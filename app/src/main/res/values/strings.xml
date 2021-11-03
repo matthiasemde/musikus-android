@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">PracticeTime!</string>
+    <string name="sessionFormDate">date</string>
+    <string name="sessionFormBreakDuration">breakDuration</string>
+    <string name="sessionFormRating">rating</string>
+    <string name="sessionFormComment">comment</string>
+    <string name="sessionFormSubmit">add row</string>
 </resources>
