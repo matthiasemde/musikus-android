@@ -1,20 +1,21 @@
 package de.practicetime.practicetime
 
-import android.content.DialogInterface
+import android.content.Context
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import android.widget.*
-import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
 import com.google.android.material.snackbar.Snackbar
-import de.practicetime.practicetime.entities.PracticeSection
-import de.practicetime.practicetime.entities.PracticeSession
+import de.practicetime.practicetime.entities.*
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
-import kotlin.text.Typography.section
 
 private var dao: PTDao? = null
 
@@ -30,35 +31,70 @@ class MainActivity : AppCompatActivity() {
         ).build()
         dao = db.ptDao
 
+        // populate the category table
+        lifecycleScope.launch {
+            val prefs = getPreferences(Context.MODE_PRIVATE)
+
+            if (prefs.getBoolean("firstrun", true)) {
+
+                val categories = listOf(
+                    Category(0, "Die Schöpfung", 0, false, 1),
+                    Category(0, "Beethoven Septett", 0, false, 1),
+                    Category(0, "Schostakowitsch 9.", 0, false, 1),
+                )
+                categories.forEach {
+                    dao?.insertCategory(it)
+                }
+
+                prefs.edit().putBoolean("firstrun", false).commit();
+            }
+        }
+
+
+        // initialize adapter and recyclerView
+        val categoryStrings = ArrayList<String>()
+        val categoryAdapter = CategoryAdapter(categoryStrings)
+
+        val categoryList = findViewById<RecyclerView>(R.id.categoryList)
+        categoryList.layoutManager = GridLayoutManager(this, 2)
+        categoryList.adapter = categoryAdapter
+
+        lifecycleScope.launch {
+            dao?.getAllCategories()?.forEach {
+                categoryStrings.add(it.name)
+            }
+            categoryAdapter.notifyDataSetChanged()
+        }
+
         // the sectionBuffer will keep track of all the section in the current session
         val sectionBuffer = mutableListOf<PracticeSection>()
 
         // add section button functionality
-        findViewById<Button>(R.id.addSection).setOnClickListener {
-            val categoryId = findViewById<EditText>(R.id.categoryId).text.toString()
-            val duration = findViewById<EditText>(R.id.duration).text.toString()
-
-            if (categoryId.isEmpty() || duration.isEmpty()) {
-                Snackbar.make(it, "Please fill out all Section fields!", Snackbar.LENGTH_SHORT).show()
-            } else {
-
-                val timeStamp = SimpleDateFormat("yyyyMMddHHmmss", Locale.getDefault()).format(Date()).toLong()
-
-                // id=0 means not assigned, autoGenerate=true will do it for us
-                val newSection = PracticeSection(
-                    0,
-                    null,
-                    categoryId.toInt(),
-                    duration.toInt(),
-                    timeStamp
-                )
-
-                sectionBuffer.add(newSection)
-                lifecycleScope.launch {
-                    fillSectionListView(sectionBuffer.toList())
-                }
-            }
-        }
+//        findViewById<Button>(R.id.addSection).setOnClickListener {
+//            val categoryId = findViewById<EditText>(R.id.categoryId).text.toString()
+//            val duration = findViewById<EditText>(R.id.duration).text.toString()
+//
+//            if (categoryId.isEmpty() || duration.isEmpty()) {
+//                Snackbar.make(it, "Please fill out all Section fields!", Snackbar.LENGTH_SHORT).show()
+//            } else {
+//
+//                val timeStamp = SimpleDateFormat("yyyyMMddHHmmss", Locale.getDefault()).format(Date()).toLong()
+//
+//                // id=0 means not assigned, autoGenerate=true will do it for us
+//                val newSection = PracticeSection(
+//                    0,
+//                    null,
+//                    categoryId.toInt(),
+//                    duration.toInt(),
+//                    timeStamp
+//                )
+//
+//                sectionBuffer.add(newSection)
+//                lifecycleScope.launch {
+//                    fillSectionListView(sectionBuffer.toList())
+//                }
+//            }
+//        }
 
         // add session button functionality
         findViewById<Button>(R.id.addSession).setOnClickListener {
@@ -130,4 +166,38 @@ class MainActivity : AppCompatActivity() {
             adapter.notifyDataSetChanged()
         }
     }
+}
+
+class CategoryAdapter(private val dataSet: ArrayList<String>) :
+    RecyclerView.Adapter<CategoryAdapter.ViewHolder>() {
+
+    class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        val button: Button
+
+        init {
+            // Define click listener for the ViewHolder's View.
+            button = view.findViewById(R.id.button)
+        }
+    }
+
+    // Create new views (invoked by the layout manager)
+    override fun onCreateViewHolder(viewGroup: ViewGroup, viewType: Int): ViewHolder {
+        // Create a new view, which defines the UI of the list item
+        val view = LayoutInflater.from(viewGroup.context)
+            .inflate(R.layout.category_item, viewGroup, false)
+
+        return ViewHolder(view)
+    }
+
+    // Replace the contents of a view (invoked by the layout manager)
+    override fun onBindViewHolder(viewHolder: ViewHolder, position: Int) {
+
+        // Get element from your dataset at this position and replace the
+        // contents of the view with that element
+        viewHolder.button.text = dataSet[position]
+    }
+
+    // Return the size of your dataset (invoked by the layout manager)
+    override fun getItemCount() = dataSet.size
+
 }

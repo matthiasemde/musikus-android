@@ -4,10 +4,10 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 
 @Entity
-data class PracticeSection (
+data class Category (
     @PrimaryKey(autoGenerate = true) val id: Int,
-    var practice_session_id: Int?,
-    val category_id: Int,
-    val duration: Int,
-    val timestamp: Long,
+    val name: String,
+    val color: Int,
+    val archived: Boolean,
+    val profile_id: Int,
 )
