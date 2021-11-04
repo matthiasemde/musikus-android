@@ -7,6 +7,7 @@ import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.lifecycleScope
 import androidx.room.Room
+import com.google.android.material.snackbar.Snackbar
 import de.practicetime.practicetime.entities.PracticeSection
 import de.practicetime.practicetime.entities.PracticeSession
 import kotlinx.coroutines.launch
@@ -21,48 +22,63 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        AlertDialog.Builder(this)
-            .setMessage("The app will crash on button press if fields are empty!")
-            .setPositiveButton(android.R.string.ok, DialogInterface.OnClickListener() {
-                    dialogInterface: DialogInterface, i: Int -> dialogInterface.cancel()
-            })
-            .show()
-
+        // initialize Database
         val db = Room.databaseBuilder(
             applicationContext,
             PTDatabase::class.java, "pt-database"
         ).build()
         dao = db.ptDao
 
-        // add section button
+        // add section button functionality
         findViewById<Button>(R.id.addSection).setOnClickListener {
-            val categoryId = findViewById<EditText>(R.id.categoryId).text.toString().toInt()
-            val duration = findViewById<EditText>(R.id.duration).text.toString().toInt()
+            val categoryId = findViewById<EditText>(R.id.categoryId).text.toString()
+            val duration = findViewById<EditText>(R.id.duration).text.toString()
             val timeStamp = SimpleDateFormat("yyyyMMddHHmmss", Locale.getDefault()).format(Date()).toLong()
 
-            // id=0 means not assigned, autoGenerate=true will do it for us
-            var newSection = PracticeSection(0, 1, categoryId, duration, timeStamp)
+            if (categoryId.isEmpty() || duration.isEmpty()) {
+                Snackbar.make(it, "Please fill out all Section fields!", Snackbar.LENGTH_SHORT).show()
+            } else {
+                // id=0 means not assigned, autoGenerate=true will do it for us
+                var newSection = PracticeSection(
+                    0,
+                    1,
+                    categoryId.toInt(),
+                    duration.toInt(),
+                    timeStamp
+                )
 
-            // insert the data asynchronously via lifecycle-aware coroutine
-            lifecycleScope.launch {
-                dao?.insertSection(newSection)
-                fillSectionListView()
+                // insert the data asynchronously via lifecycle-aware coroutine
+                lifecycleScope.launch {
+                    dao?.insertSection(newSection)
+                    fillSectionListView()
+                }
             }
         }
 
-        // add session button
+        // add session button functionality
         findViewById<Button>(R.id.addSession).setOnClickListener {
-            val date = findViewById<EditText>(R.id.date).text.toString().toLong()
-            val breakDuration = findViewById<EditText>(R.id.breakDuration).text.toString().toInt()
-            val rating = findViewById<EditText>(R.id.rating).text.toString().toInt()
+            val date = findViewById<EditText>(R.id.date).text.toString()
+            val breakDuration = findViewById<EditText>(R.id.breakDuration).text.toString()
+            val rating = findViewById<EditText>(R.id.rating).text.toString()
             val comment = findViewById<EditText>(R.id.comment).text.toString()
 
-            // id=0 means not assigned, autoGenerate=true will do it for us
-            val newSession = PracticeSession(0, date, breakDuration, rating, comment, 0)
+            if (date.isEmpty() || breakDuration.isEmpty() || rating.isEmpty() || comment.isEmpty()) {
+                Snackbar.make(it, "Please fill out all Session fields!", Snackbar.LENGTH_SHORT).show()
+            } else {
+                // id=0 means not assigned, autoGenerate=true will do it for us
+                val newSession = PracticeSession(
+                    0,
+                    date.toLong(),
+                    breakDuration.toInt(),
+                    rating.toInt(),
+                    comment,
+                    0
+                )
 
-            lifecycleScope.launch {
-                dao?.insertSession(newSession)
-                fillSessionListView()
+                lifecycleScope.launch {
+                    dao?.insertSession(newSession)
+                    fillSessionListView()
+                }
             }
         }
 
@@ -93,9 +109,9 @@ class MainActivity : AppCompatActivity() {
             var listItems = ArrayList<String>()
             sessions.forEach {
                 listItems.add("d: " + it.date +
-                        "brk: " + it.break_duration +
-                        "r: " + it.rating +
-                        "c: " + it.comment
+                        " | brk: " + it.break_duration +
+                        " | r: " + it.rating +
+                        " | c: " + it.comment
                 )
             }
             val sessionsList = findViewById<ListView>(R.id.currentSessions)
