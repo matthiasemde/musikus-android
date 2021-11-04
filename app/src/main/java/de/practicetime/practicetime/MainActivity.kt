@@ -14,6 +14,7 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
+import kotlin.text.Typography.section
 
 private var dao: PTDao? = null
 
@@ -29,28 +30,32 @@ class MainActivity : AppCompatActivity() {
         ).build()
         dao = db.ptDao
 
+        // the sectionBuffer will keep track of all the section in the current session
+        val sectionBuffer = mutableListOf<PracticeSection>()
+
         // add section button functionality
         findViewById<Button>(R.id.addSection).setOnClickListener {
             val categoryId = findViewById<EditText>(R.id.categoryId).text.toString()
             val duration = findViewById<EditText>(R.id.duration).text.toString()
-            val timeStamp = SimpleDateFormat("yyyyMMddHHmmss", Locale.getDefault()).format(Date()).toLong()
 
             if (categoryId.isEmpty() || duration.isEmpty()) {
                 Snackbar.make(it, "Please fill out all Section fields!", Snackbar.LENGTH_SHORT).show()
             } else {
+
+                val timeStamp = SimpleDateFormat("yyyyMMddHHmmss", Locale.getDefault()).format(Date()).toLong()
+
                 // id=0 means not assigned, autoGenerate=true will do it for us
-                var newSection = PracticeSection(
+                val newSection = PracticeSection(
                     0,
-                    1,
+                    null,
                     categoryId.toInt(),
                     duration.toInt(),
                     timeStamp
                 )
 
-                // insert the data asynchronously via lifecycle-aware coroutine
+                sectionBuffer.add(newSection)
                 lifecycleScope.launch {
-                    dao?.insertSection(newSection)
-                    fillSectionListView()
+                    fillSectionListView(sectionBuffer.toList())
                 }
             }
         }
@@ -72,24 +77,29 @@ class MainActivity : AppCompatActivity() {
                     breakDuration.toInt(),
                     rating.toInt(),
                     comment,
-                    0
+                    1
                 )
 
                 lifecycleScope.launch {
-                    dao?.insertSession(newSession)
+                    val sessionId = dao?.insertSession(newSession)
+                    for(section in sectionBuffer) {
+                        section.practice_session_id = sessionId?.toInt()
+                        dao?.insertSection(section)
+                    }
+                    sectionBuffer.clear()
+                    fillSectionListView(sectionBuffer.toList())
                     fillSessionListView()
                 }
             }
         }
 
-        fillSectionListView()
+        fillSectionListView(sectionBuffer.toList())
         fillSessionListView()
     }
 
-    private fun fillSectionListView() {
+    private fun fillSectionListView(sections: List<PracticeSection>) {
         // show all sections in listview
         lifecycleScope.launch {
-            var sections: List<PracticeSection> = dao!!.getAllSections()
             var listItems = ArrayList<String>()
             sections.forEach {
                 listItems.add("categ: " + it.category_id + "   |   dur: " + it.duration)
