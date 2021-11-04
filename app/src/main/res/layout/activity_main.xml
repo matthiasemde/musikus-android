@@ -11,16 +11,6 @@
         android:layout_height="match_parent"
         tools:context=".MainActivity">
 
-
-        <TextView
-            android:id="@+id/textView2"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            android:text="Sessions"
-            app:layout_constraintBottom_toTopOf="@+id/currentSessions"
-            app:layout_constraintEnd_toEndOf="parent" />
-
         <EditText
             android:id="@+id/categoryId"
             android:layout_width="0dp"
@@ -60,22 +50,44 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/duration" />
 
+        <TextView
+            android:id="@+id/textView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="10dp"
+            android:textStyle="bold"
+            android:textSize="20sp"
+            android:text="Sections:"
+            app:layout_constraintBottom_toTopOf="@+id/currentSections"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <TextView
+            android:id="@+id/textView2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="10dp"
+            android:textStyle="bold"
+            android:textSize="20sp"
+            android:text="Sessions:"
+            app:layout_constraintBottom_toTopOf="@+id/currentSessions"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_goneMarginEnd="10dp" />
 
         <ListView
             android:id="@+id/currentSections"
             android:layout_width="186dp"
             android:layout_height="227dp"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="16dp"
+            android:layout_margin="16dp"
             app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/currentSessions"
             app:layout_constraintTop_toBottomOf="@+id/addSection" />
 
         <ListView
             android:id="@+id/currentSessions"
             android:layout_width="186dp"
             android:layout_height="227dp"
-            android:layout_marginTop="16dp"
-            android:layout_marginEnd="16dp"
+            android:layout_margin="16dp"
+            app:layout_constraintStart_toEndOf="@id/currentSections"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/addSection" />
 
@@ -149,14 +161,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/comment" />
 
-        <TextView
-            android:id="@+id/textView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            android:text="Sections"
-            app:layout_constraintBottom_toTopOf="@+id/currentSections"
-            app:layout_constraintStart_toStartOf="parent" />
+
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
