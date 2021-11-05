@@ -35,6 +35,8 @@ class MainActivity : AppCompatActivity() {
         lifecycleScope.launch {
             val prefs = getPreferences(Context.MODE_PRIVATE)
 
+
+            // FIRST RUN routine
             if (prefs.getBoolean("firstrun", true)) {
 
                 val categories = listOf(
@@ -50,20 +52,24 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        fun categoryPressed(categoryView: View) {
+            Snackbar.make(categoryView, "Category ${categoryView.tag} Pressed!", Snackbar.LENGTH_SHORT).show()
+        }
 
         // initialize adapter and recyclerView
-        val categoryStrings = ArrayList<String>()
-        val categoryAdapter = CategoryAdapter(categoryStrings)
+        var categories = ArrayList<Category>()
+        val categoryAdapter = CategoryAdapter(categories, ::categoryPressed)
 
         val categoryList = findViewById<RecyclerView>(R.id.categoryList)
         categoryList.layoutManager = GridLayoutManager(this, 2)
         categoryList.adapter = categoryAdapter
 
         lifecycleScope.launch {
-            dao?.getAllCategories()?.forEach {
-                categoryStrings.add(it.name)
+            val activeCategories = dao?.getActiveCategories()
+            if(activeCategories != null) {
+                categories.addAll(activeCategories)
+                categoryAdapter.notifyDataSetChanged()
             }
-            categoryAdapter.notifyDataSetChanged()
         }
 
         // the sectionBuffer will keep track of all the section in the current session
@@ -168,15 +174,18 @@ class MainActivity : AppCompatActivity() {
     }
 }
 
-class CategoryAdapter(private val dataSet: ArrayList<String>) :
-    RecyclerView.Adapter<CategoryAdapter.ViewHolder>() {
+class CategoryAdapter(
+    private val dataSet: ArrayList<Category>,
+    private val callback: (input: View) -> Unit,
+) : RecyclerView.Adapter<CategoryAdapter.ViewHolder>() {
 
-    class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+    inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val button: Button
 
         init {
-            // Define click listener for the ViewHolder's View.
             button = view.findViewById(R.id.button)
+            // Define click listener for the ViewHolder's View.
+            button.setOnClickListener(callback)
         }
     }
 
@@ -191,10 +200,19 @@ class CategoryAdapter(private val dataSet: ArrayList<String>) :
 
     // Replace the contents of a view (invoked by the layout manager)
     override fun onBindViewHolder(viewHolder: ViewHolder, position: Int) {
+        // Get element from your dataset at this position
+        val category = dataSet[position]
 
-        // Get element from your dataset at this position and replace the
+        // store the id of the category on the button
+        viewHolder.button.tag = category.id
+
+        // archived categories should not be displayed
+        if(category.archived) {
+            viewHolder.button.visibility = View.GONE
+        }
+
         // contents of the view with that element
-        viewHolder.button.text = dataSet[position]
+        viewHolder.button.text = category.name
     }
 
     // Return the size of your dataset (invoked by the layout manager)

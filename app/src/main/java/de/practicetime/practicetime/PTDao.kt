@@ -38,6 +38,9 @@ interface PTDao {
     @Query("SELECT * FROM Category")
     suspend fun getAllCategories(): List<Category>
 
+    @Query("SELECT * FROM Category WHERE NOT archived")
+    suspend fun getActiveCategories(): List<Category>
+
     @Transaction
     @Query("SELECT * FROM PracticeSession WHERE rating > :rating")
     suspend fun getSessionsWithSections(rating: Int): List<SessionWithSections>
