@@ -104,6 +104,29 @@
             app:layout_constraintBottom_toTopOf="@+id/currentSections"
             app:layout_constraintStart_toStartOf="@+id/currentSections" />
 
+        <TextView
+            android:id="@+id/practiceTimer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toTopOf="@+id/currentSections"
+            app:layout_constraintEnd_toStartOf="@+id/textView2"
+            app:layout_constraintStart_toEndOf="@+id/textView"
+            app:layout_constraintTop_toBottomOf="@+id/totalTime"
+            tools:text="00:00.:00" />
+
+        <TextView
+            android:id="@+id/totalTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="16sp"
+            app:layout_constraintEnd_toEndOf="@+id/practiceTimer"
+            app:layout_constraintStart_toStartOf="@+id/practiceTimer"
+            app:layout_constraintTop_toBottomOf="@+id/categoryList"
+            app:layout_constraintBottom_toTopOf="@+id/practiceTimer"
+            tools:text="00:00:00" />
+
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

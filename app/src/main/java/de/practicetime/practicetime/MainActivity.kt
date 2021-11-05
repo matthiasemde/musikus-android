@@ -3,6 +3,8 @@ package de.practicetime.practicetime
 import android.content.Context
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -19,7 +21,6 @@ import java.util.*
 import kotlin.collections.ArrayList
 
 private var dao: PTDao? = null
-
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -62,7 +63,7 @@ class MainActivity : AppCompatActivity() {
         fun categoryPressed(categoryView: View) {
             // get the category id from the view tag and calculate current timestamp
             val categoryId = categoryView.tag as Int
-            val currentTimestamp = SimpleDateFormat("yyyyMMddHHmmss", Locale.getDefault()).format(Date()).toLong()
+            val now = Date().time / 1000
 
             // if there is no active session set sessionActive to true
             if(!sessionActive) {
@@ -72,7 +73,7 @@ class MainActivity : AppCompatActivity() {
 
                 // store the duration of the now ending section
                 lastSection.duration = (
-                    currentTimestamp -
+                    now -
                     lastSection.timestamp
                 ).toInt()
 
@@ -87,7 +88,7 @@ class MainActivity : AppCompatActivity() {
                     null,
                     categoryId,
                     null,
-                    currentTimestamp,
+                    now,
                 )
             )
 
@@ -123,7 +124,7 @@ class MainActivity : AppCompatActivity() {
 
                 // store the duration of the now ending section
                 lastSection.duration = (
-                    SimpleDateFormat("yyyyMMddHHmmss", Locale.getDefault()).format(Date()).toLong() -
+                    Date().time / 1000 -
                     lastSection.timestamp
                 ).toInt()
 
@@ -159,7 +160,60 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-         fillSessionListView()
+        // show current list of sessions
+        fillSessionListView()
+
+        // calling practiceTimer will start a handler, which executes the code in the post() method once per second
+        fun practiceTimer() {
+
+            // get the text views.
+            val timeView = findViewById<TextView>(R.id.practiceTimer)
+            val totalTimeView = findViewById<TextView>(R.id.totalTime)
+
+            // creates a new Handler
+            Handler(Looper.getMainLooper()).also {
+
+                // the post() method executes immediately
+                it.post(object : Runnable {
+                    override fun run() {
+                        if (sessionActive && sectionBuffer.isNotEmpty()) {
+                            // load the current section from the sectionBuffer
+                            var firstSection = sectionBuffer.first()
+                            var currentSection = sectionBuffer.last()
+
+                            val now = Date().time / 1000
+
+                            // store the duration of the now ending section
+                            val currentDuration = (now - currentSection.timestamp).toInt()
+
+                            // set the text view text to the formatted time
+                            timeView.text = "%02d:%02d:%02d".format(
+                                currentDuration / 3600,
+                                currentDuration % 3600 / 60,
+                                currentDuration % 60
+                            )
+
+                            // do the same for the total time
+                            val totalDuration = (now - firstSection.timestamp).toInt()
+
+                            totalTimeView.text = "%02d:%02d:%02d".format(
+                                totalDuration / 3600,
+                                totalDuration % 3600 / 60,
+                                totalDuration % 60
+                            )
+
+                        } else {
+                            totalTimeView.text = "00:00:00"
+                            timeView.text = "00:00:00"
+                        }
+
+                        // post the code again with a delay of 1 second
+                        it.postDelayed(this, 1000)
+                    }
+                })
+            }
+        }
+        practiceTimer()
     }
 
     private fun fillSectionListView(sections: ArrayList<PracticeSection>) {
@@ -180,24 +234,26 @@ class MainActivity : AppCompatActivity() {
     private fun fillSessionListView() {
         // show all sections in listview
         lifecycleScope.launch {
-            var sessionsWithSections: List<SessionWithSections> = dao!!.getSessionsWithSections()
-            var listItems = ArrayList<String>()
-            for ((session, sections) in sessionsWithSections) {
-                var totalDuration: Int = 0
-                for (section in sections) {
-                    totalDuration += section.duration!!
+            var sessionsWithSections: List<SessionWithSections>? = dao?.getSessionsWithSections()
+            if(sessionsWithSections != null) {
+                var listItems = ArrayList<String>()
+                for ((session, sections) in sessionsWithSections) {
+                    var totalDuration: Int = 0
+                    for (section in sections) {
+                        totalDuration += section.duration!!
+                    }
+                    listItems.add("d: " + sections.first().timestamp +
+                            " | dur: " + totalDuration +
+                            " | brk: " + session.break_duration +
+                            " | r: " + session.rating +
+                            " | c: " + session.comment
+                    )
                 }
-                listItems.add("d: " + sections.first().timestamp +
-                        " | dur: " + totalDuration +
-                        " | brk: " + session.break_duration +
-                        " | r: " + session.rating +
-                        " | c: " + session.comment
-                )
+                val sessionsList = findViewById<ListView>(R.id.currentSessions)
+                var adapter = ArrayAdapter<String>(this@MainActivity, android.R.layout.simple_list_item_1, listItems)
+                sessionsList.adapter = adapter
+                adapter.notifyDataSetChanged()
             }
-            val sessionsList = findViewById<ListView>(R.id.currentSessions)
-            var adapter = ArrayAdapter<String>(this@MainActivity, android.R.layout.simple_list_item_1, listItems)
-            sessionsList.adapter = adapter
-            adapter.notifyDataSetChanged()
         }
     }
 }
@@ -244,5 +300,5 @@ class CategoryAdapter(
 
     // Return the size of your dataset (invoked by the layout manager)
     override fun getItemCount() = dataSet.size
-
 }
+
