@@ -11,102 +11,49 @@
         android:layout_height="match_parent"
         tools:context=".MainActivity">
 
-        <Button
-            android:id="@+id/addSection"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="add section"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.501"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/categoryList" />
-
-        <TextView
-            android:id="@+id/textView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_margin="10dp"
-            android:textStyle="bold"
-            android:textSize="20sp"
-            android:text="Sections:"
-            app:layout_constraintBottom_toTopOf="@+id/currentSections"
-            app:layout_constraintStart_toStartOf="parent" />
-
         <TextView
             android:id="@+id/textView2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="10dp"
-            android:textStyle="bold"
-            android:textSize="20sp"
+            android:layout_marginBottom="16dp"
             android:text="Sessions:"
+            android:textSize="20sp"
+            android:textStyle="bold"
             app:layout_constraintBottom_toTopOf="@+id/currentSessions"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_goneMarginEnd="10dp" />
+            app:layout_constraintEnd_toEndOf="@+id/currentSessions" />
 
         <ListView
             android:id="@+id/currentSections"
-            android:layout_width="186dp"
-            android:layout_height="227dp"
-            android:layout_margin="16dp"
+            android:layout_width="181dp"
+            android:layout_height="195dp"
+            android:layout_marginTop="64dp"
+            app:layout_constraintEnd_toStartOf="@+id/currentSessions"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/currentSessions"
-            app:layout_constraintTop_toBottomOf="@+id/addSection" />
+            app:layout_constraintTop_toBottomOf="@+id/categoryList" />
 
         <ListView
             android:id="@+id/currentSessions"
             android:layout_width="186dp"
-            android:layout_height="227dp"
-            android:layout_margin="16dp"
-            app:layout_constraintStart_toEndOf="@id/currentSections"
+            android:layout_height="195dp"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/addSection" />
-
-        <EditText
-            android:id="@+id/date"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_marginTop="8dp"
-            android:layout_marginEnd="8dp"
-            android:ems="10"
-            android:hint="@string/sessionFormDate"
-            android:inputType="number"
-            android:minHeight="48dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/currentSections" />
-
-        <EditText
-            android:id="@+id/breakDuration"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_marginTop="8dp"
-            android:layout_marginEnd="8dp"
-            android:ems="10"
-            android:hint="@string/sessionFormBreakDuration"
-            android:inputType="number"
-            android:minHeight="48dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/date" />
+            app:layout_constraintStart_toEndOf="@+id/currentSections"
+            app:layout_constraintTop_toTopOf="@+id/currentSections" />
 
         <EditText
             android:id="@+id/rating"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="16dp"
             android:layout_marginEnd="8dp"
             android:ems="10"
             android:hint="@string/sessionFormRating"
             android:inputType="number"
             android:minHeight="48dp"
+            android:text="3"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/breakDuration" />
+            app:layout_constraintTop_toBottomOf="@+id/currentSections" />
 
         <EditText
             android:id="@+id/comment"
@@ -119,6 +66,7 @@
             android:hint="@string/sessionFormComment"
             android:inputType="textMultiLine"
             android:minHeight="48dp"
+            android:text="hello world"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/rating" />
@@ -144,6 +92,17 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/textView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:text="Sections"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toTopOf="@+id/currentSections"
+            app:layout_constraintStart_toStartOf="@+id/currentSections" />
 
 
     </androidx.constraintlayout.widget.ConstraintLayout>

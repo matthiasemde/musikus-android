@@ -14,6 +14,7 @@ import androidx.room.Room
 import com.google.android.material.snackbar.Snackbar
 import de.practicetime.practicetime.entities.*
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -31,7 +32,6 @@ class MainActivity : AppCompatActivity() {
         ).build()
         dao = db.ptDao
 
-        // populate the category table
         lifecycleScope.launch {
             val prefs = getPreferences(Context.MODE_PRIVATE)
 
@@ -39,12 +39,12 @@ class MainActivity : AppCompatActivity() {
             // FIRST RUN routine
             if (prefs.getBoolean("firstrun", true)) {
 
-                val categories = listOf(
+                // populate the category table on first run
+                listOf(
                     Category(0, "Die Schöpfung", 0, false, 1),
                     Category(0, "Beethoven Septett", 0, false, 1),
                     Category(0, "Schostakowitsch 9.", 0, false, 1),
-                )
-                categories.forEach {
+                ).forEach {
                     dao?.insertCategory(it)
                 }
 
@@ -52,8 +52,46 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        // the sectionBuffer will keep track of all the section in the current session
+        val sectionBuffer = ArrayList<PracticeSection>()
+
+        // keep track of whether a session is active
+        var sessionActive = false
+
+        // the routine for handling presses to category buttons
         fun categoryPressed(categoryView: View) {
-            Snackbar.make(categoryView, "Category ${categoryView.tag} Pressed!", Snackbar.LENGTH_SHORT).show()
+            // get the category id from the view tag and calculate current timestamp
+            val categoryId = categoryView.tag as Int
+            val currentTimestamp = SimpleDateFormat("yyyyMMddHHmmss", Locale.getDefault()).format(Date()).toLong()
+
+            // if there is no active session set sessionActive to true
+            if(!sessionActive) {
+                sessionActive = true
+            } else {
+                var lastSection = sectionBuffer.last()
+
+                // store the duration of the now ending section
+                lastSection.duration = (
+                    currentTimestamp -
+                    lastSection.timestamp
+                ).toInt()
+
+                // show the new section in the listView
+                fillSectionListView(sectionBuffer)
+            }
+
+            // start a new section for the chosen category and add it to the section buffer
+            sectionBuffer.add(
+                PracticeSection(
+                    0,
+                    null,
+                    categoryId,
+                    null,
+                    currentTimestamp,
+                )
+            )
+
+            Snackbar.make(categoryView, "Category $categoryId Pressed!", Snackbar.LENGTH_SHORT).show()
         }
 
         // initialize adapter and recyclerView
@@ -72,74 +110,59 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // the sectionBuffer will keep track of all the section in the current session
-        val sectionBuffer = mutableListOf<PracticeSection>()
-
-        // add section button functionality
-//        findViewById<Button>(R.id.addSection).setOnClickListener {
-//            val categoryId = findViewById<EditText>(R.id.categoryId).text.toString()
-//            val duration = findViewById<EditText>(R.id.duration).text.toString()
-//
-//            if (categoryId.isEmpty() || duration.isEmpty()) {
-//                Snackbar.make(it, "Please fill out all Section fields!", Snackbar.LENGTH_SHORT).show()
-//            } else {
-//
-//                val timeStamp = SimpleDateFormat("yyyyMMddHHmmss", Locale.getDefault()).format(Date()).toLong()
-//
-//                // id=0 means not assigned, autoGenerate=true will do it for us
-//                val newSection = PracticeSection(
-//                    0,
-//                    null,
-//                    categoryId.toInt(),
-//                    duration.toInt(),
-//                    timeStamp
-//                )
-//
-//                sectionBuffer.add(newSection)
-//                lifecycleScope.launch {
-//                    fillSectionListView(sectionBuffer.toList())
-//                }
-//            }
-//        }
-
         // add session button functionality
         findViewById<Button>(R.id.addSession).setOnClickListener {
-            val date = findViewById<EditText>(R.id.date).text.toString()
-            val breakDuration = findViewById<EditText>(R.id.breakDuration).text.toString()
             val rating = findViewById<EditText>(R.id.rating).text.toString()
             val comment = findViewById<EditText>(R.id.comment).text.toString()
 
-            if (date.isEmpty() || breakDuration.isEmpty() || rating.isEmpty() || comment.isEmpty()) {
+            if (rating.isEmpty()) {
                 Snackbar.make(it, "Please fill out all Session fields!", Snackbar.LENGTH_SHORT).show()
             } else {
+                // finish up the final section
+                var lastSection = sectionBuffer.last()
+
+                // store the duration of the now ending section
+                lastSection.duration = (
+                    SimpleDateFormat("yyyyMMddHHmmss", Locale.getDefault()).format(Date()).toLong() -
+                    lastSection.timestamp
+                ).toInt()
+
+                // TODO: Check id comment is empty -> insert null
                 // id=0 means not assigned, autoGenerate=true will do it for us
                 val newSession = PracticeSession(
                     0,
-                    date.toLong(),
-                    breakDuration.toInt(),
+                    0,
                     rating.toInt(),
-                    comment,
+                    comment ,
                     1
                 )
 
                 lifecycleScope.launch {
+                    // create a new session row and save its id
                     val sessionId = dao?.insertSession(newSession)
+
+                    // add the new sessionId to every section in the section buffer
                     for(section in sectionBuffer) {
                         section.practice_session_id = sessionId?.toInt()
+                        // and insert them into the database
                         dao?.insertSection(section)
                     }
-                    sectionBuffer.clear()
-                    fillSectionListView(sectionBuffer.toList())
+
+                    // show the new session
                     fillSessionListView()
+
+                    // reset section buffer and session status
+                    sectionBuffer.clear()
+                    fillSectionListView(sectionBuffer)
+                    sessionActive = false
                 }
             }
         }
 
-        fillSectionListView(sectionBuffer.toList())
-        fillSessionListView()
+         fillSessionListView()
     }
 
-    private fun fillSectionListView(sections: List<PracticeSection>) {
+    private fun fillSectionListView(sections: ArrayList<PracticeSection>) {
         // show all sections in listview
         lifecycleScope.launch {
             var listItems = ArrayList<String>()
@@ -157,13 +180,18 @@ class MainActivity : AppCompatActivity() {
     private fun fillSessionListView() {
         // show all sections in listview
         lifecycleScope.launch {
-            var sessions: List<PracticeSession> = dao!!.getAllSessions()
+            var sessionsWithSections: List<SessionWithSections> = dao!!.getSessionsWithSections()
             var listItems = ArrayList<String>()
-            sessions.forEach {
-                listItems.add("d: " + it.date +
-                        " | brk: " + it.break_duration +
-                        " | r: " + it.rating +
-                        " | c: " + it.comment
+            for ((session, sections) in sessionsWithSections) {
+                var totalDuration: Int = 0
+                for (section in sections) {
+                    totalDuration += section.duration!!
+                }
+                listItems.add("d: " + sections.first().timestamp +
+                        " | dur: " + totalDuration +
+                        " | brk: " + session.break_duration +
+                        " | r: " + session.rating +
+                        " | c: " + session.comment
                 )
             }
             val sessionsList = findViewById<ListView>(R.id.currentSessions)
@@ -180,10 +208,9 @@ class CategoryAdapter(
 ) : RecyclerView.Adapter<CategoryAdapter.ViewHolder>() {
 
     inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val button: Button
+        val button: Button = view.findViewById(R.id.button)
 
         init {
-            button = view.findViewById(R.id.button)
             // Define click listener for the ViewHolder's View.
             button.setOnClickListener(callback)
         }
