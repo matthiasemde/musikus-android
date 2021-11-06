@@ -1,5 +1,6 @@
 package de.practicetime.practicetime
 
+import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -36,6 +37,7 @@ private var pauseDuration = 0         // pause duration, ONLY for displaying on 
 private var activeCategories: List<Category>? = listOf<Category>()
 private lateinit var sectionsAdapter: ArrayAdapter<String>
 private var listItems = ArrayList<String>()
+private lateinit var mServiceIntent: Intent
 
 class ActiveSessionActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -90,6 +92,11 @@ class ActiveSessionActivity : AppCompatActivity() {
             fillSectionList(true)
             findViewById<ImageButton>(R.id.bottom_pause).visibility = View.VISIBLE
             findViewById<ImageButton>(R.id.bottom_stop).visibility = View.VISIBLE
+
+            //start the service
+            mServiceIntent = Intent(this, SessionForegroundService::class.java).also { intent ->
+                startService(intent)
+            }
         } else {
             endSection()
         }

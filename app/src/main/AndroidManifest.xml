@@ -2,6 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="de.practicetime.practicetime">
 
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -9,6 +11,11 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.PracticeTime">
+        <service
+            android:name=".SessionForegroundService"
+            android:enabled="true"
+            android:exported="false" />
+
         <activity
             android:name=".ActiveSessionActivity"
             android:exported="false" />
