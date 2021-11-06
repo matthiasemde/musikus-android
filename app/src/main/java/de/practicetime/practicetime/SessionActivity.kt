@@ -1,9 +1,10 @@
 package de.practicetime.practicetime
 
-import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -23,28 +24,30 @@ private var dao: PTDao? = null
 // the sectionBuffer will keep track of all the section in the current session
 private val sectionBuffer = ArrayList<PracticeSection>()
 private var sessionActive = false   // keep track of whether a session is active
+private var activeCategories: List<Category>? = listOf<Category>()
 
-class MainActivity : AppCompatActivity() {
+class SessionActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        setContentView(R.layout.activity_session)
 
-        initDatabase()
-        createDatabaseFirstRun()
+        openDatabase()
 
-        // initialize adapter and recyclerView
+        // initialize adapter and recyclerView for showing category buttons from database
         var categories = ArrayList<Category>()
-        val categoryAdapter = CategoryAdapter(categories, ::categoryPressed)
+        var categoryAdapter = CategoryAdapter(categories, ::categoryPressed)
 
         val categoryList = findViewById<RecyclerView>(R.id.categoryList)
         categoryList.layoutManager = GridLayoutManager(this, 2)
         categoryList.adapter = categoryAdapter
 
         lifecycleScope.launch {
-            val activeCategories = dao?.getActiveCategories()
+            activeCategories = dao?.getActiveCategories()
             if (activeCategories != null) {
-                categories.addAll(activeCategories)
+                categories.addAll(activeCategories!!)
             }
+            // notifyDataSetChanged necessary here since all items might have changed
+            categoryAdapter.notifyDataSetChanged()
         }
 
         // add session button functionality
@@ -52,40 +55,22 @@ class MainActivity : AppCompatActivity() {
             endSession()
         }
 
-        // show current list of sessions
-        fillSessionsListView()
-
         // start the practice timer Runnable
         practiceTimer()
     }
 
-    private fun initDatabase() {
+    private fun goToSessionList() {
+        val intent = Intent(this, SessionsListActivity::class.java)
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        startActivity(intent)
+    }
+
+    private fun openDatabase() {
         val db = Room.databaseBuilder(
             applicationContext,
             PTDatabase::class.java, "pt-database"
         ).build()
         dao = db.ptDao
-    }
-
-    private fun createDatabaseFirstRun() {
-        lifecycleScope.launch {
-            val prefs = getPreferences(Context.MODE_PRIVATE)
-
-            // FIRST RUN routine
-            if (prefs.getBoolean("firstrun", true)) {
-
-                // populate the category table on first run
-                listOf(
-                    Category(0, "Die Schöpfung", 0, false, 1),
-                    Category(0, "Beethoven Septett", 0, false, 1),
-                    Category(0, "Schostakowitsch 9.", 0, false, 1),
-                ).forEach {
-                    dao?.insertCategory(it)
-                }
-
-                prefs.edit().putBoolean("firstrun", false).apply();
-            }
-        }
     }
 
     // the routine for handling presses to category buttons
@@ -94,6 +79,11 @@ class MainActivity : AppCompatActivity() {
         val categoryId = categoryView.tag as Int
         val now = Date().time / 1000
 
+        findViewById<Button>(R.id.addSession).isEnabled = true
+        val sessBtn = categoryView as Button
+        findViewById<TextView>(R.id.activeSectionName).text = sessBtn.text.toString()
+
+        // change background color of button
         // if there is no active session set sessionActive to true
         if(!sessionActive) {
             sessionActive = true
@@ -120,7 +110,7 @@ class MainActivity : AppCompatActivity() {
                 now,
             )
         )
-        Snackbar.make(categoryView, "Category $categoryId Pressed!", Snackbar.LENGTH_SHORT).show()
+        Log.d("TAG", "Category $categoryId Pressed!")
     }
 
     private fun endSession() {
@@ -142,7 +132,7 @@ class MainActivity : AppCompatActivity() {
                             lastSection.timestamp
                     ).toInt()
 
-            // TODO: Check id comment is empty -> insert null
+            // TODO: Check if comment is empty -> insert null
             // id=0 means not assigned, autoGenerate=true will do it for us
             val newSession = PracticeSession(
                 0,
@@ -164,13 +154,14 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 // show the new session
-                fillSessionsListView()
+//                fillSessionsListView()
 
                 // reset section buffer and session status
                 sectionBuffer.clear()
                 fillSectionListView(sectionBuffer)
                 sessionActive = false
             }
+            goToSessionList()
         }
     }
 
@@ -226,42 +217,14 @@ class MainActivity : AppCompatActivity() {
 
     private fun fillSectionListView(sections: ArrayList<PracticeSection>) {
         // show all sections in listview
-        lifecycleScope.launch {
-            var listItems = ArrayList<String>()
-            sections.forEach {
-                listItems.add("categ: " + it.category_id + "   |   dur: " + it.duration)
-            }
-            val sectionsList = findViewById<ListView>(R.id.currentSections)
-            var adapter = ArrayAdapter<String>(this@MainActivity, android.R.layout.simple_list_item_1, listItems)
-            sectionsList.adapter = adapter
-            adapter.notifyDataSetChanged()
+        var listItems = ArrayList<String>()
+        sections.forEach {
+            listItems.add(activeCategories?.get(it.category_id - 1)?.name + "   |   duration: " + it.duration)
         }
-    }
-
-    private fun fillSessionsListView() {
-        // show all sections in listview
-        lifecycleScope.launch {
-            var sessionsWithSections: List<SessionWithSections>? = dao?.getSessionsWithSections()
-            if(sessionsWithSections != null) {
-                var listItems = ArrayList<String>()
-                for ((session, sections) in sessionsWithSections) {
-                    var totalDuration: Int = 0
-                    for (section in sections) {
-                        totalDuration += section.duration!!
-                    }
-                    listItems.add("d: " + sections.first().timestamp +
-                            " | dur: " + totalDuration +
-                            " | brk: " + session.break_duration +
-                            " | r: " + session.rating +
-                            " | c: " + session.comment
-                    )
-                }
-                val sessionsList = findViewById<ListView>(R.id.currentSessions)
-                var adapter = ArrayAdapter<String>(this@MainActivity, android.R.layout.simple_list_item_1, listItems)
-                sessionsList.adapter = adapter
-                adapter.notifyDataSetChanged()
-            }
-        }
+        val sectionsList = findViewById<ListView>(R.id.currentSections)
+        var adapter = ArrayAdapter<String>(this@SessionActivity, android.R.layout.simple_list_item_1, listItems)
+        sectionsList.adapter = adapter
+        adapter.notifyDataSetChanged()
     }
 }
 
@@ -303,6 +266,7 @@ class CategoryAdapter(
 
         // contents of the view with that element
         viewHolder.button.text = category.name
+        viewHolder.button.setBackgroundColor(category.color)
     }
 
     // Return the size of your dataset (invoked by the layout manager)

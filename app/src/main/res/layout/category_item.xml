@@ -3,9 +3,10 @@
 <Button xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/button"
-    android:layout_width="wrap_content"
+    android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:text="Button"
-    android:textSize="10sp"
+    android:layout_margin="10dp"
+    android:textSize="14sp"
     tools:layout_editor_absoluteX="16dp"
-    tools:layout_editor_absoluteY="16dp" />
+    tools:layout_editor_absoluteY="16dp"
+    tools:text="Button" />
