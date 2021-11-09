@@ -59,8 +59,8 @@ class SessionActivity : AppCompatActivity() {
         practiceTimer()
     }
 
-    private fun goToSessionList() {
-        val intent = Intent(this, SessionsListActivity::class.java)
+    private fun goToSessionSummary() {
+        val intent = Intent(this, SessionSummaryActivity::class.java)
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
         startActivity(intent)
     }
@@ -77,7 +77,7 @@ class SessionActivity : AppCompatActivity() {
     private fun categoryPressed(categoryView: View) {
         // get the category id from the view tag and calculate current timestamp
         val categoryId = categoryView.tag as Int
-        val now = Date().time / 1000
+        val now = Date().time / 1000L
 
         findViewById<Button>(R.id.addSession).isEnabled = true
         val sessBtn = categoryView as Button
@@ -161,7 +161,7 @@ class SessionActivity : AppCompatActivity() {
                 fillSectionListView(sectionBuffer)
                 sessionActive = false
             }
-            goToSessionList()
+            goToSessionSummary()
         }
     }
 
@@ -246,7 +246,7 @@ class CategoryAdapter(
     override fun onCreateViewHolder(viewGroup: ViewGroup, viewType: Int): ViewHolder {
         // Create a new view, which defines the UI of the list item
         val view = LayoutInflater.from(viewGroup.context)
-            .inflate(R.layout.category_item, viewGroup, false)
+            .inflate(R.layout.view_category_item, viewGroup, false)
 
         return ViewHolder(view)
     }

@@ -11,19 +11,19 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Sessions:"
-        app:layout_constraintBottom_toTopOf="@id/sessionsList"
+        app:layout_constraintBottom_toTopOf="@id/sessionList"
         app:layout_constraintStart_toStartOf="parent"
         android:layout_margin="20dp"
         android:textStyle="bold"
         android:textSize="30dp"/>
 
-    <ListView
-        android:id="@+id/sessionsList"
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/sessionList"
         android:layout_width="match_parent"
-        android:layout_margin="20dp"
         android:layout_height="600dp"
-        app:layout_constraintBottom_toBottomOf="parent" >
-    </ListView>
+        android:layout_margin="20dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        tools:layout_editor_absoluteX="20dp"></androidx.recyclerview.widget.RecyclerView>
 
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton

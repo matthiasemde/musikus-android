@@ -9,9 +9,12 @@ import android.widget.ArrayAdapter
 import android.widget.ListView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
 import de.practicetime.practicetime.entities.Category
 import de.practicetime.practicetime.entities.SessionWithSections
+import de.practicetime.practicetime.entities.SessionWithSectionsWithCategories
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
@@ -26,7 +29,22 @@ class SessionsListActivity : AppCompatActivity() {
 
         openDatabase()
         createDatabaseFirstRun()
-        fillSessionsListView()
+
+        // initialize adapter and recyclerView for showing category buttons from database
+        val sessionWithSectionsWithCategories = ArrayList<SessionWithSectionsWithCategories>()
+        val sessionSummaryAdapter = SessionSummaryAdapter(this, sessionWithSectionsWithCategories)
+
+        val sessionList = findViewById<RecyclerView>(R.id.sessionList)
+        sessionList.layoutManager = LinearLayoutManager(this)
+        sessionList.adapter = sessionSummaryAdapter
+
+        lifecycleScope.launch {
+            sessionWithSectionsWithCategories.addAll(dao?.getSessionsWithSectionsWithCategories()!!)
+
+            // notifyDataSetChanged necessary here since all items might have changed
+            sessionSummaryAdapter.notifyDataSetChanged()
+        }
+
 
         val fab: View = findViewById(R.id.fab)
         fab.setOnClickListener {
@@ -45,6 +63,7 @@ class SessionsListActivity : AppCompatActivity() {
         dao = db.ptDao
     }
 
+   @Deprecated("replaced with recycler view")
    private fun fillSessionsListView() {
        // show all sections in listview
        lifecycleScope.launch {
@@ -54,7 +73,7 @@ class SessionsListActivity : AppCompatActivity() {
                for ((session, sections) in sessionsWithSections) {
                    var totalDuration: Int = 0
                    for (section in sections) {
-                       totalDuration += section.duration!!
+                       totalDuration += section.duration ?: 0
                    }
 
                    // format date
@@ -69,7 +88,7 @@ class SessionsListActivity : AppCompatActivity() {
                            " | rating: " + session.rating + " | comment: " + session.comment
                    )
                }
-               val sessionsList = findViewById<ListView>(R.id.sessionsList)
+               val sessionsList = findViewById<ListView>(R.id.sessionList)
                var adapter = ArrayAdapter<String>(this@SessionsListActivity, android.R.layout.simple_list_item_1, listItems)
                sessionsList.adapter = adapter
                adapter.notifyDataSetChanged()

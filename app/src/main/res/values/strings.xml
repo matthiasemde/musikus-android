@@ -5,4 +5,9 @@
     <string name="sessionFormRating">rating</string>
     <string name="sessionFormComment">comment</string>
     <string name="sessionFormSubmit">add row</string>
+    <string name="sessionSummaryComment">Comment</string>
+    <string name="sessionSummaryPracticeTime">Practice time</string>
+    <string name="sessionSummaryBreakTime">Break time</string>
+    <string name="saveSessionTitle">Summary</string>
+    <string name="sessionSummarySaveButton">Save session</string>
 </resources>

@@ -1,10 +1,7 @@
 package de.practicetime.practicetime
 
 import androidx.room.*
-import de.practicetime.practicetime.entities.Category
-import de.practicetime.practicetime.entities.PracticeSection
-import de.practicetime.practicetime.entities.PracticeSession
-import de.practicetime.practicetime.entities.SessionWithSections
+import de.practicetime.practicetime.entities.*
 
 @Dao
 interface PTDao {
@@ -44,4 +41,8 @@ interface PTDao {
     @Transaction
     @Query("SELECT * FROM PracticeSession")
     suspend fun getSessionsWithSections(): List<SessionWithSections>
+
+    @Transaction
+    @Query("SELECT * FROM PracticeSession")
+    suspend fun getSessionsWithSectionsWithCategories(): List<SessionWithSectionsWithCategories>
 }

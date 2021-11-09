@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="3"
+        android:orientation="horizontal">
+
+        <View
+            android:id="@+id/sectionColor"
+            android:layout_width="4dp"
+            android:layout_height="match_parent"
+            android:layout_marginRight="8dp" />
+
+        <TextView
+            android:id="@+id/sectionName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            tools:text="section Name" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/sectionDuration"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="2"
+        tools:text="0h 0min" />
+
+</LinearLayout>
