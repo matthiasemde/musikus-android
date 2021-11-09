@@ -1,13 +1,12 @@
 <resources>
     <string name="app_name">PracticeTime!</string>
-    <string name="sessionFormDate">date</string>
-    <string name="sessionFormBreakDuration">breakDuration</string>
-    <string name="sessionFormRating">rating</string>
-    <string name="sessionFormComment">comment</string>
-    <string name="sessionFormSubmit">add row</string>
     <string name="sessionSummaryComment">Comment</string>
     <string name="sessionSummaryPracticeTime">Practice time</string>
     <string name="sessionSummaryBreakTime">Break time</string>
     <string name="saveSessionTitle">Summary</string>
     <string name="sessionSummarySaveButton">Save session</string>
+    <string name="endSessionAlertOk">End</string>
+    <string name="endSessionAlertCancel">Cancel</string>
+    <string name="endSessionDialogCommentField">Optional Comment</string>
+    <string name="endSessionDialogTitle">End session</string>
 </resources>
