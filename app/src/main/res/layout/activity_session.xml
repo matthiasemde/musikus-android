@@ -10,40 +10,15 @@ xmlns:tools="http://schemas.android.com/tools"
     <ListView
         android:id="@+id/currentSections"
         android:layout_width="match_parent"
-        android:layout_height="130dp"
+        android:layout_height="260dp"
         android:layout_margin="20dp"
+        android:fadeScrollbars="false"
+        app:layout_constraintBottom_toTopOf="@+id/endSession"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/textView2"
-        android:fadeScrollbars="false"/>
-
-    <EditText
-        android:id="@+id/rating"
-        android:layout_width="120dp"
-        android:layout_height="wrap_content"
-        android:ems="10"
-        android:hint="@string/sessionFormRating"
-        android:inputType="number"
-        android:minHeight="48dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@id/comment"
-        app:layout_constraintBottom_toBottomOf="@id/comment"/>
-
-    <EditText
-        android:id="@+id/comment"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:ems="10"
-        android:hint="@string/sessionFormComment"
-        android:inputType="textMultiLine"
-        android:minHeight="48dp"
-        android:layout_margin="20dp"
-        app:layout_constraintEnd_toStartOf="@id/rating"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/addSession" />
+        app:layout_constraintStart_toStartOf="parent" />
 
     <Button
-        android:id="@+id/addSession"
+        android:id="@+id/endSession"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="128dp"
@@ -74,17 +49,6 @@ xmlns:tools="http://schemas.android.com/tools"
         android:textStyle="bold"
         app:layout_constraintBottom_toTopOf="@+id/currentSections"
         app:layout_constraintStart_toStartOf="@+id/currentSections" />
-
-    <TextView
-        android:id="@+id/textView2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
-        android:text="End this Session:"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        app:layout_constraintBottom_toTopOf="@+id/comment"
-        app:layout_constraintStart_toStartOf="@id/comment"/>
 
     <TextView
         android:id="@+id/practiceTimer"

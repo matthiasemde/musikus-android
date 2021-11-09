@@ -1,5 +1,6 @@
 package de.practicetime.practicetime
 
+import android.content.DialogInterface
 import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
@@ -9,12 +10,12 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
-import com.google.android.material.snackbar.Snackbar
 import de.practicetime.practicetime.entities.*
 import kotlinx.coroutines.launch
 import java.util.*
@@ -33,6 +34,9 @@ class SessionActivity : AppCompatActivity() {
 
         openDatabase()
 
+        // start the practice timer Runnable
+        practiceTimer()
+
         // initialize adapter and recyclerView for showing category buttons from database
         var categories = ArrayList<Category>()
         var categoryAdapter = CategoryAdapter(categories, ::categoryPressed)
@@ -50,13 +54,50 @@ class SessionActivity : AppCompatActivity() {
             categoryAdapter.notifyDataSetChanged()
         }
 
-        // add session button functionality
-        findViewById<Button>(R.id.addSession).setOnClickListener {
-            endSession()
+        // instantiate the builder for the alert dialog
+        val endSessionDialogBuilder = AlertDialog.Builder(this)
+
+        val inflater = this.layoutInflater;
+
+        val dialogView = inflater.inflate(R.layout.dialog_view_end_session, null)
+
+        val dialogRatingBar = dialogView.findViewById<RatingBar>(R.id.dialogRatingBar)
+        val dialogComment = dialogView.findViewById<EditText>(R.id.dialogComment)
+
+        endSessionDialogBuilder.apply {
+            setView(dialogView)
+            setPositiveButton(R.string.endSessionAlertOk,
+                DialogInterface.OnClickListener { dialog, _ ->
+                    val rating = dialogRatingBar.rating.toInt()
+                    if(rating > 0) {
+                        endSession(rating, dialogComment.text.toString())
+                    } else {
+                        Toast.makeText(this@SessionActivity, "Please Rate", Toast.LENGTH_SHORT).show();
+                    }
+                })
+            setNegativeButton(android.R.string.cancel,
+                DialogInterface.OnClickListener { dialog, _ ->
+                    dialog.cancel()
+                })
         }
 
-        // start the practice timer Runnable
-        practiceTimer()
+        // create the end session dialog
+        val endSessionDialog: AlertDialog = endSessionDialogBuilder.create()
+
+
+        // end session button functionality
+        findViewById<Button>(R.id.endSession).setOnClickListener {
+            // show the end session dialog
+            endSessionDialog.show()
+            endSessionDialog.also {
+                val positiveButton = it.getButton(AlertDialog.BUTTON_POSITIVE)
+                Log.d("TAG", positiveButton.toString())
+                positiveButton.isEnabled = false
+                dialogRatingBar.setOnRatingBarChangeListener { _, _, _ ->
+                    positiveButton.isEnabled = true
+                }
+            }
+        }
     }
 
     private fun goToSessionSummary() {
@@ -79,7 +120,7 @@ class SessionActivity : AppCompatActivity() {
         val categoryId = categoryView.tag as Int
         val now = Date().time / 1000L
 
-        findViewById<Button>(R.id.addSession).isEnabled = true
+        findViewById<Button>(R.id.endSession).isEnabled = true
         val sessBtn = categoryView as Button
         findViewById<TextView>(R.id.activeSectionName).text = sessBtn.text.toString()
 
@@ -113,56 +154,42 @@ class SessionActivity : AppCompatActivity() {
         Log.d("TAG", "Category $categoryId Pressed!")
     }
 
-    private fun endSession() {
-        val rating = findViewById<EditText>(R.id.rating).text.toString()
-        val comment = findViewById<EditText>(R.id.comment).text.toString()
+    private fun endSession(rating: Int, comment: String?) {
+        // finish up the final section
+        var lastSection = sectionBuffer.last()
 
-        if (rating.isEmpty()) {
-            Snackbar.make(findViewById(android.R.id.content),
-                "Please fill out all Session fields!",
-                Snackbar.LENGTH_SHORT)
-                .show()
-        } else {
-            // finish up the final section
-            var lastSection = sectionBuffer.last()
+        // store the duration of the now ending section
+        lastSection.duration = (
+                Date().time / 1000 -
+                        lastSection.timestamp
+                ).toInt()
 
-            // store the duration of the now ending section
-            lastSection.duration = (
-                    Date().time / 1000 -
-                            lastSection.timestamp
-                    ).toInt()
+        // TODO: Check if comment is empty -> insert null
+        // id=0 means not assigned, autoGenerate=true will do it for us
+        val newSession = PracticeSession(
+            0,
+            0,
+            rating.toInt(),
+            comment ,
+            1
+        )
 
-            // TODO: Check if comment is empty -> insert null
-            // id=0 means not assigned, autoGenerate=true will do it for us
-            val newSession = PracticeSession(
-                0,
-                0,
-                rating.toInt(),
-                comment ,
-                1
-            )
+        lifecycleScope.launch {
+            // create a new session row and save its id
+            val sessionId = dao?.insertSession(newSession)
 
-            lifecycleScope.launch {
-                // create a new session row and save its id
-                val sessionId = dao?.insertSession(newSession)
-
-                // add the new sessionId to every section in the section buffer
-                for(section in sectionBuffer) {
-                    section.practice_session_id = sessionId?.toInt()
-                    // and insert them into the database
-                    dao?.insertSection(section)
-                }
-
-                // show the new session
-//                fillSessionsListView()
-
-                // reset section buffer and session status
-                sectionBuffer.clear()
-                fillSectionListView(sectionBuffer)
-                sessionActive = false
+            // add the new sessionId to every section in the section buffer
+            for(section in sectionBuffer) {
+                section.practice_session_id = sessionId?.toInt()
+                // and insert them into the database
+                dao?.insertSection(section)
             }
-            goToSessionSummary()
+
+            // reset section buffer and session status
+            sectionBuffer.clear()
+            sessionActive = false
         }
+        goToSessionSummary()
     }
 
     // calling practiceTimer will start a handler, which executes the code in the post() method once per second
@@ -272,4 +299,3 @@ class CategoryAdapter(
     // Return the size of your dataset (invoked by the layout manager)
     override fun getItemCount() = dataSet.size
 }
-
