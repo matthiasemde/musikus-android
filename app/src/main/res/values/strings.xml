@@ -9,5 +9,5 @@
     <string name="endSessionAlertOk">End</string>
     <string name="endSessionAlertCancel">Continue practicing</string>
     <string name="endSessionDialogCommentField">Comment (optional)</string>
-    <string name="endSessionDialogTitle">End session</string>
+    <string name="endSessionDialogTitle">Rate your session</string>
 </resources>
