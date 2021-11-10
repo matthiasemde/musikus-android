@@ -54,8 +54,6 @@ class ActiveSessionFragment : Fragment(R.layout.fragment_active_session) {
         }
 
         initEndSessionDialog()
-
-
     }
 
     private fun initEndSessionDialog() {
@@ -249,6 +247,9 @@ class ActiveSessionFragment : Fragment(R.layout.fragment_active_session) {
         adapter.notifyDataSetChanged()
     }
 
+    /**
+     *  Adapter for the Category selection button grid.
+     */
 
     private inner class CategoryAdapter(
         private val dataSet: ArrayList<Category>,
