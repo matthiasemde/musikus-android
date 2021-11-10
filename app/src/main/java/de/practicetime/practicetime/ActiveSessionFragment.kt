@@ -15,6 +15,7 @@ import androidx.navigation.Navigation
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import de.practicetime.practicetime.entities.Category
 import de.practicetime.practicetime.entities.PracticeSection
 import de.practicetime.practicetime.entities.PracticeSession
@@ -32,6 +33,8 @@ class ActiveSessionFragment : Fragment(R.layout.fragment_active_session) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         openDatabase()
+
+        requireView().findViewById<FloatingActionButton>(R.id.fab_stop).hide()
 
         // start the practice timer Runnable
         practiceTimer()
@@ -78,7 +81,7 @@ class ActiveSessionFragment : Fragment(R.layout.fragment_active_session) {
         // create the end session dialog
         val endSessionDialog: AlertDialog = endSessionDialogBuilder.create()
         // end session button functionality
-        requireView().findViewById<Button>(R.id.endSession).setOnClickListener {
+        requireView().findViewById<FloatingActionButton>(R.id.fab_stop).setOnClickListener {
             // show the end session dialog
             endSessionDialog.show()
             endSessionDialog.also {
@@ -112,7 +115,7 @@ class ActiveSessionFragment : Fragment(R.layout.fragment_active_session) {
         val categoryId = categoryView.tag as Int
         val now = Date().time / 1000L
 
-        requireView().findViewById<Button>(R.id.endSession).isEnabled = true
+        requireView().findViewById<FloatingActionButton>(R.id.fab_stop).show()
         val sessBtn = categoryView as Button
         requireView().findViewById<TextView>(R.id.activeSectionName).text = sessBtn.text.toString()
 

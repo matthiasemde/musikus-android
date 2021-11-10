@@ -1,12 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    tools:context=".ActiveSessionFragment">
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        tools:context=".ActiveSessionFragment">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
@@ -56,6 +60,16 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
+    <TextView
+        android:id="@+id/textView2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Categories:"
+        android:textSize="20sp"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="20dp"
+        android:textStyle="bold"/>
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/categoryList"
         android:layout_width="match_parent"
@@ -76,6 +90,7 @@
         android:layout_marginBottom="16dp"
         android:text="Finished sections (this Session):"
         android:textSize="20sp"
+        android:layout_marginStart="20dp"
         android:textStyle="bold"/>
 
     <ListView
@@ -86,12 +101,15 @@
         android:layout_margin="20dp"
         android:fadeScrollbars="false"/>
 
-    <Button
-        android:id="@+id/endSession"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:enabled="false"
-        android:text="End Session" />
-
 
 </LinearLayout>
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fab_stop"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|right"
+        android:layout_margin="16dp"
+        app:srcCompat="@drawable/ic_stop"/>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
