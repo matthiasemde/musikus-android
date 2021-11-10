@@ -3,11 +3,11 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
-    app:startDestination="@id/sessionFragment">
+    app:startDestination="@id/sessionListFragment">
 
     <fragment
-        android:id="@+id/sessionFragment"
-        android:name="de.practicetime.practicetime.SessionFragment"
+        android:id="@+id/sessionListFragment"
+        android:name="de.practicetime.practicetime.SessionListFragment"
         android:label="fragment_session"
         tools:layout="@layout/fragment_sessions_list" />
     <fragment

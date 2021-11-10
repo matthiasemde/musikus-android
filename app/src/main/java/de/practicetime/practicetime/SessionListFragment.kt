@@ -16,7 +16,7 @@ import kotlinx.coroutines.launch
 
 private var dao: PTDao? = null
 
-class SessionFragment : Fragment(R.layout.fragment_sessions_list) {
+class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
 
         openDatabase()
