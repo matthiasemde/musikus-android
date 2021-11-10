@@ -10,4 +10,5 @@
     <string name="sessionSummaryBreakTime">Break time</string>
     <string name="saveSessionTitle">Summary</string>
     <string name="sessionSummarySaveButton">Save session</string>
+    <string name="sessionListTitle">History</string>
 </resources>
