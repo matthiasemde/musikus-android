@@ -33,6 +33,8 @@ android {
 }
 
 dependencies {
+    implementation 'androidx.legacy:legacy-support-v4:1.0.0'
+
     // Room
     def room_version = "2.3.0"
     implementation "androidx.room:room-runtime:$room_version"
@@ -44,6 +46,12 @@ dependencies {
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.2'
     // Lifecycle-Scope support for Coroutines
     implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.4.0'
+
+    // Navigation
+    def nav_version = "2.3.5"
+    implementation "androidx.navigation:navigation-fragment-ktx:$nav_version"
+    implementation "androidx.navigation:navigation-ui-ktx:$nav_version"
+
 
     implementation 'androidx.core:core-ktx:1.7.0'
     implementation 'androidx.appcompat:appcompat:1.3.1'

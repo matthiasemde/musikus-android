@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/metronomeFragment"
+        android:enabled="true"
+        android:icon="@drawable/ic_metronome"
+        android:title="Metronome"/>
+    <item
+        android:id="@+id/sessionFragment"
+        android:enabled="true"
+        android:icon="@drawable/ic_sessions"
+        android:title="Sessions"/>
+    <item
+        android:id="@+id/goalsFragment"
+        android:enabled="true"
+        android:icon="@drawable/ic_goals"
+        android:title="Goals"/>
+</menu>

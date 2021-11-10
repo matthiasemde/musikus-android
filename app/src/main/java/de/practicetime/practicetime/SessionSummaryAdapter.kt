@@ -1,14 +1,15 @@
 package de.practicetime.practicetime
 
 import android.content.Context
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.*
+import android.widget.RatingBar
+import android.widget.TextView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import de.practicetime.practicetime.entities.*
+import de.practicetime.practicetime.entities.SectionWithCategory
+import de.practicetime.practicetime.entities.SessionWithSectionsWithCategories
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
