@@ -78,8 +78,8 @@ class SessionSummaryAdapter(
             practiceDuration % 60
         )
 
-        sectionsWithCategories.forEach { (section, category) -> Log.d("an_id", "$category: ${section.duration}") }
         // set the sections and update the section adapter about the change
+        viewHolder.sectionsWithCategories.clear()
         viewHolder.sectionsWithCategories.addAll(sectionsWithCategories)
         viewHolder.sectionList.adapter?.notifyDataSetChanged()
 
