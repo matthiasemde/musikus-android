@@ -1,10 +1,12 @@
 package de.practicetime.practicetime
 
-import android.content.Intent
 import android.os.Bundle
+import android.view.View
 import android.widget.Button
-import androidx.appcompat.app.AppCompatActivity
+import androidx.activity.OnBackPressedCallback
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.Navigation
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
@@ -13,20 +15,28 @@ import kotlinx.coroutines.launch
 
 private var dao: PTDao? = null
 
-class SessionSummaryActivity : AppCompatActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_session_summary)
+
+class SessionSummaryFragment : Fragment(R.layout.fragment_session_summary) {
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+
+        // prevent going back to active Session while in Summary Screen
+        requireActivity().onBackPressedDispatcher.addCallback(object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                // ain't doin' nothin'
+            }
+        })
+
 
         // load the database
         openDatabase()
 
         // initialize adapter and recyclerView for showing category buttons from database
         val sessionWithSectionsWithCategories = ArrayList<SessionWithSectionsWithCategories>()
-        val sessionSummaryAdapter = SessionSummaryAdapter(this, sessionWithSectionsWithCategories)
+        val sessionSummaryAdapter = SessionSummaryAdapter(requireContext(), sessionWithSectionsWithCategories)
 
-        val sessionSummary = findViewById<RecyclerView>(R.id.sessionSummary)
-        sessionSummary.layoutManager = LinearLayoutManager(this)
+        val sessionSummary = view.findViewById<RecyclerView>(R.id.sessionSummary)
+        sessionSummary.layoutManager = LinearLayoutManager(requireContext())
         sessionSummary.adapter = sessionSummaryAdapter
 
         lifecycleScope.launch {
@@ -36,19 +46,18 @@ class SessionSummaryActivity : AppCompatActivity() {
             sessionSummaryAdapter.notifyDataSetChanged()
         }
 
-        val saveSession = findViewById<Button>(R.id.save)
+        val saveSession = view.findViewById<Button>(R.id.save)
         saveSession.setOnClickListener{goToSessionList()}
     }
 
     private fun goToSessionList() {
-        val intent = Intent(this, MainActivity::class.java)
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-        startActivity(intent)
+        Navigation.findNavController(requireView())
+            .navigate(R.id.action_sessionSummaryFragment_to_sessionListFragment)
     }
 
     private fun openDatabase() {
         val db = Room.databaseBuilder(
-            applicationContext,
+            requireContext(),
             PTDatabase::class.java, "pt-database"
         ).build()
         dao = db.ptDao

@@ -1,12 +1,12 @@
 package de.practicetime.practicetime
 
 import android.content.Context
-import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
 import android.view.View
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.Navigation
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
@@ -40,9 +40,11 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
 
         val fab: View = view.findViewById(R.id.fab)
         fab.setOnClickListener {
-            val intent = Intent(view.context, SessionActivity::class.java)
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-            startActivity(intent)
+            // Navigate to the active session screen. Since we defined the <action> in our navigation
+            // graph (nav_graph.xml), we can call the NavController to execute it by passing the action's id.
+            // The NavController will take care of LayoutInflating, Backstack and Tab presses for us.
+            Navigation.findNavController(view)
+                .navigate(R.id.action_sessionListFragment_to_activeSessionFragment)
         }
 
     }

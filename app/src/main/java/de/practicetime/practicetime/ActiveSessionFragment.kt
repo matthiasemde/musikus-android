@@ -1,7 +1,6 @@
 package de.practicetime.practicetime
 
 import android.content.DialogInterface
-import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -11,12 +10,15 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.Navigation
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
-import de.practicetime.practicetime.entities.*
+import de.practicetime.practicetime.entities.Category
+import de.practicetime.practicetime.entities.PracticeSection
+import de.practicetime.practicetime.entities.PracticeSession
 import kotlinx.coroutines.launch
 import java.util.*
 import kotlin.collections.ArrayList
@@ -27,11 +29,9 @@ private val sectionBuffer = ArrayList<PracticeSection>()
 private var sessionActive = false   // keep track of whether a session is active
 private var activeCategories: List<Category>? = listOf<Category>()
 
-class SessionActivity : AppCompatActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_session)
+class ActiveSessionFragment : Fragment(R.layout.fragment_active_session) {
 
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         openDatabase()
 
         // start the practice timer Runnable
@@ -41,8 +41,8 @@ class SessionActivity : AppCompatActivity() {
         var categories = ArrayList<Category>()
         var categoryAdapter = CategoryAdapter(categories, ::categoryPressed)
 
-        val categoryList = findViewById<RecyclerView>(R.id.categoryList)
-        categoryList.layoutManager = GridLayoutManager(this, 2)
+        val categoryList = view.findViewById<RecyclerView>(R.id.categoryList)
+        categoryList.layoutManager = GridLayoutManager(requireContext(), 2)
         categoryList.adapter = categoryAdapter
 
         lifecycleScope.launch {
@@ -55,7 +55,7 @@ class SessionActivity : AppCompatActivity() {
         }
 
         // instantiate the builder for the alert dialog
-        val endSessionDialogBuilder = AlertDialog.Builder(this)
+        val endSessionDialogBuilder = AlertDialog.Builder(requireContext())
 
         val inflater = this.layoutInflater;
 
@@ -69,10 +69,10 @@ class SessionActivity : AppCompatActivity() {
             setPositiveButton(R.string.endSessionAlertOk,
                 DialogInterface.OnClickListener { dialog, _ ->
                     val rating = dialogRatingBar.rating.toInt()
-                    if(rating > 0) {
+                    if (rating > 0) {
                         endSession(rating, dialogComment.text.toString())
                     } else {
-                        Toast.makeText(this@SessionActivity, "Please Rate", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(requireContext(), "Please Rate", Toast.LENGTH_SHORT).show();
                     }
                 })
             setNegativeButton(R.string.endSessionAlertCancel,
@@ -86,7 +86,7 @@ class SessionActivity : AppCompatActivity() {
 
 
         // end session button functionality
-        findViewById<Button>(R.id.endSession).setOnClickListener {
+        view.findViewById<Button>(R.id.endSession).setOnClickListener {
             // show the end session dialog
             endSessionDialog.show()
             endSessionDialog.also {
@@ -101,14 +101,13 @@ class SessionActivity : AppCompatActivity() {
     }
 
     private fun goToSessionSummary() {
-        val intent = Intent(this, SessionSummaryActivity::class.java)
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-        startActivity(intent)
+        Navigation.findNavController(requireView())
+            .navigate(R.id.action_activeSessionFragment_to_sessionSummaryFragment)
     }
 
     private fun openDatabase() {
         val db = Room.databaseBuilder(
-            applicationContext,
+            requireContext(),
             PTDatabase::class.java, "pt-database"
         ).build()
         dao = db.ptDao
@@ -120,13 +119,13 @@ class SessionActivity : AppCompatActivity() {
         val categoryId = categoryView.tag as Int
         val now = Date().time / 1000L
 
-        findViewById<Button>(R.id.endSession).isEnabled = true
+        requireView().findViewById<Button>(R.id.endSession).isEnabled = true
         val sessBtn = categoryView as Button
-        findViewById<TextView>(R.id.activeSectionName).text = sessBtn.text.toString()
+        requireView().findViewById<TextView>(R.id.activeSectionName).text = sessBtn.text.toString()
 
         // change background color of button
         // if there is no active session set sessionActive to true
-        if(!sessionActive) {
+        if (!sessionActive) {
             sessionActive = true
         } else {    // Session should be switched
             var lastSection = sectionBuffer.last()
@@ -170,7 +169,7 @@ class SessionActivity : AppCompatActivity() {
             0,
             0,
             rating.toInt(),
-            comment ,
+            comment,
             1
         )
 
@@ -179,7 +178,7 @@ class SessionActivity : AppCompatActivity() {
             val sessionId = dao?.insertSession(newSession)
 
             // add the new sessionId to every section in the section buffer
-            for(section in sectionBuffer) {
+            for (section in sectionBuffer) {
                 section.practice_session_id = sessionId?.toInt()
                 // and insert them into the database
                 dao?.insertSection(section)
@@ -195,8 +194,8 @@ class SessionActivity : AppCompatActivity() {
     // calling practiceTimer will start a handler, which executes the code in the post() method once per second
     private fun practiceTimer() {
         // get the text views.
-        val timeView = findViewById<TextView>(R.id.practiceTimer)
-        val totalTimeView = findViewById<TextView>(R.id.totalTime)
+        val timeView = requireView().findViewById<TextView>(R.id.practiceTimer)
+        val totalTimeView = requireView().findViewById<TextView>(R.id.totalTime)
 
         // creates a new Handler
         Handler(Looper.getMainLooper()).also {
@@ -248,54 +247,56 @@ class SessionActivity : AppCompatActivity() {
         sections.forEach {
             listItems.add(activeCategories?.get(it.category_id - 1)?.name + "   |   duration: " + it.duration)
         }
-        val sectionsList = findViewById<ListView>(R.id.currentSections)
-        var adapter = ArrayAdapter<String>(this@SessionActivity, android.R.layout.simple_list_item_1, listItems)
+        val sectionsList = requireView().findViewById<ListView>(R.id.currentSections)
+        var adapter =
+            ArrayAdapter<String>(requireContext(), android.R.layout.simple_list_item_1, listItems)
         sectionsList.adapter = adapter
         adapter.notifyDataSetChanged()
     }
-}
 
-class CategoryAdapter(
-    private val dataSet: ArrayList<Category>,
-    private val callback: (input: View) -> Unit,
-) : RecyclerView.Adapter<CategoryAdapter.ViewHolder>() {
 
-    inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val button: Button = view.findViewById(R.id.button)
+    private inner class CategoryAdapter(
+        private val dataSet: ArrayList<Category>,
+        private val callback: (input: View) -> Unit,
+    ) : RecyclerView.Adapter<CategoryAdapter.ViewHolder>() {
 
-        init {
-            // Define click listener for the ViewHolder's View.
-            button.setOnClickListener(callback)
-        }
-    }
+        inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+            val button: Button = view.findViewById(R.id.button)
 
-    // Create new views (invoked by the layout manager)
-    override fun onCreateViewHolder(viewGroup: ViewGroup, viewType: Int): ViewHolder {
-        // Create a new view, which defines the UI of the list item
-        val view = LayoutInflater.from(viewGroup.context)
-            .inflate(R.layout.view_category_item, viewGroup, false)
-
-        return ViewHolder(view)
-    }
-
-    // Replace the contents of a view (invoked by the layout manager)
-    override fun onBindViewHolder(viewHolder: ViewHolder, position: Int) {
-        // Get element from your dataset at this position
-        val category = dataSet[position]
-
-        // store the id of the category on the button
-        viewHolder.button.tag = category.id
-
-        // archived categories should not be displayed
-        if(category.archived) {
-            viewHolder.button.visibility = View.GONE
+            init {
+                // Define click listener for the ViewHolder's View.
+                button.setOnClickListener(callback)
+            }
         }
 
-        // contents of the view with that element
-        viewHolder.button.text = category.name
-        viewHolder.button.setBackgroundColor(category.color)
-    }
+        // Create new views (invoked by the layout manager)
+        override fun onCreateViewHolder(viewGroup: ViewGroup, viewType: Int): ViewHolder {
+            // Create a new view, which defines the UI of the list item
+            val view = LayoutInflater.from(viewGroup.context)
+                .inflate(R.layout.view_category_item, viewGroup, false)
 
-    // Return the size of your dataset (invoked by the layout manager)
-    override fun getItemCount() = dataSet.size
+            return ViewHolder(view)
+        }
+
+        // Replace the contents of a view (invoked by the layout manager)
+        override fun onBindViewHolder(viewHolder: ViewHolder, position: Int) {
+            // Get element from your dataset at this position
+            val category = dataSet[position]
+
+            // store the id of the category on the button
+            viewHolder.button.tag = category.id
+
+            // archived categories should not be displayed
+            if (category.archived) {
+                viewHolder.button.visibility = View.GONE
+            }
+
+            // contents of the view with that element
+            viewHolder.button.text = category.name
+            viewHolder.button.setBackgroundColor(category.color)
+        }
+
+        // Return the size of your dataset (invoked by the layout manager)
+        override fun getItemCount() = dataSet.size
+    }
 }
