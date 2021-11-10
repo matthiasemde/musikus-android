@@ -1,6 +1,5 @@
 package de.practicetime.practicetime
 
-import android.content.DialogInterface
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -54,11 +53,15 @@ class ActiveSessionFragment : Fragment(R.layout.fragment_active_session) {
             categoryAdapter.notifyDataSetChanged()
         }
 
+        initEndSessionDialog()
+
+
+    }
+
+    private fun initEndSessionDialog() {
         // instantiate the builder for the alert dialog
         val endSessionDialogBuilder = AlertDialog.Builder(requireContext())
-
         val inflater = this.layoutInflater;
-
         val dialogView = inflater.inflate(R.layout.dialog_view_end_session, null)
 
         val dialogRatingBar = dialogView.findViewById<RatingBar>(R.id.dialogRatingBar)
@@ -66,35 +69,27 @@ class ActiveSessionFragment : Fragment(R.layout.fragment_active_session) {
 
         endSessionDialogBuilder.apply {
             setView(dialogView)
-            setPositiveButton(R.string.endSessionAlertOk,
-                DialogInterface.OnClickListener { dialog, _ ->
-                    val rating = dialogRatingBar.rating.toInt()
-                    if (rating > 0) {
-                        endSession(rating, dialogComment.text.toString())
-                    } else {
-                        Toast.makeText(requireContext(), "Please Rate", Toast.LENGTH_SHORT).show();
-                    }
-                })
-            setNegativeButton(R.string.endSessionAlertCancel,
-                DialogInterface.OnClickListener { dialog, _ ->
-                    dialog.cancel()
-                })
+            setPositiveButton(R.string.endSessionAlertOk) { dialog, _ ->
+                val rating = dialogRatingBar.rating.toInt()
+                endSession(rating, dialogComment.text.toString())
+            }
+            setNegativeButton(R.string.endSessionAlertCancel) { dialog, _ ->
+                dialog.cancel()
+            }
         }
-
         // create the end session dialog
         val endSessionDialog: AlertDialog = endSessionDialogBuilder.create()
-
-
         // end session button functionality
-        view.findViewById<Button>(R.id.endSession).setOnClickListener {
+        requireView().findViewById<Button>(R.id.endSession).setOnClickListener {
             // show the end session dialog
             endSessionDialog.show()
             endSessionDialog.also {
                 val positiveButton = it.getButton(AlertDialog.BUTTON_POSITIVE)
                 Log.d("TAG", positiveButton.toString())
                 positiveButton.isEnabled = false
-                dialogRatingBar.setOnRatingBarChangeListener { _, _, _ ->
-                    positiveButton.isEnabled = true
+                dialogRatingBar.setOnRatingBarChangeListener { _, rating, _ ->
+                    positiveButton.isEnabled = rating.toInt() > 0
+                    Log.d("TAG", "Rating: ${rating.toInt()}");
                 }
             }
         }
