@@ -8,23 +8,22 @@
 
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/appbar"
-
         android:layout_width="match_parent"
-        android:layout_height="100dp"
+        android:layout_height="128dp"
         android:background="@android:color/white">
 
         <com.google.android.material.appbar.CollapsingToolbarLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            app:collapsedTitleTextAppearance="@style/TextAppearance.AppCompat.Body1"
-            app:contentScrim="@android:color/white"
-
             app:expandedTitleMarginStart="16dp"
+            app:expandedTitleMarginBottom="28dp"
+            app:expandedTitleTextAppearance="@style/TextAppearance.MaterialComponents.Headline3"
+            app:collapsedTitleTextAppearance="@style/TextAppearance.MaterialComponents.Headline6"
+            app:contentScrim="@android:color/white"
             app:layout_scrollFlags="scroll|exitUntilCollapsed"
             app:title="@string/sessionListTitle"
             app:titleCollapseMode="scale"
             app:toolbarId="@+id/toolbar">
-
 
             <androidx.appcompat.widget.Toolbar
                 android:id="@+id/toolbar"
@@ -34,33 +33,19 @@
         </com.google.android.material.appbar.CollapsingToolbarLayout>
     </com.google.android.material.appbar.AppBarLayout>
 
-    <androidx.core.widget.NestedScrollView
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/sessionList"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior"/>
 
-
-        app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior">
-
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            tools:context=".SessionsListActivity">
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/sessionList"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_marginStart="8dp"
-                android:layout_marginTop="8dp"
-                android:layout_marginEnd="8dp"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintStart_toStartOf="parent"/>
-
-
-        </androidx.constraintlayout.widget.ConstraintLayout>
-
-    </androidx.core.widget.NestedScrollView>
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fab"
