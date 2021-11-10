@@ -36,7 +36,8 @@ class SessionSummaryAdapter(
 
             // define the layout and adapter for the section list
             val sectionAdapter = SectionAdapter(sectionsWithCategories)
-            sectionList.layoutManager = LinearLayoutManager(context)
+            val layoutManager = LinearLayoutManager(context)
+            sectionList.layoutManager = layoutManager
             sectionList.adapter = sectionAdapter
         }
     }
