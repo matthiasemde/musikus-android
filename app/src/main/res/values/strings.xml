@@ -7,7 +7,7 @@
     <string name="sessionSummarySaveButton">Save session</string>
     <string name="sessionListTitle">History</string>
     <string name="endSessionAlertOk">End</string>
-    <string name="endSessionAlertCancel">Cancel</string>
+    <string name="endSessionAlertCancel">Continue practicing</string>
     <string name="endSessionDialogCommentField">Optional Comment</string>
     <string name="endSessionDialogTitle">End session</string>
 </resources>

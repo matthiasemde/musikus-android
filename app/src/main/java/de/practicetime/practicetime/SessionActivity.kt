@@ -75,7 +75,7 @@ class SessionActivity : AppCompatActivity() {
                         Toast.makeText(this@SessionActivity, "Please Rate", Toast.LENGTH_SHORT).show();
                     }
                 })
-            setNegativeButton(android.R.string.cancel,
+            setNegativeButton(R.string.endSessionAlertCancel,
                 DialogInterface.OnClickListener { dialog, _ ->
                     dialog.cancel()
                 })
