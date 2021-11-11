@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -15,7 +16,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
-import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
 import de.practicetime.practicetime.entities.Category
 import de.practicetime.practicetime.entities.PracticeSection
 import de.practicetime.practicetime.entities.PracticeSession
@@ -36,7 +37,7 @@ class ActiveSessionActivity : AppCompatActivity() {
 
         openDatabase()
 
-        findViewById<FloatingActionButton>(R.id.fab_stop).hide()
+//        findViewById<FloatingActionButton>(R.id.fab_stop).hide()
 
         // start the practice timer Runnable
         practiceTimer()
@@ -59,6 +60,30 @@ class ActiveSessionActivity : AppCompatActivity() {
         }
 
         initEndSessionDialog()
+
+        val fabInfo = findViewById<ExtendedFloatingActionButton>(R.id.fab_info_popup)
+
+        val fabPause = findViewById<ImageButton>(R.id.bottom_pause)
+        fabPause.setOnClickListener {
+            if(fabInfo.isShown) {
+                fabInfo.hide()
+                fabPause.setImageResource(R.drawable.ic_pause)
+                fabPause.setBackgroundResource(
+                    TypedValue().also {
+                        theme.resolveAttribute(
+                            android.R.attr.selectableItemBackgroundBorderless,
+                            it,
+                            true
+                        )
+                    }.resourceId)
+            } else {
+                fabInfo.show()
+                fabPause.setImageResource(R.drawable.ic_play)
+                fabPause.setBackgroundResource(R.drawable.ripple_oval)
+            }
+        }
+
+
     }
 
     private fun initEndSessionDialog() {
@@ -82,8 +107,9 @@ class ActiveSessionActivity : AppCompatActivity() {
         }
         // create the end session dialog
         val endSessionDialog: AlertDialog = endSessionDialogBuilder.create()
+
         // end session button functionality
-        findViewById<FloatingActionButton>(R.id.fab_stop).setOnClickListener {
+        findViewById<ImageButton>(R.id.bottom_stop).setOnClickListener {
             // show the end session dialog
             endSessionDialog.show()
             endSessionDialog.also {
@@ -110,7 +136,7 @@ class ActiveSessionActivity : AppCompatActivity() {
         val categoryId = categoryView.tag as Int
         val now = Date().time / 1000L
 
-        findViewById<FloatingActionButton>(R.id.fab_stop).show()
+//        findViewById<FloatingActionButton>(R.id.fab_stop).show()
         val sessBtn = categoryView as Button
         findViewById<TextView>(R.id.activeSectionName).text = sessBtn.text.toString()
 
