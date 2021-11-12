@@ -27,8 +27,10 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
         val sessionSummaryAdapter = SessionSummaryAdapter(view.context, sessionWithSectionsWithCategories)
 
         val sessionList = view.findViewById<RecyclerView>(R.id.sessionList)
-        val layoutManager = LinearLayoutManager(view.context).apply { reverseLayout = true }
-        sessionList.layoutManager = layoutManager
+        LinearLayoutManager(view.context).also { llm ->
+            llm.reverseLayout = true
+            sessionList.layoutManager = llm
+        }
         sessionList.adapter = sessionSummaryAdapter
 
         lifecycleScope.launch {

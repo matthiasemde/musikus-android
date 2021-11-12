@@ -1,9 +1,11 @@
 package de.practicetime.practicetime
 
 import android.content.Context
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.LinearLayout
 import android.widget.RatingBar
 import android.widget.TextView
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -20,20 +22,24 @@ class SessionSummaryAdapter(
 ) : RecyclerView.Adapter<SessionSummaryAdapter.ViewHolder>() {
 
     inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        val summaryDayLayout: LinearLayout = view.findViewById(R.id.summaryDayLayout)
         val summaryDate: TextView = view.findViewById(R.id.summaryDate)
-        val breakTime: TextView = view.findViewById(R.id.breakTime)
-        val practiceTime: TextView = view.findViewById(R.id.practiceTime)
+        val summaryDayDuration: TextView = view.findViewById(R.id.summaryDayDuration)
+
+        val summaryTime: TextView = view.findViewById(R.id.summaryTime)
+        val breakDuration: TextView = view.findViewById(R.id.breakDuration)
+        val practiceDuration: TextView = view.findViewById(R.id.practiceDuration)
         val sectionList: RecyclerView = view.findViewById(R.id.sectionList)
         val ratingBar: RatingBar = view.findViewById(R.id.ratingBar)
         val commentField: TextView = view.findViewById(R.id.commentField)
 
         val sectionsWithCategories = ArrayList<SectionWithCategory>()
 
-        //define the date format
-        val sdf: SimpleDateFormat = SimpleDateFormat("dd.MM.yyyy | HH:mm")
+        //define the time and date format
+        val timeFormat: SimpleDateFormat = SimpleDateFormat("HH:mm")
+        val dateFormat: SimpleDateFormat = SimpleDateFormat("E dd.MM.yyyy")
 
         init {
-
             // define the layout and adapter for the section list
             val sectionAdapter = SectionAdapter(sectionsWithCategories)
             val layoutManager = LinearLayoutManager(context)
@@ -56,16 +62,60 @@ class SessionSummaryAdapter(
         // Get element from your dataset at this position
         val (session, sectionsWithCategories) = sessionsWithSectionsWithCategories[position]
 
-        // set the date field accordingly
-        viewHolder.summaryDate.text = viewHolder.sdf.format(Date(sectionsWithCategories.first().section.timestamp * 1000L))
+        var currentSessionDate: Calendar
 
-        // set the break time text equal to the sessions break duration
-        val breakDuration = session.break_duration
-        viewHolder.breakTime.text = "%dh %dmin".format(
+        Calendar.getInstance().also { newDate ->
+            newDate.timeInMillis = sectionsWithCategories.first().section.timestamp * 1000L
+            currentSessionDate = newDate
+        }
+
+        // detect, if this session is either the latest session or the last session of a day
+        var lastSessionOfTheDay = position == this.itemCount-1
+
+        if(position + 1 < this.itemCount) {
+            var nextSessionDate: Calendar
+
+            Calendar.getInstance().also { newDate ->
+                newDate.timeInMillis = sessionsWithSectionsWithCategories[position + 1]
+                    .sections.first().section.timestamp * 1000L
+                nextSessionDate = newDate
+            }
+            if(currentSessionDate.get(Calendar.DAY_OF_MONTH) !=
+                nextSessionDate.get(Calendar.DAY_OF_MONTH)) {
+                lastSessionOfTheDay = true
+            }
+        }
+
+        // if so, calculate the total time practiced that day and display it
+        if(lastSessionOfTheDay) {
+            var totalPracticeDuration = 0
+            for (i in position downTo 0) {
+                val (_, sectionsWithCategories) = sessionsWithSectionsWithCategories[i]
+                var date: Calendar
+                Calendar.getInstance().also { newDate ->
+                    newDate.timeInMillis = sectionsWithCategories.first().section.timestamp * 1000L
+                    date = newDate
+                }
+                if(currentSessionDate.get(Calendar.DAY_OF_MONTH) !=
+                    date.get(Calendar.DAY_OF_MONTH)) {
+                    break;
+                } else {
+                    sectionsWithCategories.forEach { (section, _) ->
+                        totalPracticeDuration += section.duration ?: 0
+                    }
+                }
+            }
+
+            viewHolder.summaryDayLayout.visibility = View.VISIBLE
+            viewHolder.summaryDate.text = viewHolder.dateFormat.format(currentSessionDate.timeInMillis)
+            viewHolder.summaryDayDuration.text = "%dh %dmin".format(
 //      Todo change back eventually      breakDuration / 3600,
-            breakDuration % 3600 / 60,
-            breakDuration % 60
-        )
+                totalPracticeDuration % 3600 / 60,
+                totalPracticeDuration % 60
+            )
+        } else {
+            viewHolder.summaryDayLayout.visibility = View.GONE
+        }
 
         // compute the total practice time
         var practiceDuration = 0
@@ -73,8 +123,29 @@ class SessionSummaryAdapter(
             practiceDuration += section.duration ?: 0
         }
 
+        val breakDuration = session.break_duration
+
+        // read the start duration from the first section and bring it to milliseconds
+        val startTimestamp = sectionsWithCategories.first().section.timestamp * 1000L
+
+        // set the time field accordingly
+        (viewHolder.timeFormat.format(Date(startTimestamp)) +
+            " - " +
+            viewHolder.timeFormat.format(
+                Date(startTimestamp + (breakDuration + practiceDuration) * 1000L)
+            )).also {
+            viewHolder.summaryTime.text = it
+        }
+
+        // set the break time text equal to the sessions break duration
+        viewHolder.breakDuration.text = "%dh %dmin".format(
+//      Todo change back eventually      breakDuration / 3600,
+            breakDuration % 3600 / 60,
+            breakDuration % 60
+        )
+
         // show the practice duration in the practice duration field
-        viewHolder.practiceTime.text = "%dh %dmin".format(
+        viewHolder.practiceDuration.text = "%dh %dmin".format(
 //      Todo change back eventually      practiceDuration / 3600,
             practiceDuration % 3600 / 60,
             practiceDuration % 60
