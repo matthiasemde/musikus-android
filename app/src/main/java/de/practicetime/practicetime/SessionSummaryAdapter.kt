@@ -80,8 +80,8 @@ class SessionSummaryAdapter(
                     .sections.first().section.timestamp * 1000L
                 nextSessionDate = newDate
             }
-            if(currentSessionDate.get(Calendar.DAY_OF_MONTH) !=
-                nextSessionDate.get(Calendar.DAY_OF_MONTH)) {
+            if(currentSessionDate.get(Calendar.DAY_OF_YEAR) !=
+                nextSessionDate.get(Calendar.DAY_OF_YEAR)) {
                 lastSessionOfTheDay = true
             }
         }
@@ -96,8 +96,8 @@ class SessionSummaryAdapter(
                     newDate.timeInMillis = sectionsWithCategories.first().section.timestamp * 1000L
                     date = newDate
                 }
-                if(currentSessionDate.get(Calendar.DAY_OF_MONTH) !=
-                    date.get(Calendar.DAY_OF_MONTH)) {
+                if(currentSessionDate.get(Calendar.DAY_OF_YEAR) !=
+                    date.get(Calendar.DAY_OF_YEAR)) {
                     break;
                 } else {
                     sectionsWithCategories.forEach { (section, _) ->

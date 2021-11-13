@@ -13,6 +13,8 @@ import androidx.room.Room
 import de.practicetime.practicetime.entities.Category
 import de.practicetime.practicetime.entities.SessionWithSectionsWithCategories
 import kotlinx.coroutines.launch
+import kotlin.collections.ArrayList
+
 
 private var dao: PTDao? = null
 
@@ -23,8 +25,8 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
         createDatabaseFirstRun()
 
         // initialize adapter and recyclerView for showing category buttons from database
-        val sessionWithSectionsWithCategories = ArrayList<SessionWithSectionsWithCategories>()
-        val sessionSummaryAdapter = SessionSummaryAdapter(view.context, sessionWithSectionsWithCategories)
+        val sessionsWithSectionsWithCategories = ArrayList<SessionWithSectionsWithCategories>()
+        val sessionSummaryAdapter = SessionSummaryAdapter(view.context, sessionsWithSectionsWithCategories)
 
         val sessionList = view.findViewById<RecyclerView>(R.id.sessionList)
         LinearLayoutManager(view.context).also { llm ->
@@ -34,12 +36,11 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
         sessionList.adapter = sessionSummaryAdapter
 
         lifecycleScope.launch {
-            sessionWithSectionsWithCategories.addAll(dao?.getSessionsWithSectionsWithCategories()!!)
+            sessionsWithSectionsWithCategories.addAll(dao?.getSessionsWithSectionsWithCategories()!!)
 
             // notifyDataSetChanged necessary here since all items might have changed
             sessionSummaryAdapter.notifyDataSetChanged()
         }
-
 
         val fab: View = view.findViewById(R.id.fab)
         fab.setOnClickListener {
@@ -80,6 +81,5 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
             }
         }
     }
-
-
 }
+
