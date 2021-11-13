@@ -93,6 +93,7 @@ class SessionSummaryAdapter(
             private val summaryDayLayout: LinearLayout = view.findViewById(R.id.summaryDayLayout)
             private val summaryDate: TextView = view.findViewById(R.id.summaryDate)
             private val summaryDayDuration: TextView = view.findViewById(R.id.summaryDayDuration)
+            private val divider : View = view.findViewById(R.id.divider)
 
             private val summaryTimeView: TextView = view.findViewById(R.id.summaryTime)
             private val breakDurationView: TextView = view.findViewById(R.id.breakDuration)
@@ -168,6 +169,7 @@ class SessionSummaryAdapter(
                     }
 
                     summaryDayLayout.visibility = View.VISIBLE
+                    divider.visibility = View.VISIBLE
                     summaryDate.text = dateFormat.format(currentSessionDate.timeInMillis)
                     summaryDayDuration.text = "%dh %dmin".format(
 //      Todo change back eventually      breakDuration / 3600,
@@ -176,6 +178,7 @@ class SessionSummaryAdapter(
                     )
                 } else {
                     summaryDayLayout.visibility = View.GONE
+                    divider.visibility = View.GONE
                 }
 
                 // compute the total practice time
