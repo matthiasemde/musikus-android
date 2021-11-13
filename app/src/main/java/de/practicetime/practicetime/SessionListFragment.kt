@@ -7,12 +7,14 @@ import android.view.View
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.Navigation
+import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
 import de.practicetime.practicetime.entities.Category
 import de.practicetime.practicetime.entities.SessionWithSectionsWithCategories
 import kotlinx.coroutines.launch
+import java.util.*
 import kotlin.collections.ArrayList
 
 
@@ -24,22 +26,59 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
         openDatabase()
         createDatabaseFirstRun()
 
-        // initialize adapter and recyclerView for showing category buttons from database
-        val sessionsWithSectionsWithCategories = ArrayList<SessionWithSectionsWithCategories>()
-        val sessionSummaryAdapter = SessionSummaryAdapter(view.context, sessionsWithSectionsWithCategories)
+        val sessionListMonths = view.findViewById<RecyclerView>(R.id.sessionList)
 
-        val sessionList = view.findViewById<RecyclerView>(R.id.sessionList)
-        LinearLayoutManager(view.context).also { llm ->
-            llm.reverseLayout = true
-            sessionList.layoutManager = llm
-        }
-        sessionList.adapter = sessionSummaryAdapter
+        val concatAdapterConfig = ConcatAdapter.Config.Builder()
+            .setIsolateViewTypes(false)
+            .build()
+
+        val concatAdapter = ConcatAdapter(concatAdapterConfig)
+
+        sessionListMonths.layoutManager = LinearLayoutManager(context)
+        sessionListMonths.adapter = concatAdapter
 
         lifecycleScope.launch {
-            sessionsWithSectionsWithCategories.addAll(dao?.getSessionsWithSectionsWithCategories()!!)
+            var currentMonthList = ArrayList<SessionWithSectionsWithCategories>()
 
-            // notifyDataSetChanged necessary here since all items might have changed
-            sessionSummaryAdapter.notifyDataSetChanged()
+            dao?.getSessionsWithSectionsWithCategories()!!.also { sessions ->
+                var currentMonth: Int
+                Calendar.getInstance().also { newDate ->
+                    newDate.timeInMillis =
+                        sessions.first().sections.first().section.timestamp * 1000L
+                    currentMonth = newDate.get(Calendar.MONTH)
+                }
+
+                currentMonthList.add(sessions.first())
+                sessions.drop(1)
+
+                sessions.forEach { session ->
+                    var sessionMonth: Int
+
+                    Calendar.getInstance().also { newDate ->
+                        newDate.timeInMillis =
+                            session.sections.first().section.timestamp * 1000L
+                        sessionMonth = newDate.get(Calendar.MONTH)
+                    }
+
+                    if (sessionMonth == currentMonth) {
+                        currentMonthList.add(session)
+                    } else {
+                        concatAdapter.addAdapter(
+                            0,
+                            SessionSummaryAdapter(view.context, false, currentMonthList)
+                        )
+                        concatAdapter.notifyItemInserted(0)
+                        currentMonthList = ArrayList()
+                    }
+                }
+                if(currentMonthList.isNotEmpty()) {
+                    concatAdapter.addAdapter(
+                        0,
+                        SessionSummaryAdapter(view.context, false, currentMonthList)
+                    )
+                    concatAdapter.notifyItemInserted(0)
+                }
+            }
         }
 
         val fab: View = view.findViewById(R.id.fab)
