@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ImageButton xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/addNewCategory"
+    android:layout_width="150dp"
+    android:layout_height="50dp"
+    android:layout_margin="4dp"
+    android:background="@drawable/add_category_button"
+    android:src="@drawable/ic_library_add"
+    app:tint="@color/design_default_color_primary">
+
+</ImageButton>

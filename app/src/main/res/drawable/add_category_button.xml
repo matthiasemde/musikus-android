@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="#206200ee">
+    <item>
+        <shape android:shape="rectangle">
+            <stroke
+                android:width="3dp"
+                android:color="@color/design_default_color_primary"
+                android:dashGap="6dp"
+                android:dashWidth="6dp"
+            />
+            <corners
+                android:radius="16dp" >
+            </corners>
+            <!-- required for ripple effect to work: -->
+            <solid android:color="@android:color/white" />
+        </shape>
+    </item>
+</ripple>

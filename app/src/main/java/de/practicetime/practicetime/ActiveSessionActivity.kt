@@ -119,7 +119,7 @@ class ActiveSessionActivity : AppCompatActivity() {
 
     private fun initCategoryList() {
         val categories = ArrayList<Category>()
-        val categoryAdapter = CategoryAdapter(categories, ::categoryPressed)
+        val categoryAdapter = CategoryAdapter(categories, ::categoryPressed, dao!!)
 
         val categoryList = findViewById<RecyclerView>(R.id.categoryList)
         categoryList.layoutManager = GridLayoutManager(this, 3, GridLayoutManager.HORIZONTAL, false)
