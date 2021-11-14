@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
 import androidx.transition.Fade
 import androidx.transition.TransitionManager
+import com.google.android.material.button.MaterialButton
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
 import de.practicetime.practicetime.entities.Category
 import de.practicetime.practicetime.entities.PracticeSection
@@ -86,7 +87,7 @@ class ActiveSessionActivity : AppCompatActivity() {
 
         if (!sessionActive) {   // session starts now
             sessionActive = true
-            fillSectionListView(true)
+            fillSectionList(true)
             findViewById<ImageButton>(R.id.bottom_pause).visibility = View.VISIBLE
             findViewById<ImageButton>(R.id.bottom_stop).visibility = View.VISIBLE
         } else {
@@ -117,7 +118,7 @@ class ActiveSessionActivity : AppCompatActivity() {
         sectionBuffer.last().first.apply {
             duration = getDuration(this)
         }
-        fillSectionListView()
+        fillSectionList()
     }
 
     private fun pauseSession() {
@@ -163,15 +164,14 @@ class ActiveSessionActivity : AppCompatActivity() {
     }
 
     private fun hideOverlay() {
-        // Animation causes ExtendedFAB shrink animation to lag
-//        val transition = Fade().apply {
-//            duration = 600
-//            addTarget(R.id.tv_overlay_pause)
-//        }
-//        TransitionManager.beginDelayedTransition(
-//            findViewById(R.id.coordinator_layout_active_session),
-//            transition
-//        )
+        val transition = Fade().apply {
+            duration = 600
+            addTarget(R.id.tv_overlay_pause)
+        }
+        TransitionManager.beginDelayedTransition(
+            findViewById(R.id.coordinator_layout_active_session),
+            transition
+        )
         findViewById<TextView>(R.id.tv_overlay_pause).visibility = View.GONE
     }
 
@@ -322,7 +322,7 @@ class ActiveSessionActivity : AppCompatActivity() {
                         )
 
 
-                        fillSectionListView()
+                        fillSectionList()
                     } else {
                         practiceTimeView.text = "00:00:00"
                     }
@@ -334,7 +334,7 @@ class ActiveSessionActivity : AppCompatActivity() {
         }
     }
 
-    private fun fillSectionListView(init: Boolean = false) {
+    private fun fillSectionList(init: Boolean = false) {
         // show all sections in listview
         listItems.clear()
         for (n in sectionBuffer.size - 1 downTo 0) {
@@ -366,7 +366,7 @@ class ActiveSessionActivity : AppCompatActivity() {
     ) : RecyclerView.Adapter<CategoryAdapter.ViewHolder>() {
 
         inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-            val button: Button = view.findViewById(R.id.button)
+            val button: MaterialButton = view.findViewById(R.id.button)
 
             init {
                 // Define click listener for the ViewHolder's View.
