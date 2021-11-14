@@ -3,8 +3,8 @@
     <item
         android:id="@+id/metronomeFragment"
         android:enabled="true"
-        android:icon="@drawable/ic_metronome"
-        android:title="Metronome"/>
+        android:icon="@drawable/ic_library"
+        android:title="Metronome" />
     <item
         android:id="@+id/sessionListFragment"
         android:enabled="true"

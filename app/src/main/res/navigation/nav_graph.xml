@@ -14,7 +14,7 @@
         android:id="@+id/metronomeFragment"
         android:name="de.practicetime.practicetime.MetronomeFragment"
         android:label="Metronome"
-        tools:layout="@layout/fragment_metronome" />
+        tools:layout="@layout/fragment_library" />
     <fragment
         android:id="@+id/goalsFragment"
         android:name="de.practicetime.practicetime.GoalsFragment"
