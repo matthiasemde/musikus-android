@@ -13,6 +13,8 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
+import androidx.transition.Fade
+import androidx.transition.TransitionManager
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
 import de.practicetime.practicetime.entities.Category
 import de.practicetime.practicetime.entities.PracticeSection
@@ -20,6 +22,9 @@ import de.practicetime.practicetime.entities.PracticeSession
 import kotlinx.coroutines.launch
 import java.util.*
 import kotlin.collections.ArrayList
+
+
+
 
 private var dao: PTDao? = null
 // the sectionBuffer will keep track of all the section in the current session
@@ -120,25 +125,56 @@ class ActiveSessionActivity : AppCompatActivity() {
         // swap pause icon with play icon
         findViewById<ImageButton>(R.id.bottom_pause).apply {
             setImageResource(R.drawable.ic_play)
+            setBackgroundResource(R.drawable.background_btn_resume_session)
         }
         // show the fab
         findViewById<ExtendedFloatingActionButton>(R.id.fab_info_popup).apply {
             show()
         }
+        showOverlay()
     }
 
     private fun resumeSession(categoryId: Int) {
         paused = false
         pauseDuration = 0
-        // swap pause icon with play icon
+        // swap play icon with pause icon
         findViewById<ImageButton>(R.id.bottom_pause).apply {
             setImageResource(R.drawable.ic_pause)
+            setBackgroundResource(R.drawable.background_bottom_btn)
         }
-        // show the fab
+        // hide the fab
         findViewById<ExtendedFloatingActionButton>(R.id.fab_info_popup).apply {
             hide()
         }
+        hideOverlay()
     }
+
+    private fun showOverlay() {
+        val transition = Fade().apply {
+            duration = 600
+            addTarget(R.id.tv_overlay_pause)
+        }
+        TransitionManager.beginDelayedTransition(
+            findViewById(R.id.coordinator_layout_active_session),
+            transition
+        )
+
+        findViewById<TextView>(R.id.tv_overlay_pause).visibility = View.VISIBLE
+    }
+
+    private fun hideOverlay() {
+        // Animation causes ExtendedFAB shrink animation to lag
+//        val transition = Fade().apply {
+//            duration = 600
+//            addTarget(R.id.tv_overlay_pause)
+//        }
+//        TransitionManager.beginDelayedTransition(
+//            findViewById(R.id.coordinator_layout_active_session),
+//            transition
+//        )
+        findViewById<TextView>(R.id.tv_overlay_pause).visibility = View.GONE
+    }
+
 
     private fun endSession(rating: Int, comment: String?) {
         // finish the final section
@@ -193,12 +229,16 @@ class ActiveSessionActivity : AppCompatActivity() {
         // Dialog Setup
         endSessionDialogBuilder.apply {
             setView(dialogView)
-            setPositiveButton(R.string.endSessionAlertOk) { dialog, _ ->
+            setCancelable(false)
+            setPositiveButton(R.string.endSessionAlertOk) { _, _ ->
                 val rating = dialogRatingBar.rating.toInt()
                 endSession(rating, dialogComment.text.toString())
             }
             setNegativeButton(R.string.endSessionAlertCancel) { dialog, _ ->
                 dialog.cancel()
+                if (!paused) {
+                    hideOverlay()
+                }
             }
         }
         val endSessionDialog: AlertDialog = endSessionDialogBuilder.create()
@@ -214,6 +254,7 @@ class ActiveSessionActivity : AppCompatActivity() {
                     positiveButton.isEnabled = rating.toInt() > 0
                 }
             }
+            showOverlay()
         }
     }
 
@@ -321,7 +362,7 @@ class ActiveSessionActivity : AppCompatActivity() {
 
     private inner class CategoryAdapter(
         private val dataSet: ArrayList<Category>,
-        private val callback: (input: View) -> Unit,
+        private val callback: View.OnClickListener
     ) : RecyclerView.Adapter<CategoryAdapter.ViewHolder>() {
 
         inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {

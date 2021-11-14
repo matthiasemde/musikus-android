@@ -3,9 +3,10 @@
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/coordinator_layout_active_session"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:transitionName="transition_fab" >
+    android:transitionName="transition_fab">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -76,81 +77,92 @@
 
     </LinearLayout>
 
-<androidx.constraintlayout.widget.ConstraintLayout
-    android:layout_width="match_parent"
-    android:layout_height="56dp"
-    android:layout_gravity="bottom|left"
-    android:orientation="horizontal"
-    android:animateLayoutChanges="true">
+    <TextView
+        android:id="@+id/tv_overlay_pause"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        android:clickable="true"
+        android:focusable="true"
+        android:background="#bb000000" />
 
-    <ImageButton
-        android:id="@+id/bottom_pause"
-        android:layout_width="45dp"
-        android:layout_height="45dp"
-        android:src="@drawable/ic_pause"
-        android:background="?selectableItemBackgroundBorderless"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/bottom_metronome"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintVertical_bias="0"
-        android:visibility="invisible"/>
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:layout_gravity="bottom|left"
+        android:orientation="horizontal"
+        android:animateLayoutChanges="true">
 
-    <ImageButton
-        android:id="@+id/bottom_metronome"
-        android:layout_width="45dp"
-        android:layout_height="45dp"
-        android:src="@drawable/ic_metronome"
-        android:background="?selectableItemBackgroundBorderless"
-        app:layout_constraintStart_toEndOf="@id/bottom_pause"
-        app:layout_constraintEnd_toStartOf="@id/bottom_record"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintVertical_bias="0" />
+        <ImageButton
+            android:id="@+id/bottom_pause"
+            android:layout_width="45dp"
+            android:layout_height="45dp"
+            android:src="@drawable/ic_pause"
+            app:tint="@color/black"
+            android:background="@drawable/background_bottom_btn"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/bottom_metronome"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintVertical_bias="0"
+            android:visibility="invisible"/>
 
-    <ImageButton
-        android:id="@+id/bottom_record"
-        android:layout_width="45dp"
-        android:layout_height="45dp"
-        android:src="@drawable/ic_record"
-        android:background="?selectableItemBackgroundBorderless"
-        app:layout_constraintStart_toEndOf="@id/bottom_metronome"
-        app:layout_constraintEnd_toStartOf="@id/bottom_stop"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintVertical_bias="0"/>
+        <ImageButton
+            android:id="@+id/bottom_metronome"
+            android:layout_width="45dp"
+            android:layout_height="45dp"
+            android:src="@drawable/ic_metronome"
+            android:background="@drawable/background_bottom_btn"
+            app:layout_constraintStart_toEndOf="@id/bottom_pause"
+            app:layout_constraintEnd_toStartOf="@id/bottom_record"
+            app:layout_constraintTop_toTopOf="parent"
+            app:tint="@color/black"
+            android:clickable="true"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintVertical_bias="0" />
 
-    <ImageButton
-        android:id="@+id/bottom_stop"
-        android:layout_width="45dp"
-        android:layout_height="45dp"
-        android:src="@drawable/ic_stop"
-        android:background="@drawable/ripple_oval"
-        app:layout_constraintStart_toEndOf="@id/bottom_record"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:tint="@color/white"
+        <ImageButton
+            android:id="@+id/bottom_record"
+            android:layout_width="45dp"
+            android:layout_height="45dp"
+            android:src="@drawable/ic_record"
+            android:background="@drawable/background_bottom_btn"
+            app:layout_constraintStart_toEndOf="@id/bottom_metronome"
+            app:layout_constraintEnd_toStartOf="@id/bottom_stop"
+            app:layout_constraintTop_toTopOf="parent"
+            app:tint="@color/black"
+            android:clickable="true"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintVertical_bias="0"/>
+
+        <ImageButton
+            android:id="@+id/bottom_stop"
+            android:layout_width="45dp"
+            android:layout_height="45dp"
+            android:src="@drawable/ic_stop"
+            android:background="@drawable/background_btn_end_session"
+            app:layout_constraintStart_toEndOf="@id/bottom_record"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:tint="@color/white"
+            android:visibility="invisible"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintVertical_bias="0"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+
+    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+        android:id="@+id/fab_info_popup"
         android:visibility="invisible"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintVertical_bias="0"/>
-
-</androidx.constraintlayout.widget.ConstraintLayout>
-
-
-
-<com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
-    android:id="@+id/fab_info_popup"
-    android:visibility="invisible"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:layout_marginStart="16dp"
-    android:layout_marginEnd="16dp"
-    android:layout_marginBottom="90dp"
-    app:rippleColor="@null"
-    android:text="Pause: 00:25:13"
-    android:layout_gravity="bottom|center"
-    app:icon="@android:drawable/ic_dialog_info"/>
-
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="200dp"
+        app:rippleColor="@null"
+        android:text="Pause: 00:25:13"
+        android:layout_gravity="bottom|center"
+        app:icon="@android:drawable/ic_dialog_info"/>
 
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
