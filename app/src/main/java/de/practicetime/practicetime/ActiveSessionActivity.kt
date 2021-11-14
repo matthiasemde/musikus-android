@@ -1,11 +1,8 @@
 package de.practicetime.practicetime
 
-import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
-import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -26,9 +23,13 @@ import kotlin.collections.ArrayList
 
 private var dao: PTDao? = null
 // the sectionBuffer will keep track of all the section in the current session
-private val sectionBuffer = ArrayList<PracticeSection>()
+private var sectionBuffer = ArrayList<Pair<PracticeSection, Int>>()
 private var sessionActive = false   // keep track of whether a session is active
+private var paused = false            // flag if session is currently paused
+private var pauseDuration = 0         // pause duration, ONLY for displaying on the fab, section pause duration is safed in sectionBuffer!
 private var activeCategories: List<Category>? = listOf<Category>()
+private lateinit var sectionsAdapter: ArrayAdapter<String>
+private var listItems = ArrayList<String>()
 
 class ActiveSessionActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -36,8 +37,6 @@ class ActiveSessionActivity : AppCompatActivity() {
         setContentView(R.layout.activity_active_session)
 
         openDatabase()
-
-//        findViewById<FloatingActionButton>(R.id.fab_stop).hide()
 
         // start the practice timer Runnable
         practiceTimer()
@@ -61,29 +60,122 @@ class ActiveSessionActivity : AppCompatActivity() {
 
         initEndSessionDialog()
 
-        val fabInfo = findViewById<ExtendedFloatingActionButton>(R.id.fab_info_popup)
-
-        val fabPause = findViewById<ImageButton>(R.id.bottom_pause)
-        fabPause.setOnClickListener {
-            if(fabInfo.isShown) {
-                fabInfo.hide()
-                fabPause.setImageResource(R.drawable.ic_pause)
-                fabPause.setBackgroundResource(
-                    TypedValue().also {
-                        theme.resolveAttribute(
-                            android.R.attr.selectableItemBackgroundBorderless,
-                            it,
-                            true
-                        )
-                    }.resourceId)
+        val btnPause = findViewById<ImageButton>(R.id.bottom_pause)
+        btnPause.setOnClickListener {
+            if (paused) {
+                // resume the Session with the last category
+                resumeSession(sectionBuffer.last().first.category_id)
             } else {
-                fabInfo.show()
-                fabPause.setImageResource(R.drawable.ic_play)
-                fabPause.setBackgroundResource(R.drawable.ripple_oval)
+                pauseSession()
             }
         }
+    }
 
+    // the routine for handling presses to category buttons
+    private fun categoryPressed(categoryView: View) {
+        // get the category id from the view tag and calculate current timestamp
+        val categoryId = categoryView.tag as Int
 
+        if (!sessionActive) {   // session starts now
+            sessionActive = true
+            fillSectionListView(true)
+            findViewById<ImageButton>(R.id.bottom_pause).visibility = View.VISIBLE
+            findViewById<ImageButton>(R.id.bottom_stop).visibility = View.VISIBLE
+        } else {
+            endSection()
+        }
+        // start a new section for the chosen category
+        startNewSection(categoryId)
+    }
+
+    private fun startNewSection(categoryId: Int) {
+        val now = Date().time / 1000L
+        sectionBuffer.add(
+            Pair(
+                PracticeSection(
+                    0,  // 0 means auto-increment
+                    null,
+                    categoryId,
+                    null,
+                    now,
+                ),
+                0
+            )
+        )
+    }
+
+    private fun endSection() {
+        // save duration of last section
+        sectionBuffer.last().first.apply {
+            duration = getDuration(this)
+        }
+        fillSectionListView()
+    }
+
+    private fun pauseSession() {
+        paused = true
+        // swap pause icon with play icon
+        findViewById<ImageButton>(R.id.bottom_pause).apply {
+            setImageResource(R.drawable.ic_play)
+        }
+        // show the fab
+        findViewById<ExtendedFloatingActionButton>(R.id.fab_info_popup).apply {
+            show()
+        }
+    }
+
+    private fun resumeSession(categoryId: Int) {
+        paused = false
+        pauseDuration = 0
+        // swap pause icon with play icon
+        findViewById<ImageButton>(R.id.bottom_pause).apply {
+            setImageResource(R.drawable.ic_pause)
+        }
+        // show the fab
+        findViewById<ExtendedFloatingActionButton>(R.id.fab_info_popup).apply {
+            hide()
+        }
+    }
+
+    private fun endSession(rating: Int, comment: String?) {
+        // finish the final section
+        endSection()
+
+        // get total break duration
+        var totalBreakDuration = 0
+        sectionBuffer.forEach {
+            totalBreakDuration += it.second
+        }
+
+        // TODO: Check if comment is empty -> insert null
+        val newSession = PracticeSession(
+            0,      // id=0 means not assigned, autoGenerate=true will do it for us
+            totalBreakDuration,
+            rating.toInt(),
+            comment,
+            1
+        )
+
+        lifecycleScope.launch {
+            // create a new session row and save its id
+            val sessionId = dao?.insertSession(newSession)
+
+            // add the new sessionId to every section in the section buffer
+            for (section in sectionBuffer) {
+                section.first.practice_session_id = sessionId?.toInt()
+                // update section durations to exclude break durations
+                section.first.duration = section.first.duration?.minus(section.second)
+                // and insert them into the database
+                dao?.insertSection(section.first)
+            }
+
+            // reset section buffer and session status
+            sectionBuffer.clear()
+            sessionActive = false
+        }
+
+        // terminate and go back to MainActivity
+        finish()
     }
 
     private fun initEndSessionDialog() {
@@ -95,6 +187,7 @@ class ActiveSessionActivity : AppCompatActivity() {
         val dialogRatingBar = dialogView.findViewById<RatingBar>(R.id.dialogRatingBar)
         val dialogComment = dialogView.findViewById<EditText>(R.id.dialogComment)
 
+        // Dialog Setup
         endSessionDialogBuilder.apply {
             setView(dialogView)
             setPositiveButton(R.string.endSessionAlertOk) { dialog, _ ->
@@ -105,10 +198,9 @@ class ActiveSessionActivity : AppCompatActivity() {
                 dialog.cancel()
             }
         }
-        // create the end session dialog
         val endSessionDialog: AlertDialog = endSessionDialogBuilder.create()
 
-        // end session button functionality
+        // stop session button functionality
         findViewById<ImageButton>(R.id.bottom_stop).setOnClickListener {
             // show the end session dialog
             endSessionDialog.show()
@@ -130,86 +222,20 @@ class ActiveSessionActivity : AppCompatActivity() {
         dao = db.ptDao
     }
 
-    // the routine for handling presses to category buttons
-    private fun categoryPressed(categoryView: View) {
-        // get the category id from the view tag and calculate current timestamp
-        val categoryId = categoryView.tag as Int
+
+    /**
+     * calculates total Duration (including pauses) of a section
+     */
+    private fun getDuration(section: PracticeSection): Int {
         val now = Date().time / 1000L
-
-//        findViewById<FloatingActionButton>(R.id.fab_stop).show()
-        val sessBtn = categoryView as Button
-        findViewById<TextView>(R.id.activeSectionName).text = sessBtn.text.toString()
-
-        // change background color of button
-        // if there is no active session set sessionActive to true
-        if (!sessionActive) {
-            sessionActive = true
-        } else {    // Session should be switched
-            var lastSection = sectionBuffer.last()
-
-            // store the duration of the now ending section
-            lastSection.duration = (
-                    now -
-                            lastSection.timestamp
-                    ).toInt()
-
-            // show the new section in the listView
-            fillSectionListView(sectionBuffer)
-        }
-
-        // start a new section for the chosen category and add it to the section buffer
-        sectionBuffer.add(
-            PracticeSection(
-                0,
-                null,
-                categoryId,
-                null,
-                now,
-            )
-        )
-        Log.d("TAG", "Category $categoryId Pressed!")
-    }
-
-    private fun endSession(rating: Int, comment: String?) {
-        // finish up the final section
-        var lastSection = sectionBuffer.last()
-
-        // store the duration of the now ending section
-        lastSection.duration = (
-            Date().time / 1000 -
-            lastSection.timestamp
-        ).toInt()
-
-        // TODO: Check if comment is empty -> insert null
-        // id=0 means not assigned, autoGenerate=true will do it for us
-        val newSession = PracticeSession(
-            0,
-            0,
-            rating,
-            comment,
-            1
-        )
-
-        lifecycleScope.launch {
-            // create a new session row and save its id
-            dao?.insertSessionAndSectionsInTransaction(
-                newSession,
-                sectionBuffer.toList()
-            )
-
-            // reset section buffer and session status
-            sectionBuffer.clear()
-            sessionActive = false
-        }
-
-        startActivity(Intent(this, MainActivity::class.java))
+        return (now - section.timestamp).toInt()
     }
 
     // calling practiceTimer will start a handler, which executes the code in the post() method once per second
     private fun practiceTimer() {
         // get the text views.
-        val timeView = findViewById<TextView>(R.id.practiceTimer)
-        val totalTimeView = findViewById<TextView>(R.id.totalTime)
+        val practiceTimeView = findViewById<TextView>(R.id.practiceTimer)
+        val fabInfoPause = findViewById<ExtendedFloatingActionButton>(R.id.fab_info_popup)
 
         // creates a new Handler
         Handler(Looper.getMainLooper()).also {
@@ -219,33 +245,42 @@ class ActiveSessionActivity : AppCompatActivity() {
                 override fun run() {
                     if (sessionActive && sectionBuffer.isNotEmpty()) {
                         // load the current section from the sectionBuffer
-                        var firstSection = sectionBuffer.first()
-                        var currentSection = sectionBuffer.last()
+                        val firstSection = sectionBuffer.first()
+                        val currentSection = sectionBuffer.last()
 
                         val now = Date().time / 1000
 
-                        // store the duration of the currently running section
-                        val currentDuration = (now - currentSection.timestamp).toInt()
+                        if (paused) {
+                            // increment pause time. Since Pairs<> are not mutable (but ArrayList is)
+                            // we have to copy the element and replace the whole element in the ArrayList
+                            sectionBuffer[sectionBuffer.lastIndex] =
+                                sectionBuffer.last().copy(second = sectionBuffer.last().second + 1)
 
-                        // set the text view text to the formatted time
-                        timeView.text = "%02d:%02d:%02d".format(
-                            currentDuration / 3600,
-                            currentDuration % 3600 / 60,
-                            currentDuration % 60
+                            pauseDuration++
+                            // display pause duration on the fab, but only time after pause was activated
+                            fabInfoPause.text = "Pause: %02d:%02d:%02d".format(
+                                pauseDuration / 3600,
+                                pauseDuration % 3600 / 60,
+                                pauseDuration % 60
+                            )
+                        }
+
+                        // calculate total time of all sections (including pauses)
+                        var totalPracticeDuration = (now - firstSection.first.timestamp).toInt()
+                        // subtract all pause durations
+                        sectionBuffer.forEach { section ->
+                            totalPracticeDuration -= section.second
+                        }
+                        practiceTimeView.text = "%02d:%02d:%02d".format(
+                            totalPracticeDuration / 3600,
+                            totalPracticeDuration % 3600 / 60,
+                            totalPracticeDuration % 60
                         )
 
-                        // do the same for the total time
-                        val totalDuration = (now - firstSection.timestamp).toInt()
 
-                        totalTimeView.text = "%02d:%02d:%02d".format(
-                            totalDuration / 3600,
-                            totalDuration % 3600 / 60,
-                            totalDuration % 60
-                        )
-
+                        fillSectionListView()
                     } else {
-                        totalTimeView.text = "00:00:00"
-                        timeView.text = "00:00:00"
+                        practiceTimeView.text = "00:00:00"
                     }
 
                     // post the code again with a delay of 1 second
@@ -255,17 +290,26 @@ class ActiveSessionActivity : AppCompatActivity() {
         }
     }
 
-    private fun fillSectionListView(sections: ArrayList<PracticeSection>) {
+    private fun fillSectionListView(init: Boolean = false) {
         // show all sections in listview
-        var listItems = ArrayList<String>()
-        sections.forEach {
-            listItems.add(activeCategories?.get(it.category_id - 1)?.name + "   |   duration: " + it.duration)
+        listItems.clear()
+        for (n in sectionBuffer.size - 1 downTo 0) {
+            var duration = sectionBuffer[n].first.duration?.minus(sectionBuffer[n].second)
+            if (duration == null) {
+                duration = getDuration(sectionBuffer[n].first).minus(sectionBuffer[n].second)
+            }
+            listItems.add(
+                    "${activeCategories?.get(sectionBuffer[n].first.category_id - 1)?.name} " +
+                    "\t\t\t\t\t${duration}s"
+            )
         }
-        val sectionsList = findViewById<ListView>(R.id.currentSections)
-        var adapter =
-            ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, listItems)
-        sectionsList.adapter = adapter
-        adapter.notifyDataSetChanged()
+        if (init) {
+            val sectionsList = findViewById<ListView>(R.id.currentSections)
+            sectionsAdapter =
+              ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, listItems)
+            sectionsList.adapter = sectionsAdapter
+        }
+        sectionsAdapter.notifyDataSetChanged()
     }
 
     /**

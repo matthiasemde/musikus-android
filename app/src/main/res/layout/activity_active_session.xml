@@ -5,177 +5,152 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:transitionName="transition_fab">
+    android:transitionName="transition_fab" >
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
-        tools:context=".ActiveSessionFragment">
-
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1">
+        tools:context=".ActiveSessionFragment"
+        android:animateLayoutChanges="true">
 
         <TextView
             android:id="@+id/practiceTimer"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="40dp"
-            android:layout_marginTop="245dp"
+            android:layout_marginTop="40dp"
+            android:layout_marginStart="40dp"
+            android:layout_marginEnd="40dp"
+            android:layout_gravity="center"
             android:textSize="40sp"
             android:textStyle="bold"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.318"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintBottom_toTopOf="@id/activeSectionName"
-            app:layout_constraintVertical_bias="1.0"
             tools:text="00:00:00" />
 
         <TextView
-            android:id="@+id/totalTime"
+            android:id="@+id/textView3"
+            android:layout_gravity="center"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            app:layout_constraintBottom_toBottomOf="@+id/practiceTimer"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.397"
-            app:layout_constraintStart_toEndOf="@+id/practiceTimer"
-            tools:text="00:00:00" />
-
+            android:text="Practice Time"
+            android:textSize="15sp" />
 
         <TextView
-            android:id="@+id/activeSectionName"
+            android:id="@+id/textView2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:text="Categories:"
             android:textSize="20sp"
-            android:textStyle="bold"
-            android:textColor="#e91e63"
+            android:layout_marginStart="20dp"
+            android:layout_marginTop="20dp"
+            android:textStyle="bold"/>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/categoryList"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_margin="20dp"
+            android:orientation="horizontal"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            tools:text="TextView" />
+            app:layout_constraintVertical_bias="2"
+            app:layout_constraintBottom_toTopOf="@id/textView" />
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <TextView
-        android:id="@+id/textView2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Categories:"
-        android:textSize="20sp"
-        android:layout_marginStart="20dp"
-        android:layout_marginTop="20dp"
-        android:textStyle="bold"/>
+        <TextView
+            android:id="@+id/textView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Sections:"
+            android:textSize="20sp"
+            android:layout_marginStart="20dp"
+            android:textStyle="bold"/>
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/categoryList"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:layout_margin="20dp"
-        android:orientation="horizontal"
-        app:layout_constraintEnd_toEndOf="parent"
+        <ListView
+            android:id="@+id/currentSections"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1.4"
+            android:layout_margin="20dp"
+            android:fadeScrollbars="false"
+            android:animateLayoutChanges="true"/>
+
+    </LinearLayout>
+
+<androidx.constraintlayout.widget.ConstraintLayout
+    android:layout_width="match_parent"
+    android:layout_height="56dp"
+    android:layout_gravity="bottom|left"
+    android:orientation="horizontal"
+    android:animateLayoutChanges="true">
+
+    <ImageButton
+        android:id="@+id/bottom_pause"
+        android:layout_width="45dp"
+        android:layout_height="45dp"
+        android:src="@drawable/ic_pause"
+        android:background="?selectableItemBackgroundBorderless"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintVertical_bias="2"
-        app:layout_constraintBottom_toTopOf="@id/textView" />
+        app:layout_constraintEnd_toStartOf="@id/bottom_metronome"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintVertical_bias="0"
+        android:visibility="invisible"/>
 
+    <ImageButton
+        android:id="@+id/bottom_metronome"
+        android:layout_width="45dp"
+        android:layout_height="45dp"
+        android:src="@drawable/ic_metronome"
+        android:background="?selectableItemBackgroundBorderless"
+        app:layout_constraintStart_toEndOf="@id/bottom_pause"
+        app:layout_constraintEnd_toStartOf="@id/bottom_record"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintVertical_bias="0" />
 
-    <TextView
-        android:id="@+id/textView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
-        android:text="Finished sections (this Session):"
-        android:textSize="20sp"
-        android:layout_marginStart="20dp"
-        android:textStyle="bold"/>
+    <ImageButton
+        android:id="@+id/bottom_record"
+        android:layout_width="45dp"
+        android:layout_height="45dp"
+        android:src="@drawable/ic_record"
+        android:background="?selectableItemBackgroundBorderless"
+        app:layout_constraintStart_toEndOf="@id/bottom_metronome"
+        app:layout_constraintEnd_toStartOf="@id/bottom_stop"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintVertical_bias="0"/>
 
-    <ListView
-        android:id="@+id/currentSections"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:layout_margin="20dp"
-        android:fadeScrollbars="false"/>
-
-</LinearLayout>
-
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:layout_gravity="bottom|left"
-        android:orientation="horizontal">
-
-        <ImageButton
-            android:id="@+id/bottom_pause"
-            android:layout_width="45dp"
-            android:layout_height="45dp"
-            android:src="@drawable/ic_pause"
-            android:background="?selectableItemBackgroundBorderless"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/bottom_metronome"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintVertical_bias="0"/>
-
-        <ImageButton
-            android:id="@+id/bottom_metronome"
-            android:layout_width="45dp"
-            android:layout_height="45dp"
-            android:src="@drawable/ic_metronome"
-            android:background="?selectableItemBackgroundBorderless"
-            app:layout_constraintStart_toEndOf="@id/bottom_pause"
-            app:layout_constraintEnd_toStartOf="@id/bottom_record"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintVertical_bias="0" />
-
-        <ImageButton
-            android:id="@+id/bottom_record"
-            android:layout_width="45dp"
-            android:layout_height="45dp"
-            android:src="@drawable/ic_record"
-            android:background="?selectableItemBackgroundBorderless"
-            app:layout_constraintStart_toEndOf="@id/bottom_metronome"
-            app:layout_constraintEnd_toStartOf="@id/bottom_stop"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintVertical_bias="0"/>
-
-        <ImageButton
-            android:id="@+id/bottom_stop"
-            android:layout_width="45dp"
-            android:layout_height="45dp"
-            android:src="@drawable/ic_stop"
-            android:background="@drawable/ripple_oval"
-            app:layout_constraintStart_toEndOf="@id/bottom_record"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:tint="@color/white"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintVertical_bias="0"/>
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
-
-
-
-    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
-        android:id="@+id/fab_info_popup"
+    <ImageButton
+        android:id="@+id/bottom_stop"
+        android:layout_width="45dp"
+        android:layout_height="45dp"
+        android:src="@drawable/ic_stop"
+        android:background="@drawable/ripple_oval"
+        app:layout_constraintStart_toEndOf="@id/bottom_record"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:tint="@color/white"
         android:visibility="invisible"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginBottom="90dp"
-        app:rippleColor="@null"
-        android:text="Pause: 00:25:13"
-        android:layout_gravity="bottom|center"
-        app:icon="@android:drawable/ic_dialog_info"/>
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintVertical_bias="0"/>
 
+</androidx.constraintlayout.widget.ConstraintLayout>
+
+
+
+<com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+    android:id="@+id/fab_info_popup"
+    android:visibility="invisible"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="16dp"
+    android:layout_marginEnd="16dp"
+    android:layout_marginBottom="90dp"
+    app:rippleColor="@null"
+    android:text="Pause: 00:25:13"
+    android:layout_gravity="bottom|center"
+    app:icon="@android:drawable/ic_dialog_info"/>
 
 
 
