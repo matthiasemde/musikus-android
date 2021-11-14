@@ -150,16 +150,16 @@ class ActiveSessionActivity : AppCompatActivity() {
 
         // store the duration of the now ending section
         lastSection.duration = (
-                Date().time / 1000 -
-                        lastSection.timestamp
-                ).toInt()
+            Date().time / 1000 -
+            lastSection.timestamp
+        ).toInt()
 
         // TODO: Check if comment is empty -> insert null
         // id=0 means not assigned, autoGenerate=true will do it for us
         val newSession = PracticeSession(
             0,
             0,
-            rating.toInt(),
+            rating,
             comment,
             1
         )
