@@ -4,7 +4,7 @@
         android:id="@+id/metronomeFragment"
         android:enabled="true"
         android:icon="@drawable/ic_library"
-        android:title="Metronome" />
+        android:title="@string/navigationLibraryTitle" />
     <item
         android:id="@+id/sessionListFragment"
         android:enabled="true"

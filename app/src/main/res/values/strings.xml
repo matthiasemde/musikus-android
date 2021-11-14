@@ -9,6 +9,7 @@
     <string name="endSessionAlertOk">Save</string>
     <string name="endSessionAlertCancel">Continue practicing</string>
     <string name="endSessionDialogCommentField">Comment (optional)</string>
+    <string name="navigationLibraryTitle">Library</string>
     <string name="endSessionDialogTitle">Finish Session</string>
     <string name="discard_session">Discard Session</string>
     <string name="practice_time_description">Practice Time</string>
