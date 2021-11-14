@@ -142,6 +142,12 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
                     Category(0, "Die Schöpfung", Color.parseColor("#4caf50"), false, 1),
                     Category(0, "Beethoven Septett", Color.parseColor("#03a9f4"), false, 1),
                     Category(0, "Schostakowitsch 9.", Color.parseColor("#cddc39"), false, 1),
+                    Category(0, "Trauermarsch c-Moll", Color.parseColor("#8bc34a"), false, 1),
+                    Category(0, "Adagio", Color.parseColor("#f44336"), false, 1),
+                    Category(0, "Eine kleine Gigue", Color.parseColor("#00bcd4"), false, 1),
+                    Category(0, "Andantino", Color.parseColor("#00bcd4"), false, 1),
+                    Category(0, "Klaviersonate", Color.parseColor("#fdd835"), false, 1),
+                    Category(0, "Trauermarsch", Color.parseColor("#00bcd4"), false, 1),
                 ).forEach {
                     dao?.insertCategory(it)
                 }

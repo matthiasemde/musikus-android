@@ -40,23 +40,8 @@ class ActiveSessionActivity : AppCompatActivity() {
 
         // start the practice timer Runnable
         practiceTimer()
-
         // initialize adapter and recyclerView for showing category buttons from database
-        var categories = ArrayList<Category>()
-        var categoryAdapter = CategoryAdapter(categories, ::categoryPressed)
-
-        val categoryList = findViewById<RecyclerView>(R.id.categoryList)
-        categoryList.layoutManager = GridLayoutManager(this, 2)
-        categoryList.adapter = categoryAdapter
-
-        lifecycleScope.launch {
-            activeCategories = dao?.getActiveCategories()
-            if (activeCategories != null) {
-                categories.addAll(activeCategories!!)
-            }
-            // notifyDataSetChanged necessary here since all items might have changed
-            categoryAdapter.notifyDataSetChanged()
-        }
+        initCategoryList()
 
         initEndSessionDialog()
 
@@ -68,6 +53,24 @@ class ActiveSessionActivity : AppCompatActivity() {
             } else {
                 pauseSession()
             }
+        }
+    }
+
+    private fun initCategoryList() {
+        val categories = ArrayList<Category>()
+        val categoryAdapter = CategoryAdapter(categories, ::categoryPressed)
+
+        val categoryList = findViewById<RecyclerView>(R.id.categoryList)
+        categoryList.layoutManager = GridLayoutManager(this, 3, GridLayoutManager.HORIZONTAL, false)
+        categoryList.adapter = categoryAdapter
+
+        lifecycleScope.launch {
+            activeCategories = dao?.getActiveCategories()
+            if (activeCategories != null) {
+                categories.addAll(activeCategories!!)
+            }
+            // notifyDataSetChanged necessary here since all items might have changed
+            categoryAdapter.notifyDataSetChanged()
         }
     }
 
@@ -355,6 +358,8 @@ class ActiveSessionActivity : AppCompatActivity() {
             // contents of the view with that element
             viewHolder.button.text = category.name
             viewHolder.button.setBackgroundColor(category.color)
+
+            // TODO set right margin for last 3 elements programmatically
         }
 
         // Return the size of your dataset (invoked by the layout manager)

@@ -41,7 +41,7 @@
             android:text="Categories:"
             android:textSize="20sp"
             android:layout_marginStart="20dp"
-            android:layout_marginTop="20dp"
+            android:layout_marginTop="50dp"
             android:textStyle="bold"/>
 
         <androidx.recyclerview.widget.RecyclerView
@@ -49,7 +49,6 @@
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:layout_margin="20dp"
             android:orientation="horizontal"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
