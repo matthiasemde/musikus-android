@@ -166,14 +166,10 @@ class ActiveSessionActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             // create a new session row and save its id
-            val sessionId = dao?.insertSession(newSession)
-
-            // add the new sessionId to every section in the section buffer
-            for (section in sectionBuffer) {
-                section.practice_session_id = sessionId?.toInt()
-                // and insert them into the database
-                dao?.insertSection(section)
-            }
+            dao?.insertSessionAndSectionsInTransaction(
+                newSession,
+                sectionBuffer.toList()
+            )
 
             // reset section buffer and session status
             sectionBuffer.clear()

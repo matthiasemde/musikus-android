@@ -14,6 +14,21 @@ interface PTDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertCategory(category: Category)
 
+    @Transaction
+    suspend fun insertSessionAndSectionsInTransaction(
+        session: PracticeSession,
+        sections: List<PracticeSection>,
+    ) {
+        val newSessionId = insertSession(session)
+
+        // add the new sessionId to every section...
+        for (section in sections) {
+            section.practice_session_id = newSessionId.toInt()
+            // and insert them into the database
+            insertSection(section)
+        }
+    }
+
     @Delete
     suspend fun deleteSession(session: PracticeSession)
 
