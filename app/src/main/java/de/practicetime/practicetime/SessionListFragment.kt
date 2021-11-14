@@ -38,43 +38,60 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
         sessionListMonths.adapter = concatAdapter
 
         lifecycleScope.launch {
-            var currentMonthList = ArrayList<SessionWithSectionsWithCategories>()
 
+            // fetch all sessions from the database
             dao?.getSessionsWithSectionsWithCategories()!!.also { sessions ->
+
+                // initialize variables to keep track of the current month
+                // and the index of its first session
                 var currentMonth: Int
+                var firstSessionOfCurrentMonth: Int = 0
                 Calendar.getInstance().also { newDate ->
                     newDate.timeInMillis =
                         sessions.first().sections.first().section.timestamp * 1000L
-                    currentMonth = newDate.get(Calendar.MONTH)
+                    currentMonth = newDate.get(Calendar.DAY_OF_MONTH)
                 }
 
-                currentMonthList.add(sessions.first())
-                sessions.drop(1)
-
-                sessions.forEach { session ->
+                // then loop trough the rest of the sessions...
+                for(i in 1 until sessions.size) {
+                    // ...get the month...
                     var sessionMonth: Int
-
                     Calendar.getInstance().also { newDate ->
                         newDate.timeInMillis =
-                            session.sections.first().section.timestamp * 1000L
-                        sessionMonth = newDate.get(Calendar.MONTH)
+                            sessions[i].sections.first().section.timestamp * 1000L
+                        sessionMonth = newDate.get(Calendar.DAY_OF_MONTH)
                     }
 
-                    if (sessionMonth == currentMonth) {
-                        currentMonthList.add(session)
-                    } else {
+                    // ...and compare it to the current month.
+                    // if it is the same, create a new summary adapter
+                    // with the respective subList of sessions
+                    if (sessionMonth != currentMonth) {
                         concatAdapter.addAdapter(
                             0,
-                            SessionSummaryAdapter(view.context, false, currentMonthList)
+                            SessionSummaryAdapter(
+                                view.context,
+                                false,
+                                sessions.subList(firstSessionOfCurrentMonth, i)
+                            )
                         )
                         concatAdapter.notifyItemInserted(0)
-                        currentMonthList = ArrayList()
+
+                        // set the current month to this sessions month and save its index
+                        currentMonth = sessionMonth
+                        firstSessionOfCurrentMonth = i
                     }
                 }
-                if(currentMonthList.isNotEmpty()) {
+
+                // create an adapter for the last subList if is not only the last element,
+                // which would be already added to the list
+                if(firstSessionOfCurrentMonth != sessions.size - 1) {
                     concatAdapter.addAdapter(
                         0,
-                        SessionSummaryAdapter(view.context, false, currentMonthList)
+                        SessionSummaryAdapter(
+                            view.context,
+                            false,
+                            sessions.subList(firstSessionOfCurrentMonth, sessions.size)
+                        )
                     )
                     concatAdapter.notifyItemInserted(0)
                 }

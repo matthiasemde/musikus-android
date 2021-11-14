@@ -21,7 +21,7 @@ import kotlin.collections.ArrayList
 class SessionSummaryAdapter(
     private val context: Context,
     private var isExpanded: Boolean,
-    private val sessionsWithSectionsWithCategories: ArrayList<SessionWithSectionsWithCategories>,
+    private val sessionsWithSectionsWithCategories: List<SessionWithSectionsWithCategories>,
 ) : RecyclerView.Adapter<SessionSummaryAdapter.ViewHolder>() {
 
     companion object {
@@ -117,7 +117,7 @@ class SessionSummaryAdapter(
             }
 
             fun bind(
-                sessionsWithSectionsWithCategories: ArrayList<SessionWithSectionsWithCategories>,
+                sessionsWithSectionsWithCategories: List<SessionWithSectionsWithCategories>,
                 position: Int,
             ) {
 
