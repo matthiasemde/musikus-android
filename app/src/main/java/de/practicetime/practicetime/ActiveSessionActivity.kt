@@ -232,7 +232,9 @@ class ActiveSessionActivity : AppCompatActivity() {
                 val rating = dialogRatingBar.rating.toInt()
                 finishSession(rating, dialogComment.text.toString())
             }
-            setNegativeButton(R.string.discard_session) { dialog, _ ->
+            setNegativeButton(R.string.discard_session) { _, _ ->
+                // clear the sectionBuffer so that runnable dies
+                mService.sectionBuffer.clear()
                 // stop the service
                 Intent(this@ActiveSessionActivity, SessionForegroundService::class.java).also {
                     stopService(it)
