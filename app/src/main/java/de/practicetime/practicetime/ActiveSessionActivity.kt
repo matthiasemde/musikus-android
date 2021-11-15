@@ -33,11 +33,6 @@ import kotlin.collections.ArrayList
 class ActiveSessionActivity : AppCompatActivity() {
 
     private var dao: PTDao? = null
-    // the sectionBuffer will keep track of all the section in the current session
-//    private var sectionBuffer = ArrayList<Pair<PracticeSection, Int>>()
-//    private var sessionActive = false   // keep track of whether a session is active
-//    private var paused = false            // flag if session is currently paused
-//    private var pauseDuration = 0         // pause duration, ONLY for displaying on the fab, section pause duration is safed in sectionBuffer!
     private var activeCategories: List<Category>? = listOf<Category>()
     private lateinit var sectionsAdapter: ArrayAdapter<String>
     private var listItems = ArrayList<String>()
@@ -330,19 +325,23 @@ class ActiveSessionActivity : AppCompatActivity() {
      * TODO ugly code, migrate to Recyclerview
      */
     private fun fillSectionList() {
-        // show all sections in listview
-        listItems.clear()
-        for (n in mService.sectionBuffer.size - 1 downTo 0) {
-            var duration = mService.sectionBuffer[n].first.duration?.minus(mService.sectionBuffer[n].second)
-            if (duration == null) {
-                duration = getDuration(mService.sectionBuffer[n].first).minus(mService.sectionBuffer[n].second)
-            }
-            listItems.add(
+        if (activeCategories != null) {
+            // show all sections in listview
+            listItems.clear()
+            for (n in mService.sectionBuffer.size - 1 downTo 0) {
+                var duration =
+                    mService.sectionBuffer[n].first.duration?.minus(mService.sectionBuffer[n].second)
+                if (duration == null) {
+                    duration =
+                        getDuration(mService.sectionBuffer[n].first).minus(mService.sectionBuffer[n].second)
+                }
+                listItems.add(
                     "${activeCategories?.get(mService.sectionBuffer[n].first.category_id - 1)?.name} " +
-                    "\t\t\t\t\t${duration}s"
-            )
+                            "\t\t\t\t\t${duration}s"
+                )
+            }
+            sectionsAdapter.notifyDataSetChanged()
         }
-        sectionsAdapter.notifyDataSetChanged()
     }
 
     /**
@@ -422,6 +421,9 @@ class ActiveSessionActivity : AppCompatActivity() {
             // sync UI with service data
             adaptUIPausedState(mService.paused)
             setPauseStopBtnVisibility(mService.sessionActive)
+            lifecycleScope.launch {
+                activeCategories = dao?.getActiveCategories()
+            }
         }
 
         override fun onServiceDisconnected(arg0: ComponentName) {
