@@ -95,7 +95,7 @@
 
         <ImageButton
             android:id="@+id/bottom_pause"
-            android:layout_width="45dp"
+            android:layout_width="80dp"
             android:layout_height="45dp"
             android:src="@drawable/ic_pause"
             app:tint="@color/black"
@@ -109,7 +109,7 @@
 
         <ImageButton
             android:id="@+id/bottom_metronome"
-            android:layout_width="45dp"
+            android:layout_width="80dp"
             android:layout_height="45dp"
             android:src="@drawable/ic_metronome"
             android:background="@drawable/background_bottom_btn"
@@ -123,7 +123,7 @@
 
         <ImageButton
             android:id="@+id/bottom_record"
-            android:layout_width="45dp"
+            android:layout_width="80dp"
             android:layout_height="45dp"
             android:src="@drawable/ic_record"
             android:background="@drawable/background_bottom_btn"
@@ -137,16 +137,15 @@
 
         <ImageButton
             android:id="@+id/bottom_stop"
-            android:layout_width="45dp"
+            android:layout_width="80dp"
             android:layout_height="45dp"
             android:src="@drawable/ic_stop"
             android:background="@drawable/background_btn_end_session"
             app:layout_constraintStart_toEndOf="@id/bottom_record"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
             app:tint="@color/white"
             android:visibility="invisible"
-            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintBottom_toBottomOf="@id/bottom_metronome"
             app:layout_constraintVertical_bias="0"/>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
@@ -160,7 +159,7 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="200dp"
         app:rippleColor="@null"
-        android:text="Pause: 00:25:13"
+        android:text="Pause: 00:00:00"
         android:layout_gravity="bottom|center"
         app:icon="@android:drawable/ic_dialog_info"/>
 

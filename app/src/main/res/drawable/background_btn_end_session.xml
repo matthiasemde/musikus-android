@@ -2,7 +2,11 @@
 <ripple xmlns:android="http://schemas.android.com/apk/res/android"
     android:color="#ffffff">
     <item>
-        <shape android:shape="oval">
+        <shape android:shape="rectangle">
+            <corners
+                android:radius="15dp" >
+            </corners>
+            <!-- required for ripple effect to work: -->
             <solid android:color="#b71c1c" />
         </shape>
     </item>

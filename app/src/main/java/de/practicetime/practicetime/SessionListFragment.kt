@@ -119,7 +119,6 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
                 .toBundle()
             )
         }
-
     }
 
     private fun openDatabase() {

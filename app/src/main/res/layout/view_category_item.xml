@@ -12,6 +12,7 @@
     android:textSize="14sp"
     android:maxLines="2"
     app:cornerRadius="15dp"
+    android:textAllCaps="false"
     tools:layout_editor_absoluteX="16dp"
     tools:layout_editor_absoluteY="16dp"
     tools:text="Button" />

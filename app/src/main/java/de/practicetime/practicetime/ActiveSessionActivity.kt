@@ -1,8 +1,12 @@
 package de.practicetime.practicetime
 
+import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
+import android.content.ServiceConnection
 import android.os.Bundle
 import android.os.Handler
+import android.os.IBinder
 import android.os.Looper
 import android.view.LayoutInflater
 import android.view.View
@@ -26,28 +30,28 @@ import java.util.*
 import kotlin.collections.ArrayList
 
 
-
-
-private var dao: PTDao? = null
-// the sectionBuffer will keep track of all the section in the current session
-private var sectionBuffer = ArrayList<Pair<PracticeSection, Int>>()
-private var sessionActive = false   // keep track of whether a session is active
-private var paused = false            // flag if session is currently paused
-private var pauseDuration = 0         // pause duration, ONLY for displaying on the fab, section pause duration is safed in sectionBuffer!
-private var activeCategories: List<Category>? = listOf<Category>()
-private lateinit var sectionsAdapter: ArrayAdapter<String>
-private var listItems = ArrayList<String>()
-private lateinit var mServiceIntent: Intent
-
 class ActiveSessionActivity : AppCompatActivity() {
+
+    private var dao: PTDao? = null
+    // the sectionBuffer will keep track of all the section in the current session
+//    private var sectionBuffer = ArrayList<Pair<PracticeSection, Int>>()
+//    private var sessionActive = false   // keep track of whether a session is active
+//    private var paused = false            // flag if session is currently paused
+//    private var pauseDuration = 0         // pause duration, ONLY for displaying on the fab, section pause duration is safed in sectionBuffer!
+    private var activeCategories: List<Category>? = listOf<Category>()
+    private lateinit var sectionsAdapter: ArrayAdapter<String>
+    private var listItems = ArrayList<String>()
+    private lateinit var mService: SessionForegroundService
+    private var mBound: Boolean = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_active_session)
 
         openDatabase()
 
-        // start the practice timer Runnable
         practiceTimer()
+
         // initialize adapter and recyclerView for showing category buttons from database
         initCategoryList()
 
@@ -55,13 +59,21 @@ class ActiveSessionActivity : AppCompatActivity() {
 
         val btnPause = findViewById<ImageButton>(R.id.bottom_pause)
         btnPause.setOnClickListener {
-            if (paused) {
-                // resume the Session with the last category
-                resumeSession(sectionBuffer.last().first.category_id)
+            if (mService.paused) {
+                mService.paused = false
+                mService.pauseDuration = 0
             } else {
-                pauseSession()
+                mService.paused = true
             }
+            // adapt UI to changes
+            adaptUIPausedState(mService.paused)
         }
+
+        // init SectionListView Adapter
+        val sectionsList = findViewById<ListView>(R.id.currentSections)
+        sectionsAdapter =
+            ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, listItems)
+        sectionsList.adapter = sectionsAdapter
     }
 
     private fun initCategoryList() {
@@ -87,74 +99,44 @@ class ActiveSessionActivity : AppCompatActivity() {
         // get the category id from the view tag and calculate current timestamp
         val categoryId = categoryView.tag as Int
 
-        if (!sessionActive) {   // session starts now
-            sessionActive = true
-            fillSectionList(true)
-            findViewById<ImageButton>(R.id.bottom_pause).visibility = View.VISIBLE
-            findViewById<ImageButton>(R.id.bottom_stop).visibility = View.VISIBLE
-
-            //start the service
-            mServiceIntent = Intent(this, SessionForegroundService::class.java).also { intent ->
-                startService(intent)
+        if (!mService.sessionActive) {   // session starts now
+            //start the service so that timer starts
+            Intent(this, SessionForegroundService::class.java).also {
+                startService(it)
             }
+            setPauseStopBtnVisibility(true)
         } else {
-            endSection()
+            mService.endSection()
         }
         // start a new section for the chosen category
-        startNewSection(categoryId)
+        mService.startNewSection(categoryId)
     }
 
-    private fun startNewSection(categoryId: Int) {
-        val now = Date().time / 1000L
-        sectionBuffer.add(
-            Pair(
-                PracticeSection(
-                    0,  // 0 means auto-increment
-                    null,
-                    categoryId,
-                    null,
-                    now,
-                ),
-                0
-            )
-        )
-    }
-
-    private fun endSection() {
-        // save duration of last section
-        sectionBuffer.last().first.apply {
-            duration = getDuration(this)
+    private fun adaptUIPausedState(paused: Boolean) {
+        if (paused) {
+            // swap pause icon with play icon
+            findViewById<ImageButton>(R.id.bottom_pause).apply {
+                setImageResource(R.drawable.ic_play)
+            }
+            // show the fab
+            findViewById<ExtendedFloatingActionButton>(R.id.fab_info_popup).apply {
+                show()
+            }
+            showOverlay()
+        } else {
+            // swap play icon with pause icon
+            findViewById<ImageButton>(R.id.bottom_pause).apply {
+                setImageResource(R.drawable.ic_pause)
+                setBackgroundResource(R.drawable.background_bottom_btn)
+            }
+            // hide the fab
+            findViewById<ExtendedFloatingActionButton>(R.id.fab_info_popup).apply {
+                hide()
+                // reset text to zero so that on next pause old time is visible for a short moment
+                text = "Pause: 00:00:00"
+            }
+            hideOverlay()
         }
-        fillSectionList()
-    }
-
-    private fun pauseSession() {
-        paused = true
-        // swap pause icon with play icon
-        findViewById<ImageButton>(R.id.bottom_pause).apply {
-            setImageResource(R.drawable.ic_play)
-            setBackgroundResource(R.drawable.background_btn_resume_session)
-        }
-        // show the fab
-        findViewById<ExtendedFloatingActionButton>(R.id.fab_info_popup).apply {
-            show()
-        }
-        showOverlay()
-    }
-
-    private fun resumeSession(categoryId: Int) {
-        paused = false
-        pauseDuration = 0
-        // swap play icon with pause icon
-        findViewById<ImageButton>(R.id.bottom_pause).apply {
-            setImageResource(R.drawable.ic_pause)
-            setBackgroundResource(R.drawable.background_bottom_btn)
-        }
-        // hide the fab
-        findViewById<ExtendedFloatingActionButton>(R.id.fab_info_popup).apply {
-            hide()
-        }
-        hideOverlay()
     }
 
     private fun showOverlay() {
@@ -183,13 +165,13 @@ class ActiveSessionActivity : AppCompatActivity() {
     }
 
 
-    private fun endSession(rating: Int, comment: String?) {
+    private fun finishSession(rating: Int, comment: String?) {
         // finish the final section
-        endSection()
+        mService.endSection()
 
         // get total break duration
         var totalBreakDuration = 0
-        sectionBuffer.forEach {
+        mService.sectionBuffer.forEach {
             totalBreakDuration += it.second
         }
 
@@ -207,7 +189,7 @@ class ActiveSessionActivity : AppCompatActivity() {
             val sessionId = dao?.insertSession(newSession)
 
             // add the new sessionId to every section in the section buffer
-            for (section in sectionBuffer) {
+            for (section in mService.sectionBuffer) {
                 section.first.practice_session_id = sessionId?.toInt()
                 // update section durations to exclude break durations
                 section.first.duration = section.first.duration?.minus(section.second)
@@ -216,10 +198,13 @@ class ActiveSessionActivity : AppCompatActivity() {
             }
 
             // reset section buffer and session status
-            sectionBuffer.clear()
-            sessionActive = false
+            mService.sectionBuffer.clear()
         }
 
+        // stop the service
+        Intent(this, SessionForegroundService::class.java).also {
+            stopService(it)
+        }
         // terminate and go back to MainActivity
         finish()
     }
@@ -239,11 +224,11 @@ class ActiveSessionActivity : AppCompatActivity() {
             setCancelable(false)
             setPositiveButton(R.string.endSessionAlertOk) { _, _ ->
                 val rating = dialogRatingBar.rating.toInt()
-                endSession(rating, dialogComment.text.toString())
+                finishSession(rating, dialogComment.text.toString())
             }
             setNegativeButton(R.string.endSessionAlertCancel) { dialog, _ ->
                 dialog.cancel()
-                if (!paused) {
+                if (!mService.paused) {
                     hideOverlay()
                 }
             }
@@ -282,7 +267,10 @@ class ActiveSessionActivity : AppCompatActivity() {
         return (now - section.timestamp).toInt()
     }
 
-    // calling practiceTimer will start a handler, which executes the code in the post() method once per second
+
+    /**
+     * TODO should be replaced by functions triggered from the service rather than polling
+     */
     private fun practiceTimer() {
         // get the text views.
         val practiceTimeView = findViewById<TextView>(R.id.practiceTimer)
@@ -294,71 +282,65 @@ class ActiveSessionActivity : AppCompatActivity() {
             // the post() method executes immediately
             it.post(object : Runnable {
                 override fun run() {
-                    if (sessionActive && sectionBuffer.isNotEmpty()) {
-                        // load the current section from the sectionBuffer
-                        val firstSection = sectionBuffer.first()
-                        val currentSection = sectionBuffer.last()
-
-                        val now = Date().time / 1000
-
-                        if (paused) {
-                            // increment pause time. Since Pairs<> are not mutable (but ArrayList is)
-                            // we have to copy the element and replace the whole element in the ArrayList
-                            sectionBuffer[sectionBuffer.lastIndex] =
-                                sectionBuffer.last().copy(second = sectionBuffer.last().second + 1)
-
-                            pauseDuration++
-                            // display pause duration on the fab, but only time after pause was activated
-                            fabInfoPause.text = "Pause: %02d:%02d:%02d".format(
-                                pauseDuration / 3600,
-                                pauseDuration % 3600 / 60,
-                                pauseDuration % 60
+                    if (mBound) {
+                        if (mService.sessionActive) {
+                            // load the current section from the sectionBuffer
+                            if (mService.paused) {
+                                // display pause duration on the fab, but only time after pause was activated
+                                fabInfoPause.text = "Pause: %02d:%02d:%02d".format(
+                                    mService.pauseDuration / 3600,
+                                    mService.pauseDuration % 3600 / 60,
+                                    mService.pauseDuration % 60
+                                )
+                            }
+                            practiceTimeView.text = "%02d:%02d:%02d".format(
+                                mService.totalPracticeDuration / 3600,
+                                mService.totalPracticeDuration % 3600 / 60,
+                                mService.totalPracticeDuration % 60
                             )
+
+                            fillSectionList()
+                        } else {
+                            practiceTimeView.text = "00:00:00"
                         }
-
-                        // calculate total time of all sections (including pauses)
-                        var totalPracticeDuration = (now - firstSection.first.timestamp).toInt()
-                        // subtract all pause durations
-                        sectionBuffer.forEach { section ->
-                            totalPracticeDuration -= section.second
-                        }
-                        practiceTimeView.text = "%02d:%02d:%02d".format(
-                            totalPracticeDuration / 3600,
-                            totalPracticeDuration % 3600 / 60,
-                            totalPracticeDuration % 60
-                        )
-
-
-                        fillSectionList()
-                    } else {
-                        practiceTimeView.text = "00:00:00"
                     }
 
-                    // post the code again with a delay of 1 second
-                    it.postDelayed(this, 1000)
+                    // post the code again with a delay of 100 milliseconds so that ui is more responsive
+                    it.postDelayed(this, 100)
                 }
             })
         }
     }
 
-    private fun fillSectionList(init: Boolean = false) {
+    private fun setPauseStopBtnVisibility(sessionActive: Boolean) {
+        if (mBound) {
+            if (sessionActive) {
+                findViewById<ImageButton>(R.id.bottom_pause).visibility = View.VISIBLE
+                findViewById<ImageButton>(R.id.bottom_stop).visibility = View.VISIBLE
+            } else {
+                findViewById<ImageButton>(R.id.bottom_pause).visibility = View.INVISIBLE
+                findViewById<ImageButton>(R.id.bottom_stop).visibility = View.INVISIBLE
+            }
+            adaptUIPausedState(mService.paused)
+        }
+
+    }
+
+    /**
+     * TODO ugly code, migrate to Recyclerview
+     */
+    private fun fillSectionList() {
         // show all sections in listview
         listItems.clear()
-        for (n in sectionBuffer.size - 1 downTo 0) {
-            var duration = sectionBuffer[n].first.duration?.minus(sectionBuffer[n].second)
+        for (n in mService.sectionBuffer.size - 1 downTo 0) {
+            var duration = mService.sectionBuffer[n].first.duration?.minus(mService.sectionBuffer[n].second)
             if (duration == null) {
-                duration = getDuration(sectionBuffer[n].first).minus(sectionBuffer[n].second)
+                duration = getDuration(mService.sectionBuffer[n].first).minus(mService.sectionBuffer[n].second)
             }
             listItems.add(
-                    "${activeCategories?.get(sectionBuffer[n].first.category_id - 1)?.name} " +
+                    "${activeCategories?.get(mService.sectionBuffer[n].first.category_id - 1)?.name} " +
                     "\t\t\t\t\t${duration}s"
             )
-        }
-        if (init) {
-            val sectionsList = findViewById<ListView>(R.id.currentSections)
-            sectionsAdapter =
-              ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, listItems)
-            sectionsList.adapter = sectionsAdapter
         }
         sectionsAdapter.notifyDataSetChanged()
     }
@@ -413,4 +395,38 @@ class ActiveSessionActivity : AppCompatActivity() {
         // Return the size of your dataset (invoked by the layout manager)
         override fun getItemCount() = dataSet.size
     }
+
+    override fun onStart() {
+        super.onStart()
+        // Bind to SessionForegroundService
+        Intent(this, SessionForegroundService::class.java).also { intent ->
+            bindService(intent, connection, Context.BIND_AUTO_CREATE)
+        }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        unbindService(connection)
+        mBound = false
+    }
+
+
+    /** Defines callbacks for service binding, passed to bindService()  */
+    private val connection = object : ServiceConnection {
+
+        override fun onServiceConnected(className: ComponentName, service: IBinder) {
+            // We've bound to LocalService, cast the IBinder and get LocalService instance
+            val binder = service as SessionForegroundService.LocalBinder
+            mService = binder.getService()
+            mBound = true
+            // sync UI with service data
+            adaptUIPausedState(mService.paused)
+            setPauseStopBtnVisibility(mService.sessionActive)
+        }
+
+        override fun onServiceDisconnected(arg0: ComponentName) {
+            mBound = false
+        }
+    }
+
 }
