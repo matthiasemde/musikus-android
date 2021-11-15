@@ -197,11 +197,11 @@ class SessionSummaryAdapter(
                     summaryTimeView.text = it
                 }
 
-                // set the break time text equal to the sessions break duration
-                practiceDurationView.text = getTimeString(breakDuration)
-
                 // show the practice duration in the practice duration field
-                breakDurationView.text = getTimeString(practiceDuration)
+                practiceDurationView.text = getTimeString(practiceDuration)
+
+                // set the break time text equal to the sessions break duration
+                breakDurationView.text = getTimeString(breakDuration)
 
                 // set the sections and update the section adapter about the change
                 sectionsWithCategoriesList.clear()
