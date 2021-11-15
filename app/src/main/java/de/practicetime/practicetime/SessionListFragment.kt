@@ -1,11 +1,9 @@
 package de.practicetime.practicetime
 
-import android.app.ActivityOptions
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -111,13 +109,8 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
         val fab = view.findViewById<FloatingActionButton>(R.id.fab)
         fab.setOnClickListener {
             val i = Intent(requireContext(), ActiveSessionActivity::class.java)
-            startActivity(i,
-                ActivityOptions.makeSceneTransitionAnimation(
-                    requireActivity(),
-                    it,
-                    "transition_fab")
-                .toBundle()
-            )
+            requireActivity().startActivity(i)
+            requireActivity().overridePendingTransition(R.anim.slide_in_up, R.anim.fake_anim)
         }
     }
 

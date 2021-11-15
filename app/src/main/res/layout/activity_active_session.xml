@@ -13,6 +13,7 @@
         android:layout_height="match_parent"
         android:orientation="vertical"
         tools:context=".ActiveSessionFragment"
+        android:layout_marginBottom="56dp"
         android:animateLayoutChanges="true">
 
         <TextView
@@ -48,8 +49,7 @@
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/categoryList"
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
+            android:layout_height="wrap_content"
             android:orientation="horizontal"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -91,66 +91,92 @@
         android:layout_height="56dp"
         android:layout_gravity="bottom|left"
         android:orientation="horizontal"
-        android:animateLayoutChanges="true">
+        android:animateLayoutChanges="true"
+        android:paddingEnd="16dp"
+        android:elevation="10dp"
+        android:background="@color/white">
 
-        <ImageButton
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/bottom_pause"
-            android:layout_width="80dp"
-            android:layout_height="45dp"
-            android:src="@drawable/ic_pause"
-            app:tint="@color/black"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_marginStart="16dp"
             android:background="@drawable/background_bottom_btn"
+            android:gravity="center"
+            app:icon="@drawable/ic_pause"
+            app:iconGravity="textStart"
+            app:iconPadding="0dp"
+            app:iconTint="@color/black"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toStartOf="@id/bottom_metronome"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintVertical_bias="0"
-            android:visibility="invisible"/>
+            android:visibility="gone"/>
 
-        <ImageButton
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/bottom_metronome"
-            android:layout_width="80dp"
-            android:layout_height="45dp"
-            android:src="@drawable/ic_metronome"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_marginStart="16dp"
             android:background="@drawable/background_bottom_btn"
+            android:gravity="center"
+            app:iconGravity="textStart"
+            app:icon="@drawable/ic_metronome"
+            app:iconTint="@color/black"
+            android:text="Metronome"
+            android:textAllCaps="false"
+            android:textColor="@color/black"
             app:layout_constraintStart_toEndOf="@id/bottom_pause"
             app:layout_constraintEnd_toStartOf="@id/bottom_record"
             app:layout_constraintTop_toTopOf="parent"
-            app:tint="@color/black"
-            android:clickable="true"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintVertical_bias="0" />
+            app:layout_constraintBottom_toBottomOf="parent"/>
 
-        <ImageButton
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/bottom_record"
-            android:layout_width="80dp"
-            android:layout_height="45dp"
-            android:src="@drawable/ic_record"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_marginStart="16dp"
             android:background="@drawable/background_bottom_btn"
+            android:gravity="center"
+            app:iconGravity="textStart"
+            app:icon="@drawable/ic_record"
+            app:iconTint="@color/black"
+            android:text="Recorder"
+            android:textAllCaps="false"
+            android:textColor="@color/black"
             app:layout_constraintStart_toEndOf="@id/bottom_metronome"
             app:layout_constraintEnd_toStartOf="@id/bottom_stop"
             app:layout_constraintTop_toTopOf="parent"
-            app:tint="@color/black"
-            android:clickable="true"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintVertical_bias="0"/>
+            app:layout_constraintBottom_toBottomOf="parent"/>
 
-        <ImageButton
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/bottom_stop"
-            android:layout_width="80dp"
-            android:layout_height="45dp"
-            android:src="@drawable/ic_stop"
-            android:background="@drawable/background_btn_end_session"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_marginStart="16dp"
+            android:background="@drawable/background_bottom_btn"
+            app:backgroundTint="@color/md_red_500"
+            android:gravity="center"
+            app:icon="@drawable/ic_stop"
+            app:iconGravity="textStart"
+            app:iconPadding="0dp"
+            app:iconTint="@color/black"
             app:layout_constraintStart_toEndOf="@id/bottom_record"
             app:layout_constraintEnd_toEndOf="parent"
-            app:tint="@color/black"
-            android:visibility="invisible"
             app:layout_constraintBottom_toBottomOf="@id/bottom_metronome"
-            app:layout_constraintVertical_bias="0"/>
+            android:visibility="gone"/>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-
+    <ImageButton
+        android:id="@+id/btn_back"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_gravity="top|left"
+        android:src="@drawable/ic_arrow_down"
+        android:layout_marginTop="20dp"
+        android:layout_marginStart="20dp"
+        android:background="?selectableItemBackgroundBorderless" />
 
     <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
         android:id="@+id/fab_info_popup"

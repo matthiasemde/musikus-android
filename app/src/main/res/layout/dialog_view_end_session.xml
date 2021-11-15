@@ -1,28 +1,46 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <TextView
-        android:id="@+id/dialogTitle"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/design_default_color_primary"
-        android:padding="16dp"
-        android:text="@string/endSessionDialogTitle"
-        android:textColor="@android:color/white"
-        android:textSize="28sp" />
+        android:orientation="horizontal"
+        android:background="@color/md_teal_400" >
+
+        <ImageButton
+            android:id="@+id/btn_back_alertdialog"
+            android:layout_width="60dp"
+            android:layout_height="match_parent"
+            android:src="?homeAsUpIndicator"
+            android:background="?selectableItemBackgroundBorderless"
+            app:tint="@color/white" />
+
+        <TextView
+            android:id="@+id/dialogTitle"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:paddingTop="16dp"
+            android:paddingBottom="16dp"
+            android:text="@string/endSessionDialogTitle"
+            android:textColor="@android:color/white"
+            android:textSize="28sp" />
+
+    </LinearLayout>
 
     <RatingBar
         android:id="@+id/dialogRatingBar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="16dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginBottom="8dp"
+        android:layout_margin="16dp"
+        android:layout_gravity="center"
         android:numStars="5"
-        android:stepSize="1" />
+        android:stepSize="1"
+        android:rating="3"/>
 
     <EditText
         android:id="@+id/dialogComment"

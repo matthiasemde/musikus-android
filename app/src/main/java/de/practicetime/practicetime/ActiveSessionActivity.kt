@@ -4,10 +4,12 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
+import android.graphics.Color
 import android.os.Bundle
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -52,7 +54,7 @@ class ActiveSessionActivity : AppCompatActivity() {
 
         initEndSessionDialog()
 
-        val btnPause = findViewById<ImageButton>(R.id.bottom_pause)
+        val btnPause = findViewById<MaterialButton>(R.id.bottom_pause)
         btnPause.setOnClickListener {
             if (mService.paused) {
                 mService.paused = false
@@ -69,6 +71,10 @@ class ActiveSessionActivity : AppCompatActivity() {
         sectionsAdapter =
             ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, listItems)
         sectionsList.adapter = sectionsAdapter
+
+        findViewById<ImageButton>(R.id.btn_back).setOnClickListener {
+            onBackPressed()
+        }
     }
 
     private fun initCategoryList() {
@@ -110,8 +116,8 @@ class ActiveSessionActivity : AppCompatActivity() {
     private fun adaptUIPausedState(paused: Boolean) {
         if (paused) {
             // swap pause icon with play icon
-            findViewById<ImageButton>(R.id.bottom_pause).apply {
-                setImageResource(R.drawable.ic_play)
+            findViewById<MaterialButton>(R.id.bottom_pause).apply {
+                setIconResource(R.drawable.ic_play)
             }
             // show the fab
             findViewById<ExtendedFloatingActionButton>(R.id.fab_info_popup).apply {
@@ -120,9 +126,8 @@ class ActiveSessionActivity : AppCompatActivity() {
             showOverlay()
         } else {
             // swap play icon with pause icon
-            findViewById<ImageButton>(R.id.bottom_pause).apply {
-                setImageResource(R.drawable.ic_pause)
-                setBackgroundResource(R.drawable.background_bottom_btn)
+            findViewById<MaterialButton>(R.id.bottom_pause).apply {
+                setIconResource(R.drawable.ic_pause)
             }
             // hide the fab
             findViewById<ExtendedFloatingActionButton>(R.id.fab_info_popup).apply {
@@ -143,8 +148,10 @@ class ActiveSessionActivity : AppCompatActivity() {
             findViewById(R.id.coordinator_layout_active_session),
             transition
         )
-
         findViewById<TextView>(R.id.tv_overlay_pause).visibility = View.VISIBLE
+
+        // make up button white
+        findViewById<ImageButton>(R.id.btn_back).setColorFilter(Color.WHITE)
     }
 
     private fun hideOverlay() {
@@ -157,6 +164,9 @@ class ActiveSessionActivity : AppCompatActivity() {
             transition
         )
         findViewById<TextView>(R.id.tv_overlay_pause).visibility = View.GONE
+
+        // make up button black
+        findViewById<ImageButton>(R.id.btn_back).setColorFilter(Color.DKGRAY)
     }
 
 
@@ -211,6 +221,7 @@ class ActiveSessionActivity : AppCompatActivity() {
         val dialogView = inflater.inflate(R.layout.dialog_view_end_session, null)
 
         val dialogRatingBar = dialogView.findViewById<RatingBar>(R.id.dialogRatingBar)
+        val dialogBackButton = dialogView.findViewById<ImageButton>(R.id.btn_back_alertdialog)
         val dialogComment = dialogView.findViewById<EditText>(R.id.dialogComment)
 
         // Dialog Setup
@@ -221,24 +232,31 @@ class ActiveSessionActivity : AppCompatActivity() {
                 val rating = dialogRatingBar.rating.toInt()
                 finishSession(rating, dialogComment.text.toString())
             }
-            setNegativeButton(R.string.endSessionAlertCancel) { dialog, _ ->
-                dialog.cancel()
-                if (!mService.paused) {
-                    hideOverlay()
+            setNegativeButton(R.string.discard_session) { dialog, _ ->
+                // stop the service
+                Intent(this@ActiveSessionActivity, SessionForegroundService::class.java).also {
+                    stopService(it)
                 }
+                // terminate and go back to MainActivity
+                finish()
             }
         }
         val endSessionDialog: AlertDialog = endSessionDialogBuilder.create()
 
         // stop session button functionality
-        findViewById<ImageButton>(R.id.bottom_stop).setOnClickListener {
+        findViewById<MaterialButton>(R.id.bottom_stop).setOnClickListener {
             // show the end session dialog
             endSessionDialog.show()
             endSessionDialog.also {
                 val positiveButton = it.getButton(AlertDialog.BUTTON_POSITIVE)
-                positiveButton.isEnabled = false
                 dialogRatingBar.setOnRatingBarChangeListener { _, rating, _ ->
                     positiveButton.isEnabled = rating.toInt() > 0
+                }
+                dialogBackButton.setOnClickListener {
+                    if (!mService.paused) {
+                        hideOverlay()
+                    }
+                    endSessionDialog.cancel()
                 }
             }
             showOverlay()
@@ -310,11 +328,19 @@ class ActiveSessionActivity : AppCompatActivity() {
     private fun setPauseStopBtnVisibility(sessionActive: Boolean) {
         if (mBound) {
             if (sessionActive) {
-                findViewById<ImageButton>(R.id.bottom_pause).visibility = View.VISIBLE
-                findViewById<ImageButton>(R.id.bottom_stop).visibility = View.VISIBLE
+                findViewById<MaterialButton>(R.id.bottom_pause).visibility = View.VISIBLE
+                findViewById<MaterialButton>(R.id.bottom_stop).visibility = View.VISIBLE
+                findViewById<MaterialButton>(R.id.bottom_metronome).apply {
+                    text = ""       // remove text from Button
+                    iconPadding = 0 // center icon
+                }
+                findViewById<MaterialButton>(R.id.bottom_record).apply {
+                    text = ""       // remove text from Button
+                    iconPadding = 0 // center icon
+                }
             } else {
-                findViewById<ImageButton>(R.id.bottom_pause).visibility = View.INVISIBLE
-                findViewById<ImageButton>(R.id.bottom_stop).visibility = View.INVISIBLE
+                findViewById<MaterialButton>(R.id.bottom_pause).visibility = View.GONE
+                findViewById<MaterialButton>(R.id.bottom_stop).visibility = View.GONE
             }
             adaptUIPausedState(mService.paused)
         }
@@ -409,6 +435,11 @@ class ActiveSessionActivity : AppCompatActivity() {
         mBound = false
     }
 
+    override fun onBackPressed() {
+        super.onBackPressed()
+        Log.d("TAH", "OnBack")
+        overridePendingTransition(0, R.anim.slide_out_down)
+    }
 
     /** Defines callbacks for service binding, passed to bindService()  */
     private val connection = object : ServiceConnection {
