@@ -7,7 +7,7 @@
                 android:radius="15dp" >
             </corners>
             <!-- required for ripple effect to work: -->
-            <solid android:color="@color/design_default_color_secondary" />
+            <solid android:color="@color/md_teal_400" />
         </shape>
     </item>
 </ripple>
