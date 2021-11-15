@@ -212,8 +212,10 @@ class ActiveSessionActivity : AppCompatActivity() {
         Intent(this, SessionForegroundService::class.java).also {
             stopService(it)
         }
-        // terminate and go back to MainActivity
-        finish()
+        // go back to MainActivity, make new intent so MainActivity gets reloaded and shows new session
+        val intent = Intent(this, MainActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
+        startActivity(intent)
     }
 
     private fun initEndSessionDialog() {
