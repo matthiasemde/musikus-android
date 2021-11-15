@@ -111,6 +111,8 @@ class ActiveSessionActivity : AppCompatActivity() {
         }
         // start a new section for the chosen category
         mService.startNewSection(categoryId)
+        // immediately update list
+        fillSectionList()
     }
 
     private fun adaptUIPausedState(paused: Boolean) {
@@ -273,7 +275,6 @@ class ActiveSessionActivity : AppCompatActivity() {
         dao = db.ptDao
     }
 
-
     /**
      * calculates total Duration (including pauses) of a section
      */
@@ -282,46 +283,23 @@ class ActiveSessionActivity : AppCompatActivity() {
         return (now - section.timestamp).toInt()
     }
 
-
     /**
-     * TODO should be replaced by functions triggered from the service rather than polling
+     * TODO should be replaced by functions triggered from the service rather than polling every 100ms
      */
     private fun practiceTimer() {
         // get the text views.
         val practiceTimeView = findViewById<TextView>(R.id.practiceTimer)
-        val fabInfoPause = findViewById<ExtendedFloatingActionButton>(R.id.fab_info_popup)
 
         // creates a new Handler
         Handler(Looper.getMainLooper()).also {
-
             // the post() method executes immediately
             it.post(object : Runnable {
                 override fun run() {
                     if (mBound) {
-                        if (mService.sessionActive) {
-                            // load the current section from the sectionBuffer
-                            if (mService.paused) {
-                                // display pause duration on the fab, but only time after pause was activated
-                                fabInfoPause.text = "Pause: %02d:%02d:%02d".format(
-                                    mService.pauseDuration / 3600,
-                                    mService.pauseDuration % 3600 / 60,
-                                    mService.pauseDuration % 60
-                                )
-                            }
-                            practiceTimeView.text = "%02d:%02d:%02d".format(
-                                mService.totalPracticeDuration / 3600,
-                                mService.totalPracticeDuration % 3600 / 60,
-                                mService.totalPracticeDuration % 60
-                            )
-
-                            fillSectionList()
-                        } else {
-                            practiceTimeView.text = "00:00:00"
-                        }
+                        updateViews()
                     }
-
                     // post the code again with a delay of 100 milliseconds so that ui is more responsive
-                    it.postDelayed(this, 100)
+                    it.postDelayed(this, 1000)
                 }
             })
         }
@@ -347,6 +325,31 @@ class ActiveSessionActivity : AppCompatActivity() {
             adaptUIPausedState(mService.paused)
         }
 
+    }
+
+    private fun updateViews() {
+        val practiceTimeView = findViewById<TextView>(R.id.practiceTimer)
+        if (mService.sessionActive) {
+            val fabInfoPause = findViewById<ExtendedFloatingActionButton>(R.id.fab_info_popup)
+            // load the current section from the sectionBuffer
+            if (mService.paused) {
+                // display pause duration on the fab, but only time after pause was activated
+                fabInfoPause.text = "Pause: %02d:%02d:%02d".format(
+                    mService.pauseDuration / 3600,
+                    mService.pauseDuration % 3600 / 60,
+                    mService.pauseDuration % 60
+                )
+            }
+            practiceTimeView.text = "%02d:%02d:%02d".format(
+                mService.totalPracticeDuration / 3600,
+                mService.totalPracticeDuration % 3600 / 60,
+                mService.totalPracticeDuration % 60
+            )
+
+            fillSectionList()
+        } else {
+            practiceTimeView.text = "00:00:00"
+        }
     }
 
     /**
@@ -452,6 +455,7 @@ class ActiveSessionActivity : AppCompatActivity() {
             mService = binder.getService()
             mBound = true
             // sync UI with service data
+            updateViews()
             adaptUIPausedState(mService.paused)
             setPauseStopBtnVisibility(mService.sessionActive)
             lifecycleScope.launch {
