@@ -11,5 +11,7 @@
         android:layout_marginStart="16dp"
         android:layout_weight="1"
         android:text="TextView"
-        android:textSize="30sp" />
+        android:textSize="30sp"
+        android:textColor="@color/black"
+        android:textStyle="bold"/>
 </LinearLayout>

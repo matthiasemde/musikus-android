@@ -1,17 +1,16 @@
 package de.practicetime.practicetime
 
 import android.content.Context
-import android.util.Log
+import android.content.res.ColorStateList
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.RatingBar
 import android.widget.TextView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import de.practicetime.practicetime.entities.PracticeSection
-import de.practicetime.practicetime.entities.PracticeSession
 import de.practicetime.practicetime.entities.SectionWithCategory
 import de.practicetime.practicetime.entities.SessionWithSectionsWithCategories
 import java.text.SimpleDateFormat
@@ -61,7 +60,7 @@ class SessionSummaryAdapter(
             )
             else -> ViewHolder.ItemViewHolder(
                 inflater.inflate(
-                    R.layout.view_session_summary,
+                    R.layout.view_session_summary_newdraft,
                     viewGroup,
                     false
                 ),
@@ -93,7 +92,7 @@ class SessionSummaryAdapter(
             private val summaryDayLayout: LinearLayout = view.findViewById(R.id.summaryDayLayout)
             private val summaryDate: TextView = view.findViewById(R.id.summaryDate)
             private val summaryDayDuration: TextView = view.findViewById(R.id.summaryDayDuration)
-            private val divider : View = view.findViewById(R.id.divider)
+//            private val divider : View = view.findViewById(R.id.divider)
 
             private val summaryTimeView: TextView = view.findViewById(R.id.summaryTime)
             private val breakDurationView: TextView = view.findViewById(R.id.breakDuration)
@@ -101,6 +100,7 @@ class SessionSummaryAdapter(
             private val sectionList: RecyclerView = view.findViewById(R.id.sectionList)
             private val ratingBar: RatingBar = view.findViewById(R.id.ratingBar)
             private val commentField: TextView = view.findViewById(R.id.commentField)
+            private val commentLabel: TextView = view.findViewById(R.id.commentLabel)
 
             private val sectionsWithCategoriesList = ArrayList<SectionWithCategory>()
 
@@ -169,16 +169,12 @@ class SessionSummaryAdapter(
                     }
 
                     summaryDayLayout.visibility = View.VISIBLE
-                    divider.visibility = View.VISIBLE
+//                    divider.visibility = View.VISIBLE
                     summaryDate.text = dateFormat.format(currentSessionDate.timeInMillis)
-                    summaryDayDuration.text = "%dh %dmin".format(
-//      Todo change back eventually      breakDuration / 3600,
-                        totalPracticeDuration % 3600 / 60,
-                        totalPracticeDuration % 60
-                    )
+                    summaryDayDuration.text = getTimeString(totalPracticeDuration)
                 } else {
                     summaryDayLayout.visibility = View.GONE
-                    divider.visibility = View.GONE
+//                    divider.visibility = View.GONE
                 }
 
                 // compute the total practice time
@@ -202,18 +198,10 @@ class SessionSummaryAdapter(
                 }
 
                 // set the break time text equal to the sessions break duration
-                breakDurationView.text = "%dh %dmin".format(
-//      Todo change back eventually      breakDuration / 3600,
-                    breakDuration % 3600 / 60,
-                    breakDuration % 60
-                )
+                practiceDurationView.text = getTimeString(breakDuration)
 
                 // show the practice duration in the practice duration field
-                practiceDurationView.text = "%dh %dmin".format(
-//      Todo change back eventually      practiceDuration / 3600,
-                    practiceDuration % 3600 / 60,
-                    practiceDuration % 60
-                )
+                breakDurationView.text = getTimeString(practiceDuration)
 
                 // set the sections and update the section adapter about the change
                 sectionsWithCategoriesList.clear()
@@ -223,8 +211,24 @@ class SessionSummaryAdapter(
                 //set the rating bar to the correct star rating
                 ratingBar.rating = session.rating.toFloat()
 
-                //set content of the comment field
-                commentField.text = session.comment
+                if (session.comment.isNullOrEmpty()) {
+                    commentField.visibility = View.GONE
+                    commentLabel.visibility = View.GONE
+                } else {
+                    //set content of the comment field
+                    commentField.text = session.comment
+                }
+            }
+
+            private fun getTimeString(durationMs: Int) : String {
+                val hoursDur =  durationMs % 3600 / 60     // TODO change back eventually
+                val minutesDur = durationMs % 60           // TODO change back eventually
+
+                return if (hoursDur > 0) {
+                    "%dh %dmin".format(hoursDur, minutesDur)
+                } else {
+                    "%dmin".format(minutesDur)
+                }
             }
 
             private inner class SectionAdapter(
@@ -232,7 +236,7 @@ class SessionSummaryAdapter(
             ) : RecyclerView.Adapter<SectionAdapter.ViewHolder>() {
 
                 inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-                    val sectionColor: View = view.findViewById(R.id.sectionColor)
+                    val sectionColor: ImageView = view.findViewById(R.id.sectionColor)
                     val sectionName: TextView = view.findViewById(R.id.sectionName)
                     val sectionDuration: TextView = view.findViewById(R.id.sectionDuration)
                 }
@@ -252,17 +256,14 @@ class SessionSummaryAdapter(
                     val (section, category) = sectionsWithCategories[position]
 
                     // set the color to the category color
-                    viewHolder.sectionColor.setBackgroundColor(category.color)
+                    viewHolder.sectionColor.backgroundTintList = ColorStateList.valueOf(category.color);
+
 
                     val sectionDuration = section.duration ?: 0
 
                     // contents of the view with that element
                     viewHolder.sectionName.text = category.name
-                    viewHolder.sectionDuration.text = "%dh %dmin".format(
-//              Todo change back eventually  sectionDuration / 3600,
-                        sectionDuration % 3600 / 60,
-                        sectionDuration % 60
-                    )
+                    viewHolder.sectionDuration.text = getTimeString(sectionDuration)
                 }
 
 
