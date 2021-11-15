@@ -60,7 +60,7 @@ class SessionSummaryAdapter(
             )
             else -> ViewHolder.ItemViewHolder(
                 inflater.inflate(
-                    R.layout.view_session_summary_newdraft,
+                    R.layout.view_session_summary,
                     viewGroup,
                     false
                 ),

@@ -6,7 +6,8 @@
     android:layout_height="wrap_content"
     android:gravity="fill_horizontal|top|fill_vertical"
     android:orientation="vertical"
-    android:visibility="visible">
+    android:visibility="visible"
+    android:background="@android:color/transparent">
 
 
     <LinearLayout
@@ -14,6 +15,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
+        android:layout_marginTop="60dp"
+        android:layout_marginBottom="16dp"
         android:visibility="visible">
 
         <TextView
@@ -21,7 +24,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
-            android:textSize="20sp"
+            android:textSize="25sp"
+            android:textStyle="bold"
+            android:textColor="@color/black"
             tools:text="19.10.2021" />
 
         <Space
@@ -38,19 +43,11 @@
             tools:text="1h 20min" />
     </LinearLayout>
 
-    <View
-        android:id="@+id/divider"
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginBottom="8dp"
-        android:background="?android:attr/listDivider" />
-
     <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_margin="16dp"
-        android:elevation="8dp"
+        android:elevation="50dp"
         app:cardCornerRadius="10dp">
 
         <TableLayout
@@ -64,82 +61,7 @@
             <TableRow
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_marginBottom="16dp">
-
-                <TextView
-                    android:id="@+id/summaryTime"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_span="5"
-                    android:textAlignment="center"
-                    android:textSize="14sp"
-                    tools:text="13:13 - 16:23" />
-            </TableRow>
-
-            <TableRow
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
-
-                <TextView
-                    android:id="@+id/breakTimeLabel"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_span="3"
-                    android:text="@string/sessionSummaryBreakTime"
-                    android:textSize="16sp" />
-
-                <TextView
-                    android:id="@+id/breakDuration"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_span="2"
-                    android:text="00:00:00"
-                    android:textAlignment="textStart"
-                    android:textSize="16sp" />
-            </TableRow>
-
-            <TableRow
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_marginBottom="16dp">
-
-                <TextView
-                    android:id="@+id/practiceTimeLabel"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_span="3"
-                    android:text="@string/sessionSummaryPracticeTime"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/practiceDuration"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_span="2"
-                    android:text="00:00:00"
-                    android:textAlignment="textStart"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
-            </TableRow>
-
-            <TableRow
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_marginBottom="32dp">
-
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/sectionList"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_span="5"
-                    android:nestedScrollingEnabled="false" />
-            </TableRow>
-
-            <TableRow
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_marginBottom="8dp">
+                android:layout_marginBottom="5dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -147,36 +69,127 @@
                     android:layout_span="5"
                     android:orientation="horizontal">
 
+                    <TextView
+                        android:id="@+id/summaryTime"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="14sp"
+                        tools:text="13:13 - 16:23" />
+
+                    <Space
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content" />
+
                     <RatingBar
                         android:id="@+id/ratingBar"
                         style="?android:attr/ratingBarStyleSmall"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_span="1"
                         android:isIndicator="true"
                         android:numStars="5"
                         android:rating="3"
                         android:stepSize="1" />
+
                 </LinearLayout>
+
+            </TableRow>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="?android:attr/listDivider" />
+
+            <TableRow
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginTop="36dp">
+
+                <TextView
+                    android:id="@+id/practiceDuration"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="3"
+                    android:text="00:00:00"
+                    android:textAlignment="textStart"
+                    android:textSize="30sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/black"/>
+
+
+                <TextView
+                    android:id="@+id/breakDuration"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="2"
+                    android:text="00:00:00"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:layout_gravity="bottom"
+                    android:textColor="@color/black"/>
 
             </TableRow>
 
             <TableRow
                 android:layout_width="match_parent"
-                android:layout_height="match_parent">
+                android:layout_height="match_parent"
+                android:layout_marginStart="16dp"
+                android:layout_marginBottom="36dp">
+
+
+                <TextView
+                    android:id="@+id/practiceTimeLabel"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="3"
+                    android:text="@string/sessionSummaryPracticeTime"
+                    android:textSize="15sp"/>
+
+                <TextView
+                    android:id="@+id/breakTimeLabel"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="2"
+                    android:text="@string/sessionSummaryBreakTime"
+                    android:textSize="15sp" />
+
+
+            </TableRow>
+
+            <View
+                android:id="@+id/divider"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="?android:attr/listDivider" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginBottom="16dp"
+                android:layout_marginTop="16dp"
+                android:orientation="vertical">
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/sectionList"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_span="5"
+                    android:nestedScrollingEnabled="false" />
+
 
                 <TextView
                     android:id="@+id/commentLabel"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="25dp"
                     android:layout_span="4"
+                    android:textColor="@color/black"
+                    android:textStyle="bold"
                     android:text="@string/sessionSummaryComment"
                     android:textSize="16sp" />
-            </TableRow>
 
-            <TableRow
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
 
                 <TextView
                     android:id="@+id/commentField"
@@ -184,13 +197,16 @@
                     android:layout_height="wrap_content"
                     android:layout_span="4"
                     android:ems="10"
+                    android:textStyle="italic"
+                    android:text="@tools:sample/lorem/random"
+                    android:layout_weight="1"
                     android:gravity="start|top"
                     android:inputType="textMultiLine"
                     android:minHeight="60dp"
                     android:singleLine="false"
                     android:textSize="16sp" />
 
-            </TableRow>
+            </LinearLayout>
 
         </TableLayout>
     </androidx.cardview.widget.CardView>
