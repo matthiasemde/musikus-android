@@ -5,6 +5,7 @@ import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
 import android.view.View
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.ConcatAdapter
@@ -131,15 +132,15 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
 
                 // populate the category table on first run
                 listOf(
-                    Category(0, "Die Schöpfung", Color.parseColor("#4caf50"), false, 1),
-                    Category(0, "Beethoven Septett", Color.parseColor("#03a9f4"), false, 1),
-                    Category(0, "Schostakowitsch 9.", Color.parseColor("#cddc39"), false, 1),
-                    Category(0, "Trauermarsch c-Moll", Color.parseColor("#8bc34a"), false, 1),
-                    Category(0, "Adagio", Color.parseColor("#f44336"), false, 1),
-                    Category(0, "Eine kleine Gigue", Color.parseColor("#00bcd4"), false, 1),
-                    Category(0, "Andantino", Color.parseColor("#00bcd4"), false, 1),
-                    Category(0, "Klaviersonate", Color.parseColor("#fdd835"), false, 1),
-                    Category(0, "Trauermarsch", Color.parseColor("#00bcd4"), false, 1),
+                    Category(0, "Die Schöpfung", ContextCompat.getColor(requireContext(), R.color.md_red_300), false, 1),
+                    Category(0, "Beethoven Septett", ContextCompat.getColor(requireContext(), R.color.md_indigo_300), false, 1),
+                    Category(0, "Schostakowitsch 9.", ContextCompat.getColor(requireContext(), R.color.md_teal_300), false, 1),
+                    Category(0, "Trauermarsch c-Moll", ContextCompat.getColor(requireContext(), R.color.md_yellow_300), false, 1),
+                    Category(0, "Adagio", ContextCompat.getColor(requireContext(), R.color.md_deep_orange_300), false, 1),
+                    Category(0, "Eine kleine Gigue", ContextCompat.getColor(requireContext(), R.color.md_blue_grey_300), false, 1),
+                    Category(0, "Andantino", ContextCompat.getColor(requireContext(), R.color.md_purple_300), false, 1),
+                    Category(0, "Klaviersonate", ContextCompat.getColor(requireContext(), R.color.md_cyan_300), false, 1),
+                    Category(0, "Trauermarsch", ContextCompat.getColor(requireContext(), R.color.md_blue_300), false, 1),
                 ).forEach {
                     dao?.insertCategory(it)
                 }
