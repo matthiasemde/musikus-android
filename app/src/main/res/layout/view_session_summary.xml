@@ -211,9 +211,6 @@
                     android:text="@tools:sample/lorem/random"
                     android:layout_weight="1"
                     android:gravity="start|top"
-                    android:inputType="textMultiLine"
-                    android:minHeight="60dp"
-                    android:singleLine="false"
                     android:textSize="16sp" />
 
             </LinearLayout>
