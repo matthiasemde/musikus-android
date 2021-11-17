@@ -9,12 +9,12 @@
     android:transitionName="transition_fab">
 
     <LinearLayout
+        android:id="@+id/ll_active_session"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
         tools:context=".ActiveSessionFragment"
-        android:layout_marginBottom="56dp"
-        android:animateLayoutChanges="true">
+        android:layout_marginBottom="56dp">
 
         <TextView
             android:id="@+id/practiceTimer"
@@ -65,16 +65,19 @@
             android:text="@string/sections"
             android:textSize="20sp"
             android:layout_marginStart="20dp"
-            android:textStyle="bold"/>
+            android:textStyle="bold"
+            android:visibility="invisible"/>
 
-        <ListView
+        <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/currentSections"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1.4"
-            android:layout_margin="20dp"
-            android:fadeScrollbars="false"
-            android:animateLayoutChanges="true"/>
+            android:layout_marginStart="30dp"
+            android:layout_marginEnd="30dp"
+            android:paddingBottom="16dp"
+            android:clipToPadding="false"
+            android:fadeScrollbars="false"/>
 
     </LinearLayout>
 
@@ -160,7 +163,7 @@
             app:layout_constraintStart_toEndOf="@id/bottom_record"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintBottom_toBottomOf="@id/bottom_metronome"
-            android:visibility="visible"/>
+            android:visibility="gone"/>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

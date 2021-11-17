@@ -10,9 +10,6 @@ import java.util.*
 import kotlin.collections.ArrayList
 
 
-
-
-
 class SessionForegroundService : Service() {
     private val CHANNEL_ID = "PracticeTime Notification Channel ID"
     private val NOTIFICATION_ID = 42
@@ -51,6 +48,7 @@ class SessionForegroundService : Service() {
                 override fun run() {
                     if (sectionBuffer.isNotEmpty()) {
                         val firstSection = sectionBuffer.first()
+                        val lastSection = sectionBuffer.last()
 
                         if (paused) {
                             // increment pause time. Since Pairs<> are not mutable (but ArrayList is)
@@ -64,9 +62,13 @@ class SessionForegroundService : Service() {
                         val now = Date().time / 1000
                         // calculate total time of all sections (including pauses)
                         totalPracticeDuration = (now - firstSection.first.timestamp).toInt()
-                        // subtract all pause durations
                         sectionBuffer.forEach { section ->
+                            // subtract all pause durations from total time
                             totalPracticeDuration -= section.second
+                        }
+                        lastSection.apply {
+                            // calculate section duration and update duration field
+                            first.duration = getDuration(first)
                         }
                         updateNotification()
                     }
@@ -161,15 +163,8 @@ class SessionForegroundService : Service() {
         )
     }
 
-    fun endSection() {
-        // save duration of last section
-        sectionBuffer.last().first.apply {
-            duration = getDuration(this)
-        }
-    }
-
     /**
-     * calculates total Duration (including pauses) of a section
+     * calculates total Duration (INCLUDING PAUSES!!!) of a section
      */
     private fun getDuration(section: PracticeSection): Int {
         val now = Date().time / 1000L
