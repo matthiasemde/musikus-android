@@ -119,6 +119,10 @@ class ActiveSessionActivity : AppCompatActivity() {
         fillSectionList()
     }
 
+    /**
+     * This function adapts all UI elements which change by pausing depending on paused
+     * It can be called whenever required to sync the UI with the data in the service
+     */
     private fun adaptUIPausedState(paused: Boolean) {
         if (paused) {
             // swap pause icon with play icon
@@ -145,6 +149,10 @@ class ActiveSessionActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Shows a translucent overlay above the screen (TextView) with a fade animation and adapts the
+     * rest of the UI to these changes
+     */
     private fun showOverlay() {
         val transition = Fade().apply {
             duration = 600

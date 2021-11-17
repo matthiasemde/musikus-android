@@ -120,6 +120,8 @@ class SessionSummaryAdapter(
                 sessionsWithSectionsWithCategories: List<SessionWithSectionsWithCategories>,
                 position: Int,
             ) {
+                // TODO please cleanup code and extract code blocks in separate functions,
+                //  100 lines of code in one function is not readable!
 
                 // get the session at given position
                 val (session, sectionsWithCategories) = sessionsWithSectionsWithCategories[position]
@@ -211,6 +213,8 @@ class SessionSummaryAdapter(
                 //set the rating bar to the correct star rating
                 ratingBar.rating = session.rating.toFloat()
 
+                // TODO Bug: currently this check returns true although session.comment is not empty
+                //  when RecyclerView recycles the views (when scrolling outside and then back)
                 if (session.comment.isNullOrEmpty()) {
                     commentField.visibility = View.GONE
                     commentLabel.visibility = View.GONE
