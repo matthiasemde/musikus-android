@@ -299,6 +299,8 @@ class ActiveSessionActivity : AppCompatActivity() {
 
             // reset section buffer and session status
             mService.sectionBuffer.clear()
+            // refresh the adapter otherwise the app will crash because of "inconsistency detected"
+            findViewById<RecyclerView>(R.id.currentSections).adapter = sectionsListAdapter
         }
 
         // stop the service
