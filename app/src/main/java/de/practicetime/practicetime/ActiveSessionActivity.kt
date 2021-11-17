@@ -119,7 +119,26 @@ class ActiveSessionActivity : AppCompatActivity() {
 
     private fun initCategoryList() {
         val categories = ArrayList<Category>()
-        val categoryAdapter = CategoryAdapter(categories, ::categoryPressed, dao!!, context = this)
+        val categoryAdapter = CategoryAdapter(
+                categories,
+                ::categoryPressed,
+                dao!!,
+                context = this,
+                lifecycleScope
+        )
+
+        categoryAdapter.addCategoryDialog?.setOnDismissListener {
+            lifecycleScope.launch {
+                categories.clear()
+                dao?.getActiveCategories().also {
+                    if (it != null) {
+                        categories.addAll(it)
+                    }
+                }
+                // notifyDataSetChanged necessary here since all items might have changed
+                categoryAdapter.notifyDataSetChanged()
+            }
+        }
 
         val categoryList = findViewById<RecyclerView>(R.id.categoryList)
 

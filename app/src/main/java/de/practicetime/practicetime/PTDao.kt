@@ -39,7 +39,7 @@ interface PTDao {
     suspend fun deleteCategory(category: Category)
 
     @Update
-    suspend fun archiveCategory(category: Category)
+    suspend fun updateCategory(category: Category)
 
     @Query("SELECT * FROM PracticeSession")
     suspend fun getAllSessions(): List<PracticeSession>

@@ -32,17 +32,17 @@ class HorizontalSpacingDecoration(
         }
 
         // add bigger spacing for last column
-        if (currentItemPos > (itemCount - (numberOfRows + 1)) && itemCount > numberOfRows * 3) {
-            outRect.right = outerSpacing
-        } else {
+//        if (currentItemPos > (itemCount - (numberOfRows + 1)) && itemCount > numberOfRows * 2) {
+//            outRect.right = outerSpacing
+//        } else {
             outRect.right = innerSpacing
-        }
+//        }
 
         // add bigger spacing for first column
         if (currentItemPos < numberOfRows) {
             outRect.left = outerSpacing
         } else {
-            outRect.left = 0
+            outRect.left = innerSpacing
         }
     }
 }
