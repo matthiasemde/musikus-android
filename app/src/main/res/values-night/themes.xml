@@ -11,7 +11,8 @@
         <item name="colorOnSecondary">@color/black</item>
         <item name="colorSurface">@color/dark_grey_lighter</item>
         <item name="colorOnSurface">@color/white</item>
-        <item name="colorError">@color/dark_red</item>
+        <item name="colorError">@color/md_red_400</item>
+        <item name="colorOnError">@color/white</item>
         <item name="android:colorBackground">@color/dark_grey</item>
         <item name="colorOnBackground">@color/white</item>
         <!-- Status bar color. -->

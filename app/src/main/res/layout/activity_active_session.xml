@@ -30,7 +30,7 @@
             tools:text="00:00:00" />
 
         <TextView
-            android:id="@+id/textView3"
+            android:id="@+id/practice_time_label"
             android:layout_gravity="center"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -38,7 +38,7 @@
             android:textSize="15sp" />
 
         <TextView
-            android:id="@+id/textView2"
+            android:id="@+id/categories_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/categories"
@@ -55,11 +55,11 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintVertical_bias="2"
-            app:layout_constraintBottom_toTopOf="@id/textView" />
+            app:layout_constraintBottom_toTopOf="@id/categories_label" />
 
 
         <TextView
-            android:id="@+id/textView"
+            android:id="@+id/sections_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/sections"
@@ -155,11 +155,12 @@
             app:icon="@drawable/ic_stop"
             app:iconGravity="textStart"
             app:iconPadding="0dp"
-            app:iconTint="?attr/colorOnPrimary"
+            app:iconTint="?attr/colorOnError"
+            app:backgroundTint="?attr/colorError"
             app:layout_constraintStart_toEndOf="@id/bottom_record"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintBottom_toBottomOf="@id/bottom_metronome"
-            android:visibility="gone"/>
+            android:visibility="visible"/>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
