@@ -53,17 +53,20 @@
         app:cardCornerRadius="10dp"
         app:cardBackgroundColor="?attr/colorSurface">
 
-        <TableLayout
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="16dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="16dp"
             android:gravity="fill_horizontal|top|fill_vertical"
             android:orientation="vertical"
             android:stretchColumns="*">
 
-            <TableRow
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
                 android:layout_marginBottom="5dp">
 
                 <LinearLayout
@@ -96,17 +99,18 @@
 
                 </LinearLayout>
 
-            </TableRow>
+            </LinearLayout>
 
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
                 android:background="?android:attr/listDivider" />
 
-            <TableRow
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
+                android:layout_marginStart="40dp"
+                android:layout_marginEnd="16dp"
                 android:layout_marginTop="36dp">
 
                 <TextView
@@ -132,14 +136,19 @@
                     android:layout_gravity="bottom"
                     android:textColor="?attr/colorOnSurface"/>
 
-            </TableRow>
+            </LinearLayout>
 
-            <TableRow
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_marginStart="16dp"
+                android:layout_marginStart="40dp"
+                android:layout_marginEnd="16dp"
                 android:layout_marginBottom="36dp">
 
+                <!--Space to align exactly with the beginning of the text defined in view_session_summary_section.xml-->
+<!--                <Space-->
+<!--                    android:layout_width="24dp"-->
+<!--                    android:layout_height="0dp" />-->
 
                 <TextView
                     android:id="@+id/practiceTimeLabel"
@@ -158,19 +167,20 @@
                     android:textSize="15sp" />
 
 
-            </TableRow>
+            </LinearLayout>
 
             <View
                 android:id="@+id/divider"
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
                 android:background="?android:attr/listDivider" />
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_marginBottom="16dp"
-                android:layout_marginTop="16dp"
+                android:layout_margin="16dp"
                 android:orientation="vertical">
 
                 <androidx.recyclerview.widget.RecyclerView
@@ -208,7 +218,7 @@
 
             </LinearLayout>
 
-        </TableLayout>
+        </LinearLayout>
     </androidx.cardview.widget.CardView>
 
 </LinearLayout>
