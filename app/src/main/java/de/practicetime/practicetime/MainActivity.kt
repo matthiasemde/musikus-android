@@ -22,7 +22,7 @@ class MainActivity : AppCompatActivity() {
         if (isInDarkMode()) {
             // workaround for removing the elevation color overlay
             // https://github.com/material-components/material-components-android/issues/1148
-            bottomNavigationView.elevation = 0F;
+            bottomNavigationView.elevation = 0F
         }
     }
 

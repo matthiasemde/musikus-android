@@ -11,4 +11,9 @@
     <string name="endSessionDialogCommentField">Comment (optional)</string>
     <string name="endSessionDialogTitle">Finish Session</string>
     <string name="discard_session">Discard Session</string>
+    <string name="practice_time_description">Practice Time</string>
+    <string name="categories">Categories:</string>
+    <string name="sections">Sections:</string>
+    <string name="metronome">Metronome</string>
+    <string name="recorder">Recorder</string>
 </resources>

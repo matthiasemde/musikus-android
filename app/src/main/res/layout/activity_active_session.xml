@@ -34,14 +34,14 @@
             android:layout_gravity="center"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Practice Time"
+            android:text="@string/practice_time_description"
             android:textSize="15sp" />
 
         <TextView
             android:id="@+id/textView2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Categories:"
+            android:text="@string/categories"
             android:textSize="20sp"
             android:layout_marginStart="20dp"
             android:layout_marginTop="50dp"
@@ -62,7 +62,7 @@
             android:id="@+id/textView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Sections:"
+            android:text="@string/sections"
             android:textSize="20sp"
             android:layout_marginStart="20dp"
             android:textStyle="bold"/>
@@ -122,7 +122,7 @@
             android:gravity="center"
             app:iconGravity="textStart"
             app:icon="@drawable/ic_metronome"
-            android:text="Metronome"
+            android:text="@string/metronome"
             android:textAllCaps="false"
             app:layout_constraintStart_toEndOf="@id/bottom_pause"
             app:layout_constraintEnd_toStartOf="@id/bottom_record"
@@ -138,7 +138,7 @@
             android:gravity="center"
             app:iconGravity="textStart"
             app:icon="@drawable/ic_record"
-            android:text="Recorder"
+            android:text="@string/recorder"
             android:textAllCaps="false"
             app:layout_constraintStart_toEndOf="@id/bottom_metronome"
             app:layout_constraintEnd_toStartOf="@id/bottom_stop"

@@ -39,7 +39,7 @@ import kotlin.collections.ArrayList
 class ActiveSessionActivity : AppCompatActivity() {
 
     private var dao: PTDao? = null
-    private var activeCategories: List<Category>? = listOf<Category>()
+    private var activeCategories: List<Category>? = listOf()
     private lateinit var sectionsAdapter: ArrayAdapter<String>
     private var listItems = ArrayList<String>()
     private lateinit var mService: SessionForegroundService
@@ -193,7 +193,7 @@ class ActiveSessionActivity : AppCompatActivity() {
         val newSession = PracticeSession(
             0,      // id=0 means not assigned, autoGenerate=true will do it for us
             totalBreakDuration,
-            rating.toInt(),
+            rating,
             comment,
             1
         )
@@ -228,7 +228,7 @@ class ActiveSessionActivity : AppCompatActivity() {
     private fun initEndSessionDialog() {
         // instantiate the builder for the alert dialog
         val endSessionDialogBuilder = AlertDialog.Builder(this)
-        val inflater = this.layoutInflater;
+        val inflater = this.layoutInflater
         val dialogView = inflater.inflate(R.layout.dialog_view_end_session, null)
 
         val dialogRatingBar = dialogView.findViewById<RatingBar>(R.id.dialogRatingBar)
@@ -296,9 +296,6 @@ class ActiveSessionActivity : AppCompatActivity() {
      * TODO should be replaced by functions triggered from the service rather than polling every 100ms
      */
     private fun practiceTimer() {
-        // get the text views.
-        val practiceTimeView = findViewById<TextView>(R.id.practiceTimer)
-
         // creates a new Handler
         Handler(Looper.getMainLooper()).also {
             // the post() method executes immediately
