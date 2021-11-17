@@ -5,10 +5,7 @@ import android.content.res.ColorStateList
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
-import android.widget.LinearLayout
-import android.widget.RatingBar
-import android.widget.TextView
+import android.widget.*
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import de.practicetime.practicetime.entities.SectionWithCategory
@@ -35,6 +32,8 @@ class SessionSummaryAdapter(
         else
             notifyItemRangeRemoved(1, sessionsWithSectionsWithCategories.size)
 
+        // notify Adapter that button text has changed
+        notifyItemChanged(0)
     }
 
     override fun getItemViewType(position: Int): Int {
@@ -270,7 +269,6 @@ class SessionSummaryAdapter(
                     viewHolder.sectionDuration.text = getTimeString(sectionDuration)
                 }
 
-
                 // Return the size of your dataset (invoked by the layout manager)
                 override fun getItemCount() = sectionsWithCategories.size
             }
@@ -278,7 +276,7 @@ class SessionSummaryAdapter(
 
         class HeaderViewHolder(private val view: View) : ViewHolder(view) {
             private val sessionHeaderMonth: TextView = view.findViewById(R.id.sessionHeaderMonth)
-
+            private val sessionHeaderToggleButton: Button = view.findViewById(R.id.btn_headermonth_toggle)
             // bind a new section header with the timestamp of the first session (in seconds)
             fun bind(
                 timestamp: Long,
@@ -288,7 +286,12 @@ class SessionSummaryAdapter(
                 SimpleDateFormat("MMMM").format(Date(timestamp * 1000L)).also {
                     sessionHeaderMonth.text = it
                 }
-                view.setOnClickListener(onClickListener)
+                sessionHeaderToggleButton.setOnClickListener(onClickListener)
+                if (expanded) {
+                    sessionHeaderToggleButton.text = view.context.getString(R.string.hide_month);
+                } else {
+                    sessionHeaderToggleButton.text = view.context.getString(R.string.show_month);
+                }
             }
         }
     }
