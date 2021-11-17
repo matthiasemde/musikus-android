@@ -12,6 +12,6 @@
         android:layout_weight="1"
         android:text="TextView"
         android:textSize="30sp"
-        android:textColor="@color/black"
+        android:textColor="?attr/colorOnSurface"
         android:textStyle="bold"/>
 </LinearLayout>

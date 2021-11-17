@@ -10,6 +10,7 @@ import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
 import android.util.Log
+import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -30,6 +31,9 @@ import de.practicetime.practicetime.entities.PracticeSession
 import kotlinx.coroutines.launch
 import java.util.*
 import kotlin.collections.ArrayList
+
+
+
 
 
 class ActiveSessionActivity : AppCompatActivity() {
@@ -167,8 +171,11 @@ class ActiveSessionActivity : AppCompatActivity() {
         )
         findViewById<TextView>(R.id.tv_overlay_pause).visibility = View.GONE
 
-        // make up button black
-        findViewById<ImageButton>(R.id.btn_back).setColorFilter(Color.DKGRAY)
+        // make up button subtle grey or subtle white, according to theme
+        val typedValue = TypedValue()
+        theme.resolveAttribute(R.attr.colorOnSurface, typedValue, true)
+        val color = typedValue.data
+        findViewById<ImageButton>(R.id.btn_back).setColorFilter(color)
     }
 
 

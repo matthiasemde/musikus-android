@@ -14,8 +14,7 @@
         android:layout_height="16dp"
         android:layout_gravity="center"
         android:background="@drawable/color_circle"
-        android:layout_marginRight="8dp"
-        android:backgroundTint="@color/black" />
+        android:layout_marginRight="8dp" />
 
     <TextView
         android:id="@+id/sectionName"

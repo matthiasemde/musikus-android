@@ -1,8 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <!-- google's material design colours from
-    http://www.google.com/design/spec/style/color.html#color-ui-color-palette -->
+    <color name="black">#000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="teal">#009688</color>
+    <color name="teal_dark">#00675b</color>
+    <color name="teal_light">#52c7b8</color>
+    <color name="yellow">#ffeb3b</color>
+    <color name="yellow_dark">#c8b900</color>
+    <color name="yellow_light">#ffff72</color>
+    <color name="dark_red">#b00020</color>
+    <color name="black_translucent">#bb000000</color>
+    <color name="ripple_color_on_primary">#aa000000</color>
+    <color name="dark_grey">#121212</color>
+    <color name="dark_grey_lighter">#292929</color>
+    <color name="dark_grey_darker">#080808</color>
+
+
+    <!--_____________________________________________________________________________________-->
 
     <!--legacy-->
     <color name="purple_200">#FFBB86FC</color>
@@ -10,8 +25,15 @@
     <color name="purple_700">#FF3700B3</color>
     <color name="teal_200">#FF03DAC5</color>
     <color name="teal_700">#FF018786</color>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
+
+    <!-- google's material design colours from
+    http://www.google.com/design/spec/style/color.html#color-ui-color-palette -->
+
+    <!-- The whole material design color palette. This should just be a handy temporary resource
+         for theme testing, once the final themes have been decided, the non-used components
+         will be deleted.
+         PLEASE REMEMBER **NOT** TO PLACE REFERENCES TO COLORS DESCRIBED HERE IN YOUR LAYOUT BUT INSTEAD
+         USE THEME COLORS!! -->
 
     <!--reds-->
     <color name="md_red_50">#FFEBEE</color>

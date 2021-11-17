@@ -9,7 +9,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:background="@color/md_teal_400" >
+        android:background="?attr/colorPrimary" >
 
         <ImageButton
             android:id="@+id/btn_back_alertdialog"
@@ -17,7 +17,7 @@
             android:layout_height="match_parent"
             android:src="?homeAsUpIndicator"
             android:background="?selectableItemBackgroundBorderless"
-            app:tint="@color/white" />
+            app:tint="?attr/colorOnPrimary" />
 
         <TextView
             android:id="@+id/dialogTitle"
@@ -27,7 +27,7 @@
             android:paddingTop="16dp"
             android:paddingBottom="16dp"
             android:text="@string/endSessionDialogTitle"
-            android:textColor="@android:color/white"
+            android:textColor="?attr/colorOnPrimary"
             android:textSize="28sp" />
 
     </LinearLayout>

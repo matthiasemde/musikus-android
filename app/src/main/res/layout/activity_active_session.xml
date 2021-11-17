@@ -26,6 +26,7 @@
             android:layout_gravity="center"
             android:textSize="40sp"
             android:textStyle="bold"
+            android:textColor="?attr/colorOnBackground"
             tools:text="00:00:00" />
 
         <TextView
@@ -84,7 +85,7 @@
         android:visibility="gone"
         android:clickable="true"
         android:focusable="true"
-        android:background="#bb000000" />
+        android:background="@color/black_translucent" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
@@ -92,9 +93,9 @@
         android:layout_gravity="bottom|left"
         android:orientation="horizontal"
         android:animateLayoutChanges="true"
+        android:background="?attr/colorSurface"
         android:paddingEnd="16dp"
-        android:elevation="10dp"
-        android:background="@color/white">
+        android:elevation="10dp">
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/bottom_pause"
@@ -106,7 +107,6 @@
             app:icon="@drawable/ic_pause"
             app:iconGravity="textStart"
             app:iconPadding="0dp"
-            app:iconTint="@color/black"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toStartOf="@id/bottom_metronome"
             app:layout_constraintTop_toTopOf="parent"
@@ -122,10 +122,8 @@
             android:gravity="center"
             app:iconGravity="textStart"
             app:icon="@drawable/ic_metronome"
-            app:iconTint="@color/black"
             android:text="Metronome"
             android:textAllCaps="false"
-            android:textColor="@color/black"
             app:layout_constraintStart_toEndOf="@id/bottom_pause"
             app:layout_constraintEnd_toStartOf="@id/bottom_record"
             app:layout_constraintTop_toTopOf="parent"
@@ -140,10 +138,8 @@
             android:gravity="center"
             app:iconGravity="textStart"
             app:icon="@drawable/ic_record"
-            app:iconTint="@color/black"
             android:text="Recorder"
             android:textAllCaps="false"
-            android:textColor="@color/black"
             app:layout_constraintStart_toEndOf="@id/bottom_metronome"
             app:layout_constraintEnd_toStartOf="@id/bottom_stop"
             app:layout_constraintTop_toTopOf="parent"
@@ -155,12 +151,11 @@
             android:layout_height="40dp"
             android:layout_marginStart="16dp"
             android:background="@drawable/background_bottom_btn"
-            app:backgroundTint="@color/md_red_500"
             android:gravity="center"
             app:icon="@drawable/ic_stop"
             app:iconGravity="textStart"
             app:iconPadding="0dp"
-            app:iconTint="@color/black"
+            app:iconTint="?attr/colorOnPrimary"
             app:layout_constraintStart_toEndOf="@id/bottom_record"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintBottom_toBottomOf="@id/bottom_metronome"
