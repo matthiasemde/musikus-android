@@ -254,6 +254,18 @@ class ActiveSessionActivity : AppCompatActivity() {
         findViewById<ImageButton>(R.id.btn_back).setColorFilter(color)
     }
 
+    private fun hideHintTextView() {
+        val transition = Fade().apply {
+            duration = 300
+            addTarget(R.id.tv_hint_start_new_session)
+        }
+        TransitionManager.beginDelayedTransition(
+            findViewById(R.id.coordinator_layout_active_session),
+            transition
+        )
+        findViewById<TextView>(R.id.tv_hint_start_new_session).visibility = View.GONE
+    }
+
     private fun finishSession(rating: Int, comment: String?) {
 
         // get total break duration
@@ -320,6 +332,8 @@ class ActiveSessionActivity : AppCompatActivity() {
             setNegativeButton(R.string.discard_session) { _, _ ->
                 // clear the sectionBuffer so that runnable dies
                 mService.sectionBuffer.clear()
+                // refresh the adapter otherwise the app will crash because of "inconsistency detected"
+                findViewById<RecyclerView>(R.id.currentSections).adapter = sectionsListAdapter
                 // stop the service
                 Intent(this@ActiveSessionActivity, SessionForegroundService::class.java).also {
                     stopService(it)
@@ -413,6 +427,7 @@ class ActiveSessionActivity : AppCompatActivity() {
     private fun updateViews() {
         val practiceTimeView = findViewById<TextView>(R.id.practiceTimer)
         if (mService.sessionActive) {
+            hideHintTextView()
             val fabInfoPause = findViewById<ExtendedFloatingActionButton>(R.id.fab_info_popup)
             // load the current section from the sectionBuffer
             if (mService.paused) {
@@ -432,6 +447,7 @@ class ActiveSessionActivity : AppCompatActivity() {
             sectionsListAdapter.notifyItemChanged(mService.sectionBuffer.size - 1)
         } else {
             practiceTimeView.text = "00:00:00"
+            findViewById<TextView>(R.id.tv_hint_start_new_session).text = getString(R.string.start_new_session_hint)
         }
     }
 

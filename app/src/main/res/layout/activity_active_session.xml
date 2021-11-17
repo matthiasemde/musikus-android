@@ -57,22 +57,12 @@
             app:layout_constraintVertical_bias="2"
             app:layout_constraintBottom_toTopOf="@id/categories_label" />
 
-
-        <TextView
-            android:id="@+id/sections_label"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/sections"
-            android:textSize="20sp"
-            android:layout_marginStart="20dp"
-            android:textStyle="bold"
-            android:visibility="invisible"/>
-
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/currentSections"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1.4"
+            android:layout_marginTop="36dp"
             android:layout_marginStart="30dp"
             android:layout_marginEnd="30dp"
             android:paddingBottom="16dp"
@@ -174,6 +164,17 @@
         android:layout_gravity="top|left"
         android:src="@drawable/ic_arrow_down"
         android:background="?selectableItemBackgroundBorderless" />
+
+    <TextView
+        android:id="@+id/tv_hint_start_new_session"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="20sp"
+        android:layout_gravity="center|bottom"
+        android:layout_marginBottom="150dp"
+        android:padding="30dp"
+        android:gravity="center"
+        tools:text="@string/start_new_session_hint"/>
 
     <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
         android:id="@+id/fab_info_popup"

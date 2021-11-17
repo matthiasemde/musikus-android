@@ -13,7 +13,7 @@
     <string name="discard_session">Discard Session</string>
     <string name="practice_time_description">Practice Time</string>
     <string name="categories">Categories:</string>
-    <string name="sections">Sections:</string>
     <string name="metronome">Metronome</string>
     <string name="recorder">Recorder</string>
+    <string name="start_new_session_hint">Select a category to start a new session</string>
 </resources>
