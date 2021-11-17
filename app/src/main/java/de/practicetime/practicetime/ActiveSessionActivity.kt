@@ -130,7 +130,7 @@ class ActiveSessionActivity : AppCompatActivity() {
         categoryAdapter.addCategoryDialog?.setOnDismissListener {
             lifecycleScope.launch {
                 categories.clear()
-                dao?.getActiveCategories().also {
+                activeCategories = dao?.getActiveCategories().also {
                     if (it != null) {
                         categories.addAll(it)
                     }
