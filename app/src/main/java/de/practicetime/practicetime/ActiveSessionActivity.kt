@@ -489,56 +489,6 @@ class ActiveSessionActivity : AppCompatActivity() {
     }
 
     /**
-     *  Adapter for the Category selection button grid.
-     */
-    private inner class CategoryAdapter(
-        private val dataSet: ArrayList<Category>,
-        private val callback: View.OnClickListener
-    ) : RecyclerView.Adapter<CategoryAdapter.ViewHolder>() {
-
-        inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-            val button: MaterialButton = view.findViewById(R.id.button)
-
-            init {
-                // Define click listener for the ViewHolder's View.
-                button.setOnClickListener(callback)
-            }
-        }
-
-        // Create new views (invoked by the layout manager)
-        override fun onCreateViewHolder(viewGroup: ViewGroup, viewType: Int): ViewHolder {
-            // Create a new view, which defines the UI of the list item
-            val view = LayoutInflater.from(viewGroup.context)
-                .inflate(R.layout.view_category_item, viewGroup, false)
-
-            return ViewHolder(view)
-        }
-
-        // Replace the contents of a view (invoked by the layout manager)
-        override fun onBindViewHolder(viewHolder: ViewHolder, position: Int) {
-            // Get element from your dataset at this position
-            val category = dataSet[position]
-
-            // store the id of the category on the button
-            viewHolder.button.tag = category.id
-
-            // archived categories should not be displayed
-            if (category.archived) {
-                viewHolder.button.visibility = View.GONE
-            }
-
-            // contents of the view with that element
-            viewHolder.button.text = category.name
-            viewHolder.button.setBackgroundColor(category.color)
-
-            // TODO set right margin for last 3 elements programmatically
-        }
-
-        // Return the size of your dataset (invoked by the layout manager)
-        override fun getItemCount() = dataSet.size
-    }
-
-    /**
      * Adapter for SectionList RecyclerView.
      */
     private inner class SectionsListAdapter(
