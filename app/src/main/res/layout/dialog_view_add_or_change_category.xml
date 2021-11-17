@@ -8,7 +8,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/design_default_color_primary"
+        android:background="?attr/colorPrimary"
         android:orientation="horizontal">
 
         <ImageView
@@ -16,7 +16,8 @@
             android:layout_width="36dp"
             android:layout_height="match_parent"
             android:layout_marginStart="16dp"
-            app:srcCompat="@drawable/ic_edit" />
+            app:srcCompat="@drawable/ic_edit"
+            app:tint="?attr/colorOnPrimary" />
 
         <TextView
             android:id="@+id/addCategoryDialogTitle"
@@ -26,7 +27,7 @@
             android:layout_marginTop="8dp"
             android:layout_marginBottom="8dp"
             android:text="@string/addCategoryDialogTitle"
-            android:textColor="@android:color/white"
+            android:textColor="?attr/colorOnPrimary"
             android:textSize="28sp" />
     </LinearLayout>
 

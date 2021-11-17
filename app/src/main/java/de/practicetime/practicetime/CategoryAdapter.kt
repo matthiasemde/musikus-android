@@ -23,16 +23,16 @@ import kotlinx.coroutines.launch
  */
 
 val categoryColors = listOf(
-    "#000000",
-    "#0000FF",
-    "#00FF00",
-    "#00FFFF",
-    "#FF0000",
-    "#FF00FF",
-    "#FFFF00",
-    "#AAAAAA",
-    "#AAAAAA",
-    "#AAAAAA",
+    "#E57373",
+    "#F06292",
+    "#BA68C8",
+    "#9575CD",
+    "#7986CB",
+    "#FF8A65",
+    "#4fC3F7",
+    "#4DB6AC",
+    "#81C784",
+    "#FFD54F",
 )
 
 class CategoryAdapter(

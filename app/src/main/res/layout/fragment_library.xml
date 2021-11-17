@@ -11,13 +11,13 @@
         android:id="@+id/libraryAppbar"
         android:layout_width="match_parent"
         android:layout_height="128dp"
-        android:background="@android:color/white">
+        android:background="@android:color/transparent">
 
         <com.google.android.material.appbar.CollapsingToolbarLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             app:collapsedTitleTextAppearance="@style/TextAppearance.MaterialComponents.Headline6"
-            app:contentScrim="@android:color/white"
+            app:contentScrim="@android:color/transparent"
             app:expandedTitleMarginBottom="28dp"
             app:expandedTitleMarginStart="16dp"
             app:expandedTitleTextAppearance="@style/TextAppearance.MaterialComponents.Headline3"

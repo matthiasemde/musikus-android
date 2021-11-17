@@ -7,9 +7,9 @@
     android:layout_height="50dp"
     android:layout_margin="4dp"
     android:background="@drawable/category_button"
-    android:backgroundTint="@color/purple_500"
+    android:backgroundTint="?attr/colorPrimary"
     android:maxLines="2"
     android:padding="0dp"
     android:textAllCaps="false"
-    android:textColor="@android:color/white"
+    android:textColor="@color/dark_grey_lighter"
     android:textSize="14sp" />

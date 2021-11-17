@@ -6,8 +6,6 @@
             <corners
                 android:radius="16dp" >
             </corners>
-            <!-- required for ripple effect to work: -->
-            <solid android:color="#fff" />
         </shape>
     </item>
 </ripple>
