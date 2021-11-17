@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import android.widget.BaseExpandableListAdapter
 import android.widget.ExpandableListView
 import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
@@ -27,7 +28,13 @@ class MetronomeFragment : Fragment(R.layout.fragment_library) {
         val categoryList : RecyclerView = view.findViewById(R.id.libraryCategoryList)
 
         val categories = ArrayList<Category>()
-        val categoryAdapter = CategoryAdapter(categories, ::categoryPressed, dao!!, grow = true)
+        val categoryAdapter = CategoryAdapter(
+            categories,
+            ::categoryPressed,
+            dao!!,
+            grow = true,
+            context = requireActivity()
+        )
 
         categoryList.layoutManager = GridLayoutManager(context, 2)
         categoryList.adapter = categoryAdapter

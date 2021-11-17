@@ -119,11 +119,24 @@ class ActiveSessionActivity : AppCompatActivity() {
 
     private fun initCategoryList() {
         val categories = ArrayList<Category>()
-        val categoryAdapter = CategoryAdapter(categories, ::categoryPressed, dao!!)
+        val categoryAdapter = CategoryAdapter(categories, ::categoryPressed, dao!!, context = this)
 
         val categoryList = findViewById<RecyclerView>(R.id.categoryList)
-        categoryList.layoutManager = GridLayoutManager(this, 3, GridLayoutManager.HORIZONTAL, false)
-        categoryList.adapter = categoryAdapter
+
+        val rowNums = 3
+        categoryList.apply {
+            layoutManager = GridLayoutManager(
+                context,
+                rowNums,
+                GridLayoutManager.HORIZONTAL,
+                false
+            )
+            adapter = categoryAdapter
+            addItemDecoration(HorizontalSpacingDecoration(
+                rowNums,
+                horizontalSpacing = (12 * resources.displayMetrics.density).toInt(),
+            ))
+        }
 
         lifecycleScope.launch {
             activeCategories = dao?.getActiveCategories()

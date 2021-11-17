@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/design_default_color_primary"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:id="@+id/imageView"
+            android:layout_width="36dp"
+            android:layout_height="match_parent"
+            android:layout_marginStart="16dp"
+            app:srcCompat="@drawable/ic_edit" />
+
+        <TextView
+            android:id="@+id/addCategoryDialogTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            android:text="@string/addCategoryDialogTitle"
+            android:textColor="@android:color/white"
+            android:textSize="28sp" />
+    </LinearLayout>
+
+    <EditText
+        android:id="@+id/addCategoryDialogName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="8dp"
+        android:ems="12"
+        android:hint="@string/addCategoryDialogNameHint"
+        android:inputType="textPersonName" />
+
+    <RadioGroup
+        android:id="@+id/addCategoryDialogColor"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="horizontal">
+
+            <androidx.appcompat.widget.AppCompatImageButton
+                android:id="@+id/addCategoryDialogColor1"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:clickable="true"
+                android:gravity="center" />
+
+            <androidx.appcompat.widget.AppCompatImageButton
+                android:id="@+id/addCategoryDialogColor3"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:clickable="true"
+                android:gravity="center" />
+
+            <androidx.appcompat.widget.AppCompatImageButton
+                android:id="@+id/addCategoryDialogColor5"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:clickable="true"
+                android:gravity="center" />
+
+            <androidx.appcompat.widget.AppCompatImageButton
+                android:id="@+id/addCategoryDialogColor2"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:clickable="true"
+                android:gravity="center" />
+
+            <androidx.appcompat.widget.AppCompatImageButton
+                android:id="@+id/addCategoryDialogColor4"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:clickable="true"
+                android:gravity="center" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <androidx.appcompat.widget.AppCompatImageButton
+                android:id="@+id/addCategoryDialogColor10"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:clickable="true"
+                android:gravity="center" />
+
+            <androidx.appcompat.widget.AppCompatImageButton
+                android:id="@+id/addCategoryDialogColor6"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:clickable="true"
+                android:gravity="center" />
+
+            <androidx.appcompat.widget.AppCompatImageButton
+                android:id="@+id/addCategoryDialogColor9"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:clickable="true"
+                android:gravity="center" />
+
+            <androidx.appcompat.widget.AppCompatImageButton
+                android:id="@+id/addCategoryDialogColor7"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:clickable="true"
+                android:gravity="center" />
+
+            <androidx.appcompat.widget.AppCompatImageButton
+                android:id="@+id/addCategoryDialogColor8"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:clickable="true"
+                android:gravity="center" />
+        </LinearLayout>
+
+    </RadioGroup>
+
+</LinearLayout>

@@ -10,6 +10,12 @@
     <string name="endSessionAlertCancel">Continue practicing</string>
     <string name="endSessionDialogCommentField">Comment (optional)</string>
     <string name="navigationLibraryTitle">Library</string>
+    <string name="addCategoryDialogTitle">Add new category</string>
+    <string name="addCategoryDialogTitleEdit">Edit category</string>
+    <string name="addCategoryDialogNameHint">Name your category</string>
+    <string name="addCategoryAlertOk">Add</string>
+    <string name="addCategoryAlertOkEdit">Edit</string>
+    <string name="addCategoryAlertCancel">Cancel</string>
     <string name="endSessionDialogTitle">Finish Session</string>
     <string name="discard_session">Discard Session</string>
     <string name="practice_time_description">Practice Time</string>

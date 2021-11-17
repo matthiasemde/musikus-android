@@ -1,28 +1,100 @@
 package de.practicetime.practicetime
 
+import android.app.Activity
 import android.content.Context
+import android.graphics.Color
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
-import android.widget.ImageButton
-import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Dao
 import android.view.ViewGroup.LayoutParams
+import android.widget.*
+import androidx.appcompat.app.AlertDialog
 import de.practicetime.practicetime.entities.Category
+
+
+
 
 /**
  *  Adapter for the Category selection button grid.
  */
 
+val categoryColors = listOf(
+    "#000000",
+    "#0000FF",
+    "#00FF00",
+    "#00FFFF",
+    "#FF0000",
+    "#FF00FF",
+    "#FFFF00",
+    "#AAAAAA",
+    "#AAAAAA",
+    "#AAAAAA",
+)
+
 class CategoryAdapter(
     private val categories: ArrayList<Category>,
     private val callback: View.OnClickListener,
     private val dao: PTDao,
-    private val grow: Boolean = false
+    private val context: Activity,
+    private val grow: Boolean = false,
 ) : RecyclerView.Adapter<CategoryAdapter.ViewHolder>() {
+
+    // instantiate the builder for the alert dialog
+    private val addCategoryDialogBuilder = AlertDialog.Builder(context)
+    private val inflater = context.layoutInflater;
+    private val dialogView = inflater.inflate(
+        R.layout.dialog_view_add_or_change_category,
+        null,
+    )
+
+    private val categoryNameView = dialogView.findViewById<EditText>(R.id.addCategoryDialogName)
+    private val categoryColorRadioGroup = dialogView.findViewById<RadioGroup>(R.id.addCategoryDialogColor)
+
+    private val categoryColorRadioGroupButtons = listOf<ImageButton>(
+        dialogView.findViewById(R.id.addCategoryDialogColor1),
+        dialogView.findViewById(R.id.addCategoryDialogColor2),
+        dialogView.findViewById(R.id.addCategoryDialogColor3),
+        dialogView.findViewById(R.id.addCategoryDialogColor4),
+        dialogView.findViewById(R.id.addCategoryDialogColor5),
+        dialogView.findViewById(R.id.addCategoryDialogColor6),
+        dialogView.findViewById(R.id.addCategoryDialogColor7),
+        dialogView.findViewById(R.id.addCategoryDialogColor8),
+        dialogView.findViewById(R.id.addCategoryDialogColor9),
+        dialogView.findViewById(R.id.addCategoryDialogColor10),
+    )
+
+    init {
+        // Dialog Setup
+        addCategoryDialogBuilder.apply {
+            setView(dialogView)
+            setPositiveButton(R.string.addCategoryAlertOk) { _, _ ->
+            }
+            setNegativeButton(R.string.addCategoryAlertCancel) { dialog, _ ->
+            }
+        }
+        categoryColorRadioGroupButtons.forEachIndexed { index, button ->
+            button.isClickable = true;
+            button.setBackgroundResource(R.drawable.background_color_picker_btn_unselected)
+//            button.background.setTint(Color.parseColor(categoryColors[index]))
+            button.setOnClickListener {
+//                button.startAnimation(AnimationUtils.loadAnimation(getBaseContext(), android.R.anim.fade_in))
+                if (it.isSelected) {
+                    it.isSelected = false
+                    button.setBackgroundResource(R.drawable.background_color_picker_btn_unselected)
+//                    button.background.setTint(Color.parseColor(categoryColors[index]))
+                } else {
+                    it.isSelected = true
+                    button.setBackgroundResource(R.drawable.background_color_picker_btn_selected)
+//                    button.background.setTint(Color.parseColor(categoryColors[index]))
+                }
+            }
+        }
+    }
+    val addCategoryDialog: AlertDialog = addCategoryDialogBuilder.create()
+
 
     companion object {
         private const val VIEW_TYPE_CATEGORY = 1
@@ -60,6 +132,7 @@ class CategoryAdapter(
                     false
                 ),
                 dao,
+                addCategoryDialog,
                 grow,
             )
         }
@@ -76,7 +149,6 @@ class CategoryAdapter(
             )
         }
     }
-
 
     sealed class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
 
@@ -114,6 +186,7 @@ class CategoryAdapter(
         class AddNewCategoryViewHolder(
             view: View,
             private val dao: PTDao,
+            private val addCategoryDialog: AlertDialog,
             private val grow: Boolean,
         ) : ViewHolder(view) {
             private val button: ImageButton = view.findViewById(R.id.addNewCategory)
@@ -126,7 +199,7 @@ class CategoryAdapter(
 
             fun bind() {
                 button.setOnClickListener {
-                    Log.d("this", "Add new Category")
+                    addCategoryDialog.show()
                 }
             }
         }
