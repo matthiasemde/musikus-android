@@ -2,6 +2,7 @@ package de.practicetime.practicetime
 
 import android.app.Activity
 import android.content.Context
+import android.content.res.ColorStateList
 import android.graphics.Color
 import android.util.Log
 import android.view.LayoutInflater
@@ -12,6 +13,7 @@ import androidx.room.Dao
 import android.view.ViewGroup.LayoutParams
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
+import androidx.core.content.ContextCompat
 import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.LifecycleCoroutineScope
 import de.practicetime.practicetime.entities.Category
@@ -22,109 +24,25 @@ import kotlinx.coroutines.launch
  *  Adapter for the Category selection button grid.
  */
 
-val categoryColors = listOf(
-    "#E57373",
-    "#F06292",
-    "#BA68C8",
-    "#9575CD",
-    "#7986CB",
-    "#FF8A65",
-    "#4fC3F7",
-    "#4DB6AC",
-    "#81C784",
-    "#FFD54F",
-)
-
 class CategoryAdapter(
+    lifecycleScope: LifecycleCoroutineScope,
+    dao: PTDao?,
     private val categories: ArrayList<Category>,
     private val callback: View.OnClickListener,
-    private val dao: PTDao,
     private val context: Activity,
-    private val lifecycleScope: LifecycleCoroutineScope,
     private val grow: Boolean = false,
 ) : RecyclerView.Adapter<CategoryAdapter.ViewHolder>() {
 
-    // instantiate the builder for the alert dialog
-    private val addCategoryDialogBuilder = AlertDialog.Builder(context)
-    private val inflater = context.layoutInflater;
-    private val dialogView = inflater.inflate(
-        R.layout.dialog_view_add_or_change_category,
-        null,
-    )
-
-    private val categoryNameView = dialogView.findViewById<EditText>(R.id.addCategoryDialogName)
-    private val categoryColorButtonGroupRow1 =
-            dialogView.findViewById<RadioGroup>(R.id.addCategoryDialogColorRow1)
-    private val categoryColorButtonGroupRow2 =
-            dialogView.findViewById<RadioGroup>(R.id.addCategoryDialogColorRow2)
-
-    private val categoryColorButtons = listOf<RadioButton>(
-        dialogView.findViewById(R.id.addCategoryDialogColor1),
-        dialogView.findViewById(R.id.addCategoryDialogColor2),
-        dialogView.findViewById(R.id.addCategoryDialogColor3),
-        dialogView.findViewById(R.id.addCategoryDialogColor4),
-        dialogView.findViewById(R.id.addCategoryDialogColor5),
-        dialogView.findViewById(R.id.addCategoryDialogColor6),
-        dialogView.findViewById(R.id.addCategoryDialogColor7),
-        dialogView.findViewById(R.id.addCategoryDialogColor8),
-        dialogView.findViewById(R.id.addCategoryDialogColor9),
-        dialogView.findViewById(R.id.addCategoryDialogColor10),
-    )
-    private var selectedColor: Int? = null
-
-    var addCategoryDialog: AlertDialog? = null
+    var addCategoryDialog: CategoryDialog? = null
 
     init {
-        // Dialog Setup
-        addCategoryDialogBuilder.apply {
-            setView(dialogView)
-            setPositiveButton(R.string.addCategoryAlertOk) { dialog, _ ->
-                val name = categoryNameView.text.toString().trim()
-                if(selectedColor != null && name.isNotEmpty()) {
-                    val newCategory = Category(
-                    0,
-                        name = name,
-                        color = selectedColor!!,
-                        archived = false,
-                        profile_id = 0
-                    )
-
-
-                    lifecycleScope.launch {
-                        dao.insertCategory(newCategory)
-                    }
-                }
-                categoryNameView.text.clear()
-                categoryColorButtonGroupRow1.clearCheck()
-                categoryColorButtonGroupRow2.clearCheck()
-                dialog.dismiss()
-            }
-            setNegativeButton(R.string.addCategoryAlertCancel) { dialog, _ ->
-                categoryNameView.text.clear()
-                categoryColorButtonGroupRow1.clearCheck()
-                categoryColorButtonGroupRow2.clearCheck()
-                dialog.cancel()
-            }
-        }
-
-        categoryColorButtons.forEachIndexed { index, button ->
-            button.background.setTint(Color.parseColor(categoryColors[index]))
-            button.setOnCheckedChangeListener { buttonView, isChecked ->
-                if(isChecked) {
-                    selectedColor = Color.parseColor(categoryColors[index])
-                    if (index < 5) {
-                        categoryColorButtonGroupRow2.clearCheck()
-                    } else {
-                        categoryColorButtonGroupRow1.clearCheck()
-                    }
-                }
-            }
-        }
-
-        addCategoryDialog = addCategoryDialogBuilder.create()
+        // create a new category dialog for adding new categories
+        addCategoryDialog = CategoryDialog(
+            context,
+            lifecycleScope,
+            dao,
+        )
     }
-
-
 
     companion object {
         private const val VIEW_TYPE_CATEGORY = 1
@@ -154,6 +72,7 @@ class CategoryAdapter(
                 ),
                 callback,
                 grow,
+                context
             )
             else -> ViewHolder.AddNewCategoryViewHolder(
                 inflater.inflate(
@@ -161,9 +80,8 @@ class CategoryAdapter(
                     viewGroup,
                     false
                 ),
-                dao,
-                addCategoryDialog,
                 grow,
+                addCategoryDialog,
             )
         }
     }
@@ -185,7 +103,8 @@ class CategoryAdapter(
         class CategoryViewHolder(
             view: View,
             callback: View.OnClickListener,
-            private val grow: Boolean
+            grow: Boolean,
+            val context: Activity,
         ) : ViewHolder(view) {
             private val button: Button = view.findViewById(R.id.categoryButton)
 
@@ -207,7 +126,11 @@ class CategoryAdapter(
 
                 // contents of the view with that element
                 button.text = category.name
-                button.background.setTint(category.color)
+
+                val categoryColors =  context.resources.getIntArray(R.array.category_colors)
+                button.backgroundTintList = ColorStateList.valueOf(
+                    categoryColors[category.colorIndex]
+                )
 
                 // TODO set right margin for last 3 elements programmatically
             }
@@ -215,10 +138,10 @@ class CategoryAdapter(
 
         class AddNewCategoryViewHolder(
             view: View,
-            private val dao: PTDao,
-            private val addCategoryDialog: AlertDialog?,
-            private val grow: Boolean,
+            grow: Boolean,
+            private val addCategoryDialog: CategoryDialog?,
         ) : ViewHolder(view) {
+
             private val button: ImageButton = view.findViewById(R.id.addNewCategory)
 
             init {
@@ -227,38 +150,9 @@ class CategoryAdapter(
                 }
             }
 
-
             fun bind() {
-
                 button.setOnClickListener {
                     addCategoryDialog?.show()
-                    addCategoryDialog?.also {
-                        val positiveButton = it.getButton(AlertDialog.BUTTON_POSITIVE)
-                        val categoryNameView =
-                            it.findViewById<EditText>(R.id.addCategoryDialogName)
-                        val categoryColorButtonGroupRow1 =
-                            it.findViewById<RadioGroup>(R.id.addCategoryDialogColorRow1)
-                        val categoryColorButtonGroupRow2 =
-                            it.findViewById<RadioGroup>(R.id.addCategoryDialogColorRow2)
-
-                        fun isComplete(): Boolean {
-                            return categoryNameView?.text.toString().trim().isNotEmpty() &&
-                                    (categoryColorButtonGroupRow1?.checkedRadioButtonId != -1 ||
-                                            categoryColorButtonGroupRow2?.checkedRadioButtonId != -1)
-
-                        }
-
-                        positiveButton.isEnabled = false
-                        categoryNameView?.addTextChangedListener   {
-                            positiveButton.isEnabled = isComplete()
-                        }
-                        categoryColorButtonGroupRow1?.setOnCheckedChangeListener { _, _ ->
-                            positiveButton.isEnabled = isComplete()
-                        }
-                        categoryColorButtonGroupRow2?.setOnCheckedChangeListener { _, _ ->
-                            positiveButton.isEnabled = isComplete()
-                        }
-                    }
                 }
             }
         }

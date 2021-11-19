@@ -2,6 +2,7 @@ package de.practicetime.practicetime
 
 import android.content.Context
 import android.content.res.ColorStateList
+import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -109,7 +110,7 @@ class SessionSummaryAdapter(
 
             init {
                 // define the layout and adapter for the section list
-                val sectionAdapter = SectionAdapter(sectionsWithCategoriesList)
+                val sectionAdapter = SectionAdapter(sectionsWithCategoriesList, context)
                 val layoutManager = LinearLayoutManager(context)
                 sectionList.layoutManager = layoutManager
                 sectionList.adapter = sectionAdapter
@@ -236,6 +237,7 @@ class SessionSummaryAdapter(
 
             private inner class SectionAdapter(
                 private val sectionsWithCategories: ArrayList<SectionWithCategory>,
+                private val context: Context
             ) : RecyclerView.Adapter<SectionAdapter.ViewHolder>() {
 
                 inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -259,7 +261,10 @@ class SessionSummaryAdapter(
                     val (section, category) = sectionsWithCategories[position]
 
                     // set the color to the category color
-                    viewHolder.sectionColor.backgroundTintList = ColorStateList.valueOf(category.color);
+                    val categoryColors =  context.resources.getIntArray(R.array.category_colors)
+                    viewHolder.sectionColor.backgroundTintList = ColorStateList.valueOf(
+                        categoryColors[category.colorIndex]
+                    );
 
 
                     val sectionDuration = section.duration ?: 0

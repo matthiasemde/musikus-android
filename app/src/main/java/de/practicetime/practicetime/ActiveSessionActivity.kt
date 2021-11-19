@@ -120,14 +120,14 @@ class ActiveSessionActivity : AppCompatActivity() {
     private fun initCategoryList() {
         val categories = ArrayList<Category>()
         val categoryAdapter = CategoryAdapter(
+                lifecycleScope,
+                dao,
                 categories,
                 ::categoryPressed,
-                dao!!,
                 context = this,
-                lifecycleScope
         )
 
-        categoryAdapter.addCategoryDialog?.setOnDismissListener {
+        categoryAdapter.addCategoryDialog?.alertDialog?.setOnDismissListener {
             lifecycleScope.launch {
                 categories.clear()
                 activeCategories = dao?.getActiveCategories().also {

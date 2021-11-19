@@ -47,6 +47,9 @@ interface PTDao {
     @Query("SELECT * FROM PracticeSection")
     suspend fun getAllSections(): List<PracticeSection>
 
+    @Query("SELECT * FROM Category WHERE id=:id")
+    suspend fun getCategory(id: Int): Category
+
     @Query("SELECT * FROM Category")
     suspend fun getAllCategories(): List<Category>
 

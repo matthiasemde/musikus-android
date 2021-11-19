@@ -11,9 +11,9 @@
         android:label="fragment_session"
         tools:layout="@layout/fragment_sessions_list" />
     <fragment
-        android:id="@+id/metronomeFragment"
-        android:name="de.practicetime.practicetime.MetronomeFragment"
-        android:label="Metronome"
+        android:id="@+id/libraryFragment"
+        android:name="de.practicetime.practicetime.LibraryFragment"
+        android:label="Library"
         tools:layout="@layout/fragment_library" />
     <fragment
         android:id="@+id/goalsFragment"

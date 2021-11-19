@@ -7,7 +7,7 @@ import androidx.room.PrimaryKey
 data class Category (
     @PrimaryKey(autoGenerate = true) val id: Int,
     val name: String,
-    val color: Int,
+    val colorIndex: Int,
     val archived: Boolean,
     val profile_id: Int,
 )

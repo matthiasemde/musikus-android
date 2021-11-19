@@ -22,7 +22,7 @@
             app:expandedTitleMarginStart="16dp"
             app:expandedTitleTextAppearance="@style/TextAppearance.MaterialComponents.Headline3"
             app:layout_scrollFlags="scroll|exitUntilCollapsed"
-            app:title="@string/sessionListTitle"
+            app:title="@string/navigationLibraryTitle"
             app:titleCollapseMode="scale"
             app:toolbarId="@+id/libraryToolbar">
 

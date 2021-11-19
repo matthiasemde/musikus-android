@@ -132,15 +132,69 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
 
                 // populate the category table on first run
                 listOf(
-                    Category(0, "Die Schöpfung", ContextCompat.getColor(requireContext(), R.color.md_red_300), false, 1),
-                    Category(0, "Beethoven Septett", ContextCompat.getColor(requireContext(), R.color.md_indigo_300), false, 1),
-                    Category(0, "Schostakowitsch 9.", ContextCompat.getColor(requireContext(), R.color.md_teal_300), false, 1),
-                    Category(0, "Trauermarsch c-Moll", ContextCompat.getColor(requireContext(), R.color.md_yellow_300), false, 1),
-                    Category(0, "Adagio", ContextCompat.getColor(requireContext(), R.color.md_deep_orange_300), false, 1),
-                    Category(0, "Eine kleine Gigue", ContextCompat.getColor(requireContext(), R.color.md_blue_grey_300), false, 1),
-                    Category(0, "Andantino", ContextCompat.getColor(requireContext(), R.color.md_purple_300), false, 1),
-                    Category(0, "Klaviersonate", ContextCompat.getColor(requireContext(), R.color.md_cyan_300), false, 1),
-                    Category(0, "Trauermarsch", ContextCompat.getColor(requireContext(), R.color.md_blue_300), false, 1),
+                    Category(
+                        id=0,
+                        name="Die Schöpfung",
+                        colorIndex=0,
+                        archived=false,
+                        profile_id=1
+                    ),
+                    Category(
+                        id=0,
+                        name="Beethoven Septett",
+                        colorIndex=1,
+                        archived=false,
+                        profile_id=1
+                    ),
+                    Category(
+                        id=0,
+                        name="Schostakowitsch 9.",
+                        colorIndex=2,
+                        archived=false,
+                        profile_id=1
+                    ),
+                    Category(
+                        id=0,
+                        name="Trauermarsch c-Moll",
+                        colorIndex=3,
+                        archived=false,
+                        profile_id=1
+                    ),
+                    Category(
+                        id=0,
+                        name="Adagio",
+                        colorIndex=4,
+                        archived=false,
+                        profile_id=1
+                    ),
+                    Category(
+                        id=0,
+                        name="Eine kleine Gigue",
+                        colorIndex=5,
+                        archived= false,
+                        profile_id=1
+                    ),
+                    Category(
+                        id=0,
+                        name="Andantino",
+                        colorIndex=6,
+                        archived=false,
+                        profile_id=1
+                    ),
+                    Category(
+                        id=0,
+                        name="Klaviersonate",
+                        colorIndex=7,
+                        archived=false,
+                        profile_id=1
+                    ),
+                    Category(
+                        id=0,
+                        name="Trauermarsch",
+                        colorIndex=8,
+                        archived=false,
+                        profile_id=1
+                    ),
                 ).forEach {
                     dao?.insertCategory(it)
                 }
