@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="category_color_1">#E57373</color>
+    <color name="category_color_2">#F06292</color>
+    <color name="category_color_3">#BA68C8</color>
+    <color name="category_color_4">#9575CD</color>
+    <color name="category_color_5">#7986CB</color>
+    <color name="category_color_6">#FF8A65</color>
+    <color name="category_color_7">#4fC3F7</color>
+    <color name="category_color_8">#4DB6AC</color>
+    <color name="category_color_9">#81C784</color>
+    <color name="category_color_10">#FFD54F</color>
+
+
+    <array name="category_colors">
+        <item>@color/category_color_1</item>
+        <item>@color/category_color_2</item>
+        <item>@color/category_color_3</item>
+        <item>@color/category_color_4</item>
+        <item>@color/category_color_5</item>
+        <item>@color/category_color_6</item>
+        <item>@color/category_color_7</item>
+        <item>@color/category_color_8</item>
+        <item>@color/category_color_9</item>
+        <item>@color/category_color_10</item>
+    </array>
+</resources>

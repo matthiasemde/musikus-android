@@ -25,6 +25,9 @@ private var dao: PTDao? = null
 class LibraryFragment : Fragment(R.layout.fragment_library) {
 
     private var editCategoryDialog: CategoryDialog? = null
+    private val categories = ArrayList<Category>()
+
+    private var categoryAdapter : CategoryAdapter? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         openDatabase()
@@ -33,11 +36,14 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
             context = requireActivity(),
             lifecycleScope,
             dao,
-        )    }
+        )
+        editCategoryDialog?.alertDialog?.setOnDismissListener {
+            updateCategoryList()
+        }
+    }
 
     private fun initCategoryList() {
-        val categories = ArrayList<Category>()
-        val categoryAdapter = CategoryAdapter(
+        categoryAdapter = CategoryAdapter(
                 lifecycleScope,
                 dao,
                 categories,
@@ -46,32 +52,15 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
                 grow = true,
         )
 
-        categoryAdapter.addCategoryDialog?.alertDialog?.setOnDismissListener {
-            lifecycleScope.launch {
-                categories.clear()
-                dao?.getActiveCategories().also {
-                    if (it != null) {
-                        categories.addAll(it)
-                    }
-                }
-                // notifyDataSetChanged necessary here since all items might have changed
-                categoryAdapter.notifyDataSetChanged()
-            }
+        categoryAdapter?.addCategoryDialog?.alertDialog?.setOnDismissListener {
+            updateCategoryList()
         }
 
         val categoryListView = requireActivity().findViewById<RecyclerView>(R.id.libraryCategoryList)
         categoryListView.layoutManager = GridLayoutManager(context, 2)
         categoryListView.adapter = categoryAdapter
 
-        lifecycleScope.launch {
-            dao?.getActiveCategories().also {
-                if (it != null) {
-                    categories.addAll(it)
-                }
-            }
-            // notifyDataSetChanged necessary here since all items might have changed
-            categoryAdapter.notifyDataSetChanged()
-        }
+        updateCategoryList()
     }
 
     // the routine for handling presses to category buttons
@@ -79,6 +68,19 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
         lifecycleScope.launch {
             val category = dao?.getCategory(id = categoryView.tag as Int)
             editCategoryDialog?.show(category)
+        }
+    }
+
+    private fun updateCategoryList() {
+        lifecycleScope.launch {
+            categories.clear()
+            dao?.getActiveCategories().also {
+                if (it != null) {
+                    categories.addAll(it)
+                }
+            }
+            // notifyDataSetChanged necessary here since all items might have changed
+            categoryAdapter?.notifyDataSetChanged()
         }
     }
 
