@@ -139,62 +139,62 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
                         archived=false,
                         profile_id=1
                     ),
-                    Category(
-                        id=0,
-                        name="Beethoven Septett",
-                        colorIndex=1,
-                        archived=false,
-                        profile_id=1
-                    ),
-                    Category(
-                        id=0,
-                        name="Schostakowitsch 9.",
-                        colorIndex=2,
-                        archived=false,
-                        profile_id=1
-                    ),
-                    Category(
-                        id=0,
-                        name="Trauermarsch c-Moll",
-                        colorIndex=3,
-                        archived=false,
-                        profile_id=1
-                    ),
-                    Category(
-                        id=0,
-                        name="Adagio",
-                        colorIndex=4,
-                        archived=false,
-                        profile_id=1
-                    ),
-                    Category(
-                        id=0,
-                        name="Eine kleine Gigue",
-                        colorIndex=5,
-                        archived= false,
-                        profile_id=1
-                    ),
-                    Category(
-                        id=0,
-                        name="Andantino",
-                        colorIndex=6,
-                        archived=false,
-                        profile_id=1
-                    ),
-                    Category(
-                        id=0,
-                        name="Klaviersonate",
-                        colorIndex=7,
-                        archived=false,
-                        profile_id=1
-                    ),
-                    Category(
-                        id=0,
-                        name="Trauermarsch",
-                        colorIndex=8,
-                        archived=false,
-                        profile_id=1
-                    ),
+//                    Category(
+//                        id=0,
+//                        name="Beethoven Septett",
+//                        colorIndex=1,
+//                        archived=false,
+//                        profile_id=1
+//                    ),
+//                    Category(
+//                        id=0,
+//                        name="Schostakowitsch 9.",
+//                        colorIndex=2,
+//                        archived=false,
+//                        profile_id=1
+//                    ),
+//                    Category(
+//                        id=0,
+//                        name="Trauermarsch c-Moll",
+//                        colorIndex=3,
+//                        archived=false,
+//                        profile_id=1
+//                    ),
+//                    Category(
+//                        id=0,
+//                        name="Adagio",
+//                        colorIndex=4,
+//                        archived=false,
+//                        profile_id=1
+//                    ),
+//                    Category(
+//                        id=0,
+//                        name="Eine kleine Gigue",
+//                        colorIndex=5,
+//                        archived= false,
+//                        profile_id=1
+//                    ),
+//                    Category(
+//                        id=0,
+//                        name="Andantino",
+//                        colorIndex=6,
+//                        archived=false,
+//                        profile_id=1
+//                    ),
+//                    Category(
+//                        id=0,
+//                        name="Klaviersonate",
+//                        colorIndex=7,
+//                        archived=false,
+//                        profile_id=1
+//                    ),
+//                    Category(
+//                        id=0,
+//                        name="Trauermarsch",
+//                        colorIndex=8,
+//                        archived=false,
+//                        profile_id=1
+//                    ),
                 ).forEach {
                     dao?.insertCategory(it)
                 }
