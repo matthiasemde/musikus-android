@@ -3,7 +3,9 @@ package de.practicetime.practicetime
 import android.app.Activity
 import android.content.res.ColorStateList
 import android.util.Log
+import android.view.View
 import android.widget.EditText
+import android.widget.ImageButton
 import android.widget.RadioButton
 import android.widget.RadioGroup
 import androidx.appcompat.app.AlertDialog
@@ -14,7 +16,7 @@ import kotlinx.coroutines.launch
 
 class CategoryDialog (
     context: Activity,
-    lifecycleScope: LifecycleCoroutineScope,
+    private val lifecycleScope: LifecycleCoroutineScope,
     private val dao: PTDao?,
 ) {
 
@@ -44,6 +46,8 @@ class CategoryDialog (
         dialogView.findViewById(R.id.addCategoryDialogColor9),
         dialogView.findViewById(R.id.addCategoryDialogColor10),
     )
+
+    private val deleteButton = dialogView.findViewById<ImageButton>(R.id.deleteCategory)
 
     private var categoryId = 0
     private var selectedColorIndex = 0
@@ -117,6 +121,22 @@ class CategoryDialog (
 
         // finally, we use the alert dialog builder to create the alertDialog
         alertDialog = alertDialogBuilder.create()
+
+        deleteButton.setOnClickListener {
+            val archivedCategory = Category(
+                id = categoryId,
+                name = categoryNameView.text.toString().trim(),
+                colorIndex = selectedColorIndex,
+                archived = true,
+                profile_id = 0
+            )
+
+            lifecycleScope.launch {
+                dao?.updateCategory(archivedCategory)
+            }
+
+            alertDialog?.dismiss()
+        }
     }
 
     // the dialog is complete if a name is entered and a color is selected
@@ -135,6 +155,8 @@ class CategoryDialog (
             val positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
 
             if(category != null) {
+                deleteButton.visibility = View.VISIBLE
+
                 categoryId = category.id
                 categoryNameView.setText(category.name)
                 categoryColorButtons[category.colorIndex].isChecked = true

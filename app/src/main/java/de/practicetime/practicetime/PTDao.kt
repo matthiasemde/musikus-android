@@ -38,6 +38,9 @@ interface PTDao {
     @Delete
     suspend fun deleteCategory(category: Category)
 
+    @Query("DELETE FROM Category WHERE id = :categoryId")
+    suspend fun deleteCategoryById(categoryId: Int)
+
     @Update
     suspend fun updateCategory(category: Category)
 
