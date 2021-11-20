@@ -512,7 +512,9 @@ class ActiveSessionActivity : AppCompatActivity() {
         // Replace the contents of a view (invoked by the layout manager)
         override fun onBindViewHolder(viewHolder: ViewHolder, position: Int) {
             // Get element from your dataset at this position
-            val categoryName = activeCategories?.get(practiceSections[position].first.category_id - 1)?.name
+            val categoryName = activeCategories?.find { category ->
+                category.id == practiceSections[position].first.category_id
+            }?.name
 
             // calculate duration of each session (minus pauses)
             var sectionDuration: Int
