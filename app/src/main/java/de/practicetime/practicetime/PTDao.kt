@@ -44,6 +44,15 @@ interface PTDao {
     @Update
     suspend fun updateCategory(category: Category)
 
+    @Transaction
+    suspend fun archiveCategory(categoryId: Int) {
+        getCategory(categoryId).also { c ->
+            c.archived = true
+            updateCategory(c)
+        }
+    }
+
+
     @Query("SELECT * FROM PracticeSession")
     suspend fun getAllSessions(): List<PracticeSession>
 

@@ -2,7 +2,6 @@ package de.practicetime.practicetime
 
 import android.app.Activity
 import android.content.res.ColorStateList
-import android.util.Log
 import android.view.View
 import android.widget.EditText
 import android.widget.ImageButton
@@ -10,14 +9,12 @@ import android.widget.RadioButton
 import android.widget.RadioGroup
 import androidx.appcompat.app.AlertDialog
 import androidx.core.widget.addTextChangedListener
-import androidx.lifecycle.LifecycleCoroutineScope
 import de.practicetime.practicetime.entities.Category
-import kotlinx.coroutines.launch
 
 class CategoryDialog (
     context: Activity,
-    private val lifecycleScope: LifecycleCoroutineScope,
-    private val dao: PTDao?,
+    onCreateHandler: (newCategory: Category) -> Unit,
+    onDeleteHandler: (categoryId: Int) -> Unit = { },
 ) {
 
     // instantiate the builder for the alert dialog
@@ -28,6 +25,7 @@ class CategoryDialog (
         null,
     )
 
+    // find and save all the views in the dialog view
     private val categoryNameView = dialogView.findViewById<EditText>(R.id.addCategoryDialogName)
     private val categoryColorButtonGroupRow1 =
         dialogView.findViewById<RadioGroup>(R.id.addCategoryDialogColorRow1)
@@ -49,7 +47,7 @@ class CategoryDialog (
 
     private val deleteButton = dialogView.findViewById<ImageButton>(R.id.deleteCategory)
 
-    private var categoryId = 0
+    private var selectedCategoryId = 0
     private var selectedColorIndex = 0
 
     var alertDialog: AlertDialog? = null
@@ -67,20 +65,18 @@ class CategoryDialog (
 
                 // check if all fields are filled out
                 if (isComplete()) {
+
                     // create the new / edited category
                     val newCategory = Category(
-                        id = categoryId,
+                        id = selectedCategoryId,
                         name = categoryName,
                         colorIndex = selectedColorIndex,
                         archived = false,
                         profile_id = 0
                     )
 
-                    Log.d("INSERT CATEGORY", "$newCategory")
-                    // and insert it into the database
-                    lifecycleScope.launch {
-                        dao?.insertCategory(newCategory)
-                    }
+                    // and call the onCreate handler
+                    onCreateHandler(newCategory)
                 }
 
                 // clear the dialog and dismiss it
@@ -123,18 +119,7 @@ class CategoryDialog (
         alertDialog = alertDialogBuilder.create()
 
         deleteButton.setOnClickListener {
-            val archivedCategory = Category(
-                id = categoryId,
-                name = categoryNameView.text.toString().trim(),
-                colorIndex = selectedColorIndex,
-                archived = true,
-                profile_id = 0
-            )
-
-            lifecycleScope.launch {
-                dao?.updateCategory(archivedCategory)
-            }
-
+            onDeleteHandler(selectedCategoryId)
             alertDialog?.dismiss()
         }
     }
@@ -148,16 +133,17 @@ class CategoryDialog (
 
     // the public function to show the dialog
     // if a category is passed it will be edited
-    // TODO change strings in dialog
     fun show(category: Category? = null) {
         alertDialog?.show()
         alertDialog?.also { dialog ->
             val positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
 
             if(category != null) {
+                dialog.setTitle(R.string.addCategoryDialogTitleEdit)
+                positiveButton.setText(R.string.addCategoryAlertOkEdit)
                 deleteButton.visibility = View.VISIBLE
 
-                categoryId = category.id
+                selectedCategoryId = category.id
                 categoryNameView.setText(category.name)
                 categoryColorButtons[category.colorIndex].isChecked = true
             }

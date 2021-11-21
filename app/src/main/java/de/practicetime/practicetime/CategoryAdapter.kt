@@ -16,6 +16,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.LifecycleCoroutineScope
+import androidx.lifecycle.lifecycleScope
 import de.practicetime.practicetime.entities.Category
 import kotlinx.coroutines.launch
 
@@ -36,12 +37,18 @@ class CategoryAdapter(
     var addCategoryDialog: CategoryDialog? = null
 
     init {
+
+        // the handler for creating new categories
+        fun addCategoryHandler(newCategory: Category) {
+            lifecycleScope.launch {
+                dao?.insertCategory(newCategory)
+                categories.add(newCategory)
+                notifyItemInserted(categories.size)
+            }
+        }
+
         // create a new category dialog for adding new categories
-        addCategoryDialog = CategoryDialog(
-            context,
-            lifecycleScope,
-            dao,
-        )
+        addCategoryDialog = CategoryDialog(context, ::addCategoryHandler)
     }
 
     companion object {

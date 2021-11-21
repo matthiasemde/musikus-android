@@ -34,12 +34,9 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
         initCategoryList()
         editCategoryDialog = CategoryDialog(
             context = requireActivity(),
-            lifecycleScope,
-            dao,
+            ::editCategoryHandler,
+            ::deleteCategoryHandler,
         )
-        editCategoryDialog?.alertDialog?.setOnDismissListener {
-            updateCategoryList()
-        }
     }
 
     private fun initCategoryList() {
@@ -52,15 +49,15 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
                 grow = true,
         )
 
-        categoryAdapter?.addCategoryDialog?.alertDialog?.setOnDismissListener {
-            updateCategoryList()
-        }
-
         val categoryListView = requireActivity().findViewById<RecyclerView>(R.id.libraryCategoryList)
         categoryListView.layoutManager = GridLayoutManager(context, 2)
         categoryListView.adapter = categoryAdapter
 
-        updateCategoryList()
+        lifecycleScope.launch {
+            dao?.getActiveCategories()?.let { categories.addAll(it) }
+            // notifyDataSetChanged necessary here since all items might have changed
+            categoryAdapter?.notifyItemRangeInserted(0, categories.size)
+        }
     }
 
     // the routine for handling presses to category buttons
@@ -71,16 +68,27 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
         }
     }
 
-    private fun updateCategoryList() {
+    // the handler for editing categories
+    private fun editCategoryHandler(category: Category) {
         lifecycleScope.launch {
-            categories.clear()
-            dao?.getActiveCategories().also {
-                if (it != null) {
-                    categories.addAll(it)
-                }
+            dao?.insertCategory(category)
+            categories.indexOfFirst { c -> c.id == category.id }.also { i ->
+                assert(i != -1)
+                categories[i] = category
+                categoryAdapter?.notifyItemChanged(i)
             }
-            // notifyDataSetChanged necessary here since all items might have changed
-            categoryAdapter?.notifyDataSetChanged()
+        }
+    }
+
+    // the handler for deleting categories
+    private fun deleteCategoryHandler(categoryId: Int) {
+        lifecycleScope.launch {
+            dao?.archiveCategory(categoryId)
+            categories.indexOfFirst { c -> c.id == categoryId }.also { i ->
+                assert(i != -1)
+                categories.removeAt(i)
+                categoryAdapter?.notifyItemRemoved(i)
+            }
         }
     }
 
