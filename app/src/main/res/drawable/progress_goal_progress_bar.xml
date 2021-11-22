@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <clip  xmlns:android="http://schemas.android.com/apk/res/android"
     android:clipOrientation="horizontal"
-    android:gravity="right">
+    android:gravity="left">
     <shape>
         <corners
             android:radius="16dp" />
-        <solid
-            android:color="#7000"/>
+        <gradient
+            android:startColor="#EEE"
+            android:endColor="#FFF" />
     </shape>
 </clip>

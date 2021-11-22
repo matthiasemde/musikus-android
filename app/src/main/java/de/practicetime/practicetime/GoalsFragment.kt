@@ -9,14 +9,16 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.ProgressBar
+import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
-import de.practicetime.practicetime.entities.Goal
 import de.practicetime.practicetime.entities.GoalWithCategories
 import kotlinx.coroutines.launch
+import java.util.*
+import kotlin.collections.ArrayList
 
 private var dao: PTDao? = null
 
@@ -116,18 +118,34 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
                 view: View,
                 val context: Activity,
             ) : ViewHolder(view) {
-                private val progressBar: ProgressBar = view.findViewById(R.id.goalProgressBar)
+                private val progressBarView: ProgressBar = view.findViewById(R.id.goalProgressBar)
+                private val progressPercentView: TextView = view.findViewById(R.id.goalProgressPercent)
+                private val goalNameView: TextView = view.findViewById(R.id.goalName)
+                private val remainingTimeView: TextView = view.findViewById(R.id.goalRemainingTime)
 
                 fun bind(goalWithCategories: GoalWithCategories) {
+                    val now = Date().time / 1000L
                     val (goal, categories) = goalWithCategories
 
-                    progressBar.max = goal.target
-                    progressBar.progress = goal.progress
+                    progressBarView.max = goal.target
+                    progressBarView.progress = goal.progress
 
                     val categoryColors =  context.resources.getIntArray(R.array.category_colors)
-                    progressBar.backgroundTintList = ColorStateList.valueOf(
+                    progressBarView.progressTintList = ColorStateList.valueOf(
                         categoryColors[categories.first().colorIndex]
                     )
+
+                    progressPercentView.text = (goal.progress * 100 / goal.target).toString() + "%"
+
+                    val targetFormatted = formatTime(goal.target.toLong())
+                    val periodFormatted = formatTime(goal.period.toLong())
+
+                    goalNameView.text = "Practice ${categories.first().name} for $targetFormatted in $periodFormatted"
+
+                    val remainingTimeFormatted = formatTime(
+                        (goal.startTimestamp + goal.period) - now
+                    )
+                    remainingTimeView.text = "Time left:\n$remainingTimeFormatted"
                 }
             }
 
@@ -150,5 +168,22 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
             }
         }
     }
+
 }
 
+fun formatTime(time: Long): String {
+    var formattedTime = ""
+
+    val months = 0
+    val days = time / 86_400
+    val hours = time % 86_400 / 3600
+    val mins = time % 3600 / 60
+
+    if (months > 0 ) formattedTime += "$months months "
+    if (days > 0 ) formattedTime += "$days days "
+    if (hours > 0 ) formattedTime += "$hours hours "
+    if (mins > 0 ) formattedTime += "$mins mins "
+
+    // remove the trailing space with trim
+    return formattedTime.trim()
+}
