@@ -99,9 +99,7 @@ class CategoryAdapter(
             is ViewHolder.CategoryViewHolder -> viewHolder.bind(
                 categories[position]
             )
-            is ViewHolder.AddNewCategoryViewHolder -> viewHolder.bind(
-
-            )
+            is ViewHolder.AddNewCategoryViewHolder -> viewHolder.bind()
         }
     }
 
@@ -138,8 +136,6 @@ class CategoryAdapter(
                 button.backgroundTintList = ColorStateList.valueOf(
                     categoryColors[category.colorIndex]
                 )
-
-                // TODO set right margin for last 3 elements programmatically
             }
         }
 

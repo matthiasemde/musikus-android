@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ProgressBar xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/goalProgressBar"
+    style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+    android:layout_width="match_parent"
+    android:layout_height="50dp"
+    android:layout_margin="4dp"
+    android:background="@drawable/background_goal_progress_bar"
+    android:backgroundTintMode="multiply"
+    android:indeterminate="false"
+    android:progressDrawable="@drawable/progress_goal_progress_bar"></ProgressBar>

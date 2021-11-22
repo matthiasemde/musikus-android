@@ -2,6 +2,7 @@ package de.practicetime.practicetime
 
 import androidx.room.*
 import de.practicetime.practicetime.entities.*
+import java.util.*
 
 @Dao
 interface PTDao {
@@ -12,7 +13,13 @@ interface PTDao {
     suspend fun insertSection(section: PracticeSection)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertCategory(category: Category)
+    suspend fun insertCategory(category: Category): Long
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertGoal(goal: Goal): Long
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertGoalCategoryCrossRef(crossRef: GoalCategoryCrossRef): Long
 
     @Transaction
     suspend fun insertSessionAndSectionsInTransaction(
@@ -67,6 +74,14 @@ interface PTDao {
 
     @Query("SELECT * FROM Category WHERE NOT archived")
     suspend fun getActiveCategories(): List<Category>
+
+    @Query("SELECT * FROM Goal")
+    suspend fun getAllGoals(): List<Goal>
+
+    @Query("SELECT * FROM Goal WHERE startTimestamp < :now AND startTimestamp + period > :now")
+    suspend fun getActiveGoalsWithCategories(now : Long = Date().time / 1000L) : List<GoalWithCategories>
+
+
 
     @Transaction
     @Query("SELECT * FROM PracticeSession")

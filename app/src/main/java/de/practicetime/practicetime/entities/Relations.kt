@@ -3,6 +3,7 @@ package de.practicetime.practicetime.entities
 // import androidx.room.Entity
 import androidx.room.Relation
 import androidx.room.Embedded
+import androidx.room.Junction
 
 
 data class SessionWithSections(
@@ -31,4 +32,32 @@ data class SessionWithSectionsWithCategories(
         entityColumn = "practice_session_id"
     )
     val sections: List<SectionWithCategory>
+)
+
+data class GoalWithCategories(
+    @Embedded val goal: Goal,
+    @Relation(
+        parentColumn = "id",
+        entityColumn = "id",
+        associateBy = Junction(
+            GoalCategoryCrossRef::class,
+            parentColumn = "goalId",
+            entityColumn = "categoryId"
+        )
+    )
+    val categories: List<Category>
+)
+
+data class CategoryWithGoals(
+    @Embedded val category: Category,
+    @Relation(
+        parentColumn = "id",
+        entityColumn = "id",
+        associateBy = Junction(
+            GoalCategoryCrossRef::class,
+            parentColumn = "categoryId",
+            entityColumn = "goalId"
+        )
+    )
+    val goals: List<Goal>
 )

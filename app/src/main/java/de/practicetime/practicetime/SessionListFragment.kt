@@ -14,6 +14,8 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import de.practicetime.practicetime.entities.Category
+import de.practicetime.practicetime.entities.Goal
+import de.practicetime.practicetime.entities.GoalCategoryCrossRef
 import kotlinx.coroutines.launch
 import java.util.*
 
@@ -132,72 +134,35 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
 
                 // populate the category table on first run
                 listOf(
-                    Category(
-                        id=0,
-                        name="Die Schöpfung",
-                        colorIndex=0,
-                        archived=false,
-                        profile_id=1
-                    ),
-//                    Category(
-//                        id=0,
-//                        name="Beethoven Septett",
-//                        colorIndex=1,
-//                        archived=false,
-//                        profile_id=1
-//                    ),
-//                    Category(
-//                        id=0,
-//                        name="Schostakowitsch 9.",
-//                        colorIndex=2,
-//                        archived=false,
-//                        profile_id=1
-//                    ),
-//                    Category(
-//                        id=0,
-//                        name="Trauermarsch c-Moll",
-//                        colorIndex=3,
-//                        archived=false,
-//                        profile_id=1
-//                    ),
-//                    Category(
-//                        id=0,
-//                        name="Adagio",
-//                        colorIndex=4,
-//                        archived=false,
-//                        profile_id=1
-//                    ),
-//                    Category(
-//                        id=0,
-//                        name="Eine kleine Gigue",
-//                        colorIndex=5,
-//                        archived= false,
-//                        profile_id=1
-//                    ),
-//                    Category(
-//                        id=0,
-//                        name="Andantino",
-//                        colorIndex=6,
-//                        archived=false,
-//                        profile_id=1
-//                    ),
-//                    Category(
-//                        id=0,
-//                        name="Klaviersonate",
-//                        colorIndex=7,
-//                        archived=false,
-//                        profile_id=1
-//                    ),
-//                    Category(
-//                        id=0,
-//                        name="Trauermarsch",
-//                        colorIndex=8,
-//                        archived=false,
-//                        profile_id=1
-//                    ),
+                    Category(name="Die Schöpfung", colorIndex=0),
+                    Category(name="Beethoven Septett", colorIndex=1),
+                    Category(name="Schostakowitsch 9.", colorIndex=2),
+                    Category(name="Trauermarsch c-Moll", colorIndex=3),
+                    Category(name="Adagio", colorIndex=4),
+                    Category(name="Eine kleine Gigue", colorIndex=5),
+                    Category(name="Andantino", colorIndex=6),
+                    Category(name="Klaviersonate", colorIndex=7),
+                    Category(name="Trauermarsch", colorIndex=8),
                 ).forEach {
                     dao?.insertCategory(it)
                 }
+
+                listOf(
+                    Goal(startTimestamp = Date().time / 1000L, period = 10000, target = 500),
+                    Goal(startTimestamp = Date().time / 1000L, period = 10000, target = 200),
+                    Goal(startTimestamp = Date().time / 1000L, period = 20000, target = 700),
+                ).forEach {
+                    dao?.insertGoal(it)
+                }
+
+                listOf(
+                    GoalCategoryCrossRef(goalId = 1, categoryId = 1),
+                    GoalCategoryCrossRef(goalId = 2, categoryId = 2),
+                    GoalCategoryCrossRef(goalId = 3, categoryId = 3),
+                ).forEach {
+                    dao?.insertGoalCategoryCrossRef(it)
+                }
+
 
                 prefs.edit().putBoolean("firstrun", false).apply();
             }
