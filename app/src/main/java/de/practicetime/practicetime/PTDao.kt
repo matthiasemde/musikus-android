@@ -51,6 +51,9 @@ interface PTDao {
     @Update
     suspend fun updateCategory(category: Category)
 
+    @Update
+    suspend fun updateGoal(goal: Goal)
+
     @Transaction
     suspend fun archiveCategory(categoryId: Int) {
         getCategory(categoryId).also { c ->
@@ -58,7 +61,6 @@ interface PTDao {
             updateCategory(c)
         }
     }
-
 
     @Query("SELECT * FROM PracticeSession")
     suspend fun getAllSessions(): List<PracticeSession>
@@ -78,10 +80,16 @@ interface PTDao {
     @Query("SELECT * FROM Goal")
     suspend fun getAllGoals(): List<Goal>
 
+    @Transaction
     @Query("SELECT * FROM Goal WHERE startTimestamp < :now AND startTimestamp + period > :now")
     suspend fun getActiveGoalsWithCategories(now : Long = Date().time / 1000L) : List<GoalWithCategories>
 
-
+    @Transaction
+    @Query("SELECT * FROM Goal WHERE id In (:ids) AND startTimestamp < :now AND startTimestamp + period > :now")
+    suspend fun getSelectedActiveGoalsWithCategories(
+        ids : List<Int>,
+        now : Long = Date().time / 1000L
+    ) : List<GoalWithCategories>
 
     @Transaction
     @Query("SELECT * FROM PracticeSession")
@@ -90,4 +98,9 @@ interface PTDao {
     @Transaction
     @Query("SELECT * FROM PracticeSession")
     suspend fun getSessionsWithSectionsWithCategories(): List<SessionWithSectionsWithCategories>
+
+    @Transaction
+    @Query("SELECT * FROM PracticeSession WHERE id = (SELECT MAX(id) FROM PracticeSession)")
+    suspend fun getLatestSessionWithSectionsWithCategoriesWithGoals()
+        : SessionWithSectionsWithCategoriesWithGoals
 }

@@ -25,13 +25,14 @@ import kotlin.collections.ArrayList
 import android.view.animation.Animation
 import android.view.animation.Transformation
 import androidx.recyclerview.widget.DefaultItemAnimator
-import org.w3c.dom.Text
+import de.practicetime.practicetime.entities.GoalType
 
 const val PROGRESS_UPDATED = 1337
 
 class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_update) {
     private var dao: PTDao? = null
 
+    private val progressedGoalsWithCategoriesShown = ArrayList<GoalWithCategories>()
     private val progressedGoalsWithCategories = ArrayList<GoalWithCategories>()
 
     private var progressAdapter : ProgressAdapter? = null
@@ -43,14 +44,54 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
 
         initProgressedGoalList()
 
-        showProgress()
+        Handler(Looper.getMainLooper()).postDelayed({
+            lifecycleScope.launch {
+                val latestSession = dao?.getLatestSessionWithSectionsWithCategoriesWithGoals()
+
+                // goalProgress maps the goal id to its progress
+                val goalProgress = mutableMapOf<Int, Int>()
+                latestSession?.sections?.forEach { (section, categoryWithGoals) ->
+                    val (_, goals) = categoryWithGoals
+                    goals.forEach { goal ->
+                        when (goal.type) {
+                            GoalType.TIME -> {
+                                goalProgress[goal.id] =
+                                    goalProgress[goal.id] ?: 0 + (section.duration ?: 0)
+                            }
+                            GoalType.SESSION_COUNT -> {
+                                goalProgress[goal.id] = 1
+                            }
+                        }
+                    }
+                }
+
+                dao?.getSelectedActiveGoalsWithCategories(goalProgress.keys.toList())?.let {
+                    progressedGoalsWithCategories.addAll(it)
+                }
+
+                if(progressedGoalsWithCategories.size > 0) {
+                    progressedGoalsWithCategories.forEach { (goal, _) ->
+                        goalProgress[goal.id].also { progress ->
+                            if (progress != null && progress > 0) {
+                                goal.progress += progress
+                                dao?.updateGoal(goal)
+
+                                // undo the progress locally after updating database for the animation to work
+                                goal.progress -= progress
+                            }
+                        }
+                    }
+                    startProgressAnimation(goalProgress)
+                }
+            }
+        }, 200)
 
         findViewById<Button>(R.id.progressUpdateLeave).setOnClickListener{ exitActivity() }
     }
 
     private fun initProgressedGoalList() {
         progressAdapter = ProgressAdapter(
-            progressedGoalsWithCategories,
+            progressedGoalsWithCategoriesShown,
             context = this,
         )
 
@@ -61,43 +102,34 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
         }
     }
 
-    private fun showProgress() {
+    private fun startProgressAnimation(goalProgress: Map<Int, Int>) {
         // load all the progressed goals after a short delay to then show them one by one
-        Handler(Looper.getMainLooper()).postDelayed({
-            lifecycleScope.launch {
-                val allProgressedGoalsWithCategories = ArrayList<GoalWithCategories>()
-                dao?.getActiveGoalsWithCategories()?.let {
-                    allProgressedGoalsWithCategories.addAll(it)
+
+        val handler = Handler(Looper.getMainLooper())
+
+        // for the animation we want to alternatingly show a new goal and then its progress
+        fun showGoal(goalIndex: Int) {
+            fun showProgress(progressIndex: Int) {
+                progressedGoalsWithCategoriesShown[0].goal.apply {
+                    progress += goalProgress[this.id] ?: 0
                 }
+                progressAdapter?.notifyItemChanged(0, PROGRESS_UPDATED)
 
-                val handler = Handler(Looper.getMainLooper())
-
-                // for the animation we want to alternatingly show a new goal and then its progress
-                fun showGoal(index: Int) {
-                    fun showProgress(index: Int) {
-                        progressedGoalsWithCategories.first().goal.progress += 100
-                        progressAdapter?.notifyItemChanged(0, PROGRESS_UPDATED)
-
-                        // only continue showing goals, as long as there are more
-                        if(index + 1 < allProgressedGoalsWithCategories.size) {
-                            handler.postDelayed({showGoal(index + 1)}, 1500)
-                        }
-                    }
-                    progressedGoalsWithCategories.add(
-                        0,
-                        allProgressedGoalsWithCategories[index]
-                    )
-                    progressAdapter?.notifyItemInserted(0)
-
-                    // the progress animation for the first element should
-                    // start earlier since there is now fade-in beforehand
-                    handler.postDelayed({showProgress(index)}, if(index == 0) 500 else 1000)
+                // only continue showing goals, as long as there are more
+                if(progressIndex + 1 < progressedGoalsWithCategories.size) {
+                    handler.postDelayed({showGoal(progressIndex + 1)}, 1500)
                 }
-
-                // start the progress animation with the first goal
-                handler.post {showGoal(0)}
             }
-        }, 1000)
+            progressedGoalsWithCategoriesShown.add(0, progressedGoalsWithCategories[goalIndex])
+            progressAdapter?.notifyItemInserted(0)
+
+            // the progress animation for the first element should
+            // start earlier since there is now fade-in beforehand
+            handler.postDelayed({showProgress(goalIndex)}, if(goalIndex == 0) 500 else 1000)
+        }
+
+        // start the progress animation in reverse order with the last goal
+        handler.post {showGoal(0)}
     }
 
     private class ProgressAdapter(
@@ -168,7 +200,7 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
 
     private class CustomAnimator() : DefaultItemAnimator(){
         // change the duration of the fade in and move animation
-        override fun getAddDuration() = 150L
+        override fun getAddDuration() = 250L
         override fun getMoveDuration() = 500L
 
         override fun animateChange(

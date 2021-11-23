@@ -61,3 +61,23 @@ data class CategoryWithGoals(
     )
     val goals: List<Goal>
 )
+
+data class SectionWithCategoryWithGoals(
+    @Embedded val section: PracticeSection,
+    @Relation(
+        entity = Category::class,
+        parentColumn = "category_id",
+        entityColumn = "id"
+    )
+    val category: CategoryWithGoals
+)
+
+data class SessionWithSectionsWithCategoriesWithGoals(
+    @Embedded val session: PracticeSession,
+    @Relation(
+        entity = PracticeSection::class,
+        parentColumn = "id",
+        entityColumn = "practice_session_id"
+    )
+    val sections: List<SectionWithCategoryWithGoals>
+)
