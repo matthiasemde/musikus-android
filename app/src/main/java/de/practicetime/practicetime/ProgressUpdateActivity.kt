@@ -44,47 +44,7 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
 
         initProgressedGoalList()
 
-        Handler(Looper.getMainLooper()).postDelayed({
-            lifecycleScope.launch {
-                val latestSession = dao?.getLatestSessionWithSectionsWithCategoriesWithGoals()
-
-                // goalProgress maps the goal id to its progress
-                val goalProgress = mutableMapOf<Int, Int>()
-                latestSession?.sections?.forEach { (section, categoryWithGoals) ->
-                    val (_, goals) = categoryWithGoals
-                    goals.forEach { goal ->
-                        when (goal.type) {
-                            GoalType.TIME -> {
-                                goalProgress[goal.id] =
-                                    goalProgress[goal.id] ?: 0 + (section.duration ?: 0)
-                            }
-                            GoalType.SESSION_COUNT -> {
-                                goalProgress[goal.id] = 1
-                            }
-                        }
-                    }
-                }
-
-                dao?.getSelectedActiveGoalsWithCategories(goalProgress.keys.toList())?.let {
-                    progressedGoalsWithCategories.addAll(it)
-                }
-
-                if(progressedGoalsWithCategories.size > 0) {
-                    progressedGoalsWithCategories.forEach { (goal, _) ->
-                        goalProgress[goal.id].also { progress ->
-                            if (progress != null && progress > 0) {
-                                goal.progress += progress
-                                dao?.updateGoal(goal)
-
-                                // undo the progress locally after updating database for the animation to work
-                                goal.progress -= progress
-                            }
-                        }
-                    }
-                    startProgressAnimation(goalProgress)
-                }
-            }
-        }, 200)
+        Handler(Looper.getMainLooper()).postDelayed({parseLatestSession()}, 200)
 
         findViewById<Button>(R.id.progressUpdateLeave).setOnClickListener{ exitActivity() }
     }
@@ -99,6 +59,49 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
             layoutManager = LinearLayoutManager(context)
             adapter = progressAdapter
             itemAnimator = CustomAnimator()
+        }
+    }
+
+    private fun parseLatestSession() {
+        lifecycleScope.launch {
+
+            val latestSession = dao?.getLatestSessionWithSectionsWithCategoriesWithGoals()
+
+            // goalProgress maps the goal id to its progress
+            val goalProgress = mutableMapOf<Int, Int>()
+            latestSession?.sections?.forEach { (section, categoryWithGoals) ->
+                val (_, goals) = categoryWithGoals
+                goals.forEach { goal ->
+                    when (goal.type) {
+                        GoalType.TIME -> {
+                            goalProgress[goal.id] =
+                                goalProgress[goal.id] ?: 0 + (section.duration ?: 0)
+                        }
+                        GoalType.SESSION_COUNT -> {
+                            goalProgress[goal.id] = 1
+                        }
+                    }
+                }
+            }
+
+            dao?.getSelectedActiveGoalsWithCategories(goalProgress.keys.toList())?.let {
+                progressedGoalsWithCategories.addAll(it)
+            }
+
+            if(progressedGoalsWithCategories.size > 0) {
+                progressedGoalsWithCategories.forEach { (goal, _) ->
+                    goalProgress[goal.id].also { progress ->
+                        if (progress != null && progress > 0) {
+                            goal.progress += progress
+                            dao?.updateGoal(goal)
+
+                            // undo the progress locally after updating database for the animation to work
+                            goal.progress -= progress
+                        }
+                    }
+                }
+                startProgressAnimation(goalProgress)
+            }
         }
     }
 
