@@ -340,10 +340,7 @@ class ActiveSessionActivity : AppCompatActivity() {
             stopService(it)
         }
         // go back to MainActivity, make new intent so MainActivity gets reloaded and shows new session
-        val intent = Intent(this, MainActivity::class.java)
-        val pBundle = Bundle()
-        pBundle.putInt("KEY_NEW_SESSION", 1)
-        intent.putExtras(pBundle)
+        val intent = Intent(this, ProgressUpdateActivity::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
         startActivity(intent)
     }

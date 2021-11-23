@@ -47,7 +47,6 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
         // load all active goals from the database and notify the adapter
         lifecycleScope.launch {
             dao?.getActiveGoalsWithCategories()?.let {
-                Log.d("TAG","$it")
                 activeGoalsWithCategories.addAll(it.reversed())
             }
             goalAdapter?.notifyItemRangeInserted(0, activeGoalsWithCategories.size)

@@ -52,8 +52,9 @@
 
     <TextView
         android:id="@+id/goalProgressPercent"
-        android:layout_width="wrap_content"
+        android:layout_width="50dp"
         android:layout_height="wrap_content"
+        android:textAlignment="center"
         android:textColor="?attr/colorOnSurface"
         android:textSize="20sp"
         app:layout_constraintBottom_toBottomOf="@+id/goalProgressBar"

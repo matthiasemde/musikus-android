@@ -26,4 +26,5 @@
     <string name="start_new_session_hint">Select a category to start a new session</string>
     <string name="hide_month">Hide month</string>
     <string name="show_month">Show month</string>
+    <string name="progressUpdateContinue">Continue</string>
 </resources>

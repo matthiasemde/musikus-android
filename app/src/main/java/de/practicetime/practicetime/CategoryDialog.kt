@@ -139,7 +139,7 @@ class CategoryDialog (
             val positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
 
             if(category != null) {
-                dialog.setTitle(R.string.addCategoryDialogTitleEdit)
+                dialog.setTitle(R.string.addCategoryDialogTitleEdit) // TODO WTH
                 positiveButton.setText(R.string.addCategoryAlertOkEdit)
                 deleteButton.visibility = View.VISIBLE
 
