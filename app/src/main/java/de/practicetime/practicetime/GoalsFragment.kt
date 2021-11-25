@@ -3,7 +3,6 @@ package de.practicetime.practicetime
 import android.app.Activity
 import android.content.res.ColorStateList
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,10 +10,13 @@ import android.widget.ImageButton
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
+import de.practicetime.practicetime.entities.Category
+import de.practicetime.practicetime.entities.Goal
 import de.practicetime.practicetime.entities.GoalWithCategories
 import kotlinx.coroutines.launch
 import java.util.*
@@ -28,8 +30,10 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
 
     private var goalAdapter : GoalAdapter? = null
 
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         openDatabase()
+
         initGoalList()
     }
 
@@ -37,6 +41,9 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
         goalAdapter = GoalAdapter(
             activeGoalsWithCategories,
             context = requireActivity(),
+            dao!!,
+            lifecycleScope,
+            ::addGoalHandler,
         )
 
         requireActivity().findViewById<RecyclerView>(R.id.goalList).apply {
@@ -53,18 +60,39 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
         }
     }
 
-    private fun openDatabase() {
-        val db = Room.databaseBuilder(
-            requireContext(),
-            PTDatabase::class.java, "pt-database"
-        ).build()
-        dao = db.ptDao
+
+
+    // the handler for creating new categories
+    fun addGoalHandler(newGoal: GoalWithCategories) {
+
+//        lifecycleScope.launch {
+//            dao?.insertGoal(newGoal)
+//            activeGoalsWithCategories.add(newGoal)
+//            goalAdapter?.notifyItemInserted(activeGoalsWithCategories.size)
+//        }
     }
 
     private class GoalAdapter(
         private val goals: ArrayList<GoalWithCategories>,
         private val context: Activity,
+        dao: PTDao,
+        lifecycleScope: LifecycleCoroutineScope,
+        addGoalHandler: (newGoal: GoalWithCategories) -> Unit,
     ) : RecyclerView.Adapter<GoalAdapter.ViewHolder>() {
+
+        private var addGoalDialog: GoalDialog? = null
+
+        init {
+
+
+            // create a new category dialog for adding new categories
+            addGoalDialog = GoalDialog(
+                context,
+                dao,
+                lifecycleScope,
+                addGoalHandler
+            )
+        }
 
         companion object {
             private const val VIEW_TYPE_GOAL = 1
@@ -97,8 +125,9 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
                     inflater.inflate(
                         R.layout.view_add_new_category,
                         viewGroup,
-                        false
+                        false,
                     ),
+                    addGoalDialog
                 )
             }
         }
@@ -134,7 +163,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
                         categoryColors[categories.first().colorIndex]
                     )
 
-                    progressPercentView.text = (goal.progress * 100 / goal.target).toString() + "%"
+                    progressPercentView.text = "${minOf((goal.progress * 100 / goal.target), 100)}%"
 
                     val targetFormatted = formatTime(goal.target.toLong())
                     val periodFormatted = formatTime(goal.period.toLong())
@@ -150,6 +179,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
 
             class AddNewGoalViewHolder(
                 view: View,
+                private val addGoalDialog: GoalDialog?,
             ) : GoalAdapter.ViewHolder(view) {
 
                 private val button: ImageButton = view.findViewById(R.id.addNewCategory)
@@ -160,14 +190,20 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
 
                 fun bind() {
                     button.setOnClickListener {
-
-    //                  addGoalDialog?.show()
+                        addGoalDialog?.show()
                     }
                 }
             }
         }
     }
 
+    private fun openDatabase() {
+        val db = Room.databaseBuilder(
+            requireContext(),
+            PTDatabase::class.java, "pt-database"
+        ).build()
+        dao = db.ptDao
+    }
 }
 
 fun formatTime(time: Long): String {

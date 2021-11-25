@@ -3,10 +3,7 @@ package de.practicetime.practicetime
 import android.app.Activity
 import android.content.res.ColorStateList
 import android.view.View
-import android.widget.EditText
-import android.widget.ImageButton
-import android.widget.RadioButton
-import android.widget.RadioGroup
+import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.core.widget.addTextChangedListener
 import de.practicetime.practicetime.entities.Category
@@ -26,7 +23,10 @@ class CategoryDialog (
     )
 
     // find and save all the views in the dialog view
-    private val categoryNameView = dialogView.findViewById<EditText>(R.id.addCategoryDialogName)
+    private val categoryDialogTitleView =
+        dialogView.findViewById<TextView>(R.id.categoryDialogTitle)
+    private val categoryNameView =
+        dialogView.findViewById<EditText>(R.id.addCategoryDialogName)
     private val categoryColorButtonGroupRow1 =
         dialogView.findViewById<RadioGroup>(R.id.addCategoryDialogColorRow1)
     private val categoryColorButtonGroupRow2 =
@@ -50,7 +50,7 @@ class CategoryDialog (
     private var selectedCategoryId = 0
     private var selectedColorIndex = 0
 
-    var alertDialog: AlertDialog? = null
+    private var alertDialog: AlertDialog? = null
 
     init {
 
@@ -139,7 +139,7 @@ class CategoryDialog (
             val positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
 
             if(category != null) {
-                dialog.setTitle(R.string.addCategoryDialogTitleEdit) // TODO WTH
+                categoryDialogTitleView.setText(R.string.addCategoryDialogTitleEdit)
                 positiveButton.setText(R.string.addCategoryAlertOkEdit)
                 deleteButton.visibility = View.VISIBLE
 

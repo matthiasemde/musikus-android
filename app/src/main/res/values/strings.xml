@@ -27,4 +27,11 @@
     <string name="hide_month">Hide month</string>
     <string name="show_month">Show month</string>
     <string name="progressUpdateContinue">Continue</string>
+    <string name="addGoalDialogTitle">Create a new goal</string>
+    <string name="goalDialogUseAllCategories">Total time</string>
+    <string name="goalDialogUseSpecificCategories">Select categories</string>
+    <string name="goalDialogHoursText">h</string>
+    <string name="goalDialogMinutesText">min</string>
+    <string name="addGoalDialogxInx">in</string>
+    <string name="goalDialogRepeatable">Repeatable</string>
 </resources>

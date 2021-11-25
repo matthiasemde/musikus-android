@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?attr/colorPrimary"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/categoryDialogTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            android:text="@string/addGoalDialogTitle"
+            android:textColor="?attr/colorOnPrimary"
+            android:textSize="28sp" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="12dp"
+        android:orientation="horizontal">
+
+        <Space
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="match_parent" />
+
+        <TextView
+            android:id="@+id/goalDialogAllCategories"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            android:paddingStart="4dp"
+            android:paddingEnd="4dp"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:gravity="center_vertical"
+            android:text="@string/goalDialogUseAllCategories"/>
+
+        <Space
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="match_parent" />
+
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/goalDialogTypeSwitch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:layout_marginEnd="4dp"
+            android:minHeight="48dp" />
+
+        <Space
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="match_parent" />
+
+        <TextView
+            android:id="@+id/goalDialogSpecificCategories"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            android:paddingStart="4dp"
+            android:paddingEnd="4dp"
+            android:textSize="16sp"
+            android:gravity="center_vertical"
+            android:text="@string/goalDialogUseSpecificCategories"/>
+
+        <Space
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="match_parent" />
+
+    </LinearLayout>
+
+    <Spinner
+        android:id="@+id/goalDialogCategorySelector"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="12dp"
+        android:clickable="false" />
+
+    <androidx.appcompat.widget.SwitchCompat
+        android:id="@+id/goalDialogRepeatable"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:minHeight="48dp"
+        android:text="@string/goalDialogRepeatable"
+        android:textSize="16sp"
+        app:switchPadding="5dp" />
+
+    <View
+        android:id="@+id/divider3"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_margin="8dp"
+        android:background="?android:attr/listDivider" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="12dp"
+        android:orientation="horizontal">
+
+        <EditText
+            android:id="@+id/goalDialogHours"
+            android:layout_width="40dp"
+            android:layout_height="wrap_content"
+            android:imeOptions="actionNext"
+            android:inputType="number"
+            android:paddingStart="5dp" />
+
+        <TextView
+            android:id="@+id/goalDialogHoursText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="0"
+            android:gravity="center_vertical"
+            android:labelFor="@id/goalDialogHours"
+            android:text="@string/goalDialogHoursText"
+            android:textSize="16sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=" : "
+            android:textSize="16sp" />
+
+        <EditText
+            android:id="@+id/goalDialogMinutes"
+            android:layout_width="40dp"
+            android:layout_height="wrap_content"
+            android:imeOptions="actionNext"
+            android:inputType="number"
+            android:paddingStart="5dp" />
+
+        <TextView
+            android:id="@+id/goalDialogMInutesText"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_weight="0"
+            android:gravity="center_vertical"
+            android:labelFor="@id/goalDialogMinutes"
+            android:text="@string/goalDialogMinutesText"
+            android:textSize="16sp" />
+
+        <Space
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_weight="1" />
+
+        <TextView
+            android:id="@+id/textView2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/addGoalDialogxInx"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <View
+            android:id="@+id/divider2"
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            android:layout_margin="4dp"
+            android:background="?android:attr/listDivider"
+            android:visibility="gone" />
+
+        <Space
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_weight="1" />
+
+        <EditText
+            android:id="@+id/goalDialogPeriodValue"
+            android:layout_width="40dp"
+            android:layout_height="wrap_content"
+            android:inputType="number" />
+
+        <Spinner
+            android:id="@+id/goalDialogPeriodUnit"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="5" />
+
+    </LinearLayout>
+
+</LinearLayout>

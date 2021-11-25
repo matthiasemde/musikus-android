@@ -21,7 +21,7 @@
             app:tint="?attr/colorOnPrimary" />
 
         <TextView
-            android:id="@+id/addCategoryDialogTitle"
+            android:id="@+id/categoryDialogTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"

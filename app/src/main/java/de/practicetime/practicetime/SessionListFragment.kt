@@ -13,10 +13,9 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import de.practicetime.practicetime.entities.Category
-import de.practicetime.practicetime.entities.Goal
-import de.practicetime.practicetime.entities.GoalCategoryCrossRef
+import de.practicetime.practicetime.entities.*
 import kotlinx.coroutines.launch
+import java.time.Period
 import java.util.*
 
 
@@ -148,9 +147,9 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
                 }
 
                 listOf(
-                    Goal(startTimestamp = Date().time / 1000L, period = 10000, target = 500),
-                    Goal(startTimestamp = Date().time / 1000L, period = 10000, target = 200),
-                    Goal(startTimestamp = Date().time / 1000L, period = 20000, target = 700),
+                    Goal(startTimestamp = Date().time / 1000L, type = GoalType.SPECIFIC_CATEGORIES, period = 100000, periodUnit = GoalPeriodUnit.WEEK, target = 50),
+                    Goal(startTimestamp = Date().time / 1000L, type = GoalType.SPECIFIC_CATEGORIES, period = 100000, periodUnit = GoalPeriodUnit.WEEK, target = 20),
+                    Goal(startTimestamp = Date().time / 1000L, type = GoalType.SPECIFIC_CATEGORIES, period = 200000, periodUnit = GoalPeriodUnit.WEEK, target = 70),
                 ).forEach {
                     dao?.insertGoal(it)
                 }

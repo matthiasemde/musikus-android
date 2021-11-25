@@ -6,7 +6,6 @@ import android.content.res.ColorStateList
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -25,7 +24,7 @@ import kotlin.collections.ArrayList
 import android.view.animation.Animation
 import android.view.animation.Transformation
 import androidx.recyclerview.widget.DefaultItemAnimator
-import de.practicetime.practicetime.entities.GoalType
+import de.practicetime.practicetime.entities.GoalProgressType
 
 const val PROGRESS_UPDATED = 1337
 
@@ -72,12 +71,12 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
             latestSession?.sections?.forEach { (section, categoryWithGoals) ->
                 val (_, goals) = categoryWithGoals
                 goals.forEach { goal ->
-                    when (goal.type) {
-                        GoalType.TIME -> {
+                    when (goal.progressType) {
+                        GoalProgressType.TIME -> {
                             goalProgress[goal.id] =
                                 goalProgress[goal.id] ?: 0 + (section.duration ?: 0)
                         }
-                        GoalType.SESSION_COUNT -> {
+                        GoalProgressType.SESSION_COUNT -> {
                             goalProgress[goal.id] = 1
                         }
                     }
@@ -162,7 +161,7 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
                 categoryColors[categories.first().colorIndex]
             )
 
-            viewHolder.progressPercentView.text = "${minOf(goal.progress * 100 / goal.target, 100)} %"
+            viewHolder.progressPercentView.text = "${minOf(goal.progress * 100 / goal.target, 100)}%"
 
             val targetFormatted = formatTime(goal.target.toLong())
             val periodFormatted = formatTime(goal.period.toLong())
@@ -216,11 +215,12 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
             if(preInfo is GoalItemHolderInfo) {
                 val progressBar = (newHolder as ProgressAdapter.ViewHolder).progressBarView
                 val percentView = newHolder.progressPercentView
+                progressBar.max *= 60  // multiply by 60 to grantee at least 60 fps
                 val animator = ProgressBarAnimation(
                     progressBar,
                     percentView,
-                    preInfo.progress,
-                    progressBar.progress
+                    preInfo.progress * 60,
+                    progressBar.progress * 60
                 )
                 animator.duration = 1300
                 progressBar.startAnimation(animator)
@@ -269,7 +269,7 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
             val value = from + (to - from) * interpolatedTime
             progressBar.progress = value.toInt()
             val progressInPercent = minOf((value * 100 / progressBar.max).toInt(), 100)
-            percentView.text = "$progressInPercent %"
+            percentView.text = "$progressInPercent%"
         }
     }
 }
