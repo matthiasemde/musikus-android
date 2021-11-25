@@ -1,18 +1,8 @@
 package de.practicetime.practicetime
 
-import android.app.Activity
-import android.content.res.ColorStateList
 import android.os.Bundle
-import android.util.Log
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
-import android.widget.Button
-import android.widget.ImageButton
-import android.widget.ProgressBar
-import android.widget.TextView
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -20,8 +10,6 @@ import androidx.room.Room
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import de.practicetime.practicetime.entities.*
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.*
 import kotlin.collections.ArrayList
 
 private var dao: PTDao? = null
@@ -45,7 +33,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
 
         initGoalList()
 
-        // create a new category dialog for adding new categories
+        // create a new category dialog for adding new goals
         addGoalDialog = GoalDialog(
             requireActivity(),
             dao!!,

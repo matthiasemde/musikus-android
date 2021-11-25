@@ -70,21 +70,35 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
         lifecycleScope.launch {
 
             val latestSession = dao?.getLatestSessionWithSectionsWithCategoriesWithGoals()
+            var totalSessionDuration = 0
 
             // goalProgress maps the goal id to its progress
             val goalProgress = mutableMapOf<Int, Int>()
+
+            // go through all the sections in the session...
             latestSession?.sections?.forEach { (section, categoryWithGoals) ->
+                // ... using the respective categories, find the goals,
+                // to which the sections are contributing to...
                 val (_, goals) = categoryWithGoals
+
+                // ... and loop through those goals, summing up the duration
                 goals.forEach { goal ->
                     when (goal.progressType) {
-                        GoalProgressType.TIME -> {
-                            goalProgress[goal.id] =
+                        GoalProgressType.TIME -> goalProgress[goal.id] =
                                 goalProgress[goal.id] ?: 0 + (section.duration ?: 0)
-                        }
-                        GoalProgressType.SESSION_COUNT -> {
-                            goalProgress[goal.id] = 1
-                        }
+                        GoalProgressType.SESSION_COUNT -> goalProgress[goal.id] = 1
                     }
+                }
+
+                // simultaneously sum up the total session duration
+                totalSessionDuration += section.duration ?: 0
+            }
+
+            // get all active goals from the database which have type TOTAL_TIME
+            dao?.getActiveTotalTimeGoals()?.forEach { totalTimeGoal ->
+                goalProgress[totalTimeGoal.id] = when (totalTimeGoal.progressType) {
+                    GoalProgressType.TIME -> totalSessionDuration
+                    GoalProgressType.SESSION_COUNT -> 1
                 }
             }
 
