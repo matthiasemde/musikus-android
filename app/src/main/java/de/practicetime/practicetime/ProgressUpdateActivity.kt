@@ -35,7 +35,7 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
     private val progressedGoalsWithCategoriesShown = ArrayList<GoalWithCategories>()
     private val progressedGoalsWithCategories = ArrayList<GoalWithCategories>()
 
-    private var progressAdapter : ProgressAdapter? = null
+    private var progressAdapter: GoalAdapter? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,13 +44,13 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
 
         initProgressedGoalList()
 
-        Handler(Looper.getMainLooper()).postDelayed({parseLatestSession()}, 200)
+        Handler(Looper.getMainLooper()).postDelayed({ parseLatestSession() }, 200)
 
-        findViewById<Button>(R.id.progressUpdateLeave).setOnClickListener{ exitActivity() }
+        findViewById<Button>(R.id.progressUpdateLeave).setOnClickListener { exitActivity() }
     }
 
     private fun initProgressedGoalList() {
-        progressAdapter = ProgressAdapter(
+        progressAdapter = GoalAdapter(
             progressedGoalsWithCategoriesShown,
             context = this,
         )
@@ -61,6 +61,10 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
             itemAnimator = CustomAnimator()
         }
     }
+
+    /*************************************************************************
+     * Parse latest session and extract goal progress
+     *************************************************************************/
 
     private fun parseLatestSession() {
         lifecycleScope.launch {
@@ -88,7 +92,7 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
                 progressedGoalsWithCategories.addAll(it)
             }
 
-            if(progressedGoalsWithCategories.size > 0) {
+            if (progressedGoalsWithCategories.size > 0) {
                 progressedGoalsWithCategories.forEach { (goal, _) ->
                     goalProgress[goal.id].also { progress ->
                         if (progress != null && progress > 0) {
@@ -105,6 +109,10 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
         }
     }
 
+    /*************************************************************************
+     * Progress animation coordination function
+     *************************************************************************/
+
     private fun startProgressAnimation(goalProgress: Map<Int, Int>) {
         // load all the progressed goals after a short delay to then show them one by one
 
@@ -119,8 +127,8 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
                 progressAdapter?.notifyItemChanged(0, PROGRESS_UPDATED)
 
                 // only continue showing goals, as long as there are more
-                if(progressIndex + 1 < progressedGoalsWithCategories.size) {
-                    handler.postDelayed({showGoal(progressIndex + 1)}, 1500)
+                if (progressIndex + 1 < progressedGoalsWithCategories.size) {
+                    handler.postDelayed({ showGoal(progressIndex + 1) }, 1500)
                 }
             }
             progressedGoalsWithCategoriesShown.add(0, progressedGoalsWithCategories[goalIndex])
@@ -128,81 +136,16 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
 
             // the progress animation for the first element should
             // start earlier since there is now fade-in beforehand
-            handler.postDelayed({showProgress(goalIndex)}, if(goalIndex == 0) 500 else 1000)
+            handler.postDelayed({ showProgress(goalIndex) }, if (goalIndex == 0) 500 else 1000)
         }
 
         // start the progress animation in reverse order with the last goal
-        handler.post {showGoal(0)}
+        handler.post { showGoal(0) }
     }
 
-    private class ProgressAdapter(
-        private val progressedGoalsWithCategories: ArrayList<GoalWithCategories>,
-        private val context: Activity,
-    ) : RecyclerView.Adapter<ProgressAdapter.ViewHolder>() {
-
-        override fun getItemCount() = progressedGoalsWithCategories.size
-
-        override fun onCreateViewHolder(viewGroup: ViewGroup, viewType: Int): ViewHolder {
-            val view = LayoutInflater.from(viewGroup.context)
-                .inflate(R.layout.view_goal_item, viewGroup, false)
-            return ViewHolder(view)
-        }
-
-        override fun onBindViewHolder(viewHolder: ViewHolder, position: Int) {
-            val (goal, categories) = progressedGoalsWithCategories[position]
-
-            viewHolder.progressBarView
-            val now = Date().time / 1000L
-
-            viewHolder.progressBarView.max = goal.target
-            viewHolder.progressBarView.progress = goal.progress
-
-            val categoryColors =  context.resources.getIntArray(R.array.category_colors)
-            viewHolder.progressBarView.progressTintList = ColorStateList.valueOf(
-                categoryColors[categories.first().colorIndex]
-            )
-
-            viewHolder.progressPercentView.text = "${minOf(goal.progress * 100 / goal.target, 100)}%"
-
-            val targetHours = goal.target / 3600
-            val targetMinutes = goal.target % 3600 / 60
-
-            val targetFormatted = if(targetHours > 0) "$targetHours hours" else "" +
-                    if (targetHours > 0 && targetMinutes > 0) " and " else "" +
-                            if(targetMinutes > 0) "$targetMinutes mins" else ""
-
-            val periodFormatted = when(goal.periodUnit) {
-                GoalPeriodUnit.DAY -> "${goal.period / SECONDS_PER_DAY} days"
-                GoalPeriodUnit.WEEK -> "${goal.period / SECONDS_PER_WEEK} weeks"
-                GoalPeriodUnit.MONTH -> "${goal.period / SECONDS_PER_MONTH} months"
-            }
-
-            viewHolder.goalNameView.text = "Practice ${categories.first().name} for $targetFormatted in $periodFormatted"
-
-            val remainingTime = (goal.startTimestamp + goal.period) - now
-            // if time left is larger than a day, show the number of days
-            when {
-                remainingTime > SECONDS_PER_DAY -> {
-                    viewHolder.remainingTimeView.text = "${remainingTime / SECONDS_PER_DAY + 1} days to go"
-                    // otherwise, if time left is larger than an hour, show the number of hours
-                }
-                remainingTime > SECONDS_PER_HOUR -> {
-                    viewHolder.remainingTimeView.text = "${remainingTime % SECONDS_PER_DAY / SECONDS_PER_HOUR + 1} hours to go"
-                    // otherwise, show the number of minutes
-                }
-                else -> {
-                    viewHolder.remainingTimeView.text = "${remainingTime % SECONDS_PER_HOUR / 60 + 1} minutes to go"
-                }
-            }
-        }
-
-        class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-            val progressBarView: ProgressBar = view.findViewById(R.id.goalProgressBar)
-            val progressPercentView: TextView = view.findViewById(R.id.goalProgressPercent)
-            val goalNameView: TextView = view.findViewById(R.id.goalName)
-            val remainingTimeView: TextView = view.findViewById(R.id.goalRemainingTime)
-        }
-    }
+    /*************************************************************************
+     * Utility functions
+     *************************************************************************/
 
     private fun openDatabase() {
         val db = Room.databaseBuilder(
@@ -222,7 +165,30 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
         startActivity(intent)
     }
 
-    private class CustomAnimator() : DefaultItemAnimator(){
+    /*************************************************************************
+     * Progress bar animation
+     *************************************************************************/
+
+    private class ProgressBarAnimation(
+        private val progressBar: ProgressBar,
+        private val percentView: TextView,
+        private val from: Int,
+        private val to: Int
+    ) : Animation() {
+        override fun applyTransformation(interpolatedTime: Float, t: Transformation?) {
+            super.applyTransformation(interpolatedTime, t)
+            val value = from + (to - from) * interpolatedTime
+            progressBar.progress = value.toInt()
+            val progressInPercent = minOf((value * 100 / progressBar.max).toInt(), 100)
+            percentView.text = "$progressInPercent%"
+        }
+    }
+
+    /*************************************************************************
+     * Custom animator
+     *************************************************************************/
+
+    private class CustomAnimator() : DefaultItemAnimator() {
         // change the duration of the fade in and move animation
         override fun getAddDuration() = 250L
         override fun getMoveDuration() = 500L
@@ -234,8 +200,8 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
             postInfo: ItemHolderInfo
         ): Boolean {
 
-            if(preInfo is GoalItemHolderInfo) {
-                val progressBar = (newHolder as ProgressAdapter.ViewHolder).progressBarView
+            if (preInfo is GoalItemHolderInfo) {
+                val progressBar = (newHolder as GoalAdapter.ViewHolder).progressBarView
                 val percentView = newHolder.progressPercentView
                 progressBar.max *= 60  // multiply by 60 to grantee at least 60 fps
                 val animator = ProgressBarAnimation(
@@ -267,10 +233,10 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
         ): ItemHolderInfo {
 
             if (changeFlags == FLAG_CHANGED) {
-                if (payloads[0] as? Int == PROGRESS_UPDATED){
+                if (payloads[0] as? Int == PROGRESS_UPDATED) {
                     //Get the info from the viewHolder and save it to GoalItemHolderInfo
                     return GoalItemHolderInfo(
-                        (viewHolder as ProgressAdapter.ViewHolder).progressBarView.progress,
+                        (viewHolder as GoalAdapter.ViewHolder).progressBarView.progress,
                     )
                 }
             }
@@ -280,18 +246,4 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
         class GoalItemHolderInfo(val progress: Int) : ItemHolderInfo()
     }
 
-    private class ProgressBarAnimation(
-        private val progressBar: ProgressBar,
-        private val percentView: TextView,
-        private val from: Int,
-        private val to: Int
-    ) : Animation() {
-        override fun applyTransformation(interpolatedTime: Float, t: Transformation?) {
-            super.applyTransformation(interpolatedTime, t)
-            val value = from + (to - from) * interpolatedTime
-            progressBar.progress = value.toInt()
-            val progressInPercent = minOf((value * 100 / progressBar.max).toInt(), 100)
-            percentView.text = "$progressInPercent%"
-        }
-    }
 }
