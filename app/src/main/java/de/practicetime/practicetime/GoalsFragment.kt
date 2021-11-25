@@ -3,6 +3,7 @@ package de.practicetime.practicetime
 import android.app.Activity
 import android.content.res.ColorStateList
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -19,6 +20,7 @@ import de.practicetime.practicetime.entities.Category
 import de.practicetime.practicetime.entities.Goal
 import de.practicetime.practicetime.entities.GoalWithCategories
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -64,6 +66,8 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
 
     // the handler for creating new categories
     fun addGoalHandler(newGoal: GoalWithCategories) {
+        val dateFormat: SimpleDateFormat = SimpleDateFormat("HH:mm - dd.MM.yyyy")
+        Log.d("addNewGoal", "$newGoal\nstartTimestamp: ${dateFormat.format(Date((newGoal.goal.startTimestamp) * 1000L))}")
 
 //        lifecycleScope.launch {
 //            dao?.insertGoal(newGoal)
@@ -83,8 +87,6 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
         private var addGoalDialog: GoalDialog? = null
 
         init {
-
-
             // create a new category dialog for adding new categories
             addGoalDialog = GoalDialog(
                 context,

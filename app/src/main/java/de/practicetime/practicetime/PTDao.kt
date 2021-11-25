@@ -81,6 +81,10 @@ interface PTDao {
     suspend fun getAllGoals(): List<Goal>
 
     @Transaction
+    @Query("SELECT MAX(groupId) FROM Goal")
+    suspend fun getMaxGoalGroupId() : Long
+
+    @Transaction
     @Query("SELECT * FROM Goal WHERE startTimestamp < :now AND startTimestamp + period > :now")
     suspend fun getActiveGoalsWithCategories(now : Long = Date().time / 1000L) : List<GoalWithCategories>
 

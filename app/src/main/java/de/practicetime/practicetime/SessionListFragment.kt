@@ -147,9 +147,9 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
                 }
 
                 listOf(
-                    Goal(startTimestamp = Date().time / 1000L, type = GoalType.SPECIFIC_CATEGORIES, period = 100000, periodUnit = GoalPeriodUnit.WEEK, target = 50),
-                    Goal(startTimestamp = Date().time / 1000L, type = GoalType.SPECIFIC_CATEGORIES, period = 100000, periodUnit = GoalPeriodUnit.WEEK, target = 20),
-                    Goal(startTimestamp = Date().time / 1000L, type = GoalType.SPECIFIC_CATEGORIES, period = 200000, periodUnit = GoalPeriodUnit.WEEK, target = 70),
+                    Goal(startTimestamp = Date().time / 1000L, type = GoalType.SPECIFIC_CATEGORIES, period = 100000, periodUnit = GoalPeriodUnit.WEEK, target = 50, groupId = 1),
+                    Goal(startTimestamp = Date().time / 1000L, type = GoalType.SPECIFIC_CATEGORIES, period = 100000, periodUnit = GoalPeriodUnit.WEEK, target = 20, groupId = 2),
+                    Goal(startTimestamp = Date().time / 1000L, type = GoalType.SPECIFIC_CATEGORIES, period = 200000, periodUnit = GoalPeriodUnit.WEEK, target = 70, groupId = 3),
                 ).forEach {
                     dao?.insertGoal(it)
                 }

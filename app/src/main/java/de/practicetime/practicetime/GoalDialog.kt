@@ -14,6 +14,7 @@ import android.text.InputFilter
 import androidx.core.widget.addTextChangedListener
 import de.practicetime.practicetime.entities.*
 import java.lang.NumberFormatException
+import java.util.*
 
 
 class GoalDialog(
@@ -57,17 +58,29 @@ class GoalDialog(
 
             // define the callback function for the positive button
             setPositiveButton(R.string.addCategoryAlertOk) { dialog, _ ->
-//                if(isComplete()) {
-//                    val newGoalWithCategories = GoalWithCategories(
-//                        goal = Goal(
-//                            type = GoalType.SPECIFIC_CATEGORIES
-//                        ),
-//                        categories = listOf()
-//                    )
-//
-//                    // and call the onCreate handler
-//                    onCreateHandler(newGoalWithCategories)
-//                }
+                if(isComplete()) {
+                        lifecycleScope.launch {
+                            val newGoalGroupId = dao.getMaxGoalGroupId().toInt() + 1
+                            val newGoal = computeNewGoal(
+                                groupId = newGoalGroupId,
+                                type = if (goalDialogTypeSwitchView.isChecked)
+                                    GoalType.SPECIFIC_CATEGORIES else
+                                        GoalType.TOTAL_TIME,
+                                timeFrame = Calendar.getInstance(),
+                                periodInPeriodUnits = goalDialogPeriodValueView.text.toString().toInt(),
+                                periodUnit = GoalPeriodUnit.values()[goalDialogPeriodUnitView.selectedItemPosition],
+                                target = goalDialogTargetHoursView.text.toString().toInt() * 3600 +
+                                        goalDialogTargetMinutesView.text.toString().toInt() * 60
+                            )
+                            val newGoalWithCategories = GoalWithCategories(
+                                goal = newGoal,
+                                categories = listOf()
+                            )
+
+                        // and call the onCreate handler
+                        onCreateHandler(newGoalWithCategories)
+                    }
+                }
                 dialog.dismiss()
             }
 
@@ -120,7 +133,7 @@ class GoalDialog(
     private fun initTimeSelector(
         context: Activity
     ) {
-        goalDialogTargetMinutesView.filters = arrayOf(InputFilterMax(60))
+        goalDialogTargetMinutesView.filters = arrayOf(InputFilterMax(59))
 
         ArrayAdapter(
             context,
@@ -136,6 +149,63 @@ class GoalDialog(
             adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
             goalDialogPeriodUnitView.adapter = adapter
         }
+    }
+
+    private fun computeNewGoal(
+        groupId: Int,
+        type: GoalType,
+        timeFrame: Calendar,
+        periodInPeriodUnits: Int,
+        periodUnit: GoalPeriodUnit,
+        target: Int,
+    ): Goal {
+        var startTimeStamp = 0L
+
+        // to find the correct starting point and period for the goal, we execute these steps:
+        // 1. clear the minutes, seconds and millis from the time frame and set hour to 0
+        // 2. set the time frame to the beginning of the day, week or month
+        // 3. save the time in seconds as startTimeStamp
+        // 4. then set the day to the end of the period according to the periodInPeriodUnits
+        // 5. calculate the period in seconds from the difference of the two timestamps
+        timeFrame.clear(Calendar.MINUTE)
+        timeFrame.clear(Calendar.SECOND)
+        timeFrame.clear(Calendar.MILLISECOND)
+        timeFrame.set(Calendar.HOUR_OF_DAY, 0)
+
+        when(periodUnit) {
+            GoalPeriodUnit.DAY -> {
+                startTimeStamp = timeFrame.timeInMillis / 1000L
+                timeFrame.add(Calendar.DAY_OF_MONTH, periodInPeriodUnits)
+            }
+            GoalPeriodUnit.WEEK -> {
+                timeFrame.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
+                startTimeStamp = timeFrame.timeInMillis / 1000L
+
+                timeFrame.add(Calendar.WEEK_OF_YEAR, periodInPeriodUnits)
+            }
+            GoalPeriodUnit.MONTH -> {
+                timeFrame.set(Calendar.DAY_OF_MONTH, 1)
+                startTimeStamp = timeFrame.timeInMillis / 1000L
+
+                timeFrame.add(Calendar.MONTH, periodInPeriodUnits)
+            }
+        }
+
+        // calculate the period in second from these two timestamps
+        val periodInSeconds = ((timeFrame.timeInMillis / 1000) - startTimeStamp).toInt()
+
+        assert(startTimeStamp > 0) {
+            Log.e("Assertion Failed", "startTimeStamp can not be 0")
+        }
+
+        return Goal(
+            groupId,
+            type,
+            startTimeStamp,
+            period = periodInSeconds,
+            periodUnit,
+            target
+        )
     }
 
     // check if all fields in the dialog are filled out
@@ -154,16 +224,15 @@ class GoalDialog(
             val positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
             positiveButton.isEnabled = isComplete()
             goalDialogTargetHoursView.addTextChangedListener {
-                positiveButton?.isEnabled = isComplete()
+                positiveButton.isEnabled = isComplete()
             }
             goalDialogTargetMinutesView.addTextChangedListener {
-                positiveButton?.isEnabled = isComplete()
+                positiveButton.isEnabled = isComplete()
             }
             goalDialogPeriodValueView.addTextChangedListener {
-                positiveButton?.isEnabled = isComplete()
+                positiveButton.isEnabled = isComplete()
             }
         }
-
     }
 
     private class InputFilterMax(
@@ -188,7 +257,7 @@ class GoalDialog(
                     + source.toString()
                     + dest.slice(dend until dest.length).toString()
                 )
-                if (input.toInt() in 1..max) return source
+                if (input.toInt() in 0..max) return source
             } catch (nfe: NumberFormatException) { }
             return ""
         }
