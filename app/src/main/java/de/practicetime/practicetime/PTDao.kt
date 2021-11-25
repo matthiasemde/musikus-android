@@ -26,13 +26,29 @@ interface PTDao {
         session: PracticeSession,
         sections: List<PracticeSection>,
     ) {
-        val newSessionId = insertSession(session)
+        val newSessionId = insertSession(session).toInt()
 
         // add the new sessionId to every section...
         for (section in sections) {
-            section.practice_session_id = newSessionId.toInt()
+            section.practice_session_id = newSessionId
             // and insert them into the database
             insertSection(section)
+        }
+    }
+
+    @Transaction
+    suspend fun insertGoalWithCategories(goalWithCategories: GoalWithCategories) {
+        val newGoalId = insertGoal(goalWithCategories.goal).toInt()
+
+        // for every category linked with the goal...
+        for (category in goalWithCategories.categories) {
+            // insert a row in the cross reference table
+            insertGoalCategoryCrossRef(
+                GoalCategoryCrossRef(
+                    newGoalId,
+                    category.id,
+                )
+            )
         }
     }
 

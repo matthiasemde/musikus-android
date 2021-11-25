@@ -16,15 +16,18 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
-import de.practicetime.practicetime.entities.Category
-import de.practicetime.practicetime.entities.Goal
-import de.practicetime.practicetime.entities.GoalWithCategories
+import de.practicetime.practicetime.entities.*
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
 
 private var dao: PTDao? = null
+
+const val SECONDS_PER_MONTH = 60 * 60 * 24 * 28 // don't judge me :(
+const val SECONDS_PER_WEEK = 60 * 60 * 24 * 7
+const val SECONDS_PER_DAY = 60 * 60 * 24
+const val SECONDS_PER_HOUR = 60 * 60
 
 class GoalsFragment : Fragment(R.layout.fragment_goals) {
 
@@ -56,7 +59,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
         // load all active goals from the database and notify the adapter
         lifecycleScope.launch {
             dao?.getActiveGoalsWithCategories()?.let {
-                activeGoalsWithCategories.addAll(it.reversed())
+                activeGoalsWithCategories.addAll(it)
             }
             goalAdapter?.notifyItemRangeInserted(0, activeGoalsWithCategories.size)
         }
@@ -65,15 +68,15 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
 
 
     // the handler for creating new categories
-    fun addGoalHandler(newGoal: GoalWithCategories) {
+    fun addGoalHandler(newGoalWithCategories: GoalWithCategories) {
         val dateFormat: SimpleDateFormat = SimpleDateFormat("HH:mm - dd.MM.yyyy")
-        Log.d("addNewGoal", "$newGoal\nstartTimestamp: ${dateFormat.format(Date((newGoal.goal.startTimestamp) * 1000L))}")
+        Log.d("addNewGoal", "$newGoalWithCategories\nstartTimestamp: ${dateFormat.format(Date((newGoalWithCategories.goal.startTimestamp) * 1000L))}")
 
-//        lifecycleScope.launch {
-//            dao?.insertGoal(newGoal)
-//            activeGoalsWithCategories.add(newGoal)
-//            goalAdapter?.notifyItemInserted(activeGoalsWithCategories.size)
-//        }
+        lifecycleScope.launch {
+            dao?.insertGoalWithCategories(newGoalWithCategories)
+            activeGoalsWithCategories.add(newGoalWithCategories)
+            goalAdapter?.notifyItemInserted(activeGoalsWithCategories.size)
+        }
     }
 
     private class GoalAdapter(
@@ -160,22 +163,47 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
                     progressBarView.max = goal.target
                     progressBarView.progress = goal.progress
 
-                    val categoryColors =  context.resources.getIntArray(R.array.category_colors)
-                    progressBarView.progressTintList = ColorStateList.valueOf(
-                        categoryColors[categories.first().colorIndex]
-                    )
+                    val targetHours = goal.target / 3600
+                    val targetMinutes = goal.target % 3600 / 60
+
+                    val targetFormatted = (if(targetHours > 0) "$targetHours hours" else "") +
+                            (if(targetHours > 0 && targetMinutes > 0) " and " else "") +
+                            if(targetMinutes > 0) "$targetMinutes mins" else ""
+
+                    val periodFormatted = when(goal.periodUnit) {
+                        GoalPeriodUnit.DAY -> "${goal.period / SECONDS_PER_DAY} days"
+                        GoalPeriodUnit.WEEK -> "${goal.period / SECONDS_PER_WEEK} weeks"
+                        GoalPeriodUnit.MONTH -> "${goal.period / SECONDS_PER_MONTH} months"
+                    }
+
+                    // if the goal tracks the total time, leave it as the primary color for now
+                    if(goal.type == GoalType.TOTAL_TIME) {
+                        goalNameView.text = "Practice for $targetFormatted in $periodFormatted"
+                    } else {
+                        val categoryColors = context.resources.getIntArray(R.array.category_colors)
+                        progressBarView.progressTintList = ColorStateList.valueOf(
+                            categoryColors[categories.first().colorIndex]
+                        )
+                        goalNameView.text = "Practice ${categories.first().name} for $targetFormatted in $periodFormatted"
+                    }
 
                     progressPercentView.text = "${minOf((goal.progress * 100 / goal.target), 100)}%"
 
-                    val targetFormatted = formatTime(goal.target.toLong())
-                    val periodFormatted = formatTime(goal.period.toLong())
-
-                    goalNameView.text = "Practice ${categories.first().name} for $targetFormatted in $periodFormatted"
-
-                    val remainingTimeFormatted = formatTime(
-                        (goal.startTimestamp + goal.period) - now
-                    )
-                    remainingTimeView.text = "Time left:\n$remainingTimeFormatted"
+                    val remainingTime = (goal.startTimestamp + goal.period) - now
+                    // if time left is larger than a day, show the number of days
+                    when {
+                        remainingTime > SECONDS_PER_DAY -> {
+                            remainingTimeView.text = "${remainingTime / SECONDS_PER_DAY + 1} days to go"
+                            // otherwise, if time left is larger than an hour, show the number of hours
+                        }
+                        remainingTime > SECONDS_PER_HOUR -> {
+                            remainingTimeView.text = "${remainingTime % SECONDS_PER_DAY / SECONDS_PER_HOUR + 1} hours to go"
+                            // otherwise, show the number of minutes
+                        }
+                        else -> {
+                            remainingTimeView.text = "${remainingTime % SECONDS_PER_HOUR / 60 + 1} minutes to go"
+                        }
+                    }
                 }
             }
 
@@ -206,21 +234,4 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
         ).build()
         dao = db.ptDao
     }
-}
-
-fun formatTime(time: Long): String {
-    var formattedTime = ""
-
-    val months = 0
-    val days = time / 86_400
-    val hours = time % 86_400 / 3600
-    val mins = time % 3600 / 60
-
-    if (months > 0 ) formattedTime += "$months months "
-    if (days > 0 ) formattedTime += "$days days "
-    if (hours > 0 ) formattedTime += "$hours hours "
-    if (mins > 0 ) formattedTime += "$mins mins "
-
-    // remove the trailing space with trim
-    return formattedTime.trim()
 }

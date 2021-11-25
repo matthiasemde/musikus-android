@@ -24,6 +24,7 @@ import kotlin.collections.ArrayList
 import android.view.animation.Animation
 import android.view.animation.Transformation
 import androidx.recyclerview.widget.DefaultItemAnimator
+import de.practicetime.practicetime.entities.GoalPeriodUnit
 import de.practicetime.practicetime.entities.GoalProgressType
 
 const val PROGRESS_UPDATED = 1337
@@ -163,15 +164,36 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
 
             viewHolder.progressPercentView.text = "${minOf(goal.progress * 100 / goal.target, 100)}%"
 
-            val targetFormatted = formatTime(goal.target.toLong())
-            val periodFormatted = formatTime(goal.period.toLong())
+            val targetHours = goal.target / 3600
+            val targetMinutes = goal.target % 3600 / 60
+
+            val targetFormatted = if(targetHours > 0) "$targetHours hours" else "" +
+                    if (targetHours > 0 && targetMinutes > 0) " and " else "" +
+                            if(targetMinutes > 0) "$targetMinutes mins" else ""
+
+            val periodFormatted = when(goal.periodUnit) {
+                GoalPeriodUnit.DAY -> "${goal.period / SECONDS_PER_DAY} days"
+                GoalPeriodUnit.WEEK -> "${goal.period / SECONDS_PER_WEEK} weeks"
+                GoalPeriodUnit.MONTH -> "${goal.period / SECONDS_PER_MONTH} months"
+            }
 
             viewHolder.goalNameView.text = "Practice ${categories.first().name} for $targetFormatted in $periodFormatted"
 
-            val remainingTimeFormatted = formatTime(
-                (goal.startTimestamp + goal.period) - now
-            )
-            viewHolder.remainingTimeView.text = "Time left:\n$remainingTimeFormatted"
+            val remainingTime = (goal.startTimestamp + goal.period) - now
+            // if time left is larger than a day, show the number of days
+            when {
+                remainingTime > SECONDS_PER_DAY -> {
+                    viewHolder.remainingTimeView.text = "${remainingTime / SECONDS_PER_DAY + 1} days to go"
+                    // otherwise, if time left is larger than an hour, show the number of hours
+                }
+                remainingTime > SECONDS_PER_HOUR -> {
+                    viewHolder.remainingTimeView.text = "${remainingTime % SECONDS_PER_DAY / SECONDS_PER_HOUR + 1} hours to go"
+                    // otherwise, show the number of minutes
+                }
+                else -> {
+                    viewHolder.remainingTimeView.text = "${remainingTime % SECONDS_PER_HOUR / 60 + 1} minutes to go"
+                }
+            }
         }
 
         class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {

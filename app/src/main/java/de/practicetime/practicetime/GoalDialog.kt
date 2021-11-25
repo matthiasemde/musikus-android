@@ -11,6 +11,7 @@ import kotlinx.coroutines.launch
 import android.text.Spanned
 
 import android.text.InputFilter
+import android.view.View
 import androidx.core.widget.addTextChangedListener
 import de.practicetime.practicetime.entities.*
 import java.lang.NumberFormatException
@@ -43,6 +44,8 @@ class GoalDialog(
     private val goalDialogPeriodValueView = dialogView.findViewById<EditText>(R.id.goalDialogPeriodValue)
     private val goalDialogPeriodUnitView = dialogView.findViewById<Spinner>(R.id.goalDialogPeriodUnit)
 
+    private val selectedCategories = ArrayList<Category>()
+
     private var alertDialog: AlertDialog? = null
 
     init {
@@ -74,7 +77,8 @@ class GoalDialog(
                             )
                             val newGoalWithCategories = GoalWithCategories(
                                 goal = newGoal,
-                                categories = listOf()
+                                categories = if (goalDialogTypeSwitchView.isChecked)
+                                    selectedCategories else emptyList()
                             )
 
                         // and call the onCreate handler
@@ -101,9 +105,6 @@ class GoalDialog(
         dao: PTDao,
         lifecycleScope: LifecycleCoroutineScope
     ) {
-        // fetch the colors for the categories from the resources
-        val categoryColors =  context.resources.getIntArray(R.array.category_colors)
-
         goalDialogTypeSwitchView.setOnCheckedChangeListener { _, isChecked ->
             if(isChecked) {
                 goalDialogCategorySelectorView.isEnabled = true
@@ -125,6 +126,21 @@ class GoalDialog(
                 ).also {
                     it.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
                     goalDialogCategorySelectorView.adapter = it
+                }
+                goalDialogCategorySelectorView.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+                    override fun onItemSelected(
+                        parent: AdapterView<*>?,
+                        view: View?,
+                        position: Int,
+                        id: Long
+                    ) {
+                        selectedCategories.clear()
+                        selectedCategories.add(categories[position])
+                    }
+
+                    override fun onNothingSelected(parent: AdapterView<*>?) {
+                        selectedCategories.clear()
+                    }
                 }
             }
         }
