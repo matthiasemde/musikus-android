@@ -2,6 +2,7 @@ package de.practicetime.practicetime
 
 import android.app.Activity
 import android.content.res.ColorStateList
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -17,6 +18,8 @@ import kotlin.collections.ArrayList
 class GoalAdapter(
     private val goalsWithCategories: ArrayList<GoalWithCategories>,
     private val context: Activity,
+    private val shortClickHandler: (goalId: Int, goalView: View) -> Unit = { _, _ -> },
+    private val longClickHandler: (goalId: Int, goalView: View) -> Boolean = { _, _ -> false },
 ) : RecyclerView.Adapter<GoalAdapter.ViewHolder>() {
 
     override fun getItemCount() = goalsWithCategories.size
@@ -30,7 +33,12 @@ class GoalAdapter(
     override fun onBindViewHolder(viewHolder: ViewHolder, position: Int) {
         val (goal, categories) = goalsWithCategories[position]
 
-        viewHolder.progressBarView
+        viewHolder.itemView.setOnClickListener { shortClickHandler(goal.id, it) }
+        viewHolder.itemView.setOnLongClickListener {
+            // tell the event handler we consumed the event
+            return@setOnLongClickListener longClickHandler(goal.id, it)
+        }
+
         val now = Date().time / 1000L
 
         viewHolder.progressBarView.max = goal.target

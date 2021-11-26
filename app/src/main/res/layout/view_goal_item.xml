@@ -4,7 +4,10 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
->
+    android:foreground="@drawable/foreground_simple_overlay"
+    android:foregroundTintMode="src_over"
+    android:paddingStart="16dp"
+    android:paddingEnd="16dp">
 
     <ProgressBar
         android:id="@+id/goalProgressBar"
@@ -18,8 +21,8 @@
         android:indeterminate="false"
         android:padding="0dp"
         android:progressDrawable="@drawable/progress_goal_progress_bar"
-        android:progressTint="#FFF"
-        android:progressTintMode="multiply"
+        android:progressTint="?attr/colorPrimary"
+        android:progressTintMode="src_in"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
@@ -62,6 +65,17 @@
         app:layout_constraintStart_toStartOf="@+id/goalProgressBar"
         app:layout_constraintTop_toTopOf="@+id/goalProgressBar"
         tools:text="50%" />
+
+    <ImageButton
+        android:id="@+id/imageButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@+id/goalProgressBar"
+        app:layout_constraintEnd_toEndOf="@+id/goalProgressBar"
+        app:layout_constraintStart_toStartOf="@+id/goalProgressBar"
+        app:layout_constraintTop_toTopOf="@+id/goalProgressBar"
+        app:srcCompat="@drawable/ic_delete" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

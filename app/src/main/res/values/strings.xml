@@ -34,4 +34,12 @@
     <string name="goalDialogMinutesText">min</string>
     <string name="addGoalDialogxInx">in</string>
     <string name="goalDialogRepeatable">Repeatable</string>
+    <string name="topToolBarSettings">Settings</string>
+    <string name="topToolBarDelete">Delete</string>
+    <string name="deleteGoalDialogTitle">Delete goal(s) and lose all progress?</string>
+    <string name="deleteGoalDialogConfirm">Delete</string>
+    <string name="deleteGoalDialogCancel">Cancel</string>
+    <string name="deleteCategoryDialogTitle">Delete category and associated goals?</string>
+    <string name="deleteCategoryDialogConfirm">Delete</string>
+    <string name="deleteCategoryDialogCancel">Cancel</string>
 </resources>

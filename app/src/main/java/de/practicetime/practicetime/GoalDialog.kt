@@ -226,8 +226,8 @@ class GoalDialog(
 
     // check if all fields in the dialog are filled out
     private fun isComplete(): Boolean {
-        return goalDialogTargetHoursView.text.toString().isNotEmpty() &&
-            goalDialogTargetMinutesView.text.toString().isNotEmpty() &&
+        return (goalDialogTargetHoursView.text.toString().isNotEmpty() ||
+                goalDialogTargetMinutesView.text.toString().isNotEmpty()) &&
             goalDialogPeriodValueView.text.toString().isNotEmpty()
     }
 
@@ -269,7 +269,7 @@ class GoalDialog(
             dend: Int
         ): CharSequence {
             try {
-                var input = (dest.slice(0 until dstart).toString()
+                val input = (dest.slice(0 until dstart).toString()
                     + source.toString()
                     + dest.slice(dend until dest.length).toString()
                 )

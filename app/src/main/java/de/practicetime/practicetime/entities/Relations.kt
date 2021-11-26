@@ -62,6 +62,21 @@ data class CategoryWithGoals(
     val goals: List<Goal>
 )
 
+data class CategoryWithGoalsWithCategories(
+    @Embedded val category: Category,
+    @Relation(
+        entity = Goal::class,
+        parentColumn = "id",
+        entityColumn = "id",
+        associateBy = Junction(
+            GoalCategoryCrossRef::class,
+            parentColumn = "categoryId",
+            entityColumn = "goalId"
+        )
+    )
+    val goals: List<GoalWithCategories>
+)
+
 data class SectionWithCategoryWithGoals(
     @Embedded val section: PracticeSection,
     @Relation(
