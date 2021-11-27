@@ -42,10 +42,16 @@ import kotlin.collections.ArrayList
 class ActiveSessionActivity : AppCompatActivity() {
 
     private var dao: PTDao? = null
+
     private var activeCategories = ArrayList<Category>()
+    private var addCategoryDialog: CategoryDialog? = null
+
     private lateinit var sectionsListAdapter: SectionsListAdapter
+
     private var listItems = ArrayList<String>()
+
     private lateinit var mService: SessionForegroundService
+
     private var mBound: Boolean = false
 
     /** Defines callbacks for service binding, passed to bindService()  */
@@ -114,12 +120,11 @@ class ActiveSessionActivity : AppCompatActivity() {
 
     private fun initCategoryList() {
         val categoryAdapter = CategoryAdapter(
-            lifecycleScope,
-            dao,
             activeCategories,
             context = this,
             showInActiveSession = true,
             shortClickHandler = ::categoryPressed,
+            addCategoryHandler = { addCategoryDialog?.show() }
         )
 
         val categoryList = findViewById<RecyclerView>(R.id.categoryList)
@@ -133,14 +138,34 @@ class ActiveSessionActivity : AppCompatActivity() {
                 false
             )
             adapter = categoryAdapter
+            itemAnimator?.apply {
+                addDuration = 200L
+//                moveDuration = 500L
+//                removeDuration = 200L
+            }
         }
 
         // load all active categories from the database and notify the adapter
         lifecycleScope.launch {
-            dao?.getActiveCategories()?.let { activeCategories.addAll(it) }
-            Log.d("activeCategories", "$activeCategories")
-            categoryAdapter.notifyItemRangeInserted(0, activeCategories.size)
+            dao?.getActiveCategories()?.let { activeCategories.addAll(it.reversed())
+                categoryAdapter.notifyItemRangeInserted(0, it.size)
+            }
         }
+
+        // the handler for creating new categories
+        fun addCategoryHandler(newCategory: Category) {
+            lifecycleScope.launch {
+                val newCategoryId = dao?.insertCategory(newCategory)?.toInt()
+                if(newCategoryId != null) {
+                    // we need to fetch the newly created category to get the correct id
+                    dao?.getCategory(newCategoryId)?.let { activeCategories.add(0, it) }
+                    categoryAdapter.notifyItemInserted(0)
+                }
+            }
+        }
+
+        // create a new category dialog for adding new categories
+        addCategoryDialog = CategoryDialog(this, ::addCategoryHandler)
     }
 
     /** called when we have a connection to the Service holding the data */

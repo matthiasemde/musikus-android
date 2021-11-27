@@ -79,8 +79,8 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
         lifecycleScope.launch {
             dao?.getActiveGoalsWithCategories()?.let {
                 activeGoalsWithCategories.addAll(it)
+                goalAdapter?.notifyItemRangeInserted(0, it.size)
             }
-            goalAdapter?.notifyItemRangeInserted(0, activeGoalsWithCategories.size)
         }
     }
 
@@ -182,6 +182,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
         lifecycleScope.launch {
             val newGoalId = dao?.insertGoalWithCategories(newGoalWithCategories)
             if(newGoalId != null) {
+                // we need to fetch the newly created goal to get the correct id
                 dao?.getGoalWithCategories(newGoalId)?.let { activeGoalsWithCategories.add(it) }
                 goalAdapter?.notifyItemInserted(activeGoalsWithCategories.size)
             }

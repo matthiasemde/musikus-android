@@ -21,6 +21,7 @@ private var dao: PTDao? = null
 class LibraryFragment : Fragment(R.layout.fragment_library) {
 
     private val activeCategories = ArrayList<Category>()
+    private var addCategoryDialog: CategoryDialog? = null
     private var categoryAdapter : CategoryAdapter? = null
 
     private var editCategoryDialog: CategoryDialog? = null
@@ -43,7 +44,7 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
 
         view.findViewById<FloatingActionButton>(R.id.libraryFab).setOnClickListener {
             resetToolbar()
-            editCategoryDialog?.show()
+            addCategoryDialog?.show()
         }
 
         initArchiveCategoryDialog()
@@ -53,8 +54,6 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
 
     private fun initCategoryList() {
         categoryAdapter = CategoryAdapter(
-                lifecycleScope,
-                dao,
                 activeCategories,
                 context = requireActivity(),
                 shortClickHandler = ::shortClickOnCategoryHandler,
@@ -64,6 +63,11 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
         requireActivity().findViewById<RecyclerView>(R.id.libraryCategoryList).apply {
             layoutManager = GridLayoutManager(context, 2)
             adapter = categoryAdapter
+            itemAnimator?.apply {
+                addDuration = 500L
+                moveDuration = 500L
+                removeDuration = 200L
+            }
         }
 
         // load all active categories from the database and notify the adapter
@@ -71,6 +75,21 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
             dao?.getActiveCategories()?.let { activeCategories.addAll(it) }
             categoryAdapter?.notifyItemRangeInserted(0, activeCategories.size)
         }
+
+        // the handler for creating new categories
+        fun addCategoryHandler(newCategory: Category) {
+            lifecycleScope.launch {
+                val newCategoryId = dao?.insertCategory(newCategory)?.toInt()
+                if(newCategoryId != null) {
+                    // we need to fetch the newly created category to get the correct id
+                    dao?.getCategory(newCategoryId)?.let { activeCategories.add(0, it) }
+                    categoryAdapter?.notifyItemInserted(0)
+                }
+            }
+        }
+
+        // create a new category dialog for adding new categories
+        addCategoryDialog = CategoryDialog(requireActivity(), ::addCategoryHandler)
     }
 
     // initialize the category archive dialog

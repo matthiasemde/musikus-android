@@ -26,30 +26,16 @@ import kotlinx.coroutines.launch
  */
 
 class CategoryAdapter(
-    lifecycleScope: LifecycleCoroutineScope,
-    dao: PTDao?,
     private val categories: ArrayList<Category>,
     private val context: Activity,
     private val showInActiveSession: Boolean = false,
     private val shortClickHandler: (category: Category, categoryView: View) -> Unit = { _, _ -> },
     private val longClickHandler: (categoryId: Int, categoryView: View) -> Boolean = { _, _ -> false },
-) : RecyclerView.Adapter<CategoryAdapter.ViewHolder>() {
-
-    var addCategoryDialog: CategoryDialog? = null
+    private val addCategoryHandler: () -> Unit = {},
+    ) : RecyclerView.Adapter<CategoryAdapter.ViewHolder>() {
 
     init {
 
-        // the handler for creating new categories
-        fun addCategoryHandler(newCategory: Category) {
-            lifecycleScope.launch {
-                dao?.insertCategory(newCategory)
-                categories.add(newCategory)
-                notifyItemInserted(categories.size)
-            }
-        }
-
-        // create a new category dialog for adding new categories
-        addCategoryDialog = CategoryDialog(context, ::addCategoryHandler)
     }
 
     companion object {
@@ -89,7 +75,7 @@ class CategoryAdapter(
                     viewGroup,
                     false
                 ),
-                addCategoryDialog,
+                addCategoryHandler,
             )
         }
     }
@@ -153,15 +139,13 @@ class CategoryAdapter(
 
         class AddNewCategoryViewHolder(
             view: View,
-            private val addCategoryDialog: CategoryDialog?,
+            private val addCategoryHandler: () -> Unit,
         ) : ViewHolder(view) {
 
             private val button: ImageButton = view.findViewById(R.id.addNewCategory)
 
             fun bind() {
-                button.setOnClickListener {
-                    addCategoryDialog?.show()
-                }
+                button.setOnClickListener { addCategoryHandler() }
             }
         }
     }
