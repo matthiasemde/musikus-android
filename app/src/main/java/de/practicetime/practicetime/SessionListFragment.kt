@@ -2,10 +2,8 @@ package de.practicetime.practicetime
 
 import android.content.Context
 import android.content.Intent
-import android.graphics.Color
 import android.os.Bundle
 import android.view.View
-import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.ConcatAdapter
@@ -15,7 +13,6 @@ import androidx.room.Room
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import de.practicetime.practicetime.entities.*
 import kotlinx.coroutines.launch
-import java.time.Period
 import java.util.*
 
 
@@ -40,15 +37,15 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
 
         lifecycleScope.launch {
             // fetch all sessions from the database
-            dao?.getSessionsWithSectionsWithCategories()!!.also { it ->
-                var sessions = it.toMutableList()
+            dao?.getSessionsWithSectionsWithCategories()!!.also {
+                val sessions = it.toMutableList()
 
                 if (sessions.size == 0) return@also
 
                 // initialize variables to keep track of the current month
                 // and the index of its first session
                 var currentMonth: Int
-                var firstSessionOfCurrentMonth: Int = 0
+                var firstSessionOfCurrentMonth = 0
                 Calendar.getInstance().also { newDate ->
                     newDate.timeInMillis =
                         sessions.first().sections.first().section.timestamp * 1000L
@@ -163,7 +160,7 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
                 }
 
 
-                prefs.edit().putBoolean("firstrun", false).apply();
+                prefs.edit().putBoolean("firstrun", false).apply()
             }
         }
     }
