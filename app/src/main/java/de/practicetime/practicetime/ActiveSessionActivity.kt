@@ -139,7 +139,7 @@ class ActiveSessionActivity : AppCompatActivity() {
             )
             adapter = categoryAdapter
             itemAnimator?.apply {
-                addDuration = 200L
+//                addDuration = 200L
 //                moveDuration = 500L
 //                removeDuration = 200L
             }
@@ -150,6 +150,7 @@ class ActiveSessionActivity : AppCompatActivity() {
             dao?.getActiveCategories()?.let { activeCategories.addAll(it.reversed())
                 categoryAdapter.notifyItemRangeInserted(0, it.size)
             }
+            categoryList.scrollToPosition(0)
         }
 
         // the handler for creating new categories
@@ -160,6 +161,7 @@ class ActiveSessionActivity : AppCompatActivity() {
                     // we need to fetch the newly created category to get the correct id
                     dao?.getCategory(newCategoryId)?.let { activeCategories.add(0, it) }
                     categoryAdapter.notifyItemInserted(0)
+                    categoryList.scrollToPosition(0)
                 }
             }
         }
