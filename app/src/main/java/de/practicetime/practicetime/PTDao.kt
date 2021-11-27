@@ -37,7 +37,7 @@ interface PTDao {
     }
 
     @Transaction
-    suspend fun insertGoalWithCategories(goalWithCategories: GoalWithCategories) {
+    suspend fun insertGoalWithCategories(goalWithCategories: GoalWithCategories): Int {
         val newGoalId = insertGoal(goalWithCategories.goal).toInt()
 
         // for every category linked with the goal...
@@ -50,6 +50,7 @@ interface PTDao {
                 )
             )
         }
+        return newGoalId
     }
 
     @Delete
@@ -142,6 +143,10 @@ interface PTDao {
 //    @Transaction
 //    @Query("SELECT * FROM Goal WHERE startTimestamp < :now AND startTimestamp + period > :now")
 //    suspend fun getActiveGoalsWithCategories(now : Long = Date().time / 1000L) : List<GoalWithCategories>
+
+    @Transaction
+    @Query("SELECT * FROM Goal WHERE id=:goalId")
+    suspend fun getGoalWithCategories(goalId: Int) : GoalWithCategories
 
     @Transaction
     @Query("SELECT * FROM Goal WHERE archived = 0")

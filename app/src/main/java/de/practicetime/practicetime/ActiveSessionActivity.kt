@@ -42,7 +42,7 @@ import kotlin.collections.ArrayList
 class ActiveSessionActivity : AppCompatActivity() {
 
     private var dao: PTDao? = null
-    private var activeCategories: List<Category>? = listOf()
+    private var activeCategories = ArrayList<Category>()
     private lateinit var sectionsListAdapter: SectionsListAdapter
     private var listItems = ArrayList<String>()
     private lateinit var mService: SessionForegroundService
@@ -65,11 +65,6 @@ class ActiveSessionActivity : AppCompatActivity() {
             updateViews()
             adaptUIPausedState(mService.paused)
             setPauseStopBtnVisibility(mService.sessionActive)
-
-            // TODO unnecessary db query --> move activeCategories to service?
-            lifecycleScope.launch {
-                activeCategories = dao?.getActiveCategories()
-            }
         }
 
         override fun onServiceDisconnected(arg0: ComponentName) {
@@ -118,13 +113,13 @@ class ActiveSessionActivity : AppCompatActivity() {
     }
 
     private fun initCategoryList() {
-        val categories = ArrayList<Category>()
         val categoryAdapter = CategoryAdapter(
-                lifecycleScope,
-                dao,
-                categories,
-                ::categoryPressed,
-                context = this,
+            lifecycleScope,
+            dao,
+            activeCategories,
+            context = this,
+            showInActiveSession = true,
+            shortClickHandler = ::categoryPressed,
         )
 
         val categoryList = findViewById<RecyclerView>(R.id.categoryList)
@@ -138,19 +133,13 @@ class ActiveSessionActivity : AppCompatActivity() {
                 false
             )
             adapter = categoryAdapter
-            addItemDecoration(HorizontalSpacingDecoration(
-                rowNums,
-                horizontalSpacing = (12 * resources.displayMetrics.density).toInt(),
-            ))
         }
 
+        // load all active categories from the database and notify the adapter
         lifecycleScope.launch {
-            activeCategories = dao?.getActiveCategories()
-            if (activeCategories != null) {
-                categories.addAll(activeCategories!!)
-            }
-            // notifyDataSetChanged necessary here since all items might have changed
-            categoryAdapter.notifyDataSetChanged()
+            dao?.getActiveCategories()?.let { activeCategories.addAll(it) }
+            Log.d("activeCategories", "$activeCategories")
+            categoryAdapter.notifyItemRangeInserted(0, activeCategories.size)
         }
     }
 
@@ -171,10 +160,7 @@ class ActiveSessionActivity : AppCompatActivity() {
     }
 
     // the routine for handling presses to category buttons
-    private fun categoryPressed(categoryView: View) {
-        // get the category id from the view tag and calculate current timestamp
-        val categoryId = categoryView.tag as Int
-
+    private fun categoryPressed(category: Category, categoryView: View) {
         if (!mService.sessionActive) {   // session starts now
             //start the service so that timer starts
             Intent(this, SessionForegroundService::class.java).also {
@@ -184,7 +170,7 @@ class ActiveSessionActivity : AppCompatActivity() {
         }
 
         // start a new section for the chosen category
-        mService.startNewSection(categoryId)
+        mService.startNewSection(category.id)
 
         // immediately update list
         // scroll up to first element so that it is visible when scrolling. Unfortunately, this breaks the animation when view is scrollable
@@ -476,6 +462,7 @@ class ActiveSessionActivity : AppCompatActivity() {
      * Adapter for SectionList RecyclerView.
      */
     private inner class SectionsListAdapter(
+        // TODO this should be a list of SectionWithCategories
         private val practiceSections: ArrayList<Pair<PracticeSection, Int>>,
     ) : RecyclerView.Adapter<SectionsListAdapter.ViewHolder>() {
 
@@ -496,7 +483,7 @@ class ActiveSessionActivity : AppCompatActivity() {
         // Replace the contents of a view (invoked by the layout manager)
         override fun onBindViewHolder(viewHolder: ViewHolder, position: Int) {
             // Get element from your dataset at this position
-            val categoryName = activeCategories?.find { category ->
+            val categoryName = activeCategories.find { category ->
                 category.id == practiceSections[position].first.category_id
             }?.name
 

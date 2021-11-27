@@ -3,7 +3,6 @@ package de.practicetime.practicetime
 import android.app.AlertDialog
 import android.content.res.ColorStateList
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.fragment.app.Fragment
@@ -29,7 +28,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
     private var goalAdapter : GoalAdapter? = null
 
     private var addGoalDialog: GoalDialog? = null
-    private var deleteGoalDialog: AlertDialog? = null
+    private var archieveGoalDialog: AlertDialog? = null
 
     private var goalsToolbar: androidx.appcompat.widget.Toolbar? = null
 
@@ -40,7 +39,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
 
         initGoalList()
 
-        // create a new category dialog for adding new goals
+        // create a new goal dialog for adding new goals
         addGoalDialog = GoalDialog(
             requireActivity(),
             dao!!,
@@ -49,15 +48,13 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
         )
 
         view.findViewById<FloatingActionButton>(R.id.goalsFab).setOnClickListener {
+            resetToolbar()
             addGoalDialog?.show()
         }
 
         initArchiveGoalDialog()
 
         goalsToolbar = view.findViewById(R.id.goalsToolbar)
-
-        goalsToolbar?.inflateMenu(R.menu.goals_toolbar_menu_base)
-
     }
 
     private fun initGoalList() {
@@ -71,6 +68,11 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
         requireActivity().findViewById<RecyclerView>(R.id.goalList).apply {
             layoutManager = LinearLayoutManager(context)
             adapter = goalAdapter
+            itemAnimator?.apply {
+                addDuration = 500L
+                moveDuration = 500L
+                removeDuration = 200L
+            }
         }
 
         // load all active goals from the database and notify the adapter
@@ -82,18 +84,16 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
         }
     }
 
-    // initialize the goal delete dialog
+    // initialize the goal archieve dialog
     private fun initArchiveGoalDialog() {
-        deleteGoalDialog = requireActivity().let { it ->
+        archieveGoalDialog = requireActivity().let { it ->
             val builder = AlertDialog.Builder(it)
             builder.apply {
-                setTitle(R.string.deleteGoalDialogTitle)
-                setPositiveButton(R.string.deleteGoalDialogConfirm) { dialog, _ ->
+                setTitle(R.string.archiveGoalDialogTitle)
+                setPositiveButton(R.string.archiveDialogConfirm) { dialog, _ ->
                     lifecycleScope.launch {
-                        Log.d("selectedGoals", "$selectedGoals")
                         selectedGoals.forEach { (goalId, _) ->
                             dao?.archiveGoal(goalId)
-                            Log.d("GoalID", "$goalId")
                             activeGoalsWithCategories.indexOfFirst { goalWithCategory ->
                                 goalWithCategory.goal.id == goalId
                             }.also { index ->
@@ -101,12 +101,12 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
                                 goalAdapter?.notifyItemRemoved(index)
                             }
                         }
-                        Toast.makeText(context, "Goal(s) deleted", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, R.string.archiveGoalToast, Toast.LENGTH_SHORT).show()
                         resetToolbar()
                     }
                     dialog.dismiss()
                 }
-                setNegativeButton(R.string.deleteGoalDialogCancel) { dialog, _ ->
+                setNegativeButton(R.string.archiveDialogCancel) { dialog, _ ->
                     dialog.cancel()
                 }
             }
@@ -129,7 +129,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
 
     // the handler for dealing with long clicks on goals
     private fun longClickOnGoalHandler(goalId: Int, goalView: View): Boolean {
-        // if there is not goal selected already, change the toolbar
+        // if there is no goal selected already, change the toolbar
         if(selectedGoals.isEmpty()) {
             goalsToolbar?.apply {
                 // clear the base menu from the toolbar and inflate the new menu
@@ -145,7 +145,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
                 // set the click listeners for the menu options here
                 setOnMenuItemClickListener {
                     when (it.itemId) {
-                        R.id.topToolbarSelectionDelete -> deleteGoalDialog?.show()
+                        R.id.topToolbarSelectionArchive -> archieveGoalDialog?.show()
                     }
                     return@setOnMenuItemClickListener true
                 }
@@ -180,9 +180,11 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
     // the handler for creating new goals
     private fun addGoalHandler(newGoalWithCategories: GoalWithCategories) {
         lifecycleScope.launch {
-            dao?.insertGoalWithCategories(newGoalWithCategories)
-            activeGoalsWithCategories.add(newGoalWithCategories)
-            goalAdapter?.notifyItemInserted(activeGoalsWithCategories.size)
+            val newGoalId = dao?.insertGoalWithCategories(newGoalWithCategories)
+            if(newGoalId != null) {
+                dao?.getGoalWithCategories(newGoalId)?.let { activeGoalsWithCategories.add(it) }
+                goalAdapter?.notifyItemInserted(activeGoalsWithCategories.size)
+            }
         }
     }
 

@@ -11,7 +11,6 @@ import de.practicetime.practicetime.entities.Category
 class CategoryDialog (
     context: Activity,
     onCreateHandler: (newCategory: Category) -> Unit,
-    onDeleteHandler: (categoryId: Int) -> Unit = { },
 ) {
 
     // instantiate the builder for the alert dialog
@@ -45,15 +44,12 @@ class CategoryDialog (
         dialogView.findViewById(R.id.addCategoryDialogColor10),
     )
 
-    private val deleteButton = dialogView.findViewById<ImageButton>(R.id.deleteCategory)
-
     private var selectedCategoryId = 0
     private var selectedColorIndex = 0
 
     private var alertDialog: AlertDialog? = null
 
     init {
-
         // Dialog Setup
         alertDialogBuilder.apply {
             // pass the dialogView to the builder
@@ -117,11 +113,6 @@ class CategoryDialog (
 
         // finally, we use the alert dialog builder to create the alertDialog
         alertDialog = alertDialogBuilder.create()
-
-        deleteButton.setOnClickListener {
-            onDeleteHandler(selectedCategoryId)
-            alertDialog?.dismiss()
-        }
     }
 
     // the dialog is complete if a name is entered and a color is selected
@@ -141,7 +132,6 @@ class CategoryDialog (
             if(category != null) {
                 categoryDialogTitleView.setText(R.string.addCategoryDialogTitleEdit)
                 positiveButton.setText(R.string.addCategoryAlertOkEdit)
-                deleteButton.visibility = View.VISIBLE
 
                 selectedCategoryId = category.id
                 categoryNameView.setText(category.name)

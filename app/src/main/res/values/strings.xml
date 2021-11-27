@@ -36,10 +36,11 @@
     <string name="goalDialogRepeatable">Repeatable</string>
     <string name="topToolBarSettings">Settings</string>
     <string name="topToolBarDelete">Delete</string>
-    <string name="deleteGoalDialogTitle">Delete goal(s) and lose all progress?</string>
-    <string name="deleteGoalDialogConfirm">Delete</string>
-    <string name="deleteGoalDialogCancel">Cancel</string>
-    <string name="deleteCategoryDialogTitle">Delete category and associated goals?</string>
-    <string name="deleteCategoryDialogConfirm">Delete</string>
-    <string name="deleteCategoryDialogCancel">Cancel</string>
+    <string name="topToolBarArchive">Archive</string>
+    <string name="archiveGoalDialogTitle">Archive selected goal(s)?</string>
+    <string name="archiveGoalToast">Goal(s) archieved</string>
+    <string name="archiveCategoryDialogTitle">Archive category and associated goals?</string>
+    <string name="archiveCategoryToast">Categorie(s) archieved</string>
+    <string name="archiveDialogConfirm">Archive</string>
+    <string name="archiveDialogCancel">Cancel</string>
 </resources>

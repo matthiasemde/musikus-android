@@ -29,9 +29,10 @@ class CategoryAdapter(
     lifecycleScope: LifecycleCoroutineScope,
     dao: PTDao?,
     private val categories: ArrayList<Category>,
-    private val callback: View.OnClickListener,
     private val context: Activity,
-    private val grow: Boolean = false,
+    private val showInActiveSession: Boolean = false,
+    private val shortClickHandler: (category: Category, categoryView: View) -> Unit = { _, _ -> },
+    private val longClickHandler: (categoryId: Int, categoryView: View) -> Boolean = { _, _ -> false },
 ) : RecyclerView.Adapter<CategoryAdapter.ViewHolder>() {
 
     var addCategoryDialog: CategoryDialog? = null
@@ -64,8 +65,8 @@ class CategoryAdapter(
             VIEW_TYPE_ADD_NEW
     }
 
-    // return the amount of categories + 1 for the add new button
-    override fun getItemCount() = categories.size + 1
+    // return the amount of categories (+1 for the add new button if shown in active session )
+    override fun getItemCount() = categories.size + if(showInActiveSession) 1 else 0
 
     // create new views depending on view type
     override fun onCreateViewHolder(viewGroup: ViewGroup, viewType: Int): ViewHolder {
@@ -77,9 +78,10 @@ class CategoryAdapter(
                     viewGroup,
                     false
                 ),
-                callback,
-                grow,
-                context
+                showInActiveSession,
+                context,
+                shortClickHandler,
+                longClickHandler,
             )
             else -> ViewHolder.AddNewCategoryViewHolder(
                 inflater.inflate(
@@ -87,7 +89,6 @@ class CategoryAdapter(
                     viewGroup,
                     false
                 ),
-                grow,
                 addCategoryDialog,
             )
         }
@@ -107,20 +108,31 @@ class CategoryAdapter(
 
         class CategoryViewHolder(
             view: View,
-            callback: View.OnClickListener,
-            grow: Boolean,
-            val context: Activity,
+            showInActiveSession: Boolean,
+            private val context: Activity,
+            private val shortClickHandler: (category: Category, categoryView: View) -> Unit,
+            private val longClickHandler: (categoryId: Int, categoryView: View) -> Boolean,
         ) : ViewHolder(view) {
             private val button: Button = view.findViewById(R.id.categoryButton)
 
             init {
-                if(grow) {
+                // if the category is not shown inside the active session
+                // it can grow to the size of its container
+                if(!showInActiveSession) {
                     button.layoutParams.width = LayoutParams.MATCH_PARENT
                 }
-                button.setOnClickListener(callback)
             }
 
             fun bind(category: Category) {
+
+                // set up short and long click handler for selecting categories
+                button.setOnClickListener { shortClickHandler(category, it) }
+                button.setOnLongClickListener {
+                    // tell the event handler we consumed the event
+                    return@setOnLongClickListener longClickHandler(category.id, it)
+                }
+
+
                 // store the id of the category on the button
                 button.tag = category.id
 
@@ -141,17 +153,10 @@ class CategoryAdapter(
 
         class AddNewCategoryViewHolder(
             view: View,
-            grow: Boolean,
             private val addCategoryDialog: CategoryDialog?,
         ) : ViewHolder(view) {
 
             private val button: ImageButton = view.findViewById(R.id.addNewCategory)
-
-            init {
-                if(grow) {
-                    button.layoutParams.width = LayoutParams.MATCH_PARENT
-                }
-            }
 
             fun bind() {
                 button.setOnClickListener {

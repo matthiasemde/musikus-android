@@ -30,7 +30,8 @@
                 android:id="@+id/goalsToolbar"
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
-                app:layout_collapseMode="pin" />
+                app:layout_collapseMode="pin"
+                app:menu="@menu/goals_toolbar_menu_base" />
 
         </com.google.android.material.appbar.CollapsingToolbarLayout>
     </com.google.android.material.appbar.AppBarLayout>

@@ -47,9 +47,9 @@ class GoalAdapter(
         val targetHours = goal.target / 3600
         val targetMinutes = goal.target % 3600 / 60
 
-        val targetFormatted = if(targetHours > 0) "$targetHours hours" else "" +
-                if (targetHours > 0 && targetMinutes > 0) " and " else "" +
-                        if(targetMinutes > 0) "$targetMinutes mins" else ""
+        val targetFormatted = (if(targetHours > 0) "$targetHours hours" else "") +
+                (if (targetHours > 0 && targetMinutes > 0) " and " else "") +
+                (if(targetMinutes > 0) "$targetMinutes mins" else "")
 
         val periodFormatted = when(goal.periodUnit) {
             GoalPeriodUnit.DAY -> "${goal.period / SECONDS_PER_DAY} days"

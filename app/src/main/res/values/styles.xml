@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="ToolbarColoredIcons" parent="Theme.PracticeTime">
+        <item name="android:textColorSecondary">?attr/colorOnBackground</item>
+    </style>
+</resources>

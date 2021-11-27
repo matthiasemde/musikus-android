@@ -41,11 +41,11 @@
             android:id="@+id/categories_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="50dp"
             android:text="@string/categories"
             android:textSize="20sp"
-            android:layout_marginStart="20dp"
-            android:layout_marginTop="50dp"
-            android:textStyle="bold"/>
+            android:textStyle="bold" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/categoryList"
@@ -55,6 +55,7 @@
             android:layout_marginBottom="16dp"
             android:clipToPadding="false"
             android:orientation="horizontal"
+            android:paddingStart="8dp"
             android:paddingEnd="16dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
