@@ -180,6 +180,17 @@ class GoalDialog(
 
         alertDialog?.also { dialog ->
             val positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+
+            if(goal != null) {
+                goalDialogTitleView.setText(R.string.goalDialogTitleEdit)
+                positiveButton.setText(R.string.goalDialogOkEdit)
+
+                goalDialogTypeSwitchView.visibility = View.GONE
+                goalDialogSpecificCategoriesView.visibility = View.GONE
+                goalDialogPeriodValueView.visibility = View.GONE
+                goalDialogPeriodUnitView.visibility = View.GONE
+            }
+
             positiveButton.isEnabled = isComplete()
             goalDialogTargetHoursView.addTextChangedListener {
                 positiveButton.isEnabled = isComplete()

@@ -15,6 +15,9 @@ import de.practicetime.practicetime.entities.GoalWithCategories
 import java.util.*
 import kotlin.collections.ArrayList
 
+const val SECONDS_PER_HOUR = 60 * 60
+const val SECONDS_PER_DAY = 60 * 60 * 24
+
 class GoalAdapter(
     private val goalsWithCategories: ArrayList<GoalWithCategories>,
     private val context: Activity,

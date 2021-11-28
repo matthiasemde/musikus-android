@@ -35,17 +35,18 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
 
         initCategoryList()
 
-        // create the category dialog for adding or editing categories
-        editCategoryDialog = CategoryDialog(
-            context = requireActivity(),
-            ::editCategoryHandler,
-        )
+        // create a new category dialog for adding new categories
+        addCategoryDialog = CategoryDialog(requireActivity(), ::addCategoryHandler)
 
         view.findViewById<FloatingActionButton>(R.id.libraryFab).setOnClickListener {
             resetToolbar()
             addCategoryDialog?.show()
         }
 
+        // create the category dialog for editing categories
+        editCategoryDialog = CategoryDialog(requireActivity(), ::editCategoryHandler)
+
+        // create the dialog for archiving categories
         initArchiveCategoryDialog()
 
         libraryToolbar = view.findViewById(R.id.libraryToolbar)
@@ -74,21 +75,6 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
             dao?.getActiveCategories()?.let { activeCategories.addAll(it.reversed()) }
             categoryAdapter?.notifyItemRangeInserted(0, activeCategories.size)
         }
-
-        // the handler for creating new categories
-        fun addCategoryHandler(newCategory: Category) {
-            lifecycleScope.launch {
-                val newCategoryId = dao?.insertCategory(newCategory)?.toInt()
-                if(newCategoryId != null) {
-                    // we need to fetch the newly created category to get the correct id
-                    dao?.getCategory(newCategoryId)?.let { activeCategories.add(0, it) }
-                    categoryAdapter?.notifyItemInserted(0)
-                }
-            }
-        }
-
-        // create a new category dialog for adding new categories
-        addCategoryDialog = CategoryDialog(requireActivity(), ::addCategoryHandler)
     }
 
     // initialize the category archive dialog
@@ -187,6 +173,18 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
             view.foregroundTintList = null
         }
         selectedCategories.clear()
+    }
+
+    // the handler for creating new categories
+    private fun addCategoryHandler(newCategory: Category) {
+        lifecycleScope.launch {
+            val newCategoryId = dao?.insertCategory(newCategory)?.toInt()
+            if(newCategoryId != null) {
+                // we need to fetch the newly created category to get the correct id
+                dao?.getCategory(newCategoryId)?.let { activeCategories.add(0, it) }
+                categoryAdapter?.notifyItemInserted(0)
+            }
+        }
     }
 
     // the handler for editing categories

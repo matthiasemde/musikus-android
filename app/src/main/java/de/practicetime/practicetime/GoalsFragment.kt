@@ -25,6 +25,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
     private var goalAdapter : GoalAdapter? = null
 
     private var addGoalDialog: GoalDialog? = null
+    private var editGoalDialog: GoalDialog? = null
     private var archiveGoalDialog: AlertDialog? = null
 
     private var goalsToolbar: androidx.appcompat.widget.Toolbar? = null
@@ -52,6 +53,10 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
             addGoalDialog?.show()
         }
 
+        // create the category dialog for editing categories
+//        editGoalDialog = GoalDialog(requireActivity(), ::editGoalHandler)
+
+        // create the dialog for archiving goals
         initArchiveGoalDialog()
 
         goalsToolbar = view.findViewById(R.id.goalsToolbar)
@@ -185,6 +190,20 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
                 // we need to fetch the newly created goal to get the correct id
                 dao?.getGoalWithCategories(newGoalId)?.let { activeGoalsWithCategories.add(it) }
                 goalAdapter?.notifyItemInserted(activeGoalsWithCategories.size)
+            }
+        }
+    }
+
+    // the handler for editing goals
+    private fun editGoalHandler(goalWithCategories: GoalWithCategories) {
+        lifecycleScope.launch {
+            dao?.insertGoalWithCategories(goalWithCategories) // TODO check if this creates duplicate entries in cross reference table
+            activeGoalsWithCategories.indexOfFirst {
+                    (g, _) -> g.id == goalWithCategories.goal.id
+            }.also { i ->
+                assert(i != -1)
+                activeGoalsWithCategories[i] = goalWithCategories
+                goalAdapter?.notifyItemChanged(i)
             }
         }
     }
