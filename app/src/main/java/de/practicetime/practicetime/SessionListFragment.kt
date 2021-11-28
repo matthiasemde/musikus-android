@@ -143,23 +143,6 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
                     dao?.insertCategory(it)
                 }
 
-                listOf(
-                    Goal(startTimestamp = Date().time / 1000L, type = GoalType.SPECIFIC_CATEGORIES, period = 100000, periodUnit = GoalPeriodUnit.WEEK, target = 50, groupId = 1),
-                    Goal(startTimestamp = Date().time / 1000L, type = GoalType.SPECIFIC_CATEGORIES, period = 100000, periodUnit = GoalPeriodUnit.WEEK, target = 20, groupId = 2),
-                    Goal(startTimestamp = Date().time / 1000L, type = GoalType.SPECIFIC_CATEGORIES, period = 200000, periodUnit = GoalPeriodUnit.WEEK, target = 70, groupId = 3),
-                ).forEach {
-                    dao?.insertGoal(it)
-                }
-
-                listOf(
-                    GoalCategoryCrossRef(goalId = 1, categoryId = 1),
-                    GoalCategoryCrossRef(goalId = 2, categoryId = 2),
-                    GoalCategoryCrossRef(goalId = 3, categoryId = 3),
-                ).forEach {
-                    dao?.insertGoalCategoryCrossRef(it)
-                }
-
-
                 prefs.edit().putBoolean("firstrun", false).apply()
             }
         }

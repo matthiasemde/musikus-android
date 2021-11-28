@@ -2,19 +2,17 @@ package de.practicetime.practicetime
 
 import android.app.Activity
 import android.graphics.Typeface
+import android.text.InputFilter
+import android.text.Spanned
 import android.util.Log
+import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.SwitchCompat
-import androidx.lifecycle.LifecycleCoroutineScope
-import kotlinx.coroutines.launch
-import android.text.Spanned
-
-import android.text.InputFilter
-import android.view.View
 import androidx.core.widget.addTextChangedListener
+import androidx.lifecycle.LifecycleCoroutineScope
 import de.practicetime.practicetime.entities.*
-import java.lang.NumberFormatException
+import kotlinx.coroutines.launch
 import java.util.*
 
 
@@ -62,24 +60,24 @@ class GoalDialog(
             // define the callback function for the positive button
             setPositiveButton(R.string.addCategoryAlertOk) { dialog, _ ->
                 if(isComplete()) {
-                        lifecycleScope.launch {
-                            val newGoalGroupId = dao.getMaxGoalGroupId().toInt() + 1
-                            val newGoal = computeNewGoal(
-                                groupId = newGoalGroupId,
-                                type = if (goalDialogTypeSwitchView.isChecked)
-                                    GoalType.SPECIFIC_CATEGORIES else
-                                        GoalType.TOTAL_TIME,
-                                timeFrame = Calendar.getInstance(),
-                                periodInPeriodUnits = goalDialogPeriodValueView.text.toString().toInt(),
-                                periodUnit = GoalPeriodUnit.values()[goalDialogPeriodUnitView.selectedItemPosition],
-                                target = goalDialogTargetHoursView.text.toString().toInt() * 3600 +
-                                        goalDialogTargetMinutesView.text.toString().toInt() * 60
-                            )
-                            val newGoalWithCategories = GoalWithCategories(
-                                goal = newGoal,
-                                categories = if (goalDialogTypeSwitchView.isChecked)
-                                    selectedCategories else emptyList()
-                            )
+                    lifecycleScope.launch {
+                        val newGoalGroupId = (dao.getMaxGoalGroupId()?: 0L).toInt() + 1
+                        val newGoal = computeNewGoal(
+                            groupId = newGoalGroupId,
+                            type = if (goalDialogTypeSwitchView.isChecked)
+                                GoalType.SPECIFIC_CATEGORIES else
+                                    GoalType.TOTAL_TIME,
+                            timeFrame = Calendar.getInstance(),
+                            periodInPeriodUnits = goalDialogPeriodValueView.text.toString().toInt(),
+                            periodUnit = GoalPeriodUnit.values()[goalDialogPeriodUnitView.selectedItemPosition],
+                            target = goalDialogTargetHoursView.text.toString().toInt() * 3600 +
+                                    goalDialogTargetMinutesView.text.toString().toInt() * 60
+                        )
+                        val newGoalWithCategories = GoalWithCategories(
+                            goal = newGoal,
+                            categories = if (goalDialogTypeSwitchView.isChecked)
+                                selectedCategories else emptyList()
+                        )
 
                         // and call the onCreate handler
                         onCreateHandler(newGoalWithCategories)
@@ -167,62 +165,6 @@ class GoalDialog(
         }
     }
 
-    private fun computeNewGoal(
-        groupId: Int,
-        type: GoalType,
-        timeFrame: Calendar,
-        periodInPeriodUnits: Int,
-        periodUnit: GoalPeriodUnit,
-        target: Int,
-    ): Goal {
-        var startTimeStamp = 0L
-
-        // to find the correct starting point and period for the goal, we execute these steps:
-        // 1. clear the minutes, seconds and millis from the time frame and set hour to 0
-        // 2. set the time frame to the beginning of the day, week or month
-        // 3. save the time in seconds as startTimeStamp
-        // 4. then set the day to the end of the period according to the periodInPeriodUnits
-        // 5. calculate the period in seconds from the difference of the two timestamps
-        timeFrame.clear(Calendar.MINUTE)
-        timeFrame.clear(Calendar.SECOND)
-        timeFrame.clear(Calendar.MILLISECOND)
-        timeFrame.set(Calendar.HOUR_OF_DAY, 0)
-
-        when(periodUnit) {
-            GoalPeriodUnit.DAY -> {
-                startTimeStamp = timeFrame.timeInMillis / 1000L
-                timeFrame.add(Calendar.DAY_OF_MONTH, periodInPeriodUnits)
-            }
-            GoalPeriodUnit.WEEK -> {
-                timeFrame.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
-                startTimeStamp = timeFrame.timeInMillis / 1000L
-
-                timeFrame.add(Calendar.WEEK_OF_YEAR, periodInPeriodUnits)
-            }
-            GoalPeriodUnit.MONTH -> {
-                timeFrame.set(Calendar.DAY_OF_MONTH, 1)
-                startTimeStamp = timeFrame.timeInMillis / 1000L
-
-                timeFrame.add(Calendar.MONTH, periodInPeriodUnits)
-            }
-        }
-
-        // calculate the period in second from these two timestamps
-        val periodInSeconds = ((timeFrame.timeInMillis / 1000) - startTimeStamp).toInt()
-
-        assert(startTimeStamp > 0) {
-            Log.e("Assertion Failed", "startTimeStamp can not be 0")
-        }
-
-        return Goal(
-            groupId,
-            type,
-            startTimeStamp,
-            period = periodInSeconds,
-            periodUnit,
-            target
-        )
-    }
 
     // check if all fields in the dialog are filled out
     private fun isComplete(): Boolean {

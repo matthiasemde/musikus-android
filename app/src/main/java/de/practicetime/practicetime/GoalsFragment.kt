@@ -3,6 +3,8 @@ package de.practicetime.practicetime
 import android.app.AlertDialog
 import android.content.res.ColorStateList
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.View
 import android.widget.Toast
 import androidx.fragment.app.Fragment
@@ -28,7 +30,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
     private var goalAdapter : GoalAdapter? = null
 
     private var addGoalDialog: GoalDialog? = null
-    private var archieveGoalDialog: AlertDialog? = null
+    private var archiveGoalDialog: AlertDialog? = null
 
     private var goalsToolbar: androidx.appcompat.widget.Toolbar? = null
 
@@ -37,7 +39,10 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         openDatabase()
 
-        initGoalList()
+        updateGoals(dao!!, lifecycleScope)
+
+        // wait for goals to be updated TODO find better solution
+        Handler(Looper.getMainLooper()).postDelayed({  initGoalList() }, 500)
 
         // create a new goal dialog for adding new goals
         addGoalDialog = GoalDialog(
@@ -84,9 +89,9 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
         }
     }
 
-    // initialize the goal archieve dialog
+    // initialize the goal archive dialog
     private fun initArchiveGoalDialog() {
-        archieveGoalDialog = requireActivity().let { it ->
+        archiveGoalDialog = requireActivity().let { it ->
             val builder = AlertDialog.Builder(it)
             builder.apply {
                 setTitle(R.string.archiveGoalDialogTitle)
@@ -145,7 +150,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
                 // set the click listeners for the menu options here
                 setOnMenuItemClickListener {
                     when (it.itemId) {
-                        R.id.topToolbarSelectionArchive -> archieveGoalDialog?.show()
+                        R.id.topToolbarSelectionArchive -> archiveGoalDialog?.show()
                     }
                     return@setOnMenuItemClickListener true
                 }

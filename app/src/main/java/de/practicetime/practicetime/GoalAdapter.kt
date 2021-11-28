@@ -52,9 +52,9 @@ class GoalAdapter(
                 (if(targetMinutes > 0) "$targetMinutes mins" else "")
 
         val periodFormatted = when(goal.periodUnit) {
-            GoalPeriodUnit.DAY -> "${goal.period / SECONDS_PER_DAY} days"
-            GoalPeriodUnit.WEEK -> "${goal.period / SECONDS_PER_WEEK} weeks"
-            GoalPeriodUnit.MONTH -> "${goal.period / SECONDS_PER_MONTH} months"
+            GoalPeriodUnit.DAY -> "${goal.periodInPeriodUnits} days"
+            GoalPeriodUnit.WEEK -> "${goal.periodInPeriodUnits} weeks"
+            GoalPeriodUnit.MONTH -> "${goal.periodInPeriodUnits} months"
         }
 
         // if the goal tracks the total time, leave it as the primary color for now
@@ -72,7 +72,7 @@ class GoalAdapter(
         // set the percent text to the progress capped at 100 %
         viewHolder.progressPercentView.text = "${minOf(goal.progress * 100 / goal.target, 100)}%"
 
-        val remainingTime = (goal.startTimestamp + goal.period) - now
+        val remainingTime = (goal.startTimestamp + goal.periodInSeconds) - now
         // if time left is larger than a day, show the number of days
         when {
             remainingTime > SECONDS_PER_DAY -> {

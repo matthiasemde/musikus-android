@@ -18,13 +18,14 @@ enum class GoalPeriodUnit {
 
 @Entity
 data class Goal (
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val groupId: Int,
     val type: GoalType,
     val startTimestamp: Long,
-    val period: Int,
+    val periodInSeconds: Int,
+    val periodInPeriodUnits: Int,
     val periodUnit: GoalPeriodUnit,
     var target: Int,
-    @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val progressType: GoalProgressType = GoalProgressType.TIME,
     var progress: Int = 0,
     var archived: Boolean = false,

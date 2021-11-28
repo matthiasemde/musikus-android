@@ -132,32 +132,26 @@ interface PTDao {
     suspend fun getGoal(goalId: Int): Goal
 
     @Query("SELECT MAX(groupId) FROM Goal")
-    suspend fun getMaxGoalGroupId() : Long
+    suspend fun getMaxGoalGroupId() : Long?
 
-    @Query("SELECT * FROM Goal WHERE type = :type  AND startTimestamp < :now AND startTimestamp + period > :now")
-    suspend fun getActiveTotalTimeGoals(
-        type: GoalType = GoalType.TOTAL_TIME,
-        now : Long = Date().time / 1000L
-    ) : List<Goal>
+    @Query("SELECT * FROM Goal WHERE archived=0 AND type = :type")
+    suspend fun getActiveTotalTimeGoals(type: GoalType = GoalType.TOTAL_TIME) : List<Goal>
 
-//    @Transaction
-//    @Query("SELECT * FROM Goal WHERE startTimestamp < :now AND startTimestamp + period > :now")
-//    suspend fun getActiveGoalsWithCategories(now : Long = Date().time / 1000L) : List<GoalWithCategories>
+    @Transaction
+    @Query("SELECT * FROM Goal WHERE archived=0 AND startTimestamp + periodInSeconds < :now")
+    suspend fun getOutdatedGoalsWithCategories(now : Long = Date().time / 1000L) : List<GoalWithCategories>
 
     @Transaction
     @Query("SELECT * FROM Goal WHERE id=:goalId")
     suspend fun getGoalWithCategories(goalId: Int) : GoalWithCategories
 
     @Transaction
-    @Query("SELECT * FROM Goal WHERE archived = 0")
+    @Query("SELECT * FROM Goal WHERE archived=0")
     suspend fun getActiveGoalsWithCategories() : List<GoalWithCategories>
 
     @Transaction
-    @Query("SELECT * FROM Goal WHERE id In (:ids) AND startTimestamp < :now AND startTimestamp + period > :now")
-    suspend fun getSelectedActiveGoalsWithCategories(
-        ids : List<Int>,
-        now : Long = Date().time / 1000L
-    ) : List<GoalWithCategories>
+    @Query("SELECT * FROM Goal WHERE id In (:ids) AND archived=0")
+    suspend fun getSelectedActiveGoalsWithCategories(ids : List<Int>) : List<GoalWithCategories>
 
     @Transaction
     @Query("SELECT * FROM PracticeSession")

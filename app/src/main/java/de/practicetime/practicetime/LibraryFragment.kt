@@ -72,7 +72,7 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
 
         // load all active categories from the database and notify the adapter
         lifecycleScope.launch {
-            dao?.getActiveCategories()?.let { activeCategories.addAll(it) }
+            dao?.getActiveCategories()?.let { activeCategories.addAll(it.reversed()) }
             categoryAdapter?.notifyItemRangeInserted(0, activeCategories.size)
         }
 
