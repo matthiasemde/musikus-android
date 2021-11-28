@@ -19,11 +19,6 @@ import kotlin.collections.ArrayList
 
 private var dao: PTDao? = null
 
-const val SECONDS_PER_MONTH = 60 * 60 * 24 * 28 // don't judge me :(
-const val SECONDS_PER_WEEK = 60 * 60 * 24 * 7
-const val SECONDS_PER_DAY = 60 * 60 * 24
-const val SECONDS_PER_HOUR = 60 * 60
-
 class GoalsFragment : Fragment(R.layout.fragment_goals) {
 
     private val activeGoalsWithCategories = ArrayList<GoalWithCategories>()
@@ -91,7 +86,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
 
     // initialize the goal archive dialog
     private fun initArchiveGoalDialog() {
-        archiveGoalDialog = requireActivity().let { it ->
+        archiveGoalDialog = requireActivity().let {
             val builder = AlertDialog.Builder(it)
             builder.apply {
                 setTitle(R.string.archiveGoalDialogTitle)

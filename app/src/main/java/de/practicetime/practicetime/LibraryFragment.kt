@@ -3,7 +3,6 @@ package de.practicetime.practicetime
 import android.app.AlertDialog
 import android.content.res.ColorStateList
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.fragment.app.Fragment
@@ -21,9 +20,9 @@ private var dao: PTDao? = null
 class LibraryFragment : Fragment(R.layout.fragment_library) {
 
     private val activeCategories = ArrayList<Category>()
-    private var addCategoryDialog: CategoryDialog? = null
     private var categoryAdapter : CategoryAdapter? = null
 
+    private var addCategoryDialog: CategoryDialog? = null
     private var editCategoryDialog: CategoryDialog? = null
     private var archiveCategoryDialog: AlertDialog? = null
 
@@ -94,7 +93,7 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
 
     // initialize the category archive dialog
     private fun initArchiveCategoryDialog() {
-        archiveCategoryDialog = requireActivity().let { it ->
+        archiveCategoryDialog = requireActivity().let {
             val builder = AlertDialog.Builder(it)
             builder.apply {
                 setTitle(R.string.archiveCategoryDialogTitle)
@@ -198,18 +197,6 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
                 assert(i != -1)
                 activeCategories[i] = category
                 categoryAdapter?.notifyItemChanged(i)
-            }
-        }
-    }
-
-    // the handler for archive categories
-    private fun archiveCategoryHandler(categoryId: Int) {
-        lifecycleScope.launch {
-            dao?.archiveCategory(categoryId)
-            activeCategories.indexOfFirst { c -> c.id == categoryId }.also { i ->
-                assert(i != -1)
-                activeCategories.removeAt(i)
-                categoryAdapter?.notifyItemRemoved(i)
             }
         }
     }
