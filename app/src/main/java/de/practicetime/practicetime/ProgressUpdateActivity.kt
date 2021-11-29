@@ -99,8 +99,10 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
                 }
             }
 
+            // get all active instances and use the start time of the session as reference
             dao?.getActiveSelectedGoalInstancesWithDescriptionsWithCategories(
-                goalProgress.keys.toList()
+                goalProgress.keys.toList(),
+                latestSession?.sections?.first()?.section?.timestamp?: Date().time / 1000L
             )?.let {
                 progressedGoalInstancesWithDescriptionsWithCategories.addAll(it)
             }

@@ -171,7 +171,7 @@ interface PTDao {
 //    @Query("SELECT * FROM Goal WHERE id In (:ids) AND archived=0")
 //    suspend fun getSelectedActiveGoalsWithCategories(ids : List<Int>) : List<GoalWithCategories>
 //
-    @Query("SELECT * FROM GoalDescription WHERE  archived = 0 AND type = :type")
+    @Query("SELECT * FROM GoalDescription WHERE archived = 0 AND type = :type")
     suspend fun getActiveGoalDescriptionsOfType(
         type: GoalType
     ) : List<GoalDescription>
