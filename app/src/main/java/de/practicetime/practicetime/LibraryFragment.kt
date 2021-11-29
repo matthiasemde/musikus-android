@@ -10,7 +10,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
-import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
 import de.practicetime.practicetime.entities.Category
 import kotlinx.coroutines.launch
 
@@ -38,7 +38,7 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
         // create a new category dialog for adding new categories
         addCategoryDialog = CategoryDialog(requireActivity(), ::addCategoryHandler)
 
-        view.findViewById<FloatingActionButton>(R.id.libraryFab).setOnClickListener {
+        view.findViewById<ExtendedFloatingActionButton>(R.id.libraryFab).setOnClickListener {
             resetToolbar()
             addCategoryDialog?.show()
         }

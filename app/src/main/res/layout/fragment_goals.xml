@@ -46,13 +46,14 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
+    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
         android:id="@+id/goalsFab"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="end|bottom"
         android:layout_margin="16dp"
-        android:src="@android:drawable/ic_input_add"
+        app:icon="@android:drawable/ic_input_add"
+        android:text="@string/add_goal"
         android:transitionName="transition_fab"/>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -4,9 +4,9 @@
     android:gravity="left">
     <shape>
         <corners
-            android:radius="16dp" />
+            android:radius="8dp" />
         <gradient
-            android:startColor="#EEE"
-            android:endColor="#FFF" />
+            android:startColor="@color/md_purple_A700"
+            android:endColor="@color/md_purple_A700" />
     </shape>
 </clip>

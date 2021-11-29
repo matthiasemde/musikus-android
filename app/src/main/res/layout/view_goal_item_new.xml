@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/cardView_goal_item"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="8dp"
+    android:layout_marginBottom="8dp"
+    android:layout_marginStart="16dp"
+    android:layout_marginEnd="16dp"
+    app:cardElevation="4dp"
+    app:cardCornerRadius="10dp"
+    app:cardBackgroundColor="?attr/colorSurface"
+    android:foreground="?android:attr/selectableItemBackground"
+    android:clickable="true" >
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:foreground="@drawable/foreground_simple_overlay"
+        android:foregroundTintMode="src_over"
+        android:padding="16dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/goalName"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:textStyle="bold"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="20sp"
+                tools:text="Goal Name" />
+
+            <TextView
+                android:id="@+id/goalProgressPercent"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:layout_gravity="start"
+                android:layout_marginStart="12dp"
+                tools:text="50%"/>
+
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/goalDescription"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:textSize="16sp"
+            android:layout_marginBottom="16dp"
+            android:text="20h 30m in 7 weeks"/>
+
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/goalProgressIndicator"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:text="02:04"
+                android:layout_marginBottom="4dp"
+                app:layout_constraintStart_toStartOf="@id/goalProgressBar"
+                app:layout_constraintBottom_toTopOf="@id/goalProgressBar"/>
+
+            <TextView
+                android:id="@+id/goalStartDate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="16sp"
+                android:text="02.12."
+                android:layout_gravity="center"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/goalProgressIndicator"
+                app:layout_constraintBottom_toTopOf="@id/goalRemainingTime"/>
+
+            <ProgressBar
+                android:id="@+id/goalProgressBar"
+                style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+                android:layout_weight="1"
+                android:layout_gravity="center"
+                android:layout_width="0dp"
+                android:layout_height="12dp"
+                android:background="@drawable/background_goal_progress_bar"
+                android:indeterminate="false"
+                android:progress="42"
+                android:progressDrawable="@drawable/progress_goal_progress_bar"
+                android:progressTint="?attr/colorPrimary"
+                android:progressTintMode="src_in"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                app:layout_constraintStart_toEndOf="@id/goalStartDate"
+                app:layout_constraintEnd_toStartOf="@id/goalEndDate"
+                app:layout_constraintTop_toTopOf="@id/goalStartDate"
+                app:layout_constraintBottom_toBottomOf="@+id/goalStartDate" />
+
+            <TextView
+                android:id="@+id/goalEndDate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="16sp"
+                android:text="08.12."
+                android:layout_gravity="center"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/goalProgressIndicator"/>
+
+            <TextView
+                android:id="@+id/goalRemainingTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="start"
+                android:textSize="14sp"
+                tools:text="days left"
+                app:layout_constraintEnd_toEndOf="@id/goalEndDate"
+                app:layout_constraintTop_toBottomOf="@id/goalEndDate"/>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </LinearLayout>
+
+</androidx.cardview.widget.CardView>

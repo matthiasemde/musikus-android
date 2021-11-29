@@ -12,7 +12,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
-import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
 import de.practicetime.practicetime.entities.*
 import kotlinx.coroutines.launch
 import java.util.*
@@ -50,7 +50,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
             ::addGoalHandler
         )
 
-        view.findViewById<FloatingActionButton>(R.id.goalsFab).setOnClickListener {
+        view.findViewById<ExtendedFloatingActionButton>(R.id.goalsFab).setOnClickListener {
             resetToolbar()
             addGoalDialog?.show()
         }
@@ -113,7 +113,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
     private fun shortClickOnGoalHandler(goalId: Int, goalView: View) {
         if(selectedGoals.isNotEmpty()) {
             if(selectedGoals.remove(Pair(goalId, goalView))) {
-                goalView.foregroundTintList = null
+                goalView.backgroundTintList = null
                 if(selectedGoals.isEmpty()) {
                     resetToolbar()
                 }
@@ -152,7 +152,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
         selectedGoals.add(Pair(goalId, goalView))
 
         // and tint its foreground to mark it as selected
-        goalView.foregroundTintList = ColorStateList.valueOf(
+        goalView.backgroundTintList = ColorStateList.valueOf(
             requireActivity().resources.getColor(R.color.redTransparent, requireActivity().theme)
         )
 

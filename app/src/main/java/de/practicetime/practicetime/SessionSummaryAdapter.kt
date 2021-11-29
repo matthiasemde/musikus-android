@@ -2,7 +2,6 @@ package de.practicetime.practicetime
 
 import android.content.Context
 import android.content.res.ColorStateList
-import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -105,8 +104,8 @@ class SessionSummaryAdapter(
             private val sectionsWithCategoriesList = ArrayList<SectionWithCategory>()
 
             // define the time and date format
-            private val timeFormat: SimpleDateFormat = SimpleDateFormat("HH:mm")
-            private val dateFormat: SimpleDateFormat = SimpleDateFormat("E dd.MM.yyyy")
+            private val timeFormat: SimpleDateFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+            private val dateFormat: SimpleDateFormat = SimpleDateFormat("E dd.MM.yyyy", Locale.getDefault())
 
             init {
                 // define the layout and adapter for the section list

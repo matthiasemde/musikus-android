@@ -45,4 +45,17 @@
     <string name="archiveCategoryToast">Categorie(s) archieved</string>
     <string name="archiveDialogConfirm">Archive</string>
     <string name="archiveDialogCancel">Cancel</string>
+    <string name="min_left">%1$d minutes left</string>
+    <string name="hours_left">%1$d hours left</string>
+    <string name="days_left">%1$d days left</string>
+    <string name="goal_name_non_specific">All Categories</string>
+    <string name="goal_description_day">in one day</string>
+    <string name="goal_description_days">in %1$d days</string>
+    <string name="goal_description_week">in one week</string>
+    <string name="goal_description_weeks">in %1$d weeks</string>
+    <string name="goal_description_month">in one month</string>
+    <string name="goal_description_months">in %1$d months</string>
+    <string name="goal_description_complete">Practice for %1$s%2$s%3$s</string>
+    <string name="add_goal">Goal</string>
+    <string name="add_category">Category</string>
 </resources>
