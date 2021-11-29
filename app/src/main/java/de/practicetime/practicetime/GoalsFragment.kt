@@ -37,7 +37,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         openDatabase()
 
-//        updateGoals(dao!!, lifecycleScope)
+        updateGoals(dao!!, lifecycleScope)
 
         // wait for goals to be updated TODO find better solution
         Handler(Looper.getMainLooper()).postDelayed({  initGoalList() }, 500)

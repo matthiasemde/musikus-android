@@ -152,9 +152,9 @@ interface PTDao {
 
     @Transaction
     @Query("SELECT * FROM GoalInstance WHERE renewed=0 AND startTimestamp + periodInSeconds < :now")
-    suspend fun getOutdatedGoalInstancesWithGoalsWithCategories(
+    suspend fun getOutdatedGoalInstancesWithDescriptions(
         now : Long = Date().time / 1000L
-    ) : List<GoalInstanceWithDescriptionWithCategories>
+    ) : List<GoalInstanceWithDescription>
 
     @Transaction
     @Query("SELECT * FROM GoalDescription WHERE id=:goalId")

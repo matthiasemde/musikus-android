@@ -96,15 +96,15 @@ data class SessionWithSectionsWithCategoriesWithGoalDescriptions(
     )
     val sections: List<SectionWithCategoryWithGoalDescriptions>
 )
-//
-//data class GoalInstanceWithDescription(
-//    @Embedded val instance: GoalInstance,
-//    @Relation(
-//        parentColumn = "goalDescriptionId",
-//        entityColumn = "id"
-//    )
-//    val description: GoalDescription
-//)
+
+data class GoalInstanceWithDescription(
+    @Embedded val instance: GoalInstance,
+    @Relation(
+        parentColumn = "goalDescriptionId",
+        entityColumn = "id"
+    )
+    val description: GoalDescription
+)
 
 //data class GoalDescriptionWithInstances(
 //    @Embedded val description: GoalDescription,
