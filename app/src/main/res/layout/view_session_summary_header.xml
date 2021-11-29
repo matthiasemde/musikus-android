@@ -15,7 +15,6 @@
         tools:text="TextView"
         android:textSize="30sp"
         android:layout_gravity="center"
-        android:textColor="?attr/colorOnSurface"
         android:textStyle="bold"/>
 
     <Button

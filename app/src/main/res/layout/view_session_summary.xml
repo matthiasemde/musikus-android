@@ -25,7 +25,6 @@
             android:layout_marginStart="16dp"
             android:textSize="25sp"
             android:textStyle="bold"
-            android:textColor="?attr/colorOnSurface"
             tools:text="19.10.2021" />
 
         <Space

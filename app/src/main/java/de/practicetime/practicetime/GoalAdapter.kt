@@ -8,8 +8,8 @@ import android.view.ViewGroup
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.chip.Chip
 import de.practicetime.practicetime.entities.*
-import java.text.SimpleDateFormat
 import java.util.*
 
 const val SECONDS_PER_HOUR = 60 * 60
@@ -99,7 +99,7 @@ class GoalAdapter(
         // tint progressbar and progress TextView
         if(description.type != GoalType.NON_SPECIFIC) {
             viewHolder.progressBarView.progressTintList = categoryColor
-            viewHolder.goalProgressIndicatorView.setTextColor(categoryColor)
+//            viewHolder.goalProgressIndicatorView.setTextColor(categoryColor)
         }
         // adapt X position for tv indicating progress. Do it asynchronously otherwise UI dimensions will be 0
         viewHolder.progressBarView.post {
@@ -109,7 +109,7 @@ class GoalAdapter(
             // add the progress width as an offset to the current position
             viewHolder.goalProgressIndicatorView.apply {
                 val offset = (progress * width).toFloat() / max.toFloat() - this.width
-                x += if (offset > 0) offset else 0f
+//                x += if (offset > 0) offset else 0f
             }
         }
 
@@ -120,7 +120,7 @@ class GoalAdapter(
             viewHolder.goalProgressIndicatorView.text = String.format("%02:%02d", progressHours, progressMinutes)
         else
             if (progressMinutes > 0)
-                viewHolder.goalProgressIndicatorView.text = String.format("%dm", progressMinutes)
+                viewHolder.goalProgressIndicatorView.text = String.format("%d min", progressMinutes)
             else
                 viewHolder.goalProgressIndicatorView.text = "<1m"
 
@@ -128,17 +128,10 @@ class GoalAdapter(
         // set the percent text to the progress capped at 100 %
         viewHolder.progressPercentView.apply {
             text = "${minOf(instance.progress * 100 / instance.target, 100)}%"
-            if(description.type != GoalType.NON_SPECIFIC) {
-                setTextColor(categoryColor)
-            }
+//            if(description.type != GoalType.NON_SPECIFIC) {
+//                setTextColor(categoryColor)
+//            }
         }
-
-        // start + end date
-        val formatter = SimpleDateFormat("dd.MM.", Locale.getDefault());
-        val startDateString = formatter.format(Date(instance.startTimestamp*1000));
-        val endDateString = formatter.format(Date((instance.startTimestamp + instance.periodInSeconds)*1000));
-        viewHolder.goalStartDateView.text = startDateString
-        viewHolder.goalEndDateView.text =  endDateString
 
 
         // remaining time
@@ -177,9 +170,7 @@ class GoalAdapter(
         val progressPercentView: TextView = view.findViewById(R.id.goalProgressPercent)
         val goalNameView: TextView = view.findViewById(R.id.goalName)
         val goalDescriptionView: TextView = view.findViewById(R.id.goalDescription)
-        val remainingTimeView: TextView = view.findViewById(R.id.goalRemainingTime)
-        val goalStartDateView: TextView = view.findViewById(R.id.goalStartDate)
-        val goalEndDateView: TextView = view.findViewById(R.id.goalEndDate)
+        val remainingTimeView: Chip = view.findViewById(R.id.goalRemainingTime)
         val goalProgressIndicatorView: TextView = view.findViewById(R.id.goalProgressIndicator)
 
     }
