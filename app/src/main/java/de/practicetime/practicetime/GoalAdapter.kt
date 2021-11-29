@@ -116,13 +116,13 @@ class GoalAdapter(
         // progress Indicator Text
         val progressHours = instance.progress / 3600
         val progressMinutes = instance.progress % 3600 / 60
-        if (progressHours > 0)
-            viewHolder.goalProgressIndicatorView.text = String.format("%02:%02d", progressHours, progressMinutes)
-        else
-            if (progressMinutes > 0)
+        when {
+            progressHours > 0 ->
+                viewHolder.goalProgressIndicatorView.text = String.format("%02:%02d", progressHours, progressMinutes)
+            progressMinutes > 0 ->
                 viewHolder.goalProgressIndicatorView.text = String.format("%d min", progressMinutes)
-            else
-                viewHolder.goalProgressIndicatorView.text = "<1m"
+            else -> viewHolder.goalProgressIndicatorView.text = "<1m"
+        }
 
         // Percentage
         // set the percent text to the progress capped at 100 %

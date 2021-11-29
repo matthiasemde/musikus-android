@@ -198,10 +198,18 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
     ) : Animation() {
         override fun applyTransformation(interpolatedTime: Float, t: Transformation?) {
             super.applyTransformation(interpolatedTime, t)
-            val value = from + (to - from) * interpolatedTime
-            progressBar.progress = value.toInt()
-            val progressInPercent = minOf((value * 100 / progressBar.max).toInt(), 100)
-            percentView.text = "$progressInPercent%"
+            val progress = (from + (to - from) * interpolatedTime).toInt()
+
+            progressBar.progress = progress
+
+            // progress Indicator Text
+            val progressHours = progress / 3600
+            val progressMinutes = progress % 3600 / 60
+            when {
+                progressHours > 0 -> percentView.text = String.format("%02:%02d", progressHours, progressMinutes)
+                progressMinutes > 0 -> percentView.text = String.format("%d min", progressMinutes)
+                else -> percentView.text = "<1m"
+            }
         }
     }
 
@@ -223,11 +231,11 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
 
             if (preInfo is GoalItemHolderInfo) {
                 val progressBar = (newHolder as GoalAdapter.ViewHolder).progressBarView
-                val percentView = newHolder.progressPercentView
+                val progressIndicator = newHolder.goalProgressIndicatorView
                 progressBar.max *= 60  // multiply by 60 to grantee at least 60 fps
                 val animator = ProgressBarAnimation(
                     progressBar,
-                    percentView,
+                    progressIndicator,
                     preInfo.progress * 60,
                     progressBar.progress * 60
                 )
