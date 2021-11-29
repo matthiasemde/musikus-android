@@ -78,12 +78,14 @@ class GoalDialog(
                             selectedCategories else emptyList()
                     )
 
+                    val targetDuration = goalDialogTargetHoursView.text.toString().trim().let{
+                        if(it.isNotEmpty()) it.toInt() * 3600 else 0
+                    } + goalDialogTargetMinutesView.text.toString().trim().let {
+                        if(it.isNotEmpty()) it.toInt() * 60 else 0
+                    }
+
                     // and call the onCreate handler, passing the selected target duration
-                    onCreateHandler(
-                        newGoalDescriptionWithCategories,
-                        goalDialogTargetHoursView.text.toString().toInt() * 3600 +
-                            goalDialogTargetMinutesView.text.toString().toInt() * 60
-                    )
+                    onCreateHandler(newGoalDescriptionWithCategories, targetDuration)
                 }
                 dialog.dismiss()
             }
@@ -170,9 +172,17 @@ class GoalDialog(
 
     // check if all fields in the dialog are filled out
     private fun isComplete(): Boolean {
-        return (goalDialogTargetHoursView.text.toString().isNotEmpty() ||
-                goalDialogTargetMinutesView.text.toString().isNotEmpty()) &&
-            goalDialogPeriodValueView.text.toString().isNotEmpty()
+        val targetMinutes = goalDialogTargetMinutesView.text.toString().trim().let {
+            if (it.isNotEmpty()) it.toInt() else 0
+        }
+        val targetHours = goalDialogTargetHoursView.text.toString().trim().let {
+            if (it.isNotEmpty()) it.toInt() else 0
+        }
+        val periodValue = goalDialogPeriodValueView.text.toString().trim().let {
+            if (it.isNotEmpty()) it.toInt() else 0
+        }
+
+        return targetMinutes + targetHours > 0 && periodValue > 0
     }
 
     // the public function to show the dialog
