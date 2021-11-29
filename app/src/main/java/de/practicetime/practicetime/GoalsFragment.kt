@@ -5,6 +5,7 @@ import android.content.res.ColorStateList
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.fragment.app.Fragment
@@ -40,7 +41,13 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
         updateGoals(dao!!, lifecycleScope)
 
         // wait for goals to be updated TODO find better solution
-        Handler(Looper.getMainLooper()).postDelayed({  initGoalList() }, 500)
+        Handler(Looper.getMainLooper()).postDelayed({
+            try {
+                initGoalList()
+            } catch (e: IllegalStateException) {
+                return@postDelayed
+            }
+        }, 500)
 
         // create a new goal dialog for adding new goals
         addGoalDialog = GoalDialog(
