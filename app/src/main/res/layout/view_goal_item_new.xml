@@ -82,16 +82,17 @@
 
         <TextView
             android:id="@+id/goalProgressIndicator"
-            android:layout_width="wrap_content"
+            android:layout_width="100dp"
             android:layout_height="wrap_content"
-            android:textSize="18sp"
-            android:textStyle="bold"
+            android:gravity="center"
             android:text="02:04"
             android:textColor="?attr/colorOnSurface"
-            app:layout_constraintStart_toStartOf="@id/goalProgressBar"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="@id/goalProgressBar"
             app:layout_constraintEnd_toEndOf="@id/goalProgressBar"
-            app:layout_constraintTop_toTopOf="@id/goalProgressBar"
-            app:layout_constraintBottom_toBottomOf="@id/goalProgressBar"/>
+            app:layout_constraintStart_toStartOf="@id/goalProgressBar"
+            app:layout_constraintTop_toTopOf="@id/goalProgressBar" />
 
         <TextView
             android:id="@+id/goalProgressPercent"

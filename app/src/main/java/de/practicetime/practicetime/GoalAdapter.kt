@@ -118,7 +118,7 @@ class GoalAdapter(
         val progressMinutes = instance.progress % 3600 / 60
         when {
             progressHours > 0 ->
-                viewHolder.goalProgressIndicatorView.text = String.format("%02:%02d", progressHours, progressMinutes)
+                viewHolder.goalProgressIndicatorView.text = String.format("%02d:%02d", progressHours, progressMinutes)
             progressMinutes > 0 ->
                 viewHolder.goalProgressIndicatorView.text = String.format("%d min", progressMinutes)
             else -> viewHolder.goalProgressIndicatorView.text = "<1m"
