@@ -22,21 +22,6 @@ class MainActivity : AppCompatActivity() {
         val bottomNavigationView = findViewById<BottomNavigationView>(R.id.bottom_navigation_view)
         bottomNavigationView.setupWithNavController(navController)
 
-
-        // if a new Session has been added and we're returning from saving (detected through Bundle),
-        // wait 700ms so that entries have had enough time to be written into the db before reading
-        if (intent.extras?.getInt("KEY_NEW_SESSION") == 1) {
-            Handler(Looper.getMainLooper()).also {
-                it.postDelayed({
-                        val id = navController.currentDestination?.id
-                        navController.popBackStack(id!!,true)
-                        navController.navigate(id)
-                    },
-                    700
-                )
-            }
-        }
-
         if (isInDarkMode()) {
             // workaround for removing the elevation color overlay
             // https://github.com/material-components/material-components-android/issues/1148

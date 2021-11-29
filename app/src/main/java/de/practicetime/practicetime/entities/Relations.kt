@@ -34,65 +34,93 @@ data class SessionWithSectionsWithCategories(
     val sections: List<SectionWithCategory>
 )
 
-data class GoalWithCategories(
-    @Embedded val goal: Goal,
+data class GoalDescriptionWithCategories(
+    @Embedded val description: GoalDescription,
     @Relation(
         parentColumn = "id",
         entityColumn = "id",
         associateBy = Junction(
-            GoalCategoryCrossRef::class,
-            parentColumn = "goalId",
+            GoalDescriptionCategoryCrossRef::class,
+            parentColumn = "goalDescriptionId",
             entityColumn = "categoryId"
         )
     )
     val categories: List<Category>
 )
 
-data class CategoryWithGoals(
+data class CategoryWithGoalDescriptions(
     @Embedded val category: Category,
     @Relation(
         parentColumn = "id",
         entityColumn = "id",
         associateBy = Junction(
-            GoalCategoryCrossRef::class,
+            GoalDescriptionCategoryCrossRef::class,
             parentColumn = "categoryId",
-            entityColumn = "goalId"
+            entityColumn = "goalDescriptionId"
         )
     )
-    val goals: List<Goal>
+    val descriptions: List<GoalDescription>
 )
 
-data class CategoryWithGoalsWithCategories(
+data class CategoryWithGoalDescriptionsWithCategories(
     @Embedded val category: Category,
     @Relation(
-        entity = Goal::class,
+        entity = GoalDescription::class,
         parentColumn = "id",
         entityColumn = "id",
         associateBy = Junction(
-            GoalCategoryCrossRef::class,
+            GoalDescriptionCategoryCrossRef::class,
             parentColumn = "categoryId",
-            entityColumn = "goalId"
+            entityColumn = "goalDescriptionId"
         )
     )
-    val goals: List<GoalWithCategories>
+    val descriptions: List<GoalDescriptionWithCategories>
 )
 
-data class SectionWithCategoryWithGoals(
+data class SectionWithCategoryWithGoalDescriptions(
     @Embedded val section: PracticeSection,
     @Relation(
         entity = Category::class,
         parentColumn = "category_id",
         entityColumn = "id"
     )
-    val category: CategoryWithGoals
+    val category: CategoryWithGoalDescriptions
 )
 
-data class SessionWithSectionsWithCategoriesWithGoals(
+data class SessionWithSectionsWithCategoriesWithGoalDescriptions(
     @Embedded val session: PracticeSession,
     @Relation(
         entity = PracticeSection::class,
         parentColumn = "id",
         entityColumn = "practice_session_id"
     )
-    val sections: List<SectionWithCategoryWithGoals>
+    val sections: List<SectionWithCategoryWithGoalDescriptions>
+)
+//
+//data class GoalInstanceWithDescription(
+//    @Embedded val instance: GoalInstance,
+//    @Relation(
+//        parentColumn = "goalDescriptionId",
+//        entityColumn = "id"
+//    )
+//    val description: GoalDescription
+//)
+
+//data class GoalDescriptionWithInstances(
+//    @Embedded val description: GoalDescription,
+//    @Relation(
+//        parentColumn = "id",
+//        entityColumn = "goalDescriptionId"
+//    )
+//    val instances: List<GoalInstance>
+//)
+
+data class GoalInstanceWithDescriptionWithCategories(
+    @Embedded val instance: GoalInstance,
+    @Relation(
+        entity = GoalDescription::class,
+        parentColumn = "goalDescriptionId",
+        entityColumn = "id"
+    )
+    val description: GoalDescriptionWithCategories
 )

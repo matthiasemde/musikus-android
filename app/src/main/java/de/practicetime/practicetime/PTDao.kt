@@ -16,10 +16,13 @@ interface PTDao {
     suspend fun insertCategory(category: Category): Long
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertGoal(goal: Goal): Long
+    suspend fun insertGoalDescription(goalDescription: GoalDescription): Long
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertGoalCategoryCrossRef(crossRef: GoalCategoryCrossRef): Long
+    suspend fun insertGoalInstance(goalInstance: GoalInstance): Long
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertGoalDescriptionCategoryCrossRef(crossRef: GoalDescriptionCategoryCrossRef): Long
 
     @Transaction
     suspend fun insertSessionAndSectionsInTransaction(
@@ -37,20 +40,24 @@ interface PTDao {
     }
 
     @Transaction
-    suspend fun insertGoalWithCategories(goalWithCategories: GoalWithCategories): Int {
-        val newGoalId = insertGoal(goalWithCategories.goal).toInt()
+    suspend fun insertGoalDescriptionWithCategories(
+        goalDescriptionWithCategories: GoalDescriptionWithCategories
+    ): Int {
+        val newGoalDescriptionId = insertGoalDescription(
+            goalDescriptionWithCategories.description
+        ).toInt()
 
         // for every category linked with the goal...
-        for (category in goalWithCategories.categories) {
+        for (category in goalDescriptionWithCategories.categories) {
             // insert a row in the cross reference table
-            insertGoalCategoryCrossRef(
-                GoalCategoryCrossRef(
-                    newGoalId,
+            insertGoalDescriptionCategoryCrossRef(
+                GoalDescriptionCategoryCrossRef(
+                    newGoalDescriptionId,
                     category.id,
                 )
             )
         }
-        return newGoalId
+        return newGoalDescriptionId
     }
 
     @Delete
@@ -69,38 +76,39 @@ interface PTDao {
     suspend fun updateCategory(category: Category)
 
     @Update
-    suspend fun updateGoal(goal: Goal)
+    suspend fun updateGoalDescription(goalDescription: GoalDescription)
+
+    @Update
+    suspend fun updateGoalInstance(goalInstance: GoalInstance)
 
     @Transaction
-    suspend fun archiveGoal(goalId: Int) {
-        getGoal(goalId).also { g ->
-            g.archived = true
-            updateGoal(g)
+    suspend fun renewGoalInstance(id: Int) {
+        getGoalInstance(id).also { g ->
+            g.renewed = true
+            updateGoalInstance(g)
         }
     }
 
     @Transaction
-    suspend fun archiveGoals(goalIds: List<Int>) {
-        goalIds.forEach { id ->
-            getGoal(id).also { g ->
-                g.archived = true
-                updateGoal(g)
-            }
+    suspend fun archiveGoals(goalDescriptionIds: List<Int>) {
+        getGoalDescriptions(goalDescriptionIds).forEach { g ->
+            g.archived = true
+            updateGoalDescription(g)
         }
     }
 
     @Transaction
     suspend fun archiveCategory(categoryId: Int) {
         // to archive a category, fetch it from the database along with associated goals
-        getCategoryWithGoalsWithCategories(categoryId).also {
-            val (category, goalsWithCategories) = it
+        getCategoryWithGoalDescriptionsWithCategories(categoryId).also {
+            val (category, goalDescriptionsWithCategories) = it
             // check if the goals are only associated with the selected category
             // or other categories which are already archived
-            for ((goal, categories) in goalsWithCategories) {
+            for ((goalDescription, categories) in goalDescriptionsWithCategories) {
                 if ((categories.filter { c -> !c.archived }).size == 1) {
                     // in this case, archive the goal as well
-                    goal.archived = true
-                    updateGoal(goal)
+                    goalDescription.archived = true
+                    updateGoalDescription(goalDescription)
                 }
             }
             category.archived = true
@@ -119,8 +127,8 @@ interface PTDao {
 
     @Transaction
     @Query("SELECT * FROM Category WHERE id=:id")
-    suspend fun getCategoryWithGoalsWithCategories(id: Int)
-        : CategoryWithGoalsWithCategories
+    suspend fun getCategoryWithGoalDescriptionsWithCategories(id: Int)
+        : CategoryWithGoalDescriptionsWithCategories
 
     @Query("SELECT * FROM Category")
     suspend fun getAllCategories(): List<Category>
@@ -128,30 +136,58 @@ interface PTDao {
     @Query("SELECT * FROM Category WHERE NOT archived")
     suspend fun getActiveCategories(): List<Category>
 
-    @Query("SELECT * FROM Goal WHERE id=:goalId")
-    suspend fun getGoal(goalId: Int): Goal
+    @Query("SELECT * FROM GoalDescription WHERE id=:id")
+    suspend fun getGoalDescription(id: Int): GoalDescription
 
-    @Query("SELECT MAX(groupId) FROM Goal")
-    suspend fun getMaxGoalGroupId() : Long?
+    @Query("SELECT * FROM GoalDescription WHERE id IN (:ids)")
+    suspend fun getGoalDescriptions(ids: List<Int>): List<GoalDescription>
 
-    @Query("SELECT * FROM Goal WHERE archived=0 AND type = :type")
-    suspend fun getActiveTotalTimeGoals(type: GoalType = GoalType.TOTAL_TIME) : List<Goal>
+    @Query("SELECT * FROM GoalInstance WHERE id=:id")
+    suspend fun getGoalInstance(id: Int): GoalInstance
 
-    @Transaction
-    @Query("SELECT * FROM Goal WHERE archived=0 AND startTimestamp + periodInSeconds < :now")
-    suspend fun getOutdatedGoalsWithCategories(now : Long = Date().time / 1000L) : List<GoalWithCategories>
-
-    @Transaction
-    @Query("SELECT * FROM Goal WHERE id=:goalId")
-    suspend fun getGoalWithCategories(goalId: Int) : GoalWithCategories
+//
+//    @Transaction
+//    @Query("SELECT * FROM Goal WHERE archived=0 AND startTimestamp + periodInSeconds < :now")
+//    suspend fun getOutdatedGoalsWithCategories(now : Long = Date().time / 1000L) : List<GoalWithCategories>
 
     @Transaction
-    @Query("SELECT * FROM Goal WHERE archived=0")
-    suspend fun getActiveGoalsWithCategories() : List<GoalWithCategories>
+    @Query("SELECT * FROM GoalInstance WHERE renewed=0 AND startTimestamp + periodInSeconds < :now")
+    suspend fun getOutdatedGoalInstancesWithGoalsWithCategories(
+        now : Long = Date().time / 1000L
+    ) : List<GoalInstanceWithDescriptionWithCategories>
 
     @Transaction
-    @Query("SELECT * FROM Goal WHERE id In (:ids) AND archived=0")
-    suspend fun getSelectedActiveGoalsWithCategories(ids : List<Int>) : List<GoalWithCategories>
+    @Query("SELECT * FROM GoalDescription WHERE id=:goalId")
+    suspend fun getGoalWithCategories(goalId: Int) : GoalDescriptionWithCategories
+
+//    @Query("SELECT * FROM Goal WHERE archived=0 AND type = :type")
+//    suspend fun getActiveTotalTimeGoals(type: GoalType = GoalType.TOTAL_TIME) : List<Goal>
+//
+//    @Transaction
+//    @Query("SELECT * FROM Goal WHERE archived=0")
+//    suspend fun getActiveGoalsWithCategories() : List<GoalWithCategories>
+//
+//    @Transaction
+//    @Query("SELECT * FROM Goal WHERE id In (:ids) AND archived=0")
+//    suspend fun getSelectedActiveGoalsWithCategories(ids : List<Int>) : List<GoalWithCategories>
+//
+    @Query("SELECT * FROM GoalDescription WHERE  archived = 0 AND type = :type")
+    suspend fun getActiveGoalDescriptionsOfType(
+        type: GoalType
+    ) : List<GoalDescription>
+
+    @Transaction
+    @Query("SELECT * FROM GoalInstance WHERE startTimestamp < :now AND startTimestamp+periodInSeconds > :now AND goalDescriptionId IN (SELECT id FROM GoalDescription WHERE archived=0)")
+    suspend fun getActiveGoalInstancesWithDescriptionsWithCategories(
+        now : Long = Date().time / 1000L
+    ) : List<GoalInstanceWithDescriptionWithCategories>
+
+    @Transaction
+    @Query("SELECT * FROM GoalInstance WHERE startTimestamp < :now AND startTimestamp+periodInSeconds > :now AND goalDescriptionId IN (:descriptionIds)")
+    suspend fun getActiveSelectedGoalInstancesWithDescriptionsWithCategories(
+        descriptionIds : List<Int>,
+        now : Long = Date().time / 1000L,
+    ) : List<GoalInstanceWithDescriptionWithCategories>
 
     @Transaction
     @Query("SELECT * FROM PracticeSession")
@@ -164,5 +200,5 @@ interface PTDao {
     @Transaction
     @Query("SELECT * FROM PracticeSession WHERE id = (SELECT MAX(id) FROM PracticeSession)")
     suspend fun getLatestSessionWithSectionsWithCategoriesWithGoals()
-        : SessionWithSectionsWithCategoriesWithGoals
+        : SessionWithSectionsWithCategoriesWithGoalDescriptions
 }

@@ -9,8 +9,9 @@ import de.practicetime.practicetime.entities.*
         PracticeSession::class,
         PracticeSection::class,
         Category::class,
-        Goal::class,
-        GoalCategoryCrossRef::class,
+        GoalDescription::class,
+        GoalInstance::class,
+        GoalDescriptionCategoryCrossRef::class,
     ],
     version = 1
 )

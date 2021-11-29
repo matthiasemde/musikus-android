@@ -35,7 +35,7 @@
     <string name="goalDialogHoursText">h</string>
     <string name="goalDialogMinutesText">min</string>
     <string name="addGoalDialogxInx">in</string>
-    <string name="goalDialogRepeatable">Repeatable</string>
+    <string name="goalDialogOneTimeGoal">One time goal</string>
     <string name="topToolBarSettings">Settings</string>
     <string name="topToolBarDelete">Delete</string>
     <string name="topToolBarArchive">Archive</string>

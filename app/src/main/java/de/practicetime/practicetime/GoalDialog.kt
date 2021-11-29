@@ -20,7 +20,7 @@ class GoalDialog(
     context: Activity,
     dao: PTDao,
     lifecycleScope: LifecycleCoroutineScope,
-    onCreateHandler: (newGoal: GoalWithCategories) -> Unit,
+    onCreateHandler: (newGoal: GoalDescriptionWithCategories, firstTarget: Int) -> Unit,
 ) {
 
     // instantiate the builder for the alert dialog
@@ -37,6 +37,7 @@ class GoalDialog(
     private val goalDialogSpecificCategoriesView = dialogView.findViewById<TextView>(R.id.goalDialogSpecificCategories)
     private val goalDialogTypeSwitchView = dialogView.findViewById<SwitchCompat>(R.id.goalDialogTypeSwitch)
     private val goalDialogCategorySelectorView = dialogView.findViewById<Spinner>(R.id.goalDialogCategorySelector)
+    private val goalDialogOneTimeGoalView = dialogView.findViewById<SwitchCompat>(R.id.goalDialogOneTimeGoal)
     private val goalDialogTargetHoursView = dialogView.findViewById<EditText>(R.id.goalDialogHours)
     private val goalDialogTargetMinutesView = dialogView.findViewById<EditText>(R.id.goalDialogMinutes)
     private val goalDialogPeriodValueView = dialogView.findViewById<EditText>(R.id.goalDialogPeriodValue)
@@ -60,28 +61,29 @@ class GoalDialog(
             // define the callback function for the positive button
             setPositiveButton(R.string.addCategoryAlertOk) { dialog, _ ->
                 if(isComplete()) {
-                    lifecycleScope.launch {
-                        val newGoalGroupId = (dao.getMaxGoalGroupId()?: 0L).toInt() + 1
-                        val newGoal = computeNewGoal(
-                            groupId = newGoalGroupId,
-                            type = if (goalDialogTypeSwitchView.isChecked)
-                                GoalType.SPECIFIC_CATEGORIES else
-                                    GoalType.TOTAL_TIME,
-                            timeFrame = Calendar.getInstance(),
-                            periodInPeriodUnits = goalDialogPeriodValueView.text.toString().toInt(),
-                            periodUnit = GoalPeriodUnit.values()[goalDialogPeriodUnitView.selectedItemPosition],
-                            target = goalDialogTargetHoursView.text.toString().toInt() * 3600 +
-                                    goalDialogTargetMinutesView.text.toString().toInt() * 60
-                        )
-                        val newGoalWithCategories = GoalWithCategories(
-                            goal = newGoal,
-                            categories = if (goalDialogTypeSwitchView.isChecked)
-                                selectedCategories else emptyList()
-                        )
+                    // first create the new description
+                    val newGoalDescription = GoalDescription(
+                        type = if (goalDialogTypeSwitchView.isChecked)
+                            GoalType.CATEGORY_SPECIFIC else
+                            GoalType.NON_SPECIFIC,
+                        oneTime = goalDialogOneTimeGoalView.isChecked,
+                        periodInPeriodUnits = goalDialogPeriodValueView.text.toString().toInt(),
+                        periodUnit = GoalPeriodUnit.values()[goalDialogPeriodUnitView.selectedItemPosition],
+                    )
 
-                        // and call the onCreate handler
-                        onCreateHandler(newGoalWithCategories)
-                    }
+                    // then create a object joining the description with any selected categories
+                    val newGoalDescriptionWithCategories = GoalDescriptionWithCategories(
+                        description = newGoalDescription,
+                        categories = if (goalDialogTypeSwitchView.isChecked)
+                            selectedCategories else emptyList()
+                    )
+
+                    // and call the onCreate handler, passing the selected target duration
+                    onCreateHandler(
+                        newGoalDescriptionWithCategories,
+                        goalDialogTargetHoursView.text.toString().toInt() * 3600 +
+                            goalDialogTargetMinutesView.text.toString().toInt() * 60
+                    )
                 }
                 dialog.dismiss()
             }
@@ -175,13 +177,13 @@ class GoalDialog(
 
     // the public function to show the dialog
     // if a goal is passed it will be edited
-    fun show(goal: Goal? = null) {
+    fun show(goalDescription: GoalDescription? = null) {
         alertDialog?.show()
 
         alertDialog?.also { dialog ->
             val positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
 
-            if(goal != null) {
+            if(goalDescription != null) {
                 goalDialogTitleView.setText(R.string.goalDialogTitleEdit)
                 positiveButton.setText(R.string.goalDialogOkEdit)
 

@@ -196,7 +196,7 @@ class ActiveSessionActivity : AppCompatActivity() {
             setPauseStopBtnVisibility(true)
 
             // when the session start, also update the goals
-            updateGoals(dao!!, lifecycleScope)
+//            updateGoals(dao!!, lifecycleScope)
         }
 
         // start a new section for the chosen category

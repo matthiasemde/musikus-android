@@ -9,9 +9,7 @@ import android.view.ViewGroup
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import de.practicetime.practicetime.entities.GoalPeriodUnit
-import de.practicetime.practicetime.entities.GoalType
-import de.practicetime.practicetime.entities.GoalWithCategories
+import de.practicetime.practicetime.entities.*
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -19,13 +17,13 @@ const val SECONDS_PER_HOUR = 60 * 60
 const val SECONDS_PER_DAY = 60 * 60 * 24
 
 class GoalAdapter(
-    private val goalsWithCategories: ArrayList<GoalWithCategories>,
+    private val goalInstancesWithDescriptionsWithCategories: ArrayList<GoalInstanceWithDescriptionWithCategories>,
     private val context: Activity,
     private val shortClickHandler: (goalId: Int, goalView: View) -> Unit = { _, _ -> },
     private val longClickHandler: (goalId: Int, goalView: View) -> Boolean = { _, _ -> false },
 ) : RecyclerView.Adapter<GoalAdapter.ViewHolder>() {
 
-    override fun getItemCount() = goalsWithCategories.size
+    override fun getItemCount() = goalInstancesWithDescriptionsWithCategories.size
 
     override fun onCreateViewHolder(viewGroup: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(viewGroup.context)
@@ -34,34 +32,35 @@ class GoalAdapter(
     }
 
     override fun onBindViewHolder(viewHolder: ViewHolder, position: Int) {
-        val (goal, categories) = goalsWithCategories[position]
+        val (instance, descriptionWithCategories) = goalInstancesWithDescriptionsWithCategories[position]
+        val (description, categories) = descriptionWithCategories
 
-        viewHolder.itemView.setOnClickListener { shortClickHandler(goal.id, it) }
+        viewHolder.itemView.setOnClickListener { shortClickHandler(description.id, it) }
         viewHolder.itemView.setOnLongClickListener {
             // tell the event handler we consumed the event
-            return@setOnLongClickListener longClickHandler(goal.id, it)
+            return@setOnLongClickListener longClickHandler(description.id, it)
         }
 
         val now = Date().time / 1000L
 
-        viewHolder.progressBarView.max = goal.target
-        viewHolder.progressBarView.progress = goal.progress
+        viewHolder.progressBarView.max = instance.target
+        viewHolder.progressBarView.progress = instance.progress
 
-        val targetHours = goal.target / 3600
-        val targetMinutes = goal.target % 3600 / 60
+        val targetHours = instance.target / 3600
+        val targetMinutes = instance.target % 3600 / 60
 
         val targetFormatted = (if(targetHours > 0) "$targetHours hours" else "") +
                 (if (targetHours > 0 && targetMinutes > 0) " and " else "") +
                 (if(targetMinutes > 0) "$targetMinutes mins" else "")
 
-        val periodFormatted = when(goal.periodUnit) {
-            GoalPeriodUnit.DAY -> "${goal.periodInPeriodUnits} days"
-            GoalPeriodUnit.WEEK -> "${goal.periodInPeriodUnits} weeks"
-            GoalPeriodUnit.MONTH -> "${goal.periodInPeriodUnits} months"
+        val periodFormatted = when(description.periodUnit) {
+            GoalPeriodUnit.DAY -> "${description.periodInPeriodUnits} days"
+            GoalPeriodUnit.WEEK -> "${description.periodInPeriodUnits} weeks"
+            GoalPeriodUnit.MONTH -> "${description.periodInPeriodUnits} months"
         }
 
         // if the goal tracks the total time, leave it as the primary color for now
-        if(goal.type == GoalType.TOTAL_TIME) {
+        if(description.type == GoalType.NON_SPECIFIC) {
             viewHolder.goalNameView.text = "Practice for $targetFormatted in $periodFormatted"
         } else {
             val categoryColors = context.resources.getIntArray(R.array.category_colors)
@@ -73,9 +72,9 @@ class GoalAdapter(
         }
 
         // set the percent text to the progress capped at 100 %
-        viewHolder.progressPercentView.text = "${minOf(goal.progress * 100 / goal.target, 100)}%"
+        viewHolder.progressPercentView.text = "${minOf(instance.progress * 100 / instance.target, 100)}%"
 
-        val remainingTime = (goal.startTimestamp + goal.periodInSeconds) - now
+        val remainingTime = (instance.startTimestamp + instance.periodInSeconds) - now
         // if time left is larger than a day, show the number of days
         when {
             remainingTime > SECONDS_PER_DAY -> {

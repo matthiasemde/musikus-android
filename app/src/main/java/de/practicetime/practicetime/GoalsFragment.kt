@@ -15,17 +15,19 @@ import androidx.room.Room
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import de.practicetime.practicetime.entities.*
 import kotlinx.coroutines.launch
+import java.util.*
 import kotlin.collections.ArrayList
 
 private var dao: PTDao? = null
 
 class GoalsFragment : Fragment(R.layout.fragment_goals) {
 
-    private val activeGoalsWithCategories = ArrayList<GoalWithCategories>()
+    private val activeGoalInstancesWithDescriptionWithCategories =
+        ArrayList<GoalInstanceWithDescriptionWithCategories>()
     private var goalAdapter : GoalAdapter? = null
 
     private var addGoalDialog: GoalDialog? = null
-    private var editGoalDialog: GoalDialog? = null
+//    private var editGoalDialog: GoalDialog? = null
     private var archiveGoalDialog: AlertDialog? = null
 
     private var goalsToolbar: androidx.appcompat.widget.Toolbar? = null
@@ -35,7 +37,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         openDatabase()
 
-        updateGoals(dao!!, lifecycleScope)
+//        updateGoals(dao!!, lifecycleScope)
 
         // wait for goals to be updated TODO find better solution
         Handler(Looper.getMainLooper()).postDelayed({  initGoalList() }, 500)
@@ -64,7 +66,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
 
     private fun initGoalList() {
         goalAdapter = GoalAdapter(
-            activeGoalsWithCategories,
+            activeGoalInstancesWithDescriptionWithCategories,
             context = requireActivity(),
             ::shortClickOnGoalHandler,
             ::longClickOnGoalHandler,
@@ -82,8 +84,8 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
 
         // load all active goals from the database and notify the adapter
         lifecycleScope.launch {
-            dao?.getActiveGoalsWithCategories()?.let {
-                activeGoalsWithCategories.addAll(it)
+            dao?.getActiveGoalInstancesWithDescriptionsWithCategories()?.let {
+                activeGoalInstancesWithDescriptionWithCategories.addAll(it)
                 goalAdapter?.notifyItemRangeInserted(0, it.size)
             }
         }
@@ -96,19 +98,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
             builder.apply {
                 setTitle(R.string.archiveGoalDialogTitle)
                 setPositiveButton(R.string.archiveDialogConfirm) { dialog, _ ->
-                    lifecycleScope.launch {
-                        selectedGoals.forEach { (goalId, _) ->
-                            dao?.archiveGoal(goalId)
-                            activeGoalsWithCategories.indexOfFirst { goalWithCategory ->
-                                goalWithCategory.goal.id == goalId
-                            }.also { index ->
-                                activeGoalsWithCategories.removeAt(index)
-                                goalAdapter?.notifyItemRemoved(index)
-                            }
-                        }
-                        Toast.makeText(context, R.string.archiveGoalToast, Toast.LENGTH_SHORT).show()
-                        resetToolbar()
-                    }
+                    archiveGoalHandler(selectedGoals.map { pair -> pair.first })
                     dialog.dismiss()
                 }
                 setNegativeButton(R.string.archiveDialogCancel) { dialog, _ ->
@@ -119,6 +109,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
         }
     }
 
+    // the handler for dealing with short clicks on goals
     private fun shortClickOnGoalHandler(goalId: Int, goalView: View) {
         if(selectedGoals.isNotEmpty()) {
             if(selectedGoals.remove(Pair(goalId, goalView))) {
@@ -183,29 +174,67 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
     }
 
     // the handler for creating new goals
-    private fun addGoalHandler(newGoalWithCategories: GoalWithCategories) {
+    private fun addGoalHandler(
+        newGoalDescriptionWithCategories: GoalDescriptionWithCategories,
+        firstTarget: Int,
+    ) {
         lifecycleScope.launch {
-            val newGoalId = dao?.insertGoalWithCategories(newGoalWithCategories)
-            if(newGoalId != null) {
+            val newGoalDescriptionId = dao?.insertGoalDescriptionWithCategories(
+                newGoalDescriptionWithCategories
+            )
+            if(newGoalDescriptionId != null) {
                 // we need to fetch the newly created goal to get the correct id
-                dao?.getGoalWithCategories(newGoalId)?.let { activeGoalsWithCategories.add(it) }
-                goalAdapter?.notifyItemInserted(activeGoalsWithCategories.size)
+                dao?.getGoalWithCategories(newGoalDescriptionId)?.let { d ->
+                    val newGoalInstanceId = dao?.insertGoalInstance(
+                        d.description.createInstance(Calendar.getInstance(), firstTarget)
+                    )?.toInt()
+                    if(newGoalInstanceId != null) {
+                        dao?.getGoalInstance(newGoalInstanceId)?.let { i ->
+                            activeGoalInstancesWithDescriptionWithCategories.add(
+                                GoalInstanceWithDescriptionWithCategories(
+                                    instance = i,
+                                    description = d,
+                                )
+                            )
+                            goalAdapter?.notifyItemInserted(
+                                activeGoalInstancesWithDescriptionWithCategories.size
+                            )
+                        }
+                    }
+                }
             }
         }
     }
 
-    // the handler for editing goals
-    private fun editGoalHandler(goalWithCategories: GoalWithCategories) {
+//    // the handler for editing goals
+//    private fun editGoalHandler(goalWithCategories: GoalWithCategories) {
+//        lifecycleScope.launch {
+//            dao?.insertGoalWithCategories(goalWithCategories) // TODO check if this creates duplicate entries in cross reference table
+//            activeGoalsWithCategories.indexOfFirst {
+//                    (g, _) -> g.id == goalWithCategories.goalDescription.id
+//            }.also { i ->
+//                assert(i != -1)
+//                activeGoalsWithCategories[i] = goalWithCategories
+//                goalAdapter?.notifyItemChanged(i)
+//            }
+//        }
+//    }
+
+    // the handler for archiving goals
+    private fun archiveGoalHandler(goalDescriptionIds: List<Int>) {
         lifecycleScope.launch {
-            dao?.insertGoalWithCategories(goalWithCategories) // TODO check if this creates duplicate entries in cross reference table
-            activeGoalsWithCategories.indexOfFirst {
-                    (g, _) -> g.id == goalWithCategories.goal.id
-            }.also { i ->
-                assert(i != -1)
-                activeGoalsWithCategories[i] = goalWithCategories
-                goalAdapter?.notifyItemChanged(i)
+            dao?.archiveGoals(goalDescriptionIds)
+        }
+        goalDescriptionIds.forEach { goalDescriptionId ->
+            activeGoalInstancesWithDescriptionWithCategories.indexOfFirst{ (_, d) ->
+                d.description.id == goalDescriptionId
+            }.also { index ->
+                activeGoalInstancesWithDescriptionWithCategories.removeAt(index)
+                goalAdapter?.notifyItemRemoved(index)
             }
         }
+        Toast.makeText(context, R.string.archiveGoalToast, Toast.LENGTH_SHORT).show()
+        resetToolbar()
     }
 
     private fun openDatabase() {

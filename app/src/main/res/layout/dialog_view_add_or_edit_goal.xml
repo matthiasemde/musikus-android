@@ -97,12 +97,12 @@
         android:clickable="false" />
 
     <androidx.appcompat.widget.SwitchCompat
-        android:id="@+id/goalDialogRepeatable"
+        android:id="@+id/goalDialogOneTimeGoal"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="12dp"
         android:minHeight="48dp"
-        android:text="@string/goalDialogRepeatable"
+        android:text="@string/goalDialogOneTimeGoal"
         android:textSize="16sp"
         app:switchPadding="5dp" />
 
