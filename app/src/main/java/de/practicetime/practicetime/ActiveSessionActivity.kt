@@ -18,26 +18,21 @@ import android.view.ViewGroup
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.GridLayoutManager
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import androidx.recyclerview.widget.SimpleItemAnimator
+import androidx.recyclerview.widget.*
 import androidx.room.Room
 import androidx.transition.Fade
 import androidx.transition.TransitionManager
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+import com.google.android.material.snackbar.Snackbar
 import de.practicetime.practicetime.entities.Category
 import de.practicetime.practicetime.entities.PracticeSection
 import de.practicetime.practicetime.entities.PracticeSession
 import kotlinx.coroutines.launch
 import java.util.*
 import kotlin.collections.ArrayList
-
-
-
-
 
 class ActiveSessionActivity : AppCompatActivity() {
 
@@ -50,10 +45,7 @@ class ActiveSessionActivity : AppCompatActivity() {
 
     private lateinit var sectionsListAdapter: SectionsListAdapter
 
-    private var listItems = ArrayList<String>()
-
     private lateinit var mService: SessionForegroundService
-
     private var mBound: Boolean = false
 
     /** Defines callbacks for service binding, passed to bindService()  */
@@ -116,7 +108,6 @@ class ActiveSessionActivity : AppCompatActivity() {
             // adapt UI to changes
             adaptUIPausedState(mService.paused)
         }
-
 
         // call onBackPressed when upper left Button is pressed to respect custom animation
         findViewById<ImageButton>(R.id.btn_back).setOnClickListener {
@@ -198,6 +189,11 @@ class ActiveSessionActivity : AppCompatActivity() {
 //        (findViewById<ViewGroup>(R.id.ll_active_session)).layoutTransition.enableTransitionType(LayoutTransition.CHANGING)
         sectionsRecyclerView.layoutManager = layoutManager
         sectionsRecyclerView.adapter = sectionsListAdapter
+
+        ItemTouchHelper(object : ItemTouchHelper.SimpleCallback( 0, ItemTouchHelper.LEFT) {
+            override fun onMove(v: RecyclerView, h: RecyclerView.ViewHolder, t: RecyclerView.ViewHolder) = false
+            override fun onSwiped(h: RecyclerView.ViewHolder, dir: Int) = sectionsListAdapter.removeAt(h.absoluteAdapterPosition)
+        }).attachToRecyclerView(sectionsRecyclerView)
     }
 
     // the routine for handling presses to category buttons
@@ -552,7 +548,7 @@ class ActiveSessionActivity : AppCompatActivity() {
             // calculate duration of each session (minus pauses)
             var sectionDuration: Int
             practiceSections[position].apply {
-                sectionDuration = (first.duration?:0).minus(second)
+                sectionDuration = (first.duration ?: 0).minus(second)
             }
 
             // contents of the view with that element
@@ -561,7 +557,10 @@ class ActiveSessionActivity : AppCompatActivity() {
 
             if (position == practiceSections.size - 1) {
                 viewHolder.sectionName.setTypeface(viewHolder.sectionName.typeface, Typeface.BOLD);
-                viewHolder.sectionDuration.setTypeface(viewHolder.sectionName.typeface, Typeface.BOLD);
+                viewHolder.sectionDuration.setTypeface(
+                    viewHolder.sectionName.typeface,
+                    Typeface.BOLD
+                );
 
                 val typedValue = TypedValue()
                 theme.resolveAttribute(R.attr.colorPrimary, typedValue, true)
@@ -577,7 +576,45 @@ class ActiveSessionActivity : AppCompatActivity() {
 
         // Return the size of your dataset (invoked by the layout manager)
         override fun getItemCount() = practiceSections.size
+
+        /**
+         * called when section is removed by swipe. Remove it from the list and notify adapter
+         * If only one item left, don't allow removing
+         */
+        fun removeAt(index: Int) {
+            Log.d("Tga", "Index: $index")
+            if (index != practiceSections.size-1) {
+                val elem = practiceSections[index]
+                practiceSections.removeAt(index)   // items is a MutableList
+                notifyItemRemoved(index)
+
+                Snackbar.make(
+                    findViewById(R.id.coordinator_layout_active_session),
+                    getString(R.string.item_removed),
+                    Snackbar.LENGTH_LONG
+                ).apply {
+                    setAction(R.string.undo) {
+                        practiceSections.add(index, elem)
+                        notifyItemInserted(index)
+                        this.dismiss()
+                    }
+                    anchorView = findViewById<ConstraintLayout>(R.id.constraintLayout_Bottom_btn)
+                    show()
+                }
+            } else {
+                notifyDataSetChanged()
+                Snackbar.make(
+                    findViewById(R.id.coordinator_layout_active_session),
+                    getString(R.string.cannot_remove_item),
+                    Snackbar.LENGTH_LONG
+                ).apply {
+                    anchorView = findViewById<ConstraintLayout>(R.id.constraintLayout_Bottom_btn)
+                    show()
+                }
+            }
+        }
     }
+
 
     private fun getTimeString(durationSecs: Int) : String {
         return "%02d:%02d:%02d".format(

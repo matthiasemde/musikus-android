@@ -67,5 +67,8 @@
     <string name="add_goal">Goal</string>
     <string name="add_category">Category</string>
     <string name="selected">selected</string>
+    <string name="item_removed">Section removed from session</string>
+    <string name="undo">undo</string>
+    <string name="cannot_remove_item">current section cannot be removed!</string>
     <string name="progressUpdateTitle">Goal progress</string>
 </resources>
