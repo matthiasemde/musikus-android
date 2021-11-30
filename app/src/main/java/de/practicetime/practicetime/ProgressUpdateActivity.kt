@@ -4,23 +4,23 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.view.animation.Animation
+import android.view.animation.Transformation
 import android.widget.Button
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
-import kotlinx.coroutines.launch
-import java.util.*
-import kotlin.collections.ArrayList
-import android.view.animation.Animation
-import android.view.animation.Transformation
-import androidx.recyclerview.widget.DefaultItemAnimator
 import de.practicetime.practicetime.entities.GoalInstanceWithDescriptionWithCategories
 import de.practicetime.practicetime.entities.GoalProgressType
 import de.practicetime.practicetime.entities.GoalType
+import kotlinx.coroutines.launch
+import java.util.*
+import kotlin.collections.ArrayList
 
 const val PROGRESS_UPDATED = 1337
 
@@ -217,7 +217,7 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
             when {
                 progressHours > 0 -> progressIndicator.text = String.format("%02d:%02d", progressHours, progressMinutes)
                 progressMinutes > 0 -> progressIndicator.text = String.format("%d min", progressMinutes)
-                else -> progressIndicator.text = "<1m"
+                else -> progressIndicator.text = "< 1 min"
             }
         }
     }

@@ -142,7 +142,7 @@
                 android:layout_height="match_parent"
                 android:layout_marginStart="40dp"
                 android:layout_marginEnd="16dp"
-                android:layout_marginBottom="36dp">
+                android:layout_marginBottom="20dp">
 
                 <!--Space to align exactly with the beginning of the text defined in view_session_summary_section.xml-->
 <!--                <Space-->
@@ -168,13 +168,13 @@
 
             </LinearLayout>
 
-            <View
-                android:id="@+id/divider"
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:layout_marginStart="16dp"
-                android:layout_marginEnd="16dp"
-                android:background="?android:attr/listDivider" />
+<!--            <View-->
+<!--                android:id="@+id/divider"-->
+<!--                android:layout_width="match_parent"-->
+<!--                android:layout_height="1dp"-->
+<!--                android:layout_marginStart="29dp"-->
+<!--                android:layout_marginEnd="29dp"-->
+<!--                android:background="?android:attr/listDivider" />-->
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -186,9 +186,17 @@
                     android:id="@+id/sectionList"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:paddingStart="13dp"
                     android:layout_weight="1"
                     android:nestedScrollingEnabled="false" />
 
+
+                <View
+                    android:id="@+id/commentDivider"
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginTop="25dp"
+                    android:background="?android:attr/listDivider" />
 
                 <TextView
                     android:id="@+id/commentLabel"

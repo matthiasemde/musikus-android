@@ -100,6 +100,7 @@ class SessionSummaryAdapter(
             private val ratingBar: RatingBar = view.findViewById(R.id.ratingBar)
             private val commentField: TextView = view.findViewById(R.id.commentField)
             private val commentLabel: TextView = view.findViewById(R.id.commentLabel)
+            private val commentDivider: View = view.findViewById(R.id.commentDivider)
 
             private val sectionsWithCategoriesList = ArrayList<SectionWithCategory>()
 
@@ -217,6 +218,7 @@ class SessionSummaryAdapter(
                 if (session.comment.isNullOrEmpty()) {
                     commentField.visibility = View.GONE
                     commentLabel.visibility = View.GONE
+                    commentDivider.visibility = View.GONE
                 } else {
                     //set content of the comment field
                     commentField.text = session.comment

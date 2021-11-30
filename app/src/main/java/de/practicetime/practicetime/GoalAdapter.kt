@@ -5,6 +5,7 @@ import android.content.res.ColorStateList
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
@@ -26,7 +27,7 @@ class GoalAdapter(
 
     override fun onCreateViewHolder(viewGroup: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(viewGroup.context)
-            .inflate(R.layout.view_goal_item_new, viewGroup, false)
+            .inflate(R.layout.view_goal_item, viewGroup, false)
         return ViewHolder(view)
     }
 
@@ -49,17 +50,14 @@ class GoalAdapter(
             return@setOnLongClickListener longClickHandler(description.id, it)
         }
 
-
         // Goal Title
         if(description.type == GoalType.NON_SPECIFIC) {
             viewHolder.goalNameView.text = context.getString(R.string.goal_name_non_specific)
         } else {
             viewHolder.goalNameView.apply {
                 text = categories.first().name
-//                setTextColor(categoryColor)
             }
         }
-
 
         // Goal Description
         val targetHours = instance.target / 3600
@@ -91,15 +89,16 @@ class GoalAdapter(
             periodFormatted
         )
 
-
         // ProgressBar
         viewHolder.progressBarView.max = instance.target
         viewHolder.progressBarView.progress = instance.progress
 
-        // tint progressbar and progress TextView
+        // tint progressbar
         if(description.type != GoalType.NON_SPECIFIC) {
             viewHolder.progressBarView.progressTintList = categoryColor
-//            viewHolder.goalProgressIndicatorView.setTextColor(categoryColor)
+            viewHolder.sectionColorView.backgroundTintList = categoryColor
+        } else {
+            viewHolder.sectionColorView.visibility = View.GONE
         }
         // adapt X position for tv indicating progress. Do it asynchronously otherwise UI dimensions will be 0
         viewHolder.progressBarView.post {
@@ -121,16 +120,13 @@ class GoalAdapter(
                 viewHolder.goalProgressIndicatorView.text = String.format("%02d:%02d", progressHours, progressMinutes)
             progressMinutes > 0 ->
                 viewHolder.goalProgressIndicatorView.text = String.format("%d min", progressMinutes)
-            else -> viewHolder.goalProgressIndicatorView.text = "<1m"
+            else -> viewHolder.goalProgressIndicatorView.text = "< 1 min"
         }
 
-        // Percentage
+        // Percentage TODO remove??!
         // set the percent text to the progress capped at 100 %
         viewHolder.progressPercentView.apply {
             text = "${minOf(instance.progress * 100 / instance.target, 100)}%"
-//            if(description.type != GoalType.NON_SPECIFIC) {
-//                setTextColor(categoryColor)
-//            }
         }
 
 
@@ -172,6 +168,6 @@ class GoalAdapter(
         val goalDescriptionView: TextView = view.findViewById(R.id.goalDescription)
         val remainingTimeView: Chip = view.findViewById(R.id.goalRemainingTime)
         val goalProgressIndicatorView: TextView = view.findViewById(R.id.goalProgressIndicator)
-
+        val sectionColorView: ImageView = view.findViewById(R.id.sectionColor)
     }
 }

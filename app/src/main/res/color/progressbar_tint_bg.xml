@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+  Tint the progressbar background depending on theme: overlay colorOnSurface with alpha
+    Light Theme: make it a bit darker than surface
+    Dark Theme: make it a bit lighter than surface
+  -->
+
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:color="?attr/colorOnSurface"
+        android:alpha="0.08" />
+</selector>

@@ -1,18 +1,21 @@
 package de.practicetime.practicetime
 
 import android.app.AlertDialog
-import android.content.res.ColorStateList
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
+import android.util.TypedValue
 import android.view.View
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
+import androidx.cardview.widget.CardView
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
+import com.google.android.material.appbar.CollapsingToolbarLayout
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
 import de.practicetime.practicetime.entities.*
 import kotlinx.coroutines.launch
@@ -20,6 +23,7 @@ import java.util.*
 import kotlin.collections.ArrayList
 
 private var dao: PTDao? = null
+private var savedCardElevation = 0f
 
 class GoalsFragment : Fragment(R.layout.fragment_goals) {
 
@@ -32,8 +36,24 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
     private var archiveGoalDialog: AlertDialog? = null
 
     private var goalsToolbar: androidx.appcompat.widget.Toolbar? = null
+    private var goalsCollapsingToolbarLayout: CollapsingToolbarLayout? = null
 
     private val selectedGoals = ArrayList<Pair<Int, View>>()
+
+    // catch the back press for the case where the selection should be reverted
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        activity?.onBackPressedDispatcher?.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                if(selectedGoals.isNotEmpty()){
+                    resetToolbar()
+                }else{
+                    isEnabled = false
+                    activity?.onBackPressed()
+                }
+            }
+        })
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         openDatabase()
@@ -69,6 +89,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
         initArchiveGoalDialog()
 
         goalsToolbar = view.findViewById(R.id.goalsToolbar)
+        goalsCollapsingToolbarLayout = view.findViewById(R.id.collapsing_toolbar_layout)
     }
 
     private fun initGoalList() {
@@ -103,7 +124,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
         archiveGoalDialog = requireActivity().let {
             val builder = AlertDialog.Builder(it)
             builder.apply {
-                setTitle(R.string.archiveGoalDialogTitle)
+                setMessage(R.string.archiveGoalDialogTitle)
                 setPositiveButton(R.string.archiveDialogConfirm) { dialog, _ ->
                     archiveGoalHandler(selectedGoals.map { pair -> pair.first })
                     dialog.dismiss()
@@ -120,7 +141,8 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
     private fun shortClickOnGoalHandler(goalId: Int, goalView: View) {
         if(selectedGoals.isNotEmpty()) {
             if(selectedGoals.remove(Pair(goalId, goalView))) {
-                goalView.backgroundTintList = null
+                setCardSelected(false, goalView)
+
                 if(selectedGoals.isEmpty()) {
                     resetToolbar()
                 }
@@ -153,15 +175,18 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
                     return@setOnMenuItemClickListener true
                 }
             }
+            // change the background color of the App Bar
+            val typedValue = TypedValue()
+            requireActivity().theme.resolveAttribute(R.attr.colorSurface, typedValue, true)
+            var color = typedValue.data
+            goalsToolbar?.setBackgroundColor(color)
         }
 
         // now add the newly selected goal to the list...
         selectedGoals.add(Pair(goalId, goalView))
 
-        // and tint its foreground to mark it as selected
-        goalView.backgroundTintList = ColorStateList.valueOf(
-            requireActivity().resources.getColor(R.color.redTransparent, requireActivity().theme)
-        )
+        setCardSelected(true, goalView)
+
 
         // we consumed the event so we return true
         return true
@@ -173,11 +198,33 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
             menu?.clear()
             inflateMenu(R.menu.goals_toolbar_menu_base)
             navigationIcon = null
+            setBackgroundColor(ContextCompat.getColor(context, android.R.color.transparent))
         }
         for ((_, view) in selectedGoals) {
-            view.foregroundTintList = null
+            setCardSelected(false, view)
         }
         selectedGoals.clear()
+    }
+
+    private fun setCardSelected(selected: Boolean, view: View) {
+        (view as CardView).apply {
+            isSelected = selected // set selected so that background changes
+            if (!selected) {
+                // restore card Elevation
+                cardElevation = savedCardElevation
+                // re-enable ripple effect
+                foreground = with(TypedValue()) {
+                    context.theme.resolveAttribute(R.attr.selectableItemBackground, this, true)
+                    ContextCompat.getDrawable(context, resourceId)
+                }
+            } else {
+                // remove Card Elevation because in Light theme it would look ugly
+                savedCardElevation = cardElevation
+                cardElevation = 0f
+                // remove ripple effect
+                foreground = null
+            }
+        }
     }
 
     // the handler for creating new goals

@@ -40,9 +40,9 @@
     <string name="topToolBarDelete">Delete</string>
     <string name="topToolBarArchive">Archive</string>
     <string name="archiveGoalDialogTitle">Archive selected goal(s)?</string>
-    <string name="archiveGoalToast">Goal(s) archieved</string>
+    <string name="archiveGoalToast">Goal(s) archived</string>
     <string name="archiveCategoryDialogTitle">Archive category and associated goals?</string>
-    <string name="archiveCategoryToast">Categorie(s) archieved</string>
+    <string name="archiveCategoryToast">Categorie(s) archived</string>
     <string name="archiveDialogConfirm">Archive</string>
     <string name="archiveDialogCancel">Cancel</string>
     <string name="min_left">%1$d minutes left</string>
@@ -58,4 +58,5 @@
     <string name="goal_description_complete">%1$s%2$s%3$s</string>
     <string name="add_goal">Goal</string>
     <string name="add_category">Category</string>
+    <string name="selected">selected</string>
 </resources>
