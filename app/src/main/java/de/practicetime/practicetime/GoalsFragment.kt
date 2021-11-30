@@ -64,7 +64,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
         Handler(Looper.getMainLooper()).postDelayed({
             try {
                 initGoalList()
-            } catch (e: IllegalStateException) {
+            } catch (e: Exception) {
                 return@postDelayed
             }
         }, 500)

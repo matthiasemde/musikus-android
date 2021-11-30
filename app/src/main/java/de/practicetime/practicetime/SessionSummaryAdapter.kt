@@ -87,7 +87,7 @@ class SessionSummaryAdapter(
     sealed class ViewHolder(view: View) :
         RecyclerView.ViewHolder(view) {
 
-        class ItemViewHolder(view: View, context: Context) : ViewHolder(view) {
+        class ItemViewHolder(view: View, private val context: Context) : ViewHolder(view) {
             private val summaryDayLayout: LinearLayout = view.findViewById(R.id.summaryDayLayout)
             private val summaryDate: TextView = view.findViewById(R.id.summaryDate)
             private val summaryDayDuration: TextView = view.findViewById(R.id.summaryDayDuration)
@@ -105,7 +105,7 @@ class SessionSummaryAdapter(
             private val sectionsWithCategoriesList = ArrayList<SectionWithCategory>()
 
             // define the time and date format
-            private val timeFormat: SimpleDateFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+            private val timeFormat: SimpleDateFormat = SimpleDateFormat("H:mm", Locale.getDefault())
             private val dateFormat: SimpleDateFormat = SimpleDateFormat("E dd.MM.yyyy", Locale.getDefault())
 
             init {
@@ -191,13 +191,7 @@ class SessionSummaryAdapter(
                 val startTimestamp = sectionsWithCategories.first().section.timestamp * 1000L
 
                 // set the time field accordingly
-                (timeFormat.format(Date(startTimestamp)) +
-                        " - " +
-                        timeFormat.format(
-                            Date(startTimestamp + (breakDuration + practiceDuration) * 1000L)
-                        )).also {
-                    summaryTimeView.text = it
-                }
+                summaryTimeView.text = timeFormat.format(Date(startTimestamp))
 
                 // show the practice duration in the practice duration field
                 practiceDurationView.text = getTimeString(practiceDuration)

@@ -6,7 +6,7 @@
         <item name="colorPrimaryVariant">@color/teal_dark</item>
         <item name="colorOnPrimary">@color/white</item>
         <!-- Secondary brand color. -->
-        <item name="colorSecondary">@color/yellow</item>
+        <item name="colorSecondary">@color/md_yellow_600</item>
         <item name="colorSecondaryVariant">@color/yellow_dark</item>
         <item name="colorOnSecondary">@color/black</item>
         <item name="colorSurface">@color/white</item>

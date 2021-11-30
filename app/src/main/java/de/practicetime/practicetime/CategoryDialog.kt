@@ -113,6 +113,7 @@ class CategoryDialog (
 
         // finally, we use the alert dialog builder to create the alertDialog
         alertDialog = alertDialogBuilder.create()
+        alertDialog?.window?.setBackgroundDrawable(context.getDrawable(R.drawable.dialog_background))
     }
 
     // the dialog is complete if a name is entered and a color is selected

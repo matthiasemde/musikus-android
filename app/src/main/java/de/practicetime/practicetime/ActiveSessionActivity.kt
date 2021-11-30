@@ -161,7 +161,10 @@ class ActiveSessionActivity : AppCompatActivity() {
             dao?.getActiveCategories()?.let { activeCategories.addAll(it.reversed())
                 categoryAdapter.notifyItemRangeInserted(0, it.size)
             }
-            categoryList.scrollToPosition(0)
+            categoryList.apply {
+                scrollToPosition(0)
+                visibility = View.VISIBLE
+            }
         }
 
         // the handler for creating new categories

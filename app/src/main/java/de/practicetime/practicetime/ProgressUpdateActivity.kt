@@ -44,7 +44,7 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
         Handler(Looper.getMainLooper()).postDelayed({
             try {
                 parseLatestSession()
-            } catch (e: IllegalStateException) {
+            } catch (e: Exception) {
                 return@postDelayed
             }
         }, 200)

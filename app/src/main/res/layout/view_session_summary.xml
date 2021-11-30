@@ -79,12 +79,12 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:textSize="14sp"
-                        tools:text="13:13 - 16:23" />
+                        tools:text="Started at 13:13" />
 
                     <Space
                         android:layout_width="0dp"
-                        android:layout_weight="1"
-                        android:layout_height="wrap_content" />
+                        android:layout_height="match_parent"
+                        android:layout_weight="1" />
 
                     <RatingBar
                         android:id="@+id/ratingBar"

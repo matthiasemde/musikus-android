@@ -1,11 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
-<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.appcompat.widget.LinearLayoutCompat
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/text"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:gravity="center_vertical"
-    android:lines="1"
-    android:paddingEnd="0dp"
-    android:ellipsize="end"
-    android:textSize="16sp"/>
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="4dp">
+
+    <ImageView
+        android:id="@+id/categorySpinnerColor"
+        android:layout_width="6dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="center"
+        android:background="@drawable/color_rect_cat_indicator"
+        android:layout_marginEnd="5dp" />
+    <TextView
+        android:id="@+id/categorySpinnerName"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:lines="1"
+        android:ellipsize="end"
+        android:textSize="18sp"
+        android:paddingStart="4dp"
+        android:paddingEnd="4dp"
+        tools:text="Category"/>
+
+</androidx.appcompat.widget.LinearLayoutCompat>
