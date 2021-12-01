@@ -1,18 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
-        android:id="@+id/libraryFragment"
-        android:enabled="true"
-        android:icon="@drawable/ic_library"
-        android:title="@string/navigationLibraryTitle" />
-    <item
         android:id="@+id/sessionListFragment"
         android:enabled="true"
         android:icon="@drawable/ic_sessions"
-        android:title="Sessions"/>
+        android:title="@string/navigationSessionsTitle"/>
     <item
         android:id="@+id/goalsFragment"
         android:enabled="true"
         android:icon="@drawable/ic_goals"
-        android:title="Goals"/>
+        android:title="@string/navigationGoalsTitle"/>
+    <item
+        android:id="@+id/statisticsFragment"
+        android:enabled="true"
+        android:icon="@drawable/ic_bar_chart"
+        android:title="@string/navigationStatisticsTitle"/>
+    <item
+        android:id="@+id/libraryFragment"
+        android:enabled="true"
+        android:icon="@drawable/ic_library"
+        android:title="@string/navigationLibraryTitle" />
 </menu>

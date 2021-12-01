@@ -11,13 +11,18 @@
         android:label="fragment_session"
         tools:layout="@layout/fragment_sessions_list" />
     <fragment
-        android:id="@+id/libraryFragment"
-        android:name="de.practicetime.practicetime.LibraryFragment"
-        android:label="Library"
-        tools:layout="@layout/fragment_library" />
-    <fragment
         android:id="@+id/goalsFragment"
         android:name="de.practicetime.practicetime.GoalsFragment"
         android:label="fragment_goals"
         tools:layout="@layout/fragment_goals" />
+    <fragment
+        android:id="@+id/statisticsFragment"
+        android:name="de.practicetime.practicetime.StatisticsFragment"
+        android:label="Library"
+        tools:layout="@layout/fragment_statistics" />
+    <fragment
+        android:id="@+id/libraryFragment"
+        android:name="de.practicetime.practicetime.LibraryFragment"
+        android:label="Library"
+        tools:layout="@layout/fragment_library" />
 </navigation>
