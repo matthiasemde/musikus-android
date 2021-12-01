@@ -1,24 +1,14 @@
 package de.practicetime.practicetime
 
 import android.app.Activity
-import android.content.Context
 import android.content.res.ColorStateList
-import android.graphics.Color
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.recyclerview.widget.RecyclerView
-import androidx.room.Dao
 import android.view.ViewGroup.LayoutParams
 import android.widget.*
-import androidx.appcompat.app.AlertDialog
-import androidx.core.content.ContextCompat
-import androidx.core.widget.addTextChangedListener
-import androidx.lifecycle.LifecycleCoroutineScope
-import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.RecyclerView
 import de.practicetime.practicetime.entities.Category
-import kotlinx.coroutines.launch
 
 
 /**

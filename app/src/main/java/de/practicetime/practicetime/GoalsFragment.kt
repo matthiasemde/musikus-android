@@ -193,7 +193,6 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
 
         setCardSelected(true, goalView)
 
-
         // we consumed the event so we return true
         return true
     }

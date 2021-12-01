@@ -1,15 +1,18 @@
 package de.practicetime.practicetime
 
 import android.app.AlertDialog
-import android.content.res.ColorStateList
 import android.os.Bundle
+import android.util.TypedValue
 import android.view.View
+import android.widget.Button
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
+import com.google.android.material.appbar.CollapsingToolbarLayout
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
 import de.practicetime.practicetime.entities.Category
 import kotlinx.coroutines.launch
@@ -27,6 +30,7 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
     private var archiveCategoryDialog: AlertDialog? = null
 
     private var libraryToolbar: androidx.appcompat.widget.Toolbar? = null
+    private var libraryCollapsingToolbarLayout: CollapsingToolbarLayout? = null
 
     private val selectedCategories = ArrayList<Pair<Int, View>>()
 
@@ -50,6 +54,7 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
         initArchiveCategoryDialog()
 
         libraryToolbar = view.findViewById(R.id.libraryToolbar)
+        libraryCollapsingToolbarLayout = view.findViewById(R.id.library_collapsing_toolbar_layout)
     }
 
     private fun initCategoryList() {
@@ -112,14 +117,14 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
         // add or remove the clicked category from the selection
         if(selectedCategories.isNotEmpty()) {
             if(selectedCategories.remove(Pair(category.id, categoryView))) {
-                categoryView.foregroundTintList = null
+                setCategorySelected(false, categoryView)
                 if(selectedCategories.isEmpty()) {
                     resetToolbar()
                 }
             } else {
                 longClickOnCategoryHandler(category.id, categoryView)
             }
-        // if no selection is in progress show the dit dialog with the category
+        // if no selection is in progress show the edit dialog with the category
         } else {
             editCategoryDialog?.show(category)
         }
@@ -148,15 +153,18 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
                     return@setOnMenuItemClickListener true
                 }
             }
+            // change the background color of the App Bar
+            val typedValue = TypedValue()
+            requireActivity().theme.resolveAttribute(R.attr.colorSurface, typedValue, true)
+            var color = typedValue.data
+            libraryCollapsingToolbarLayout?.setBackgroundColor(color)
         }
 
         // now add the newly selected category to the list...
         selectedCategories.add(Pair(categoryId, categoryView))
 
         // and tint its foreground to mark it as selected
-        categoryView.foregroundTintList = ColorStateList.valueOf(
-            requireActivity().resources.getColor(R.color.redTransparent, requireActivity().theme)
-        )
+        setCategorySelected(true, categoryView)
 
         // we consumed the event so we return true
         return true
@@ -169,10 +177,17 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
             inflateMenu(R.menu.library_toolbar_menu_base)
             navigationIcon = null
         }
+        libraryCollapsingToolbarLayout?.apply {
+            setBackgroundColor(ContextCompat.getColor(context, android.R.color.transparent))
+        }
         for ((_, view) in selectedCategories) {
-            view.foregroundTintList = null
+            setCategorySelected(false, view)
         }
         selectedCategories.clear()
+    }
+
+    private fun setCategorySelected(selected: Boolean, view: View) {
+        (view as Button).isSelected = selected // set selected so that background changes
     }
 
     // the handler for creating new categories
