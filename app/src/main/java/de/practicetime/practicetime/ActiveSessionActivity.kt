@@ -405,7 +405,7 @@ class ActiveSessionActivity : AppCompatActivity() {
     private fun initDiscardSessionDialog() {
         val builder = AlertDialog.Builder(this)
         builder.apply {
-            setTitle(R.string.discard_session_dialog_title)
+            setMessage(R.string.discard_session_dialog_title)
             setPositiveButton(R.string.discard_session_dialog_ok) { dialog, _ ->
                 // clear the sectionBuffer so that runnable dies
                 mService.sectionBuffer.clear()
