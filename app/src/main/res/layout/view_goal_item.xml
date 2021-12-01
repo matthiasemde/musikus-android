@@ -12,7 +12,7 @@
     android:layout_marginEnd="16dp"
     app:cardElevation="4dp"
     app:cardCornerRadius="10dp"
-    app:cardBackgroundColor="@color/color_cardview_goals"
+    app:cardBackgroundColor="?attr/colorSurface"
     android:foreground="?android:attr/selectableItemBackground"
     android:clickable="true">
 
@@ -20,10 +20,10 @@
         android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:foreground="@drawable/foreground_simple_overlay"
         android:foregroundTintMode="src_over"
         android:padding="16dp"
-        android:clipToPadding="false">
+        android:clipToPadding="false"
+        android:foreground="@color/color_cardview_goals">
 
 
         <ImageView
@@ -112,21 +112,6 @@
             app:layout_constraintStart_toStartOf="@id/goalProgressBar"
             app:layout_constraintEnd_toEndOf="@id/goalProgressBar"
             app:layout_constraintTop_toTopOf="@id/goalProgressBar"
-            app:layout_constraintBottom_toBottomOf="@id/goalProgressBar"/>
-
-        <TextView
-            android:id="@+id/goalProgressPercent"
-            android:layout_width="30dp"
-            android:gravity="center"
-            android:layout_height="wrap_content"
-            android:textSize="15sp"
-            android:textStyle="bold"
-            tools:text="50%"
-            android:visibility="gone"
-            android:textColor="@color/black"
-            app:layout_constraintStart_toStartOf="@id/goalProgressBar"
-            app:layout_constraintTop_toTopOf="@id/goalProgressBar"
-            app:layout_constraintEnd_toEndOf="@id/goalProgressBar"
             app:layout_constraintBottom_toBottomOf="@id/goalProgressBar"/>
 
         </androidx.constraintlayout.widget.ConstraintLayout>

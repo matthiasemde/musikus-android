@@ -5,5 +5,5 @@
         android:color="?attr/colorOnSurface"
         android:alpha="0.25" />
     <!-- default -->
-    <item android:color="?attr/colorSurface" />
+    <item android:color="@android:color/transparent" />
 </selector>

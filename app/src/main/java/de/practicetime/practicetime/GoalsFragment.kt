@@ -185,7 +185,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
             val typedValue = TypedValue()
             requireActivity().theme.resolveAttribute(R.attr.colorSurface, typedValue, true)
             var color = typedValue.data
-            goalsToolbar?.setBackgroundColor(color)
+            goalsCollapsingToolbarLayout?.setBackgroundColor(color)
         }
 
         // now add the newly selected goal to the list...
@@ -204,6 +204,8 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
             menu?.clear()
             inflateMenu(R.menu.goals_toolbar_menu_base)
             navigationIcon = null
+        }
+        goalsCollapsingToolbarLayout?.apply {
             setBackgroundColor(ContextCompat.getColor(context, android.R.color.transparent))
         }
         for ((_, view) in selectedGoals) {

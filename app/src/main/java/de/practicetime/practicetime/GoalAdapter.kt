@@ -43,18 +43,19 @@ class GoalAdapter(
             )
         }
 
-        // set Click listener
+        /** set Click listener */
         viewHolder.itemView.setOnClickListener {
             shortClickHandler(GoalInstanceWithDescription(
                 instance = instance,
                 description = description
-            ), it)}
+            ), it)
+        }
         viewHolder.itemView.setOnLongClickListener {
             // tell the event handler we consumed the event
             return@setOnLongClickListener longClickHandler(description.id, it)
         }
 
-        // Goal Title
+        /** Goal Title */
         if(description.type == GoalType.NON_SPECIFIC) {
             viewHolder.goalNameView.text = context.getString(R.string.goal_name_non_specific)
         } else {
@@ -63,7 +64,7 @@ class GoalAdapter(
             }
         }
 
-        // Goal Description
+        /** Goal Description */
         val targetHours = instance.target / 3600
         val targetMinutes = instance.target % 3600 / 60
         var targetHoursString = ""
@@ -93,7 +94,7 @@ class GoalAdapter(
             periodFormatted
         )
 
-        // ProgressBar
+        /** ProgressBar */
         viewHolder.progressBarView.max = instance.target
         viewHolder.progressBarView.progress = instance.progress
 
@@ -116,7 +117,7 @@ class GoalAdapter(
             }
         }
 
-        // progress Indicator Text
+        /** progress Indicator Text */
         val progressHours = instance.progress / 3600
         val progressMinutes = instance.progress % 3600 / 60
         when {
@@ -126,13 +127,6 @@ class GoalAdapter(
                 viewHolder.goalProgressIndicatorView.text = String.format("%d min", progressMinutes)
             else -> viewHolder.goalProgressIndicatorView.text = "< 1 min"
         }
-
-        // Percentage TODO remove??!
-        // set the percent text to the progress capped at 100 %
-        viewHolder.progressPercentView.apply {
-            text = "${minOf(instance.progress * 100 / instance.target, 100)}%"
-        }
-
 
         // remaining time
         val now = Date().time / 1000L
@@ -167,7 +161,6 @@ class GoalAdapter(
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val progressBarView: ProgressBar = view.findViewById(R.id.goalProgressBar)
-        val progressPercentView: TextView = view.findViewById(R.id.goalProgressPercent)
         val goalNameView: TextView = view.findViewById(R.id.goalName)
         val goalDescriptionView: TextView = view.findViewById(R.id.goalDescription)
         val remainingTimeView: Chip = view.findViewById(R.id.goalRemainingTime)
