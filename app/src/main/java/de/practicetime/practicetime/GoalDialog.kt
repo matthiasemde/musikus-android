@@ -94,13 +94,22 @@ class GoalDialog(
                     // and call the onCreate handler, passing the selected target duration
                     onCreateHandler(newGoalDescriptionWithCategories, targetDuration)
                 }
+
+                // clear the dialog and dismiss it
+                selectedGoalDescriptionId = 0
+                trackAllCategories = true
+                goalDialogCategorySelectorView.setSelection(0)
+                goalDialogOneTimeGoalView.isChecked = true
+                goalDialogTargetHoursView.setText("")
+                goalDialogTargetMinutesView.setText("")
+                goalDialogPeriodValueView.setText("1")
+                goalDialogPeriodUnitView.setSelection(0)
                 dialog.dismiss()
             }
 
             // define the callback function for the negative button
             // to clear the dialog and then cancel it
             setNegativeButton(R.string.addCategoryAlertCancel) { dialog, _ ->
-                trackAllCategories = false
                 dialog.cancel()
             }
         }
@@ -231,10 +240,8 @@ class GoalDialog(
             if (it.isNotEmpty()) it.toInt() else 0
         }
 
-        if(selectedCategories.size == 0 && !trackAllCategories)
-            return false
-
-        return (targetMinutes + targetHours > 0 && periodValue > 0)
+        return (targetMinutes + targetHours > 0 && periodValue > 0) &&
+            (selectedCategories.size > 0 || trackAllCategories)
     }
 
     // the public function to show the dialog
@@ -257,7 +264,7 @@ class GoalDialog(
                 goalDialogTargetMinutesView.setText(minutes.toString())
 
                 // we need this, to make the positive button clickable - value is ignored
-                goalDialogPeriodValueView.setText("1")
+                trackAllCategories = true
 
                 dialogView.findViewById<View>(R.id.goalDialogNotTarget).visibility = View.GONE
             }

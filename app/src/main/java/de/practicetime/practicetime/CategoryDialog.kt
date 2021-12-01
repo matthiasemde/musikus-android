@@ -76,6 +76,8 @@ class CategoryDialog (
                 }
 
                 // clear the dialog and dismiss it
+                selectedCategoryId = 0
+                selectedColorIndex = 0
                 categoryNameView.text.clear()
                 categoryColorButtonGroupRow1.clearCheck()
                 categoryColorButtonGroupRow2.clearCheck()
