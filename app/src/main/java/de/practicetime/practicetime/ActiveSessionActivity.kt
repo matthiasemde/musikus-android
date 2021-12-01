@@ -44,7 +44,9 @@ class ActiveSessionActivity : AppCompatActivity() {
     private var dao: PTDao? = null
 
     private var activeCategories = ArrayList<Category>()
+
     private var addCategoryDialog: CategoryDialog? = null
+    private var discardSessionDialog: AlertDialog? = null
 
     private lateinit var sectionsListAdapter: SectionsListAdapter
 
@@ -97,7 +99,11 @@ class ActiveSessionActivity : AppCompatActivity() {
         // initialize adapter and recyclerView for showing category buttons from database
         initCategoryList()
 
+        // create the dialog for finishing the current session
         initEndSessionDialog()
+
+        // create the dialog for discarding the current session
+        initDiscardSessionDialog()
 
         val btnPause = findViewById<MaterialButton>(R.id.bottom_pause)
         btnPause.setOnClickListener {
@@ -115,6 +121,11 @@ class ActiveSessionActivity : AppCompatActivity() {
         // call onBackPressed when upper left Button is pressed to respect custom animation
         findViewById<ImageButton>(R.id.btn_back).setOnClickListener {
             onBackPressed()
+        }
+
+        // show the discard session dialog when btn_discard is pressed
+        findViewById<ImageButton>(R.id.btn_discard).setOnClickListener {
+            discardSessionDialog?.show()
         }
     }
 
@@ -267,8 +278,9 @@ class ActiveSessionActivity : AppCompatActivity() {
         )
         findViewById<TextView>(R.id.tv_overlay_pause).visibility = View.VISIBLE
 
-        // make up button white
+        // make down and discard button white
         findViewById<ImageButton>(R.id.btn_back).setColorFilter(Color.WHITE)
+        findViewById<ImageButton>(R.id.btn_discard).setColorFilter(Color.WHITE)
     }
 
     private fun hideOverlay() {
@@ -287,6 +299,7 @@ class ActiveSessionActivity : AppCompatActivity() {
         theme.resolveAttribute(R.attr.colorOnSurface, typedValue, true)
         val color = typedValue.data
         findViewById<ImageButton>(R.id.btn_back).setColorFilter(color)
+        findViewById<ImageButton>(R.id.btn_discard).setColorFilter(color)
     }
 
     private fun hideHintTextView() {
@@ -355,28 +368,21 @@ class ActiveSessionActivity : AppCompatActivity() {
         val dialogView = inflater.inflate(R.layout.dialog_view_end_session, null)
 
         val dialogRatingBar = dialogView.findViewById<RatingBar>(R.id.dialogRatingBar)
-        val dialogBackButton = dialogView.findViewById<ImageButton>(R.id.btn_back_alertdialog)
         val dialogComment = dialogView.findViewById<EditText>(R.id.dialogComment)
 
         // Dialog Setup
         endSessionDialogBuilder.apply {
             setView(dialogView)
             setCancelable(false)
-            setPositiveButton(R.string.endSessionAlertOk) { _, _ ->
+            setPositiveButton(R.string.endSessionDialogOk) { _, _ ->
                 val rating = dialogRatingBar.rating.toInt()
                 finishSession(rating, dialogComment.text.toString())
             }
-            setNegativeButton(R.string.discard_session) { _, _ ->
-                // clear the sectionBuffer so that runnable dies
-                mService.sectionBuffer.clear()
-                // refresh the adapter otherwise the app will crash because of "inconsistency detected"
-                findViewById<RecyclerView>(R.id.currentSections).adapter = sectionsListAdapter
-                // stop the service
-                Intent(this@ActiveSessionActivity, SessionForegroundService::class.java).also {
-                    stopService(it)
+            setNegativeButton(R.string.endSessionDialogCancel) { dialog, _ ->
+                if (!mService.paused) {
+                    hideOverlay()
                 }
-                // terminate and go back to MainActivity
-                finish()
+                dialog.cancel()
             }
         }
         val endSessionDialog: AlertDialog = endSessionDialogBuilder.create()
@@ -390,17 +396,37 @@ class ActiveSessionActivity : AppCompatActivity() {
                 dialogRatingBar.setOnRatingBarChangeListener { _, rating, _ ->
                     positiveButton.isEnabled = rating.toInt() > 0
                 }
-                dialogBackButton.setOnClickListener {
-                    if (!mService.paused) {
-                        hideOverlay()
-                    }
-                    endSessionDialog.cancel()
-                }
             }
             showOverlay()
         }
     }
 
+    // initialize the dialog for discarding the current session
+    private fun initDiscardSessionDialog() {
+        val builder = AlertDialog.Builder(this)
+        builder.apply {
+            setTitle(R.string.discard_session_dialog_title)
+            setPositiveButton(R.string.discard_session_dialog_ok) { dialog, _ ->
+                // clear the sectionBuffer so that runnable dies
+                mService.sectionBuffer.clear()
+                // refresh the adapter otherwise the app will crash because of "inconsistency detected"
+                findViewById<RecyclerView>(R.id.currentSections).adapter = sectionsListAdapter
+                // stop the service
+                Intent(this@ActiveSessionActivity, SessionForegroundService::class.java).also {
+                    stopService(it)
+                }
+                // terminate and go back to MainActivity
+                finish()
+            }
+            setNegativeButton(R.string.discard_session_dialog_cancel) { dialog, _ ->
+                if (!mService.paused) {
+                    hideOverlay()
+                }
+                dialog.cancel()
+            }
+        }
+        discardSessionDialog = builder.create()
+    }
     private fun openDatabase() {
         val db = Room.databaseBuilder(
             this,

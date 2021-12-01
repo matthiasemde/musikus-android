@@ -6,9 +6,12 @@
     <string name="saveSessionTitle">Summary</string>
     <string name="sessionSummarySaveButton">Save session</string>
     <string name="sessionListTitle">History</string>
-    <string name="endSessionAlertOk">Save</string>
-    <string name="endSessionAlertCancel">Continue practicing</string>
+    <string name="endSessionDialogOk">Save</string>
+    <string name="endSessionDialogCancel">Keep practicing</string>
     <string name="endSessionDialogCommentField">Comment (optional)</string>
+    <string name="discard_session_dialog_title">Discard current session and loose all progress?</string>
+    <string name="discard_session_dialog_ok">Discard</string>
+    <string name="discard_session_dialog_cancel">Keep practicing</string>
     <string name="navigationLibraryTitle">Library</string>
     <string name="navigationGoalsTitle">Goals</string>
     <string name="addCategoryDialogTitle">Add new category</string>

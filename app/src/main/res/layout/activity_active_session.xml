@@ -170,6 +170,14 @@
         android:src="@drawable/ic_arrow_down"
         android:background="?selectableItemBackgroundBorderless" />
 
+    <ImageButton
+        android:id="@+id/btn_discard"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_gravity="top|right"
+        android:background="?selectableItemBackgroundBorderless"
+        android:src="@drawable/ic_close" />
+
     <TextView
         android:id="@+id/tv_hint_start_new_session"
         android:layout_width="wrap_content"
