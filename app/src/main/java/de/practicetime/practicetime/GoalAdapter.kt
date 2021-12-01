@@ -19,7 +19,7 @@ const val SECONDS_PER_DAY = 60 * 60 * 24
 class GoalAdapter(
     private val goalInstancesWithDescriptionsWithCategories: ArrayList<GoalInstanceWithDescriptionWithCategories>,
     private val context: Activity,
-    private val shortClickHandler: (goalId: Int, goalView: View) -> Unit = { _, _ -> },
+    private val shortClickHandler: (goalInstanceWithDescription: GoalInstanceWithDescription, goalView: View) -> Unit = { _, _ -> },
     private val longClickHandler: (goalId: Int, goalView: View) -> Boolean = { _, _ -> false },
 ) : RecyclerView.Adapter<GoalAdapter.ViewHolder>() {
 
@@ -44,7 +44,11 @@ class GoalAdapter(
         }
 
         // set Click listener
-        viewHolder.itemView.setOnClickListener { shortClickHandler(description.id, it) }
+        viewHolder.itemView.setOnClickListener {
+            shortClickHandler(GoalInstanceWithDescription(
+                instance = instance,
+                description = description
+            ), it)}
         viewHolder.itemView.setOnLongClickListener {
             // tell the event handler we consumed the event
             return@setOnLongClickListener longClickHandler(description.id, it)

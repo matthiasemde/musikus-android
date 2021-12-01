@@ -32,7 +32,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
     private var goalAdapter : GoalAdapter? = null
 
     private var addGoalDialog: GoalDialog? = null
-//    private var editGoalDialog: GoalDialog? = null
+    private var editGoalDialog: GoalDialog? = null
     private var archiveGoalDialog: AlertDialog? = null
 
     private var goalsToolbar: androidx.appcompat.widget.Toolbar? = null
@@ -69,13 +69,14 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
             }
         }, 500)
 
-        // create a new goal dialog for adding new goals
-        addGoalDialog = GoalDialog(
-            requireActivity(),
-            dao!!,
-            lifecycleScope,
-            ::addGoalHandler
-        )
+        lifecycleScope.launch {
+            // create a new goal dialog for adding new goals
+            addGoalDialog = GoalDialog(
+                requireActivity(),
+                dao?.getActiveCategories()?: listOf(),
+                ::addGoalHandler
+            )
+        }
 
         view.findViewById<ExtendedFloatingActionButton>(R.id.goalsFab).setOnClickListener {
             resetToolbar()
@@ -83,7 +84,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
         }
 
         // create the category dialog for editing categories
-//        editGoalDialog = GoalDialog(requireActivity(), ::editGoalHandler)
+        editGoalDialog = GoalDialog(requireActivity(), listOf(), ::editGoalHandler)
 
         // create the dialog for archiving goals
         initArchiveGoalDialog()
@@ -138,17 +139,22 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
     }
 
     // the handler for dealing with short clicks on goals
-    private fun shortClickOnGoalHandler(goalId: Int, goalView: View) {
+    private fun shortClickOnGoalHandler(
+        goalInstanceWithDescription: GoalInstanceWithDescription,
+        goalView: View
+    ) {
         if(selectedGoals.isNotEmpty()) {
-            if(selectedGoals.remove(Pair(goalId, goalView))) {
+            if(selectedGoals.remove(Pair(goalInstanceWithDescription.description.id, goalView))) {
                 setCardSelected(false, goalView)
 
                 if(selectedGoals.isEmpty()) {
                     resetToolbar()
                 }
             } else {
-                longClickOnGoalHandler(goalId, goalView)
+                longClickOnGoalHandler(goalInstanceWithDescription.description.id, goalView)
             }
+        } else {
+            editGoalDialog?.show(goalInstanceWithDescription)
         }
     }
 
@@ -260,19 +266,21 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
         }
     }
 
-//    // the handler for editing goals
-//    private fun editGoalHandler(goalWithCategories: GoalWithCategories) {
-//        lifecycleScope.launch {
-//            dao?.insertGoalWithCategories(goalWithCategories) // TODO check if this creates duplicate entries in cross reference table
-//            activeGoalsWithCategories.indexOfFirst {
-//                    (g, _) -> g.id == goalWithCategories.goalDescription.id
-//            }.also { i ->
-//                assert(i != -1)
-//                activeGoalsWithCategories[i] = goalWithCategories
-//                goalAdapter?.notifyItemChanged(i)
-//            }
-//        }
-//    }
+    // the handler for editing goals
+    private fun editGoalHandler(
+        newGoalDescriptionWithCategories: GoalDescriptionWithCategories,
+        newTarget: Int,
+    ) {
+        lifecycleScope.launch {
+            dao?.updateGoalTarget(newGoalDescriptionWithCategories.description.id, newTarget)
+            activeGoalInstancesWithDescriptionWithCategories.indexOfFirst {
+                it.description.description.id == newGoalDescriptionWithCategories.description.id
+            }.also { i ->
+                activeGoalInstancesWithDescriptionWithCategories[i].instance.target = newTarget
+                goalAdapter?.notifyItemChanged(i)
+            }
+        }
+    }
 
     // the handler for archiving goals
     private fun archiveGoalHandler(goalDescriptionIds: List<Int>) {

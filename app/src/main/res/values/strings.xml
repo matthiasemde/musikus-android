@@ -31,7 +31,7 @@
     <string name="show_month">Show month</string>
     <string name="progressUpdateContinue">Continue</string>
     <string name="addGoalDialogTitle">Create a new goal</string>
-    <string name="goalDialogTitleEdit">Edit goal</string>
+    <string name="goalDialogTitleEdit">Edit goal target</string>
     <string name="goalDialogOkEdit">Edit</string>
     <string name="goalDialogTarget">Target:</string>
     <string name="goalDialogCatSelectHint">Select a category</string>

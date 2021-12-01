@@ -82,6 +82,14 @@ interface PTDao {
     suspend fun updateGoalInstance(goalInstance: GoalInstance)
 
     @Transaction
+    suspend fun updateGoalTarget(goalDescriptionId: Int, newTarget: Int) {
+        getGoalInstancesFromNowOnWhereDescriptionId(goalDescriptionId).forEach {
+            it.target = newTarget
+            updateGoalInstance(it)
+        }
+    }
+
+    @Transaction
     suspend fun renewGoalInstance(id: Int) {
         getGoalInstance(id).also { g ->
             g.renewed = true
@@ -144,6 +152,12 @@ interface PTDao {
 
     @Query("SELECT * FROM GoalInstance WHERE id=:id")
     suspend fun getGoalInstance(id: Int): GoalInstance
+
+    @Query("SELECT * FROM GoalInstance WHERE startTimestamp < :now AND goalDescriptionId=(SELECT id FROM GoalDescription WHERE id=:descriptionId)")
+    suspend fun getGoalInstancesFromNowOnWhereDescriptionId(
+        descriptionId: Int,
+        now : Long = Date().time / 1000L
+    ): List<GoalInstance>
 
 //
 //    @Transaction

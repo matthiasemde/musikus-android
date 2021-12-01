@@ -23,14 +23,13 @@ import kotlinx.coroutines.launch
 import java.util.*
 
 class GoalDialog(
-    context: Activity,
-    dao: PTDao,
-    lifecycleScope: LifecycleCoroutineScope,
+    private val context: Activity,
+    private val categories: List<Category>,
     onCreateHandler: (newGoal: GoalDescriptionWithCategories, firstTarget: Int) -> Unit,
 ) {
 
     // instantiate the builder for the alert dialog
-    private val alertDialogBuilder = MaterialAlertDialogBuilder(context)
+    private val alertDialogBuilder = AlertDialog.Builder(context)
     private val inflater = context.layoutInflater;
     private val dialogView = inflater.inflate(
         R.layout.dialog_view_add_or_edit_goal,
@@ -52,13 +51,14 @@ class GoalDialog(
     private var trackAllCategories = true
 
     private val selectedCategories = ArrayList<Category>()
+    private var selectedGoalDescriptionId = 0
 
     private var alertDialog: AlertDialog? = null
 
     init {
-        initCategorySelector(context, dao, lifecycleScope)
+        initCategorySelector()
 
-        initTimeSelector(context)
+        initTimeSelector()
 
         // dialog Setup
         alertDialogBuilder.apply {
@@ -70,6 +70,7 @@ class GoalDialog(
                 if(isComplete()) {
                     // first create the new description
                     val newGoalDescription = GoalDescription(
+                        id = selectedGoalDescriptionId,
                         type =  if (trackAllCategories) GoalType.NON_SPECIFIC
                                     else GoalType.CATEGORY_SPECIFIC,
                         oneTime = !(goalDialogOneTimeGoalView.isChecked),
@@ -115,22 +116,7 @@ class GoalDialog(
         )
     }
 
-    private fun showKeyboard(context: Activity, view: View) {
-        val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-        imm.showSoftInput(view, InputMethodManager.SHOW_FORCED)
-    }
-
-    private fun hideKeyboard(context: Activity) {
-        val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-        imm.hideSoftInputFromWindow(context.window.decorView.rootView.windowToken, 0)
-    }
-
-
-    private fun initCategorySelector(
-        context: Activity,
-        dao: PTDao,
-        lifecycleScope: LifecycleCoroutineScope
-    ) {
+    private fun initCategorySelector() {
         val typedValue = TypedValue()
 
         context.theme.resolveAttribute(R.attr.colorPrimary, typedValue, true)
@@ -183,39 +169,34 @@ class GoalDialog(
             updatePositiveButtonState()
         }
 
-        lifecycleScope.launch {
-            dao.getActiveCategories().let { categories ->
-                goalDialogCategorySelectorView.apply {
-                    adapter = CategoryDropDownAdapter(
-                        context,
-                        categories,
-                    )
-                    goalDialogCategorySelectorView.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-                        override fun onItemSelected(
-                            parent: AdapterView<*>?,
-                            view: View?,
-                            position: Int,
-                            id: Long
-                        ) {
-                            selectedCategories.clear()
-                            if (position > 0)
-                                selectedCategories.add(categories[position-1])  // -1 because pos=0 is hint
-                            updatePositiveButtonState()
-                        }
+        goalDialogCategorySelectorView.apply {
+            adapter = CategoryDropDownAdapter(
+                context,
+                categories,
+            )
+            goalDialogCategorySelectorView.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+                override fun onItemSelected(
+                    parent: AdapterView<*>?,
+                    view: View?,
+                    position: Int,
+                    id: Long
+                ) {
+                    selectedCategories.clear()
+                    if (position > 0)
+                        selectedCategories.add(categories[position-1])  // -1 because pos=0 is hint
+                    updatePositiveButtonState()
+                }
 
-                        override fun onNothingSelected(parent: AdapterView<*>?) {
-                            selectedCategories.clear()
-                        }
-                    }
+                override fun onNothingSelected(parent: AdapterView<*>?) {
+                    selectedCategories.clear()
                 }
             }
         }
     }
 
-    private fun initTimeSelector(
-        context: Activity
-    ) {
+    private fun initTimeSelector() {
         goalDialogTargetMinutesView.filters = arrayOf(InputFilterMax(59))
+        goalDialogTargetHoursView.filters = arrayOf(InputFilterMax(500))
 
         ArrayAdapter(
             context,
@@ -233,7 +214,7 @@ class GoalDialog(
         }
     }
 
-    // sets the enabled state of the add button dependig on valid and complete inputs
+    // sets the enabled state of the add button depending on valid and complete inputs
     private fun updatePositiveButtonState() {
         alertDialog?.getButton(AlertDialog.BUTTON_POSITIVE)?.isEnabled = isComplete()
     }
@@ -258,20 +239,27 @@ class GoalDialog(
 
     // the public function to show the dialog
     // if a goal is passed it will be edited
-    fun show(goalDescription: GoalDescription? = null) {
+    fun show(goalInstanceWithDescription: GoalInstanceWithDescription? = null) {
         alertDialog?.show()
 
         alertDialog?.also { dialog ->
             val positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
 
-            if(goalDescription != null) {
+            if(goalInstanceWithDescription != null) {
+                selectedGoalDescriptionId = goalInstanceWithDescription.description.id
                 goalDialogTitleView.setText(R.string.goalDialogTitleEdit)
                 positiveButton.setText(R.string.goalDialogOkEdit)
 
-                goalDialogAllCategoriesButtonView.visibility = View.GONE
-                goalDialogSingleCategoryButtonView.visibility = View.GONE
-                goalDialogPeriodValueView.visibility = View.GONE
-                goalDialogPeriodUnitView.visibility = View.GONE
+                val hours = goalInstanceWithDescription.instance.target / 3600
+                val minutes = goalInstanceWithDescription.instance.target % 3600 / 60
+
+                goalDialogTargetHoursView.setText(hours.toString())
+                goalDialogTargetMinutesView.setText(minutes.toString())
+
+                // we need this, to make the positive button clickable - value is ignored
+                goalDialogPeriodValueView.setText("1")
+
+                dialogView.findViewById<View>(R.id.goalDialogNotTarget).visibility = View.GONE
             }
 
             updatePositiveButtonState()
