@@ -389,6 +389,9 @@ class ActiveSessionActivity : AppCompatActivity() {
             }
         }
         val endSessionDialog: AlertDialog = endSessionDialogBuilder.create()
+        endSessionDialog.window?.setBackgroundDrawable(
+            this.getDrawable(R.drawable.dialog_background)
+        )
 
         // stop session button functionality
         findViewById<MaterialButton>(R.id.bottom_stop).setOnClickListener {
