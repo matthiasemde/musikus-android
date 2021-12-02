@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.view.View
 import android.view.animation.Animation
 import android.view.animation.Transformation
 import android.widget.Button
@@ -34,6 +35,15 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
 
     private var progressAdapter: GoalAdapter? = null
 
+    private var skipAnimation = false
+
+    private var continueButton : TextView? = null
+    private var skipButton : TextView? = null
+
+    override fun onBackPressed() {
+        exitActivity()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -49,13 +59,35 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
             }
         }, 200)
 
-        findViewById<Button>(R.id.progressUpdateLeave).setOnClickListener { exitActivity() }
+        continueButton =  findViewById(R.id.progressUpdateLeave)
+        skipButton = findViewById(R.id.progressUpdateSkipAnimation)
+
+        continueButton?.setOnClickListener { exitActivity() }
+        skipButton?.setOnClickListener { button ->
+            skipAnimation = true
+            val oldSize = progressAdapterData.size
+            progressAdapterData.clear()
+            progressAdapter?.notifyItemRangeRemoved(0, oldSize)
+
+            progressedGoalInstancesWithDescriptionsWithCategories.filter {
+                it.instance.target > it.instance.progress
+            }.also {
+                progressAdapterData.addAll(it)
+                progressAdapter?.notifyItemRangeInserted(
+                    0,
+                    it.size
+                )
+            }
+            button.visibility = View.GONE
+            continueButton?.visibility = View.VISIBLE
+        }
     }
 
     private fun initProgressedGoalList() {
         progressAdapter = GoalAdapter(
             progressAdapterData,
             context = this,
+            showEmptyHeader = true,
         )
 
         findViewById<RecyclerView>(R.id.progessUpdateGoalList).apply {
@@ -125,7 +157,17 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
                         }
                     }
                 }
+
+                //if no element is progressed which wasn't already at 100%, exit the activity
+                if (progressedGoalInstancesWithDescriptionsWithCategories.none {
+                        it.instance.progress < it.instance.target
+                    }) {
+                    exitActivity()
+                }
+
                 startProgressAnimation(goalProgress)
+            } else {
+                exitActivity()
             }
         }
     }
@@ -141,15 +183,25 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
 
         // for the animation we want to alternatingly show a new goal and then its progress
         fun showGoal(goalIndex: Int, firstAnimation: Boolean) {
+            if(skipAnimation) return
+
             fun showProgress(progressIndex: Int) {
+                if(skipAnimation) return
+
                 progressAdapterData[0].also { (i, d) ->
                     i.progress += goalProgress[d.description.id] ?: 0
                 }
-                progressAdapter?.notifyItemChanged(0, PROGRESS_UPDATED)
+                progressAdapter?.notifyItemChanged(1, PROGRESS_UPDATED)
 
                 // only continue showing goals, as long as there are more
                 if (progressIndex+1 < progressedGoalInstancesWithDescriptionsWithCategories.size) {
-                    handler.postDelayed({ showGoal(progressIndex+1, false) }, 1500)
+                    handler.postDelayed({
+                        showGoal(progressIndex+1, false)
+                    }, 1500L)
+                // when animation is complete change the visibility of skip and continue button
+                } else {
+                    skipButton?.visibility = View.GONE
+                    continueButton?.visibility = View.VISIBLE
                 }
             }
 
@@ -157,16 +209,25 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
             if(progressedGoalInstancesWithDescriptionsWithCategories[goalIndex].instance.let {
                 it.progress >= it.target
             }) {
-                showGoal(goalIndex+1, firstAnimation)
+                // before skipping, check if there actually is another goal and if not show continue
+                if(goalIndex+1 < progressedGoalInstancesWithDescriptionsWithCategories.size) {
+                    showGoal(goalIndex + 1, firstAnimation)
+                } else {
+                    skipButton?.visibility = View.GONE
+                    continueButton?.visibility = View.VISIBLE
+                }
                 return
             }
 
             progressAdapterData.add(0, progressedGoalInstancesWithDescriptionsWithCategories[goalIndex])
-            progressAdapter?.notifyItemInserted(0)
+            progressAdapter?.notifyItemInserted(1)
 
             // the progress animation for the first element should
             // start earlier since there is now fade-in beforehand
-            handler.postDelayed({ showProgress(goalIndex) }, if (firstAnimation) 500 else 1000)
+            handler.postDelayed(
+                { showProgress(goalIndex) },
+                if (firstAnimation) 500L else 1000L
+            )
         }
 
         // start the progress animation in reverse order with the last goal
@@ -212,8 +273,9 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
             progress /= 60
 
             // progress Indicator Text
-            val progressHours = progress / 3600
-            val progressMinutes = progress % 3600 / 60
+            val cappedProgress = minOf(progressBar.max / 60, progress)
+            val progressHours = cappedProgress / 3600
+            val progressMinutes = cappedProgress % 3600 / 60
             when {
                 progressHours > 0 -> progressIndicator.text = String.format("%02d:%02d", progressHours, progressMinutes)
                 progressMinutes > 0 -> progressIndicator.text = String.format("%d min", progressMinutes)

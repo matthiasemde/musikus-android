@@ -21,18 +21,44 @@ class GoalAdapter(
     private val context: Activity,
     private val shortClickHandler: (goalInstanceWithDescription: GoalInstanceWithDescription, goalView: View) -> Unit = { _, _ -> },
     private val longClickHandler: (goalId: Int, goalView: View) -> Boolean = { _, _ -> false },
+    private val showEmptyHeader: Boolean = false
 ) : RecyclerView.Adapter<GoalAdapter.ViewHolder>() {
 
-    override fun getItemCount() = goalInstancesWithDescriptionsWithCategories.size
+    companion object {
+        private const val VIEW_TYPE_HEADER = 1
+        private const val VIEW_TYPE_GOAL = 2
+    }
+
+    override fun getItemCount() =
+        goalInstancesWithDescriptionsWithCategories.size + if (showEmptyHeader) 1 else 0
+
+    override fun getItemViewType(position: Int): Int {
+        return if (!showEmptyHeader) VIEW_TYPE_GOAL else {
+            when (position) {
+                0 -> VIEW_TYPE_HEADER
+                else -> VIEW_TYPE_GOAL
+            }
+        }
+    }
 
     override fun onCreateViewHolder(viewGroup: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(viewGroup.context)
             .inflate(R.layout.view_goal_item, viewGroup, false)
+        if (viewType == VIEW_TYPE_HEADER) {
+            view.layoutParams.height = 0
+        }
         return ViewHolder(view)
     }
 
     override fun onBindViewHolder(viewHolder: ViewHolder, position: Int) {
-        val (instance, descriptionWithCategories) = goalInstancesWithDescriptionsWithCategories[position]
+        var goalPosition = position
+
+        if(showEmptyHeader) {
+            if(position == 0) return
+            else goalPosition -= 1
+        }
+
+        val (instance, descriptionWithCategories) = goalInstancesWithDescriptionsWithCategories[goalPosition]
         val (description, categories) = descriptionWithCategories
 
         // get the category color for later use in different UI elements
@@ -118,8 +144,9 @@ class GoalAdapter(
         }
 
         /** progress Indicator Text */
-        val progressHours = instance.progress / 3600
-        val progressMinutes = instance.progress % 3600 / 60
+        val cappedProgress = minOf(instance.target, instance.progress)
+        val progressHours = cappedProgress / 3600
+        val progressMinutes = cappedProgress % 3600 / 60
         when {
             progressHours > 0 ->
                 viewHolder.goalProgressIndicatorView.text = String.format("%02d:%02d", progressHours, progressMinutes)
@@ -157,7 +184,6 @@ class GoalAdapter(
             }
         }
     }
-
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val progressBarView: ProgressBar = view.findViewById(R.id.goalProgressBar)

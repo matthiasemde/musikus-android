@@ -24,10 +24,6 @@ class CategoryAdapter(
     private val addCategoryHandler: () -> Unit = {},
     ) : RecyclerView.Adapter<CategoryAdapter.ViewHolder>() {
 
-    init {
-
-    }
-
     companion object {
         private const val VIEW_TYPE_CATEGORY = 1
         private const val VIEW_TYPE_ADD_NEW = 2
