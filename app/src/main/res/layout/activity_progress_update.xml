@@ -6,18 +6,30 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?attr/colorSurface"
+        android:elevation="10dp"
+        android:padding="16dp"
+        android:text="@string/progressUpdateTitle"
+        android:textSize="20sp"
+        android:textStyle="bold" />
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/progessUpdateGoalList"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:paddingTop="30dp"
         android:layout_weight="1"
-        android:clipToPadding="false"/>
+        android:clipToPadding="false" />
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="12dp"
+        android:layout_height="56dp"
+        android:animateLayoutChanges="true"
+        android:background="?attr/colorSurface"
+        android:elevation="10dp"
         android:gravity="end|center_vertical">
 
 
@@ -26,19 +38,19 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="16dp"
-            android:textSize="18sp"
+            android:text="@string/progressUpdateSkip"
             android:textColor="?attr/colorPrimary"
-            android:text="@string/progressUpdateSkip" />
+            android:textSize="18sp" />
 
         <TextView
             android:id="@+id/progressUpdateLeave"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="16dp"
-            android:textSize="18sp"
+            android:text="@string/progressUpdateContinue"
             android:textColor="?attr/colorPrimary"
+            android:textSize="18sp"
             android:visibility="gone"
-            tools:visibility="visible"
-            android:text="@string/progressUpdateContinue" />
+            tools:visibility="visible" />
     </LinearLayout>
 </LinearLayout>
