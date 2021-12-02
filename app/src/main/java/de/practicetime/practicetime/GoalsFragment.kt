@@ -18,7 +18,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
 import com.google.android.material.appbar.CollapsingToolbarLayout
-import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import de.practicetime.practicetime.entities.*
 import kotlinx.coroutines.launch
 import java.util.*
@@ -80,7 +80,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
             )
         }
 
-        view.findViewById<ExtendedFloatingActionButton>(R.id.goalsFab).setOnClickListener {
+        view.findViewById<FloatingActionButton>(R.id.goalsFab).setOnClickListener {
             resetToolbar()
             addGoalDialog?.show()
         }

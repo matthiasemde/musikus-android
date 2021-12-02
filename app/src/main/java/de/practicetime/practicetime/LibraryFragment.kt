@@ -44,7 +44,7 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
         // create a new category dialog for adding new categories
         addCategoryDialog = CategoryDialog(requireActivity(), ::addCategoryHandler)
 
-        view.findViewById<ExtendedFloatingActionButton>(R.id.libraryFab).setOnClickListener {
+        view.findViewById<FloatingActionButton>(R.id.libraryFab).setOnClickListener {
             resetToolbar()
             addCategoryDialog?.show()
         }

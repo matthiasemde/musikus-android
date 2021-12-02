@@ -27,7 +27,7 @@
             android:layout_gravity="center"
             android:textSize="40sp"
             android:textStyle="bold"
-            android:textColor="?attr/colorOnBackground"
+            android:textColor="?attr/colorOnSurface"
             tools:text="00:00:00" />
 
         <TextView
@@ -220,7 +220,8 @@
         android:layout_height="50dp"
         android:layout_gravity="top|right"
         android:background="?selectableItemBackgroundBorderless"
-        android:src="@drawable/ic_close" />
+        android:visibility="gone"
+        android:src="@drawable/ic_delete" />
 
     <TextView
         android:id="@+id/tv_hint_start_new_session"

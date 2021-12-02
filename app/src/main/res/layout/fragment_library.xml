@@ -51,14 +51,13 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/libraryFab"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="end|bottom"
         android:layout_margin="16dp"
-        app:icon="@android:drawable/ic_input_add"
-        android:text="@string/add_category"
+        android:src="@android:drawable/ic_input_add"
         android:transitionName="transition_fab"/>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

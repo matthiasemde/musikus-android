@@ -309,7 +309,7 @@ class ActiveSessionActivity : AppCompatActivity() {
 
         // make up button subtle grey or subtle white, according to theme
         val typedValue = TypedValue()
-        theme.resolveAttribute(R.attr.colorOnSurface, typedValue, true)
+        theme.resolveAttribute(R.attr.colorOnSurfaceLowerContrast, typedValue, true)
         val color = typedValue.data
         findViewById<ImageButton>(R.id.btn_back).setColorFilter(color)
         findViewById<ImageButton>(R.id.btn_discard).setColorFilter(color)
@@ -507,6 +507,8 @@ class ActiveSessionActivity : AppCompatActivity() {
         val practiceTimeView = findViewById<TextView>(R.id.practiceTimer)
         if (mService.sessionActive) {
             hideHintTextView()
+            // make discard option visible
+            findViewById<ImageButton>(R.id.btn_discard).visibility = View.VISIBLE
             val fabInfoPause = findViewById<ExtendedFloatingActionButton>(R.id.fab_info_popup)
             // load the current section from the sectionBuffer
             if (mService.paused) {

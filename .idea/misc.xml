@@ -20,6 +20,7 @@
         <entry key="app/src/main/res/drawable/goal_dialog_button_right_background.xml" value="0.29140625" />
         <entry key="app/src/main/res/drawable/ic_archive.xml" value="0.3885416666666667" />
         <entry key="app/src/main/res/drawable/ic_arrow_down.xml" value="0.3885416666666667" />
+        <entry key="app/src/main/res/drawable/ic_delete.xml" value="0.3333333333333333" />
         <entry key="app/src/main/res/drawable/ic_goals.xml" value="0.3885416666666667" />
         <entry key="app/src/main/res/drawable/ic_launcher_background.xml" value="0.3885416666666667" />
         <entry key="app/src/main/res/drawable/ic_library.xml" value="0.3885416666666667" />
@@ -33,7 +34,7 @@
         <entry key="app/src/main/res/drawable/ripple_oval.xml" value="0.25" />
         <entry key="app/src/main/res/drawable/rounded_corner.xml" value="0.3885416666666667" />
         <entry key="app/src/main/res/drawable/spinner_background.xml" value="0.3885416666666667" />
-        <entry key="app/src/main/res/layout/activity_active_session.xml" value="0.2" />
+        <entry key="app/src/main/res/layout/activity_active_session.xml" value="0.33" />
         <entry key="app/src/main/res/layout/activity_bottom.xml" value="0.3723958333333333" />
         <entry key="app/src/main/res/layout/activity_main.xml" value="0.33" />
         <entry key="app/src/main/res/layout/activity_progress_update.xml" value="0.3723958333333333" />
