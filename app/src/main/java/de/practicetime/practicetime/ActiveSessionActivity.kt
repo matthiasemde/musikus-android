@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.graphics.Color
-import android.graphics.Typeface
 import android.os.Bundle
 import android.os.Handler
 import android.os.IBinder
@@ -183,13 +182,14 @@ class ActiveSessionActivity : AppCompatActivity() {
         sectionsListAdapter = SectionsListAdapter(mService.sectionBuffer)
         val layoutManager = LinearLayoutManager(this)
         layoutManager.apply {
-            reverseLayout = true
-            stackFromEnd = true
+            reverseLayout = true        // reverse the layout so that the last item (the most recent) is on top
+            stackFromEnd = true         // this makes the last (most recent) item appear at the top of the view instead of the bottom
         }
 //        (findViewById<ViewGroup>(R.id.ll_active_session)).layoutTransition.enableTransitionType(LayoutTransition.CHANGING)
         sectionsRecyclerView.layoutManager = layoutManager
         sectionsRecyclerView.adapter = sectionsListAdapter
 
+        // swipe to delete
         ItemTouchHelper(object : ItemTouchHelper.SimpleCallback( 0, ItemTouchHelper.LEFT) {
             override fun onMove(v: RecyclerView, h: RecyclerView.ViewHolder, t: RecyclerView.ViewHolder) = false
             override fun onSwiped(h: RecyclerView.ViewHolder, dir: Int) = sectionsListAdapter.removeAt(h.absoluteAdapterPosition)
@@ -212,24 +212,36 @@ class ActiveSessionActivity : AppCompatActivity() {
         // start a new section for the chosen category
         mService.startNewSection(category.id)
 
-        // immediately update list
-        // scroll up to first element so that it is visible when scrolling. Unfortunately, this breaks the animation when view is scrollable
-        findViewById<RecyclerView>(R.id.currentSections).smoothScrollToPosition(mService.sectionBuffer.size)
+        updateActiveSectionView()
+
+        // update list for adapter
+        // scroll up to first element so that it is visible when scrolling.
+//        if (mService.sectionBuffer.size > 1)
+//            findViewById<RecyclerView>(R.id.currentSections).smoothScrollToPosition(mService.sectionBuffer.size-2)
+
         // this only re-draws the new item, also, it adds animation which would not occur with notifyDataSetChanged()
-        sectionsListAdapter.notifyItemInserted(mService.sectionBuffer.size - 1)
+        // we use the second last item because the last one is always hidden (in onBindViewHolder()). This ensures insertion
+        // animation even when list is full and should scroll
+        sectionsListAdapter.notifyItemInserted(mService.sectionBuffer.size - 2)
 
-        // force re-draw the whole RecyclerView after delayMs to clear the TextAppearance on items at position > 0
-        // delayed in order to wait for the animation to finish introduced from notifyItemInserted()
-        // this seems hacky but it's the only way to achieve both animation and proper textStyle clearing
-        val delayMs: Long = 300
-        Handler(Looper.getMainLooper()).also {
-            it.postDelayed({
-                    findViewById<RecyclerView>(R.id.currentSections).adapter = sectionsListAdapter
-                },
-                delayMs
-            )
+    }
+
+    private fun updateActiveSectionView() {
+        val sName = findViewById<TextView>(R.id.running_section_name)
+        val sDur = findViewById<TextView>(R.id.running_section_duration)
+
+        if (mService.sectionBuffer.isNotEmpty()) {
+            val categoryName = activeCategories.find { category ->
+                category.id == mService.sectionBuffer.last().first.category_id
+            }?.name
+            sName.text = categoryName
+
+            var sectionDur: Int
+            mService.sectionBuffer.last().apply {
+                sectionDur = (first.duration ?: 0).minus(second)
+            }
+            sDur.text = getTimeString(sectionDur)
         }
-
     }
 
     /**
@@ -508,8 +520,7 @@ class ActiveSessionActivity : AppCompatActivity() {
                 mService.totalPracticeDuration % 3600 / 60,
                 mService.totalPracticeDuration % 60
             )
-            // notify adapter that first item changed on tick update (when activity has started the view is redrawn anyways)
-            sectionsListAdapter.notifyItemChanged(mService.sectionBuffer.size - 1)
+            updateActiveSectionView()
         } else {
             practiceTimeView.text = "00:00:00"
             findViewById<TextView>(R.id.tv_hint_start_new_session).text = getString(R.string.start_new_session_hint)
@@ -524,9 +535,13 @@ class ActiveSessionActivity : AppCompatActivity() {
         private val practiceSections: ArrayList<Pair<PracticeSection, Int>>,
     ) : RecyclerView.Adapter<SectionsListAdapter.ViewHolder>() {
 
+        private val VIEW_TYPE_HEADER = 1
+        private val VIEW_TYPE_GOAL = 2
+
         inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
             val sectionName: TextView = view.findViewById(R.id.sectionName)
             val sectionDuration: TextView = view.findViewById(R.id.sectionDuration)
+            val rootLayoutItem: LinearLayout = view.findViewById(R.id.ll_activesession_list)
         }
 
         // Create new views (invoked by the layout manager)
@@ -535,11 +550,27 @@ class ActiveSessionActivity : AppCompatActivity() {
             val view = LayoutInflater.from(viewGroup.context)
                 .inflate(R.layout.view_active_session_section, viewGroup, false)
 
+            // don't display the most recent item (=last item in sectionBuffer) because we have a TextView for it
+            if (viewType == VIEW_TYPE_HEADER) {
+                view.layoutParams.height = 0
+            }
             return ViewHolder(view)
+        }
+
+        override fun getItemViewType(position: Int): Int {
+            return when (position) {
+                practiceSections.size-1 -> VIEW_TYPE_HEADER
+                else -> VIEW_TYPE_GOAL
+            }
         }
 
         // Replace the contents of a view (invoked by the layout manager)
         override fun onBindViewHolder(viewHolder: ViewHolder, position: Int) {
+            // immediately return on uppermost view because its height is 0 anyways
+            if (position == practiceSections.size-1) {
+                return
+            }
+
             // Get element from your dataset at this position
             val categoryName = activeCategories.find { category ->
                 category.id == practiceSections[position].first.category_id
@@ -555,62 +586,32 @@ class ActiveSessionActivity : AppCompatActivity() {
             viewHolder.sectionName.text = categoryName
             viewHolder.sectionDuration.text = getTimeString(sectionDuration)
 
-            if (position == practiceSections.size - 1) {
-                viewHolder.sectionName.setTypeface(viewHolder.sectionName.typeface, Typeface.BOLD);
-                viewHolder.sectionDuration.setTypeface(
-                    viewHolder.sectionName.typeface,
-                    Typeface.BOLD
-                );
-
-                val typedValue = TypedValue()
-                theme.resolveAttribute(R.attr.colorPrimary, typedValue, true)
-                val color = typedValue.data
-                viewHolder.sectionName.setTextColor(color)
-                viewHolder.sectionDuration.setTextColor(color)
-            }
-
-            // possible animation for first item: https://stackoverflow.com/a/26748274
-            // bit laggy when animation is triggered shortly before it redraws anyways due to secondly
-            // updates. DEPRECATED since notifyItemInserted() supports nice native animation!
         }
 
         // Return the size of your dataset (invoked by the layout manager)
+        // -1 because don't include most recent item (we have a dedicated TextView for that)
         override fun getItemCount() = practiceSections.size
 
         /**
          * called when section is removed by swipe. Remove it from the list and notify adapter
-         * If only one item left, don't allow removing
          */
         fun removeAt(index: Int) {
-            Log.d("Tga", "Index: $index")
-            if (index != practiceSections.size-1) {
-                val elem = practiceSections[index]
-                practiceSections.removeAt(index)   // items is a MutableList
-                notifyItemRemoved(index)
+            val elem = practiceSections[index]
+            practiceSections.removeAt(index)   // items is a MutableList
+            notifyItemRemoved(index)
 
-                Snackbar.make(
-                    findViewById(R.id.coordinator_layout_active_session),
-                    getString(R.string.item_removed),
-                    Snackbar.LENGTH_LONG
-                ).apply {
-                    setAction(R.string.undo) {
-                        practiceSections.add(index, elem)
-                        notifyItemInserted(index)
-                        this.dismiss()
-                    }
-                    anchorView = findViewById<ConstraintLayout>(R.id.constraintLayout_Bottom_btn)
-                    show()
+            Snackbar.make(
+                findViewById(R.id.coordinator_layout_active_session),
+                getString(R.string.item_removed),
+                Snackbar.LENGTH_LONG
+            ).apply {
+                setAction(R.string.undo) {
+                    practiceSections.add(index, elem)
+                    notifyItemInserted(index)
+                    this.dismiss()
                 }
-            } else {
-                notifyDataSetChanged()
-                Snackbar.make(
-                    findViewById(R.id.coordinator_layout_active_session),
-                    getString(R.string.cannot_remove_item),
-                    Snackbar.LENGTH_LONG
-                ).apply {
-                    anchorView = findViewById<ConstraintLayout>(R.id.constraintLayout_Bottom_btn)
-                    show()
-                }
+                anchorView = findViewById<ConstraintLayout>(R.id.constraintLayout_Bottom_btn)
+                show()
             }
         }
     }

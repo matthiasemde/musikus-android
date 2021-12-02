@@ -10,7 +10,7 @@
     <string name="endSessionDialogCancel">Keep practicing</string>
     <string name="endSessionDialogCommentField">Comment (optional)</string>
     <string name="discard_session_dialog_title">Discard current session and loose all progress?</string>
-    <string name="discard_session_dialog_ok">Discard</string>
+    <string name="discard_session_dialog_ok">Discard session</string>
     <string name="discard_session_dialog_cancel">Keep practicing</string>
     <string name="navigationLibraryTitle">Library</string>
     <string name="navigationGoalsTitle">Goals</string>
@@ -69,6 +69,5 @@
     <string name="selected">selected</string>
     <string name="item_removed">Section removed from session</string>
     <string name="undo">undo</string>
-    <string name="cannot_remove_item">current section cannot be removed!</string>
     <string name="progressUpdateTitle">Goal progress</string>
 </resources>
