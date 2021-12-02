@@ -198,6 +198,8 @@ class ActiveSessionActivity : AppCompatActivity() {
 
     // the routine for handling presses to category buttons
     private fun categoryPressed(category: Category, categoryView: View) {
+
+
         if (!mService.sessionActive) {   // session starts now
             //start the service so that timer starts
             Intent(this, SessionForegroundService::class.java).also {
@@ -207,17 +209,17 @@ class ActiveSessionActivity : AppCompatActivity() {
 
             // when the session start, also update the goals
             updateGoals(dao!!, lifecycleScope)
+        } else if (mService.sectionBuffer.last().let {         // when session is running, don't allow starting if...
+            (category.id == it.first.category_id) ||           // ... in the same category
+            (it.first.duration ?: 0 - it.second < 1)           // ... section running for less than 1sec
+        }) {
+            return  // ignore press then
         }
 
         // start a new section for the chosen category
         mService.startNewSection(category.id)
 
         updateActiveSectionView()
-
-        // update list for adapter
-        // scroll up to first element so that it is visible when scrolling.
-//        if (mService.sectionBuffer.size > 1)
-//            findViewById<RecyclerView>(R.id.currentSections).smoothScrollToPosition(mService.sectionBuffer.size-2)
 
         // this only re-draws the new item, also, it adds animation which would not occur with notifyDataSetChanged()
         // we use the second last item because the last one is always hidden (in onBindViewHolder()). This ensures insertion

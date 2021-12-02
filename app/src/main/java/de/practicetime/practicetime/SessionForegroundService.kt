@@ -69,7 +69,7 @@ class SessionForegroundService : Service() {
 
                         totalPracticeDuration = 0
                         sectionBuffer.forEach { section ->
-                            totalPracticeDuration += section.first.duration!! - section.second
+                            totalPracticeDuration += (section.first.duration ?: 0).minus(section.second)
                         }
 
                         updateNotification()
