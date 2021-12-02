@@ -60,16 +60,18 @@ class SessionForegroundService : Service() {
                         }
 
                         val now = Date().time / 1000
-                        // calculate total time of all sections (including pauses)
-                        totalPracticeDuration = (now - firstSection.first.timestamp).toInt()
-                        sectionBuffer.forEach { section ->
-                            // subtract all pause durations from total time
-                            totalPracticeDuration -= section.second
-                        }
+
+
                         lastSection.apply {
                             // calculate section duration and update duration field
                             first.duration = getDuration(first)
                         }
+
+                        totalPracticeDuration = 0
+                        sectionBuffer.forEach { section ->
+                            totalPracticeDuration += section.first.duration!! - section.second
+                        }
+
                         updateNotification()
                     }
                     // post the code again with a delay of 1 second
