@@ -3,4 +3,12 @@
     <style name="ToolbarColoredIcons" parent="Theme.PracticeTime">
         <item name="android:textColorSecondary">?attr/colorOnBackground</item>
     </style>
+    <style name="ToolbarTitleCollapsed">
+        <item name="android:textColor">?android:attr/textColorTertiary</item>
+        <item name="android:textSize">24sp</item>
+    </style>
+    <style name="ToolbarTitleExpanded">
+        <item name="android:textColor">?android:attr/textColorTertiary</item>
+        <item name="android:textSize">48sp</item>
+    </style>
 </resources>
