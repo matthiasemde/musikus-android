@@ -25,7 +25,9 @@
             android:name=".ActiveSessionActivity"
             android:parentActivityName=".MainActivity"
             android:windowSoftInputMode="adjustNothing"
-            android:exported="false" />
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:configChanges="orientation|keyboardHidden"/>
         <activity
             android:name=".MainActivity"
             android:exported="true">
