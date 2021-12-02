@@ -7,7 +7,6 @@ import android.os.Looper
 import android.view.View
 import android.view.animation.Animation
 import android.view.animation.Transformation
-import android.widget.Button
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -16,6 +15,7 @@ import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
+import com.google.android.material.button.MaterialButton
 import de.practicetime.practicetime.entities.GoalInstanceWithDescriptionWithCategories
 import de.practicetime.practicetime.entities.GoalProgressType
 import de.practicetime.practicetime.entities.GoalType
@@ -37,8 +37,8 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
 
     private var skipAnimation = false
 
-    private var continueButton : TextView? = null
-    private var skipButton : TextView? = null
+    private var continueButton : MaterialButton? = null
+    private var skipButton : MaterialButton? = null
 
     override fun onBackPressed() {
         exitActivity()
