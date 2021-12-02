@@ -22,11 +22,11 @@ class MainActivity : AppCompatActivity() {
         val bottomNavigationView = findViewById<BottomNavigationView>(R.id.bottom_navigation_view)
         bottomNavigationView.setupWithNavController(navController)
 
-        if (isInDarkMode()) {
-            // workaround for removing the elevation color overlay
-            // https://github.com/material-components/material-components-android/issues/1148
-            bottomNavigationView.elevation = 0F
-        }
+//        if (isInDarkMode()) {
+//            // workaround for removing the elevation color overlay
+//            // https://github.com/material-components/material-components-android/issues/1148
+//            bottomNavigationView.elevation = 0F
+//        }
     }
 
     private fun isInDarkMode() : Boolean {
