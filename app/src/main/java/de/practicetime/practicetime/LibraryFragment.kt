@@ -3,7 +3,9 @@ package de.practicetime.practicetime
 import android.app.AlertDialog
 import android.os.Bundle
 import android.util.TypedValue
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.widget.Button
 import android.widget.Toast
 import androidx.core.content.ContextCompat
@@ -14,6 +16,7 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
 import com.google.android.material.appbar.CollapsingToolbarLayout
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
 import de.practicetime.practicetime.entities.Category
 import kotlinx.coroutines.launch
@@ -67,20 +70,24 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
                 longClickHandler = ::longClickOnCategoryHandler,
         )
 
-        requireActivity().findViewById<RecyclerView>(R.id.libraryCategoryList).apply {
-            layoutManager = GridLayoutManager(context, 2)
-            adapter = categoryAdapter
-            itemAnimator?.apply {
-                addDuration = 500L
-                moveDuration = 500L
-                removeDuration = 200L
-            }
-        }
-
         // load all active categories from the database and notify the adapter
         lifecycleScope.launch {
+            Log.d("Tag", "adding Categories...BEFORE")
             dao?.getActiveCategories()?.let { activeCategories.addAll(it.reversed()) }
+            Log.d("Tag", "adding Categories...")
             categoryAdapter?.notifyItemRangeInserted(0, activeCategories.size)
+
+            requireActivity().findViewById<RecyclerView>(R.id.libraryCategoryList).apply {
+                layoutManager = GridLayoutManager(context, 2)
+                adapter = categoryAdapter
+                Log.d("Tag", "setting adapter...")
+                itemAnimator?.apply {
+                    addDuration = 500L
+                    moveDuration = 500L
+                    removeDuration = 200L
+                }
+            }
+
         }
     }
 

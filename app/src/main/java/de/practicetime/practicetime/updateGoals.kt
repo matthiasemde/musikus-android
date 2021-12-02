@@ -1,12 +1,15 @@
 package de.practicetime.practicetime
 
-import android.util.Log
 import androidx.lifecycle.LifecycleCoroutineScope
 import de.practicetime.practicetime.entities.GoalPeriodUnit
 import kotlinx.coroutines.launch
 import java.util.*
 
-fun updateGoals(dao: PTDao, lifecycleScope: LifecycleCoroutineScope) {
+fun updateGoals(
+    dao: PTDao,
+    lifecycleScope: LifecycleCoroutineScope,
+    callbackFn: () -> Unit = {}
+) {
     lifecycleScope.launch {
         var notDone = true
         while(notDone) {
@@ -42,5 +45,6 @@ fun updateGoals(dao: PTDao, lifecycleScope: LifecycleCoroutineScope) {
                 }
             }
         }
+        callbackFn()
     }
 }

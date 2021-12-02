@@ -2,8 +2,6 @@ package de.practicetime.practicetime
 
 import android.app.AlertDialog
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.util.TypedValue
 import android.view.View
 import android.widget.CheckBox
@@ -60,16 +58,8 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         openDatabase()
 
-        updateGoals(dao!!, lifecycleScope)
-
-        // wait for goals to be updated TODO find better solution
-        Handler(Looper.getMainLooper()).postDelayed({
-            try {
-                initGoalList()
-            } catch (e: Exception) {
-                return@postDelayed
-            }
-        }, 500)
+        // trigger update routine and set adapter (initGoalList()) when it is ready
+        updateGoals(dao!!, lifecycleScope, ::initGoalList)
 
         lifecycleScope.launch {
             // create a new goal dialog for adding new goals
