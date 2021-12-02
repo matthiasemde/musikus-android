@@ -1,15 +1,19 @@
 package de.practicetime.practicetime
 
-import android.content.res.Configuration
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.bottomnavigation.BottomNavigationView
 
 class MainActivity : AppCompatActivity() {
+
+    private lateinit var bottomNavigationView: BottomNavigationView
+    private lateinit var handler: Handler
+    private lateinit var runnable: Runnable
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -19,18 +23,35 @@ class MainActivity : AppCompatActivity() {
             supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
         val navController = navHostFragment.navController
 
-        val bottomNavigationView = findViewById<BottomNavigationView>(R.id.bottom_navigation_view)
+        bottomNavigationView = findViewById(R.id.bottom_navigation_view)
         bottomNavigationView.setupWithNavController(navController)
 
-//        if (isInDarkMode()) {
-//            // workaround for removing the elevation color overlay
-//            // https://github.com/material-components/material-components-android/issues/1148
-//            bottomNavigationView.elevation = 0F
-//        }
     }
 
-    private fun isInDarkMode() : Boolean {
-        val currentNightMode = resources.configuration.uiMode.and(Configuration.UI_MODE_NIGHT_MASK)
-        return currentNightMode == Configuration.UI_MODE_NIGHT_YES
+    // periodically check if session is still running (if it is) to remove the badge if yes
+    override fun onResume() {
+        super.onResume()
+        runnable = object : Runnable {
+            override fun run() {
+                Log.d("Tag", "RUN!!!! ${Singleton.serviceIsRunning}")
+                if (Singleton.serviceIsRunning) {
+                    bottomNavigationView.getOrCreateBadge(R.id.sessionListFragment)
+                } else {
+                    bottomNavigationView.removeBadge(R.id.sessionListFragment)
+                }
+                if (Singleton.serviceIsRunning)
+                    handler.postDelayed(this, 1000)
+            }
+        }
+        handler = Handler(Looper.getMainLooper()).also {
+            it.post(runnable)
+        }
+    }
+
+    // remove the callback. Otherwise, the runnable will keep going and when entering the activity again,
+    // there will be twice as much and so on...
+    override fun onStop() {
+        super.onStop()
+        handler.removeCallbacks(runnable)
     }
 }

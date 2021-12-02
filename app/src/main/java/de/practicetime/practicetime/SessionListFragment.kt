@@ -3,6 +3,8 @@ package de.practicetime.practicetime
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.View
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -12,13 +14,18 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import de.practicetime.practicetime.entities.*
+import kotlinx.coroutines.Runnable
 import kotlinx.coroutines.launch
 import java.util.*
 
-
-private var dao: PTDao? = null
-
 class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
+
+    private var dao: PTDao? = null
+    private lateinit var fabNewSession: FloatingActionButton
+    private lateinit var fabRunningSession: FloatingActionButton
+    private lateinit var handler: Handler
+    private lateinit var runnable: Runnable
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
 
         openDatabase()
@@ -105,12 +112,15 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
             }
         }
 
-        val fab = view.findViewById<FloatingActionButton>(R.id.fab)
-        fab.setOnClickListener {
+        fabNewSession = view.findViewById(R.id.fab_new_session)
+        fabRunningSession = view.findViewById(R.id.fab_running_session)
+        val clickListener = View.OnClickListener {
             val i = Intent(requireContext(), ActiveSessionActivity::class.java)
             requireActivity().startActivity(i)
             requireActivity().overridePendingTransition(R.anim.slide_in_up, R.anim.fake_anim)
         }
+        fabNewSession.setOnClickListener(clickListener)
+        fabRunningSession.setOnClickListener(clickListener)
     }
 
     private fun openDatabase() {
@@ -146,5 +156,36 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
                 prefs.edit().putBoolean("firstrun", false).apply()
             }
         }
+    }
+
+    // check if session is running every second to respond the fab design to it
+    override fun onResume() {
+        super.onResume()
+        val fabRunningSession = requireView().findViewById<FloatingActionButton>(R.id.fab_running_session)
+        // set correct FAB depending if session is running.
+        // wait 100ms and check again to give Service time to stop after discarding session
+        runnable = object : Runnable {
+            override fun run() {
+                if (Singleton.serviceIsRunning) {
+                    fabRunningSession.show()
+                    fabNewSession.hide()
+                } else {
+                    fabNewSession.show()
+                    fabRunningSession.hide()
+                }
+                if (Singleton.serviceIsRunning)
+                    handler.postDelayed(this, 1000)
+            }
+        }
+        handler = Handler(Looper.getMainLooper()).also {
+            it.post(runnable)
+        }
+    }
+
+    // remove the callback. Otherwise, the runnable will keep going and when entering the activity again,
+    // there will be twice as much and so on...
+    override fun onStop() {
+        super.onStop()
+        handler.removeCallbacks(runnable)
     }
 }

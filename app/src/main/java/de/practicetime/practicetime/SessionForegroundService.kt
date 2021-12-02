@@ -4,6 +4,7 @@ import android.app.*
 import android.content.Context
 import android.content.Intent
 import android.os.*
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import de.practicetime.practicetime.entities.PracticeSection
 import java.util.*
@@ -26,12 +27,14 @@ class SessionForegroundService : Service() {
 
     override fun onCreate() {
         // The service is being created
+        Log.d("Service", "Service created")
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         // The service is starting, due to a call to startService()
-        startTimer()
 
+        Singleton.serviceIsRunning = true
+        startTimer()
         createNotificationChannel()
         // set the Service to foregrund to display the notification
         // this is different to displaying the notification via notify() since it automatically
@@ -146,6 +149,7 @@ class SessionForegroundService : Service() {
 
     override fun onBind(intent: Intent): IBinder? {
         // A client is binding to the service with bindService()
+        Log.d("Service", "onBind()")
         return binder
     }
 
@@ -175,6 +179,7 @@ class SessionForegroundService : Service() {
 
     override fun onUnbind(intent: Intent): Boolean {
         // All clients have unbound with unbindService()
+        Log.d("Service", "Service unbound")
         return allowRebind
     }
 
@@ -195,4 +200,9 @@ class SessionForegroundService : Service() {
         fun getService(): SessionForegroundService = this@SessionForegroundService
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        Log.d("Service", "Service destroyed")
+        Singleton.serviceIsRunning = false
+    }
 }
