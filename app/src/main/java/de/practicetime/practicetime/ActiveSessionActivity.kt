@@ -607,7 +607,7 @@ class ActiveSessionActivity : AppCompatActivity() {
             Snackbar.make(
                 findViewById(R.id.coordinator_layout_active_session),
                 getString(R.string.item_removed),
-                Snackbar.LENGTH_LONG
+                7000
             ).apply {
                 setAction(R.string.undo) {
                     practiceSections.add(index, elem)
