@@ -7,6 +7,7 @@ import android.os.Looper
 import android.view.View
 import android.view.animation.Animation
 import android.view.animation.Transformation
+import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -117,7 +118,7 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
                 val (_, goalDescriptions) = categoryWithGoalDescriptions
 
                 // ... and loop through those goals, summing up the duration
-                goalDescriptions.forEach { description ->
+                goalDescriptions.filter {d -> !d.archived}.forEach { description ->
                     when (description.progressType) {
                         GoalProgressType.TIME -> goalProgress[description.id] =
                                 goalProgress[description.id] ?: 0 + (section.duration ?: 0)
@@ -145,29 +146,26 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
                 progressedGoalInstancesWithDescriptionsWithCategories.addAll(it)
             }
 
-            if (progressedGoalInstancesWithDescriptionsWithCategories.isNotEmpty()) {
-                progressedGoalInstancesWithDescriptionsWithCategories.forEach { (instance, d) ->
-                    goalProgress[d.description.id].also { progress ->
-                        if (progress != null && progress > 0) {
-                            instance.progress += progress
-                            dao?.updateGoalInstance(instance)
+            progressedGoalInstancesWithDescriptionsWithCategories.forEach { (instance, d) ->
+                goalProgress[d.description.id].also { progress ->
+                    if (progress != null && progress > 0) {
+                        instance.progress += progress
+                        dao?.updateGoalInstance(instance)
 
-                            // undo the progress locally after updating database for the animation to work
-                            instance.progress -= progress
-                        }
+                        // undo the progress locally after updating database for the animation to work
+                        instance.progress -= progress
                     }
                 }
+            }
 
-                //if no element is progressed which wasn't already at 100%, exit the activity
-                if (progressedGoalInstancesWithDescriptionsWithCategories.none {
-                        it.instance.progress < it.instance.target
-                    }) {
-                    exitActivity()
-                }
-
-                startProgressAnimation(goalProgress)
+            //if no element is progressed which wasn't already at 100%, show ¯\_(ツ)_/¯
+            if (progressedGoalInstancesWithDescriptionsWithCategories.none {
+                    it.instance.progress < it.instance.target
+                }) {
+                findViewById<LinearLayout>(R.id.shrug).visibility = View.VISIBLE
+                findViewById<RecyclerView>(R.id.progessUpdateGoalList).visibility = View.GONE
             } else {
-                exitActivity()
+                startProgressAnimation(goalProgress)
             }
         }
     }
