@@ -2,11 +2,11 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
-        android:id="@+id/topToolbarSelectionArchive"
-        android:icon="@drawable/ic_archive"
+        android:id="@+id/topToolbarSelectionDelete"
+        android:icon="@drawable/ic_delete"
         android:enabled="true"
         app:showAsAction="ifRoom"
-        android:title="@string/topToolBarArchive" />
+        android:title="@string/topToolBarDelete" />
     <item
         android:id="@+id/topToolbarSelectionSettings"
         android:title="@string/topToolBarSettings"

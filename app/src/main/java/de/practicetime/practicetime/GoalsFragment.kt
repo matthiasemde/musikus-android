@@ -6,6 +6,8 @@ import android.os.Handler
 import android.os.Looper
 import android.util.TypedValue
 import android.view.View
+import android.widget.CheckBox
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.cardview.widget.CardView
@@ -33,7 +35,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
 
     private var addGoalDialog: GoalDialog? = null
     private var editGoalDialog: GoalDialog? = null
-    private var archiveGoalDialog: AlertDialog? = null
+    private var deleteGoalDialog: AlertDialog? = null
 
     private var goalsToolbar: androidx.appcompat.widget.Toolbar? = null
     private var goalsCollapsingToolbarLayout: CollapsingToolbarLayout? = null
@@ -86,8 +88,8 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
         // create the category dialog for editing categories
         editGoalDialog = GoalDialog(requireActivity(), listOf(), ::editGoalHandler)
 
-        // create the dialog for archiving goals
-        initArchiveGoalDialog()
+        // create the dialog for deleting goals
+        initDeleteGoalDialog()
 
         goalsToolbar = view.findViewById(R.id.goalsToolbar)
         goalsCollapsingToolbarLayout = view.findViewById(R.id.collapsing_toolbar_layout)
@@ -120,17 +122,25 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
         }
     }
 
-    // initialize the goal archive dialog
-    private fun initArchiveGoalDialog() {
-        archiveGoalDialog = requireActivity().let {
-            val builder = AlertDialog.Builder(it)
+    // initialize the goal delete dialog
+    private fun initDeleteGoalDialog() {
+
+        deleteGoalDialog = requireActivity().let { context ->
+            val view = context.layoutInflater.inflate(R.layout.dialog_view_delete_goal, null)
+            val builder = AlertDialog.Builder(context)
+
+            val checkBox = view.findViewById<CheckBox>(R.id.deleteGoalDialogCheckBox)
+
             builder.apply {
-                setMessage(R.string.archiveGoalDialogTitle)
-                setPositiveButton(R.string.archiveDialogConfirm) { dialog, _ ->
-                    archiveGoalHandler(selectedGoals.map { pair -> pair.first })
+                setView(view)
+                setPositiveButton(R.string.deleteDialogConfirm) { dialog, _ ->
+                    if(checkBox.isChecked) deleteGoalHandler(selectedGoals.map { p -> p.first })
+                    else archiveGoalHandler(selectedGoals.map { p -> p.first })
+                    checkBox.isChecked = false
                     dialog.dismiss()
                 }
-                setNegativeButton(R.string.archiveDialogCancel) { dialog, _ ->
+                setNegativeButton(R.string.dialogCancel) { dialog, _ ->
+                    checkBox.isChecked = false
                     dialog.cancel()
                 }
             }
@@ -176,7 +186,15 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
                 // set the click listeners for the menu options here
                 setOnMenuItemClickListener {
                     when (it.itemId) {
-                        R.id.topToolbarSelectionArchive -> archiveGoalDialog?.show()
+                        R.id.topToolbarSelectionDelete -> {
+                            deleteGoalDialog?.show()
+                            deleteGoalDialog?.also { dialog ->
+                                dialog.findViewById<TextView>(R.id.deleteGoalDialogMessage).setText(
+                                    if(selectedGoals.size > 1) R.string.deleteGoalsDialogMessage
+                                    else R.string.deleteGoalDialogMessage
+                                )
+                            }
+                        }
                     }
                     return@setOnMenuItemClickListener true
                 }
@@ -184,7 +202,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
             // change the background color of the App Bar
             val typedValue = TypedValue()
             requireActivity().theme.resolveAttribute(R.attr.colorSurface, typedValue, true)
-            var color = typedValue.data
+            val color = typedValue.data
             goalsCollapsingToolbarLayout?.setBackgroundColor(color)
         }
 
@@ -296,7 +314,32 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
                 goalAdapter?.notifyItemRemoved(index)
             }
         }
-        Toast.makeText(context, R.string.archiveGoalToast, Toast.LENGTH_SHORT).show()
+        if(goalDescriptionIds.size > 1) {
+            Toast.makeText(context, R.string.deleteGoalsToast, Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(context, R.string.deleteGoalToast, Toast.LENGTH_SHORT).show()
+        }
+        resetToolbar()
+    }
+
+    // the handler for deleting goals
+    private fun deleteGoalHandler(goalDescriptionIds: List<Int>) {
+        lifecycleScope.launch {
+            dao?.deleteGoals(goalDescriptionIds)
+        }
+        goalDescriptionIds.forEach { goalDescriptionId ->
+            activeGoalInstancesWithDescriptionWithCategories.indexOfFirst{ (_, d) ->
+                d.description.id == goalDescriptionId
+            }.also { index ->
+                activeGoalInstancesWithDescriptionWithCategories.removeAt(index)
+                goalAdapter?.notifyItemRemoved(index)
+            }
+        }
+        if(goalDescriptionIds.size > 1) {
+            Toast.makeText(context, R.string.deleteGoalsToast, Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(context, R.string.deleteGoalToast, Toast.LENGTH_SHORT).show()
+        }
         resetToolbar()
     }
 

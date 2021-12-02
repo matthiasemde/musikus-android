@@ -69,6 +69,12 @@ interface PTDao {
     @Delete
     suspend fun deleteCategory(category: Category)
 
+    @Delete
+    suspend fun deleteGoalDescription(goalDescription: GoalDescription)
+
+    @Delete
+    suspend fun deleteGoalInstance(goalInstance: GoalInstance)
+
     @Query("DELETE FROM Category WHERE id = :categoryId")
     suspend fun deleteCategoryById(categoryId: Int)
 
@@ -106,21 +112,31 @@ interface PTDao {
     }
 
     @Transaction
-    suspend fun archiveCategory(categoryId: Int) {
+    suspend fun deleteCategory(categoryId: Int) : Boolean {
         // to archive a category, fetch it from the database along with associated goals
-        getCategoryWithGoalDescriptionsWithCategories(categoryId).also {
-            val (category, goalDescriptionsWithCategories) = it
-            // check if the goals are only associated with the selected category
-            // or other categories which are already archived
-            for ((goalDescription, categories) in goalDescriptionsWithCategories) {
-                if ((categories.filter { c -> !c.archived }).size == 1) {
-                    // in this case, archive the goal as well
-                    goalDescription.archived = true
-                    updateGoalDescription(goalDescription)
-                }
+        getCategoryWithGoalDescriptions(categoryId).also {
+            val (category, goalDescriptions) = it
+            // check if there are goals associated with the selected category
+            return if (goalDescriptions.isNotEmpty()) {
+                // in this case, we don't allow deletion and return false
+                false
+            } else {
+                category.archived = true
+                updateCategory(category)
+                true
             }
-            category.archived = true
-            updateCategory(category)
+        }
+    }
+
+    @Transaction
+    suspend fun deleteGoals(goalDescriptionIds: List<Int>) {
+        // to delete a goal, first fetch all instances from the database
+        for (goalDescriptionId in goalDescriptionIds) {
+            getGoalInstancesWhereDescriptionId(goalDescriptionId).forEach {
+                // in this case, archive the goal as well
+                deleteGoalInstance(it)
+            }
+            deleteGoalDescription(getGoalDescription(goalDescriptionId))
         }
     }
 
@@ -135,8 +151,8 @@ interface PTDao {
 
     @Transaction
     @Query("SELECT * FROM Category WHERE id=:id")
-    suspend fun getCategoryWithGoalDescriptionsWithCategories(id: Int)
-        : CategoryWithGoalDescriptionsWithCategories
+    suspend fun getCategoryWithGoalDescriptions(id: Int)
+        : CategoryWithGoalDescriptions
 
     @Query("SELECT * FROM Category")
     suspend fun getAllCategories(): List<Category>
@@ -154,9 +170,14 @@ interface PTDao {
     suspend fun getGoalInstance(id: Int): GoalInstance
 
     @Query("SELECT * FROM GoalInstance WHERE startTimestamp < :now AND goalDescriptionId=(SELECT id FROM GoalDescription WHERE id=:descriptionId)")
-    suspend fun getGoalInstancesFromNowOnWhereDescriptionId(
+    suspend fun getGoalInstancesWhereDescriptionId(
         descriptionId: Int,
         now : Long = Date().time / 1000L
+    ): List<GoalInstance>
+
+    @Query("SELECT * FROM GoalInstance WHERE goalDescriptionId=(SELECT id FROM GoalDescription WHERE id=:descriptionId)")
+    suspend fun getGoalInstancesFromNowOnWhereDescriptionId(
+        descriptionId: Int,
     ): List<GoalInstance>
 
 //

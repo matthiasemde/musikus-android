@@ -14,8 +14,10 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
 import com.google.android.material.appbar.CollapsingToolbarLayout
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+import com.google.android.material.snackbar.Snackbar
 import de.practicetime.practicetime.entities.Category
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.selects.select
 
 
 private var dao: PTDao? = null
@@ -27,7 +29,7 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
 
     private var addCategoryDialog: CategoryDialog? = null
     private var editCategoryDialog: CategoryDialog? = null
-    private var archiveCategoryDialog: AlertDialog? = null
+    private var deleteCategoryDialog: AlertDialog? = null
 
     private var libraryToolbar: androidx.appcompat.widget.Toolbar? = null
     private var libraryCollapsingToolbarLayout: CollapsingToolbarLayout? = null
@@ -51,7 +53,7 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
         editCategoryDialog = CategoryDialog(requireActivity(), ::editCategoryHandler)
 
         // create the dialog for archiving categories
-        initArchiveCategoryDialog()
+        initDeleteCategoryDialog()
 
         libraryToolbar = view.findViewById(R.id.libraryToolbar)
         libraryCollapsingToolbarLayout = view.findViewById(R.id.library_collapsing_toolbar_layout)
@@ -82,29 +84,17 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
         }
     }
 
-    // initialize the category archive dialog
-    private fun initArchiveCategoryDialog() {
-        archiveCategoryDialog = requireActivity().let {
+    // initialize the category delete dialog
+    private fun initDeleteCategoryDialog() {
+        deleteCategoryDialog = requireActivity().let {
             val builder = AlertDialog.Builder(it)
             builder.apply {
-                setTitle(R.string.archiveCategoryDialogTitle)
-                setPositiveButton(R.string.archiveDialogConfirm) { dialog, _ ->
-                    lifecycleScope.launch {
-                        selectedCategories.forEach { (categoryId, _) ->
-                            dao?.archiveCategory(categoryId)
-                            activeCategories.indexOfFirst { category ->
-                                category.id == categoryId
-                            }.also { index ->
-                                activeCategories.removeAt(index)
-                                categoryAdapter?.notifyItemRemoved(index)
-                            }
-                        }
-                        Toast.makeText(context, R.string.archiveCategoryToast, Toast.LENGTH_SHORT).show()
-                        resetToolbar()
-                    }
+                setMessage(R.string.deleteCategoryDialogMessage)
+                setPositiveButton(R.string.deleteDialogConfirm) { dialog, _ ->
+                    deleteCategoriesHandler(selectedCategories.map{ p -> p.first})
                     dialog.dismiss()
                 }
-                setNegativeButton(R.string.archiveDialogCancel) { dialog, _ ->
+                setNegativeButton(R.string.dialogCancel) { dialog, _ ->
                     dialog.cancel()
                 }
             }
@@ -148,7 +138,7 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
                 // set the click listeners for the menu options here
                 setOnMenuItemClickListener {
                     when (it.itemId) {
-                        R.id.topToolbarSelectionArchive -> archiveCategoryDialog?.show()
+                        R.id.topToolbarSelectionDelete -> deleteCategoryDialog?.show()
                     }
                     return@setOnMenuItemClickListener true
                 }
@@ -211,6 +201,41 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
                 activeCategories[i] = category
                 categoryAdapter?.notifyItemChanged(i)
             }
+        }
+    }
+
+    // the handler for deleting categories
+    private fun deleteCategoriesHandler(categoryIds: List<Int>) {
+        var failedDeleteFlag = false
+        lifecycleScope.launch {
+            for (categoryId in categoryIds) {
+                if(dao?.deleteCategory(categoryId) == true) {
+                    activeCategories.indexOfFirst { category ->
+                        category.id == categoryId
+                    }.also { index ->
+                        activeCategories.removeAt(index)
+                        categoryAdapter?.notifyItemRemoved(index)
+                    }
+                } else {
+                    failedDeleteFlag = true
+                }
+            }
+            if(failedDeleteFlag) {
+                Snackbar.make(
+                    requireView(),
+                    if(categoryIds.size > 1) R.string.deleteCategoriesFailSnackbar
+                    else R.string.deleteCategoryFailSnackbar,
+                    Snackbar.LENGTH_LONG
+                ).show()
+            } else {
+                Snackbar.make(
+                    requireView(),
+                    if(categoryIds.size > 1) R.string.deleteCategoriesSuccessSnackbar
+                    else R.string.deleteCategorySuccessSnackbar,
+                    Snackbar.LENGTH_LONG
+                ).show()
+            }
+            resetToolbar()
         }
     }
 
