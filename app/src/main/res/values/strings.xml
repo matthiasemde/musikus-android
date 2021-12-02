@@ -5,7 +5,7 @@
     <string name="sessionSummaryBreakTime">Break time</string>
     <string name="saveSessionTitle">Summary</string>
     <string name="sessionSummarySaveButton">Save session</string>
-    <string name="sessionListTitle">History</string>
+    <string name="sessionListTitle">Practice Time</string>
     <string name="endSessionDialogOk">Save</string>
     <string name="endSessionDialogCancel">Keep practicing</string>
     <string name="endSessionDialogCommentField">Comment (optional)</string>
@@ -48,9 +48,9 @@
     <string name="topToolBarDelete">Delete</string>
     <string name="topToolBarArchive">Archive</string>
     <string name="archiveGoalDialogTitle">Archive selected goal(s)?</string>
-    <string name="archiveGoalToast">Goal(s) archived</string>
+    <string name="archiveGoalToast">Goal archived</string>
     <string name="archiveCategoryDialogTitle">Archive category and associated goals?</string>
-    <string name="archiveCategoryToast">Categorie(s) archived</string>
+    <string name="archiveCategoryToast">Category archived</string>
     <string name="archiveDialogConfirm">Archive</string>
     <string name="archiveDialogCancel">Cancel</string>
     <string name="min_left">%1$d minutes left</string>
