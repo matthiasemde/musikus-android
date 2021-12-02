@@ -57,6 +57,6 @@
         android:layout_gravity="end|bottom"
         android:layout_margin="16dp"
         android:src="@android:drawable/ic_input_add"
-        android:transitionName="transition_fab"/>
+        android:transitionName="transition_fab" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

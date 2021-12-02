@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.util.TypedValue
 import android.view.View
 import android.widget.Button
+import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -224,14 +225,14 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
                     requireView(),
                     if(categoryIds.size > 1) R.string.deleteCategoriesFailSnackbar
                     else R.string.deleteCategoryFailSnackbar,
-                    Snackbar.LENGTH_LONG
+                    5000
                 ).show()
             } else {
-                Snackbar.make(
-                    requireView(),
+                Toast.makeText(
+                    requireActivity(),
                     if(categoryIds.size > 1) R.string.deleteCategoriesSuccessSnackbar
                     else R.string.deleteCategorySuccessSnackbar,
-                    Snackbar.LENGTH_LONG
+                    Toast.LENGTH_SHORT
                 ).show()
             }
             resetToolbar()

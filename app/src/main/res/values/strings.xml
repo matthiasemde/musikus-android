@@ -54,8 +54,8 @@
     <string name="deleteGoalsToast">Goals deleted</string>
     <string name="deleteCategoryDialogMessage">Delete selected category</string>
     <string name="deleteCategoriesDialogMessage">Delete selected categories</string>
-    <string name="deleteCategorySuccessSnackbar">Category successfully deleted</string>
-    <string name="deleteCategoriesSuccessSnackbar">Categories successfully deleted</string>
+    <string name="deleteCategorySuccessSnackbar">Category deleted</string>
+    <string name="deleteCategoriesSuccessSnackbar">Categories deleted</string>
     <string name="deleteCategoryFailSnackbar">Category could not be deleted, because it is associated with at least one goal</string>
     <string name="deleteCategoriesFailSnackbar">Some categories could not be deleted, because they are associated with at least one goal</string>
     <string name="deleteDialogConfirm">Delete</string>
