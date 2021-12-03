@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.util.TypedValue
 import android.view.View
 import android.widget.Button
+import android.widget.TextView
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
@@ -68,8 +69,10 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
 
         // load all active categories from the database and notify the adapter
         lifecycleScope.launch {
-            dao?.getActiveCategories()?.let { activeCategories.addAll(it.reversed()) }
-            categoryAdapter?.notifyItemRangeInserted(0, activeCategories.size)
+            dao?.getActiveCategories()?.let {
+                activeCategories.addAll(it.reversed())
+                categoryAdapter?.notifyItemRangeInserted(0, it.size)
+            }
 
             requireActivity().findViewById<RecyclerView>(R.id.libraryCategoryList).apply {
                 layoutManager = GridLayoutManager(context, 2)
@@ -81,6 +84,7 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
                 }
             }
 
+            if (activeCategories.isEmpty()) showHint()
         }
     }
 
@@ -189,6 +193,7 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
                 dao?.getCategory(newCategoryId)?.let { activeCategories.add(0, it) }
                 categoryAdapter?.notifyItemInserted(0)
             }
+            if(activeCategories.isNotEmpty()) hideHint()
         }
     }
 
@@ -235,7 +240,22 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
                     Toast.LENGTH_SHORT
                 ).show()
             }
+            if(activeCategories.isEmpty()) showHint()
             resetToolbar()
+        }
+    }
+
+    private fun showHint() {
+        requireView().apply {
+            findViewById<TextView>(R.id.libraryHint).visibility = View.VISIBLE
+            findViewById<RecyclerView>(R.id.libraryCategoryList).visibility = View.GONE
+        }
+    }
+
+    private fun hideHint() {
+        requireView().apply {
+            findViewById<TextView>(R.id.libraryHint).visibility = View.GONE
+            findViewById<RecyclerView>(R.id.libraryCategoryList).visibility = View.VISIBLE
         }
     }
 

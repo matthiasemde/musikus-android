@@ -164,6 +164,8 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
                 }) {
                 findViewById<LinearLayout>(R.id.shrug).visibility = View.VISIBLE
                 findViewById<RecyclerView>(R.id.progessUpdateGoalList).visibility = View.GONE
+                skipButton?.visibility = View.GONE
+                continueButton?.visibility = View.VISIBLE
             } else {
                 startProgressAnimation(goalProgress)
             }

@@ -60,4 +60,16 @@
         android:src="@android:drawable/ic_input_add"
         android:transitionName="transition_fab"/>
 
+    <TextView
+        android:id="@+id/goalsHint"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_margin="32dp"
+        android:text="@string/goalsFragmentHint"
+        android:textAlignment="center"
+        android:textSize="18sp"
+        android:visibility="gone"
+        tools:visibility="visible" />
+
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

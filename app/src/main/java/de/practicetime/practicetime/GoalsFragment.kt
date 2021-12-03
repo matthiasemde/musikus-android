@@ -109,6 +109,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
                 activeGoalInstancesWithDescriptionWithCategories.addAll(it)
                 goalAdapter?.notifyItemRangeInserted(0, it.size)
             }
+            if (activeGoalInstancesWithDescriptionWithCategories.isEmpty()) showHint()
         }
     }
 
@@ -272,6 +273,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
                     }
                 }
             }
+            if (activeGoalInstancesWithDescriptionWithCategories.isNotEmpty()) hideHint()
         }
     }
 
@@ -309,6 +311,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
         } else {
             Toast.makeText(context, R.string.deleteGoalToast, Toast.LENGTH_SHORT).show()
         }
+        if (activeGoalInstancesWithDescriptionWithCategories.isEmpty()) showHint()
         resetToolbar()
     }
 
@@ -330,7 +333,22 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
         } else {
             Toast.makeText(context, R.string.deleteGoalToast, Toast.LENGTH_SHORT).show()
         }
+        if (activeGoalInstancesWithDescriptionWithCategories.isEmpty()) showHint()
         resetToolbar()
+    }
+
+    private fun showHint() {
+        requireView().apply {
+            findViewById<TextView>(R.id.goalsHint).visibility = View.VISIBLE
+            findViewById<RecyclerView>(R.id.goalList).visibility = View.GONE
+        }
+    }
+
+    private fun hideHint() {
+        requireView().apply {
+            findViewById<TextView>(R.id.goalsHint).visibility = View.GONE
+            findViewById<RecyclerView>(R.id.goalList).visibility = View.VISIBLE
+        }
     }
 
     private fun openDatabase() {

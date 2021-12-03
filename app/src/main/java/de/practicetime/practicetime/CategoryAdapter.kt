@@ -1,7 +1,11 @@
 package de.practicetime.practicetime
 
 import android.app.Activity
+import android.content.Context
 import android.content.res.ColorStateList
+import android.os.Build
+import android.os.VibrationEffect
+import android.os.VibratorManager
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -100,6 +104,19 @@ class CategoryAdapter(
                 // set up short and long click handler for selecting categories
                 button.setOnClickListener { shortClickHandler(category, it) }
                 button.setOnLongClickListener {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                        (context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE)
+                            as VibratorManager
+                        ).defaultVibrator.apply {
+                            cancel()
+                            vibrate(
+                                VibrationEffect.createOneShot(
+                                    100,
+                                    100
+                                )
+                            )
+                        }
+                    }
                     // tell the event handler we consumed the event
                     return@setOnLongClickListener longClickHandler(category.id, it)
                 }
