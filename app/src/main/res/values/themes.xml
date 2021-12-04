@@ -17,6 +17,7 @@
         <item name="colorOnBackground">@color/black</item>
         <!-- Status bar color. -->
         <item name="android:statusBarColor" tools:targetApi="l">?attr/colorPrimaryVariant</item>
+        <item name="android:navigationBarColor">?attr/colorSurface</item>
         <!-- Customize your theme here. -->
         <!-- This would change the default text color of (nearly all text): -->
         <!--<item name="android:textColorTertiary">@color/md_red_500</item>-->

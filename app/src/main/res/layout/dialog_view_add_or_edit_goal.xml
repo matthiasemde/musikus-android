@@ -158,10 +158,9 @@
                 android:layout_height="44dp"
                 android:layout_weight="1"
                 android:background="@drawable/goal_dialog_button_left_background"
-                android:backgroundTint="?attr/colorPrimary"
+                style="@style/GoalDialogToggleButton"
                 android:gravity="center|center_vertical"
                 android:text="@string/goalDialogUseAllCategories"
-                android:textColor="?attr/colorOnPrimary"
                 android:textSize="14sp" />
 
             <androidx.appcompat.widget.AppCompatButton
@@ -170,9 +169,9 @@
                 android:layout_height="44dp"
                 android:layout_weight="1"
                 android:background="@drawable/goal_dialog_button_right_background"
+                style="@style/GoalDialogToggleButton"
                 android:gravity="center|center_vertical"
                 android:text="@string/goalDialogUseSpecificCategories"
-                android:textColor="?attr/colorOnSurface"
                 android:textSize="14sp" />
 
         </LinearLayout>

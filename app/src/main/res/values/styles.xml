@@ -1,14 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
     <style name="ToolbarColoredIcons" parent="Theme.PracticeTime">
         <item name="android:textColorSecondary">?attr/colorOnBackground</item>
     </style>
-    <style name="ToolbarTitleCollapsed">
+    <style name="ToolbarTitleCollapsed" parent="">
         <item name="android:textColor">?android:attr/textColorTertiary</item>
         <item name="android:textSize">24sp</item>
     </style>
-    <style name="ToolbarTitleExpanded">
+    <style name="ToolbarTitleExpanded" parent="">
         <item name="android:textColor">?android:attr/textColorTertiary</item>
         <item name="android:textSize">48sp</item>
+    </style>
+    <style name="GoalDialogToggleButton" parent="">
+        <item name="android:backgroundTint">@color/color_toggle_button_goal_dialog</item>
+        <item name="android:textColor">@color/text_color_toggle_button_goal_dialog</item>
     </style>
 </resources>

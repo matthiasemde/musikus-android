@@ -219,12 +219,14 @@ class SessionSummaryAdapter(
                 }
             }
 
-            private fun getTimeString(durationMs: Int) : String {
-                val hoursDur =  durationMs % 3600 / 60     // TODO change back eventually
-                val minutesDur = durationMs % 60           // TODO change back eventually
+            private fun getTimeString(duration: Int) : String {
+                val hoursDur =  duration % 3600 / 60     // TODO change back eventually
+                val minutesDur = duration % 60           // TODO change back eventually
 
                 return if (hoursDur > 0) {
                     "%dh %dmin".format(hoursDur, minutesDur)
+                } else if (minutesDur == 0 && duration > 0){
+                    "<1min"
                 } else {
                     "%dmin".format(minutesDur)
                 }

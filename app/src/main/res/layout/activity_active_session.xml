@@ -135,9 +135,9 @@
         android:layout_gravity="bottom|left"
         android:orientation="horizontal"
         android:animateLayoutChanges="true"
-        android:background="?attr/colorSurface"
+        android:background="?android:attr/navigationBarColor"
         android:paddingEnd="16dp"
-        android:elevation="10dp">
+        app:elevation="6dp">
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/bottom_pause"

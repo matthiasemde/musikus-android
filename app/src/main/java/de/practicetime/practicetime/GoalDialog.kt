@@ -126,38 +126,18 @@ class GoalDialog(
     }
 
     private fun initCategorySelector() {
-        val typedValue = TypedValue()
 
-        context.theme.resolveAttribute(R.attr.colorPrimary, typedValue, true)
-        val colorPrimary = ColorStateList.valueOf(typedValue.data)
-
-        context.theme.resolveAttribute(R.attr.colorOnPrimary, typedValue, true)
-        val colorOnPrimary = ColorStateList.valueOf(typedValue.data)
-
-        context.theme.resolveAttribute(R.attr.colorOnSurface, typedValue, true)
-        val colorOnSurfaceWithAlpha = ColorStateList.valueOf(typedValue.data).withAlpha(30)
-
-        context.theme.resolveAttribute(R.attr.colorOnSurface, typedValue, true)
-        val colorOnSurface = ColorStateList.valueOf(typedValue.data)
-
-        goalDialogSingleCategoryButtonView.apply {
-            backgroundTintList = colorOnSurfaceWithAlpha
-            setTextColor(colorOnSurface)
-        }
+        goalDialogAllCategoriesButtonView.isSelected = true
 
         goalDialogCategorySelectorLayoutView.alpha = 0.5f
         goalDialogCategorySelectorView.isEnabled = false
 
         goalDialogSingleCategoryButtonView.setOnClickListener {
             trackAllCategories = false
-            goalDialogAllCategoriesButtonView.apply {
-                backgroundTintList = colorOnSurfaceWithAlpha
-                setTextColor(colorOnSurface)
-            }
-            goalDialogSingleCategoryButtonView.apply {
-                backgroundTintList = colorPrimary
-                setTextColor(colorOnPrimary)
-            }
+
+            goalDialogSingleCategoryButtonView.isSelected = true
+            goalDialogAllCategoriesButtonView.isSelected = false
+
             goalDialogCategorySelectorLayoutView.alpha = 1f
             goalDialogCategorySelectorView.isEnabled = true
             updatePositiveButtonState()
@@ -165,14 +145,10 @@ class GoalDialog(
 
         goalDialogAllCategoriesButtonView.setOnClickListener {
             trackAllCategories = true
-            goalDialogAllCategoriesButtonView.apply {
-                backgroundTintList = colorPrimary
-                setTextColor(colorOnPrimary)
-            }
-            goalDialogSingleCategoryButtonView.apply {
-                backgroundTintList = colorOnSurfaceWithAlpha
-                setTextColor(colorOnSurface)
-            }
+
+            goalDialogSingleCategoryButtonView.isSelected = false
+            goalDialogAllCategoriesButtonView.isSelected = true
+
             goalDialogCategorySelectorLayoutView.alpha = 0.5f
             goalDialogCategorySelectorView.isEnabled = false
             updatePositiveButtonState()
@@ -345,15 +321,15 @@ class GoalDialog(
         }
 
         override fun getItem(position: Int): Any? {
-            return categories[position];
+            return categories[position]
         }
 
         override fun getCount(): Int {
-            return categories.size;
+            return categories.size + 1
         }
 
         override fun getItemId(position: Int): Long {
-            return position.toLong();
+            return position.toLong()
         }
 
         private class ItemHolder(row: View?) {

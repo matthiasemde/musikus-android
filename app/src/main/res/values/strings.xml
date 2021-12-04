@@ -1,11 +1,11 @@
 <resources>
     <string name="app_name">PracticeTime!</string>
     <string name="sessionSummaryComment">Comment</string>
-    <string name="sessionSummaryPracticeTime">Practice time!</string>
+    <string name="sessionSummaryPracticeTime">Practice time</string>
     <string name="sessionSummaryBreakTime">Break time</string>
     <string name="saveSessionTitle">Summary</string>
     <string name="sessionSummarySaveButton">Save session</string>
-    <string name="sessionListTitle">Practice Time</string>
+    <string name="sessionListTitle">Practice Time!</string>
     <string name="endSessionDialogOk">Save</string>
     <string name="endSessionDialogCancel">Keep practicing</string>
     <string name="endSessionDialogCommentField">Comment (optional)</string>
@@ -79,4 +79,8 @@
     <string name="goalsFragmentHint">Create some goals to get started on tracking your progress</string>
     <string name="libraryHint">Create categories for any piece, scale or other exercise you want to practice</string>
     <string name="sessionsHint">Press the \"+\" button to start your first Practice Session</string>
+    <string name="new_session_fab">Start a new session</string>
+    <string name="running_session_fab">Return to running session</string>
+    <string name="new_category_fab">Create a new category</string>
+    <string name="new_goal_fab">Create a new goal</string>
 </resources>
