@@ -9,8 +9,6 @@
     android:background="@drawable/category_button"
     android:backgroundTint="?attr/colorPrimary"
     android:foreground="@drawable/foreground_simple_overlay"
-    android:foregroundTint="@color/color_selector_category_items"
-    android:foregroundTintMode="src_over"
     android:maxLines="2"
     android:padding="0dp"
     android:textAllCaps="false"

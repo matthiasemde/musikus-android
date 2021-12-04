@@ -4,7 +4,6 @@
     <corners
         android:radius="16dp" >
     </corners>
-    <solid android:color="@android:color/transparent"/>
-
+    <solid android:color="@color/foreground_color_selector"/>
 </shape>
 
