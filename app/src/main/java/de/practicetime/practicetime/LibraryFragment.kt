@@ -7,6 +7,7 @@ import android.view.View
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -35,6 +36,21 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
     private var libraryCollapsingToolbarLayout: CollapsingToolbarLayout? = null
 
     private val selectedCategories = ArrayList<Pair<Int, View>>()
+
+    // catch the back press for the case where the selection should be reverted
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        activity?.onBackPressedDispatcher?.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                if(selectedCategories.isNotEmpty()){
+                    resetToolbar()
+                }else{
+                    isEnabled = false
+                    activity?.onBackPressed()
+                }
+            }
+        })
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         openDatabase()
