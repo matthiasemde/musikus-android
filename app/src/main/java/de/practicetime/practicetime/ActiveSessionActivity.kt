@@ -32,6 +32,7 @@ import de.practicetime.practicetime.entities.PracticeSession
 import kotlinx.coroutines.launch
 import java.util.*
 import kotlin.collections.ArrayList
+import android.view.MotionEvent
 
 class ActiveSessionActivity : AppCompatActivity() {
 
@@ -389,6 +390,42 @@ class ActiveSessionActivity : AppCompatActivity() {
         val dialogRatingBar = dialogView.findViewById<RatingBar>(R.id.dialogRatingBar)
         val dialogComment = dialogView.findViewById<EditText>(R.id.dialogComment)
 
+
+        dialogRatingBar.setOnTouchListener (object : View.OnTouchListener {
+            var handleUp = false
+
+            override fun onTouch(v: View?, event: MotionEvent?): Boolean {
+                return when (event?.action) {
+                    MotionEvent.ACTION_DOWN -> {
+                        handleUp = true
+                        v?.dispatchTouchEvent(MotionEvent.obtain(
+                            event.downTime,
+                            event.eventTime,
+                            MotionEvent.ACTION_UP,
+                            event.x,
+                            event.y,
+                            event.metaState
+                        ))
+                        true
+                    }
+
+                    MotionEvent.ACTION_MOVE -> {
+                        // When true is returned, view will not handle this event.
+                        true
+                    }
+                    MotionEvent.ACTION_UP -> {
+                        // When true is returned, view will not handle this event.
+                        if(handleUp) {
+                            handleUp = false
+                            false
+                        } else
+                            true
+                    }
+                    else -> false
+                }
+            }
+        })
+
         // Dialog Setup
         endSessionDialogBuilder.apply {
             setView(dialogView)
@@ -425,30 +462,32 @@ class ActiveSessionActivity : AppCompatActivity() {
 
     // initialize the dialog for discarding the current session
     private fun initDiscardSessionDialog() {
-        val builder = AlertDialog.Builder(this)
-        builder.apply {
-            setMessage(R.string.discard_session_dialog_title)
-            setPositiveButton(R.string.discard_session_dialog_ok) { dialog, _ ->
-                // clear the sectionBuffer so that runnable dies
-                mService.sectionBuffer.clear()
-                // refresh the adapter otherwise the app will crash because of "inconsistency detected"
-                findViewById<RecyclerView>(R.id.currentSections).adapter = sectionsListAdapter
-                // stop the service
-                Intent(this@ActiveSessionActivity, SessionForegroundService::class.java).also {
-                    stopService(it)
+        discardSessionDialog = AlertDialog.Builder(this).let { builder ->
+            builder.apply {
+                setMessage(R.string.discard_session_dialog_title)
+                setPositiveButton(R.string.discard_session_dialog_ok) { dialog, _ ->
+                    // clear the sectionBuffer so that runnable dies
+                    mService.sectionBuffer.clear()
+                    // refresh the adapter otherwise the app will crash because of "inconsistency detected"
+                    findViewById<RecyclerView>(R.id.currentSections).adapter = sectionsListAdapter
+                    // stop the service
+                    Intent(this@ActiveSessionActivity, SessionForegroundService::class.java).also {
+                        stopService(it)
+                    }
+                    // terminate and go back to MainActivity
+                    finish()
                 }
-                // terminate and go back to MainActivity
-                finish()
-            }
-            setNegativeButton(R.string.discard_session_dialog_cancel) { dialog, _ ->
-                if (!mService.paused) {
-                    hideOverlay()
+                setNegativeButton(R.string.discard_session_dialog_cancel) { dialog, _ ->
+                    if (!mService.paused) {
+                        hideOverlay()
+                    }
+                    dialog.cancel()
                 }
-                dialog.cancel()
             }
+            builder.create()
         }
-        discardSessionDialog = builder.create()
     }
+
     private fun openDatabase() {
         val db = Room.databaseBuilder(
             this,
