@@ -86,5 +86,6 @@
     <string name="running_session_fab">Return to running session</string>
     <string name="new_category_fab">Create a new category</string>
     <string name="new_goal_fab">Create a new goal</string>
+    <string name="fullscreen_session_title">Practice Session</string>
     <string name="goal_description_achieved">Goal achieved!</string>
 </resources>

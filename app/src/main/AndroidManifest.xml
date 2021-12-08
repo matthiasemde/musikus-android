@@ -24,6 +24,11 @@
             android:windowSoftInputMode="adjustNothing"
             android:exported="false" />
         <activity
+            android:name=".FullscreenSessionActivity"
+            android:parentActivityName=".MainActivity"
+            android:windowSoftInputMode="adjustNothing"
+            android:exported="false" />
+        <activity
             android:name=".ActiveSessionActivity"
             android:parentActivityName=".MainActivity"
             android:windowSoftInputMode="adjustNothing"
