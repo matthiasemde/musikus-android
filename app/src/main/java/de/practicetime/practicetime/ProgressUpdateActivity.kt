@@ -2,8 +2,6 @@ package de.practicetime.practicetime
 
 import android.content.Intent
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.view.View
 import android.view.animation.Animation
 import android.view.animation.Transformation
@@ -18,6 +16,7 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
 import com.google.android.material.button.MaterialButton
 import de.practicetime.practicetime.entities.*
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.*
 import kotlin.collections.ArrayList
@@ -34,8 +33,8 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
 
     private var skipAnimation = false
 
-    private var continueButton : MaterialButton? = null
-    private var skipButton : MaterialButton? = null
+    private lateinit var continueButton : MaterialButton
+    private lateinit var skipButton : MaterialButton
 
     override fun onBackPressed() {
         exitActivity()
@@ -49,18 +48,18 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
         val latestSessionId = intent.extras?.getInt("KEY_SESSION")
 
         if (latestSessionId != null) {
-            Handler(Looper.getMainLooper()).postDelayed({
-                try {
-                    parseSession(latestSessionId)
-                } catch (e: Exception) {
-                    return@postDelayed
-                }
-            }, 200)
+            parseSession(latestSessionId)
         } else {
             exitActivity()
         }
 
         initProgressedGoalList()
+
+        // prepare the skip and continue button
+        continueButton =  findViewById(R.id.progressUpdateLeave)
+        skipButton = findViewById(R.id.progressUpdateSkipAnimation)
+
+        continueButton.setOnClickListener { exitActivity() }
     }
 
     private fun initProgressedGoalList() {
@@ -73,7 +72,7 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
         findViewById<RecyclerView>(R.id.progessUpdateGoalList).apply {
             layoutManager = LinearLayoutManager(context)
             adapter = progressAdapter
-            itemAnimator = CustomAnimator()
+            itemAnimator = CustomAnimator(animationDuration = { if(skipAnimation) 200L else 1300L })
         }
     }
 
@@ -110,8 +109,8 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
                 if(it.isEmpty()) {
                     findViewById<LinearLayout>(R.id.shrug).visibility = View.VISIBLE
                     findViewById<RecyclerView>(R.id.progessUpdateGoalList).visibility = View.GONE
-                    skipButton?.visibility = View.GONE
-                    continueButton?.visibility = View.VISIBLE
+                    skipButton.visibility = View.GONE
+                    continueButton.visibility = View.VISIBLE
                 // else start the progress animation
                 } else {
                     startProgressAnimation(it, goalProgress)
@@ -126,86 +125,67 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
      *************************************************************************/
 
     private fun startProgressAnimation(
-        progressedGoalInstancesWithDescriptionsWithCategories
+        progressedGoals
             : List<GoalInstanceWithDescriptionWithCategories>,
         goalProgress: Map<Int, Int>
     ) {
 
-        // prepare the skip and continue button
-        continueButton =  findViewById(R.id.progressUpdateLeave)
-        skipButton = findViewById(R.id.progressUpdateSkipAnimation)
-
-        continueButton?.setOnClickListener { exitActivity() }
-        skipButton?.setOnClickListener { button ->
+        skipButton.setOnClickListener { button ->
             skipAnimation = true
-            val oldSize = progressAdapterData.size
-            progressAdapterData.clear()
-            progressAdapter?.notifyItemRangeRemoved(0, oldSize)
 
-            progressedGoalInstancesWithDescriptionsWithCategories.also {
-                progressAdapterData.addAll(it)
-                progressAdapter?.notifyItemRangeInserted(
-                    0,
-                    it.size
-                )
-            }
+            progressedGoals
+                .slice(progressAdapterData.size until progressedGoals.size)
+                .reversed()
+                .onEach { goal ->
+                    goal.instance.progress += goalProgress[goal.description.description.id] ?: 0
+                }.also {
+                    progressAdapterData.addAll(0, it)
+                    progressAdapter?.notifyItemRangeInserted(
+                        1,
+                        it.size
+                    )
+                }
+
             button.visibility = View.GONE
-            continueButton?.visibility = View.VISIBLE
+            continueButton.visibility = View.VISIBLE
         }
-
-        val handler = Handler(Looper.getMainLooper())
 
         // for the animation we want to alternatingly show a new goal and then its progress
-        fun showGoal(goalIndex: Int, firstAnimation: Boolean) {
-            if(skipAnimation) return
+        lifecycleScope.launch {
+            var firstGoal = true
 
-            fun showProgress(progressIndex: Int) {
-                if(skipAnimation) return
+            for (progressedGoal in progressedGoals) {
 
-                progressAdapterData[0].also { (i, d) ->
-                    i.progress += goalProgress[d.description.id] ?: 0
+                delay(if(firstGoal) 0L else 1500L)
+
+                if (skipAnimation) break
+
+                progressAdapterData.add(0, progressedGoal)
+                progressAdapter?.notifyItemInserted(1) // position 1, because the invisible header is at position 0
+
+                // the progress animation for the first element should
+                // start earlier since there is now fade-in beforehand
+                repeat(100) {
+                    delay(if(firstGoal) 5L else 10L)
+                    if(skipAnimation) return@repeat
                 }
-                progressAdapter?.notifyItemChanged(1, PROGRESS_UPDATED)
 
-                // only continue showing goals, as long as there are more
-                if (progressIndex+1 < progressedGoalInstancesWithDescriptionsWithCategories.size) {
-                    handler.postDelayed({
-                        showGoal(progressIndex+1, false)
-                    }, 1500L)
-                // when animation is complete change the visibility of skip and continue button
-                } else {
-                    skipButton?.visibility = View.GONE
-                    continueButton?.visibility = View.VISIBLE
+                progressedGoal.also { (p_i, p_d) ->
+                    p_i.progress += goalProgress[p_d.description.id] ?: 0
+                    progressAdapter?.notifyItemChanged(
+                        progressAdapterData.indexOfFirst { it == progressedGoal } + 1,
+                        PROGRESS_UPDATED
+                    )
                 }
+                if (skipAnimation) break
+
+                firstGoal = false
             }
 
-            // skip all goals, where progress is already at 100%
-            if(progressedGoalInstancesWithDescriptionsWithCategories[goalIndex].instance.let {
-                it.progress >= it.target
-            }) {
-                // before skipping, check if there actually is another goal and if not show continue
-                if(goalIndex+1 < progressedGoalInstancesWithDescriptionsWithCategories.size) {
-                    showGoal(goalIndex + 1, firstAnimation)
-                } else {
-                    skipButton?.visibility = View.GONE
-                    continueButton?.visibility = View.VISIBLE
-                }
-                return
-            }
-
-            progressAdapterData.add(0, progressedGoalInstancesWithDescriptionsWithCategories[goalIndex])
-            progressAdapter?.notifyItemInserted(1)
-
-            // the progress animation for the first element should
-            // start earlier since there is now fade-in beforehand
-            handler.postDelayed(
-                { showProgress(goalIndex) },
-                if (firstAnimation) 500L else 1000L
-            )
+            // when animation is complete change the visibility of skip and continue button
+            skipButton.visibility = View.GONE
+            continueButton.visibility = View.VISIBLE
         }
-
-        // start the progress animation in reverse order with the last goal
-        handler.post { showGoal(0, true) }
     }
 
     /*************************************************************************
@@ -262,7 +242,9 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
      * Custom animator
      *************************************************************************/
 
-    private class CustomAnimator() : DefaultItemAnimator() {
+    private class CustomAnimator(
+        val animationDuration: () -> Long
+    ) : DefaultItemAnimator() {
         // change the duration of the fade in and move animation
         override fun getAddDuration() = 250L
         override fun getMoveDuration() = 500L
@@ -285,7 +267,7 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
                     preInfo.progress * 60,
                     (progressBar.progress * 60).let { if (it < progressBar.max) it else progressBar.max}
                 )
-                animator.duration = 1300
+                animator.duration = animationDuration()
                 progressBar.startAnimation(animator)
                 return true
             }
