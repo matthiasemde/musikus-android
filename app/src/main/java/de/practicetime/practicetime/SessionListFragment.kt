@@ -92,23 +92,20 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
 
                 // initialize variables to keep track of the current month
                 // and the index of its first session
-                var currentMonth: Int
                 var firstSessionOfCurrentMonth = 0
-                Calendar.getInstance().also { newDate ->
+                var currentMonth = Calendar.getInstance().let { newDate ->
                     newDate.timeInMillis =
                         sessions.first().sections.first().section.timestamp * 1000L
-                    currentMonth = newDate.get(Calendar.MONTH)
+                    newDate.get(Calendar.MONTH)
                 }
 
                 // then loop trough the rest of the sessions...
                 sessions.forEachIndexed { i, session ->
                     // ...get the month...
-                    var sessionMonth: Int
-
-                    Calendar.getInstance().also { newDate ->
+                    val sessionMonth = Calendar.getInstance().let { newDate ->
                         newDate.timeInMillis =
                             session.sections.first().section.timestamp * 1000L
-                        sessionMonth = newDate.get(Calendar.MONTH)
+                        newDate.get(Calendar.MONTH)
                     }
 
                     // ...and compare it to the current month.

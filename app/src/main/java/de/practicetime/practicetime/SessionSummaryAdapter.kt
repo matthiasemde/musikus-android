@@ -177,19 +177,16 @@ class SessionSummaryAdapter(
                     return@setOnLongClickListener longClickHandler(session.id, it, adapter)
                 }
 
-                var currentSessionDate: Calendar
-
-                Calendar.getInstance().also { newDate ->
-                    newDate.timeInMillis = sectionsWithCategories.first().section.timestamp * 1000L
-                    currentSessionDate = newDate
+                val currentSessionDate = Calendar.getInstance().apply {
+                    timeInMillis = sectionsWithCategories.first().section.timestamp * 1000L
                 }
+
 
                 // detect, if this session is either the last session of a day or the whole month
                 val lastSessionOfTheDay = if (position == 0) true else {
-                    val nextSessionDate = Calendar.getInstance().let { newDate ->
-                        newDate.timeInMillis = sessionsWithSectionsWithCategories[position - 1]
+                    val nextSessionDate = Calendar.getInstance().apply {
+                        timeInMillis = sessionsWithSectionsWithCategories[position - 1]
                             .sections.first().section.timestamp * 1000L
-                        newDate
                     }
                     currentSessionDate.get(Calendar.DAY_OF_YEAR) !=
                         nextSessionDate.get(Calendar.DAY_OF_YEAR)
@@ -198,12 +195,10 @@ class SessionSummaryAdapter(
                 // if so, calculate the total time practiced that day and display it
                 if(lastSessionOfTheDay) {
                     var totalPracticeDuration = 0
-                    for (i in position downTo 0) {
+                    for (i in position until sessionsWithSectionsWithCategories.size) {
                         val (_, pastSectionsWithCategories) = sessionsWithSectionsWithCategories[i]
-                        var date: Calendar
-                        Calendar.getInstance().also { newDate ->
-                            newDate.timeInMillis = pastSectionsWithCategories.first().section.timestamp * 1000L
-                            date = newDate
+                        val date = Calendar.getInstance().apply {
+                            timeInMillis = pastSectionsWithCategories.first().section.timestamp * 1000L
                         }
                         if(currentSessionDate.get(Calendar.DAY_OF_YEAR) !=
                             date.get(Calendar.DAY_OF_YEAR)) {
