@@ -72,7 +72,11 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
         findViewById<RecyclerView>(R.id.progessUpdateGoalList).apply {
             layoutManager = LinearLayoutManager(context)
             adapter = progressAdapter
-            itemAnimator = CustomAnimator(animationDuration = { if(skipAnimation) 200L else 1300L })
+            itemAnimator = CustomAnimator(
+                progressDuration = { if(skipAnimation) 400L else 1300L },
+                addDuration = { if(skipAnimation) 200L else 250L },
+                moveDuration = { if(skipAnimation) 400L else 500L },
+            )
         }
     }
 
@@ -133,21 +137,25 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
         skipButton.setOnClickListener { button ->
             skipAnimation = true
 
-            progressedGoals
-                .slice(progressAdapterData.size until progressedGoals.size)
-                .reversed()
-                .onEach { goal ->
-                    goal.instance.progress += goalProgress[goal.description.description.id] ?: 0
-                }.also {
-                    progressAdapterData.addAll(0, it)
-                    progressAdapter?.notifyItemRangeInserted(
-                        1,
-                        it.size
-                    )
-                }
-
             button.visibility = View.GONE
             continueButton.visibility = View.VISIBLE
+
+            lifecycleScope.launch {
+                progressedGoals
+                    .slice(progressAdapterData.size until progressedGoals.size)
+                    .reversed()
+                    .also {
+                        progressAdapterData.addAll(0, it)
+                        progressAdapter?.notifyItemRangeInserted(
+                            1,
+                            it.size
+                        )
+                        delay(600L)
+                    }.onEachIndexed { index, goal ->
+                        goal.instance.progress += goalProgress[goal.description.description.id] ?: 0
+                        progressAdapter?.notifyItemChanged(index + 1, PROGRESS_UPDATED)
+                    }
+            }
         }
 
         // for the animation we want to alternatingly show a new goal and then its progress
@@ -243,11 +251,13 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
      *************************************************************************/
 
     private class CustomAnimator(
-        val animationDuration: () -> Long
+        val progressDuration: () -> Long,
+        val addDuration: () -> Long,
+        val moveDuration: () -> Long,
     ) : DefaultItemAnimator() {
         // change the duration of the fade in and move animation
-        override fun getAddDuration() = 250L
-        override fun getMoveDuration() = 500L
+        override fun getAddDuration() = addDuration()
+        override fun getMoveDuration() = moveDuration()
 
         override fun animateChange(
             oldHolder: RecyclerView.ViewHolder,
@@ -267,7 +277,7 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
                     preInfo.progress * 60,
                     (progressBar.progress * 60).let { if (it < progressBar.max) it else progressBar.max}
                 )
-                animator.duration = animationDuration()
+                animator.duration = progressDuration()
                 progressBar.startAnimation(animator)
                 return true
             }
