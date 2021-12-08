@@ -10,7 +10,7 @@
     <string name="endSessionDialogCancel">Keep practicing</string>
     <string name="endSessionDialogCommentField">Comment (optional)</string>
     <string name="discard_session_dialog_title">Discard current session and lose all progress?</string>
-    <string name="discard_session_dialog_ok">Discard session</string>
+    <string name="discard_session_dialog_ok">Discard</string>
     <string name="discard_session_dialog_cancel">Keep practicing</string>
     <string name="navigationLibraryTitle">Library</string>
     <string name="navigationGoalsTitle">Goals</string>

@@ -106,10 +106,8 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
 
     // initialize the category delete dialog
     private fun initDeleteCategoryDialog() {
-        deleteCategoryDialog = requireActivity().let {
-            val builder = AlertDialog.Builder(it)
+        deleteCategoryDialog = AlertDialog.Builder(requireActivity()).let { builder ->
             builder.apply {
-                setMessage(R.string.deleteCategoryDialogMessage)
                 setPositiveButton(R.string.deleteDialogConfirm) { dialog, _ ->
                     deleteCategoriesHandler(selectedCategories.map{ p -> p.first})
                     dialog.dismiss()
@@ -158,7 +156,13 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
                 // set the click listeners for the menu options here
                 setOnMenuItemClickListener {
                     when (it.itemId) {
-                        R.id.topToolbarSelectionDelete -> deleteCategoryDialog?.show()
+                        R.id.topToolbarSelectionDelete -> deleteCategoryDialog?.apply {
+                            setMessage(context.getString(
+                                if(selectedCategories.size > 1) R.string.deleteCategoriesDialogMessage
+                                else R.string.deleteCategoryDialogMessage
+                            ))
+                            show()
+                        }
                     }
                     return@setOnMenuItemClickListener true
                 }

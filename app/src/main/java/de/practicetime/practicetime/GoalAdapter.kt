@@ -21,7 +21,7 @@ const val SECONDS_PER_HOUR = 60 * 60
 const val SECONDS_PER_DAY = 60 * 60 * 24
 
 class GoalAdapter(
-    private val goalInstancesWithDescriptionsWithCategories: ArrayList<GoalInstanceWithDescriptionWithCategories>,
+    private val goalInstancesWithDescriptionsWithCategories: List<GoalInstanceWithDescriptionWithCategories>,
     private val context: Activity,
     private val shortClickHandler: (goalInstanceWithDescription: GoalInstanceWithDescription, goalView: View) -> Unit = { _, _ -> },
     private val longClickHandler: (goalId: Int, goalView: View) -> Boolean = { _, _ -> false },

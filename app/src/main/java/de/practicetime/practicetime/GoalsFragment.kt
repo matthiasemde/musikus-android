@@ -27,7 +27,7 @@ private var savedCardElevation = 0f
 
 class GoalsFragment : Fragment(R.layout.fragment_goals) {
 
-    private val activeGoalInstancesWithDescriptionWithCategories =
+    private val goalAdapterData =
         ArrayList<GoalInstanceWithDescriptionWithCategories>()
     private var goalAdapter : GoalAdapter? = null
 
@@ -87,7 +87,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
 
     private fun initGoalList() {
         goalAdapter = GoalAdapter(
-            activeGoalInstancesWithDescriptionWithCategories,
+            goalAdapterData,
             context = requireActivity(),
             ::shortClickOnGoalHandler,
             ::longClickOnGoalHandler,
@@ -105,11 +105,11 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
 
         // load all active goals from the database and notify the adapter
         lifecycleScope.launch {
-            dao?.getActiveGoalInstancesWithDescriptionsWithCategories()?.let {
-                activeGoalInstancesWithDescriptionWithCategories.addAll(it)
+            dao?.getGoalInstancesWithDescriptionsWithCategories()?.let {
+                goalAdapterData.addAll(it)
                 goalAdapter?.notifyItemRangeInserted(0, it.size)
             }
-            if (activeGoalInstancesWithDescriptionWithCategories.isEmpty()) showHint()
+            if (goalAdapterData.isEmpty()) showHint()
         }
     }
 
@@ -260,20 +260,20 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
                     )?.toInt()
                     if(newGoalInstanceId != null) {
                         dao?.getGoalInstance(newGoalInstanceId)?.let { i ->
-                            activeGoalInstancesWithDescriptionWithCategories.add(
+                            goalAdapterData.add(
                                 GoalInstanceWithDescriptionWithCategories(
                                     instance = i,
                                     description = d,
                                 )
                             )
                             goalAdapter?.notifyItemInserted(
-                                activeGoalInstancesWithDescriptionWithCategories.size
+                                goalAdapterData.size
                             )
                         }
                     }
                 }
             }
-            if (activeGoalInstancesWithDescriptionWithCategories.isNotEmpty()) hideHint()
+            if (goalAdapterData.isNotEmpty()) hideHint()
         }
     }
 
@@ -284,10 +284,10 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
     ) {
         lifecycleScope.launch {
             dao?.updateGoalTarget(newGoalDescriptionWithCategories.description.id, newTarget)
-            activeGoalInstancesWithDescriptionWithCategories.indexOfFirst {
+            goalAdapterData.indexOfFirst {
                 it.description.description.id == newGoalDescriptionWithCategories.description.id
             }.also { i ->
-                activeGoalInstancesWithDescriptionWithCategories[i].instance.target = newTarget
+                goalAdapterData[i].instance.target = newTarget
                 goalAdapter?.notifyItemChanged(i)
             }
         }
@@ -299,10 +299,10 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
             dao?.archiveGoals(goalDescriptionIds)
         }
         goalDescriptionIds.forEach { goalDescriptionId ->
-            activeGoalInstancesWithDescriptionWithCategories.indexOfFirst{ (_, d) ->
+            goalAdapterData.indexOfFirst{ (_, d) ->
                 d.description.id == goalDescriptionId
             }.also { index ->
-                activeGoalInstancesWithDescriptionWithCategories.removeAt(index)
+                goalAdapterData.removeAt(index)
                 goalAdapter?.notifyItemRemoved(index)
             }
         }
@@ -311,7 +311,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
         } else {
             Toast.makeText(context, R.string.deleteGoalToast, Toast.LENGTH_SHORT).show()
         }
-        if (activeGoalInstancesWithDescriptionWithCategories.isEmpty()) showHint()
+        if (goalAdapterData.isEmpty()) showHint()
         resetToolbar()
     }
 
@@ -321,10 +321,10 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
             dao?.deleteGoals(goalDescriptionIds)
         }
         goalDescriptionIds.forEach { goalDescriptionId ->
-            activeGoalInstancesWithDescriptionWithCategories.indexOfFirst{ (_, d) ->
+            goalAdapterData.indexOfFirst{ (_, d) ->
                 d.description.id == goalDescriptionId
             }.also { index ->
-                activeGoalInstancesWithDescriptionWithCategories.removeAt(index)
+                goalAdapterData.removeAt(index)
                 goalAdapter?.notifyItemRemoved(index)
             }
         }
@@ -333,7 +333,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
         } else {
             Toast.makeText(context, R.string.deleteGoalToast, Toast.LENGTH_SHORT).show()
         }
-        if (activeGoalInstancesWithDescriptionWithCategories.isEmpty()) showHint()
+        if (goalAdapterData.isEmpty()) showHint()
         resetToolbar()
     }
 

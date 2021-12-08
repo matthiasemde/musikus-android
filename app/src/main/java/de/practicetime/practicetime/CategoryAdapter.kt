@@ -20,7 +20,7 @@ import de.practicetime.practicetime.entities.Category
  */
 
 class CategoryAdapter(
-    private val categories: ArrayList<Category>,
+    private val categories: List<Category>,
     private val context: Activity,
     private val showInActiveSession: Boolean = false,
     private val shortClickHandler: (category: Category, categoryView: View) -> Unit = { _, _ -> },
