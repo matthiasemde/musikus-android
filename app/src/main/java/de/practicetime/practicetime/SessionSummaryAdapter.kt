@@ -99,8 +99,7 @@ class SessionSummaryAdapter(
             private val sectionList: RecyclerView = view.findViewById(R.id.sectionList)
             private val ratingBar: RatingBar = view.findViewById(R.id.ratingBar)
             private val commentField: TextView = view.findViewById(R.id.commentField)
-            private val commentLabel: TextView = view.findViewById(R.id.commentLabel)
-            private val commentDivider: View = view.findViewById(R.id.commentDivider)
+            private val commentSection: View = view.findViewById(R.id.commentSection)
 
             private val sectionsWithCategoriesList = ArrayList<SectionWithCategory>()
 
@@ -207,14 +206,11 @@ class SessionSummaryAdapter(
                 //set the rating bar to the correct star rating
                 ratingBar.rating = session.rating.toFloat()
 
-                // TODO Bug: currently this check returns true although session.comment is not empty
-                //  when RecyclerView recycles the views (when scrolling outside and then back)
                 if (session.comment.isNullOrEmpty()) {
-                    commentField.visibility = View.GONE
-                    commentLabel.visibility = View.GONE
-                    commentDivider.visibility = View.GONE
+                    commentSection.visibility = View.GONE
                 } else {
                     //set content of the comment field
+                    commentSection.visibility = View.VISIBLE
                     commentField.text = session.comment
                 }
             }
