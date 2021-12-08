@@ -76,11 +76,6 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
             it.build()
         })
 
-        requireActivity().findViewById<RecyclerView>(R.id.sessionList).apply {
-            layoutManager = LinearLayoutManager(context)
-            adapter = sessionListAdapter
-        }
-
         lifecycleScope.launch {
             // fetch all sessions from the database
             dao?.getSessionsWithSectionsWithCategories()!!.also { sessions ->
@@ -149,6 +144,11 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
                     )
                 )
                 sessionListAdapter.notifyItemInserted(0)
+            }
+
+            requireActivity().findViewById<RecyclerView>(R.id.sessionList).apply {
+                layoutManager = LinearLayoutManager(context)
+                adapter = sessionListAdapter
             }
         }
     }
