@@ -306,6 +306,7 @@ class GoalDialog(
                 vh = view.tag as ItemHolder
             }
             if (position != 0) {
+                vh.color?.visibility  = View.VISIBLE
                 vh.name?.text = categories[position - 1].name
                 // set the color to the category color
                 val categoryColors = context.resources.getIntArray(R.array.category_colors)
@@ -320,17 +321,11 @@ class GoalDialog(
             return view
         }
 
-        override fun getItem(position: Int): Any? {
-            return categories[position]
-        }
+        override fun getItem(position: Int) = categories[position]
 
-        override fun getCount(): Int {
-            return categories.size + 1
-        }
+        override fun getCount() = categories.size + 1
 
-        override fun getItemId(position: Int): Long {
-            return position.toLong()
-        }
+        override fun getItemId(position: Int) = position.toLong()
 
         private class ItemHolder(row: View?) {
             val color = row?.findViewById<ImageView>(R.id.categorySpinnerColor)
