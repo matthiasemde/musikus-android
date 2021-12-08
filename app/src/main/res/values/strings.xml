@@ -45,6 +45,7 @@
     <string name="addGoalDialogxInx">in</string>
     <string name="goalDialogRepeat">Repeat goal after every interval</string>
     <string name="topToolBarSettings">Settings</string>
+    <string name="topToolBarEdit">Edit</string>
     <string name="topToolBarDelete">Delete</string>
     <string name="dialogCancel">Cancel</string>
     <string name="deleteGoalDialogMessage">Delete selected goal?</string>
