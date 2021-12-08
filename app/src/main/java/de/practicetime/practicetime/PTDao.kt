@@ -73,10 +73,10 @@ interface PTDao {
     suspend fun deleteGoalDescription(goalDescription: GoalDescription)
 
     @Delete
-    suspend fun deleteGoalInstance(goalInstance: GoalInstance)
+    suspend fun deleteGoalDescriptionCategoryCrossRef(crossRef: GoalDescriptionCategoryCrossRef)
 
-    @Query("DELETE FROM Category WHERE id = :categoryId")
-    suspend fun deleteCategoryById(categoryId: Int)
+    @Delete
+    suspend fun deleteGoalInstance(goalInstance: GoalInstance)
 
     @Update
     suspend fun updateCategory(category: Category)
@@ -104,11 +104,13 @@ interface PTDao {
     }
 
     @Transaction
+    suspend fun archiveGoal(goalDescription: GoalDescription) {
+            goalDescription.archived = true
+            updateGoalDescription(goalDescription)
+    }
+
     suspend fun archiveGoals(goalDescriptionIds: List<Int>) {
-        getGoalDescriptions(goalDescriptionIds).forEach { g ->
-            g.archived = true
-            updateGoalDescription(g)
-        }
+        getGoalDescriptions(goalDescriptionIds).forEach { archiveGoal(it) }
     }
 
     @Transaction
@@ -116,8 +118,8 @@ interface PTDao {
         // to archive a category, fetch it from the database along with associated goals
         getCategoryWithGoalDescriptions(categoryId).also {
             val (category, goalDescriptions) = it
-            // check if there are goals associated with the selected category
-            return if (goalDescriptions.isNotEmpty()) {
+            // check if there are non-archived goals associated with the selected category
+            return if (goalDescriptions.any { d -> !d.archived }) {
                 // in this case, we don't allow deletion and return false
                 false
             } else {
@@ -129,16 +131,30 @@ interface PTDao {
     }
 
     @Transaction
-    suspend fun deleteGoals(goalDescriptionIds: List<Int>) {
-        // to delete a goal, first fetch all instances from the database
-        for (goalDescriptionId in goalDescriptionIds) {
-            getGoalInstancesWhereDescriptionId(goalDescriptionId).forEach {
-                // in this case, archive the goal as well
-                deleteGoalInstance(it)
-            }
-            deleteGoalDescription(getGoalDescription(goalDescriptionId))
+    suspend fun deleteGoal(goalDescriptionId: Int) {
+        // to delete a goal, first fetch all instances from the database and delete them
+        getGoalInstancesWhereDescriptionId(goalDescriptionId).forEach {
+            deleteGoalInstance(it)
         }
+        // we also need to remove all entries in the cross reference table
+        getGoalDescriptionCategoryCrossRefsWhereDescriptionId(goalDescriptionId).forEach {
+            deleteGoalDescriptionCategoryCrossRef(it)
+        }
+        deleteGoalDescription(getGoalDescription(goalDescriptionId))
     }
+
+    suspend fun deleteGoals(goalDescriptionIds: List<Int>) {
+        goalDescriptionIds.forEach { deleteGoal(it) }
+    }
+
+    @Transaction
+    suspend fun deleteSession(sessionId: Int, updatedGoalInstances: List<GoalInstance>) {
+        updatedGoalInstances.forEach { updateGoalInstance(it) }
+        deleteSession(getSession(sessionId))
+    }
+
+    @Query("SELECT * FROM PracticeSession WHERE id=:id")
+    suspend fun getSession(id: Int): PracticeSession
 
     @Query("SELECT * FROM PracticeSession")
     suspend fun getAllSessions(): List<PracticeSession>
@@ -153,6 +169,16 @@ interface PTDao {
     @Query("SELECT * FROM Category WHERE id=:id")
     suspend fun getCategoryWithGoalDescriptions(id: Int)
         : CategoryWithGoalDescriptions
+
+    @Transaction
+    @Query("SELECT * FROM GoalDescription WHERE id=:id")
+    suspend fun getGoalDescriptionWithCategories(id: Int)
+        : GoalDescriptionWithCategories
+
+    @Transaction
+    @Query("SELECT * FROM GoalDescriptionCategoryCrossRef WHERE goalDescriptionId=:id")
+    suspend fun getGoalDescriptionCategoryCrossRefsWhereDescriptionId(id: Int)
+        : List<GoalDescriptionCategoryCrossRef>
 
     @Query("SELECT * FROM Category")
     suspend fun getAllCategories(): List<Category>
@@ -180,11 +206,6 @@ interface PTDao {
         descriptionId: Int,
     ): List<GoalInstance>
 
-//
-//    @Transaction
-//    @Query("SELECT * FROM Goal WHERE archived=0 AND startTimestamp + periodInSeconds < :now")
-//    suspend fun getOutdatedGoalsWithCategories(now : Long = Date().time / 1000L) : List<GoalWithCategories>
-
     @Transaction
     @Query("SELECT * FROM GoalInstance WHERE renewed=0 AND startTimestamp + periodInSeconds < :now")
     suspend fun getOutdatedGoalInstancesWithDescriptions(
@@ -195,45 +216,88 @@ interface PTDao {
     @Query("SELECT * FROM GoalDescription WHERE id=:goalId")
     suspend fun getGoalWithCategories(goalId: Int) : GoalDescriptionWithCategories
 
-//    @Query("SELECT * FROM Goal WHERE archived=0 AND type = :type")
-//    suspend fun getActiveTotalTimeGoals(type: GoalType = GoalType.TOTAL_TIME) : List<Goal>
-//
-//    @Transaction
-//    @Query("SELECT * FROM Goal WHERE archived=0")
-//    suspend fun getActiveGoalsWithCategories() : List<GoalWithCategories>
-//
-//    @Transaction
-//    @Query("SELECT * FROM Goal WHERE id In (:ids) AND archived=0")
-//    suspend fun getSelectedActiveGoalsWithCategories(ids : List<Int>) : List<GoalWithCategories>
-//
-    @Query("SELECT * FROM GoalDescription WHERE archived = 0 AND type = :type")
-    suspend fun getActiveGoalDescriptionsOfType(
-        type: GoalType
+    @Query("SELECT * FROM GoalDescription WHERE (archived=0 OR archived=:checkArchived) AND type=:type")
+    suspend fun getGoalDescriptions(
+        checkArchived : Boolean = false,
+        type : GoalType
     ) : List<GoalDescription>
 
     @Transaction
-    @Query("SELECT * FROM GoalInstance WHERE startTimestamp < :now AND startTimestamp+periodInSeconds > :now AND goalDescriptionId IN (SELECT id FROM GoalDescription WHERE archived=0)")
-    suspend fun getActiveGoalInstancesWithDescriptionsWithCategories(
-        now : Long = Date().time / 1000L
-    ) : List<GoalInstanceWithDescriptionWithCategories>
-
-    @Transaction
-    @Query("SELECT * FROM GoalInstance WHERE startTimestamp < :now AND startTimestamp+periodInSeconds > :now AND goalDescriptionId IN (:descriptionIds)")
-    suspend fun getActiveSelectedGoalInstancesWithDescriptionsWithCategories(
-        descriptionIds : List<Int>,
+    @Query("SELECT * FROM GoalInstance WHERE startTimestamp < :now AND startTimestamp+periodInSeconds > :now AND goalDescriptionId IN (SELECT id FROM GoalDescription WHERE archived=0 OR archived=:checkArchived)")
+    suspend fun getGoalInstancesWithDescriptionsWithCategories(
+        checkArchived : Boolean = false,
         now : Long = Date().time / 1000L,
     ) : List<GoalInstanceWithDescriptionWithCategories>
 
     @Transaction
-    @Query("SELECT * FROM PracticeSession")
-    suspend fun getSessionsWithSections(): List<SessionWithSections>
+    @Query("SELECT * FROM GoalInstance WHERE startTimestamp < :now AND startTimestamp+periodInSeconds > :now AND goalDescriptionId IN (:descriptionIds)")
+    suspend fun getGoalInstances(
+        descriptionIds: List<Int>,
+        now : Long = Date().time / 1000L,
+    ) : List<GoalInstance>
+
+    @Transaction
+    @Query("SELECT * FROM GoalInstance WHERE startTimestamp < :now AND startTimestamp+periodInSeconds > :now AND goalDescriptionId IN (:descriptionIds) AND goalDescriptionId IN (SELECT id FROM GoalDescription WHERE archived=0 OR archived=:checkArchived)")
+    suspend fun getGoalInstancesWithDescriptionsWithCategories(
+        descriptionIds : List<Int>,
+        checkArchived : Boolean = false,
+        now : Long = Date().time / 1000L,
+    ) : List<GoalInstanceWithDescriptionWithCategories>
+
+    @Transaction
+    @Query("SELECT * FROM PracticeSession WHERE id=:id")
+    suspend fun getSessionWithSectionsWithCategoriesWithGoals(id: Int)
+        : SessionWithSectionsWithCategoriesWithGoalDescriptions
 
     @Transaction
     @Query("SELECT * FROM PracticeSession")
     suspend fun getSessionsWithSectionsWithCategories(): List<SessionWithSectionsWithCategories>
 
     @Transaction
-    @Query("SELECT * FROM PracticeSession WHERE id = (SELECT MAX(id) FROM PracticeSession)")
-    suspend fun getLatestSessionWithSectionsWithCategoriesWithGoals()
-        : SessionWithSectionsWithCategoriesWithGoalDescriptions
+    @Query("SELECT * FROM PracticeSession WHERE id=:id")
+    suspend fun getSessionWithSections(id: Int): SessionWithSections
+
+    @Transaction
+    suspend fun computeGoalProgressForSession(
+        sessionId: Int,
+        checkArchived: Boolean = false,
+    ) : Map<Int, Int>{
+        var totalSessionDuration = 0
+
+        val session = getSessionWithSectionsWithCategoriesWithGoals(sessionId)
+
+        // goalProgress maps the goalDescription-id to its progress
+        val goalProgress = mutableMapOf<Int, Int>()
+
+        // go through all the sections in the session...
+        session.sections.forEach { (section, categoryWithGoalDescriptions) ->
+            // ... using the respective categories, find the goals,
+            // to which the sections are contributing to...
+            val (_, goalDescriptions) = categoryWithGoalDescriptions
+
+            // ... and loop through those goals, summing up the duration
+            goalDescriptions.filter {d -> checkArchived || !d.archived}.forEach { description ->
+                when (description.progressType) {
+                    GoalProgressType.TIME -> goalProgress[description.id] =
+                        goalProgress[description.id] ?: 0 + (section.duration ?: 0)
+                    GoalProgressType.SESSION_COUNT -> goalProgress[description.id] = 1
+                }
+            }
+
+            // simultaneously sum up the total session duration
+            totalSessionDuration += section.duration ?: 0
+        }
+
+        // query all goal descriptions which have type NON-SPECIFIC
+        getGoalDescriptions(
+            checkArchived,
+            GoalType.NON_SPECIFIC,
+        ).forEach { totalTimeGoal ->
+            goalProgress[totalTimeGoal.id] = when (totalTimeGoal.progressType) {
+                GoalProgressType.TIME -> totalSessionDuration
+                GoalProgressType.SESSION_COUNT -> 1
+            }
+        }
+        return goalProgress
+    }
 }

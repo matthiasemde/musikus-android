@@ -346,12 +346,12 @@ class ActiveSessionActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             // create a new session row and save its id
-            val sessionId = dao?.insertSession(newSession)
+            val sessionId = dao?.insertSession(newSession)!!.toInt()
 
             // traverse all sections for post-processing before writing into db
             for (section in mService.sectionBuffer) {
                 // add the new sessionId to every section in the section buffer
-                section.first.practice_session_id = sessionId?.toInt()
+                section.first.practice_session_id = sessionId
                 // update section durations to exclude break durations
                 section.first.duration = section.first.duration?.minus(section.second)
                 // and insert them into the database
@@ -362,14 +362,20 @@ class ActiveSessionActivity : AppCompatActivity() {
             mService.sectionBuffer.clear()
             // refresh the adapter otherwise the app will crash because of "inconsistency detected"
             findViewById<RecyclerView>(R.id.currentSections).adapter = sectionsListAdapter
+            exitActivity(sessionId)
         }
+    }
 
+    private fun exitActivity(sessionId: Int) {
         // stop the service
         Intent(this, SessionForegroundService::class.java).also {
             stopService(it)
         }
         // go back to MainActivity, make new intent so MainActivity gets reloaded and shows new session
         val intent = Intent(this, ProgressUpdateActivity::class.java)
+        val pBundle = Bundle()
+        pBundle.putInt("KEY_SESSION", sessionId)
+        intent.putExtras(pBundle)
         intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
         startActivity(intent)
     }

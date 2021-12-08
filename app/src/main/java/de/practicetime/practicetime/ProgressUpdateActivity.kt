@@ -17,9 +17,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
 import com.google.android.material.button.MaterialButton
-import de.practicetime.practicetime.entities.GoalInstanceWithDescriptionWithCategories
-import de.practicetime.practicetime.entities.GoalProgressType
-import de.practicetime.practicetime.entities.GoalType
+import de.practicetime.practicetime.entities.*
 import kotlinx.coroutines.launch
 import java.util.*
 import kotlin.collections.ArrayList
@@ -27,11 +25,9 @@ import kotlin.collections.ArrayList
 const val PROGRESS_UPDATED = 1337
 
 class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_update) {
-    private var dao: PTDao? = null
+    private lateinit var dao: PTDao
 
     private val progressAdapterData =
-        ArrayList<GoalInstanceWithDescriptionWithCategories>()
-    private val progressedGoalInstancesWithDescriptionsWithCategories =
         ArrayList<GoalInstanceWithDescriptionWithCategories>()
 
     private var progressAdapter: GoalAdapter? = null
@@ -50,38 +46,21 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
 
         openDatabase()
 
-        initProgressedGoalList()
+        val latestSessionId = intent.extras?.getInt("KEY_SESSION")
 
-        Handler(Looper.getMainLooper()).postDelayed({
-            try {
-                parseLatestSession()
-            } catch (e: Exception) {
-                return@postDelayed
-            }
-        }, 200)
-
-        continueButton =  findViewById(R.id.progressUpdateLeave)
-        skipButton = findViewById(R.id.progressUpdateSkipAnimation)
-
-        continueButton?.setOnClickListener { exitActivity() }
-        skipButton?.setOnClickListener { button ->
-            skipAnimation = true
-            val oldSize = progressAdapterData.size
-            progressAdapterData.clear()
-            progressAdapter?.notifyItemRangeRemoved(0, oldSize)
-
-            progressedGoalInstancesWithDescriptionsWithCategories.filter {
-                it.instance.target > it.instance.progress
-            }.also {
-                progressAdapterData.addAll(it)
-                progressAdapter?.notifyItemRangeInserted(
-                    0,
-                    it.size
-                )
-            }
-            button.visibility = View.GONE
-            continueButton?.visibility = View.VISIBLE
+        if (latestSessionId != null) {
+            Handler(Looper.getMainLooper()).postDelayed({
+                try {
+                    parseSession(latestSessionId)
+                } catch (e: Exception) {
+                    return@postDelayed
+                }
+            }, 200)
+        } else {
+            exitActivity()
         }
+
+        initProgressedGoalList()
     }
 
     private fun initProgressedGoalList() {
@@ -102,82 +81,77 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
      * Parse latest session and extract goal progress
      *************************************************************************/
 
-    private fun parseLatestSession() {
+    private fun parseSession(sessionId: Int) {
         lifecycleScope.launch {
+            val latestSession = dao.getSessionWithSections(sessionId)
+            val goalProgress = dao.computeGoalProgressForSession(sessionId)
 
-            val latestSession = dao?.getLatestSessionWithSectionsWithCategoriesWithGoals()
-            var totalSessionDuration = 0
-
-            // goalProgress maps the goalDescription-id to its progress
-            val goalProgress = mutableMapOf<Int, Int>()
-
-            // go through all the sections in the session...
-            latestSession?.sections?.forEach { (section, categoryWithGoalDescriptions) ->
-                // ... using the respective categories, find the goals,
-                // to which the sections are contributing to...
-                val (_, goalDescriptions) = categoryWithGoalDescriptions
-
-                // ... and loop through those goals, summing up the duration
-                goalDescriptions.filter {d -> !d.archived}.forEach { description ->
-                    when (description.progressType) {
-                        GoalProgressType.TIME -> goalProgress[description.id] =
-                                goalProgress[description.id] ?: 0 + (section.duration ?: 0)
-                        GoalProgressType.SESSION_COUNT -> goalProgress[description.id] = 1
-                    }
-                }
-
-                // simultaneously sum up the total session duration
-                totalSessionDuration += section.duration ?: 0
-            }
-
-            // query all active (non-archived) goal descriptions which have type NON-SPECIFIC
-            dao?.getActiveGoalDescriptionsOfType(GoalType.NON_SPECIFIC)?.forEach { totalTimeGoal ->
-                goalProgress[totalTimeGoal.id] = when (totalTimeGoal.progressType) {
-                    GoalProgressType.TIME -> totalSessionDuration
-                    GoalProgressType.SESSION_COUNT -> 1
-                }
-            }
-
-            // get all active instances and use the start time of the session as reference
-            dao?.getActiveSelectedGoalInstancesWithDescriptionsWithCategories(
-                goalProgress.keys.toList(),
-                latestSession?.sections?.first()?.section?.timestamp?: Date().time / 1000L
-            )?.let {
-                progressedGoalInstancesWithDescriptionsWithCategories.addAll(it)
-            }
-
-            progressedGoalInstancesWithDescriptionsWithCategories.forEach { (instance, d) ->
+            // get all active goal instances at the time of the session
+            dao.getGoalInstancesWithDescriptionsWithCategories(
+                descriptionIds = goalProgress.keys.toList(),
+                checkArchived = false,
+                now = latestSession.sections.first().timestamp
+            // store the progress in the database
+            ).onEach { (instance, d) ->
                 goalProgress[d.description.id].also { progress ->
                     if (progress != null && progress > 0) {
                         instance.progress += progress
-                        dao?.updateGoalInstance(instance)
+                        dao.updateGoalInstance(instance)
 
                         // undo the progress locally after updating database for the animation to work
                         instance.progress -= progress
                     }
                 }
-            }
-
-            //if no element is progressed which wasn't already at 100%, show ¯\_(ツ)_/¯
-            if (progressedGoalInstancesWithDescriptionsWithCategories.none {
-                    it.instance.progress < it.instance.target
-                }) {
-                findViewById<LinearLayout>(R.id.shrug).visibility = View.VISIBLE
-                findViewById<RecyclerView>(R.id.progessUpdateGoalList).visibility = View.GONE
-                skipButton?.visibility = View.GONE
-                continueButton?.visibility = View.VISIBLE
-            } else {
-                startProgressAnimation(goalProgress)
+            // filter out all instances, where the goal is already at 100%
+            }.filter {
+                it.instance.progress < it.instance.target
+            }.also {
+                // if no element is progressed which wasn't already at 100%, show ¯\_(ツ)_/¯
+                if(it.isEmpty()) {
+                    findViewById<LinearLayout>(R.id.shrug).visibility = View.VISIBLE
+                    findViewById<RecyclerView>(R.id.progessUpdateGoalList).visibility = View.GONE
+                    skipButton?.visibility = View.GONE
+                    continueButton?.visibility = View.VISIBLE
+                // else start the progress animation
+                } else {
+                    startProgressAnimation(it, goalProgress)
+                }
             }
         }
     }
+
 
     /*************************************************************************
      * Progress animation coordination function
      *************************************************************************/
 
-    private fun startProgressAnimation(goalProgress: Map<Int, Int>) {
-        // load all the progressed goals after a short delay to then show them one by one
+    private fun startProgressAnimation(
+        progressedGoalInstancesWithDescriptionsWithCategories
+            : List<GoalInstanceWithDescriptionWithCategories>,
+        goalProgress: Map<Int, Int>
+    ) {
+
+        // prepare the skip and continue button
+        continueButton =  findViewById(R.id.progressUpdateLeave)
+        skipButton = findViewById(R.id.progressUpdateSkipAnimation)
+
+        continueButton?.setOnClickListener { exitActivity() }
+        skipButton?.setOnClickListener { button ->
+            skipAnimation = true
+            val oldSize = progressAdapterData.size
+            progressAdapterData.clear()
+            progressAdapter?.notifyItemRangeRemoved(0, oldSize)
+
+            progressedGoalInstancesWithDescriptionsWithCategories.also {
+                progressAdapterData.addAll(it)
+                progressAdapter?.notifyItemRangeInserted(
+                    0,
+                    it.size
+                )
+            }
+            button.visibility = View.GONE
+            continueButton?.visibility = View.VISIBLE
+        }
 
         val handler = Handler(Looper.getMainLooper())
 
@@ -346,5 +320,6 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
 
         class GoalItemHolderInfo(val progress: Int) : ItemHolderInfo()
     }
-
 }
+
+
