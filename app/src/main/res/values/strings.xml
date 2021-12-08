@@ -50,6 +50,8 @@
     <string name="dialogCancel">Cancel</string>
     <string name="deleteGoalDialogMessage">Delete selected goal?</string>
     <string name="deleteGoalsDialogMessage">Delete selected goals?</string>
+    <string name="deleteSessionDialogMessage">Delete selected session and lose all goal progress?</string>
+    <string name="deleteSessionsDialogMessage">Delete selected sessions and lose all goal progress?</string>
     <string name="deleteGoalDialogFullDeleteCheckbox">Delete goal from statistics as well</string>
     <string name="deleteGoalToast">Goal deleted</string>
     <string name="deleteGoalsToast">Goals deleted</string>

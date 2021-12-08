@@ -2,14 +2,20 @@ package de.practicetime.practicetime
 
 import android.content.Context
 import android.content.res.ColorStateList
+import android.os.Build
+import android.os.VibrationEffect
+import android.os.VibratorManager
+import android.util.AttributeSet
+import android.util.Log
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
+import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import de.practicetime.practicetime.entities.SectionWithCategory
-import de.practicetime.practicetime.entities.SessionWithSectionsWithCategories
+import de.practicetime.practicetime.entities.*
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
@@ -18,6 +24,16 @@ class SessionSummaryAdapter(
     private val context: Context,
     private var isExpanded: Boolean,
     private val sessionsWithSectionsWithCategories: List<SessionWithSectionsWithCategories>,
+    private val shortClickHandler: (
+        session: PracticeSession,
+        sessionView: View,
+        adapter: SessionSummaryAdapter
+    ) -> Unit,
+    private val longClickHandler: (
+        sessionId: Int,
+        sessionView: View,
+        adapter: SessionSummaryAdapter
+    ) -> Boolean,
 ) : RecyclerView.Adapter<SessionSummaryAdapter.ViewHolder>() {
 
     companion object {
@@ -63,7 +79,10 @@ class SessionSummaryAdapter(
                     viewGroup,
                     false
                 ),
-                context
+                adapter = this,
+                context,
+                shortClickHandler,
+                longClickHandler,
             )
         }
     }
@@ -73,7 +92,7 @@ class SessionSummaryAdapter(
         when (viewHolder) {
             is ViewHolder.ItemViewHolder -> viewHolder.bind(
                 sessionsWithSectionsWithCategories,
-                sessionsWithSectionsWithCategories.size - position,
+                position - 1,
             )
             is ViewHolder.HeaderViewHolder -> viewHolder.bind(
                 sessionsWithSectionsWithCategories.first().sections.first().section.timestamp,
@@ -87,11 +106,27 @@ class SessionSummaryAdapter(
     sealed class ViewHolder(view: View) :
         RecyclerView.ViewHolder(view) {
 
-        class ItemViewHolder(view: View, private val context: Context) : ViewHolder(view) {
+        class ItemViewHolder(
+            view: View,
+            private val adapter: SessionSummaryAdapter,
+            private val context: Context,
+            private val shortClickHandler: (
+                session: PracticeSession,
+                sessionView: View,
+                adapter: SessionSummaryAdapter
+            ) -> Unit,
+            private val longClickHandler: (
+                sessionId: Int,
+                sessionView: View,
+                adapter: SessionSummaryAdapter
+            ) -> Boolean,
+        ) : ViewHolder(view) {
+
             private val summaryDayLayout: LinearLayout = view.findViewById(R.id.summaryDayLayout)
             private val summaryDate: TextView = view.findViewById(R.id.summaryDate)
             private val summaryDayDuration: TextView = view.findViewById(R.id.summaryDayDuration)
-//            private val divider : View = view.findViewById(R.id.divider)
+
+            private val summaryCard = view.findViewById(R.id.summaryCardWrapper) as InterceptTouchCardView
 
             private val summaryTimeView: TextView = view.findViewById(R.id.summaryTime)
             private val breakDurationView: TextView = view.findViewById(R.id.breakDuration)
@@ -119,11 +154,28 @@ class SessionSummaryAdapter(
                 sessionsWithSectionsWithCategories: List<SessionWithSectionsWithCategories>,
                 position: Int,
             ) {
-                // TODO please cleanup code and extract code blocks in separate functions,
-                //  100 lines of code in one function is not readable!
-
                 // get the session at given position
                 val (session, sectionsWithCategories) = sessionsWithSectionsWithCategories[position]
+
+                // set up short and long click handler for selecting sessions
+                summaryCard.setOnClickListener { shortClickHandler(session, it, adapter) }
+                summaryCard.setOnLongClickListener {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                        (context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE)
+                                as VibratorManager
+                                ).defaultVibrator.apply {
+                                cancel()
+                                vibrate(
+                                    VibrationEffect.createOneShot(
+                                        100,
+                                        100
+                                    )
+                                )
+                            }
+                    }
+                    // tell the event handler we consumed the event
+                    return@setOnLongClickListener longClickHandler(session.id, it, adapter)
+                }
 
                 var currentSessionDate: Calendar
 
@@ -133,20 +185,14 @@ class SessionSummaryAdapter(
                 }
 
                 // detect, if this session is either the last session of a day or the whole month
-                var lastSessionOfTheDay = position == sessionsWithSectionsWithCategories.size-1
-
-                if(position + 1 < sessionsWithSectionsWithCategories.size) {
-                    var nextSessionDate: Calendar
-
-                    Calendar.getInstance().also { newDate ->
-                        newDate.timeInMillis = sessionsWithSectionsWithCategories[position + 1]
+                val lastSessionOfTheDay = if (position == 0) true else {
+                    val nextSessionDate = Calendar.getInstance().let { newDate ->
+                        newDate.timeInMillis = sessionsWithSectionsWithCategories[position - 1]
                             .sections.first().section.timestamp * 1000L
-                        nextSessionDate = newDate
+                        newDate
                     }
-                    if(currentSessionDate.get(Calendar.DAY_OF_YEAR) !=
-                        nextSessionDate.get(Calendar.DAY_OF_YEAR)) {
-                        lastSessionOfTheDay = true
-                    }
+                    currentSessionDate.get(Calendar.DAY_OF_YEAR) !=
+                        nextSessionDate.get(Calendar.DAY_OF_YEAR)
                 }
 
                 // if so, calculate the total time practiced that day and display it
@@ -201,7 +247,7 @@ class SessionSummaryAdapter(
                 // set the sections and update the section adapter about the change
                 sectionsWithCategoriesList.clear()
                 sectionsWithCategoriesList.addAll(sectionsWithCategories)
-                sectionList.adapter?.notifyDataSetChanged()
+                sectionList.adapter?.notifyItemRangeInserted(0,sectionsWithCategories.size)
 
                 //set the rating bar to the correct star rating
                 ratingBar.rating = session.rating.toFloat()
@@ -292,6 +338,12 @@ class SessionSummaryAdapter(
                 }
             }
         }
+    }
+}
+
+class InterceptTouchCardView(context: Context, attrs: AttributeSet) : CardView(context, attrs) {
+    override fun onInterceptTouchEvent(ev: MotionEvent?): Boolean {
+        return true
     }
 }
 

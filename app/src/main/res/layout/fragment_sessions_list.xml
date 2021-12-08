@@ -14,6 +14,7 @@
         android:background="@android:color/transparent">
 
         <com.google.android.material.appbar.CollapsingToolbarLayout
+            android:id="@+id/session_list_collapsing_toolbar_layout"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             app:collapsedTitleTextAppearance="@style/ToolbarTitleCollapsed"
@@ -24,12 +25,14 @@
             app:layout_scrollFlags="scroll|exitUntilCollapsed"
             app:title="@string/sessionListTitle"
             app:titleCollapseMode="scale"
-            app:toolbarId="@+id/toolbar">
+            app:toolbarId="@+id/session_list_toolbar">
 
             <androidx.appcompat.widget.Toolbar
-                android:id="@+id/toolbar"
+                android:id="@+id/session_list_toolbar"
                 android:layout_width="match_parent"
-                android:layout_height="48dp" />
+                android:layout_height="48dp"
+                app:layout_collapseMode="pin"
+                app:menu="@menu/sessions_list_menu_base" />
 
         </com.google.android.material.appbar.CollapsingToolbarLayout>
     </com.google.android.material.appbar.AppBarLayout>
