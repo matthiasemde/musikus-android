@@ -517,7 +517,7 @@ class ActiveSessionActivity : AppCompatActivity() {
                         updateViews()
                     }
                     // post the code again with a delay of 100 milliseconds so that ui is more responsive
-                    it.postDelayed(this, 1000)
+                    it.postDelayed(this, 100)
                 }
             })
         }

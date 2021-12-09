@@ -17,11 +17,14 @@ class SessionForegroundService : Service() {
     private val binder = LocalBinder()         // interface for clients that bind
     private var allowRebind: Boolean = true    // indicates whether onRebind should be used
 
-    var sessionActive = false     // keep track of whether a session is active
+    var sessionActive = false               // keep track of whether a session is active
     // the sectionBuffer will keep track of all the section in the current session
     var sectionBuffer = ArrayList<Pair<PracticeSection, Int>>()
-    var paused = false            // flag if session is currently paused
-    var pauseDuration = 0         // pause duration, ONLY for displaying on the fab, section pause duration is safed in sectionBuffer!
+    var paused = false                      // flag if session is currently paused
+    private var lastPausedState = false     // paused variable the last tick (to detect transition)
+    private var pauseBeginTimestamp: Long = 0
+    private var pauseDurationBuffer = 0     // just a buffer to
+    var pauseDuration = 0                   // pause duration, ONLY for displaying on the fab, section pause duration is saved in sectionBuffer!
 
     var totalPracticeDuration = 0
 
@@ -36,7 +39,7 @@ class SessionForegroundService : Service() {
         Singleton.serviceIsRunning = true
         startTimer()
         createNotificationChannel()
-        // set the Service to foregrund to display the notification
+        // set the Service to foreground to dispINCLUDINGl the notification
         // this is different to displaying the notification via notify() since it automatically
         // produces a non-cancellable notification
         startForeground(NOTIFICATION_ID, getNotification( "Sepp, Sepp", "sei kein Depp"))
@@ -50,20 +53,26 @@ class SessionForegroundService : Service() {
             it.post(object : Runnable {
                 override fun run() {
                     if (sectionBuffer.isNotEmpty()) {
-                        val firstSection = sectionBuffer.first()
                         val lastSection = sectionBuffer.last()
+                        val now = Date().time / 1000L
 
-                        if (paused) {
-                            // increment pause time. Since Pairs<> are not mutable (but ArrayList is)
-                            // we have to copy the element and replace the whole element in the ArrayList
-                            sectionBuffer[sectionBuffer.lastIndex] =
-                                sectionBuffer.last().copy(second = sectionBuffer.last().second + 1)
-
-                            pauseDuration++
+                        // pause started
+                        if (!lastPausedState && paused) {
+                            pauseBeginTimestamp = now
+                            // save previous pause time
+                            pauseDurationBuffer = sectionBuffer.last().second
                         }
 
-                        val now = Date().time / 1000
+                        if (paused) {
+                            val timePassed = (now - pauseBeginTimestamp).toInt()
+                            Log.d("Twrf", "pause going for $timePassed")
+                            // Since Pairs<> are not mutable (but ArrayList is)
+                            // we have to copy the element and replace the whole element in the ArrayList
+                            sectionBuffer[sectionBuffer.lastIndex] =
+                                sectionBuffer.last().copy(second = timePassed + pauseDurationBuffer)
 
+                            pauseDuration = timePassed
+                        }
 
                         lastSection.apply {
                             // calculate section duration and update duration field
@@ -76,9 +85,11 @@ class SessionForegroundService : Service() {
                         }
 
                         updateNotification()
+
+                        lastPausedState = paused
                     }
                     // post the code again with a delay of 1 second
-                    it.postDelayed(this, 1000)
+                    it.postDelayed(this, 100)
                 }
             })
         }
