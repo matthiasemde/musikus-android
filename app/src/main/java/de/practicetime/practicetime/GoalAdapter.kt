@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.chip.Chip
 import de.practicetime.practicetime.entities.*
 import java.util.*
+import kotlin.math.ceil
 import kotlin.math.roundToInt
 
 const val SECONDS_PER_HOUR = 60 * 60
@@ -153,7 +154,7 @@ class GoalAdapter(
             val progressDoneHours = instance.progress / 3600
             val progressDoneMinutes = instance.progress % 3600 / 60
             val progressLeftHours = progressLeft / 3600
-            val progressLeftMinutes = (progressLeft % 3600 / 60F).roundToInt()
+            val progressLeftMinutes = ceil(progressLeft % 3600 / 60F).toInt()
             when {
                 progressDoneHours > 0 ->
                     viewHolder.goalProgressDoneIndicatorView.text =

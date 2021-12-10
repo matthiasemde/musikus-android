@@ -256,7 +256,11 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
                     else ->
                         viewHolder.goalProgressLeftIndicatorView.text = String.format("%d min", progressLeftMinutes)
                 }
-            } else {
+
+                 viewHolder.goalProgressAchievedView.visibility = View.INVISIBLE
+                 viewHolder.goalProgressDoneIndicatorView.visibility = View.VISIBLE
+                 viewHolder.goalProgressLeftIndicatorView.visibility = View.VISIBLE
+             } else {
                 viewHolder.goalProgressAchievedView.visibility = View.VISIBLE
                 viewHolder.goalProgressDoneIndicatorView.visibility = View.GONE
                 viewHolder.goalProgressLeftIndicatorView.visibility = View.GONE
