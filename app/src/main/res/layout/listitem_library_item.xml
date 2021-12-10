@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    This Source Code Form is subject to the terms of the Mozilla Public
+    License, v. 2.0. If a copy of the MPL was not distributed with this
+    file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+    Copyright (c) 2022 Matthias Emde
+-->
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/library_item_card"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:foreground="@drawable/foreground_simple_overlay"
+    app:cardBackgroundColor="?attr/colorSurface"
+    app:cardCornerRadius="12dp"
+    android:layout_margin="4dp">
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_margin="8dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="2dp"
+                android:background="?attr/colorStaffLines" />
+
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="2dp"
+                android:background="?attr/colorStaffLines" />
+
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="2dp"
+                android:background="?attr/colorStaffLines" />
+
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="2dp"
+                android:background="?attr/colorStaffLines" />
+
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
+            <ImageView
+                android:layout_height="2dp"
+                android:layout_width="match_parent"
+                android:background="?attr/colorStaffLines" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:id="@+id/library_item_color_indicator"
+                android:layout_width="10dp"
+                android:layout_height="match_parent"
+                android:layout_marginEnd="4dp"
+                android:background="@drawable/color_rect_cat_indicator" />
+
+            <ImageView
+                android:layout_width="4dp"
+                android:layout_height="match_parent"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/color_rect_cat_indicator"
+                android:backgroundTint="?attr/colorStaffLines"/>
+
+<!--            <ImageView-->
+<!--                android:layout_width="25dp"-->
+<!--                android:layout_height="match_parent"-->
+<!--                android:layout_marginEnd="12dp"-->
+<!--                android:background="@drawable/ic_treble_clef"-->
+<!--                android:backgroundTint="?attr/colorStaffLines"/>-->
+
+            <TextView
+                android:id="@+id/library_item_name"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:textColor="?attr/colorOnSurfaceLowerContrast"
+                android:textSize="20sp"
+                android:textStyle="italic"
+                android:gravity="center_vertical"
+                app:lineHeight="25dp"
+                tools:text="Category Name" />
+
+            <ImageView
+                android:layout_width="4dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="12dp"
+                android:background="@drawable/color_rect_cat_indicator"
+                android:backgroundTint="?attr/colorStaffLines" />
+
+            <ImageView
+                android:layout_width="6dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="4dp"
+                android:background="@drawable/color_rect_cat_indicator"
+                android:backgroundTint="?attr/colorStaffLines" />
+
+        </LinearLayout>
+    </FrameLayout>
+</androidx.cardview.widget.CardView>

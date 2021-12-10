@@ -21,6 +21,7 @@ import androidx.activity.OnBackPressedCallback
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.appbar.CollapsingToolbarLayout
 import com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -103,7 +104,8 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
             }
 
             requireActivity().findViewById<RecyclerView>(R.id.libraryCategoryList).apply {
-                layoutManager = GridLayoutManager(context, 2)
+//                layoutManager = GridLayoutManager(context, 2)
+                layoutManager = LinearLayoutManager(context)
                 adapter = categoryAdapter
                 itemAnimator?.apply {
                     addDuration = 500L

@@ -1,5 +1,11 @@
 /*
- * This software is licensed under the MIT license
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ *
+ * Copyright (c) 2022 Matthias Emde
+ *
+ * Parts of this software are licensed under the MIT license
  *
  * Copyright (c) 2022, Javier Carbone, author Matthias Emde
  */
@@ -11,9 +17,11 @@ import android.content.res.ColorStateList
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.ViewGroup.LayoutParams
 import android.widget.Button
 import android.widget.ImageButton
+import android.widget.ImageView
+import android.widget.TextView
+import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.RecyclerView
 import de.practicetime.practicetime.R
 import de.practicetime.practicetime.database.entities.Category
@@ -55,7 +63,8 @@ class CategoryAdapter(
         return when (viewType) {
             VIEW_TYPE_CATEGORY -> ViewHolder.CategoryViewHolder(
                 inflater.inflate(
-                    R.layout.listitem_category,
+                    if(showInActiveSession) R.layout.listitem_category
+                    else R.layout.listitem_library_item,
                     viewGroup,
                     false
                 ),
@@ -89,49 +98,55 @@ class CategoryAdapter(
     sealed class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
 
         class CategoryViewHolder(
-            view: View,
-            showInActiveSession: Boolean,
+            private val view: View,
+            private val showInActiveSession: Boolean,
             private val context: Activity,
             private val selectedCategories: List<Int>,
             private val shortClickHandler: (index: Int) -> Unit,
             private val longClickHandler: (index: Int) -> Boolean,
         ) : ViewHolder(view) {
-            private val button: Button = view.findViewById(R.id.categoryButton)
-
-            init {
-                // if the category is not shown inside the active session
-                // it can grow to the size of its container
-                if(!showInActiveSession) {
-                    button.layoutParams.width = LayoutParams.MATCH_PARENT
-                }
-            }
 
             fun bind(category: Category) {
-                button.isSelected = selectedCategories.contains(layoutPosition)
+                val categoryColors = context.resources.getIntArray(R.array.category_colors)
 
                 // set up short and long click handler for selecting categories
-                button.setOnClickListener { shortClickHandler(layoutPosition) }
-                button.setOnLongClickListener {
+                itemView.setOnClickListener { shortClickHandler(layoutPosition) }
+                itemView.setOnLongClickListener {
                     // tell the event handler we consumed the event
                     return@setOnLongClickListener longClickHandler(layoutPosition)
                 }
 
+                if(showInActiveSession) {
+                    val button = view.findViewById<Button>(R.id.categoryButton)
+                    button.isSelected = selectedCategories.contains(layoutPosition)
 
-                // store the id of the category on the button
-                button.tag = category.id
 
-                // archived categories should not be displayed
-                if (category.archived) {
-                    button.visibility = View.GONE
+                    // store the id of the category on the button
+                    button.tag = category.id
+
+                    // archived categories should not be displayed
+                    if (category.archived) {
+                        button.visibility = View.GONE
+                    }
+
+                    // contents of the view with that element
+                    button.text = category.name
+
+                    button.backgroundTintList = ColorStateList.valueOf(
+                        categoryColors[category.colorIndex]
+                    )
+                } else {
+                    val cardView = view.findViewById<CardView>(R.id.library_item_card)
+                    val colorIndicatorView = view.findViewById<ImageView>(R.id.library_item_color_indicator)
+                    val nameView = view.findViewById<TextView>(R.id.library_item_name)
+
+                    cardView.isSelected = selectedCategories.contains(layoutPosition)
+                    colorIndicatorView.backgroundTintList = ColorStateList.valueOf(
+                        categoryColors[category.colorIndex]
+                    )
+
+                    nameView.text = category.name
                 }
-
-                // contents of the view with that element
-                button.text = category.name
-
-                val categoryColors =  context.resources.getIntArray(R.array.category_colors)
-                button.backgroundTintList = ColorStateList.valueOf(
-                    categoryColors[category.colorIndex]
-                )
             }
         }
 

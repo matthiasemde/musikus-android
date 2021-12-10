@@ -1,5 +1,11 @@
 <!--
-    This software is licensed under the MIT license
+    This Source Code Form is subject to the terms of the Mozilla Public
+    License, v. 2.0. If a copy of the MPL was not distributed with this
+    file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+    Copyright (c) 2022 Matthias Emde
+
+    Parts of this software are licensed under the MIT license
 
     Copyright (c) 2022, Javier Carbone, author Michael Prommersberger
     Additions and modifications, author Matthias Emde
@@ -30,6 +36,7 @@
         <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">false</item>
         <item name="android:navigationBarDividerColor" tools:targetApi="o_mr1">@color/md_grey_700</item>
         <item name="android:windowLayoutInDisplayCutoutMode" tools:targetApi="o_mr1">shortEdges</item>
+        <item name="colorStaffLines">@color/md_grey_800</item>
 
         <item name="colorControlActivated">@color/md_yellow_700</item>
     </style>
