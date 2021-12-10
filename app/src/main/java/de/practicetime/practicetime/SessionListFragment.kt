@@ -29,8 +29,8 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
     private var dao: PTDao? = null
     private lateinit var fabNewSession: FloatingActionButton
     private lateinit var fabRunningSession: FloatingActionButton
-    private lateinit var handler: Handler
-    private lateinit var runnable: Runnable
+    private var handler: Handler = Handler(Looper.getMainLooper())
+    private var runnable: Runnable = Runnable { }
 
     private lateinit var sessionListAdapter: ConcatAdapter
     private val sessionListAdapterData = ArrayList<ArrayList<SessionWithSectionsWithCategories>>()
