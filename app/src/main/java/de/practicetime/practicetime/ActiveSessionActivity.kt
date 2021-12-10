@@ -47,6 +47,7 @@ class ActiveSessionActivity : AppCompatActivity() {
 
     private lateinit var mService: SessionForegroundService
     private var mBound: Boolean = false
+    private var stopDialogShown = false
 
     /** Defines callbacks for service binding, passed to bindService()  */
     private val connection = object : ServiceConnection {
@@ -330,6 +331,9 @@ class ActiveSessionActivity : AppCompatActivity() {
 
     private fun finishSession(rating: Int, comment: String?) {
 
+        // remove time the "stop session" AlertDialog was shown from last section
+        mService.subtractStopDialogTime()
+
         // get total break duration
         var totalBreakDuration = 0
         mService.sectionBuffer.forEach {
@@ -438,6 +442,7 @@ class ActiveSessionActivity : AppCompatActivity() {
                 if (!mService.paused) {
                     hideOverlay()
                 }
+                stopDialogShown = false
                 dialog.cancel()
             }
         }
@@ -448,6 +453,8 @@ class ActiveSessionActivity : AppCompatActivity() {
 
         // stop session button functionality
         findViewById<MaterialButton>(R.id.bottom_stop).setOnClickListener {
+            mService.stopDialogTimestamp = Date().time / 1000L
+            stopDialogShown = true
             // show the end session dialog
             endSessionDialog.show()
             endSessionDialog.also {
@@ -513,7 +520,7 @@ class ActiveSessionActivity : AppCompatActivity() {
             // the post() method executes immediately
             it.post(object : Runnable {
                 override fun run() {
-                    if (mBound) {
+                    if (mBound && !stopDialogShown) {
                         updateViews()
                     }
                     // post the code again with a delay of 100 milliseconds so that ui is more responsive

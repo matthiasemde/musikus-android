@@ -26,6 +26,9 @@ class SessionForegroundService : Service() {
     private var pauseDurationBuffer = 0     // just a buffer to
     var pauseDuration = 0                   // pause duration, ONLY for displaying on the fab, section pause duration is saved in sectionBuffer!
 
+
+    var stopDialogTimestamp: Long = 0
+
     var totalPracticeDuration = 0
 
     override fun onCreate() {
@@ -65,7 +68,6 @@ class SessionForegroundService : Service() {
 
                         if (paused) {
                             val timePassed = (now - pauseBeginTimestamp).toInt()
-                            Log.d("Twrf", "pause going for $timePassed")
                             // Since Pairs<> are not mutable (but ArrayList is)
                             // we have to copy the element and replace the whole element in the ArrayList
                             sectionBuffer[sectionBuffer.lastIndex] =
@@ -160,7 +162,7 @@ class SessionForegroundService : Service() {
 
     override fun onBind(intent: Intent): IBinder? {
         // A client is binding to the service with bindService()
-        Log.d("Service", "onBind()")
+//        Log.d("Service", "onBind()")
         return binder
     }
 
@@ -181,6 +183,26 @@ class SessionForegroundService : Service() {
     }
 
     /**
+     * subtracts the time passed since stopDialogTimestamp from the last section
+     */
+    fun subtractStopDialogTime() {
+        val timePassed = (Date().time / 1000L) - stopDialogTimestamp
+        if(paused) {
+            // subtract from paused time
+            sectionBuffer[sectionBuffer.lastIndex] =
+                sectionBuffer.last().copy(second = sectionBuffer.last().second - timePassed.toInt())
+            Log.d("TAG", "subtracted $timePassed from pause time last session")
+        } else {
+            // subtract from regular duration
+            sectionBuffer.last().first.duration =
+                sectionBuffer.last().first.duration?.minus(
+                    timePassed.toInt()
+                )
+            Log.d("TAG", "subtracted $timePassed from duration last session")
+        }
+    }
+
+    /**
      * calculates total Duration (INCLUDING PAUSES!!!) of a section
      */
     private fun getDuration(section: PracticeSection): Int {
@@ -190,7 +212,7 @@ class SessionForegroundService : Service() {
 
     override fun onUnbind(intent: Intent): Boolean {
         // All clients have unbound with unbindService()
-        Log.d("Service", "Service unbound")
+//        Log.d("Service", "Service unbound")
         return allowRebind
     }
 
