@@ -39,8 +39,7 @@
             android:textSize="40sp"
             android:textColor="@color/edittext_color"
             android:background="@android:color/transparent"
-            android:hint="00"
-            android:textColorHint="?attr/colorOnBackground"/>
+            android:hint="00"/>
 
         <TextView
             android:id="@+id/goalDialogHoursText"
@@ -65,8 +64,7 @@
             android:textSize="40sp"
             android:textStyle="bold"
             android:layout_marginStart="8dp"
-            android:hint="00"
-            android:textColorHint="?attr/colorOnBackground"/>
+            android:hint="00"/>
 
         <TextView
             android:id="@+id/goalDialogMInutesText"
