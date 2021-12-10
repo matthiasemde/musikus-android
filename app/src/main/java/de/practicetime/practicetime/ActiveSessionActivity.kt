@@ -110,6 +110,12 @@ class ActiveSessionActivity : AppCompatActivity() {
             adaptUIPausedState(mService.paused)
         }
 
+        val dummyOnClick = View.OnClickListener {
+            Toast.makeText(this, "Coming Soon™", Toast.LENGTH_SHORT).show()
+        }
+        findViewById<MaterialButton>(R.id.bottom_metronome).setOnClickListener(dummyOnClick)
+        findViewById<MaterialButton>(R.id.bottom_record).setOnClickListener(dummyOnClick)
+
         // call onBackPressed when upper left Button is pressed to respect custom animation
         findViewById<ImageButton>(R.id.btn_back).setOnClickListener {
             onBackPressed()
