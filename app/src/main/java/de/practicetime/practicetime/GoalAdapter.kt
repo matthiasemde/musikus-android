@@ -144,6 +144,7 @@ class GoalAdapter(
             viewHolder.sectionColorView.backgroundTintList = categoryColor
         } else {
             viewHolder.sectionColorView.visibility = View.GONE
+            viewHolder.progressBarView.progressTintList = null
         }
 
         /** progress Indicator Text */

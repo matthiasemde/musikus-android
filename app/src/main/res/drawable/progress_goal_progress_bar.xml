@@ -5,8 +5,7 @@
     <shape>
         <corners
             android:radius="12dp" />
-        <gradient
-            android:startColor="@color/md_purple_A700"
-            android:endColor="@color/md_purple_A700" />
+        <solid
+            android:color="?attr/colorPrimary" />
     </shape>
 </clip>

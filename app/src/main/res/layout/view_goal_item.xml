@@ -98,14 +98,12 @@
             android:background="@drawable/background_goal_progress_bar"
             android:backgroundTint="@color/progressbar_tint_bg"
             android:indeterminate="false"
-            android:progress="42"
             android:progressDrawable="@drawable/progress_goal_progress_bar"
-            android:progressTint="?attr/colorPrimary"
-            android:progressTintMode="src_in"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/goalDescription" />
+            app:layout_constraintTop_toBottomOf="@id/goalDescription"
+            tools:progress="42" />
 
         <LinearLayout
             android:layout_width="match_parent"
