@@ -139,6 +139,7 @@ class GoalAdapter(
 
         // tint progressbar
         if(description.type != GoalType.NON_SPECIFIC) {
+            viewHolder.sectionColorView.visibility = View.VISIBLE
             viewHolder.progressBarView.progressTintList = categoryColor
             viewHolder.sectionColorView.backgroundTintList = categoryColor
         } else {
