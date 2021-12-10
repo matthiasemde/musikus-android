@@ -252,14 +252,24 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
             if(newGoalDescriptionId != null) {
                 // we need to fetch the newly created goal to get the correct id
                 dao?.getGoalWithCategories(newGoalDescriptionId)?.let { d ->
+                    // and create the first instance of the newly created goal description
                     val newGoalInstanceId = dao?.insertGoalInstance(
                         d.description.createInstance(Calendar.getInstance(), firstTarget)
                     )?.toInt()
                     if(newGoalInstanceId != null) {
-                        dao?.getGoalInstance(newGoalInstanceId)?.let { i ->
+                        dao?.getGoalInstance(newGoalInstanceId)?.let { instance ->
+                            dao?.getSessionIds(instance.startTimestamp, instance.startTimestamp + instance.periodInSeconds)
+                                ?.filter { s -> s.sections.first().timestamp > instance.startTimestamp}?.forEach { s ->
+                                    dao?.computeGoalProgressForSession(s.session.id).also { progress ->
+                                        instance.progress += progress?.get(d.description.id) ?: 0
+                                    }
+                                }
+
+                            dao?.updateGoalInstance(instance)
+
                             goalAdapterData.add(
                                 GoalInstanceWithDescriptionWithCategories(
-                                    instance = i,
+                                    instance = instance,
                                     description = d,
                                 )
                             )

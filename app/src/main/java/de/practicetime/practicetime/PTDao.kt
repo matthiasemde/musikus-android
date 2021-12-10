@@ -259,6 +259,13 @@ interface PTDao {
     suspend fun getSessionWithSections(id: Int): SessionWithSections
 
     @Transaction
+    @Query("SELECT * FROM PracticeSession WHERE id IN (SELECT practice_session_id FROM PracticeSection WHERE timestamp > :from AND timestamp < :to )")
+    suspend fun getSessionIds(
+        from: Long,
+        to: Long,
+    ): List<SessionWithSections>
+
+    @Transaction
     suspend fun computeGoalProgressForSession(
         sessionId: Int,
         checkArchived: Boolean = false,
