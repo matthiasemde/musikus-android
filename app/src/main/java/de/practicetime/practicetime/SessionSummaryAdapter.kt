@@ -316,7 +316,6 @@ class SessionSummaryAdapter(
 
         class HeaderViewHolder(private val view: View) : ViewHolder(view) {
             private val sessionHeaderMonth: TextView = view.findViewById(R.id.sessionHeaderMonth)
-            private val sessionHeaderToggleButton: Button = view.findViewById(R.id.btn_headermonth_toggle)
             // bind a new section header with the timestamp of the first session (in seconds)
             fun bind(
                 timestamp: Long,
@@ -326,12 +325,7 @@ class SessionSummaryAdapter(
                 SimpleDateFormat("MMMM").format(Date(timestamp * 1000L)).also {
                     sessionHeaderMonth.text = it
                 }
-                sessionHeaderToggleButton.setOnClickListener(onClickListener)
-                if (expanded) {
-                    sessionHeaderToggleButton.text = view.context.getString(R.string.hide_month)
-                } else {
-                    sessionHeaderToggleButton.text = view.context.getString(R.string.show_month)
-                }
+                sessionHeaderMonth.setOnClickListener(onClickListener)
             }
         }
     }

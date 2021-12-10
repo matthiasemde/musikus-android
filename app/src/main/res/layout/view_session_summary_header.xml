@@ -7,24 +7,28 @@
     android:paddingEnd="16dp"
     android:orientation="horizontal">
 
+    <Space
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1" />
+
     <TextView
         android:id="@+id/sessionHeaderMonth"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
-        tools:text="TextView"
+        android:layout_weight="5"
+        tools:text="January"
+        android:maxLines="1"
+        android:gravity="center"
         android:textSize="25sp"
         android:layout_gravity="center"
-        android:textStyle="bold"/>
+        android:padding="3dp"
+        android:textStyle="bold"
+        android:background="@drawable/background_session_summary_header"/>
 
-    <Button
-        android:id="@+id/btn_headermonth_toggle"
-        android:layout_width="wrap_content"
+    <Space
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:gravity="center"
-        tools:text="@string/hide_month"
-        android:textSize="11sp"
-        style="?attr/materialButtonOutlinedStyle"
-        android:textColor="?android:attr/textColorTertiary"
-        android:layout_gravity="top"/>
+        android:layout_weight="1" />
+
 </LinearLayout>
