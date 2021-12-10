@@ -1,38 +1,221 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:orientation="vertical">
 
-    <com.google.android.material.appbar.AppBarLayout
-        android:id="@+id/fullscreen_session_appbar"
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:layout_width="match_parent"
-        android:layout_height="128dp"
-        android:background="@android:color/transparent">
+        android:layout_height="0dp"
+        android:layout_weight="1">
 
-        <com.google.android.material.appbar.CollapsingToolbarLayout
-            android:id="@+id/fullscreen_session__collapsing_toolbar_layout"
+        <com.google.android.material.appbar.AppBarLayout
+            android:id="@+id/fullscreen_session_appbar"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            app:collapsedTitleTextAppearance="@style/ToolbarTitleCollapsed"
-            app:contentScrim="@android:color/transparent"
-            app:expandedTitleMarginBottom="28dp"
-            app:expandedTitleMarginStart="16dp"
-            app:expandedTitleTextAppearance="@style/ToolbarTitleExpanded"
-            app:layout_scrollFlags="scroll|exitUntilCollapsed"
-            app:title="@string/fullscreen_session_title"
-            app:titleCollapseMode="scale"
-            app:toolbarId="@+id/fullscreen_session_toolbar">
+            android:layout_height="128dp"
+            android:background="@android:color/transparent">
 
-            <androidx.appcompat.widget.Toolbar
-                android:id="@+id/fullscreen_session_toolbar"
+            <com.google.android.material.appbar.CollapsingToolbarLayout
+                android:id="@+id/fullscreen_session__collapsing_toolbar_layout"
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
-                app:layout_collapseMode="pin"
-                app:menu="@menu/goals_toolbar_menu_base" />
+                android:layout_height="match_parent"
+                app:collapsedTitleTextAppearance="@style/ToolbarTitleCollapsed"
+                app:contentScrim="@android:color/transparent"
+                app:expandedTitleMarginBottom="28dp"
+                app:expandedTitleMarginStart="16dp"
+                app:expandedTitleTextAppearance="@style/ToolbarTitleExpanded"
+                app:layout_scrollFlags="scroll|exitUntilCollapsed"
+                app:title="@string/fullscreen_session_title"
+                app:titleCollapseMode="scale"
+                app:toolbarId="@+id/fullscreen_session_toolbar">
 
-        </com.google.android.material.appbar.CollapsingToolbarLayout>
-    </com.google.android.material.appbar.AppBarLayout>
+                <androidx.appcompat.widget.Toolbar
+                    android:id="@+id/fullscreen_session_toolbar"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    app:layout_collapseMode="pin"
+                    app:menu="@menu/goals_toolbar_menu_base" />
 
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+            </com.google.android.material.appbar.CollapsingToolbarLayout>
+        </com.google.android.material.appbar.AppBarLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp"
+            app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/fullscreen_session_date"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="?attr/colorOnSurfaceLowerContrast"
+                    android:textSize="20sp"
+                    tools:text="On 19.10.2021 at 13:13" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/fullscreen_session_rating"
+                        android:textSize="20sp" />
+
+                    <RatingBar
+                        android:id="@+id/fullscreen_session_rating_bar"
+                        style="@style/Widget.AppCompat.RatingBar"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="12dp"
+                        android:indeterminateDrawable="@drawable/abc_ratingbar_indicator_material"
+                        android:numStars="5"
+                        android:progressDrawable="@drawable/abc_ratingbar_indicator_material"
+                        android:rating="3"
+                        android:stepSize="1" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="24dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginEnd="12dp"
+                    android:orientation="vertical">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp">
+
+                        <TextView
+                            android:id="@+id/fullscreen_session_practice_duration"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="3"
+                            android:textAlignment="textStart"
+                            android:textColor="?attr/colorOnSurface"
+                            android:textSize="30sp"
+                            android:textStyle="bold"
+                            tools:text="00:00:00" />
+
+                        <TextView
+                            android:id="@+id/fullscreen_session_break_duration"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="bottom"
+                            android:layout_weight="2"
+                            android:textColor="?attr/colorOnSurface"
+                            android:textSize="20sp"
+                            android:textStyle="bold"
+                            tools:text="00:00:00" />
+
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <TextView
+                            android:id="@+id/practiceTimeLabel"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="3"
+                            android:text="@string/sessionSummaryPracticeTime"
+                            android:textSize="15sp" />
+
+                        <TextView
+                            android:id="@+id/breakTimeLabel"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="2"
+                            android:text="@string/sessionSummaryBreakTime"
+                            android:textSize="15sp" />
+
+                    </LinearLayout>
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/fullscreen_session_section_list"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:nestedScrollingEnabled="false" />
+
+                </LinearLayout>
+
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_margin="16dp"
+                    android:background="?android:attr/listDivider" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/sessionSummaryComment"
+                    android:textColor="?attr/colorOnSurface"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/fullscreen_session_comment_field"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:ems="10"
+                    android:gravity="start|top"
+                    android:paddingStart="8dp"
+                    android:paddingEnd="8dp"
+                    android:text="@tools:sample/lorem/random"
+                    android:textSize="16sp"
+                    android:textStyle="italic" />
+            </LinearLayout>
+        </LinearLayout>
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:background="?android:attr/navigationBarColor"
+        android:elevation="10dp"
+        android:gravity="end">
+
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/fullscreen_session_cancel"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:text="@string/fullscreen_session_discard_changes"
+            android:textColor="?attr/colorPrimary" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/fullscreen_session_save"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_marginEnd="16dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:text="@string/fullscreen_session_save_changes"
+            android:textColor="?attr/colorPrimary" />
+
+    </LinearLayout>
+</LinearLayout>

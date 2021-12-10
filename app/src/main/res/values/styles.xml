@@ -9,7 +9,7 @@
     </style>
     <style name="ToolbarTitleExpanded" parent="">
         <item name="android:textColor">?android:attr/textColorTertiary</item>
-        <item name="android:textSize">42sp</item>
+        <item name="android:textSize">38sp</item>
     </style>
     <style name="GoalDialogToggleButton" parent="">
         <item name="android:backgroundTint">@color/color_toggle_button_goal_dialog</item>

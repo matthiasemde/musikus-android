@@ -222,8 +222,8 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
                 }
 
                 // set the click listeners for the menu options here
-                setOnMenuItemClickListener {
-                    when (it.itemId) {
+                setOnMenuItemClickListener { item ->
+                    when (item.itemId) {
                         R.id.topToolbarSelectionDelete -> deleteSessionDialog.apply {
                             setMessage(context.getString(
                                 if(selectedSessions.size > 1) R.string.deleteSessionsDialogMessage
@@ -232,7 +232,13 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
                             show()
                         }
                         R.id.topToolbarSelectionEdit -> {
-                            Toast.makeText(requireContext(), "Coming Soon™", Toast.LENGTH_SHORT).show()
+                            openSessionInFullscreen(
+                                sessionListAdapter.adapters.indexOf(adapter).let {
+                                    sessionListAdapterData[it][
+                                        selectedSessions.first().first - 1
+                                    ].session.id
+                                }
+                            )
                         }
                     }
                     return@setOnMenuItemClickListener true
@@ -361,15 +367,15 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
             notifyAllItems()
         }
     }
-//
-//    private fun openSessionInFullscreen(sessionId: Int) {
-//        val intent = Intent(requireContext(), FullscreenSessionActivity::class.java)
-//        val pBundle = Bundle()
-//        pBundle.putInt("KEY_SESSION", sessionId)
-//        intent.putExtras(pBundle)
-//        intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
-//        startActivity(intent)
-//    }
+
+    private fun openSessionInFullscreen(sessionId: Int) {
+        val intent = Intent(requireContext(), FullscreenSessionActivity::class.java)
+        val pBundle = Bundle()
+        pBundle.putInt("KEY_SESSION", sessionId)
+        intent.putExtras(pBundle)
+        intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
+        startActivity(intent)
+    }
 
     private fun openDatabase() {
         val db = Room.databaseBuilder(
