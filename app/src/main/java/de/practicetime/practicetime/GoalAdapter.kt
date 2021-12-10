@@ -169,6 +169,10 @@ class GoalAdapter(
                     viewHolder.goalProgressLeftIndicatorView.text =
                         String.format("%d min", progressLeftMinutes)
             }
+
+            viewHolder.goalProgressAchievedView.visibility = View.INVISIBLE
+            viewHolder.goalProgressDoneIndicatorView.visibility = View.VISIBLE
+            viewHolder.goalProgressLeftIndicatorView.visibility = View.VISIBLE
         } else {
             viewHolder.goalProgressAchievedView.visibility = View.VISIBLE
             viewHolder.goalProgressDoneIndicatorView.visibility = View.GONE
