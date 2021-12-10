@@ -287,6 +287,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
                 goalAdapterData[i].instance.target = newTarget
                 goalAdapter?.notifyItemChanged(i)
             }
+            resetToolbar()
         }
     }
 

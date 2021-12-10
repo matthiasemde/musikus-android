@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.chip.Chip
 import de.practicetime.practicetime.entities.*
 import java.util.*
+import kotlin.math.roundToInt
 
 const val SECONDS_PER_HOUR = 60 * 60
 const val SECONDS_PER_DAY = 60 * 60 * 24
@@ -143,28 +144,35 @@ class GoalAdapter(
         } else {
             viewHolder.sectionColorView.visibility = View.GONE
         }
-        // adapt X position for tv indicating progress. Do it asynchronously otherwise UI dimensions will be 0
-        viewHolder.progressBarView.post {
-            val width = viewHolder.progressBarView.width
-            val progress = viewHolder.progressBarView.progress
-            val max = viewHolder.progressBarView.max
-            // add the progress width as an offset to the current position
-            viewHolder.goalProgressIndicatorView.apply {
-                val offset = (progress * width).toFloat() / max.toFloat() - this.width
-//                x += if (offset > 0) offset else 0f
-            }
-        }
 
         /** progress Indicator Text */
-        val cappedProgress = minOf(instance.target, instance.progress)
-        val progressHours = cappedProgress / 3600
-        val progressMinutes = cappedProgress % 3600 / 60
-        when {
-            progressHours > 0 ->
-                viewHolder.goalProgressIndicatorView.text = String.format("%02d:%02d", progressHours, progressMinutes)
-            progressMinutes > 0 ->
-                viewHolder.goalProgressIndicatorView.text = String.format("%d min", progressMinutes)
-            else -> viewHolder.goalProgressIndicatorView.text = "< 1 min"
+        val progressLeft = maxOf(0, instance.target - instance.progress)
+        if(progressLeft > 0) {
+            val progressDoneHours = instance.progress / 3600
+            val progressDoneMinutes = instance.progress % 3600 / 60
+            val progressLeftHours = progressLeft / 3600
+            val progressLeftMinutes = (progressLeft % 3600 / 60F).roundToInt()
+            when {
+                progressDoneHours > 0 ->
+                    viewHolder.goalProgressDoneIndicatorView.text =
+                        String.format("%02d:%02d", progressDoneHours, progressDoneMinutes)
+                progressDoneMinutes > 0 ->
+                    viewHolder.goalProgressDoneIndicatorView.text =
+                        String.format("%d min", progressDoneMinutes)
+                else -> viewHolder.goalProgressDoneIndicatorView.text = "< 1 min"
+            }
+            when {
+                progressLeftHours > 0 ->
+                    viewHolder.goalProgressLeftIndicatorView.text =
+                        String.format("%02d:%02d", progressLeftHours, progressLeftMinutes)
+                else ->
+                    viewHolder.goalProgressLeftIndicatorView.text =
+                        String.format("%d min", progressLeftMinutes)
+            }
+        } else {
+            viewHolder.goalProgressAchievedView.visibility = View.VISIBLE
+            viewHolder.goalProgressDoneIndicatorView.visibility = View.GONE
+            viewHolder.goalProgressLeftIndicatorView.visibility = View.GONE
         }
 
         // remaining time
@@ -203,7 +211,9 @@ class GoalAdapter(
         val goalNameView: TextView = view.findViewById(R.id.goalName)
         val goalDescriptionView: TextView = view.findViewById(R.id.goalDescription)
         val remainingTimeView: Chip = view.findViewById(R.id.goalRemainingTime)
-        val goalProgressIndicatorView: TextView = view.findViewById(R.id.goalProgressIndicator)
+        val goalProgressDoneIndicatorView: TextView = view.findViewById(R.id.goalProgressDoneIndicator)
+        val goalProgressLeftIndicatorView: TextView = view.findViewById(R.id.goalProgressLeftIndicator)
+        val goalProgressAchievedView: TextView = view.findViewById(R.id.goalProgressAchieved)
         val sectionColorView: ImageView = view.findViewById(R.id.sectionColor)
     }
 }

@@ -86,4 +86,5 @@
     <string name="running_session_fab">Return to running session</string>
     <string name="new_category_fab">Create a new category</string>
     <string name="new_goal_fab">Create a new goal</string>
+    <string name="goal_description_achieved">Goal achieved!</string>
 </resources>

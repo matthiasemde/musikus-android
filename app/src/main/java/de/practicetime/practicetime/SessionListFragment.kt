@@ -7,6 +7,7 @@ import android.os.*
 import android.util.TypedValue
 import android.view.View
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
@@ -230,7 +231,9 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
                             ))
                             show()
                         }
-                        R.id.topToolbarSelectionEdit -> {}
+                        R.id.topToolbarSelectionEdit -> {
+                            Toast.makeText(requireContext(), "Coming Soon™", Toast.LENGTH_SHORT).show()
+                        }
                     }
                     return@setOnMenuItemClickListener true
                 }

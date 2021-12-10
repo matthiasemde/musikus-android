@@ -20,6 +20,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.*
 import kotlin.collections.ArrayList
+import kotlin.math.ceil
 
 const val PROGRESS_UPDATED = 1337
 
@@ -220,8 +221,7 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
      *************************************************************************/
 
     private class ProgressBarAnimation(
-        private val progressBar: ProgressBar,
-        private val progressIndicator: TextView,
+        private val viewHolder: GoalAdapter.ViewHolder,
         private val from: Int,
         private val to: Int
     ) : Animation() {
@@ -229,19 +229,37 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
             super.applyTransformation(interpolatedTime, t)
             var progress = (from + (to - from) * interpolatedTime).toInt()
 
-            progressBar.progress = progress
+            viewHolder.progressBarView.progress = progress
 
             // correct for the fps scaling factor
+            val target = viewHolder.progressBarView.max / 60
             progress /= 60
 
-            // progress Indicator Text
-            val cappedProgress = minOf(progressBar.max / 60, progress)
-            val progressHours = cappedProgress / 3600
-            val progressMinutes = cappedProgress % 3600 / 60
-            when {
-                progressHours > 0 -> progressIndicator.text = String.format("%02d:%02d", progressHours, progressMinutes)
-                progressMinutes > 0 -> progressIndicator.text = String.format("%d min", progressMinutes)
-                else -> progressIndicator.text = "< 1 min"
+            /** progress Indicator Text */
+            val progressLeft = maxOf(0, target - progress)
+
+             if(progressLeft > 0) {
+                val progressDoneHours = progress / 3600
+                val progressDoneMinutes = progress % 3600 / 60
+                val progressLeftHours = progressLeft / 3600
+                val progressLeftMinutes = ceil(progressLeft % 3600 / 60F).toInt()
+                when {
+                    progressDoneHours > 0 ->
+                        viewHolder.goalProgressDoneIndicatorView.text = String.format("%02d:%02d", progressDoneHours, progressDoneMinutes)
+                    progressDoneMinutes > 0 ->
+                        viewHolder.goalProgressDoneIndicatorView.text = String.format("%d min", progressDoneMinutes)
+                    else -> viewHolder.goalProgressDoneIndicatorView.text = "< 1 min"
+                }
+                when {
+                    progressLeftHours > 0 ->
+                        viewHolder.goalProgressLeftIndicatorView.text = String.format("%02d:%02d", progressLeftHours, progressLeftMinutes)
+                    else ->
+                        viewHolder.goalProgressLeftIndicatorView.text = String.format("%d min", progressLeftMinutes)
+                }
+            } else {
+                viewHolder.goalProgressAchievedView.visibility = View.VISIBLE
+                viewHolder.goalProgressDoneIndicatorView.visibility = View.GONE
+                viewHolder.goalProgressLeftIndicatorView.visibility = View.GONE
             }
         }
     }
@@ -268,12 +286,10 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
 
             if (preInfo is GoalItemHolderInfo) {
                 val progressBar = (newHolder as GoalAdapter.ViewHolder).progressBarView
-                val progressIndicator = newHolder.goalProgressIndicatorView
                 // multiply by 60 to grantee at least 60 fps
                 progressBar.max *= 60
                 val animator = ProgressBarAnimation(
-                    progressBar,
-                    progressIndicator,
+                    newHolder as GoalAdapter.ViewHolder,
                     preInfo.progress * 60,
                     (progressBar.progress * 60).let { if (it < progressBar.max) it else progressBar.max}
                 )

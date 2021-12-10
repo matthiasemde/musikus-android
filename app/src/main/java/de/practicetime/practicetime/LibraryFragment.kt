@@ -240,6 +240,7 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
                 activeCategories[i] = category
                 categoryAdapter?.notifyItemChanged(i)
             }
+            resetToolbar()
         }
     }
 
