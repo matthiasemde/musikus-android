@@ -1,11 +1,7 @@
 package de.practicetime.practicetime
 
 import android.app.Activity
-import android.content.Context
 import android.content.res.ColorStateList
-import android.os.Build
-import android.os.VibrationEffect
-import android.os.VibratorManager
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -21,10 +17,11 @@ import de.practicetime.practicetime.entities.Category
 
 class CategoryAdapter(
     private val categories: List<Category>,
+    private val selectedCategories: List<Int> = listOf(),
     private val context: Activity,
     private val showInActiveSession: Boolean = false,
-    private val shortClickHandler: (category: Category, categoryView: View) -> Unit = { _, _ -> },
-    private val longClickHandler: (categoryId: Int, categoryView: View) -> Boolean = { _, _ -> false },
+    private val shortClickHandler: (index: Int) -> Unit = {},
+    private val longClickHandler: (index: Int) -> Boolean = { false },
     private val addCategoryHandler: () -> Unit = {},
     ) : RecyclerView.Adapter<CategoryAdapter.ViewHolder>() {
 
@@ -56,6 +53,7 @@ class CategoryAdapter(
                 ),
                 showInActiveSession,
                 context,
+                selectedCategories,
                 shortClickHandler,
                 longClickHandler,
             )
@@ -86,8 +84,9 @@ class CategoryAdapter(
             view: View,
             showInActiveSession: Boolean,
             private val context: Activity,
-            private val shortClickHandler: (category: Category, categoryView: View) -> Unit,
-            private val longClickHandler: (categoryId: Int, categoryView: View) -> Boolean,
+            private val selectedCategories: List<Int>,
+            private val shortClickHandler: (index: Int) -> Unit,
+            private val longClickHandler: (index: Int) -> Boolean,
         ) : ViewHolder(view) {
             private val button: Button = view.findViewById(R.id.categoryButton)
 
@@ -100,25 +99,13 @@ class CategoryAdapter(
             }
 
             fun bind(category: Category) {
+                button.isSelected = selectedCategories.contains(layoutPosition)
 
                 // set up short and long click handler for selecting categories
-                button.setOnClickListener { shortClickHandler(category, it) }
+                button.setOnClickListener { shortClickHandler(layoutPosition) }
                 button.setOnLongClickListener {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                        (context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE)
-                            as VibratorManager
-                        ).defaultVibrator.apply {
-                            cancel()
-                            vibrate(
-                                VibrationEffect.createOneShot(
-                                    100,
-                                    100
-                                )
-                            )
-                        }
-                    }
                     // tell the event handler we consumed the event
-                    return@setOnLongClickListener longClickHandler(category.id, it)
+                    return@setOnLongClickListener longClickHandler(layoutPosition)
                 }
 
 

@@ -1,10 +1,13 @@
 package de.practicetime.practicetime
 
 import android.app.AlertDialog
+import android.content.Context
+import android.os.Build
 import android.os.Bundle
+import android.os.VibrationEffect
+import android.os.VibratorManager
 import android.util.TypedValue
 import android.view.View
-import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
@@ -32,10 +35,10 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
     private var editCategoryDialog: CategoryDialog? = null
     private var deleteCategoryDialog: AlertDialog? = null
 
-    private var libraryToolbar: androidx.appcompat.widget.Toolbar? = null
-    private var libraryCollapsingToolbarLayout: CollapsingToolbarLayout? = null
+    private lateinit var libraryToolbar: androidx.appcompat.widget.Toolbar
+    private lateinit var libraryCollapsingToolbarLayout: CollapsingToolbarLayout
 
-    private val selectedCategories = ArrayList<Pair<Int, View>>()
+    private val selectedCategories = ArrayList<Int>()
 
     // catch the back press for the case where the selection should be reverted
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -77,10 +80,11 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
 
     private fun initCategoryList() {
         categoryAdapter = CategoryAdapter(
-                activeCategories,
-                context = requireActivity(),
-                shortClickHandler = ::shortClickOnCategoryHandler,
-                longClickHandler = ::longClickOnCategoryHandler,
+            activeCategories,
+            selectedCategories,
+            context = requireActivity(),
+            shortClickHandler = ::shortClickOnCategoryHandler,
+            longClickHandler = ::longClickOnCategoryHandler,
         )
 
         // load all active categories from the database and notify the adapter
@@ -109,7 +113,7 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
         deleteCategoryDialog = AlertDialog.Builder(requireActivity()).let { builder ->
             builder.apply {
                 setPositiveButton(R.string.deleteDialogConfirm) { dialog, _ ->
-                    deleteCategoriesHandler(selectedCategories.map{ p -> p.first})
+                    deleteCategoriesHandler()
                     dialog.dismiss()
                 }
                 setNegativeButton(R.string.dialogCancel) { dialog, _ ->
@@ -120,29 +124,28 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
         }
     }
 
-    private fun shortClickOnCategoryHandler(category: Category, categoryView: View) {
+    private fun shortClickOnCategoryHandler(index: Int) {
         // if there are already categories selected,
         // add or remove the clicked category from the selection
         if(selectedCategories.isNotEmpty()) {
-            if(selectedCategories.remove(Pair(category.id, categoryView))) {
-                setCategorySelected(false, categoryView)
-                if(selectedCategories.isEmpty()) {
+            if(selectedCategories.remove(index)) {
+                categoryAdapter?.notifyItemChanged(index)
+                if(selectedCategories.size == 1) {
+                    libraryToolbar.menu.findItem(R.id.topToolbarSelectionEdit).isVisible = true
+                } else if(selectedCategories.isEmpty()) {
                     resetToolbar()
                 }
             } else {
-                longClickOnCategoryHandler(category.id, categoryView)
+                longClickOnCategoryHandler(index, vibrate = false)
             }
-        // if no selection is in progress show the edit dialog with the category
-        } else {
-            editCategoryDialog?.show(category)
         }
     }
 
     // the handler for dealing with long clicks on category
-    private fun longClickOnCategoryHandler(categoryId: Int, categoryView: View): Boolean {
+    private fun longClickOnCategoryHandler(index: Int, vibrate: Boolean = true): Boolean {
         // if there is no category selected already, change the toolbar
         if(selectedCategories.isEmpty()) {
-            libraryToolbar?.apply {
+            libraryToolbar.apply {
                 // clear the base menu from the toolbar and inflate the new menu
                 menu?.clear()
                 inflateMenu(R.menu.library_toolbar_menu_for_selection)
@@ -163,6 +166,9 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
                             ))
                             show()
                         }
+                        R.id.topToolbarSelectionEdit -> {
+                            editCategoryDialog?.show(activeCategories[selectedCategories.first()])
+                        }
                     }
                     return@setOnMenuItemClickListener true
                 }
@@ -170,15 +176,28 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
             // change the background color of the App Bar
             val typedValue = TypedValue()
             requireActivity().theme.resolveAttribute(R.attr.colorSurface, typedValue, true)
-            var color = typedValue.data
-            libraryCollapsingToolbarLayout?.setBackgroundColor(color)
+            val color = typedValue.data
+            libraryCollapsingToolbarLayout.setBackgroundColor(color)
         }
 
-        // now add the newly selected category to the list...
-        selectedCategories.add(Pair(categoryId, categoryView))
+        if(!selectedCategories.contains(index)) {
+            if (vibrate && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                (requireContext().getSystemService(
+                    Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
+                        ).defaultVibrator.apply {
+                        cancel()
+                        vibrate(
+                            VibrationEffect.createOneShot(100,100)
+                        )
+                    }
+            }
+            // now add the newly selected category to the list...
+            selectedCategories.add(index)
+            categoryAdapter?.notifyItemChanged(index)
+        }
 
-        // and tint its foreground to mark it as selected
-        setCategorySelected(true, categoryView)
+        libraryToolbar.menu.findItem(R.id.topToolbarSelectionEdit).isVisible =
+            selectedCategories.size == 1
 
         // we consumed the event so we return true
         return true
@@ -186,22 +205,17 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
 
     // reset the toolbar and associated data
     private fun resetToolbar() {
-        libraryToolbar?.apply {
+        libraryToolbar.apply {
             menu?.clear()
             inflateMenu(R.menu.library_toolbar_menu_base)
             navigationIcon = null
         }
-        libraryCollapsingToolbarLayout?.apply {
+        libraryCollapsingToolbarLayout.apply {
             setBackgroundColor(ContextCompat.getColor(context, android.R.color.transparent))
         }
-        for ((_, view) in selectedCategories) {
-            setCategorySelected(false, view)
-        }
+        val tmpCopy = selectedCategories.toList()
         selectedCategories.clear()
-    }
-
-    private fun setCategorySelected(selected: Boolean, view: View) {
-        (view as Button).isSelected = selected // set selected so that background changes
+        tmpCopy.forEach { categoryAdapter?.notifyItemChanged(it) }
     }
 
     // the handler for creating new categories
@@ -230,36 +244,34 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
     }
 
     // the handler for deleting categories
-    private fun deleteCategoriesHandler(categoryIds: List<Int>) {
+    private fun deleteCategoriesHandler() {
         var failedDeleteFlag = false
         lifecycleScope.launch {
-            for (categoryId in categoryIds) {
-                if(dao?.deleteCategory(categoryId) == true) {
-                    activeCategories.indexOfFirst { category ->
-                        category.id == categoryId
-                    }.also { index ->
-                        activeCategories.removeAt(index)
-                        categoryAdapter?.notifyItemRemoved(index)
-                    }
+            selectedCategories.sortedByDescending { it }.forEach { index ->
+                if(dao?.deleteCategory(activeCategories[index].id) == true) {
+                    activeCategories.removeAt(index)
+                    categoryAdapter?.notifyItemRemoved(index)
                 } else {
                     failedDeleteFlag = true
                 }
             }
+
             if(failedDeleteFlag) {
                 Snackbar.make(
                     requireView(),
-                    if(categoryIds.size > 1) R.string.deleteCategoriesFailSnackbar
+                    if(selectedCategories.size > 1) R.string.deleteCategoriesFailSnackbar
                     else R.string.deleteCategoryFailSnackbar,
                     5000
                 ).show()
             } else {
                 Toast.makeText(
                     requireActivity(),
-                    if(categoryIds.size > 1) R.string.deleteCategoriesSuccessSnackbar
+                    if(selectedCategories.size > 1) R.string.deleteCategoriesSuccessSnackbar
                     else R.string.deleteCategorySuccessSnackbar,
                     Toast.LENGTH_SHORT
                 ).show()
             }
+
             if(activeCategories.isEmpty()) showHint()
             resetToolbar()
         }

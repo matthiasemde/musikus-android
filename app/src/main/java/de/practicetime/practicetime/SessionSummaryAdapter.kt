@@ -2,11 +2,7 @@ package de.practicetime.practicetime
 
 import android.content.Context
 import android.content.res.ColorStateList
-import android.os.Build
-import android.os.VibrationEffect
-import android.os.VibratorManager
 import android.util.AttributeSet
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
@@ -22,16 +18,15 @@ import kotlin.collections.ArrayList
 
 class SessionSummaryAdapter(
     private val context: Context,
-    private var isExpanded: Boolean,
+    var isExpanded: Boolean,
     private val sessionsWithSectionsWithCategories: List<SessionWithSectionsWithCategories>,
+    private val selectedSessions: List<Pair<Int, SessionSummaryAdapter>>,
     private val shortClickHandler: (
-        session: PracticeSession,
-        sessionView: View,
+        layoutPosition: Int,
         adapter: SessionSummaryAdapter
     ) -> Unit,
     private val longClickHandler: (
-        sessionId: Int,
-        sessionView: View,
+        layoutPosition: Int,
         adapter: SessionSummaryAdapter
     ) -> Boolean,
 ) : RecyclerView.Adapter<SessionSummaryAdapter.ViewHolder>() {
@@ -79,8 +74,9 @@ class SessionSummaryAdapter(
                     viewGroup,
                     false
                 ),
-                adapter = this,
                 context,
+                sessionsWithSectionsWithCategories,
+                selectedSessions,
                 shortClickHandler,
                 longClickHandler,
             )
@@ -91,8 +87,7 @@ class SessionSummaryAdapter(
     override fun onBindViewHolder(viewHolder: ViewHolder, position: Int) {
         when (viewHolder) {
             is ViewHolder.ItemViewHolder -> viewHolder.bind(
-                sessionsWithSectionsWithCategories,
-                position - 1,
+                dataIndex = position - 1,
             )
             is ViewHolder.HeaderViewHolder -> viewHolder.bind(
                 sessionsWithSectionsWithCategories.first().sections.first().section.timestamp,
@@ -108,17 +103,16 @@ class SessionSummaryAdapter(
 
         class ItemViewHolder(
             view: View,
-            private val adapter: SessionSummaryAdapter,
             private val context: Context,
+            private val sessionsWithSectionsWithCategories: List<SessionWithSectionsWithCategories>,
+            private val selectedSessions: List<Pair<Int, SessionSummaryAdapter>>,
             private val shortClickHandler: (
-                session: PracticeSession,
-                sessionView: View,
-                adapter: SessionSummaryAdapter
+                layoutPosition: Int,
+                adapter: SessionSummaryAdapter,
             ) -> Unit,
             private val longClickHandler: (
-                sessionId: Int,
-                sessionView: View,
-                adapter: SessionSummaryAdapter
+                layoutPosition: Int,
+                adapter: SessionSummaryAdapter,
             ) -> Boolean,
         ) : ViewHolder(view) {
 
@@ -142,6 +136,8 @@ class SessionSummaryAdapter(
             private val timeFormat: SimpleDateFormat = SimpleDateFormat("H:mm", Locale.getDefault())
             private val dateFormat: SimpleDateFormat = SimpleDateFormat("E dd.MM.yyyy", Locale.getDefault())
 
+            private val defaultCardElevation = 11F // default value
+
             init {
                 // define the layout and adapter for the section list
                 val sectionAdapter = SectionAdapter(sectionsWithCategoriesList, context)
@@ -151,58 +147,63 @@ class SessionSummaryAdapter(
             }
 
             fun bind(
-                sessionsWithSectionsWithCategories: List<SessionWithSectionsWithCategories>,
-                position: Int,
+                dataIndex: Int,
             ) {
                 // get the session at given position
-                val (session, sectionsWithCategories) = sessionsWithSectionsWithCategories[position]
+                val (session, sectionsWithCategories) = sessionsWithSectionsWithCategories[dataIndex]
+
+                summaryCard.apply {
+                    if (selectedSessions.map { t -> t.first }.contains(layoutPosition)) {
+                        isSelected = true // set selected so that background changes
+                        // remove Card Elevation because in Light theme it would look ugly
+                        cardElevation = 0f
+                    } else {
+                        isSelected = false // set selected so that background changes
+                        // restore card Elevation
+                        cardElevation = defaultCardElevation
+                    }
+                }
 
                 // set up short and long click handler for selecting sessions
-                summaryCard.setOnClickListener { shortClickHandler(session, it, adapter) }
+                summaryCard.setOnClickListener {
+                    shortClickHandler(
+                        layoutPosition,
+                        bindingAdapter as SessionSummaryAdapter
+                    )
+                }
                 summaryCard.setOnLongClickListener {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                        (context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE)
-                                as VibratorManager
-                                ).defaultVibrator.apply {
-                                cancel()
-                                vibrate(
-                                    VibrationEffect.createOneShot(
-                                        100,
-                                        100
-                                    )
-                                )
-                            }
-                    }
                     // tell the event handler we consumed the event
-                    return@setOnLongClickListener longClickHandler(session.id, it, adapter)
+                    return@setOnLongClickListener longClickHandler(
+                        layoutPosition,
+                        bindingAdapter as SessionSummaryAdapter
+                    )
                 }
 
                 val currentSessionDate = Calendar.getInstance().apply {
                     timeInMillis = sectionsWithCategories.first().section.timestamp * 1000L
                 }
 
-
                 // detect, if this session is either the last session of a day or the whole month
-                val lastSessionOfTheDay = if (position == 0) true else {
+                val lastSessionOfTheDay = if (dataIndex == 0) true else {
                     val nextSessionDate = Calendar.getInstance().apply {
-                        timeInMillis = sessionsWithSectionsWithCategories[position - 1]
+                        timeInMillis = sessionsWithSectionsWithCategories[dataIndex - 1]
                             .sections.first().section.timestamp * 1000L
                     }
                     currentSessionDate.get(Calendar.DAY_OF_YEAR) !=
-                        nextSessionDate.get(Calendar.DAY_OF_YEAR)
+                            nextSessionDate.get(Calendar.DAY_OF_YEAR)
                 }
 
                 // if so, calculate the total time practiced that day and display it
                 if(lastSessionOfTheDay) {
                     var totalPracticeDuration = 0
-                    for (i in position until sessionsWithSectionsWithCategories.size) {
+                    for (i in dataIndex until sessionsWithSectionsWithCategories.size) {
                         val (_, pastSectionsWithCategories) = sessionsWithSectionsWithCategories[i]
                         val date = Calendar.getInstance().apply {
                             timeInMillis = pastSectionsWithCategories.first().section.timestamp * 1000L
                         }
                         if(currentSessionDate.get(Calendar.DAY_OF_YEAR) !=
                             date.get(Calendar.DAY_OF_YEAR)) {
-                            break;
+                            break
                         } else {
                             pastSectionsWithCategories.forEach { (section, _) ->
                                 totalPracticeDuration += section.duration ?: 0
@@ -298,7 +299,7 @@ class SessionSummaryAdapter(
                     val categoryColors =  context.resources.getIntArray(R.array.category_colors)
                     viewHolder.sectionColor.backgroundTintList = ColorStateList.valueOf(
                         categoryColors[category.colorIndex]
-                    );
+                    )
 
 
                     val sectionDuration = section.duration ?: 0
@@ -327,9 +328,9 @@ class SessionSummaryAdapter(
                 }
                 sessionHeaderToggleButton.setOnClickListener(onClickListener)
                 if (expanded) {
-                    sessionHeaderToggleButton.text = view.context.getString(R.string.hide_month);
+                    sessionHeaderToggleButton.text = view.context.getString(R.string.hide_month)
                 } else {
-                    sessionHeaderToggleButton.text = view.context.getString(R.string.show_month);
+                    sessionHeaderToggleButton.text = view.context.getString(R.string.show_month)
                 }
             }
         }

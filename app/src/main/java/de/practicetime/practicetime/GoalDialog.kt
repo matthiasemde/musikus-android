@@ -6,20 +6,15 @@ import android.content.res.ColorStateList
 import android.text.InputFilter
 import android.text.Spanned
 import android.util.Log
-import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.inputmethod.InputMethodManager
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.AppCompatButton
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.widget.addTextChangedListener
-import androidx.lifecycle.LifecycleCoroutineScope
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import de.practicetime.practicetime.entities.*
-import kotlinx.coroutines.launch
 import java.util.*
 
 class GoalDialog(
@@ -222,19 +217,20 @@ class GoalDialog(
 
     // the public function to show the dialog
     // if a goal is passed it will be edited
-    fun show(goalInstanceWithDescription: GoalInstanceWithDescription? = null) {
+    fun show(goalInstanceWithDescriptionWithCategories: GoalInstanceWithDescriptionWithCategories? = null) {
         alertDialog?.show()
 
         alertDialog?.also { dialog ->
             val positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
 
-            if(goalInstanceWithDescription != null) {
-                selectedGoalDescriptionId = goalInstanceWithDescription.description.id
+            if(goalInstanceWithDescriptionWithCategories != null) {
+                selectedGoalDescriptionId =
+                    goalInstanceWithDescriptionWithCategories.description.description.id
                 goalDialogTitleView.setText(R.string.goalDialogTitleEdit)
                 positiveButton.setText(R.string.goalDialogOkEdit)
 
-                val hours = goalInstanceWithDescription.instance.target / 3600
-                val minutes = goalInstanceWithDescription.instance.target % 3600 / 60
+                val hours = goalInstanceWithDescriptionWithCategories.instance.target / 3600
+                val minutes = goalInstanceWithDescriptionWithCategories.instance.target % 3600 / 60
 
                 goalDialogTargetHoursView.setText(hours.toString())
                 goalDialogTargetMinutesView.setText(minutes.toString())

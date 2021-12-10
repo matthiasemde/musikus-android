@@ -1,17 +1,14 @@
 package de.practicetime.practicetime
 
 import android.app.Activity
-import android.content.Context
 import android.content.res.ColorStateList
-import android.os.Build
-import android.os.VibrationEffect
-import android.os.VibratorManager
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
+import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.chip.Chip
 import de.practicetime.practicetime.entities.*
@@ -21,12 +18,15 @@ const val SECONDS_PER_HOUR = 60 * 60
 const val SECONDS_PER_DAY = 60 * 60 * 24
 
 class GoalAdapter(
-    private val goalInstancesWithDescriptionsWithCategories: List<GoalInstanceWithDescriptionWithCategories>,
+    private val goals: List<GoalInstanceWithDescriptionWithCategories>,
+    private val selectedGoals: List<Int> = listOf(),
     private val context: Activity,
-    private val shortClickHandler: (goalInstanceWithDescription: GoalInstanceWithDescription, goalView: View) -> Unit = { _, _ -> },
-    private val longClickHandler: (goalId: Int, goalView: View) -> Boolean = { _, _ -> false },
+    private val shortClickHandler: (index: Int) -> Unit = {},
+    private val longClickHandler: (index: Int) -> Boolean = { false },
     private val showEmptyHeader: Boolean = false
 ) : RecyclerView.Adapter<GoalAdapter.ViewHolder>() {
+
+    private val defaultCardElevation = 11F // default value
 
     companion object {
         private const val VIEW_TYPE_HEADER = 1
@@ -34,7 +34,7 @@ class GoalAdapter(
     }
 
     override fun getItemCount() =
-        goalInstancesWithDescriptionsWithCategories.size + if (showEmptyHeader) 1 else 0
+        goals.size + if (showEmptyHeader) 1 else 0
 
     override fun getItemViewType(position: Int): Int {
         return if (!showEmptyHeader) VIEW_TYPE_GOAL else {
@@ -62,7 +62,18 @@ class GoalAdapter(
             else goalPosition -= 1
         }
 
-        val (instance, descriptionWithCategories) = goalInstancesWithDescriptionsWithCategories[goalPosition]
+        viewHolder.goalCardView.apply {
+            if (selectedGoals.contains(viewHolder.layoutPosition)) {
+                isSelected = true // set selected so that background changes
+                // remove Card Elevation because in Light theme it would look ugly
+                cardElevation = 0f
+            } else {
+                isSelected = false // set selected so that background changes
+                cardElevation = defaultCardElevation
+            }
+        }
+
+        val (instance, descriptionWithCategories) = goals[goalPosition]
         val (description, categories) = descriptionWithCategories
 
         // get the category color for later use in different UI elements
@@ -75,24 +86,11 @@ class GoalAdapter(
 
         /** set Click listener */
         viewHolder.itemView.setOnClickListener {
-            shortClickHandler(GoalInstanceWithDescription(
-                instance = instance,
-                description = description
-            ), it)
+            shortClickHandler(viewHolder.layoutPosition)
         }
         viewHolder.itemView.setOnLongClickListener {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                (context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE)
-                        as VibratorManager
-                ).defaultVibrator.apply {
-                    cancel()
-                    vibrate(
-                        VibrationEffect.createOneShot(100,100)
-                    )
-                }
-            }
             // tell the event handler we consumed the event
-            return@setOnLongClickListener longClickHandler(description.id, it)
+            return@setOnLongClickListener longClickHandler(viewHolder.layoutPosition)
         }
 
         /** Goal Title */
@@ -200,6 +198,7 @@ class GoalAdapter(
     }
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        val goalCardView: CardView = view.findViewById(R.id.cardView_goal_item)
         val progressBarView: ProgressBar = view.findViewById(R.id.goalProgressBar)
         val goalNameView: TextView = view.findViewById(R.id.goalName)
         val goalDescriptionView: TextView = view.findViewById(R.id.goalDescription)

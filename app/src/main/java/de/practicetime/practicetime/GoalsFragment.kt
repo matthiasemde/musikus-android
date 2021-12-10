@@ -1,14 +1,17 @@
 package de.practicetime.practicetime
 
 import android.app.AlertDialog
+import android.content.Context
+import android.os.Build
 import android.os.Bundle
+import android.os.VibrationEffect
+import android.os.VibratorManager
 import android.util.TypedValue
 import android.view.View
 import android.widget.CheckBox
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
-import androidx.cardview.widget.CardView
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -23,7 +26,6 @@ import java.util.*
 import kotlin.collections.ArrayList
 
 private var dao: PTDao? = null
-private var savedCardElevation = 0f
 
 class GoalsFragment : Fragment(R.layout.fragment_goals) {
 
@@ -35,10 +37,10 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
     private var editGoalDialog: GoalDialog? = null
     private var deleteGoalDialog: AlertDialog? = null
 
-    private var goalsToolbar: androidx.appcompat.widget.Toolbar? = null
-    private var goalsCollapsingToolbarLayout: CollapsingToolbarLayout? = null
+    private lateinit var goalsToolbar: androidx.appcompat.widget.Toolbar
+    private lateinit var goalsCollapsingToolbarLayout: CollapsingToolbarLayout
 
-    private val selectedGoals = ArrayList<Pair<Int, View>>()
+    private val selectedGoals = ArrayList<Int>()
 
     // catch the back press for the case where the selection should be reverted
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -88,6 +90,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
     private fun initGoalList() {
         goalAdapter = GoalAdapter(
             goalAdapterData,
+            selectedGoals,
             context = requireActivity(),
             ::shortClickOnGoalHandler,
             ::longClickOnGoalHandler,
@@ -125,8 +128,8 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
             builder.apply {
                 setView(view)
                 setPositiveButton(R.string.deleteDialogConfirm) { dialog, _ ->
-                    if(checkBox.isChecked) deleteGoalHandler(selectedGoals.map { p -> p.first })
-                    else archiveGoalHandler(selectedGoals.map { p -> p.first })
+                    if(checkBox.isChecked) deleteGoalHandler()
+                    else archiveGoalHandler()
                     checkBox.isChecked = false
                     dialog.dismiss()
                 }
@@ -141,29 +144,27 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
 
     // the handler for dealing with short clicks on goals
     private fun shortClickOnGoalHandler(
-        goalInstanceWithDescription: GoalInstanceWithDescription,
-        goalView: View
+        index: Int,
     ) {
         if(selectedGoals.isNotEmpty()) {
-            if(selectedGoals.remove(Pair(goalInstanceWithDescription.description.id, goalView))) {
-                setCardSelected(false, goalView)
-
-                if(selectedGoals.isEmpty()) {
+            if (selectedGoals.remove(index)) {
+                goalAdapter?.notifyItemChanged(index)
+                if(selectedGoals.size == 1) {
+                    goalsToolbar.menu.findItem(R.id.topToolbarSelectionEdit).isVisible = true
+                } else if (selectedGoals.isEmpty()) {
                     resetToolbar()
                 }
             } else {
-                longClickOnGoalHandler(goalInstanceWithDescription.description.id, goalView)
+                longClickOnGoalHandler(index, vibrate = false)
             }
-        } else {
-            editGoalDialog?.show(goalInstanceWithDescription)
         }
     }
 
     // the handler for dealing with long clicks on goals
-    private fun longClickOnGoalHandler(goalId: Int, goalView: View): Boolean {
+    private fun longClickOnGoalHandler(index: Int, vibrate: Boolean = true): Boolean {
         // if there is no goal selected already, change the toolbar
         if(selectedGoals.isEmpty()) {
-            goalsToolbar?.apply {
+            goalsToolbar.apply {
                 // clear the base menu from the toolbar and inflate the new menu
                 menu?.clear()
                 inflateMenu(R.menu.goals_toolbar_menu_for_selection)
@@ -186,6 +187,9 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
                                 )
                             }
                         }
+                        R.id.topToolbarSelectionEdit -> {
+                            editGoalDialog?.show(goalAdapterData[selectedGoals.first()])
+                        }
                     }
                     return@setOnMenuItemClickListener true
                 }
@@ -194,13 +198,27 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
             val typedValue = TypedValue()
             requireActivity().theme.resolveAttribute(R.attr.colorSurface, typedValue, true)
             val color = typedValue.data
-            goalsCollapsingToolbarLayout?.setBackgroundColor(color)
+            goalsCollapsingToolbarLayout.setBackgroundColor(color)
         }
 
-        // now add the newly selected goal to the list...
-        selectedGoals.add(Pair(goalId, goalView))
+        if(!selectedGoals.contains(index)) {
+            if (vibrate && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                (requireContext().getSystemService(
+                    Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
+                ).defaultVibrator.apply {
+                        cancel()
+                        vibrate(
+                            VibrationEffect.createOneShot(100,100)
+                        )
+                    }
+            }
+            // now add the newly selected goal to the list...
+            selectedGoals.add(index)
+            goalAdapter?.notifyItemChanged(index)
+        }
 
-        setCardSelected(true, goalView)
+        goalsToolbar.menu.findItem(R.id.topToolbarSelectionEdit).isVisible =
+            selectedGoals.size == 1
 
         // we consumed the event so we return true
         return true
@@ -208,39 +226,18 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
 
     // reset the toolbar and associated data
     private fun resetToolbar() {
-        goalsToolbar?.apply {
+        goalsToolbar.apply {
             menu?.clear()
             inflateMenu(R.menu.goals_toolbar_menu_base)
             navigationIcon = null
         }
-        goalsCollapsingToolbarLayout?.apply {
+        goalsCollapsingToolbarLayout.apply {
             setBackgroundColor(ContextCompat.getColor(context, android.R.color.transparent))
         }
-        for ((_, view) in selectedGoals) {
-            setCardSelected(false, view)
-        }
-        selectedGoals.clear()
-    }
 
-    private fun setCardSelected(selected: Boolean, view: View) {
-        (view as CardView).apply {
-            isSelected = selected // set selected so that background changes
-            if (!selected) {
-                // restore card Elevation
-                cardElevation = savedCardElevation
-                // re-enable ripple effect
-                foreground = with(TypedValue()) {
-                    context.theme.resolveAttribute(R.attr.selectableItemBackground, this, true)
-                    ContextCompat.getDrawable(context, resourceId)
-                }
-            } else {
-                // remove Card Elevation because in Light theme it would look ugly
-                savedCardElevation = cardElevation
-                cardElevation = 0f
-                // remove ripple effect
-                foreground = null
-            }
-        }
+        val tmpCopy = selectedGoals.toList()
+        selectedGoals.clear()
+        tmpCopy.forEach { goalAdapter?.notifyItemChanged(it) }
     }
 
     // the handler for creating new goals
@@ -294,7 +291,10 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
     }
 
     // the handler for archiving goals
-    private fun archiveGoalHandler(goalDescriptionIds: List<Int>) {
+    private fun archiveGoalHandler() {
+        val goalDescriptionIds = selectedGoals.sortedDescending().map {
+            goalAdapterData[it].description.description.id
+        }
         lifecycleScope.launch {
             dao?.archiveGoals(goalDescriptionIds)
         }
@@ -316,7 +316,10 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
     }
 
     // the handler for deleting goals
-    private fun deleteGoalHandler(goalDescriptionIds: List<Int>) {
+    private fun deleteGoalHandler() {
+        val goalDescriptionIds = selectedGoals.sortedDescending().map {
+            goalAdapterData[it].description.description.id
+        }
         lifecycleScope.launch {
             dao?.deleteGoals(goalDescriptionIds)
         }

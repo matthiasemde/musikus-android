@@ -3,12 +3,11 @@ package de.practicetime.practicetime
 import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
-import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
+import android.os.*
 import android.util.TypedValue
 import android.view.View
 import android.widget.TextView
+import androidx.activity.OnBackPressedCallback
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -41,7 +40,24 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
 
     private lateinit var deleteSessionDialog: AlertDialog
 
-    private val selectedSessions = ArrayList<Triple<Int, View, SessionSummaryAdapter>>()
+    private val selectedSessions = ArrayList<Pair<Int, SessionSummaryAdapter>>()
+
+    // catch the back press for the case where the selection should be reverted
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        activity?.onBackPressedDispatcher?.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                if(selectedSessions.isNotEmpty()){
+                    selectedSessions.clear()
+                    notifyAllItems()
+                    resetToolbar()
+                } else {
+                    isEnabled = false
+                    activity?.onBackPressed()
+                }
+            }
+        })
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
 
@@ -54,10 +70,13 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
         // initialize the sessions list
         initSessionList()
 
-
         fabNewSession = view.findViewById(R.id.fab_new_session)
         fabRunningSession = view.findViewById(R.id.fab_running_session)
         val clickListener = View.OnClickListener {
+            selectedSessions.clear()
+            notifyAllItems()
+            resetToolbar()
+
             val i = Intent(requireContext(), ActiveSessionActivity::class.java)
             requireActivity().startActivity(i)
             requireActivity().overridePendingTransition(R.anim.slide_in_up, R.anim.fake_anim)
@@ -117,6 +136,7 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
                                 requireContext(),
                                 false,
                                 sessionListAdapterData.last(),
+                                selectedSessions,
                                 ::shortClickOnSessionHandler,
                                 ::longClickOnSessionHandler,
                             ),
@@ -139,6 +159,7 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
                         requireContext(),
                         true,
                         sessionListAdapterData.last(),
+                        selectedSessions,
                         ::shortClickOnSessionHandler,
                         ::longClickOnSessionHandler,
                     )
@@ -149,37 +170,40 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
             requireActivity().findViewById<RecyclerView>(R.id.sessionList).apply {
                 layoutManager = LinearLayoutManager(context)
                 adapter = sessionListAdapter
+                itemAnimator?.apply{
+                    changeDuration = 100L // default is 250
+                    moveDuration = 200L
+                    removeDuration = 100L
+                }
             }
         }
     }
 
     private fun shortClickOnSessionHandler(
-        session: PracticeSession,
-        sessionView: View,
+        layoutPosition: Int,
         adapter: SessionSummaryAdapter,
     ) {
         // if there are already sessions selected,
         // add or remove the clicked session from the selection
         if(selectedSessions.isNotEmpty()) {
-            if(selectedSessions.remove(Triple(session.id, sessionView, adapter))) {
-                setSessionSelected(false, sessionView)
-                if(selectedSessions.isEmpty()) {
+            if(selectedSessions.remove(Pair(layoutPosition, adapter))) {
+                adapter.notifyItemChanged(layoutPosition)
+                if(selectedSessions.size == 1) {
+                    sessionListToolbar.menu.findItem(R.id.topToolbarSelectionEdit).isVisible = true
+                } else if(selectedSessions.isEmpty()) {
                     resetToolbar()
                 }
             } else {
-                longClickOnSessionHandler(session.id, sessionView, adapter)
+                longClickOnSessionHandler(layoutPosition, adapter, vibrate = false)
             }
-//            // if no selection is in progress show the edit dialog with the session
-//        } else {
-//            openSessionInFullscreen(session.id)
         }
     }
 
     // the handler for dealing with long clicks on session
     private fun longClickOnSessionHandler(
-        sessionId: Int,
-        sessionView: View,
+        layoutPosition: Int,
         adapter: SessionSummaryAdapter,
+        vibrate: Boolean = true,
     ): Boolean {
         // if there is no session selected already, change the toolbar
         if(selectedSessions.isEmpty()) {
@@ -191,6 +215,8 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
                 // set the back button and its click listener
                 setNavigationIcon(R.drawable.ic_nav_back)
                 setNavigationOnClickListener {
+                    selectedSessions.clear()
+                    notifyAllItems()
                     resetToolbar()
                 }
 
@@ -204,6 +230,7 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
                             ))
                             show()
                         }
+                        R.id.topToolbarSelectionEdit -> {}
                     }
                     return@setOnMenuItemClickListener true
                 }
@@ -215,17 +242,43 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
             sessionListCollapsingToolbarLayout.setBackgroundColor(color)
         }
 
-        // now add the newly selected session to the list...
-        selectedSessions.add(Triple(sessionId, sessionView, adapter))
+        Pair(layoutPosition, adapter).also {
+            if (!selectedSessions.contains(it)) {
+                if (vibrate && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    (requireContext().getSystemService(Context.VIBRATOR_MANAGER_SERVICE)
+                            as VibratorManager
+                            ).defaultVibrator.apply {
+                            cancel()
+                            vibrate(
+                                VibrationEffect.createOneShot(
+                                    100,
+                                    100
+                                )
+                            )
+                        }
+                }
+                // now add the newly selected session to the list...
+                selectedSessions.add(it)
+                adapter.notifyItemChanged(layoutPosition)
+            }
+        }
 
-        // and tint its foreground to mark it as selected
-        setSessionSelected(true, sessionView)
+        sessionListToolbar.menu.findItem(R.id.topToolbarSelectionEdit).isVisible =
+                selectedSessions.size == 1
 
         // we consumed the event so we return true
         return true
     }
 
-    // reset the toolbar and associated data
+    private fun notifyAllItems() {
+        sessionListAdapter.adapters.zip(sessionListAdapterData).forEach { (adapter, list) ->
+            // notify data index + 1 because first item in adapter is the month header
+            for(i in 0 until list.size) { adapter.notifyItemChanged(i + 1) }
+        }
+    }
+
+
+    // reset the toolbar
     private fun resetToolbar() {
         sessionListToolbar.apply {
             menu?.clear()
@@ -235,15 +288,6 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
         sessionListCollapsingToolbarLayout.apply {
             setBackgroundColor(ContextCompat.getColor(context, android.R.color.transparent))
         }
-        for ((_, view) in selectedSessions) {
-            setSessionSelected(false, view)
-        }
-        selectedSessions.clear()
-    }
-
-    private fun setSessionSelected(selected: Boolean, view: View) {
-        // TODO does not work with recycler view isSelected needs to be set on bind
-        view.isSelected = selected // set selected so that background changes
     }
 
     // initialize the session delete dialog
@@ -252,7 +296,7 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
             builder.apply {
                 setMessage(R.string.deleteSessionDialogMessage)
                 setPositiveButton(R.string.deleteDialogConfirm) { dialog, _ ->
-                    deleteSessionsHandler(selectedSessions.map{ p -> Pair(p.first, p.third)})
+                    deleteSessionsHandler()
                     dialog.dismiss()
                 }
                 setNegativeButton(R.string.dialogCancel) { dialog, _ ->
@@ -264,16 +308,21 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
     }
 
     // the handler for deleting sessions
-    private fun deleteSessionsHandler(sessionIdsWithAdapter: List<Pair<Int, SessionSummaryAdapter>>) {
+    private fun deleteSessionsHandler() {
         lifecycleScope.launch {
-            for ((sessionId, adapter) in sessionIdsWithAdapter) {
-                val session = dao!!.getSessionWithSections(sessionId)
-                val goalProgress = dao!!.computeGoalProgressForSession(sessionId, checkArchived = true)
+            selectedSessions.sortedByDescending { it.first }.forEach { (layoutPosition ,adapter) ->
+                val adapterIndex = sessionListAdapter.adapters.indexOf(adapter)
+                val adapterData = sessionListAdapterData[adapterIndex]
+
+                val (session, sectionsWithCategories) = adapterData[layoutPosition - 1]
+                val sections = sectionsWithCategories.map { s -> s.section }
+
+                val goalProgress = dao!!.computeGoalProgressForSession(session.id, checkArchived = true)
 
                 // get all active goal instances at the time of the session
                 val updatedGoalInstances = dao!!.getGoalInstances(
                     descriptionIds = goalProgress.keys.toList(),
-                    now = session.sections.first().timestamp
+                    now = sections.first().timestamp
                 // subtract the progress
                 ).onEach { instance ->
                     goalProgress[instance.goalDescriptionId].also { progress ->
@@ -285,28 +334,28 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
                 }
 
                 // update goal instances and delete session in a single transaction
-                dao!!.deleteSession(sessionId, updatedGoalInstances)
+                dao!!.deleteSession(session.id, updatedGoalInstances)
 
                 // find the session in the session list adapter data and delete it
-                sessionListAdapter.adapters.indexOf(adapter).also { listIndex ->
-                    sessionListAdapterData[listIndex].also { list ->
-                        list.indexOfFirst {
-                            it.session.id == sessionId
-                        }.also { index ->
-                            if (index != -1) {
-                                list.removeAt(index)
-                                if (list.isEmpty()) {
-                                    sessionListAdapterData.removeAt(listIndex)
-                                    sessionListAdapter.notifyItemRemoved(listIndex)
-                                // finally we notify the adapter about the removed item
-                                } else adapter.notifyItemRemoved(index + 1)
-                            }
-                        }
-                    }
+                adapterData.removeAt(layoutPosition - 1)
+                if (adapterData.isEmpty()) {
+                    sessionListAdapterData.removeAt(adapterIndex)
+                    sessionListAdapter.removeAdapter(adapter)
+                    sessionListAdapter.notifyItemRemoved(adapterIndex)
+                // finally we notify the adapter about the removed item
+                } else if(adapter.isExpanded) {
+                    adapter.notifyItemRemoved(layoutPosition)
                 }
             }
+
             if(sessionListAdapterData.isEmpty()) showHint()
+            selectedSessions.clear()
+
             resetToolbar()
+
+            delay(300L)
+
+            notifyAllItems()
         }
     }
 //

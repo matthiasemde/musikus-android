@@ -6,22 +6,22 @@
     android:id="@+id/cardView_goal_item"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginTop="8dp"
-    android:layout_marginBottom="8dp"
     android:layout_marginStart="16dp"
+    android:layout_marginTop="8dp"
     android:layout_marginEnd="16dp"
-    app:cardElevation="4dp"
-    app:cardCornerRadius="16dp"
+    android:layout_marginBottom="8dp"
+    android:foreground="@drawable/foreground_simple_overlay"
     app:cardBackgroundColor="?attr/colorSurface"
-    android:foreground="?android:attr/selectableItemBackground">
+    app:cardCornerRadius="16dp"
+    app:cardElevation="4dp">
 
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="16dp"
         android:clipToPadding="false"
-        android:foreground="@drawable/foreground_simple_overlay">
+        android:foreground="@drawable/foreground_simple_overlay"
+        android:orientation="vertical"
+        android:padding="16dp">
 
 
         <ImageView
@@ -38,11 +38,11 @@
             android:id="@+id/goalName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="18sp"
-            tools:text="Goal Name"
             android:layout_marginStart="5dp"
+            android:textSize="18sp"
             app:layout_constraintStart_toEndOf="@id/sectionColor"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="Goal Name" />
 
 
         <com.google.android.material.chip.Chip
@@ -50,12 +50,12 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:clickable="false"
+            android:enabled="false"
             android:textColor="?attr/colorOnSurface"
             android:textSize="15sp"
-            android:enabled="false"
+            app:layout_constraintBottom_toBottomOf="@id/goalName"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="@id/goalName"
-            app:layout_constraintBottom_toBottomOf="@id/goalName"
             tools:text="days left" />
 
         <View
@@ -63,18 +63,18 @@
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:background="?android:attr/listDivider"
-            app:layout_constraintTop_toBottomOf="@id/goalRemainingTime"/>
+            app:layout_constraintTop_toBottomOf="@id/goalRemainingTime" />
 
         <TextView
             android:id="@+id/goalDescription"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textSize="20sp"
+            android:layout_marginTop="12dp"
             android:textColor="?attr/colorOnSurface"
-            tools:text="20h 30m in 7 weeks"
+            android:textSize="20sp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/divider"
-            android:layout_marginTop="12dp"/>
+            tools:text="20h 30m in 7 weeks" />
 
 
         <ProgressBar
@@ -88,11 +88,11 @@
             android:layout_weight="1"
             android:background="@drawable/background_goal_progress_bar"
             android:backgroundTint="@color/progressbar_tint_bg"
+            android:indeterminate="false"
+            android:progress="42"
             android:progressDrawable="@drawable/progress_goal_progress_bar"
             android:progressTint="?attr/colorPrimary"
             android:progressTintMode="src_in"
-            android:indeterminate="false"
-            android:progress="42"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -100,18 +100,30 @@
 
         <TextView
             android:id="@+id/goalProgressIndicator"
-            android:layout_width="100dp"
-            android:gravity="center"
+            android:layout_width="200dp"
             android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:gravity="start|center_horizontal|center_vertical"
+            android:textColor="?attr/colorOnSurface"
             android:textSize="18sp"
             android:textStyle="normal"
-            tools:text="02:04"
-            android:textColor="?attr/colorOnSurface"
+            app:layout_constraintBottom_toBottomOf="@id/goalProgressBar"
+            app:layout_constraintEnd_toStartOf="@+id/goalProgressIndicatorLeft"
             app:layout_constraintStart_toStartOf="@id/goalProgressBar"
-            app:layout_constraintEnd_toEndOf="@id/goalProgressBar"
             app:layout_constraintTop_toTopOf="@id/goalProgressBar"
-            app:layout_constraintBottom_toBottomOf="@id/goalProgressBar"/>
+            tools:text="02:04" />
 
-        </androidx.constraintlayout.widget.ConstraintLayout>
+        <TextView
+            android:id="@+id/goalProgressIndicatorLeft"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:text="TextView"
+            app:layout_constraintBottom_toBottomOf="@+id/goalProgressBar"
+            app:layout_constraintEnd_toEndOf="@+id/goalProgressBar"
+            app:layout_constraintStart_toEndOf="@+id/goalProgressIndicator"
+            app:layout_constraintTop_toTopOf="@+id/goalProgressBar" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </androidx.cardview.widget.CardView>

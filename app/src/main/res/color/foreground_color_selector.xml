@@ -3,7 +3,7 @@
     <!-- selected -->
     <item android:state_selected="true"
         android:color="?attr/colorOnSurface"
-        android:alpha="0.35" />
+        android:alpha="0.2" />
     <!-- default -->
     <item android:color="@android:color/transparent" />
 </selector>

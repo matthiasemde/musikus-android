@@ -150,14 +150,15 @@ interface PTDao {
     @Transaction
     suspend fun deleteSession(sessionId: Int, updatedGoalInstances: List<GoalInstance>) {
         updatedGoalInstances.forEach { updateGoalInstance(it) }
+        getSections(sessionId).forEach { deleteSection(it) }
         deleteSession(getSession(sessionId))
     }
 
     @Query("SELECT * FROM PracticeSession WHERE id=:id")
     suspend fun getSession(id: Int): PracticeSession
 
-    @Query("SELECT * FROM PracticeSession")
-    suspend fun getAllSessions(): List<PracticeSession>
+    @Query("SELECT * FROM PracticeSection WHERE practice_session_id=:sessionId")
+    suspend fun getSections(sessionId: Int): List<PracticeSection>
 
     @Query("SELECT * FROM PracticeSection")
     suspend fun getAllSections(): List<PracticeSection>

@@ -74,7 +74,7 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
             adapter = progressAdapter
             itemAnimator = CustomAnimator(
                 progressDuration = { if(skipAnimation) 400L else 1300L },
-                addDuration = { if(skipAnimation) 200L else 250L },
+                addDuration = { if(skipAnimation) 300L else 250L },
                 moveDuration = { if(skipAnimation) 400L else 500L },
             )
         }
@@ -150,7 +150,7 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
                             1,
                             it.size
                         )
-                        delay(600L)
+                        delay(900L)
                     }.onEachIndexed { index, goal ->
                         goal.instance.progress += goalProgress[goal.description.description.id] ?: 0
                         progressAdapter?.notifyItemChanged(index + 1, PROGRESS_UPDATED)
