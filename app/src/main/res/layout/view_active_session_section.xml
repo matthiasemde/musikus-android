@@ -11,16 +11,17 @@
     <TextView
         android:id="@+id/sectionName"
         android:layout_width="0dp"
-        android:layout_weight="3"
         android:layout_height="wrap_content"
-        android:textSize="18sp"
+        android:layout_marginEnd="24dp"
+        android:layout_weight="3"
+        android:textSize="16sp"
         tools:text="section Name" />
 
     <TextView
         android:id="@+id/sectionDuration"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="18sp"
+        android:textSize="16sp"
         tools:text="00:00:00" />
 
 </LinearLayout>
