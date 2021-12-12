@@ -8,31 +8,31 @@
     android:orientation="horizontal">
 
     <LinearLayout
-        android:layout_height="wrap_content"
         android:layout_width="0dp"
-        android:layout_weight="3">
-
-    <ImageView
-        android:id="@+id/sectionColor"
-        android:layout_width="6dp"
-        android:layout_height="match_parent"
-        android:layout_gravity="center"
-        android:background="@drawable/color_rect_cat_indicator"
-        android:layout_marginEnd="5dp" />
-
-    <TextView
-        android:id="@+id/sectionName"
-        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        tools:text="section Name" />
+        android:layout_weight="4">
+
+        <ImageView
+            android:id="@+id/sectionColor"
+            android:layout_width="6dp"
+            android:layout_height="match_parent"
+            android:layout_marginEnd="5dp"
+            android:background="@drawable/color_rect_cat_indicator" />
+
+        <TextView
+            android:id="@+id/sectionName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="14dp"
+            tools:text="section Name" />
     </LinearLayout>
 
     <TextView
         android:id="@+id/sectionDuration"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
+        android:layout_height="match_parent"
         android:layout_weight="2"
+        android:gravity="center_vertical"
         tools:text="0h 0min" />
 
 </LinearLayout>

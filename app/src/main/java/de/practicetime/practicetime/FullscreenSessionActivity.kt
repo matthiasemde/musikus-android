@@ -1,22 +1,29 @@
 package de.practicetime.practicetime
 
+import android.app.Dialog
 import android.content.Context
+import android.content.DialogInterface
 import android.content.Intent
 import android.content.res.ColorStateList
+import android.media.Image
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
-import android.widget.RatingBar
-import android.widget.TextView
+import android.view.inputmethod.InputMethodManager
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
+import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import de.practicetime.practicetime.entities.SectionWithCategory
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
@@ -38,6 +45,8 @@ class FullscreenSessionActivity : AppCompatActivity() {
     private lateinit var sectionAdapter: SectionAdapter
     private val sectionAdapterData = ArrayList<SectionWithCategory>()
 
+    private lateinit var commentDialog: BottomSheetDialog
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_fullscreen_session)
@@ -54,16 +63,20 @@ class FullscreenSessionActivity : AppCompatActivity() {
     }
 
     private fun showFullscreenSession(id: Int) {
-        dateView = findViewById(R.id.fullscreen_session_date)
+//        dateView = findViewById(R.id.fullscreen_session_date)
         ratingBarView = findViewById(R.id.fullscreen_session_rating_bar)
-        practiceDurationView = findViewById(R.id.fullscreen_session_practice_duration)
-        breakDurationView = findViewById(R.id.fullscreen_session_break_duration)
+//        practiceDurationView = findViewById(R.id.fullscreen_session_practice_duration)
+//        breakDurationView = findViewById(R.id.fullscreen_session_break_duration)
         sectionListView = findViewById(R.id.fullscreen_session_section_list)
         commentFieldView = findViewById(R.id.fullscreen_session_comment_field)
 
         // define the layout and adapter for the section list
         val sectionAdapter = SectionAdapter(sectionAdapterData, this)
-        val lm = LinearLayoutManager(this)
+        val lm = object : LinearLayoutManager(this) {
+            override fun canScrollVertically(): Boolean {
+                return false
+            }
+        }
         sectionListView.apply {
             layoutManager = lm
             adapter = sectionAdapter
@@ -83,14 +96,15 @@ class FullscreenSessionActivity : AppCompatActivity() {
 
             val breakDuration = session.break_duration
 
-            dateView.text = getString(R.string.fullscreen_session_date).format(
-                dateFormat.format(startTimestamp),
-                timeFormat.format(startTimestamp),
-            )
+//            dateView.text = getString(R.string.fullscreen_session_date).format(
+//                dateFormat.format(startTimestamp),
+//                timeFormat.format(startTimestamp),
+//            )
             ratingBarView.progress = session.rating
-            practiceDurationView.text = getTimeString(practiceDuration)
-            breakDurationView.text = getTimeString(breakDuration)
+//            practiceDurationView.text = getTimeString(practiceDuration)
+//            breakDurationView.text = getTimeString(breakDuration)
             commentFieldView.text = session.comment
+            commentFieldView.setOnClickListener { showDialog() }
 
             sectionAdapterData.addAll(sectionsWithCategories)
             sectionAdapter.notifyItemRangeInserted(0, sectionsWithCategories.size)
@@ -175,4 +189,63 @@ class FullscreenSessionActivity : AppCompatActivity() {
         intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
         startActivity(intent)
     }
+
+    /*************************************************************************
+     * Comment Fragment
+     *************************************************************************/
+
+    private fun showDialog() {
+        val fragmentManager = supportFragmentManager
+        val newFragment = CommentDialogFragment(::editCommentHandler)
+        val args = Bundle()
+        args.putCharSequence("comment", commentFieldView.text)
+        newFragment.arguments = args
+        newFragment.show(fragmentManager, "dialog")
+    }
+
+    private fun editCommentHandler(newComment: CharSequence) {
+        commentFieldView.text = newComment
+    }
+
+    class CommentDialogFragment(
+        private val onConfirmHandler: (CharSequence) -> Unit
+    ) : BottomSheetDialogFragment() {
+
+        private lateinit var commentText: CharSequence
+
+        private lateinit var commentFieldView: EditText
+
+        override fun onCreateView(
+            inflater: LayoutInflater,
+            container: ViewGroup?,
+            savedInstanceState: Bundle?
+        ): View {
+            return inflater.inflate(R.layout.bottom_sheet_dialog_comment, container, false)
+        }
+
+        override fun onCreate(savedInstanceState: Bundle?) {
+            super.onCreate(savedInstanceState)
+            setStyle(STYLE_NO_TITLE, R.style.CommentDialog)
+            commentText = arguments?.getCharSequence("comment") ?: ""
+        }
+
+        override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+            commentFieldView = view.findViewById<EditText>(R.id.comment_dialog_text_field).also {
+                it.setText(commentText)
+                if(it.requestFocus()) {
+                    lifecycleScope.launch {
+                        delay(150L) // TODO: WTF
+                        (requireActivity()
+                            .getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager)
+                            .showSoftInput(view, InputMethodManager.SHOW_IMPLICIT)
+                    }
+                }
+            }
+            view.findViewById<ImageButton>(R.id.comment_dialog_confirm).setOnClickListener {
+                onConfirmHandler(commentFieldView.text)
+                dismiss()
+            }
+        }
+    }
+
 }

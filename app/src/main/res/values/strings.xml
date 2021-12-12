@@ -89,7 +89,9 @@
     <string name="fullscreen_session_title">Edit Session</string>
     <string name="fullscreen_session_discard_changes">Discard changes</string>
     <string name="fullscreen_session_save_changes">Save</string>
-    <string name="fullscreen_session_rating">Your rating:</string>
-    <string name="fullscreen_session_date">On %s at %s</string>
+    <string name="fullscreen_session_rating_label">Your rating</string>
+    <string name="fullscreen_session_date_label">Date &amp; Time</string>
+    <string name="fullscreen_session_date">%s at %s</string>
+    <string name="fullscreen_session_time_label">Your session time</string>
     <string name="goal_description_achieved">Goal achieved!</string>
 </resources>

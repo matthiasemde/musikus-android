@@ -15,4 +15,9 @@
         <item name="android:backgroundTint">@color/color_toggle_button_goal_dialog</item>
         <item name="android:textColor">@color/text_color_toggle_button_goal_dialog</item>
     </style>
+    <style name="CommentDialog" parent="Theme.MaterialComponents.DayNight.BottomSheetDialog">
+        <item name="colorSecondary">@color/md_yellow_600</item> <!-- // TODO wtf -->
+        <item name="android:windowSoftInputMode">adjustResize</item>
+        <item name="behavior_draggable">false</item>
+    </style>
 </resources>

@@ -13,9 +13,8 @@
         android:id="@+id/summaryDayLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
         android:orientation="horizontal"
-        android:layout_marginTop="32dp"
-        android:layout_marginBottom="16dp"
         android:visibility="visible">
 
         <TextView
@@ -23,8 +22,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
-            android:textSize="20sp"
-            android:textStyle="normal"
+            android:textSize="18sp"
+            android:textStyle="bold"
             tools:text="19.10.2021" />
 
         <Space
@@ -37,17 +36,24 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="16dp"
-            android:textSize="20sp"
+            android:textSize="18sp"
             android:textStyle="bold"
             tools:text="1h 20min" />
     </LinearLayout>
+
+    <View
+        android:id="@+id/summaryDayDivider"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="12dp"
+        android:background="?android:attr/listDivider" />
 
     <de.practicetime.practicetime.InterceptTouchCardView
         android:id="@+id/summaryCardWrapper"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="12dp"
         android:layout_marginEnd="16dp"
         android:layout_marginBottom="8dp"
         android:foreground="@drawable/foreground_simple_overlay"
@@ -103,9 +109,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:orientation="vertical"
-                android:paddingStart="40dp"
+                android:paddingStart="48dp"
                 android:paddingTop="16dp"
-                android:paddingEnd="32dp"
+                android:paddingEnd="48dp"
                 android:paddingBottom="24dp">
 
                 <LinearLayout
@@ -116,12 +122,13 @@
                         android:id="@+id/practiceDuration"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_weight="3"
+                        android:layout_weight="4"
+                        android:includeFontPadding="false"
                         android:textAlignment="textStart"
                         android:textColor="?attr/colorOnSurface"
                         android:textSize="30sp"
                         android:textStyle="bold"
-                        tools:text="00:00:00" />
+                        tools:text="2h 30min" />
 
                     <TextView
                         android:id="@+id/breakDuration"
@@ -129,10 +136,12 @@
                         android:layout_height="wrap_content"
                         android:layout_gravity="bottom"
                         android:layout_weight="2"
+                        android:includeFontPadding="false"
+                        android:maxLines="1"
                         android:textColor="?attr/colorOnSurface"
                         android:textSize="20sp"
                         android:textStyle="bold"
-                        tools:text="00:00:00" />
+                        tools:text="1h 30 min" />
 
                 </LinearLayout>
 
@@ -144,17 +153,19 @@
                         android:id="@+id/practiceTimeLabel"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_weight="3"
+                        android:layout_weight="4"
+                        android:includeFontPadding="false"
                         android:text="@string/sessionSummaryPracticeTime"
-                        android:textSize="15sp" />
+                        android:textSize="16sp" />
 
                     <TextView
                         android:id="@+id/breakTimeLabel"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="2"
+                        android:includeFontPadding="false"
                         android:text="@string/sessionSummaryBreakTime"
-                        android:textSize="15sp" />
+                        android:textSize="16sp" />
 
                 </LinearLayout>
 
@@ -163,7 +174,7 @@
                     android:id="@+id/sectionList"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
+                    android:layout_marginTop="24dp"
                     android:nestedScrollingEnabled="false" />
 
             </LinearLayout>
