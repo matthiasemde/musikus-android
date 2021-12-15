@@ -260,7 +260,9 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
                         dao?.getGoalInstance(newGoalInstanceId)?.let { instance ->
                             dao?.getSessionIds(instance.startTimestamp, instance.startTimestamp + instance.periodInSeconds)
                                 ?.filter { s -> s.sections.first().timestamp > instance.startTimestamp}?.forEach { s ->
-                                    dao?.computeGoalProgressForSession(s.session.id).also { progress ->
+                                    dao?.computeGoalProgressForSession(
+                                        dao!!.getSessionWithSectionsWithCategoriesWithGoals(s.session.id)
+                                    ).also { progress ->
                                         instance.progress += progress?.get(d.description.id) ?: 0
                                     }
                                 }

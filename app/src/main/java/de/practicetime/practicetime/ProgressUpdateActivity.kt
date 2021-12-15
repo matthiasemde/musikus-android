@@ -87,14 +87,14 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
 
     private fun parseSession(sessionId: Int) {
         lifecycleScope.launch {
-            val latestSession = dao.getSessionWithSections(sessionId)
-            val goalProgress = dao.computeGoalProgressForSession(sessionId)
+            val latestSession = dao.getSessionWithSectionsWithCategoriesWithGoals(sessionId)
+            val goalProgress = dao.computeGoalProgressForSession(latestSession)
 
             // get all active goal instances at the time of the session
             dao.getGoalInstancesWithDescriptionsWithCategories(
                 descriptionIds = goalProgress.keys.toList(),
                 checkArchived = false,
-                now = latestSession.sections.first().timestamp
+                now = latestSession.sections.first().section.timestamp
             // store the progress in the database
             ).onEach { (instance, d) ->
                 goalProgress[d.description.id].also { progress ->

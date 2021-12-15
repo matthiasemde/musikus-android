@@ -271,12 +271,10 @@ interface PTDao {
 
     @Transaction
     suspend fun computeGoalProgressForSession(
-        sessionId: Int,
+        session: SessionWithSectionsWithCategoriesWithGoalDescriptions,
         checkArchived: Boolean = false,
     ) : Map<Int, Int>{
         var totalSessionDuration = 0
-
-        val session = getSessionWithSectionsWithCategoriesWithGoals(sessionId)
 
         // goalProgress maps the goalDescription-id to its progress
         val goalProgress = mutableMapOf<Int, Int>()
