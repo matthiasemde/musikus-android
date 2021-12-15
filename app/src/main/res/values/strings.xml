@@ -103,4 +103,5 @@
     <string name="confirm_changes_dialog_ok">Save</string>
     <string name="discard_changes_dialog_message">Discard changes?</string>
     <string name="discard_changes_dialog_cancel">Keep editing</string>
+    <string name="goalDialogDefaultDuration">00</string>
 </resources>
