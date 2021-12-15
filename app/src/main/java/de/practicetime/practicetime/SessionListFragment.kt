@@ -239,6 +239,9 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
                                     ].session.id
                                 }
                             )
+                            selectedSessions.clear()
+                            notifyAllItems()
+                            resetToolbar()
                         }
                     }
                     return@setOnMenuItemClickListener true
@@ -326,7 +329,10 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
                 val (session, sectionsWithCategories) = adapterData[layoutPosition - 1]
                 val sections = sectionsWithCategories.map { s -> s.section }
 
-                val goalProgress = dao!!.computeGoalProgressForSession(session.id, checkArchived = true)
+                val goalProgress = dao!!.computeGoalProgressForSession(
+                    dao!!.getSessionWithSectionsWithCategoriesWithGoals(session.id),
+                    checkArchived = true
+                )
 
                 // get all active goal instances at the time of the session
                 val updatedGoalInstances = dao!!.getGoalInstances(

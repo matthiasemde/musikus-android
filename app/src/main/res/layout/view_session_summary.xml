@@ -14,6 +14,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
+        android:layout_marginBottom="4dp"
         android:orientation="horizontal"
         android:visibility="visible">
 
@@ -23,7 +24,6 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:textSize="18sp"
-            android:textStyle="bold"
             tools:text="19.10.2021" />
 
         <Space
@@ -40,13 +40,6 @@
             android:textStyle="bold"
             tools:text="1h 20min" />
     </LinearLayout>
-
-    <View
-        android:id="@+id/summaryDayDivider"
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:layout_marginTop="12dp"
-        android:background="?android:attr/listDivider" />
 
     <de.practicetime.practicetime.InterceptTouchCardView
         android:id="@+id/summaryCardWrapper"

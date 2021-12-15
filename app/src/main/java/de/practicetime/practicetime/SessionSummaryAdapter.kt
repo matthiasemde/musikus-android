@@ -117,7 +117,6 @@ class SessionSummaryAdapter(
         ) : ViewHolder(view) {
 
             private val summaryDayLayout: LinearLayout = view.findViewById(R.id.summaryDayLayout)
-            private val summaryDayDivider: View = view.findViewById(R.id.summaryDayDivider)
             private val summaryDate: TextView = view.findViewById(R.id.summaryDate)
             private val summaryDayDuration: TextView = view.findViewById(R.id.summaryDayDuration)
 
@@ -213,12 +212,10 @@ class SessionSummaryAdapter(
                     }
 
                     summaryDayLayout.visibility = View.VISIBLE
-                    summaryDayDivider.visibility = View.VISIBLE
                     summaryDate.text = dateFormat.format(currentSessionDate.timeInMillis)
                     summaryDayDuration.text = getTimeString(totalPracticeDuration)
                 } else {
                     summaryDayLayout.visibility = View.GONE
-                    summaryDayDivider.visibility = View.GONE
                 }
 
                 // compute the total practice time
