@@ -10,7 +10,7 @@
     <string name="endSessionDialogCancel">Keep practicing</string>
     <string name="endSessionDialogCommentField">Comment (optional)</string>
     <string name="discard_session_dialog_title">Discard current session and lose all progress?</string>
-    <string name="discard_session_dialog_ok">Discard</string>
+    <string name="discard_dialog_ok">Discard</string>
     <string name="discard_session_dialog_cancel">Keep practicing</string>
     <string name="navigationLibraryTitle">Library</string>
     <string name="navigationGoalsTitle">Goals</string>
@@ -87,11 +87,20 @@
     <string name="new_category_fab">Create a new category</string>
     <string name="new_goal_fab">Create a new goal</string>
     <string name="fullscreen_session_title">Edit Session</string>
-    <string name="fullscreen_session_discard_changes">Discard changes</string>
+    <string name="fullscreen_session_cancel">Cancel</string>
     <string name="fullscreen_session_save_changes">Save</string>
     <string name="fullscreen_session_rating_label">Your rating</string>
     <string name="fullscreen_session_date_label">Date &amp; Time</string>
     <string name="fullscreen_session_date">%s at %s</string>
     <string name="fullscreen_session_time_label">Your session time</string>
     <string name="goal_description_achieved">Goal achieved!</string>
+    <string name="editDialogOk">Edit</string>
+    <string name="editDialogCancel">Cancel</string>
+    <string name="edit_section_time_dialog_title">Edit section time</string>
+    <string name="discard_comment_dialog_message">Discard comment?</string>
+    <string name="discard_comment_dialog_cancel">Keep writing</string>
+    <string name="confirm_changes_dialog_message">Save changes to session?</string>
+    <string name="confirm_changes_dialog_ok">Save</string>
+    <string name="discard_changes_dialog_message">Discard changes?</string>
+    <string name="discard_changes_dialog_cancel">Keep editing</string>
 </resources>

@@ -478,7 +478,7 @@ class ActiveSessionActivity : AppCompatActivity() {
         discardSessionDialog = AlertDialog.Builder(this).let { builder ->
             builder.apply {
                 setMessage(R.string.discard_session_dialog_title)
-                setPositiveButton(R.string.discard_session_dialog_ok) { dialog, _ ->
+                setPositiveButton(R.string.discard_dialog_ok) { dialog, _ ->
                     // clear the sectionBuffer so that runnable dies
                     mService.sectionBuffer.clear()
                     // refresh the adapter otherwise the app will crash because of "inconsistency detected"
