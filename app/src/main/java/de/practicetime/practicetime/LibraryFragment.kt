@@ -110,18 +110,15 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
 
     // initialize the category delete dialog
     private fun initDeleteCategoryDialog() {
-        deleteCategoryDialog = AlertDialog.Builder(requireActivity()).let { builder ->
-            builder.apply {
-                setPositiveButton(R.string.deleteDialogConfirm) { dialog, _ ->
-                    deleteCategoriesHandler()
-                    dialog.dismiss()
-                }
-                setNegativeButton(R.string.dialogCancel) { dialog, _ ->
-                    dialog.cancel()
-                }
+        deleteCategoryDialog = AlertDialog.Builder(requireActivity()).apply {
+            setPositiveButton(R.string.deleteDialogConfirm) { dialog, _ ->
+                deleteCategoriesHandler()
+                dialog.dismiss()
             }
-            builder.create()
-        }
+            setNegativeButton(R.string.dialogCancel) { dialog, _ ->
+                dialog.cancel()
+            }
+        }.create()
     }
 
     private fun shortClickOnCategoryHandler(index: Int) {
