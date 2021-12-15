@@ -7,6 +7,12 @@ import android.util.AttributeSet
 import android.util.Log
 import android.view.inputmethod.InputMethodManager
 import androidx.core.widget.addTextChangedListener
+import android.R
+
+import android.content.res.TypedArray
+
+
+
 
 class NumberInput(
     context: Context,
@@ -14,18 +20,27 @@ class NumberInput(
 ) : androidx.appcompat.widget.AppCompatEditText(context, attrs) {
 
     init {
-        filters = arrayOf(InputFilterMax(99))
+        val a = context.obtainStyledAttributes(attrs, de.practicetime.practicetime.R.styleable.numberInput)
+
+        val showLeadingZeroes = a.getBoolean(de.practicetime.practicetime.R.styleable.numberInput_showLeadingZeroes, false)
+        val maxValue = a.getInt(de.practicetime.practicetime.R.styleable.numberInput_maxValue, 99)
+
+        filters = arrayOf(InputFilterMax(maxValue))
+
+        val maxLength = maxValue.toString().length
+
         addTextChangedListener {
-            val diff = 2 - (it?.length ?: 0)
-            if(diff < 0)
+            val diff = maxLength - (it?.length ?: 0)
+            if (diff < 0)
                 this.setText(it?.drop(-diff))
-            else if(diff > 0)
-                this.setText(it?.padStart(2, '0'))
-            this.setSelection(2)
+            else if (showLeadingZeroes && diff > 0)
+                this.setText(it?.padStart(maxLength, '0'))
+            this.setSelection(text?.length ?: 0)
         }
+
         setOnTouchListener { _, _ ->
             performClick()
-            setSelection(2)
+            setSelection(text?.length ?: 0)
             requestFocus()
             showKeyboard()
             true

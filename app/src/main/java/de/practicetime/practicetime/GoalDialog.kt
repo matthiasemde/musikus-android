@@ -14,6 +14,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.AppCompatButton
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.widget.addTextChangedListener
+import de.practicetime.practicetime.components.NumberInput
 import de.practicetime.practicetime.entities.*
 import java.util.*
 
@@ -38,8 +39,8 @@ class GoalDialog(
     private val goalDialogCategorySelectorView = dialogView.findViewById<Spinner>(R.id.goalDialogCategorySelector)
     private val goalDialogCategorySelectorLayoutView = dialogView.findViewById<LinearLayout>(R.id.goalDialogCategorySelectorLayout)
     private val goalDialogOneTimeGoalView = dialogView.findViewById<CheckBox>(R.id.goalDialogOneTimeGoal)
-    private val goalDialogTargetHoursView = dialogView.findViewById<EditText>(R.id.goalDialogHours)
-    private val goalDialogTargetMinutesView = dialogView.findViewById<EditText>(R.id.goalDialogMinutes)
+    private val goalDialogTargetHoursView = dialogView.findViewById<NumberInput>(R.id.goalDialogHours)
+    private val goalDialogTargetMinutesView = dialogView.findViewById<NumberInput>(R.id.goalDialogMinutes)
     private val goalDialogPeriodValueView = dialogView.findViewById<EditText>(R.id.goalDialogPeriodValue)
     private val goalDialogPeriodUnitView = dialogView.findViewById<Spinner>(R.id.goalDialogPeriodUnit)
 
@@ -175,9 +176,6 @@ class GoalDialog(
     }
 
     private fun initTimeSelector() {
-        goalDialogTargetMinutesView.filters = arrayOf(InputFilterMax(59))
-        goalDialogTargetHoursView.filters = arrayOf(InputFilterMax(500))
-
         ArrayAdapter(
             context,
             android.R.layout.simple_spinner_item,
@@ -241,6 +239,9 @@ class GoalDialog(
                 dialogView.findViewById<View>(R.id.goalDialogNotTarget).visibility = View.GONE
             }
 
+            goalDialogTargetHoursView.setText("0")
+            goalDialogTargetMinutesView.setText("0")
+
             updatePositiveButtonState()
             goalDialogTargetHoursView.addTextChangedListener {
                 updatePositiveButtonState()
@@ -254,34 +255,6 @@ class GoalDialog(
         }
     }
 
-    private class InputFilterMax(
-        private var max: Int
-    ) : InputFilter {
-        init {
-            assert(max >= 1) {
-                Log.e("Assertion failed", "Maximum has to be larger than 0")
-            }
-        }
-
-        override fun filter(
-            source: CharSequence,
-            start: Int,
-            end: Int,
-            dest: Spanned,
-            dstart: Int,
-            dend: Int
-        ): CharSequence {
-            try {
-                val input = (dest.slice(0 until dstart).toString()
-                    + source.toString()
-                    + dest.slice(dend until dest.length).toString()
-                )
-                if (input.toInt() in 0..max) return source
-            } catch (nfe: NumberFormatException) { }
-            return ""
-        }
-    }
-
     private class CategoryDropDownAdapter(
         private val context: Context,
         private val categories: List<Category>
@@ -290,7 +263,7 @@ class GoalDialog(
         private val inflater: LayoutInflater =
             context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
 
-        override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View? {
+        override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
             val view: View
             val vh: ItemHolder
             if (convertView == null) {

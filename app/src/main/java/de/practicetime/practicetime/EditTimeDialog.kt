@@ -1,6 +1,9 @@
 package de.practicetime.practicetime
 
 import android.app.Activity
+import android.content.Context
+import android.util.Log
+import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
@@ -8,7 +11,7 @@ import androidx.core.widget.addTextChangedListener
 import de.practicetime.practicetime.components.NumberInput
 
 class EditTimeDialog (
-    context: Activity,
+    private val context: Activity,
     title: String,
     onEditHandler: (newTime: Int) -> Unit,
 ) {
@@ -23,7 +26,7 @@ class EditTimeDialog (
     private var dialog: AlertDialog
 
     // find and save all the views in the dialog view
-    private val editHoursView = dialogView.findViewById<NumberInput>(R.id.time_dialog_hours)
+    val editHoursView = dialogView.findViewById<NumberInput>(R.id.time_dialog_hours)
     private val editMinutesView = dialogView.findViewById<NumberInput>(R.id.time_dialog_minutes)
 
     init {
@@ -67,8 +70,6 @@ class EditTimeDialog (
 
             editHoursView.setText(initHours.toString())
             editMinutesView.setText(initMinutes.toString())
-
-//            editHoursView.requestFocus()
 
             positiveButton.isEnabled = isComplete()
 

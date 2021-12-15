@@ -252,7 +252,17 @@ class FullscreenSessionActivity : AppCompatActivity() {
 
             viewHolder.itemView.setOnClickListener {
                 selectedSection = section
-                editSectionTimeDialog.show(sectionDuration)
+                lifecycleScope.launch {
+                    editSectionTimeDialog.apply {
+                        show(sectionDuration)
+                        // https://stackoverflow.com/questions/1109022/how-do-you-close-hide-the-android-soft-keyboard-programmatically?page=1&tab=votes#tab-top
+                        delay(200L)
+                        if(editHoursView.requestFocus()) {
+                            (getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager)
+                                .showSoftInput(editHoursView, 0)
+                        }
+                    }
+                }
             }
         }
 

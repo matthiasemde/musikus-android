@@ -10,72 +10,99 @@
         android:id="@+id/categoryDialogTitle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="?attr/colorPrimary"
+        android:paddingStart="16dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp"
         android:text="@string/addGoalDialogTitle"
         android:textColor="?attr/colorOnPrimary"
-        android:background="?attr/colorPrimary"
-        android:paddingBottom="8dp"
-        android:paddingTop="8dp"
-        android:paddingStart="16dp"
         android:textSize="28sp" />
 
 
     <LinearLayout
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginTop="16dp"
-        android:gravity="center"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:gravity="center"
+        android:padding="8dp">
 
-        <EditText
-            android:id="@+id/goalDialogHours"
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:imeOptions="actionNext"
-            android:inputType="number"
-            android:paddingStart="5dp"
-            android:textStyle="bold"
-            android:textSize="40sp"
-            android:textColor="@color/edittext_color"
-            android:background="@android:color/transparent"
-            android:hint="00"/>
+            android:layout_height="match_parent"
+            android:layout_marginEnd="8dp">
 
-        <TextView
-            android:id="@+id/goalDialogHoursText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="0"
-            android:layout_gravity="bottom"
-            android:labelFor="@id/goalDialogHours"
-            android:text="@string/goalDialogHoursText"
-            android:textSize="16sp"
-            android:textStyle="bold"/>
+            <de.practicetime.practicetime.components.NumberInput
+                android:id="@+id/goalDialogHours"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@android:color/transparent"
+                android:cursorVisible="false"
+                android:imeOptions="actionNext"
+                android:inputType="number"
+                android:minWidth="48dp"
+                android:textColor="@color/edittext_color"
+                android:textSize="40sp"
+                android:textStyle="bold"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:maxValue="99"
+                app:showLeadingZeroes="true"
+                tools:text="00" />
 
-        <EditText
-            android:id="@+id/goalDialogMinutes"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:imeOptions="actionNext"
-            android:inputType="number"
-            android:paddingStart="12dp"
-            android:textColor="@color/edittext_color"
-            android:background="@android:color/transparent"
-            android:textSize="40sp"
-            android:textStyle="bold"
-            android:layout_marginStart="8dp"
-            android:hint="00"/>
+            <TextView
+                android:id="@+id/goalDialogHoursText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                android:layout_weight="0"
+                android:labelFor="@id/goalDialogHours"
+                android:text="@string/goalDialogHoursText"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                app:layout_constraintBaseline_toBaselineOf="@+id/goalDialogHours"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/goalDialogHours"
+                tools:layout_editor_absoluteY="32dp" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
-        <TextView
-            android:id="@+id/goalDialogMInutesText"
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="0"
-            android:layout_gravity="bottom"
-            android:textStyle="bold"
-            android:labelFor="@id/goalDialogMinutes"
-            android:text="@string/goalDialogMinutesText"
-            android:textSize="16sp" />
+            android:layout_height="match_parent">
+
+            <de.practicetime.practicetime.components.NumberInput
+                android:id="@+id/goalDialogMinutes"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@android:color/transparent"
+                android:cursorVisible="false"
+                android:imeOptions="actionNext"
+                android:inputType="number"
+                android:minWidth="48dp"
+                android:textColor="@color/edittext_color"
+                android:textSize="40sp"
+                android:textStyle="bold"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:maxValue="99"
+                app:showLeadingZeroes="true"
+                tools:text="00" />
+
+            <TextView
+                android:id="@+id/goalDialogMInutesText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                android:layout_weight="0"
+                android:labelFor="@id/goalDialogMinutes"
+                android:text="@string/goalDialogMinutesText"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                app:layout_constraintBaseline_toBaselineOf="@+id/goalDialogMinutes"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/goalDialogMinutes"
+                tools:layout_editor_absoluteY="32dp" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
     </LinearLayout>
 
@@ -86,11 +113,10 @@
         android:orientation="vertical">
 
         <LinearLayout
-            android:layout_marginStart="16dp"
-            android:layout_marginEnd="16dp"
-            android:layout_marginTop="16dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
             android:gravity="center"
             android:orientation="horizontal">
 
@@ -103,24 +129,27 @@
                 android:textStyle="bold" />
 
 
-            <EditText
+            <de.practicetime.practicetime.components.NumberInput
                 android:id="@+id/goalDialogPeriodValue"
                 android:layout_width="40dp"
                 android:layout_height="wrap_content"
-                android:inputType="number"
-                android:textSize="20sp"
-                android:gravity="center"
-                android:textStyle="bold"
-                android:text="1"
                 android:layout_marginStart="8dp"
                 android:layout_marginEnd="12dp"
-                android:textColor="@color/edittext_color"/>
+                android:cursorVisible="false"
+                android:gravity="center"
+                android:inputType="number"
+                android:text="1"
+                android:textColor="@color/edittext_color"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                app:maxValue="99"
+                app:showLeadingZeroes="false" />
 
             <LinearLayout
                 android:layout_width="wrap_content"
-                android:padding="5dp"
                 android:layout_height="wrap_content"
-                android:background="@drawable/spinner_background">
+                android:background="@drawable/spinner_background"
+                android:padding="5dp">
 
                 <Spinner
                     android:id="@+id/goalDialogPeriodUnit"
@@ -128,7 +157,7 @@
                     android:layout_height="36dp"
                     android:layout_gravity="center"
                     android:gravity="center"
-                    android:spinnerMode="dropdown"/>
+                    android:spinnerMode="dropdown" />
 
             </LinearLayout>
 
@@ -152,22 +181,22 @@
 
             <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/goalDialogAllCategories"
+                style="@style/GoalDialogToggleButton"
                 android:layout_width="0dp"
                 android:layout_height="44dp"
                 android:layout_weight="1"
                 android:background="@drawable/goal_dialog_button_left_background"
-                style="@style/GoalDialogToggleButton"
                 android:gravity="center|center_vertical"
                 android:text="@string/goalDialogUseAllCategories"
                 android:textSize="14sp" />
 
             <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/goalDialogSpecificCategories"
+                style="@style/GoalDialogToggleButton"
                 android:layout_width="0dp"
                 android:layout_height="44dp"
                 android:layout_weight="1"
                 android:background="@drawable/goal_dialog_button_right_background"
-                style="@style/GoalDialogToggleButton"
                 android:gravity="center|center_vertical"
                 android:text="@string/goalDialogUseSpecificCategories"
                 android:textSize="14sp" />
@@ -180,25 +209,25 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:layout_marginEnd="16dp"
+            android:animateLayoutChanges="true"
             android:gravity="center"
-            android:orientation="horizontal"
-            android:animateLayoutChanges="true">
+            android:orientation="horizontal">
 
             <LinearLayout
                 android:layout_width="0dp"
-                android:layout_weight="1"
-                android:padding="5dp"
                 android:layout_height="wrap_content"
-                android:background="@drawable/spinner_background">
+                android:layout_weight="1"
+                android:background="@drawable/spinner_background"
+                android:padding="5dp">
 
                 <Spinner
                     android:id="@+id/goalDialogCategorySelector"
                     android:layout_width="match_parent"
                     android:layout_height="36dp"
                     android:layout_gravity="center"
+                    android:dropDownWidth="300dp"
                     android:gravity="center"
-                    android:spinnerMode="dropdown"
-                    android:dropDownWidth="300dp" />
+                    android:spinnerMode="dropdown" />
 
             </LinearLayout>
 
