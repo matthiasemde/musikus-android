@@ -38,15 +38,14 @@
                 android:cursorVisible="false"
                 android:imeOptions="actionNext"
                 android:inputType="number"
-                android:minWidth="48dp"
                 android:textColor="@color/edittext_color"
                 android:textSize="40sp"
                 android:textStyle="bold"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                app:showLeadingZeroes="true"
                 app:maxValue="99"
+                app:showLeadingZeroes="true"
                 tools:text="00" />
 
             <TextView
@@ -75,15 +74,14 @@
                 android:cursorVisible="false"
                 android:imeOptions="actionDone"
                 android:inputType="number"
-                android:minWidth="48dp"
                 android:textColor="@color/edittext_color"
                 android:textSize="40sp"
                 android:textStyle="bold"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                app:showLeadingZeroes="true"
                 app:maxValue="99"
+                app:showLeadingZeroes="true"
                 tools:text="00" />
 
             <TextView
