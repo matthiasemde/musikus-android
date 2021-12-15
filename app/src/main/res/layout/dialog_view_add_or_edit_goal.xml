@@ -38,7 +38,6 @@
                 android:cursorVisible="false"
                 android:imeOptions="actionNext"
                 android:inputType="number"
-                android:text="@string/goalDialogDefaultDuration"
                 android:textColor="@color/edittext_color"
                 android:textSize="40sp"
                 android:textStyle="bold"
@@ -46,7 +45,8 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 app:maxValue="99"
-                app:showLeadingZeroes="true" />
+                app:showLeadingZeroes="true"
+                tools:text="00" />
 
             <TextView
                 android:id="@+id/goalDialogHoursText"
@@ -76,7 +76,6 @@
                 android:cursorVisible="false"
                 android:imeOptions="actionNext"
                 android:inputType="number"
-                android:text="@string/goalDialogDefaultDuration"
                 android:textColor="@color/edittext_color"
                 android:textSize="40sp"
                 android:textStyle="bold"
@@ -84,7 +83,8 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 app:maxValue="99"
-                app:showLeadingZeroes="true" />
+                app:showLeadingZeroes="true"
+                tools:text="00" />
 
             <TextView
                 android:id="@+id/goalDialogMInutesText"
