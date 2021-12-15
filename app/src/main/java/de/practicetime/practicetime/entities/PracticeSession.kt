@@ -7,7 +7,7 @@ import androidx.room.PrimaryKey
 data class PracticeSession (
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val break_duration: Int,
-    val rating: Int,
-    val comment: String?,
+    var rating: Int,
+    var comment: String?,
     val profile_id: Int = 0,
 )

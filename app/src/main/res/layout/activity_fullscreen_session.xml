@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -7,10 +7,13 @@
     android:orientation="vertical">
 
     <androidx.coordinatorlayout.widget.CoordinatorLayout
+        android:id="@+id/coordinatorLayout"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        android:paddingBottom="30dp">
+        app:layout_constraintBottom_toTopOf="@+id/linearLayout"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
         <com.google.android.material.appbar.AppBarLayout
             android:id="@+id/fullscreen_session_appbar"
@@ -40,46 +43,20 @@
                     app:menu="@menu/goals_toolbar_menu_base" />
 
             </com.google.android.material.appbar.CollapsingToolbarLayout>
+
         </com.google.android.material.appbar.AppBarLayout>
 
-        <LinearLayout
+        <androidx.core.widget.NestedScrollView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
-
+            app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical">
-
-                <!--                <TextView-->
-                <!--                    android:layout_width="wrap_content"-->
-                <!--                    android:layout_height="wrap_content"-->
-                <!--                    android:layout_marginStart="24dp"-->
-                <!--                    android:layout_marginTop="16dp"-->
-                <!--                    android:text="@string/fullscreen_session_date_label"-->
-                <!--                    android:textSize="16sp" />-->
-
-                <!--                <View-->
-                <!--                    android:layout_width="match_parent"-->
-                <!--                    android:layout_height="1dp"-->
-                <!--                    android:layout_marginTop="12dp"-->
-                <!--                    android:layout_marginBottom="8dp"-->
-                <!--                    android:background="?android:attr/listDivider" />-->
-
-                <!--                <TextView-->
-                <!--                    android:id="@+id/fullscreen_session_date"-->
-                <!--                    android:layout_width="wrap_content"-->
-                <!--                    android:layout_height="wrap_content"-->
-                <!--                    android:layout_marginStart="24dp"-->
-                <!--                    android:textColor="?attr/colorOnSurfaceLowerContrastLowerContrast"-->
-                <!--                    android:textSize="20sp"-->
-                <!--                    tools:text="19.10.2021 at 13:13" />-->
+                android:clipToPadding="false"
+                android:orientation="vertical"
+                android:paddingBottom="32dp">
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -110,9 +87,8 @@
                     android:rating="3"
                     android:stepSize="1" />
 
-
                 <TextView
-                    android:layout_width="match_parent"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="24dp"
                     android:text="@string/fullscreen_session_time_label"
@@ -152,24 +128,38 @@
                     android:layout_marginBottom="8dp"
                     android:background="?android:attr/listDivider" />
 
-                <TextView
-                    android:id="@+id/fullscreen_session_comment_field"
+                <androidx.cardview.widget.CardView
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="match_parent"
                     android:layout_marginStart="24dp"
                     android:layout_marginEnd="24dp"
-                    android:textSize="16sp"
-                    android:textStyle="italic" />
+                    app:cardBackgroundColor="?attr/colorSurface"
+                    app:cardElevation="4dp"
+                    app:cardCornerRadius="16dp">
+
+                    <TextView
+                        android:id="@+id/fullscreen_session_comment_field"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="16dp"
+                        android:drawablePadding="12dp"
+                        android:textSize="16sp"
+                        android:textStyle="italic"
+                        app:drawableEndCompat="@drawable/ic_edit" />
+                </androidx.cardview.widget.CardView>
+
             </LinearLayout>
-        </LinearLayout>
+        </androidx.core.widget.NestedScrollView>
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
     <LinearLayout
+        android:id="@+id/linearLayout"
         android:layout_width="match_parent"
         android:layout_height="56dp"
         android:background="?android:attr/navigationBarColor"
         android:elevation="10dp"
-        android:gravity="end">
+        android:gravity="end"
+        app:layout_constraintBottom_toBottomOf="parent">
 
 
         <com.google.android.material.button.MaterialButton
@@ -179,7 +169,7 @@
             android:background="?attr/selectableItemBackgroundBorderless"
             android:paddingStart="8dp"
             android:paddingEnd="8dp"
-            android:text="@string/fullscreen_session_discard_changes"
+            android:text="@string/fullscreen_session_cancel"
             android:textColor="?attr/colorPrimary" />
 
         <com.google.android.material.button.MaterialButton
@@ -192,4 +182,4 @@
             android:textColor="?attr/colorPrimary" />
 
     </LinearLayout>
-</LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

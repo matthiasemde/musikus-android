@@ -82,6 +82,12 @@ interface PTDao {
     suspend fun updateCategory(category: Category)
 
     @Update
+    suspend fun updateSession(session: PracticeSession)
+
+    @Update
+    suspend fun updateSection(section: PracticeSection)
+
+    @Update
     suspend fun updateGoalDescription(goalDescription: GoalDescription)
 
     @Update
@@ -309,5 +315,56 @@ interface PTDao {
             }
         }
         return goalProgress
+    }
+
+    @Transaction
+    suspend fun updateSession(
+        sessionId: Int,
+        newRating: Int,
+        newSections: List<SectionWithCategory>,
+        newComment: String,
+    ) {
+        // the difference session will save the difference in the section duration
+        // between the original session and the edited sections
+        val session =
+            getSessionWithSectionsWithCategoriesWithGoals(sessionId)
+
+        session.sections.forEach { (section, _) ->
+            section.duration = (newSections.find {
+                it.section.id == section.id
+            }?.section?.duration ?: 0) - (section.duration ?: 0)
+        }
+
+        val goalProgress = computeGoalProgressForSession(
+            session,
+            checkArchived = true
+        )
+
+        // get all active goal instances at the time of the session
+        getGoalInstances(
+            descriptionIds = goalProgress.keys.toList(),
+            now = session.sections.first().section.timestamp
+            // add the progress
+        ).onEach { instance ->
+            goalProgress[instance.goalDescriptionId].also { progress ->
+                if (progress != null) {
+                    // progress should not get lower than 0
+                    instance.progress = maxOf(0 , instance.progress + progress)
+                }
+            }
+            updateGoalInstance(instance)
+        }
+
+        // update all sections
+        newSections.forEach { (section, _) ->
+            updateSection(section)
+        }
+
+        session.session.apply {
+            comment = newComment
+            rating = newRating
+        }
+
+        updateSession(session.session)
     }
 }

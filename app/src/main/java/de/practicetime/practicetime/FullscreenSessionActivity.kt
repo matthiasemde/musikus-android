@@ -1,51 +1,71 @@
 package de.practicetime.practicetime
 
-import android.app.Dialog
+import android.app.AlertDialog
 import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
 import android.content.res.ColorStateList
-import android.media.Image
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
-import com.google.android.material.bottomsheet.BottomSheetBehavior
-import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import com.google.android.material.button.MaterialButton
+import de.practicetime.practicetime.entities.PracticeSection
+import de.practicetime.practicetime.entities.PracticeSession
 import de.practicetime.practicetime.entities.SectionWithCategory
+import de.practicetime.practicetime.entities.SessionWithSectionsWithCategories
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
 import java.util.*
+import android.app.Activity
+import android.util.Log
+import androidx.fragment.app.FragmentManager
+
 
 class FullscreenSessionActivity : AppCompatActivity() {
 
     private lateinit var dao: PTDao
 
-    private lateinit var dateView: TextView
     private lateinit var ratingBarView: RatingBar
-    private lateinit var practiceDurationView: TextView
-    private lateinit var breakDurationView: TextView
     private lateinit var sectionListView: RecyclerView
     private lateinit var commentFieldView: TextView
-
-    private val timeFormat: SimpleDateFormat = SimpleDateFormat("H:mm", Locale.getDefault())
-    private val dateFormat: SimpleDateFormat = SimpleDateFormat("E dd.MM.yyyy", Locale.getDefault())
 
     private lateinit var sectionAdapter: SectionAdapter
     private val sectionAdapterData = ArrayList<SectionWithCategory>()
 
-    private lateinit var commentDialog: BottomSheetDialog
+    private lateinit var editSectionTimeDialog: EditTimeDialog
+    private lateinit var confirmationDialog: AlertDialog
+
+    private var sessionWithSectionsWithCategories: SessionWithSectionsWithCategories? = null
+    private var selectedSection: PracticeSection? = null
+
+    private var showCommentPlaceholder = true
+
+    private var sessionEdited = false
+
+    override fun onBackPressed() {
+        if(!sessionEdited) return super.onBackPressed()
+        confirmationDialog.apply {
+            setMessage(getString(R.string.discard_changes_dialog_message))
+            show()
+            getButton(AlertDialog.BUTTON_NEGATIVE).setText(R.string.discard_changes_dialog_cancel)
+            getButton(AlertDialog.BUTTON_POSITIVE).apply {
+                setText(R.string.discard_dialog_ok)
+                setOnClickListener {
+                    dismiss()
+                    super.onBackPressed()
+                }
+            }
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,25 +73,73 @@ class FullscreenSessionActivity : AppCompatActivity() {
 
         openDatabase()
 
+        initConfirmationDialog()
+
+        sessionEdited = false
+
+        editSectionTimeDialog = EditTimeDialog(
+            this,
+            title = getString(R.string.edit_section_time_dialog_title)
+        ) {
+            editSectionDurationHandler(selectedSection, it)
+        }
+
         val sessionId = intent.extras?.getInt("KEY_SESSION")
 
         if (sessionId != null) {
             showFullscreenSession(sessionId)
+            findViewById<MaterialButton>(R.id.fullscreen_session_cancel).setOnClickListener {
+                if(!sessionEdited) return@setOnClickListener exitActivity()
+                confirmationDialog.apply {
+                    setMessage(getString(R.string.discard_changes_dialog_message))
+                    show()
+                    getButton(AlertDialog.BUTTON_NEGATIVE).setText(R.string.discard_changes_dialog_cancel)
+                    getButton(AlertDialog.BUTTON_POSITIVE).apply {
+                        setText(R.string.discard_dialog_ok)
+                        setOnClickListener {
+                            dismiss()
+                            exitActivity()
+                        }
+                    }
+                }
+            }
+
+            findViewById<MaterialButton>(R.id.fullscreen_session_save).setOnClickListener {
+                confirmationDialog.apply {
+                    setMessage(getString(R.string.confirm_changes_dialog_message))
+                    show()
+                    getButton(AlertDialog.BUTTON_NEGATIVE).setText(R.string.dialogCancel)
+                    getButton(AlertDialog.BUTTON_POSITIVE).apply {
+                        setText(R.string.confirm_changes_dialog_ok)
+                        setOnClickListener {
+                            lifecycleScope.launch {
+                                dao.updateSession(
+                                    sessionId,
+                                    newRating = ratingBarView.rating.toInt(),
+                                    newSections = sectionAdapterData,
+                                    newComment = if(showCommentPlaceholder) ""
+                                        else commentFieldView.text.toString(),
+                                )
+                                dismiss()
+                                exitActivity()
+                            }
+                        }
+                    }
+                }
+            }
         } else {
             exitActivity()
         }
+
     }
 
     private fun showFullscreenSession(id: Int) {
-//        dateView = findViewById(R.id.fullscreen_session_date)
         ratingBarView = findViewById(R.id.fullscreen_session_rating_bar)
-//        practiceDurationView = findViewById(R.id.fullscreen_session_practice_duration)
-//        breakDurationView = findViewById(R.id.fullscreen_session_break_duration)
         sectionListView = findViewById(R.id.fullscreen_session_section_list)
         commentFieldView = findViewById(R.id.fullscreen_session_comment_field)
 
         // define the layout and adapter for the section list
-        val sectionAdapter = SectionAdapter(sectionAdapterData, this)
+        sectionAdapter = SectionAdapter(sectionAdapterData, this)
         val lm = object : LinearLayoutManager(this) {
             override fun canScrollVertically(): Boolean {
                 return false
@@ -83,32 +151,27 @@ class FullscreenSessionActivity : AppCompatActivity() {
         }
 
         lifecycleScope.launch {
-            Log.d("doa", "$id, ${dao.getSessionWithSectionsWithCategories(id)}")
-            val (session, sectionsWithCategories) = dao.getSessionWithSectionsWithCategories(id)
+            sessionWithSectionsWithCategories = dao.getSessionWithSectionsWithCategories(id)
+            val (session, sectionsWithCategories) = sessionWithSectionsWithCategories!!
 
-            val startTimestamp = Date(sectionsWithCategories.first().section.timestamp * 1000L)
-
-            // compute the total practice time
-            var practiceDuration = 0
-            sectionsWithCategories.forEach { (section, _) ->
-                practiceDuration += section.duration ?: 0
+            ratingBarView.progress = session.rating
+            ratingBarView.setOnRatingBarChangeListener { _, _, _ ->
+                sessionEdited = true
             }
 
-            val breakDuration = session.break_duration
+            showCommentPlaceholder = session.comment?.isBlank() == true
 
-//            dateView.text = getString(R.string.fullscreen_session_date).format(
-//                dateFormat.format(startTimestamp),
-//                timeFormat.format(startTimestamp),
-//            )
-            ratingBarView.progress = session.rating
-//            practiceDurationView.text = getTimeString(practiceDuration)
-//            breakDurationView.text = getTimeString(breakDuration)
-            commentFieldView.text = session.comment
-            commentFieldView.setOnClickListener { showDialog() }
+            if(showCommentPlaceholder)
+                commentFieldView.setText(R.string.endSessionDialogCommentField)
+            else
+                commentFieldView.text = session.comment
+
+            commentFieldView.setOnClickListener { showCommentDialog() }
 
             sectionAdapterData.addAll(sectionsWithCategories)
             sectionAdapter.notifyItemRangeInserted(0, sectionsWithCategories.size)
         }
+
     }
 
     private fun getTimeString(duration: Int) : String {
@@ -124,6 +187,27 @@ class FullscreenSessionActivity : AppCompatActivity() {
         }
     }
 
+    private fun editSectionDurationHandler(section: PracticeSection?, newSectionDuration: Int) {
+        section?.duration = newSectionDuration
+        sectionAdapterData.indexOfFirst {
+            it.section.id == section?.id
+        }.also {
+            sectionAdapter.notifyItemChanged(it)
+        }
+        sessionEdited = true
+    }
+
+    private fun initConfirmationDialog() {
+        confirmationDialog = AlertDialog.Builder(this).apply {
+            setPositiveButton(R.string.discard_dialog_ok) { dialog, _ ->
+                dialog.dismiss()
+            }
+            setNegativeButton(R.string.dialogCancel) { dialog, _ ->
+                dialog.cancel()
+            }
+        }.create()
+        confirmationDialog.setCanceledOnTouchOutside(false)
+    }
 
     /*************************************************************************
      * Section Adapter
@@ -144,7 +228,7 @@ class FullscreenSessionActivity : AppCompatActivity() {
         override fun onCreateViewHolder(viewGroup: ViewGroup, viewType: Int): ViewHolder {
             // Create a new view, which defines the UI of the list item
             val view = LayoutInflater.from(viewGroup.context)
-                .inflate(R.layout.view_session_summary_section, viewGroup, false)
+                .inflate(R.layout.view_fullscreen_session_section, viewGroup, false)
 
             return ViewHolder(view)
         }
@@ -165,6 +249,11 @@ class FullscreenSessionActivity : AppCompatActivity() {
             // contents of the view with that element
             viewHolder.sectionName.text = category.name
             viewHolder.sectionDuration.text = getTimeString(sectionDuration)
+
+            viewHolder.itemView.setOnClickListener {
+                selectedSection = section
+                editSectionTimeDialog.show(sectionDuration)
+            }
         }
 
         // Return the size of your dataset (invoked by the layout manager)
@@ -190,28 +279,65 @@ class FullscreenSessionActivity : AppCompatActivity() {
         startActivity(intent)
     }
 
+    private fun hideKeyboard() {
+        val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
+        //Find the currently focused view, so we can grab the correct window token from it.
+        var view = currentFocus
+        //If no view currently has focus, create a new one, just so we can grab a window token from it
+        if (view == null) {
+            view = View(this)
+        }
+        imm.hideSoftInputFromWindow(view.windowToken, 0)
+    }
     /*************************************************************************
      * Comment Fragment
      *************************************************************************/
 
-    private fun showDialog() {
+    private fun showCommentDialog(altText: String? = null) {
         val fragmentManager = supportFragmentManager
-        val newFragment = CommentDialogFragment(::editCommentHandler)
+        val newFragment = CommentDialogFragment(::editCommentHandler) { comment ->
+            // if the comment has not changed, don't show the confirmation dialog
+            if(comment == if(showCommentPlaceholder) "" else commentFieldView.text)
+                return@CommentDialogFragment
+
+            hideKeyboard()
+            lifecycleScope.launch {
+                delay(25L) // We need this delay so the keyboard has time to close
+                confirmationDialog.apply {
+                    setMessage(context.getString(R.string.discard_comment_dialog_message))
+                    show()
+                    getButton(AlertDialog.BUTTON_NEGATIVE).apply{
+                        setText(R.string.discard_comment_dialog_cancel)
+                        setOnClickListener {
+                            cancel()
+                            showCommentDialog(comment)
+                        }
+                    }
+                    getButton(AlertDialog.BUTTON_POSITIVE).setText(R.string.discard_dialog_ok)
+                }
+            }
+        }
         val args = Bundle()
-        args.putCharSequence("comment", commentFieldView.text)
+        args.putCharSequence("comment", altText ?: if(showCommentPlaceholder) "" else commentFieldView.text)
         newFragment.arguments = args
         newFragment.show(fragmentManager, "dialog")
     }
 
-    private fun editCommentHandler(newComment: CharSequence) {
-        commentFieldView.text = newComment
+    private fun editCommentHandler(newComment: String) {
+        showCommentPlaceholder = newComment.isBlank()
+        commentFieldView.text = if (showCommentPlaceholder)
+                getString(R.string.endSessionDialogCommentField)
+            else
+                newComment
+        sessionEdited = true
     }
 
     class CommentDialogFragment(
-        private val onConfirmHandler: (CharSequence) -> Unit
+        private val onConfirmHandler: (String) -> Unit,
+        private val onCancelHandler: (String) -> Unit,
     ) : BottomSheetDialogFragment() {
 
-        private lateinit var commentText: CharSequence
+        private lateinit var commentText: String
 
         private lateinit var commentFieldView: EditText
 
@@ -226,25 +352,31 @@ class FullscreenSessionActivity : AppCompatActivity() {
         override fun onCreate(savedInstanceState: Bundle?) {
             super.onCreate(savedInstanceState)
             setStyle(STYLE_NO_TITLE, R.style.CommentDialog)
-            commentText = arguments?.getCharSequence("comment") ?: ""
+            arguments?.getCharSequence("comment").let {
+                if(it != null) commentText = it.toString()
+            }
         }
 
         override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-            commentFieldView = view.findViewById<EditText>(R.id.comment_dialog_text_field).also {
+            commentFieldView = view.findViewById<EditText>(R.id.comment_dialog_text_field)
+            commentFieldView.also {
                 it.setText(commentText)
                 if(it.requestFocus()) {
-                    lifecycleScope.launch {
-                        delay(150L) // TODO: WTF
-                        (requireActivity()
-                            .getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager)
-                            .showSoftInput(view, InputMethodManager.SHOW_IMPLICIT)
-                    }
+                    (requireActivity()
+                        .getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager)
+                        .showSoftInput(it, 0)
                 }
             }
+
             view.findViewById<ImageButton>(R.id.comment_dialog_confirm).setOnClickListener {
-                onConfirmHandler(commentFieldView.text)
+                onConfirmHandler(commentFieldView.text.toString())
                 dismiss()
             }
+        }
+
+        override fun onCancel(dialog: DialogInterface) {
+            onCancelHandler(commentFieldView.text.toString())
+            super.onCancel(dialog)
         }
     }
 
