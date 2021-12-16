@@ -33,6 +33,9 @@ import kotlinx.coroutines.launch
 import java.util.*
 import kotlin.collections.ArrayList
 import android.view.MotionEvent
+import androidx.appcompat.widget.LinearLayoutCompat
+import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.google.android.material.bottomsheet.BottomSheetDialog
 
 class ActiveSessionActivity : AppCompatActivity() {
 
@@ -48,6 +51,9 @@ class ActiveSessionActivity : AppCompatActivity() {
     private lateinit var mService: SessionForegroundService
     private var mBound: Boolean = false
     private var stopDialogShown = false
+
+    private lateinit var metronomeBottomSheet: LinearLayout
+    private lateinit var metronomeBottomSheetBehaviour: BottomSheetBehavior<LinearLayout>
 
     /** Defines callbacks for service binding, passed to bindService()  */
     private val connection = object : ServiceConnection {
@@ -113,7 +119,9 @@ class ActiveSessionActivity : AppCompatActivity() {
         val dummyOnClick = View.OnClickListener {
             Toast.makeText(this, "Coming Soon™", Toast.LENGTH_SHORT).show()
         }
-        findViewById<MaterialButton>(R.id.bottom_metronome).setOnClickListener(dummyOnClick)
+
+        initMetronomeBottomSheet()
+
         findViewById<MaterialButton>(R.id.bottom_record).setOnClickListener(dummyOnClick)
 
         // call onBackPressed when upper left Button is pressed to respect custom animation
@@ -202,6 +210,40 @@ class ActiveSessionActivity : AppCompatActivity() {
             override fun onMove(v: RecyclerView, h: RecyclerView.ViewHolder, t: RecyclerView.ViewHolder) = false
             override fun onSwiped(h: RecyclerView.ViewHolder, dir: Int) = sectionsListAdapter.removeAt(h.absoluteAdapterPosition)
         }).attachToRecyclerView(sectionsRecyclerView)
+    }
+
+    /*********************************************
+     *  Bottom sheet init
+     ********************************************/
+
+    private fun initMetronomeBottomSheet() {
+        metronomeBottomSheet = findViewById(R.id.metronome_sheet_layout)
+        metronomeBottomSheetBehaviour = BottomSheetBehavior.from(metronomeBottomSheet)
+
+        metronomeBottomSheetBehaviour.state = BottomSheetBehavior.STATE_HIDDEN
+
+//        metronomeBottomSheetBehaviour.addBottomSheetCallback(object :
+//            BottomSheetBehavior.BottomSheetCallback() {
+//
+//            override fun onSlide(bottomSheet: View, slideOffset: Float) {
+//                // handle onSlide
+//            }
+//
+//            override fun onStateChanged(bottomSheet: View, newState: Int) {
+//                when (newState) {
+//                    BottomSheetBehavior.STATE_COLLAPSED -> Toast.makeText(application, "STATE_COLLAPSED", Toast.LENGTH_SHORT).show()
+//                    BottomSheetBehavior.STATE_EXPANDED -> Toast.makeText(application, "STATE_EXPANDED", Toast.LENGTH_SHORT).show()
+//                    BottomSheetBehavior.STATE_DRAGGING -> Toast.makeText(application, "STATE_DRAGGING", Toast.LENGTH_SHORT).show()
+//                    BottomSheetBehavior.STATE_SETTLING -> Toast.makeText(application, "STATE_SETTLING", Toast.LENGTH_SHORT).show()
+//                    BottomSheetBehavior.STATE_HIDDEN -> Toast.makeText(application, "STATE_HIDDEN", Toast.LENGTH_SHORT).show()
+//                    else -> Toast.makeText(application, "OTHER_STATE", Toast.LENGTH_SHORT).show()
+//                }
+//            }
+//        })
+
+        findViewById<MaterialButton>(R.id.bottom_metronome).setOnClickListener {
+            metronomeBottomSheetBehaviour.state = BottomSheetBehavior.STATE_EXPANDED
+        }
     }
 
     // the routine for handling presses to category buttons
@@ -399,7 +441,6 @@ class ActiveSessionActivity : AppCompatActivity() {
 
         val dialogRatingBar = dialogView.findViewById<RatingBar>(R.id.dialogRatingBar)
         val dialogComment = dialogView.findViewById<EditText>(R.id.dialogComment)
-
 
         dialogRatingBar.setOnTouchListener (object : View.OnTouchListener {
             var handleUp = false

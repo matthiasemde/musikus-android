@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/metronome_sheet_layout"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/background_bottom_sheet"
+    android:orientation="vertical"
+    android:paddingStart="24dp"
+    android:paddingEnd="24dp"
+    android:paddingTop="16dp"
+    android:paddingBottom="32dp"
+    app:behavior_hideable="true"
+    app:behavior_peekHeight="88dp"
+    app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:gravity="center_vertical">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/metronome_sheet_minus_five"
+            style="@style/OutlinedButton"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:text="-5"
+            android:textSize="13sp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/metronome_sheet_minus_one"
+            style="@style/OutlinedButton"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:text="-1"
+            android:textSize="13sp" />
+
+        <TextView
+            android:id="@+id/metronome_sheet_bpm"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:includeFontPadding="false"
+            android:text="120"
+            android:textColor="?attr/colorOnSurface"
+            android:textSize="40sp"
+            android:textStyle="bold" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/metronome_sheet_plus_one"
+            style="@style/OutlinedButton"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:text="+1"
+            android:textSize="13sp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/metronome_sheet_plus_five"
+            style="@style/OutlinedButton"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:text="+5"
+            android:textSize="13sp" />
+
+
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/metronome_sheet_play"
+            style="@style/IconOnlyButton"
+            android:layout_width="48dp"
+            android:layout_height="40dp"
+            android:layout_margin="16dp"
+            android:contentDescription="@string/metronome_sheet_start"
+            app:cornerRadius="16dp"
+            app:icon="@drawable/ic_play" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/metronome_sheet_stop"
+            style="@style/IconOnlyButton"
+            android:layout_width="48dp"
+            android:layout_height="40dp"
+            android:layout_margin="16dp"
+            android:contentDescription="@string/metronome_sheet_stop"
+            android:visibility="gone"
+            app:cornerRadius="16dp"
+            app:icon="@drawable/ic_stop"
+            tools:visibility="visible" />
+
+
+    </LinearLayout>
+
+    <SeekBar
+        android:id="@+id/seekBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center_horizontal"
+            android:text="@string/metronome_sheet_beats_per_bar" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center_horizontal"
+            android:text="@string/metronome_sheet_clicks_per_beat" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center_horizontal"
+            android:text="@string/metronome_sheet_tab_tempo" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/metronome_sheet_bpb_minus"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:textColor="?attr/colorOnSurfaceLowerContrast"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:padding="0dp"
+                android:includeFontPadding="false"
+                android:textStyle="bold"
+                android:text="-"
+                android:textSize="18sp" />
+
+            <TextView
+                android:id="@+id/metronome_sheet_bpb"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:includeFontPadding="false"
+                android:text="@string/metronome_sheet_default_beats_per_bar"
+                android:textSize="24sp"
+                android:textStyle="bold" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/metronome_sheet_bpb_plus"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:textColor="?attr/colorOnSurfaceLowerContrast"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:padding="0dp"
+                android:includeFontPadding="false"
+                android:textStyle="bold"
+                android:text="+"
+                android:textSize="18sp" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/metronome_sheet_cpb_minus"
+                style="@style/OutlinedButton"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:text="-"
+                android:textSize="13sp" />
+
+            <TextView
+                android:id="@+id/metronome_sheet_cpb"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:includeFontPadding="false"
+                android:text="@string/metronome_sheet_default_clicks_per_beat"
+                android:textSize="24sp"
+                android:textStyle="bold" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/metronome_sheet_cpb_plus"
+                style="@style/OutlinedButton"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:text="+"
+                android:textSize="13sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center_horizontal"
+            android:orientation="horizontal">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/metronome_sheet_tab"
+                style="@style/IconOnlyButton"
+                android:layout_width="wrap_content"
+                android:layout_height="48dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/metronome_sheet_tab_tempo"
+                app:icon="@drawable/ic_click"
+                app:iconTint="?attr/colorOnSurfaceLowerContrast" />
+        </LinearLayout>
+
+
+    </LinearLayout>
+
+
+</LinearLayout>

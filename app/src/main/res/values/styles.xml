@@ -16,8 +16,26 @@
         <item name="android:textColor">@color/text_color_toggle_button_goal_dialog</item>
     </style>
     <style name="CommentDialog" parent="Theme.MaterialComponents.DayNight.BottomSheetDialog">
-        <item name="colorSecondary">@color/md_yellow_600</item> <!-- // TODO wtf -->
+        <item name="colorSecondary">@color/md_yellow_600</item> <!-- // TODO figure out, why the secondary color is not inherited from the theme -->
         <item name="android:windowSoftInputMode">adjustResize</item>
         <item name="behavior_draggable">false</item>
+    </style>
+    <style name="IconOnlyButton" parent="Widget.MaterialComponents.Button">
+        <item name="iconPadding">0dp</item>
+        <item name="android:insetLeft">0dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetRight">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:padding">0dp</item>
+        <item name="iconGravity">textStart</item>
+    </style>
+
+    <style name="OutlinedButton" parent="Widget.MaterialComponents.Button">
+        <item name="android:background">@drawable/outlined_button</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:minWidth">0dp</item>
+        <item name="android:padding">0dp</item>
+        <item name="android:textColor">?attr/colorOnSurfaceLowerContrast</item>
+        <item name="backgroundTint">@null</item>
     </style>
 </resources>

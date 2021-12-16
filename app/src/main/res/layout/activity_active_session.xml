@@ -234,6 +234,17 @@
         android:gravity="center"
         tools:text="@string/start_new_session_hint"/>
 
+
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        tools:visibility="gone">
+
+        <include layout="@layout/bottom_sheet_dialog_metronome" />
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
+
+
     <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
         android:id="@+id/fab_info_popup"
         android:visibility="invisible"
