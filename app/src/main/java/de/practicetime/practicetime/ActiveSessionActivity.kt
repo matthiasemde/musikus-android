@@ -33,9 +33,9 @@ import kotlinx.coroutines.launch
 import java.util.*
 import kotlin.collections.ArrayList
 import android.view.MotionEvent
-import androidx.appcompat.widget.LinearLayoutCompat
 import com.google.android.material.bottomsheet.BottomSheetBehavior
-import com.google.android.material.bottomsheet.BottomSheetDialog
+import kotlin.math.abs
+import kotlin.math.round
 
 class ActiveSessionActivity : AppCompatActivity() {
 
@@ -216,35 +216,113 @@ class ActiveSessionActivity : AppCompatActivity() {
      *  Bottom sheet init
      ********************************************/
 
+    private val metronomeMinBPM = 10
+    private val metronomeMaxBPM = 300
+
+    private var metronomeBeatsPerMinute = 120
+    private var metronomeBeatsPerBar = 4
+    private var metronomeClicksPerBeat = 1
+
+    private lateinit var bpmView: TextView
+
+    private lateinit var bpmMinusFiveView: MaterialButton
+    private lateinit var bpmMinusOneView: MaterialButton
+    private lateinit var bpmPlusOneView: MaterialButton
+    private lateinit var bpmPlusFiveView: MaterialButton
+
+    private lateinit var bpmSliderView: SeekBar
+
+    private lateinit var bpmTabTempoView: MaterialButton
+//    private lateinit var
+
+    private var tabTempoLastTab: Long? = null
+    private var tabTempoLastBpm = 120F
+
     private fun initMetronomeBottomSheet() {
+
+        bpmView = findViewById(R.id.metronome_sheet_bpm)
+
+        bpmMinusFiveView = findViewById(R.id.metronome_sheet_minus_five)
+        bpmMinusOneView = findViewById(R.id.metronome_sheet_minus_one)
+        bpmPlusOneView = findViewById(R.id.metronome_sheet_plus_one)
+        bpmPlusFiveView = findViewById(R.id.metronome_sheet_plus_five)
+
+        bpmSliderView = findViewById(R.id.metronome_sheet_slider)
+
+        bpmTabTempoView = findViewById(R.id.metronome_sheet_tab)
+
+        bpmMinusFiveView.setOnClickListener {
+            metronomeBeatsPerMinute = maxOf(metronomeMinBPM, metronomeBeatsPerMinute - 5)
+            syncUIToNewBPM()
+        }
+        bpmMinusOneView.setOnClickListener {
+            metronomeBeatsPerMinute = maxOf(metronomeMinBPM, metronomeBeatsPerMinute - 1)
+            syncUIToNewBPM()
+        }
+        bpmPlusOneView.setOnClickListener {
+            metronomeBeatsPerMinute = minOf(metronomeMaxBPM, metronomeBeatsPerMinute + 1)
+            syncUIToNewBPM()
+        }
+        bpmPlusFiveView.setOnClickListener {
+            metronomeBeatsPerMinute = minOf(metronomeMaxBPM, metronomeBeatsPerMinute + 5)
+            syncUIToNewBPM()
+        }
+
+        bpmSliderView.apply {
+            max = metronomeMaxBPM - metronomeMinBPM
+            setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+                override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                    if(fromUser) {
+                        metronomeBeatsPerMinute = progress + metronomeMinBPM
+                        syncUIToNewBPM()
+                    }
+                }
+                override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+                override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+            })
+        }
+
+        bpmTabTempoView.setOnClickListener {
+            val now = Date().time
+
+            if(tabTempoLastTab != null) {
+                metronomeBeatsPerMinute = (60_000F / (now - tabTempoLastTab!!).toFloat()).let { newValue ->
+                    val alpha = when(abs(tabTempoLastBpm - newValue)) {
+                        in 0F..10F -> 0.1F
+                        in 10F..20F -> 0.2F
+                        in 20F..50F -> 0.3F
+                        else -> 1F
+                    }
+                    tabTempoLastBpm = (1 - alpha) * tabTempoLastBpm + alpha * newValue
+                    Log.d("TAB", "alpha: $alpha, tabLAstBpm: $tabTempoLastBpm")
+                    round(tabTempoLastBpm).toInt()
+                }
+                syncUIToNewBPM()
+            }
+
+            tabTempoLastTab = now
+        }
+
         metronomeBottomSheet = findViewById(R.id.metronome_sheet_layout)
         metronomeBottomSheetBehaviour = BottomSheetBehavior.from(metronomeBottomSheet)
 
         metronomeBottomSheetBehaviour.state = BottomSheetBehavior.STATE_HIDDEN
 
-//        metronomeBottomSheetBehaviour.addBottomSheetCallback(object :
-//            BottomSheetBehavior.BottomSheetCallback() {
-//
-//            override fun onSlide(bottomSheet: View, slideOffset: Float) {
-//                // handle onSlide
-//            }
-//
-//            override fun onStateChanged(bottomSheet: View, newState: Int) {
-//                when (newState) {
-//                    BottomSheetBehavior.STATE_COLLAPSED -> Toast.makeText(application, "STATE_COLLAPSED", Toast.LENGTH_SHORT).show()
-//                    BottomSheetBehavior.STATE_EXPANDED -> Toast.makeText(application, "STATE_EXPANDED", Toast.LENGTH_SHORT).show()
-//                    BottomSheetBehavior.STATE_DRAGGING -> Toast.makeText(application, "STATE_DRAGGING", Toast.LENGTH_SHORT).show()
-//                    BottomSheetBehavior.STATE_SETTLING -> Toast.makeText(application, "STATE_SETTLING", Toast.LENGTH_SHORT).show()
-//                    BottomSheetBehavior.STATE_HIDDEN -> Toast.makeText(application, "STATE_HIDDEN", Toast.LENGTH_SHORT).show()
-//                    else -> Toast.makeText(application, "OTHER_STATE", Toast.LENGTH_SHORT).show()
-//                }
-//            }
-//        })
-
         findViewById<MaterialButton>(R.id.bottom_metronome).setOnClickListener {
             metronomeBottomSheetBehaviour.state = BottomSheetBehavior.STATE_EXPANDED
         }
+
+        syncUIToNewBPM()
     }
+
+    private fun syncUIToNewBPM() {
+        bpmView.text = metronomeBeatsPerMinute.toString()
+        bpmSliderView.progress = metronomeBeatsPerMinute + metronomeMinBPM
+    }
+
+    /*********************************************
+     *  Timing stuff
+     ********************************************/
 
     // the routine for handling presses to category buttons
     private fun categoryPressed(index: Int) {

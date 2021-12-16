@@ -40,10 +40,9 @@
 
         <TextView
             android:id="@+id/metronome_sheet_bpm"
-            android:layout_width="wrap_content"
+            android:layout_width="86dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_marginEnd="8dp"
+            android:gravity="center_horizontal"
             android:includeFontPadding="false"
             android:text="120"
             android:textColor="?attr/colorOnSurface"
@@ -98,10 +97,9 @@
     </LinearLayout>
 
     <SeekBar
-        android:id="@+id/seekBar"
+        android:id="@+id/metronome_sheet_slider"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp" />
+        android:layout_height="32dp" />
 
     <LinearLayout
         android:layout_width="match_parent"
