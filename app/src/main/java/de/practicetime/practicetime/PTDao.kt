@@ -171,7 +171,7 @@ interface PTDao {
 
     @Transaction
     @Query("SELECT * FROM PracticeSection WHERE timestamp>=:beginTimeStamp AND timestamp<=:endTimeStamp")
-    suspend fun getSectionsWithCateories(beginTimeStamp: Long, endTimeStamp: Long): List<SectionWithCategory>
+    suspend fun getSectionsWithCategories(beginTimeStamp: Long, endTimeStamp: Long): List<SectionWithCategory>
 
     @Query("SELECT * FROM Category WHERE id=:id")
     suspend fun getCategory(id: Int): Category
