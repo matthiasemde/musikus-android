@@ -1,6 +1,7 @@
 package de.practicetime.practicetime
 
 import android.content.res.ColorStateList
+import android.icu.text.DecimalFormatSymbols
 import android.os.Bundle
 import android.util.Log
 import android.util.TypedValue
@@ -25,6 +26,7 @@ import java.time.*
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoField
 import kotlin.collections.ArrayList
+import kotlin.math.roundToInt
 
 
 class StatisticsFragment : Fragment(R.layout.fragment_statistics) {
@@ -129,9 +131,11 @@ class StatisticsFragment : Fragment(R.layout.fragment_statistics) {
 
         leftAxis.axisMinimum = 0f   // needed for y axis scaling (probably a bug!)
         leftAxis.isEnabled = false
+
         rightAxis.axisMinimum = 0f
         rightAxis.setDrawAxisLine(false)
         rightAxis.textColor = getThemeColor(R.attr.colorOnSurfaceLowerContrast)
+        rightAxis.valueFormatter = YAxisValueFormatter()
 
         xAxis.setDrawGridLines(false)
         xAxis.position = XAxis.XAxisPosition.BOTTOM
@@ -200,7 +204,11 @@ class StatisticsFragment : Fragment(R.layout.fragment_statistics) {
             }
         }
         // show sum of visible data
-        tvTotalTimeInRange.text = "${chartArray.values.sumOf { it.yVals.sum().toLong() }.toString()} sec"
+        tvTotalTimeInRange.text = secondsToTimeString(
+            chartArray.values.sumOf {
+                it.yVals.sum().toInt()
+            }
+        )
     }
 
     private fun setBtnEnabledState(view: View) {
@@ -505,6 +513,10 @@ class StatisticsFragment : Fragment(R.layout.fragment_statistics) {
         Log.d("STATISTICS", msg)
     }
 
+
+    /**
+     * formats x axis value according to our time scaling
+     */
     private inner class XAxisValueFormatter: ValueFormatter() {
 
         override fun getFormattedValue(value: Float): String {
@@ -554,6 +566,23 @@ class StatisticsFragment : Fragment(R.layout.fragment_statistics) {
     }
 
     /**
+     * formats y axis value according to our time scaling
+     */
+    private inner class YAxisValueFormatter: ValueFormatter() {
+
+        override fun getFormattedValue(value: Float): String {
+            val (h, m) = secondsToHoursMins(value.toInt())
+            val str = if (h != 0){
+                "${h}." +
+                "${m?.toFloat()?.div(60f)?.times(10)?.roundToInt()} h"
+            } else{
+                "${m} m"
+            }
+            return str
+        }
+    }
+
+    /**
      * This ValueFormatter shows the sum of all stacked Bars on top of the each bar instead of for every segment
      * It should do the same as StackedValueFormatter but this one doesn't work for our case because we have
      * "invisible" stacked segments with value=0 in our bars which results to no call in getBarStackedLabel() and thus
@@ -581,14 +610,15 @@ class StatisticsFragment : Fragment(R.layout.fragment_statistics) {
 
                 // show value if there is only 1 stack in this bar
                 if (stackEntriesNotZero == 1) {
-                    return stackedEntry?.yVals?.sum()?.toInt().toString()
+                    return secondsToTimeString(stackedEntry?.yVals?.sum()?.toInt())
                 }
             } else {
                 lastEntryX = stackedEntry.x
                 stackCounterCurrentBar++
                 if (stackCounterCurrentBar == stackEntriesNotZero) {
                     // we reached the last non-zero stack of the bar, so we're at the top
-                    return stackedEntry?.yVals?.sum()?.toInt().toString()
+//                    return stackedEntry?.yVals?.sum()?.toInt().toString()
+                    return secondsToTimeString(stackedEntry.yVals?.sum()?.toInt())
                 }
             }
             return ""   // return empty string so no value is drawn
@@ -630,6 +660,27 @@ class StatisticsFragment : Fragment(R.layout.fragment_statistics) {
 
         override fun getItemCount(): Int = categories.filter { it.visible }.size
 
+    }
+
+    private fun secondsToTimeString(seconds: Int?): String {
+        val (h, m) = secondsToHoursMins(seconds)
+        var str = ""
+        if (h != 0) str += "$h h "
+        if (m != 0) str += "$m min"
+        else str = "< 1 min"
+        return str
+    }
+
+    private fun secondsToHoursMins(seconds: Int?): Pair<Int?, Int?> {
+        // TODO uncomment for production
+//        val hours = seconds?.div(3600)
+//        val minutes = (seconds?.rem(3600))?.div(60)
+
+        // FAKE values:
+        val hours = (seconds?.rem(3600))?.div(60)
+        val minutes = seconds?.rem(60)
+
+        return Pair(hours, minutes)
     }
 
     private fun getThemeColor(color: Int): Int {
