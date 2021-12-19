@@ -304,7 +304,7 @@ class StatisticsFragment : Fragment(R.layout.fragment_statistics) {
     }
 
     /**
-     * construct array for "week" view -> each bar = 1 day; 7 bars per chart
+     * construct array for "week" view -> each bar = 1 day
      */
     private suspend fun getMoToFrArray(): ArrayList<BarEntry> {
         val chartArray = arrayListOf<BarEntry>()
@@ -332,7 +332,7 @@ class StatisticsFragment : Fragment(R.layout.fragment_statistics) {
     }
 
     /**
-     * construct array for "months" view -> each bar = 1 week; 10 bars per chart
+     * construct array for "months" view -> each bar = 1 week
      */
     private suspend fun getWeeksArray(): ArrayList<BarEntry> {
         val chartArray = arrayListOf<BarEntry>()
@@ -364,7 +364,7 @@ class StatisticsFragment : Fragment(R.layout.fragment_statistics) {
 
 
     /**
-     * construct array for "year" view -> each bar = 1 month; 12 bars per chart
+     * construct array for "year" view -> each bar = 1 month
      */
     private suspend fun getMonthsArray(): ArrayList<BarEntry> {
         val chartArray = arrayListOf<BarEntry>()
@@ -570,6 +570,7 @@ class StatisticsFragment : Fragment(R.layout.fragment_statistics) {
         // stackedEntry: the whole BarEntry object for current bar, always the same for each stack on the same Bar
         override fun getBarStackedLabel(value: Float, stackedEntry: BarEntry?): String {
             if (stackedEntry?.x != lastEntryX) {
+                lastEntryX = stackedEntry?.x ?: -1f
                 // first stack on a new bar
                 stackCounterCurrentBar = 1
                 stackEntriesNotZero = stackedEntry?.yVals?.filterNot { it == 0f }?.count() ?: 0
@@ -583,14 +584,13 @@ class StatisticsFragment : Fragment(R.layout.fragment_statistics) {
                     return stackedEntry?.yVals?.sum()?.toInt().toString()
                 }
             } else {
+                lastEntryX = stackedEntry.x
                 stackCounterCurrentBar++
                 if (stackCounterCurrentBar == stackEntriesNotZero) {
                     // we reached the last non-zero stack of the bar, so we're at the top
                     return stackedEntry?.yVals?.sum()?.toInt().toString()
                 }
             }
-
-            lastEntryX = stackedEntry?.x ?: -1f
             return ""   // return empty string so no value is drawn
         }
     }
