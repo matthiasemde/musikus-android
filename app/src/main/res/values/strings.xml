@@ -94,6 +94,11 @@
     <string name="fullscreen_session_date">%s at %s</string>
     <string name="fullscreen_session_time_label">Your session time</string>
     <string name="goal_description_achieved">Goal achieved!</string>
+    <string name="week">week</string>
+    <string name="month">month</string>
+    <string name="year">year</string>
+    <string name="shrug">¯\\_(ツ)_/¯</string>
+    <string name="no_sessions">No sessions.</string>
     <string name="editDialogOk">Edit</string>
     <string name="editDialogCancel">Cancel</string>
     <string name="edit_section_time_dialog_title">Edit section time</string>

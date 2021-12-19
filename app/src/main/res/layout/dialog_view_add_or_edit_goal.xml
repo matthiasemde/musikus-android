@@ -179,25 +179,21 @@
 
             <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/goalDialogAllCategories"
-                style="@style/GoalDialogToggleButton"
+                style="@style/ToggleButton"
                 android:layout_width="0dp"
-                android:layout_height="44dp"
                 android:layout_weight="1"
-                android:background="@drawable/goal_dialog_button_left_background"
+                android:background="@drawable/bg_toggle_button_left"
                 android:gravity="center|center_vertical"
-                android:text="@string/goalDialogUseAllCategories"
-                android:textSize="14sp" />
+                android:text="@string/goalDialogUseAllCategories" />
 
             <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/goalDialogSpecificCategories"
-                style="@style/GoalDialogToggleButton"
+                style="@style/ToggleButton"
+                android:background="@drawable/bg_toggle_button_right"
                 android:layout_width="0dp"
-                android:layout_height="44dp"
                 android:layout_weight="1"
-                android:background="@drawable/goal_dialog_button_right_background"
                 android:gravity="center|center_vertical"
-                android:text="@string/goalDialogUseSpecificCategories"
-                android:textSize="14sp" />
+                android:text="@string/goalDialogUseSpecificCategories" />
 
         </LinearLayout>
 

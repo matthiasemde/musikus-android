@@ -10,64 +10,86 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:orientation="vertical"
-        android:layout_weight="1">
+        android:layout_weight="1"
+        android:layout_margin="16dp">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:gravity="center">
 
-            <Button
+            <ImageButton
                 android:id="@+id/btn_rwnd"
-                android:layout_width="0dp"
-                android:layout_weight="2"
-                android:layout_height="wrap_content"
-                android:layout_margin="2dp"
-                android:text="&lt;"/>
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                app:tint="?attr/colorOnSurfaceLowerContrast"
+                android:src="@drawable/ic_arrow_left"
+                android:background="?selectableItemBackgroundBorderless"/>
 
-            <Button
-                android:id="@+id/btn_week"
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:layout_margin="2dp"
-                android:layout_height="wrap_content"
-                android:text="w"/>
 
-            <Button
-                android:id="@+id/btn_month"
+            <LinearLayout
                 android:layout_width="0dp"
                 android:layout_weight="1"
-                android:layout_margin="2dp"
-                android:layout_height="wrap_content"
-                android:text="m"/>
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:gravity="center">
+
+                <TextView
+                    android:id="@+id/tv_visible_range"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    tools:text="November 14 - 20" />
 
 
-            <Button
-                android:id="@+id/btn_year"
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:layout_margin="2dp"
-                android:layout_height="wrap_content"
-                android:text="y"/>
 
-            <Button
+            </LinearLayout>
+
+            <ImageButton
                 android:id="@+id/btn_fwd"
-                android:layout_width="0dp"
-                android:layout_weight="2"
-                android:layout_margin="2dp"
-                android:layout_height="wrap_content"
-                android:text="&gt;"/>
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                app:tint="@color/color_imagebutton_alpha_on_disabled"
+                android:src="@drawable/ic_arrow_right"
+                android:background="?selectableItemBackgroundBorderless"/>
 
         </LinearLayout>
 
-        <TextView
-            android:id="@+id/tv_visible_range"
-            android:layout_width="match_parent"
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_gravity="center"
             android:layout_height="wrap_content"
-            android:gravity="center"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            tools:text="November 14 - 20" />
+            android:orientation="horizontal"
+            android:layout_margin="16dp">
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/btn_week"
+                style="@style/ToggleButtonSmall"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_toggle_button_left"
+                android:text="@string/week"/>
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/btn_month"
+                style="@style/ToggleButtonSmall"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_toggle_button_middle"
+                android:text="@string/month"/>
+
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/btn_year"
+                style="@style/ToggleButtonSmall"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_toggle_button_right"
+                android:text="@string/year"/>
+        </LinearLayout>
 
         <TextView
             android:id="@+id/tv_total_time_visible_range"
@@ -80,19 +102,29 @@
         <com.github.mikephil.charting.charts.BarChart
             android:id="@+id/chart"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_margin="16dp"/>
+            android:layout_height="match_parent"/>
 
 
     </LinearLayout>
 
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/list_statistics"
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1" />
+        android:layout_weight="1">
 
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerview_categories_statistics"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="16dp"
+            android:clipToPadding="false"
+            android:fadeScrollbars="false"/>
 
+        <include
+            layout="@layout/view_shrug"
+            android:layout_height="match_parent"
+            android:layout_width="match_parent"/>
+
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
 </LinearLayout>

@@ -112,7 +112,7 @@
             android:layout_weight="1.4"
             android:paddingStart="30dp"
             android:paddingTop="10dp"
-            android:layout_marginEnd="30dp"
+            android:paddingEnd="30dp"
             android:paddingBottom="16dp"
             android:clipToPadding="false"
             android:fadeScrollbars="false" />

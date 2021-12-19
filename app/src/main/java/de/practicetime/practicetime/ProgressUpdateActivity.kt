@@ -6,8 +6,6 @@ import android.view.View
 import android.view.animation.Animation
 import android.view.animation.Transformation
 import android.widget.LinearLayout
-import android.widget.ProgressBar
-import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.DefaultItemAnimator
@@ -112,7 +110,7 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
             }.also {
                 // if no element is progressed which wasn't already at 100%, show ¯\_(ツ)_/¯
                 if(it.isEmpty()) {
-                    findViewById<LinearLayout>(R.id.shrug).visibility = View.VISIBLE
+                    findViewById<LinearLayout>(R.id.shrug_layout).visibility = View.VISIBLE
                     findViewById<RecyclerView>(R.id.progessUpdateGoalList).visibility = View.GONE
                     skipButton.visibility = View.GONE
                     continueButton.visibility = View.VISIBLE

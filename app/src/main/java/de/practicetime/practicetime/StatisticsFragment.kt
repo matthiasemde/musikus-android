@@ -1,19 +1,25 @@
 package de.practicetime.practicetime
 
+import android.content.res.ColorStateList
 import android.os.Bundle
 import android.util.Log
 import android.util.TypedValue
+import android.view.LayoutInflater
 import android.view.View
-import android.widget.Button
-import android.widget.TextView
+import android.view.ViewGroup
+import android.widget.*
+import androidx.appcompat.widget.AppCompatButton
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
 import com.github.mikephil.charting.animation.Easing
 import com.github.mikephil.charting.charts.BarChart
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.*
 import com.github.mikephil.charting.formatter.ValueFormatter
+import de.practicetime.practicetime.entities.Category
 import kotlinx.coroutines.launch
 import java.time.*
 import java.time.format.DateTimeFormatter
@@ -25,25 +31,33 @@ class StatisticsFragment : Fragment(R.layout.fragment_statistics) {
 
     private lateinit var dao: PTDao
     private lateinit var chart: BarChart
+    private lateinit var categoryListAdapter: CategoryStatsAdapter
     private var weekViewWeekOffset = 0L
     private var monthViewWeekOffset = 0L
     private var yearViewMonthOffset = 0L
     private var colorAmount = 0
+
+    private val categories = ArrayList<CategoryListElement>()
+
+    data class CategoryListElement(
+        val category: Category,
+        var selected: Boolean,
+        var visible: Boolean
+    )
 
     private enum class VIEWS(val barCount: Int) {
         WEEK_VIEW(7),   // be careful to change because 7 means Mon-Sun here!
         MONTH_VIEW(7), // current week + last 9 weeks
         YEAR_VIEW(7),  // current month + last 11 months
     }
-
     private var activeView = VIEWS.WEEK_VIEW
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        colorAmount = context?.resources?.getIntArray(R.array.category_colors)?.toCollection(mutableListOf())?.size ?: 0
 
-        chart = view.findViewById(R.id.chart) as BarChart
+        // get the dao object
+        openDatabase()
 
-        view.findViewById<Button>(R.id.btn_week).setOnClickListener {
+        view.findViewById<AppCompatButton>(R.id.btn_week).setOnClickListener {
             activeView = VIEWS.WEEK_VIEW
             updateChartData()
             setBtnEnabledState(view)
@@ -51,7 +65,7 @@ class StatisticsFragment : Fragment(R.layout.fragment_statistics) {
             monthViewWeekOffset = 0L
             yearViewMonthOffset = 0L
         }
-        view.findViewById<Button>(R.id.btn_month).setOnClickListener {
+        view.findViewById<AppCompatButton>(R.id.btn_month).setOnClickListener {
             activeView = VIEWS.MONTH_VIEW
             updateChartData()
             setBtnEnabledState(view)
@@ -59,7 +73,7 @@ class StatisticsFragment : Fragment(R.layout.fragment_statistics) {
             weekViewWeekOffset = 0L
             yearViewMonthOffset = 0L
         }
-        view.findViewById<Button>(R.id.btn_year).setOnClickListener {
+        view.findViewById<AppCompatButton>(R.id.btn_year).setOnClickListener {
             activeView = VIEWS.YEAR_VIEW
             updateChartData()
             setBtnEnabledState(view)
@@ -67,18 +81,34 @@ class StatisticsFragment : Fragment(R.layout.fragment_statistics) {
             weekViewWeekOffset = 0L
             monthViewWeekOffset = 0L
         }
-        view.findViewById<Button>(R.id.btn_rwnd).setOnClickListener {
+        view.findViewById<ImageButton>(R.id.btn_rwnd).setOnClickListener {
             seekPast(view)
         }
-        view.findViewById<Button>(R.id.btn_fwd).setOnClickListener {
+        view.findViewById<ImageButton>(R.id.btn_fwd).setOnClickListener {
             seekFuture(view)
         }
 
-        openDatabase()
-
+        colorAmount = context?.resources?.getIntArray(R.array.category_colors)?.toCollection(mutableListOf())?.size ?: 0
+        chart = view.findViewById(R.id.chart) as BarChart
         initChartView()
         updateChartData()
         setBtnEnabledState(view)
+
+        initCategoryList()
+    }
+
+    private fun initCategoryList() {
+        lifecycleScope.launch {
+            dao.getAllCategories().forEach {
+                categories.add(CategoryListElement(it, selected = true, visible = false))
+            }
+            categoryListAdapter = CategoryStatsAdapter()
+            val layoutManager = LinearLayoutManager(requireContext())
+
+            val categoryRecyclerView = requireView().findViewById<RecyclerView>(R.id.recyclerview_categories_statistics)
+            categoryRecyclerView.layoutManager = layoutManager
+            categoryRecyclerView.adapter = categoryListAdapter
+        }
     }
 
     private fun initChartView() {
@@ -174,11 +204,14 @@ class StatisticsFragment : Fragment(R.layout.fragment_statistics) {
     }
 
     private fun setBtnEnabledState(view: View) {
-        val btnWeek = view.findViewById<Button>(R.id.btn_week)
-        val btnMonth = view.findViewById<Button>(R.id.btn_month)
-        val btnYear = view.findViewById<Button>(R.id.btn_year)
-        val btnFwd = view.findViewById<Button>(R.id.btn_fwd)
+        val btnWeek = view.findViewById<AppCompatButton>(R.id.btn_week)
+        val btnMonth = view.findViewById<AppCompatButton>(R.id.btn_month)
+        val btnYear = view.findViewById<AppCompatButton>(R.id.btn_year)
+        val btnFwd = view.findViewById<ImageButton>(R.id.btn_fwd)
 
+        btnWeek.isSelected = false
+        btnMonth.isSelected = false
+        btnYear.isSelected = false
         btnWeek.isEnabled = true
         btnMonth.isEnabled = true
         btnYear.isEnabled = true
@@ -186,14 +219,17 @@ class StatisticsFragment : Fragment(R.layout.fragment_statistics) {
         when(activeView) {
             VIEWS.WEEK_VIEW -> {
                 btnFwd.isEnabled = weekViewWeekOffset != 0L
+                btnWeek.isSelected = true
                 btnWeek.isEnabled = false
             }
             VIEWS.MONTH_VIEW -> {
                 btnFwd.isEnabled = monthViewWeekOffset != 0L
+                btnMonth.isSelected = true
                 btnMonth.isEnabled = false
             }
             VIEWS.YEAR_VIEW -> {
                 btnFwd.isEnabled = yearViewMonthOffset != 0L
+                btnYear.isSelected = true
                 btnYear.isEnabled = false
             }
         }
@@ -201,13 +237,14 @@ class StatisticsFragment : Fragment(R.layout.fragment_statistics) {
 
     private fun updateChartData() {
         lifecycleScope.launch {
+            // re-calculate bar data
             val values = when (activeView) {
                 VIEWS.WEEK_VIEW -> getMoToFrArray()
                 VIEWS.MONTH_VIEW -> getWeeksArray()
                 VIEWS.YEAR_VIEW -> getMonthsArray()
             }
 
-            var dataSet: BarDataSet
+            val dataSet: BarDataSet
 
             if (chart.data != null && chart.data.dataSetCount > 0) {
                 dataSet = chart.data.getDataSetByIndex(0) as BarDataSet
@@ -271,6 +308,7 @@ class StatisticsFragment : Fragment(R.layout.fragment_statistics) {
      */
     private suspend fun getMoToFrArray(): ArrayList<BarEntry> {
         val chartArray = arrayListOf<BarEntry>()
+        val visibleCategories = ArrayList<Int>()
 
         for (day in VIEWS.WEEK_VIEW.barCount downTo 1) {
             val floatArrDur = FloatArray(colorAmount) {0f}
@@ -279,12 +317,17 @@ class StatisticsFragment : Fragment(R.layout.fragment_statistics) {
                 getEndOfDayOfWeek(day.toLong(), weekViewWeekOffset).toEpochSecond()
             )
             sectionsThisDay.forEach { (section, category) ->
-                floatArrDur[category.colorIndex] += (section.duration ?:0).toFloat()
+                // only show selected entries (checkbox enabled)
+                if(categories.any { it.selected && it.category.id == category.id }) {
+                    floatArrDur[category.colorIndex] += (section.duration ?: 0).toFloat()
 //                log("Section ${category.name} dur=${section.duration} added on day $day")
+                }
+                visibleCategories.add(category.id)
             }
             chartArray.add(BarEntry(day.toFloat(), floatArrDur))
         }
 
+        updateVisibleCategories(visibleCategories)
         return chartArray
     }
 
@@ -293,6 +336,7 @@ class StatisticsFragment : Fragment(R.layout.fragment_statistics) {
      */
     private suspend fun getWeeksArray(): ArrayList<BarEntry> {
         val chartArray = arrayListOf<BarEntry>()
+        val visibleCategories = ArrayList<Int>()
 
         for (week in 0 downTo -(VIEWS.MONTH_VIEW.barCount-1)) {     // last 10 weeks
 
@@ -304,11 +348,17 @@ class StatisticsFragment : Fragment(R.layout.fragment_statistics) {
                 getEndOfWeek(week.toLong() + monthViewWeekOffset).toEpochSecond()
             )
             sectionsThisWeek.forEach { (section, category) ->
-                floatArrDur[category.colorIndex] += (section.duration ?:0).toFloat()
-                log("\t${category.name} (${section.duration})")
+                // only show selected entries (checkbox enabled)
+                if(categories.any { it.selected && it.category.id == category.id }) {
+                    floatArrDur[category.colorIndex] += (section.duration ?: 0).toFloat()
+//                log("\t${category.name} (${section.duration})")
+                }
+                visibleCategories.add(category.id)
             }
             chartArray.add(BarEntry((week + monthViewWeekOffset).toFloat(), floatArrDur))
         }
+
+        updateVisibleCategories(visibleCategories)
         return chartArray
     }
 
@@ -318,6 +368,7 @@ class StatisticsFragment : Fragment(R.layout.fragment_statistics) {
      */
     private suspend fun getMonthsArray(): ArrayList<BarEntry> {
         val chartArray = arrayListOf<BarEntry>()
+        val visibleCategories = ArrayList<Int>()
 
         for (month in 0 downTo -(VIEWS.YEAR_VIEW.barCount-1)) {
             val floatArrDur = FloatArray(colorAmount) {0f}
@@ -326,23 +377,58 @@ class StatisticsFragment : Fragment(R.layout.fragment_statistics) {
                 getEndOfMonth(month.toLong() + yearViewMonthOffset).toEpochSecond()
             )
             sectionsThisMonth.forEach { (section, category) ->
-                floatArrDur[category.colorIndex] += (section.duration ?:0).toFloat()
-                log("\t${category.name} (${section.duration})")
+                // only show selected entries (checkbox enabled)
+                if(categories.any { it.selected && it.category.id == category.id }) {
+                    floatArrDur[category.colorIndex] += (section.duration ?: 0).toFloat()
+//                log("\t${category.name} (${section.duration})")
+                }
+                visibleCategories.add(category.id)
             }
             chartArray.add(BarEntry((month + yearViewMonthOffset).toFloat(), floatArrDur))
         }
 
-        // Logging
-        chartArray.forEach {
-            log("Month: ${it.x}:")
-            it.yVals.forEach {
-                log("\t\tCategory with $it seconds")
-            }
-        }
-
+        updateVisibleCategories(visibleCategories)
         return chartArray
     }
 
+    private fun updateVisibleCategories(visibleCategories: List<Int>) {
+        var elemRemovedOrInserted = false
+        // traverse in reverse order so that newly inserted/removed items don't affect list indices
+        categories.asReversed().forEach { elem ->
+            if (visibleCategories.contains(elem.category.id)) {
+                if (!elem.visible) {   // category was hidden before, should now be shown
+                    elem.visible = true
+                    categories.filter { it.visible }    // convert to same list as adapter uses
+                        .indexOfFirst { it.category.id == elem.category.id }    // find newly "inserted" item position
+                        .let { position ->
+                            categoryListAdapter.notifyItemInserted(position)    // notify adapter about new element
+                        }
+                    elemRemovedOrInserted = true
+                }
+            } else {
+                if (elem.visible) {     // category was shown, should now be hidden
+                    categories.filter { it.visible }    // convert to same list as adapter uses
+                        .indexOfFirst { it.category.id == elem.category.id }    // find newly "removed" item position
+                        .let { position ->
+                            categoryListAdapter.notifyItemRemoved(position)    // notify adapter about deleted element
+                        }
+                    elem.visible = false
+                    elemRemovedOrInserted = true
+                }
+            }
+        }
+        // scroll to top if elements are removed/inserted to show possibly added items on top
+        if(elemRemovedOrInserted) requireView().findViewById<RecyclerView>(R.id.recyclerview_categories_statistics).scrollToPosition(0)
+
+        // if list is empty, show shrug
+        if (categories.none { it.visible }) {
+            requireView().findViewById<LinearLayout>(R.id.shrug_layout).visibility = View.VISIBLE
+            requireView().findViewById<TextView>(R.id.shrug_text_1).text = resources.getString(R.string.no_sessions)
+            requireView().findViewById<TextView>(R.id.shrug_text_2).visibility = View.GONE
+        } else {
+            requireView().findViewById<LinearLayout>(R.id.shrug_layout).visibility = View.GONE
+        }
+    }
 
     // gets the timestamp for start of day
     // dayBack: 0=today, 1=yesterday, 2=day before yesterday
@@ -419,7 +505,7 @@ class StatisticsFragment : Fragment(R.layout.fragment_statistics) {
         Log.d("STATISTICS", msg)
     }
 
-    inner class XAxisValueFormatter: ValueFormatter() {
+    private inner class XAxisValueFormatter: ValueFormatter() {
 
         override fun getFormattedValue(value: Float): String {
             return when (activeView) {
@@ -473,7 +559,7 @@ class StatisticsFragment : Fragment(R.layout.fragment_statistics) {
      * "invisible" stacked segments with value=0 in our bars which results to no call in getBarStackedLabel() and thus
      * the sum doesn't get drawn. This one only uses non-zero entries to determine the top position
      */
-    inner class BarChartValueFormatter: ValueFormatter() {
+    private inner class BarChartValueFormatter: ValueFormatter() {
 
         var lastEntryX = -1f            // the x entry (=Bar ID) of last time getBarStackedLabel() was called
         var stackCounterCurrentBar = 0  // counter variable counting the stack we are inside the current bar
@@ -507,6 +593,43 @@ class StatisticsFragment : Fragment(R.layout.fragment_statistics) {
             lastEntryX = stackedEntry?.x ?: -1f
             return ""   // return empty string so no value is drawn
         }
+    }
+
+    private inner class CategoryStatsAdapter : RecyclerView.Adapter<CategoryStatsAdapter.ViewHolder>() {
+
+        inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+            val catCheckBox: CheckBox = view.findViewById(R.id.checkbox_category)
+        }
+
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CategoryStatsAdapter.ViewHolder {
+            // Create a new view, which defines the UI of the list item
+            val view = LayoutInflater.from(parent.context)
+                .inflate(R.layout.view_statistics_category_list_item, parent, false)
+
+            return ViewHolder(view)
+        }
+
+        override fun onBindViewHolder(holder: CategoryStatsAdapter.ViewHolder, position: Int) {
+
+            val elem = categories.filter { it.visible }[position]
+            holder.catCheckBox.text = elem.category.name
+//            holder.catCheckBox.text = position.toString()
+
+            val categoryColors = requireContext().resources.getIntArray(R.array.category_colors)
+
+            holder.catCheckBox.isChecked = elem.selected
+            holder.catCheckBox.buttonTintList = ColorStateList.valueOf(
+                categoryColors[elem.category.colorIndex]
+            )
+
+            holder.catCheckBox.setOnCheckedChangeListener { _, isChecked ->
+                elem.selected = isChecked   // sync list with UI
+                updateChartData()  // notify fragment to change chart
+            }
+        }
+
+        override fun getItemCount(): Int = categories.filter { it.visible }.size
+
     }
 
     private fun getThemeColor(color: Int): Int {

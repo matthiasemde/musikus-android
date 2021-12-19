@@ -1129,7 +1129,7 @@ class ActiveSessionActivity : AppCompatActivity() {
      * Adapter for SectionList RecyclerView.
      */
     private inner class SectionsListAdapter(
-        // TODO this should be a list of SectionWithCategories
+        // TODO this should be a list of SectionWithCategories or a custom data class
         private val practiceSections: ArrayList<Pair<PracticeSection, Int>>,
     ) : RecyclerView.Adapter<SectionsListAdapter.ViewHolder>() {
 

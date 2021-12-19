@@ -11,9 +11,18 @@
         <item name="android:textColor">?android:attr/textColorTertiary</item>
         <item name="android:textSize">38sp</item>
     </style>
-    <style name="GoalDialogToggleButton" parent="">
-        <item name="android:backgroundTint">@color/color_toggle_button_goal_dialog</item>
-        <item name="android:textColor">@color/text_color_toggle_button_goal_dialog</item>
+
+    <style name="ToggleButtonBase" parent="">
+        <item name="android:backgroundTint">@color/bg_color_toggle_button</item>
+        <item name="android:textColor">@color/text_color_toggle_button</item>
+    </style>
+    <style name="ToggleButton" parent="ToggleButtonBase">
+        <item name="android:layout_height">44dp</item>
+        <item name="android:textSize">14sp</item>
+    </style>
+    <style name="ToggleButtonSmall" parent="ToggleButtonBase">
+        <item name="android:layout_height">30dp</item>
+        <item name="android:textSize">12sp</item>
     </style>
     <style name="CommentDialog" parent="Theme.MaterialComponents.DayNight.BottomSheetDialog">
         <item name="colorSecondary">@color/md_yellow_600</item> <!-- // TODO figure out, why the secondary color is not inherited from the theme -->
