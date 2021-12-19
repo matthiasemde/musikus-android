@@ -125,4 +125,7 @@
     <string name="record_snackbar_message">%s saved</string>
     <string name="record_snackbar_undo">Delete</string>
     <string name="total_time">Total: %1$s</string>
+    <string name="paused_practicing">Practicing paused</string>
+    <string name="notification_title">Practicing for %1$02d:%2$02d:%3$02d</string>
+    <string name="notification_settings_description">Running Session</string>
 </resources>

@@ -12,7 +12,7 @@ import kotlin.collections.ArrayList
 
 
 class SessionForegroundService : Service() {
-    private val CHANNEL_ID = "PracticeTime Notification Channel ID"
+    private val CHANNEL_ID = "PT_Channel_ID"
     private val NOTIFICATION_ID = 42
     private val binder = LocalBinder()         // interface for clients that bind
     private var allowRebind: Boolean = true    // indicates whether onRebind should be used
@@ -25,7 +25,7 @@ class SessionForegroundService : Service() {
     private var pauseBeginTimestamp: Long = 0
     private var pauseDurationBuffer = 0     // just a buffer to
     var pauseDuration = 0                   // pause duration, ONLY for displaying on the fab, section pause duration is saved in sectionBuffer!
-
+    var currCategoryName = ""                   // the name of the active category
 
     var stopDialogTimestamp: Long = 0
 
@@ -42,10 +42,10 @@ class SessionForegroundService : Service() {
         Singleton.serviceIsRunning = true
         startTimer()
         createNotificationChannel()
-        // set the Service to foreground to dispINCLUDINGl the notification
+        // set the Service to foreground to displaying the notification
         // this is different to displaying the notification via notify() since it automatically
         // produces a non-cancellable notification
-        startForeground(NOTIFICATION_ID, getNotification( "Sepp, Sepp", "sei kein Depp"))
+        startForeground(NOTIFICATION_ID, getNotification( "title", "content"))
 
         return START_NOT_STICKY
     }
@@ -101,16 +101,14 @@ class SessionForegroundService : Service() {
      * updates the notification text continuously to show elapsed time
      */
     private fun updateNotification() {
-        val title = "Practicing for %02d:%02d:%02d".format(
+        val title = getString(R.string.notification_title,
             totalPracticeDuration / 3600,
             totalPracticeDuration % 3600 / 60,
-            totalPracticeDuration % 60
-        )
-        var desc = ""
-        desc = if (paused) {
-            "Practicing paused"
+            totalPracticeDuration % 60)
+        val desc = if (paused) {
+            getString(R.string.paused_practicing)
         } else {
-            "Active Category: ${sectionBuffer.last().first.category_id}"
+            currCategoryName
         }
 
         val notification: Notification = getNotification(title, desc)
@@ -147,8 +145,8 @@ class SessionForegroundService : Service() {
         // Create the NotificationChannel, but only on API 26+ because
         // the NotificationChannel class is new and not in the support library
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val name = "PracticeTime Channel"
-            val descriptionText = "This is the description of the Notification Channel of PracticeTime"
+            val name = getString(R.string.notification_settings_description)
+            val descriptionText = "Notification to keep track of the running session"
             val importance = NotificationManager.IMPORTANCE_LOW
             val channel = NotificationChannel(CHANNEL_ID, name, importance).apply {
                 description = descriptionText
@@ -166,7 +164,8 @@ class SessionForegroundService : Service() {
         return binder
     }
 
-    fun startNewSection(categoryId: Int) {
+    fun startNewSection(categoryId: Int, categoryName: String) {
+        currCategoryName = categoryName
         val now = Date().time / 1000L
         sectionBuffer.add(
             Pair(
@@ -191,14 +190,12 @@ class SessionForegroundService : Service() {
             // subtract from paused time
             sectionBuffer[sectionBuffer.lastIndex] =
                 sectionBuffer.last().copy(second = sectionBuffer.last().second - timePassed.toInt())
-            Log.d("TAG", "subtracted $timePassed from pause time last session")
         } else {
             // subtract from regular duration
             sectionBuffer.last().first.duration =
                 sectionBuffer.last().first.duration?.minus(
                     timePassed.toInt()
                 )
-            Log.d("TAG", "subtracted $timePassed from duration last session")
         }
     }
 

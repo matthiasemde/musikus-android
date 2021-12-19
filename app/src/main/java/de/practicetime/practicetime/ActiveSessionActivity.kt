@@ -762,7 +762,7 @@ class ActiveSessionActivity : AppCompatActivity() {
         }
 
         // start a new section for the chosen category
-        mService.startNewSection(categoryId)
+        mService.startNewSection(categoryId, activeCategories[index].name)
 
         updateActiveSectionView()
 
