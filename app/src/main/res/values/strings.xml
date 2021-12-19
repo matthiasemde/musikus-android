@@ -94,9 +94,9 @@
     <string name="fullscreen_session_date">%s at %s</string>
     <string name="fullscreen_session_time_label">Your session time</string>
     <string name="goal_description_achieved">Goal achieved!</string>
-    <string name="week">week</string>
-    <string name="month">month</string>
-    <string name="year">year</string>
+    <string name="days">days</string>
+    <string name="weeks">weeks</string>
+    <string name="months">months</string>
     <string name="shrug">¯\\_(ツ)_/¯</string>
     <string name="no_sessions">No sessions.</string>
     <string name="editDialogOk">Edit</string>
@@ -124,4 +124,5 @@
     <string name="record_sheet_open_save_location_button">Open selected save location</string>
     <string name="record_snackbar_message">%s saved</string>
     <string name="record_snackbar_undo">Delete</string>
+    <string name="total_time">Total: %1$s</string>
 </resources>

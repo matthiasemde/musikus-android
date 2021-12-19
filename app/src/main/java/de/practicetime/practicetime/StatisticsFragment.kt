@@ -1,7 +1,6 @@
 package de.practicetime.practicetime
 
 import android.content.res.ColorStateList
-import android.icu.text.DecimalFormatSymbols
 import android.os.Bundle
 import android.util.Log
 import android.util.TypedValue
@@ -34,54 +33,55 @@ class StatisticsFragment : Fragment(R.layout.fragment_statistics) {
     private lateinit var dao: PTDao
     private lateinit var chart: BarChart
     private lateinit var categoryListAdapter: CategoryStatsAdapter
-    private var weekViewWeekOffset = 0L
-    private var monthViewWeekOffset = 0L
-    private var yearViewMonthOffset = 0L
+    private var daysViewWeekOffset = 0L
+    private var weeksViewWeekOffset = 0L
+    private var monthsViewMonthOffset = 0L
     private var colorAmount = 0
 
     private val categories = ArrayList<CategoryListElement>()
 
     data class CategoryListElement(
         val category: Category,
+        var totalDuration: Int = 0,
         var selected: Boolean,
         var visible: Boolean
     )
 
     private enum class VIEWS(val barCount: Int) {
-        WEEK_VIEW(7),   // be careful to change because 7 means Mon-Sun here!
-        MONTH_VIEW(7), // current week + last 9 weeks
-        YEAR_VIEW(7),  // current month + last 11 months
+        DAYS_VIEW(7),   // be careful to change because 7 means Mon-Sun here!
+        WEEKS_VIEW(7), // current week + last 9 weeks
+        MONTHS_VIEW(7),  // current month + last 11 months
     }
-    private var activeView = VIEWS.WEEK_VIEW
+    private var activeView = VIEWS.DAYS_VIEW
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
 
         // get the dao object
         openDatabase()
 
-        view.findViewById<AppCompatButton>(R.id.btn_week).setOnClickListener {
-            activeView = VIEWS.WEEK_VIEW
+        view.findViewById<AppCompatButton>(R.id.btn_days).setOnClickListener {
+            activeView = VIEWS.DAYS_VIEW
             updateChartData()
             setBtnEnabledState(view)
             // reset time ranges for other views
-            monthViewWeekOffset = 0L
-            yearViewMonthOffset = 0L
+            weeksViewWeekOffset = 0L
+            monthsViewMonthOffset = 0L
         }
-        view.findViewById<AppCompatButton>(R.id.btn_month).setOnClickListener {
-            activeView = VIEWS.MONTH_VIEW
+        view.findViewById<AppCompatButton>(R.id.btn_weeks).setOnClickListener {
+            activeView = VIEWS.WEEKS_VIEW
             updateChartData()
             setBtnEnabledState(view)
             // reset time ranges for other views
-            weekViewWeekOffset = 0L
-            yearViewMonthOffset = 0L
+            daysViewWeekOffset = 0L
+            monthsViewMonthOffset = 0L
         }
-        view.findViewById<AppCompatButton>(R.id.btn_year).setOnClickListener {
-            activeView = VIEWS.YEAR_VIEW
+        view.findViewById<AppCompatButton>(R.id.btn_months).setOnClickListener {
+            activeView = VIEWS.MONTHS_VIEW
             updateChartData()
             setBtnEnabledState(view)
             // reset time ranges for other views
-            weekViewWeekOffset = 0L
-            monthViewWeekOffset = 0L
+            daysViewWeekOffset = 0L
+            weeksViewWeekOffset = 0L
         }
         view.findViewById<ImageButton>(R.id.btn_rwnd).setOnClickListener {
             seekPast(view)
@@ -121,7 +121,6 @@ class StatisticsFragment : Fragment(R.layout.fragment_statistics) {
         chart.description.isEnabled = false
         chart.legend.isEnabled = false
         chart.setDrawValueAboveBar(true)
-        chart.animateY(1000, Easing.EaseOutBack)
         chart.invalidate()
 
         // axis settings
@@ -155,22 +154,22 @@ class StatisticsFragment : Fragment(R.layout.fragment_statistics) {
         val lastBarXVal = chartArray.xMax
         when(activeView) {
 
-            VIEWS.WEEK_VIEW -> {
-                val start = getStartOfWeek(weekViewWeekOffset)
+            VIEWS.DAYS_VIEW -> {
+                val start = getStartOfWeek(daysViewWeekOffset)
                     .format(DateTimeFormatter.ofPattern("MMMM d"))
 
                 var formatStr = "d"
-                if (getStartOfWeek(weekViewWeekOffset).month != getEndOfWeek(weekViewWeekOffset).minusDays(1).month) {
+                if (getStartOfWeek(daysViewWeekOffset).month != getEndOfWeek(daysViewWeekOffset).minusDays(1).month) {
                     formatStr = "MMMM d"    // also show month if it is different from startMonth
                 }
 
-                val end = getEndOfWeek(weekViewWeekOffset)
+                val end = getEndOfWeek(daysViewWeekOffset)
                     .minusDays(1)   // subtract one day because of half-open approach
                     .format(DateTimeFormatter.ofPattern(formatStr))
                 tvRange.text = ("$start - $end")
             }
 
-            VIEWS.MONTH_VIEW -> {
+            VIEWS.WEEKS_VIEW -> {
                 val start = LocalDate
                     .now(ZoneId.systemDefault())
                     .plusWeeks(firstBarXVal.toLong())
@@ -184,7 +183,7 @@ class StatisticsFragment : Fragment(R.layout.fragment_statistics) {
                 tvRange.text = ("$start - $end")
             }
 
-            VIEWS.YEAR_VIEW -> {
+            VIEWS.MONTHS_VIEW -> {
                 val startDate = LocalDate
                     .now(ZoneId.systemDefault())
                     .plusMonths(firstBarXVal.toLong())
@@ -204,17 +203,18 @@ class StatisticsFragment : Fragment(R.layout.fragment_statistics) {
             }
         }
         // show sum of visible data
-        tvTotalTimeInRange.text = secondsToTimeString(
+        val durationStr = secondsToTimeString(
             chartArray.values.sumOf {
                 it.yVals.sum().toInt()
             }
         )
+        tvTotalTimeInRange.text = requireContext().getString(R.string.total_time, durationStr)
     }
 
     private fun setBtnEnabledState(view: View) {
-        val btnWeek = view.findViewById<AppCompatButton>(R.id.btn_week)
-        val btnMonth = view.findViewById<AppCompatButton>(R.id.btn_month)
-        val btnYear = view.findViewById<AppCompatButton>(R.id.btn_year)
+        val btnWeek = view.findViewById<AppCompatButton>(R.id.btn_days)
+        val btnMonth = view.findViewById<AppCompatButton>(R.id.btn_weeks)
+        val btnYear = view.findViewById<AppCompatButton>(R.id.btn_months)
         val btnFwd = view.findViewById<ImageButton>(R.id.btn_fwd)
 
         btnWeek.isSelected = false
@@ -225,31 +225,31 @@ class StatisticsFragment : Fragment(R.layout.fragment_statistics) {
         btnYear.isEnabled = true
 
         when(activeView) {
-            VIEWS.WEEK_VIEW -> {
-                btnFwd.isEnabled = weekViewWeekOffset != 0L
+            VIEWS.DAYS_VIEW -> {
+                btnFwd.isEnabled = daysViewWeekOffset != 0L
                 btnWeek.isSelected = true
                 btnWeek.isEnabled = false
             }
-            VIEWS.MONTH_VIEW -> {
-                btnFwd.isEnabled = monthViewWeekOffset != 0L
+            VIEWS.WEEKS_VIEW -> {
+                btnFwd.isEnabled = weeksViewWeekOffset != 0L
                 btnMonth.isSelected = true
                 btnMonth.isEnabled = false
             }
-            VIEWS.YEAR_VIEW -> {
-                btnFwd.isEnabled = yearViewMonthOffset != 0L
+            VIEWS.MONTHS_VIEW -> {
+                btnFwd.isEnabled = monthsViewMonthOffset != 0L
                 btnYear.isSelected = true
                 btnYear.isEnabled = false
             }
         }
     }
 
-    private fun updateChartData() {
+    private fun updateChartData(recalculateDurs: Boolean = true) {
         lifecycleScope.launch {
             // re-calculate bar data
             val values = when (activeView) {
-                VIEWS.WEEK_VIEW -> getMoToFrArray()
-                VIEWS.MONTH_VIEW -> getWeeksArray()
-                VIEWS.YEAR_VIEW -> getMonthsArray()
+                VIEWS.DAYS_VIEW -> getMoToFrArray()
+                VIEWS.WEEKS_VIEW -> getWeeksArray()
+                VIEWS.MONTHS_VIEW -> getMonthsArray()
             }
 
             val dataSet: BarDataSet
@@ -282,17 +282,21 @@ class StatisticsFragment : Fragment(R.layout.fragment_statistics) {
 
             // update the Heading
             setHeadingTextViews(requireView())
+
+            // don't recalculate the total durations for each category if explicitly told so to prevent flashing
+            if (recalculateDurs)
+                categoryListAdapter.notifyItemRangeChanged(0, categories.filter { it.visible }.size)
         }
     }
 
     private fun seekPast(view: View) {
         when(activeView) {
-            VIEWS.WEEK_VIEW ->
-                weekViewWeekOffset--    // special treatment for weekview because we always want Mo-Sun range
-            VIEWS.MONTH_VIEW ->
-                monthViewWeekOffset -= activeView.barCount
-            VIEWS.YEAR_VIEW ->
-                yearViewMonthOffset -= activeView.barCount
+            VIEWS.DAYS_VIEW ->
+                daysViewWeekOffset--    // special treatment for weekview because we always want Mo-Sun range
+            VIEWS.WEEKS_VIEW ->
+                weeksViewWeekOffset -= activeView.barCount
+            VIEWS.MONTHS_VIEW ->
+                monthsViewMonthOffset -= activeView.barCount
         }
         updateChartData()
         setBtnEnabledState(view)
@@ -300,12 +304,12 @@ class StatisticsFragment : Fragment(R.layout.fragment_statistics) {
 
     private fun seekFuture(view: View) {
         when(activeView) {
-            VIEWS.WEEK_VIEW ->
-                weekViewWeekOffset++    // special treatment for weekview because we always want Mo-Sun range
-            VIEWS.MONTH_VIEW ->
-                monthViewWeekOffset += activeView.barCount
-            VIEWS.YEAR_VIEW ->
-                yearViewMonthOffset += activeView.barCount
+            VIEWS.DAYS_VIEW ->
+                daysViewWeekOffset++    // special treatment for weekview because we always want Mo-Sun range
+            VIEWS.WEEKS_VIEW ->
+                weeksViewWeekOffset += activeView.barCount
+            VIEWS.MONTHS_VIEW ->
+                monthsViewMonthOffset += activeView.barCount
         }
         updateChartData()
         setBtnEnabledState(view)
@@ -318,19 +322,22 @@ class StatisticsFragment : Fragment(R.layout.fragment_statistics) {
         val chartArray = arrayListOf<BarEntry>()
         val visibleCategories = ArrayList<Int>()
 
-        for (day in VIEWS.WEEK_VIEW.barCount downTo 1) {
+        categories.forEach { it.totalDuration = 0 }
+
+        for (day in VIEWS.DAYS_VIEW.barCount downTo 1) {
             val floatArrDur = FloatArray(colorAmount) {0f}
             val sectionsThisDay = dao.getSectionsWithCategories(
-                getStartOfDayOfWeek(day.toLong(), weekViewWeekOffset).toEpochSecond(),
-                getEndOfDayOfWeek(day.toLong(), weekViewWeekOffset).toEpochSecond()
+                getStartOfDayOfWeek(day.toLong(), daysViewWeekOffset).toEpochSecond(),
+                getEndOfDayOfWeek(day.toLong(), daysViewWeekOffset).toEpochSecond()
             )
             sectionsThisDay.forEach { (section, category) ->
                 // only show selected entries (checkbox enabled)
                 if(categories.any { it.selected && it.category.id == category.id }) {
+                    // sum all section duration with same color (regardless whether they are actually the same category)
                     floatArrDur[category.colorIndex] += (section.duration ?: 0).toFloat()
-//                log("Section ${category.name} dur=${section.duration} added on day $day")
                 }
                 visibleCategories.add(category.id)
+                categories.first { it.category.id == category.id}.totalDuration += section.duration ?: 0
             }
             chartArray.add(BarEntry(day.toFloat(), floatArrDur))
         }
@@ -346,24 +353,22 @@ class StatisticsFragment : Fragment(R.layout.fragment_statistics) {
         val chartArray = arrayListOf<BarEntry>()
         val visibleCategories = ArrayList<Int>()
 
-        for (week in 0 downTo -(VIEWS.MONTH_VIEW.barCount-1)) {     // last 10 weeks
-
-            log("Week $week ( ${getStartOfWeek(week.toLong() + monthViewWeekOffset)} bis ${getEndOfWeek(week.toLong() + monthViewWeekOffset)}:")
+        for (week in 0 downTo -(VIEWS.WEEKS_VIEW.barCount-1)) {     // last 10 weeks
 
             val floatArrDur = FloatArray(colorAmount) {0f}
             val sectionsThisWeek = dao.getSectionsWithCategories(
-                getStartOfWeek(week.toLong() + monthViewWeekOffset).toEpochSecond(),
-                getEndOfWeek(week.toLong() + monthViewWeekOffset).toEpochSecond()
+                getStartOfWeek(week.toLong() + weeksViewWeekOffset).toEpochSecond(),
+                getEndOfWeek(week.toLong() + weeksViewWeekOffset).toEpochSecond()
             )
             sectionsThisWeek.forEach { (section, category) ->
                 // only show selected entries (checkbox enabled)
                 if(categories.any { it.selected && it.category.id == category.id }) {
                     floatArrDur[category.colorIndex] += (section.duration ?: 0).toFloat()
-//                log("\t${category.name} (${section.duration})")
                 }
                 visibleCategories.add(category.id)
+                categories.first { it.category.id == category.id}.totalDuration += section.duration ?: 0
             }
-            chartArray.add(BarEntry((week + monthViewWeekOffset).toFloat(), floatArrDur))
+            chartArray.add(BarEntry((week + weeksViewWeekOffset).toFloat(), floatArrDur))
         }
 
         updateVisibleCategories(visibleCategories)
@@ -378,21 +383,21 @@ class StatisticsFragment : Fragment(R.layout.fragment_statistics) {
         val chartArray = arrayListOf<BarEntry>()
         val visibleCategories = ArrayList<Int>()
 
-        for (month in 0 downTo -(VIEWS.YEAR_VIEW.barCount-1)) {
+        for (month in 0 downTo -(VIEWS.MONTHS_VIEW.barCount-1)) {
             val floatArrDur = FloatArray(colorAmount) {0f}
             val sectionsThisMonth = dao.getSectionsWithCategories(
-                getStartOfMonth(month.toLong() + yearViewMonthOffset).toEpochSecond(),
-                getEndOfMonth(month.toLong() + yearViewMonthOffset).toEpochSecond()
+                getStartOfMonth(month.toLong() + monthsViewMonthOffset).toEpochSecond(),
+                getEndOfMonth(month.toLong() + monthsViewMonthOffset).toEpochSecond()
             )
             sectionsThisMonth.forEach { (section, category) ->
                 // only show selected entries (checkbox enabled)
                 if(categories.any { it.selected && it.category.id == category.id }) {
                     floatArrDur[category.colorIndex] += (section.duration ?: 0).toFloat()
-//                log("\t${category.name} (${section.duration})")
                 }
                 visibleCategories.add(category.id)
+                categories.first { it.category.id == category.id}.totalDuration += section.duration ?: 0
             }
-            chartArray.add(BarEntry((month + yearViewMonthOffset).toFloat(), floatArrDur))
+            chartArray.add(BarEntry((month + monthsViewMonthOffset).toFloat(), floatArrDur))
         }
 
         updateVisibleCategories(visibleCategories)
@@ -509,10 +514,6 @@ class StatisticsFragment : Fragment(R.layout.fragment_statistics) {
         dao = db.ptDao
     }
 
-    private fun log(msg: String) {
-        Log.d("STATISTICS", msg)
-    }
-
 
     /**
      * formats x axis value according to our time scaling
@@ -521,11 +522,11 @@ class StatisticsFragment : Fragment(R.layout.fragment_statistics) {
 
         override fun getFormattedValue(value: Float): String {
             return when (activeView) {
-                VIEWS.WEEK_VIEW ->
+                VIEWS.DAYS_VIEW ->
                     getDayString(value)
-                VIEWS.MONTH_VIEW ->
+                VIEWS.WEEKS_VIEW ->
                     getWeekString(value)
-                VIEWS.YEAR_VIEW ->
+                VIEWS.MONTHS_VIEW ->
                     getMonthString(value)
             }
         }
@@ -570,17 +571,18 @@ class StatisticsFragment : Fragment(R.layout.fragment_statistics) {
      */
     private inner class YAxisValueFormatter: ValueFormatter() {
 
-        override fun getFormattedValue(value: Float): String {
-            val (h, m) = secondsToHoursMins(value.toInt())
+        override fun getFormattedValue(seconds: Float): String {
+            val (h, m) = secondsToHoursMins(seconds.toInt())
             val str = if (h != 0){
                 "${h}." +
-                "${m?.toFloat()?.div(60f)?.times(10)?.roundToInt()} h"
+                "${m?.toFloat()?.div(60f)?.times(10)?.roundToInt()} h"   //TODO this is super ugly
             } else{
                 "${m} m"
             }
             return str
         }
     }
+
 
     /**
      * This ValueFormatter shows the sum of all stacked Bars on top of the each bar instead of for every segment
@@ -617,7 +619,6 @@ class StatisticsFragment : Fragment(R.layout.fragment_statistics) {
                 stackCounterCurrentBar++
                 if (stackCounterCurrentBar == stackEntriesNotZero) {
                     // we reached the last non-zero stack of the bar, so we're at the top
-//                    return stackedEntry?.yVals?.sum()?.toInt().toString()
                     return secondsToTimeString(stackedEntry.yVals?.sum()?.toInt())
                 }
             }
@@ -629,6 +630,7 @@ class StatisticsFragment : Fragment(R.layout.fragment_statistics) {
 
         inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
             val catCheckBox: CheckBox = view.findViewById(R.id.checkbox_category)
+            val catTimeView: TextView = view.findViewById(R.id.total_time_category)
         }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CategoryStatsAdapter.ViewHolder {
@@ -642,20 +644,20 @@ class StatisticsFragment : Fragment(R.layout.fragment_statistics) {
         override fun onBindViewHolder(holder: CategoryStatsAdapter.ViewHolder, position: Int) {
 
             val elem = categories.filter { it.visible }[position]
-            holder.catCheckBox.text = elem.category.name
-//            holder.catCheckBox.text = position.toString()
-
             val categoryColors = requireContext().resources.getIntArray(R.array.category_colors)
 
+            holder.catCheckBox.text = elem.category.name
+            holder.catCheckBox.setOnCheckedChangeListener(null)
             holder.catCheckBox.isChecked = elem.selected
             holder.catCheckBox.buttonTintList = ColorStateList.valueOf(
                 categoryColors[elem.category.colorIndex]
             )
-
             holder.catCheckBox.setOnCheckedChangeListener { _, isChecked ->
                 elem.selected = isChecked   // sync list with UI
-                updateChartData()  // notify fragment to change chart
+                updateChartData(recalculateDurs = false)  // notify fragment to change chart
             }
+
+            holder.catTimeView.text = secondsToTimeString(elem.totalDuration)
         }
 
         override fun getItemCount(): Int = categories.filter { it.visible }.size
@@ -663,11 +665,15 @@ class StatisticsFragment : Fragment(R.layout.fragment_statistics) {
     }
 
     private fun secondsToTimeString(seconds: Int?): String {
+        // TODO change to string resources with placeholders eventually
         val (h, m) = secondsToHoursMins(seconds)
         var str = ""
         if (h != 0) str += "$h h "
         if (m != 0) str += "$m min"
-        else str = "< 1 min"
+        else
+            if (h == 0)
+                if (seconds != 0) str = "< 1 min"
+                else str += "0 min"
         return str
     }
 
