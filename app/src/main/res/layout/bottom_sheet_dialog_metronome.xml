@@ -12,7 +12,7 @@
     android:paddingTop="16dp"
     android:paddingBottom="32dp"
     app:behavior_hideable="true"
-    app:behavior_peekHeight="88dp"
+    app:behavior_peekHeight="96dp"
     app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior">
 
     <LinearLayout
@@ -25,16 +25,16 @@
         <com.google.android.material.button.MaterialButton
             android:id="@+id/metronome_sheet_minus_five"
             style="@style/OutlinedButton"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
             android:text="-5"
-            android:textSize="13sp" />
+            android:textSize="15sp" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/metronome_sheet_minus_one"
             style="@style/OutlinedButton"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
             android:text="-1"
             android:textSize="13sp" />
 
@@ -52,18 +52,18 @@
         <com.google.android.material.button.MaterialButton
             android:id="@+id/metronome_sheet_plus_one"
             style="@style/OutlinedButton"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
             android:text="+1"
             android:textSize="13sp" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/metronome_sheet_plus_five"
             style="@style/OutlinedButton"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
             android:text="+5"
-            android:textSize="13sp" />
+            android:textSize="15sp" />
 
 
         <Space
@@ -75,26 +75,34 @@
             android:id="@+id/metronome_sheet_play"
             style="@style/IconOnlyButton"
             android:layout_width="48dp"
-            android:layout_height="40dp"
+            android:layout_height="48dp"
             android:layout_margin="16dp"
             android:contentDescription="@string/metronome_sheet_start"
-            app:cornerRadius="16dp"
+            app:cornerRadius="24dp"
             app:icon="@drawable/ic_play" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/metronome_sheet_stop"
             style="@style/IconOnlyButton"
             android:layout_width="48dp"
-            android:layout_height="40dp"
+            android:layout_height="48dp"
             android:layout_margin="16dp"
             android:contentDescription="@string/metronome_sheet_stop"
             android:visibility="gone"
-            app:cornerRadius="16dp"
+            app:cornerRadius="24dp"
             app:icon="@drawable/ic_stop"
             tools:visibility="visible" />
 
 
     </LinearLayout>
+
+    <TextView
+        android:id="@+id/metronome_sheet_tempo_description"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:textSize="18sp"
+        tools:text="Adagio" />
 
     <SeekBar
         android:id="@+id/metronome_sheet_slider"
@@ -186,11 +194,15 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/metronome_sheet_cpb_minus"
-                style="@style/OutlinedButton"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:textColor="?attr/colorOnSurfaceLowerContrast"
                 android:layout_width="32dp"
                 android:layout_height="32dp"
+                android:padding="0dp"
+                android:includeFontPadding="false"
+                android:textStyle="bold"
                 android:text="-"
-                android:textSize="13sp" />
+                android:textSize="18sp" />
 
             <TextView
                 android:id="@+id/metronome_sheet_cpb"
@@ -203,11 +215,15 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/metronome_sheet_cpb_plus"
-                style="@style/OutlinedButton"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:textColor="?attr/colorOnSurfaceLowerContrast"
                 android:layout_width="32dp"
                 android:layout_height="32dp"
+                android:padding="0dp"
+                android:includeFontPadding="false"
+                android:textStyle="bold"
                 android:text="+"
-                android:textSize="13sp" />
+                android:textSize="18sp" />
         </LinearLayout>
 
         <LinearLayout

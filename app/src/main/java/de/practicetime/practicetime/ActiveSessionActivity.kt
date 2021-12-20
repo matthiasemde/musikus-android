@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.graphics.Color
+import android.media.*
 import android.os.Bundle
 import android.os.Handler
 import android.os.IBinder
@@ -34,8 +35,15 @@ import java.util.*
 import kotlin.collections.ArrayList
 import android.view.MotionEvent
 import com.google.android.material.bottomsheet.BottomSheetBehavior
+import kotlinx.coroutines.Job
 import kotlin.math.abs
 import kotlin.math.round
+import kotlin.math.sin
+import android.media.AudioAttributes
+
+import kotlin.math.roundToInt
+import kotlin.system.measureTimeMillis
+
 
 class ActiveSessionActivity : AppCompatActivity() {
 
@@ -216,70 +224,240 @@ class ActiveSessionActivity : AppCompatActivity() {
      *  Bottom sheet init
      ********************************************/
 
-    private val metronomeMinBPM = 10
-    private val metronomeMaxBPM = 300
+    private val metronomeMinSilence = 500
+    private val sampleRate = 44_100
 
-    private var metronomeBeatsPerMinute = 120
-    private var metronomeBeatsPerBar = 4
-    private var metronomeClicksPerBeat = 1
+    private val metronomeMinBpm = 20
+    private val metronomeMaxBpm = 250
 
-    private lateinit var bpmView: TextView
+    private val metronomeMinBpb = 1
+    private val metronomeMaxBpb = 10
+
+    private val metronomeMinCpb = 1
+    private val metronomeMaxCpb = 10
+
+    companion object {
+        private var metronomeBeatsPerMinute = 120
+        private var metronomeBeatsPerBar = 4
+        private var metronomeClicksPerBeat = 1
+    }
 
     private lateinit var bpmMinusFiveView: MaterialButton
     private lateinit var bpmMinusOneView: MaterialButton
+    private lateinit var bpmView: TextView
     private lateinit var bpmPlusOneView: MaterialButton
     private lateinit var bpmPlusFiveView: MaterialButton
 
+    private lateinit var metronomePlayView: MaterialButton
+    private lateinit var metronomeStopView: MaterialButton
+
+    private lateinit var bpmDescriptionView: TextView
+
     private lateinit var bpmSliderView: SeekBar
 
+    private lateinit var bpbMinusView: MaterialButton
+    private lateinit var bpbView: TextView
+    private lateinit var bpbPlusView: MaterialButton
+
+    private lateinit var cpbMinusView: MaterialButton
+    private lateinit var cpbView: TextView
+    private lateinit var cpbPlusView: MaterialButton
+
     private lateinit var bpmTabTempoView: MaterialButton
-//    private lateinit var
 
     private var tabTempoLastTab: Long? = null
     private var tabTempoLastBpm = 120F
 
-    private fun initMetronomeBottomSheet() {
+    // calculate the interval for a single click in frames
+    private inline fun cpmToBytes(cpm: Int): Int {
+        // times two because each sample requires two bytes for 16BitPCM
+        return (2F * sampleRate.toFloat() * 60F / cpm.toFloat()).roundToInt()
+    }
 
-        bpmView = findViewById(R.id.metronome_sheet_bpm)
+    private fun initMetronomeBottomSheet() {
+        var play: Boolean
 
         bpmMinusFiveView = findViewById(R.id.metronome_sheet_minus_five)
         bpmMinusOneView = findViewById(R.id.metronome_sheet_minus_one)
+        bpmView = findViewById(R.id.metronome_sheet_bpm)
         bpmPlusOneView = findViewById(R.id.metronome_sheet_plus_one)
         bpmPlusFiveView = findViewById(R.id.metronome_sheet_plus_five)
 
+        metronomePlayView = findViewById(R.id.metronome_sheet_play)
+        metronomeStopView = findViewById(R.id.metronome_sheet_stop)
+
+        bpmDescriptionView = findViewById(R.id.metronome_sheet_tempo_description)
+
         bpmSliderView = findViewById(R.id.metronome_sheet_slider)
+
+        bpbMinusView = findViewById(R.id.metronome_sheet_bpb_minus)
+        bpbView = findViewById(R.id.metronome_sheet_bpb)
+        bpbPlusView = findViewById(R.id.metronome_sheet_bpb_plus)
+
+        cpbMinusView = findViewById(R.id.metronome_sheet_cpb_minus)
+        cpbView = findViewById(R.id.metronome_sheet_cpb)
+        cpbPlusView = findViewById(R.id.metronome_sheet_cpb_plus)
 
         bpmTabTempoView = findViewById(R.id.metronome_sheet_tab)
 
-        bpmMinusFiveView.setOnClickListener {
-            metronomeBeatsPerMinute = maxOf(metronomeMinBPM, metronomeBeatsPerMinute - 5)
-            syncUIToNewBPM()
+        bpmMinusFiveView.setOnClickListener { metronomeBeatsPerMinute -= 5; syncUIToNewBPM() }
+        bpmMinusOneView.setOnClickListener { metronomeBeatsPerMinute -= 1; syncUIToNewBPM() }
+        bpmPlusOneView.setOnClickListener { metronomeBeatsPerMinute += 1; syncUIToNewBPM() }
+        bpmPlusFiveView.setOnClickListener { metronomeBeatsPerMinute += 5; syncUIToNewBPM() }
+
+        val snap = resources.openRawResource(R.raw.snap).let {
+            it.skip(44) // skip 44 bytes for the header
+            val byteArray = it.readBytes()
+            it.close()
+            byteArray
         }
-        bpmMinusOneView.setOnClickListener {
-            metronomeBeatsPerMinute = maxOf(metronomeMinBPM, metronomeBeatsPerMinute - 1)
-            syncUIToNewBPM()
+
+        metronomePlayView.setOnClickListener {
+            play = true
+            metronomePlayView.visibility = View.GONE
+            metronomeStopView.visibility = View.VISIBLE
+
+            var click = 0
+
+            val track = AudioTrack.Builder()
+                .setAudioAttributes(AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_MEDIA)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                    .build())
+                .setAudioFormat(AudioFormat.Builder()
+                    .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
+                    .setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
+                    .setSampleRate(sampleRate)
+                    .build())
+                .setBufferSizeInBytes(AudioTrack.getMinBufferSize(
+                    sampleRate,
+                    AudioFormat.CHANNEL_OUT_MONO,
+                    AudioFormat.ENCODING_PCM_16BIT
+                ))
+                .setTransferMode(AudioTrack.MODE_STREAM)
+                .build()
+
+            track.play()
+
+            PracticeTime.executorService.execute {
+                var intervalInBytes = 0
+                var clickDuration = 0
+                var silenceDuration = 0
+
+                var silence = ByteArray(0)
+                var clickHigh = ByteArray(0)
+                var clickMedium = ByteArray(0)
+                var clickLow = ByteArray(0)
+
+                val filterLength = 500
+                val filterArray = FloatArray(filterLength)
+                filterArray.forEachIndexed { i, _ ->
+                    filterArray[i] = i.toFloat() / (filterLength-1)
+                }
+
+                while(play) {
+                    // check if metronomeBeatsPerMinute was changed and if so,
+                    // recalculate the silence array and store the new interval
+                    (cpmToBytes(metronomeClicksPerBeat * metronomeBeatsPerMinute)).let {
+                        if(it != intervalInBytes) {
+                            silenceDuration = minOf(metronomeMinSilence, it / 2)
+                            clickDuration = snap.size
+                            if (it >= clickDuration + metronomeMinSilence) {
+                                silenceDuration = it - clickDuration
+                            } else {
+                                clickDuration = it - silenceDuration
+                            }
+                            silence = ByteArray(silenceDuration) { 0 }
+
+                            clickHigh = snap.copyOfRange(0, clickDuration)
+                            clickMedium = snap.copyOfRange(0, clickDuration)
+                            clickLow = snap.copyOfRange(0, clickDuration)
+
+                            for (index in 0 until filterLength) {
+                                clickHigh[index] = (
+                                    clickHigh[index] * filterArray[index]
+                                ).toInt().toByte()
+                                clickHigh[clickDuration - 1 - index] = (
+                                    clickHigh[clickDuration - 1 - index] * filterArray[filterLength - 1 - index]
+                                ).toInt().toByte()
+                                clickMedium[index] = (
+                                    clickMedium[index] * filterArray[index]
+                                ).toInt().toByte()
+                                clickMedium[clickDuration - 1 - index] = (
+                                    clickMedium[clickDuration - 1 - index] * filterArray[filterLength - 1 - index]
+                                ).toInt().toByte()
+                                clickLow[index] = (
+                                    clickLow[index] * filterArray[index]
+                                ).toInt().toByte()
+                                clickLow[clickDuration - 1 - index] = (
+                                    clickLow[clickDuration - 1 - index] * filterArray[filterLength - 1 - index]
+                                ).toInt().toByte()
+                            }
+                            intervalInBytes = silenceDuration + clickDuration
+                        }
+                    }
+
+                    track.write(
+                        when {
+                            click == 0 -> {
+                                clickHigh
+                            }
+                            click % metronomeClicksPerBeat == 0 -> {
+                                clickMedium
+                            }
+                            else -> {
+                                clickLow
+                            }
+                        },
+                        0,
+                        clickDuration
+                    )
+
+                    track.write(silence, 0, silenceDuration)
+
+                    click = (click + 1) % (metronomeClicksPerBeat * metronomeBeatsPerBar)
+                }
+            }
         }
-        bpmPlusOneView.setOnClickListener {
-            metronomeBeatsPerMinute = minOf(metronomeMaxBPM, metronomeBeatsPerMinute + 1)
-            syncUIToNewBPM()
-        }
-        bpmPlusFiveView.setOnClickListener {
-            metronomeBeatsPerMinute = minOf(metronomeMaxBPM, metronomeBeatsPerMinute + 5)
-            syncUIToNewBPM()
+
+        metronomeStopView.setOnClickListener {
+            play = false
+            metronomePlayView.visibility = View.VISIBLE
+            metronomeStopView.visibility = View.GONE
         }
 
         bpmSliderView.apply {
-            max = metronomeMaxBPM - metronomeMinBPM
+            max = metronomeMaxBpm - metronomeMinBpm
             setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
                 override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                     if(fromUser) {
-                        metronomeBeatsPerMinute = progress + metronomeMinBPM
+                        metronomeBeatsPerMinute = progress + metronomeMinBpm
                         syncUIToNewBPM()
                     }
                 }
                 override fun onStartTrackingTouch(seekBar: SeekBar?) {}
                 override fun onStopTrackingTouch(seekBar: SeekBar?) {}
             })
+        }
+
+        bpbMinusView.setOnClickListener {
+            metronomeBeatsPerBar = maxOf(metronomeBeatsPerBar - 1, metronomeMinBpb)
+            bpbView.text = metronomeBeatsPerBar.toString()
+        }
+
+        bpbPlusView.setOnClickListener {
+            metronomeBeatsPerBar = minOf(metronomeBeatsPerBar + 1, metronomeMaxBpb)
+            bpbView.text = metronomeBeatsPerBar.toString()
+        }
+
+        cpbMinusView.setOnClickListener {
+            metronomeClicksPerBeat = maxOf(metronomeClicksPerBeat - 1, metronomeMinCpb)
+            cpbView.text = metronomeClicksPerBeat.toString()
+        }
+
+        cpbPlusView.setOnClickListener {
+            metronomeClicksPerBeat = minOf(metronomeClicksPerBeat + 1, metronomeMaxCpb)
+            cpbView.text = metronomeClicksPerBeat.toString()
         }
 
         bpmTabTempoView.setOnClickListener {
@@ -294,7 +472,6 @@ class ActiveSessionActivity : AppCompatActivity() {
                         else -> 1F
                     }
                     tabTempoLastBpm = (1 - alpha) * tabTempoLastBpm + alpha * newValue
-                    Log.d("TAB", "alpha: $alpha, tabLAstBpm: $tabTempoLastBpm")
                     round(tabTempoLastBpm).toInt()
                 }
                 syncUIToNewBPM()
@@ -312,12 +489,32 @@ class ActiveSessionActivity : AppCompatActivity() {
             metronomeBottomSheetBehaviour.state = BottomSheetBehavior.STATE_EXPANDED
         }
 
+        bpbView.text = metronomeBeatsPerBar.toString()
+        cpbView.text = metronomeClicksPerBeat.toString()
+
         syncUIToNewBPM()
     }
 
     private fun syncUIToNewBPM() {
+        metronomeBeatsPerMinute = minOf(metronomeBeatsPerMinute, metronomeMaxBpm)
+        metronomeBeatsPerMinute = maxOf(metronomeBeatsPerMinute, metronomeMinBpm)
+
         bpmView.text = metronomeBeatsPerMinute.toString()
-        bpmSliderView.progress = metronomeBeatsPerMinute + metronomeMinBPM
+        bpmDescriptionView.text = when(metronomeBeatsPerMinute) {
+            in 20..40 -> "Grave"
+            in 40..55 -> "Largo"
+            in 55..66 -> "Lento"
+            in 66..76 -> "Adagio"
+            in 76..92 -> "Andante"
+            in 92..108 -> "Andante moderato"
+            in 108..116 -> "Moderato"
+            in 116..120 -> "Allegro moderato"
+            in 120..156 -> "Allegro"
+            in 156..172 -> "Vivace"
+            in 172..200 -> "Presto"
+            else -> "Prestissimo"
+        }
+        bpmSliderView.progress = metronomeBeatsPerMinute - metronomeMinBpm
     }
 
     /*********************************************
