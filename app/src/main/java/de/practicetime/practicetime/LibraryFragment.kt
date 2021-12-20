@@ -156,12 +156,19 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
                 // set the click listeners for the menu options here
                 setOnMenuItemClickListener {
                     when (it.itemId) {
-                        R.id.topToolbarSelectionDelete -> deleteCategoryDialog?.apply {
-                            setMessage(context.getString(
-                                if(selectedCategories.size > 1) R.string.deleteCategoriesDialogMessage
-                                else R.string.deleteCategoryDialogMessage
-                            ))
-                            show()
+                        R.id.topToolbarSelectionDelete ->
+                            if(Singleton.serviceIsRunning)
+                                Toast.makeText(context, getString(R.string.cannot_delete_error), Toast.LENGTH_SHORT).show()
+                            else {
+                                deleteCategoryDialog?.apply {
+                                setMessage(
+                                    context.getString(
+                                        if (selectedCategories.size > 1) R.string.deleteCategoriesDialogMessage
+                                        else R.string.deleteCategoryDialogMessage
+                                    )
+                                )
+                                show()
+                            }
                         }
                         R.id.topToolbarSelectionEdit -> {
                             editCategoryDialog?.show(activeCategories[selectedCategories.first()])

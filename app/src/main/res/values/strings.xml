@@ -128,4 +128,5 @@
     <string name="paused_practicing">Practicing paused</string>
     <string name="notification_title">Practicing for %1$02d:%2$02d:%3$02d</string>
     <string name="notification_settings_description">Running Session</string>
+    <string name="cannot_delete_error">Category cannot be deleted during running session!</string>
 </resources>

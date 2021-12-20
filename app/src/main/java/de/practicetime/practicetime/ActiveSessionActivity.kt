@@ -159,7 +159,8 @@ class ActiveSessionActivity : AppCompatActivity() {
 
         val categoryList = findViewById<RecyclerView>(R.id.categoryList)
 
-        val rowNums = 3
+        var rowNums = 3
+
         categoryList.apply {
             layoutManager = GridLayoutManager(
                 context,
@@ -184,6 +185,8 @@ class ActiveSessionActivity : AppCompatActivity() {
                 scrollToPosition(0)
                 visibility = View.VISIBLE
             }
+
+           adjustSpanCountCatList()
         }
 
         // the handler for creating new categories
@@ -195,12 +198,23 @@ class ActiveSessionActivity : AppCompatActivity() {
                     dao?.getCategory(newCategoryId)?.let { activeCategories.add(0, it) }
                     categoryAdapter.notifyItemInserted(0)
                     categoryList.scrollToPosition(0)
+                    adjustSpanCountCatList()
                 }
             }
         }
 
         // create a new category dialog for adding new categories
         addCategoryDialog = CategoryDialog(this, ::addCategoryHandler)
+    }
+
+    private fun adjustSpanCountCatList() {
+        // change the span count if only few categories are displayed
+        val l = findViewById<RecyclerView>(R.id.categoryList).layoutManager as GridLayoutManager
+        l.spanCount = when {
+            (activeCategories.size < 3) -> 1
+            (activeCategories.size < 6) -> 2
+            else -> 3
+        }
     }
 
     /** called when we have a connection to the Service holding the data */
