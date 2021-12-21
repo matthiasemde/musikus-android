@@ -44,20 +44,7 @@
             android:contentDescription="@string/record_sheet_start_pause"
             android:enabled="false"
             app:cornerRadius="24dp"
-            app:icon="@drawable/record_pause" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/record_sheet_stop"
-            style="@style/IconOnlyButton"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:layout_margin="16dp"
-            android:contentDescription="@string/record_sheet_stop"
-            android:visibility="gone"
-            app:backgroundTint="?attr/colorError"
-            app:cornerRadius="24dp"
-            app:icon="@drawable/ic_stop"
-            tools:visibility="visible" />
+            app:icon="@drawable/start_stop" />
 
     </LinearLayout>
 

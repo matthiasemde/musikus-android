@@ -12,6 +12,7 @@ import android.view.ViewGroup
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.AppCompatButton
+import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.widget.addTextChangedListener
 import de.practicetime.practicetime.components.NumberInput
@@ -113,11 +114,7 @@ class GoalDialog(
         // finally, we use the alert dialog builder to create the alertDialog
         alertDialog = alertDialogBuilder.create()
         alertDialog?.window?.setBackgroundDrawable(
-            ResourcesCompat.getDrawable(
-                context.resources,
-                R.drawable.dialog_background,
-                context.theme
-            )
+            ContextCompat.getDrawable(context, R.drawable.dialog_background)
         )
     }
 

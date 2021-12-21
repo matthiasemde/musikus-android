@@ -5,6 +5,7 @@ import android.content.res.ColorStateList
 import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
+import androidx.core.content.ContextCompat
 import androidx.core.widget.addTextChangedListener
 import de.practicetime.practicetime.entities.Category
 
@@ -115,7 +116,7 @@ class CategoryDialog (
 
         // finally, we use the alert dialog builder to create the alertDialog
         alertDialog = alertDialogBuilder.create()
-        alertDialog?.window?.setBackgroundDrawable(context.getDrawable(R.drawable.dialog_background))
+        alertDialog?.window?.setBackgroundDrawable(ContextCompat.getDrawable(context, R.drawable.dialog_background))
     }
 
     // the dialog is complete if a name is entered and a color is selected
