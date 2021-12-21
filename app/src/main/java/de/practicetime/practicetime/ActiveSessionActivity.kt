@@ -1,15 +1,12 @@
 package de.practicetime.practicetime
 
+import android.app.Activity
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.graphics.Color
 import android.media.*
-import android.os.Bundle
-import android.os.Handler
-import android.os.IBinder
-import android.os.Looper
 import android.util.Log
 import android.util.TypedValue
 import android.view.LayoutInflater
@@ -35,14 +32,22 @@ import java.util.*
 import kotlin.collections.ArrayList
 import android.view.MotionEvent
 import com.google.android.material.bottomsheet.BottomSheetBehavior
-import kotlinx.coroutines.Job
 import kotlin.math.abs
 import kotlin.math.round
-import kotlin.math.sin
 import android.media.AudioAttributes
+import android.os.*
+import android.text.TextUtils
+import androidx.activity.result.contract.ActivityResultContracts
 
 import kotlin.math.roundToInt
-import kotlin.system.measureTimeMillis
+import androidx.documentfile.provider.DocumentFile
+import android.media.MediaRecorder
+
+import java.lang.Exception
+import java.text.SimpleDateFormat
+import android.Manifest
+import android.content.pm.PackageManager
+import java.io.File
 
 
 class ActiveSessionActivity : AppCompatActivity() {
@@ -62,6 +67,9 @@ class ActiveSessionActivity : AppCompatActivity() {
 
     private lateinit var metronomeBottomSheet: LinearLayout
     private lateinit var metronomeBottomSheetBehaviour: BottomSheetBehavior<LinearLayout>
+
+    private lateinit var recordingBottomSheet: LinearLayout
+    private lateinit var recordingBottomSheetBehaviour: BottomSheetBehavior<LinearLayout>
 
     /** Defines callbacks for service binding, passed to bindService()  */
     private val connection = object : ServiceConnection {
@@ -124,13 +132,8 @@ class ActiveSessionActivity : AppCompatActivity() {
             adaptUIPausedState(mService.paused)
         }
 
-        val dummyOnClick = View.OnClickListener {
-            Toast.makeText(this, "Coming Soon™", Toast.LENGTH_SHORT).show()
-        }
-
         initMetronomeBottomSheet()
-
-        findViewById<MaterialButton>(R.id.bottom_record).setOnClickListener(dummyOnClick)
+        initRecordBottomSheet()
 
         // call onBackPressed when upper left Button is pressed to respect custom animation
         findViewById<ImageButton>(R.id.btn_back).setOnClickListener {
@@ -221,7 +224,7 @@ class ActiveSessionActivity : AppCompatActivity() {
     }
 
     /*********************************************
-     *  Bottom sheet init
+     *  Metronome Bottom sheet init
      ********************************************/
 
     private val metronomeMinSilence = 500
@@ -515,6 +518,126 @@ class ActiveSessionActivity : AppCompatActivity() {
             else -> "Prestissimo"
         }
         bpmSliderView.progress = metronomeBeatsPerMinute - metronomeMinBpm
+    }
+
+    /*********************************************
+     *  Recording Bottom sheet init
+     ********************************************/
+
+    private lateinit var recordingTimeView: TextView
+    private var recordingTime = 0f
+
+    private lateinit var recordingSaveLocationView: TextView
+    private var recordSaveDirectory: DocumentFile? = null
+
+
+    private fun initRecordBottomSheet() {
+        /* Find all views in bottom sheet */
+        recordingTimeView = findViewById(R.id.record_sheet_recording_time)
+
+        val startPauseButtonView = findViewById<MaterialButton>(R.id.record_sheet_start_pause)
+        val stopButtonView = findViewById<MaterialButton>(R.id.record_sheet_stop)
+
+        recordingSaveLocationView = findViewById(R.id.record_sheet_save_location)
+
+        /* Initialize local variables */
+        val recorder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            MediaRecorder(this)
+        } else {
+            MediaRecorder()
+        }
+
+        var recording = false
+
+        val recordingNameFormat = SimpleDateFormat("dd_MM_yyyy_H_mm", Locale.getDefault())
+
+        /* Modify views */
+        recordingTimeView.text = getTimeString(recordingTime.toInt())
+
+        startPauseButtonView.setOnClickListener {
+            if(checkSelfPermission(Manifest.permission.RECORD_AUDIO) !=PackageManager.PERMISSION_GRANTED ) {
+                requestPermissions(Array(1){Manifest.permission.RECORD_AUDIO}, 69)
+            } else {
+                recording = !recording
+                startPauseButtonView.isSelected = recording
+
+                // if recordingTime is zero and recording was turned on, start a new recording
+                if(recording && recordingTime == 0f) {
+                    recordSaveDirectory?.createFile(
+                        "audio/*",
+                        recordingNameFormat.format(Date().time) + ".m4a"
+                    )?.let { newRecording ->
+                        Log.d("RECORD", "newRec. ${newRecording.uri.path}")
+                        recorder.apply{
+                            setAudioSource(MediaRecorder.AudioSource.MIC)
+                            setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
+                            setAudioEncoder(MediaRecorder.AudioEncoder.DEFAULT)
+                            setOutputFile(contentResolver.openFileDescriptor(newRecording.uri, "w")?.fileDescriptor)
+                        }
+                        try {
+                            recorder.prepare()
+                        } catch (e: Exception) {
+                            Log.d("Exeption", "$e")
+                            e.printStackTrace()
+                        }
+                        recorder.start()
+                        stopButtonView.visibility = View.VISIBLE
+                    }
+                }
+            }
+        }
+
+        stopButtonView.setOnClickListener {
+            if(recording) {
+                recorder.stop()
+                recorder.release()
+                recording = false
+                startPauseButtonView.isSelected = false
+                stopButtonView.visibility = View.GONE
+            }
+        }
+
+        recordingSaveLocationView.apply {
+            ellipsize = TextUtils.TruncateAt.MARQUEE
+            isSingleLine = true
+            marqueeRepeatLimit = -1 // minus one repeats indefinitely
+            isSelected = true
+        }
+
+        val getSaveDirectoryLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                // There are no request codes
+                recordSaveDirectory = result.data?.data?.let {
+                    val df = DocumentFile.fromTreeUri(this, it)
+                    if(df != null) {
+                        startPauseButtonView.isEnabled = true
+                        recordingSaveLocationView.text = df.uri.lastPathSegment?.split(':')?.last()
+                    } else {
+                        startPauseButtonView.isEnabled = false
+                        recordingSaveLocationView.text = ""
+                    }
+                    df
+                }
+            }
+        }
+
+        findViewById<MaterialButton>(R.id.record_sheet_select_save_location).setOnClickListener { _ ->
+            getSaveDirectoryLauncher.launch(Intent(Intent.ACTION_OPEN_DOCUMENT_TREE))
+        }
+
+        recordingBottomSheet = findViewById(R.id.record_sheet_layout)
+        recordingBottomSheetBehaviour = BottomSheetBehavior.from(recordingBottomSheet)
+
+        recordingBottomSheetBehaviour.state = BottomSheetBehavior.STATE_HIDDEN
+
+        findViewById<MaterialButton>(R.id.bottom_record).setOnClickListener {
+            recordingBottomSheetBehaviour.state = BottomSheetBehavior.STATE_EXPANDED
+        }
+
+    }
+
+    private fun syncUIToNewRecordingLength() {
+
     }
 
     /*********************************************

@@ -242,6 +242,7 @@
         tools:visibility="gone">
 
         <include layout="@layout/bottom_sheet_dialog_metronome" />
+        <include layout="@layout/bottom_sheet_dialog_record" />
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
 

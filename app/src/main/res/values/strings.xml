@@ -112,4 +112,8 @@
     <string name="metronome_sheet_clicks_per_beat">Clicks/beat</string>
     <string name="metronome_sheet_default_clicks_per_beat">1</string>
     <string name="metronome_sheet_tab_tempo">Tab tempo</string>
+    <string name="record_sheet_start_pause">Start/Pause recording</string>
+    <string name="record_sheet_stop">Stop recording</string>
+    <string name="record_sheet_select_save_location">Select a save location</string>
+    <string name="record_sheet_select_save_location_button">Select</string>
 </resources>

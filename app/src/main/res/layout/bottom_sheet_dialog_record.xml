@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/record_sheet_layout"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/background_bottom_sheet"
+    android:orientation="vertical"
+    android:paddingStart="24dp"
+    android:paddingTop="16dp"
+    android:paddingEnd="24dp"
+    android:paddingBottom="32dp"
+    app:behavior_hideable="true"
+    app:behavior_peekHeight="96dp"
+    app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/record_sheet_recording_time"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_weight="1"
+            android:includeFontPadding="false"
+            android:textSize="32sp"
+            tools:text="00:00:00" />
+
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/record_sheet_start_pause"
+            style="@style/IconOnlyButton"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_gravity="right|center_vertical"
+            android:layout_margin="16dp"
+            app:backgroundTint="@color/toggle_enabled_button"
+            android:contentDescription="@string/record_sheet_start_pause"
+            android:enabled="false"
+            app:cornerRadius="24dp"
+            app:icon="@drawable/record_pause" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/record_sheet_stop"
+            style="@style/IconOnlyButton"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_margin="16dp"
+            android:contentDescription="@string/record_sheet_stop"
+            android:visibility="gone"
+            app:backgroundTint="?attr/colorError"
+            app:cornerRadius="24dp"
+            app:icon="@drawable/ic_stop"
+            tools:visibility="visible" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp">
+
+        <TextView
+            android:id="@+id/record_sheet_save_location"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="12dp"
+            android:layout_weight="1"
+            android:background="@drawable/spinner_background"
+            android:padding="8dp"
+            android:text="@string/record_sheet_select_save_location" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/record_sheet_select_save_location"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:text="@string/record_sheet_select_save_location_button" />
+    </LinearLayout>
+
+
+</LinearLayout>
