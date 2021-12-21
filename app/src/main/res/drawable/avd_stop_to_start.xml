@@ -9,5 +9,5 @@
 
     <target
         android:name="rotation_group"
-        android:animation="@animator/rotate_90_degrees" />
+        android:animation="@animator/rotate_in_90_degrees" />
 </animated-vector>

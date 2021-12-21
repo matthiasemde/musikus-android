@@ -3,7 +3,16 @@
     android:height="24dp"
     android:viewportWidth="24"
     android:viewportHeight="24">
-  <path
-      android:fillColor="@color/md_purple_A700"
-      android:pathData="M8,5v14l11,-7z"/>
+
+  <group
+      android:name="rotation_group"
+      android:pivotX="12"
+      android:pivotY="12">
+
+    <path
+        android:name="play"
+        android:fillColor="@color/md_purple_A700"
+        android:pathData="@string/play"/>
+
+  </group>
 </vector>

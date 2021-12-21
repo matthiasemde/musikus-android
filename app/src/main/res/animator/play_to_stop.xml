@@ -2,8 +2,8 @@
 <objectAnimator
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:propertyName="pathData"
-    android:valueFrom="@string/square"
-    android:valueTo="@string/circle"
+    android:valueFrom="@string/play"
+    android:valueTo="@string/square"
     android:duration="800"
     android:interpolator="@android:interpolator/fast_out_slow_in"
     android:valueType="pathType"/>

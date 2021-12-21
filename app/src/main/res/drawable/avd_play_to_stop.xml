@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <animated-vector
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:drawable="@drawable/ic_record">
+    android:drawable="@drawable/ic_play">
 
     <target
-        android:name="record"
-        android:animation="@animator/start_to_stop" />
+        android:name="play"
+        android:animation="@animator/play_to_stop" />
 
     <target
         android:name="rotation_group"

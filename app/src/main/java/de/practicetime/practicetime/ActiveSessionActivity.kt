@@ -43,13 +43,13 @@ import kotlin.math.roundToInt
 import androidx.documentfile.provider.DocumentFile
 import android.media.MediaRecorder
 
-import java.lang.Exception
 import java.text.SimpleDateFormat
 import android.Manifest
 import android.content.pm.PackageManager
 import android.graphics.drawable.AnimatedVectorDrawable
+import android.net.Uri
+import android.provider.DocumentsContract
 import androidx.core.content.ContextCompat
-import java.io.File
 
 
 class ActiveSessionActivity : AppCompatActivity() {
@@ -253,8 +253,7 @@ class ActiveSessionActivity : AppCompatActivity() {
     private lateinit var bpmPlusOneView: MaterialButton
     private lateinit var bpmPlusFiveView: MaterialButton
 
-    private lateinit var metronomePlayView: MaterialButton
-    private lateinit var metronomeStopView: MaterialButton
+    private lateinit var metronomePlayStopView: MaterialButton
 
     private lateinit var bpmDescriptionView: TextView
 
@@ -280,7 +279,7 @@ class ActiveSessionActivity : AppCompatActivity() {
     }
 
     private fun initMetronomeBottomSheet() {
-        var play: Boolean
+        var play = false
 
         bpmMinusFiveView = findViewById(R.id.metronome_sheet_minus_five)
         bpmMinusOneView = findViewById(R.id.metronome_sheet_minus_one)
@@ -288,8 +287,7 @@ class ActiveSessionActivity : AppCompatActivity() {
         bpmPlusOneView = findViewById(R.id.metronome_sheet_plus_one)
         bpmPlusFiveView = findViewById(R.id.metronome_sheet_plus_five)
 
-        metronomePlayView = findViewById(R.id.metronome_sheet_play)
-        metronomeStopView = findViewById(R.id.metronome_sheet_stop)
+        metronomePlayStopView = findViewById(R.id.metronome_sheet_play_stop)
 
         bpmDescriptionView = findViewById(R.id.metronome_sheet_tempo_description)
 
@@ -317,119 +315,128 @@ class ActiveSessionActivity : AppCompatActivity() {
             byteArray
         }
 
-        metronomePlayView.setOnClickListener {
-            play = true
-            metronomePlayView.visibility = View.GONE
-            metronomeStopView.visibility = View.VISIBLE
+        metronomePlayStopView.setOnClickListener {
+            val playToStop = ContextCompat.getDrawable(this, R.drawable.avd_play_to_stop) as AnimatedVectorDrawable
+            val stopToPlay = ContextCompat.getDrawable(this, R.drawable.avd_stop_to_play) as AnimatedVectorDrawable
 
-            var click = 0
+            if(play) {
+                play = false
+                metronomePlayStopView.icon = stopToPlay
+                stopToPlay.start()
+            } else {
+                play = true
+                metronomePlayStopView.icon = playToStop
+                playToStop.start()
 
-            val track = AudioTrack.Builder()
-                .setAudioAttributes(AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_MEDIA)
-                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                    .build())
-                .setAudioFormat(AudioFormat.Builder()
-                    .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
-                    .setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
-                    .setSampleRate(sampleRate)
-                    .build())
-                .setBufferSizeInBytes(AudioTrack.getMinBufferSize(
-                    sampleRate,
-                    AudioFormat.CHANNEL_OUT_MONO,
-                    AudioFormat.ENCODING_PCM_16BIT
-                ))
-                .setTransferMode(AudioTrack.MODE_STREAM)
-                .build()
+                var click = 0
+                val track = AudioTrack.Builder()
+                    .setAudioAttributes(
+                        AudioAttributes.Builder()
+                            .setUsage(AudioAttributes.USAGE_MEDIA)
+                            .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                            .build()
+                    )
+                    .setAudioFormat(
+                        AudioFormat.Builder()
+                            .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
+                            .setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
+                            .setSampleRate(sampleRate)
+                            .build()
+                    )
+                    .setBufferSizeInBytes(
+                        AudioTrack.getMinBufferSize(
+                            sampleRate,
+                            AudioFormat.CHANNEL_OUT_MONO,
+                            AudioFormat.ENCODING_PCM_16BIT
+                        )
+                    )
+                    .setTransferMode(AudioTrack.MODE_STREAM)
+                    .build()
 
-            track.play()
+                track.play()
 
-            PracticeTime.executorService.execute {
-                var intervalInBytes = 0
-                var clickDuration = 0
-                var silenceDuration = 0
+                PracticeTime.executorService.execute {
+                    var intervalInBytes = 0
+                    var clickDuration = 0
+                    var silenceDuration = 0
 
-                var silence = ByteArray(0)
-                var clickHigh = ByteArray(0)
-                var clickMedium = ByteArray(0)
-                var clickLow = ByteArray(0)
+                    var silence = ByteArray(0)
+                    var clickHigh = ByteArray(0)
+                    var clickMedium = ByteArray(0)
+                    var clickLow = ByteArray(0)
 
-                val filterLength = 500
-                val filterArray = FloatArray(filterLength)
-                filterArray.forEachIndexed { i, _ ->
-                    filterArray[i] = i.toFloat() / (filterLength-1)
-                }
-
-                while(play) {
-                    // check if metronomeBeatsPerMinute was changed and if so,
-                    // recalculate the silence array and store the new interval
-                    (cpmToBytes(metronomeClicksPerBeat * metronomeBeatsPerMinute)).let {
-                        if(it != intervalInBytes) {
-                            silenceDuration = minOf(metronomeMinSilence, it / 2)
-                            clickDuration = snap.size
-                            if (it >= clickDuration + metronomeMinSilence) {
-                                silenceDuration = it - clickDuration
-                            } else {
-                                clickDuration = it - silenceDuration
-                            }
-                            silence = ByteArray(silenceDuration) { 0 }
-
-                            clickHigh = snap.copyOfRange(0, clickDuration)
-                            clickMedium = snap.copyOfRange(0, clickDuration)
-                            clickLow = snap.copyOfRange(0, clickDuration)
-
-                            for (index in 0 until filterLength) {
-                                clickHigh[index] = (
-                                    clickHigh[index] * filterArray[index]
-                                ).toInt().toByte()
-                                clickHigh[clickDuration - 1 - index] = (
-                                    clickHigh[clickDuration - 1 - index] * filterArray[filterLength - 1 - index]
-                                ).toInt().toByte()
-                                clickMedium[index] = (
-                                    clickMedium[index] * filterArray[index]
-                                ).toInt().toByte()
-                                clickMedium[clickDuration - 1 - index] = (
-                                    clickMedium[clickDuration - 1 - index] * filterArray[filterLength - 1 - index]
-                                ).toInt().toByte()
-                                clickLow[index] = (
-                                    clickLow[index] * filterArray[index]
-                                ).toInt().toByte()
-                                clickLow[clickDuration - 1 - index] = (
-                                    clickLow[clickDuration - 1 - index] * filterArray[filterLength - 1 - index]
-                                ).toInt().toByte()
-                            }
-                            intervalInBytes = silenceDuration + clickDuration
-                        }
+                    val filterLength = 500
+                    val filterArray = FloatArray(filterLength)
+                    filterArray.forEachIndexed { i, _ ->
+                        filterArray[i] = i.toFloat() / (filterLength - 1)
                     }
 
-                    track.write(
-                        when {
-                            click == 0 -> {
-                                clickHigh
-                            }
-                            click % metronomeClicksPerBeat == 0 -> {
-                                clickMedium
-                            }
-                            else -> {
-                                clickLow
-                            }
-                        },
-                        0,
-                        clickDuration
-                    )
+                    while (play) {
+                        // check if metronomeBeatsPerMinute was changed and if so,
+                        // recalculate the silence array and store the new interval
+                        (cpmToBytes(metronomeClicksPerBeat * metronomeBeatsPerMinute)).let {
+                            if (it != intervalInBytes) {
+                                silenceDuration = minOf(metronomeMinSilence, it / 2)
+                                clickDuration = snap.size
+                                if (it >= clickDuration + metronomeMinSilence) {
+                                    silenceDuration = it - clickDuration
+                                } else {
+                                    clickDuration = it - silenceDuration
+                                }
+                                silence = ByteArray(silenceDuration) { 0 }
 
-                    track.write(silence, 0, silenceDuration)
+                                clickHigh = snap.copyOfRange(0, clickDuration)
+                                clickMedium = snap.copyOfRange(0, clickDuration)
+                                clickLow = snap.copyOfRange(0, clickDuration)
 
-                    click = (click + 1) % (metronomeClicksPerBeat * metronomeBeatsPerBar)
+                                for (index in 0 until filterLength) {
+                                    clickHigh[index] = (
+                                            clickHigh[index] * filterArray[index]
+                                            ).toInt().toByte()
+                                    clickHigh[clickDuration - 1 - index] = (
+                                            clickHigh[clickDuration - 1 - index] * filterArray[filterLength - 1 - index]
+                                            ).toInt().toByte()
+                                    clickMedium[index] = (
+                                            clickMedium[index] * filterArray[index]
+                                            ).toInt().toByte()
+                                    clickMedium[clickDuration - 1 - index] = (
+                                            clickMedium[clickDuration - 1 - index] * filterArray[filterLength - 1 - index]
+                                            ).toInt().toByte()
+                                    clickLow[index] = (
+                                            clickLow[index] * filterArray[index]
+                                            ).toInt().toByte()
+                                    clickLow[clickDuration - 1 - index] = (
+                                            clickLow[clickDuration - 1 - index] * filterArray[filterLength - 1 - index]
+                                            ).toInt().toByte()
+                                }
+                                intervalInBytes = silenceDuration + clickDuration
+                            }
+                        }
+
+                        track.write(
+                            when {
+                                click == 0 -> {
+                                    clickHigh
+                                }
+                                click % metronomeClicksPerBeat == 0 -> {
+                                    clickMedium
+                                }
+                                else -> {
+                                    clickLow
+                                }
+                            },
+                            0,
+                            clickDuration
+                        )
+
+                        track.write(silence, 0, silenceDuration)
+
+                        click = (click + 1) % (metronomeClicksPerBeat * metronomeBeatsPerBar)
+                    }
                 }
             }
         }
 
-        metronomeStopView.setOnClickListener {
-            play = false
-            metronomePlayView.visibility = View.VISIBLE
-            metronomeStopView.visibility = View.GONE
-        }
 
         bpmSliderView.apply {
             max = metronomeMaxBpm - metronomeMinBpm
@@ -527,6 +534,7 @@ class ActiveSessionActivity : AppCompatActivity() {
      ********************************************/
 
     private lateinit var recordingTimeView: TextView
+    private lateinit var recordingTimeCsView: TextView
     private var recordingStartTime: Long? = null
 
     private lateinit var recordingSaveLocationView: TextView
@@ -537,42 +545,50 @@ class ActiveSessionActivity : AppCompatActivity() {
     private fun initRecordBottomSheet() {
         /* Find all views in bottom sheet */
         recordingTimeView = findViewById(R.id.record_sheet_recording_time)
+        recordingTimeCsView = findViewById(R.id.record_sheet_recording_time_cs)
 
         val startStopButtonView = findViewById<MaterialButton>(R.id.record_sheet_start_pause)
 
         recordingSaveLocationView = findViewById(R.id.record_sheet_save_location)
+        val selectSaveLocationView = findViewById<MaterialButton>(R.id.record_sheet_select_save_location)
 
         /* Initialize local variables */
-        val recorder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            MediaRecorder(this)
-        } else {
-            MediaRecorder()
-        }
-
-        val recordingNameFormat = SimpleDateFormat("dd_MM_yyyy_H_mm", Locale.getDefault())
+        val recordingNameFormat = SimpleDateFormat("_dd-MM-yyyy'T'H_mm_ss", Locale.getDefault())
 
         /* Modify views */
         recordingTimeView.text = "00:00:00"
+        recordingTimeCsView.text = "00"
         recordingStartTime?.let {
-            recordingTimeView.text = getTimeString((Date().time - it).toInt() / 1000)
+            val diff = (Date().time - it).toInt()
+            recordingTimeView.text = getTimeString(diff / 1000)
+            recordingTimeCsView.text = "%02d".format(diff % 1000 / 10)
         }
+
+
+        var recorder: MediaRecorder? = null
 
         startStopButtonView.setOnClickListener {
             val startToStop = ContextCompat.getDrawable(this, R.drawable.avd_start_to_stop) as AnimatedVectorDrawable
             val stopToStart = ContextCompat.getDrawable(this, R.drawable.avd_stop_to_start) as AnimatedVectorDrawable
-
             if(!recording) {
                 if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
                     requestPermissions(Array(1) { Manifest.permission.RECORD_AUDIO }, 69)
                 } else {
+                    recorder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                        MediaRecorder(this)
+                    } else {
+                        MediaRecorder()
+                    }
+
                     recordSaveDirectory?.createFile(
                         "audio/mp4",
-                        recordingNameFormat.format(Date().time)
+                        (if(mService.sectionBuffer.isNotEmpty()) mService.sectionBuffer.last().first.category_id.toString()
+                        else "PracticeTime") + recordingNameFormat.format(Date().time)
                     )?.let { newRecording ->
                         Log.d("RECORD", "newRec. ${newRecording.uri.path}")
-                        recorder.apply {
+                        recorder?.apply {
                             setAudioSource(MediaRecorder.AudioSource.MIC)
-                            setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP)
+                            setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
                             setAudioEncoder(MediaRecorder.AudioEncoder.AMR_WB)
                             setAudioChannels(2)
                             setAudioEncodingBitRate(128_000)
@@ -589,20 +605,38 @@ class ActiveSessionActivity : AppCompatActivity() {
                         recording = true
                         startStopButtonView.icon = startToStop
                         startToStop.start()
+                        selectSaveLocationView.isEnabled = false
                         recordingStartTime = Date().time
                         recordingTimeHandler.post(incrementRecordingTime)
                     }
                 }
             } else {
-                recording = false
-                recordingStartTime = null
-                recordingTimeView.text = "00:00:00"
-                startStopButtonView.icon = stopToStart
-                stopToStart.start()
-                recorder.stop()
-                recorder.release()
+                // recording has to be at least one second long
+                recordingStartTime?.let {
+                    if(Date().time - it > 1000 ) {
+                        recording = false
+                        recordingStartTime = null
+                        selectSaveLocationView.isEnabled = true
+//                        recordingTimeView.text = "00:00:00"
+                        startStopButtonView.icon = stopToStart
+                        stopToStart.start()
+                        recorder?.apply {
+                            stop()
+                            release()
+                        }
+                    }
+                }
             }
         }
+
+        recordSaveDirectory = getPreferences(Context.MODE_PRIVATE)
+            .getString("recordings_directory", null)
+            ?.let {
+                val df = DocumentFile.fromTreeUri(this, Uri.parse(it))
+                recordingSaveLocationView.text = df?.uri?.lastPathSegment?.split(':')?.last()
+                startStopButtonView.isEnabled = true
+                df
+            }
 
         recordingSaveLocationView.apply {
             ellipsize = TextUtils.TruncateAt.MARQUEE
@@ -617,8 +651,13 @@ class ActiveSessionActivity : AppCompatActivity() {
                 recordSaveDirectory = result.data?.data?.let {
                     val df = DocumentFile.fromTreeUri(this, it)
                     if(df != null) {
+                        contentResolver.takePersistableUriPermission(it, Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
                         startStopButtonView.isEnabled = true
                         recordingSaveLocationView.text = df.uri.lastPathSegment?.split(':')?.last()
+                        getPreferences(Context.MODE_PRIVATE)
+                            .edit()
+                            .putString("recordings_directory", df.uri.toString())
+                            .apply()
                     } else {
                         startStopButtonView.isEnabled = false
                         recordingSaveLocationView.text = ""
@@ -628,8 +667,18 @@ class ActiveSessionActivity : AppCompatActivity() {
             }
         }
 
-        findViewById<MaterialButton>(R.id.record_sheet_select_save_location).setOnClickListener { _ ->
+        selectSaveLocationView.setOnClickListener {
             getSaveDirectoryLauncher.launch(Intent(Intent.ACTION_OPEN_DOCUMENT_TREE))
+        }
+
+        findViewById<MaterialButton>(R.id.record_sheet_open_save_location).setOnClickListener {
+            recordSaveDirectory?.let {
+                val intent = Intent(Intent.ACTION_VIEW)
+                if(DocumentFile.isDocumentUri(this, it.uri)) {
+                    intent.setDataAndType(it.uri, DocumentsContract.Document.MIME_TYPE_DIR)
+                    startActivity(intent)
+                }
+            }
         }
 
         recordingBottomSheet = findViewById(R.id.record_sheet_layout)
@@ -649,9 +698,11 @@ class ActiveSessionActivity : AppCompatActivity() {
         override fun run() {
             if(recording) {
                 recordingStartTime?.let {
-                    recordingTimeView.text = getTimeString((Date().time - it).toInt() / 1000)
+                    val diff = (Date().time - it).toInt()
+                    recordingTimeView.text = getTimeString(diff / 1000)
+                    recordingTimeCsView.text = "%02d".format(diff % 1000 / 10)
                 }
-                recordingTimeHandler.postDelayed(this, 200L)
+                recordingTimeHandler.postDelayed(this, 10L)
             }
         }
     }
