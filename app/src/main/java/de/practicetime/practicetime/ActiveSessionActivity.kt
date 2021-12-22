@@ -355,7 +355,7 @@ class ActiveSessionActivity : AppCompatActivity() {
 
                 track.play()
 
-                PracticeTime.executorService.execute {
+                (application as PracticeTime).executorService.execute {
                     var intervalInBytes = 0
                     var clickDuration = 0
                     var silenceDuration = 0

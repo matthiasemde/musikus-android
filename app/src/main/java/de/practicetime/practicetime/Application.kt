@@ -5,9 +5,5 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
 class PracticeTime : Application() {
-
-    companion object {
-        val executorService: ExecutorService = Executors.newFixedThreadPool(4)
-    }
-
+    val executorService = Executors.newFixedThreadPool(4)
 }
