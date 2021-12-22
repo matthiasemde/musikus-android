@@ -10,14 +10,15 @@ import androidx.core.widget.addTextChangedListener
 import android.R
 
 import android.content.res.TypedArray
-
-
+import android.graphics.Rect
 
 
 class NumberInput(
     context: Context,
     attrs: AttributeSet,
 ) : androidx.appcompat.widget.AppCompatEditText(context, attrs) {
+
+    private var firstEdit = false
 
     init {
         val a = context.obtainStyledAttributes(attrs, de.practicetime.practicetime.R.styleable.numberInput)
@@ -30,6 +31,10 @@ class NumberInput(
         val maxLength = maxValue.toString().length
 
         addTextChangedListener {
+            if(firstEdit) {
+                it?.replace(0, it.length - 1, "", 0, 0)
+                firstEdit = false
+            }
             val diff = maxLength - (it?.length ?: 0)
             if (diff < 0)
                 this.setText(it?.drop(-diff))
@@ -47,13 +52,20 @@ class NumberInput(
         }
     }
 
+    override fun onFocusChanged(focused: Boolean, direction: Int, previouslyFocusedRect: Rect?) {
+        if(focused) {
+            firstEdit = true
+        }
+        super.onFocusChanged(focused, direction, previouslyFocusedRect)
+    }
+
     private fun showKeyboard() {
         (context
             .getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager)
             .showSoftInput(this, InputMethodManager.SHOW_IMPLICIT)
     }
 
-    private class InputFilterMax(
+    private inner class InputFilterMax(
         private var max: Int
     ) : InputFilter {
         init {
@@ -71,6 +83,7 @@ class NumberInput(
             dend: Int
         ): CharSequence {
             try {
+                if(firstEdit) return if(source.toString().toInt() in 0..max) source else "0"
                 val input = (dest.slice(0 until dstart).toString()
                         + source.toString()
                         + dest.slice(dend until dest.length).toString()
