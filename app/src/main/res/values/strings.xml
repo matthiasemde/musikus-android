@@ -116,5 +116,7 @@
     <string name="record_sheet_stop">Stop recording</string>
     <string name="record_sheet_select_save_location">Select a save location</string>
     <string name="record_sheet_select_save_location_button">Select</string>
-    <string name="record_sheet_open_save_location_button">Listen to recordings</string>
+    <string name="record_sheet_open_save_location_button">Open selected save location</string>
+    <string name="record_snackbar_message">%s saved</string>
+    <string name="record_snackbar_undo">Delete</string>
 </resources>

@@ -558,6 +558,8 @@ class ActiveSessionActivity : AppCompatActivity() {
 
         var recordingButtonLocked = false
 
+        var newRecordingFile: DocumentFile? = null
+
         /* Modify views */
         recordingTimeView.text = "00:00:00"
         recordingTimeCsView.text = "00"
@@ -585,7 +587,7 @@ class ActiveSessionActivity : AppCompatActivity() {
                         MediaRecorder()
                     }
 
-                    recordSaveDirectory?.createFile(
+                    newRecordingFile = recordSaveDirectory?.createFile(
                         "audio/mp4",
                         (if(mService.sectionBuffer.isNotEmpty()) mService.sectionBuffer.last().first.category_id.toString()
                         else "PracticeTime") + recordingNameFormat.format(Date().time)
@@ -617,27 +619,42 @@ class ActiveSessionActivity : AppCompatActivity() {
                         startStopButtonView.icon = startToStop
                         startToStop.start()
                         recordingTimeHandler.post(incrementRecordingTime)
+                        newRecording
                     }
                 }
             } else {
-                // recording has to be at least one second long
-                recordingStartTime?.let {
-                    if(Date().time - it > 1000 ) {
-                        recording = false
-                        recordingStartTime = null
-//                        recordingTimeView.text = "00:00:00"
-                        startStopButtonView.icon = stopToStart
-                        stopToStart.start()
-                        selectSaveLocationView.isEnabled = true
-                        recordingButtonLocked = true
-                        Handler(Looper.getMainLooper()).postDelayed({
-                            recordingButtonLocked = false
-                        }, 1000L)
-                        recorder?.apply {
-                            stop()
-                            release()
-                        }
+                recording = false
+                recordingStartTime = null
+//                recordingTimeView.text = "00:00:00"
+                startStopButtonView.icon = stopToStart
+                stopToStart.start()
+                selectSaveLocationView.isEnabled = true
+                recordingButtonLocked = true
+                Handler(Looper.getMainLooper()).postDelayed({
+                    recordingButtonLocked = false
+                }, 1000L)
+                recorder?.apply {
+                    stop()
+                    release()
+                }
+
+                recordingTimeView.setOnClickListener {
+                    Log.d("DEBUG", "${newRecordingFile?.uri?.lastPathSegment}")
+                }
+
+                Snackbar.make(
+                    findViewById(R.id.coordinator_layout_active_session),
+                    resources.getString(R.string.record_snackbar_message).format(
+                        newRecordingFile?.uri?.lastPathSegment?.split('/')?.last()
+                    ),
+                    7000
+                ).apply {
+                    setAction(R.string.record_snackbar_undo) {
+                        newRecordingFile?.delete()
+                        this.dismiss()
                     }
+                    anchorView = recordingBottomSheet
+                    show()
                 }
             }
         }
