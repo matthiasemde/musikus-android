@@ -554,6 +554,9 @@ class ActiveSessionActivity : AppCompatActivity() {
 
         /* Initialize local variables */
         val recordingNameFormat = SimpleDateFormat("_dd-MM-yyyy'T'H_mm_ss", Locale.getDefault())
+        var recorder: MediaRecorder? = null
+
+        var recordingButtonLocked = false
 
         /* Modify views */
         recordingTimeView.text = "00:00:00"
@@ -565,11 +568,13 @@ class ActiveSessionActivity : AppCompatActivity() {
         }
 
 
-        var recorder: MediaRecorder? = null
 
         startStopButtonView.setOnClickListener {
+            if (recordingButtonLocked) return@setOnClickListener
+
             val startToStop = ContextCompat.getDrawable(this, R.drawable.avd_start_to_stop) as AnimatedVectorDrawable
             val stopToStart = ContextCompat.getDrawable(this, R.drawable.avd_stop_to_start) as AnimatedVectorDrawable
+
             if(!recording) {
                 if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
                     requestPermissions(Array(1) { Manifest.permission.RECORD_AUDIO }, 69)
@@ -603,10 +608,14 @@ class ActiveSessionActivity : AppCompatActivity() {
                             start()
                         }
                         recording = true
+                        recordingStartTime = Date().time
+                        recordingButtonLocked = true
+                        Handler(Looper.getMainLooper()).postDelayed({
+                            recordingButtonLocked = false
+                        }, 1000L)
+                        selectSaveLocationView.isEnabled = false
                         startStopButtonView.icon = startToStop
                         startToStop.start()
-                        selectSaveLocationView.isEnabled = false
-                        recordingStartTime = Date().time
                         recordingTimeHandler.post(incrementRecordingTime)
                     }
                 }
@@ -616,10 +625,14 @@ class ActiveSessionActivity : AppCompatActivity() {
                     if(Date().time - it > 1000 ) {
                         recording = false
                         recordingStartTime = null
-                        selectSaveLocationView.isEnabled = true
 //                        recordingTimeView.text = "00:00:00"
                         startStopButtonView.icon = stopToStart
                         stopToStart.start()
+                        selectSaveLocationView.isEnabled = true
+                        recordingButtonLocked = true
+                        Handler(Looper.getMainLooper()).postDelayed({
+                            recordingButtonLocked = false
+                        }, 1000L)
                         recorder?.apply {
                             stop()
                             release()
