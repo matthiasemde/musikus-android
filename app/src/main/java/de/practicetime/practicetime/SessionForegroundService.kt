@@ -3,12 +3,16 @@ package de.practicetime.practicetime
 import android.app.*
 import android.content.Context
 import android.content.Intent
+import android.media.AudioAttributes
+import android.media.AudioFormat
+import android.media.AudioTrack
 import android.os.*
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import de.practicetime.practicetime.entities.PracticeSection
 import java.util.*
 import kotlin.collections.ArrayList
+import kotlin.math.roundToInt
 
 
 class SessionForegroundService : Service() {
@@ -230,9 +234,167 @@ class SessionForegroundService : Service() {
         fun getService(): SessionForegroundService = this@SessionForegroundService
     }
 
+    /****************************************************************************
+     *  Metronome Functionality
+     ***************************************************************************/
+
+    private val metronomeMinSilence = 500
+    private val sampleRate = 44_100
+
+    val metronomeMinBpm = 20
+    val metronomeMaxBpm = 250
+
+    private val metronomeMinBpb = 1
+    private val metronomeMaxBpb = 10
+
+    private val metronomeMinCpb = 1
+    private val metronomeMaxCpb = 10
+
+    var metronomeBeatsPerMinute = 120
+        set(value) {
+            field = value.coerceIn(metronomeMinBpm, metronomeMaxBpm)
+        }
+    var metronomeBeatsPerBar = 4
+        set(value) {
+            field = value.coerceIn(metronomeMinBpb, metronomeMaxBpb)
+        }
+    var metronomeClicksPerBeat = 1
+        set(value) {
+            field = value.coerceIn(metronomeMinCpb, metronomeMaxCpb)
+        }
+
+    var metronomePlaying = false
+
+    var beat1 = ByteArray(5000) {0}
+    var beat2 = ByteArray(5000) {0}
+    var beat3 = ByteArray(5000) {0}
+
+    // calculate the interval for a single click in frames
+    private fun cpmToBytes(cpm: Int): Int {
+        // times two because each sample requires two bytes for 16BitPCM
+        return (2F * sampleRate.toFloat() * 60F / cpm.toFloat()).roundToInt()
+    }
+
+    fun stopMetronome() {
+        metronomePlaying = false
+    }
+
+    fun startMetronome() {
+        metronomePlaying = true
+        var click = 0
+
+        val track = AudioTrack.Builder()
+            .setAudioAttributes(
+                AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_MEDIA)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                    .build()
+            )
+            .setAudioFormat(
+                AudioFormat.Builder()
+                    .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
+                    .setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
+                    .setSampleRate(sampleRate)
+                    .build()
+            )
+            .setBufferSizeInBytes(
+                AudioTrack.getMinBufferSize(
+                    sampleRate,
+                    AudioFormat.CHANNEL_OUT_MONO,
+                    AudioFormat.ENCODING_PCM_16BIT
+                )
+            )
+            .setTransferMode(AudioTrack.MODE_STREAM)
+            .build()
+
+        track.play()
+
+        (application as PracticeTime).executorService.execute {
+            var intervalInBytes = 0
+            var clickDuration = 0
+            var silenceDuration = 0
+
+            var silence = ByteArray(0)
+            var clickHigh = ByteArray(0)
+            var clickMedium = ByteArray(0)
+            var clickLow = ByteArray(0)
+
+            val filterLength = 0
+            val filterArray = FloatArray(filterLength)
+            filterArray.forEachIndexed { i, _ ->
+                filterArray[i] = i.toFloat() / (filterLength - 1)
+            }
+
+            while (metronomePlaying) {
+                // check if metronomeBeatsPerMinute was changed and if so,
+                // recalculate the silence array and store the new interval
+                (cpmToBytes(metronomeClicksPerBeat * metronomeBeatsPerMinute)).let {
+                    if (it != intervalInBytes) {
+                        silenceDuration = minOf(metronomeMinSilence, it / 2)
+                        clickDuration = beat1.size
+                        if (it >= clickDuration + metronomeMinSilence) {
+                            silenceDuration = it - clickDuration
+                        } else {
+                            clickDuration = it - silenceDuration
+                        }
+                        silence = ByteArray(silenceDuration) { 0 }
+
+                        clickHigh = beat1.copyOfRange(0, clickDuration)
+                        clickMedium = beat2.copyOfRange(0, clickDuration)
+                        clickLow = beat3.copyOfRange(0, clickDuration)
+
+                        for (index in 0 until filterLength) {
+                            clickHigh[index] = (
+                                    clickHigh[index] * filterArray[index]
+                                    ).toInt().toByte()
+                            clickHigh[clickDuration - 1 - index] = (
+                                    clickHigh[clickDuration - 1 - index] * filterArray[filterLength - 1 - index]
+                                    ).toInt().toByte()
+                            clickMedium[index] = (
+                                    clickMedium[index] * filterArray[index]
+                                    ).toInt().toByte()
+                            clickMedium[clickDuration - 1 - index] = (
+                                    clickMedium[clickDuration - 1 - index] * filterArray[filterLength - 1 - index]
+                                    ).toInt().toByte()
+                            clickLow[index] = (
+                                    clickLow[index] * filterArray[index]
+                                    ).toInt().toByte()
+                            clickLow[clickDuration - 1 - index] = (
+                                    clickLow[clickDuration - 1 - index] * filterArray[filterLength - 1 - index]
+                                    ).toInt().toByte()
+                        }
+                        intervalInBytes = silenceDuration + clickDuration
+                    }
+                }
+
+                track.write(
+                    when {
+                        click == 0 -> {
+                            clickHigh
+                        }
+                        click % metronomeClicksPerBeat == 0 -> {
+                            clickMedium
+                        }
+                        else -> {
+                            clickLow
+                        }
+                    },
+                    0,
+                    clickDuration
+                )
+
+                track.write(silence, 0, silenceDuration)
+
+                click = (click + 1) % (metronomeClicksPerBeat * metronomeBeatsPerBar)
+            }
+        }
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         Log.d("Service", "Service destroyed")
         Singleton.serviceIsRunning = false
+        stopMetronome()
     }
+
 }
