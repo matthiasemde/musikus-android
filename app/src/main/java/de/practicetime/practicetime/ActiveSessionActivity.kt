@@ -1,10 +1,6 @@
 package de.practicetime.practicetime
 
 import android.app.Activity
-import android.content.ComponentName
-import android.content.Context
-import android.content.Intent
-import android.content.ServiceConnection
 import android.graphics.Color
 import android.media.*
 import android.util.Log
@@ -34,22 +30,23 @@ import android.view.MotionEvent
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import kotlin.math.abs
 import kotlin.math.round
-import android.media.AudioAttributes
 import android.os.*
 import android.text.TextUtils
 import androidx.activity.result.contract.ActivityResultContracts
 
-import kotlin.math.roundToInt
 import androidx.documentfile.provider.DocumentFile
-import android.media.MediaRecorder
 
 import java.text.SimpleDateFormat
 import android.Manifest
+import android.content.*
 import android.content.pm.PackageManager
 import android.graphics.drawable.AnimatedVectorDrawable
 import android.net.Uri
 import android.provider.DocumentsContract
+import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.content.ContextCompat
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import com.google.android.material.snackbar.BaseTransientBottomBar.LENGTH_INDEFINITE
 
 
 class ActiveSessionActivity : AppCompatActivity() {
@@ -400,115 +397,100 @@ class ActiveSessionActivity : AppCompatActivity() {
 
     private lateinit var recordingTimeView: TextView
     private lateinit var recordingTimeCsView: TextView
-    private var recordingStartTime: Long? = null
+
+    private lateinit var recordingStartStopButtonView: MaterialButton
 
     private lateinit var recordingSaveLocationView: TextView
+    private lateinit var recordingSelectSaveLocationView: MaterialButton
     private var recordSaveDirectory: DocumentFile? = null
-
-    private var recording = false
 
     private fun initRecordBottomSheet() {
         /* Find all views in bottom sheet */
         recordingTimeView = findViewById(R.id.record_sheet_recording_time)
         recordingTimeCsView = findViewById(R.id.record_sheet_recording_time_cs)
 
-        val startStopButtonView = findViewById<MaterialButton>(R.id.record_sheet_start_pause)
+        recordingStartStopButtonView = findViewById(R.id.record_sheet_start_pause)
 
         recordingSaveLocationView = findViewById(R.id.record_sheet_save_location)
-        val selectSaveLocationView = findViewById<MaterialButton>(R.id.record_sheet_select_save_location)
+        recordingSelectSaveLocationView = findViewById(R.id.record_sheet_select_save_location)
 
         /* Initialize local variables */
         val recordingNameFormat = SimpleDateFormat("_dd-MM-yyyy'T'H_mm_ss", Locale.getDefault())
-        var recorder: MediaRecorder? = null
 
         var recordingButtonLocked = false
-
-        var newRecordingFile: DocumentFile? = null
 
         /* Modify views */
         recordingTimeView.text = "00:00:00"
         recordingTimeCsView.text = "00"
-        recordingStartTime?.let {
-            val diff = (Date().time - it).toInt()
-            recordingTimeView.text = getTimeString(diff / 1000)
-            recordingTimeCsView.text = "%02d".format(diff % 1000 / 10)
-        }
 
-        startStopButtonView.setOnClickListener {
+        LocalBroadcastManager.getInstance(this).registerReceiver(
+            object : BroadcastReceiver() {
+                override fun onReceive(context: Context?, intent: Intent?) {
+                    intent?.extras?.getString("DURATION")?.toInt()?.also {
+                        recordingTimeView.text = getTimeString(it / 1000)
+                        recordingTimeCsView.text = "%02d".format(it % 1000 / 10)
+                    }
+                }
+            },
+            IntentFilter("RecordingDurationUpdate")
+        )
+
+        var newRecordingFile: DocumentFile? = null
+
+        recordingStartStopButtonView.icon = ContextCompat.getDrawable(
+            this,
+            if(RecorderService.recording) R.drawable.ic_stop else R.drawable.ic_record
+        )
+
+        recordingStartStopButtonView.setOnClickListener {
+            // Return if button is still locked
             if (recordingButtonLocked) return@setOnClickListener
 
-            val startToStop = ContextCompat.getDrawable(this, R.drawable.avd_start_to_stop) as AnimatedVectorDrawable
-            val stopToStart = ContextCompat.getDrawable(this, R.drawable.avd_stop_to_start) as AnimatedVectorDrawable
+            // if not, lock it for one second to avoid double presses
+            recordingButtonLocked = true
+            Handler(Looper.getMainLooper()).postDelayed({
+                recordingButtonLocked = false
+            }, 1000L)
 
-            if(!recording) {
+            if(!RecorderService.recording) {
                 if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
                     requestPermissions(Array(1) { Manifest.permission.RECORD_AUDIO }, 69)
                 } else {
-                    recorder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                        MediaRecorder(this)
-                    } else {
-                        MediaRecorder()
-                    }
-
                     newRecordingFile = recordSaveDirectory?.createFile(
                         "audio/mp4",
                         (if(mService.sectionBuffer.isNotEmpty()) mService.sectionBuffer.last().first.category_id.toString()
                         else "PracticeTime") + recordingNameFormat.format(Date().time)
-                    )?.let { newRecording ->
-                        Log.d("RECORD", "newRec. ${newRecording.uri.path}")
-                        recorder?.apply {
-                            setAudioSource(MediaRecorder.AudioSource.MIC)
-                            setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
-                            setAudioEncoder(MediaRecorder.AudioEncoder.AMR_WB)
-                            setAudioChannels(2)
-                            setAudioEncodingBitRate(128_000)
-                            setAudioSamplingRate(44_100)
-                            setOutputFile(
-                                contentResolver.openFileDescriptor(
-                                    newRecording.uri,
-                                    "w"
-                                )?.fileDescriptor
-                            )
-                            prepare()
-                            start()
-                        }
-                        recording = true
-                        recordingStartTime = Date().time
-                        recordingButtonLocked = true
-                        Handler(Looper.getMainLooper()).postDelayed({
-                            recordingButtonLocked = false
-                        }, 1000L)
-                        selectSaveLocationView.isEnabled = false
-                        startStopButtonView.icon = startToStop
-                        startToStop.start()
-                        recordingTimeHandler.post(incrementRecordingTime)
-                        newRecording
+                    )
+
+                    Intent(this, RecorderService::class.java).also {
+                        it.putExtra("URI", newRecordingFile?.uri.toString())
+                        startService(it)
                     }
+                    val startToStop = ContextCompat.getDrawable(
+                        this, R.drawable.avd_start_to_stop
+                    ) as AnimatedVectorDrawable
+
+                    recordingSelectSaveLocationView.isEnabled = false
+                    recordingStartStopButtonView.icon = startToStop
+                    startToStop.start()
                 }
             } else {
-                recording = false
-                recordingStartTime = null
-//                recordingTimeView.text = "00:00:00"
-                startStopButtonView.icon = stopToStart
-                stopToStart.start()
-                selectSaveLocationView.isEnabled = true
-                recordingButtonLocked = true
-                Handler(Looper.getMainLooper()).postDelayed({
-                    recordingButtonLocked = false
-                }, 1000L)
-                recorder?.apply {
-                    stop()
-                    release()
-                }
+                val stopToStart = ContextCompat.getDrawable(
+                    this, R.drawable.avd_stop_to_start
+                ) as AnimatedVectorDrawable
 
-                recordingTimeView.setOnClickListener {
-                    Log.d("DEBUG", "${newRecordingFile?.uri?.lastPathSegment}")
+                recordingSelectSaveLocationView.isEnabled = true
+                recordingStartStopButtonView.icon = stopToStart
+                stopToStart.start()
+
+                Intent(this, RecorderService::class.java).also {
+                    stopService(it)
                 }
 
                 Snackbar.make(
                     findViewById(R.id.coordinator_layout_active_session),
                     resources.getString(R.string.record_snackbar_message).format(
-                        newRecordingFile?.uri?.lastPathSegment?.split('/')?.last()
+                        RecorderService.recordingName ?: "Recording"
                     ),
                     7000
                 ).apply {
@@ -527,7 +509,7 @@ class ActiveSessionActivity : AppCompatActivity() {
             ?.let {
                 val df = DocumentFile.fromTreeUri(this, Uri.parse(it))
                 recordingSaveLocationView.text = df?.uri?.lastPathSegment?.split(':')?.last()
-                startStopButtonView.isEnabled = true
+                recordingStartStopButtonView.isEnabled = true
                 df
             }
 
@@ -541,18 +523,18 @@ class ActiveSessionActivity : AppCompatActivity() {
         val getSaveDirectoryLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
                 // There are no request codes
-                recordSaveDirectory = result.data?.data?.let {
-                    val df = DocumentFile.fromTreeUri(this, it)
+                recordSaveDirectory = result.data?.data?.let { uri ->
+                    val df = DocumentFile.fromTreeUri(this, uri)
                     if(df != null) {
-                        contentResolver.takePersistableUriPermission(it, Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
-                        startStopButtonView.isEnabled = true
+                        contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+                        recordingStartStopButtonView.isEnabled = true
                         recordingSaveLocationView.text = df.uri.lastPathSegment?.split(':')?.last()
                         getPreferences(Context.MODE_PRIVATE)
                             .edit()
                             .putString("recordings_directory", df.uri.toString())
                             .apply()
                     } else {
-                        startStopButtonView.isEnabled = false
+                        recordingStartStopButtonView.isEnabled = false
                         recordingSaveLocationView.text = ""
                     }
                     df
@@ -560,15 +542,15 @@ class ActiveSessionActivity : AppCompatActivity() {
             }
         }
 
-        selectSaveLocationView.setOnClickListener {
+        recordingSelectSaveLocationView.setOnClickListener {
             getSaveDirectoryLauncher.launch(Intent(Intent.ACTION_OPEN_DOCUMENT_TREE))
         }
 
         findViewById<MaterialButton>(R.id.record_sheet_open_save_location).setOnClickListener {
-            recordSaveDirectory?.let {
+            recordSaveDirectory?.uri.let { uri ->
                 val intent = Intent(Intent.ACTION_VIEW)
-                if(DocumentFile.isDocumentUri(this, it.uri)) {
-                    intent.setDataAndType(it.uri, DocumentsContract.Document.MIME_TYPE_DIR)
+                if(DocumentFile.isDocumentUri(this, uri)) {
+                    intent.setDataAndType(uri, DocumentsContract.Document.MIME_TYPE_DIR)
                     startActivity(intent)
                 }
             }
@@ -581,22 +563,6 @@ class ActiveSessionActivity : AppCompatActivity() {
 
         findViewById<MaterialButton>(R.id.bottom_record).setOnClickListener {
             recordingBottomSheetBehaviour.state = BottomSheetBehavior.STATE_EXPANDED
-        }
-
-    }
-
-    private val recordingTimeHandler = Handler(Looper.getMainLooper())
-
-    private val incrementRecordingTime = object : Runnable {
-        override fun run() {
-            if(recording) {
-                recordingStartTime?.let {
-                    val diff = (Date().time - it).toInt()
-                    recordingTimeView.text = getTimeString(diff / 1000)
-                    recordingTimeCsView.text = "%02d".format(diff % 1000 / 10)
-                }
-                recordingTimeHandler.postDelayed(this, 10L)
-            }
         }
     }
 
@@ -1076,7 +1042,6 @@ class ActiveSessionActivity : AppCompatActivity() {
             }
         }
     }
-
 
     private fun getTimeString(durationSecs: Int) : String {
         return "%02d:%02d:%02d".format(
