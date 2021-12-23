@@ -411,6 +411,8 @@ class ActiveSessionActivity : AppCompatActivity() {
 
         recordingStartStopButtonView = findViewById(R.id.record_sheet_start_pause)
 
+        val openRecorderButtonView = findViewById<MaterialButton>(R.id.bottom_record)
+
         recordingSaveLocationView = findViewById(R.id.record_sheet_save_location)
         recordingSelectSaveLocationView = findViewById(R.id.record_sheet_select_save_location)
 
@@ -445,6 +447,7 @@ class ActiveSessionActivity : AppCompatActivity() {
         if(RecorderService.recording) {
             recordingStartStopButtonView.icon = ContextCompat.getDrawable(this, R.drawable.ic_stop)
             recordingBottomSheetBehaviour.state = BottomSheetBehavior.STATE_COLLAPSED
+            openRecorderButtonView.isSelected = true
         }
 
         recordingStartStopButtonView.setOnClickListener {
@@ -478,8 +481,10 @@ class ActiveSessionActivity : AppCompatActivity() {
                     recordingSelectSaveLocationView.isEnabled = false
                     recordingStartStopButtonView.icon = startToStop
                     startToStop.start()
+                    openRecorderButtonView.isSelected = true
                 }
             } else {
+                openRecorderButtonView.isSelected = false
                 val stopToStart = ContextCompat.getDrawable(
                     this, R.drawable.avd_stop_to_start
                 ) as AnimatedVectorDrawable

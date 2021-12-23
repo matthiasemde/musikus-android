@@ -178,6 +178,7 @@
             android:layout_marginStart="16dp"
             android:background="@drawable/background_bottom_btn"
             android:gravity="center"
+            app:backgroundTint="@color/toggle_primary_error_color"
             app:iconGravity="textStart"
             app:icon="@drawable/ic_record"
             android:text="@string/recorder"
