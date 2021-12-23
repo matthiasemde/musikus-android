@@ -22,7 +22,8 @@
         <service
             android:name=".RecorderService"
             android:enabled="true"
-            android:exported="false" />
+            android:exported="false"
+            android:foregroundServiceType="microphone"/>
 
         <activity
             android:name=".ProgressUpdateActivity"

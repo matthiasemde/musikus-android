@@ -420,6 +420,11 @@ class ActiveSessionActivity : AppCompatActivity() {
         var recordingButtonLocked = false
 
         /* Modify views */
+        recordingBottomSheet = findViewById(R.id.record_sheet_layout)
+        recordingBottomSheetBehaviour = BottomSheetBehavior.from(recordingBottomSheet)
+
+        recordingBottomSheetBehaviour.state = BottomSheetBehavior.STATE_HIDDEN
+
         recordingTimeView.text = "00:00:00"
         recordingTimeCsView.text = "00"
 
@@ -437,10 +442,10 @@ class ActiveSessionActivity : AppCompatActivity() {
 
         var newRecordingFile: DocumentFile? = null
 
-        recordingStartStopButtonView.icon = ContextCompat.getDrawable(
-            this,
-            if(RecorderService.recording) R.drawable.ic_stop else R.drawable.ic_record
-        )
+        if(RecorderService.recording) {
+            recordingStartStopButtonView.icon = ContextCompat.getDrawable(this, R.drawable.ic_stop)
+            recordingBottomSheetBehaviour.state = BottomSheetBehavior.STATE_COLLAPSED
+        }
 
         recordingStartStopButtonView.setOnClickListener {
             // Return if button is still locked
@@ -458,7 +463,7 @@ class ActiveSessionActivity : AppCompatActivity() {
                 } else {
                     newRecordingFile = recordSaveDirectory?.createFile(
                         "audio/mp4",
-                        (if(mService.sectionBuffer.isNotEmpty()) mService.sectionBuffer.last().first.category_id.toString()
+                        (if(mService.sectionBuffer.isNotEmpty()) mService.currCategoryName
                         else "PracticeTime") + recordingNameFormat.format(Date().time)
                     )
 
@@ -487,19 +492,26 @@ class ActiveSessionActivity : AppCompatActivity() {
                     stopService(it)
                 }
 
-                Snackbar.make(
-                    findViewById(R.id.coordinator_layout_active_session),
-                    resources.getString(R.string.record_snackbar_message).format(
-                        RecorderService.recordingName ?: "Recording"
-                    ),
-                    7000
-                ).apply {
-                    setAction(R.string.record_snackbar_undo) {
-                        newRecordingFile?.delete()
-                        this.dismiss()
+                if(recordingBottomSheetBehaviour.state == BottomSheetBehavior.STATE_COLLAPSED)
+                    recordingBottomSheetBehaviour.state = BottomSheetBehavior.STATE_HIDDEN
+
+                (application as PracticeTime).executorService.execute {
+                    while(RecorderService.recording) {}
+                    Snackbar.make(
+                        findViewById(R.id.coordinator_layout_active_session),
+                        resources.getString(R.string.record_snackbar_message).format(
+                            RecorderService.recordingName ?: "Recording"
+                        ),
+                        7000
+                    ).apply {
+                        setAction(R.string.record_snackbar_undo) {
+                            newRecordingFile?.delete()
+                            this.dismiss()
+                        }
+                        anchorView = recordingBottomSheet
+                        show()
                     }
-                    anchorView = recordingBottomSheet
-                    show()
+                    RecorderService.recordingName = null
                 }
             }
         }
@@ -555,11 +567,6 @@ class ActiveSessionActivity : AppCompatActivity() {
                 }
             }
         }
-
-        recordingBottomSheet = findViewById(R.id.record_sheet_layout)
-        recordingBottomSheetBehaviour = BottomSheetBehavior.from(recordingBottomSheet)
-
-        recordingBottomSheetBehaviour.state = BottomSheetBehavior.STATE_HIDDEN
 
         findViewById<MaterialButton>(R.id.bottom_record).setOnClickListener {
             recordingBottomSheetBehaviour.state = BottomSheetBehavior.STATE_EXPANDED
@@ -1058,8 +1065,15 @@ class ActiveSessionActivity : AppCompatActivity() {
     }
 
     override fun onBackPressed() {
-        super.onBackPressed()
-        Log.d("TAH", "OnBack")
-        overridePendingTransition(0, R.anim.slide_out_down)
+        when {
+            recordingBottomSheetBehaviour.state != BottomSheetBehavior.STATE_HIDDEN ->
+                recordingBottomSheetBehaviour.state = BottomSheetBehavior.STATE_HIDDEN
+            metronomeBottomSheetBehaviour.state != BottomSheetBehavior.STATE_HIDDEN ->
+                metronomeBottomSheetBehaviour.state = BottomSheetBehavior.STATE_HIDDEN
+            else -> {
+                super.onBackPressed()
+                overridePendingTransition(0, R.anim.slide_out_down)
+            }
+        }
     }
 }
