@@ -1,7 +1,9 @@
 package de.practicetime.practicetime
 
 import android.content.res.ColorStateList
+import android.graphics.Color
 import android.os.Bundle
+import android.util.DisplayMetrics
 import android.util.Log
 import android.util.TypedValue
 import android.view.LayoutInflater
@@ -16,8 +18,10 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
 import com.github.mikephil.charting.animation.Easing
 import com.github.mikephil.charting.charts.BarChart
+import com.github.mikephil.charting.charts.PieChart
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.*
+import com.github.mikephil.charting.formatter.PercentFormatter
 import com.github.mikephil.charting.formatter.ValueFormatter
 import de.practicetime.practicetime.entities.Category
 import kotlinx.coroutines.launch
@@ -31,7 +35,8 @@ import kotlin.math.roundToInt
 class StatisticsFragment : Fragment(R.layout.fragment_statistics) {
 
     private lateinit var dao: PTDao
-    private lateinit var chart: BarChart
+    private lateinit var barChart: BarChart
+    private lateinit var pieChart: PieChart
     private lateinit var categoryListAdapter: CategoryStatsAdapter
     private var daysViewWeekOffset = 0L
     private var weeksViewWeekOffset = 0L
@@ -53,6 +58,10 @@ class StatisticsFragment : Fragment(R.layout.fragment_statistics) {
         MONTHS_VIEW(7),  // current month + last 11 months
     }
     private var activeView = VIEWS.DAYS_VIEW
+
+    val BAR_CHART = 0
+    val PIE_CHART = 1
+    var chartType = BAR_CHART
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
 
@@ -89,10 +98,19 @@ class StatisticsFragment : Fragment(R.layout.fragment_statistics) {
         view.findViewById<ImageButton>(R.id.btn_fwd).setOnClickListener {
             seekFuture(view)
         }
+        view.findViewById<ImageButton>(R.id.btn_toggle_chart).setOnClickListener {
+            chartType = when (chartType) {
+                BAR_CHART -> PIE_CHART
+                PIE_CHART -> BAR_CHART
+                else -> BAR_CHART
+            }
+            updateChartData()
+            Log.d("TAG", "$chartType")
+        }
 
         colorAmount = context?.resources?.getIntArray(R.array.category_colors)?.toCollection(mutableListOf())?.size ?: 0
-        chart = view.findViewById(R.id.chart) as BarChart
-        initChartView()
+        initBarChart()
+        initPieChart()
         updateChartData()
         setBtnEnabledState(view)
 
@@ -113,20 +131,21 @@ class StatisticsFragment : Fragment(R.layout.fragment_statistics) {
         }
     }
 
-    private fun initChartView() {
+    private fun initBarChart() {
         // for rounded bars: https://gist.github.com/xanscale/e971cc4f2f0712a8a3bcc35e85325c27
         //      issue: https://github.com/PhilJay/MPAndroidChart/issues/2771#issuecomment-566719474
 
-        chart.setTouchEnabled(false)
-        chart.description.isEnabled = false
-        chart.legend.isEnabled = false
-        chart.setDrawValueAboveBar(true)
-        chart.invalidate()
+        barChart = requireView().findViewById(R.id.bar_chart) as BarChart
+        barChart.setTouchEnabled(false)
+        barChart.description.isEnabled = false
+        barChart.legend.isEnabled = false
+        barChart.setDrawValueAboveBar(true)
+        barChart.invalidate()
 
         // axis settings
-        val leftAxis = chart.axisLeft
-        val xAxis = chart.xAxis
-        val rightAxis = chart.axisRight
+        val leftAxis = barChart.axisLeft
+        val xAxis = barChart.xAxis
+        val rightAxis = barChart.axisRight
 
         leftAxis.axisMinimum = 0f   // needed for y axis scaling (probably a bug!)
         leftAxis.isEnabled = false
@@ -144,11 +163,71 @@ class StatisticsFragment : Fragment(R.layout.fragment_statistics) {
 
     }
 
+    private fun initPieChart() {
+        pieChart = requireView().findViewById(R.id.pie_chart);
+
+        val height = (requireView().measuredHeight * 0.65).toInt()
+
+        Log.d("ZAG", "height: $height")
+
+        val p = (pieChart.layoutParams as LinearLayout.LayoutParams)
+        p.setMargins(0, 0, 0, -height)
+        pieChart.layoutParams = p
+
+        pieChart.setUsePercentValues(true);
+        pieChart.description.isEnabled = false;
+
+        pieChart.isDrawHoleEnabled = true
+        pieChart.setHoleColor(Color.TRANSPARENT)
+
+        pieChart.isRotationEnabled = false;
+
+        pieChart.animateY(1400, Easing.EaseInOutQuad);
+
+        pieChart.legend.isEnabled = false
+
+        pieChart.setEntryLabelColor(Color.WHITE)
+        pieChart.setEntryLabelTextSize(9f)
+
+        pieChart.maxAngle = 180f // HALF CHART
+        pieChart.rotationAngle = 180f
+
+        pieChart.holeRadius = 58f
+        pieChart.transparentCircleRadius = 61f
+        pieChart.setCenterTextOffset(0f, -20f)
+
+//        chart.setHighlightPerTapEnabled(true);
+//
+//        // chart.setUnit(" €");
+//        // chart.setDrawUnitsInChart(true);
+//
+//        // add a selection listener
+//        chart.setOnChartValueSelectedListener(this);
+//
+//        seekBarX.setProgress(4);
+//        seekBarY.setProgress(10);
+
+//        chart.setTransparentCircleColor(Color.WHITE);
+//        chart.setTransparentCircleAlpha(110);
+
+//        pieChart.setHoleRadius(58f);
+//        chart.setTransparentCircleRadius(61f);
+//
+//        chart.setDrawCenterText(true);
+
+//        chart.setExtraOffsets(5, 10, 5, 5);
+
+//        chart.setDragDecelerationFrictionCoef(0.95f);
+
+//        chart.setCenterTextTypeface(tfLight);
+//        chart.setCenterText(generateCenterSpannableText());
+    }
+
     private fun setHeadingTextViews(view: View) {
         val tvRange = view.findViewById<TextView>(R.id.tv_visible_range)
         val tvTotalTimeInRange = view.findViewById<TextView>(R.id.tv_total_time_visible_range)
 
-        val chartArray = chart.data.getDataSetByIndex(0) as BarDataSet
+        val chartArray = barChart.data.getDataSetByIndex(0) as BarDataSet
         // because we're always counting down in the loops, xVals are chronologically reversed
         val firstBarXVal = chartArray.xMin
         val lastBarXVal = chartArray.xMax
@@ -246,39 +325,69 @@ class StatisticsFragment : Fragment(R.layout.fragment_statistics) {
     private fun updateChartData(recalculateDurs: Boolean = true) {
         lifecycleScope.launch {
             // re-calculate bar data
-            val values = when (activeView) {
+            val (barValues, pieValues) = when (activeView) {
                 VIEWS.DAYS_VIEW -> getMoToFrArray()
                 VIEWS.WEEKS_VIEW -> getWeeksArray()
                 VIEWS.MONTHS_VIEW -> getMonthsArray()
             }
 
-            val dataSet: BarDataSet
+            val dataSetBarChart: BarDataSet
+            val dataSetPieChart: PieDataSet
 
-            if (chart.data != null && chart.data.dataSetCount > 0) {
-                dataSet = chart.data.getDataSetByIndex(0) as BarDataSet
-                dataSet.values = values
-                chart.data.notifyDataChanged()
-                chart.notifyDataSetChanged()
+            if (barChart.data != null && barChart.data.dataSetCount > 0) {
+                dataSetBarChart = barChart.data.getDataSetByIndex(0) as BarDataSet
+                dataSetBarChart.values = barValues
+                barChart.data.notifyDataChanged()
+                barChart.notifyDataSetChanged()
+
+                dataSetPieChart = pieChart.data.getDataSetByIndex(0) as PieDataSet
+                dataSetPieChart.values = pieValues
+                pieChart.data.notifyDataChanged()
+                pieChart.notifyDataSetChanged()
 
             } else {
                 // first time drawing chart, create the DataSet from values
-                dataSet = BarDataSet(values, "Label")
+                dataSetBarChart = BarDataSet(barValues, "Label")
+                dataSetPieChart = PieDataSet(pieValues, "Label")
 
-                val categoryColors = context?.resources?.getIntArray(R.array.category_colors)?.toCollection(mutableListOf())
-                dataSet.colors = categoryColors
-                dataSet.setDrawValues(true)
+                val categoryColors = context?.resources?.getIntArray(R.array.category_colors)
+                    ?.toCollection(mutableListOf())
+                dataSetBarChart.colors = categoryColors
+                dataSetPieChart.colors = categoryColors
+                dataSetBarChart.setDrawValues(true)
+                dataSetPieChart.setDrawValues(true)
 
-                val data = BarData(dataSet)
-                data.barWidth = 0.4f
-                data.setValueFormatter(BarChartValueFormatter())
-                data.setValueTextColor(getThemeColor(R.attr.colorOnSurfaceLowerContrast))
-                data.setValueTextSize(12f)
+                val barData = BarData(dataSetBarChart)
+                barData.barWidth = 0.4f
+                barData.setValueFormatter(BarChartValueFormatter())
+                barData.setValueTextColor(getThemeColor(R.attr.colorOnSurfaceLowerContrast))
+                barData.setValueTextSize(12f)
 
-                chart.data = data
+                barChart.data = barData
+
+
+                val pieData = PieData(dataSetPieChart)
+                pieData.setValueFormatter(PercentFormatter())
+                pieData.setValueTextSize(11f)
+                pieData.setValueTextColor(Color.WHITE)
+                pieChart.data = pieData
+
             }
+
+            if(chartType == BAR_CHART) {
+                pieChart.visibility = View.GONE
+                barChart.visibility = View.VISIBLE
+            } else {
+                pieChart.visibility = View.VISIBLE
+                barChart.visibility = View.GONE
+            }
+
             // redraw the chart
-            chart.animateY(1000, Easing.EaseOutBack)
-            chart.invalidate()
+            barChart.animateY(1000, Easing.EaseOutBack)
+            barChart.invalidate()
+
+            pieChart.animateY(1400, Easing.EaseInOutQuad)
+            pieChart.invalidate()
 
             // update the Heading
             setHeadingTextViews(requireView())
@@ -318,14 +427,18 @@ class StatisticsFragment : Fragment(R.layout.fragment_statistics) {
     /**
      * construct array for "week" view -> each bar = 1 day
      */
-    private suspend fun getMoToFrArray(): ArrayList<BarEntry> {
-        val chartArray = arrayListOf<BarEntry>()
+    private suspend fun getMoToFrArray(): Pair< ArrayList<BarEntry>, ArrayList<PieEntry> > {
+        val barChartArray = arrayListOf<BarEntry>()
+        val pieChartArray = arrayListOf<PieEntry>()
         val visibleCategories = ArrayList<Int>()
 
         categories.forEach { it.totalDuration = 0 }
 
+        // init pie chart array here because we sum over all days
+        val floatArrDurPieChart = FloatArray(colorAmount) {0f}
+
         for (day in VIEWS.DAYS_VIEW.barCount downTo 1) {
-            val floatArrDur = FloatArray(colorAmount) {0f}
+            val floatArrDurBarChart = FloatArray(colorAmount) {0f}
             val sectionsThisDay = dao.getSectionsWithCategories(
                 getStartOfDayOfWeek(day.toLong(), daysViewWeekOffset).toEpochSecond(),
                 getEndOfDayOfWeek(day.toLong(), daysViewWeekOffset).toEpochSecond()
@@ -334,28 +447,36 @@ class StatisticsFragment : Fragment(R.layout.fragment_statistics) {
                 // only show selected entries (checkbox enabled)
                 if(categories.any { it.selected && it.category.id == category.id }) {
                     // sum all section duration with same color (regardless whether they are actually the same category)
-                    floatArrDur[category.colorIndex] += (section.duration ?: 0).toFloat()
+                    floatArrDurBarChart[category.colorIndex] += (section.duration ?: 0).toFloat()
+                    floatArrDurPieChart[category.colorIndex] += (section.duration ?: 0).toFloat()
                 }
                 visibleCategories.add(category.id)
                 categories.first { it.category.id == category.id}.totalDuration += section.duration ?: 0
             }
-            chartArray.add(BarEntry(day.toFloat(), floatArrDur))
+            barChartArray.add(BarEntry(day.toFloat(), floatArrDurBarChart))
+        }
+
+        floatArrDurPieChart.forEachIndexed { cat_id, dur ->
+            pieChartArray.add(PieEntry(dur, "Category $cat_id"))
         }
 
         updateVisibleCategories(visibleCategories)
-        return chartArray
+        return Pair(barChartArray, pieChartArray)
     }
 
     /**
      * construct array for "months" view -> each bar = 1 week
      */
-    private suspend fun getWeeksArray(): ArrayList<BarEntry> {
+    private suspend fun getWeeksArray(): Pair< ArrayList<BarEntry>, ArrayList<PieEntry> > {
         val chartArray = arrayListOf<BarEntry>()
+        val pieChartArray = arrayListOf<PieEntry>()
         val visibleCategories = ArrayList<Int>()
 
-        for (week in 0 downTo -(VIEWS.WEEKS_VIEW.barCount-1)) {     // last 10 weeks
+        // init pie chart array here because we sum over all days
+        val floatArrDurPieChart = FloatArray(colorAmount) {0f}
 
-            val floatArrDur = FloatArray(colorAmount) {0f}
+        for (week in 0 downTo -(VIEWS.WEEKS_VIEW.barCount-1)) {     // last 10 weeks
+            val floatArrDurBarChart = FloatArray(colorAmount) {0f}
             val sectionsThisWeek = dao.getSectionsWithCategories(
                 getStartOfWeek(week.toLong() + weeksViewWeekOffset).toEpochSecond(),
                 getEndOfWeek(week.toLong() + weeksViewWeekOffset).toEpochSecond()
@@ -363,28 +484,35 @@ class StatisticsFragment : Fragment(R.layout.fragment_statistics) {
             sectionsThisWeek.forEach { (section, category) ->
                 // only show selected entries (checkbox enabled)
                 if(categories.any { it.selected && it.category.id == category.id }) {
-                    floatArrDur[category.colorIndex] += (section.duration ?: 0).toFloat()
+                    floatArrDurBarChart[category.colorIndex] += (section.duration ?: 0).toFloat()
+                    floatArrDurPieChart[category.colorIndex] += (section.duration ?: 0).toFloat()
                 }
                 visibleCategories.add(category.id)
                 categories.first { it.category.id == category.id}.totalDuration += section.duration ?: 0
             }
-            chartArray.add(BarEntry((week + weeksViewWeekOffset).toFloat(), floatArrDur))
+            chartArray.add(BarEntry((week + weeksViewWeekOffset).toFloat(), floatArrDurBarChart))
+        }
+
+        floatArrDurPieChart.forEachIndexed { cat_id, dur ->
+            pieChartArray.add(PieEntry(dur, "Category $cat_id"))
         }
 
         updateVisibleCategories(visibleCategories)
-        return chartArray
+        return Pair(chartArray, pieChartArray)
     }
-
 
     /**
      * construct array for "year" view -> each bar = 1 month
      */
-    private suspend fun getMonthsArray(): ArrayList<BarEntry> {
-        val chartArray = arrayListOf<BarEntry>()
+    private suspend fun getMonthsArray(): Pair< ArrayList<BarEntry>, ArrayList<PieEntry> > {
+        val barChartArray = arrayListOf<BarEntry>()
+        val pieChartArray = arrayListOf<PieEntry>()
         val visibleCategories = ArrayList<Int>()
 
+        // init pie chart array here because we sum over all days
+        val floatArrDurPieChart = FloatArray(colorAmount) {0f}
         for (month in 0 downTo -(VIEWS.MONTHS_VIEW.barCount-1)) {
-            val floatArrDur = FloatArray(colorAmount) {0f}
+            val floatArrDurBarChart = FloatArray(colorAmount) {0f}
             val sectionsThisMonth = dao.getSectionsWithCategories(
                 getStartOfMonth(month.toLong() + monthsViewMonthOffset).toEpochSecond(),
                 getEndOfMonth(month.toLong() + monthsViewMonthOffset).toEpochSecond()
@@ -392,16 +520,21 @@ class StatisticsFragment : Fragment(R.layout.fragment_statistics) {
             sectionsThisMonth.forEach { (section, category) ->
                 // only show selected entries (checkbox enabled)
                 if(categories.any { it.selected && it.category.id == category.id }) {
-                    floatArrDur[category.colorIndex] += (section.duration ?: 0).toFloat()
+                    floatArrDurBarChart[category.colorIndex] += (section.duration ?: 0).toFloat()
+                    floatArrDurPieChart[category.colorIndex] += (section.duration ?: 0).toFloat()
                 }
                 visibleCategories.add(category.id)
                 categories.first { it.category.id == category.id}.totalDuration += section.duration ?: 0
             }
-            chartArray.add(BarEntry((month + monthsViewMonthOffset).toFloat(), floatArrDur))
+            barChartArray.add(BarEntry((month + monthsViewMonthOffset).toFloat(), floatArrDurBarChart))
+        }
+
+        floatArrDurPieChart.forEachIndexed { cat_id, dur ->
+            pieChartArray.add(PieEntry(dur, "Category $cat_id"))
         }
 
         updateVisibleCategories(visibleCategories)
-        return chartArray
+        return Pair(barChartArray, pieChartArray)
     }
 
     private fun updateVisibleCategories(visibleCategories: List<Int>) {
