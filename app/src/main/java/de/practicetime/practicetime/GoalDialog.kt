@@ -234,10 +234,10 @@ class GoalDialog(
                 trackAllCategories = true
 
                 dialogView.findViewById<View>(R.id.goalDialogNotTarget).visibility = View.GONE
+            } else {
+                goalDialogTargetHoursView.setText("0")
+                goalDialogTargetMinutesView.setText("0")
             }
-
-            goalDialogTargetHoursView.setText("0")
-            goalDialogTargetMinutesView.setText("0")
 
             updatePositiveButtonState()
             goalDialogTargetHoursView.addTextChangedListener {
