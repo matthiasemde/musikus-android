@@ -214,9 +214,8 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
             inflateMenu(R.menu.library_toolbar_menu_base)
             navigationIcon = null
         }
-        libraryCollapsingToolbarLayout.apply {
-            setBackgroundColor(ContextCompat.getColor(context, android.R.color.transparent))
-        }
+        libraryCollapsingToolbarLayout.background = null
+
         val tmpCopy = selectedCategories.toList()
         selectedCategories.clear()
         tmpCopy.forEach { categoryAdapter?.notifyItemChanged(it) }

@@ -3,13 +3,36 @@
     <style name="ToolbarColoredIcons" parent="Theme.PracticeTime">
         <item name="android:textColorSecondary">?attr/colorOnBackground</item>
     </style>
+    <style name="AppBar" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">128dp</item>
+        <item name="android:background">?android:attr/colorBackground</item>
+    </style>
+
+    <style name="CollapsingToolbar" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="collapsedTitleTextAppearance">@style/ToolbarTitleCollapsed</item>
+        <item name="expandedTitleTextAppearance">@style/ToolbarTitleExpanded</item>
+        <item name="expandedTitleMarginBottom">28dp</item>
+        <item name="expandedTitleMarginStart">16dp</item>
+        <item name="layout_scrollFlags">scroll|exitUntilCollapsed</item>
+        <item name="titleCollapseMode">scale</item>
+    </style>
+
     <style name="ToolbarTitleCollapsed" parent="">
-        <item name="android:textColor">?android:attr/textColorTertiary</item>
+        <item name="android:textColor">?attr/colorOnSurfaceLowerContrast</item>
         <item name="android:textSize">24sp</item>
     </style>
     <style name="ToolbarTitleExpanded" parent="">
-        <item name="android:textColor">?android:attr/textColorTertiary</item>
+        <item name="android:textColor">?attr/colorOnSurfaceLowerContrast</item>
         <item name="android:textSize">38sp</item>
+    </style>
+
+    <style name="Toolbar" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">48dp</item>
+        <item name="layout_collapseMode">pin</item>
     </style>
 
     <style name="ToggleButtonBase" parent="">

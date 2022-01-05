@@ -9,30 +9,17 @@
 
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/goalsAppbar"
-        android:layout_width="match_parent"
-        android:layout_height="128dp"
-        android:background="@android:color/transparent">
+        style="@style/AppBar">
 
         <com.google.android.material.appbar.CollapsingToolbarLayout
             android:id="@+id/collapsing_toolbar_layout"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            app:collapsedTitleTextAppearance="@style/ToolbarTitleCollapsed"
-            app:contentScrim="@android:color/transparent"
-            app:expandedTitleMarginBottom="28dp"
-            app:expandedTitleMarginStart="16dp"
-            app:expandedTitleTextAppearance="@style/TextAppearance.MaterialComponents.Headline3"
-            app:layout_scrollFlags="scroll|exitUntilCollapsed"
+            style="@style/CollapsingToolbar"
             app:title="@string/navigationGoalsTitle"
-            app:titleCollapseMode="scale"
             app:toolbarId="@+id/goalsToolbar">
 
             <androidx.appcompat.widget.Toolbar
                 android:id="@+id/goalsToolbar"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:elevation="4dp"
-                app:layout_collapseMode="pin"
+                style="@style/Toolbar"
                 app:menu="@menu/goals_toolbar_menu_base" />
 
         </com.google.android.material.appbar.CollapsingToolbarLayout>

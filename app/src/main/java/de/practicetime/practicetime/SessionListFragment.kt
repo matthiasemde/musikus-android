@@ -298,9 +298,7 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
             inflateMenu(R.menu.library_toolbar_menu_base)
             navigationIcon = null
         }
-        sessionListCollapsingToolbarLayout.apply {
-            setBackgroundColor(ContextCompat.getColor(context, android.R.color.transparent))
-        }
+        sessionListCollapsingToolbarLayout.background = null
     }
 
     // initialize the session delete dialog

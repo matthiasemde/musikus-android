@@ -231,9 +231,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
             inflateMenu(R.menu.goals_toolbar_menu_base)
             navigationIcon = null
         }
-        goalsCollapsingToolbarLayout.apply {
-            setBackgroundColor(ContextCompat.getColor(context, android.R.color.transparent))
-        }
+        goalsCollapsingToolbarLayout.background = null
 
         val tmpCopy = selectedGoals.toList()
         selectedGoals.clear()
