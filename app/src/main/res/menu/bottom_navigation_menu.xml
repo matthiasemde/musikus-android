@@ -11,7 +11,7 @@
         android:icon="@drawable/ic_goals"
         android:title="@string/navigationGoalsTitle"/>
     <item
-        android:id="@+id/statisticsFragment"
+        android:id="@+id/statisticsOverviewFragment"
         android:enabled="true"
         android:icon="@drawable/ic_bar_chart"
         android:title="@string/navigationStatisticsTitle"/>

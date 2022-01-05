@@ -117,7 +117,8 @@
         android:layout_height="wrap_content"
         android:src="@drawable/ic_bar_chart"
         android:layout_gravity="end"
-        android:layout_marginEnd="16dp"/>
+        android:layout_marginEnd="16dp"
+        app:tint="?attr/colorOnBackground" />
 
     <View
         android:layout_width="match_parent"

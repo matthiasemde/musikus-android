@@ -16,13 +16,22 @@
         android:label="fragment_goals"
         tools:layout="@layout/fragment_goals" />
     <fragment
-        android:id="@+id/statisticsFragment"
-        android:name="de.practicetime.practicetime.StatisticsFragment"
+        android:id="@+id/statisticsOverviewFragment"
+        android:name="de.practicetime.practicetime.StatisticsOverviewFragment"
         android:label="Library"
-        tools:layout="@layout/fragment_statistics" />
+        tools:layout="@layout/fragment_statistics_overview" >
+        <action
+            android:id="@+id/action_statisticsOverviewFragment_to_sessionsStatisticsFragment"
+            app:destination="@id/sessionsStatisticsFragment" />
+    </fragment>
     <fragment
         android:id="@+id/libraryFragment"
         android:name="de.practicetime.practicetime.LibraryFragment"
         android:label="Library"
         tools:layout="@layout/fragment_library" />
+    <fragment
+        android:id="@+id/sessionsStatisticsFragment"
+        android:name="de.practicetime.practicetime.SessionsStatisticsFragment"
+        android:label="SessionsStatisticsFragment"
+        tools:layout="@layout/fragment_statistics"/>
 </navigation>
