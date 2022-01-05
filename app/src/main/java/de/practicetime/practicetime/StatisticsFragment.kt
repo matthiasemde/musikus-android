@@ -487,7 +487,7 @@ class StatisticsFragment : Fragment(R.layout.fragment_statistics) {
 
     // get the Beginning of a Day (1=Mo, 7=Sun) of the current week (weekOffset=0) / the weeks before (weekOffset<0)
     private fun getStartOfDayOfWeek(dayIndex: Long, weekOffset: Long): ZonedDateTime {
-        return ZonedDateTime.now()
+         return ZonedDateTime.now()
             .with(ChronoField.DAY_OF_WEEK , dayIndex )         // ISO 8601, Monday is first day of week.
             .toLocalDate().atStartOfDay(ZoneId.systemDefault())  // make sure time is 00:00
             .plusWeeks(weekOffset)
@@ -498,12 +498,15 @@ class StatisticsFragment : Fragment(R.layout.fragment_statistics) {
         // because of half-open approach we have to get the "start of the _next_ day" instead of the end of the current day
         // e.g. end of Tuesday = Start of Wednesday, so make dayIndex 2 -> 3
         var nextDay = dayIndex + 1
-        if (dayIndex > 6)
+        var weekOffsetAdpated = weekOffset
+        if (dayIndex > 6) {
             nextDay = (dayIndex + 1) % 7
+            weekOffsetAdpated += 1  // increase weekOffset so that we take the start of the first day of NEXT week as end of day
+        }
         return ZonedDateTime.now()
             .with(ChronoField.DAY_OF_WEEK, nextDay)         // ISO 8601, Monday is first day of week.
             .toLocalDate().atStartOfDay(ZoneId.systemDefault())  // make sure time is 00:00
-            .plusWeeks(weekOffset)
+            .plusWeeks(weekOffsetAdpated)
     }
 
     private fun openDatabase() {
