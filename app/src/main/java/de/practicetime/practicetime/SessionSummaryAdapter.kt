@@ -101,7 +101,7 @@ class SessionSummaryAdapter(
 
         class ItemViewHolder(
             view: View,
-            context: Context,
+            private val context: Context,
             private val sessionsWithSectionsWithCategories: List<SessionWithSectionsWithCategories>,
             private val selectedSessions: List<Pair<Int, SessionSummaryAdapter>>,
             private val shortClickHandler: (
@@ -164,7 +164,6 @@ class SessionSummaryAdapter(
 
                 // set up short and long click handler for selecting sessions
                 summaryCard.setOnClickListener {
-                    Log.d("CLICK", "$bindingAdapterPosition")
                     shortClickHandler(
                         bindingAdapterPosition,
                         bindingAdapter as SessionSummaryAdapter
@@ -210,9 +209,20 @@ class SessionSummaryAdapter(
                         }
                     }
 
+                    val today = Calendar.getInstance().get(Calendar.DAY_OF_YEAR)
+                    val yesterday = Calendar.getInstance().let {
+                        it.add(Calendar.DAY_OF_YEAR, -1)
+                        it.get(Calendar.DAY_OF_YEAR)
+                    }
+
                     summaryDayLayout.visibility = View.VISIBLE
-                    summaryDate.text = dateFormat.format(currentSessionDate.timeInMillis)
+                    summaryDate.text = when(currentSessionDate.get(Calendar.DAY_OF_YEAR)) {
+                        today -> context.getString(R.string.today)
+                        yesterday -> context.getString(R.string.yesterday)
+                        else -> dateFormat.format(currentSessionDate.timeInMillis)
+                    }
                     summaryDayDuration.text = getTimeString(totalPracticeDuration)
+
                 } else {
                     summaryDayLayout.visibility = View.GONE
                 }

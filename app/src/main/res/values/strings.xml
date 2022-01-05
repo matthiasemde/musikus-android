@@ -131,4 +131,6 @@
     <string name="recording_notification_settings_description">Active recording</string>
     <string name="cannot_delete_error">Category cannot be deleted during running session!</string>
     <string name="open">Open</string>
+    <string name="today">Today</string>
+    <string name="yesterday">Yesterday</string>
 </resources>
