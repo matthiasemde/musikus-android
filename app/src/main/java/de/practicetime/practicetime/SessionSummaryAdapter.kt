@@ -3,6 +3,7 @@ package de.practicetime.practicetime
 import android.content.Context
 import android.content.res.ColorStateList
 import android.util.AttributeSet
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
@@ -43,19 +44,16 @@ class SessionSummaryAdapter(
         else
             notifyItemRangeRemoved(1, sessionsWithSectionsWithCategories.size)
 
-        // notify Adapter that button text has changed
-        notifyItemChanged(0)
+//        // notify Adapter that button text has changed
+//        notifyItemChanged(0)
     }
 
-    override fun getItemViewType(position: Int): Int {
-        return if (position == 0) VIEW_TYPE_HEADER else VIEW_TYPE_ITEM
-    }
+    override fun getItemViewType(position: Int) =
+        if (position == 0) VIEW_TYPE_HEADER else VIEW_TYPE_ITEM
 
-    override fun getItemCount(): Int =
-        if (isExpanded)
-            sessionsWithSectionsWithCategories.size + 1
-        else
-            1
+    override fun getItemCount() : Int {
+        return if (isExpanded) sessionsWithSectionsWithCategories.size + 1 else 1
+    }
 
     // Create new views (invoked by the layout manager)
     override fun onCreateViewHolder(viewGroup: ViewGroup, viewType: Int): ViewHolder {
@@ -103,7 +101,7 @@ class SessionSummaryAdapter(
 
         class ItemViewHolder(
             view: View,
-            private val context: Context,
+            context: Context,
             private val sessionsWithSectionsWithCategories: List<SessionWithSectionsWithCategories>,
             private val selectedSessions: List<Pair<Int, SessionSummaryAdapter>>,
             private val shortClickHandler: (
@@ -153,7 +151,7 @@ class SessionSummaryAdapter(
                 val (session, sectionsWithCategories) = sessionsWithSectionsWithCategories[dataIndex]
 
                 summaryCard.apply {
-                    if (selectedSessions.map { t -> t.first }.contains(layoutPosition)) {
+                    if (selectedSessions.map { t -> t.first }.contains(bindingAdapterPosition)) {
                         isSelected = true // set selected so that background changes
                         // remove Card Elevation because in Light theme it would look ugly
                         cardElevation = 0f
@@ -166,15 +164,16 @@ class SessionSummaryAdapter(
 
                 // set up short and long click handler for selecting sessions
                 summaryCard.setOnClickListener {
+                    Log.d("CLICK", "$bindingAdapterPosition")
                     shortClickHandler(
-                        layoutPosition,
+                        bindingAdapterPosition,
                         bindingAdapter as SessionSummaryAdapter
                     )
                 }
                 summaryCard.setOnLongClickListener {
                     // tell the event handler we consumed the event
                     return@setOnLongClickListener longClickHandler(
-                        layoutPosition,
+                        bindingAdapterPosition,
                         bindingAdapter as SessionSummaryAdapter
                     )
                 }

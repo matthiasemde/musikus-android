@@ -4,6 +4,7 @@ import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.os.*
+import android.util.Log
 import android.util.TypedValue
 import android.view.View
 import android.widget.TextView
@@ -92,7 +93,7 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
     private fun initSessionList() {
 
         sessionListAdapter = ConcatAdapter(ConcatAdapter.Config.Builder().let {
-            it.setIsolateViewTypes(false)
+            it.setIsolateViewTypes(true)
             it.build()
         })
 
@@ -128,7 +129,7 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
                     // if it is the same, create a new summary adapter
                     // with the respective subList of sessions
                     if (sessionMonth != currentMonth) {
-                        sessionListAdapterData.add(ArrayList(
+                        sessionListAdapterData.add(0, ArrayList(
                             sessions.slice(firstSessionOfCurrentMonth until i).reversed()
                         ))
                         sessionListAdapter.addAdapter(
@@ -136,7 +137,7 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
                             SessionSummaryAdapter(
                                 requireContext(),
                                 false,
-                                sessionListAdapterData.last(),
+                                sessionListAdapterData.first(),
                                 selectedSessions,
                                 ::shortClickOnSessionHandler,
                                 ::longClickOnSessionHandler,
@@ -151,7 +152,7 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
                 }
 
                 // create an adapter for the last subList
-                sessionListAdapterData.add(ArrayList(
+                sessionListAdapterData.add(0, ArrayList(
                     sessions.slice(firstSessionOfCurrentMonth until sessions.size).reversed()
                 ))
                 sessionListAdapter.addAdapter(
@@ -159,7 +160,7 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
                     SessionSummaryAdapter(
                         requireContext(),
                         true,
-                        sessionListAdapterData.last(),
+                        sessionListAdapterData.first(),
                         selectedSessions,
                         ::shortClickOnSessionHandler,
                         ::longClickOnSessionHandler,
