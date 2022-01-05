@@ -35,5 +35,7 @@
         android:scaleType="fitXY"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:srcCompat="@drawable/ic_check" />
+        app:srcCompat="@drawable/ic_check"
+        app:tint="?attr/colorOnSurfaceLowerContrast" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

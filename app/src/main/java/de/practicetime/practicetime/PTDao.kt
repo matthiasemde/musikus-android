@@ -95,7 +95,8 @@ interface PTDao {
 
     @Transaction
     suspend fun updateGoalTarget(goalDescriptionId: Int, newTarget: Int) {
-        getGoalInstancesFromNowOnWhereDescriptionId(goalDescriptionId).forEach {
+        // TODO check if correct because only future targets should be updated
+        getGoalInstances(goalDescriptionId).forEach {
             it.target = newTarget
             updateGoalInstance(it)
         }
@@ -200,6 +201,10 @@ interface PTDao {
     @Query("SELECT * FROM GoalDescription WHERE id=:id")
     suspend fun getGoalDescription(id: Int): GoalDescription
 
+    @Transaction
+    @Query("SELECT * FROM GoalDescription")
+    suspend fun getGoalDescriptionsWithCategories(): List<GoalDescriptionWithCategories>
+
     @Query("SELECT * FROM GoalDescription WHERE id IN (:ids)")
     suspend fun getGoalDescriptions(ids: List<Int>): List<GoalDescription>
 
@@ -210,11 +215,6 @@ interface PTDao {
     suspend fun getGoalInstancesWhereDescriptionId(
         descriptionId: Int,
         now : Long = Date().time / 1000L
-    ): List<GoalInstance>
-
-    @Query("SELECT * FROM GoalInstance WHERE goalDescriptionId=(SELECT id FROM GoalDescription WHERE id=:descriptionId)")
-    suspend fun getGoalInstancesFromNowOnWhereDescriptionId(
-        descriptionId: Int,
     ): List<GoalInstance>
 
     @Transaction
@@ -240,11 +240,17 @@ interface PTDao {
         now : Long = Date().time / 1000L,
     ) : List<GoalInstanceWithDescriptionWithCategories>
 
-    @Transaction
     @Query("SELECT * FROM GoalInstance WHERE startTimestamp < :now AND startTimestamp+periodInSeconds > :now AND goalDescriptionId IN (:descriptionIds)")
     suspend fun getGoalInstances(
         descriptionIds: List<Int>,
         now : Long = Date().time / 1000L,
+    ) : List<GoalInstance>
+
+    // all active goals and all in future
+    @Query("SELECT * FROM GoalInstance WHERE startTimestamp+periodInSeconds > :from AND goalDescriptionId=:descriptionId")
+    suspend fun getGoalInstances(
+        descriptionId: Int,
+        from : Long = Date().time / 1000L,
     ) : List<GoalInstance>
 
     @Transaction

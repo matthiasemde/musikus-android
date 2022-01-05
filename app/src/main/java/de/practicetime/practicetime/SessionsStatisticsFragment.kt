@@ -3,7 +3,6 @@ package de.practicetime.practicetime
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.os.Bundle
-import android.util.DisplayMetrics
 import android.util.Log
 import android.util.TypedValue
 import android.view.LayoutInflater
@@ -100,7 +99,7 @@ class SessionsStatisticsFragment : Fragment(R.layout.fragment_statistics) {
         view.findViewById<ImageButton>(R.id.btn_fwd).setOnClickListener {
             seekFuture(view)
         }
-        view.findViewById<ImageButton>(R.id.btn_toggle_chart).setOnClickListener {
+        view.findViewById<ImageButton>(R.id.btn_toggle_chart_type).setOnClickListener {
             chartType = when (chartType) {
                 BAR_CHART -> PIE_CHART
                 PIE_CHART -> BAR_CHART
@@ -127,7 +126,7 @@ class SessionsStatisticsFragment : Fragment(R.layout.fragment_statistics) {
             categoryListAdapter = CategoryStatsAdapter()
             val layoutManager = LinearLayoutManager(requireContext())
 
-            val categoryRecyclerView = requireView().findViewById<RecyclerView>(R.id.recyclerview_categories_statistics)
+            val categoryRecyclerView = requireView().findViewById<RecyclerView>(R.id.recyclerview_statistics)
             categoryRecyclerView.layoutManager = layoutManager
             categoryRecyclerView.adapter = categoryListAdapter
         }
@@ -226,8 +225,8 @@ class SessionsStatisticsFragment : Fragment(R.layout.fragment_statistics) {
     }
 
     private fun setHeadingTextViews(view: View) {
-        val tvRange = view.findViewById<TextView>(R.id.tv_visible_range)
-        val tvTotalTimeInRange = view.findViewById<TextView>(R.id.tv_total_time_visible_range)
+        val tvRange = view.findViewById<TextView>(R.id.tv_chart_header)
+        val tvTotalTimeInRange = view.findViewById<TextView>(R.id.tv_secondary_chart_header)
 
         val chartArray = barChart.data.getDataSetByIndex(0) as BarDataSet
         // because we're always counting down in the loops, xVals are chronologically reversed
@@ -566,7 +565,7 @@ class SessionsStatisticsFragment : Fragment(R.layout.fragment_statistics) {
             }
         }
         // scroll to top if elements are removed/inserted to show possibly added items on top
-        if(elemRemovedOrInserted) requireView().findViewById<RecyclerView>(R.id.recyclerview_categories_statistics).scrollToPosition(0)
+        if(elemRemovedOrInserted) requireView().findViewById<RecyclerView>(R.id.recyclerview_statistics).scrollToPosition(0)
 
         // if list is empty, show shrug
         if (categories.none { it.visible }) {

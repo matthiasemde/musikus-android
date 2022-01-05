@@ -1,148 +1,157 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/scrollview_statistics"
     android:layout_width="match_parent"
-    android:orientation="vertical"
-    android:layout_height="match_parent">
-
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_gravity="center"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_margin="24dp">
-
-        <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/btn_days"
-            style="@style/ToggleButton"
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:background="@drawable/bg_toggle_button_left"
-            android:text="@string/days"/>
-
-        <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/btn_weeks"
-            style="@style/ToggleButton"
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:background="@drawable/bg_toggle_button_middle"
-            android:text="@string/weeks"/>
-
-
-        <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/btn_months"
-            style="@style/ToggleButton"
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:background="@drawable/bg_toggle_button_right"
-            android:text="@string/months"/>
-    </LinearLayout>
+    android:layout_height="wrap_content">
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="0dp"
         android:orientation="vertical"
-        android:layout_weight="1"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp">
+        android:layout_height="wrap_content">
+
+        <LinearLayout
+            android:id="@+id/ll_statistics_toggle_timespan"
+            android:layout_width="wrap_content"
+            android:layout_gravity="center"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_margin="24dp">
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/btn_days"
+                style="@style/ToggleButton"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_toggle_button_left"
+                android:text="@string/days"/>
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/btn_weeks"
+                style="@style/ToggleButton"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_toggle_button_middle"
+                android:text="@string/weeks"/>
+
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/btn_months"
+                style="@style/ToggleButton"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_toggle_button_right"
+                android:text="@string/months"/>
+        </LinearLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center">
-
-            <ImageButton
-                android:id="@+id/btn_rwnd"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                app:tint="?attr/colorOnSurfaceLowerContrast"
-                android:src="@drawable/ic_arrow_left"
-                android:background="?selectableItemBackgroundBorderless"/>
+            android:layout_height="300dp"
+            android:orientation="vertical"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp">
 
             <LinearLayout
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:layout_height="match_parent"
-                android:orientation="vertical"
-                android:layout_gravity="center">
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center">
 
-                <TextView
-                    android:id="@+id/tv_visible_range"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center"
-                    android:textSize="20sp"
-                    android:textStyle="bold"
-                    tools:text="November 14 - 20" />
+                <ImageButton
+                    android:id="@+id/btn_rwnd"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    app:tint="?attr/colorOnSurfaceLowerContrast"
+                    android:src="@drawable/ic_arrow_left"
+                    android:background="?selectableItemBackgroundBorderless"/>
 
-                <TextView
-                    android:id="@+id/tv_total_time_visible_range"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center"
-                    android:textSize="15sp"
-                    tools:text="12h 32min"/>
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:layout_gravity="center">
+
+                    <TextView
+                        android:id="@+id/tv_chart_header"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:textSize="20sp"
+                        android:textStyle="bold"
+                        tools:text="November 14 - 20" />
+
+                    <TextView
+                        android:id="@+id/tv_secondary_chart_header"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:textSize="15sp"
+                        tools:text="12h 32min"/>
+
+                </LinearLayout>
+
+                <ImageButton
+                    android:id="@+id/btn_fwd"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    app:tint="@color/color_imagebutton_alpha_on_disabled"
+                    android:src="@drawable/ic_arrow_right"
+                    android:background="?selectableItemBackgroundBorderless"/>
 
             </LinearLayout>
 
-            <ImageButton
-                android:id="@+id/btn_fwd"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                app:tint="@color/color_imagebutton_alpha_on_disabled"
-                android:src="@drawable/ic_arrow_right"
-                android:background="?selectableItemBackgroundBorderless"/>
+            <com.github.mikephil.charting.charts.BarChart
+                android:id="@+id/bar_chart"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+
+            <com.github.mikephil.charting.charts.PieChart
+                android:id="@+id/pie_chart"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="gone"
+                tools:visibility="gone"/>
 
         </LinearLayout>
 
-        <com.github.mikephil.charting.charts.BarChart
-            android:id="@+id/bar_chart"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+        <ImageButton
+            android:id="@+id/btn_toggle_chart_type"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_bar_chart"
+            android:layout_gravity="end"
+            android:layout_marginEnd="16dp"
+            app:tint="?attr/colorOnBackground" />
 
-        <com.github.mikephil.charting.charts.PieChart
-            android:id="@+id/pie_chart"
+        <View
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:visibility="gone"
-            tools:visibility="visible"/>
+            android:layout_height="1dp"
+            android:background="?android:attr/listDivider" />
+
+        <androidx.coordinatorlayout.widget.CoordinatorLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerview_statistics"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:padding="16dp"
+                android:clipToPadding="false"
+                android:fadeScrollbars="false"
+                android:nestedScrollingEnabled="false"
+                tools:listitem="@layout/view_statistics_category_list_item"/>
+
+            <include
+                layout="@layout/view_shrug"
+                android:layout_height="match_parent"
+                android:layout_width="match_parent"/>
+
+        </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
     </LinearLayout>
 
-    <ImageButton
-        android:id="@+id/btn_toggle_chart"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:src="@drawable/ic_bar_chart"
-        android:layout_gravity="end"
-        android:layout_marginEnd="16dp"
-        app:tint="?attr/colorOnBackground" />
-
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="?android:attr/listDivider" />
-
-    <androidx.coordinatorlayout.widget.CoordinatorLayout
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1">
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recyclerview_categories_statistics"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:padding="16dp"
-            android:clipToPadding="false"
-            android:fadeScrollbars="false"/>
-
-        <include
-            layout="@layout/view_shrug"
-            android:layout_height="match_parent"
-            android:layout_width="match_parent"/>
-
-    </androidx.coordinatorlayout.widget.CoordinatorLayout>
-
-</LinearLayout>
+</androidx.core.widget.NestedScrollView>

@@ -24,7 +24,7 @@
         <!-- This would change the default text color of (nearly all text): -->
         <!--<item name="android:textColorTertiary">@color/md_red_500</item>-->
         <!--<item name="android:textColorSecondary">@color/md_red_500</item>-->
-        <item name="colorOnSurfaceLowerContrast">@color/md_grey_600</item>
+        <item name="colorOnSurfaceLowerContrast">@color/md_grey_700</item>
 
     </style>
 </resources>

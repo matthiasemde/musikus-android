@@ -3,7 +3,6 @@ package de.practicetime.practicetime
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.os.Bundle
-import android.util.DisplayMetrics
 import android.util.Log
 import android.util.TypedValue
 import android.view.LayoutInflater
@@ -11,6 +10,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import androidx.appcompat.widget.AppCompatButton
+import androidx.cardview.widget.CardView
+import androidx.core.widget.NestedScrollView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -24,6 +25,9 @@ import com.github.mikephil.charting.data.*
 import com.github.mikephil.charting.formatter.PercentFormatter
 import com.github.mikephil.charting.formatter.ValueFormatter
 import de.practicetime.practicetime.entities.Category
+import de.practicetime.practicetime.entities.GoalDescription
+import de.practicetime.practicetime.entities.GoalInstance
+import de.practicetime.practicetime.entities.GoalPeriodUnit
 import kotlinx.coroutines.launch
 import java.time.*
 import java.time.format.DateTimeFormatter
@@ -36,103 +40,60 @@ class GoalsStatisticsFragment : Fragment(R.layout.fragment_statistics) {
 
     private lateinit var dao: PTDao
     private lateinit var barChart: BarChart
-    private lateinit var pieChart: PieChart
-    private lateinit var categoryListAdapter: CategoryStatsAdapter
-    private var daysViewWeekOffset = 0L
-    private var weeksViewWeekOffset = 0L
-    private var monthsViewMonthOffset = 0L
-    private var colorAmount = 0
+    private lateinit var goalListAdapter: GoalStatsAdapter
 
-    private val categories = ArrayList<CategoryListElement>()
+    private val goals = ArrayList<GoalListElement>()
+    private var selectedGoal = -1
 
-    data class CategoryListElement(
-        val category: Category,
-        var totalDuration: Int = 0,
-        var selected: Boolean,
-        var visible: Boolean
+    data class GoalListElement(
+        val goalInstances: List<GoalInstance>,
+        val goalDesc: GoalDescription,
+        val category: Category?,
     )
-
-    private enum class VIEWS(val barCount: Int) {
-        DAYS_VIEW(7),   // be careful to change because 7 means Mon-Sun here!
-        WEEKS_VIEW(7),  // current week + last 6 weeks
-        MONTHS_VIEW(7), // current month + last 6 months
-    }
-    private var activeView = VIEWS.DAYS_VIEW
-
-    companion object {
-        const val BAR_CHART = 0
-        const val PIE_CHART = 1
-    }
-    private var chartType = BAR_CHART   // current chart type to display
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
 
         // get the dao object
         openDatabase()
 
-        view.findViewById<AppCompatButton>(R.id.btn_days).setOnClickListener {
-            activeView = VIEWS.DAYS_VIEW
-            updateChartData()
-            setBtnEnabledState(view)
-            // reset time ranges for other views
-            weeksViewWeekOffset = 0L
-            monthsViewMonthOffset = 0L
-        }
-        view.findViewById<AppCompatButton>(R.id.btn_weeks).setOnClickListener {
-            activeView = VIEWS.WEEKS_VIEW
-            updateChartData()
-            setBtnEnabledState(view)
-            // reset time ranges for other views
-            daysViewWeekOffset = 0L
-            monthsViewMonthOffset = 0L
-        }
-        view.findViewById<AppCompatButton>(R.id.btn_months).setOnClickListener {
-            activeView = VIEWS.MONTHS_VIEW
-            updateChartData()
-            setBtnEnabledState(view)
-            // reset time ranges for other views
-            daysViewWeekOffset = 0L
-            weeksViewWeekOffset = 0L
-        }
         view.findViewById<ImageButton>(R.id.btn_rwnd).setOnClickListener {
-            seekPast(view)
+//            seekPast(view)
         }
         view.findViewById<ImageButton>(R.id.btn_fwd).setOnClickListener {
-            seekFuture(view)
-        }
-        view.findViewById<ImageButton>(R.id.btn_toggle_chart).setOnClickListener {
-            chartType = when (chartType) {
-                BAR_CHART -> PIE_CHART
-                PIE_CHART -> BAR_CHART
-                else -> BAR_CHART
-            }
-            updateChartData()
-            Log.d("TAG", "$chartType")
+//            seekFuture(view)
         }
 
-        colorAmount = context?.resources?.getIntArray(R.array.category_colors)?.toCollection(mutableListOf())?.size ?: 0
-        initBarChart()
-        initPieChart()
-        updateChartData()
-        setBtnEnabledState(view)
+//        initBarChart()
+//        initPieChart()
+//        updateChartData()
+//        setBtnEnabledState(view)
 
-        initCategoryList()
+        initGoalsList()
+
+        view.findViewById<LinearLayout>(R.id.ll_statistics_toggle_timespan).visibility = View.GONE
     }
 
-    private fun initCategoryList() {
+    private fun initGoalsList() {
         lifecycleScope.launch {
-            dao.getAllCategories().forEach {
-                categories.add(CategoryListElement(it, selected = true, visible = false))
+            dao.getGoalDescriptionsWithCategories().forEach { (desc, cat) ->
+                goals.add(
+                    GoalListElement(
+                        goalInstances = dao.getGoalInstances(desc.id, from = 0L),
+                        goalDesc = desc,
+                        category = cat.firstOrNull()
+                    )
+                )
             }
-            categoryListAdapter = CategoryStatsAdapter()
+            goalListAdapter = GoalStatsAdapter()
             val layoutManager = LinearLayoutManager(requireContext())
 
-            val categoryRecyclerView = requireView().findViewById<RecyclerView>(R.id.recyclerview_categories_statistics)
+            val categoryRecyclerView = requireView().findViewById<RecyclerView>(R.id.recyclerview_statistics)
             categoryRecyclerView.layoutManager = layoutManager
-            categoryRecyclerView.adapter = categoryListAdapter
+            categoryRecyclerView.adapter = goalListAdapter
         }
     }
 
+    /*
     private fun initBarChart() {
         // for rounded bars: https://gist.github.com/xanscale/e971cc4f2f0712a8a3bcc35e85325c27
         //      issue: https://github.com/PhilJay/MPAndroidChart/issues/2771#issuecomment-566719474
@@ -226,8 +187,8 @@ class GoalsStatisticsFragment : Fragment(R.layout.fragment_statistics) {
     }
 
     private fun setHeadingTextViews(view: View) {
-        val tvRange = view.findViewById<TextView>(R.id.tv_visible_range)
-        val tvTotalTimeInRange = view.findViewById<TextView>(R.id.tv_total_time_visible_range)
+        val tvRange = view.findViewById<TextView>(R.id.tv_chart_header)
+        val tvTotalTimeInRange = view.findViewById<TextView>(R.id.tv_secondary_chart_header)
 
         val chartArray = barChart.data.getDataSetByIndex(0) as BarDataSet
         // because we're always counting down in the loops, xVals are chronologically reversed
@@ -425,7 +386,9 @@ class GoalsStatisticsFragment : Fragment(R.layout.fragment_statistics) {
         updateChartData()
         setBtnEnabledState(view)
     }
+*/
 
+    /*
     /**
      * construct array for "week" view -> each bar = 1 day
      */
@@ -566,7 +529,7 @@ class GoalsStatisticsFragment : Fragment(R.layout.fragment_statistics) {
             }
         }
         // scroll to top if elements are removed/inserted to show possibly added items on top
-        if(elemRemovedOrInserted) requireView().findViewById<RecyclerView>(R.id.recyclerview_categories_statistics).scrollToPosition(0)
+        if(elemRemovedOrInserted) requireView().findViewById<RecyclerView>(R.id.recyclerview_statistics).scrollToPosition(0)
 
         // if list is empty, show shrug
         if (categories.none { it.visible }) {
@@ -644,6 +607,8 @@ class GoalsStatisticsFragment : Fragment(R.layout.fragment_statistics) {
             .plusWeeks(weekOffsetAdpated)
     }
 
+*/
+
     private fun openDatabase() {
         val db = Room.databaseBuilder(
             requireContext(),
@@ -652,7 +617,7 @@ class GoalsStatisticsFragment : Fragment(R.layout.fragment_statistics) {
         dao = db.ptDao
     }
 
-
+/*
     /**
      * formats x axis value according to our time scaling
      */
@@ -764,41 +729,100 @@ class GoalsStatisticsFragment : Fragment(R.layout.fragment_statistics) {
         }
     }
 
-    private inner class CategoryStatsAdapter : RecyclerView.Adapter<CategoryStatsAdapter.ViewHolder>() {
+
+     */
+    private inner class GoalStatsAdapter : RecyclerView.Adapter<GoalStatsAdapter.ViewHolder>() {
 
         inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-            val catCheckBox: CheckBox = view.findViewById(R.id.checkbox_category)
-            val catTimeView: TextView = view.findViewById(R.id.total_time_category)
+            val goalRadioButton: RadioButton = view.findViewById(R.id.radiobutton_goal)
+            val goalTitleTv: TextView = view.findViewById(R.id.tv_goal_title_statistics)
+            val goalDescTv: TextView = view.findViewById(R.id.tv_goal_desc_statistics)
+            val tvNumSuccess: TextView = view.findViewById(R.id.tv_success_count)
+            val tvNumFail: TextView = view.findViewById(R.id.tv_fail_count)
+            val progressGoal: ProgressBar = view.findViewById(R.id.progressbar_goal_element)
+            val cardViewWrapper: CardView = view.findViewById(R.id.cardview_goal_statistics)
         }
 
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CategoryStatsAdapter.ViewHolder {
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): GoalStatsAdapter.ViewHolder {
             // Create a new view, which defines the UI of the list item
             val view = LayoutInflater.from(parent.context)
-                .inflate(R.layout.view_statistics_category_list_item, parent, false)
+                .inflate(R.layout.view_statistics_goal_list_item, parent, false)
 
             return ViewHolder(view)
         }
 
-        override fun onBindViewHolder(holder: CategoryStatsAdapter.ViewHolder, position: Int) {
+        override fun onBindViewHolder(holder: GoalStatsAdapter.ViewHolder, position: Int) {
+            val elem = goals[position]
 
-            val elem = categories.filter { it.visible }[position]
             val categoryColors = requireContext().resources.getIntArray(R.array.category_colors)
-
-            holder.catCheckBox.text = elem.category.name
-            holder.catCheckBox.setOnCheckedChangeListener(null)
-            holder.catCheckBox.isChecked = elem.selected
-            holder.catCheckBox.buttonTintList = ColorStateList.valueOf(
-                categoryColors[elem.category.colorIndex]
-            )
-            holder.catCheckBox.setOnCheckedChangeListener { _, isChecked ->
-                elem.selected = isChecked   // sync list with UI
-                updateChartData(recalculateDurs = false)  // notify fragment to change chart
+            if (elem.category != null) {
+                val catColor = ColorStateList.valueOf(categoryColors[elem.category.colorIndex])
+                holder.goalTitleTv.text = elem.category.name
+                holder.goalRadioButton.buttonTintList = catColor
+                holder.progressGoal.progressTintList = catColor
+            } else {
+                holder.goalTitleTv.text = getString(R.string.goal_name_non_specific)
+                holder.goalRadioButton.buttonTintList = ColorStateList.valueOf(getThemeColor(R.attr.colorPrimary))
+                holder.progressGoal.progressTintList = null
             }
 
-            holder.catTimeView.text = secondsToTimeString(elem.totalDuration)
+            // TODO take data from last Instance?
+            val targetHours = elem.goalInstances.last().target / 3600
+            val targetMinutes = elem.goalInstances.last().target % 3600 / 60
+
+            // Following copy pasted from GoalAdapter:
+            var targetHoursString = ""
+            var targetMinutesString = ""
+            if (targetHours > 0) targetHoursString = "${targetHours}h "
+            if (targetMinutes > 0) targetMinutesString = "${targetMinutes}min "
+
+            val periodFormatted =
+                if (elem.goalDesc.periodInPeriodUnits > 1) {  // plural
+                    when (elem.goalDesc.periodUnit) {
+                        GoalPeriodUnit.DAY -> requireContext().getString(R.string.goal_description_days, elem.goalDesc.periodInPeriodUnits)
+                        GoalPeriodUnit.WEEK -> requireContext().getString(R.string.goal_description_weeks, elem.goalDesc.periodInPeriodUnits)
+                        GoalPeriodUnit.MONTH -> requireContext().getString(R.string.goal_description_months, elem.goalDesc.periodInPeriodUnits)
+                    }
+                } else {    // singular
+                    when (elem.goalDesc.periodUnit) {
+                        GoalPeriodUnit.DAY -> requireContext().getString(R.string.goal_description_day)
+                        GoalPeriodUnit.WEEK -> requireContext().getString(R.string.goal_description_week)
+                        GoalPeriodUnit.MONTH -> requireContext().getString(R.string.goal_description_month)
+                    }
+                }
+
+            holder.goalDescTv.text = requireContext().getString(
+                R.string.goal_description_complete,
+                targetHoursString,
+                targetMinutesString,
+                periodFormatted
+            )
+
+            val succeeded = elem.goalInstances.filter { it.progress >= it.target }.size
+            val failed = elem.goalInstances.filter { it.progress < it.target }.size
+            holder.tvNumSuccess.text = succeeded.toString()
+            holder.tvNumFail.text = failed.toString()
+
+            holder.progressGoal.max = succeeded + failed
+            holder.progressGoal.progress = succeeded
+
+            val radioSelectListener = View.OnClickListener {
+                val oldSel = selectedGoal
+                selectedGoal = holder.bindingAdapterPosition
+                notifyItemChanged(oldSel)
+                holder.goalRadioButton.isChecked = true
+                val sv = requireView().findViewById<NestedScrollView>(R.id.scrollview_statistics)
+                // only scroll to top if already more than 100px scrolled to prevent blocking the UI for scroll duration
+                if (sv.scrollY > 100)
+                    sv.smoothScrollTo(0,0, 600)
+            }
+            holder.cardViewWrapper.setOnClickListener(radioSelectListener)
+            holder.goalRadioButton.setOnClickListener(radioSelectListener)
+
+            holder.goalRadioButton.isChecked = position == selectedGoal
         }
 
-        override fun getItemCount(): Int = categories.filter { it.visible }.size
+        override fun getItemCount(): Int = goals.size
 
     }
 

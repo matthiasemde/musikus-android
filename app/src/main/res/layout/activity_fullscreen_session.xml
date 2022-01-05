@@ -97,7 +97,8 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="24dp"
                     android:layout_marginEnd="24dp"
-                    android:nestedScrollingEnabled="false" />
+                    android:nestedScrollingEnabled="false"
+                    tools:listitem="@layout/view_fullscreen_session_section"/>
 
                 <TextView
                     android:layout_width="wrap_content"
