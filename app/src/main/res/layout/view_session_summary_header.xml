@@ -16,15 +16,17 @@
         android:id="@+id/sessionHeaderMonth"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_weight="5"
-        tools:text="January"
-        android:maxLines="1"
-        android:gravity="center"
-        android:textSize="25sp"
         android:layout_gravity="center"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
+        android:layout_weight="5"
+        android:background="@drawable/background_session_summary_header"
+        android:gravity="center"
+        android:maxLines="1"
         android:padding="3dp"
+        android:textSize="25sp"
         android:textStyle="bold"
-        android:background="@drawable/background_session_summary_header"/>
+        tools:text="January" />
 
     <Space
         android:layout_width="0dp"
