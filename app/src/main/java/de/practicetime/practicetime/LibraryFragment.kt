@@ -135,6 +135,8 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
             } else {
                 longClickOnCategoryHandler(index, vibrate = false)
             }
+        } else {
+            editCategoryDialog?.show(activeCategories[index])
         }
     }
 
