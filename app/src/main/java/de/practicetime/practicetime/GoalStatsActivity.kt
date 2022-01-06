@@ -1,142 +1,92 @@
 package de.practicetime.practicetime
 
 import android.content.res.ColorStateList
-import android.graphics.Color
+import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
-import androidx.appcompat.widget.AppCompatButton
-import androidx.fragment.app.Fragment
+import androidx.cardview.widget.CardView
+import androidx.core.widget.NestedScrollView
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
-import com.github.mikephil.charting.animation.Easing
 import com.github.mikephil.charting.charts.BarChart
-import com.github.mikephil.charting.charts.PieChart
-import com.github.mikephil.charting.components.XAxis
-import com.github.mikephil.charting.data.*
-import com.github.mikephil.charting.formatter.PercentFormatter
-import com.github.mikephil.charting.formatter.ValueFormatter
 import de.practicetime.practicetime.entities.Category
+import de.practicetime.practicetime.entities.GoalDescription
+import de.practicetime.practicetime.entities.GoalInstance
+import de.practicetime.practicetime.entities.GoalPeriodUnit
 import kotlinx.coroutines.launch
-import java.time.*
-import java.time.format.DateTimeFormatter
-import java.time.temporal.ChronoField
-import kotlin.collections.ArrayList
-import kotlin.math.roundToInt
 
-
-class SessionsStatisticsFragment : Fragment(R.layout.fragment_statistics) {
+class GoalStatsActivity : AppCompatActivity() {
 
     private lateinit var dao: PTDao
     private lateinit var barChart: BarChart
-    private lateinit var pieChart: PieChart
-    private lateinit var categoryListAdapter: CategoryStatsAdapter
-    private var daysViewWeekOffset = 0L
-    private var weeksViewWeekOffset = 0L
-    private var monthsViewMonthOffset = 0L
-    private var colorAmount = 0
+    private lateinit var goalListAdapter: GoalStatsAdapter
 
-    private val categories = ArrayList<CategoryListElement>()
+    private val goals = ArrayList<GoalListElement>()
+    private var selectedGoal = -1
 
-    data class CategoryListElement(
-        val category: Category,
-        var totalDuration: Int = 0,
-        var selected: Boolean,
-        var visible: Boolean
+    data class GoalListElement(
+        val goalInstances: List<GoalInstance>,
+        val goalDesc: GoalDescription,
+        val category: Category?,
     )
 
-    private enum class VIEWS(val barCount: Int) {
-        DAYS_VIEW(7),   // be careful to change because 7 means Mon-Sun here!
-        WEEKS_VIEW(7),  // current week + last 6 weeks
-        MONTHS_VIEW(7), // current month + last 6 months
-    }
-    private var activeView = VIEWS.DAYS_VIEW
-
-    companion object {
-        const val BAR_CHART = 0
-        const val PIE_CHART = 1
-    }
-    private var chartType = BAR_CHART   // current chart type to display
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_statistics)
 
         // get the dao object
         openDatabase()
 
-        view.findViewById<AppCompatButton>(R.id.btn_days).setOnClickListener {
-            activeView = VIEWS.DAYS_VIEW
-            updateChartData()
-            setBtnEnabledState(view)
-            // reset time ranges for other views
-            weeksViewWeekOffset = 0L
-            monthsViewMonthOffset = 0L
+        findViewById<ImageButton>(R.id.btn_rwnd).setOnClickListener {
+//            seekPast(view)
         }
-        view.findViewById<AppCompatButton>(R.id.btn_weeks).setOnClickListener {
-            activeView = VIEWS.WEEKS_VIEW
-            updateChartData()
-            setBtnEnabledState(view)
-            // reset time ranges for other views
-            daysViewWeekOffset = 0L
-            monthsViewMonthOffset = 0L
-        }
-        view.findViewById<AppCompatButton>(R.id.btn_months).setOnClickListener {
-            activeView = VIEWS.MONTHS_VIEW
-            updateChartData()
-            setBtnEnabledState(view)
-            // reset time ranges for other views
-            daysViewWeekOffset = 0L
-            weeksViewWeekOffset = 0L
-        }
-        view.findViewById<ImageButton>(R.id.btn_rwnd).setOnClickListener {
-            seekPast(view)
-        }
-        view.findViewById<ImageButton>(R.id.btn_fwd).setOnClickListener {
-            seekFuture(view)
-        }
-        view.findViewById<ImageButton>(R.id.btn_toggle_chart_type).setOnClickListener {
-            chartType = when (chartType) {
-                BAR_CHART -> PIE_CHART
-                PIE_CHART -> BAR_CHART
-                else -> BAR_CHART
-            }
-            updateChartData()
-            Log.d("TAG", "$chartType")
+        findViewById<ImageButton>(R.id.btn_fwd).setOnClickListener {
+//            seekFuture(view)
         }
 
-        colorAmount = context?.resources?.getIntArray(R.array.category_colors)?.toCollection(mutableListOf())?.size ?: 0
-        initBarChart()
-        initPieChart()
-        updateChartData()
-        setBtnEnabledState(view)
+//        initBarChart()
+//        initPieChart()
+//        updateChartData()
+//        setBtnEnabledState(view)
 
-        initCategoryList()
+        initGoalsList()
+
+        findViewById<LinearLayout>(R.id.ll_statistics_toggle_timespan).visibility = View.GONE
+
     }
 
-    private fun initCategoryList() {
+    private fun initGoalsList() {
         lifecycleScope.launch {
-            dao.getAllCategories().forEach {
-                categories.add(CategoryListElement(it, selected = true, visible = false))
+            dao.getGoalDescriptionsWithCategories().forEach { (desc, cat) ->
+                goals.add(
+                    GoalListElement(
+                        goalInstances = dao.getGoalInstances(desc.id, from = 0L),
+                        goalDesc = desc,
+                        category = cat.firstOrNull()
+                    )
+                )
             }
-            categoryListAdapter = CategoryStatsAdapter()
-            val layoutManager = LinearLayoutManager(requireContext())
+            goalListAdapter = GoalStatsAdapter()
+            val layoutManager = LinearLayoutManager(this@GoalStatsActivity)
 
-            val categoryRecyclerView = requireView().findViewById<RecyclerView>(R.id.recyclerview_statistics)
+            val categoryRecyclerView = findViewById<RecyclerView>(R.id.recyclerview_statistics)
             categoryRecyclerView.layoutManager = layoutManager
-            categoryRecyclerView.adapter = categoryListAdapter
+            categoryRecyclerView.adapter = goalListAdapter
         }
     }
 
+    /*
     private fun initBarChart() {
         // for rounded bars: https://gist.github.com/xanscale/e971cc4f2f0712a8a3bcc35e85325c27
         //      issue: https://github.com/PhilJay/MPAndroidChart/issues/2771#issuecomment-566719474
 
-        barChart = requireView().findViewById(R.id.bar_chart) as BarChart
+        barChart = findViewById(R.id.bar_chart) as BarChart
         barChart.setTouchEnabled(false)
         barChart.description.isEnabled = false
         barChart.legend.isEnabled = false
@@ -165,9 +115,9 @@ class SessionsStatisticsFragment : Fragment(R.layout.fragment_statistics) {
     }
 
     private fun initPieChart() {
-        pieChart = requireView().findViewById(R.id.pie_chart);
+        pieChart = findViewById(R.id.pie_chart);
 
-        val height = (requireView().measuredHeight * 0.65).toInt()
+        val height = (measuredHeight * 0.65).toInt()
 
         Log.d("ZAG", "height: $height")
 
@@ -225,8 +175,8 @@ class SessionsStatisticsFragment : Fragment(R.layout.fragment_statistics) {
     }
 
     private fun setHeadingTextViews(view: View) {
-        val tvRange = view.findViewById<TextView>(R.id.tv_chart_header)
-        val tvTotalTimeInRange = view.findViewById<TextView>(R.id.tv_secondary_chart_header)
+        val tvRange = findViewById<TextView>(R.id.tv_chart_header)
+        val tvTotalTimeInRange = findViewById<TextView>(R.id.tv_secondary_chart_header)
 
         val chartArray = barChart.data.getDataSetByIndex(0) as BarDataSet
         // because we're always counting down in the loops, xVals are chronologically reversed
@@ -288,14 +238,14 @@ class SessionsStatisticsFragment : Fragment(R.layout.fragment_statistics) {
                 it.yVals.sum().toInt()
             }
         )
-        tvTotalTimeInRange.text = requireContext().getString(R.string.total_time, durationStr)
+        tvTotalTimeInRange.text = getString(R.string.total_time, durationStr)
     }
 
     private fun setBtnEnabledState(view: View) {
-        val btnWeek = view.findViewById<AppCompatButton>(R.id.btn_days)
-        val btnMonth = view.findViewById<AppCompatButton>(R.id.btn_weeks)
-        val btnYear = view.findViewById<AppCompatButton>(R.id.btn_months)
-        val btnFwd = view.findViewById<ImageButton>(R.id.btn_fwd)
+        val btnWeek = findViewById<AppCompatButton>(R.id.btn_days)
+        val btnMonth = findViewById<AppCompatButton>(R.id.btn_weeks)
+        val btnYear = findViewById<AppCompatButton>(R.id.btn_months)
+        val btnFwd = findViewById<ImageButton>(R.id.btn_fwd)
 
         btnWeek.isSelected = false
         btnMonth.isSelected = false
@@ -424,7 +374,9 @@ class SessionsStatisticsFragment : Fragment(R.layout.fragment_statistics) {
         updateChartData()
         setBtnEnabledState(view)
     }
+*/
 
+    /*
     /**
      * construct array for "week" view -> each bar = 1 day
      */
@@ -565,15 +517,15 @@ class SessionsStatisticsFragment : Fragment(R.layout.fragment_statistics) {
             }
         }
         // scroll to top if elements are removed/inserted to show possibly added items on top
-        if(elemRemovedOrInserted) requireView().findViewById<RecyclerView>(R.id.recyclerview_statistics).scrollToPosition(0)
+        if(elemRemovedOrInserted) findViewById<RecyclerView>(R.id.recyclerview_statistics).scrollToPosition(0)
 
         // if list is empty, show shrug
         if (categories.none { it.visible }) {
-            requireView().findViewById<LinearLayout>(R.id.shrug_layout).visibility = View.VISIBLE
-            requireView().findViewById<TextView>(R.id.shrug_text_1).text = resources.getString(R.string.no_sessions)
-            requireView().findViewById<TextView>(R.id.shrug_text_2).visibility = View.GONE
+            findViewById<LinearLayout>(R.id.shrug_layout).visibility = View.VISIBLE
+            findViewById<TextView>(R.id.shrug_text_1).text = resources.getString(R.string.no_sessions)
+            findViewById<TextView>(R.id.shrug_text_2).visibility = View.GONE
         } else {
-            requireView().findViewById<LinearLayout>(R.id.shrug_layout).visibility = View.GONE
+            findViewById<LinearLayout>(R.id.shrug_layout).visibility = View.GONE
         }
     }
 
@@ -621,7 +573,7 @@ class SessionsStatisticsFragment : Fragment(R.layout.fragment_statistics) {
 
     // get the Beginning of a Day (1=Mo, 7=Sun) of the current week (weekOffset=0) / the weeks before (weekOffset<0)
     private fun getStartOfDayOfWeek(dayIndex: Long, weekOffset: Long): ZonedDateTime {
-        return ZonedDateTime.now()
+         return ZonedDateTime.now()
             .with(ChronoField.DAY_OF_WEEK , dayIndex )         // ISO 8601, Monday is first day of week.
             .toLocalDate().atStartOfDay(ZoneId.systemDefault())  // make sure time is 00:00
             .plusWeeks(weekOffset)
@@ -632,169 +584,233 @@ class SessionsStatisticsFragment : Fragment(R.layout.fragment_statistics) {
         // because of half-open approach we have to get the "start of the _next_ day" instead of the end of the current day
         // e.g. end of Tuesday = Start of Wednesday, so make dayIndex 2 -> 3
         var nextDay = dayIndex + 1
-        if (dayIndex > 6)
+        var weekOffsetAdpated = weekOffset
+        if (dayIndex > 6) {
             nextDay = (dayIndex + 1) % 7
+            weekOffsetAdpated += 1  // increase weekOffset so that we take the start of the first day of NEXT week as end of day
+        }
         return ZonedDateTime.now()
             .with(ChronoField.DAY_OF_WEEK, nextDay)         // ISO 8601, Monday is first day of week.
             .toLocalDate().atStartOfDay(ZoneId.systemDefault())  // make sure time is 00:00
-            .plusWeeks(weekOffset)
+            .plusWeeks(weekOffsetAdpated)
     }
+
+*/
 
     private fun openDatabase() {
         val db = Room.databaseBuilder(
-            requireContext(),
+            this,
             PTDatabase::class.java, "pt-database"
         ).build()
         dao = db.ptDao
     }
 
-
-    /**
-     * formats x axis value according to our time scaling
-     */
-    private inner class XAxisValueFormatter: ValueFormatter() {
-
-        override fun getFormattedValue(value: Float): String {
-            return when (activeView) {
-                VIEWS.DAYS_VIEW ->
-                    getDayString(value)
-                VIEWS.WEEKS_VIEW ->
-                    getWeekString(value)
-                VIEWS.MONTHS_VIEW ->
-                    getMonthString(value)
-            }
-        }
-
+    /*
         /**
-         * For DateFormatter patterns see: https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatter.html
+         * formats x axis value according to our time scaling
          */
-
-        private fun getDayString(xValue: Float): String {
-            if (xValue < 1 || xValue > 7) {
-                // sometimes on activeView change getFormattedValue is called to soon / on wrong xValue
-                // so just return nothing to prevent crash because of wrong dayIndex
-                return ""
-            }
-            return ZonedDateTime.now()
-                .with(ChronoField.DAY_OF_WEEK , xValue.toLong())
-                .format(DateTimeFormatter.ofPattern("E"))
-        }
-
-        private fun getWeekString(xValue: Float): String {
-            // maybe a solution for multiline: https://stackoverflow.com/a/46676451
-            val start = getStartOfWeek(xValue.toLong())
-                .format(DateTimeFormatter.ofPattern("dd"))
-
-            val end = getEndOfWeek(xValue.toLong())
-                .minusDays(1)   // subtract one day to get the "last" day (because of half-open approach)
-                .format(DateTimeFormatter.ofPattern("dd"))
-
-            return ("$start - $end")
-        }
-
-        private fun getMonthString(xValue: Float): String {
-            return LocalDate
-                .now(ZoneId.systemDefault())
-                .plusMonths(xValue.toLong())
-                .format(DateTimeFormatter.ofPattern("MMM"))
-        }
-    }
-
-    /**
-     * formats y axis value according to our time scaling
-     */
-    private inner class YAxisValueFormatter: ValueFormatter() {
-
-        override fun getFormattedValue(seconds: Float): String {
-            val (h, m) = secondsToHoursMins(seconds.toInt())
-            val str = if (h != 0){
-                "${h}." +
-                "${m?.toFloat()?.div(60f)?.times(10)?.roundToInt()} h"   //TODO this is super ugly
-            } else{
-                "${m} m"
-            }
-            return str
-        }
-    }
-
-
-    /**
-     * This ValueFormatter shows the sum of all stacked Bars on top of the each bar instead of for every segment
-     * It should do the same as StackedValueFormatter but this one doesn't work for our case because we have
-     * "invisible" stacked segments with value=0 in our bars which results to no call in getBarStackedLabel() and thus
-     * the sum doesn't get drawn. This one only uses non-zero entries to determine the top position
-     */
-    private inner class BarChartValueFormatter: ValueFormatter() {
-
-        var lastEntryX = -1f            // the x entry (=Bar ID) of last time getBarStackedLabel() was called
-        var stackCounterCurrentBar = 0  // counter variable counting the stack we are inside the current bar
-        var stackEntriesNotZero = 0     // amount of non-zero entries in this bar
-
-        // getBarStackedLabel is called on every bar for every non-zero segment
-        // value: the y value of current segment
-        // stackedEntry: the whole BarEntry object for current bar, always the same for each stack on the same Bar
-        override fun getBarStackedLabel(value: Float, stackedEntry: BarEntry?): String {
-            if (stackedEntry?.x != lastEntryX) {
-                lastEntryX = stackedEntry?.x ?: -1f
-                // first stack on a new bar
-                stackCounterCurrentBar = 1
-                stackEntriesNotZero = stackedEntry?.yVals?.filterNot { it == 0f }?.count() ?: 0
-
-                // show 0 if there are no stacks in this bar
-                if (stackEntriesNotZero == 0)
-                    return "0"
-
-                // show value if there is only 1 stack in this bar
-                if (stackEntriesNotZero == 1) {
-                    return secondsToTimeString(stackedEntry?.yVals?.sum()?.toInt())
-                }
-            } else {
-                lastEntryX = stackedEntry.x
-                stackCounterCurrentBar++
-                if (stackCounterCurrentBar == stackEntriesNotZero) {
-                    // we reached the last non-zero stack of the bar, so we're at the top
-                    return secondsToTimeString(stackedEntry.yVals?.sum()?.toInt())
+        private inner class XAxisValueFormatter: ValueFormatter() {
+    
+            override fun getFormattedValue(value: Float): String {
+                return when (activeView) {
+                    VIEWS.DAYS_VIEW ->
+                        getDayString(value)
+                    VIEWS.WEEKS_VIEW ->
+                        getWeekString(value)
+                    VIEWS.MONTHS_VIEW ->
+                        getMonthString(value)
                 }
             }
-            return ""   // return empty string so no value is drawn
+    
+            /**
+             * For DateFormatter patterns see: https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatter.html
+             */
+    
+            private fun getDayString(xValue: Float): String {
+                if (xValue < 1 || xValue > 7) {
+                    // sometimes on activeView change getFormattedValue is called to soon / on wrong xValue
+                    // so just return nothing to prevent crash because of wrong dayIndex
+                    return ""
+                }
+                return ZonedDateTime.now()
+                    .with(ChronoField.DAY_OF_WEEK , xValue.toLong())
+                    .format(DateTimeFormatter.ofPattern("E"))
+            }
+    
+            private fun getWeekString(xValue: Float): String {
+                // maybe a solution for multiline: https://stackoverflow.com/a/46676451
+                val start = getStartOfWeek(xValue.toLong())
+                    .format(DateTimeFormatter.ofPattern("dd"))
+    
+                val end = getEndOfWeek(xValue.toLong())
+                    .minusDays(1)   // subtract one day to get the "last" day (because of half-open approach)
+                    .format(DateTimeFormatter.ofPattern("dd"))
+    
+                return ("$start - $end")
+            }
+    
+            private fun getMonthString(xValue: Float): String {
+                return LocalDate
+                    .now(ZoneId.systemDefault())
+                    .plusMonths(xValue.toLong())
+                    .format(DateTimeFormatter.ofPattern("MMM"))
+            }
         }
-    }
-
-    private inner class CategoryStatsAdapter : RecyclerView.Adapter<CategoryStatsAdapter.ViewHolder>() {
+    
+        /**
+         * formats y axis value according to our time scaling
+         */
+        private inner class YAxisValueFormatter: ValueFormatter() {
+    
+            override fun getFormattedValue(seconds: Float): String {
+                val (h, m) = secondsToHoursMins(seconds.toInt())
+                val str = if (h != 0){
+                    "${h}." +
+                    "${m?.toFloat()?.div(60f)?.times(10)?.roundToInt()} h"   //TODO this is super ugly
+                } else{
+                    "${m} m"
+                }
+                return str
+            }
+        }
+    
+    
+        /**
+         * This ValueFormatter shows the sum of all stacked Bars on top of the each bar instead of for every segment
+         * It should do the same as StackedValueFormatter but this one doesn't work for our case because we have
+         * "invisible" stacked segments with value=0 in our bars which results to no call in getBarStackedLabel() and thus
+         * the sum doesn't get drawn. This one only uses non-zero entries to determine the top position
+         */
+        private inner class BarChartValueFormatter: ValueFormatter() {
+    
+            var lastEntryX = -1f            // the x entry (=Bar ID) of last time getBarStackedLabel() was called
+            var stackCounterCurrentBar = 0  // counter variable counting the stack we are inside the current bar
+            var stackEntriesNotZero = 0     // amount of non-zero entries in this bar
+    
+            // getBarStackedLabel is called on every bar for every non-zero segment
+            // value: the y value of current segment
+            // stackedEntry: the whole BarEntry object for current bar, always the same for each stack on the same Bar
+            override fun getBarStackedLabel(value: Float, stackedEntry: BarEntry?): String {
+                if (stackedEntry?.x != lastEntryX) {
+                    lastEntryX = stackedEntry?.x ?: -1f
+                    // first stack on a new bar
+                    stackCounterCurrentBar = 1
+                    stackEntriesNotZero = stackedEntry?.yVals?.filterNot { it == 0f }?.count() ?: 0
+    
+                    // show 0 if there are no stacks in this bar
+                    if (stackEntriesNotZero == 0)
+                        return "0"
+    
+                    // show value if there is only 1 stack in this bar
+                    if (stackEntriesNotZero == 1) {
+                        return secondsToTimeString(stackedEntry?.yVals?.sum()?.toInt())
+                    }
+                } else {
+                    lastEntryX = stackedEntry.x
+                    stackCounterCurrentBar++
+                    if (stackCounterCurrentBar == stackEntriesNotZero) {
+                        // we reached the last non-zero stack of the bar, so we're at the top
+                        return secondsToTimeString(stackedEntry.yVals?.sum()?.toInt())
+                    }
+                }
+                return ""   // return empty string so no value is drawn
+            }
+        }
+    
+    
+         */
+    private inner class GoalStatsAdapter : RecyclerView.Adapter<GoalStatsAdapter.ViewHolder>() {
 
         inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-            val catCheckBox: CheckBox = view.findViewById(R.id.checkbox_category)
-            val catTimeView: TextView = view.findViewById(R.id.total_time_category)
+            val goalRadioButton: RadioButton = view.findViewById(R.id.radiobutton_goal)
+            val goalTitleTv: TextView = view.findViewById(R.id.tv_goal_title_statistics)
+            val goalDescTv: TextView = view.findViewById(R.id.tv_goal_desc_statistics)
+            val tvNumSuccess: TextView = view.findViewById(R.id.tv_success_count)
+            val tvNumFail: TextView = view.findViewById(R.id.tv_fail_count)
+            val progressGoal: ProgressBar = view.findViewById(R.id.progressbar_goal_element)
+            val cardViewWrapper: CardView = view.findViewById(R.id.cardview_goal_statistics)
         }
 
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CategoryStatsAdapter.ViewHolder {
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): GoalStatsAdapter.ViewHolder {
             // Create a new view, which defines the UI of the list item
             val view = LayoutInflater.from(parent.context)
-                .inflate(R.layout.view_statistics_category_list_item, parent, false)
+                .inflate(R.layout.view_statistics_goal_list_item, parent, false)
 
             return ViewHolder(view)
         }
 
-        override fun onBindViewHolder(holder: CategoryStatsAdapter.ViewHolder, position: Int) {
+        override fun onBindViewHolder(holder: GoalStatsAdapter.ViewHolder, position: Int) {
+            val elem = goals[position]
 
-            val elem = categories.filter { it.visible }[position]
-            val categoryColors = requireContext().resources.getIntArray(R.array.category_colors)
-
-            holder.catCheckBox.text = elem.category.name
-            holder.catCheckBox.setOnCheckedChangeListener(null)
-            holder.catCheckBox.isChecked = elem.selected
-            holder.catCheckBox.buttonTintList = ColorStateList.valueOf(
-                categoryColors[elem.category.colorIndex]
-            )
-            holder.catCheckBox.setOnCheckedChangeListener { _, isChecked ->
-                elem.selected = isChecked   // sync list with UI
-                updateChartData(recalculateDurs = false)  // notify fragment to change chart
+            val categoryColors = resources.getIntArray(R.array.category_colors)
+            if (elem.category != null) {
+                val catColor = ColorStateList.valueOf(categoryColors[elem.category.colorIndex])
+                holder.goalTitleTv.text = elem.category.name
+                holder.goalRadioButton.buttonTintList = catColor
+                holder.progressGoal.progressTintList = catColor
+            } else {
+                holder.goalTitleTv.text = getString(R.string.goal_name_non_specific)
+                holder.goalRadioButton.buttonTintList = ColorStateList.valueOf(getThemeColor(R.attr.colorPrimary))
+                holder.progressGoal.progressTintList = null
             }
 
-            holder.catTimeView.text = secondsToTimeString(elem.totalDuration)
+            // TODO take data from last Instance?
+            val targetHours = elem.goalInstances.last().target / 3600
+            val targetMinutes = elem.goalInstances.last().target % 3600 / 60
+
+            // Following copy pasted from GoalAdapter:
+            var targetHoursString = ""
+            var targetMinutesString = ""
+            if (targetHours > 0) targetHoursString = "${targetHours}h "
+            if (targetMinutes > 0) targetMinutesString = "${targetMinutes}min "
+
+            val periodFormatted =
+                if (elem.goalDesc.periodInPeriodUnits > 1) {  // plural
+                    when (elem.goalDesc.periodUnit) {
+                        GoalPeriodUnit.DAY -> getString(R.string.goal_description_days, elem.goalDesc.periodInPeriodUnits)
+                        GoalPeriodUnit.WEEK -> getString(R.string.goal_description_weeks, elem.goalDesc.periodInPeriodUnits)
+                        GoalPeriodUnit.MONTH -> getString(R.string.goal_description_months, elem.goalDesc.periodInPeriodUnits)
+                    }
+                } else {    // singular
+                    when (elem.goalDesc.periodUnit) {
+                        GoalPeriodUnit.DAY -> getString(R.string.goal_description_day)
+                        GoalPeriodUnit.WEEK -> getString(R.string.goal_description_week)
+                        GoalPeriodUnit.MONTH -> getString(R.string.goal_description_month)
+                    }
+                }
+
+            holder.goalDescTv.text = getString(
+                R.string.goal_description_complete,
+                targetHoursString,
+                targetMinutesString,
+                periodFormatted
+            )
+
+            val succeeded = elem.goalInstances.filter { it.progress >= it.target }.size
+            val failed = elem.goalInstances.filter { it.progress < it.target }.size
+            holder.tvNumSuccess.text = succeeded.toString()
+            holder.tvNumFail.text = failed.toString()
+
+            holder.progressGoal.max = succeeded + failed
+            holder.progressGoal.progress = succeeded
+
+            val radioSelectListener = View.OnClickListener {
+                val oldSel = selectedGoal
+                selectedGoal = holder.bindingAdapterPosition
+                notifyItemChanged(oldSel)
+                holder.goalRadioButton.isChecked = true
+                val sv = findViewById<NestedScrollView>(R.id.scrollview_statistics)
+                // only scroll to top if already more than 100px scrolled to prevent blocking the UI for scroll duration
+                if (sv.scrollY > 100)
+                    sv.smoothScrollTo(0,0, 600)
+            }
+            holder.cardViewWrapper.setOnClickListener(radioSelectListener)
+            holder.goalRadioButton.setOnClickListener(radioSelectListener)
+
+            holder.goalRadioButton.isChecked = position == selectedGoal
         }
 
-        override fun getItemCount(): Int = categories.filter { it.visible }.size
+        override fun getItemCount(): Int = goals.size
 
     }
 
@@ -825,7 +841,7 @@ class SessionsStatisticsFragment : Fragment(R.layout.fragment_statistics) {
 
     private fun getThemeColor(color: Int): Int {
         val typedValue = TypedValue()
-        requireActivity().theme.resolveAttribute(color, typedValue, true)
+        theme.resolveAttribute(color, typedValue, true)
         return typedValue.data
     }
 }

@@ -1,5 +1,6 @@
 package de.practicetime.practicetime
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.View
@@ -13,20 +14,13 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
 
         view.findViewById<Button>(R.id.btn_open_session_history).setOnClickListener {
-            var sessionStatsFrag = SessionsStatisticsFragment()
-            requireActivity().supportFragmentManager.beginTransaction()
-                .replace((view.parent as ViewGroup).id, sessionStatsFrag, "statisticsSessionsFragment")
-                .addToBackStack(null)
-                .commit()
-
+            val i = Intent(requireContext(), SessionStatsActivity::class.java)
+            requireActivity().startActivity(i)
         }
 
         view.findViewById<Button>(R.id.btn_open_goals_history).setOnClickListener {
-            var goalsStatsFrag = GoalsStatisticsFragment()
-            requireActivity().supportFragmentManager.beginTransaction()
-                .replace((view.parent as ViewGroup).id, goalsStatsFrag, "statisticsGoalFragment")
-                .addToBackStack(null)
-                .commit()
+            val i = Intent(requireContext(), GoalStatsActivity::class.java)
+            requireActivity().startActivity(i)
         }
     }
 

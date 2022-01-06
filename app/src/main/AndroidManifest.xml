@@ -16,6 +16,13 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.PracticeTime">
+        <activity
+            android:name=".GoalStatsActivity"
+            android:exported="false" />
+        <activity
+            android:name=".SessionStatsActivity"
+            android:exported="false" />
+
         <service
             android:name=".SessionForegroundService"
             android:enabled="true"
@@ -28,21 +35,21 @@
 
         <activity
             android:name=".ProgressUpdateActivity"
+            android:exported="false"
             android:parentActivityName=".MainActivity"
-            android:windowSoftInputMode="adjustNothing"
-            android:exported="false" />
+            android:windowSoftInputMode="adjustNothing" />
         <activity
             android:name=".FullscreenSessionActivity"
+            android:exported="false"
             android:parentActivityName=".MainActivity"
-            android:windowSoftInputMode="adjustNothing"
-            android:exported="false" />
+            android:windowSoftInputMode="adjustNothing" />
         <activity
             android:name=".ActiveSessionActivity"
-            android:parentActivityName=".MainActivity"
-            android:windowSoftInputMode="adjustNothing"
+            android:configChanges="orientation|keyboardHidden"
             android:exported="false"
+            android:parentActivityName=".MainActivity"
             android:screenOrientation="portrait"
-            android:configChanges="orientation|keyboardHidden"/>
+            android:windowSoftInputMode="adjustNothing" />
         <activity
             android:name=".MainActivity"
             android:exported="true">
