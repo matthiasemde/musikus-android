@@ -21,5 +21,7 @@
         <item name="android:navigationBarColor">#404040</item>
         <!-- Customize your theme here. -->
         <item name="colorOnSurfaceLowerContrast">@color/md_grey_400</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">false</item>
+        <item name="android:navigationBarDividerColor" tools:targetApi="o_mr1">@color/md_grey_700</item>
     </style>
 </resources>
