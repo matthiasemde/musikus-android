@@ -46,6 +46,7 @@ import android.net.Uri
 import android.provider.DocumentsContract
 import android.provider.MediaStore
 import androidx.coordinatorlayout.widget.CoordinatorLayout
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.google.android.material.snackbar.BaseTransientBottomBar.LENGTH_INDEFINITE
@@ -405,8 +406,6 @@ class ActiveSessionActivity : AppCompatActivity() {
 
     private lateinit var recordingStartStopButtonView: MaterialButton
 
-    private lateinit var recordingSaveLocationView: TextView
-    private lateinit var recordingSelectSaveLocationView: MaterialButton
     private var recordSaveDirectory: DocumentFile? = null
 
     private fun initRecordBottomSheet() {
@@ -417,9 +416,6 @@ class ActiveSessionActivity : AppCompatActivity() {
         recordingStartStopButtonView = findViewById(R.id.record_sheet_start_pause)
 
         val openRecorderButtonView = findViewById<MaterialButton>(R.id.bottom_record)
-
-        recordingSaveLocationView = findViewById(R.id.record_sheet_save_location)
-        recordingSelectSaveLocationView = findViewById(R.id.record_sheet_select_save_location)
 
         /* Initialize local variables */
         val recordingNameFormat = SimpleDateFormat("_dd-MM-yyyy'T'H_mm_ss", Locale.getDefault())
@@ -468,10 +464,6 @@ class ActiveSessionActivity : AppCompatActivity() {
                     requestPermissions(Array(1) { Manifest.permission.RECORD_AUDIO }, 69)
                 } else {
 
-                    val audioCollection = if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                        MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
-                    } else MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
-
                     val displayName = (if(mService.sectionBuffer.isNotEmpty()) mService.currCategoryName
                     else "PracticeTime") + recordingNameFormat.format(Date().time)
 
@@ -480,20 +472,40 @@ class ActiveSessionActivity : AppCompatActivity() {
                         put(MediaStore.Audio.Media.MIME_TYPE, "audio/mp4")
                         put(MediaStore.Audio.Media.ALBUM, "Practice Time")
                         put(MediaStore.Audio.Media.ARTIST, "Practice Time")
-                        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                            put(MediaStore.MediaColumns.RELATIVE_PATH, "Music/Practice Time/")
-                            put(MediaStore.MediaColumns.IS_PENDING, true)
-                        }
                     }
 
                     try {
-                        contentResolver.insert(audioCollection, contentValues)?.also { uri ->
+                        val newRecordingUri = if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                            contentValues.put(MediaStore.MediaColumns.RELATIVE_PATH, "Music/Practice Time/")
+                            contentValues.put(MediaStore.MediaColumns.IS_PENDING, true)
+
+                            MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+
+                        } else {
+                            if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                                != PackageManager.PERMISSION_GRANTED) {
+                                requestPermissions(arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE), 1);
+                                return@setOnClickListener
+                            }
+                            val ptDir = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).toString() + "/Practice Time")
+                            Log.d("path", ptDir.absolutePath)
+                            if (!ptDir.exists()) {
+                                ptDir.mkdirs()
+                            }
+                            val newRecordingFile = File(ptDir, displayName)
+                            Log.d("path", newRecordingFile.absolutePath)
+                            contentValues.put(MediaStore.Audio.Media.DATA, newRecordingFile.absolutePath)
+                            MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+                        }
+
+                        contentResolver.insert(newRecordingUri, contentValues)?.also { uri ->
                             Intent(this, RecorderService::class.java).also {
                                 it.putExtra("URI", uri.toString())
                                 startService(it)
                             }
-                            RecorderService.recordingName = displayName
                         } ?: throw IOException("Couldn't create MediaStore entry")
+
+                        RecorderService.recordingName = displayName
                     } catch(e: IOException) {
                         Log.d("EXE", "$e")
                         e.printStackTrace()
@@ -509,7 +521,6 @@ class ActiveSessionActivity : AppCompatActivity() {
                         this, R.drawable.avd_start_to_stop
                     ) as AnimatedVectorDrawable
 
-                    recordingSelectSaveLocationView.isEnabled = false
                     recordingStartStopButtonView.icon = startToStop
                     startToStop.start()
                     openRecorderButtonView.isSelected = true
@@ -520,7 +531,6 @@ class ActiveSessionActivity : AppCompatActivity() {
                     this, R.drawable.avd_stop_to_start
                 ) as AnimatedVectorDrawable
 
-                recordingSelectSaveLocationView.isEnabled = true
                 recordingStartStopButtonView.icon = stopToStart
                 stopToStart.start()
 
@@ -561,58 +571,6 @@ class ActiveSessionActivity : AppCompatActivity() {
                     }
                     RecorderService.recordingUri = null
                     RecorderService.recordingName = null
-                }
-            }
-        }
-
-        recordSaveDirectory = getPreferences(Context.MODE_PRIVATE)
-            .getString("recordings_directory", null)
-            ?.let {
-                val df = DocumentFile.fromTreeUri(this, Uri.parse(it))
-                recordingSaveLocationView.text = df?.uri?.lastPathSegment?.split(':')?.last()
-                recordingStartStopButtonView.isEnabled = true
-                df
-            }
-
-        recordingSaveLocationView.apply {
-            ellipsize = TextUtils.TruncateAt.MARQUEE
-            isSingleLine = true
-            marqueeRepeatLimit = -1 // minus one repeats indefinitely
-            isSelected = true
-        }
-
-        val getSaveDirectoryLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode == Activity.RESULT_OK) {
-                // There are no request codes
-                recordSaveDirectory = result.data?.data?.let { uri ->
-                    val df = DocumentFile.fromTreeUri(this, uri)
-                    if(df != null) {
-                        contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
-                        recordingStartStopButtonView.isEnabled = true
-                        recordingSaveLocationView.text = df.uri.lastPathSegment?.split(':')?.last()
-                        getPreferences(Context.MODE_PRIVATE)
-                            .edit()
-                            .putString("recordings_directory", df.uri.toString())
-                            .apply()
-                    } else {
-                        recordingStartStopButtonView.isEnabled = false
-                        recordingSaveLocationView.text = ""
-                    }
-                    df
-                }
-            }
-        }
-
-        recordingSelectSaveLocationView.setOnClickListener {
-            getSaveDirectoryLauncher.launch(Intent(Intent.ACTION_OPEN_DOCUMENT_TREE))
-        }
-
-        findViewById<MaterialButton>(R.id.record_sheet_open_save_location).setOnClickListener {
-            recordSaveDirectory?.uri.let { uri ->
-                val intent = Intent(Intent.ACTION_VIEW)
-                if(DocumentFile.isDocumentUri(this, uri)) {
-                    intent.setDataAndType(uri, DocumentsContract.Document.MIME_TYPE_DIR)
-                    startActivity(intent)
                 }
             }
         }

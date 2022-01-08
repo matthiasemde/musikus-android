@@ -5,5 +5,5 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
 class PracticeTime : Application() {
-    val executorService = Executors.newFixedThreadPool(4)
+    val executorService: ExecutorService = Executors.newFixedThreadPool(4)
 }
