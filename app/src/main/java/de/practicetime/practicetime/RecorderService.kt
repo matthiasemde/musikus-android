@@ -20,6 +20,7 @@ class RecorderService : Service() {
 
     companion object {
         var recording = false
+        var recordingUri: Uri? = null
         var recordingName: String? = null
     }
 
@@ -35,14 +36,10 @@ class RecorderService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.d("RecService", "Started")
-        val fileDescriptor = intent?.extras?.getString("URI")?.let {
+        val fileDescriptor = Uri.parse(intent?.extras?.getString("URI"))?.let {
             try {
-                val uri = Uri.parse(it)
-                recordingName = uri.lastPathSegment?.split('/')?.last()
-                contentResolver.openFileDescriptor(
-                    uri,
-                    "w"
-                )?.fileDescriptor
+                recordingUri = it
+                contentResolver.openFileDescriptor(it,"w")?.fileDescriptor
             } catch (e: Exception) {
                 null
             }
@@ -69,7 +66,7 @@ class RecorderService : Service() {
         recorder.apply {
             setAudioSource(MediaRecorder.AudioSource.MIC)
             setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
-            setAudioEncoder(MediaRecorder.AudioEncoder.AMR_WB)
+            setAudioEncoder(MediaRecorder.AudioEncoder.HE_AAC)
             setAudioChannels(2)
             setAudioEncodingBitRate(256_000)
             setAudioSamplingRate(44_100)

@@ -40,13 +40,18 @@ import java.text.SimpleDateFormat
 import android.Manifest
 import android.content.*
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.graphics.drawable.AnimatedVectorDrawable
 import android.net.Uri
 import android.provider.DocumentsContract
+import android.provider.MediaStore
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.content.ContextCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.google.android.material.snackbar.BaseTransientBottomBar.LENGTH_INDEFINITE
+import org.w3c.dom.Document
+import java.io.File
+import java.io.IOException
 
 
 class ActiveSessionActivity : AppCompatActivity() {
@@ -442,8 +447,6 @@ class ActiveSessionActivity : AppCompatActivity() {
             IntentFilter("RecordingDurationUpdate")
         )
 
-        var newRecordingFile: DocumentFile? = null
-
         if(RecorderService.recording) {
             recordingStartStopButtonView.icon = ContextCompat.getDrawable(this, R.drawable.ic_stop)
             recordingBottomSheetBehaviour.state = BottomSheetBehavior.STATE_COLLAPSED
@@ -464,16 +467,44 @@ class ActiveSessionActivity : AppCompatActivity() {
                 if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
                     requestPermissions(Array(1) { Manifest.permission.RECORD_AUDIO }, 69)
                 } else {
-                    newRecordingFile = recordSaveDirectory?.createFile(
-                        "audio/mp4",
-                        (if(mService.sectionBuffer.isNotEmpty()) mService.currCategoryName
-                        else "PracticeTime") + recordingNameFormat.format(Date().time)
-                    )
 
-                    Intent(this, RecorderService::class.java).also {
-                        it.putExtra("URI", newRecordingFile?.uri.toString())
-                        startService(it)
+                    val audioCollection = if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+                    } else MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+
+                    val displayName = (if(mService.sectionBuffer.isNotEmpty()) mService.currCategoryName
+                    else "PracticeTime") + recordingNameFormat.format(Date().time)
+
+                    val contentValues = ContentValues().apply {
+                        put(MediaStore.Audio.Media.DISPLAY_NAME, displayName)
+                        put(MediaStore.Audio.Media.MIME_TYPE, "audio/mp4")
+                        put(MediaStore.Audio.Media.ALBUM, "Practice Time")
+                        put(MediaStore.Audio.Media.ARTIST, "Practice Time")
+                        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                            put(MediaStore.MediaColumns.RELATIVE_PATH, "Music/Practice Time/")
+                            put(MediaStore.MediaColumns.IS_PENDING, true)
+                        }
                     }
+
+                    try {
+                        contentResolver.insert(audioCollection, contentValues)?.also { uri ->
+                            Intent(this, RecorderService::class.java).also {
+                                it.putExtra("URI", uri.toString())
+                                startService(it)
+                            }
+                            RecorderService.recordingName = displayName
+                        } ?: throw IOException("Couldn't create MediaStore entry")
+                    } catch(e: IOException) {
+                        Log.d("EXE", "$e")
+                        e.printStackTrace()
+                    }
+
+//                    newRecordingFile = recordSaveDirectory?.createFile(
+//                        "audio/mp4",
+//                        (if(mService.sectionBuffer.isNotEmpty()) mService.currCategoryName
+//                        else "PracticeTime") + recordingNameFormat.format(Date().time)
+//                    )
+
                     val startToStop = ContextCompat.getDrawable(
                         this, R.drawable.avd_start_to_stop
                     ) as AnimatedVectorDrawable
@@ -501,7 +532,14 @@ class ActiveSessionActivity : AppCompatActivity() {
                     recordingBottomSheetBehaviour.state = BottomSheetBehavior.STATE_HIDDEN
 
                 (application as PracticeTime).executorService.execute {
+                    // we can block this thread because it is not the main ui thread
+                    val uri = RecorderService.recordingUri ?: return@execute
                     while(RecorderService.recording) {}
+                    if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        val values = ContentValues()
+                        values.put(MediaStore.MediaColumns.IS_PENDING, false)
+                        contentResolver.update(uri, values, null, null)
+                    }
                     Snackbar.make(
                         findViewById(R.id.coordinator_layout_active_session),
                         resources.getString(R.string.record_snackbar_message).format(
@@ -510,12 +548,18 @@ class ActiveSessionActivity : AppCompatActivity() {
                         7000
                     ).apply {
                         setAction(R.string.record_snackbar_undo) {
-                            newRecordingFile?.delete()
-                            this.dismiss()
+                            contentResolver.delete(uri, null, null)
+                            dismiss()
+                            Toast.makeText(
+                                this@ActiveSessionActivity,
+                                R.string.record_toast_deleted,
+                                Toast.LENGTH_SHORT
+                            ).show()
                         }
                         anchorView = recordingBottomSheet
                         show()
                     }
+                    RecorderService.recordingUri = null
                     RecorderService.recordingName = null
                 }
             }
