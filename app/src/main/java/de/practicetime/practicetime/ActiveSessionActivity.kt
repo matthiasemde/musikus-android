@@ -1,6 +1,5 @@
 package de.practicetime.practicetime
 
-import android.app.Activity
 import android.graphics.Color
 import android.media.*
 import android.util.Log
@@ -31,26 +30,16 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 import kotlin.math.abs
 import kotlin.math.round
 import android.os.*
-import android.text.TextUtils
-import androidx.activity.result.contract.ActivityResultContracts
-
-import androidx.documentfile.provider.DocumentFile
-
 import java.text.SimpleDateFormat
 import android.Manifest
 import android.content.*
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
 import android.graphics.drawable.AnimatedVectorDrawable
 import android.net.Uri
-import android.provider.DocumentsContract
+import android.provider.CalendarContract.Attendees.query
 import android.provider.MediaStore
-import androidx.coordinatorlayout.widget.CoordinatorLayout
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
-import com.google.android.material.snackbar.BaseTransientBottomBar.LENGTH_INDEFINITE
-import org.w3c.dom.Document
 import java.io.File
 import java.io.IOException
 
@@ -406,8 +395,6 @@ class ActiveSessionActivity : AppCompatActivity() {
 
     private lateinit var recordingStartStopButtonView: MaterialButton
 
-    private var recordSaveDirectory: DocumentFile? = null
-
     private fun initRecordBottomSheet() {
         /* Find all views in bottom sheet */
         recordingTimeView = findViewById(R.id.record_sheet_recording_time)
@@ -511,12 +498,6 @@ class ActiveSessionActivity : AppCompatActivity() {
                         e.printStackTrace()
                     }
 
-//                    newRecordingFile = recordSaveDirectory?.createFile(
-//                        "audio/mp4",
-//                        (if(mService.sectionBuffer.isNotEmpty()) mService.currCategoryName
-//                        else "PracticeTime") + recordingNameFormat.format(Date().time)
-//                    )
-
                     val startToStop = ContextCompat.getDrawable(
                         this, R.drawable.avd_start_to_stop
                     ) as AnimatedVectorDrawable
@@ -574,6 +555,59 @@ class ActiveSessionActivity : AppCompatActivity() {
                 }
             }
         }
+
+        data class Recording (
+            val id: Long,
+            val displayName: String,
+            val contentUri: Uri
+        )
+
+        // load recordings from recordings directory
+        val recordingList = mutableListOf<Recording>()
+
+        val collection =
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                MediaStore.Audio.Media.getContentUri(
+                    MediaStore.VOLUME_EXTERNAL
+                )
+            } else {
+                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+            }
+
+        val projection = arrayOf(
+            MediaStore.Audio.Media._ID,
+            MediaStore.Audio.Media.DISPLAY_NAME,
+        )
+
+        // Show only videos that are at least 5 minutes in duration.
+        val selection = "${MediaStore.Audio.Media.ALBUM} = 'Practice Time'"
+
+        // Display videos in alphabetical order based on their display name.
+        val sortOrder = "${MediaStore.Audio.Media.DATE_ADDED} ASC"
+
+        contentResolver.query(
+            collection,
+            projection,
+            selection,
+            null,
+            sortOrder
+        )?.use { cursor ->
+            val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
+            val displayNameColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DISPLAY_NAME)
+
+            while(cursor.moveToNext()) {
+                val id = cursor.getLong(idColumn)
+                val displayName = cursor.getString(displayNameColumn)
+                val contentUri = ContentUris.withAppendedId(
+                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                    id
+                )
+                recordingList.add(Recording(id, displayName, contentUri))
+            }
+            recordingList.toList()
+        }
+
+        Log.d("list", "$recordingList")
 
         findViewById<MaterialButton>(R.id.bottom_record).setOnClickListener {
             recordingBottomSheetBehaviour.state = BottomSheetBehavior.STATE_EXPANDED
