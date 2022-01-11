@@ -11,8 +11,8 @@ android {
         applicationId "de.practicetime.practicetime"
         minSdk 23
         targetSdk 31
-        versionCode 1
-        versionName "1.0"
+        versionCode 3
+        versionName "0.3-alpha"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }

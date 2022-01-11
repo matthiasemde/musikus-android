@@ -12,29 +12,29 @@
         android:id="@+id/ll_active_session"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
-        tools:context=".ActiveSessionFragment"
         android:layout_marginBottom="56dp"
-        android:clipToPadding="false">
+        android:clipToPadding="false"
+        android:orientation="vertical"
+        tools:context=".ActiveSessionFragment">
 
         <TextView
             android:id="@+id/practiceTimer"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="40dp"
-            android:layout_marginStart="40dp"
-            android:layout_marginEnd="40dp"
             android:layout_gravity="center"
+            android:layout_marginStart="40dp"
+            android:layout_marginTop="40dp"
+            android:layout_marginEnd="40dp"
+            android:textColor="?attr/colorOnSurface"
             android:textSize="40sp"
             android:textStyle="bold"
-            android:textColor="?attr/colorOnSurface"
             tools:text="00:00:00" />
 
         <TextView
             android:id="@+id/practice_time_label"
-            android:layout_gravity="center"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_gravity="center"
             android:text="@string/practice_time_description"
             android:textSize="15sp" />
 
@@ -69,18 +69,18 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="30dp"
-            android:layout_marginEnd="30dp"
             android:layout_marginTop="20dp"
-            android:orientation="horizontal"
-            android:animateLayoutChanges="true">
+            android:layout_marginEnd="30dp"
+            android:animateLayoutChanges="true"
+            android:orientation="horizontal">
 
             <TextView
                 android:id="@+id/running_section_name"
                 android:layout_width="0dp"
-                android:layout_weight="3"
                 android:layout_height="wrap_content"
-                android:textSize="20sp"
+                android:layout_weight="3"
                 android:textColor="?attr/colorPrimary"
+                android:textSize="20sp"
                 android:textStyle="bold"
                 tools:text="Section Name" />
 
@@ -88,8 +88,8 @@
                 android:id="@+id/running_section_duration"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="20sp"
                 android:textColor="?attr/colorPrimary"
+                android:textSize="20sp"
                 android:textStyle="bold"
                 tools:text="00:00:00" />
 
@@ -99,23 +99,23 @@
             android:id="@+id/divider"
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="?android:attr/listDivider"
-            android:backgroundTint="?attr/colorPrimary"
             android:layout_marginStart="16dp"
+            android:layout_marginTop="5dp"
             android:layout_marginEnd="16dp"
-            android:layout_marginTop="5dp"/>
+            android:background="?android:attr/listDivider"
+            android:backgroundTint="?attr/colorPrimary" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/currentSections"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1.4"
+            android:clipToPadding="false"
+            android:fadeScrollbars="false"
             android:paddingStart="30dp"
             android:paddingTop="10dp"
             android:paddingEnd="30dp"
-            android:paddingBottom="16dp"
-            android:clipToPadding="false"
-            android:fadeScrollbars="false" />
+            android:paddingBottom="16dp" />
 
     </LinearLayout>
 
@@ -133,11 +133,12 @@
         android:layout_width="match_parent"
         android:layout_height="56dp"
         android:layout_gravity="bottom|left"
-        android:orientation="horizontal"
         android:animateLayoutChanges="true"
         android:background="?android:attr/navigationBarColor"
-        android:paddingEnd="16dp"
-        app:elevation="6dp">
+        android:clipToPadding="false"
+        android:elevation="8dp"
+        android:orientation="horizontal"
+        android:paddingEnd="16dp">
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/bottom_pause"
@@ -146,14 +147,14 @@
             android:layout_marginStart="16dp"
             android:background="@drawable/background_bottom_btn"
             android:gravity="center"
+            android:visibility="gone"
             app:icon="@drawable/ic_pause"
             app:iconGravity="textStart"
             app:iconPadding="0dp"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/bottom_metronome"
-            app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
-            android:visibility="gone"/>
+            app:layout_constraintEnd_toStartOf="@id/bottom_metronome"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/bottom_metronome"
@@ -162,14 +163,14 @@
             android:layout_marginStart="16dp"
             android:background="@drawable/background_bottom_btn"
             android:gravity="center"
-            app:iconGravity="textStart"
-            app:icon="@drawable/ic_metronome"
             android:text="@string/metronome"
             android:textAllCaps="false"
-            app:layout_constraintStart_toEndOf="@id/bottom_pause"
+            app:icon="@drawable/ic_metronome"
+            app:iconGravity="textStart"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@id/bottom_record"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"/>
+            app:layout_constraintStart_toEndOf="@id/bottom_pause"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/bottom_record"
@@ -178,15 +179,15 @@
             android:layout_marginStart="16dp"
             android:background="@drawable/background_bottom_btn"
             android:gravity="center"
-            app:backgroundTint="@color/toggle_primary_error_color"
-            app:iconGravity="textStart"
-            app:icon="@drawable/ic_record"
             android:text="@string/recorder"
             android:textAllCaps="false"
-            app:layout_constraintStart_toEndOf="@id/bottom_metronome"
+            app:backgroundTint="@color/toggle_primary_error_color"
+            app:icon="@drawable/ic_record"
+            app:iconGravity="textStart"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@id/bottom_stop"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"/>
+            app:layout_constraintStart_toEndOf="@id/bottom_metronome"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/bottom_stop"
@@ -195,15 +196,15 @@
             android:layout_marginStart="16dp"
             android:background="@drawable/background_bottom_btn"
             android:gravity="center"
+            android:visibility="gone"
+            app:backgroundTint="?attr/colorError"
             app:icon="@drawable/ic_stop"
             app:iconGravity="textStart"
             app:iconPadding="0dp"
             app:iconTint="?attr/colorOnError"
-            app:backgroundTint="?attr/colorError"
-            app:layout_constraintStart_toEndOf="@id/bottom_record"
-            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintBottom_toBottomOf="@id/bottom_metronome"
-            android:visibility="gone"/>
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/bottom_record" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -212,8 +213,8 @@
         android:layout_width="50dp"
         android:layout_height="50dp"
         android:layout_gravity="top|left"
-        android:src="@drawable/ic_arrow_down"
-        android:background="?selectableItemBackgroundBorderless" />
+        android:background="?selectableItemBackgroundBorderless"
+        android:src="@drawable/ic_arrow_down" />
 
     <ImageButton
         android:id="@+id/btn_discard"
@@ -221,41 +222,57 @@
         android:layout_height="50dp"
         android:layout_gravity="top|right"
         android:background="?selectableItemBackgroundBorderless"
-        android:visibility="gone"
-        android:src="@drawable/ic_delete" />
+        android:src="@drawable/ic_delete"
+        android:visibility="gone" />
 
     <TextView
         android:id="@+id/tv_hint_start_new_session"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="20sp"
         android:layout_gravity="center|bottom"
         android:layout_marginBottom="150dp"
-        android:padding="30dp"
         android:gravity="center"
-        tools:text="@string/start_new_session_hint"/>
+        android:padding="30dp"
+        android:textSize="20sp"
+        tools:text="@string/start_new_session_hint" />
+
+
+    <TextView
+        android:id="@+id/fab_info_popup"
+        style="@style/Widget.Design.FloatingActionButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:background="@drawable/background_pause_counter"
+        android:gravity="center"
+        android:paddingStart="16dp"
+        android:paddingTop="12dp"
+        android:paddingEnd="24dp"
+        android:paddingBottom="12dp"
+        android:textAllCaps="true"
+        android:textColor="?attr/colorOnSecondary"
+        android:textSize="14sp"
+        android:letterSpacing="0.15"
+        android:visibility="invisible"
+        app:drawableStartCompat="@android:drawable/ic_dialog_info"
+        app:drawableTint="?attr/colorOnSecondary"
+        android:drawablePadding="12dp"
+        tools:text="Pause: 00:00:00"
+        tools:visibility="visible" />
 
 
     <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:layout_gravity="bottom"
-        tools:visibility="gone">
+        android:layout_marginBottom="56dp"
+        android:animateLayoutChanges="true"
+        tools:visibility="visible">
 
         <include layout="@layout/bottom_sheet_dialog_metronome" />
+
         <include layout="@layout/bottom_sheet_dialog_record" />
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
-
-
-    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
-        android:id="@+id/fab_info_popup"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:text="Pause: 00:00:00"
-        android:visibility="invisible"
-        app:icon="@android:drawable/ic_dialog_info"
-        app:rippleColor="@null" />
 
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -90,6 +90,7 @@ class RecorderService : Service() {
     }
 
     private fun stopRecording() {
+        Log.d("RecService", "Stop reocrding")
         if(recording) {
             recorder.apply {
                 stop()
@@ -97,6 +98,10 @@ class RecorderService : Service() {
             }
             recording = false
             recordingStartTime = null
+            val intent = Intent("RecordingStopped")
+            LocalBroadcastManager
+                .getInstance(this@RecorderService)
+                .sendBroadcast(intent)
         }
     }
 
@@ -121,8 +126,6 @@ class RecorderService : Service() {
     }
 
     private fun updateNotification(durationSecs: Int) {
-        val title = "Lalala"
-
         val notification: Notification = getNotification(durationSecs)
         val mNotificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         mNotificationManager.notify(NOTIFICATION_ID, notification)
