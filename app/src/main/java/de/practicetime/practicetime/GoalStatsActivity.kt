@@ -23,7 +23,10 @@ import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.BarData
 import com.github.mikephil.charting.data.BarDataSet
 import com.github.mikephil.charting.data.BarEntry
+import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.formatter.ValueFormatter
+import com.github.mikephil.charting.highlight.Highlight
+import com.github.mikephil.charting.listener.OnChartValueSelectedListener
 import com.github.mikephil.charting.utils.MPPointF
 import de.practicetime.practicetime.entities.Category
 import de.practicetime.practicetime.entities.GoalDescription
@@ -41,7 +44,7 @@ import kotlin.math.max
 
 private const val X_AXIS_LABEL_COUNT = 5
 
-class GoalStatsActivity : AppCompatActivity() {
+class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
 
     private lateinit var dao: PTDao
     private lateinit var barChart: BarChart
@@ -81,9 +84,13 @@ class GoalStatsActivity : AppCompatActivity() {
         lifecycleScope.launch {
             updateGoals(dao)    // update the goalInstances if they are outdated
             initGoalsList()
-            initBarChart()
-            updateChartData()
-            setButtonEnabledState()
+            // if no goals, do nothing. Should never happen normally because you
+            // shouldn't be able to enter activity with zero goals
+            if (goals.size > 0) {
+                initBarChart()
+                updateChartData()
+                setButtonEnabledState()
+            }
         }
 
         // disable pie chart button for goals
@@ -113,6 +120,7 @@ class GoalStatsActivity : AppCompatActivity() {
         val categoryRecyclerView = findViewById<RecyclerView>(R.id.recyclerview_statistics)
         categoryRecyclerView.layoutManager = layoutManager
         categoryRecyclerView.adapter = goalListAdapter
+        log("Goals added")
     }
 
 
@@ -122,7 +130,11 @@ class GoalStatsActivity : AppCompatActivity() {
 
         barChart = findViewById(R.id.bar_chart)
         barChart.apply {
-            setTouchEnabled(false)
+            isDragEnabled = false
+            isDoubleTapToZoomEnabled = false
+            setScaleEnabled(false)
+            setPinchZoom(false)
+            setOnChartValueSelectedListener(this@GoalStatsActivity)
             description.isEnabled = false
             legend.isEnabled = false
             setDrawValueAboveBar(true)
@@ -130,12 +142,13 @@ class GoalStatsActivity : AppCompatActivity() {
             invalidate()
         }
 
-        // axis settings
+        // left axis
         barChart.axisLeft.apply {
             axisMinimum = 0f   // needed for y axis scaling because chart depends on left axis (even if disabled)
             isEnabled = false
         }
 
+        // right axis
         barChart.axisRight.apply {
             axisMinimum = 0f
             setDrawAxisLine(false)
@@ -144,6 +157,7 @@ class GoalStatsActivity : AppCompatActivity() {
             setDrawLimitLinesBehindData(true)
         }
 
+        // x axis
         barChart.xAxis.apply {
             setDrawGridLines(false)
             position = XAxis.XAxisPosition.BOTTOM
@@ -151,14 +165,16 @@ class GoalStatsActivity : AppCompatActivity() {
             valueFormatter = XAxisValueFormatter()
             textColor = getThemeColor(R.attr.colorOnSurface)
         }
-
     }
 
-    private fun getLimitLime(limit: Float): LimitLine {
+    private fun getLimitLime(
+        limit: Float,
+        labelPos: LimitLine.LimitLabelPosition = LimitLine.LimitLabelPosition.RIGHT_TOP
+    ): LimitLine {
         // TODO string resource
         return LimitLine(limit, secondsToTimeString(limit.toInt())).apply {
             lineWidth = 1f
-            labelPosition = LimitLine.LimitLabelPosition.RIGHT_TOP
+            labelPosition = labelPos
             textSize = 10f
             enableDashedLine(10f, 10f, 0f)
             lineColor = getChartColor()
@@ -198,6 +214,7 @@ class GoalStatsActivity : AppCompatActivity() {
                 setValueFormatter(BarChartValueFormatter())
                 setValueTextColor(getThemeColor(R.attr.colorOnSurfaceLowerContrast))
                 setValueTextSize(12f)
+                isHighlightEnabled = true
             }
             barChart.data = barData
         }
@@ -212,7 +229,7 @@ class GoalStatsActivity : AppCompatActivity() {
             axisRight.addLimitLine(getLimitLime(t))
 
             highlightValue(-1f, 0, false)   // remove all highlighting
-            highlightValue((goals[selectedGoal].goalInstances.size - 1).toFloat(), 0, false)
+//            highlightValue((goals[selectedGoal].goalInstances.size - 1).toFloat(), 0, false)
 
             // redraw the chart
             animateY(1000, Easing.EaseOutBack)
@@ -269,54 +286,38 @@ class GoalStatsActivity : AppCompatActivity() {
                 it.startTimestamp + it.periodInSeconds - 1  // -1 to get right day because of half-open approach
             }
 
-        when(goals[selectedGoal].goalDesc.periodUnit) {
+        if (goals[selectedGoal].goalDesc.periodUnit != GoalPeriodUnit.MONTH) {
+            // Daily and Weekly Goals
+            var formatStrStart = "MMMM d"
+            var formatStrEnd = "d"
+            if (unixTimeToZonedDateTime(tmStart).month != unixTimeToZonedDateTime(tmEnd).month) {
+                formatStrEnd = "MMM d"    // also show month if it is different from startMonth
+                formatStrStart = "MMM d"
+            }
+            // START date
+            val start = unixTimeToZonedDateTime(tmStart)
+                .format(DateTimeFormatter.ofPattern(formatStrStart))
+            val end = unixTimeToZonedDateTime(tmEnd)
+                .format(DateTimeFormatter.ofPattern(formatStrEnd))
 
-            GoalPeriodUnit.DAY -> {
-                var formatStrStart = "MMMM d"
-                var formatStrEnd = "d"
-                if (unixTimeToZonedDateTime(tmStart).month != unixTimeToZonedDateTime(tmEnd).month) {
-                    formatStrEnd = "MMM d"    // also show month if it is different from startMonth
-                    formatStrStart = "MMM d"
-                }
-                // START date
-                val start = unixTimeToZonedDateTime(tmStart)
-                    .format(DateTimeFormatter.ofPattern(formatStrStart))
-                val end = unixTimeToZonedDateTime(tmEnd)
-                    .format(DateTimeFormatter.ofPattern(formatStrEnd))
+            // set the textView text as the final string
+            tvRange.text = ("$start - $end")
 
-                // set the textView text as the final string
-                tvRange.text = ("$start - $end")
+        } else {
+            // Monthly goals
+            var formatStrStart = "MMMM"
+            var formatStrEnd = "MMMM y"
+            if (unixTimeToZonedDateTime(tmStart).year != unixTimeToZonedDateTime(tmEnd).year) {
+                formatStrStart = "MMM y"
+                formatStrEnd = "MMM y"
             }
 
-            GoalPeriodUnit.WEEK -> {
-                var formatStr = "w"
-                if (unixTimeToZonedDateTime(tmStart).year != unixTimeToZonedDateTime(tmEnd).year)
-                    formatStr = "w (y)"
+            val start = unixTimeToZonedDateTime(tmStart)
+                .format(DateTimeFormatter.ofPattern(formatStrStart))
+            val end = unixTimeToZonedDateTime(tmEnd)
+                .format(DateTimeFormatter.ofPattern(formatStrEnd))
 
-                val start = unixTimeToZonedDateTime(tmStart)
-                    .format(DateTimeFormatter.ofPattern(formatStr, Locale.UK))
-                val end = unixTimeToZonedDateTime(tmEnd)
-                    .format(DateTimeFormatter.ofPattern("w (y)", Locale.UK))
-
-                // TODO string resources
-                tvRange.text = "Week $start - $end"
-            }
-
-            GoalPeriodUnit.MONTH -> {
-                var formatStrStart = "MMMM"
-                var formatStrEnd = "MMMM y"
-                if (unixTimeToZonedDateTime(tmStart).year != unixTimeToZonedDateTime(tmEnd).year) {
-                    formatStrStart = "MMM y"
-                    formatStrEnd = "MMM y"
-                }
-
-                val start = unixTimeToZonedDateTime(tmStart)
-                    .format(DateTimeFormatter.ofPattern(formatStrStart))
-                val end = unixTimeToZonedDateTime(tmEnd)
-                    .format(DateTimeFormatter.ofPattern(formatStrEnd))
-
-                tvRange.text = "$start - $end"
-            }
+            tvRange.text = "$start - $end"
         }
 
         // TODO string resources
@@ -358,6 +359,30 @@ class GoalStatsActivity : AppCompatActivity() {
         setButtonEnabledState()
     }
 
+
+    override fun onValueSelected(e: Entry?, h: Highlight?) {
+
+        log("Trigger")
+        if (e == null)
+            return
+
+        barChart.axisRight.apply {
+            val t = getGoalInstance(lastGoalInstShownIndex).target.toFloat()
+            removeAllLimitLines()
+            if (e.x == barChart.data.getDataSetByIndex(0).xMax)
+                addLimitLine(getLimitLime(t, LimitLine.LimitLabelPosition.LEFT_TOP))
+            else
+                addLimitLine(getLimitLime(t))
+        }
+    }
+
+    override fun onNothingSelected() {
+        barChart.axisRight.apply {
+            val t = getGoalInstance(lastGoalInstShownIndex).target.toFloat()
+            removeAllLimitLines()
+            addLimitLine(getLimitLime(t))
+        }
+    }
 
     /** gets the ArrayList for the BarChart object out of goals ArrayList */
     private fun getGoalsArray(): ArrayList<BarEntry> {
@@ -420,10 +445,9 @@ class GoalStatsActivity : AppCompatActivity() {
                 }
 
                 GoalPeriodUnit.WEEK -> {
-                    // show calender week index/indices as xTick
-                    labelString = unixTimeToWeekOfYear(timeStampStart)
-                    if (multiIntervalGoal)
-                        labelString += " - ${unixTimeToWeekOfYear(timeStampStart + periodInSecs - 1)}"
+                    // always subtract 1 second to get the right day because of half-open approach
+                    labelString = "${unixTimeToDayOfMonth(timeStampStart)} -" +
+                            " ${unixTimeToDayOfMonth(timeStampStart + periodInSecs - 1)}"
                 }
 
                 GoalPeriodUnit.MONTH -> {
@@ -531,53 +555,22 @@ class GoalStatsActivity : AppCompatActivity() {
         }
     }
 
-    /**
-     * This ValueFormatter shows the sum of all stacked Bars on top of the each bar instead of for every segment
-     * It should do the same as StackedValueFormatter but this one doesn't work for our case because we have
-     * "invisible" stacked segments with value=0 in our bars which results to no call in getBarStackedLabel() and thus
-     * the sum doesn't get drawn. This one only uses non-zero entries to determine the top position
-     */
+
     private inner class BarChartValueFormatter: ValueFormatter() {
 
-        var lastEntryX = -1f            // the x entry (=Bar ID) of last time getBarStackedLabel() was called
-        var stackCounterCurrentBar = 0  // counter variable counting the stack we are inside the current bar
-        var stackEntriesNotZero = 0     // amount of non-zero entries in this bar
-
-        // getBarStackedLabel is called on every bar for every non-zero segment
-        // value: the y value of current segment
-        // stackedEntry: the whole BarEntry object for current bar, always the same for each stack on the same Bar
-        override fun getBarStackedLabel(value: Float, stackedEntry: BarEntry?): String {
-            if (stackedEntry?.x != lastEntryX) {
-                lastEntryX = stackedEntry?.x ?: -1f
-                // first stack on a new bar
-                stackCounterCurrentBar = 1
-                stackEntriesNotZero = stackedEntry?.yVals?.filterNot { it == 0f }?.count() ?: 0
-
-                // show 0 if there are no stacks in this bar
-                if (stackEntriesNotZero == 0)
-                    return "0"
-
-                // show value if there is only 1 stack in this bar
-                if (stackEntriesNotZero == 1) {
-                    return secondsToTimeString(stackedEntry?.yVals?.sum()?.toInt())
-                }
-            } else {
-                lastEntryX = stackedEntry.x
-                stackCounterCurrentBar++
-                if (stackCounterCurrentBar == stackEntriesNotZero) {
-                    // we reached the last non-zero stack of the bar, so we're at the top
-                    return secondsToTimeString(stackedEntry.yVals?.sum()?.toInt())
-                }
-            }
-            return ""   // return empty string so no value is drawn
-        }
-
         override fun getBarLabel(barEntry: BarEntry): String {
-            barEntry.y.also {
-                return if (it == 0.001f) {  // we've encoded fake values with a value of 0.001f
-                    "X"
-                } else
-                    secondsToTimeString(it.toInt())
+            barEntry.y.also { yVal ->
+                if (yVal == 0.001f) {  // we've encoded fake values with a value of 0.001f
+                    return "X"
+                } else if (
+                    barChart.highlighted != null &&                                 // there are highlighted values
+                    barChart.highlighted.find { it.x == barEntry.x } != null) {     // barEntry is among the highlighted Values
+                        // draw the time
+                        return secondsToTimeString(yVal.toInt())
+                } else {
+                    // hide total time
+                    return ""
+                }
             }
         }
     }
