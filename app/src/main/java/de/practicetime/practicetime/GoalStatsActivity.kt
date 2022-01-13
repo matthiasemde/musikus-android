@@ -10,6 +10,7 @@ import android.view.ViewGroup
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
+import androidx.core.content.ContextCompat
 import androidx.core.widget.NestedScrollView
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -23,6 +24,7 @@ import com.github.mikephil.charting.data.BarData
 import com.github.mikephil.charting.data.BarDataSet
 import com.github.mikephil.charting.data.BarEntry
 import com.github.mikephil.charting.formatter.ValueFormatter
+import com.github.mikephil.charting.utils.MPPointF
 import de.practicetime.practicetime.entities.Category
 import de.practicetime.practicetime.entities.GoalDescription
 import de.practicetime.practicetime.entities.GoalInstance
@@ -77,7 +79,7 @@ class GoalStatsActivity : AppCompatActivity() {
         }
 
         lifecycleScope.launch {
-//            updateGoals(dao, lifecycleScope)  // TODO how to integrate properly to wait for finish?
+            updateGoals(dao)    // update the goalInstances if they are outdated
             initGoalsList()
             initBarChart()
             updateChartData()
@@ -98,7 +100,7 @@ class GoalStatsActivity : AppCompatActivity() {
     private suspend fun initGoalsList() {
         dao.getGoalDescriptionsWithCategories().forEach { (desc, cat) ->
             goals.add(
-                GoalListElement(
+                GoalStatsActivity.GoalListElement(
                     goalInstances = dao.getGoalInstances(desc.id, from = 0L),
                     goalDesc = desc,
                     category = cat.firstOrNull()
@@ -173,8 +175,10 @@ class GoalStatsActivity : AppCompatActivity() {
         if (barChart.data != null && barChart.data.dataSetCount > 0) {
             // update chart data
             dataSetBarChart = barChart.data.getDataSetByIndex(0) as BarDataSet
-            dataSetBarChart.values = barValues
-            dataSetBarChart.color = getChartColor()
+            dataSetBarChart.apply {
+                values = barValues
+                color = getChartColor()
+            }
             barChart.data.notifyDataChanged()
             barChart.notifyDataSetChanged()
 
@@ -183,6 +187,7 @@ class GoalStatsActivity : AppCompatActivity() {
             dataSetBarChart = BarDataSet(barValues, "Label")
             dataSetBarChart.apply {
                 setDrawValues(true)
+                iconsOffset = MPPointF(0f, 18f)
                 color = getChartColor()
                 dataSetBarChart.highLightColor = getThemeColor(R.attr.colorOnSurface)
                 dataSetBarChart.highLightAlpha = 150
@@ -367,10 +372,13 @@ class GoalStatsActivity : AppCompatActivity() {
 
         for (i in firstGoalInstShownIndex..lastGoalInstShownIndex) {
             val yVal =
-                if(i < 0) 0.001f    // all instances exhausted. Make 0.001f to recognize that it is fake in the Valueformatter
+                if(i < 0) 0.001f    // all instances exhausted. Make 0.001f to recognize in the ValueFormatter that it is fake
                 else allInstances[i].progress.toFloat()
 
-            barChartArray.add(BarEntry(i.toFloat(), yVal))
+            if (i >= 0 && yVal >= allInstances[i].target)
+                barChartArray.add(BarEntry(i.toFloat(), yVal, ContextCompat.getDrawable(this, R.drawable.ic_check_small)))
+            else
+                barChartArray.add(BarEntry(i.toFloat(), yVal))
         }
 
         return barChartArray

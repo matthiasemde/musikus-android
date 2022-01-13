@@ -60,10 +60,10 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         openDatabase()
 
-        // trigger update routine and set adapter (initGoalList()) when it is ready
-        updateGoals(dao!!, lifecycleScope, ::initGoalList)
-
         lifecycleScope.launch {
+            // trigger update routine and set adapter (initGoalList()) when it is ready
+            updateGoals(dao!!)
+            initGoalList()
             // create a new goal dialog for adding new goals
             addGoalDialog = GoalDialog(
                 requireActivity(),
