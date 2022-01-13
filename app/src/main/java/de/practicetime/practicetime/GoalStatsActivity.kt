@@ -519,13 +519,6 @@ class GoalStatsActivity : AppCompatActivity() {
     private inner class YAxisValueFormatter: ValueFormatter() {
 
         override fun getFormattedValue(seconds: Float): String {
-//            val (h, m) = secondsToHoursMins(seconds.toInt())
-//            val str = if (h != 0){
-//                "${h}." +
-//                "${m?.toFloat()?.div(60f)?.times(10)?.roundToInt()} h"   //TODO this is super ugly
-//            } else{
-//                "${m} m"
-//            }
             return secondsToTimeString(seconds.toInt())
         }
     }

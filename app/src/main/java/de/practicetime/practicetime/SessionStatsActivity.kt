@@ -32,7 +32,7 @@ import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoField
-import kotlin.math.roundToInt
+import kotlin.math.ceil
 
 class SessionStatsActivity : AppCompatActivity() {
 
@@ -405,6 +405,12 @@ class SessionStatsActivity : AppCompatActivity() {
                 barChart.visibility = View.GONE
             }
 
+            val (max, cnt) = calculateAxisValues()
+            barChart.axisRight.axisMaximum = max
+            barChart.axisLeft.axisMaximum = max
+            barChart.axisRight.setLabelCount(cnt, true)
+
+
             // redraw the chart
             barChart.animateY(1000, Easing.EaseOutBack)
             barChart.notifyDataSetChanged()
@@ -421,6 +427,29 @@ class SessionStatsActivity : AppCompatActivity() {
             if (recalculateDurs)
                 categoryListAdapter.notifyItemRangeChanged(0, categories.filter { it.visible }.size)
         }
+    }
+
+    /**
+     * Function to calculate the y Axis label values which should be drawn.
+     * makes sure all values are 15min, 30min or full hours intervals
+     */
+    private fun calculateAxisValues(): Pair<Float, Int> {
+        val maximumRequired = barChart.yMax * 1.1f // determine maximum value shown, let 10% margin on top for value
+
+        val interval = when {
+            maximumRequired < 60*60 -> 15*60         // max Value <1h, round up to next 15min
+            maximumRequired < 2*60*60 -> 20*60       // max Value <2h, round up to next 20min
+            maximumRequired < 5*60*60 -> 60*60       // max Value <5h, round up to next hour
+            maximumRequired < 10*60*60 -> 2*60*60    // max Value <10h, round up to next 2 hours
+            else -> {
+                // above 10hours, fix the interval to 1/6 of maximum and then round up to full hours
+                val desiredInterval = maximumRequired / 6f
+                // round desiredInterval up to full hours
+                60*60 * ceil(desiredInterval / (60*60)).toInt()
+            }
+        }
+        val newMax = interval * ceil(maximumRequired / interval.toFloat())
+        return Pair(newMax, (newMax / interval).toInt() + 1)
     }
 
     /** "<" button to seek into data more in the past */
@@ -737,14 +766,7 @@ class SessionStatsActivity : AppCompatActivity() {
     private inner class YAxisValueFormatter: ValueFormatter() {
 
         override fun getFormattedValue(seconds: Float): String {
-            val (h, m) = secondsToHoursMins(seconds.toInt())
-            val str = if (h != 0){
-                "${h}." +
-                        "${m?.toFloat()?.div(60f)?.times(10)?.roundToInt()} h"   //TODO this is super ugly
-            } else{
-                "${m} m"
-            }
-            return str
+            return secondsToTimeString(seconds.toInt())
         }
     }
 
@@ -844,12 +866,12 @@ class SessionStatsActivity : AppCompatActivity() {
 
     private fun secondsToHoursMins(seconds: Int?): Pair<Int?, Int?> {
         // TODO uncomment for production
-//        val hours = seconds?.div(3600)
-//        val minutes = (seconds?.rem(3600))?.div(60)
+        val hours = seconds?.div(3600)
+        val minutes = (seconds?.rem(3600))?.div(60)
 
         // FAKE values:
-        val hours = (seconds?.rem(3600))?.div(60)
-        val minutes = seconds?.rem(60)
+//        val hours = (seconds?.rem(3600))?.div(60)
+//        val minutes = seconds?.rem(60)
 
         return Pair(hours, minutes)
     }
