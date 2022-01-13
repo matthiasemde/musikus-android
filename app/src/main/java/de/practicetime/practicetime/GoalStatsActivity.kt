@@ -120,7 +120,6 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
         val categoryRecyclerView = findViewById<RecyclerView>(R.id.recyclerview_statistics)
         categoryRecyclerView.layoutManager = layoutManager
         categoryRecyclerView.adapter = goalListAdapter
-        log("Goals added")
     }
 
 
@@ -138,8 +137,15 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
             description.isEnabled = false
             legend.isEnabled = false
             setDrawValueAboveBar(true)
-            notifyDataSetChanged()
-            invalidate()
+        }
+
+        // x axis
+        barChart.xAxis.apply {
+            setDrawGridLines(false)
+            position = XAxis.XAxisPosition.BOTTOM
+            labelCount = X_AXIS_LABEL_COUNT
+            valueFormatter = XAxisValueFormatter()
+            textColor = getThemeColor(R.attr.colorOnSurface)
         }
 
         // left axis
@@ -157,31 +163,9 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
             setDrawLimitLinesBehindData(true)
         }
 
-        // x axis
-        barChart.xAxis.apply {
-            setDrawGridLines(false)
-            position = XAxis.XAxisPosition.BOTTOM
-            labelCount = X_AXIS_LABEL_COUNT
-            valueFormatter = XAxisValueFormatter()
-            textColor = getThemeColor(R.attr.colorOnSurface)
-        }
+        barChart.notifyDataSetChanged()
+        barChart.invalidate()
     }
-
-    private fun getLimitLime(
-        limit: Float,
-        labelPos: LimitLine.LimitLabelPosition = LimitLine.LimitLabelPosition.RIGHT_TOP
-    ): LimitLine {
-        // TODO string resource
-        return LimitLine(limit, secondsToTimeString(limit.toInt())).apply {
-            lineWidth = 1f
-            labelPosition = labelPos
-            textSize = 10f
-            enableDashedLine(10f, 10f, 0f)
-            lineColor = getChartColor()
-            textColor = getChartColor()
-        }
-    }
-
 
     private fun updateChartData() {
         // re-calculate bar data
@@ -195,19 +179,20 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
                 values = barValues
                 color = getChartColor()
             }
+            // update
             barChart.data.notifyDataChanged()
-            barChart.notifyDataSetChanged()
 
         } else {
             // first time drawing chart, create the DataSet from values
             dataSetBarChart = BarDataSet(barValues, "Label")
             dataSetBarChart.apply {
                 setDrawValues(true)
-                iconsOffset = MPPointF(0f, 18f)
+                iconsOffset = MPPointF(0f, 18f)     // checkmarks should draw inside of bars
                 color = getChartColor()
-                dataSetBarChart.highLightColor = getThemeColor(R.attr.colorOnSurface)
-                dataSetBarChart.highLightAlpha = 150
+                highLightColor = getThemeColor(R.attr.colorOnSurface)
+                highLightAlpha = 150    // 150 out of 255 (0=fully transparent)
             }
+
             val barData = BarData(dataSetBarChart)
             barData.apply {
                 barWidth = 0.4f
@@ -216,12 +201,14 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
                 setValueTextSize(12f)
                 isHighlightEnabled = true
             }
+
             barChart.data = barData
         }
 
         barChart.apply {
             val t = getGoalInstance(lastGoalInstShownIndex).target.toFloat()
             val (max, cnt) = calculateAxisValues()
+
             axisLeft.axisMaximum = max
             axisRight.axisMaximum = max
             axisRight.setLabelCount(cnt, true)
@@ -239,7 +226,20 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
 
         // update the Heading
         setHeadingTextViews()
+    }
 
+    private fun getLimitLime(
+        limit: Float,
+        labelPos: LimitLine.LimitLabelPosition = LimitLine.LimitLabelPosition.RIGHT_TOP
+    ): LimitLine {
+        return LimitLine(limit, secondsToTimeString(limit.toInt())).apply {
+            lineWidth = 1f
+            labelPosition = labelPos
+            textSize = 10f
+            enableDashedLine(10f, 10f, 0f)
+            lineColor = getChartColor()
+            textColor = getChartColor()
+        }
     }
 
     /**
@@ -320,9 +320,8 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
             tvRange.text = "$start - $end"
         }
 
-        // TODO string resources
         if (lastGoalInstShownIndex < 0)
-            tvSecondHeader.text = "No records for current goal"
+            tvSecondHeader.text = getString(R.string.no_records_current_goal)
         else {
             val succeeded = goals[selectedGoal].goalInstances
                 .subList(max(firstGoalInstShownIndex, 0), lastGoalInstShownIndex+1) // +1 because lastindex is exclusive
@@ -334,7 +333,7 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
                 .filter { it.progress < it.target }
                 .size
 
-            tvSecondHeader.text = "Succeeded $succeeded out of ${failed+succeeded}"
+            tvSecondHeader.text = getString(R.string.succeeded_failed, succeeded, failed+succeeded)
         }
     }
 
@@ -362,14 +361,14 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
 
     override fun onValueSelected(e: Entry?, h: Highlight?) {
 
-        log("Trigger")
         if (e == null)
             return
 
         barChart.axisRight.apply {
             val t = getGoalInstance(lastGoalInstShownIndex).target.toFloat()
             removeAllLimitLines()
-            if (e.x == barChart.data.getDataSetByIndex(0).xMax)
+            if (e.x == barChart.data.getDataSetByIndex(0).xMax &&
+                    e.y > 0.8 * t && e.y < 1.2 * t)     // only change if bar is ca. same height as LimitLine
                 addLimitLine(getLimitLime(t, LimitLine.LimitLabelPosition.LEFT_TOP))
             else
                 addLimitLine(getLimitLime(t))
@@ -474,15 +473,6 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
             .format(DateTimeFormatter.ofPattern("dd"))
     }
 
-    private fun unixTimeToWeekOfYear(timestamp: Long): String {
-        // Week number for Sundays is determined by week start day: https://stackoverflow.com/a/52950623
-        // which is again dependent on Locale passed to DateTimeFormatter.ofPattern()
-        // Locale.getDefault() results in week start at Sunday if Phone *Language* (!) is set to English (US)
-        // since we always want the week to start on Mondays here in this case, hardcode it to Locale.UK
-        return unixTimeToZonedDateTime(timestamp)
-            .format(DateTimeFormatter.ofPattern("w", Locale.UK))
-    }
-
     private fun unixTimeToMonth(timestamp: Long): String {
         return unixTimeToZonedDateTime(timestamp)
             .format(DateTimeFormatter.ofPattern("MMM"))
@@ -491,7 +481,6 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
     /** Interface helper method for getting goal instances. Returns a valid instance for index >= 0
      * For index < 0, returns a fake instance which can be used e.g. to calculate the time range of shown interval
      * **/
-    // TODO this calculation does NOT consider daylight savings!
     private fun getGoalInstance(index: Int): GoalInstance {
 
         if (index >= 0) {
@@ -672,7 +661,6 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
         }
 
         override fun getItemCount(): Int = goals.size
-
     }
 
     private fun secondsToTimeString(seconds: Int?): String {
