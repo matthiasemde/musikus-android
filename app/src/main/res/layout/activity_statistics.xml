@@ -62,7 +62,7 @@
                     android:id="@+id/btn_rwnd"
                     android:layout_width="48dp"
                     android:layout_height="48dp"
-                    app:tint="?attr/colorOnSurfaceLowerContrast"
+                    app:tint="@color/color_imagebutton_alpha_on_disabled"
                     android:src="@drawable/ic_arrow_left"
                     android:background="?selectableItemBackgroundBorderless"/>
 
@@ -80,7 +80,7 @@
                         android:gravity="center"
                         android:textSize="20sp"
                         android:textStyle="bold"
-                        tools:text="November 14 - 20" />
+                        tools:text="Nov 28 - Dec 21" />
 
                     <TextView
                         android:id="@+id/tv_secondary_chart_header"

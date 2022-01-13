@@ -2,7 +2,6 @@ package de.practicetime.practicetime
 
 import android.content.res.ColorStateList
 import android.graphics.Color
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.util.TypedValue
@@ -13,6 +12,7 @@ import android.widget.CheckBox
 import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatButton
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -124,6 +124,7 @@ class SessionStatsActivity : AppCompatActivity() {
     }
 
 
+    /** initialize the checkbox list with the categories */
     private fun initCategoryList() {
         lifecycleScope.launch {
             dao.getAllCategories().forEach {
@@ -144,6 +145,7 @@ class SessionStatsActivity : AppCompatActivity() {
         }
     }
 
+    /** initialize the bar chart view object */
     private fun initBarChart() {
         // for rounded bars: https://gist.github.com/xanscale/e971cc4f2f0712a8a3bcc35e85325c27
         //      issue: https://github.com/PhilJay/MPAndroidChart/issues/2771#issuecomment-566719474
@@ -153,6 +155,7 @@ class SessionStatsActivity : AppCompatActivity() {
         barChart.description.isEnabled = false
         barChart.legend.isEnabled = false
         barChart.setDrawValueAboveBar(true)
+        barChart.notifyDataSetChanged()
         barChart.invalidate()
 
         // axis settings
@@ -176,6 +179,7 @@ class SessionStatsActivity : AppCompatActivity() {
 
     }
 
+    /** initialize the (hidden) Pie chart view object */
     private fun initPieChart() {
         pieChart = findViewById(R.id.pie_chart);
 
@@ -237,6 +241,7 @@ class SessionStatsActivity : AppCompatActivity() {
 //        chart.setCenterText(generateCenterSpannableText());
     }
 
+    /** sets the heading above the chart for the time range */
     private fun setHeadingTextViews() {
         val tvRange = findViewById<TextView>(R.id.tv_chart_header)
         val tvTotalTimeInRange = findViewById<TextView>(R.id.tv_secondary_chart_header)
@@ -267,12 +272,12 @@ class SessionStatsActivity : AppCompatActivity() {
                     .now(ZoneId.systemDefault())
                     .plusWeeks(firstBarXVal.toLong())
                     .with(ChronoField.DAY_OF_WEEK , 1)  // go to Monday
-                    .format(DateTimeFormatter.ofPattern("MMMM d"))
+                    .format(DateTimeFormatter.ofPattern("MMM d"))
                 val end = LocalDate
                     .now(ZoneId.systemDefault())
                     .plusWeeks(lastBarXVal.toLong())
                     .with(ChronoField.DAY_OF_WEEK , 7)  // go to Sunday
-                    .format(DateTimeFormatter.ofPattern("MMMM d"))
+                    .format(DateTimeFormatter.ofPattern("MMM d"))
                 tvRange.text = ("$start - $end")
             }
 
@@ -285,13 +290,15 @@ class SessionStatsActivity : AppCompatActivity() {
                     .now(ZoneId.systemDefault())
                     .plusMonths(lastBarXVal.toLong())
 
-                var formatStr = "MMMM"
+                var formatStrStart = "MMMM"
+                var formatStrEnd = "MMMM y"
                 if(startDate.year != endDate.year) {
-                    formatStr = "MMMM y"    // also show year of beginning if it is different from end
+                    formatStrStart = "MMM y"    // also show year of beginning if it is different from end
+                    formatStrEnd = "MMM y"
                 }
 
-                val start = startDate.format(DateTimeFormatter.ofPattern(formatStr))
-                val end = endDate.format(DateTimeFormatter.ofPattern("MMMM y"))
+                val start = startDate.format(DateTimeFormatter.ofPattern(formatStrStart))
+                val end = endDate.format(DateTimeFormatter.ofPattern(formatStrEnd))
                 tvRange.text = ("$start - $end")
             }
         }
@@ -304,6 +311,7 @@ class SessionStatsActivity : AppCompatActivity() {
         tvTotalTimeInRange.text = getString(R.string.total_time, durationStr)
     }
 
+    /** toggles the states of the "days"/"month"/"week" chooser buttons*/
     private fun setBtnEnabledState() {
         val btnWeek = findViewById<AppCompatButton>(R.id.btn_days)
         val btnMonth = findViewById<AppCompatButton>(R.id.btn_weeks)
@@ -336,6 +344,7 @@ class SessionStatsActivity : AppCompatActivity() {
         }
     }
 
+    /** called whenever the chart has to update since the user requests other data (e.g. time range) */
     private fun updateChartData(recalculateDurs: Boolean = true) {
         lifecycleScope.launch {
             // re-calculate bar data
@@ -398,9 +407,11 @@ class SessionStatsActivity : AppCompatActivity() {
 
             // redraw the chart
             barChart.animateY(1000, Easing.EaseOutBack)
+            barChart.notifyDataSetChanged()
             barChart.invalidate()
 
             pieChart.animateY(1400, Easing.EaseInOutQuad)
+            pieChart.notifyDataSetChanged()
             pieChart.invalidate()
 
             // update the Heading
@@ -412,6 +423,7 @@ class SessionStatsActivity : AppCompatActivity() {
         }
     }
 
+    /** "<" button to seek into data more in the past */
     private fun seekPast() {
         when(activeView) {
             VIEWS.DAYS_VIEW ->
@@ -425,6 +437,7 @@ class SessionStatsActivity : AppCompatActivity() {
         setBtnEnabledState()
     }
 
+    /** ">" button to seek into data less in the past */
     private fun seekFuture() {
         when(activeView) {
             VIEWS.DAYS_VIEW ->
@@ -486,6 +499,8 @@ class SessionStatsActivity : AppCompatActivity() {
         val pieChartArray = arrayListOf<PieEntry>()
         val visibleCategories = ArrayList<Int>()
 
+        categories.forEach { it.totalDuration = 0 }
+
         // init pie chart array here because we sum over all days
         val floatArrDurPieChart = FloatArray(colorAmount) {0f}
 
@@ -523,6 +538,8 @@ class SessionStatsActivity : AppCompatActivity() {
         val pieChartArray = arrayListOf<PieEntry>()
         val visibleCategories = ArrayList<Int>()
 
+        categories.forEach { it.totalDuration = 0 }
+
         // init pie chart array here because we sum over all days
         val floatArrDurPieChart = FloatArray(colorAmount) {0f}
         for (month in 0 downTo -(VIEWS.MONTHS_VIEW.barCount-1)) {
@@ -551,6 +568,7 @@ class SessionStatsActivity : AppCompatActivity() {
         return Pair(barChartArray, pieChartArray)
     }
 
+    /** updates the shown Elements in the checkbox list according to the data in the chart */
     private fun updateVisibleCategories(visibleCategories: List<Int>) {
         var elemRemovedOrInserted = false
         // traverse in reverse order so that newly inserted/removed items don't affect list indices
@@ -815,12 +833,12 @@ class SessionStatsActivity : AppCompatActivity() {
         // TODO change to string resources with placeholders eventually
         val (h, m) = secondsToHoursMins(seconds)
         var str = ""
-        if (h != 0) str += "$h h "
-        if (m != 0) str += "$m min"
+        if (h != 0) str += "${h}h "
+        if (m != 0) str += "${m}m"
         else
             if (h == 0)
-                if (seconds != 0) str = "< 1 min"
-                else str += "0 min"
+                if (seconds != 0) str = "< 1m"
+                else str += "0m"
         return str
     }
 
