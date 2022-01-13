@@ -437,6 +437,7 @@ class SessionStatsActivity : AppCompatActivity() {
         val maximumRequired = barChart.yMax * 1.1f // determine maximum value shown, let 10% margin on top for value
 
         val interval = when {
+            maximumRequired < 30*60 -> 5*60          // max Value <30m, round up to next 5min
             maximumRequired < 60*60 -> 15*60         // max Value <1h, round up to next 15min
             maximumRequired < 2*60*60 -> 20*60       // max Value <2h, round up to next 20min
             maximumRequired < 5*60*60 -> 60*60       // max Value <5h, round up to next hour

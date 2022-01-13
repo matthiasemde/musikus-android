@@ -251,6 +251,7 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
         val maximumRequired = max(t * 1.1f, barChart.yMax) // determine maximum value shown
 
         val interval = when {
+            maximumRequired < 30*60 -> 5*60          // max Value <30m, round up to next 5min
             maximumRequired < 60*60 -> 15*60         // max Value <1h, round up to next 15min
             maximumRequired < 2*60*60 -> 20*60       // max Value <2h, round up to next 20min
             maximumRequired < 5*60*60 -> 60*60       // max Value <5h, round up to next hour
