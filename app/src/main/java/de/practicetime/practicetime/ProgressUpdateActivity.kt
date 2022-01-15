@@ -44,6 +44,10 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
 
         openDatabase()
 
+        // prepare the skip and continue button
+        continueButton =  findViewById(R.id.progressUpdateLeave)
+        skipButton = findViewById(R.id.progressUpdateSkipAnimation)
+
         val latestSessionId = intent.extras?.getInt("KEY_SESSION")
 
         if (latestSessionId != null) {
@@ -53,10 +57,6 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
         }
 
         initProgressedGoalList()
-
-        // prepare the skip and continue button
-        continueButton =  findViewById(R.id.progressUpdateLeave)
-        skipButton = findViewById(R.id.progressUpdateSkipAnimation)
 
         continueButton.setOnClickListener { exitActivity() }
     }
