@@ -75,12 +75,15 @@ class GoalDialog(
                         periodUnit = GoalPeriodUnit.values()[goalDialogPeriodUnitView.selectedItemPosition],
                     )
 
+                    Log.d("CREATE", "track: $trackAllCategories\nselectedCategories:$selectedCategories")
                     // then create a object joining the description with any selected categories
                     val newGoalDescriptionWithCategories = GoalDescriptionWithCategories(
                         description = newGoalDescription,
                         categories = if (!trackAllCategories)
-                            selectedCategories else emptyList()
+                            selectedCategories.toList() else emptyList()
                     )
+
+                    Log.d("CREATE", "$newGoalDescriptionWithCategories")
 
                     val targetDuration = goalDialogTargetHoursView.text.toString().trim().let{
                         if(it.isNotEmpty()) it.toInt() * 3600 else 0
@@ -94,12 +97,18 @@ class GoalDialog(
 
                 // clear the dialog and dismiss it
                 selectedGoalDescriptionId = 0
-                trackAllCategories = true
+
+                goalDialogAllCategoriesButtonView.performClick()
+
+                selectedCategories.clear()
                 goalDialogCategorySelectorView.setSelection(0)
+
                 goalDialogOneTimeGoalView.isChecked = true
-                goalDialogTargetHoursView.setText("")
-                goalDialogTargetMinutesView.setText("")
+
+                goalDialogTargetHoursView.setText("0")
+                goalDialogTargetMinutesView.setText("0")
                 goalDialogPeriodValueView.setText("1")
+
                 goalDialogPeriodUnitView.setSelection(0)
                 dialog.dismiss()
             }

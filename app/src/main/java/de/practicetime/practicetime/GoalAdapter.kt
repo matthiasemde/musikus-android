@@ -82,7 +82,7 @@ class GoalAdapter(
         var categoryColor: ColorStateList? = null
         if(description.type != GoalType.NON_SPECIFIC) {
             categoryColor = ColorStateList.valueOf(
-                context.resources.getIntArray(R.array.category_colors)[categories.first().colorIndex]
+                context.resources.getIntArray(R.array.category_colors)[categories.firstOrNull()?.colorIndex ?: 0]
             )
         }
 
@@ -100,7 +100,7 @@ class GoalAdapter(
             viewHolder.goalNameView.text = context.getString(R.string.goal_name_non_specific)
         } else {
             viewHolder.goalNameView.apply {
-                text = categories.first().name
+                text = categories.firstOrNull()?.name ?: "Delete me!"
             }
         }
 
