@@ -216,7 +216,8 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
             axisRight.addLimitLine(getLimitLime(t))
 
             highlightValue(-1f, 0, false)   // remove all highlighting
-//            highlightValue((goals[selectedGoal].goalInstances.size - 1).toFloat(), 0, false)
+            // highlight last value in the beginning
+            highlightValue((goals[selectedGoal].goalInstances.size - 1).toFloat(), 0, false)
 
             // redraw the chart
             animateY(1000, Easing.EaseOutBack)
