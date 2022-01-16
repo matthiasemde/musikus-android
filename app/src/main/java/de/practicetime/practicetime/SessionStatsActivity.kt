@@ -150,33 +150,42 @@ class SessionStatsActivity : AppCompatActivity() {
         // for rounded bars: https://gist.github.com/xanscale/e971cc4f2f0712a8a3bcc35e85325c27
         //      issue: https://github.com/PhilJay/MPAndroidChart/issues/2771#issuecomment-566719474
 
-        barChart = findViewById(R.id.bar_chart) as BarChart
-        barChart.setTouchEnabled(false)
-        barChart.description.isEnabled = false
-        barChart.legend.isEnabled = false
-        barChart.setDrawValueAboveBar(true)
+        barChart = findViewById(R.id.bar_chart)
+        barChart.apply {
+            isDragEnabled = false
+            isDoubleTapToZoomEnabled = false
+            setScaleEnabled(false)
+            setPinchZoom(false)
+            description.isEnabled = false
+            legend.isEnabled = false
+            setDrawValueAboveBar(true)
+        }
+
+        // x axis
+        barChart.xAxis.apply {
+            setDrawGridLines(false)
+            position = XAxis.XAxisPosition.BOTTOM
+            labelCount = activeView.barCount
+            valueFormatter = XAxisValueFormatter()
+            textColor = getThemeColor(R.attr.colorOnSurface)
+        }
+
+        // left axis
+        barChart.axisLeft.apply {
+            axisMinimum = 0f   // needed for y axis scaling (probably a bug!)
+            isEnabled = false
+        }
+
+        // right axis
+        barChart.axisRight.apply {
+            axisMinimum = 0f
+            setDrawAxisLine(false)
+            textColor = getThemeColor(R.attr.colorOnSurfaceLowerContrast)
+            valueFormatter = YAxisValueFormatter()
+        }
+
         barChart.notifyDataSetChanged()
         barChart.invalidate()
-
-        // axis settings
-        val leftAxis = barChart.axisLeft
-        val xAxis = barChart.xAxis
-        val rightAxis = barChart.axisRight
-
-        leftAxis.axisMinimum = 0f   // needed for y axis scaling (probably a bug!)
-        leftAxis.isEnabled = false
-
-        rightAxis.axisMinimum = 0f
-        rightAxis.setDrawAxisLine(false)
-        rightAxis.textColor = getThemeColor(R.attr.colorOnSurfaceLowerContrast)
-        rightAxis.valueFormatter = YAxisValueFormatter()
-
-        xAxis.setDrawGridLines(false)
-        xAxis.position = XAxis.XAxisPosition.BOTTOM
-        xAxis.labelCount = activeView.barCount
-        xAxis.valueFormatter = XAxisValueFormatter()
-        xAxis.textColor = getThemeColor(R.attr.colorOnSurface)
-
     }
 
     /** initialize the (hidden) Pie chart view object */
