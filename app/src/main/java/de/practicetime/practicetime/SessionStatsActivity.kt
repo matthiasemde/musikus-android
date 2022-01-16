@@ -702,12 +702,15 @@ class SessionStatsActivity : AppCompatActivity() {
         // because of half-open approach we have to get the "start of the _next_ day" instead of the end of the current day
         // e.g. end of Tuesday = Start of Wednesday, so make dayIndex 2 -> 3
         var nextDay = dayIndex + 1
-        if (dayIndex > 6)
+        var weekOffsetAdapted = weekOffset
+        if (dayIndex > 6) {
             nextDay = (dayIndex + 1) % 7
+            weekOffsetAdapted += 1  // increase weekOffset so that we take the start of the first day of NEXT week as end of day
+        }
         return ZonedDateTime.now()
             .with(ChronoField.DAY_OF_WEEK, nextDay)         // ISO 8601, Monday is first day of week.
             .toLocalDate().atStartOfDay(ZoneId.systemDefault())  // make sure time is 00:00
-            .plusWeeks(weekOffset)
+            .plusWeeks(weekOffsetAdapted)
     }
 
     private fun openDatabase() {
