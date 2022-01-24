@@ -27,7 +27,6 @@ import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.formatter.ValueFormatter
 import com.github.mikephil.charting.highlight.Highlight
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener
-import com.github.mikephil.charting.utils.MPPointF
 import de.practicetime.practicetime.entities.Category
 import de.practicetime.practicetime.entities.GoalDescription
 import de.practicetime.practicetime.entities.GoalInstance
@@ -136,7 +135,7 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
             setOnChartValueSelectedListener(this@GoalStatsActivity)
             description.isEnabled = false
             legend.isEnabled = false
-            setDrawValueAboveBar(true)
+            setDrawValueAboveBar(false)
         }
 
         // x axis
@@ -187,7 +186,6 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
             dataSetBarChart = BarDataSet(barValues, "Label")
             dataSetBarChart.apply {
                 setDrawValues(true)
-                iconsOffset = MPPointF(0f, 18f)     // checkmarks should draw inside of bars
                 color = getChartColor()
                 highLightColor = getThemeColor(R.attr.colorOnSurface)
                 highLightAlpha = 150    // 150 out of 255 (0=fully transparent)
