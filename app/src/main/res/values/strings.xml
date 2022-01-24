@@ -1,5 +1,9 @@
 <!--
-    This software is licensed under the MIT license
+    This Source Code Form is subject to the terms of the Mozilla Public
+    License, v. 2.0. If a copy of the MPL was not distributed with this
+    file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+    Copyright (c) 2022 Matthias Emde
 
     Copyright (c) 2022, Javier Carbone, author Michael Prommersberger
     Additions and modifications, author Matthias Emde
@@ -162,6 +166,8 @@
     <string name="record_snackbar_message">%s saved</string>
     <string name="record_snackbar_undo">Delete</string>
     <string name="record_toast_deleted">Recording deleted</string>
+    <string name="record_item_play">Play recording</string>
+    <string name="record_item_duration">Duration:</string>
     <string name="total_time">Total</string>
     <string name="paused_practicing">Practicing paused</string>
     <string name="statistics_paused_practicing_limitline_label">%1$s break</string>

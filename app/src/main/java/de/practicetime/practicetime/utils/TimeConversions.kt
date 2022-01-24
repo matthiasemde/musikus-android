@@ -1,5 +1,11 @@
 /*
- * This software is licensed under the MIT license
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ *
+ * Copyright (c) 2022 Matthias Emde
+ *
+ * Parts of this software are licensed under the MIT license
  *
  * Copyright (c) 2022, Javier Carbone, author Michael Prommersberger
  */
@@ -30,6 +36,12 @@ const val TIME_FORMAT_PRETTY_APPROX_SHORT = 4
 
 /** Fixed format HH:MM:SS */
 const val TIME_FORMAT_HMS_DIGITAL = 3
+
+/** Fixed format MM:SS */
+const val TIME_FORMAT_MS_DIGITAL = 4
+
+/** Fixed format HH:MM for >1h, else e.g. "32 min" for <1h (used in GoalsProgressBar) */
+const val TIME_FORMAT_HM_DIGITAL_OR_MIN_HUMAN = 5
 
 /** The scaling factor of 'h' an 'm' in time strings for smaller text. */
 const val SCALE_FACTOR_FOR_SMALL_TEXT = 0.8f
@@ -118,6 +130,27 @@ fun getDurationString(durationSeconds: Int, format: Int, scale: Float = 0.6f): C
                 minutes,
                 seconds
             )
+        }
+
+        TIME_FORMAT_MS_DIGITAL -> {
+            return "%02d:%02d".format(
+                hours * 60 + minutes,
+                seconds
+            )
+        }
+
+        TIME_FORMAT_HM_DIGITAL_OR_MIN_HUMAN -> {
+            return when {
+                hours > 0 -> {
+                    "%02d:%02d".format(hours, minutes)
+                }
+                minutes > 0 -> {
+                    "%d min".format(minutes)
+                }
+                else -> {
+                    "< 1min"
+                }
+            }
         }
         TIME_FORMAT_PRETTY_APPROX -> {
             return when {

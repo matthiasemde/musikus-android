@@ -1,5 +1,11 @@
 /*
- * This software is licensed under the MIT license
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ *
+ * Copyright (c) 2022 Matthias Emde
+ *
+ * Parts of this software are licensed under the MIT license
  *
  * Copyright (c) 2022, Javier Carbone, author Michael Prommersberger
  * Additions and modifications, author Matthias Emde 
@@ -12,11 +18,11 @@ import android.content.*
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.graphics.drawable.AnimatedVectorDrawable
+import android.media.AudioAttributes
+import android.media.MediaPlayer
 import android.net.Uri
 import android.os.*
 import android.provider.MediaStore
-import android.text.TextUtils
-import android.util.Log
 import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
@@ -29,7 +35,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.content.ContextCompat
-import androidx.core.widget.NestedScrollView
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.recyclerview.widget.*
@@ -52,6 +58,7 @@ import de.practicetime.practicetime.ui.goals.updateGoals
 import de.practicetime.practicetime.ui.library.CategoryAdapter
 import de.practicetime.practicetime.ui.library.CategoryDialog
 import de.practicetime.practicetime.utils.TIME_FORMAT_HMS_DIGITAL
+import de.practicetime.practicetime.utils.TIME_FORMAT_MS_DIGITAL
 import de.practicetime.practicetime.utils.getCurrTimestamp
 import de.practicetime.practicetime.utils.getDurationString
 import kotlinx.coroutines.launch
@@ -61,6 +68,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.math.abs
 import kotlin.math.round
+
 
 class ActiveSessionActivity : AppCompatActivity() {
 
@@ -80,8 +88,8 @@ class ActiveSessionActivity : AppCompatActivity() {
     private lateinit var metronomeBottomSheet: LinearLayout
     private lateinit var metronomeBottomSheetBehaviour: BottomSheetBehavior<LinearLayout>
 
-    private lateinit var recordingBottomSheet: NestedScrollView
-    private lateinit var recordingBottomSheetBehaviour: BottomSheetBehavior<NestedScrollView>
+    private lateinit var recordingBottomSheet: RecyclerView
+    private lateinit var recordingBottomSheetBehaviour: BottomSheetBehavior<RecyclerView>
 
     /** Defines callbacks for service binding, passed to bindService()  */
     private val connection = object : ServiceConnection {
@@ -103,6 +111,9 @@ class ActiveSessionActivity : AppCompatActivity() {
             adaptUIPausedState(mService.paused)
             setPauseStopBtnVisibility(mService.sessionActive)
             adaptBottomTextView(mService.sessionActive)
+
+            // initialize persistent bottom sheet dialog for metronome
+            initMetronomeBottomSheet()
         }
 
         override fun onServiceDisconnected(arg0: ComponentName) {
@@ -116,11 +127,6 @@ class ActiveSessionActivity : AppCompatActivity() {
         Intent(this, SessionForegroundService::class.java).also { intent ->
             bindService(intent, connection, Context.BIND_AUTO_CREATE)
         }
-
-        LocalBroadcastManager.getInstance(this).registerReceiver(
-            updateRecordTimeReceiver,
-            IntentFilter("RecordingDurationUpdate")
-        )
 
         LocalBroadcastManager.getInstance(this).registerReceiver(
             stopRecordingReceiver,
@@ -226,10 +232,10 @@ class ActiveSessionActivity : AppCompatActivity() {
             lifecycleScope.launch {
                 PracticeTime.categoryDao.insertAndGet(newCategory)?.let {
                     activeCategories.add(0, it)
+                    categoryAdapter.notifyItemInserted(0)
+                    categoryList.scrollToPosition(0)
+                    adjustSpanCountCatList()
                 }
-                categoryAdapter.notifyItemInserted(0)
-                categoryList.scrollToPosition(0)
-                adjustSpanCountCatList()
             }
         }
 
@@ -397,7 +403,7 @@ class ActiveSessionActivity : AppCompatActivity() {
             if (metronomeBottomSheetBehaviour.state == BottomSheetBehavior.STATE_HIDDEN) {
                 metronomeBottomSheetBehaviour.state = BottomSheetBehavior.STATE_EXPANDED
                 recordingBottomSheetBehaviour.state = BottomSheetBehavior.STATE_HIDDEN
-                recordingBottomSheet.scrollY = 0
+                recordingBottomSheet.scrollToPosition(0)
             } else {
                 metronomeBottomSheetBehaviour.state = BottomSheetBehavior.STATE_HIDDEN
             }
@@ -446,20 +452,32 @@ class ActiveSessionActivity : AppCompatActivity() {
      *  Recording Bottom sheet init
      ********************************************/
 
-    private lateinit var recordingTimeView: TextView
-    private lateinit var recordingTimeCsView: TextView
-
-    private lateinit var recordingStartStopButtonView: MaterialButton
+    private lateinit var openRecorderButtonView: MaterialButton
 
     data class Recording (
         val id: Long,
         val displayName: String,
-        val duration: String,
+        val duration: Int,
+        val date: Long,
         val contentUri: Uri
     )
 
     private val recordingList = mutableListOf<Recording>()
-    private val recordingListAdapter = RecordingListAdapter(recordingList)
+    private val recordingListAdapter = RecordingListAdapter(
+        recordingList,
+        this,
+        ::startRecording,
+        ::stopRecording
+    )
+
+    private val updateRecordTimeReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+//            intent?.extras?.getString("DURATION")?.toInt()?.also {
+//                recordingTimeView.text = getDurationString(it / 1000, TIME_FORMAT_HMS_DIGITAL)
+//                recordingTimeCsView.text = "%02d".format(it % 1000 / 10)
+//            }
+        }
+    }
 
     private val recordingPermissions =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { granted ->
@@ -475,12 +493,12 @@ class ActiveSessionActivity : AppCompatActivity() {
         val permissions = arrayListOf<String>()
 
         if(checkSelfPermission(Manifest.permission.RECORD_AUDIO)
-                != PackageManager.PERMISSION_GRANTED) {
+            != PackageManager.PERMISSION_GRANTED) {
             permissions.add(Manifest.permission.RECORD_AUDIO)
         }
         if(Build.VERSION.SDK_INT < Build.VERSION_CODES.Q &&
             checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                != PackageManager.PERMISSION_GRANTED) {
+            != PackageManager.PERMISSION_GRANTED) {
             permissions.add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
             permissions.add(Manifest.permission.READ_EXTERNAL_STORAGE)
         }
@@ -527,16 +545,18 @@ class ActiveSessionActivity : AppCompatActivity() {
             val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media._ID)
             val displayNameColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DISPLAY_NAME)
             val durationColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION)
+            val dateColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATE_ADDED)
 
             while(cursor.moveToNext()) {
                 val id = cursor.getLong(idColumn)
                 val displayName = cursor.getString(displayNameColumn)
-                val duration = cursor.getString(durationColumn)
+                val duration = cursor.getString(durationColumn).toIntOrNull() ?: 0
+                val date = (cursor.getString(dateColumn).toLongOrNull() ?: 0L) * 1000L
                 val contentUri = ContentUris.withAppendedId(
                     MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
                     id
                 )
-                recordingList.add(Recording(id, displayName, duration ?: "0", contentUri))
+                recordingList.add(0, Recording(id, displayName, duration, date, contentUri))
             }
         }
 
@@ -554,28 +574,17 @@ class ActiveSessionActivity : AppCompatActivity() {
         }
     }
 
-    private val updateRecordTimeReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-            intent?.extras?.getString("DURATION")?.toInt()?.also {
-                recordingTimeView.text = getDurationString(it / 1000, TIME_FORMAT_HMS_DIGITAL)
-                recordingTimeCsView.text = "%02d".format(it % 1000 / 10)
-            }
-        }
-    }
-
     private val stopRecordingReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
-            Log.d("BROAD","Broadcast received! $this")
             val uri = RecorderService.recordingUri ?: return
-            Log.d("BROAD","Uri: $uri")
             if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 val values = ContentValues()
                 values.put(MediaStore.MediaColumns.IS_PENDING, false)
                 contentResolver.update(uri, values, null, null)
             }
-
-            recordingTimeView.text = "00:00:00"
-            recordingTimeCsView.text = "00"
+//
+//            recordingTimeView.text = "00:00:00"
+//            recordingTimeCsView.text = "00"
 
             contentResolver.query(
                 uri,
@@ -589,16 +598,18 @@ class ActiveSessionActivity : AppCompatActivity() {
             )?.use { cursor ->
                 val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media._ID)
                 val durationColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION)
+                val dateColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATE_ADDED)
 
                 cursor.moveToNext()
                 val id = cursor.getLong(idColumn)
-                val duration = cursor.getString(durationColumn)
+                val duration = cursor.getString(durationColumn).toIntOrNull() ?: 0
+                val date = (cursor.getString(dateColumn).toLongOrNull() ?: 0L) * 1000L
                 val contentUri = ContentUris.withAppendedId(
                     MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
                     id
                 )
                 RecorderService.recordingName?.let {
-                    recordingList.add(0, Recording(id, it, duration ?: "0", contentUri))
+                    recordingList.add(0, Recording(id, it, duration, date, contentUri))
                 }
                 recordingListAdapter.notifyItemInserted(0)
             }
@@ -610,11 +621,15 @@ class ActiveSessionActivity : AppCompatActivity() {
                 ),
                 10000
             ).apply {
-                anchorView = findViewById<ConstraintLayout>(R.id.constraintLayout_Bottom_btn)
+                anchorView =
+                    if(recordingBottomSheetBehaviour.state == BottomSheetBehavior.STATE_HIDDEN)
+                        recordingBottomSheet
+                    else findViewById<ConstraintLayout>(R.id.constraintLayout_Bottom_btn)
+
                 setAction(R.string.record_snackbar_undo) {
                     contentResolver.delete(uri, null, null)
                     recordingList.removeAt(0)
-                    recordingListAdapter.notifyItemRemoved(0)
+                    recordingListAdapter.deleteRecording()
                     dismiss()
                     Toast.makeText(
                         this@ActiveSessionActivity,
@@ -629,179 +644,495 @@ class ActiveSessionActivity : AppCompatActivity() {
         }
     }
 
+    private fun startRecording() : Boolean {
+        if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(Array(1) { Manifest.permission.RECORD_AUDIO }, 69)
+            return false
+        } else {
+            val recordingNameFormat = SimpleDateFormat("_dd-MM-yyyy'T'H_mm_ss", Locale.getDefault())
+
+            val displayName = (if(mService.sectionBuffer.isNotEmpty()) mService.currCategoryName
+            else "PracticeTime") + recordingNameFormat.format(Date().time)
+
+            val contentValues = ContentValues().apply {
+                put(MediaStore.Audio.Media.DISPLAY_NAME, displayName)
+                put(MediaStore.Audio.Media.TITLE, displayName)
+                put(MediaStore.Audio.Media.MIME_TYPE, "audio/mp4")
+                put(MediaStore.Audio.Media.ALBUM, "Practice Time")
+                put(MediaStore.Audio.Media.DATE_ADDED, getCurrTimestamp())
+                        put(MediaStore.Audio.Media.IS_MUSIC, 1)
+            }
+
+            try {
+                val newRecordingUri = if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    contentValues.put(MediaStore.MediaColumns.RELATIVE_PATH, "Music/Practice Time")
+                    contentValues.put(MediaStore.MediaColumns.IS_PENDING, true)
+                    when {
+                        Build.VERSION.SDK_INT >= Build.VERSION_CODES.R -> {
+                            contentValues.put(MediaStore.Audio.Media.GENRE, "Recording")
+                        }
+                        Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
+                            contentValues.put(MediaStore.Audio.Media.IS_RECORDING, 1)
+                        }
+                    }
+
+                    MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+
+                } else {
+                    if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                        != PackageManager.PERMISSION_GRANTED) return false
+                    val ptDir = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).toString() + "/Practice Time")
+                    if (!ptDir.exists()) {
+                        ptDir.mkdirs()
+                    }
+                    val newRecordingFile = File(ptDir, displayName)
+                    contentValues.put(MediaStore.Audio.Media.DATA, newRecordingFile.absolutePath)
+                    MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+                }
+
+                contentResolver.insert(newRecordingUri, contentValues)?.also { uri ->
+                    Intent(this, RecorderService::class.java).also {
+                        it.putExtra("URI", uri.toString())
+                        startService(it)
+                    }
+                } ?: throw IOException("Couldn't create MediaStore entry")
+
+                RecorderService.recordingName = displayName
+                openRecorderButtonView.isSelected = true
+
+            } catch(e: IOException) {
+                e.printStackTrace()
+                return false
+            }
+            return true
+        }
+    }
+
+    private fun stopRecording() {
+        openRecorderButtonView.isSelected = false
+        Intent(this, RecorderService::class.java).also {
+            stopService(it)
+        }
+    }
+
     private fun initRecordBottomSheet() {
-        /* Find all views in bottom sheet */
-        recordingTimeView = findViewById(R.id.record_sheet_recording_time)
-        recordingTimeCsView = findViewById(R.id.record_sheet_recording_time_cs)
 
-        recordingStartStopButtonView = findViewById(R.id.record_sheet_start_pause)
-
-        val openRecorderButtonView = findViewById<MaterialButton>(R.id.bottom_record)
-
-        /* Initialize local variables */
-        val recordingNameFormat = SimpleDateFormat("_dd-MM-yyyy'T'H_mm_ss", Locale.getDefault())
-
-        var recordingButtonLocked = false
+        openRecorderButtonView = findViewById(R.id.bottom_record)
 
         /* Modify views */
-        recordingBottomSheet = findViewById(R.id.record_sheet_layout)
+        recordingBottomSheet = findViewById(R.id.record_sheet_list)
         recordingBottomSheetBehaviour = BottomSheetBehavior.from(recordingBottomSheet)
 
         recordingBottomSheetBehaviour.state = BottomSheetBehavior.STATE_HIDDEN
-
-        recordingTimeView.text = "00:00:00"
-        recordingTimeCsView.text = "00"
+        recordingBottomSheetBehaviour.halfExpandedRatio = 0.34F
 
         if(RecorderService.recording) {
-            recordingStartStopButtonView.icon = ContextCompat.getDrawable(this, R.drawable.ic_stop)
             recordingBottomSheetBehaviour.state = BottomSheetBehavior.STATE_COLLAPSED
             openRecorderButtonView.isSelected = true
-        }
-
-        recordingStartStopButtonView.setOnClickListener {
-            // Return if button is still locked
-            if (recordingButtonLocked) return@setOnClickListener
-
-            // if not, lock it for one second to avoid double presses
-            recordingButtonLocked = true
-            Handler(Looper.getMainLooper()).postDelayed({
-                recordingButtonLocked = false
-            }, 1000L)
-
-            if(!RecorderService.recording) {
-                if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
-                    val displayName = (if(mService.sectionBuffer.isNotEmpty()) mService.currCategoryName
-                    else "PracticeTime") + recordingNameFormat.format(Date().time)
-
-                    val contentValues = ContentValues().apply {
-                        put(MediaStore.Audio.Media.DISPLAY_NAME, displayName)
-                        put(MediaStore.Audio.Media.TITLE, displayName)
-                        put(MediaStore.Audio.Media.MIME_TYPE, "audio/mp4")
-                        put(MediaStore.Audio.Media.ALBUM, "Practice Time")
-                        put(MediaStore.Audio.Media.DATE_ADDED, getCurrTimestamp())
-                        put(MediaStore.Audio.Media.IS_MUSIC, 1)
-                    }
-
-                    try {
-                        val newRecordingUri = if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                            contentValues.put(MediaStore.MediaColumns.RELATIVE_PATH, "Music/Practice Time")
-                            contentValues.put(MediaStore.MediaColumns.IS_PENDING, true)
-                            when {
-                                Build.VERSION.SDK_INT >= Build.VERSION_CODES.R -> {
-                                    contentValues.put(MediaStore.Audio.Media.GENRE, "Recording")
-                                }
-                                Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-                                    contentValues.put(MediaStore.Audio.Media.IS_RECORDING, 1)
-                                }
-                            }
-
-                            MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
-
-                        } else {
-                            if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                                != PackageManager.PERMISSION_GRANTED) return@setOnClickListener
-                            val ptDir = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).toString() + "/Practice Time")
-                            if (!ptDir.exists()) {
-                                ptDir.mkdirs()
-                            }
-                            val newRecordingFile = File(ptDir, displayName)
-                            contentValues.put(MediaStore.Audio.Media.DATA, newRecordingFile.absolutePath)
-                            MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
-                        }
-
-                        contentResolver.insert(newRecordingUri, contentValues)?.also { uri ->
-                            Intent(this, RecorderService::class.java).also {
-                                it.putExtra("URI", uri.toString())
-                                startService(it)
-                            }
-                        } ?: throw IOException("Couldn't create MediaStore entry")
-
-                        RecorderService.recordingName = displayName
-
-                        val startToStop = ContextCompat.getDrawable(
-                            this, R.drawable.avd_start_to_stop
-                        ) as AnimatedVectorDrawable
-
-                        recordingStartStopButtonView.icon = startToStop
-                        startToStop.start()
-                        openRecorderButtonView.isSelected = true
-                    } catch(e: IOException) {
-                        e.printStackTrace()
-                    }
-                }
-            } else {
-                openRecorderButtonView.isSelected = false
-                val stopToStart = ContextCompat.getDrawable(
-                    this, R.drawable.avd_stop_to_start
-                ) as AnimatedVectorDrawable
-
-                recordingStartStopButtonView.icon = stopToStart
-                stopToStart.start()
-
-                Intent(this, RecorderService::class.java).also {
-                    stopService(it)
-                }
-            }
         }
 
         findViewById<RecyclerView>(R.id.record_sheet_list).apply {
             layoutManager = LinearLayoutManager(this@ActiveSessionActivity)
             adapter = recordingListAdapter
+            itemAnimator?.changeDuration = 1L
+            setHasFixedSize(false)
         }
+
+        updateRecordingsList()
+        recordingListAdapter.notifyItemInserted(0)
 
         findViewById<MaterialButton>(R.id.bottom_record).setOnClickListener {
             findViewById<CoordinatorLayout>(R.id.active_session_bottom_sheet_container).visibility = View.VISIBLE
             if(recordingBottomSheetBehaviour.state == BottomSheetBehavior.STATE_HIDDEN) {
-                metronomeBottomSheetBehaviour.state = BottomSheetBehavior.STATE_HIDDEN
+                recordingBottomSheetBehaviour.state = BottomSheetBehavior.STATE_HALF_EXPANDED
                 if(requestRecorderPermissions()) {
-                    recordingBottomSheetBehaviour.halfExpandedRatio = 0.34F
                     recordingBottomSheetBehaviour.state = BottomSheetBehavior.STATE_HALF_EXPANDED
                 }
             } else {
                 recordingBottomSheetBehaviour.state = BottomSheetBehavior.STATE_HIDDEN
-                recordingBottomSheet.scrollY = 0
+                recordingBottomSheet.scrollToPosition(0)
             }
         }
     }
 
-    private inner class RecordingListAdapter(
-        private val recordings: List<Recording>
-    ) : RecyclerView.Adapter<RecordingListAdapter.ViewHolder>() {
+
+    class FrontFragment(
+        private val recording: Recording
+    ) : Fragment() {
+
+        override fun onCreateView(
+            inflater: LayoutInflater,
+            container: ViewGroup?,
+            savedInstanceState: Bundle?
+        ): View = inflater.inflate(R.layout.fragment_recording_front, container, false)
+
+        override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+            val timeAgo = when(val timeDiffInMins = ((Date().time - recording.date) / 60_000)) {
+                0L -> "Just now"
+                in 1..59 -> "$timeDiffInMins minutes ago"
+                in 60..1439 -> "${timeDiffInMins / 60} hours ago"
+                else -> "${timeDiffInMins / 1440} days ago"
+            }
+
+            view.apply {
+                findViewById<TextView>(R.id.recording_file_name).text = recording.displayName
+                findViewById<TextView>(R.id.recording_file_date).text = timeAgo
+                findViewById<TextView>(R.id.recording_file_length).text = getDurationString(
+                    recording.duration / 1000,
+                    format = TIME_FORMAT_MS_DIGITAL
+                )
+            }
+        }
+    }
+
+    class BackFragment(
+        private val mediaPlayer: MediaPlayer,
+    ) : Fragment() {
+
+        private lateinit var timePlayedView: TextView
+        private lateinit var timeLeftView: TextView
+        private lateinit var playBarView: SeekBar
+
+        private fun syncUIToPlayTime() {
+            timePlayedView.text = getDurationString(
+                mediaPlayer.currentPosition / 1000,
+                format = TIME_FORMAT_MS_DIGITAL
+            )
+
+            timeLeftView.text = getDurationString(
+                (mediaPlayer.duration / 1000 -  mediaPlayer.currentPosition / 1000 ),
+                format = TIME_FORMAT_MS_DIGITAL
+            )
+            playBarView.progress = mediaPlayer.currentPosition / 10
+        }
+
+        private val uiHandler = Handler(Looper.getMainLooper())
+
+        private val recordingTracker = object : Runnable {
+            override fun run() {
+                syncUIToPlayTime()
+                uiHandler.postDelayed(this, 10)
+            }
+        }
+
+        override fun onCreateView(
+            inflater: LayoutInflater,
+            container: ViewGroup?,
+            savedInstanceState: Bundle?
+        ): View = inflater.inflate(R.layout.fragment_recording_back, container, false)
+
+        override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+            playBarView = view.findViewById(R.id.recording_playbar)
+            playBarView.apply {
+                max = mediaPlayer.duration / 10
+                setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+                    override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                        if(fromUser) {
+                            mediaPlayer.seekTo(progress * 10)
+                        }
+                    }
+                    override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+                    override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+                })
+            }
+
+            timePlayedView = view.findViewById(R.id.recording_time_played)
+            timeLeftView = view.findViewById(R.id.recording_time_left)
+            uiHandler.post(recordingTracker)
+        }
+
+        fun stopUISync() {
+            uiHandler.removeCallbacks(recordingTracker)
+        }
+
+        override fun onDestroy() {
+            super.onDestroy()
+            uiHandler.removeCallbacks(recordingTracker)
+        }
+    }
+
+    private class RecordingListAdapter(
+        private val recordings: List<Recording>,
+        private val context: AppCompatActivity,
+        private var startRecordingHandler: () -> Boolean,
+        private var stopRecordingHandler: () -> Unit,
+        ) : RecyclerView.Adapter<RecordingListAdapter.ViewHolder>() {
+
+        companion object {
+            private const val VIEW_TYPE_ITEM = 1
+            private const val VIEW_TYPE_HEADER = 2
+        }
+
+        private var playingRecording = -1
+
+        private val mediaPlayer = MediaPlayer()
+
+        private lateinit var recyclerView: RecyclerView
+
+        init {
+            mediaPlayer.setAudioAttributes(
+                AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_MEDIA)
+                .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                .build()
+            )
+        }
+
+        fun deleteRecording() {
+            this.notifyItemRemoved(1)
+            if(playingRecording != -1) {
+                playingRecording--
+            }
+        }
+
+        fun addRecording() {
+            this.notifyItemInserted(1)
+            if(playingRecording != -1) {
+                playingRecording++
+            }
+        }
+
+        fun setPlayingRecording(newPlayingRecording: Int) {
+            this.recyclerView.findViewHolderForAdapterPosition(playingRecording + 1)?.apply {
+                if (this !is ViewHolder.ItemViewHolder) return@apply
+                backFragment?.let { bFragment ->
+                    bFragment.stopUISync()
+                    frontFragment?.let { fFragment ->
+                        if(justFlipped) {
+                            context.supportFragmentManager.beginTransaction()
+                                .replace(containerView.id, fFragment)
+                                .commitNow()
+                        } else {
+                            context.supportFragmentManager.beginTransaction()
+                                .setCustomAnimations(
+                                    R.animator.flip_in,
+                                    R.animator.flip_out,
+                                )
+                                .replace(containerView.id, fFragment)
+                                .commit()
+                        }
+                    }
+                }
+                playerShowing = false
+                playFileView.icon = ContextCompat.getDrawable(context, R.drawable.ic_play)
+            }
+            playingRecording = newPlayingRecording
+        }
+
+        override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
+            this.recyclerView = recyclerView
+        }
+
+        override fun getItemCount() = recordings.size + 1
+
+        override fun getItemViewType(position: Int) =
+            if (position == 0) VIEW_TYPE_HEADER else VIEW_TYPE_ITEM
+
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-            val view = LayoutInflater.from(parent.context)
-                .inflate(R.layout.listitem_recorder, parent, false)
-            return ViewHolder(view)
+            val inflater = LayoutInflater.from(parent.context)
+            return when(viewType) {
+                VIEW_TYPE_ITEM -> ViewHolder.ItemViewHolder(
+                    inflater.inflate(R.layout.listitem_recording, parent, false),
+                    context,
+                    ::setPlayingRecording,
+                )
+                else -> ViewHolder.HeaderViewHolder(inflater
+                    .inflate(R.layout.listitem_recording_header, parent, false),
+                    context,
+                    startRecordingHandler,
+                    stopRecordingHandler,
+                )
+            }
         }
 
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-            val recording = recordings[position]
-            holder.apply {
-                fileNameView.text = recording.displayName
-                fileLengthView.text = getDurationString((recording.duration.toIntOrNull() ?: 0) / 1000, TIME_FORMAT_HMS_DIGITAL)
-                divider.visibility = if(recording == recordings.last()) View.GONE else View.VISIBLE
-                openFileView.setOnClickListener {
-                    Log.d("CLICK", "${recording.contentUri}")
-                    val intent = Intent(Intent.ACTION_VIEW)
-                    intent.setDataAndType(recording.contentUri, "audio/mpeg")
-                    startActivity(intent)
+            when (holder) {
+                is ViewHolder.ItemViewHolder -> {
+                    holder.bind(
+                        recordings[position-1],
+                        mediaPlayer,
+                        playingRecording == position - 1,
+                        position == recordings.size,
+                    )
+                }
+                is ViewHolder.HeaderViewHolder -> holder.bind()
+            }
+        }
+
+        override fun onViewAttachedToWindow(holder: ViewHolder) {
+            when(holder) {
+                is ViewHolder.ItemViewHolder -> {
+                    (if (holder.playerShowing) holder.backFragment else holder.frontFragment)?.let { fragment ->
+                        context.supportFragmentManager.beginTransaction().apply {
+                            replace(holder.containerView.id, fragment)
+                            commit()
+                        }
+                    }
+                }
+                is ViewHolder.HeaderViewHolder -> {
+                    holder.registerReceiver()
                 }
             }
         }
 
-        override fun getItemCount() = recordings.size
+        override fun onViewDetachedFromWindow(holder: ViewHolder) {
+            when(holder) {
+                is ViewHolder.HeaderViewHolder -> holder.unregisterReceiver()
+                else -> {}
+            }
+        }
 
-        inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-            val fileNameView: TextView = view.findViewById(R.id.recording_file_name)
-            val fileLengthView: TextView = view.findViewById(R.id.recording_file_length)
-            val openFileView: MaterialButton = view.findViewById(R.id.recording_file_open)
-            val divider: View = view.findViewById(R.id.recording_file_divider)
+        sealed class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
 
-            init {
-                fileNameView.apply {
-                    ellipsize = TextUtils.TruncateAt.MARQUEE
-                    isSingleLine = true
-                    marqueeRepeatLimit = -1 // minus one repeats indefinitely
-                    isSelected = true
+            class HeaderViewHolder(
+                view: View,
+                private val context: AppCompatActivity,
+                private val startRecordingHandler: () -> Boolean,
+                private val stopRecordingHandler: () -> Unit,
+            ) : ViewHolder(view) {
+
+                private val recordingTimeView = view.findViewById<TextView>(R.id.record_sheet_recording_time)
+                private val recordingTimeCsView = view.findViewById<TextView>(R.id.record_sheet_recording_time_cs)
+
+                private val recordingStartStopButtonView = view.findViewById<MaterialButton>(R.id.record_sheet_start_pause)
+
+                /* Initialize local variables */
+                var recordingButtonLocked = false
+
+                private val updateRecordTimeReceiver = object : BroadcastReceiver() {
+                    override fun onReceive(context: Context?, intent: Intent?) {
+                        intent?.extras?.getString("DURATION")?.toInt()?.also {
+                            recordingTimeView.text = getDurationString(it / 1000, format = TIME_FORMAT_HMS_DIGITAL)
+                            recordingTimeCsView.text = "%02d".format(it % 1000 / 10)
+                        }
+                    }
+                }
+
+                fun registerReceiver() {
+                    LocalBroadcastManager.getInstance(context).registerReceiver(
+                        updateRecordTimeReceiver,
+                        IntentFilter("RecordingDurationUpdate")
+                    )
+                }
+
+                fun unregisterReceiver() {
+                    LocalBroadcastManager.getInstance(context).unregisterReceiver(
+                        updateRecordTimeReceiver,
+                    )
+                }
+
+                fun bind() {
+                    recordingStartStopButtonView.icon = ContextCompat.getDrawable(
+                        context,
+                        if(RecorderService.recording) R.drawable.ic_stop else R.drawable.ic_record
+                    )
+
+                    recordingStartStopButtonView.setOnClickListener {
+                        // Return if button is still locked
+                        if (recordingButtonLocked) return@setOnClickListener
+
+                        // if not, lock it for one second to avoid double presses
+                        recordingButtonLocked = true
+                        Handler(Looper.getMainLooper()).postDelayed({
+                            recordingButtonLocked = false
+                        }, 1000L)
+
+                        if(!RecorderService.recording) {
+                            if (startRecordingHandler()) {
+                            val startToStop = ContextCompat.getDrawable(
+                                context, R.drawable.avd_start_to_stop
+                            ) as AnimatedVectorDrawable
+
+                            recordingStartStopButtonView.icon = startToStop
+                            startToStop.start()
+                            }
+                        } else {
+                            stopRecordingHandler()
+                            val stopToStart = ContextCompat.getDrawable(
+                                context, R.drawable.avd_stop_to_start
+                            ) as AnimatedVectorDrawable
+
+                            recordingStartStopButtonView.icon = stopToStart
+                            stopToStart.start()
+                        }
+                    }
+                }
+            }
+
+            class ItemViewHolder(
+                view: View,
+                private val context: AppCompatActivity,
+                private val setPlayingRecording: (new: Int) -> Unit,
+            ) : ViewHolder(view) {
+                var frontFragment: FrontFragment? = null
+                var backFragment: BackFragment? = null
+
+                var playerShowing = false
+                var justFlipped = false
+
+                val playFileView: MaterialButton = view.findViewById(R.id.recording_file_open)
+                val containerView: FrameLayout = view.findViewById(R.id.recording_container)
+                private val dividerView: View = view.findViewById(R.id.recording_file_divider)
+
+                private val playIcon = ContextCompat.getDrawable(context, R.drawable.ic_play)
+                private val pauseIcon = ContextCompat.getDrawable(context, R.drawable.ic_pause)
+
+
+                init {
+                    containerView.id = View.generateViewId()
+                }
+
+                fun bind(recording: Recording, mediaPlayer: MediaPlayer, playerShowing: Boolean, lastItem: Boolean) {
+                    this.playerShowing = playerShowing
+
+                    frontFragment = FrontFragment(recording)
+                    backFragment = BackFragment(mediaPlayer)
+
+                    playFileView.icon = if(playerShowing && mediaPlayer.isPlaying) pauseIcon else playIcon
+                    playFileView.setOnClickListener {
+                        if(this.playerShowing) {
+                            if(mediaPlayer.isPlaying) {
+                                playFileView.icon = playIcon
+                                mediaPlayer.pause()
+                            } else {
+                                if(mediaPlayer.currentPosition == mediaPlayer.duration)
+                                    mediaPlayer.seekTo(0)
+                                playFileView.icon = pauseIcon
+                                mediaPlayer.start()
+                            }
+                        } else {
+                            backFragment?.let { backFragment ->
+                                context.supportFragmentManager.beginTransaction()
+                                    .setCustomAnimations(
+                                        R.animator.flip_in,
+                                        R.animator.flip_out,
+                                    )
+                                    .replace(containerView.id, backFragment)
+                                    .commit()
+                            }
+
+                            mediaPlayer.apply {
+                                reset()
+                                setDataSource(context, recording.contentUri)
+                                prepare()
+                                start()
+                                setOnCompletionListener {
+                                    playFileView.icon = playIcon
+                                }
+                            }
+                            setPlayingRecording(layoutPosition - 1)
+
+                            this.playerShowing = true
+                            playFileView.icon = ContextCompat.getDrawable(context, R.drawable.ic_pause)
+
+                            // mark, that the player just flipped
+                            justFlipped = true
+                            Handler(Looper.getMainLooper()).postDelayed({
+                                justFlipped = false
+                            }, 500L)
+                        }
+                    }
+                    dividerView.visibility = if(lastItem) View.GONE else View.VISIBLE
                 }
             }
         }
@@ -1259,7 +1590,6 @@ class ActiveSessionActivity : AppCompatActivity() {
     override fun onStop() {
         super.onStop()
         unbindService(connection)
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(updateRecordTimeReceiver)
         LocalBroadcastManager.getInstance(this).unregisterReceiver(stopRecordingReceiver)
         mBound = false
     }
