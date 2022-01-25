@@ -23,9 +23,11 @@ import com.github.mikephil.charting.charts.BarChart
 import com.github.mikephil.charting.charts.PieChart
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.*
-import com.github.mikephil.charting.formatter.PercentFormatter
 import com.github.mikephil.charting.formatter.ValueFormatter
+import com.github.mikephil.charting.highlight.Highlight
+import com.github.mikephil.charting.listener.OnChartValueSelectedListener
 import de.practicetime.practicetime.entities.Category
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.ZoneId
@@ -33,8 +35,9 @@ import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoField
 import kotlin.math.ceil
+import kotlin.math.roundToInt
 
-class SessionStatsActivity : AppCompatActivity() {
+class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
 
     private lateinit var dao: PTDao
     private lateinit var barChart: BarChart
@@ -51,7 +54,7 @@ class SessionStatsActivity : AppCompatActivity() {
         val category: Category,
         var totalDuration: Int = 0,
         var selected: Boolean,
-        var visible: Boolean
+        var visible: Boolean,
     )
 
     private enum class VIEWS(val barCount: Int) {
@@ -104,14 +107,23 @@ class SessionStatsActivity : AppCompatActivity() {
         findViewById<ImageButton>(R.id.btn_fwd).setOnClickListener {
             seekFuture()
         }
-        findViewById<ImageButton>(R.id.btn_toggle_chart_type).setOnClickListener {
-            chartType = when (chartType) {
-                BAR_CHART -> PIE_CHART
-                PIE_CHART -> BAR_CHART
-                else -> BAR_CHART
+        val btnChart = findViewById<ImageButton>(R.id.btn_toggle_chart_type)
+        btnChart.setOnClickListener {
+            when (chartType) {
+                BAR_CHART -> {
+                    chartType = PIE_CHART
+                    btnChart.setImageResource(R.drawable.ic_bar_chart)
+                }
+                PIE_CHART -> {
+                    chartType = BAR_CHART
+                    btnChart.setImageResource(R.drawable.ic_pie_chart)
+                }
+                else -> {
+                    chartType = BAR_CHART
+                    btnChart.setImageResource(R.drawable.ic_pie_chart)
+                }
             }
             updateChartData()
-            Log.d("TAG", "$chartType")
         }
 
         colorAmount = resources?.getIntArray(R.array.category_colors)?.toCollection(mutableListOf())?.size ?: 0
@@ -156,14 +168,16 @@ class SessionStatsActivity : AppCompatActivity() {
             isDoubleTapToZoomEnabled = false
             setScaleEnabled(false)
             setPinchZoom(false)
+            setOnChartValueSelectedListener(this@SessionStatsActivity)
             description.isEnabled = false
             legend.isEnabled = false
             setDrawValueAboveBar(true)
+            isHighlightFullBarEnabled = true
         }
 
         // x axis
         barChart.xAxis.apply {
-            setDrawGridLines(false)
+            setDrawGridLines(false) //TODO
             position = XAxis.XAxisPosition.BOTTOM
             labelCount = activeView.barCount
             valueFormatter = XAxisValueFormatter()
@@ -191,64 +205,43 @@ class SessionStatsActivity : AppCompatActivity() {
     /** initialize the (hidden) Pie chart view object */
     private fun initPieChart() {
         pieChart = findViewById(R.id.pie_chart);
+        pieChart.apply {
+            setDrawEntryLabels(false)
+            isHighlightPerTapEnabled = false
 
-        // TODO check if pieChart is the correct view for measuring height
-        val height = ((pieChart as View).measuredHeight * 0.65).toInt()
+            setUsePercentValues(true);
+            description.isEnabled = false;
+            legend.isEnabled = false
+            isRotationEnabled = false;
 
-        Log.d("ZAG", "height: $height")
+            maxAngle = 180f // HALF CHART
+            rotationAngle = 180f
 
-        val p = (pieChart.layoutParams as LinearLayout.LayoutParams)
-        p.setMargins(0, 0, 0, -height)
-        pieChart.layoutParams = p
+            isDrawHoleEnabled = true
+            holeRadius = 58f
+            setHoleColor(Color.TRANSPARENT)
+            setTransparentCircleAlpha(0)    // disable transparent circle
 
-        pieChart.setUsePercentValues(true);
-        pieChart.description.isEnabled = false;
+//            setEntryLabelColor(getThemeColor(R.attr.colorOnSurfaceLowerContrast))
+//            setEntryLabelTextSize(9f)
 
-        pieChart.isDrawHoleEnabled = true
-        pieChart.setHoleColor(Color.TRANSPARENT)
+//            // add space at the top for the labels
+//            setExtraOffsets(0f, 20f, 0f, 0f);
 
-        pieChart.isRotationEnabled = false;
+            setDrawCenterText(false)
+//            setCenterTextOffset(0f, -20f)
 
-        pieChart.animateY(1400, Easing.EaseInOutQuad);
-
-        pieChart.legend.isEnabled = false
-
-        pieChart.setEntryLabelColor(Color.WHITE)
-        pieChart.setEntryLabelTextSize(9f)
-
-        pieChart.maxAngle = 180f // HALF CHART
-        pieChart.rotationAngle = 180f
-
-        pieChart.holeRadius = 58f
-        pieChart.transparentCircleRadius = 61f
-        pieChart.setCenterTextOffset(0f, -20f)
-
-//        chart.setHighlightPerTapEnabled(true);
-//
-//        // chart.setUnit(" €");
-//        // chart.setDrawUnitsInChart(true);
-//
-//        // add a selection listener
-//        chart.setOnChartValueSelectedListener(this);
-//
-//        seekBarX.setProgress(4);
-//        seekBarY.setProgress(10);
-
-//        chart.setTransparentCircleColor(Color.WHITE);
-//        chart.setTransparentCircleAlpha(110);
-
-//        pieChart.setHoleRadius(58f);
-//        chart.setTransparentCircleRadius(61f);
-//
-//        chart.setDrawCenterText(true);
-
-//        chart.setExtraOffsets(5, 10, 5, 5);
-
-//        chart.setDragDecelerationFrictionCoef(0.95f);
-
-//        chart.setCenterTextTypeface(tfLight);
-//        chart.setCenterText(generateCenterSpannableText());
+            animateY(1400, Easing.EaseInOutQuad);
+        }
     }
+
+    override fun onValueSelected(e: Entry?, h: Highlight?) {
+        Log.d("TAG", "onValueSelected")
+        if (e == null)
+            return
+    }
+
+    override fun onNothingSelected() {}
 
     /** sets the heading above the chart for the time range */
     private fun setHeadingTextViews() {
@@ -384,24 +377,41 @@ class SessionStatsActivity : AppCompatActivity() {
 
                 val categoryColors = resources?.getIntArray(R.array.category_colors)
                     ?.toCollection(mutableListOf())
-                dataSetBarChart.colors = categoryColors
-                dataSetPieChart.colors = categoryColors
-                dataSetBarChart.setDrawValues(true)
-                dataSetPieChart.setDrawValues(true)
+                dataSetBarChart.apply {
+                    colors = categoryColors
+                    setDrawValues(true)
+                }
+                dataSetPieChart.apply {
+                    colors = categoryColors
+                    setDrawValues(true)
+
+                    // Disabled value lines:
+//                    yValuePosition = PieDataSet.ValuePosition.INSIDE_SLICE
+//                    //setSelectionShift(0f);
+//                    valueLinePart1OffsetPercentage = 70f    // start of value line in % from center of chart
+//                    valueLinePart1Length = 0.6f // lenght of "outgoing" line
+//                    valueLinePart2Length = 0.4f // length of horizonal line
+                }
 
                 val barData = BarData(dataSetBarChart)
-                barData.barWidth = 0.4f
-                barData.setValueFormatter(BarChartValueFormatter())
-                barData.setValueTextColor(getThemeColor(R.attr.colorOnSurfaceLowerContrast))
-                barData.setValueTextSize(12f)
+                barData.apply {
+                    barWidth = 0.4f
+                    setValueFormatter(BarChartValueFormatter())
+                    setValueTextColor(getThemeColor(R.attr.colorOnSurfaceLowerContrast))
+                    setValueTextSize(12f)
+                    isHighlightEnabled = true
+                }
 
                 barChart.data = barData
 
 
                 val pieData = PieData(dataSetPieChart)
-                pieData.setValueFormatter(PercentFormatter())
-                pieData.setValueTextSize(11f)
-                pieData.setValueTextColor(Color.WHITE)
+                pieData.apply {
+                    setValueFormatter(PieChartValueFormatter())
+                    setValueTextSize(11f)
+                    setValueTextColor(Color.BLACK)
+                }
+
                 pieChart.data = pieData
 
             }
@@ -409,25 +419,30 @@ class SessionStatsActivity : AppCompatActivity() {
             if(chartType == BAR_CHART) {
                 pieChart.visibility = View.GONE
                 barChart.visibility = View.VISIBLE
+                highlightCurrentInterval()
             } else {
                 pieChart.visibility = View.VISIBLE
                 barChart.visibility = View.GONE
             }
 
             val (max, cnt) = calculateAxisValues()
-            barChart.axisRight.axisMaximum = max
-            barChart.axisLeft.axisMaximum = max
-            barChart.axisRight.setLabelCount(cnt, true)
+            barChart.apply {
+                axisRight.axisMaximum = max
+                axisRight.setLabelCount(cnt, true)
+                axisLeft.axisMaximum = max
+                setFitBars(true)
 
+                // redraw the chart
+                animateY(1000, Easing.EaseOutBack)
+                notifyDataSetChanged()
+                invalidate()
+            }
 
-            // redraw the chart
-            barChart.animateY(1000, Easing.EaseOutBack)
-            barChart.notifyDataSetChanged()
-            barChart.invalidate()
-
-            pieChart.animateY(1400, Easing.EaseInOutQuad)
-            pieChart.notifyDataSetChanged()
-            pieChart.invalidate()
+            pieChart.apply {
+                animateY(1400, Easing.EaseInOutQuad)
+                notifyDataSetChanged()
+                invalidate()
+            }
 
             // update the Heading
             setHeadingTextViews()
@@ -435,7 +450,54 @@ class SessionStatsActivity : AppCompatActivity() {
             // don't recalculate the total durations for each category if explicitly told so to prevent flashing
             if (recalculateDurs)
                 categoryListAdapter.notifyItemRangeChanged(0, categories.filter { it.visible }.size)
+
+            delay(100)  // TODO this is needed in order to make movePieChart work the first time. Don't know why
+            movePieChart()
         }
+    }
+
+    private fun highlightCurrentInterval() {
+
+        val shouldDisplay = when(activeView) {
+            VIEWS.DAYS_VIEW -> daysViewWeekOffset == 0L
+            VIEWS.WEEKS_VIEW -> weeksViewWeekOffset == 0L
+            VIEWS.MONTHS_VIEW -> monthsViewMonthOffset == 0L
+        }
+
+        barChart.highlightValue(-1f, 0, false)   // remove all highlighting
+        if (shouldDisplay) {
+
+            val highlightXValue =
+                if (activeView == VIEWS.DAYS_VIEW) {
+                    getCurrentDayOfWeek().toFloat()
+                } else {
+                    barChart.barData.xMax
+                }
+            barChart.highlightValue(highlightXValue, 0, false)
+            barChart.invalidate()
+        }
+    }
+
+    private fun movePieChart() {
+        val p = (pieChart.layoutParams as LinearLayout.LayoutParams)
+//        Log.d("TAG", "pieChart margins: lef:${p.leftMargin} right:${p.rightMargin} top:${p.topMargin} bot: ${p.bottomMargin}")
+
+        // reset all margins
+        p.setMargins(p.leftMargin, 0, p.rightMargin, 0)
+        pieChart.layoutParams = p
+
+        // re-set top margin to shift it down
+        val height = ((pieChart as View).measuredHeight * 0.3).toInt()
+
+        // we want to enlarge the pie chart (since its vertical space is too small) therefore, enlarge the
+        // vertical space by adding `height` pixels at the bottom but only reducing `height*0.3` pixels at the top
+        p.setMargins(
+            p.leftMargin,
+            p.topMargin + (height*0.5).toInt(),
+            p.rightMargin,
+            p.bottomMargin - height
+        )
+        pieChart.layoutParams = p
     }
 
     /**
@@ -519,7 +581,8 @@ class SessionStatsActivity : AppCompatActivity() {
                 visibleCategories.add(category.id)
                 categories.first { it.category.id == category.id}.totalDuration += section.duration ?: 0
             }
-            barChartArray.add(BarEntry(day.toFloat(), floatArrDurBarChart))
+            // add the entry to the BEGINNING of the array otherwise the bars will not be clickable (probably a bug?)
+            barChartArray.add(0, BarEntry(day.toFloat(), floatArrDurBarChart))
         }
 
         floatArrDurPieChart.forEachIndexed { cat_id, dur ->
@@ -558,7 +621,8 @@ class SessionStatsActivity : AppCompatActivity() {
                 visibleCategories.add(category.id)
                 categories.first { it.category.id == category.id}.totalDuration += section.duration ?: 0
             }
-            chartArray.add(BarEntry((week + weeksViewWeekOffset).toFloat(), floatArrDurBarChart))
+            // add the entry to the BEGINNING of the array otherwise the bars will not be clickable (probably a bug?)
+            chartArray.add(0, BarEntry((week + weeksViewWeekOffset).toFloat(), floatArrDurBarChart))
         }
 
         floatArrDurPieChart.forEachIndexed { cat_id, dur ->
@@ -596,7 +660,8 @@ class SessionStatsActivity : AppCompatActivity() {
                 visibleCategories.add(category.id)
                 categories.first { it.category.id == category.id}.totalDuration += section.duration ?: 0
             }
-            barChartArray.add(BarEntry((month + monthsViewMonthOffset).toFloat(), floatArrDurBarChart))
+            // add the entry to the BEGINNING of the array otherwise the bars will not be clickable (probably a bug?)
+            barChartArray.add(0, BarEntry((month + monthsViewMonthOffset).toFloat(), floatArrDurBarChart))
         }
 
         floatArrDurPieChart.forEachIndexed { cat_id, dur ->
@@ -713,6 +778,12 @@ class SessionStatsActivity : AppCompatActivity() {
             .plusWeeks(weekOffsetAdapted)
     }
 
+    // returns the weekDay of today from index 1=Mo until 7=Sun
+    private fun getCurrentDayOfWeek(): Int {
+        return ZonedDateTime.now()
+            .toLocalDate().dayOfWeek.value
+    }
+
     private fun openDatabase() {
         val db = Room.databaseBuilder(
             this,
@@ -792,37 +863,66 @@ class SessionStatsActivity : AppCompatActivity() {
      */
     private inner class BarChartValueFormatter: ValueFormatter() {
 
-        var lastEntryX = -1f            // the x entry (=Bar ID) of last time getBarStackedLabel() was called
+        var lastEntryX = 100f            // the x entry (=Bar ID) of last time getBarStackedLabel() was called
         var stackCounterCurrentBar = 0  // counter variable counting the stack we are inside the current bar
         var stackEntriesNotZero = 0     // amount of non-zero entries in this bar
 
         // getBarStackedLabel is called on every bar for every non-zero segment
         // value: the y value of current segment
         // stackedEntry: the whole BarEntry object for current bar, always the same for each stack on the same Bar
-        override fun getBarStackedLabel(value: Float, stackedEntry: BarEntry?): String {
-            if (stackedEntry?.x != lastEntryX) {
-                lastEntryX = stackedEntry?.x ?: -1f
-                // first stack on a new bar
-                stackCounterCurrentBar = 1
-                stackEntriesNotZero = stackedEntry?.yVals?.filterNot { it == 0f }?.count() ?: 0
+        override fun getBarStackedLabel(value: Float, stackedEntry: BarEntry): String {
 
-                // show 0 if there are no stacks in this bar
-                if (stackEntriesNotZero == 0)
-                    return "0"
+            var prefix = ""
+            if (stackedEntry.x == getCurrentDayOfWeek().toFloat() && daysViewWeekOffset == 0L && activeView == VIEWS.DAYS_VIEW)
+                prefix += "${getString(R.string.today)}: "
 
-                // show value if there is only 1 stack in this bar
-                if (stackEntriesNotZero == 1) {
-                    return secondsToTimeString(stackedEntry?.yVals?.sum()?.toInt())
-                }
-            } else {
-                lastEntryX = stackedEntry.x
-                stackCounterCurrentBar++
-                if (stackCounterCurrentBar == stackEntriesNotZero) {
-                    // we reached the last non-zero stack of the bar, so we're at the top
-                    return secondsToTimeString(stackedEntry.yVals?.sum()?.toInt())
+            // only display label if Bar is highlighted
+            if (barChart.highlighted != null &&
+                barChart.highlighted.find { it.x == stackedEntry.x } != null) {
+
+                if (stackedEntry.x != lastEntryX) {
+                    lastEntryX = stackedEntry.x
+                    // first stack on a new bar
+                    stackCounterCurrentBar = 1
+                    stackEntriesNotZero = stackedEntry.yVals?.filterNot { it == 0f }?.count() ?: 0
+
+                    // show 0 if there are no stacks in this bar
+                    if (stackEntriesNotZero == 0) {
+                        // reset (set to value which will never occur on x axis) lastEntry so that un- and then re-selecting same bar works
+                        lastEntryX = 100f
+                        return prefix + "0"
+                    }
+
+                    // show value if there is only 1 stack in this bar
+                    if (stackEntriesNotZero == 1) {
+                        // reset (set to value which will never occur on x axis) lastEntry so that un- and then re-selecting same bar works
+                        lastEntryX = 100f
+                        return prefix + secondsToTimeString(stackedEntry?.yVals?.sum()?.toInt())
+                    }
+                } else {
+                    lastEntryX = stackedEntry.x
+                    stackCounterCurrentBar++
+                    if (stackCounterCurrentBar == stackEntriesNotZero) {
+                        // reset (set to value which will never occur on x axis) lastEntry so that un- and then re-selecting same bar works
+                        lastEntryX = 100f
+                        // we reached the last non-zero stack of the bar, so we're at the top
+                        return prefix + secondsToTimeString(stackedEntry.yVals?.sum()?.toInt())
+                    }
                 }
             }
             return ""   // return empty string so no value is drawn
+        }
+    }
+
+
+    private inner class PieChartValueFormatter : ValueFormatter() {
+
+        override fun getFormattedValue(value: Float): String {
+
+            if (value > 2)
+                return "${value.roundToInt()} %"
+
+            return ""
         }
     }
 
