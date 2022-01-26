@@ -70,9 +70,17 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
     }
     private var chartType = BAR_CHART   // current chart type to display
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_statistics)
+
+        setSupportActionBar(findViewById(R.id.my_toolbar))
+        supportActionBar?.apply {
+            setDisplayHomeAsUpEnabled(true)
+            setDisplayShowHomeEnabled(true)
+            title = getString(R.string.session_statistics)
+        }
 
         // get the dao object
         openDatabase()
@@ -995,4 +1003,8 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
         return typedValue.data
     }
 
+    override fun onSupportNavigateUp(): Boolean {
+        onBackPressed()
+        return true
+    }
 }

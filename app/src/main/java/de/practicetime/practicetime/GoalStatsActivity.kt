@@ -37,8 +37,6 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
-import java.util.*
-import kotlin.collections.ArrayList
 import kotlin.math.ceil
 import kotlin.math.max
 
@@ -70,6 +68,13 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_statistics)
+
+        setSupportActionBar(findViewById(R.id.my_toolbar))
+        supportActionBar?.apply {
+            setDisplayHomeAsUpEnabled(true)
+            setDisplayShowHomeEnabled(true)
+            title = getString(R.string.goal_statistics)
+        }
 
         // get the dao object
         openDatabase()
@@ -698,5 +703,10 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
 
     private fun log(msg: String) {
         Log.d("GOALS", msg)
+    }
+
+    override fun onSupportNavigateUp(): Boolean {
+        onBackPressed()
+        return true
     }
 }
