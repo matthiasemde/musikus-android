@@ -177,7 +177,7 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
 
         // x axis
         barChart.xAxis.apply {
-            setDrawGridLines(false) //TODO
+            setDrawGridLines(false)
             position = XAxis.XAxisPosition.BOTTOM
             labelCount = activeView.barCount
             valueFormatter = XAxisValueFormatter()

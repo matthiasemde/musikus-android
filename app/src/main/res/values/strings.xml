@@ -138,4 +138,7 @@
     <string name="yesterday">Yesterday</string>
     <string name="no_records_current_goal">No records for current goal</string>
     <string name="succeeded_failed">succeeded %1$d out of %2$d"</string>
+    <string name="headline_stats_last7days">Practice Time</string>
+    <string name="headline_stats_last7days_subheading">Last 7 days</string>
+    <string name="total">Total</string>
 </resources>
