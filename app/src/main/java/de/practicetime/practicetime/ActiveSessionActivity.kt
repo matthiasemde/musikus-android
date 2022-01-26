@@ -836,6 +836,7 @@ class ActiveSessionActivity : AppCompatActivity() {
     }
 
     private fun hideHintTextView() {
+        findViewById<RecyclerView>(R.id.currentSections).visibility = View.VISIBLE
         val transition = Fade().apply {
             duration = 300
             addTarget(R.id.tv_hint_start_new_session)

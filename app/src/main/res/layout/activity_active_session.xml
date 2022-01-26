@@ -110,12 +110,23 @@
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1.4"
-            android:clipToPadding="false"
-            android:fadeScrollbars="false"
             android:paddingStart="30dp"
             android:paddingTop="10dp"
             android:paddingEnd="30dp"
-            android:paddingBottom="16dp" />
+            android:paddingBottom="16dp"
+            android:clipToPadding="false"
+            android:fadeScrollbars="false"
+            android:visibility="gone"/>
+
+        <TextView
+            android:id="@+id/tv_hint_start_new_session"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:layout_weight="1.4"
+            android:textSize="20sp"
+            android:layout_gravity="center"
+            android:gravity="center"
+            tools:text="@string/start_new_session_hint"/>
 
     </LinearLayout>
 
@@ -224,17 +235,6 @@
         android:background="?selectableItemBackgroundBorderless"
         android:src="@drawable/ic_delete"
         android:visibility="gone" />
-
-    <TextView
-        android:id="@+id/tv_hint_start_new_session"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center|bottom"
-        android:layout_marginBottom="150dp"
-        android:gravity="center"
-        android:padding="30dp"
-        android:textSize="20sp"
-        tools:text="@string/start_new_session_hint" />
 
 
     <TextView
