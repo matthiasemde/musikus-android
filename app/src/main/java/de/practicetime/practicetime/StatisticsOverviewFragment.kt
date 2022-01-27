@@ -5,8 +5,8 @@ import android.os.Bundle
 import android.util.Log
 import android.util.TypedValue
 import android.view.View
-import android.widget.Button
 import android.widget.ImageButton
+import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.cardview.widget.CardView
 import androidx.fragment.app.Fragment
@@ -19,10 +19,12 @@ import com.github.mikephil.charting.data.BarData
 import com.github.mikephil.charting.data.BarDataSet
 import com.github.mikephil.charting.data.BarEntry
 import com.github.mikephil.charting.formatter.ValueFormatter
+import de.practicetime.practicetime.entities.GoalType
 import kotlinx.coroutines.launch
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
+import kotlin.math.min
 
 class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overview) {
 
@@ -33,25 +35,30 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
 
         openDatabase()
 
-        view.findViewById<Button>(R.id.btn_open_goals_history).setOnClickListener {
-            val i = Intent(requireContext(), GoalStatsActivity::class.java)
-            requireActivity().startActivity(i)
-        }
-
         val sessionDetailClickListener = View.OnClickListener {
             val i = Intent(requireContext(), SessionStatsActivity::class.java)
             requireActivity().startActivity(i)
         }
-        view.findViewById<CardView>(R.id.stats_ov_cardview).setOnClickListener(sessionDetailClickListener)
-        view.findViewById<ImageButton>(R.id.stats_ov_card_ib_more_details).setOnClickListener(sessionDetailClickListener)
+        view.findViewById<CardView>(R.id.stats_ov_cardview_last7days).setOnClickListener(sessionDetailClickListener)
+        view.findViewById<ImageButton>(R.id.stats_ov_card_last7days_ib_more_details).setOnClickListener(sessionDetailClickListener)
 
-        initLast7DaysChart(view)
+        val goalsDetailClickListener = View.OnClickListener {
+            val i = Intent(requireContext(), GoalStatsActivity::class.java)
+            requireActivity().startActivity(i)
+        }
+        view.findViewById<CardView>(R.id.stats_ov_cardview_lastgoals).setOnClickListener(goalsDetailClickListener)
+        view.findViewById<ImageButton>(R.id.stats_ov_card_lastgoals_ib_more_details).setOnClickListener(goalsDetailClickListener)
+
+
+
+        initLast7DaysChart()
         setLast7DaysChartData()
 
+        initLastGoalsCard()
     }
 
-    private fun initLast7DaysChart(view: View) {
-        lastDaysChart = view.findViewById(R.id.stats_ov_card_bar_chart)
+    private fun initLast7DaysChart() {
+        lastDaysChart = requireView().findViewById(R.id.stats_ov_card_last7days_bar_chart)
         lastDaysChart.apply {
             setTouchEnabled(false)
             description.isEnabled = false
@@ -111,7 +118,7 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
             }
 
             requireView()
-                .findViewById<TextView>(R.id.stats_ov_card_tv_avg_time)
+                .findViewById<TextView>(R.id.stats_ov_card_last7days_tv_avg_time_desc)
                 .text = getAvgText(barChartArray)
         }
     }
@@ -129,6 +136,38 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
         } else {
             "%dmin".format(minutes)
         }
+    }
+
+    private fun initLastGoalsCard() {
+        lifecycleScope.launch {
+            val lastGoals = dao.getGoalInstancesWithDescription().takeLast(5)
+            Log.d("TAG", "LAST: $lastGoals")
+            val pBars = arrayListOf<ProgressBar>(
+                requireView().findViewById(R.id.stats_ov_card_lastgoals_pg_1),
+                requireView().findViewById(R.id.stats_ov_card_lastgoals_pg_2),
+                requireView().findViewById(R.id.stats_ov_card_lastgoals_pg_3),
+                requireView().findViewById(R.id.stats_ov_card_lastgoals_pg_4),
+                requireView().findViewById(R.id.stats_ov_card_lastgoals_pg_5),
+            )
+
+            pBars.forEachIndexed { i, pBar ->
+                val gi = lastGoals[i].instance
+                pBar.progress = min(100, gi.progress / gi.target * 100)
+                Log.d("ZAGS", "set Progress of $i bar to: ${pBar.progress}")
+
+                val gd = lastGoals[i].description
+                if (gd.type == GoalType.CATEGORY_SPECIFIC) {
+                    // find out category
+                    val catId = dao.getGoalDescriptionCategoryCrossRefsWhereDescriptionId(gd.id).first().categoryId
+                    val cat = dao.getCategory(catId)
+                    val categoryColors =  requireContext().resources.getIntArray(R.array.category_colors)
+                    val color = categoryColors[cat.colorIndex]
+
+                    pBar.setBackgroundColor(color)
+                }
+            }
+        }
+
     }
 
     private fun openDatabase() {

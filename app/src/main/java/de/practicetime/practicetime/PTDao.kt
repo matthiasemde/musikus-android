@@ -253,6 +253,13 @@ interface PTDao {
         from : Long = Date().time / 1000L,
     ) : List<GoalInstance>
 
+
+    @Transaction
+    @Query("SELECT * FROM GoalInstance WHERE startTimestamp+periodInSeconds < :expiredBefore")
+    suspend fun getGoalInstancesWithDescription(
+        expiredBefore : Long = Date().time / 1000L,
+    ) : List<GoalInstanceWithDescription>
+
     @Transaction
     @Query("SELECT * FROM GoalInstance WHERE startTimestamp < :now AND startTimestamp+periodInSeconds > :now AND goalDescriptionId IN (:descriptionIds) AND goalDescriptionId IN (SELECT id FROM GoalDescription WHERE archived=0 OR archived=:checkArchived)")
     suspend fun getGoalInstancesWithDescriptionsWithCategories(
