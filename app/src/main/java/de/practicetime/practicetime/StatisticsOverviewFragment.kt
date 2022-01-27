@@ -118,7 +118,7 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
             }
 
             requireView()
-                .findViewById<TextView>(R.id.stats_ov_card_last7days_tv_avg_time_desc)
+                .findViewById<TextView>(R.id.stats_ov_card_last7days_tv_avg_time)
                 .text = getAvgText(barChartArray)
         }
     }
