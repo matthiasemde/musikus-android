@@ -1,0 +1,345 @@
+package de.practicetime.practicetime
+
+import android.content.Context
+import android.content.res.ColorStateList
+import android.util.AttributeSet
+import android.view.LayoutInflater
+import android.view.MotionEvent
+import android.view.View
+import android.view.ViewGroup
+import android.widget.*
+import androidx.cardview.widget.CardView
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import de.practicetime.practicetime.database.entities.*
+import java.text.SimpleDateFormat
+import java.util.*
+import kotlin.collections.ArrayList
+
+class SessionSummaryAdapter(
+    private val context: Context,
+    var isExpanded: Boolean,
+    private val sessionsWithSectionsWithCategories: List<SessionWithSectionsWithCategories>,
+    private val selectedSessions: List<Pair<Int, SessionSummaryAdapter>>,
+    private val shortClickHandler: (
+        layoutPosition: Int,
+        adapter: SessionSummaryAdapter
+    ) -> Unit,
+    private val longClickHandler: (
+        layoutPosition: Int,
+        adapter: SessionSummaryAdapter
+    ) -> Boolean,
+) : RecyclerView.Adapter<SessionSummaryAdapter.ViewHolder>() {
+
+    companion object {
+        private const val VIEW_TYPE_ITEM = 1
+        private const val VIEW_TYPE_HEADER = 2
+    }
+
+    private val onHeaderClickListener = View.OnClickListener {
+        isExpanded = !isExpanded
+        if(isExpanded)
+            notifyItemRangeInserted(1, sessionsWithSectionsWithCategories.size)
+        else
+            notifyItemRangeRemoved(1, sessionsWithSectionsWithCategories.size)
+
+//        // notify Adapter that button text has changed
+//        notifyItemChanged(0)
+    }
+
+    override fun getItemViewType(position: Int) =
+        if (position == 0) VIEW_TYPE_HEADER else VIEW_TYPE_ITEM
+
+    override fun getItemCount() : Int {
+        return if (isExpanded) sessionsWithSectionsWithCategories.size + 1 else 1
+    }
+
+    // Create new views (invoked by the layout manager)
+    override fun onCreateViewHolder(viewGroup: ViewGroup, viewType: Int): ViewHolder {
+        val inflater = LayoutInflater.from(viewGroup.context)
+        return when (viewType) {
+            VIEW_TYPE_HEADER -> ViewHolder.HeaderViewHolder(
+                inflater.inflate(
+                    R.layout.view_session_summary_header,
+                    viewGroup,
+                    false
+                )
+            )
+            else -> ViewHolder.ItemViewHolder(
+                inflater.inflate(
+                    R.layout.view_session_summary,
+                    viewGroup,
+                    false
+                ),
+                context,
+                sessionsWithSectionsWithCategories,
+                selectedSessions,
+                shortClickHandler,
+                longClickHandler,
+            )
+        }
+    }
+
+    // Replace the contents of a view (invoked by the layout manager)
+    override fun onBindViewHolder(viewHolder: ViewHolder, position: Int) {
+        when (viewHolder) {
+            is ViewHolder.ItemViewHolder -> viewHolder.bind(
+                dataIndex = position - 1,
+            )
+            is ViewHolder.HeaderViewHolder -> viewHolder.bind(
+                sessionsWithSectionsWithCategories.first().sections.first().section.timestamp,
+                isExpanded,
+                onHeaderClickListener,
+            )
+        }
+    }
+
+    // the sealed view holder class contains a class for both the list items and headers
+    sealed class ViewHolder(view: View) :
+        RecyclerView.ViewHolder(view) {
+
+        class ItemViewHolder(
+            view: View,
+            private val context: Context,
+            private val sessionsWithSectionsWithCategories: List<SessionWithSectionsWithCategories>,
+            private val selectedSessions: List<Pair<Int, SessionSummaryAdapter>>,
+            private val shortClickHandler: (
+                layoutPosition: Int,
+                adapter: SessionSummaryAdapter,
+            ) -> Unit,
+            private val longClickHandler: (
+                layoutPosition: Int,
+                adapter: SessionSummaryAdapter,
+            ) -> Boolean,
+        ) : ViewHolder(view) {
+
+            private val summaryDayLayout: LinearLayout = view.findViewById(R.id.summaryDayLayout)
+            private val summaryDate: TextView = view.findViewById(R.id.summaryDate)
+            private val summaryDayDuration: TextView = view.findViewById(R.id.summaryDayDuration)
+
+            private val summaryCard = view.findViewById(R.id.summaryCardWrapper) as InterceptTouchCardView
+
+            private val summaryTimeView: TextView = view.findViewById(R.id.summaryTime)
+            private val breakDurationView: TextView = view.findViewById(R.id.breakDuration)
+            private val practiceDurationView: TextView = view.findViewById(R.id.practiceDuration)
+            private val sectionList: RecyclerView = view.findViewById(R.id.sectionList)
+            private val ratingBar: RatingBar = view.findViewById(R.id.ratingBar)
+            private val commentField: TextView = view.findViewById(R.id.commentField)
+            private val commentSection: View = view.findViewById(R.id.commentSection)
+
+            private val sectionsWithCategoriesList = ArrayList<SectionWithCategory>()
+
+            // define the time and date format
+            private val timeFormat: SimpleDateFormat = SimpleDateFormat("H:mm", Locale.getDefault())
+            private val dateFormat: SimpleDateFormat = SimpleDateFormat("E dd.MM.yyyy", Locale.getDefault())
+
+            private val defaultCardElevation = 11F // default value
+
+            init {
+                // define the layout and adapter for the section list
+                val sectionAdapter = SectionAdapter(sectionsWithCategoriesList, context)
+                val layoutManager = LinearLayoutManager(context)
+                sectionList.layoutManager = layoutManager
+                sectionList.adapter = sectionAdapter
+            }
+
+            fun bind(
+                dataIndex: Int,
+            ) {
+                // get the session at given position
+                val (session, sectionsWithCategories) = sessionsWithSectionsWithCategories[dataIndex]
+
+                summaryCard.apply {
+                    if (selectedSessions.map { t -> t.first }.contains(bindingAdapterPosition)) {
+                        isSelected = true // set selected so that background changes
+                        // remove Card Elevation because in Light theme it would look ugly
+                        cardElevation = 0f
+                    } else {
+                        isSelected = false // set selected so that background changes
+                        // restore card Elevation
+                        cardElevation = defaultCardElevation
+                    }
+                }
+
+                // set up short and long click handler for selecting sessions
+                summaryCard.setOnClickListener {
+                    shortClickHandler(
+                        bindingAdapterPosition,
+                        bindingAdapter as SessionSummaryAdapter
+                    )
+                }
+                summaryCard.setOnLongClickListener {
+                    // tell the event handler we consumed the event
+                    return@setOnLongClickListener longClickHandler(
+                        bindingAdapterPosition,
+                        bindingAdapter as SessionSummaryAdapter
+                    )
+                }
+
+                val currentSessionDate = Calendar.getInstance().apply {
+                    timeInMillis = sectionsWithCategories.first().section.timestamp * 1000L
+                }
+
+                // detect, if this session is either the last session of a day or the whole month
+                val lastSessionOfTheDay = if (dataIndex == 0) true else {
+                    val nextSessionDate = Calendar.getInstance().apply {
+                        timeInMillis = sessionsWithSectionsWithCategories[dataIndex - 1]
+                            .sections.first().section.timestamp * 1000L
+                    }
+                    currentSessionDate.get(Calendar.DAY_OF_YEAR) !=
+                            nextSessionDate.get(Calendar.DAY_OF_YEAR)
+                }
+
+                // if so, calculate the total time practiced that day and display it
+                if(lastSessionOfTheDay) {
+                    var totalPracticeDuration = 0
+                    for (i in dataIndex until sessionsWithSectionsWithCategories.size) {
+                        val (_, pastSectionsWithCategories) = sessionsWithSectionsWithCategories[i]
+                        val date = Calendar.getInstance().apply {
+                            timeInMillis = pastSectionsWithCategories.first().section.timestamp * 1000L
+                        }
+                        if(currentSessionDate.get(Calendar.DAY_OF_YEAR) !=
+                            date.get(Calendar.DAY_OF_YEAR)) {
+                            break
+                        } else {
+                            pastSectionsWithCategories.forEach { (section, _) ->
+                                totalPracticeDuration += section.duration ?: 0
+                            }
+                        }
+                    }
+
+                    val today = Calendar.getInstance().get(Calendar.DAY_OF_YEAR)
+                    val yesterday = Calendar.getInstance().let {
+                        it.add(Calendar.DAY_OF_YEAR, -1)
+                        it.get(Calendar.DAY_OF_YEAR)
+                    }
+
+                    summaryDayLayout.visibility = View.VISIBLE
+                    summaryDate.text = when(currentSessionDate.get(Calendar.DAY_OF_YEAR)) {
+                        today -> context.getString(R.string.today)
+                        yesterday -> context.getString(R.string.yesterday)
+                        else -> dateFormat.format(currentSessionDate.timeInMillis)
+                    }
+                    summaryDayDuration.text = getTimeString(totalPracticeDuration)
+
+                } else {
+                    summaryDayLayout.visibility = View.GONE
+                }
+
+                // compute the total practice time
+                var practiceDuration = 0
+                sectionsWithCategories.forEach { (section, _) ->
+                    practiceDuration += section.duration ?: 0
+                }
+
+                val breakDuration = session.break_duration
+
+                // read the start duration from the first section and bring it to milliseconds
+                val startTimestamp = sectionsWithCategories.first().section.timestamp * 1000L
+
+                // set the time field accordingly
+                summaryTimeView.text = timeFormat.format(Date(startTimestamp))
+
+                // show the practice duration in the practice duration field
+                practiceDurationView.text = getTimeString(practiceDuration)
+
+                // set the break time text equal to the sessions break duration
+                breakDurationView.text = getTimeString(breakDuration)
+
+                // set the sections and update the section adapter about the change
+                sectionsWithCategoriesList.clear()
+                sectionsWithCategoriesList.addAll(sectionsWithCategories)
+                sectionList.adapter?.notifyItemRangeInserted(0,sectionsWithCategories.size)
+
+                //set the rating bar to the correct star rating
+                ratingBar.rating = session.rating.toFloat()
+
+                if (session.comment.isNullOrEmpty()) {
+                    commentSection.visibility = View.GONE
+                } else {
+                    //set content of the comment field
+                    commentSection.visibility = View.VISIBLE
+                    commentField.text = session.comment
+                }
+            }
+
+            private fun getTimeString(duration: Int) : String {
+                val hoursDur =  duration % 3600 / 60     // TODO change back eventually
+                val minutesDur = duration % 60           // TODO change back eventually
+
+                return if (hoursDur > 0) {
+                    "%dh %dmin".format(hoursDur, minutesDur)
+                } else if (minutesDur == 0 && duration > 0){
+                    "<1min"
+                } else {
+                    "%dmin".format(minutesDur)
+                }
+            }
+
+            private inner class SectionAdapter(
+                private val sectionsWithCategories: ArrayList<SectionWithCategory>,
+                private val context: Context
+            ) : RecyclerView.Adapter<SectionAdapter.ViewHolder>() {
+
+                inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+                    val sectionColor: ImageView = view.findViewById(R.id.sectionColor)
+                    val sectionName: TextView = view.findViewById(R.id.sectionName)
+                    val sectionDuration: TextView = view.findViewById(R.id.sectionDuration)
+                }
+
+                // Create new views (invoked by the layout manager)
+                override fun onCreateViewHolder(viewGroup: ViewGroup, viewType: Int): ViewHolder {
+                    // Create a new view, which defines the UI of the list item
+                    val view = LayoutInflater.from(viewGroup.context)
+                        .inflate(R.layout.view_session_summary_section, viewGroup, false)
+
+                    return ViewHolder(view)
+                }
+
+                // Replace the contents of a view (invoked by the layout manager)
+                override fun onBindViewHolder(viewHolder: ViewHolder, position: Int) {
+                    // Get element from your dataset at this position
+                    val (section, category) = sectionsWithCategories[position]
+
+                    // set the color to the category color
+                    val categoryColors =  context.resources.getIntArray(R.array.category_colors)
+                    viewHolder.sectionColor.backgroundTintList = ColorStateList.valueOf(
+                        categoryColors[category.colorIndex]
+                    )
+
+
+                    val sectionDuration = section.duration ?: 0
+
+                    // contents of the view with that element
+                    viewHolder.sectionName.text = category.name
+                    viewHolder.sectionDuration.text = getTimeString(sectionDuration)
+                }
+
+                // Return the size of your dataset (invoked by the layout manager)
+                override fun getItemCount() = sectionsWithCategories.size
+            }
+        }
+
+        class HeaderViewHolder(private val view: View) : ViewHolder(view) {
+            private val sessionHeaderMonth: TextView = view.findViewById(R.id.sessionHeaderMonth)
+            // bind a new section header with the timestamp of the first session (in seconds)
+            fun bind(
+                timestamp: Long,
+                expanded: Boolean,
+                onClickListener: View.OnClickListener,
+            ) {
+                SimpleDateFormat("MMMM").format(Date(timestamp * 1000L)).also {
+                    sessionHeaderMonth.text = it
+                }
+                sessionHeaderMonth.setOnClickListener(onClickListener)
+            }
+        }
+    }
+}
+
+class InterceptTouchCardView(context: Context, attrs: AttributeSet) : CardView(context, attrs) {
+    override fun onInterceptTouchEvent(ev: MotionEvent?): Boolean {
+        return true
+    }
+}
+

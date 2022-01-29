@@ -1,0 +1,53 @@
+package de.practicetime.practicetime
+
+import de.practicetime.practicetime.database.PTDao
+import de.practicetime.practicetime.database.entities.GoalPeriodUnit
+import java.util.*
+
+suspend fun updateGoals(
+    dao: PTDao
+) {
+    var notDone = true
+    while(notDone) {
+        dao.getOutdatedGoalInstancesWithDescriptions().also {outdatedInstancesWithDescriptions ->
+            // while there are still outdated goals, keep looping and adding new ones
+            notDone = outdatedInstancesWithDescriptions.isNotEmpty()
+            outdatedInstancesWithDescriptions.forEach { (outdatedInstance, description) ->
+                if (!description.oneTime) {
+
+                    // create a new calendar instance, set the time to the instances start timestamp,...
+                    val startCalendar = Calendar.getInstance()
+                    startCalendar.timeInMillis = outdatedInstance.startTimestamp * 1000L
+
+                    // ... add to the calendar the period in period units...
+                    when (description.periodUnit) {
+                        GoalPeriodUnit.DAY ->
+                            startCalendar.add(
+                                Calendar.DAY_OF_YEAR,
+                                description.periodInPeriodUnits
+                            )
+                        GoalPeriodUnit.WEEK ->
+                            startCalendar.add(
+                                Calendar.WEEK_OF_YEAR,
+                                description.periodInPeriodUnits
+                            )
+                        GoalPeriodUnit.MONTH ->
+                            startCalendar.add(Calendar.MONTH, description.periodInPeriodUnits)
+                    }
+
+                    // ... and create a new goal with the same groupId, period and target
+                    dao.insertGoalInstance(
+                        description.createInstance(
+                            timeFrame = startCalendar,
+                            target = outdatedInstance.target
+                        )
+                    )
+                }
+
+                // finally mark the outdated instance as renewed
+                outdatedInstance.renewed = true
+                dao.updateGoalInstance(outdatedInstance)
+            }
+        }
+    }
+}

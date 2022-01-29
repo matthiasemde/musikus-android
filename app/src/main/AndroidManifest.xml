@@ -17,41 +17,41 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.PracticeTime">
         <activity
-            android:name=".GoalStatsActivity"
+            android:name=".ui.statistics.GoalStatsActivity"
             android:exported="false" />
         <activity
-            android:name=".SessionStatsActivity"
+            android:name=".ui.statistics.SessionStatsActivity"
             android:exported="false" />
 
         <service
-            android:name=".SessionForegroundService"
+            android:name=".services.SessionForegroundService"
             android:enabled="true"
             android:exported="false" />
         <service
-            android:name=".RecorderService"
+            android:name=".services.RecorderService"
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="microphone"/>
 
         <activity
-            android:name=".ProgressUpdateActivity"
+            android:name=".ui.goals.ProgressUpdateActivity"
             android:exported="false"
-            android:parentActivityName=".MainActivity"
+            android:parentActivityName=".ui.MainActivity"
             android:windowSoftInputMode="adjustNothing" />
         <activity
-            android:name=".FullscreenSessionActivity"
+            android:name=".ui.sessionlist.FullscreenSessionActivity"
             android:exported="false"
-            android:parentActivityName=".MainActivity"
+            android:parentActivityName=".ui.MainActivity"
             android:windowSoftInputMode="adjustNothing" />
         <activity
-            android:name=".ActiveSessionActivity"
+            android:name=".ui.activesession.ActiveSessionActivity"
             android:configChanges="orientation|keyboardHidden"
             android:exported="false"
-            android:parentActivityName=".MainActivity"
+            android:parentActivityName=".ui.MainActivity"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustNothing" />
         <activity
-            android:name=".MainActivity"
+            android:name=".ui.MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

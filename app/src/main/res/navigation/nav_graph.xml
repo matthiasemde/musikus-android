@@ -7,22 +7,22 @@
 
     <fragment
         android:id="@+id/sessionListFragment"
-        android:name="de.practicetime.practicetime.SessionListFragment"
+        android:name="de.practicetime.practicetime.ui.sessionlist.SessionListFragment"
         android:label="fragment_session"
         tools:layout="@layout/fragment_sessions_list" />
     <fragment
         android:id="@+id/goalsFragment"
-        android:name="de.practicetime.practicetime.GoalsFragment"
+        android:name="de.practicetime.practicetime.ui.goals.GoalsFragment"
         android:label="fragment_goals"
         tools:layout="@layout/fragment_goals" />
     <fragment
         android:id="@+id/statisticsOverviewFragment"
-        android:name="de.practicetime.practicetime.StatisticsOverviewFragment"
+        android:name="de.practicetime.practicetime.ui.statistics.StatisticsOverviewFragment"
         android:label="Library"
         tools:layout="@layout/fragment_statistics_overview" />
     <fragment
         android:id="@+id/libraryFragment"
-        android:name="de.practicetime.practicetime.LibraryFragment"
+        android:name="de.practicetime.practicetime.ui.library.LibraryFragment"
         android:label="Library"
         tools:layout="@layout/fragment_library" />
 </navigation>
