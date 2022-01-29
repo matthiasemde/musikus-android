@@ -5,29 +5,30 @@
             <shape
                 android:innerRadiusRatio="3"
                 android:shape="ring"
-                android:thickness="5dp"
+                android:thickness="3dp"
                 android:useLevel="true">
                 <solid android:color="?attr/colorPrimary" />
             </shape>
         </rotate>
     </item>
-<!--    <item android:bottom="211dp">-->
+
+<!--    <item android:bottom="27.5dp">-->
 <!--        <shape-->
 <!--            android:innerRadiusRatio="1000"-->
 <!--            android:shape="ring"-->
-<!--            android:thickness="7dp"-->
+<!--            android:thickness="2.4dp"-->
 <!--            android:useLevel="false">-->
 <!--            <solid android:color="?attr/colorPrimary" />-->
 <!--        </shape>-->
 <!--    </item>-->
 <!--    <item>-->
 <!--        <rotate>-->
-<!--            <inset android:insetBottom="211dp">-->
+<!--            <inset android:insetBottom="27.5dp">-->
 <!--                <shape-->
 <!--                    android:innerRadiusRatio="1000"-->
 <!--                    android:shape="ring"-->
-<!--                    android:thickness="7dp"-->
-<!--                    android:useLevel="false">-->
+<!--                    android:thickness="2.4dp"-->
+<!--                    android:useLevel="true">-->
 <!--                    <solid android:color="?attr/colorPrimary" />-->
 <!--                </shape>-->
 <!--            </inset>-->

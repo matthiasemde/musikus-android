@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+        <ProgressBar
+            android:id="@+id/stats_ov_card_lastgoals_progressbarlayout_pg"
+            style="@style/ProgressBarGoalsOverview" />
+
+        <ImageView
+            android:id="@+id/stats_ov_card_lastgoals_progressbarlayout_iv"
+            style="@style/ImageViewCheckIconGoalsOverview"
+            tools:visibility="visible"/>
+
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
+
+    <TextView
+        android:id="@+id/stats_ov_card_lastgoals_progressbarlayout_tv_date"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        tools:text="15.12."
+        android:textSize="12sp"
+        android:layout_gravity="center|bottom" />
+
+</LinearLayout>

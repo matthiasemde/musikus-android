@@ -253,7 +253,6 @@ interface PTDao {
         from : Long = Date().time / 1000L,
     ) : List<GoalInstance>
 
-
     @Transaction
     @Query("SELECT * FROM GoalInstance WHERE startTimestamp+periodInSeconds < :expiredBefore")
     suspend fun getGoalInstancesWithDescription(

@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:android="http://schemas.android.com/apk/res/android">
+<resources xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
     <style name="ToolbarColoredIcons" parent="Theme.PracticeTime">
         <item name="android:textColorSecondary">?attr/colorOnBackground</item>
     </style>
@@ -74,10 +76,22 @@
     <style name="ProgressBarGoalsOverview" parent="">
         <item name="android:layout_width">34dp</item>
         <item name="android:layout_height">34dp</item>
-        <item name="android:layout_margin">8dp</item>
+        <item name="android:layout_marginRight">4dp</item>
+        <item name="android:layout_marginLeft">4dp</item>
         <item name="android:indeterminateOnly">false</item>
         <item name="android:progressDrawable">@drawable/circular_progress_bar</item>
+        <item name="android:background">@drawable/circular_progress_bar_bg</item>
         <item name="android:max">100</item>
         <item name="android:progress">65</item>
     </style>
+
+    <style name="ImageViewCheckIconGoalsOverview" parent="">
+        <item name="android:layout_width">10dp</item>
+        <item name="android:layout_height">10dp</item>
+        <item name="android:src">@drawable/ic_check_small</item>
+        <item name="android:layout_gravity">center</item>
+        <item name="tint">?attr/colorPrimary</item>
+        <item name="android:visibility">gone</item>
+    </style>
+
 </resources>

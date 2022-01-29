@@ -1,13 +1,11 @@
 package de.practicetime.practicetime
 
 import android.content.Intent
+import android.content.res.ColorStateList
 import android.os.Bundle
-import android.util.Log
 import android.util.TypedValue
 import android.view.View
-import android.widget.ImageButton
-import android.widget.ProgressBar
-import android.widget.TextView
+import android.widget.*
 import androidx.cardview.widget.CardView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -21,9 +19,11 @@ import com.github.mikephil.charting.data.BarEntry
 import com.github.mikephil.charting.formatter.ValueFormatter
 import de.practicetime.practicetime.entities.GoalType
 import kotlinx.coroutines.launch
+import java.time.Instant
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoField
 import kotlin.math.min
 
 class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overview) {
@@ -50,6 +50,7 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
         view.findViewById<ImageButton>(R.id.stats_ov_card_lastgoals_ib_more_details).setOnClickListener(goalsDetailClickListener)
 
 
+        initHeaderData()
 
         initLast7DaysChart()
         setLast7DaysChartData()
@@ -88,7 +89,6 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
             // get all total durations from the last 7 days
             val barChartArray = arrayListOf<BarEntry>()
             for (day in 0 downTo -6) {
-                Log.d("TZASG", "Day is: $day")
                 val dur = dao.getSectionsWithCategories(
                         getStartOfDay(day.toLong()).toEpochSecond(),
                         getEndOfDay(day.toLong()).toEpochSecond()
@@ -141,33 +141,115 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
     private fun initLastGoalsCard() {
         lifecycleScope.launch {
             val lastGoals = dao.getGoalInstancesWithDescription().takeLast(5)
-            Log.d("TAG", "LAST: $lastGoals")
-            val pBars = arrayListOf<ProgressBar>(
-                requireView().findViewById(R.id.stats_ov_card_lastgoals_pg_1),
-                requireView().findViewById(R.id.stats_ov_card_lastgoals_pg_2),
-                requireView().findViewById(R.id.stats_ov_card_lastgoals_pg_3),
-                requireView().findViewById(R.id.stats_ov_card_lastgoals_pg_4),
-                requireView().findViewById(R.id.stats_ov_card_lastgoals_pg_5),
-            )
+            var achievedGoalsCount = 0
+            arrayListOf<LinearLayout>(
+                requireView().findViewById(R.id.progressbarlayout_1),
+                requireView().findViewById(R.id.progressbarlayout_2),
+                requireView().findViewById(R.id.progressbarlayout_3),
+                requireView().findViewById(R.id.progressbarlayout_4),
+                requireView().findViewById(R.id.progressbarlayout_5),
 
-            pBars.forEachIndexed { i, pBar ->
+            ).forEachIndexed { i, ll ->
+                val pBar = ll.findViewById<ProgressBar>(R.id.stats_ov_card_lastgoals_progressbarlayout_pg)
+                val check = ll.findViewById<ImageView>(R.id.stats_ov_card_lastgoals_progressbarlayout_iv)
+                val date = ll.findViewById<TextView>(R.id.stats_ov_card_lastgoals_progressbarlayout_tv_date)
+
                 val gi = lastGoals[i].instance
-                pBar.progress = min(100, gi.progress / gi.target * 100)
-                Log.d("ZAGS", "set Progress of $i bar to: ${pBar.progress}")
+//                Log.d("TAG", "Goal $i: id=${gi.id} progress=${gi.progress}, target=${gi.target}")
 
+                pBar.progress = min(100, (gi.progress.toFloat() / gi.target.toFloat() * 100).toInt())
+                date.text = getDateString(gi.startTimestamp + gi.periodInSeconds)
+
+                if (pBar.progress == 100) {
+                    check.visibility = View.VISIBLE
+                    achievedGoalsCount++
+                }
+
+                // change color according to category
                 val gd = lastGoals[i].description
                 if (gd.type == GoalType.CATEGORY_SPECIFIC) {
                     // find out category
                     val catId = dao.getGoalDescriptionCategoryCrossRefsWhereDescriptionId(gd.id).first().categoryId
                     val cat = dao.getCategory(catId)
                     val categoryColors =  requireContext().resources.getIntArray(R.array.category_colors)
-                    val color = categoryColors[cat.colorIndex]
+                    val color = ColorStateList.valueOf(categoryColors[cat.colorIndex])
 
-                    pBar.setBackgroundColor(color)
+                    pBar.progressTintList = color
+                    check.imageTintList = color
+                }
+            }
+
+            requireView().findViewById<TextView>(R.id.stats_ov_card_lastgoals_tv_achieved).text =
+                "$achievedGoalsCount/5"
+        }
+
+    }
+
+    private fun initHeaderData() {
+        lifecycleScope.launch {
+            arrayListOf<LinearLayout>(
+                requireView().findViewById(R.id.heading_data_1),
+                requireView().findViewById(R.id.heading_data_2),
+                requireView().findViewById(R.id.heading_data_3),
+                requireView().findViewById(R.id.heading_data_4),
+
+                ).forEachIndexed { i, ll ->
+                val tvData = ll.findViewById<TextView>(R.id.stats_ov_heading_tv_data)
+                val tvDesc = ll.findViewById<TextView>(R.id.stats_ov_heading_tv_desc)
+
+                when (i) {
+                    0 -> {
+                        tvData.text = getTotalTimeLastMonth()
+                        tvDesc.text = getString(R.string.total_time_last_month)
+                    }
+                    else -> {
+                        tvData.text = "TBA"
+                        tvDesc.text = "TBA"
+                    }
                 }
             }
         }
+    }
 
+    private suspend fun getTotalTimeLastMonth(): String {
+        val beginLastMonth = ZonedDateTime.now()
+            .with(ChronoField.DAY_OF_MONTH , 1 )    // jump to first day of this month
+            .toLocalDate()
+            .atStartOfDay(ZoneId.systemDefault())  // make sure time is 00:00
+            .minusMonths(1) // subtract one month from now
+            .toEpochSecond()
+
+        // half-open: end of last month = start of this month
+        val endLastMonth = ZonedDateTime.now()
+            .with(ChronoField.DAY_OF_MONTH , 1 )
+            .toLocalDate()
+            .atStartOfDay(ZoneId.systemDefault())  // make sure time is 00:00
+            .toEpochSecond()
+
+        val totalTime = dao.getSectionsWithCategories(beginLastMonth, endLastMonth)
+            .sumOf { it.section.duration ?: 0}
+
+        return secondsToTimeString(totalTime)
+    }
+
+    private fun secondsToTimeString(seconds: Int?): String {
+        // TODO change to string resources with placeholders eventually
+        val (h, m) = secondsToHoursMins(seconds)
+        var str = ""
+        if (h != 0) str += "${h}h "
+        if (m != 0) str += "${m}m"
+        else
+            if (h == 0)
+                if (seconds != 0) str = "< 1m"
+                else str += "0m"
+        return str
+    }
+
+    private fun secondsToHoursMins(seconds: Int?): Pair<Int?, Int?> {
+        val hours = seconds?.div(3600)
+        val minutes = (seconds?.rem(3600))?.div(60)
+
+        return Pair(hours, minutes)
     }
 
     private fun openDatabase() {
@@ -197,8 +279,6 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
             .toLocalDate()
             .atStartOfDay(ZoneId.systemDefault())  // make sure time is 00:00
             .plusDays(daysInPastOffset)
-
-        Log.d("TAG", "getting start of $day")
         return day
     }
 
@@ -214,5 +294,12 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
         val typedValue = TypedValue()
         requireActivity().theme.resolveAttribute(color, typedValue, true)
         return typedValue.data
+    }
+
+    private fun getDateString(epochSecs: Long): String {
+        return ZonedDateTime
+            .ofInstant(Instant.ofEpochSecond(epochSecs), ZoneId.systemDefault())
+            .minusHours(1)  // subtract 1 hour to get the day before (because of half-open approach)
+            .format(DateTimeFormatter.ofPattern("dd.MM."))
     }
 }

@@ -2,6 +2,7 @@
 
 <androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/stats_ov_cardview_lastgoals"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -53,60 +54,64 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintVertical_bias="0" />
 
-        <TextView
-            android:id="@+id/stats_ov_card_lastgoals_tv_achieved"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            android:textColor="?attr/colorPrimary"
-            app:layout_constraintStart_toStartOf="@id/stats_ov_card_lastgoals_tv_headline"
-            app:layout_constraintHorizontal_bias="0"
-            app:layout_constraintTop_toBottomOf="@id/stats_ov_card_lastgoals_tv_subheadline"
-            app:layout_constraintBottom_toBottomOf="parent"
-            android:text="4/5" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/achieved"
-            android:textColor="?attr/colorPrimary"
-            app:layout_constraintStart_toStartOf="@id/stats_ov_card_lastgoals_tv_achieved"
-            app:layout_constraintTop_toBottomOf="@id/stats_ov_card_lastgoals_tv_achieved"
-            app:layout_constraintBaseline_toBottomOf="parent"
-            app:layout_constraintHorizontal_bias="0" />
-
 
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="32dp"
-            app:layout_constraintStart_toEndOf="@id/stats_ov_card_lastgoals_tv_achieved"
+            android:orientation="vertical"
+            app:layout_constraintStart_toStartOf="@id/stats_ov_card_lastgoals_tv_headline"
+            app:layout_constraintTop_toBottomOf="@id/stats_ov_card_lastgoals_tv_subheadline"
+            app:layout_constraintBottom_toBottomOf="@id/lay_progressbarlayouts"
+            app:layout_constraintVertical_bias="1">
+
+            <TextView
+                android:id="@+id/stats_ov_card_lastgoals_tv_achieved"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:textColor="?attr/colorPrimary"
+                tools:text="4/5" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/achieved"
+                android:textColor="?attr/colorPrimary" />
+
+        </LinearLayout>
+
+
+        <LinearLayout
+            android:id="@+id/lay_progressbarlayouts"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@id/stats_ov_card_lastgoals_tv_subheadline"
-            app:layout_constraintHorizontal_bias="1"
-            app:layout_constraintVertical_weight="1"
-            app:layout_constraintBottom_toBottomOf="parent">
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintHorizontal_bias="1">
 
-            <ProgressBar
-                android:id="@+id/stats_ov_card_lastgoals_pg_1"
-                style="@style/ProgressBarGoalsOverview" />
 
-            <ProgressBar
-                android:id="@+id/stats_ov_card_lastgoals_pg_2"
-                style="@style/ProgressBarGoalsOverview" />
+            <include
+                android:id="@+id/progressbarlayout_1"
+                layout="@layout/view_statistics_overview_lastgoals_progressbarlayout"/>
 
-            <ProgressBar
-                android:id="@+id/stats_ov_card_lastgoals_pg_3"
-                style="@style/ProgressBarGoalsOverview" />
+            <include
+                android:id="@+id/progressbarlayout_2"
+                layout="@layout/view_statistics_overview_lastgoals_progressbarlayout"/>
 
-            <ProgressBar
-                android:id="@+id/stats_ov_card_lastgoals_pg_4"
-                style="@style/ProgressBarGoalsOverview" />
+            <include
+                android:id="@+id/progressbarlayout_3"
+                layout="@layout/view_statistics_overview_lastgoals_progressbarlayout"/>
 
-            <ProgressBar
-                android:id="@+id/stats_ov_card_lastgoals_pg_5"
-                style="@style/ProgressBarGoalsOverview" />
+            <include
+                android:id="@+id/progressbarlayout_4"
+                layout="@layout/view_statistics_overview_lastgoals_progressbarlayout"/>
+
+            <include
+                android:id="@+id/progressbarlayout_5"
+                layout="@layout/view_statistics_overview_lastgoals_progressbarlayout"/>
 
 
         </LinearLayout>
