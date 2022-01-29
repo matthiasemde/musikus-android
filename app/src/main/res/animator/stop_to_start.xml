@@ -9,6 +9,6 @@
     android:propertyName="pathData"
     android:valueFrom="@string/square"
     android:valueTo="@string/circle"
-    android:duration="800"
+    android:duration="400"
     android:interpolator="@android:interpolator/fast_out_slow_in"
     android:valueType="pathType"/>

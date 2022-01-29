@@ -23,5 +23,5 @@
     app:behavior_peekHeight="96dp"
     app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior"
     tools:itemCount="4"
-    tools:listitem="@layout/view_recording_item" />
+    tools:listitem="@layout/listitem_recording" />
 

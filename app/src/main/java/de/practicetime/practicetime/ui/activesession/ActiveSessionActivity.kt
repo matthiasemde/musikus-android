@@ -8,7 +8,7 @@
  * Parts of this software are licensed under the MIT license
  *
  * Copyright (c) 2022, Javier Carbone, author Michael Prommersberger
- * Additions and modifications, author Matthias Emde 
+ * Additions and modifications, author Matthias Emde
  */
 
 package de.practicetime.practicetime.ui.activesession
@@ -401,9 +401,9 @@ class ActiveSessionActivity : AppCompatActivity() {
         findViewById<MaterialButton>(R.id.bottom_metronome).setOnClickListener {
             findViewById<CoordinatorLayout>(R.id.active_session_bottom_sheet_container).visibility = View.VISIBLE
             if (metronomeBottomSheetBehaviour.state == BottomSheetBehavior.STATE_HIDDEN) {
-                metronomeBottomSheetBehaviour.state = BottomSheetBehavior.STATE_EXPANDED
                 recordingBottomSheetBehaviour.state = BottomSheetBehavior.STATE_HIDDEN
                 recordingBottomSheet.scrollToPosition(0)
+                metronomeBottomSheetBehaviour.state = BottomSheetBehavior.STATE_EXPANDED
             } else {
                 metronomeBottomSheetBehaviour.state = BottomSheetBehavior.STATE_HIDDEN
             }
@@ -459,7 +459,8 @@ class ActiveSessionActivity : AppCompatActivity() {
         val displayName: String,
         val duration: Int,
         val date: Long,
-        val contentUri: Uri
+        val contentUri: Uri,
+        var playing: Boolean = false
     )
 
     private val recordingList = mutableListOf<Recording>()
@@ -526,11 +527,12 @@ class ActiveSessionActivity : AppCompatActivity() {
             MediaStore.Audio.Media._ID,
             MediaStore.Audio.Media.DISPLAY_NAME,
             MediaStore.Audio.Media.DURATION,
+            MediaStore.Audio.Media.DATE_ADDED
         )
 
         val selection = "${MediaStore.Audio.Media.ALBUM} = 'Practice Time'"
 
-        val sortOrder = "${MediaStore.Audio.Media.DATE_ADDED} DESC"
+        val sortOrder = "${MediaStore.Audio.Media.DATE_ADDED} ASC"
 
         val oldRecordingList = recordingList.toList()
         recordingList.clear()
@@ -591,6 +593,7 @@ class ActiveSessionActivity : AppCompatActivity() {
                 arrayOf(
                     MediaStore.Audio.Media._ID,
                     MediaStore.Audio.Media.DURATION,
+                    MediaStore.Audio.Media.DATE_ADDED
                 ),
                 null,
                 null,
@@ -609,9 +612,9 @@ class ActiveSessionActivity : AppCompatActivity() {
                     id
                 )
                 RecorderService.recordingName?.let {
-                    recordingList.add(0, Recording(id, it, duration, date, contentUri))
+                    recordingList.add(0, Recording(id, it, duration, date,  contentUri))
+                    recordingListAdapter.addRecording()
                 }
-                recordingListAdapter.notifyItemInserted(0)
             }
 
             Snackbar.make(
@@ -622,7 +625,7 @@ class ActiveSessionActivity : AppCompatActivity() {
                 10000
             ).apply {
                 anchorView =
-                    if(recordingBottomSheetBehaviour.state == BottomSheetBehavior.STATE_HIDDEN)
+                    if(recordingBottomSheetBehaviour.state != BottomSheetBehavior.STATE_EXPANDED)
                         recordingBottomSheet
                     else findViewById<ConstraintLayout>(R.id.constraintLayout_Bottom_btn)
 
@@ -660,7 +663,7 @@ class ActiveSessionActivity : AppCompatActivity() {
                 put(MediaStore.Audio.Media.MIME_TYPE, "audio/mp4")
                 put(MediaStore.Audio.Media.ALBUM, "Practice Time")
                 put(MediaStore.Audio.Media.DATE_ADDED, getCurrTimestamp())
-                        put(MediaStore.Audio.Media.IS_MUSIC, 1)
+                put(MediaStore.Audio.Media.IS_MUSIC, 1)
             }
 
             try {
@@ -731,6 +734,7 @@ class ActiveSessionActivity : AppCompatActivity() {
             openRecorderButtonView.isSelected = true
         }
 
+        // load recordings from recordings directory
         findViewById<RecyclerView>(R.id.record_sheet_list).apply {
             layoutManager = LinearLayoutManager(this@ActiveSessionActivity)
             adapter = recordingListAdapter
@@ -739,11 +743,11 @@ class ActiveSessionActivity : AppCompatActivity() {
         }
 
         updateRecordingsList()
-        recordingListAdapter.notifyItemInserted(0)
 
         findViewById<MaterialButton>(R.id.bottom_record).setOnClickListener {
             findViewById<CoordinatorLayout>(R.id.active_session_bottom_sheet_container).visibility = View.VISIBLE
             if(recordingBottomSheetBehaviour.state == BottomSheetBehavior.STATE_HIDDEN) {
+                metronomeBottomSheetBehaviour.state = BottomSheetBehavior.STATE_HIDDEN
                 recordingBottomSheetBehaviour.state = BottomSheetBehavior.STATE_HALF_EXPANDED
                 if(requestRecorderPermissions()) {
                     recordingBottomSheetBehaviour.state = BottomSheetBehavior.STATE_HALF_EXPANDED
@@ -893,28 +897,22 @@ class ActiveSessionActivity : AppCompatActivity() {
         }
 
         fun setPlayingRecording(newPlayingRecording: Int) {
+            // there is a bug here with recycler view for elements which are recycled but also not visible when new Recording is played
             this.recyclerView.findViewHolderForAdapterPosition(playingRecording + 1)?.apply {
                 if (this !is ViewHolder.ItemViewHolder) return@apply
-                backFragment?.let { bFragment ->
-                    bFragment.stopUISync()
-                    frontFragment?.let { fFragment ->
-                        if(justFlipped) {
-                            context.supportFragmentManager.beginTransaction()
-                                .replace(containerView.id, fFragment)
-                                .commitNow()
-                        } else {
-                            context.supportFragmentManager.beginTransaction()
-                                .setCustomAnimations(
-                                    R.animator.flip_in,
-                                    R.animator.flip_out,
-                                )
-                                .replace(containerView.id, fFragment)
-                                .commit()
-                        }
-                    }
+                backFragment?.stopUISync()
+                frontFragment?.let { fFragment ->
+                    context.supportFragmentManager.beginTransaction()
+                        .setCustomAnimations(
+                            R.animator.flip_in,
+                            R.animator.flip_out,
+                        )
+                        .replace(containerView.id, fFragment)
+                        .commitNow()
                 }
                 playerShowing = false
-                playFileView.icon = ContextCompat.getDrawable(context, R.drawable.ic_play)
+                playFileView.icon = pauseToPlay
+                pauseToPlay.start()
             }
             playingRecording = newPlayingRecording
         }
@@ -1068,14 +1066,20 @@ class ActiveSessionActivity : AppCompatActivity() {
                 var backFragment: BackFragment? = null
 
                 var playerShowing = false
-                var justFlipped = false
 
                 val playFileView: MaterialButton = view.findViewById(R.id.recording_file_open)
                 val containerView: FrameLayout = view.findViewById(R.id.recording_container)
                 private val dividerView: View = view.findViewById(R.id.recording_file_divider)
 
-                private val playIcon = ContextCompat.getDrawable(context, R.drawable.ic_play)
-                private val pauseIcon = ContextCompat.getDrawable(context, R.drawable.ic_pause)
+                private val pause = ContextCompat.getDrawable(context, R.drawable.ic_pause)
+                private val play = ContextCompat.getDrawable(context, R.drawable.ic_play)
+
+                private val playToPause = ContextCompat.getDrawable(
+                context, R.drawable.avd_play_to_pause
+                ) as AnimatedVectorDrawable
+                val pauseToPlay = ContextCompat.getDrawable(
+                    context, R.drawable.avd_pause_to_play
+                ) as AnimatedVectorDrawable
 
 
                 init {
@@ -1088,19 +1092,31 @@ class ActiveSessionActivity : AppCompatActivity() {
                     frontFragment = FrontFragment(recording)
                     backFragment = BackFragment(mediaPlayer)
 
-                    playFileView.icon = if(playerShowing && mediaPlayer.isPlaying) pauseIcon else playIcon
+                    playFileView.icon = if(playerShowing && mediaPlayer.isPlaying) pause else play
                     playFileView.setOnClickListener {
                         if(this.playerShowing) {
                             if(mediaPlayer.isPlaying) {
-                                playFileView.icon = playIcon
+                                playFileView.icon = pauseToPlay
+                                pauseToPlay.start()
                                 mediaPlayer.pause()
                             } else {
                                 if(mediaPlayer.currentPosition == mediaPlayer.duration)
                                     mediaPlayer.seekTo(0)
-                                playFileView.icon = pauseIcon
+                                playFileView.icon = playToPause
+                                playToPause.start()
                                 mediaPlayer.start()
                             }
                         } else {
+                            mediaPlayer.apply {
+                                reset()
+                                setDataSource(context, recording.contentUri)
+                                prepare()
+                                start()
+                                setOnCompletionListener {
+                                    playFileView.icon = play
+                                }
+                            }
+
                             backFragment?.let { backFragment ->
                                 context.supportFragmentManager.beginTransaction()
                                     .setCustomAnimations(
@@ -1108,28 +1124,13 @@ class ActiveSessionActivity : AppCompatActivity() {
                                         R.animator.flip_out,
                                     )
                                     .replace(containerView.id, backFragment)
-                                    .commit()
-                            }
-
-                            mediaPlayer.apply {
-                                reset()
-                                setDataSource(context, recording.contentUri)
-                                prepare()
-                                start()
-                                setOnCompletionListener {
-                                    playFileView.icon = playIcon
-                                }
+                                    .commitNow()
                             }
                             setPlayingRecording(layoutPosition - 1)
 
                             this.playerShowing = true
-                            playFileView.icon = ContextCompat.getDrawable(context, R.drawable.ic_pause)
-
-                            // mark, that the player just flipped
-                            justFlipped = true
-                            Handler(Looper.getMainLooper()).postDelayed({
-                                justFlipped = false
-                            }, 500L)
+                            playFileView.icon = playToPause
+                            playToPause.start()
                         }
                     }
                     dividerView.visibility = if(lastItem) View.GONE else View.VISIBLE

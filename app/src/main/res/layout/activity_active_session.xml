@@ -272,7 +272,7 @@
         android:id="@+id/btn_back"
         android:layout_width="50dp"
         android:layout_height="50dp"
-        android:layout_gravity="top|left"
+        android:layout_gravity="top|start"
         android:background="?selectableItemBackgroundBorderless"
         android:src="@drawable/ic_arrow_down"
         app:tint="?attr/colorOnSurfaceLowerContrast" />
@@ -281,7 +281,7 @@
         android:id="@+id/btn_discard"
         android:layout_width="50dp"
         android:layout_height="50dp"
-        android:layout_gravity="top|right"
+        android:layout_gravity="top|end"
         android:background="?selectableItemBackgroundBorderless"
         android:src="@drawable/ic_delete"
         android:visibility="gone" />
@@ -317,8 +317,8 @@
         android:layout_height="match_parent"
         android:layout_gravity="bottom"
         android:layout_marginBottom="56dp"
-        android:visibility="visible"
-        android:animateLayoutChanges="true">
+        android:visibility="gone"
+        android:animateLayoutChanges="false">
 
         <include
             layout="@layout/bottom_sheet_dialog_metronome"
