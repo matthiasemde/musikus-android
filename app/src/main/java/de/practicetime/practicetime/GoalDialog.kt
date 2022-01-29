@@ -15,6 +15,7 @@ import androidx.appcompat.widget.AppCompatButton
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.widget.addTextChangedListener
+import com.google.android.material.button.MaterialButton
 import de.practicetime.practicetime.components.NumberInput
 import de.practicetime.practicetime.entities.*
 import java.util.*
@@ -40,10 +41,12 @@ class GoalDialog(
     private val goalDialogCategorySelectorView = dialogView.findViewById<Spinner>(R.id.goalDialogCategorySelector)
     private val goalDialogCategorySelectorLayoutView = dialogView.findViewById<LinearLayout>(R.id.goalDialogCategorySelectorLayout)
     private val goalDialogOneTimeGoalView = dialogView.findViewById<CheckBox>(R.id.goalDialogOneTimeGoal)
+    private val goalDialogOneTimeGoalTooltipView = dialogView.findViewById<MaterialButton>(R.id.goalDialogOneTimeGoalTooltip)
     private val goalDialogTargetHoursView = dialogView.findViewById<NumberInput>(R.id.goalDialogHours)
     private val goalDialogTargetMinutesView = dialogView.findViewById<NumberInput>(R.id.goalDialogMinutes)
     private val goalDialogPeriodValueView = dialogView.findViewById<EditText>(R.id.goalDialogPeriodValue)
     private val goalDialogPeriodUnitView = dialogView.findViewById<Spinner>(R.id.goalDialogPeriodUnit)
+    private val goalDialogPeriodUnitTooltipView = dialogView.findViewById<MaterialButton>(R.id.goalDialogPeriodUnitTooltip)
 
     private var trackAllCategories = true
 
@@ -118,6 +121,13 @@ class GoalDialog(
             setNegativeButton(R.string.addCategoryAlertCancel) { dialog, _ ->
                 dialog.cancel()
             }
+        }
+
+        goalDialogOneTimeGoalTooltipView.setOnClickListener {
+            it.performLongClick()
+        }
+        goalDialogPeriodUnitTooltipView.setOnClickListener {
+            it.performLongClick()
         }
 
         // finally, we use the alert dialog builder to create the alertDialog

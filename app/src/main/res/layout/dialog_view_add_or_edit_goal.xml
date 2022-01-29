@@ -87,7 +87,7 @@
                 tools:text="00" />
 
             <TextView
-                android:id="@+id/goalDialogMInutesText"
+                android:id="@+id/goalDialogMinutesText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="bottom"
@@ -146,6 +146,7 @@
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
                 android:background="@drawable/spinner_background"
                 android:padding="5dp">
 
@@ -158,6 +159,18 @@
                     android:spinnerMode="dropdown" />
 
             </LinearLayout>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/goalDialogPeriodUnitTooltip"
+                style="@style/IconOnlyButton"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="@android:color/transparent"
+                android:scaleX="0.6"
+                android:scaleY="0.6"
+                android:tooltipText="@string/goalDialogGoalUnitTooltip"
+                app:icon="@android:drawable/ic_dialog_info"
+                app:iconTint="?attr/colorOnSurfaceLowerContrast" />
 
         </LinearLayout>
 
@@ -234,15 +247,34 @@
             android:layout_marginBottom="16dp"
             android:background="?android:attr/listDivider" />
 
-        <CheckBox
-            android:id="@+id/goalDialogOneTimeGoal"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:layout_marginEnd="16dp"
-            android:checked="true"
-            android:text="@string/goalDialogRepeat"
-            android:textSize="16sp" />
+            android:orientation="horizontal">
+
+            <CheckBox
+                android:id="@+id/goalDialogOneTimeGoal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:checked="true"
+                android:text="@string/goalDialogRepeat"
+                android:textSize="16sp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/goalDialogOneTimeGoalTooltip"
+                style="@style/IconOnlyButton"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="@android:color/transparent"
+                android:scaleX="0.6"
+                android:scaleY="0.6"
+                android:tooltipText="@string/goalDialogRepeatTooltip"
+                app:icon="@android:drawable/ic_dialog_info"
+                app:iconTint="?attr/colorOnSurfaceLowerContrast" />
+        </LinearLayout>
 
     </LinearLayout>
 </LinearLayout>
