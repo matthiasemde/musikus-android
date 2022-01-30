@@ -11,7 +11,6 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
-import de.practicetime.practicetime.Singleton
 import de.practicetime.practicetime.database.entities.PracticeSection
 import de.practicetime.practicetime.ui.activesession.ActiveSessionActivity
 import java.util.*
@@ -46,7 +45,7 @@ class SessionForegroundService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         // The service is starting, due to a call to startService()
 
-        Singleton.serviceIsRunning = true
+        PracticeTime.serviceIsRunning = true
         startTimer()
         createNotificationChannel()
         // set the Service to foreground to displaying the notification
@@ -396,7 +395,7 @@ class SessionForegroundService : Service() {
     override fun onDestroy() {
         super.onDestroy()
         Log.d("Service", "Service destroyed")
-        Singleton.serviceIsRunning = false
+        PracticeTime.serviceIsRunning = false
         stopMetronome()
     }
 

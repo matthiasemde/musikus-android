@@ -7,8 +7,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
-import de.practicetime.practicetime.Singleton
 
 class MainActivity : AppCompatActivity() {
 
@@ -33,12 +33,12 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         runnable = object : Runnable {
             override fun run() {
-                if (Singleton.serviceIsRunning) {
+                if (PracticeTime.serviceIsRunning) {
                     bottomNavigationView.getOrCreateBadge(R.id.sessionListFragment)
                 } else {
                     bottomNavigationView.removeBadge(R.id.sessionListFragment)
                 }
-                if (Singleton.serviceIsRunning)
+                if (PracticeTime.serviceIsRunning)
                     handler.postDelayed(this, 1000)
             }
         }

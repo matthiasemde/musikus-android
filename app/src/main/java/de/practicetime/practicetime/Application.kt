@@ -12,6 +12,8 @@ class PracticeTime : Application() {
 
     companion object {
         lateinit var dao: PTDao
+        var serviceIsRunning = false
+        var isRecording = false
     }
 
     override fun onCreate() {

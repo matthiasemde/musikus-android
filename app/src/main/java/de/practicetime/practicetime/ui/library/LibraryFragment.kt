@@ -20,7 +20,6 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
-import de.practicetime.practicetime.Singleton
 import de.practicetime.practicetime.database.entities.Category
 import kotlinx.coroutines.launch
 
@@ -157,7 +156,7 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
                 setOnMenuItemClickListener {
                     when (it.itemId) {
                         R.id.topToolbarSelectionDelete ->
-                            if(Singleton.serviceIsRunning)
+                            if(PracticeTime.serviceIsRunning)
                                 Toast.makeText(context, getString(R.string.cannot_delete_error), Toast.LENGTH_SHORT).show()
                             else {
                                 deleteCategoryDialog?.apply {

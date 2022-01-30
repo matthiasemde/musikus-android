@@ -18,7 +18,6 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
 import de.practicetime.practicetime.SessionSummaryAdapter
-import de.practicetime.practicetime.Singleton
 import de.practicetime.practicetime.database.entities.Category
 import de.practicetime.practicetime.database.entities.SessionWithSectionsWithCategories
 import de.practicetime.practicetime.ui.activesession.ActiveSessionActivity
@@ -418,14 +417,14 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
         // wait 100ms and check again to give Service time to stop after discarding session
         runnable = object : Runnable {
             override fun run() {
-                if (Singleton.serviceIsRunning) {
+                if (PracticeTime.serviceIsRunning) {
                     fabRunningSession.show()
                     fabNewSession.hide()
                 } else {
                     fabNewSession.show()
                     fabRunningSession.hide()
                 }
-                if (Singleton.serviceIsRunning)
+                if (PracticeTime.serviceIsRunning)
                     handler.postDelayed(this, 1000)
             }
         }
