@@ -4,7 +4,6 @@ import android.content.res.ColorStateList
 import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
-import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -28,15 +27,10 @@ import com.github.mikephil.charting.listener.OnChartValueSelectedListener
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
 import de.practicetime.practicetime.database.entities.Category
-import de.practicetime.practicetime.utils.TIME_FORMAT_HUMAN_PRETTY_SHORT
-import de.practicetime.practicetime.utils.getDurationString
+import de.practicetime.practicetime.utils.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.time.LocalDate
-import java.time.ZoneId
-import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
-import java.time.temporal.ChronoField
 import kotlin.math.ceil
 import kotlin.math.roundToInt
 
@@ -189,7 +183,7 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
             position = XAxis.XAxisPosition.BOTTOM
             labelCount = activeView.barCount
             valueFormatter = XAxisValueFormatter()
-            textColor = getThemeColor(R.attr.colorOnSurface)
+            textColor = PracticeTime.ctx.getThemeColor(R.attr.colorOnSurface, this@SessionStatsActivity)
         }
 
         // left axis
@@ -202,7 +196,7 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
         barChart.axisRight.apply {
             axisMinimum = 0f
             setDrawAxisLine(false)
-            textColor = getThemeColor(R.attr.colorOnSurfaceLowerContrast)
+            textColor = PracticeTime.ctx.getThemeColor(R.attr.colorOnSurfaceLowerContrast, this@SessionStatsActivity)
             valueFormatter = YAxisValueFormatter()
         }
 
@@ -263,48 +257,49 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
         when(activeView) {
 
             VIEWS.DAYS_VIEW -> {
-                val start = getStartOfWeek(daysViewWeekOffset)
-                    .format(DateTimeFormatter.ofPattern("MMMM d"))
+                var formatStrStart = "$DATE_FORMATTER_PATTERN_MONTH_TEXT_FULL $DATE_FORMATTER_PATTERN_DAY_OF_MONTH"
+                var formatStrEnd = DATE_FORMATTER_PATTERN_DAY_OF_MONTH
 
-                var formatStr = "d"
                 if (getStartOfWeek(daysViewWeekOffset).month != getEndOfWeek(daysViewWeekOffset).minusDays(1).month) {
-                    formatStr = "MMMM d"    // also show month if it is different from startMonth
+                    formatStrStart = "$DATE_FORMATTER_PATTERN_MONTH_TEXT_ABBREV $DATE_FORMATTER_PATTERN_DAY_OF_MONTH"
+                    formatStrEnd = formatStrStart    // also show month if it is different from startMonth
                 }
+
+                val start = getStartOfWeek(daysViewWeekOffset)
+                    .format(DateTimeFormatter.ofPattern(formatStrStart))
 
                 val end = getEndOfWeek(daysViewWeekOffset)
                     .minusDays(1)   // subtract one day because of half-open approach
-                    .format(DateTimeFormatter.ofPattern(formatStr))
+                    .format(DateTimeFormatter.ofPattern(formatStrEnd))
+
                 tvRange.text = ("$start - $end")
             }
 
             VIEWS.WEEKS_VIEW -> {
-                val start = LocalDate
-                    .now(ZoneId.systemDefault())
-                    .plusWeeks(firstBarXVal.toLong())
-                    .with(ChronoField.DAY_OF_WEEK , 1)  // go to Monday
-                    .format(DateTimeFormatter.ofPattern("MMM d"))
-                val end = LocalDate
-                    .now(ZoneId.systemDefault())
-                    .plusWeeks(lastBarXVal.toLong())
-                    .with(ChronoField.DAY_OF_WEEK , 7)  // go to Sunday
-                    .format(DateTimeFormatter.ofPattern("MMM d"))
+                val formatStr = "$DATE_FORMATTER_PATTERN_MONTH_TEXT_ABBREV $DATE_FORMATTER_PATTERN_DAY_OF_MONTH"
+
+                val start = getStartOfWeek(firstBarXVal.toLong())
+                    .format(DateTimeFormatter.ofPattern(formatStr))
+
+                val end = getEndOfWeek(lastBarXVal.toLong())
+                    .minusDays(1)  // subtract one day because of half-open approach
+                    .format(DateTimeFormatter.ofPattern(formatStr))
+
                 tvRange.text = ("$start - $end")
             }
 
             VIEWS.MONTHS_VIEW -> {
-                val startDate = LocalDate
-                    .now(ZoneId.systemDefault())
-                    .plusMonths(firstBarXVal.toLong())
+                val startDate = getStartOfMonth(firstBarXVal.toLong())
 
-                val endDate = LocalDate
-                    .now(ZoneId.systemDefault())
+                val endDate = getEndOfMonth(lastBarXVal.toLong())
+                    .minusDays(1)   // subtract one day because of half-open approach
                     .plusMonths(lastBarXVal.toLong())
 
-                var formatStrStart = "MMMM"
-                var formatStrEnd = "MMMM y"
+                var formatStrStart = DATE_FORMATTER_PATTERN_MONTH_TEXT_FULL
+                var formatStrEnd = "$DATE_FORMATTER_PATTERN_MONTH_TEXT_FULL $DATE_FORMATTER_PATTERN_YEAR"
                 if(startDate.year != endDate.year) {
-                    formatStrStart = "MMM y"    // also show year of beginning if it is different from end
-                    formatStrEnd = "MMM y"
+                    formatStrStart = "$DATE_FORMATTER_PATTERN_MONTH_TEXT_ABBREV $DATE_FORMATTER_PATTERN_YEAR"
+                    formatStrEnd = formatStrStart
                 }
 
                 val start = startDate.format(DateTimeFormatter.ofPattern(formatStrStart))
@@ -406,7 +401,7 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
                 barData.apply {
                     barWidth = 0.4f
                     setValueFormatter(BarChartValueFormatter())
-                    setValueTextColor(getThemeColor(R.attr.colorOnSurfaceLowerContrast))
+                    setValueTextColor(PracticeTime.ctx.getThemeColor(R.attr.colorOnSurfaceLowerContrast, this@SessionStatsActivity))
                     setValueTextSize(12f)
                     isHighlightEnabled = true
                 }
@@ -478,7 +473,7 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
 
             val highlightXValue =
                 if (activeView == VIEWS.DAYS_VIEW) {
-                    getCurrentDayOfWeek().toFloat()
+                    getCurrentDayIndexOfWeek().toFloat()
                 } else {
                     barChart.barData.xMax
                 }
@@ -721,78 +716,6 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
         }
     }
 
-    // gets the timestamp for start of day
-    // dayBack: 0=today, 1=yesterday, 2=day before yesterday
-    private fun getStartOfDay(dayOffset: Long): ZonedDateTime {
-        // use local timezone here
-        return LocalDate
-            .now(ZoneId.systemDefault())
-            .plusDays(dayOffset)
-            .atStartOfDay(ZoneId.systemDefault())
-    }
-
-    private fun getStartOfWeek(weekOffset: Long): ZonedDateTime {
-        return getStartOfDayOfWeek(1, weekOffset)
-    }
-
-    private fun getStartOfMonth(monthOffset: Long): ZonedDateTime {
-        return ZonedDateTime.now()
-            .with(ChronoField.DAY_OF_MONTH , 1 )
-            .toLocalDate().atStartOfDay(ZoneId.systemDefault())  // make sure time is 00:00
-            .plusMonths(monthOffset)
-    }
-
-    private fun getEndOfDay(dayOffset: Long): ZonedDateTime {
-        return LocalDate
-            .now(ZoneId.systemDefault())
-            .plusDays(dayOffset)
-            .plusDays(1)    // begin of next day is end of this day (half-open)
-            .atStartOfDay(ZoneId.systemDefault())
-    }
-
-    // gets end date of current Week
-    private fun getEndOfWeek(weekOffset: Long): ZonedDateTime {
-        return getStartOfDayOfWeek(1, weekOffset).plusWeeks(1)
-    }
-
-    private fun getEndOfMonth(monthOffset: Long): ZonedDateTime {
-        return ZonedDateTime.now()
-            .with(ChronoField.DAY_OF_MONTH , 1 )
-            .toLocalDate().atStartOfDay(ZoneId.systemDefault())  // make sure time is 00:00
-            .plusMonths(monthOffset)
-            .plusMonths(1)
-    }
-
-    // get the Beginning of a Day (1=Mo, 7=Sun) of the current week (weekOffset=0) / the weeks before (weekOffset<0)
-    private fun getStartOfDayOfWeek(dayIndex: Long, weekOffset: Long): ZonedDateTime {
-        return ZonedDateTime.now()
-            .with(ChronoField.DAY_OF_WEEK , dayIndex )         // ISO 8601, Monday is first day of week.
-            .toLocalDate().atStartOfDay(ZoneId.systemDefault())  // make sure time is 00:00
-            .plusWeeks(weekOffset)
-    }
-
-    // get the End of a Day (1=Mo, 7=Sun) of the current week (weekOffset=0) / the weeks before (weekOffset<0)
-    private fun getEndOfDayOfWeek(dayIndex: Long, weekOffset: Long): ZonedDateTime {
-        // because of half-open approach we have to get the "start of the _next_ day" instead of the end of the current day
-        // e.g. end of Tuesday = Start of Wednesday, so make dayIndex 2 -> 3
-        var nextDay = dayIndex + 1
-        var weekOffsetAdapted = weekOffset
-        if (dayIndex > 6) {
-            nextDay = (dayIndex + 1) % 7
-            weekOffsetAdapted += 1  // increase weekOffset so that we take the start of the first day of NEXT week as end of day
-        }
-        return ZonedDateTime.now()
-            .with(ChronoField.DAY_OF_WEEK, nextDay)         // ISO 8601, Monday is first day of week.
-            .toLocalDate().atStartOfDay(ZoneId.systemDefault())  // make sure time is 00:00
-            .plusWeeks(weekOffsetAdapted)
-    }
-
-    // returns the weekDay of today from index 1=Mo until 7=Sun
-    private fun getCurrentDayOfWeek(): Int {
-        return ZonedDateTime.now()
-            .toLocalDate().dayOfWeek.value
-    }
-
     /**
      * formats x axis value according to our time scaling
      */
@@ -809,9 +732,7 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
             }
         }
 
-        /**
-         * For DateFormatter patterns see: https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatter.html
-         */
+
 
         private fun getDayString(xValue: Float): String {
             if (xValue < 1 || xValue > 7) {
@@ -819,28 +740,25 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
                 // so just return nothing to prevent crash because of wrong dayIndex
                 return ""
             }
-            return ZonedDateTime.now()
-                .with(ChronoField.DAY_OF_WEEK , xValue.toLong())
-                .format(DateTimeFormatter.ofPattern("E"))
+            return getStartOfDayOfWeek(xValue.toLong(), 0)
+                .format(DateTimeFormatter.ofPattern(DATE_FORMATTER_PATTERN_WEEKDAY_ABBREV))
         }
 
         private fun getWeekString(xValue: Float): String {
             // maybe a solution for multiline: https://stackoverflow.com/a/46676451
             val start = getStartOfWeek(xValue.toLong())
-                .format(DateTimeFormatter.ofPattern("dd"))
+                .format(DateTimeFormatter.ofPattern(DATE_FORMATTER_PATTERN_DAY_OF_MONTH_PADDED))
 
             val end = getEndOfWeek(xValue.toLong())
                 .minusDays(1)   // subtract one day to get the "last" day (because of half-open approach)
-                .format(DateTimeFormatter.ofPattern("dd"))
+                .format(DateTimeFormatter.ofPattern(DATE_FORMATTER_PATTERN_DAY_OF_MONTH_PADDED))
 
             return ("$start - $end")
         }
 
         private fun getMonthString(xValue: Float): String {
-            return LocalDate
-                .now(ZoneId.systemDefault())
-                .plusMonths(xValue.toLong())
-                .format(DateTimeFormatter.ofPattern("MMM"))
+            return getStartOfMonth(xValue.toLong())
+                .format(DateTimeFormatter.ofPattern(DATE_FORMATTER_PATTERN_MONTH_TEXT_ABBREV))
         }
     }
 
@@ -873,7 +791,7 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
         override fun getBarStackedLabel(value: Float, stackedEntry: BarEntry): String {
 
             var prefix = ""
-            if (stackedEntry.x == getCurrentDayOfWeek().toFloat() && daysViewWeekOffset == 0L && activeView == VIEWS.DAYS_VIEW)
+            if (stackedEntry.x == getCurrentDayIndexOfWeek().toFloat() && daysViewWeekOffset == 0L && activeView == VIEWS.DAYS_VIEW)
                 prefix += "${getString(R.string.today)}: "
 
             // only display label if Bar is highlighted
@@ -962,12 +880,6 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
 
         override fun getItemCount(): Int = categories.filter { it.visible }.size
 
-    }
-
-    private fun getThemeColor(color: Int): Int {
-        val typedValue = TypedValue()
-        theme.resolveAttribute(color, typedValue, true)
-        return typedValue.data
     }
 
     override fun onSupportNavigateUp(): Boolean {

@@ -3,7 +3,6 @@ package de.practicetime.practicetime.ui.statistics
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.os.Bundle
-import android.util.TypedValue
 import android.view.View
 import android.widget.*
 import androidx.cardview.widget.CardView
@@ -19,14 +18,9 @@ import com.github.mikephil.charting.formatter.ValueFormatter
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
 import de.practicetime.practicetime.database.entities.GoalType
-import de.practicetime.practicetime.utils.TIME_FORMAT_HUMAN_PRETTY_SHORT
-import de.practicetime.practicetime.utils.getDurationString
+import de.practicetime.practicetime.utils.*
 import kotlinx.coroutines.launch
-import java.time.Instant
-import java.time.ZoneId
-import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
-import java.time.temporal.ChronoField
 import kotlin.math.min
 
 class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overview) {
@@ -73,7 +67,7 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
             position = XAxis.XAxisPosition.BOTTOM
             labelCount = 7
             valueFormatter = XAxisValueFormatter()
-            textColor = getThemeColor(R.attr.colorOnSurface)
+            textColor = PracticeTime.ctx.getThemeColor(R.attr.colorOnSurface, requireActivity())
         }
 
         lastDaysChart.axisLeft.isEnabled = false
@@ -101,7 +95,7 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
             val dataSetBarChart = BarDataSet(barChartArray, "Label")
             dataSetBarChart.apply {
                 setDrawValues(false)
-                color = getThemeColor(R.attr.colorPrimary)
+                color = PracticeTime.ctx.getThemeColor(R.attr.colorPrimary, requireActivity())
             }
 
             val barData = BarData(dataSetBarChart)
@@ -158,7 +152,9 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
 //                Log.d("TAG", "Goal $i: id=${gi.id} progress=${gi.progress}, target=${gi.target}")
 
                 pBar.progress = min(100, (gi.progress.toFloat() / gi.target.toFloat() * 100).toInt())
-                date.text = getDateString(gi.startTimestamp + gi.periodInSeconds)
+                date.text = epochSecondsToDate(gi.startTimestamp + gi.periodInSeconds)
+                    .minusHours(1)  // subtract 1 hour to get the day before (because of half-open approach)
+                    .format(DateTimeFormatter.ofPattern(DATE_FORMATTER_PATTERN_DAY_AND_MONTH))
 
                 if (pBar.progress == 100) {
                     check.visibility = View.VISIBLE
@@ -212,19 +208,8 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
     }
 
     private suspend fun getTotalTimeLastMonth(): String {
-        val beginLastMonth = ZonedDateTime.now()
-            .with(ChronoField.DAY_OF_MONTH , 1 )    // jump to first day of this month
-            .toLocalDate()
-            .atStartOfDay(ZoneId.systemDefault())  // make sure time is 00:00
-            .minusMonths(1) // subtract one month from now
-            .toEpochSecond()
-
-        // half-open: end of last month = start of this month
-        val endLastMonth = ZonedDateTime.now()
-            .with(ChronoField.DAY_OF_MONTH , 1 )
-            .toLocalDate()
-            .atStartOfDay(ZoneId.systemDefault())  // make sure time is 00:00
-            .toEpochSecond()
+        val beginLastMonth = getStartOfMonth(-1).toEpochSecond()
+        val endLastMonth = getEndOfMonth(-1).toEpochSecond()
 
         val totalTime = PracticeTime.dao.getSectionsWithCategories(beginLastMonth, endLastMonth)
             .sumOf { it.section.duration ?: 0}
@@ -239,39 +224,8 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
     private inner class XAxisValueFormatter: ValueFormatter() {
 
         override fun getFormattedValue(xValue: Float): String {
-            return ZonedDateTime.now()
-                .plusDays(xValue.toLong())
-                .format(DateTimeFormatter.ofPattern("EEEEE"))
+            return getStartOfDay(xValue.toLong())
+                .format(DateTimeFormatter.ofPattern(DATE_FORMATTER_PATTERN_WEEKDAY_SHORT))
         }
-    }
-
-    // get the Beginning of daysInPastOffset Days in the past
-    private fun getStartOfDay(daysInPastOffset: Long): ZonedDateTime {
-        val day = ZonedDateTime.now()
-            .toLocalDate()
-            .atStartOfDay(ZoneId.systemDefault())  // make sure time is 00:00
-            .plusDays(daysInPastOffset)
-        return day
-    }
-
-    // get the End of daysInPastOffset Days in the past. Half-open: Actually get the Start of the Next day
-    private fun getEndOfDay(daysInPastOffset: Long): ZonedDateTime {
-        return ZonedDateTime.now()
-            .toLocalDate()
-            .atStartOfDay(ZoneId.systemDefault())  // make sure time is 00:00
-            .plusDays(daysInPastOffset + 1)
-    }
-
-    private fun getThemeColor(color: Int): Int {
-        val typedValue = TypedValue()
-        requireActivity().theme.resolveAttribute(color, typedValue, true)
-        return typedValue.data
-    }
-
-    private fun getDateString(epochSecs: Long): String {
-        return ZonedDateTime
-            .ofInstant(Instant.ofEpochSecond(epochSecs), ZoneId.systemDefault())
-            .minusHours(1)  // subtract 1 hour to get the day before (because of half-open approach)
-            .format(DateTimeFormatter.ofPattern("dd.MM."))
     }
 }

@@ -3,7 +3,6 @@ package de.practicetime.practicetime.ui.statistics
 import android.content.res.ColorStateList
 import android.os.Bundle
 import android.util.Log
-import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -34,13 +33,8 @@ import de.practicetime.practicetime.database.entities.GoalDescription
 import de.practicetime.practicetime.database.entities.GoalInstance
 import de.practicetime.practicetime.database.entities.GoalPeriodUnit
 import de.practicetime.practicetime.updateGoals
-import de.practicetime.practicetime.utils.TIME_FORMAT_HUMAN_PRETTY
-import de.practicetime.practicetime.utils.TIME_FORMAT_HUMAN_PRETTY_SHORT
-import de.practicetime.practicetime.utils.getDurationString
+import de.practicetime.practicetime.utils.*
 import kotlinx.coroutines.launch
-import java.time.Instant
-import java.time.ZoneId
-import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import kotlin.math.ceil
 import kotlin.math.max
@@ -151,7 +145,7 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
             position = XAxis.XAxisPosition.BOTTOM
             labelCount = X_AXIS_LABEL_COUNT
             valueFormatter = XAxisValueFormatter()
-            textColor = getThemeColor(R.attr.colorOnSurface)
+            textColor = PracticeTime.ctx.getThemeColor(R.attr.colorOnSurface, this@GoalStatsActivity)
         }
 
         // left axis
@@ -164,7 +158,7 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
         barChart.axisRight.apply {
             axisMinimum = 0f
             setDrawAxisLine(false)
-            textColor = getThemeColor(R.attr.colorOnSurfaceLowerContrast)
+            textColor = PracticeTime.ctx.getThemeColor(R.attr.colorOnSurfaceLowerContrast, this@GoalStatsActivity)
             valueFormatter = YAxisValueFormatter()
             setDrawLimitLinesBehindData(true)
         }
@@ -195,7 +189,7 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
                 setDrawValues(true)
                 iconsOffset = MPPointF(0f, 18f)     // checkmarks should draw inside of bars
                 color = getChartColor()
-                highLightColor = getThemeColor(R.attr.colorOnSurface)
+                highLightColor = PracticeTime.ctx.getThemeColor(R.attr.colorOnSurface, this@GoalStatsActivity)
                 highLightAlpha = 150    // 150 out of 255 (0=fully transparent)
             }
 
@@ -203,7 +197,7 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
             barData.apply {
                 barWidth = 0.4f
                 setValueFormatter(BarChartValueFormatter())
-                setValueTextColor(getThemeColor(R.attr.colorOnSurfaceLowerContrast))
+                setValueTextColor(PracticeTime.ctx.getThemeColor(R.attr.colorOnSurfaceLowerContrast, this@GoalStatsActivity))
                 setValueTextSize(12f)
                 isHighlightEnabled = true
             }
@@ -296,16 +290,17 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
 
         if (goals[selectedGoal].goalDesc.periodUnit != GoalPeriodUnit.MONTH) {
             // Daily and Weekly Goals
-            var formatStrStart = "MMMM d"
-            var formatStrEnd = "d"
-            if (unixTimeToZonedDateTime(tmStart).month != unixTimeToZonedDateTime(tmEnd).month) {
-                formatStrEnd = "MMM d"    // also show month if it is different from startMonth
-                formatStrStart = "MMM d"
+            var formatStrStart = "$DATE_FORMATTER_PATTERN_MONTH_TEXT_FULL $DATE_FORMATTER_PATTERN_DAY_OF_MONTH"
+            var formatStrEnd = DATE_FORMATTER_PATTERN_DAY_OF_MONTH
+
+            if (epochSecondsToDate(tmStart).month != epochSecondsToDate(tmEnd).month) {
+                formatStrEnd = "$DATE_FORMATTER_PATTERN_MONTH_TEXT_ABBREV $DATE_FORMATTER_PATTERN_DAY_OF_MONTH"    // also show month if it is different from startMonth
+                formatStrStart = formatStrEnd
             }
             // START date
-            val start = unixTimeToZonedDateTime(tmStart)
+            val start = epochSecondsToDate(tmStart)
                 .format(DateTimeFormatter.ofPattern(formatStrStart))
-            val end = unixTimeToZonedDateTime(tmEnd)
+            val end = epochSecondsToDate(tmEnd)
                 .format(DateTimeFormatter.ofPattern(formatStrEnd))
 
             // set the textView text as the final string
@@ -313,16 +308,17 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
 
         } else {
             // Monthly goals
-            var formatStrStart = "MMMM"
-            var formatStrEnd = "MMMM y"
-            if (unixTimeToZonedDateTime(tmStart).year != unixTimeToZonedDateTime(tmEnd).year) {
-                formatStrStart = "MMM y"
-                formatStrEnd = "MMM y"
+            var formatStrStart = DATE_FORMATTER_PATTERN_MONTH_TEXT_FULL
+            var formatStrEnd = "$DATE_FORMATTER_PATTERN_MONTH_TEXT_FULL $DATE_FORMATTER_PATTERN_YEAR"
+
+            if (epochSecondsToDate(tmStart).year != epochSecondsToDate(tmEnd).year) {
+                formatStrStart = "$DATE_FORMATTER_PATTERN_MONTH_TEXT_ABBREV $DATE_FORMATTER_PATTERN_YEAR"
+                formatStrEnd = formatStrStart
             }
 
-            val start = unixTimeToZonedDateTime(tmStart)
+            val start = epochSecondsToDate(tmStart)
                 .format(DateTimeFormatter.ofPattern(formatStrStart))
-            val end = unixTimeToZonedDateTime(tmEnd)
+            val end = epochSecondsToDate(tmEnd)
                 .format(DateTimeFormatter.ofPattern(formatStrEnd))
 
             tvRange.text = "$start - $end"
@@ -350,7 +346,7 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
                 val categoryColors = resources.getIntArray(R.array.category_colors).toCollection(mutableListOf())
                 categoryColors[goals[selectedGoal].category!!.colorIndex]
             } else {
-                getThemeColor(R.attr.colorPrimary)
+                PracticeTime.ctx.getThemeColor(R.attr.colorPrimary, this)
             }
     }
 
@@ -462,19 +458,14 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
      * For DateFormatter patterns see: https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatter.html
      */
 
-    private fun unixTimeToZonedDateTime(timestamp: Long): ZonedDateTime {
-        return ZonedDateTime
-            .ofInstant(Instant.ofEpochSecond(timestamp), ZoneId.systemDefault())
-    }
-
     private fun unixTimeToDayOfMonth(timestamp: Long): String {
-        return unixTimeToZonedDateTime(timestamp)
-            .format(DateTimeFormatter.ofPattern("dd"))
+        return epochSecondsToDate(timestamp)
+            .format(DateTimeFormatter.ofPattern(DATE_FORMATTER_PATTERN_DAY_OF_MONTH_PADDED))
     }
 
     private fun unixTimeToMonth(timestamp: Long): String {
-        return unixTimeToZonedDateTime(timestamp)
-            .format(DateTimeFormatter.ofPattern("MMM"))
+        return epochSecondsToDate(timestamp)
+            .format(DateTimeFormatter.ofPattern(DATE_FORMATTER_PATTERN_MONTH_TEXT_ABBREV))
     }
 
     /** Interface helper method for getting goal instances. Returns a valid instance for index >= 0
@@ -497,23 +488,23 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
             when (goals[selectedGoal].goalDesc.periodUnit) {
                 GoalPeriodUnit.DAY -> {
                     // calculate plusDays with the API instead of adding periodInSeconds to respect daylight savings
-                    startTime = unixTimeToZonedDateTime(firstInstance.startTimestamp)
+                    startTime = epochSecondsToDate(firstInstance.startTimestamp)
                         .plusDays((index * goalDesc.periodInPeriodUnits).toLong())  // index is <0
                         .toEpochSecond()
                     // periodInSeconds doesn't change since it is always UTC
 
                 } GoalPeriodUnit.WEEK -> {
-                    startTime = unixTimeToZonedDateTime(firstInstance.startTimestamp)
+                    startTime = epochSecondsToDate(firstInstance.startTimestamp)
                         .plusWeeks((index * goalDesc.periodInPeriodUnits).toLong())  // index is <0
                         .toEpochSecond()
                     // periodInSeconds doesn't change since it is always UTC
 
                 } GoalPeriodUnit.MONTH -> {
-                    startTime = unixTimeToZonedDateTime(firstInstance.startTimestamp)
+                    startTime = epochSecondsToDate(firstInstance.startTimestamp)
                         .plusMonths((index * goalDesc.periodInPeriodUnits).toLong())  // index is <0
                         .toEpochSecond()
 
-                    val endTime = unixTimeToZonedDateTime(firstInstance.startTimestamp)
+                    val endTime = epochSecondsToDate(firstInstance.startTimestamp)
                         .plusMonths(index.toLong() * goalDesc.periodInPeriodUnits + goalDesc.periodInPeriodUnits)
                         .toEpochSecond()
                     // adjust periodInSeconds for month length
@@ -595,7 +586,7 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
                 holder.progressGoal.progressTintList = catColor
             } else {
                 holder.goalTitleTv.text = getString(R.string.goal_name_non_specific)
-                holder.goalRadioButton.buttonTintList = ColorStateList.valueOf(getThemeColor(R.attr.colorPrimary))
+                holder.goalRadioButton.buttonTintList = ColorStateList.valueOf(PracticeTime.ctx.getThemeColor(R.attr.colorPrimary, this@GoalStatsActivity))
                 holder.progressGoal.progressTintList = null
             }
 
@@ -650,12 +641,6 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
         }
 
         override fun getItemCount(): Int = goals.size
-    }
-
-    private fun getThemeColor(color: Int): Int {
-        val typedValue = TypedValue()
-        theme.resolveAttribute(color, typedValue, true)
-        return typedValue.data
     }
 
     private fun log(msg: String) {
