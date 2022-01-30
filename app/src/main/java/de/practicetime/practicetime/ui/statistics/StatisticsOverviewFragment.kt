@@ -67,7 +67,7 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
             position = XAxis.XAxisPosition.BOTTOM
             labelCount = 7
             valueFormatter = XAxisValueFormatter()
-            textColor = PracticeTime.ctx.getThemeColor(R.attr.colorOnSurface, requireActivity())
+            textColor = PracticeTime.getThemeColor(R.attr.colorOnSurface, requireActivity())
         }
 
         lastDaysChart.axisLeft.isEnabled = false
@@ -95,7 +95,7 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
             val dataSetBarChart = BarDataSet(barChartArray, "Label")
             dataSetBarChart.apply {
                 setDrawValues(false)
-                color = PracticeTime.ctx.getThemeColor(R.attr.colorPrimary, requireActivity())
+                color = PracticeTime.getThemeColor(R.attr.colorPrimary, requireActivity())
             }
 
             val barData = BarData(dataSetBarChart)

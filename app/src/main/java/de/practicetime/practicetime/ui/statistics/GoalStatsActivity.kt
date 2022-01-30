@@ -148,7 +148,7 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
             position = XAxis.XAxisPosition.BOTTOM
             labelCount = X_AXIS_LABEL_COUNT
             valueFormatter = XAxisValueFormatter()
-            textColor = PracticeTime.ctx.getThemeColor(R.attr.colorOnSurface, this@GoalStatsActivity)
+            textColor = PracticeTime.getThemeColor(R.attr.colorOnSurface, this@GoalStatsActivity)
         }
 
         // left axis
@@ -161,7 +161,7 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
         barChart.axisRight.apply {
             axisMinimum = 0f
             setDrawAxisLine(false)
-            textColor = PracticeTime.ctx.getThemeColor(R.attr.colorOnSurfaceLowerContrast, this@GoalStatsActivity)
+            textColor = PracticeTime.getThemeColor(R.attr.colorOnSurfaceLowerContrast, this@GoalStatsActivity)
             valueFormatter = YAxisValueFormatter()
             setDrawLimitLinesBehindData(true)
         }
@@ -192,7 +192,7 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
                 setDrawValues(true)
                 iconsOffset = MPPointF(0f, 18f)     // checkmarks should draw inside of bars
                 color = getChartColor()
-                highLightColor = PracticeTime.ctx.getThemeColor(R.attr.colorOnSurface, this@GoalStatsActivity)
+                highLightColor = PracticeTime.getThemeColor(R.attr.colorOnSurface, this@GoalStatsActivity)
                 highLightAlpha = 150    // 150 out of 255 (0=fully transparent)
             }
 
@@ -200,7 +200,7 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
             barData.apply {
                 barWidth = 0.4f
                 setValueFormatter(BarChartValueFormatter())
-                setValueTextColor(PracticeTime.ctx.getThemeColor(R.attr.colorOnSurfaceLowerContrast, this@GoalStatsActivity))
+                setValueTextColor(PracticeTime.getThemeColor(R.attr.colorOnSurfaceLowerContrast, this@GoalStatsActivity))
                 setValueTextSize(12f)
                 isHighlightEnabled = true
             }
@@ -349,7 +349,7 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
                 val categoryColors = resources.getIntArray(R.array.category_colors).toCollection(mutableListOf())
                 categoryColors[goals[selectedGoal].category!!.colorIndex]
             } else {
-                PracticeTime.ctx.getThemeColor(R.attr.colorPrimary, this)
+                PracticeTime.getThemeColor(R.attr.colorPrimary, this)
             }
     }
 
@@ -410,7 +410,7 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
                 val iconDrawable = ContextCompat.getDrawable(this, R.drawable.ic_check_small)!!
                 // tint it like this because iconTintList requires API >=26
                 DrawableCompat.setTint(iconDrawable,
-                    PracticeTime.ctx.getThemeColor(R.attr.colorSurface, this));
+                    PracticeTime.getThemeColor(R.attr.colorSurface, this));
                 barChartArray.add(BarEntry(i.toFloat(), yVal, iconDrawable))
             } else
                 barChartArray.add(BarEntry(i.toFloat(), yVal))
@@ -593,7 +593,7 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
                 holder.progressGoal.progressTintList = catColor
             } else {
                 holder.goalTitleTv.text = getString(R.string.goal_name_non_specific)
-                holder.goalRadioButton.buttonTintList = ColorStateList.valueOf(PracticeTime.ctx.getThemeColor(R.attr.colorPrimary, this@GoalStatsActivity))
+                holder.goalRadioButton.buttonTintList = ColorStateList.valueOf(PracticeTime.getThemeColor(R.attr.colorPrimary, this@GoalStatsActivity))
                 holder.progressGoal.progressTintList = null
             }
 

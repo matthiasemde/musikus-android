@@ -344,7 +344,7 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
         toolbar.menu.findItem(itemToSetIcon).apply {
             val iconDrawable = ContextCompat.getDrawable(requireContext(), R.drawable.ic_check_small)!!
             // tint it like this because iconTintList requires API >=26
-            DrawableCompat.setTint(iconDrawable, PracticeTime.ctx.getThemeColor(R.attr.colorOnSurfaceLowerContrast, requireContext()));
+            DrawableCompat.setTint(iconDrawable, PracticeTime.getThemeColor(R.attr.colorOnSurfaceLowerContrast, requireContext()));
             icon = iconDrawable
         }
     }

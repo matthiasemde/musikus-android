@@ -6,6 +6,6 @@
         android:enabled="true"
         android:title="@string/toggle_chart"
         app:showAsAction="always"
-        app:iconTint="?attr/colorOnBackground"
+        app:iconTint="?attr/colorOnSurfaceLowerContrast"
         android:icon="@drawable/ic_pie_chart"/>
 </menu>

@@ -209,7 +209,7 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
             position = XAxis.XAxisPosition.BOTTOM
             labelCount = activeView.barCount
             valueFormatter = XAxisValueFormatter()
-            textColor = PracticeTime.ctx.getThemeColor(R.attr.colorOnSurface, this@SessionStatsActivity)
+            textColor = PracticeTime.getThemeColor(R.attr.colorOnSurface, this@SessionStatsActivity)
         }
 
         // left axis
@@ -222,7 +222,7 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
         barChart.axisRight.apply {
             axisMinimum = 0f
             setDrawAxisLine(false)
-            textColor = PracticeTime.ctx.getThemeColor(R.attr.colorOnSurfaceLowerContrast, this@SessionStatsActivity)
+            textColor = PracticeTime.getThemeColor(R.attr.colorOnSurfaceLowerContrast, this@SessionStatsActivity)
             valueFormatter = YAxisValueFormatter()
         }
 
@@ -411,7 +411,7 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
                 barData.apply {
                     barWidth = 0.4f
                     setValueFormatter(BarChartValueFormatter())
-                    setValueTextColor(PracticeTime.ctx.getThemeColor(R.attr.colorOnSurfaceLowerContrast, this@SessionStatsActivity))
+                    setValueTextColor(PracticeTime.getThemeColor(R.attr.colorOnSurfaceLowerContrast, this@SessionStatsActivity))
                     setValueTextSize(12f)
                     isHighlightEnabled = true
                 }
