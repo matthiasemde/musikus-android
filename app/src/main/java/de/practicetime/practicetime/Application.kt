@@ -20,6 +20,8 @@ class PracticeTime : Application() {
         lateinit var ctx: PracticeTime
         var serviceIsRunning = false
         var isRecording = false
+        const val PREFERENCES_KEY_FIRSTRUN = "firstrun"
+        const val PREFERENCES_KEY_THEME = "'theme'"
     }
 
     override fun onCreate() {

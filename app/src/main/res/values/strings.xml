@@ -47,6 +47,10 @@
     <string name="goalDialogRepeat">Repeat goal</string>
     <string name="goalDialogRepeatTooltip">Repeat the goal after the time has elapsed. If you want to create a one time goal, disable this option.</string>
     <string name="topToolBarSettings">Settings</string>
+    <string name="topToolBarTheme">Theme</string>
+    <string name="topToolBarThemeAuto">Automatic</string>
+    <string name="topToolBarThemeDark">Dark theme</string>
+    <string name="topToolBarThemeLight">Light theme</string>
     <string name="topToolBarEdit">Edit</string>
     <string name="topToolBarDelete">Delete</string>
     <string name="dialogCancel">Cancel</string>

@@ -6,4 +6,27 @@
         android:enabled="true"
         android:title="@string/topToolBarSettings"
         app:showAsAction="never" />
+
+    <item
+        android:id="@+id/topToolbarThemeSwitch"
+        android:enabled="true"
+        android:title="@string/topToolBarTheme"
+        app:showAsAction="never" >
+
+        <menu>
+            <item
+                android:id="@+id/topToolbarThemeSwitchAuto"
+                android:title="@string/topToolBarThemeAuto" />
+
+            <item
+                android:id="@+id/topToolbarThemeSwitchLight"
+                android:title="@string/topToolBarThemeLight" />
+
+            <item
+                android:id="@+id/topToolbarThemeSwitchDark"
+                android:title="@string/topToolBarThemeDark" />
+
+        </menu>
+
+    </item>
 </menu>

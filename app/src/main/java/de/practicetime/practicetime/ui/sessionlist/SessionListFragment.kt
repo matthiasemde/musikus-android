@@ -8,6 +8,9 @@ import android.util.TypedValue
 import android.view.View
 import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.DrawableCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.ConcatAdapter
@@ -18,7 +21,6 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
 import de.practicetime.practicetime.SessionSummaryAdapter
-import de.practicetime.practicetime.database.entities.Category
 import de.practicetime.practicetime.database.entities.SessionWithSectionsWithCategories
 import de.practicetime.practicetime.ui.activesession.ActiveSessionActivity
 import kotlinx.coroutines.Runnable
@@ -64,8 +66,6 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
 
-        createDatabaseFirstRun()
-
         // create the dialog for deleting sessions
         initDeleteSessionDialog()
 
@@ -88,6 +88,7 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
 
         sessionListToolbar = view.findViewById(R.id.session_list_toolbar)
         sessionListCollapsingToolbarLayout = view.findViewById(R.id.session_list_collapsing_toolbar_layout)
+        resetToolbar()  // initialize the toolbar with all its listeners
     }
 
     private fun initSessionList() {
@@ -212,7 +213,7 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
             sessionListToolbar.apply {
                 // clear the base menu from the toolbar and inflate the new menu
                 menu?.clear()
-                inflateMenu(R.menu.library_toolbar_menu_for_selection)
+                inflateMenu(R.menu.sessions_list_menu_for_selection)
 
                 // set the back button and its click listener
                 setNavigationIcon(R.drawable.ic_nav_back)
@@ -293,12 +294,59 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
 
     // reset the toolbar
     private fun resetToolbar() {
+        val prefs = requireActivity().getPreferences(Context.MODE_PRIVATE)
         sessionListToolbar.apply {
             menu?.clear()
-            inflateMenu(R.menu.library_toolbar_menu_base)
+            inflateMenu(R.menu.sessions_list_menu_base)
             navigationIcon = null
+            setToolbarIcons(sessionListToolbar)
+            setOnMenuItemClickListener {
+                when (it.itemId) {
+                    R.id.topToolbarThemeSwitchAuto -> {
+                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
+                        prefs.edit().putInt(
+                            PracticeTime.PREFERENCES_KEY_THEME,
+                            AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM).apply()
+                    }
+                    R.id.topToolbarThemeSwitchDark -> {
+                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+                        prefs.edit().putInt(
+                            PracticeTime.PREFERENCES_KEY_THEME,
+                            AppCompatDelegate.MODE_NIGHT_YES).apply()
+                    }
+                    R.id.topToolbarThemeSwitchLight -> {
+                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+                        prefs.edit().putInt(
+                            PracticeTime.PREFERENCES_KEY_THEME,
+                            AppCompatDelegate.MODE_NIGHT_NO).apply()
+                    }
+                }
+                setToolbarIcons(sessionListToolbar)
+                return@setOnMenuItemClickListener true
+            }
         }
         sessionListCollapsingToolbarLayout.background = null
+    }
+
+    private fun setToolbarIcons(toolbar: androidx.appcompat.widget.Toolbar) {
+        toolbar.menu.findItem(R.id.topToolbarThemeSwitchAuto).icon = null
+        toolbar.menu.findItem(R.id.topToolbarThemeSwitchDark).icon = null
+        toolbar.menu.findItem(R.id.topToolbarThemeSwitchLight).icon = null
+
+        val itemToSetIcon = when (AppCompatDelegate.getDefaultNightMode()) {
+            AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM, AppCompatDelegate.MODE_NIGHT_UNSPECIFIED ->
+                R.id.topToolbarThemeSwitchAuto
+            AppCompatDelegate.MODE_NIGHT_NO -> R.id.topToolbarThemeSwitchLight
+            AppCompatDelegate.MODE_NIGHT_YES -> R.id.topToolbarThemeSwitchDark
+            else -> R.id.topToolbarThemeSwitchDark
+        }
+
+        toolbar.menu.findItem(itemToSetIcon).apply {
+            val iconDrawable = ContextCompat.getDrawable(requireContext(), R.drawable.ic_check_small)!!
+            // tint it like this because iconTintList requires API >=26
+            DrawableCompat.setTint(iconDrawable, PracticeTime.ctx.getThemeColor(R.attr.colorOnSurfaceLowerContrast, requireContext()));
+            icon = iconDrawable
+        }
     }
 
     // initialize the session delete dialog
@@ -380,33 +428,6 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
         intent.putExtras(pBundle)
         intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
         startActivity(intent)
-    }
-
-    private fun createDatabaseFirstRun() {
-        lifecycleScope.launch {
-            val prefs = requireActivity().getPreferences(Context.MODE_PRIVATE)
-
-            // FIRST RUN routine
-            if (prefs.getBoolean("firstrun", true)) {
-
-                // populate the category table on first run
-                listOf(
-                    Category(name="Die Schöpfung", colorIndex=0),
-                    Category(name="Beethoven Septett", colorIndex=1),
-                    Category(name="Schostakowitsch 9.", colorIndex=2),
-                    Category(name="Trauermarsch c-Moll", colorIndex=3),
-                    Category(name="Adagio", colorIndex=4),
-                    Category(name="Eine kleine Gigue", colorIndex=5),
-                    Category(name="Andantino", colorIndex=6),
-                    Category(name="Klaviersonate", colorIndex=7),
-                    Category(name="Trauermarsch", colorIndex=8),
-                ).forEach {
-                    PracticeTime.dao.insertCategory(it)
-                }
-
-                prefs.edit().putBoolean("firstrun", false).apply()
-            }
-        }
     }
 
     // check if session is running every second to respond the fab design to it
