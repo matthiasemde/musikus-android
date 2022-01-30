@@ -139,7 +139,7 @@
                     android:clipToPadding="false"
                     android:fadeScrollbars="false"
                     android:nestedScrollingEnabled="false"
-                    tools:listitem="@layout/view_statistics_category_list_item"
+                    tools:listitem="@layout/listitem_statisitcs_session"
                     tools:visibility="gone"/>
 
             </LinearLayout>
@@ -159,7 +159,7 @@
             android:layout_weight="1"/>
 
         <include
-            layout="@layout/view_shrug"
+            layout="@layout/layout_shrug"
             android:layout_height="0dp"
             android:layout_width="match_parent"
             android:layout_weight="1"/>

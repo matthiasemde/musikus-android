@@ -49,7 +49,7 @@ class CategoryAdapter(
         return when (viewType) {
             VIEW_TYPE_CATEGORY -> ViewHolder.CategoryViewHolder(
                 inflater.inflate(
-                    R.layout.view_category_item,
+                    R.layout.listitem_category,
                     viewGroup,
                     false
                 ),
@@ -61,7 +61,7 @@ class CategoryAdapter(
             )
             else -> ViewHolder.AddNewCategoryViewHolder(
                 inflater.inflate(
-                    R.layout.view_add_new_category,
+                    R.layout.listitem_add_new_category,
                     viewGroup,
                     false
                 ),

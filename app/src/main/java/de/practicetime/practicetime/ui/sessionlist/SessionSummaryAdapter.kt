@@ -65,14 +65,14 @@ class SessionSummaryAdapter(
         return when (viewType) {
             VIEW_TYPE_HEADER -> ViewHolder.HeaderViewHolder(
                 inflater.inflate(
-                    R.layout.view_session_summary_header,
+                    R.layout.listitem_session_list_header,
                     viewGroup,
                     false
                 )
             )
             else -> ViewHolder.ItemViewHolder(
                 inflater.inflate(
-                    R.layout.view_session_summary,
+                    R.layout.listitem_session_list_summary,
                     viewGroup,
                     false
                 ),
@@ -283,7 +283,7 @@ class SessionSummaryAdapter(
                 override fun onCreateViewHolder(viewGroup: ViewGroup, viewType: Int): ViewHolder {
                     // Create a new view, which defines the UI of the list item
                     val view = LayoutInflater.from(viewGroup.context)
-                        .inflate(R.layout.view_session_summary_section, viewGroup, false)
+                        .inflate(R.layout.listitem_session_list_summary_section, viewGroup, false)
 
                     return ViewHolder(view)
                 }

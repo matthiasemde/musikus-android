@@ -7,7 +7,7 @@
 
     <include
         android:id="@+id/heading_data_1"
-        layout="@layout/view_statistics_overview_heading_data"
+        layout="@layout/layout_statistics_overview_header_data"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:layout_constraintEnd_toStartOf="@+id/heading_data_2"
@@ -16,7 +16,7 @@
 
     <include
         android:id="@+id/heading_data_2"
-        layout="@layout/view_statistics_overview_heading_data"
+        layout="@layout/layout_statistics_overview_header_data"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:layout_constraintEnd_toStartOf="@+id/heading_data_3"
@@ -25,7 +25,7 @@
 
     <include
         android:id="@+id/heading_data_3"
-        layout="@layout/view_statistics_overview_heading_data"
+        layout="@layout/layout_statistics_overview_header_data"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:layout_constraintEnd_toStartOf="@+id/heading_data_4"
@@ -34,7 +34,7 @@
 
     <include
         android:id="@+id/heading_data_4"
-        layout="@layout/view_statistics_overview_heading_data"
+        layout="@layout/layout_statistics_overview_header_data"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:layout_constraintEnd_toEndOf="parent"

@@ -28,7 +28,7 @@ class GoalDialog(
     private val alertDialogBuilder = AlertDialog.Builder(context)
     private val inflater = context.layoutInflater
     private val dialogView = inflater.inflate(
-        R.layout.dialog_view_add_or_edit_goal,
+        R.layout.dialog_add_or_edit_goal,
         null,
     )
 
@@ -280,7 +280,7 @@ class GoalDialog(
             val view: View
             val vh: ItemHolder
             if (convertView == null) {
-                view = inflater.inflate(R.layout.view_goal_spinner_item, parent, false)
+                view = inflater.inflate(R.layout.listitem_goal_dropdown, parent, false)
                 vh = ItemHolder(view)
                 view?.tag = vh
             } else {

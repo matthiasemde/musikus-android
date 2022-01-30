@@ -37,16 +37,16 @@
             android:paddingBottom="16dp">
 
             <include
-                layout="@layout/statistics_overview_header" />
+                layout="@layout/layout_statistics_overview_header" />
 
             <include
-                layout="@layout/view_statistics_overview_last7days_card"
+                layout="@layout/layout_statistics_overview_last7days"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="16dp" />
 
             <include
-                layout="@layout/view_statistics_overview_lastgoals_card"
+                layout="@layout/layout_statistics_overview_lastgoals"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="16dp"

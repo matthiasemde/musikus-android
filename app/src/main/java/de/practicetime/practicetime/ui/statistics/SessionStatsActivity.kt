@@ -864,7 +864,7 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
             // Create a new view, which defines the UI of the list item
             val view = LayoutInflater.from(parent.context)
-                .inflate(R.layout.view_statistics_category_list_item, parent, false)
+                .inflate(R.layout.listitem_statisitcs_session, parent, false)
 
             return ViewHolder(view)
         }

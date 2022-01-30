@@ -47,7 +47,7 @@ class GoalAdapter(
 
     override fun onCreateViewHolder(viewGroup: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(viewGroup.context)
-            .inflate(R.layout.view_goal_item, viewGroup, false)
+            .inflate(R.layout.listitem_goal, viewGroup, false)
         if (viewType == VIEW_TYPE_HEADER) {
             view.layoutParams.height = 0
         }

@@ -13,6 +13,7 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.DrawableCompat
 import androidx.core.widget.NestedScrollView
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -405,9 +406,13 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
                 if(i < 0) 0.001f    // all instances exhausted. Make 0.001f to recognize in the ValueFormatter that it is fake
                 else allInstances[i].progress.toFloat()
 
-            if (i >= 0 && yVal >= allInstances[i].target)
-                barChartArray.add(BarEntry(i.toFloat(), yVal, ContextCompat.getDrawable(this, R.drawable.ic_check_small)))
-            else
+            if (i >= 0 && yVal >= allInstances[i].target) {
+                val iconDrawable = ContextCompat.getDrawable(this, R.drawable.ic_check_small)!!
+                // tint it like this because iconTintList requires API >=26
+                DrawableCompat.setTint(iconDrawable,
+                    PracticeTime.ctx.getThemeColor(R.attr.colorSurface, this));
+                barChartArray.add(BarEntry(i.toFloat(), yVal, iconDrawable))
+            } else
                 barChartArray.add(BarEntry(i.toFloat(), yVal))
         }
 
@@ -572,7 +577,7 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): GoalStatsAdapter.ViewHolder {
             // Create a new view, which defines the UI of the list item
             val view = LayoutInflater.from(parent.context)
-                .inflate(R.layout.view_statistics_goal_list_item, parent, false)
+                .inflate(R.layout.listitem_statistics_goal, parent, false)
 
             return ViewHolder(view)
         }

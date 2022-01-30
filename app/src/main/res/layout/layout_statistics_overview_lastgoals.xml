@@ -95,23 +95,23 @@
 
             <include
                 android:id="@+id/progressbarlayout_1"
-                layout="@layout/view_statistics_overview_lastgoals_progressbarlayout"/>
+                layout="@layout/layout_statistics_overview_lastgoals_circularprogressbar"/>
 
             <include
                 android:id="@+id/progressbarlayout_2"
-                layout="@layout/view_statistics_overview_lastgoals_progressbarlayout"/>
+                layout="@layout/layout_statistics_overview_lastgoals_circularprogressbar"/>
 
             <include
                 android:id="@+id/progressbarlayout_3"
-                layout="@layout/view_statistics_overview_lastgoals_progressbarlayout"/>
+                layout="@layout/layout_statistics_overview_lastgoals_circularprogressbar"/>
 
             <include
                 android:id="@+id/progressbarlayout_4"
-                layout="@layout/view_statistics_overview_lastgoals_progressbarlayout"/>
+                layout="@layout/layout_statistics_overview_lastgoals_circularprogressbar"/>
 
             <include
                 android:id="@+id/progressbarlayout_5"
-                layout="@layout/view_statistics_overview_lastgoals_progressbarlayout"/>
+                layout="@layout/layout_statistics_overview_lastgoals_circularprogressbar"/>
 
 
         </LinearLayout>

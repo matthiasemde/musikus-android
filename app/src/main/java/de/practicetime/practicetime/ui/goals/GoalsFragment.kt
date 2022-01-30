@@ -120,7 +120,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
     private fun initDeleteGoalDialog() {
 
         deleteGoalDialog = requireActivity().let { context ->
-            val view = context.layoutInflater.inflate(R.layout.dialog_view_delete_goal, null)
+            val view = context.layoutInflater.inflate(R.layout.dialog_delete_goal, null)
             val builder = AlertDialog.Builder(context)
 
             val checkBox = view.findViewById<CheckBox>(R.id.deleteGoalDialogCheckBox)

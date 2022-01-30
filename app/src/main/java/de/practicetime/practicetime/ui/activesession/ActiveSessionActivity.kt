@@ -676,7 +676,7 @@ class ActiveSessionActivity : AppCompatActivity() {
     ) : RecyclerView.Adapter<RecordingListAdapter.ViewHolder>() {
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
             val view = LayoutInflater.from(parent.context)
-                .inflate(R.layout.view_recording_item, parent, false)
+                .inflate(R.layout.listitem_recorder, parent, false)
             return ViewHolder(view)
         }
 
@@ -1096,7 +1096,7 @@ class ActiveSessionActivity : AppCompatActivity() {
         override fun onCreateViewHolder(viewGroup: ViewGroup, viewType: Int): ViewHolder {
             // Create a new view, which defines the UI of the list item
             val view = LayoutInflater.from(viewGroup.context)
-                .inflate(R.layout.view_active_session_section, viewGroup, false)
+                .inflate(R.layout.listitem_active_session_section, viewGroup, false)
 
             // don't display the most recent item (=last item in sectionBuffer) because we have a TextView for it
             if (viewType == VIEW_TYPE_HEADER) {

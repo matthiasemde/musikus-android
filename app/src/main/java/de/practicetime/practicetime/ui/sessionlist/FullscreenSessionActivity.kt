@@ -211,7 +211,7 @@ class FullscreenSessionActivity : AppCompatActivity() {
         override fun onCreateViewHolder(viewGroup: ViewGroup, viewType: Int): ViewHolder {
             // Create a new view, which defines the UI of the list item
             val view = LayoutInflater.from(viewGroup.context)
-                .inflate(R.layout.view_fullscreen_session_section, viewGroup, false)
+                .inflate(R.layout.listitem_fullscreen_session_section, viewGroup, false)
 
             return ViewHolder(view)
         }
