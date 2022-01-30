@@ -17,7 +17,6 @@ import androidx.appcompat.widget.AppCompatButton
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import androidx.room.Room
 import com.github.mikephil.charting.animation.Easing
 import com.github.mikephil.charting.charts.BarChart
 import com.github.mikephil.charting.charts.PieChart
@@ -26,9 +25,8 @@ import com.github.mikephil.charting.data.*
 import com.github.mikephil.charting.formatter.ValueFormatter
 import com.github.mikephil.charting.highlight.Highlight
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener
+import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
-import de.practicetime.practicetime.database.PTDao
-import de.practicetime.practicetime.database.PTDatabase
 import de.practicetime.practicetime.database.entities.Category
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -42,7 +40,6 @@ import kotlin.math.roundToInt
 
 class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
 
-    private lateinit var dao: PTDao
     private lateinit var barChart: BarChart
     private lateinit var pieChart: PieChart
     private lateinit var categoryListAdapter: CategoryStatsAdapter
@@ -84,9 +81,6 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
             setDisplayShowHomeEnabled(true)
             title = getString(R.string.session_statistics)
         }
-
-        // get the dao object
-        openDatabase()
 
         findViewById<AppCompatButton>(R.id.btn_days).setOnClickListener {
             activeView = VIEWS.DAYS_VIEW
@@ -150,7 +144,7 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
     /** initialize the checkbox list with the categories */
     private fun initCategoryList() {
         lifecycleScope.launch {
-            dao.getAllCategories().forEach {
+            PracticeTime.dao.getAllCategories().forEach {
                 categories.add(
                     CategoryListElement(
                         it,
@@ -578,7 +572,7 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
 
         for (day in VIEWS.DAYS_VIEW.barCount downTo 1) {
             val floatArrDurBarChart = FloatArray(colorAmount) {0f}
-            val sectionsThisDay = dao.getSectionsWithCategories(
+            val sectionsThisDay = PracticeTime.dao.getSectionsWithCategories(
                 getStartOfDayOfWeek(day.toLong(), daysViewWeekOffset).toEpochSecond(),
                 getEndOfDayOfWeek(day.toLong(), daysViewWeekOffset).toEpochSecond()
             )
@@ -619,7 +613,7 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
 
         for (week in 0 downTo -(VIEWS.WEEKS_VIEW.barCount-1)) {     // last 10 weeks
             val floatArrDurBarChart = FloatArray(colorAmount) {0f}
-            val sectionsThisWeek = dao.getSectionsWithCategories(
+            val sectionsThisWeek = PracticeTime.dao.getSectionsWithCategories(
                 getStartOfWeek(week.toLong() + weeksViewWeekOffset).toEpochSecond(),
                 getEndOfWeek(week.toLong() + weeksViewWeekOffset).toEpochSecond()
             )
@@ -658,7 +652,7 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
         val floatArrDurPieChart = FloatArray(colorAmount) {0f}
         for (month in 0 downTo -(VIEWS.MONTHS_VIEW.barCount-1)) {
             val floatArrDurBarChart = FloatArray(colorAmount) {0f}
-            val sectionsThisMonth = dao.getSectionsWithCategories(
+            val sectionsThisMonth = PracticeTime.dao.getSectionsWithCategories(
                 getStartOfMonth(month.toLong() + monthsViewMonthOffset).toEpochSecond(),
                 getEndOfMonth(month.toLong() + monthsViewMonthOffset).toEpochSecond()
             )
@@ -794,15 +788,6 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
         return ZonedDateTime.now()
             .toLocalDate().dayOfWeek.value
     }
-
-    private fun openDatabase() {
-        val db = Room.databaseBuilder(
-            this,
-            PTDatabase::class.java, "pt-database"
-        ).build()
-        dao = db.ptDao
-    }
-
 
     /**
      * formats x axis value according to our time scaling

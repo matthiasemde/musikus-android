@@ -15,24 +15,20 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import androidx.room.Room
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.android.material.button.MaterialButton
-import de.practicetime.practicetime.ui.MainActivity
-import de.practicetime.practicetime.database.PTDao
-import de.practicetime.practicetime.database.PTDatabase
+import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
 import de.practicetime.practicetime.database.entities.PracticeSection
 import de.practicetime.practicetime.database.entities.SectionWithCategory
 import de.practicetime.practicetime.database.entities.SessionWithSectionsWithCategories
 import de.practicetime.practicetime.shared.EditTimeDialog
+import de.practicetime.practicetime.ui.MainActivity
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 
 class FullscreenSessionActivity : AppCompatActivity() {
-
-    private lateinit var dao: PTDao
 
     private lateinit var ratingBarView: RatingBar
     private lateinit var sectionListView: RecyclerView
@@ -70,8 +66,6 @@ class FullscreenSessionActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_fullscreen_session)
-
-        openDatabase()
 
         initConfirmationDialog()
 
@@ -113,7 +107,7 @@ class FullscreenSessionActivity : AppCompatActivity() {
                         setText(R.string.confirm_changes_dialog_ok)
                         setOnClickListener {
                             lifecycleScope.launch {
-                                dao.updateSession(
+                                PracticeTime.dao.updateSession(
                                     sessionId,
                                     newRating = ratingBarView.rating.toInt(),
                                     newSections = sectionAdapterData,
@@ -151,7 +145,7 @@ class FullscreenSessionActivity : AppCompatActivity() {
         }
 
         lifecycleScope.launch {
-            sessionWithSectionsWithCategories = dao.getSessionWithSectionsWithCategories(id)
+            sessionWithSectionsWithCategories = PracticeTime.dao.getSessionWithSectionsWithCategories(id)
             val (session, sectionsWithCategories) = sessionWithSectionsWithCategories!!
 
             ratingBarView.progress = session.rating
@@ -273,14 +267,6 @@ class FullscreenSessionActivity : AppCompatActivity() {
     /*************************************************************************
      * Utility functions
      *************************************************************************/
-
-    private fun openDatabase() {
-        val db = Room.databaseBuilder(
-            this,
-            PTDatabase::class.java, "pt-database"
-        ).build()
-        dao = db.ptDao
-    }
 
     private fun exitActivity() {
         // go back to MainActivity, make new intent so MainActivity gets reloaded and shows new session

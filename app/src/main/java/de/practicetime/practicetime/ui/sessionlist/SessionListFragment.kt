@@ -13,14 +13,12 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import androidx.room.Room
 import com.google.android.material.appbar.CollapsingToolbarLayout
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
 import de.practicetime.practicetime.SessionSummaryAdapter
 import de.practicetime.practicetime.Singleton
-import de.practicetime.practicetime.database.PTDao
-import de.practicetime.practicetime.database.PTDatabase
 import de.practicetime.practicetime.database.entities.Category
 import de.practicetime.practicetime.database.entities.SessionWithSectionsWithCategories
 import de.practicetime.practicetime.ui.activesession.ActiveSessionActivity
@@ -31,7 +29,6 @@ import java.util.*
 
 class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
 
-    private var dao: PTDao? = null
     private lateinit var fabNewSession: FloatingActionButton
     private lateinit var fabRunningSession: FloatingActionButton
     private var handler: Handler = Handler(Looper.getMainLooper())
@@ -44,12 +41,14 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
     private lateinit var sessionListCollapsingToolbarLayout: CollapsingToolbarLayout
 
     private lateinit var deleteSessionDialog: AlertDialog
+    private lateinit var app: PracticeTime
 
     private val selectedSessions = ArrayList<Pair<Int, SessionSummaryAdapter>>()
 
     // catch the back press for the case where the selection should be reverted
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
         activity?.onBackPressedDispatcher?.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 if(selectedSessions.isNotEmpty()){
@@ -66,7 +65,6 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
 
-        openDatabase()
         createDatabaseFirstRun()
 
         // create the dialog for deleting sessions
@@ -102,7 +100,7 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
 
         lifecycleScope.launch {
             // fetch all sessions from the database
-            dao?.getSessionsWithSectionsWithCategories()!!.also { sessions ->
+            PracticeTime.dao.getSessionsWithSectionsWithCategories()!!.also { sessions ->
                 if (sessions.isEmpty()) {
                     showHint()
                     return@also
@@ -331,13 +329,13 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
                 val (session, sectionsWithCategories) = adapterData[layoutPosition - 1]
                 val sections = sectionsWithCategories.map { s -> s.section }
 
-                val goalProgress = dao!!.computeGoalProgressForSession(
-                    dao!!.getSessionWithSectionsWithCategoriesWithGoals(session.id),
+                val goalProgress = PracticeTime.dao.computeGoalProgressForSession(
+                    PracticeTime.dao.getSessionWithSectionsWithCategoriesWithGoals(session.id),
                     checkArchived = true
                 )
 
                 // get all active goal instances at the time of the session
-                val updatedGoalInstances = dao!!.getGoalInstances(
+                val updatedGoalInstances = PracticeTime.dao.getGoalInstances(
                     descriptionIds = goalProgress.keys.toList(),
                     now = sections.first().timestamp
                 // subtract the progress
@@ -351,7 +349,7 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
                 }
 
                 // update goal instances and delete session in a single transaction
-                dao!!.deleteSession(session.id, updatedGoalInstances)
+                PracticeTime.dao.deleteSession(session.id, updatedGoalInstances)
 
                 // find the session in the session list adapter data and delete it
                 adapterData.removeAt(layoutPosition - 1)
@@ -385,14 +383,6 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
         startActivity(intent)
     }
 
-    private fun openDatabase() {
-        val db = Room.databaseBuilder(
-            requireContext(),
-            PTDatabase::class.java, "pt-database"
-        ).build()
-        dao = db.ptDao
-    }
-
     private fun createDatabaseFirstRun() {
         lifecycleScope.launch {
             val prefs = requireActivity().getPreferences(Context.MODE_PRIVATE)
@@ -412,7 +402,7 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
                     Category(name="Klaviersonate", colorIndex=7),
                     Category(name="Trauermarsch", colorIndex=8),
                 ).forEach {
-                    dao?.insertCategory(it)
+                    PracticeTime.dao.insertCategory(it)
                 }
 
                 prefs.edit().putBoolean("firstrun", false).apply()

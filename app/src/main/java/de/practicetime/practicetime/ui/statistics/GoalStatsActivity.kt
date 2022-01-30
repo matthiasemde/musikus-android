@@ -15,7 +15,6 @@ import androidx.core.widget.NestedScrollView
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import androidx.room.Room
 import com.github.mikephil.charting.animation.Easing
 import com.github.mikephil.charting.charts.BarChart
 import com.github.mikephil.charting.components.LimitLine
@@ -28,9 +27,8 @@ import com.github.mikephil.charting.formatter.ValueFormatter
 import com.github.mikephil.charting.highlight.Highlight
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener
 import com.github.mikephil.charting.utils.MPPointF
+import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
-import de.practicetime.practicetime.database.PTDao
-import de.practicetime.practicetime.database.PTDatabase
 import de.practicetime.practicetime.database.entities.Category
 import de.practicetime.practicetime.database.entities.GoalDescription
 import de.practicetime.practicetime.database.entities.GoalInstance
@@ -48,7 +46,6 @@ private const val X_AXIS_LABEL_COUNT = 5
 
 class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
 
-    private lateinit var dao: PTDao
     private lateinit var barChart: BarChart
     private lateinit var goalListAdapter: GoalStatsAdapter
 
@@ -80,9 +77,6 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
             title = getString(R.string.goal_statistics)
         }
 
-        // get the dao object
-        openDatabase()
-
         findViewById<ImageButton>(R.id.btn_rwnd).setOnClickListener {
             seekPast()
         }
@@ -91,7 +85,7 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
         }
 
         lifecycleScope.launch {
-            updateGoals(dao)    // update the goalInstances if they are outdated
+            updateGoals(PracticeTime.dao)    // update the goalInstances if they are outdated
             initGoalsList()
             // if no goals, do nothing. Should never happen normally because you
             // shouldn't be able to enter activity with zero goals
@@ -114,10 +108,10 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
 
     /** get the goals from the database */
     private suspend fun initGoalsList() {
-        dao.getGoalDescriptionsWithCategories().forEach { (desc, cat) ->
+        PracticeTime.dao.getGoalDescriptionsWithCategories().forEach { (desc, cat) ->
             goals.add(
                 GoalStatsActivity.GoalListElement(
-                    goalInstances = dao.getGoalInstances(desc.id, from = 0L),
+                    goalInstances = PracticeTime.dao.getGoalInstances(desc.id, from = 0L),
                     goalDesc = desc,
                     category = cat.firstOrNull()
                 )
@@ -418,15 +412,6 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
 
         return barChartArray
     }
-
-    private fun openDatabase() {
-        val db = Room.databaseBuilder(
-            this,
-            PTDatabase::class.java, "pt-database"
-        ).build()
-        dao = db.ptDao
-    }
-
 
     /**
      * formats x axis value according to our time scaling

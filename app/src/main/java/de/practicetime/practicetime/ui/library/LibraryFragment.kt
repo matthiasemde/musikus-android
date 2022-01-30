@@ -15,19 +15,14 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import androidx.room.Room
 import com.google.android.material.appbar.CollapsingToolbarLayout
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
-import de.practicetime.practicetime.database.PTDao
-import de.practicetime.practicetime.database.PTDatabase
+import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
 import de.practicetime.practicetime.Singleton
 import de.practicetime.practicetime.database.entities.Category
 import kotlinx.coroutines.launch
-
-
-private var dao: PTDao? = null
 
 class LibraryFragment : Fragment(R.layout.fragment_library) {
 
@@ -46,6 +41,7 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
     // catch the back press for the case where the selection should be reverted
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
         activity?.onBackPressedDispatcher?.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 if(selectedCategories.isNotEmpty()){
@@ -59,7 +55,6 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        openDatabase()
 
         initCategoryList()
 
@@ -92,7 +87,7 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
 
         // load all active categories from the database and notify the adapter
         lifecycleScope.launch {
-            dao?.getActiveCategories()?.let {
+            PracticeTime.dao.getActiveCategories()?.let {
                 activeCategories.addAll(it.reversed())
                 categoryAdapter?.notifyItemRangeInserted(0, it.size)
             }
@@ -229,10 +224,10 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
     // the handler for creating new categories
     private fun addCategoryHandler(newCategory: Category) {
         lifecycleScope.launch {
-            val newCategoryId = dao?.insertCategory(newCategory)?.toInt()
+            val newCategoryId = PracticeTime.dao.insertCategory(newCategory)?.toInt()
             if(newCategoryId != null) {
                 // we need to fetch the newly created category to get the correct id
-                dao?.getCategory(newCategoryId)?.let { activeCategories.add(0, it) }
+                PracticeTime.dao.getCategory(newCategoryId)?.let { activeCategories.add(0, it) }
                 categoryAdapter?.notifyItemInserted(0)
             }
             if(activeCategories.isNotEmpty()) hideHint()
@@ -242,7 +237,7 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
     // the handler for editing categories
     private fun editCategoryHandler(category: Category) {
         lifecycleScope.launch {
-            dao?.insertCategory(category)
+            PracticeTime.dao.insertCategory(category)
             activeCategories.indexOfFirst { c -> c.id == category.id }.also { i ->
                 assert(i != -1)
                 activeCategories[i] = category
@@ -257,7 +252,7 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
         var failedDeleteFlag = false
         lifecycleScope.launch {
             selectedCategories.sortedByDescending { it }.forEach { index ->
-                if(dao?.deleteCategory(activeCategories[index].id) == true) {
+                if(PracticeTime.dao.deleteCategory(activeCategories[index].id) == true) {
                     activeCategories.removeAt(index)
                     categoryAdapter?.notifyItemRemoved(index)
                 } else {
@@ -298,13 +293,5 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
             findViewById<TextView>(R.id.libraryHint).visibility = View.GONE
             findViewById<RecyclerView>(R.id.libraryCategoryList).visibility = View.VISIBLE
         }
-    }
-
-    private fun openDatabase() {
-        val db = Room.databaseBuilder(
-            requireContext(),
-            PTDatabase::class.java, "pt-database"
-        ).build()
-        dao = db.ptDao
     }
 }

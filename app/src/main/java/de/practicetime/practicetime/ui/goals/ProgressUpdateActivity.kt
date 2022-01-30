@@ -11,11 +11,9 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import androidx.room.Room
 import com.google.android.material.button.MaterialButton
+import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
-import de.practicetime.practicetime.database.PTDao
-import de.practicetime.practicetime.database.PTDatabase
 import de.practicetime.practicetime.database.entities.GoalInstanceWithDescriptionWithCategories
 import de.practicetime.practicetime.ui.MainActivity
 import kotlinx.coroutines.delay
@@ -25,7 +23,6 @@ import kotlin.math.ceil
 const val PROGRESS_UPDATED = 1337
 
 class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_update) {
-    private lateinit var dao: PTDao
 
     private val progressAdapterData =
         ArrayList<GoalInstanceWithDescriptionWithCategories>()
@@ -43,8 +40,6 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        openDatabase()
 
         // prepare the skip and continue button
         continueButton =  findViewById(R.id.progressUpdateLeave)
@@ -87,11 +82,11 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
 
     private fun parseSession(sessionId: Int) {
         lifecycleScope.launch {
-            val latestSession = dao.getSessionWithSectionsWithCategoriesWithGoals(sessionId)
-            val goalProgress = dao.computeGoalProgressForSession(latestSession)
+            val latestSession = PracticeTime.dao.getSessionWithSectionsWithCategoriesWithGoals(sessionId)
+            val goalProgress = PracticeTime.dao.computeGoalProgressForSession(latestSession)
 
             // get all active goal instances at the time of the session
-            dao.getGoalInstancesWithDescriptionsWithCategories(
+            PracticeTime.dao.getGoalInstancesWithDescriptionsWithCategories(
                 descriptionIds = goalProgress.keys.toList(),
                 checkArchived = false,
                 now = latestSession.sections.first().section.timestamp
@@ -100,7 +95,7 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
                 goalProgress[d.description.id].also { progress ->
                     if (progress != null && progress > 0) {
                         instance.progress += progress
-                        dao.updateGoalInstance(instance)
+                        PracticeTime.dao.updateGoalInstance(instance)
 
                         // undo the progress locally after updating database for the animation to work
                         instance.progress -= progress
@@ -200,14 +195,6 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
     /*************************************************************************
      * Utility functions
      *************************************************************************/
-
-    private fun openDatabase() {
-        val db = Room.databaseBuilder(
-            this,
-            PTDatabase::class.java, "pt-database"
-        ).build()
-        dao = db.ptDao
-    }
 
     private fun exitActivity() {
         // go back to MainActivity, make new intent so MainActivity gets reloaded and shows new session

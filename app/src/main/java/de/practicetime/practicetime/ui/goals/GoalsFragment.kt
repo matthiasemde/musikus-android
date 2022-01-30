@@ -16,19 +16,16 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import androidx.room.Room
 import com.google.android.material.appbar.CollapsingToolbarLayout
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
-import de.practicetime.practicetime.database.PTDao
-import de.practicetime.practicetime.database.PTDatabase
 import de.practicetime.practicetime.database.entities.GoalDescriptionWithCategories
 import de.practicetime.practicetime.database.entities.GoalInstanceWithDescriptionWithCategories
 import de.practicetime.practicetime.updateGoals
 import kotlinx.coroutines.launch
 import java.util.*
 
-private var dao: PTDao? = null
 
 class GoalsFragment : Fragment(R.layout.fragment_goals) {
 
@@ -48,6 +45,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
     // catch the back press for the case where the selection should be reverted
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         activity?.onBackPressedDispatcher?.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 if(selectedGoals.isNotEmpty()){
@@ -61,16 +59,15 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        openDatabase()
 
         lifecycleScope.launch {
             // trigger update routine and set adapter (initGoalList()) when it is ready
-            updateGoals(dao!!)
+            updateGoals(PracticeTime.dao)
             initGoalList()
             // create a new goal dialog for adding new goals
             addGoalDialog = GoalDialog(
                 requireActivity(),
-                dao?.getActiveCategories()?: listOf(),
+                PracticeTime.dao.getActiveCategories()?: listOf(),
                 ::addGoalHandler
             )
         }
@@ -111,7 +108,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
 
         // load all active goals from the database and notify the adapter
         lifecycleScope.launch {
-            dao?.getGoalInstancesWithDescriptionsWithCategories()?.let {
+            PracticeTime.dao.getGoalInstancesWithDescriptionsWithCategories()?.let {
                 goalAdapterData.addAll(it)
                 goalAdapter?.notifyItemRangeInserted(0, it.size)
             }
@@ -247,28 +244,28 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
         firstTarget: Int,
     ) {
         lifecycleScope.launch {
-            val newGoalDescriptionId = dao?.insertGoalDescriptionWithCategories(
+            val newGoalDescriptionId = PracticeTime.dao.insertGoalDescriptionWithCategories(
                 newGoalDescriptionWithCategories
             )
             if(newGoalDescriptionId != null) {
                 // we need to fetch the newly created goal to get the correct id
-                dao?.getGoalWithCategories(newGoalDescriptionId)?.let { d ->
+                PracticeTime.dao.getGoalWithCategories(newGoalDescriptionId)?.let { d ->
                     // and create the first instance of the newly created goal description
-                    val newGoalInstanceId = dao?.insertGoalInstance(
+                    val newGoalInstanceId = PracticeTime.dao.insertGoalInstance(
                         d.description.createInstance(Calendar.getInstance(), firstTarget)
                     )?.toInt()
                     if(newGoalInstanceId != null) {
-                        dao?.getGoalInstance(newGoalInstanceId)?.let { instance ->
-                            dao?.getSessionIds(instance.startTimestamp, instance.startTimestamp + instance.periodInSeconds)
+                        PracticeTime.dao.getGoalInstance(newGoalInstanceId)?.let { instance ->
+                            PracticeTime.dao.getSessionIds(instance.startTimestamp, instance.startTimestamp + instance.periodInSeconds)
                                 ?.filter { s -> s.sections.first().timestamp > instance.startTimestamp}?.forEach { s ->
-                                    dao?.computeGoalProgressForSession(
-                                        dao!!.getSessionWithSectionsWithCategoriesWithGoals(s.session.id)
+                                    PracticeTime.dao.computeGoalProgressForSession(
+                                        PracticeTime.dao.getSessionWithSectionsWithCategoriesWithGoals(s.session.id)
                                     ).also { progress ->
                                         instance.progress += progress?.get(d.description.id) ?: 0
                                     }
                                 }
 
-                            dao?.updateGoalInstance(instance)
+                            PracticeTime.dao.updateGoalInstance(instance)
 
                             goalAdapterData.add(
                                 GoalInstanceWithDescriptionWithCategories(
@@ -293,7 +290,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
         newTarget: Int,
     ) {
         lifecycleScope.launch {
-            dao?.updateGoalTarget(newGoalDescriptionWithCategories.description.id, newTarget)
+            PracticeTime.dao.updateGoalTarget(newGoalDescriptionWithCategories.description.id, newTarget)
             goalAdapterData.indexOfFirst {
                 it.description.description.id == newGoalDescriptionWithCategories.description.id
             }.also { i ->
@@ -310,7 +307,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
             goalAdapterData[it].description.description.id
         }
         lifecycleScope.launch {
-            dao?.archiveGoals(goalDescriptionIds)
+            PracticeTime.dao.archiveGoals(goalDescriptionIds)
         }
         goalDescriptionIds.forEach { goalDescriptionId ->
             goalAdapterData.indexOfFirst{ (_, d) ->
@@ -335,7 +332,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
             goalAdapterData[it].description.description.id
         }
         lifecycleScope.launch {
-            dao?.deleteGoals(goalDescriptionIds)
+            PracticeTime.dao.deleteGoals(goalDescriptionIds)
         }
         goalDescriptionIds.forEach { goalDescriptionId ->
             goalAdapterData.indexOfFirst{ (_, d) ->
@@ -366,13 +363,5 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
             findViewById<TextView>(R.id.goalsHint).visibility = View.GONE
             findViewById<RecyclerView>(R.id.goalList).visibility = View.VISIBLE
         }
-    }
-
-    private fun openDatabase() {
-        val db = Room.databaseBuilder(
-            requireContext(),
-            PTDatabase::class.java, "pt-database"
-        ).build()
-        dao = db.ptDao
     }
 }

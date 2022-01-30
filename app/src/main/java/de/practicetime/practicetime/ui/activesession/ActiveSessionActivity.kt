@@ -24,15 +24,13 @@ import androidx.core.widget.NestedScrollView
 import androidx.lifecycle.lifecycleScope
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.recyclerview.widget.*
-import androidx.room.Room
 import androidx.transition.Fade
 import androidx.transition.TransitionManager
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.snackbar.Snackbar
+import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
-import de.practicetime.practicetime.database.PTDao
-import de.practicetime.practicetime.database.PTDatabase
 import de.practicetime.practicetime.database.entities.Category
 import de.practicetime.practicetime.database.entities.PracticeSection
 import de.practicetime.practicetime.database.entities.PracticeSession
@@ -52,8 +50,6 @@ import kotlin.math.round
 
 
 class ActiveSessionActivity : AppCompatActivity() {
-
-    private var dao: PTDao? = null
 
     private var activeCategories = ArrayList<Category>()
 
@@ -121,8 +117,6 @@ class ActiveSessionActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_active_session)
 
-        openDatabase()
-
         practiceTimer()
 
         // initialize adapter and recyclerView for showing category buttons from database
@@ -188,7 +182,7 @@ class ActiveSessionActivity : AppCompatActivity() {
 
         // load all active categories from the database and notify the adapter
         lifecycleScope.launch {
-            dao?.getActiveCategories()?.let { activeCategories.addAll(it.reversed())
+            PracticeTime.dao.getActiveCategories()?.let { activeCategories.addAll(it.reversed())
                 categoryAdapter.notifyItemRangeInserted(0, it.size)
             }
             categoryList.apply {
@@ -202,10 +196,10 @@ class ActiveSessionActivity : AppCompatActivity() {
         // the handler for creating new categories
         fun addCategoryHandler(newCategory: Category) {
             lifecycleScope.launch {
-                val newCategoryId = dao?.insertCategory(newCategory)?.toInt()
+                val newCategoryId = PracticeTime.dao.insertCategory(newCategory)?.toInt()
                 if(newCategoryId != null) {
                     // we need to fetch the newly created category to get the correct id
-                    dao?.getCategory(newCategoryId)?.let { activeCategories.add(0, it) }
+                    PracticeTime.dao.getCategory(newCategoryId)?.let { activeCategories.add(0, it) }
                     categoryAdapter.notifyItemInserted(0)
                     categoryList.scrollToPosition(0)
                     adjustSpanCountCatList()
@@ -735,7 +729,7 @@ class ActiveSessionActivity : AppCompatActivity() {
             setPauseStopBtnVisibility(true)
 
             // when the session start, also update the goals
-            lifecycleScope.launch { updateGoals(dao!!) }
+            lifecycleScope.launch { updateGoals(PracticeTime.dao) }
         } else if (mService.sectionBuffer.last().let {         // when session is running, don't allow starting if...
             (categoryId == it.first.category_id) ||           // ... in the same category
             (it.first.duration ?: 0 - it.second < 1)           // ... section running for less than 1sec
@@ -870,7 +864,7 @@ class ActiveSessionActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             // create a new session row and save its id
-            val sessionId = dao?.insertSession(newSession)!!.toInt()
+            val sessionId = PracticeTime.dao.insertSession(newSession)!!.toInt()
 
             // traverse all sections for post-processing before writing into db
             for (section in mService.sectionBuffer) {
@@ -879,7 +873,7 @@ class ActiveSessionActivity : AppCompatActivity() {
                 // update section durations to exclude break durations
                 section.first.duration = section.first.duration?.minus(section.second)
                 // and insert them into the database
-                dao?.insertSection(section.first)
+                PracticeTime.dao.insertSection(section.first)
             }
 
             // reset section buffer and session status
@@ -1011,14 +1005,6 @@ class ActiveSessionActivity : AppCompatActivity() {
             }
             builder.create()
         }
-    }
-
-    private fun openDatabase() {
-        val db = Room.databaseBuilder(
-            this,
-            PTDatabase::class.java, "pt-database"
-        ).build()
-        dao = db.ptDao
     }
 
     /**
