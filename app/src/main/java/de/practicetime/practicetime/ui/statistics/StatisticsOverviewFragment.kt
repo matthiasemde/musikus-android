@@ -148,35 +148,46 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
                 val check = ll.findViewById<ImageView>(R.id.stats_ov_card_lastgoals_progressbarlayout_iv)
                 val date = ll.findViewById<TextView>(R.id.stats_ov_card_lastgoals_progressbarlayout_tv_date)
 
-                val gi = lastGoals[i].instance
-//                Log.d("TAG", "Goal $i: id=${gi.id} progress=${gi.progress}, target=${gi.target}")
+                if (i < lastGoals.size) {
+                    val gi = lastGoals[i].instance
 
-                pBar.progress = min(100, (gi.progress.toFloat() / gi.target.toFloat() * 100).toInt())
-                date.text = epochSecondsToDate(gi.startTimestamp + gi.periodInSeconds)
-                    .minusHours(1)  // subtract 1 hour to get the day before (because of half-open approach)
-                    .format(DateTimeFormatter.ofPattern(DATE_FORMATTER_PATTERN_DAY_AND_MONTH))
+                    pBar.progress =
+                        min(100, (gi.progress.toFloat() / gi.target.toFloat() * 100).toInt())
+                    date.text = epochSecondsToDate(gi.startTimestamp + gi.periodInSeconds)
+                        .minusHours(1)  // subtract 1 hour to get the day before (because of half-open approach)
+                        .format(DateTimeFormatter.ofPattern(DATE_FORMATTER_PATTERN_DAY_AND_MONTH))
 
-                if (pBar.progress == 100) {
-                    check.visibility = View.VISIBLE
-                    achievedGoalsCount++
-                }
+                    if (pBar.progress == 100) {
+                        check.visibility = View.VISIBLE
+                        achievedGoalsCount++
+                    }
 
-                // change color according to category
-                val gd = lastGoals[i].description
-                if (gd.type == GoalType.CATEGORY_SPECIFIC) {
-                    // find out category
-                    val catId = PracticeTime.dao.getGoalDescriptionCategoryCrossRefsWhereDescriptionId(gd.id).first().categoryId
-                    val cat = PracticeTime.dao.getCategory(catId)
-                    val categoryColors =  requireContext().resources.getIntArray(R.array.category_colors)
-                    val color = ColorStateList.valueOf(categoryColors[cat.colorIndex])
+                    // change color according to category
+                    val gd = lastGoals[i].description
+                    if (gd.type == GoalType.CATEGORY_SPECIFIC) {
+                        // find out category
+                        val catId =
+                            PracticeTime.dao.getGoalDescriptionCategoryCrossRefsWhereDescriptionId(
+                                gd.id).first().categoryId
+                        val cat = PracticeTime.dao.getCategory(catId)
+                        val categoryColors =
+                            requireContext().resources.getIntArray(R.array.category_colors)
+                        val color = ColorStateList.valueOf(categoryColors[cat.colorIndex])
 
-                    pBar.progressTintList = color
-                    check.imageTintList = color
+                        pBar.progressTintList = color
+                        check.imageTintList = color
+                    }
+                } else {
+                    // not enough goals, hide the elements
+                    pBar.visibility = View.INVISIBLE
+                    check.visibility = View.INVISIBLE
+                    date.visibility = View.INVISIBLE
                 }
             }
 
             requireView().findViewById<TextView>(R.id.stats_ov_card_lastgoals_tv_achieved).text =
-                "$achievedGoalsCount/5"
+                "$achievedGoalsCount/${lastGoals.size}"
+
         }
 
     }
