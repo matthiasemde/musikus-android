@@ -11,6 +11,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import de.practicetime.practicetime.BuildConfig
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
 import de.practicetime.practicetime.database.entities.Category
@@ -56,7 +57,8 @@ class MainActivity : AppCompatActivity() {
                     Category(name="Klaviersonate", colorIndex=7),
                     Category(name="Trauermarsch", colorIndex=8),
                 ).forEach {
-                    PracticeTime.dao.insertCategory(it)
+                    if (BuildConfig.DEBUG)
+                        PracticeTime.dao.insertCategory(it)
                 }
 
                 prefs.edit().putBoolean(PracticeTime.PREFERENCES_KEY_FIRSTRUN, false).apply()
