@@ -26,10 +26,10 @@ class RecorderService : Service() {
         var recording = false
         var recordingUri: Uri? = null
         var recordingName: String? = null
+        private const val CHANNEL_ID = "PT_Recording_Channel_ID"
+        private const val NOTIFICATION_ID = 69
     }
 
-    private val CHANNEL_ID = "PT_Recording_Channel_ID"
-    private val NOTIFICATION_ID = 69
 
     private var recordingStartTime: Long? = null
     private val recordingTimeHandler = Handler(Looper.getMainLooper())

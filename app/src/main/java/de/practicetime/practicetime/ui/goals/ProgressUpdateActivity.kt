@@ -273,7 +273,7 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
                 // multiply by 60 to grantee at least 60 fps
                 progressBar.max *= 60
                 val animator = ProgressBarAnimation(
-                    newHolder as GoalAdapter.ViewHolder,
+                    newHolder,
                     preInfo.progress * 60,
                     (progressBar.progress * 60).let { if (it < progressBar.max) it else progressBar.max}
                 )

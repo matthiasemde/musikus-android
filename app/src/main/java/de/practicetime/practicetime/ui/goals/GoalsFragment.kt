@@ -67,7 +67,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
             // create a new goal dialog for adding new goals
             addGoalDialog = GoalDialog(
                 requireActivity(),
-                PracticeTime.dao.getActiveCategories()?: listOf(),
+                PracticeTime.dao.getActiveCategories(),
                 ::addGoalHandler
             )
         }
@@ -108,7 +108,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
 
         // load all active goals from the database and notify the adapter
         lifecycleScope.launch {
-            PracticeTime.dao.getGoalInstancesWithDescriptionsWithCategories()?.let {
+            PracticeTime.dao.getGoalInstancesWithDescriptionsWithCategories().let {
                 goalAdapterData.addAll(it)
                 goalAdapter?.notifyItemRangeInserted(0, it.size)
             }
@@ -247,37 +247,32 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
             val newGoalDescriptionId = PracticeTime.dao.insertGoalDescriptionWithCategories(
                 newGoalDescriptionWithCategories
             )
-            if(newGoalDescriptionId != null) {
-                // we need to fetch the newly created goal to get the correct id
-                PracticeTime.dao.getGoalWithCategories(newGoalDescriptionId)?.let { d ->
-                    // and create the first instance of the newly created goal description
-                    val newGoalInstanceId = PracticeTime.dao.insertGoalInstance(
-                        d.description.createInstance(Calendar.getInstance(), firstTarget)
-                    )?.toInt()
-                    if(newGoalInstanceId != null) {
-                        PracticeTime.dao.getGoalInstance(newGoalInstanceId)?.let { instance ->
-                            PracticeTime.dao.getSessionIds(instance.startTimestamp, instance.startTimestamp + instance.periodInSeconds)
-                                ?.filter { s -> s.sections.first().timestamp > instance.startTimestamp}?.forEach { s ->
-                                    PracticeTime.dao.computeGoalProgressForSession(
-                                        PracticeTime.dao.getSessionWithSectionsWithCategoriesWithGoals(s.session.id)
-                                    ).also { progress ->
-                                        instance.progress += progress?.get(d.description.id) ?: 0
-                                    }
-                                }
-
-                            PracticeTime.dao.updateGoalInstance(instance)
-
-                            goalAdapterData.add(
-                                GoalInstanceWithDescriptionWithCategories(
-                                    instance = instance,
-                                    description = d,
-                                )
-                            )
-                            goalAdapter?.notifyItemInserted(
-                                goalAdapterData.size
-                            )
+            PracticeTime.dao.getGoalWithCategories(newGoalDescriptionId).let { d ->
+                // and create the first instance of the newly created goal description
+                val newGoalInstanceId = PracticeTime.dao.insertGoalInstance(
+                    d.description.createInstance(Calendar.getInstance(), firstTarget)
+                ).toInt()
+                PracticeTime.dao.getGoalInstance(newGoalInstanceId).let { instance ->
+                    PracticeTime.dao.getSessionIds(instance.startTimestamp, instance.startTimestamp + instance.periodInSeconds)
+                        .filter { s -> s.sections.first().timestamp > instance.startTimestamp}.forEach { s ->
+                            PracticeTime.dao.computeGoalProgressForSession(
+                                PracticeTime.dao.getSessionWithSectionsWithCategoriesWithGoals(s.session.id)
+                            ).also { progress ->
+                                instance.progress += progress.get(d.description.id) ?: 0
+                            }
                         }
-                    }
+
+                    PracticeTime.dao.updateGoalInstance(instance)
+
+                    goalAdapterData.add(
+                        GoalInstanceWithDescriptionWithCategories(
+                            instance = instance,
+                            description = d,
+                        )
+                    )
+                    goalAdapter?.notifyItemInserted(
+                        goalAdapterData.size
+                    )
                 }
             }
             if (goalAdapterData.isNotEmpty()) hideHint()

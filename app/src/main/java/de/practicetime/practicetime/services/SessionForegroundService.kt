@@ -163,7 +163,7 @@ class SessionForegroundService : Service() {
         }
     }
 
-    override fun onBind(intent: Intent): IBinder? {
+    override fun onBind(intent: Intent): IBinder {
         // A client is binding to the service with bindService()
 //        Log.d("Service", "onBind()")
         return binder

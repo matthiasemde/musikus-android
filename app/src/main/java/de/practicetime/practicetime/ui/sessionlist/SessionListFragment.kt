@@ -42,7 +42,6 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
     private lateinit var sessionListCollapsingToolbarLayout: CollapsingToolbarLayout
 
     private lateinit var deleteSessionDialog: AlertDialog
-    private lateinit var app: PracticeTime
 
     private val selectedSessions = ArrayList<Pair<Int, SessionSummaryAdapter>>()
 
@@ -100,7 +99,7 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
 
         lifecycleScope.launch {
             // fetch all sessions from the database
-            PracticeTime.dao.getSessionsWithSectionsWithCategories()!!.also { sessions ->
+            PracticeTime.dao.getSessionsWithSectionsWithCategories().also { sessions ->
                 if (sessions.isEmpty()) {
                     showHint()
                     return@also
@@ -344,7 +343,7 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
         toolbar.menu.findItem(itemToSetIcon).apply {
             val iconDrawable = ContextCompat.getDrawable(requireContext(), R.drawable.ic_check_small)!!
             // tint it like this because iconTintList requires API >=26
-            DrawableCompat.setTint(iconDrawable, PracticeTime.getThemeColor(R.attr.colorOnSurfaceLowerContrast, requireContext()));
+            DrawableCompat.setTint(iconDrawable, PracticeTime.getThemeColor(R.attr.colorOnSurfaceLowerContrast, requireContext()))
             icon = iconDrawable
         }
     }

@@ -96,6 +96,7 @@ class SessionSummaryAdapter(
                 isExpanded,
                 onHeaderClickListener,
             )
+            else -> {}
         }
     }
 
@@ -312,7 +313,7 @@ class SessionSummaryAdapter(
             }
         }
 
-        class HeaderViewHolder(private val view: View) : ViewHolder(view) {
+        class HeaderViewHolder(view: View) : ViewHolder(view) {
             private val sessionHeaderMonth: TextView = view.findViewById(R.id.sessionHeaderMonth)
             // bind a new section header with the timestamp of the first session (in seconds)
             fun bind(
@@ -320,6 +321,7 @@ class SessionSummaryAdapter(
                 expanded: Boolean,
                 onClickListener: View.OnClickListener,
             ) {
+                // TODO move to TimeUtils
                 SimpleDateFormat("MMMM").format(Date(timestamp * 1000L)).also {
                     sessionHeaderMonth.text = it
                 }

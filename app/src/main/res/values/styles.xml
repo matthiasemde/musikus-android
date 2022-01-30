@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
 
     <style name="ToolbarColoredIcons" parent="Theme.PracticeTime">
         <item name="android:textColorSecondary">?attr/colorOnBackground</item>

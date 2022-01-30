@@ -17,7 +17,6 @@ class PracticeTime : Application() {
     companion object {
         lateinit var dao: PTDao         // the central static dao object of the application
         var serviceIsRunning = false
-        var isRecording = false
         const val PREFERENCES_KEY_FIRSTRUN = "firstrun"
         const val PREFERENCES_KEY_THEME = "'theme'"
 

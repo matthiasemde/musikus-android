@@ -1,4 +1,4 @@
-package de.practicetime.practicetime.database.entities;
+package de.practicetime.practicetime.database.entities
 
 import androidx.room.Entity
 

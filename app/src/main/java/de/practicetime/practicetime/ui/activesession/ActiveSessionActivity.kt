@@ -164,7 +164,7 @@ class ActiveSessionActivity : AppCompatActivity() {
 
         val categoryList = findViewById<RecyclerView>(R.id.categoryList)
 
-        var rowNums = 3
+        val rowNums = 3
 
         categoryList.apply {
             layoutManager = GridLayoutManager(
@@ -183,7 +183,7 @@ class ActiveSessionActivity : AppCompatActivity() {
 
         // load all active categories from the database and notify the adapter
         lifecycleScope.launch {
-            PracticeTime.dao.getActiveCategories()?.let { activeCategories.addAll(it.reversed())
+            PracticeTime.dao.getActiveCategories().let { activeCategories.addAll(it.reversed())
                 categoryAdapter.notifyItemRangeInserted(0, it.size)
             }
             categoryList.apply {
@@ -197,14 +197,13 @@ class ActiveSessionActivity : AppCompatActivity() {
         // the handler for creating new categories
         fun addCategoryHandler(newCategory: Category) {
             lifecycleScope.launch {
-                val newCategoryId = PracticeTime.dao.insertCategory(newCategory)?.toInt()
-                if(newCategoryId != null) {
-                    // we need to fetch the newly created category to get the correct id
-                    PracticeTime.dao.getCategory(newCategoryId)?.let { activeCategories.add(0, it) }
-                    categoryAdapter.notifyItemInserted(0)
-                    categoryList.scrollToPosition(0)
-                    adjustSpanCountCatList()
-                }
+                val newCategoryId = PracticeTime.dao.insertCategory(newCategory).toInt()
+                // we need to fetch the newly created category to get the correct id
+                PracticeTime.dao.getCategory(newCategoryId).let { activeCategories.add(0, it) }
+                categoryAdapter.notifyItemInserted(0)
+                categoryList.scrollToPosition(0)
+                adjustSpanCountCatList()
+
             }
         }
 
@@ -865,7 +864,7 @@ class ActiveSessionActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             // create a new session row and save its id
-            val sessionId = PracticeTime.dao.insertSession(newSession)!!.toInt()
+            val sessionId = PracticeTime.dao.insertSession(newSession).toInt()
 
             // traverse all sections for post-processing before writing into db
             for (section in mService.sectionBuffer) {
@@ -1089,7 +1088,6 @@ class ActiveSessionActivity : AppCompatActivity() {
         inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
             val sectionName: TextView = view.findViewById(R.id.sectionName)
             val sectionDuration: TextView = view.findViewById(R.id.sectionDuration)
-            val rootLayoutItem: LinearLayout = view.findViewById(R.id.ll_activesession_list)
         }
 
         // Create new views (invoked by the layout manager)

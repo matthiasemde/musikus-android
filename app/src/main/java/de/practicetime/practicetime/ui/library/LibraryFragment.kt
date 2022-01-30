@@ -86,7 +86,7 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
 
         // load all active categories from the database and notify the adapter
         lifecycleScope.launch {
-            PracticeTime.dao.getActiveCategories()?.let {
+            PracticeTime.dao.getActiveCategories().let {
                 activeCategories.addAll(it.reversed())
                 categoryAdapter?.notifyItemRangeInserted(0, it.size)
             }
@@ -223,12 +223,10 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
     // the handler for creating new categories
     private fun addCategoryHandler(newCategory: Category) {
         lifecycleScope.launch {
-            val newCategoryId = PracticeTime.dao.insertCategory(newCategory)?.toInt()
-            if(newCategoryId != null) {
-                // we need to fetch the newly created category to get the correct id
-                PracticeTime.dao.getCategory(newCategoryId)?.let { activeCategories.add(0, it) }
-                categoryAdapter?.notifyItemInserted(0)
-            }
+            val newCategoryId = PracticeTime.dao.insertCategory(newCategory).toInt()
+            // we need to fetch the newly created category to get the correct id
+            PracticeTime.dao.getCategory(newCategoryId).let { activeCategories.add(0, it) }
+            categoryAdapter?.notifyItemInserted(0)
             if(activeCategories.isNotEmpty()) hideHint()
         }
     }
@@ -251,7 +249,7 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
         var failedDeleteFlag = false
         lifecycleScope.launch {
             selectedCategories.sortedByDescending { it }.forEach { index ->
-                if(PracticeTime.dao.deleteCategory(activeCategories[index].id) == true) {
+                if(PracticeTime.dao.deleteCategory(activeCategories[index].id)) {
                     activeCategories.removeAt(index)
                     categoryAdapter?.notifyItemRemoved(index)
                 } else {

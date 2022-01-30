@@ -19,7 +19,7 @@ class CategoryDialog (
 
     // instantiate the builder for the alert dialog
     private val alertDialogBuilder = AlertDialog.Builder(context)
-    private val inflater = context.layoutInflater;
+    private val inflater = context.layoutInflater
     private val dialogView = inflater.inflate(
         R.layout.dialog_add_or_change_category,
         null,

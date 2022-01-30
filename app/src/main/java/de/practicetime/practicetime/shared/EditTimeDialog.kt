@@ -9,13 +9,13 @@ import de.practicetime.practicetime.components.NumberInput
 import de.practicetime.practicetime.utils.secondsDurationToHoursMinSec
 
 class EditTimeDialog (
-    private val context: Activity,
+    context: Activity,
     title: String,
     onEditHandler: (newTime: Int) -> Unit,
 ) {
     // instantiate the builder for the alert dialog
     private val alertDialogBuilder = AlertDialog.Builder(context)
-    private val inflater = context.layoutInflater;
+    private val inflater = context.layoutInflater
     private val dialogView = inflater.inflate(
         R.layout.dialog_edit_time,
         null,
@@ -24,7 +24,7 @@ class EditTimeDialog (
     private var dialog: AlertDialog
 
     // find and save all the views in the dialog view
-    val editHoursView = dialogView.findViewById<NumberInput>(R.id.time_dialog_hours)
+    private val editHoursView = dialogView.findViewById<NumberInput>(R.id.time_dialog_hours)
     private val editMinutesView = dialogView.findViewById<NumberInput>(R.id.time_dialog_minutes)
 
     init {

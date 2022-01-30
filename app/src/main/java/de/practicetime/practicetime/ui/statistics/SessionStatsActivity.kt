@@ -169,7 +169,7 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
             PracticeTime.dao.getAllCategories().forEach {
                 Log.d("ZAS", "CATEGORY: ${it.name}")
                 categories.add(
-                    SessionStatsActivity.CategoryListElement(
+                    CategoryListElement(
                         it,
                         selected = true,
                         visible = false
@@ -232,15 +232,15 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
 
     /** initialize the (hidden) Pie chart view object */
     private fun initPieChart() {
-        pieChart = findViewById(R.id.pie_chart);
+        pieChart = findViewById(R.id.pie_chart)
         pieChart.apply {
             setDrawEntryLabels(false)
             isHighlightPerTapEnabled = false
 
-            setUsePercentValues(true);
-            description.isEnabled = false;
+            setUsePercentValues(true)
+            description.isEnabled = false
             legend.isEnabled = false
-            isRotationEnabled = false;
+            isRotationEnabled = false
 
             maxAngle = 180f // HALF CHART
             rotationAngle = 180f
@@ -259,7 +259,7 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
             setDrawCenterText(false)
 //            setCenterTextOffset(0f, -20f)
 
-            animateY(1400, Easing.EaseInOutQuad);
+            animateY(1400, Easing.EaseInOutQuad)
         }
     }
 

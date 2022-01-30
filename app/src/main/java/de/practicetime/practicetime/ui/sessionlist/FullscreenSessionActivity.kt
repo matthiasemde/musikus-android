@@ -343,7 +343,7 @@ class FullscreenSessionActivity : AppCompatActivity() {
         }
 
         override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-            commentFieldView = view.findViewById<EditText>(R.id.comment_dialog_text_field)
+            commentFieldView = view.findViewById(R.id.comment_dialog_text_field)
             commentFieldView.also {
                 it.setText(commentText)
                 if(it.requestFocus()) {

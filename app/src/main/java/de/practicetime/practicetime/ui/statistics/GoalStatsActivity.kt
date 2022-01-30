@@ -2,7 +2,6 @@ package de.practicetime.practicetime.ui.statistics
 
 import android.content.res.ColorStateList
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -110,7 +109,7 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
     private suspend fun initGoalsList() {
         PracticeTime.dao.getGoalDescriptionsWithCategories().forEach { (desc, cat) ->
             goals.add(
-                GoalStatsActivity.GoalListElement(
+                GoalListElement(
                     goalInstances = PracticeTime.dao.getGoalInstances(desc.id, from = 0L),
                     goalDesc = desc,
                     category = cat.firstOrNull()
@@ -410,7 +409,7 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
                 val iconDrawable = ContextCompat.getDrawable(this, R.drawable.ic_check_small)!!
                 // tint it like this because iconTintList requires API >=26
                 DrawableCompat.setTint(iconDrawable,
-                    PracticeTime.getThemeColor(R.attr.colorSurface, this));
+                    PracticeTime.getThemeColor(R.attr.colorSurface, this))
                 barChartArray.add(BarEntry(i.toFloat(), yVal, iconDrawable))
             } else
                 barChartArray.add(BarEntry(i.toFloat(), yVal))
@@ -546,16 +545,16 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
 
         override fun getBarLabel(barEntry: BarEntry): String {
             barEntry.y.also { yVal ->
-                if (yVal == 0.001f) {  // we've encoded fake values with a value of 0.001f
-                    return "X"
+                return if (yVal == 0.001f) {  // we've encoded fake values with a value of 0.001f
+                    "X"
                 } else if (
                     barChart.highlighted != null &&                                 // there are highlighted values
                     barChart.highlighted.find { it.x == barEntry.x } != null) {     // barEntry is among the highlighted Values
-                        // draw the time
-                        return getDurationString(yVal.toInt(), TIME_FORMAT_HUMAN_PRETTY_SHORT)
+                    // draw the time
+                    getDurationString(yVal.toInt(), TIME_FORMAT_HUMAN_PRETTY_SHORT)
                 } else {
                     // hide total time
-                    return ""
+                    ""
                 }
             }
         }
@@ -648,10 +647,6 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
         }
 
         override fun getItemCount(): Int = goals.size
-    }
-
-    private fun log(msg: String) {
-        Log.d("GOALS", msg)
     }
 
     override fun onSupportNavigateUp(): Boolean {
