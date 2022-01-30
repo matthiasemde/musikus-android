@@ -166,10 +166,8 @@
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:background="@android:color/transparent"
-                android:scaleX="0.6"
-                android:scaleY="0.6"
                 android:tooltipText="@string/goalDialogGoalUnitTooltip"
-                app:icon="@android:drawable/ic_dialog_info"
+                app:icon="@drawable/ic_info"
                 app:iconTint="?attr/colorOnSurfaceLowerContrast" />
 
         </LinearLayout>
@@ -269,10 +267,8 @@
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:background="@android:color/transparent"
-                android:scaleX="0.6"
-                android:scaleY="0.6"
                 android:tooltipText="@string/goalDialogRepeatTooltip"
-                app:icon="@android:drawable/ic_dialog_info"
+                app:icon="@drawable/ic_info"
                 app:iconTint="?attr/colorOnSurfaceLowerContrast" />
         </LinearLayout>
 
