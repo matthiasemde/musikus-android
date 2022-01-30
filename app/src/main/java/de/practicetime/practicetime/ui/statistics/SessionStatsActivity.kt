@@ -134,10 +134,10 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
         colorAmount = resources?.getIntArray(R.array.category_colors)?.toCollection(mutableListOf())?.size ?: 0
         initBarChart()
         initPieChart()
+        initCategoryList()
+
         updateChartData()
         setBtnEnabledState()
-
-        initCategoryList()
     }
 
 
@@ -145,6 +145,7 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
     private fun initCategoryList() {
         lifecycleScope.launch {
             PracticeTime.dao.getAllCategories().forEach {
+                Log.d("ZAS", "CATEGORY: ${it.name}")
                 categories.add(
                     CategoryListElement(
                         it,
