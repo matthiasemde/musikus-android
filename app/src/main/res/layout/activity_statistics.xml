@@ -10,8 +10,9 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
 
+
         <androidx.appcompat.widget.Toolbar
-            android:id="@+id/my_toolbar"
+            android:id="@+id/stats_session_toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:background="?attr/colorSurface"
@@ -29,6 +30,31 @@
                 android:layout_width="match_parent"
                 android:orientation="vertical"
                 android:layout_height="wrap_content">
+
+                <com.google.android.material.tabs.TabLayout
+                    android:id="@+id/statistics_tablayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <com.google.android.material.tabs.TabItem
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/days"
+                        />
+
+                    <com.google.android.material.tabs.TabItem
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/weeks"
+                        />
+
+                    <com.google.android.material.tabs.TabItem
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/months"
+                        />
+
+                </com.google.android.material.tabs.TabLayout>
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -98,63 +124,6 @@
                         android:visibility="gone" />
 
                 </LinearLayout>
-
-                <androidx.constraintlayout.widget.ConstraintLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginStart="16dp"
-                    android:layout_marginEnd="16dp">
-
-                    <LinearLayout
-                        android:id="@+id/ll_statistics_toggle_timespan"
-                        android:layout_width="wrap_content"
-                        android:layout_gravity="center"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintEnd_toStartOf="@id/btn_toggle_chart_type"
-                        app:layout_constraintTop_toTopOf="parent"
-                        app:layout_constraintBottom_toBottomOf="parent">
-
-                        <androidx.appcompat.widget.AppCompatButton
-                            android:id="@+id/btn_days"
-                            style="@style/ToggleButtonSmall"
-                            android:layout_width="0dp"
-                            android:layout_weight="1"
-                            android:background="@drawable/bg_toggle_button_left"
-                            android:text="@string/days"/>
-
-                        <androidx.appcompat.widget.AppCompatButton
-                            android:id="@+id/btn_weeks"
-                            style="@style/ToggleButtonSmall"
-                            android:layout_width="0dp"
-                            android:layout_weight="1"
-                            android:background="@drawable/bg_toggle_button_middle"
-                            android:text="@string/weeks"/>
-
-
-                        <androidx.appcompat.widget.AppCompatButton
-                            android:id="@+id/btn_months"
-                            style="@style/ToggleButtonSmall"
-                            android:layout_width="0dp"
-                            android:layout_weight="1"
-                            android:background="@drawable/bg_toggle_button_right"
-                            android:text="@string/months"/>
-                    </LinearLayout>
-
-                    <ImageButton
-                        android:id="@+id/btn_toggle_chart_type"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:src="@drawable/ic_pie_chart"
-                        android:layout_gravity="end"
-                        app:tint="?attr/colorOnBackground"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"
-                        app:layout_constraintBottom_toBottomOf="parent" />
-
-                </androidx.constraintlayout.widget.ConstraintLayout>
 
                 <View
                     android:layout_width="match_parent"

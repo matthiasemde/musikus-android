@@ -6,7 +6,10 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.*
+import android.widget.ImageButton
+import android.widget.ProgressBar
+import android.widget.RadioButton
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
 import androidx.core.content.ContextCompat
@@ -26,6 +29,7 @@ import com.github.mikephil.charting.formatter.ValueFormatter
 import com.github.mikephil.charting.highlight.Highlight
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener
 import com.github.mikephil.charting.utils.MPPointF
+import com.google.android.material.tabs.TabLayout
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
 import de.practicetime.practicetime.database.entities.Category
@@ -67,7 +71,7 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_statistics)
 
-        setSupportActionBar(findViewById(R.id.my_toolbar))
+        setSupportActionBar(findViewById(R.id.stats_session_toolbar))
         supportActionBar?.apply {
             setDisplayHomeAsUpEnabled(true)
             setDisplayShowHomeEnabled(true)
@@ -93,10 +97,8 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
             }
         }
 
-        // disable pie chart button for goals
-        findViewById<ImageButton>(R.id.btn_toggle_chart_type).visibility = View.GONE
         // disable time range switcher buttons
-        findViewById<LinearLayout>(R.id.ll_statistics_toggle_timespan).visibility = View.GONE
+        findViewById<TabLayout>(R.id.statistics_tablayout).visibility = View.GONE
     }
 
     private fun setButtonEnabledState() {

@@ -4,15 +4,13 @@ import android.content.res.ColorStateList
 import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.widget.CheckBox
 import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.AppCompatButton
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -24,6 +22,7 @@ import com.github.mikephil.charting.data.*
 import com.github.mikephil.charting.formatter.ValueFormatter
 import com.github.mikephil.charting.highlight.Highlight
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener
+import com.google.android.material.tabs.TabLayout
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
 import de.practicetime.practicetime.database.entities.Category
@@ -71,60 +70,20 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_statistics)
 
-        setSupportActionBar(findViewById(R.id.my_toolbar))
+        setSupportActionBar(findViewById(R.id.stats_session_toolbar))
         supportActionBar?.apply {
             setDisplayHomeAsUpEnabled(true)
             setDisplayShowHomeEnabled(true)
             title = getString(R.string.session_statistics)
         }
 
-        findViewById<AppCompatButton>(R.id.btn_days).setOnClickListener {
-            activeView = VIEWS.DAYS_VIEW
-            updateChartData()
-            setBtnEnabledState()
-            // reset time ranges for other views
-            weeksViewWeekOffset = 0L
-            monthsViewMonthOffset = 0L
-        }
-        findViewById<AppCompatButton>(R.id.btn_weeks).setOnClickListener {
-            activeView = VIEWS.WEEKS_VIEW
-            updateChartData()
-            setBtnEnabledState()
-            // reset time ranges for other views
-            daysViewWeekOffset = 0L
-            monthsViewMonthOffset = 0L
-        }
-        findViewById<AppCompatButton>(R.id.btn_months).setOnClickListener {
-            activeView = VIEWS.MONTHS_VIEW
-            updateChartData()
-            setBtnEnabledState()
-            // reset time ranges for other views
-            daysViewWeekOffset = 0L
-            weeksViewWeekOffset = 0L
-        }
+        initTabs()
+
         findViewById<ImageButton>(R.id.btn_rwnd).setOnClickListener {
             seekPast()
         }
         findViewById<ImageButton>(R.id.btn_fwd).setOnClickListener {
             seekFuture()
-        }
-        val btnChart = findViewById<ImageButton>(R.id.btn_toggle_chart_type)
-        btnChart.setOnClickListener {
-            when (chartType) {
-                BAR_CHART -> {
-                    chartType = PIE_CHART
-                    btnChart.setImageResource(R.drawable.ic_bar_chart)
-                }
-                PIE_CHART -> {
-                    chartType = BAR_CHART
-                    btnChart.setImageResource(R.drawable.ic_pie_chart)
-                }
-                else -> {
-                    chartType = BAR_CHART
-                    btnChart.setImageResource(R.drawable.ic_pie_chart)
-                }
-            }
-            updateChartData()
         }
 
         colorAmount = resources?.getIntArray(R.array.category_colors)?.toCollection(mutableListOf())?.size ?: 0
@@ -136,6 +95,73 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
         setBtnEnabledState()
     }
 
+    private fun initTabs() {
+        findViewById<TabLayout>(R.id.statistics_tablayout).addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
+
+            override fun onTabSelected(tab: TabLayout.Tab) {
+                when(tab.position) {
+                    0 -> {  // days view
+                        activeView = VIEWS.DAYS_VIEW
+                        updateChartData()
+                        setBtnEnabledState()
+                        // reset time ranges for other views
+                        weeksViewWeekOffset = 0L
+                        monthsViewMonthOffset = 0L
+                    }
+                    1 -> { // week view
+                        activeView = VIEWS.WEEKS_VIEW
+                        updateChartData()
+                        setBtnEnabledState()
+                        // reset time ranges for other views
+                        daysViewWeekOffset = 0L
+                        monthsViewMonthOffset = 0L
+                    }
+                    2 -> {  //months view
+                        activeView = VIEWS.MONTHS_VIEW
+                        updateChartData()
+                        setBtnEnabledState()
+                        // reset time ranges for other views
+                        daysViewWeekOffset = 0L
+                        weeksViewWeekOffset = 0L
+                    }
+                }
+            }
+            override fun onTabReselected(tab: TabLayout.Tab?) {}
+
+            override fun onTabUnselected(tab: TabLayout.Tab?) {}
+        })
+    }
+
+    // needed because we use setSupportActionBar() https://stackoverflow.com/a/57978912
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.stats_session_toolbar_menu_base, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            R.id.statsToolbarChartToggle -> {
+                when (chartType) {
+                    BAR_CHART -> {
+                        chartType = PIE_CHART
+                        item.icon = ContextCompat.getDrawable(this, R.drawable.ic_bar_chart)
+                    }
+                    PIE_CHART -> {
+                        chartType = BAR_CHART
+                        item.icon = ContextCompat.getDrawable(this, R.drawable.ic_pie_chart)
+                    }
+                    else -> {
+                        chartType = BAR_CHART
+                        item.icon = ContextCompat.getDrawable(this, R.drawable.ic_pie_chart)
+                    }
+                }
+                updateChartData()
+                return true
+            }
+            else ->
+                return super.onOptionsItemSelected(item)
+        }
+    }
 
     /** initialize the checkbox list with the categories */
     private fun initCategoryList() {
@@ -143,7 +169,7 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
             PracticeTime.dao.getAllCategories().forEach {
                 Log.d("ZAS", "CATEGORY: ${it.name}")
                 categories.add(
-                    CategoryListElement(
+                    SessionStatsActivity.CategoryListElement(
                         it,
                         selected = true,
                         visible = false
@@ -319,33 +345,17 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
 
     /** toggles the states of the "days"/"month"/"week" chooser buttons*/
     private fun setBtnEnabledState() {
-        val btnWeek = findViewById<AppCompatButton>(R.id.btn_days)
-        val btnMonth = findViewById<AppCompatButton>(R.id.btn_weeks)
-        val btnYear = findViewById<AppCompatButton>(R.id.btn_months)
         val btnFwd = findViewById<ImageButton>(R.id.btn_fwd)
-
-        btnWeek.isSelected = false
-        btnMonth.isSelected = false
-        btnYear.isSelected = false
-        btnWeek.isEnabled = true
-        btnMonth.isEnabled = true
-        btnYear.isEnabled = true
 
         when(activeView) {
             VIEWS.DAYS_VIEW -> {
                 btnFwd.isEnabled = daysViewWeekOffset != 0L
-                btnWeek.isSelected = true
-                btnWeek.isEnabled = false
             }
             VIEWS.WEEKS_VIEW -> {
                 btnFwd.isEnabled = weeksViewWeekOffset != 0L
-                btnMonth.isSelected = true
-                btnMonth.isEnabled = false
             }
             VIEWS.MONTHS_VIEW -> {
                 btnFwd.isEnabled = monthsViewMonthOffset != 0L
-                btnYear.isSelected = true
-                btnYear.isEnabled = false
             }
         }
     }

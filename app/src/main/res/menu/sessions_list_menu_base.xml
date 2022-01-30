@@ -16,7 +16,7 @@
         <menu>
             <item
                 android:id="@+id/topToolbarThemeSwitchAuto"
-                android:title="@string/topToolBarThemeAuto" />
+                android:title="@string/topToolBarThemeAuto"/>
 
             <item
                 android:id="@+id/topToolbarThemeSwitchLight"
