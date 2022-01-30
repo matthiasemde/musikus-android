@@ -24,6 +24,8 @@ import de.practicetime.practicetime.database.entities.SectionWithCategory
 import de.practicetime.practicetime.database.entities.SessionWithSectionsWithCategories
 import de.practicetime.practicetime.shared.EditTimeDialog
 import de.practicetime.practicetime.ui.MainActivity
+import de.practicetime.practicetime.utils.TIME_FORMAT_HUMAN_PRETTY
+import de.practicetime.practicetime.utils.getDurationString
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -168,19 +170,6 @@ class FullscreenSessionActivity : AppCompatActivity() {
 
     }
 
-    private fun getTimeString(duration: Int) : String {
-        val hoursDur =  duration % 3600 / 60     // TODO change back eventually
-        val minutesDur = duration % 60           // TODO change back eventually
-
-        return if (hoursDur > 0) {
-            "%dh %dmin".format(hoursDur, minutesDur)
-        } else if (minutesDur == 0 && duration > 0){
-            "<1min"
-        } else {
-            "%dmin".format(minutesDur)
-        }
-    }
-
     private fun editSectionDurationHandler(section: PracticeSection?, newSectionDuration: Int) {
         section?.duration = newSectionDuration
         sectionAdapterData.indexOfFirst {
@@ -242,7 +231,7 @@ class FullscreenSessionActivity : AppCompatActivity() {
 
             // contents of the view with that element
             viewHolder.sectionName.text = category.name
-            viewHolder.sectionDuration.text = getTimeString(sectionDuration)
+            viewHolder.sectionDuration.text = getDurationString(sectionDuration, TIME_FORMAT_HUMAN_PRETTY)
 
             viewHolder.itemView.setOnClickListener {
                 selectedSection = section

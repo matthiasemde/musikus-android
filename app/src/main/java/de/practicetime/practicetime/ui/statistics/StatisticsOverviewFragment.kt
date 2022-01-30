@@ -19,6 +19,8 @@ import com.github.mikephil.charting.formatter.ValueFormatter
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
 import de.practicetime.practicetime.database.entities.GoalType
+import de.practicetime.practicetime.utils.TIME_FORMAT_HUMAN_PRETTY_SHORT
+import de.practicetime.practicetime.utils.getDurationString
 import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.ZoneId
@@ -227,27 +229,7 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
         val totalTime = PracticeTime.dao.getSectionsWithCategories(beginLastMonth, endLastMonth)
             .sumOf { it.section.duration ?: 0}
 
-        return secondsToTimeString(totalTime)
-    }
-
-    private fun secondsToTimeString(seconds: Int?): String {
-        // TODO change to string resources with placeholders eventually
-        val (h, m) = secondsToHoursMins(seconds)
-        var str = ""
-        if (h != 0) str += "${h}h "
-        if (m != 0) str += "${m}m"
-        else
-            if (h == 0)
-                if (seconds != 0) str = "< 1m"
-                else str += "0m"
-        return str
-    }
-
-    private fun secondsToHoursMins(seconds: Int?): Pair<Int?, Int?> {
-        val hours = seconds?.div(3600)
-        val minutes = (seconds?.rem(3600))?.div(60)
-
-        return Pair(hours, minutes)
+        return getDurationString(totalTime, TIME_FORMAT_HUMAN_PRETTY_SHORT)
     }
 
     /**

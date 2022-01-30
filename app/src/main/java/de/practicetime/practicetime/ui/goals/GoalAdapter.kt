@@ -15,11 +15,7 @@ import de.practicetime.practicetime.R
 import de.practicetime.practicetime.database.entities.GoalInstanceWithDescriptionWithCategories
 import de.practicetime.practicetime.database.entities.GoalPeriodUnit
 import de.practicetime.practicetime.database.entities.GoalType
-import java.util.*
-import kotlin.math.ceil
-
-const val SECONDS_PER_HOUR = 60 * 60
-const val SECONDS_PER_DAY = 60 * 60 * 24
+import de.practicetime.practicetime.utils.*
 
 class GoalAdapter(
     private val goals: List<GoalInstanceWithDescriptionWithCategories>,
@@ -107,13 +103,6 @@ class GoalAdapter(
         }
 
         /** Goal Description */
-        val targetHours = instance.target / 3600
-        val targetMinutes = instance.target % 3600 / 60
-        var targetHoursString = ""
-        var targetMinutesString = ""
-        if (targetHours > 0) targetHoursString = "${targetHours}h "
-        if (targetMinutes > 0) targetMinutesString = "${targetMinutes}min "
-
         val periodFormatted =
             if (description.periodInPeriodUnits > 1) {  // plural
                 when (description.periodUnit) {
@@ -131,9 +120,8 @@ class GoalAdapter(
 
         viewHolder.goalDescriptionView.text = context.getString(
             R.string.goal_description_complete,
-            targetHoursString,
-            targetMinutesString,
-            periodFormatted
+            getDurationString(instance.target, TIME_FORMAT_HUMAN_PRETTY),
+            " $periodFormatted"
         )
 
         /** ProgressBar */
@@ -153,27 +141,16 @@ class GoalAdapter(
         /** progress Indicator Text */
         val progressLeft = maxOf(0, instance.target - instance.progress)
         if(progressLeft > 0) {
-            val progressDoneHours = instance.progress / 3600
-            val progressDoneMinutes = instance.progress % 3600 / 60
-            val progressLeftHours = progressLeft / 3600
-            val progressLeftMinutes = ceil(progressLeft % 3600 / 60F).toInt()
-            when {
-                progressDoneHours > 0 ->
-                    viewHolder.goalProgressDoneIndicatorView.text =
-                        String.format("%02d:%02d", progressDoneHours, progressDoneMinutes)
-                progressDoneMinutes > 0 ->
-                    viewHolder.goalProgressDoneIndicatorView.text =
-                        String.format("%d min", progressDoneMinutes)
-                else -> viewHolder.goalProgressDoneIndicatorView.text = "< 1 min"
-            }
-            when {
-                progressLeftHours > 0 ->
-                    viewHolder.goalProgressLeftIndicatorView.text =
-                        String.format("%02d:%02d", progressLeftHours, progressLeftMinutes)
-                else ->
-                    viewHolder.goalProgressLeftIndicatorView.text =
-                        String.format("%d min", progressLeftMinutes)
-            }
+
+            viewHolder.goalProgressDoneIndicatorView.text = getDurationString(
+                instance.progress,
+                TIME_FORMAT_HM_DIGITAL_OR_MIN_HUMAN
+            )
+
+            viewHolder.goalProgressLeftIndicatorView.text = getDurationString(
+                progressLeft,
+                TIME_FORMAT_HM_DIGITAL_OR_MIN_HUMAN
+            )
 
             viewHolder.goalProgressAchievedView.visibility = View.INVISIBLE
             viewHolder.goalProgressDoneIndicatorView.visibility = View.VISIBLE
@@ -185,33 +162,12 @@ class GoalAdapter(
         }
 
         // remaining time
-        val now = Date().time / 1000L
-        val remainingTime = (instance.startTimestamp + instance.periodInSeconds) - now
-        // if time left is larger than a day, show the number of days
-        when {
-            remainingTime > SECONDS_PER_DAY -> {
-                viewHolder.remainingTimeView.text =
-                    context.getString(
-                        R.string.days_left,
-                        remainingTime / SECONDS_PER_DAY + 1
-                    )
-                // otherwise, if time left is larger than an hour, show the number of hours
-            }
-            remainingTime > SECONDS_PER_HOUR -> {
-                viewHolder.remainingTimeView.text =
-                    context.getString(
-                        R.string.hours_left,
-                        remainingTime % SECONDS_PER_DAY / SECONDS_PER_HOUR + 1
-                    )
-            }
-            else -> {   // otherwise, show the number of minutes
-                viewHolder.remainingTimeView.text =
-                    context.getString(
-                        R.string.min_left,
-                        remainingTime % SECONDS_PER_HOUR / 60 + 1
-                    )
-            }
-        }
+        val remainingTime = (instance.startTimestamp + instance.periodInSeconds) - getCurrTimestamp()
+
+        viewHolder.remainingTimeView.text = context.getString(
+            R.string.time_left,
+            getDurationString(remainingTime.toInt(), TIME_FORMAT_PRETTY_APPROX)
+        )
     }
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {

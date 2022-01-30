@@ -16,6 +16,7 @@ import com.google.android.material.button.MaterialButton
 import de.practicetime.practicetime.R
 import de.practicetime.practicetime.components.NumberInput
 import de.practicetime.practicetime.database.entities.*
+import de.practicetime.practicetime.utils.secondsDurationToHoursMinSec
 
 class GoalDialog(
     private val context: Activity,
@@ -240,8 +241,7 @@ class GoalDialog(
                 goalDialogTitleView.setText(R.string.goalDialogTitleEdit)
                 positiveButton.setText(R.string.goalDialogOkEdit)
 
-                val hours = goalInstanceWithDescriptionWithCategories.instance.target / 3600
-                val minutes = goalInstanceWithDescriptionWithCategories.instance.target % 3600 / 60
+                val (hours, minutes, _) = secondsDurationToHoursMinSec(goalInstanceWithDescriptionWithCategories.instance.target)
 
                 goalDialogTargetHoursView.setText(hours.toString())
                 goalDialogTargetMinutesView.setText(minutes.toString())

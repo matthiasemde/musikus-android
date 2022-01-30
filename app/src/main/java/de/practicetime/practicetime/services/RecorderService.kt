@@ -15,6 +15,8 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
 import de.practicetime.practicetime.ui.activesession.ActiveSessionActivity
+import de.practicetime.practicetime.utils.TIME_FORMAT_HMS_DIGITAL
+import de.practicetime.practicetime.utils.getDurationString
 import java.io.FileDescriptor
 import java.util.*
 
@@ -146,7 +148,7 @@ class RecorderService : Service() {
         return  NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_record)
             .setContentTitle(getString(R.string.recording_notification_settings_description))
-            .setContentText(getTimeString(durationSecs))
+            .setContentText(getDurationString(durationSecs, TIME_FORMAT_HMS_DIGITAL))
             .setContentIntent(resultPendingIntent)
             .setOnlyAlertOnce(true)
             .build()
@@ -168,13 +170,5 @@ class RecorderService : Service() {
                 getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.createNotificationChannel(channel)
         }
-    }
-
-    private fun getTimeString(durationSecs: Int) : String {
-        return "%02d:%02d:%02d".format(
-            durationSecs / 3600,
-            durationSecs % 3600 / 60,
-            durationSecs % 60
-        )
     }
 }

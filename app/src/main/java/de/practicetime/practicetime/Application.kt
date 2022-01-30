@@ -11,14 +11,13 @@ class PracticeTime : Application() {
     val executorService: ExecutorService = Executors.newFixedThreadPool(4)
 
     companion object {
-        lateinit var dao: PTDao
+        lateinit var dao: PTDao         // the central static dao object of the application
         var serviceIsRunning = false
         var isRecording = false
     }
 
     override fun onCreate() {
         super.onCreate()
-
         openDatabase()
     }
 
@@ -29,6 +28,5 @@ class PracticeTime : Application() {
         ).build()
         dao = db.ptDao
     }
-
 
 }

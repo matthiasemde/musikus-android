@@ -64,9 +64,7 @@
     <string name="deleteCategoryFailSnackbar">Category could not be deleted, because it is associated with at least one goal</string>
     <string name="deleteCategoriesFailSnackbar">Some categories could not be deleted, because they are associated with at least one goal</string>
     <string name="deleteDialogConfirm">Delete</string>
-    <string name="min_left">%1$d minutes left</string>
-    <string name="hours_left">%1$d hours left</string>
-    <string name="days_left">%1$d days left</string>
+    <string name="time_left">%1$s left</string>
     <string name="goal_name_non_specific">All Categories</string>
     <string name="goal_description_day">in one day</string>
     <string name="goal_description_days">in %1$d days</string>
@@ -74,7 +72,7 @@
     <string name="goal_description_weeks">in %1$d weeks</string>
     <string name="goal_description_month">in one month</string>
     <string name="goal_description_months">in %1$d months</string>
-    <string name="goal_description_complete">%1$s%2$s%3$s</string>
+    <string name="goal_description_complete">%1$s%2$s</string>
     <string name="add_goal">Goal</string>
     <string name="add_category">Category</string>
     <string name="selected">selected</string>
@@ -129,6 +127,7 @@
     <string name="record_toast_deleted">Recording deleted</string>
     <string name="total_time">Total: %1$s</string>
     <string name="paused_practicing">Practicing paused</string>
+    <string name="pause_durationstring">Pause: %1$s</string>
     <string name="notification_title">Practicing for %1$02d:%2$02d:%3$02d</string>
     <string name="notification_settings_description">Running Session</string>
     <string name="recording_notification_settings_description">Active recording</string>

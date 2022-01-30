@@ -7,14 +7,19 @@ import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
-import android.widget.*
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.RatingBar
+import android.widget.TextView
 import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import de.practicetime.practicetime.database.entities.*
+import de.practicetime.practicetime.database.entities.SectionWithCategory
+import de.practicetime.practicetime.database.entities.SessionWithSectionsWithCategories
+import de.practicetime.practicetime.utils.TIME_FORMAT_HUMAN_PRETTY
+import de.practicetime.practicetime.utils.getDurationString
 import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.collections.ArrayList
 
 class SessionSummaryAdapter(
     private val context: Context,
@@ -220,7 +225,7 @@ class SessionSummaryAdapter(
                         yesterday -> context.getString(R.string.yesterday)
                         else -> dateFormat.format(currentSessionDate.timeInMillis)
                     }
-                    summaryDayDuration.text = getTimeString(totalPracticeDuration)
+                    summaryDayDuration.text = getDurationString(totalPracticeDuration, TIME_FORMAT_HUMAN_PRETTY)
 
                 } else {
                     summaryDayLayout.visibility = View.GONE
@@ -241,10 +246,10 @@ class SessionSummaryAdapter(
                 summaryTimeView.text = timeFormat.format(Date(startTimestamp))
 
                 // show the practice duration in the practice duration field
-                practiceDurationView.text = getTimeString(practiceDuration)
+                practiceDurationView.text = getDurationString(practiceDuration, TIME_FORMAT_HUMAN_PRETTY)
 
                 // set the break time text equal to the sessions break duration
-                breakDurationView.text = getTimeString(breakDuration)
+                breakDurationView.text = getDurationString(breakDuration, TIME_FORMAT_HUMAN_PRETTY)
 
                 // set the sections and update the section adapter about the change
                 sectionsWithCategoriesList.clear()
@@ -260,19 +265,6 @@ class SessionSummaryAdapter(
                     //set content of the comment field
                     commentSection.visibility = View.VISIBLE
                     commentField.text = session.comment
-                }
-            }
-
-            private fun getTimeString(duration: Int) : String {
-                val hoursDur =  duration % 3600 / 60     // TODO change back eventually
-                val minutesDur = duration % 60           // TODO change back eventually
-
-                return if (hoursDur > 0) {
-                    "%dh %dmin".format(hoursDur, minutesDur)
-                } else if (minutesDur == 0 && duration > 0){
-                    "<1min"
-                } else {
-                    "%dmin".format(minutesDur)
                 }
             }
 
@@ -312,7 +304,7 @@ class SessionSummaryAdapter(
 
                     // contents of the view with that element
                     viewHolder.sectionName.text = category.name
-                    viewHolder.sectionDuration.text = getTimeString(sectionDuration)
+                    viewHolder.sectionDuration.text = getDurationString(sectionDuration, TIME_FORMAT_HUMAN_PRETTY)
                 }
 
                 // Return the size of your dataset (invoked by the layout manager)

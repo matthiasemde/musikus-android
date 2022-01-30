@@ -34,6 +34,9 @@ import de.practicetime.practicetime.database.entities.GoalDescription
 import de.practicetime.practicetime.database.entities.GoalInstance
 import de.practicetime.practicetime.database.entities.GoalPeriodUnit
 import de.practicetime.practicetime.updateGoals
+import de.practicetime.practicetime.utils.TIME_FORMAT_HUMAN_PRETTY
+import de.practicetime.practicetime.utils.TIME_FORMAT_HUMAN_PRETTY_SHORT
+import de.practicetime.practicetime.utils.getDurationString
 import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.ZoneId
@@ -236,7 +239,7 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
         limit: Float,
         labelPos: LimitLine.LimitLabelPosition = LimitLine.LimitLabelPosition.RIGHT_TOP
     ): LimitLine {
-        return LimitLine(limit, secondsToTimeString(limit.toInt())).apply {
+        return LimitLine(limit, getDurationString(limit.toInt(), TIME_FORMAT_HUMAN_PRETTY_SHORT)).apply {
             lineWidth = 1f
             labelPosition = labelPos
             textSize = 10f
@@ -536,7 +539,7 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
     private inner class YAxisValueFormatter: ValueFormatter() {
 
         override fun getFormattedValue(seconds: Float): String {
-            return secondsToTimeString(seconds.toInt())
+            return getDurationString(seconds.toInt(), TIME_FORMAT_HUMAN_PRETTY_SHORT)
         }
     }
 
@@ -551,7 +554,7 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
                     barChart.highlighted != null &&                                 // there are highlighted values
                     barChart.highlighted.find { it.x == barEntry.x } != null) {     // barEntry is among the highlighted Values
                         // draw the time
-                        return secondsToTimeString(yVal.toInt())
+                        return getDurationString(yVal.toInt(), TIME_FORMAT_HUMAN_PRETTY_SHORT)
                 } else {
                     // hide total time
                     return ""
@@ -596,16 +599,6 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
                 holder.progressGoal.progressTintList = null
             }
 
-            // TODO take data from most recent Instance enough?
-            val targetHours = elem.goalInstances.last().target / 3600
-            val targetMinutes = elem.goalInstances.last().target % 3600 / 60
-
-            // Following copy pasted from GoalAdapter:
-            var targetHoursString = ""
-            var targetMinutesString = ""
-            if (targetHours > 0) targetHoursString = "${targetHours}h "
-            if (targetMinutes > 0) targetMinutesString = "${targetMinutes}min "
-
             val periodFormatted =
                 if (elem.goalDesc.periodInPeriodUnits > 1) {  // plural
                     when (elem.goalDesc.periodUnit) {
@@ -621,10 +614,10 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
                     }
                 }
 
+            // TODO take target data from most recent Instance enough?
             holder.goalDescTv.text = getString(
                 R.string.goal_description_complete,
-                targetHoursString,
-                targetMinutesString,
+                getDurationString(elem.goalInstances.last().target, TIME_FORMAT_HUMAN_PRETTY),
                 periodFormatted
             )
 
@@ -657,31 +650,6 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
         }
 
         override fun getItemCount(): Int = goals.size
-    }
-
-    private fun secondsToTimeString(seconds: Int?): String {
-        // TODO change to string resources with placeholders eventually
-        val (h, m) = secondsToHoursMins(seconds)
-        var str = ""
-        if (h != 0) str += "${h}h "
-        if (m != 0) str += "${m}m"
-        else
-            if (h == 0)
-                if (seconds != 0) str = "< 1m"
-                else str += "0m"
-        return str
-    }
-
-    private fun secondsToHoursMins(seconds: Int?): Pair<Int?, Int?> {
-        // TODO uncomment for production
-        val hours = seconds?.div(3600)
-        val minutes = (seconds?.rem(3600))?.div(60)
-
-        // FAKE values:
-//        val hours = (seconds?.rem(3600))?.div(60)
-//        val minutes = seconds?.rem(60)
-
-        return Pair(hours, minutes)
     }
 
     private fun getThemeColor(color: Int): Int {

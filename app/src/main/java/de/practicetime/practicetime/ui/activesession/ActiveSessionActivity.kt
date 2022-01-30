@@ -40,6 +40,8 @@ import de.practicetime.practicetime.ui.goals.ProgressUpdateActivity
 import de.practicetime.practicetime.ui.library.CategoryAdapter
 import de.practicetime.practicetime.ui.library.CategoryDialog
 import de.practicetime.practicetime.updateGoals
+import de.practicetime.practicetime.utils.TIME_FORMAT_HMS_DIGITAL
+import de.practicetime.practicetime.utils.getDurationString
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.IOException
@@ -81,7 +83,6 @@ class ActiveSessionActivity : AppCompatActivity() {
             // set adapter for sections List
             initSectionsList()
 
-            //
             initMetronomeBottomSheet()
 
             // sync UI with service data
@@ -425,7 +426,7 @@ class ActiveSessionActivity : AppCompatActivity() {
     private val updateRecordTimeReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             intent?.extras?.getString("DURATION")?.toInt()?.also {
-                recordingTimeView.text = getTimeString(it / 1000)
+                recordingTimeView.text = getDurationString(it / 1000, TIME_FORMAT_HMS_DIGITAL)
                 recordingTimeCsView.text = "%02d".format(it % 1000 / 10)
             }
         }
@@ -683,7 +684,7 @@ class ActiveSessionActivity : AppCompatActivity() {
             val recording = recordings[position]
             holder.apply {
                 fileNameView.text = recording.displayName
-                fileLengthView.text = getTimeString((recording.duration.toIntOrNull() ?: 0) / 1000)
+                fileLengthView.text = getDurationString((recording.duration.toIntOrNull() ?: 0) / 1000, TIME_FORMAT_HMS_DIGITAL)
                 divider.visibility = if(recording == recordings.last()) View.GONE else View.VISIBLE
                 openFileView.setOnClickListener {
                     Log.d("CLICK", "${recording.contentUri}")
@@ -763,7 +764,7 @@ class ActiveSessionActivity : AppCompatActivity() {
             mService.sectionBuffer.last().apply {
                 sectionDur = (first.duration ?: 0).minus(second)
             }
-            sDur.text = getTimeString(sectionDur)
+            sDur.text = getDurationString(sectionDur, TIME_FORMAT_HMS_DIGITAL)
         }
     }
 
@@ -1008,14 +1009,6 @@ class ActiveSessionActivity : AppCompatActivity() {
     }
 
     /**
-     * calculates total Duration (including pauses) of a section
-     */
-    private fun getDuration(section: PracticeSection): Int {
-        val now = Date().time / 1000L
-        return (now - section.timestamp).toInt()
-    }
-
-    /**
      * TODO should be replaced by functions triggered from the service rather than polling every 100ms
      */
     private fun practiceTimer() {
@@ -1069,17 +1062,12 @@ class ActiveSessionActivity : AppCompatActivity() {
             // load the current section from the sectionBuffer
             if (mService.paused) {
                 // display pause duration on the fab, but only time after pause was activated
-                fabInfoPause.text = "Pause: %02d:%02d:%02d".format(
-                    mService.pauseDuration / 3600,
-                    mService.pauseDuration % 3600 / 60,
-                    mService.pauseDuration % 60
+                fabInfoPause.text = getString(
+                    R.string.pause_durationstring,
+                    getDurationString(mService.pauseDuration, TIME_FORMAT_HMS_DIGITAL)
                 )
             }
-            practiceTimeView.text = "%02d:%02d:%02d".format(
-                mService.totalPracticeDuration / 3600,
-                mService.totalPracticeDuration % 3600 / 60,
-                mService.totalPracticeDuration % 60
-            )
+            practiceTimeView.text = getDurationString(mService.totalPracticeDuration, TIME_FORMAT_HMS_DIGITAL)
             updateActiveSectionView()
         } else {
             practiceTimeView.text = "00:00:00"
@@ -1144,7 +1132,7 @@ class ActiveSessionActivity : AppCompatActivity() {
 
             // contents of the view with that element
             viewHolder.sectionName.text = categoryName
-            viewHolder.sectionDuration.text = getTimeString(sectionDuration)
+            viewHolder.sectionDuration.text = getDurationString(sectionDuration, TIME_FORMAT_HMS_DIGITAL)
 
         }
 
@@ -1174,14 +1162,6 @@ class ActiveSessionActivity : AppCompatActivity() {
                 show()
             }
         }
-    }
-
-    private fun getTimeString(durationSecs: Int) : String {
-        return "%02d:%02d:%02d".format(
-            durationSecs / 3600,
-            durationSecs % 3600 / 60,
-            durationSecs % 60
-        )
     }
 
     override fun onStop() {

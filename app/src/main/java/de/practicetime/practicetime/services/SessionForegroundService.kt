@@ -13,6 +13,7 @@ import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
 import de.practicetime.practicetime.database.entities.PracticeSection
 import de.practicetime.practicetime.ui.activesession.ActiveSessionActivity
+import de.practicetime.practicetime.utils.secondsDurationToHoursMinSec
 import java.util.*
 import kotlin.math.roundToInt
 
@@ -107,10 +108,8 @@ class SessionForegroundService : Service() {
      * updates the notification text continuously to show elapsed time
      */
     private fun updateNotification() {
-        val title = getString(R.string.notification_title,
-            totalPracticeDuration / 3600,
-            totalPracticeDuration % 3600 / 60,
-            totalPracticeDuration % 60)
+        val (h, m, s) = secondsDurationToHoursMinSec(totalPracticeDuration)
+        val title = getString(R.string.notification_title, h, m, s)
         val desc = if (paused) {
             getString(R.string.paused_practicing)
         } else {

@@ -16,9 +16,10 @@ import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
 import de.practicetime.practicetime.database.entities.GoalInstanceWithDescriptionWithCategories
 import de.practicetime.practicetime.ui.MainActivity
+import de.practicetime.practicetime.utils.TIME_FORMAT_HM_DIGITAL_OR_MIN_HUMAN
+import de.practicetime.practicetime.utils.getDurationString
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlin.math.ceil
 
 const val PROGRESS_UPDATED = 1337
 
@@ -224,25 +225,17 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
 
             /** progress Indicator Text */
             val progressLeft = maxOf(0, target - progress)
-
              if(progressLeft > 0) {
-                val progressDoneHours = progress / 3600
-                val progressDoneMinutes = progress % 3600 / 60
-                val progressLeftHours = progressLeft / 3600
-                val progressLeftMinutes = ceil(progressLeft % 3600 / 60F).toInt()
-                when {
-                    progressDoneHours > 0 ->
-                        viewHolder.goalProgressDoneIndicatorView.text = String.format("%02d:%02d", progressDoneHours, progressDoneMinutes)
-                    progressDoneMinutes > 0 ->
-                        viewHolder.goalProgressDoneIndicatorView.text = String.format("%d min", progressDoneMinutes)
-                    else -> viewHolder.goalProgressDoneIndicatorView.text = "< 1 min"
-                }
-                when {
-                    progressLeftHours > 0 ->
-                        viewHolder.goalProgressLeftIndicatorView.text = String.format("%02d:%02d", progressLeftHours, progressLeftMinutes)
-                    else ->
-                        viewHolder.goalProgressLeftIndicatorView.text = String.format("%d min", progressLeftMinutes)
-                }
+
+                 viewHolder.goalProgressDoneIndicatorView.text = getDurationString(
+                     progress,
+                     TIME_FORMAT_HM_DIGITAL_OR_MIN_HUMAN
+                 )
+
+                 viewHolder.goalProgressLeftIndicatorView.text = getDurationString(
+                     progressLeft,
+                     TIME_FORMAT_HM_DIGITAL_OR_MIN_HUMAN
+                 )
 
                  viewHolder.goalProgressAchievedView.visibility = View.INVISIBLE
                  viewHolder.goalProgressDoneIndicatorView.visibility = View.VISIBLE

@@ -6,6 +6,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.core.widget.addTextChangedListener
 import de.practicetime.practicetime.R
 import de.practicetime.practicetime.components.NumberInput
+import de.practicetime.practicetime.utils.secondsDurationToHoursMinSec
 
 class EditTimeDialog (
     private val context: Activity,
@@ -58,8 +59,7 @@ class EditTimeDialog (
     }
 
     fun show(initTime: Int) {
-        val initHours = initTime / 3600
-        val initMinutes = initTime % 3600 / 60
+        val (initHours, initMinutes, _) = secondsDurationToHoursMinSec(initTime)
 
         dialog.show()
         dialog.also {

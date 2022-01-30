@@ -28,6 +28,8 @@ import com.github.mikephil.charting.listener.OnChartValueSelectedListener
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
 import de.practicetime.practicetime.database.entities.Category
+import de.practicetime.practicetime.utils.TIME_FORMAT_HUMAN_PRETTY_SHORT
+import de.practicetime.practicetime.utils.getDurationString
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -311,10 +313,11 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
             }
         }
         // show sum of visible data
-        val durationStr = secondsToTimeString(
+        val durationStr = getDurationString(
             chartArray.values.sumOf {
                 it.yVals.sum().toInt()
-            }
+            },
+            TIME_FORMAT_HUMAN_PRETTY_SHORT
         )
         tvTotalTimeInRange.text = getString(R.string.total_time, durationStr)
     }
@@ -847,7 +850,7 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
     private inner class YAxisValueFormatter: ValueFormatter() {
 
         override fun getFormattedValue(seconds: Float): String {
-            return secondsToTimeString(seconds.toInt())
+            return getDurationString(seconds.toInt(), TIME_FORMAT_HUMAN_PRETTY_SHORT)
         }
     }
 
@@ -894,7 +897,7 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
                     if (stackEntriesNotZero == 1) {
                         // reset (set to value which will never occur on x axis) lastEntry so that un- and then re-selecting same bar works
                         lastEntryX = 100f
-                        return prefix + secondsToTimeString(stackedEntry?.yVals?.sum()?.toInt())
+                        return prefix + getDurationString(stackedEntry.yVals?.sum()?.toInt() ?: 0, TIME_FORMAT_HUMAN_PRETTY_SHORT)
                     }
                 } else {
                     lastEntryX = stackedEntry.x
@@ -903,7 +906,7 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
                         // reset (set to value which will never occur on x axis) lastEntry so that un- and then re-selecting same bar works
                         lastEntryX = 100f
                         // we reached the last non-zero stack of the bar, so we're at the top
-                        return prefix + secondsToTimeString(stackedEntry.yVals?.sum()?.toInt())
+                        return prefix + getDurationString(stackedEntry.yVals?.sum()?.toInt() ?: 0, TIME_FORMAT_HUMAN_PRETTY_SHORT)
                     }
                 }
             }
@@ -954,36 +957,11 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
                 updateChartData(recalculateDurs = false)  // notify fragment to change chart
             }
 
-            holder.catTimeView.text = secondsToTimeString(elem.totalDuration)
+            holder.catTimeView.text = getDurationString(elem.totalDuration, TIME_FORMAT_HUMAN_PRETTY_SHORT)
         }
 
         override fun getItemCount(): Int = categories.filter { it.visible }.size
 
-    }
-
-    private fun secondsToTimeString(seconds: Int?): String {
-        // TODO change to string resources with placeholders eventually
-        val (h, m) = secondsToHoursMins(seconds)
-        var str = ""
-        if (h != 0) str += "${h}h "
-        if (m != 0) str += "${m}m"
-        else
-            if (h == 0)
-                if (seconds != 0) str = "< 1m"
-                else str += "0m"
-        return str
-    }
-
-    private fun secondsToHoursMins(seconds: Int?): Pair<Int?, Int?> {
-        // TODO uncomment for production
-        val hours = seconds?.div(3600)
-        val minutes = (seconds?.rem(3600))?.div(60)
-
-        // FAKE values:
-//        val hours = (seconds?.rem(3600))?.div(60)
-//        val minutes = seconds?.rem(60)
-
-        return Pair(hours, minutes)
     }
 
     private fun getThemeColor(color: Int): Int {
