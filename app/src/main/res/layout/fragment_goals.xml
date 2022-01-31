@@ -37,7 +37,8 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        tools:listitem="@layout/listitem_goal"/>
+        tools:listitem="@layout/listitem_goal"
+        tools:itemCount="3"/>
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/goalsFab"

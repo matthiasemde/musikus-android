@@ -140,7 +140,7 @@
                     android:fadeScrollbars="false"
                     android:nestedScrollingEnabled="false"
                     tools:listitem="@layout/listitem_statisitcs_session"
-                    tools:visibility="gone"/>
+                    tools:itemCount="2"/>
 
             </LinearLayout>
 

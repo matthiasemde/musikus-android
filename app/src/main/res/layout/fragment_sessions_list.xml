@@ -37,7 +37,8 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         tools:clipToPadding="false"
-        tools:listitem="@layout/listitem_session_list_summary"/>
+        tools:listitem="@layout/listitem_session_list_summary"
+        tools:itemCount="3"/>
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fab_new_session"

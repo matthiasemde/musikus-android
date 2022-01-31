@@ -167,7 +167,9 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="24dp"
-                    android:nestedScrollingEnabled="false" />
+                    android:nestedScrollingEnabled="false"
+                    tools:listitem="@layout/listitem_session_list_summary_section"
+                    tools:itemCount="3"/>
 
             </LinearLayout>
 
@@ -204,7 +206,7 @@
                     android:layout_marginEnd="24dp"
                     android:ems="10"
                     android:gravity="start|top"
-                    android:text="@tools:sample/lorem/random"
+                    tools:text="This is a comment"
                     android:textSize="16sp"
                     android:textStyle="italic" />
             </LinearLayout>
