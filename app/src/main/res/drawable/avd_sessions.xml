@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    This Source Code Form is subject to the terms of the Mozilla Public
+    License, v. 2.0. If a copy of the MPL was not distributed with this
+    file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+    Copyright (c) 2022 Matthias Emde
+-->
+<animated-vector
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:drawable="@drawable/ic_sessions">
+
+    <target android:name="sessions">
+        <aapt:attr name="android:animation">
+            <set android:ordering="sequentially">
+                <objectAnimator
+                    android:propertyName="pathData"
+                    android:duration="200"
+                    android:valueFrom="@string/ic_sessions"
+                    android:valueTo="@string/ic_sessions_stretched"
+                    android:valueType="pathType"
+                    android:interpolator="@android:interpolator/linear"
+                    />
+                <objectAnimator
+                    android:propertyName="pathData"
+                    android:duration="600"
+                    android:valueFrom="@string/ic_sessions_stretched"
+                    android:valueTo="@string/ic_sessions"
+                    android:valueType="pathType"
+                    android:interpolator="@android:interpolator/bounce"
+                    />
+            </set>
+        </aapt:attr>
+    </target>
+    <target
+        android:name="rotation_group">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:propertyName="rotation"
+                android:valueFrom="0"
+                android:valueTo="120"
+                android:duration="600"
+                >
+                    <aapt:attr name="android:interpolator">
+                        <overshootInterpolator
+                            android:tension="3.0"/>
+                    </aapt:attr>
+            </objectAnimator>
+        </aapt:attr>
+    </target>
+</animated-vector>

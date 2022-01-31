@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    This Source Code Form is subject to the terms of the Mozilla Public
+    License, v. 2.0. If a copy of the MPL was not distributed with this
+    file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+    Copyright (c) 2022 Matthias Emde
+-->
+<animated-vector
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:drawable="@drawable/ic_bar_chart">
+
+    <target android:name="bar_chart_l">
+        <aapt:attr name="android:animation">
+            <set android:ordering="sequentially">
+                <objectAnimator
+                    android:propertyName="pathData"
+                    android:duration="200"
+                    android:valueFrom="@string/bar_chart_l"
+                    android:valueTo="@string/bar_chart_l_stretched"
+                    android:valueType="pathType"
+                    android:interpolator="@android:interpolator/linear_out_slow_in"
+                    />
+                <objectAnimator
+                    android:propertyName="pathData"
+                    android:duration="600"
+                    android:valueFrom="@string/bar_chart_l_stretched"
+                    android:valueTo="@string/bar_chart_l"
+                    android:valueType="pathType"
+                    android:interpolator="@android:interpolator/bounce"
+                    />
+            </set>
+        </aapt:attr>
+    </target>
+
+    <target android:name="bar_chart_m">
+        <aapt:attr name="android:animation">
+            <set android:ordering="sequentially">
+                <objectAnimator
+                    android:propertyName="pathData"
+                    android:duration="200"
+                    android:startOffset="100"
+                    android:valueFrom="@string/bar_chart_m"
+                    android:valueTo="@string/bar_chart_m_stretched"
+                    android:valueType="pathType"
+                    android:interpolator="@android:interpolator/linear_out_slow_in"
+                    />
+                <objectAnimator
+                    android:propertyName="pathData"
+                    android:duration="600"
+                    android:valueFrom="@string/bar_chart_m_stretched"
+                    android:valueTo="@string/bar_chart_m"
+                    android:valueType="pathType"
+                    android:interpolator="@android:interpolator/bounce"
+                    />
+            </set>
+        </aapt:attr>
+    </target>
+
+    <target android:name="bar_chart_r">
+        <aapt:attr name="android:animation">
+            <set android:ordering="sequentially">
+                <objectAnimator
+                    android:propertyName="pathData"
+                    android:duration="200"
+                    android:startOffset="200"
+                    android:valueFrom="@string/bar_chart_r"
+                    android:valueTo="@string/bar_chart_r_stretched"
+                    android:valueType="pathType"
+                    android:interpolator="@android:interpolator/linear_out_slow_in"
+                    />
+                <objectAnimator
+                    android:propertyName="pathData"
+                    android:duration="600"
+                    android:valueFrom="@string/bar_chart_r_stretched"
+                    android:valueTo="@string/bar_chart_r"
+                    android:valueType="pathType"
+                    android:interpolator="@android:interpolator/bounce"
+                    />
+            </set>
+        </aapt:attr>
+    </target>
+</animated-vector>

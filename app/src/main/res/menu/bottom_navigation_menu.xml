@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    This software is licensed under the MIT license
+    This Source Code Form is subject to the terms of the Mozilla Public
+    License, v. 2.0. If a copy of the MPL was not distributed with this
+    file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+    Copyright (c) 2022 Matthias Emde
+
+    Parts of this software are licensed under the MIT license
 
     Copyright (c) 2022, Javier Carbone, author Michael Prommersberger
     Additions and modifications, author Matthias Emde
@@ -9,21 +15,21 @@
     <item
         android:id="@+id/sessionListFragment"
         android:enabled="true"
-        android:icon="@drawable/ic_sessions"
-        android:title="@string/navigationSessionsTitle"/>
+        android:icon="@drawable/anim_sessions"
+        android:title="@string/navigationSessionsTitle" />
     <item
         android:id="@+id/goalsFragment"
         android:enabled="true"
-        android:icon="@drawable/ic_goals"
-        android:title="@string/navigationGoalsTitle"/>
+        android:icon="@drawable/anim_goals"
+        android:title="@string/navigationGoalsTitle" />
     <item
         android:id="@+id/statisticsOverviewFragment"
         android:enabled="true"
-        android:icon="@drawable/ic_bar_chart"
-        android:title="@string/navigationStatisticsTitle"/>
+        android:icon="@drawable/anim_bar_chart"
+        android:title="@string/navigationStatisticsTitle" />
     <item
         android:id="@+id/libraryFragment"
         android:enabled="true"
-        android:icon="@drawable/ic_library"
+        android:icon="@drawable/anim_library"
         android:title="@string/navigationLibraryTitle" />
 </menu>

@@ -1,9 +1,17 @@
+<!--
+    This Source Code Form is subject to the terms of the Mozilla Public
+    License, v. 2.0. If a copy of the MPL was not distributed with this
+    file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+    Copyright (c) 2022 Matthias Emde
+-->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"
     android:viewportWidth="24"
     android:viewportHeight="24">
   <path
+      android:name="goals"
       android:fillColor="@color/md_purple_A700"
-      android:pathData="M14,6l-1,-2L5,4v17h2v-7h5l1,2h7L20,6h-6zM18,14h-4l-1,-2L7,12L7,6h5l1,2h5v6z"/>
+      android:pathData="@string/ic_goals_kf_1"/>
 </vector>

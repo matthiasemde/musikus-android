@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    This Source Code Form is subject to the terms of the Mozilla Public
+    License, v. 2.0. If a copy of the MPL was not distributed with this
+    file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+    Copyright (c) 2022 Matthias Emde
+-->
+<animated-vector
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:drawable="@drawable/ic_goals">
+
+    <target android:name="goals">
+        <aapt:attr name="android:animation">
+            <set android:ordering="sequentially">
+                <objectAnimator
+                    android:propertyName="pathData"
+                    android:duration="200"
+                    android:valueFrom="@string/ic_goals_kf_1"
+                    android:valueTo="@string/ic_goals_kf_2"
+                    android:valueType="pathType"
+                    android:interpolator="@android:interpolator/fast_out_linear_in"
+                    />
+                <objectAnimator
+                    android:propertyName="pathData"
+                    android:duration="150"
+                    android:valueFrom="@string/ic_goals_kf_2"
+                    android:valueTo="@string/ic_goals_kf_3"
+                    android:valueType="pathType"
+                    android:interpolator="@android:interpolator/linear"
+                    />
+                <objectAnimator
+                    android:propertyName="pathData"
+                    android:duration="150"
+                    android:valueFrom="@string/ic_goals_kf_3"
+                    android:valueTo="@string/ic_goals_kf_4"
+                    android:valueType="pathType"
+                    android:interpolator="@android:interpolator/linear"
+                    />
+                <objectAnimator
+                    android:propertyName="pathData"
+                    android:duration="200"
+                    android:valueFrom="@string/ic_goals_kf_4"
+                    android:valueTo="@string/ic_goals_kf_5"
+                    android:valueType="pathType"
+                    android:interpolator="@android:interpolator/linear_out_slow_in"
+                    />
+            </set>
+        </aapt:attr>
+    </target>
+</animated-vector>
