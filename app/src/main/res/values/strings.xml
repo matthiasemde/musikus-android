@@ -128,7 +128,7 @@
     <string name="record_snackbar_message">%s saved</string>
     <string name="record_snackbar_undo">Delete</string>
     <string name="record_toast_deleted">Recording deleted</string>
-    <string name="total_time">Total: %1$s</string>
+    <string name="total_time">Total</string>
     <string name="paused_practicing">Practicing paused</string>
     <string name="pause_durationstring">Pause: %1$s</string>
     <string name="notification_title">Practicing for %1$02d:%2$02d:%3$02d</string>

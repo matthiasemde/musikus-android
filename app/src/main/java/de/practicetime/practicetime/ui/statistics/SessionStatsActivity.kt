@@ -3,6 +3,7 @@ package de.practicetime.practicetime.ui.statistics
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.os.Bundle
+import android.text.TextUtils
 import android.util.Log
 import android.view.*
 import android.widget.CheckBox
@@ -338,9 +339,12 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
             chartArray.values.sumOf {
                 it.yVals.sum().toInt()
             },
-            TIME_FORMAT_HUMAN_PRETTY_SHORT
+            TIME_FORMAT_HUMAN_PRETTY
         )
-        tvTotalTimeInRange.text = getString(R.string.total_time, durationStr)
+        tvTotalTimeInRange.text = TextUtils.concat(
+            getString(R.string.total_time),
+            ": ",
+            durationStr)
     }
 
     /** toggles the states of the "days"/"month"/"week" chooser buttons*/

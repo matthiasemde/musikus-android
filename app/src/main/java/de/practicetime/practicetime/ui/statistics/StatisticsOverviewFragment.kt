@@ -3,9 +3,7 @@ package de.practicetime.practicetime.ui.statistics
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.os.Bundle
-import android.text.SpannableString
 import android.text.TextUtils
-import android.text.style.RelativeSizeSpan
 import android.view.View
 import android.widget.*
 import androidx.cardview.widget.CardView
@@ -98,24 +96,6 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
                 }
             }
         }
-    }
-
-    private fun testingSpannable(): CharSequence {
-        val minutesName = "m"
-        val str = "32m"
-
-        val spannable = SpannableString(str)
-        val hIndex = str.indexOf('h')
-        if (hIndex >= 0) {
-            // shrink the 'h'
-            spannable.setSpan(RelativeSizeSpan(0.5f), hIndex, hIndex + 1, 0)
-        }
-        val mIndex = str.indexOf('m')
-        if (mIndex >= 0) {
-            // shrink 'm' or "min", accordingly
-            spannable.setSpan(RelativeSizeSpan(0.5f), mIndex, mIndex + minutesName.length, 0)
-        }
-        return spannable
     }
 
     /**
