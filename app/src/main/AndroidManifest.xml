@@ -18,7 +18,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.PracticeTime">
         <activity
-            android:name=".ui.AppIntroActivity"
+            android:name=".ui.intro.AppIntroActivity"
             android:exported="false" />
         <activity
             android:name=".ui.statistics.GoalStatsActivity"

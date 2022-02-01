@@ -16,6 +16,7 @@ import de.practicetime.practicetime.BuildConfig
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
 import de.practicetime.practicetime.database.entities.Category
+import de.practicetime.practicetime.ui.intro.AppIntroActivity
 import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {

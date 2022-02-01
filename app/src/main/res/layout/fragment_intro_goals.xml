@@ -6,7 +6,9 @@
     android:layout_height="match_parent"
     android:background="?android:attr/colorBackground">
 
-    <com.google.android.material.appbar.AppBarLayout style="@style/AppBar">
+    <com.google.android.material.appbar.AppBarLayout
+        style="@style/AppBar"
+        android:layout_height="80dp">
 
         <com.google.android.material.appbar.CollapsingToolbarLayout
             style="@style/CollapsingToolbar"
@@ -15,42 +17,40 @@
 
             <androidx.appcompat.widget.Toolbar
                 android:id="@+id/introGoalsToolbar"
-                style="@style/Toolbar"
-                android:clickable="false"
-                app:menu="@menu/goals_toolbar_menu_base" />
+                style="@style/Toolbar"/>
 
         </com.google.android.material.appbar.CollapsingToolbarLayout>
     </com.google.android.material.appbar.AppBarLayout>
 
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center_horizontal"
-        android:orientation="vertical"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/introGoalList"
+            android:overScrollMode="never"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_margin="8dp"
             tools:itemCount="2"
             tools:listitem="@layout/listitem_goal" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:clickable="false"
-            android:text="@string/navigationGoalsTitle"
-            android:textAlignment="textEnd"
-            android:textAllCaps="false"
-            android:textColor="?attr/colorPrimary"
-            app:backgroundTint="?android:attr/navigationBarColor"
-            app:drawableTint="?attr/colorPrimary"
-            app:drawableTopCompat="@drawable/ic_goals" />
-
     </LinearLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:clickable="false"
+        android:text="@string/navigationGoalsTitle"
+        android:textAllCaps="false"
+        android:textColor="?attr/colorPrimary"
+        app:backgroundTint="?android:attr/navigationBarColor"
+        app:drawableTint="?attr/colorPrimary"
+        app:drawableTopCompat="@drawable/ic_goals"
+        android:layout_gravity="bottom|center"
+        android:layout_marginBottom="16dp" />
+
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

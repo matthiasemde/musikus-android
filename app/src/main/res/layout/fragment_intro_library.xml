@@ -8,7 +8,8 @@
     android:background="?android:attr/colorBackground">
 
     <com.google.android.material.appbar.AppBarLayout
-        style="@style/AppBar">
+        style="@style/AppBar"
+        android:layout_height="80dp">
 
         <com.google.android.material.appbar.CollapsingToolbarLayout
             style="@style/CollapsingToolbar"
@@ -17,41 +18,39 @@
 
             <androidx.appcompat.widget.Toolbar
                 android:id="@+id/introLibraryToolbar"
-                android:clickable="false"
-                style="@style/Toolbar"
-                app:menu="@menu/library_toolbar_menu_base" />
+                style="@style/Toolbar" />
 
         </com.google.android.material.appbar.CollapsingToolbarLayout>
     </com.google.android.material.appbar.AppBarLayout>
 
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center_horizontal"
-        android:orientation="vertical"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/introCategoryList"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:overScrollMode="never"
             android:layout_margin="8dp"
             tools:itemCount="3"
             tools:listitem="@layout/listitem_category" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:clickable="false"
-            android:text="@string/navigationLibraryTitle"
-            android:textAlignment="textEnd"
-            android:textAllCaps="false"
-            android:textColor="?attr/colorPrimary"
-            app:backgroundTint="?android:attr/navigationBarColor"
-            app:drawableTint="?attr/colorPrimary"
-            app:drawableTopCompat="@drawable/ic_library"/>
     </LinearLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:clickable="false"
+        android:text="@string/navigationLibraryTitle"
+        android:textAllCaps="false"
+        android:textColor="?attr/colorPrimary"
+        app:backgroundTint="?android:attr/navigationBarColor"
+        app:drawableTint="?attr/colorPrimary"
+        app:drawableTopCompat="@drawable/ic_library"
+        android:layout_gravity="bottom|center"
+        android:layout_marginBottom="16dp" />
+
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
