@@ -16,7 +16,7 @@ import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
 import de.practicetime.practicetime.database.entities.GoalInstanceWithDescriptionWithCategories
 import de.practicetime.practicetime.ui.MainActivity
-import de.practicetime.practicetime.utils.TIME_FORMAT_HM_DIGITAL_OR_MIN_HUMAN
+import de.practicetime.practicetime.utils.TIME_FORMAT_HUMAN_PRETTY_SHORT
 import de.practicetime.practicetime.utils.getDurationString
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -229,12 +229,12 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
 
                  viewHolder.goalProgressDoneIndicatorView.text = getDurationString(
                      progress,
-                     TIME_FORMAT_HM_DIGITAL_OR_MIN_HUMAN
+                     TIME_FORMAT_HUMAN_PRETTY_SHORT
                  )
 
                  viewHolder.goalProgressLeftIndicatorView.text = getDurationString(
                      progressLeft,
-                     TIME_FORMAT_HM_DIGITAL_OR_MIN_HUMAN
+                     TIME_FORMAT_HUMAN_PRETTY_SHORT
                  )
 
                  viewHolder.goalProgressAchievedView.visibility = View.INVISIBLE

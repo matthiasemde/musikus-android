@@ -269,7 +269,6 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
             setExtraOffsets(0f, 10f, 0f, 6f);
             setEntryLabelColor(PracticeTime.getThemeColor(R.attr.colorOnSurfaceLowerContrast, requireContext()))
             setEntryLabelTextSize(11f)
-            animateY(1400, Easing.EaseInOutQuad)
         }
 
         lifecycleScope.launch {
@@ -296,7 +295,7 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
             // render the chart
             ratingsChart.apply {
                 data = rData
-                animateY(1400, Easing.EaseInOutQuad)
+                animateY(1000, Easing.EaseInOutQuad)
                 notifyDataSetChanged()
                 invalidate()
             }

@@ -23,6 +23,7 @@ const val TIME_FORMAT_PRETTY_APPROX = 2
 const val TIME_FORMAT_HMS_DIGITAL = 3
 
 /** Fixed format HH:MM for >1h, else e.g. "32 min" for <1h (used in GoalsProgressBar) */
+@Deprecated("not used anymore")
 const val TIME_FORMAT_HM_DIGITAL_OR_MIN_HUMAN = 4
 
 /**
