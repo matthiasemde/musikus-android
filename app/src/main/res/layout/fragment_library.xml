@@ -52,14 +52,8 @@
 
     <TextView
         android:id="@+id/libraryHint"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:layout_margin="32dp"
+        style="@style/tv_hint_empty_fragment"
         android:text="@string/libraryHint"
-        android:textAlignment="center"
-        android:textSize="18sp"
-        android:visibility="gone"
         tools:visibility="visible" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -93,4 +93,14 @@
         <item name="android:visibility">gone</item>
     </style>
 
+    <style name="tv_hint_empty_fragment" parent="">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_gravity">center</item>
+        <item name="android:layout_margin">32dp</item>
+        <item name="android:textAlignment">center</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:visibility">gone</item>
+    </style>
+
 </resources>

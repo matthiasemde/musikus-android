@@ -25,8 +25,11 @@
     </com.google.android.material.appbar.AppBarLayout>
 
     <ScrollView
+        android:id="@+id/statistics_overview_scrollview"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:visibility="gone"
+        tools:visibility="visible"
         app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior">
 
         <LinearLayout
@@ -49,11 +52,19 @@
                 layout="@layout/layout_statistics_overview_lastgoals"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:visibility="gone"
+                tools:visibility="visible"
                 android:layout_marginStart="16dp"
                 android:layout_marginEnd="16dp" />
 
         </LinearLayout>
 
     </ScrollView>
+
+    <TextView
+        android:id="@+id/statisticsHint"
+        style="@style/tv_hint_empty_fragment"
+        android:text="@string/statisticsHint"
+        tools:visibility="visible" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

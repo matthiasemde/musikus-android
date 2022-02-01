@@ -37,7 +37,6 @@ import de.practicetime.practicetime.database.entities.Category
 import de.practicetime.practicetime.database.entities.GoalDescription
 import de.practicetime.practicetime.database.entities.GoalInstance
 import de.practicetime.practicetime.database.entities.GoalPeriodUnit
-import de.practicetime.practicetime.updateGoals
 import de.practicetime.practicetime.utils.*
 import kotlinx.coroutines.launch
 import java.time.format.DateTimeFormatter
@@ -87,7 +86,6 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
         }
 
         lifecycleScope.launch {
-            updateGoals(PracticeTime.dao)    // update the goalInstances if they are outdated
             initGoalsList()
             // if no goals, do nothing. Should never happen normally because you
             // shouldn't be able to enter activity with zero goals

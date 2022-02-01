@@ -76,7 +76,7 @@ fun secondsDurationToFullDays(seconds: Int): Int {
  *
  * @param durationSeconds the duration in seconds to be converted
  * @param format one of TIME_FORMAT_XXX variables, indicating the output format
- * @return A CharSequence (either Sting or SpannableString) with the final String.
+ * @return A CharSequence (either a String or a SpannableString) with the final String.
  */
 fun getDurationString(durationSeconds: Int, format: Int): CharSequence {
     val (hours, minutes, seconds) = secondsDurationToHoursMinSec(durationSeconds)

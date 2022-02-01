@@ -20,6 +20,7 @@ import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
 import de.practicetime.practicetime.database.entities.GoalType
 import de.practicetime.practicetime.database.entities.SessionWithSectionsWithCategories
+import de.practicetime.practicetime.updateGoals
 import de.practicetime.practicetime.utils.*
 import kotlinx.coroutines.launch
 import java.time.format.DateTimeFormatter
@@ -33,28 +34,42 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
     private var totalPracticeTime: Int = -1
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        lifecycleScope.launch {
+            updateGoals(PracticeTime.dao)    // update the goalInstances if they are outdated
+            if (getAllSessions().isNotEmpty()) {
+                requireView().findViewById<ScrollView>(R.id.statistics_overview_scrollview).visibility = View.VISIBLE
+                val sessionDetailClickListener = View.OnClickListener {
+                    val i = Intent(requireContext(), SessionStatsActivity::class.java)
+                    requireActivity().startActivity(i)
+                }
+                view.findViewById<CardView>(R.id.stats_ov_cardview_last7days)
+                    .setOnClickListener(sessionDetailClickListener)
+                view.findViewById<ImageButton>(R.id.stats_ov_card_last7days_ib_more_details)
+                    .setOnClickListener(sessionDetailClickListener)
 
-        val sessionDetailClickListener = View.OnClickListener {
-            val i = Intent(requireContext(), SessionStatsActivity::class.java)
-            requireActivity().startActivity(i)
+                if (PracticeTime.dao.getGoalInstancesWithDescription().isNotEmpty()) {
+                    view.findViewById<CardView>(R.id.stats_ov_cardview_lastgoals).visibility = View.VISIBLE
+                    val goalsDetailClickListener = View.OnClickListener {
+                        val i = Intent(requireContext(), GoalStatsActivity::class.java)
+                        requireActivity().startActivity(i)
+                    }
+                    view.findViewById<CardView>(R.id.stats_ov_cardview_lastgoals)
+                        .setOnClickListener(goalsDetailClickListener)
+                    view.findViewById<ImageButton>(R.id.stats_ov_card_lastgoals_ib_more_details)
+                        .setOnClickListener(goalsDetailClickListener)
+
+                    initLastGoalsCard()
+                }
+
+                initHeaderData()
+
+                initLast7DaysChart()
+                setLast7DaysChartData()
+
+            } else {
+                requireView().findViewById<TextView>(R.id.statisticsHint).visibility = View.VISIBLE
+            }
         }
-        view.findViewById<CardView>(R.id.stats_ov_cardview_last7days).setOnClickListener(sessionDetailClickListener)
-        view.findViewById<ImageButton>(R.id.stats_ov_card_last7days_ib_more_details).setOnClickListener(sessionDetailClickListener)
-
-        val goalsDetailClickListener = View.OnClickListener {
-            val i = Intent(requireContext(), GoalStatsActivity::class.java)
-            requireActivity().startActivity(i)
-        }
-        view.findViewById<CardView>(R.id.stats_ov_cardview_lastgoals).setOnClickListener(goalsDetailClickListener)
-        view.findViewById<ImageButton>(R.id.stats_ov_card_lastgoals_ib_more_details).setOnClickListener(goalsDetailClickListener)
-
-
-        initHeaderData()
-
-        initLast7DaysChart()
-        setLast7DaysChartData()
-
-        initLastGoalsCard()
     }
 
     /**
