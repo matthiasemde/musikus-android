@@ -1,23 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:animateLayoutChanges="true">
+    android:background="?android:attr/colorBackground">
 
-    <com.google.android.material.appbar.AppBarLayout
-        style="@style/AppBar">
+    <com.google.android.material.appbar.AppBarLayout style="@style/AppBar">
 
         <com.google.android.material.appbar.CollapsingToolbarLayout
             style="@style/CollapsingToolbar"
             app:title="@string/navigationGoalsTitle"
-            app:toolbarId="@+id/goalsToolbar">
+            app:toolbarId="@+id/introGoalsToolbar">
 
             <androidx.appcompat.widget.Toolbar
-                android:clickable="false"
+                android:id="@+id/introGoalsToolbar"
                 style="@style/Toolbar"
+                android:clickable="false"
                 app:menu="@menu/goals_toolbar_menu_base" />
 
         </com.google.android.material.appbar.CollapsingToolbarLayout>
@@ -51,7 +50,7 @@
             android:textColor="?attr/colorPrimary"
             app:backgroundTint="?android:attr/navigationBarColor"
             app:drawableTint="?attr/colorPrimary"
-            app:drawableTopCompat="@drawable/ic_goals"/>
+            app:drawableTopCompat="@drawable/ic_goals" />
 
     </LinearLayout>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

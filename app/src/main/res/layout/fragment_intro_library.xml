@@ -4,7 +4,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground">
 
     <com.google.android.material.appbar.AppBarLayout
         style="@style/AppBar">
@@ -12,9 +13,10 @@
         <com.google.android.material.appbar.CollapsingToolbarLayout
             style="@style/CollapsingToolbar"
             app:title="@string/navigationLibraryTitle"
-            app:toolbarId="@+id/libraryToolbar">
+            app:toolbarId="@+id/introLibraryToolbar">
 
             <androidx.appcompat.widget.Toolbar
+                android:id="@+id/introLibraryToolbar"
                 android:clickable="false"
                 style="@style/Toolbar"
                 app:menu="@menu/library_toolbar_menu_base" />
