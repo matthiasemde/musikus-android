@@ -3,6 +3,9 @@ package de.practicetime.practicetime.ui.statistics
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.os.Bundle
+import android.text.SpannableString
+import android.text.TextUtils
+import android.text.style.RelativeSizeSpan
 import android.view.View
 import android.widget.*
 import androidx.cardview.widget.CardView
@@ -18,14 +21,18 @@ import com.github.mikephil.charting.formatter.ValueFormatter
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
 import de.practicetime.practicetime.database.entities.GoalType
+import de.practicetime.practicetime.database.entities.SessionWithSectionsWithCategories
 import de.practicetime.practicetime.utils.*
 import kotlinx.coroutines.launch
 import java.time.format.DateTimeFormatter
 import kotlin.math.min
 
+
 class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overview) {
 
     private lateinit var lastDaysChart: BarChart
+    private lateinit var allSessions: List<SessionWithSectionsWithCategories>
+    private var totalPracticeTime: Int = -1
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
 
@@ -52,6 +59,68 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
         initLastGoalsCard()
     }
 
+    /**
+     * Header with Textviews showing statistics
+     */
+    private fun initHeaderData() {
+        lifecycleScope.launch {
+            arrayListOf<LinearLayout>(
+                requireView().findViewById(R.id.heading_data_1),
+                requireView().findViewById(R.id.heading_data_2),
+                requireView().findViewById(R.id.heading_data_3),
+                requireView().findViewById(R.id.heading_data_4),
+
+                ).forEachIndexed { i, ll ->
+                val tvData = ll.findViewById<TextView>(R.id.stats_ov_heading_tv_data)
+                val tvDesc = ll.findViewById<TextView>(R.id.stats_ov_heading_tv_desc)
+
+                when (i) {
+                    0 -> {
+                        tvData.text = getTotalTimeLastMonth()
+                        tvDesc.text = getString(R.string.total_time_last_month)
+                    }
+                    1 -> {
+                        tvData.text = getAvgTimePerSession()
+                        tvDesc.text = getString(R.string.average)
+                    }
+                    2 -> {
+                        tvData.text = getAvgBreakTimePerHour()
+                        tvDesc.text = getString(R.string.avg_break_time)
+                    }
+                    3 -> {
+                        tvData.text = getAvgRating()
+                        tvDesc.text = getString(R.string.avg_rating)
+                    }
+                    else -> {
+                        tvData.text = "TBA"
+                        tvDesc.text = "TBA"
+                    }
+                }
+            }
+        }
+    }
+
+    private fun testingSpannable(): CharSequence {
+        val minutesName = "m"
+        val str = "32m"
+
+        val spannable = SpannableString(str)
+        val hIndex = str.indexOf('h')
+        if (hIndex >= 0) {
+            // shrink the 'h'
+            spannable.setSpan(RelativeSizeSpan(0.5f), hIndex, hIndex + 1, 0)
+        }
+        val mIndex = str.indexOf('m')
+        if (mIndex >= 0) {
+            // shrink 'm' or "min", accordingly
+            spannable.setSpan(RelativeSizeSpan(0.5f), mIndex, mIndex + minutesName.length, 0)
+        }
+        return spannable
+    }
+
+    /**
+     * PracticeTime "last 7 days" quick glimpse chart
+     */
     private fun initLast7DaysChart() {
         lastDaysChart = requireView().findViewById(R.id.stats_ov_card_last7days_bar_chart)
         lastDaysChart.apply {
@@ -112,23 +181,11 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
             }
 
             requireView()
-                .findViewById<TextView>(R.id.stats_ov_card_last7days_tv_avg_time)
-                .text = getAvgText(barChartArray)
-        }
-    }
-
-    private fun getAvgText(barChartArray: ArrayList<BarEntry>): String {
-        val totalSec = barChartArray.sumOf { it.y.toInt() }
-
-        val hours = totalSec.div(3600)
-        val minutes = (totalSec.rem(3600)).div(60)
-
-        return if (hours > 0) {
-            "%dh %dmin".format(hours, minutes)
-        } else if (minutes == 0 && hours > 0){
-            "<1min"
-        } else {
-            "%dmin".format(minutes)
+                .findViewById<TextView>(R.id.stats_ov_card_last7days_tv_total_time)
+                .text = getDurationString(
+                        barChartArray.sumOf { it.y.toInt() },
+                        TIME_FORMAT_HUMAN_PRETTY
+                    )
         }
     }
 
@@ -192,33 +249,7 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
 
     }
 
-    private fun initHeaderData() {
-        lifecycleScope.launch {
-            arrayListOf<LinearLayout>(
-                requireView().findViewById(R.id.heading_data_1),
-                requireView().findViewById(R.id.heading_data_2),
-                requireView().findViewById(R.id.heading_data_3),
-                requireView().findViewById(R.id.heading_data_4),
-
-                ).forEachIndexed { i, ll ->
-                val tvData = ll.findViewById<TextView>(R.id.stats_ov_heading_tv_data)
-                val tvDesc = ll.findViewById<TextView>(R.id.stats_ov_heading_tv_desc)
-
-                when (i) {
-                    0 -> {
-                        tvData.text = getTotalTimeLastMonth()
-                        tvDesc.text = getString(R.string.total_time_last_month)
-                    }
-                    else -> {
-                        tvData.text = "TBA"
-                        tvDesc.text = "TBA"
-                    }
-                }
-            }
-        }
-    }
-
-    private suspend fun getTotalTimeLastMonth(): String {
+    private suspend fun getTotalTimeLastMonth(): CharSequence {
         val beginLastMonth = getStartOfMonth(-1).toEpochSecond()
         val endLastMonth = getEndOfMonth(-1).toEpochSecond()
 
@@ -226,6 +257,51 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
             .sumOf { it.section.duration ?: 0}
 
         return getDurationString(totalTime, TIME_FORMAT_HUMAN_PRETTY_SHORT)
+    }
+
+    private suspend fun getAvgTimePerSession(): CharSequence {
+        return TextUtils.concat(getString(R.string.average_sign) + " ",
+                getDurationString(
+                    (getTotalPracticeTime().toFloat() / getAllSessions().size.toFloat()).toInt(),
+                    TIME_FORMAT_HUMAN_PRETTY_SHORT
+                ))
+    }
+
+
+    private suspend fun getAvgBreakTimePerHour(): CharSequence {
+        val totalBreakTime = getAllSessions()
+            .sumOf { it.session.break_duration }
+        val totalPracticeHours = getTotalPracticeTime().toFloat() / SECONDS_PER_HOUR.toFloat()
+
+        return getDurationString(
+            (totalBreakTime.toFloat() / totalPracticeHours).toInt(),
+            TIME_FORMAT_HUMAN_PRETTY_SHORT
+        )
+    }
+
+    private suspend fun getAvgRating(): CharSequence {
+        val avg = getAllSessions().sumOf { it.session.rating }.toFloat() /
+                getAllSessions().size.toFloat()
+
+        return getString(R.string.average_sign) + " " +
+                "%.1f".format(avg) +
+                getString(R.string.star_sign)
+    }
+
+    private suspend fun getTotalPracticeTime(): Int {
+        if (totalPracticeTime < 0) {
+            totalPracticeTime = getAllSessions().sumOf { prSess ->
+                    prSess.sections.sumOf { it.section.duration ?: 0 }
+                }
+        }
+        return totalPracticeTime
+    }
+
+    private suspend fun getAllSessions(): List<SessionWithSectionsWithCategories> {
+        if (!this::allSessions.isInitialized)
+            allSessions = PracticeTime.dao.getSessionsWithSectionsWithCategories()
+
+        return allSessions
     }
 
     /**

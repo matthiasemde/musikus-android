@@ -2,6 +2,7 @@ package de.practicetime.practicetime.ui.goals
 
 import android.app.Activity
 import android.content.res.ColorStateList
+import android.text.TextUtils
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -118,10 +119,10 @@ class GoalAdapter(
                 }
             }
 
-        viewHolder.goalDescriptionView.text = context.getString(
-            R.string.goal_description_complete,
+        viewHolder.goalDescriptionView.text = TextUtils.concat(
             getDurationString(instance.target, TIME_FORMAT_HUMAN_PRETTY),
-            " $periodFormatted"
+            " ",
+            periodFormatted
         )
 
         /** ProgressBar */

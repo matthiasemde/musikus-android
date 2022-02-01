@@ -110,6 +110,7 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
                 // initialize variables to keep track of the current month
                 // and the index of its first session
                 var firstSessionOfCurrentMonth = 0
+                // TODO move logic to TimeConversion.kt
                 var currentMonth = Calendar.getInstance().let { newDate ->
                     newDate.timeInMillis =
                         sessions.first().sections.first().section.timestamp * 1000L

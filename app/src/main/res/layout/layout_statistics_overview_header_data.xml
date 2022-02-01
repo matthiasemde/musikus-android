@@ -21,6 +21,8 @@
         android:layout_height="wrap_content"
         tools:text="Cal"
         android:layout_gravity="center"
+        android:gravity="center"
+        android:textSize="12sp"
         android:textColor="?attr/colorOnBackground"/>
 
 </LinearLayout>

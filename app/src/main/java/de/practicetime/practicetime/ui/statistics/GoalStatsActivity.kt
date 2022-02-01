@@ -2,6 +2,7 @@ package de.practicetime.practicetime.ui.statistics
 
 import android.content.res.ColorStateList
 import android.os.Bundle
+import android.text.TextUtils
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -235,7 +236,7 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
         limit: Float,
         labelPos: LimitLine.LimitLabelPosition = LimitLine.LimitLabelPosition.RIGHT_TOP
     ): LimitLine {
-        return LimitLine(limit, getDurationString(limit.toInt(), TIME_FORMAT_HUMAN_PRETTY_SHORT)).apply {
+        return LimitLine(limit, getDurationString(limit.toInt(), TIME_FORMAT_HUMAN_PRETTY_SHORT).toString()).apply {
             lineWidth = 1f
             labelPosition = labelPos
             textSize = 10f
@@ -536,7 +537,7 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
     private inner class YAxisValueFormatter: ValueFormatter() {
 
         override fun getFormattedValue(seconds: Float): String {
-            return getDurationString(seconds.toInt(), TIME_FORMAT_HUMAN_PRETTY_SHORT)
+            return getDurationString(seconds.toInt(), TIME_FORMAT_HUMAN_PRETTY_SHORT).toString()
         }
     }
 
@@ -551,7 +552,7 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
                     barChart.highlighted != null &&                                 // there are highlighted values
                     barChart.highlighted.find { it.x == barEntry.x } != null) {     // barEntry is among the highlighted Values
                     // draw the time
-                    getDurationString(yVal.toInt(), TIME_FORMAT_HUMAN_PRETTY_SHORT)
+                    getDurationString(yVal.toInt(), TIME_FORMAT_HUMAN_PRETTY_SHORT).toString()
                 } else {
                     // hide total time
                     ""
@@ -612,9 +613,9 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
                 }
 
             // TODO take target data from most recent Instance enough?
-            holder.goalDescTv.text = getString(
-                R.string.goal_description_complete,
-                getDurationString(elem.goalInstances.last().target, TIME_FORMAT_HUMAN_PRETTY),
+            holder.goalDescTv.text = TextUtils.concat(
+                getDurationString(elem.goalInstances.last().target, TIME_FORMAT_HUMAN_PRETTY_SHORT),
+                " ",
                 periodFormatted
             )
 

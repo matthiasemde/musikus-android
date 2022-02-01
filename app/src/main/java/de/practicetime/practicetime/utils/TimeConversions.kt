@@ -1,10 +1,13 @@
 package de.practicetime.practicetime.utils
 
+import android.text.SpannableString
+import android.text.style.RelativeSizeSpan
 import java.time.Instant
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.temporal.ChronoField
 
+const val SECONDS_PER_HOUR = 60 * 60
 const val SECONDS_PER_DAY = 60 * 60 * 24
 
 /** Format Time intelligently, e.g. "1h 30min" or "<1m" */
@@ -62,7 +65,20 @@ fun secondsDurationToFullDays(seconds: Int): Int {
     return seconds / SECONDS_PER_DAY
 }
 
-fun getDurationString(durationSeconds: Int, format: Int) : String {
+/**
+ * Get the formatted string for a duration of seconds, e.g. "1h 32min"
+ *
+ * The 'h' and 'm'/'min' are shrunk, if used. In that case,
+ * the return value is a SpannableString which can be used directly in e.g. TextViews.
+ * If you want to concat the returned CharSequence with another String, do it with
+ * TextUtils.concat() to preserve styling!
+ * If you NEED a String, simply call .toString().
+ *
+ * @param durationSeconds the duration in seconds to be converted
+ * @param format one of TIME_FORMAT_XXX variables, indicating the output format
+ * @return A CharSequence (either Sting or SpannableString) with the final String.
+ */
+fun getDurationString(durationSeconds: Int, format: Int): CharSequence {
     val (hours, minutes, seconds) = secondsDurationToHoursMinSec(durationSeconds)
     val days = secondsDurationToFullDays(durationSeconds)
 
@@ -71,16 +87,26 @@ fun getDurationString(durationSeconds: Int, format: Int) : String {
         TIME_FORMAT_HUMAN_PRETTY_SHORT -> "m"
         else -> ""
     }
+    val spaceOrNot = when(format) {
+        TIME_FORMAT_HUMAN_PRETTY -> " "
+        TIME_FORMAT_HUMAN_PRETTY_SHORT -> ""
+        else -> ""
+    }
 
     when (format) {
         TIME_FORMAT_HUMAN_PRETTY, TIME_FORMAT_HUMAN_PRETTY_SHORT -> {
-            return if (hours > 0) {
-                "%dh %d$minutesName".format(hours, minutes)
-            } else if (minutes == 0 && durationSeconds > 0) {
-                "<1$minutesName"
-            } else {
-                "%d$minutesName".format(minutes)
-            }
+            val str =
+                if (hours > 0 && minutes > 0) {
+                    ("%dh" + spaceOrNot + "%02d" + minutesName).format(hours, minutes)
+                } else if (hours > 0 && minutes == 0) {
+                    "%dh".format(hours)
+                } else if (minutes == 0 && durationSeconds > 0) {
+                    "<" + spaceOrNot + "1" + minutesName
+                } else {
+                    ("%d" + minutesName).format(minutes)
+                }
+
+            return getSpannableHourMinShrunk(str, minutesName)
         }
 
         TIME_FORMAT_HMS_DIGITAL -> {
@@ -96,10 +122,16 @@ fun getDurationString(durationSeconds: Int, format: Int) : String {
                     "%02d:%02d".format(hours, minutes)
                 }
                 minutes > 0 -> {
-                    "%d min".format(minutes)
+                    getSpannableHourMinShrunk(
+                        "%dmin".format(minutes),
+                        "min"
+                    )
                 }
                 else -> {
-                    "< 1min"
+                    getSpannableHourMinShrunk(
+                        "< 1min",
+                        "min"
+                    )
                 }
             }
         }
@@ -123,6 +155,28 @@ fun getDurationString(durationSeconds: Int, format: Int) : String {
             return "TIME_FORMAT_ERR"
         }
     }
+}
+
+/**
+ * Helper function to shrink the 'h' and the 'm' or 'min' in a time sting like e.g. "3h 42min"
+ *
+ * @param str the whole time string, e.g. "3h 42min"
+ * @param minutesStr the string used for minutes, e.g. "m" or "min"
+ */
+private fun getSpannableHourMinShrunk(str: String, minutesStr: String): CharSequence {
+    val scaleFactor = 0.6f
+    val spannable = SpannableString(str)
+    val hIndex = str.indexOf('h')
+    if (hIndex >= 0) {
+        // shrink the 'h'
+        spannable.setSpan(RelativeSizeSpan(scaleFactor), hIndex, hIndex + 1, 0)
+    }
+    val mIndex = str.indexOf('m')
+    if (mIndex >= 0) {
+        // shrink 'm' or "min", accordingly
+        spannable.setSpan(RelativeSizeSpan(scaleFactor), mIndex, mIndex + minutesStr.length, 0)
+    }
+    return spannable
 }
 
 fun getCurrTimestamp(): Long {

@@ -54,7 +54,7 @@
             app:layout_constraintVertical_bias="0" />
 
         <TextView
-            android:id="@+id/stats_ov_card_last7days_tv_avg_time"
+            android:id="@+id/stats_ov_card_last7days_tv_total_time"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textSize="20sp"
@@ -72,9 +72,9 @@
             android:layout_height="wrap_content"
             android:text="@string/total"
             android:textColor="?attr/colorPrimary"
-            app:layout_constraintStart_toStartOf="@id/stats_ov_card_last7days_tv_avg_time"
+            app:layout_constraintStart_toStartOf="@id/stats_ov_card_last7days_tv_total_time"
             app:layout_constraintEnd_toStartOf="@id/stats_ov_card_last7days_bar_chart"
-            app:layout_constraintTop_toBottomOf="@id/stats_ov_card_last7days_tv_avg_time"
+            app:layout_constraintTop_toBottomOf="@id/stats_ov_card_last7days_tv_total_time"
             app:layout_constraintBaseline_toBottomOf="parent"
             app:layout_constraintHorizontal_bias="0" />
 
@@ -82,7 +82,7 @@
             android:id="@+id/stats_ov_card_last7days_bar_chart"
             android:layout_width="200dp"
             android:layout_height="80dp"
-            app:layout_constraintStart_toEndOf="@id/stats_ov_card_last7days_tv_avg_time"
+            app:layout_constraintStart_toEndOf="@id/stats_ov_card_last7days_tv_total_time"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@id/stats_ov_card_last7days_tv_subheadline"
             app:layout_constraintHorizontal_bias="1"

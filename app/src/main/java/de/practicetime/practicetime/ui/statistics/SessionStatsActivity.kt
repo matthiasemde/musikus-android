@@ -778,7 +778,7 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
     private inner class YAxisValueFormatter: ValueFormatter() {
 
         override fun getFormattedValue(seconds: Float): String {
-            return getDurationString(seconds.toInt(), TIME_FORMAT_HUMAN_PRETTY_SHORT)
+            return getDurationString(seconds.toInt(), TIME_FORMAT_HUMAN_PRETTY_SHORT).toString()
         }
     }
 
