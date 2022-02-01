@@ -24,12 +24,13 @@
         </com.google.android.material.appbar.CollapsingToolbarLayout>
     </com.google.android.material.appbar.AppBarLayout>
 
-    <ScrollView
+    <androidx.core.widget.NestedScrollView
         android:id="@+id/statistics_overview_scrollview"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:visibility="gone"
         tools:visibility="visible"
+        android:fillViewport="true"
         app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior">
 
         <LinearLayout
@@ -57,9 +58,17 @@
                 android:layout_marginStart="16dp"
                 android:layout_marginEnd="16dp" />
 
+            <include
+                layout="@layout/layout_statistics_overview_session_ratings"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"/>
+
         </LinearLayout>
 
-    </ScrollView>
+    </androidx.core.widget.NestedScrollView>
 
     <TextView
         android:id="@+id/statisticsHint"

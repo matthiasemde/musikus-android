@@ -402,6 +402,7 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
                 dataSetPieChart.apply {
                     colors = categoryColors
                     setDrawValues(true)
+                    sliceSpace = 3f
 
                     // Disabled value lines:
 //                    yValuePosition = PieDataSet.ValuePosition.INSIDE_SLICE

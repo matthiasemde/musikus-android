@@ -7,14 +7,15 @@ import android.text.TextUtils
 import android.view.View
 import android.widget.*
 import androidx.cardview.widget.CardView
+import androidx.core.widget.NestedScrollView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.github.mikephil.charting.animation.Easing
 import com.github.mikephil.charting.charts.BarChart
+import com.github.mikephil.charting.charts.PieChart
+import com.github.mikephil.charting.components.Legend
 import com.github.mikephil.charting.components.XAxis
-import com.github.mikephil.charting.data.BarData
-import com.github.mikephil.charting.data.BarDataSet
-import com.github.mikephil.charting.data.BarEntry
+import com.github.mikephil.charting.data.*
 import com.github.mikephil.charting.formatter.ValueFormatter
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
@@ -29,44 +30,43 @@ import kotlin.math.min
 
 class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overview) {
 
-    private lateinit var lastDaysChart: BarChart
     private lateinit var allSessions: List<SessionWithSectionsWithCategories>
     private var totalPracticeTime: Int = -1
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         lifecycleScope.launch {
             updateGoals(PracticeTime.dao)    // update the goalInstances if they are outdated
+
             if (getAllSessions().isNotEmpty()) {
-                requireView().findViewById<ScrollView>(R.id.statistics_overview_scrollview).visibility = View.VISIBLE
+                view.findViewById<NestedScrollView>(R.id.statistics_overview_scrollview).visibility = View.VISIBLE
+
                 val sessionDetailClickListener = View.OnClickListener {
                     val i = Intent(requireContext(), SessionStatsActivity::class.java)
                     requireActivity().startActivity(i)
                 }
-                view.findViewById<CardView>(R.id.stats_ov_cardview_last7days)
-                    .setOnClickListener(sessionDetailClickListener)
-                view.findViewById<ImageButton>(R.id.stats_ov_card_last7days_ib_more_details)
-                    .setOnClickListener(sessionDetailClickListener)
+                view.findViewById<CardView>(R.id.stats_ov_cardview_last7days).setOnClickListener(sessionDetailClickListener)
+                view.findViewById<ImageButton>(R.id.stats_ov_card_last7days_ib_more_details).setOnClickListener(sessionDetailClickListener)
 
+                /** last 5 goals overview */
                 if (PracticeTime.dao.getGoalInstancesWithDescription().isNotEmpty()) {
                     view.findViewById<CardView>(R.id.stats_ov_cardview_lastgoals).visibility = View.VISIBLE
+
                     val goalsDetailClickListener = View.OnClickListener {
                         val i = Intent(requireContext(), GoalStatsActivity::class.java)
                         requireActivity().startActivity(i)
                     }
-                    view.findViewById<CardView>(R.id.stats_ov_cardview_lastgoals)
-                        .setOnClickListener(goalsDetailClickListener)
-                    view.findViewById<ImageButton>(R.id.stats_ov_card_lastgoals_ib_more_details)
-                        .setOnClickListener(goalsDetailClickListener)
+                    view.findViewById<CardView>(R.id.stats_ov_cardview_lastgoals).setOnClickListener(goalsDetailClickListener)
+                    view.findViewById<ImageButton>(R.id.stats_ov_card_lastgoals_ib_more_details).setOnClickListener(goalsDetailClickListener)
 
                     initLastGoalsCard()
                 }
 
                 initHeaderData()
-
-                initLast7DaysChart()
-                setLast7DaysChartData()
+                initLast7DaysCard()
+                initRatingsCard()
 
             } else {
+                // show the hint
                 requireView().findViewById<TextView>(R.id.statisticsHint).visibility = View.VISIBLE
             }
         }
@@ -120,8 +120,8 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
     /**
      * PracticeTime "last 7 days" quick glimpse chart
      */
-    private fun initLast7DaysChart() {
-        lastDaysChart = requireView().findViewById(R.id.stats_ov_card_last7days_bar_chart)
+    private fun initLast7DaysCard() {
+        val lastDaysChart: BarChart = requireView().findViewById(R.id.stats_ov_card_last7days_bar_chart)
         lastDaysChart.apply {
             setTouchEnabled(false)
             description.isEnabled = false
@@ -143,9 +143,11 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
 
         lastDaysChart.notifyDataSetChanged()
         lastDaysChart.invalidate()
+
+        setLast7DaysChartData(lastDaysChart)
     }
 
-    private fun setLast7DaysChartData() {
+    private fun setLast7DaysChartData(lastDaysChart: BarChart) {
         lifecycleScope.launch {
 
             // get all total durations from the last 7 days
@@ -174,7 +176,7 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
             }
             lastDaysChart.apply {
                 data = barData
-                animateXY(500, 1000, Easing.EaseOutBack)
+                animateXY(5000, 1000, Easing.EaseOutBack)
                 notifyDataSetChanged()
                 invalidate()
             }
@@ -245,7 +247,61 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
                 "$achievedGoalsCount/${lastGoals.size}"
 
         }
+    }
 
+    private fun initRatingsCard() {
+        val ratingsChart: PieChart = requireView().findViewById(R.id.stats_ov_card_session_ratings_pie_chart)
+
+        /** CHART */
+        ratingsChart.apply {
+            setDrawEntryLabels(true)
+            isDrawHoleEnabled = false
+            isHighlightPerTapEnabled = false
+            setUsePercentValues(true)
+            description.isEnabled = false
+            legend.apply {
+                isEnabled = false
+                verticalAlignment = Legend.LegendVerticalAlignment.CENTER
+                orientation = Legend.LegendOrientation.VERTICAL
+                isWordWrapEnabled = true
+
+            }
+            isRotationEnabled = false
+            setExtraOffsets(0f, 10f, 0f, 6f);
+            setEntryLabelColor(PracticeTime.getThemeColor(R.attr.colorOnSurfaceLowerContrast, requireContext()))
+            setEntryLabelTextSize(11f)
+            animateY(1400, Easing.EaseInOutQuad)
+        }
+
+        lifecycleScope.launch {
+
+            /** DATASET */
+            val dataset = PieDataSet(getRatingsPieArray(), "LABEL")
+            dataset.apply {
+                colors = PracticeTime.getCategoryColors(requireContext())
+                setDrawValues(false)
+                sliceSpace = 2f
+                xValuePosition = PieDataSet.ValuePosition.OUTSIDE_SLICE
+                yValuePosition = PieDataSet.ValuePosition.OUTSIDE_SLICE
+                valueLinePart1OffsetPercentage = 100f   // start of value line in % from center of chart
+                valueLinePart1Length = 1f             // lenght of "outgoing" line
+                valueLinePart2Length = 2f             // length of horizonal line
+            }
+
+            /** DATA */
+            val rData = PieData(dataset)
+            rData.apply {
+                setValueTextSize(10f)
+            }
+
+            // render the chart
+            ratingsChart.apply {
+                data = rData
+                animateY(1400, Easing.EaseInOutQuad)
+                notifyDataSetChanged()
+                invalidate()
+            }
+        }
     }
 
     private suspend fun getTotalTimeLastMonth(): CharSequence {
@@ -265,7 +321,6 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
                     TIME_FORMAT_HUMAN_PRETTY_SHORT
                 ))
     }
-
 
     private suspend fun getAvgBreakTimePerHour(): CharSequence {
         val totalBreakTime = getAllSessions()
@@ -303,9 +358,30 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
         return allSessions
     }
 
+    private suspend fun getRatingsPieArray(): ArrayList<PieEntry> {
+        val pieChartArray = arrayListOf<PieEntry>()
+        val ratingsData = IntArray(6) {0}
+        getAllSessions().forEach {
+            ratingsData[it.session.rating]++
+        }
+        ratingsData.forEachIndexed { i, ratingValue ->
+            if (i != 0)
+                pieChartArray.add(PieEntry(ratingValue.toFloat(), getStarsString(i)))
+        }
+        return pieChartArray
+    }
+
+    private fun getStarsString(num: Int): String {
+        if (num == 0) return "0"
+        var str = ""
+        for (i in 0 until num) {
+            str += getString(R.string.star_sign)
+        }
+        return str
+    }
+
     /**
-     * formats x axis value according to Last 7 days
-     * // TODO re-use the Formatter from the Statistics Activities
+     * shows weekday abbreviations under the bars in last7days card
      */
     private inner class XAxisValueFormatter: ValueFormatter() {
 

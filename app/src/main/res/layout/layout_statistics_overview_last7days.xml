@@ -1,15 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-
 <androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/stats_ov_cardview_last7days"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:layout_margin="2dp"
-    app:cardBackgroundColor="?attr/colorSurface"
-    app:cardCornerRadius="16dp"
-    app:cardElevation="4dp"
-    android:foreground="?android:attr/selectableItemBackground">
+    style="@style/cardview_statistics_overview" >
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"

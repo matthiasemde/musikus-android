@@ -31,6 +31,11 @@ class PracticeTime : Application() {
             activityContext.theme.resolveAttribute(color, typedValue, true)
             return typedValue.data
         }
+
+        fun getCategoryColors(context: Context): MutableList<Int> {
+            return context.resources?.getIntArray(R.array.category_colors)
+                ?.toCollection(mutableListOf()) ?: mutableListOf()
+        }
     }
 
     override fun onCreate() {
