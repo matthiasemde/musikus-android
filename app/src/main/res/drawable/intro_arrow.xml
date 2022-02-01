@@ -1,0 +1,15 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="72dp"
+    android:height="24dp"
+    android:viewportWidth="55"
+    android:viewportHeight="20">
+    <path
+        android:strokeColor="@color/md_purple_A700"
+        android:strokeWidth="1"
+        android:pathData="
+            M 5,5
+            C 20 20, 40 20, 50 15
+            M 49.7,15.1 l -5,-2
+            M 49.8,15.2 l -3,4.5
+        "/>
+</vector>
