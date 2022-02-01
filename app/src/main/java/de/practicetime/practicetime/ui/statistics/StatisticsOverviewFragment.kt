@@ -75,7 +75,9 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
                 when (i) {
                     0 -> {
                         tvData.text = getTotalTimeLastMonth()
-                        tvDesc.text = getString(R.string.total_time_last_month)
+                        tvDesc.text = getStartOfMonth(-1)
+                            .format(DateTimeFormatter.ofPattern(
+                            DATE_FORMATTER_PATTERN_MONTH_TEXT_FULL))
                     }
                     1 -> {
                         tvData.text = getAvgTimePerSession()
@@ -97,6 +99,8 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
             }
         }
     }
+
+
 
     /**
      * PracticeTime "last 7 days" quick glimpse chart

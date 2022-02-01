@@ -148,7 +148,6 @@
     <string name="achieved">Achieved</string>
     <string name="session_statistics">Session History</string>
     <string name="goal_statistics">Goal History</string>
-    <string name="total_time_last_month">Last month</string>
     <string name="toggle_chart">toggle chart type</string>
     <string name="average">Time per\nsession</string>
     <string name="avg_break_time">Break time\nper hour</string>
