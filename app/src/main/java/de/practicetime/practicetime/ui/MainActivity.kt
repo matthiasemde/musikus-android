@@ -1,6 +1,7 @@
 package de.practicetime.practicetime.ui
 
 import android.content.Context
+import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.os.Handler
@@ -28,6 +29,8 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        prefs = getPreferences(Context.MODE_PRIVATE)
+
         val navHostFragment =
             supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
         val navController = navHostFragment.navController
@@ -36,11 +39,19 @@ class MainActivity : AppCompatActivity() {
         bottomNavigationView.setupWithNavController(navController)
 
         createDatabaseFirstRun()
+
+        launchAppIntroFirstRun()
+    }
+
+    private fun launchAppIntroFirstRun() {
+//        if (prefs.getBoolean(PracticeTime.PREFERENCES_KEY_FIRSTRUN, true)) {
+            val i = Intent(this, AppIntroActivity::class.java)
+            startActivity(i)
+//        }
     }
 
     private fun createDatabaseFirstRun() {
         lifecycleScope.launch {
-            prefs = getPreferences(Context.MODE_PRIVATE)
 
             // FIRST RUN routine
             if (prefs.getBoolean(PracticeTime.PREFERENCES_KEY_FIRSTRUN, true)) {

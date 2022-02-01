@@ -4,8 +4,9 @@
 
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
-        android:maxSdkVersion="28"/>
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28" />
     <uses-permission android:name="android.permission.VIBRATE" />
 
     <application
@@ -16,6 +17,9 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.PracticeTime">
+        <activity
+            android:name=".ui.AppIntroActivity"
+            android:exported="false" />
         <activity
             android:name=".ui.statistics.GoalStatsActivity"
             android:exported="false" />
@@ -31,7 +35,7 @@
             android:name=".services.RecorderService"
             android:enabled="true"
             android:exported="false"
-            android:foregroundServiceType="microphone"/>
+            android:foregroundServiceType="microphone" />
 
         <activity
             android:name=".ui.goals.ProgressUpdateActivity"
