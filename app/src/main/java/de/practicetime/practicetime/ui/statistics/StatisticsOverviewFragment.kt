@@ -90,9 +90,10 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
                 when (i) {
                     0 -> {
                         tvData.text = getTotalTimeLastMonth()
-                        tvDesc.text = getStartOfMonth(-1)
-                            .format(DateTimeFormatter.ofPattern(
-                            DATE_FORMATTER_PATTERN_MONTH_TEXT_FULL))
+                        tvDesc.text = getString(R.string.in_month,
+                                    getStartOfMonth(-1)
+                                        .format(DateTimeFormatter.ofPattern(
+                                        DATE_FORMATTER_PATTERN_MONTH_TEXT_FULL)))
                     }
                     1 -> {
                         tvData.text = getAvgTimePerSession()
@@ -114,8 +115,6 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
             }
         }
     }
-
-
 
     /**
      * PracticeTime "last 7 days" quick glimpse chart
@@ -257,7 +256,7 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
             setDrawEntryLabels(true)
             isDrawHoleEnabled = false
             isHighlightPerTapEnabled = false
-            setUsePercentValues(true)
+            setUsePercentValues(false)
             description.isEnabled = false
             legend.apply {
                 isEnabled = false
@@ -338,8 +337,7 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
                 getAllSessions().size.toFloat()
 
         return getString(R.string.average_sign) + " " +
-                "%.1f".format(avg) +
-                getString(R.string.star_sign)
+                "%.1f".format(avg)
     }
 
     private suspend fun getTotalPracticeTime(): Int {
@@ -366,9 +364,19 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
         }
         ratingsData.forEachIndexed { i, ratingValue ->
             if (i != 0)
-                pieChartArray.add(PieEntry(ratingValue.toFloat(), getStarsString(i)))
+                pieChartArray.add(PieEntry(ratingValue.toFloat(), "${getStarsString(i)} · $ratingValue"))
         }
-        return pieChartArray
+
+        // to make labels not overlap, re-sort the entries based on their size in the chart
+        // sort ascending
+        pieChartArray.sortBy { it.value }
+        // new order will be small-large-small-large
+        val a = arrayListOf(1,4,2,3,0)
+        val pieChartArrSorted = arrayListOf<PieEntry>()
+        a.forEach {index ->
+            pieChartArrSorted.add(pieChartArray[index])
+        }
+        return pieChartArrSorted
     }
 
     private fun getStarsString(num: Int): String {
