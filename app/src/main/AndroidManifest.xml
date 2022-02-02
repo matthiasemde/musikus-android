@@ -19,6 +19,7 @@
         android:theme="@style/Theme.PracticeTime">
         <activity
             android:name=".ui.intro.AppIntroActivity"
+            android:screenOrientation="portrait"
             android:exported="false" />
         <activity
             android:name=".ui.statistics.GoalStatsActivity"
