@@ -175,7 +175,7 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
             }
             lastDaysChart.apply {
                 data = barData
-                animateXY(5000, 1000, Easing.EaseOutBack)
+                animateXY(1000, 1000, Easing.EaseOutBack)
                 notifyDataSetChanged()
                 invalidate()
             }
