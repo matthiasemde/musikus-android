@@ -31,4 +31,86 @@
         app:menu="@menu/bottom_navigation_menu" />
 
 
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/activity_main_card_now_playing"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/now_playing_card_height"
+        app:layout_constraintBottom_toTopOf="@id/bottom_navigation_view"
+        android:layout_marginBottom="@dimen/default_margin"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:backgroundTint="?attr/colorPrimary"
+        android:elevation="10dp"
+        app:cardCornerRadius="8dp"
+        android:visibility="gone"
+        tools:visibility="visible" >
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:baselineAligned="true"
+            android:orientation="horizontal"
+            android:paddingStart="16dp"
+            android:paddingTop="8dp"
+            android:paddingEnd="16dp"
+            android:paddingBottom="8dp">
+
+            <TextView
+                android:id="@+id/activity_main_tv_now_playing_category"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                app:layout_constraintEnd_toStartOf="@+id/textView3"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                tools:text="Category" />
+
+            <TextView
+                android:id="@+id/textView3"
+                android:layout_width="16dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                app:layout_constraintEnd_toStartOf="@+id/activity_main_tv_now_playing_time"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toEndOf="@+id/activity_main_tv_now_playing_category"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                android:text="@string/point_seperator" />
+
+            <TextView
+                android:id="@+id/activity_main_tv_now_playing_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="15sp"
+                app:layout_constraintStart_toEndOf="@+id/textView3"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBaseline_toBaselineOf="@id/activity_main_tv_now_playing_category"
+                tools:text="00:00:00" />
+
+            <ImageButton
+                android:id="@+id/activtiy_main_btn_now_playing"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_gravity="top|left"
+                android:background="?selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_pause"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:tint="?attr/colorOnSurface" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </com.google.android.material.card.MaterialCardView>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

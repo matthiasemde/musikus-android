@@ -7,6 +7,7 @@ import android.text.TextUtils
 import android.view.View
 import android.widget.*
 import androidx.cardview.widget.CardView
+import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.widget.NestedScrollView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -38,7 +39,8 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
             updateGoals(PracticeTime.dao)    // update the goalInstances if they are outdated
 
             if (getAllSessions().isNotEmpty()) {
-                view.findViewById<NestedScrollView>(R.id.statistics_overview_scrollview).visibility = View.VISIBLE
+                val scrollView = view.findViewById<NestedScrollView>(R.id.statistics_overview_scrollview)
+                scrollView.visibility = View.VISIBLE
 
                 val sessionDetailClickListener = View.OnClickListener {
                     val i = Intent(requireContext(), SessionStatsActivity::class.java)
@@ -64,6 +66,13 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
                 initHeaderData()
                 initLast7DaysCard()
                 initRatingsCard()
+
+                if (PracticeTime.serviceIsRunning) {
+                    val params = scrollView.layoutParams as CoordinatorLayout.LayoutParams
+                    params.bottomMargin = requireActivity().resources.getDimensionPixelSize(R.dimen.now_playing_card_height) +
+                            requireActivity().resources.getDimensionPixelSize(R.dimen.default_margin) * 2
+                    scrollView.layoutParams = params
+                }
 
             } else {
                 // show the hint

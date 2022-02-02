@@ -11,6 +11,7 @@ import android.view.View
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
+import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
@@ -60,11 +61,20 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
         // create a new category dialog for adding new categories
         addCategoryDialog = CategoryDialog(requireActivity(), ::addCategoryHandler)
 
-        view.findViewById<FloatingActionButton>(R.id.libraryFab).setOnClickListener {
-            resetToolbar()
-            addCategoryDialog?.show()
-        }
+        view.findViewById<FloatingActionButton>(R.id.libraryFab).apply {
+            setOnClickListener {
+                resetToolbar()
+                addCategoryDialog?.show()
+            }
 
+            if (PracticeTime.serviceIsRunning) {
+                val params = layoutParams as CoordinatorLayout.LayoutParams
+                params.bottomMargin = requireActivity().resources.getDimensionPixelSize(R.dimen.now_playing_card_height) +
+                        requireActivity().resources.getDimensionPixelSize(R.dimen.default_margin)*2
+                layoutParams = params
+            }
+
+        }
         // create the category dialog for editing categories
         editCategoryDialog = CategoryDialog(requireActivity(), ::editCategoryHandler)
 

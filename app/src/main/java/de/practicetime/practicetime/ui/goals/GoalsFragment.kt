@@ -12,6 +12,7 @@ import android.widget.CheckBox
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
+import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -72,9 +73,18 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
             )
         }
 
-        view.findViewById<FloatingActionButton>(R.id.goalsFab).setOnClickListener {
-            resetToolbar()
-            addGoalDialog?.show()
+        view.findViewById<FloatingActionButton>(R.id.goalsFab).apply {
+            setOnClickListener {
+                resetToolbar()
+                addGoalDialog?.show()
+            }
+
+            if (PracticeTime.serviceIsRunning) {
+                val params = layoutParams as CoordinatorLayout.LayoutParams
+                params.bottomMargin = requireActivity().resources.getDimensionPixelSize(R.dimen.now_playing_card_height) +
+                        requireActivity().resources.getDimensionPixelSize(R.dimen.default_margin)*2
+                layoutParams = params
+            }
         }
 
         // create the category dialog for editing categories

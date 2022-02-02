@@ -11,6 +11,7 @@ import de.practicetime.practicetime.database.PTDatabase
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
+
 class PracticeTime : Application() {
     val executorService: ExecutorService = Executors.newFixedThreadPool(4)
 

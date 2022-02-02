@@ -31,7 +31,6 @@ import java.util.*
 class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
 
     private lateinit var fabNewSession: FloatingActionButton
-    private lateinit var fabRunningSession: FloatingActionButton
     private var handler: Handler = Handler(Looper.getMainLooper())
     private var runnable: Runnable = Runnable { }
 
@@ -72,7 +71,6 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
         initSessionList()
 
         fabNewSession = view.findViewById(R.id.fab_new_session)
-        fabRunningSession = view.findViewById(R.id.fab_running_session)
         val clickListener = View.OnClickListener {
             selectedSessions.clear()
             notifyAllItems()
@@ -83,7 +81,6 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
             requireActivity().overridePendingTransition(R.anim.slide_in_up, R.anim.fake_anim)
         }
         fabNewSession.setOnClickListener(clickListener)
-        fabRunningSession.setOnClickListener(clickListener)
 
         sessionListToolbar = view.findViewById(R.id.session_list_toolbar)
         sessionListCollapsingToolbarLayout = view.findViewById(R.id.session_list_collapsing_toolbar_layout)
@@ -433,17 +430,14 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
     // check if session is running every second to respond the fab design to it
     override fun onResume() {
         super.onResume()
-        val fabRunningSession = requireView().findViewById<FloatingActionButton>(R.id.fab_running_session)
         // set correct FAB depending if session is running.
         // wait 100ms and check again to give Service time to stop after discarding session
         runnable = object : Runnable {
             override fun run() {
                 if (PracticeTime.serviceIsRunning) {
-                    fabRunningSession.show()
                     fabNewSession.hide()
                 } else {
                     fabNewSession.show()
-                    fabRunningSession.hide()
                 }
                 if (PracticeTime.serviceIsRunning)
                     handler.postDelayed(this, 1000)

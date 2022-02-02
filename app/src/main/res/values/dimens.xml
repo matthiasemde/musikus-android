@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <dimen name="padding_bottom_buttons">6dp</dimen>
+    <dimen name="now_playing_card_height">45dp</dimen>
+    <dimen name="default_margin">16dp</dimen>
 </resources>
