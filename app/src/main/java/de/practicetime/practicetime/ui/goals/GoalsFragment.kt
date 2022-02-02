@@ -157,6 +157,8 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
             } else {
                 longClickOnGoalHandler(index, vibrate = false)
             }
+        } else {
+            editGoalDialog?.show(goalAdapterData[index])
         }
     }
 

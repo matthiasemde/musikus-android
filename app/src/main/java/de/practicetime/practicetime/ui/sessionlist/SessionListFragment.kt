@@ -199,6 +199,12 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
             } else {
                 longClickOnSessionHandler(layoutPosition, adapter, vibrate = false)
             }
+        } else {
+            openSessionInFullscreen(
+                sessionListAdapter.adapters.indexOf(adapter).let {
+                    sessionListAdapterData[it][layoutPosition - 1].session.id
+                }
+            )
         }
     }
 
