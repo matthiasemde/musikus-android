@@ -20,4 +20,10 @@
         android:enabled="true"
         android:icon="@drawable/ic_library"
         android:title="@string/navigationLibraryTitle" />
+
+    <item
+        android:id="@+id/tunerFragment"
+        android:enabled="true"
+        android:icon="@drawable/ic_tuner"
+        android:title="@string/tuner"/>
 </menu>

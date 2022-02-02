@@ -25,4 +25,10 @@
         android:name="de.practicetime.practicetime.ui.library.LibraryFragment"
         android:label="Library"
         tools:layout="@layout/fragment_library" />
+    <fragment
+        android:id="@+id/tunerFragment"
+        android:name="de.practicetime.practicetime.ui.tuner.TunerFragment"
+        android:label="Tuner"
+        tools:layout="@layout/fragment_tuner" />
+
 </navigation>

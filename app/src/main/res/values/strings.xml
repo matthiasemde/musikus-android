@@ -158,4 +158,5 @@
     <string name="headline_stats_session_ratings">Ratings</string>
     <string name="headline_stats_session_ratings_subheading">Your session ratings</string>
     <string name="in_month">In %1$s</string>
+    <string name="tuner">Tuner</string>
 </resources>
