@@ -24,7 +24,7 @@ import kotlin.math.round
 private const val SAMPLE_RATE = 22050
 private const val SAMPLES = SAMPLE_RATE / 5
 private const val MAX_ROTATION_ANGLE: Float = 22f / 180 * PI.toFloat()
-private const val MAX_ANIM_DURATION = 20  // duration of the animation if needle needs to travel from -MAX to +MAX
+private const val MAX_ANIM_DURATION = 10  // duration of the animation if needle needs to travel from -MAX to +MAX
 private const val IN_TUNE_CENTS = 4f
 
 class TunerFragment : Fragment(R.layout.fragment_tuner) {
@@ -46,8 +46,8 @@ class TunerFragment : Fragment(R.layout.fragment_tuner) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         setupPitchHandler()
         needle = requireView().findViewById(R.id.fragment_tuner_needle)
-        tvNote = requireView().findViewById<TextView>(R.id.fragment_tuner_tv_note)
-        tvHz = requireView().findViewById<TextView>(R.id.fragment_tuner_tv_hz)
+        tvNote = requireView().findViewById(R.id.fragment_tuner_tv_note)
+        tvHz = requireView().findViewById(R.id.fragment_tuner_tv_hz)
     }
 
     private fun radToDeg(deg: Float) = (deg * 180 / PI).toFloat()
