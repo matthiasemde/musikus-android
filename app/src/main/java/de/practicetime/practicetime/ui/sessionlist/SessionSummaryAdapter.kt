@@ -1,4 +1,4 @@
-package de.practicetime.practicetime
+package de.practicetime.practicetime.ui.sessionlist
 
 import android.content.Context
 import android.content.res.ColorStateList
@@ -14,6 +14,7 @@ import android.widget.TextView
 import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import de.practicetime.practicetime.R
 import de.practicetime.practicetime.database.entities.SectionWithCategory
 import de.practicetime.practicetime.database.entities.SessionWithSectionsWithCategories
 import de.practicetime.practicetime.utils.SCALE_FACTOR_FOR_SMALL_TEXT
@@ -26,15 +27,15 @@ class SessionSummaryAdapter(
     private val context: Context,
     var isExpanded: Boolean,
     private val sessionsWithSectionsWithCategories: List<SessionWithSectionsWithCategories>,
-    private val selectedSessions: List<Pair<Int, SessionSummaryAdapter>>,
+    private val selectedSessions: List<Pair<Int, SessionSummaryAdapter>> = listOf(),
     private val shortClickHandler: (
         layoutPosition: Int,
         adapter: SessionSummaryAdapter
-    ) -> Unit,
+    ) -> Unit = {_, _ ->},
     private val longClickHandler: (
         layoutPosition: Int,
         adapter: SessionSummaryAdapter
-    ) -> Boolean,
+    ) -> Boolean = { _, _ -> false },
 ) : RecyclerView.Adapter<SessionSummaryAdapter.ViewHolder>() {
 
     companion object {

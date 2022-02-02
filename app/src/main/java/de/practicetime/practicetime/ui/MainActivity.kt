@@ -47,6 +47,7 @@ class MainActivity : AppCompatActivity() {
     private fun launchAppIntroFirstRun() {
 //        if (prefs.getBoolean(PracticeTime.PREFERENCES_KEY_FIRSTRUN, true)) {
             val i = Intent(this, AppIntroActivity::class.java)
+            i.flags = Intent.FLAG_ACTIVITY_NO_HISTORY
             startActivity(i)
 //        }
     }

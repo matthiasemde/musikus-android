@@ -17,7 +17,6 @@ import com.google.android.material.appbar.CollapsingToolbarLayout
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
-import de.practicetime.practicetime.SessionSummaryAdapter
 import de.practicetime.practicetime.database.entities.SessionWithSectionsWithCategories
 import de.practicetime.practicetime.shared.setCommonToolbar
 import de.practicetime.practicetime.ui.activesession.ActiveSessionActivity

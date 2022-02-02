@@ -40,7 +40,7 @@
             tools:text="1h 20min" />
     </LinearLayout>
 
-    <de.practicetime.practicetime.InterceptTouchCardView
+    <de.practicetime.practicetime.ui.sessionlist.InterceptTouchCardView
         android:id="@+id/summaryCardWrapper"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -213,5 +213,5 @@
             </LinearLayout>
 
         </LinearLayout>
-    </de.practicetime.practicetime.InterceptTouchCardView>
+    </de.practicetime.practicetime.ui.sessionlist.InterceptTouchCardView>
 </LinearLayout>

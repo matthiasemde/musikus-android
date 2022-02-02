@@ -1,29 +1,49 @@
 package de.practicetime.practicetime.ui.intro
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.annotation.ColorInt
+import androidx.annotation.ColorRes
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentContainerView
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.github.appintro.AppIntro
+import com.github.appintro.SlideBackgroundColorHolder
+import com.google.android.material.floatingactionbutton.FloatingActionButton
+import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
+import de.practicetime.practicetime.ui.sessionlist.SessionSummaryAdapter
 import de.practicetime.practicetime.database.entities.*
+import de.practicetime.practicetime.ui.activesession.ActiveSessionActivity
 import de.practicetime.practicetime.ui.goals.GoalAdapter
+import de.practicetime.practicetime.ui.goals.GoalDialog
 import de.practicetime.practicetime.ui.library.CategoryAdapter
-import de.practicetime.practicetime.utils.SECONDS_PER_DAY
-import de.practicetime.practicetime.utils.SECONDS_PER_HOUR
-import de.practicetime.practicetime.utils.getStartOfDay
-import de.practicetime.practicetime.utils.getStartOfWeek
+import de.practicetime.practicetime.ui.library.CategoryDialog
+import de.practicetime.practicetime.utils.*
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import java.util.*
 import kotlin.math.roundToInt
 
 
-class IntroFragment() : Fragment() {
+class IntroFragment(
+    @ColorRes override val defaultBackgroundColorRes: Int = R.color.md_red_300
+) : Fragment(), SlideBackgroundColorHolder {
+    override val defaultBackgroundColor = 0
 
     private lateinit var fragType: IntroFragmentType
+
+    override fun setBackgroundColor(backgroundColor: Int) {
+        requireView().setBackgroundColor(backgroundColor)
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -35,21 +55,28 @@ class IntroFragment() : Fragment() {
         return inflater.inflate(R.layout.fragment_intro, container, false)
     }
 
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
 
         val container = view.findViewById<FragmentContainerView>(R.id.fragment_intro_frag_container_view)
         var fragment: Fragment? = null
         var description = ""
+        var fabClickListener: View.OnClickListener? = null
 
         when(fragType) {
             IntroFragmentType.FRAGMENT_LIBRARY -> {
                 fragment = IntroLibraryFragment()
                 description = getString(R.string.intro_text_library)
+                fabClickListener = libraryClickListener
             }
             IntroFragmentType.FRAGMENT_GOAL -> {
                 fragment = IntroGoalsFragment()
                 description = getString(R.string.intro_text_goals)
+                fabClickListener = goalsClickListener
+            }
+            IntroFragmentType.FRAGMENT_SESSION -> {
+                fragment = IntroSessionsFragment()
+                description = getString(R.string.intro_text_sessions)
+                fabClickListener = sessionsClickListener
             }
         }
 
@@ -59,11 +86,79 @@ class IntroFragment() : Fragment() {
 
         view.findViewById<TextView>(R.id.fragment_intro_text).text =
             description
+
+        view.findViewById<FloatingActionButton>(R.id.fragment_intro_fab).setOnClickListener(
+            fabClickListener
+        )
     }
 
+    private val libraryClickListener = View.OnClickListener {
+        CategoryDialog(
+            context = requireActivity(),
+        ) { newCategory ->
+            lifecycleScope.launch {
+                PracticeTime.dao.insertCategory(newCategory)
+                delay(200)
+                (requireActivity() as AppIntroActivity).changeSlide()
+            }
+        }.show()
+    }
 
+    private val goalsClickListener = View.OnClickListener {
+        lifecycleScope.launch {
+            GoalDialog(
+                context = requireActivity(),
+                categories = PracticeTime.dao.getActiveCategories(),
+            ) { newGoalDescriptionWithCategories, firstTarget ->
+                lifecycleScope.launch {
+                    val newGoalDescriptionId = PracticeTime.dao.insertGoalDescriptionWithCategories(
+                        newGoalDescriptionWithCategories
+                    )
+                    val newGoalInstance = PracticeTime.dao.getGoalWithCategories(
+                        newGoalDescriptionId
+                    ).description.createInstance(Calendar.getInstance(), firstTarget)
+                    PracticeTime.dao.insertGoalInstance(newGoalInstance)
+                    delay(200)
+                    (requireActivity() as AppIntroActivity).changeSlide()
+                }
+            }.show()
+        }
+    }
+
+    private val sessionsClickListener = View.OnClickListener {
+        val i = Intent(requireActivity(), ActiveSessionActivity::class.java)
+        requireActivity().startActivity(i)
+    }
 }
 
+
+class IntroLibraryFragment : Fragment(R.layout.fragment_intro_library) {
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+
+        val recView = view.findViewById<RecyclerView>(R.id.introCategoryList)
+        val catDummyAdapter = CategoryAdapter(
+            getDummyCategories(),
+            context = requireActivity(),
+        )
+
+        recView.apply {
+            layoutManager = GridLayoutManager(context, 2)
+            adapter = catDummyAdapter
+        }
+    }
+
+    private fun getDummyCategories() =
+        listOf(
+            Category(name="B-Dur", colorIndex=0),
+            Category(name="Czerny Etude Nr.2", colorIndex=1),
+            Category(name="Trauermarsch c-Moll", colorIndex=3),
+            Category(name="Andantino", colorIndex=6),
+            Category(name="Klaviersonate", colorIndex=7),
+            Category(name=getString(R.string.dummy_category_name), colorIndex = 4)
+        )
+
+}
 
 class IntroGoalsFragment : Fragment(R.layout.fragment_intro_goals) {
 
@@ -129,30 +224,60 @@ class IntroGoalsFragment : Fragment(R.layout.fragment_intro_goals) {
     }
 }
 
-class IntroLibraryFragment : Fragment(R.layout.fragment_intro_library) {
+class IntroSessionsFragment : Fragment(R.layout.fragment_intro_sessions) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
 
-    val recView = view.findViewById<RecyclerView>(R.id.introCategoryList)
-    val catDummyAdapter = CategoryAdapter(
-        getDummyCategories(),
+    val recView = view.findViewById<RecyclerView>(R.id.introSessionList)
+    val sessionDummyAdapter = SessionSummaryAdapter(
         context = requireActivity(),
+        isExpanded = true,
+        getDummySessions(),
     )
 
     recView.apply {
-        layoutManager = GridLayoutManager(context, 2)
-        adapter = catDummyAdapter
+        layoutManager = LinearLayoutManager(context)
+        adapter = sessionDummyAdapter
     }
 }
 
-private fun getDummyCategories() =
+private fun getDummySessions() =
     listOf(
-        Category(name="Die Schöpfung", colorIndex=0),
-        Category(name="Beethoven Septett", colorIndex=1),
-        Category(name="Trauermarsch c-Moll", colorIndex=3),
-        Category(name="Andantino", colorIndex=6),
-        Category(name="Klaviersonate", colorIndex=7),
-        Category(name=getString(R.string.dummy_category_name), colorIndex = 4)
+        SessionWithSectionsWithCategories(
+            session = PracticeSession(
+                break_duration = 60 * 10,
+                rating = 4,
+                comment = "Great session!"
+            ),
+            sections = listOf(
+                SectionWithCategory(
+                    PracticeSection(
+                        practice_session_id = 1,
+                        category_id = 1,
+                        duration = 60 * 10,
+                        timestamp = getCurrTimestamp()
+                    ),
+                    Category(name="B-Dur", colorIndex=0),
+                ),
+                SectionWithCategory(
+                    PracticeSection(
+                        practice_session_id = 1,
+                        category_id = 1,
+                        duration = 60 * 23,
+                        timestamp = getCurrTimestamp()
+                    ),
+                    Category(name="Czerny Etude Nr.2", colorIndex=1),
+                ),
+                SectionWithCategory(
+                    PracticeSection(
+                        practice_session_id = 1,
+                        category_id = 1,
+                        duration = 60 * 37,
+                        timestamp = getCurrTimestamp()
+                    ),
+                    Category(name=getString(R.string.dummy_category_name), colorIndex = 4)
+                ),
+            )
+        )
     )
-
 }

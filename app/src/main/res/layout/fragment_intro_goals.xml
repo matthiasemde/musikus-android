@@ -43,14 +43,16 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_gravity="bottom|center"
+        android:layout_marginBottom="24dp"
         android:clickable="false"
+        android:scaleX="1.3"
+        android:scaleY="1.3"
         android:text="@string/navigationGoalsTitle"
         android:textAllCaps="false"
         android:textColor="?attr/colorPrimary"
         app:backgroundTint="?android:attr/navigationBarColor"
         app:drawableTint="?attr/colorPrimary"
-        app:drawableTopCompat="@drawable/ic_goals"
-        android:layout_gravity="bottom|center"
-        android:layout_marginBottom="16dp" />
+        app:drawableTopCompat="@drawable/ic_goals" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

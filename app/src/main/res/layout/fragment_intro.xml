@@ -53,7 +53,7 @@
         app:layout_constraintEnd_toStartOf="@+id/fragment_intro_fab"
         app:layout_constraintTop_toTopOf="@+id/fragment_intro_fab"
         app:layout_constraintVertical_bias="1"
-        app:tint="?attr/colorSurface" />
+        app:tint="?attr/colorOnPrimary" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fragment_intro_fab"

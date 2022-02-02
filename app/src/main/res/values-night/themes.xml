@@ -23,5 +23,6 @@
         <item name="colorOnSurfaceLowerContrast">@color/md_grey_400</item>
         <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">false</item>
         <item name="android:navigationBarDividerColor" tools:targetApi="o_mr1">@color/md_grey_700</item>
+        <item name="android:windowLayoutInDisplayCutoutMode" tools:targetApi="o_mr1">shortEdges</item>
     </style>
 </resources>
