@@ -145,12 +145,14 @@ class GoalAdapter(
 
             viewHolder.goalProgressDoneIndicatorView.text = getDurationString(
                 instance.progress,
-                TIME_FORMAT_HUMAN_PRETTY_SHORT
+                TIME_FORMAT_HUMAN_PRETTY,
+                SCALE_FACTOR_FOR_SMALL_TEXT
             )
 
             viewHolder.goalProgressLeftIndicatorView.text = getDurationString(
                 progressLeft,
-                TIME_FORMAT_HUMAN_PRETTY_SHORT
+                TIME_FORMAT_HUMAN_PRETTY,
+                SCALE_FACTOR_FOR_SMALL_TEXT
             )
 
             viewHolder.goalProgressAchievedView.visibility = View.INVISIBLE

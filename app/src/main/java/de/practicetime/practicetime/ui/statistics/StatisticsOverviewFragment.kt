@@ -278,6 +278,7 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
             dataset.apply {
                 colors = PracticeTime.getCategoryColors(requireContext())
                 setDrawValues(false)
+                isUsingSliceColorAsValueLineColor = true
                 sliceSpace = 2f
                 xValuePosition = PieDataSet.ValuePosition.OUTSIDE_SLICE
                 yValuePosition = PieDataSet.ValuePosition.OUTSIDE_SLICE

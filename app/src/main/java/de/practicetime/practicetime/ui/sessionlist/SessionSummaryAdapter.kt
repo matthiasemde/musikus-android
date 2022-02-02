@@ -16,6 +16,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import de.practicetime.practicetime.database.entities.SectionWithCategory
 import de.practicetime.practicetime.database.entities.SessionWithSectionsWithCategories
+import de.practicetime.practicetime.utils.SCALE_FACTOR_FOR_SMALL_TEXT
 import de.practicetime.practicetime.utils.TIME_FORMAT_HUMAN_PRETTY
 import de.practicetime.practicetime.utils.getDurationString
 import java.text.SimpleDateFormat
@@ -250,7 +251,7 @@ class SessionSummaryAdapter(
                 practiceDurationView.text = getDurationString(practiceDuration, TIME_FORMAT_HUMAN_PRETTY)
 
                 // set the break time text equal to the sessions break duration
-                breakDurationView.text = getDurationString(breakDuration, TIME_FORMAT_HUMAN_PRETTY)
+                breakDurationView.text = getDurationString(breakDuration, TIME_FORMAT_HUMAN_PRETTY, SCALE_FACTOR_FOR_SMALL_TEXT)
 
                 // set the sections and update the section adapter about the change
                 sectionsWithCategoriesList.clear()
@@ -305,7 +306,7 @@ class SessionSummaryAdapter(
 
                     // contents of the view with that element
                     viewHolder.sectionName.text = category.name
-                    viewHolder.sectionDuration.text = getDurationString(sectionDuration, TIME_FORMAT_HUMAN_PRETTY)
+                    viewHolder.sectionDuration.text = getDurationString(sectionDuration, TIME_FORMAT_HUMAN_PRETTY, SCALE_FACTOR_FOR_SMALL_TEXT)
                 }
 
                 // Return the size of your dataset (invoked by the layout manager)

@@ -234,7 +234,7 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
         limit: Float,
         labelPos: LimitLine.LimitLabelPosition = LimitLine.LimitLabelPosition.RIGHT_TOP
     ): LimitLine {
-        return LimitLine(limit, getDurationString(limit.toInt(), TIME_FORMAT_HUMAN_PRETTY_SHORT).toString()).apply {
+        return LimitLine(limit, getDurationString(limit.toInt(), TIME_FORMAT_HUMAN_PRETTY).toString()).apply {
             lineWidth = 1f
             labelPosition = labelPos
             textSize = 10f
@@ -535,7 +535,7 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
     private inner class YAxisValueFormatter: ValueFormatter() {
 
         override fun getFormattedValue(seconds: Float): String {
-            return getDurationString(seconds.toInt(), TIME_FORMAT_HUMAN_PRETTY_SHORT).toString()
+            return getDurationString(seconds.toInt(), TIME_FORMAT_HUMAN_PRETTY).toString()
         }
     }
 
@@ -550,7 +550,7 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
                     barChart.highlighted != null &&                                 // there are highlighted values
                     barChart.highlighted.find { it.x == barEntry.x } != null) {     // barEntry is among the highlighted Values
                     // draw the time
-                    getDurationString(yVal.toInt(), TIME_FORMAT_HUMAN_PRETTY_SHORT).toString()
+                    getDurationString(yVal.toInt(), TIME_FORMAT_HUMAN_PRETTY).toString()
                 } else {
                     // hide total time
                     ""
@@ -612,7 +612,7 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
 
             // TODO take target data from most recent Instance enough?
             holder.goalDescTv.text = TextUtils.concat(
-                getDurationString(elem.goalInstances.last().target, TIME_FORMAT_HUMAN_PRETTY_SHORT),
+                getDurationString(elem.goalInstances.last().target, TIME_FORMAT_HUMAN_PRETTY, SCALE_FACTOR_FOR_SMALL_TEXT),
                 " ",
                 periodFormatted
             )

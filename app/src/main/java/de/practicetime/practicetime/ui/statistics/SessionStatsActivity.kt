@@ -783,7 +783,7 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
     private inner class YAxisValueFormatter: ValueFormatter() {
 
         override fun getFormattedValue(seconds: Float): String {
-            return getDurationString(seconds.toInt(), TIME_FORMAT_HUMAN_PRETTY_SHORT).toString()
+            return getDurationString(seconds.toInt(), TIME_FORMAT_HUMAN_PRETTY).toString()
         }
     }
 
@@ -830,7 +830,7 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
                     if (stackEntriesNotZero == 1) {
                         // reset (set to value which will never occur on x axis) lastEntry so that un- and then re-selecting same bar works
                         lastEntryX = 100f
-                        return prefix + getDurationString(stackedEntry.yVals?.sum()?.toInt() ?: 0, TIME_FORMAT_HUMAN_PRETTY_SHORT)
+                        return prefix + getDurationString(stackedEntry.yVals?.sum()?.toInt() ?: 0, TIME_FORMAT_HUMAN_PRETTY)
                     }
                 } else {
                     lastEntryX = stackedEntry.x
@@ -839,7 +839,7 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
                         // reset (set to value which will never occur on x axis) lastEntry so that un- and then re-selecting same bar works
                         lastEntryX = 100f
                         // we reached the last non-zero stack of the bar, so we're at the top
-                        return prefix + getDurationString(stackedEntry.yVals?.sum()?.toInt() ?: 0, TIME_FORMAT_HUMAN_PRETTY_SHORT)
+                        return prefix + getDurationString(stackedEntry.yVals?.sum()?.toInt() ?: 0, TIME_FORMAT_HUMAN_PRETTY)
                     }
                 }
             }
@@ -890,7 +890,7 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
                 updateChartData(recalculateDurs = false)  // notify fragment to change chart
             }
 
-            holder.catTimeView.text = getDurationString(elem.totalDuration, TIME_FORMAT_HUMAN_PRETTY_SHORT)
+            holder.catTimeView.text = getDurationString(elem.totalDuration, TIME_FORMAT_HUMAN_PRETTY)
         }
 
         override fun getItemCount(): Int = categories.filter { it.visible }.size
