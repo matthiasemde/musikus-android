@@ -26,6 +26,12 @@
     </item>
 
     <item
+        android:id="@+id/commonToolbarHelp"
+        android:enabled="true"
+        android:title="@string/help_title"
+        app:showAsAction="never" />
+
+    <item
         android:id="@+id/commonToolbarDonations"
         android:enabled="true"
         android:title="@string/donations_title"

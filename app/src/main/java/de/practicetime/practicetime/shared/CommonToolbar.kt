@@ -8,8 +8,8 @@ import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.DrawableCompat
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
-import de.practicetime.practicetime.ui.activesession.ActiveSessionActivity
 import de.practicetime.practicetime.ui.overflowitems.DonationsActivity
+import de.practicetime.practicetime.ui.overflowitems.HelpActivity
 
 fun setCommonToolbar(context: Activity, toolbar: androidx.appcompat.widget.Toolbar) {
     val prefs = context.getPreferences(Context.MODE_PRIVATE)
@@ -40,6 +40,9 @@ fun setCommonToolbar(context: Activity, toolbar: androidx.appcompat.widget.Toolb
                 }
                 R.id.commonToolbarDonations -> {
                     context.startActivity(Intent(context, DonationsActivity::class.java))
+                }
+                R.id.commonToolbarHelp -> {
+                    context.startActivity(Intent(context, HelpActivity::class.java))
                 }
             }
             setToolbarIcons(context, toolbar)

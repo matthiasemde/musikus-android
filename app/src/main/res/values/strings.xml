@@ -159,4 +159,8 @@
     <string name="in_month">In %1$s</string>
     <string name="donations_title">Support us!</string>
     <string name="donations_text">If you are enjoying the app and would like to support us, we would be very thankful for a small donation.\n This will help us in developing awesome new features like\n &#8226; Sharable sessions\n &#8226; Integrated tuner\n &#8226; Special layout for tablets\n &#8226; And many more!</string>
+    <string name="help_title">Help</string>
+    <string name="help_replay_intro">Replay app introduction</string>
+    <string name="help_tips_title">Tips and tricks</string>
+    <string name="help_tips_text">Have you tried…\n &#8226; Swiping sections during an active session to delete them,\n&#8226; Long-clicking on sessions, goals or library items to select and delete them? </string>
 </resources>

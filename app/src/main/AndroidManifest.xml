@@ -43,6 +43,10 @@
             android:exported="false"
             android:parentActivityName=".ui.MainActivity" />
         <activity
+            android:name=".ui.overflowitems.HelpActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.MainActivity" />
+        <activity
             android:name=".ui.sessionlist.FullscreenSessionActivity"
             android:exported="false"
             android:parentActivityName=".ui.MainActivity"
