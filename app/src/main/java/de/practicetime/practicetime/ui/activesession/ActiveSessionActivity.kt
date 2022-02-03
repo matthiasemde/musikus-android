@@ -143,7 +143,8 @@ class ActiveSessionActivity : AppCompatActivity() {
 
         // call onBackPressed when upper left Button is pressed to respect custom animation
         findViewById<ImageButton>(R.id.btn_back).setOnClickListener {
-            onBackPressed()
+            super.onBackPressed()
+            overridePendingTransition(0, R.anim.slide_out_down)
         }
 
         // show the discard session dialog when btn_discard is pressed
