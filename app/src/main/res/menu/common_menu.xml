@@ -1,32 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
-    <item
-        android:id="@+id/topToolbarSettings"
-        android:enabled="true"
-        android:title="@string/topToolBarSettings"
-        app:showAsAction="never" />
 
     <item
-        android:id="@+id/topToolbarThemeSwitch"
+        android:id="@+id/commonToolbarThemeSwitch"
         android:enabled="true"
         android:title="@string/topToolBarTheme"
         app:showAsAction="never" >
 
         <menu>
             <item
-                android:id="@+id/topToolbarThemeSwitchAuto"
+                android:id="@+id/commonToolbarThemeSwitchAuto"
                 android:title="@string/topToolBarThemeAuto"/>
 
             <item
-                android:id="@+id/topToolbarThemeSwitchLight"
+                android:id="@+id/commonToolbarThemeSwitchLight"
                 android:title="@string/topToolBarThemeLight" />
 
             <item
-                android:id="@+id/topToolbarThemeSwitchDark"
+                android:id="@+id/commonToolbarThemeSwitchDark"
                 android:title="@string/topToolBarThemeDark" />
 
         </menu>
 
     </item>
+
+    <item
+        android:id="@+id/commonToolbarDonations"
+        android:enabled="true"
+        android:title="@string/donations_title"
+        app:showAsAction="never" />
 </menu>

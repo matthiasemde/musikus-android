@@ -157,4 +157,6 @@
     <string name="headline_stats_session_ratings">Ratings</string>
     <string name="headline_stats_session_ratings_subheading">Your session ratings</string>
     <string name="in_month">In %1$s</string>
+    <string name="donations_title">Support us!</string>
+    <string name="donations_text">If you are enjoying the app and would like to support us, we would be very thankful for a small donation.\n This will help us in developing awesome new features like\n &#8226; Sharable sessions\n &#8226; Integrated tuner\n &#8226; Special layout for tablets\n &#8226; And many more!</string>
 </resources>

@@ -2,11 +2,14 @@ package de.practicetime.practicetime.shared
 
 import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.DrawableCompat
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
+import de.practicetime.practicetime.ui.activesession.ActiveSessionActivity
+import de.practicetime.practicetime.ui.overflowitems.DonationsActivity
 
 fun setCommonToolbar(context: Activity, toolbar: androidx.appcompat.widget.Toolbar) {
     val prefs = context.getPreferences(Context.MODE_PRIVATE)
@@ -17,23 +20,26 @@ fun setCommonToolbar(context: Activity, toolbar: androidx.appcompat.widget.Toolb
         setToolbarIcons(context, toolbar)
         setOnMenuItemClickListener {
             when (it.itemId) {
-                R.id.topToolbarThemeSwitchAuto -> {
+                R.id.commonToolbarThemeSwitchAuto -> {
                     AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
                     prefs.edit().putInt(
                         PracticeTime.PREFERENCES_KEY_THEME,
                         AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM).apply()
                 }
-                R.id.topToolbarThemeSwitchDark -> {
+                R.id.commonToolbarThemeSwitchDark -> {
                     AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
                     prefs.edit().putInt(
                         PracticeTime.PREFERENCES_KEY_THEME,
                         AppCompatDelegate.MODE_NIGHT_YES).apply()
                 }
-                R.id.topToolbarThemeSwitchLight -> {
+                R.id.commonToolbarThemeSwitchLight -> {
                     AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
                     prefs.edit().putInt(
                         PracticeTime.PREFERENCES_KEY_THEME,
                         AppCompatDelegate.MODE_NIGHT_NO).apply()
+                }
+                R.id.commonToolbarDonations -> {
+                    context.startActivity(Intent(context, DonationsActivity::class.java))
                 }
             }
             setToolbarIcons(context, toolbar)
@@ -44,16 +50,16 @@ fun setCommonToolbar(context: Activity, toolbar: androidx.appcompat.widget.Toolb
 }
 
 private fun setToolbarIcons(context: Activity, toolbar: androidx.appcompat.widget.Toolbar) {
-    toolbar.menu.findItem(R.id.topToolbarThemeSwitchAuto).icon = null
-    toolbar.menu.findItem(R.id.topToolbarThemeSwitchDark).icon = null
-    toolbar.menu.findItem(R.id.topToolbarThemeSwitchLight).icon = null
+    toolbar.menu.findItem(R.id.commonToolbarThemeSwitchAuto).icon = null
+    toolbar.menu.findItem(R.id.commonToolbarThemeSwitchDark).icon = null
+    toolbar.menu.findItem(R.id.commonToolbarThemeSwitchLight).icon = null
 
     val itemToSetIcon = when (AppCompatDelegate.getDefaultNightMode()) {
         AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM, AppCompatDelegate.MODE_NIGHT_UNSPECIFIED ->
-            R.id.topToolbarThemeSwitchAuto
-        AppCompatDelegate.MODE_NIGHT_NO -> R.id.topToolbarThemeSwitchLight
-        AppCompatDelegate.MODE_NIGHT_YES -> R.id.topToolbarThemeSwitchDark
-        else -> R.id.topToolbarThemeSwitchDark
+            R.id.commonToolbarThemeSwitchAuto
+        AppCompatDelegate.MODE_NIGHT_NO -> R.id.commonToolbarThemeSwitchLight
+        AppCompatDelegate.MODE_NIGHT_YES -> R.id.commonToolbarThemeSwitchDark
+        else -> R.id.commonToolbarThemeSwitchDark
     }
 
     toolbar.menu.findItem(itemToSetIcon).apply {

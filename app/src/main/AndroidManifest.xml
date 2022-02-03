@@ -39,6 +39,10 @@
             android:parentActivityName=".ui.MainActivity"
             android:windowSoftInputMode="adjustNothing" />
         <activity
+            android:name=".ui.overflowitems.DonationsActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.MainActivity" />
+        <activity
             android:name=".ui.sessionlist.FullscreenSessionActivity"
             android:exported="false"
             android:parentActivityName=".ui.MainActivity"
