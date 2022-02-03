@@ -28,6 +28,7 @@ import com.google.android.material.button.MaterialButton
 import com.google.android.material.snackbar.Snackbar
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
+import de.practicetime.practicetime.components.NonDraggableRatingBar
 import de.practicetime.practicetime.database.entities.Category
 import de.practicetime.practicetime.database.entities.PracticeSection
 import de.practicetime.practicetime.database.entities.PracticeSession
@@ -904,43 +905,10 @@ class ActiveSessionActivity : AppCompatActivity() {
         val inflater = this.layoutInflater
         val dialogView = inflater.inflate(R.layout.dialog_view_end_session, null)
 
-        val dialogRatingBar = dialogView.findViewById<RatingBar>(R.id.dialogRatingBar)
+        val dialogRatingBar = dialogView.findViewById<NonDraggableRatingBar>(R.id.dialogRatingBar)
         val dialogComment = dialogView.findViewById<EditText>(R.id.dialogComment)
 
-        dialogRatingBar.setOnTouchListener (object : View.OnTouchListener {
-            var handleUp = false
 
-            override fun onTouch(v: View?, event: MotionEvent?): Boolean {
-                return when (event?.action) {
-                    MotionEvent.ACTION_DOWN -> {
-                        handleUp = true
-                        v?.dispatchTouchEvent(MotionEvent.obtain(
-                            event.downTime,
-                            event.eventTime,
-                            MotionEvent.ACTION_UP,
-                            event.x,
-                            event.y,
-                            event.metaState
-                        ))
-                        true
-                    }
-
-                    MotionEvent.ACTION_MOVE -> {
-                        // When true is returned, view will not handle this event.
-                        true
-                    }
-                    MotionEvent.ACTION_UP -> {
-                        // When true is returned, view will not handle this event.
-                        if(handleUp) {
-                            handleUp = false
-                            false
-                        } else
-                            true
-                    }
-                    else -> false
-                }
-            }
-        })
 
         // Dialog Setup
         endSessionDialogBuilder.apply {

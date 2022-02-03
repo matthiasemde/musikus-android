@@ -63,17 +63,31 @@
                     android:layout_marginBottom="8dp"
                     android:background="?android:attr/listDivider" />
 
-                <RatingBar
-                    android:id="@+id/fullscreen_session_rating_bar"
-                    style="@style/Widget.AppCompat.RatingBar"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="24dp"
-                    android:indeterminateDrawable="@drawable/abc_ratingbar_indicator_material"
-                    android:numStars="5"
-                    android:progressDrawable="@drawable/abc_ratingbar_indicator_material"
-                    android:rating="3"
-                    android:stepSize="1" />
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="horizontal">
+
+                    <de.practicetime.practicetime.components.NonDraggableRatingBar
+                        android:id="@+id/fullscreen_session_rating_bar"
+                        style="@style/Widget.AppCompat.RatingBar"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="24dp"
+                        android:layout_marginEnd="16dp"
+                        android:indeterminateDrawable="@drawable/abc_ratingbar_indicator_material"
+                        android:numStars="5"
+                        android:progressDrawable="@drawable/abc_ratingbar_indicator_material"
+                        android:rating="3"
+                        android:stepSize="1" />
+
+                    <ImageView
+                        android:id="@+id/imageView"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        app:srcCompat="@drawable/ic_edit" />
+                </LinearLayout>
 
                 <TextView
                     android:layout_width="wrap_content"
