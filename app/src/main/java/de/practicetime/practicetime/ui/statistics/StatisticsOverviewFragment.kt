@@ -21,6 +21,7 @@ import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
 import de.practicetime.practicetime.database.entities.GoalType
 import de.practicetime.practicetime.database.entities.SessionWithSectionsWithCategories
+import de.practicetime.practicetime.shared.setCommonToolbar
 import de.practicetime.practicetime.updateGoals
 import de.practicetime.practicetime.utils.*
 import kotlinx.coroutines.launch
@@ -70,6 +71,8 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
                 requireView().findViewById<TextView>(R.id.statisticsHint).visibility = View.VISIBLE
             }
         }
+
+        setCommonToolbar(requireActivity(), view.findViewById(R.id.statsToolbar))
     }
 
     /**

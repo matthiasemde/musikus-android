@@ -22,6 +22,7 @@ import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
 import de.practicetime.practicetime.database.entities.GoalDescriptionWithCategories
 import de.practicetime.practicetime.database.entities.GoalInstanceWithDescriptionWithCategories
+import de.practicetime.practicetime.shared.setCommonToolbar
 import de.practicetime.practicetime.updateGoals
 import kotlinx.coroutines.launch
 import java.util.*
@@ -49,6 +50,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
         activity?.onBackPressedDispatcher?.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 if(selectedGoals.isNotEmpty()){
+                    clearGoalSelection()
                     resetToolbar()
                 }else{
                     isEnabled = false
@@ -73,6 +75,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
         }
 
         view.findViewById<FloatingActionButton>(R.id.goalsFab).setOnClickListener {
+            clearGoalSelection()
             resetToolbar()
             addGoalDialog?.show()
         }
@@ -85,6 +88,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
 
         goalsToolbar = view.findViewById(R.id.goalsToolbar)
         goalsCollapsingToolbarLayout = view.findViewById(R.id.collapsing_toolbar_layout)
+        resetToolbar()  // initialize the toolbar with all its listeners
     }
 
     private fun initGoalList() {
@@ -174,6 +178,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
                 // set the back button and its click listener
                 setNavigationIcon(R.drawable.ic_nav_back)
                 setNavigationOnClickListener {
+                    clearGoalSelection()
                     resetToolbar()
                 }
 
@@ -226,18 +231,22 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
         return true
     }
 
+    // remove goals from selections list and notify the recycler items
+    private fun clearGoalSelection() {
+        val tmpCopy = selectedGoals.toList()
+        selectedGoals.clear()
+        tmpCopy.forEach { goalAdapter?.notifyItemChanged(it) }
+    }
+
     // reset the toolbar and associated data
     private fun resetToolbar() {
         goalsToolbar.apply {
             menu?.clear()
+            setCommonToolbar(requireActivity(), this)
             inflateMenu(R.menu.goals_toolbar_menu_base)
             navigationIcon = null
         }
         goalsCollapsingToolbarLayout.background = null
-
-        val tmpCopy = selectedGoals.toList()
-        selectedGoals.clear()
-        tmpCopy.forEach { goalAdapter?.notifyItemChanged(it) }
     }
 
     // the handler for creating new goals
@@ -260,7 +269,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
                             PracticeTime.dao.computeGoalProgressForSession(
                                 PracticeTime.dao.getSessionWithSectionsWithCategoriesWithGoals(s.session.id)
                             ).also { progress ->
-                                instance.progress += progress.get(d.description.id) ?: 0
+                                instance.progress += progress[d.description.id] ?: 0
                             }
                         }
 
@@ -294,6 +303,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
                 goalAdapterData[i].instance.target = newTarget
                 goalAdapter?.notifyItemChanged(i)
             }
+            clearGoalSelection()
             resetToolbar()
         }
     }
@@ -320,6 +330,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
             Toast.makeText(context, R.string.deleteGoalToast, Toast.LENGTH_SHORT).show()
         }
         if (goalAdapterData.isEmpty()) showHint()
+        clearGoalSelection()
         resetToolbar()
     }
 
@@ -345,6 +356,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
             Toast.makeText(context, R.string.deleteGoalToast, Toast.LENGTH_SHORT).show()
         }
         if (goalAdapterData.isEmpty()) showHint()
+        clearGoalSelection()
         resetToolbar()
     }
 

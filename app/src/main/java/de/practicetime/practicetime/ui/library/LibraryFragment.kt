@@ -21,6 +21,7 @@ import com.google.android.material.snackbar.Snackbar
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
 import de.practicetime.practicetime.database.entities.Category
+import de.practicetime.practicetime.shared.setCommonToolbar
 import kotlinx.coroutines.launch
 
 class LibraryFragment : Fragment(R.layout.fragment_library) {
@@ -44,6 +45,7 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
         activity?.onBackPressedDispatcher?.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 if(selectedCategories.isNotEmpty()){
+                    clearCategorySelection()
                     resetToolbar()
                 }else{
                     isEnabled = false
@@ -61,6 +63,7 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
         addCategoryDialog = CategoryDialog(requireActivity(), ::addCategoryHandler)
 
         view.findViewById<FloatingActionButton>(R.id.libraryFab).setOnClickListener {
+            clearCategorySelection()
             resetToolbar()
             addCategoryDialog?.show()
         }
@@ -73,6 +76,7 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
 
         libraryToolbar = view.findViewById(R.id.libraryToolbar)
         libraryCollapsingToolbarLayout = view.findViewById(R.id.library_collapsing_toolbar_layout)
+        resetToolbar()  // initialize the toolbar with all its listeners
     }
 
     private fun initCategoryList() {
@@ -149,6 +153,7 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
                 // set the back button and its click listener
                 setNavigationIcon(R.drawable.ic_nav_back)
                 setNavigationOnClickListener {
+                    clearCategorySelection()
                     resetToolbar()
                 }
 
@@ -206,18 +211,21 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
         return true
     }
 
+    private fun clearCategorySelection() {
+        val tmpCopy = selectedCategories.toList()
+        selectedCategories.clear()
+        tmpCopy.forEach { categoryAdapter?.notifyItemChanged(it) }
+    }
+
     // reset the toolbar and associated data
     private fun resetToolbar() {
         libraryToolbar.apply {
             menu?.clear()
+            setCommonToolbar(requireActivity(), this)
             inflateMenu(R.menu.library_toolbar_menu_base)
             navigationIcon = null
         }
         libraryCollapsingToolbarLayout.background = null
-
-        val tmpCopy = selectedCategories.toList()
-        selectedCategories.clear()
-        tmpCopy.forEach { categoryAdapter?.notifyItemChanged(it) }
     }
 
     // the handler for creating new categories
@@ -240,6 +248,7 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
                 activeCategories[i] = category
                 categoryAdapter?.notifyItemChanged(i)
             }
+            clearCategorySelection()
             resetToolbar()
         }
     }
@@ -274,6 +283,7 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
             }
 
             if(activeCategories.isEmpty()) showHint()
+            clearCategorySelection()
             resetToolbar()
         }
     }
