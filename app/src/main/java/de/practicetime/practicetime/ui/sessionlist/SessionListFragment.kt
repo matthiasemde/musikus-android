@@ -97,6 +97,16 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
             it.build()
         })
 
+        requireActivity().findViewById<RecyclerView>(R.id.sessionList).apply {
+            layoutManager = LinearLayoutManager(context)
+            adapter = sessionListAdapter
+            itemAnimator?.apply{
+                changeDuration = 100L // default is 250
+                moveDuration = 200L
+                removeDuration = 100L
+            }
+        }
+
         lifecycleScope.launch {
             // fetch all sessions from the database
             PracticeTime.dao.getSessionsWithSectionsWithCategories().also { sessions ->
@@ -168,16 +178,6 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
                     )
                 )
                 sessionListAdapter.notifyItemInserted(0)
-            }
-
-            requireActivity().findViewById<RecyclerView>(R.id.sessionList).apply {
-                layoutManager = LinearLayoutManager(context)
-                adapter = sessionListAdapter
-                itemAnimator?.apply{
-                    changeDuration = 100L // default is 250
-                    moveDuration = 200L
-                    removeDuration = 100L
-                }
             }
         }
     }

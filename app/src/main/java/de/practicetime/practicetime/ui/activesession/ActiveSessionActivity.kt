@@ -962,7 +962,7 @@ class ActiveSessionActivity : AppCompatActivity() {
                         stopService(it)
                     }
                     // terminate and go back to MainActivity
-                    finish()
+                    super.onBackPressed()
                 }
                 setNegativeButton(R.string.discard_session_dialog_cancel) { dialog, _ ->
                     if (!mService.paused) {
