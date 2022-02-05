@@ -649,8 +649,9 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
                     if (elem.category != null)
                         color = ColorStateList.valueOf(categoryColors[elem.category.colorIndex])
 
-                    setCardBackgroundColor(color.withAlpha(90))
+                    setCardBackgroundColor(color.withAlpha(50))
                     cardElevation = 0f
+
                 }
 
                 val sv = findViewById<NestedScrollView>(R.id.scrollview_statistics)
@@ -678,7 +679,7 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
 
                 if (position != selectedGoal)
                     color = ColorStateList.valueOf(
-                        PracticeTime.getThemeColor(R.attr.colorSurface, this@GoalStatsActivity))
+                        PracticeTime.getThemeColor(android.R.attr.colorBackground, this@GoalStatsActivity))
 
                 setCardBackgroundColor(color)
             }
