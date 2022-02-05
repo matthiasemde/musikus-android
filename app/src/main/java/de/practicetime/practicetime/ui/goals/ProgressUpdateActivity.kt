@@ -16,7 +16,7 @@ import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
 import de.practicetime.practicetime.database.entities.GoalInstanceWithDescriptionWithCategories
 import de.practicetime.practicetime.ui.MainActivity
-import de.practicetime.practicetime.utils.*
+import de.practicetime.practicetime.utils.TIME_FORMAT_HUMAN_PRETTY
 import de.practicetime.practicetime.utils.getDurationString
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -41,6 +41,11 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        setSupportActionBar(findViewById(R.id.activity_progress_update_toolbar))
+        supportActionBar.apply {
+            title = getString(R.string.progressUpdateTitle)
+        }
 
         // prepare the skip and continue button
         continueButton =  findViewById(R.id.progressUpdateLeave)

@@ -11,7 +11,10 @@ import android.provider.MediaStore
 import android.text.TextUtils
 import android.util.Log
 import android.util.TypedValue
-import android.view.*
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.view.WindowManager
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -41,7 +44,6 @@ import de.practicetime.practicetime.updateGoals
 import de.practicetime.practicetime.utils.TIME_FORMAT_HMS_DIGITAL
 import de.practicetime.practicetime.utils.getDurationString
 import kotlinx.coroutines.launch
-import org.w3c.dom.Text
 import java.io.File
 import java.io.IOException
 import java.text.SimpleDateFormat
@@ -62,6 +64,8 @@ class ActiveSessionActivity : AppCompatActivity() {
     private lateinit var mService: SessionForegroundService
     private var mBound: Boolean = false
     private var stopDialogShown = false
+
+    private var quote: CharSequence = ""
 
     private lateinit var metronomeBottomSheet: LinearLayout
     private lateinit var metronomeBottomSheetBehaviour: BottomSheetBehavior<LinearLayout>
@@ -88,6 +92,7 @@ class ActiveSessionActivity : AppCompatActivity() {
             updateViews()
             adaptUIPausedState(mService.paused)
             setPauseStopBtnVisibility(mService.sessionActive)
+            adaptBottomTextView(mService.sessionActive)
         }
 
         override fun onServiceDisconnected(arg0: ComponentName) {
@@ -155,14 +160,9 @@ class ActiveSessionActivity : AppCompatActivity() {
         }
 
         // load a random quote
-        val quote = PracticeTime.getRandomQuote(this)
-        findViewById<TextView>(R.id.tv_quote).text = quote
+        quote = PracticeTime.getRandomQuote(this)
         findViewById<TextView>(R.id.tv_overlay_pause).text = quote
-        findViewById<TextView>(R.id.tv_hint_start_new_session).visibility = View.GONE
-        Handler(Looper.getMainLooper()).postDelayed({
-            hideQuoteShowHint()
-        }, 7000)
-
+        findViewById<TextView>(R.id.tv_quote).text = quote
     }
 
     private fun initCategoryList() {
@@ -734,6 +734,7 @@ class ActiveSessionActivity : AppCompatActivity() {
         val categoryId = activeCategories[index].id
 
         if (!mService.sessionActive) {   // session starts now
+
             //start the service so that timer starts
             Intent(this, SessionForegroundService::class.java).also {
                 startService(it)
@@ -744,7 +745,7 @@ class ActiveSessionActivity : AppCompatActivity() {
             lifecycleScope.launch { updateGoals(PracticeTime.dao) }
         } else if (mService.sectionBuffer.last().let {         // when session is running, don't allow starting if...
             (categoryId == it.first.category_id) ||           // ... in the same category
-            (it.first.duration ?: 0 - it.second < 1)           // ... section running for less than 1sec
+            (it.first.duration ?: 0 - it.second < 1)          // ... section running for less than 1sec
         }) {
             return  // ignore press then
         }
@@ -753,6 +754,7 @@ class ActiveSessionActivity : AppCompatActivity() {
         mService.startNewSection(categoryId, activeCategories[index].name)
 
         updateActiveSectionView()
+        adaptBottomTextView(true)
 
         // this only re-draws the new item, also, it adds animation which would not occur with notifyDataSetChanged()
         // we use the second last item because the last one is always hidden (in onBindViewHolder()). This ensures insertion
@@ -842,34 +844,49 @@ class ActiveSessionActivity : AppCompatActivity() {
     }
 
 
-    private fun hideQuoteShowHint() {
-        val transition = Fade().apply {
-            duration = 300
-            addTarget(R.id.tv_hint_start_new_session)
-            addTarget(R.id.tv_quote)
-        }
-        TransitionManager.beginDelayedTransition(
-            findViewById(R.id.coordinator_layout_active_session),
-            transition
-        )
-        findViewById<TextView>(R.id.tv_hint_start_new_session).visibility = View.VISIBLE
-        findViewById<TextView>(R.id.tv_quote).visibility = View.GONE
-    }
+    /**
+     * Adapt the bottom text views to show relevant info to the user:
+     * - before session start: Quote (or hint, if first session ever). After 7s, show hint
+     * - after session start: None (or hint to add new section, if first session)
+     * - after chosing second cat: None (or hin to delete section, if first session)
+     */
+    private fun adaptBottomTextView(sessionActive: Boolean) {
 
+        val tvHint = findViewById<TextView>(R.id.activity_active_session_tv_bottom)
+        val tvQuote = findViewById<TextView>(R.id.tv_quote)
 
-    private fun hideHintTextView() {
-        findViewById<RecyclerView>(R.id.currentSections).visibility = View.VISIBLE
-        val transition = Fade().apply {
-            duration = 300
-            addTarget(R.id.tv_hint_start_new_session)
-            addTarget(R.id.tv_quote)
+        tvHint.visibility = View.GONE
+        tvQuote.visibility = View.GONE
+
+        if (!sessionActive) {
+            if (PracticeTime.noSessionsYet) {
+                tvHint.apply {
+                    visibility = View.VISIBLE
+                    text = getString(R.string.hint_start_new_session)
+                }
+            } else {
+                tvQuote.visibility = View.VISIBLE
+                Handler(Looper.getMainLooper()).postDelayed({
+                    if (!PracticeTime.serviceIsRunning)
+                        tvHint.visibility = View.VISIBLE
+                    tvQuote.visibility = View.GONE
+                }, 7000)
+            }
+        } else {
+            // Session active
+            if (PracticeTime.noSessionsYet) {
+                when (mService.sectionBuffer.size) {
+                    1 -> {
+                        tvHint.visibility = View.VISIBLE    // must be set separately otherwise it will blink on size >2
+                        tvHint.text = getString(R.string.hint_add_new_section)
+                    }
+                    2 -> {
+                        tvHint.visibility = View.VISIBLE
+                        tvHint.text = getString(R.string.hint_delete_section)
+                    }
+                }
+            }
         }
-        TransitionManager.beginDelayedTransition(
-            findViewById(R.id.coordinator_layout_active_session),
-            transition
-        )
-        findViewById<TextView>(R.id.tv_hint_start_new_session).visibility = View.GONE
-        findViewById<TextView>(R.id.tv_quote).visibility = View.GONE
     }
 
     private fun finishSession(rating: Int, comment: String?) {
@@ -1051,7 +1068,6 @@ class ActiveSessionActivity : AppCompatActivity() {
     private fun updateViews() {
         val practiceTimeView = findViewById<TextView>(R.id.practiceTimer)
         if (mService.sessionActive) {
-            hideHintTextView()
             // make discard option visible
             findViewById<ImageButton>(R.id.btn_discard).visibility = View.VISIBLE
             val fabInfoPause = findViewById<TextView>(R.id.fab_info_popup)
@@ -1067,7 +1083,7 @@ class ActiveSessionActivity : AppCompatActivity() {
             updateActiveSectionView()
         } else {
             practiceTimeView.text = "00:00:00"
-            findViewById<TextView>(R.id.tv_hint_start_new_session).text = getString(R.string.start_new_session_hint)
+            findViewById<TextView>(R.id.activity_active_session_tv_bottom).text = getString(R.string.hint_start_new_session)
         }
     }
 

@@ -28,7 +28,7 @@
     <string name="categories">Library items:</string>
     <string name="metronome">Metronome</string>
     <string name="recorder">Recorder</string>
-    <string name="start_new_session_hint">Select a library item to start a new session</string>
+    <string name="hint_start_new_session">Select a library item to start a new session</string>
     <string name="hide_month">Hide month</string>
     <string name="show_month">Show month</string>
     <string name="progressUpdateContinue">Continue</string>
@@ -162,5 +162,7 @@
     <string name="help_title">Help</string>
     <string name="help_replay_intro">Replay app introduction</string>
     <string name="help_tips_title">Tips and tricks</string>
-    <string name="help_tips_text">Have you tried…\n &#8226; Swiping sections during an active session to delete them,\n&#8226; Long-clicking on sessions, goals or library items to select and delete them? </string>
+    <string name="help_tips_text">Have you tried…\n &#8226; Swiping sections during an active session to delete them,\n&#8226; Long-clicking on sessions, goals or library items to select and delete them?</string>
+    <string name="hint_add_new_section">Choose another item to add it to your session</string>
+    <string name="hint_delete_section">You can swipe left on an entry to remove it from your session</string>
 </resources>

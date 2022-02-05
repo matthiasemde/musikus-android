@@ -15,6 +15,7 @@
         android:layout_marginBottom="56dp"
         android:clipToPadding="false"
         android:orientation="vertical"
+        android:animateLayoutChanges="true"
         tools:context=".ActiveSessionFragment">
 
         <TextView
@@ -107,44 +108,54 @@
             android:background="?android:attr/listDivider"
             android:backgroundTint="?attr/colorPrimary" />
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/currentSections"
+        <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1.4"
-            android:clipToPadding="false"
-            android:fadeScrollbars="false"
-            android:paddingStart="30dp"
-            android:paddingTop="10dp"
-            android:paddingEnd="30dp"
-            android:paddingBottom="16dp"
-            android:visibility="gone"
-            tools:itemCount="3"
-            tools:listitem="@layout/listitem_active_session_section"
-            tools:visibility="visible" />
+            android:animateLayoutChanges="true">
 
-        <TextView
-            android:id="@+id/tv_hint_start_new_session"
-            android:layout_width="wrap_content"
-            android:layout_height="0dp"
-            android:layout_gravity="center"
-            android:layout_marginStart="24dp"
-            android:layout_marginEnd="24dp"
-            android:layout_weight="1.4"
-            android:gravity="center"
-            android:textSize="18sp"
-            tools:text="@string/start_new_session_hint" />
 
-        <TextView
-            android:id="@+id/tv_quote"
-            android:layout_width="wrap_content"
-            android:layout_height="0dp"
-            android:layout_gravity="center"
-            android:layout_marginStart="24dp"
-            android:layout_marginEnd="24dp"
-            android:layout_weight="1.4"
-            android:gravity="center"
-            android:textSize="16sp" />
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/currentSections"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clipToPadding="false"
+                android:fadeScrollbars="false"
+                android:paddingStart="30dp"
+                android:paddingTop="10dp"
+                android:paddingEnd="30dp"
+                android:paddingBottom="16dp"
+                tools:itemCount="3"
+                tools:listitem="@layout/listitem_active_session_section"
+                tools:visibility="visible" />
+
+            <TextView
+                android:id="@+id/activity_active_session_tv_bottom"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginStart="24dp"
+                android:layout_marginEnd="24dp"
+                android:visibility="gone"
+                tools:visibility="visible"
+                android:gravity="center"
+                android:textSize="18sp"
+                tools:text="@string/hint_start_new_session" />
+
+            <TextView
+                android:id="@+id/tv_quote"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginStart="24dp"
+                tools:visibility="visible"
+                tools:text="QUOTES"
+                android:layout_marginEnd="24dp"
+                android:visibility="gone"
+                android:gravity="center"
+                android:textSize="16sp" />
+
+        </FrameLayout>
 
     </LinearLayout>
 
@@ -293,9 +304,11 @@
         android:animateLayoutChanges="true"
         tools:visibility="visible">
 
-        <include layout="@layout/bottom_sheet_dialog_metronome" />
+        <include layout="@layout/bottom_sheet_dialog_metronome"
+            tools:visibility="gone"/>
 
-        <include layout="@layout/bottom_sheet_dialog_record" />
+        <include layout="@layout/bottom_sheet_dialog_record"
+            tools:visibility="gone"/>
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
 

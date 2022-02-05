@@ -13,8 +13,5 @@
         android:enabled="true"
         app:showAsAction="ifRoom"
         android:title="@string/topToolBarDelete" />
-    <item
-        android:id="@+id/topToolbarSelectionSettings"
-        android:title="@string/topToolBarSettings"
-        app:showAsAction="never" />
+
 </menu>

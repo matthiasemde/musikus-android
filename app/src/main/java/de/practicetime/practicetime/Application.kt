@@ -16,9 +16,10 @@ class PracticeTime : Application() {
 
     companion object {
         lateinit var dao: PTDao         // the central static dao object of the application
+        var noSessionsYet = true
         var serviceIsRunning = false
         const val PREFERENCES_KEY_FIRSTRUN = "firstrun"
-        const val PREFERENCES_KEY_THEME = "'theme'"
+        const val PREFERENCES_KEY_THEME = "theme"
 
         /**
          * Get a color int from a theme attribute.

@@ -8,9 +8,6 @@ import android.util.TypedValue
 import android.view.View
 import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
-import androidx.appcompat.app.AppCompatDelegate
-import androidx.core.content.ContextCompat
-import androidx.core.graphics.drawable.DrawableCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.ConcatAdapter
@@ -116,6 +113,7 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
                     return@also
                 } else {
                     hideHint()
+                    PracticeTime.noSessionsYet = false
                 }
 
                 // initialize variables to keep track of the current month
