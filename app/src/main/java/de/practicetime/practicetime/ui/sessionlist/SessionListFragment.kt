@@ -400,14 +400,16 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
         runnable = object : Runnable {
             override fun run() {
                 if (PracticeTime.serviceIsRunning) {
+                    // apparently there is a bug with hide() / View.GONE which causes the Toolbar to jump down
+                    // so use Invisible so that views don't get broken
+                    fabNewSession.visibility = View.INVISIBLE
                     fabRunningSession.show()
-                    fabNewSession.hide()
                 } else {
+                    fabRunningSession.visibility = View.INVISIBLE
                     fabNewSession.show()
-                    fabRunningSession.hide()
                 }
                 if (PracticeTime.serviceIsRunning)
-                    handler.postDelayed(this, 1000)
+                    handler.postDelayed(this, 500)
             }
         }
         handler = Handler(Looper.getMainLooper()).also {

@@ -6,13 +6,13 @@
     </style>
     <style name="AppBar" parent="">
         <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">128dp</item>
+        <item name="android:layout_height">wrap_content</item>
         <item name="android:background">?android:attr/colorBackground</item>
     </style>
 
     <style name="CollapsingToolbar" parent="">
         <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">match_parent</item>
+        <item name="android:layout_height">128dp</item>
         <item name="collapsedTitleTextAppearance">@style/ToolbarTitleCollapsed</item>
         <item name="expandedTitleTextAppearance">@style/ToolbarTitleExpanded</item>
         <item name="expandedTitleMarginBottom">28dp</item>
@@ -32,7 +32,7 @@
 
     <style name="Toolbar" parent="">
         <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">48dp</item>
+        <item name="android:layout_height">?attr/actionBarSize</item>
         <item name="layout_collapseMode">pin</item>
     </style>
 

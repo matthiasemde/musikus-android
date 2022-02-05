@@ -54,8 +54,8 @@
         android:layout_gravity="end|bottom"
         android:layout_margin="16dp"
         android:src="@android:drawable/ic_input_add"
-        android:visibility="gone"
-        tools:visibility="gone"
+        android:visibility="invisible"
+        tools:visibility="visible"
         android:transitionName="transition_fab"
         android:contentDescription="@string/new_session_fab" />
 
@@ -69,7 +69,7 @@
         android:backgroundTint="?attr/colorError"
         app:borderWidth="0dp"
         app:tint="?attr/colorOnError"
-        android:visibility="gone"
+        android:visibility="invisible"
         android:transitionName="transition_fab"
         android:contentDescription="@string/running_session_fab" />
 
