@@ -48,7 +48,7 @@ class CategoryDialog (
         dialogView.findViewById(R.id.addCategoryDialogColor10),
     )
 
-    private var selectedCategoryId = 0
+    private var selectedCategoryId = 0L
     private var selectedColorIndex = 0
 
     private var alertDialog: AlertDialog? = null
@@ -68,11 +68,11 @@ class CategoryDialog (
 
                     // create the new / edited category
                     val newCategory = Category(
-                        id = selectedCategoryId,
+//                        id = selectedCategoryId.toLong(), TODO
                         name = categoryName,
                         colorIndex = selectedColorIndex,
                         archived = false,
-                        profile_id = 0
+                        profileId = 0,
                     )
 
                     // and call the onCreate handler

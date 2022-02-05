@@ -71,7 +71,7 @@ class MainActivity : AppCompatActivity() {
                     Category(name="Trauermarsch", colorIndex=8),
                 ).forEach {
                     if (BuildConfig.DEBUG)
-                        PracticeTime.dao.insertCategory(it)
+                        PracticeTime.categoryDao.insert(it)
                 }
 
                 prefs.edit().putBoolean(PracticeTime.PREFERENCES_KEY_FIRSTRUN, false).apply()

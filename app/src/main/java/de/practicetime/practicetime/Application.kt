@@ -8,6 +8,7 @@ import androidx.annotation.ColorInt
 import androidx.room.Room
 import de.practicetime.practicetime.database.PTDao
 import de.practicetime.practicetime.database.PTDatabase
+import de.practicetime.practicetime.database.daos.CategoryDao
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
@@ -16,6 +17,7 @@ class PracticeTime : Application() {
 
     companion object {
         lateinit var dao: PTDao         // the central static dao object of the application
+        lateinit var categoryDao: CategoryDao
         var noSessionsYet = true
         var serviceIsRunning = false
         const val PREFERENCES_KEY_FIRSTRUN = "firstrun"
@@ -55,5 +57,6 @@ class PracticeTime : Application() {
             PTDatabase::class.java, "pt-database"
         ).build()
         dao = db.ptDao
+        categoryDao = db.categoryDao
     }
 }

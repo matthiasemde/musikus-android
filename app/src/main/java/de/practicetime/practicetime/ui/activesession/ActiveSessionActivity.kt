@@ -195,7 +195,7 @@ class ActiveSessionActivity : AppCompatActivity() {
 
         // load all active categories from the database and notify the adapter
         lifecycleScope.launch {
-            PracticeTime.dao.getActiveCategories().let { activeCategories.addAll(it.reversed())
+            PracticeTime.categoryDao.getAll(activeOnly = true).let { activeCategories.addAll(it.reversed())
                 categoryAdapter.notifyItemRangeInserted(0, it.size)
             }
             categoryList.apply {
@@ -209,13 +209,12 @@ class ActiveSessionActivity : AppCompatActivity() {
         // the handler for creating new categories
         fun addCategoryHandler(newCategory: Category) {
             lifecycleScope.launch {
-                val newCategoryId = PracticeTime.dao.insertCategory(newCategory).toInt()
-                // we need to fetch the newly created category to get the correct id
-                PracticeTime.dao.getCategory(newCategoryId).let { activeCategories.add(0, it) }
+                PracticeTime.categoryDao.insert(newCategory, getRow = true)?.let {
+                    activeCategories.add(0, it)
+                }
                 categoryAdapter.notifyItemInserted(0)
                 categoryList.scrollToPosition(0)
                 adjustSpanCountCatList()
-
             }
         }
 

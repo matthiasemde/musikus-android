@@ -167,7 +167,7 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
     /** initialize the checkbox list with the categories */
     private fun initCategoryList() {
         lifecycleScope.launch {
-            PracticeTime.dao.getAllCategories().forEach {
+            PracticeTime.categoryDao.getAll().forEach {
                 categories.add(
                     CategoryListElement(
                         it,
@@ -579,7 +579,7 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
     private suspend fun getMoToFrArray(): Pair< ArrayList<BarEntry>, ArrayList<PieEntry> > {
         val barChartArray = arrayListOf<BarEntry>()
         val pieChartArray = arrayListOf<PieEntry>()
-        val visibleCategories = ArrayList<Int>()
+        val visibleCategories = ArrayList<Long>()
 
         categories.forEach { it.totalDuration = 0 }
 
@@ -620,7 +620,7 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
     private suspend fun getWeeksArray(): Pair< ArrayList<BarEntry>, ArrayList<PieEntry> > {
         val chartArray = arrayListOf<BarEntry>()
         val pieChartArray = arrayListOf<PieEntry>()
-        val visibleCategories = ArrayList<Int>()
+        val visibleCategories = ArrayList<Long>()
 
         categories.forEach { it.totalDuration = 0 }
 
@@ -660,7 +660,7 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
     private suspend fun getMonthsArray(): Pair< ArrayList<BarEntry>, ArrayList<PieEntry> > {
         val barChartArray = arrayListOf<BarEntry>()
         val pieChartArray = arrayListOf<PieEntry>()
-        val visibleCategories = ArrayList<Int>()
+        val visibleCategories = ArrayList<Long>()
 
         categories.forEach { it.totalDuration = 0 }
 
@@ -694,7 +694,7 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
     }
 
     /** updates the shown Elements in the checkbox list according to the data in the chart */
-    private fun updateVisibleCategories(visibleCategories: List<Int>) {
+    private fun updateVisibleCategories(visibleCategories: List<Long>) {
         var elemRemovedOrInserted = false
         // traverse in reverse order so that newly inserted/removed items don't affect list indices
         categories.asReversed().forEach { elem ->

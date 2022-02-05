@@ -90,7 +90,7 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
 
         // load all active categories from the database and notify the adapter
         lifecycleScope.launch {
-            PracticeTime.dao.getActiveCategories().let {
+            PracticeTime.categoryDao.getAll().let {
                 activeCategories.addAll(it.reversed())
                 categoryAdapter?.notifyItemRangeInserted(0, it.size)
             }
@@ -231,9 +231,8 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
     // the handler for creating new categories
     private fun addCategoryHandler(newCategory: Category) {
         lifecycleScope.launch {
-            val newCategoryId = PracticeTime.dao.insertCategory(newCategory).toInt()
-            // we need to fetch the newly created category to get the correct id
-            PracticeTime.dao.getCategory(newCategoryId).let { activeCategories.add(0, it) }
+            PracticeTime.categoryDao.insert(newCategory, getRow = true)
+                ?.let { activeCategories.add(0, it) }
             categoryAdapter?.notifyItemInserted(0)
             if(activeCategories.isNotEmpty()) hideHint()
         }
@@ -242,7 +241,7 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
     // the handler for editing categories
     private fun editCategoryHandler(category: Category) {
         lifecycleScope.launch {
-            PracticeTime.dao.insertCategory(category)
+            PracticeTime.categoryDao.update(category)
             activeCategories.indexOfFirst { c -> c.id == category.id }.also { i ->
                 assert(i != -1)
                 activeCategories[i] = category
@@ -258,7 +257,7 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
         var failedDeleteFlag = false
         lifecycleScope.launch {
             selectedCategories.sortedByDescending { it }.forEach { index ->
-                if(PracticeTime.dao.deleteCategory(activeCategories[index].id)) {
+                if(PracticeTime.categoryDao.archive(activeCategories[index].id)) {
                     activeCategories.removeAt(index)
                     categoryAdapter?.notifyItemRemoved(index)
                 } else {

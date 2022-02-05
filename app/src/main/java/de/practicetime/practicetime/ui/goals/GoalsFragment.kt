@@ -69,7 +69,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
             // create a new goal dialog for adding new goals
             addGoalDialog = GoalDialog(
                 requireActivity(),
-                PracticeTime.dao.getActiveCategories(),
+                PracticeTime.categoryDao.getAll(activeOnly = true),
                 ::addGoalHandler
             )
         }

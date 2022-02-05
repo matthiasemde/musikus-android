@@ -1,13 +1,14 @@
 package de.practicetime.practicetime.database.entities
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import de.practicetime.practicetime.database.ModelWithTimestamps
 
-@Entity
+@Entity(tableName = "category")
 data class Category (
-    @PrimaryKey(autoGenerate = true) val id: Int = 0,
-    var name: String,
-    var colorIndex: Int,
-    var archived: Boolean = false,
-    val profile_id: Int = 0,
-)
+    @ColumnInfo(name="name") var name: String,
+    @ColumnInfo(name="color_index") var colorIndex: Int,
+    @ColumnInfo(name="archived") var archived: Boolean = false,
+    @ColumnInfo(name="profile_id") val profileId: Int = 0,
+) : ModelWithTimestamps()

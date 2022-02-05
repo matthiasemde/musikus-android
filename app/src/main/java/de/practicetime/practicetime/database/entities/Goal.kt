@@ -3,6 +3,7 @@ package de.practicetime.practicetime.database.entities
 import android.util.Log
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import de.practicetime.practicetime.utils.getCurrTimestamp
 import java.util.*
 
 // shows, whether a goal will count all sections or only the one from specific categories

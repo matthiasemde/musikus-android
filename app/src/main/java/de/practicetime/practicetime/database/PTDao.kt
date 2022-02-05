@@ -2,26 +2,59 @@ package de.practicetime.practicetime.database
 
 import androidx.room.*
 import de.practicetime.practicetime.database.entities.*
+import de.practicetime.practicetime.utils.getCurrTimestamp
+import java.io.Serializable
 import java.util.*
+
+abstract class BaseModel (
+    @PrimaryKey(autoGenerate = true) var id: Long = 0,
+)
+
+abstract class ModelWithTimestamps (
+    @ColumnInfo(name="created_at", defaultValue = "0") var createdAt: Long = getCurrTimestamp(),
+    @ColumnInfo(name="modified_at", defaultValue = "0") var modifiedAt: Long = getCurrTimestamp(),
+) : BaseModel()
+
+abstract class BaseDao<T>{
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    abstract fun insert(row: T) : Long
+
+    @Update(onConflict = OnConflictStrategy.ABORT)
+    abstract fun directUpdate(row: T)
+
+    @Delete
+    abstract fun delete(row: T)
+
+    fun update(row: T) {
+        if(row is ModelWithTimestamps) {
+            row.modifiedAt = getCurrTimestamp()
+        }
+        directUpdate(row)
+    }
+
+    abstract suspend fun get(id: Long): T?
+
+    suspend fun insert(row: T, getRow: Boolean) : T? {
+        val newId = insert(row)
+        return get(newId)
+    }
+}
 
 @Dao
 interface PTDao {
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertSession(session: PracticeSession): Long
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertSection(section: PracticeSection)
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertCategory(category: Category): Long
-
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertGoalDescription(goalDescription: GoalDescription): Long
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertGoalInstance(goalInstance: GoalInstance): Long
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertGoalDescriptionCategoryCrossRef(crossRef: GoalDescriptionCategoryCrossRef): Long
 
     @Transaction
@@ -42,10 +75,10 @@ interface PTDao {
     @Transaction
     suspend fun insertGoalDescriptionWithCategories(
         goalDescriptionWithCategories: GoalDescriptionWithCategories
-    ): Int {
+    ): Long {
         val newGoalDescriptionId = insertGoalDescription(
             goalDescriptionWithCategories.description
-        ).toInt()
+        )
 
         // for every category linked with the goal...
         for (category in goalDescriptionWithCategories.categories) {
@@ -67,9 +100,6 @@ interface PTDao {
     suspend fun deleteSection(section: PracticeSection)
 
     @Delete
-    suspend fun deleteCategory(category: Category)
-
-    @Delete
     suspend fun deleteGoalDescription(goalDescription: GoalDescription)
 
     @Delete
@@ -77,9 +107,6 @@ interface PTDao {
 
     @Delete
     suspend fun deleteGoalInstance(goalInstance: GoalInstance)
-
-    @Update
-    suspend fun updateCategory(category: Category)
 
     @Update
     suspend fun updateSession(session: PracticeSession)
@@ -120,22 +147,6 @@ interface PTDao {
         getGoalDescriptions(goalDescriptionIds).forEach { archiveGoal(it) }
     }
 
-    @Transaction
-    suspend fun deleteCategory(categoryId: Int) : Boolean {
-        // to archive a category, fetch it from the database along with associated goals
-        getCategoryWithGoalDescriptions(categoryId).also {
-            val (category, goalDescriptions) = it
-            // check if there are non-archived goals associated with the selected category
-            return if (goalDescriptions.any { d -> !d.archived }) {
-                // in this case, we don't allow deletion and return false
-                false
-            } else {
-                category.archived = true
-                updateCategory(category)
-                true
-            }
-        }
-    }
 
     @Transaction
     suspend fun deleteGoal(goalDescriptionId: Int) {
@@ -174,14 +185,6 @@ interface PTDao {
     @Query("SELECT * FROM PracticeSection WHERE timestamp>=:beginTimeStamp AND timestamp<=:endTimeStamp")
     suspend fun getSectionsWithCategories(beginTimeStamp: Long, endTimeStamp: Long): List<SectionWithCategory>
 
-    @Query("SELECT * FROM Category WHERE id=:id")
-    suspend fun getCategory(id: Int): Category
-
-    @Transaction
-    @Query("SELECT * FROM Category WHERE id=:id")
-    suspend fun getCategoryWithGoalDescriptions(id: Int)
-        : CategoryWithGoalDescriptions
-
     @Transaction
     @Query("SELECT * FROM GoalDescription WHERE id=:id")
     suspend fun getGoalDescriptionWithCategories(id: Int)
@@ -191,12 +194,6 @@ interface PTDao {
     @Query("SELECT * FROM GoalDescriptionCategoryCrossRef WHERE goalDescriptionId=:id")
     suspend fun getGoalDescriptionCategoryCrossRefsWhereDescriptionId(id: Int)
         : List<GoalDescriptionCategoryCrossRef>
-
-    @Query("SELECT * FROM Category")
-    suspend fun getAllCategories(): List<Category>
-
-    @Query("SELECT * FROM Category WHERE NOT archived")
-    suspend fun getActiveCategories(): List<Category>
 
     @Query("SELECT * FROM GoalDescription WHERE id=:id")
     suspend fun getGoalDescription(id: Int): GoalDescription
@@ -211,7 +208,10 @@ interface PTDao {
     @Query("SELECT * FROM GoalInstance WHERE id=:id")
     suspend fun getGoalInstance(id: Int): GoalInstance
 
-    @Query("SELECT * FROM GoalInstance WHERE startTimestamp < :now AND goalDescriptionId=(SELECT id FROM GoalDescription WHERE id=:descriptionId)")
+    @Query("SELECT * FROM GoalInstance " +
+            "WHERE startTimestamp < :now AND" +
+            " goalDescriptionId=(SELECT id FROM GoalDescription WHERE id=:descriptionId)"
+    )
     suspend fun getGoalInstancesWhereDescriptionId(
         descriptionId: Int,
         now : Long = Date().time / 1000L
@@ -225,7 +225,7 @@ interface PTDao {
 
     @Transaction
     @Query("SELECT * FROM GoalDescription WHERE id=:goalId")
-    suspend fun getGoalWithCategories(goalId: Int) : GoalDescriptionWithCategories
+    suspend fun getGoalWithCategories(goalId: Long) : GoalDescriptionWithCategories
 
     @Query("SELECT * FROM GoalDescription WHERE (archived=0 OR archived=:checkArchived) AND type=:type")
     suspend fun getGoalDescriptions(

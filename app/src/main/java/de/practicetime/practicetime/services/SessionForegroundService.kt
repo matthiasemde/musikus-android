@@ -169,7 +169,7 @@ class SessionForegroundService : Service() {
         return binder
     }
 
-    fun startNewSection(categoryId: Int, categoryName: String) {
+    fun startNewSection(categoryId: Long, categoryName: String) {
         currCategoryName = categoryName
         val now = Date().time / 1000L
         sectionBuffer.add(

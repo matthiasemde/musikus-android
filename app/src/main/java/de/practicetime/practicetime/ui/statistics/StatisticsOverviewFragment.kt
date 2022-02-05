@@ -229,10 +229,10 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
                         val catId =
                             PracticeTime.dao.getGoalDescriptionCategoryCrossRefsWhereDescriptionId(
                                 gd.id).first().categoryId
-                        val cat = PracticeTime.dao.getCategory(catId)
+                        val cat = PracticeTime.categoryDao.get(catId)
                         val categoryColors =
                             requireContext().resources.getIntArray(R.array.category_colors)
-                        val color = ColorStateList.valueOf(categoryColors[cat.colorIndex])
+                        val color = ColorStateList.valueOf(categoryColors[cat?.colorIndex ?: 0])
 
                         pBar.progressTintList = color
                         check.imageTintList = color
