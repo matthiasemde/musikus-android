@@ -6,12 +6,8 @@ import android.text.TextUtils
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageButton
-import android.widget.ProgressBar
-import android.widget.RadioButton
-import android.widget.TextView
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
-import androidx.cardview.widget.CardView
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.DrawableCompat
 import androidx.core.widget.NestedScrollView
@@ -569,8 +565,7 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
             val tvNumSuccess: TextView = view.findViewById(R.id.tv_success_count)
             val tvNumFail: TextView = view.findViewById(R.id.tv_fail_count)
             val progressGoal: ProgressBar = view.findViewById(R.id.progressbar_goal_element)
-            val cardViewWrapper: CardView = view.findViewById(R.id.cardview_goal_statistics)
-            val defaultCardElevation = cardViewWrapper.cardElevation
+            val llContainer: LinearLayout = view.findViewById(R.id.listitem_stats_goal_ll_container)
         }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): GoalStatsAdapter.ViewHolder {
@@ -584,22 +579,12 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
         override fun onBindViewHolder(holder: GoalStatsAdapter.ViewHolder, position: Int) {
             val elem = goals[position]
 
-//            holder.cardViewWrapper.apply {
-//                setCardBackgroundColor(
-//                    ColorStateList.valueOf(
-//                        PracticeTime.getThemeColor(R.attr.colorSurface, this@GoalStatsActivity)
-//                    )
-//                )
-//                cardElevation = holder.defaultCardElevation
-//            }
             val categoryColors = resources.getIntArray(R.array.category_colors)
 
-            holder.cardViewWrapper.apply {
-                setGoalItemBackgroundColor(this, position, categoryColors)
-                cardElevation = if (position == selectedGoal) 0f else holder.defaultCardElevation
-            }
+            // adapt entry to selected state
+            setGoalItemBackgroundColor(holder.llContainer, position, categoryColors)
 
-
+            /** goal entry (radiobutton + progressbar) and set name depending on category */
             if (elem.category != null) {
                 val catColor = ColorStateList.valueOf(categoryColors[elem.category.colorIndex])
                 holder.goalTitleTv.text = elem.category.name
@@ -612,6 +597,7 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
                 holder.progressGoal.progressTintList = null
             }
 
+            /** description of goal */
             val count = elem.goalDesc.periodInPeriodUnits
             val periodFormatted =
                 when (elem.goalDesc.periodUnit) {
@@ -620,13 +606,13 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
                     GoalPeriodUnit.MONTH -> resources.getQuantityString(R.plurals.time_period_month, count, count)
                 }
 
+            /** ProgressBar + success/failure count */
             // TODO take target data from most recent Instance enough?
             holder.goalDescTv.text = TextUtils.concat(
                 getDurationString(elem.goalInstances.last().target, TIME_FORMAT_HUMAN_PRETTY, SCALE_FACTOR_FOR_SMALL_TEXT),
                 " ",
                 periodFormatted
             )
-
             val succeeded = elem.goalInstances.filter { it.progress >= it.target }.size
             val failed = elem.goalInstances.filter { it.progress < it.target }.size
 
@@ -636,6 +622,7 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
             holder.progressGoal.max = succeeded + failed
             holder.progressGoal.progress = succeeded
 
+            /** onclicklistener for elements */
             val radioSelectListener = View.OnClickListener {
                 val oldSel = selectedGoal
                 intervalOffset = 0  // reset time range
@@ -643,16 +630,7 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
                 notifyItemChanged(oldSel)
                 holder.goalRadioButton.isChecked = true
 
-                holder.cardViewWrapper.apply {
-                    var color = ColorStateList.valueOf(
-                        PracticeTime.getThemeColor(R.attr.colorPrimary, this@GoalStatsActivity))
-                    if (elem.category != null)
-                        color = ColorStateList.valueOf(categoryColors[elem.category.colorIndex])
-
-                    setCardBackgroundColor(color.withAlpha(50))
-                    cardElevation = 0f
-
-                }
+                setGoalItemBackgroundColor(holder.llContainer, position, categoryColors)
 
                 val sv = findViewById<NestedScrollView>(R.id.scrollview_statistics)
                 // only scroll to top if already more than 100px scrolled to prevent blocking the UI for scroll duration
@@ -661,7 +639,7 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
                 updateChartData()
                 setButtonEnabledState()
             }
-            holder.cardViewWrapper.setOnClickListener(radioSelectListener)
+            holder.llContainer.setOnClickListener(radioSelectListener)
             holder.goalRadioButton.setOnClickListener(radioSelectListener)
 
             holder.goalRadioButton.isChecked = position == selectedGoal
@@ -669,19 +647,23 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
 
         override fun getItemCount(): Int = goals.size
 
-        private fun setGoalItemBackgroundColor(cardView: CardView, position: Int, catColors: IntArray){
-            cardView.apply {
+        /** set background tint of goal list item. Color will change depending on "selected" state of
+         * element since we use a custom selector drawable for foreground
+         * */
+        private fun setGoalItemBackgroundColor(ll: LinearLayout, position: Int, catColors: IntArray){
+            ll.apply {
+                if (position != selectedGoal) {
+                    isSelected = false
+                    return
+                }
+
                 var color = ColorStateList.valueOf(
-                    PracticeTime.getThemeColor(R.attr.colorPrimary, this@GoalStatsActivity)).withAlpha(90)
-
+                    PracticeTime.getThemeColor(R.attr.colorPrimary, this@GoalStatsActivity))
                 if (goals[position].category != null)
-                    color = ColorStateList.valueOf(catColors[goals[position].category!!.colorIndex]).withAlpha(90)
+                    color = ColorStateList.valueOf(catColors[goals[position].category!!.colorIndex])
 
-                if (position != selectedGoal)
-                    color = ColorStateList.valueOf(
-                        PracticeTime.getThemeColor(android.R.attr.colorBackground, this@GoalStatsActivity))
-
-                setCardBackgroundColor(color)
+                foregroundTintList = color
+                isSelected = true
             }
         }
     }

@@ -1,27 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/cardview_goal_statistics"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="0dp"
-    app:cardBackgroundColor="?attr/colorSurface"
-    app:cardCornerRadius="0dp"
-    app:cardElevation="0dp"
-    app:strokeWidth="1dp"
-    app:strokeColor="@color/md_grey_200"
-    android:foreground="?android:attr/selectableItemBackground">
+    android:orientation="vertical">
+
 
     <LinearLayout
-        android:id="@+id/ll_activesession_list"
+        android:id="@+id/listitem_stats_goal_ll_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingTop="15dp"
         android:paddingBottom="15dp"
         android:paddingStart="16dp"
         android:paddingEnd="16dp"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:foreground="@color/foreground_color_selector"
+        android:foregroundTint="@color/md_green_500"
+        android:background="?android:attr/selectableItemBackground">
 
 
         <RadioButton
@@ -115,4 +113,10 @@
         </LinearLayout>
 
     </LinearLayout>
-</com.google.android.material.card.MaterialCardView>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="?android:attr/listDivider"/>
+
+</LinearLayout>
