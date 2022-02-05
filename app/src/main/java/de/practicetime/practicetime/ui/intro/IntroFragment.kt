@@ -1,32 +1,31 @@
 package de.practicetime.practicetime.ui.intro
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
-import androidx.annotation.ColorInt
 import androidx.annotation.ColorRes
-import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentContainerView
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.github.appintro.AppIntro
 import com.github.appintro.SlideBackgroundColorHolder
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import de.practicetime.practicetime.BuildConfig
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
-import de.practicetime.practicetime.ui.sessionlist.SessionSummaryAdapter
 import de.practicetime.practicetime.database.entities.*
 import de.practicetime.practicetime.ui.activesession.ActiveSessionActivity
 import de.practicetime.practicetime.ui.goals.GoalAdapter
 import de.practicetime.practicetime.ui.goals.GoalDialog
 import de.practicetime.practicetime.ui.library.CategoryAdapter
 import de.practicetime.practicetime.ui.library.CategoryDialog
+import de.practicetime.practicetime.ui.sessionlist.SessionSummaryAdapter
 import de.practicetime.practicetime.utils.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -126,6 +125,11 @@ class IntroFragment(
     }
 
     private val sessionsClickListener = View.OnClickListener {
+        if (!BuildConfig.DEBUG) {
+            val prefs = requireActivity().getSharedPreferences(
+                getString(R.string.filename_shared_preferences), Context.MODE_PRIVATE)
+            prefs.edit().putBoolean(PracticeTime.PREFERENCES_KEY_APPINTRO_DONE, true).apply()
+        }
         val i = Intent(requireActivity(), ActiveSessionActivity::class.java)
         requireActivity().startActivity(i)
     }

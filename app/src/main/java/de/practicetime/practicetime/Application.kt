@@ -20,6 +20,7 @@ class PracticeTime : Application() {
         var serviceIsRunning = false
         const val PREFERENCES_KEY_FIRSTRUN = "firstrun"
         const val PREFERENCES_KEY_THEME = "theme"
+        const val PREFERENCES_KEY_APPINTRO_DONE = "appintro_done"
 
         /**
          * Get a color int from a theme attribute.

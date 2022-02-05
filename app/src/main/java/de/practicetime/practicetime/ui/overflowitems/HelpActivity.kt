@@ -1,10 +1,11 @@
 package de.practicetime.practicetime.ui.overflowitems
 
+import android.content.Intent
 import android.os.Bundle
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.button.MaterialButton
 import de.practicetime.practicetime.R
+import de.practicetime.practicetime.ui.intro.AppIntroActivity
 
 class HelpActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?){
@@ -12,7 +13,8 @@ class HelpActivity : AppCompatActivity() {
         setContentView(R.layout.activity_help)
 
         findViewById<MaterialButton>(R.id.help_replay_intro).setOnClickListener {
-            Toast.makeText(this, "Replay Intro", Toast.LENGTH_SHORT).show()
+            val i = Intent(this, AppIntroActivity::class.java)
+            startActivity(i)
         }
     }
 }

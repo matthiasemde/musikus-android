@@ -1,12 +1,12 @@
 package de.practicetime.practicetime.ui.intro
 
+import android.content.Context
 import android.os.Bundle
-import android.util.Log
-import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.github.appintro.AppIntro
 import com.github.appintro.AppIntroFragment
-import com.github.appintro.AppIntroPageTransformerType
+import de.practicetime.practicetime.BuildConfig
+import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
 
 const val FRAGMENT_TYPE_KEY = "introfragment"
@@ -45,7 +45,7 @@ class AppIntroActivity : AppIntro() {
 
         val lBundle = Bundle()
         lBundle.putSerializable(FRAGMENT_TYPE_KEY, IntroFragmentType.FRAGMENT_LIBRARY)
-        val libFragment = IntroFragment(R.color.md_amber_300)
+        val libFragment = IntroFragment(R.color.md_blue_800)
         libFragment.arguments = lBundle
         addSlide(libFragment)
 
@@ -73,6 +73,11 @@ class AppIntroActivity : AppIntro() {
     override fun onDonePressed(currentFragment: Fragment?) {
         super.onDonePressed(currentFragment)
         // Decide what to do when the user clicks on "Done"
+        if (!BuildConfig.DEBUG) {
+            val prefs = getSharedPreferences(
+                getString(R.string.filename_shared_preferences), Context.MODE_PRIVATE)
+            prefs.edit().putBoolean(PracticeTime.PREFERENCES_KEY_APPINTRO_DONE, true).apply()
+        }
         finish()
     }
 }

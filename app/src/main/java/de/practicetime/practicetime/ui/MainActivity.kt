@@ -30,7 +30,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        prefs = getPreferences(Context.MODE_PRIVATE)
+        prefs = getSharedPreferences(getString(R.string.filename_shared_preferences), Context.MODE_PRIVATE)
 
         val navHostFragment =
             supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
@@ -45,11 +45,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun launchAppIntroFirstRun() {
-//        if (prefs.getBoolean(PracticeTime.PREFERENCES_KEY_FIRSTRUN, true)) {
+        if (!prefs.getBoolean(PracticeTime.PREFERENCES_KEY_APPINTRO_DONE, false)) {
             val i = Intent(this, AppIntroActivity::class.java)
             i.flags = Intent.FLAG_ACTIVITY_NO_HISTORY
             startActivity(i)
-//        }
+        }
     }
 
     private fun createDatabaseFirstRun() {
