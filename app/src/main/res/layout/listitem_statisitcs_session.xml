@@ -4,15 +4,14 @@
     android:id="@+id/ll_activesession_list"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:paddingBottom="2dp"
-    android:paddingTop="2dp"
+    android:paddingStart="16dp"
+    android:paddingEnd="16dp"
     android:orientation="horizontal">
-
 
     <CheckBox
         android:id="@+id/checkbox_category"
         android:layout_width="0dp"
-        android:layout_height="35dp"
+        android:layout_height="45dp"
         android:layout_weight="1"
         tools:text="Category Name"
         android:textSize="16sp" />

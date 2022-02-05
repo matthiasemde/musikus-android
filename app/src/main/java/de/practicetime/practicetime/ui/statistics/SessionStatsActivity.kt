@@ -156,7 +156,7 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
                         item.icon = ContextCompat.getDrawable(this, R.drawable.ic_pie_chart)
                     }
                 }
-                updateChartData()
+                updateChartData(false)
                 return true
             }
             else ->
@@ -168,7 +168,6 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
     private fun initCategoryList() {
         lifecycleScope.launch {
             PracticeTime.dao.getAllCategories().forEach {
-                Log.d("ZAS", "CATEGORY: ${it.name}")
                 categories.add(
                     CategoryListElement(
                         it,
@@ -178,11 +177,12 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
                 )
             }
             categoryListAdapter = CategoryStatsAdapter()
-            val layoutManager = LinearLayoutManager(this@SessionStatsActivity)
 
             val categoryRecyclerView = findViewById<RecyclerView>(R.id.recyclerview_statistics)
-            categoryRecyclerView.layoutManager = layoutManager
-            categoryRecyclerView.adapter = categoryListAdapter
+            categoryRecyclerView.apply {
+                layoutManager = LinearLayoutManager(this@SessionStatsActivity)
+                adapter = categoryListAdapter
+            }
         }
     }
 
@@ -470,7 +470,7 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
             if (recalculateDurs)
                 categoryListAdapter.notifyItemRangeChanged(0, categories.filter { it.visible }.size)
 
-            delay(100)  // TODO this is needed in order to make movePieChart work the first time. Don't know why
+            delay(50)  // TODO this is needed in order to make movePieChart work (halfway) the first time. Don't know why. Still buggy tho
             movePieChart()
         }
     }
@@ -506,7 +506,7 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
         pieChart.layoutParams = p
 
         // re-set top margin to shift it down
-        val height = ((pieChart as View).measuredHeight * 0.3).toInt()
+        val height = ((pieChart as View).measuredHeight * 0.45).toInt()
 
         // we want to enlarge the pie chart (since its vertical space is too small) therefore, enlarge the
         // vertical space by adding `height` pixels at the bottom but only reducing `height*0.3` pixels at the top
