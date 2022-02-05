@@ -36,6 +36,10 @@ class PracticeTime : Application() {
             return context.resources?.getIntArray(R.array.category_colors)
                 ?.toCollection(mutableListOf()) ?: mutableListOf()
         }
+
+        fun getRandomQuote(context: Context) : CharSequence {
+            return context.resources.getTextArray(R.array.quotes).random()
+        }
     }
 
     override fun onCreate() {

@@ -41,6 +41,7 @@ import de.practicetime.practicetime.updateGoals
 import de.practicetime.practicetime.utils.TIME_FORMAT_HMS_DIGITAL
 import de.practicetime.practicetime.utils.getDurationString
 import kotlinx.coroutines.launch
+import org.w3c.dom.Text
 import java.io.File
 import java.io.IOException
 import java.text.SimpleDateFormat
@@ -152,6 +153,16 @@ class ActiveSessionActivity : AppCompatActivity() {
         findViewById<ImageButton>(R.id.btn_discard).setOnClickListener {
             discardSessionDialog?.show()
         }
+
+        // load a random quote
+        val quote = PracticeTime.getRandomQuote(this)
+        findViewById<TextView>(R.id.tv_quote).text = quote
+        findViewById<TextView>(R.id.tv_overlay_pause).text = quote
+        findViewById<TextView>(R.id.tv_hint_start_new_session).visibility = View.GONE
+        Handler(Looper.getMainLooper()).postDelayed({
+            hideQuoteShowHint()
+        }, 7000)
+
     }
 
     private fun initCategoryList() {
@@ -797,7 +808,7 @@ class ActiveSessionActivity : AppCompatActivity() {
      */
     private fun showOverlay() {
         val transition = Fade().apply {
-            duration = 600
+            duration = 300
             addTarget(R.id.tv_overlay_pause)
         }
         TransitionManager.beginDelayedTransition(
@@ -813,7 +824,7 @@ class ActiveSessionActivity : AppCompatActivity() {
 
     private fun hideOverlay() {
         val transition = Fade().apply {
-            duration = 600
+            duration = 300
             addTarget(R.id.tv_overlay_pause)
         }
         TransitionManager.beginDelayedTransition(
@@ -830,17 +841,35 @@ class ActiveSessionActivity : AppCompatActivity() {
         findViewById<ImageButton>(R.id.btn_discard).setColorFilter(color)
     }
 
+
+    private fun hideQuoteShowHint() {
+        val transition = Fade().apply {
+            duration = 300
+            addTarget(R.id.tv_hint_start_new_session)
+            addTarget(R.id.tv_quote)
+        }
+        TransitionManager.beginDelayedTransition(
+            findViewById(R.id.coordinator_layout_active_session),
+            transition
+        )
+        findViewById<TextView>(R.id.tv_hint_start_new_session).visibility = View.VISIBLE
+        findViewById<TextView>(R.id.tv_quote).visibility = View.GONE
+    }
+
+
     private fun hideHintTextView() {
         findViewById<RecyclerView>(R.id.currentSections).visibility = View.VISIBLE
         val transition = Fade().apply {
             duration = 300
             addTarget(R.id.tv_hint_start_new_session)
+            addTarget(R.id.tv_quote)
         }
         TransitionManager.beginDelayedTransition(
             findViewById(R.id.coordinator_layout_active_session),
             transition
         )
         findViewById<TextView>(R.id.tv_hint_start_new_session).visibility = View.GONE
+        findViewById<TextView>(R.id.tv_quote).visibility = View.GONE
     }
 
     private fun finishSession(rating: Int, comment: String?) {
