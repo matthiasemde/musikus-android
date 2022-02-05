@@ -8,8 +8,7 @@
     android:background="?android:attr/colorBackground">
 
     <com.google.android.material.appbar.AppBarLayout
-        style="@style/AppBar"
-        android:layout_height="80dp">
+        style="@style/AppBar">
 
         <com.google.android.material.appbar.CollapsingToolbarLayout
             style="@style/CollapsingToolbar"
