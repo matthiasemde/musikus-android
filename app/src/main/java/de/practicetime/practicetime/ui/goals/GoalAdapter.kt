@@ -104,19 +104,12 @@ class GoalAdapter(
         }
 
         /** Goal Description */
+        val count = description.periodInPeriodUnits
         val periodFormatted =
-            if (description.periodInPeriodUnits > 1) {  // plural
-                when (description.periodUnit) {
-                    GoalPeriodUnit.DAY -> context.getString(R.string.goal_description_days, description.periodInPeriodUnits)
-                    GoalPeriodUnit.WEEK -> context.getString(R.string.goal_description_weeks, description.periodInPeriodUnits)
-                    GoalPeriodUnit.MONTH -> context.getString(R.string.goal_description_months, description.periodInPeriodUnits)
-                }
-            } else {    // singular
-                when (description.periodUnit) {
-                    GoalPeriodUnit.DAY -> context.getString(R.string.goal_description_day)
-                    GoalPeriodUnit.WEEK -> context.getString(R.string.goal_description_week)
-                    GoalPeriodUnit.MONTH -> context.getString(R.string.goal_description_month)
-                }
+            when (description.periodUnit) {
+                GoalPeriodUnit.DAY -> context.resources.getQuantityString(R.plurals.time_period_day, count, count)
+                GoalPeriodUnit.WEEK -> context.resources.getQuantityString(R.plurals.time_period_week, count, count)
+                GoalPeriodUnit.MONTH -> context.resources.getQuantityString(R.plurals.time_period_month, count, count)
             }
 
         viewHolder.goalDescriptionView.text = TextUtils.concat(

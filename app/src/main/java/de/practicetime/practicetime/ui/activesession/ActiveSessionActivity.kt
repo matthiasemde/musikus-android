@@ -203,7 +203,7 @@ class ActiveSessionActivity : AppCompatActivity() {
                 visibility = View.VISIBLE
             }
 
-           adjustSpanCountCatList()
+            adjustSpanCountCatList()
         }
 
         // the handler for creating new categories
@@ -488,7 +488,7 @@ class ActiveSessionActivity : AppCompatActivity() {
                 resources.getString(R.string.record_snackbar_message).format(
                     RecorderService.recordingName ?: "Recording"
                 ),
-                7000
+                10000
             ).apply {
                 anchorView = findViewById<ConstraintLayout>(R.id.constraintLayout_Bottom_btn)
                 setAction(R.string.record_snackbar_undo) {

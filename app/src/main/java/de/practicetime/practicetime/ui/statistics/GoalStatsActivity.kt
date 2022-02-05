@@ -595,19 +595,12 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
                 holder.progressGoal.progressTintList = null
             }
 
+            val count = elem.goalDesc.periodInPeriodUnits
             val periodFormatted =
-                if (elem.goalDesc.periodInPeriodUnits > 1) {  // plural
-                    when (elem.goalDesc.periodUnit) {
-                        GoalPeriodUnit.DAY -> getString(R.string.goal_description_days, elem.goalDesc.periodInPeriodUnits)
-                        GoalPeriodUnit.WEEK -> getString(R.string.goal_description_weeks, elem.goalDesc.periodInPeriodUnits)
-                        GoalPeriodUnit.MONTH -> getString(R.string.goal_description_months, elem.goalDesc.periodInPeriodUnits)
-                    }
-                } else {    // singular
-                    when (elem.goalDesc.periodUnit) {
-                        GoalPeriodUnit.DAY -> getString(R.string.goal_description_day)
-                        GoalPeriodUnit.WEEK -> getString(R.string.goal_description_week)
-                        GoalPeriodUnit.MONTH -> getString(R.string.goal_description_month)
-                    }
+                when (elem.goalDesc.periodUnit) {
+                    GoalPeriodUnit.DAY -> resources.getQuantityString(R.plurals.time_period_day, count, count)
+                    GoalPeriodUnit.WEEK -> resources.getQuantityString(R.plurals.time_period_week, count, count)
+                    GoalPeriodUnit.MONTH -> resources.getQuantityString(R.plurals.time_period_month, count, count)
                 }
 
             // TODO take target data from most recent Instance enough?
