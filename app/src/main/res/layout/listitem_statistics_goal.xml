@@ -3,13 +3,14 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/listitem_stats_goal_ll_container"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:background="@color/foreground_color_selector">
 
 
     <LinearLayout
-        android:id="@+id/listitem_stats_goal_ll_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingTop="15dp"
@@ -17,8 +18,6 @@
         android:paddingStart="16dp"
         android:paddingEnd="16dp"
         android:orientation="horizontal"
-        android:foreground="@color/foreground_color_selector"
-        android:foregroundTint="@color/md_green_500"
         android:background="?android:attr/selectableItemBackground">
 
 

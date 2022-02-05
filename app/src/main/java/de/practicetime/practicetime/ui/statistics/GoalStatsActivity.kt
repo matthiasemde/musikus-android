@@ -187,7 +187,7 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
                 iconsOffset = MPPointF(0f, 18f)     // checkmarks should draw inside of bars
                 color = getChartColor()
                 highLightColor = PracticeTime.getThemeColor(R.attr.colorOnSurface, this@GoalStatsActivity)
-                highLightAlpha = 150    // 150 out of 255 (0=fully transparent)
+                highLightAlpha = 100    // 150 out of 255 (0=fully transparent)
             }
 
             val barData = BarData(dataSetBarChart)
@@ -662,7 +662,7 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
                 if (goals[position].category != null)
                     color = ColorStateList.valueOf(catColors[goals[position].category!!.colorIndex])
 
-                foregroundTintList = color
+                backgroundTintList = color
                 isSelected = true
             }
         }

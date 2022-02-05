@@ -379,7 +379,9 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
 
             if (barChart.data != null && barChart.data.dataSetCount > 0) {
                 dataSetBarChart = barChart.data.getDataSetByIndex(0) as BarDataSet
-                dataSetBarChart.values = barValues
+                dataSetBarChart.apply {
+                    values = barValues
+                }
                 barChart.data.notifyDataChanged()
                 barChart.notifyDataSetChanged()
 
@@ -398,6 +400,8 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
                 dataSetBarChart.apply {
                     colors = categoryColors
                     setDrawValues(true)
+                    highLightColor = PracticeTime.getThemeColor(R.attr.colorOnSurface, this@SessionStatsActivity)
+                    highLightAlpha = 80    // 150 out of 255 (0=fully transparent)
                 }
                 dataSetPieChart.apply {
                     colors = categoryColors
@@ -428,11 +432,9 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
                 pieData.apply {
                     setValueFormatter(PieChartValueFormatter())
                     setValueTextSize(11f)
-                    setValueTextColor(Color.BLACK)
+                    setValueTextColor(PracticeTime.getThemeColor(R.attr.colorOnSurface, this@SessionStatsActivity))
                 }
-
                 pieChart.data = pieData
-
             }
 
             if(chartType == BAR_CHART) {

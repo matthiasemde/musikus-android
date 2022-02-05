@@ -10,7 +10,6 @@
     android:layout_marginTop="8dp"
     android:layout_marginEnd="16dp"
     android:layout_marginBottom="8dp"
-    android:foreground="@drawable/foreground_simple_overlay"
     app:cardBackgroundColor="?attr/colorSurface"
     app:cardCornerRadius="16dp"
     app:cardElevation="4dp">
@@ -20,6 +19,7 @@
         android:layout_height="wrap_content"
         android:clipToPadding="false"
         android:foreground="@drawable/foreground_simple_overlay"
+        android:background="?android:selectableItemBackground"
         android:orientation="vertical"
         android:padding="16dp">
 
