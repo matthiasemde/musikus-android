@@ -13,7 +13,8 @@ import de.practicetime.practicetime.database.entities.*
         GoalInstance::class,
         GoalDescriptionCategoryCrossRef::class,
     ],
-    version = 1
+    version = 1,
+    exportSchema = true
 )
 abstract class PTDatabase : RoomDatabase() {
     abstract val ptDao : PTDao
