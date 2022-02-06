@@ -12,7 +12,7 @@ import de.practicetime.practicetime.database.entities.CategoryWithGoalDescriptio
 abstract class CategoryDao : BaseDao<Category>() {
 
 //    @Transaction
-    fun archive(categoryId: Long) : Boolean {
+    suspend fun archive(categoryId: Long) : Boolean {
         // to archive a category, fetch it from the database along with associated goals
         getWithGoalDescriptions(categoryId)?.also {
             val (category, goalDescriptions) = it
@@ -45,5 +45,5 @@ abstract class CategoryDao : BaseDao<Category>() {
 
     @Transaction
     @Query("SELECT * FROM Category WHERE id=:id")
-    abstract fun getWithGoalDescriptions(id: Long): CategoryWithGoalDescriptions?
+    abstract suspend fun getWithGoalDescriptions(id: Long): CategoryWithGoalDescriptions?
 }

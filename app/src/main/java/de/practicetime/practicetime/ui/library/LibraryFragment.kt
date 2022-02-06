@@ -6,6 +6,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.VibrationEffect
 import android.os.VibratorManager
+import android.util.Log
 import android.util.TypedValue
 import android.view.View
 import android.widget.TextView
@@ -231,7 +232,7 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
     // the handler for creating new categories
     private fun addCategoryHandler(newCategory: Category) {
         lifecycleScope.launch {
-            PracticeTime.categoryDao.insert(newCategory, getRow = true)
+            PracticeTime.categoryDao.insertAndGet(newCategory)
                 ?.let { activeCategories.add(0, it) }
             categoryAdapter?.notifyItemInserted(0)
             if(activeCategories.isNotEmpty()) hideHint()
@@ -243,7 +244,9 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
         lifecycleScope.launch {
             PracticeTime.categoryDao.update(category)
             activeCategories.indexOfFirst { c -> c.id == category.id }.also { i ->
-                assert(i != -1)
+                assert(i != -1) {
+                    Log.e("EDIT_CATEGORY", "No category with matching id found")
+                }
                 activeCategories[i] = category
                 categoryAdapter?.notifyItemChanged(i)
             }

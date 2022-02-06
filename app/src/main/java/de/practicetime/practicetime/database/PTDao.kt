@@ -1,5 +1,6 @@
 package de.practicetime.practicetime.database
 
+import android.util.Log
 import androidx.room.*
 import de.practicetime.practicetime.database.entities.*
 import de.practicetime.practicetime.utils.getCurrTimestamp
@@ -15,17 +16,17 @@ abstract class ModelWithTimestamps (
     @ColumnInfo(name="modified_at", defaultValue = "0") var modifiedAt: Long = getCurrTimestamp(),
 ) : BaseModel()
 
-abstract class BaseDao<T>{
+abstract class BaseDao<T> where T : BaseModel {
     @Insert(onConflict = OnConflictStrategy.ABORT)
-    abstract fun insert(row: T) : Long
+    abstract suspend fun insert(row: T) : Long
 
     @Update(onConflict = OnConflictStrategy.ABORT)
-    abstract fun directUpdate(row: T)
+    abstract suspend fun directUpdate(row: T)
 
     @Delete
-    abstract fun delete(row: T)
+    abstract suspend fun delete(row: T)
 
-    fun update(row: T) {
+    suspend fun update(row: T) {
         if(row is ModelWithTimestamps) {
             row.modifiedAt = getCurrTimestamp()
         }
@@ -34,7 +35,7 @@ abstract class BaseDao<T>{
 
     abstract suspend fun get(id: Long): T?
 
-    suspend fun insert(row: T, getRow: Boolean) : T? {
+    suspend fun insertAndGet(row: T) : T? {
         val newId = insert(row)
         return get(newId)
     }

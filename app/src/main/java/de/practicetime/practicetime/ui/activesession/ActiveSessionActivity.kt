@@ -209,7 +209,7 @@ class ActiveSessionActivity : AppCompatActivity() {
         // the handler for creating new categories
         fun addCategoryHandler(newCategory: Category) {
             lifecycleScope.launch {
-                PracticeTime.categoryDao.insert(newCategory, getRow = true)?.let {
+                PracticeTime.categoryDao.insertAndGet(newCategory)?.let {
                     activeCategories.add(0, it)
                 }
                 categoryAdapter.notifyItemInserted(0)

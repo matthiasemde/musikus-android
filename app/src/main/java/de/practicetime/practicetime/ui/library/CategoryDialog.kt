@@ -2,6 +2,7 @@ package de.practicetime.practicetime.ui.library
 
 import android.app.Activity
 import android.content.res.ColorStateList
+import android.util.Log
 import android.widget.EditText
 import android.widget.RadioButton
 import android.widget.RadioGroup
@@ -14,7 +15,7 @@ import de.practicetime.practicetime.database.entities.Category
 
 class CategoryDialog (
     context: Activity,
-    onCreateHandler: (newCategory: Category) -> Unit,
+    submitHandler: (newCategory: Category) -> Unit,
 ) {
 
     // instantiate the builder for the alert dialog
@@ -48,8 +49,7 @@ class CategoryDialog (
         dialogView.findViewById(R.id.addCategoryDialogColor10),
     )
 
-    private var selectedCategoryId = 0L
-    private var selectedColorIndex = 0
+    private var category: Category? = null
 
     private var alertDialog: AlertDialog? = null
 
@@ -61,27 +61,17 @@ class CategoryDialog (
 
             // define the callback function for the positive button
             setPositiveButton(R.string.addCategoryAlertOk) { dialog, _ ->
-                val categoryName = categoryNameView.text.toString().trim()
 
                 // check if all fields are filled out
                 if (isComplete()) {
 
-                    // create the new / edited category
-                    val newCategory = Category(
-//                        id = selectedCategoryId.toLong(), TODO
-                        name = categoryName,
-                        colorIndex = selectedColorIndex,
-                        archived = false,
-                        profileId = 0,
-                    )
-
-                    // and call the onCreate handler
-                    onCreateHandler(newCategory)
+                    // and call the submit handler
+                    category?.let { submitHandler(it) }
+                        ?: Log.e("CATEGORY_DIALOG", "Ok clicked, but category is null")
                 }
 
                 // clear the dialog and dismiss it
-                selectedCategoryId = 0
-                selectedColorIndex = 0
+                category = null
                 categoryNameView.text.clear()
                 categoryColorButtonGroupRow1.clearCheck()
                 categoryColorButtonGroupRow2.clearCheck()
@@ -91,6 +81,7 @@ class CategoryDialog (
             // define the callback function for the negative button
             // to clear the dialog and then cancel it
             setNegativeButton(R.string.addCategoryAlertCancel) { dialog, _ ->
+                category = null
                 categoryNameView.text.clear()
                 categoryColorButtonGroupRow1.clearCheck()
                 categoryColorButtonGroupRow2.clearCheck()
@@ -107,7 +98,7 @@ class CategoryDialog (
             button.backgroundTintList = ColorStateList.valueOf(categoryColors[index])
             button.setOnCheckedChangeListener { _, isChecked ->
                 if(isChecked) {
-                    selectedColorIndex = index
+                    category?.colorIndex = index
                     if (index < 5) {
                         categoryColorButtonGroupRow2.clearCheck()
                     } else {
@@ -125,29 +116,38 @@ class CategoryDialog (
 
     // the dialog is complete if a name is entered and a color is selected
     private fun isComplete(): Boolean {
-        return categoryNameView?.text.toString().trim().isNotEmpty() &&
-                (categoryColorButtonGroupRow1?.checkedRadioButtonId != -1 ||
-                        categoryColorButtonGroupRow2?.checkedRadioButtonId != -1)
+        return category?.let { it.name.isNotEmpty() && it.colorIndex != -1 } ?: false
     }
 
     // the public function to show the dialog
     // if a category is passed it will be edited
-    fun show(category: Category? = null) {
+    fun show(editCategory: Category? = null) {
+
+        // create the new / edited category
+        category = editCategory?.copy() ?: Category(
+            name = "",
+            colorIndex = -1,
+            archived = false,
+            profileId = 0,
+        )
+
         alertDialog?.show()
         alertDialog?.also { dialog ->
             val positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
 
-            if(category != null) {
+            if(editCategory != null) {
                 categoryDialogTitleView.setText(R.string.addCategoryDialogTitleEdit)
                 positiveButton.setText(R.string.addCategoryAlertOkEdit)
 
-                selectedCategoryId = category.id
-                categoryNameView.setText(category.name)
-                categoryColorButtons[category.colorIndex].isChecked = true
+                category?.let {
+                    categoryNameView.setText(it.name)
+                    categoryColorButtons[it.colorIndex].isChecked = true
+                }
             }
 
             positiveButton.isEnabled = isComplete()
-            categoryNameView.addTextChangedListener   {
+            categoryNameView.addTextChangedListener {
+                category?.name = categoryNameView.text.toString().trim()
                 positiveButton.isEnabled = isComplete()
             }
             categoryColorButtonGroupRow1.setOnCheckedChangeListener { _, _ ->
