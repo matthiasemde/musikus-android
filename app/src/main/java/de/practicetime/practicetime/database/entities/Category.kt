@@ -2,7 +2,6 @@ package de.practicetime.practicetime.database.entities
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
-import androidx.room.PrimaryKey
 import de.practicetime.practicetime.database.ModelWithTimestamps
 
 @Entity(tableName = "category")
@@ -11,4 +10,5 @@ data class Category (
     @ColumnInfo(name="color_index") var colorIndex: Int,
     @ColumnInfo(name="archived") var archived: Boolean = false,
     @ColumnInfo(name="profile_id") val profileId: Int = 0,
+    @ColumnInfo(name="order", defaultValue = "0") var order: Int = 0,
 ) : ModelWithTimestamps()
