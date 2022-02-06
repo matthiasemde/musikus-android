@@ -119,10 +119,10 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
 
     /** get the goals from the database */
     private suspend fun initGoalsList() {
-        PracticeTime.dao.getGoalDescriptionsWithCategories().forEach { (desc, cat) ->
+        PracticeTime.goalDescriptionDao.getAllWithCategories().forEach { (desc, cat) ->
             goals.add(
                 GoalListElement(
-                    goalInstances = PracticeTime.dao.getGoalInstances(desc.id, from = 0L),
+                    goalInstances = PracticeTime.goalInstanceDao.get(desc.id, from = 0L),
                     goalDesc = desc,
                     category = cat.firstOrNull()
                 )

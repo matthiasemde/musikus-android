@@ -1,6 +1,5 @@
 package de.practicetime.practicetime.database.entities
 
-// import androidx.room.Entity
 import androidx.room.Relation
 import androidx.room.Embedded
 import androidx.room.Junction
@@ -41,8 +40,8 @@ data class GoalDescriptionWithCategories(
         entityColumn = "id",
         associateBy = Junction(
             GoalDescriptionCategoryCrossRef::class,
-            parentColumn = "goalDescriptionId",
-            entityColumn = "categoryId"
+            parentColumn = "goal_description_id",
+            entityColumn = "category_id"
         )
     )
     val categories: List<Category>
@@ -55,8 +54,8 @@ data class CategoryWithGoalDescriptions(
         entityColumn = "id",
         associateBy = Junction(
             GoalDescriptionCategoryCrossRef::class,
-            parentColumn = "categoryId",
-            entityColumn = "goalDescriptionId"
+            parentColumn = "category_id",
+            entityColumn = "goal_description_id"
         )
     )
     val descriptions: List<GoalDescription>
@@ -70,8 +69,8 @@ data class CategoryWithGoalDescriptionsWithCategories(
         entityColumn = "id",
         associateBy = Junction(
             GoalDescriptionCategoryCrossRef::class,
-            parentColumn = "categoryId",
-            entityColumn = "goalDescriptionId"
+            parentColumn = "category_id",
+            entityColumn = "goal_description_id"
         )
     )
     val descriptions: List<GoalDescriptionWithCategories>
@@ -100,7 +99,7 @@ data class SessionWithSectionsWithCategoriesWithGoalDescriptions(
 data class GoalInstanceWithDescription(
     @Embedded val instance: GoalInstance,
     @Relation(
-        parentColumn = "goalDescriptionId",
+        parentColumn = "goal_description_id",
         entityColumn = "id"
     )
     val description: GoalDescription
@@ -119,7 +118,7 @@ data class GoalInstanceWithDescriptionWithCategories(
     @Embedded val instance: GoalInstance,
     @Relation(
         entity = GoalDescription::class,
-        parentColumn = "goalDescriptionId",
+        parentColumn = "goal_description_id",
         entityColumn = "id"
     )
     val description: GoalDescriptionWithCategories

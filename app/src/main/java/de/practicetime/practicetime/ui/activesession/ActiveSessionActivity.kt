@@ -741,7 +741,7 @@ class ActiveSessionActivity : AppCompatActivity() {
             setPauseStopBtnVisibility(true)
 
             // when the session start, also update the goals
-            lifecycleScope.launch { updateGoals(PracticeTime.dao) }
+            lifecycleScope.launch { updateGoals() }
         } else if (mService.sectionBuffer.last().let {         // when session is running, don't allow starting if...
             (categoryId == it.first.category_id) ||           // ... in the same category
             (it.first.duration ?: 0 - it.second < 1)          // ... section running for less than 1sec

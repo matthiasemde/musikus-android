@@ -1,16 +1,19 @@
 package de.practicetime.practicetime.database.entities
 
 import android.util.Log
+import androidx.room.ColumnInfo
 import androidx.room.Entity
-import androidx.room.PrimaryKey
-import de.practicetime.practicetime.utils.getCurrTimestamp
+import de.practicetime.practicetime.database.ModelWithTimestamps
 import java.util.*
 
-// shows, whether a goal will count all sections or only the one from specific categories
+// shows, whether a goal will count all sections
+// or only the one from specific categories
 enum class GoalType {
     NON_SPECIFIC, CATEGORY_SPECIFIC
 }
 
+// shows, whether a goal will track practice time
+// or number of sessions
 enum class GoalProgressType {
     TIME, SESSION_COUNT
 }
@@ -19,17 +22,28 @@ enum class GoalPeriodUnit {
     DAY, WEEK, MONTH
 }
 
-@Entity
+@Entity(tableName = "goal_instance")
+data class GoalInstance(
+    @ColumnInfo(name="goal_description_id") val goalDescriptionId: Long,
+    @ColumnInfo(name="start_timestamp") val startTimestamp: Long,
+    @ColumnInfo(name="period_in_seconds") val periodInSeconds: Int,
+    @ColumnInfo(name="target") var target: Int,
+    @ColumnInfo(name="progress") var progress: Int = 0,
+    @ColumnInfo(name="renewed") var renewed: Boolean = false,
+) : ModelWithTimestamps()
+
+
+@Entity(tableName = "goal_description")
 class GoalDescription (
-    @PrimaryKey(autoGenerate = true) val id: Int = 0,
-    val type: GoalType,
-    val oneTime: Boolean,
-    val periodInPeriodUnits: Int,
-    val periodUnit: GoalPeriodUnit,
-    val progressType: GoalProgressType = GoalProgressType.TIME,
-    var archived: Boolean = false,
-    val profileId: Int = 0,
-) {
+    @ColumnInfo(name="type") val type: GoalType,
+    @ColumnInfo(name="repeat") val repeat: Boolean,
+    @ColumnInfo(name="period_in_period_units") val periodInPeriodUnits: Int,
+    @ColumnInfo(name="period_unit") val periodUnit: GoalPeriodUnit,
+    @ColumnInfo(name="progress_type") val progressType: GoalProgressType = GoalProgressType.TIME,
+    @ColumnInfo(name="archived") var archived: Boolean = false,
+    @ColumnInfo(name="profile_id") val profileId: Int = 0,
+    @ColumnInfo(name="order", defaultValue = "0") var order: Int = 0,
+    ) : ModelWithTimestamps() {
 
     // create a new instance of this goal, storing the target and progress during a single period
     fun createInstance(
@@ -83,14 +97,3 @@ class GoalDescription (
         )
     }
 }
-
-@Entity
-data class GoalInstance(
-    @PrimaryKey(autoGenerate = true) val id: Int = 0,
-    val goalDescriptionId: Int,
-    val startTimestamp: Long,
-    val periodInSeconds: Int,
-    var target: Int,
-    var progress: Int = 0,
-    var renewed: Boolean = false,
-)

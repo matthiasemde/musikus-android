@@ -20,6 +20,7 @@ import com.google.android.material.appbar.CollapsingToolbarLayout
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
+import de.practicetime.practicetime.database.entities.GoalDescription
 import de.practicetime.practicetime.database.entities.GoalDescriptionWithCategories
 import de.practicetime.practicetime.database.entities.GoalInstanceWithDescriptionWithCategories
 import de.practicetime.practicetime.shared.setCommonToolbar
@@ -64,7 +65,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
 
         lifecycleScope.launch {
             // trigger update routine and set adapter (initGoalList()) when it is ready
-            updateGoals(PracticeTime.dao)
+            updateGoals()
             initGoalList()
             // create a new goal dialog for adding new goals
             addGoalDialog = GoalDialog(
@@ -81,7 +82,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
         }
 
         // create the category dialog for editing categories
-        editGoalDialog = GoalDialog(requireActivity(), listOf(), ::editGoalHandler)
+//        editGoalDialog = GoalDialog(requireActivity(), listOf(), ::editGoalHandler)
 
         // create the dialog for deleting goals
         initDeleteGoalDialog()
@@ -112,7 +113,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
 
         // load all active goals from the database and notify the adapter
         lifecycleScope.launch {
-            PracticeTime.dao.getGoalInstancesWithDescriptionsWithCategories().let {
+            PracticeTime.goalInstanceDao.getWithDescriptionsWithCategories().let {
                 goalAdapterData.addAll(it)
                 goalAdapter?.notifyItemRangeInserted(0, it.size)
             }
@@ -255,30 +256,35 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
         firstTarget: Int,
     ) {
         lifecycleScope.launch {
-            val newGoalDescriptionId = PracticeTime.dao.insertGoalDescriptionWithCategories(
+            val newGoalDescriptionId = PracticeTime.goalDescriptionDao.insertGoalDescriptionWithCategories(
                 newGoalDescriptionWithCategories
             )
-            PracticeTime.dao.getGoalWithCategories(newGoalDescriptionId).let { d ->
+            PracticeTime.goalDescriptionDao.getWithCategories(
+                newGoalDescriptionId
+            )?.let { newGoalDescriptionWithCategories ->
+                val newGoalDescription = newGoalDescriptionWithCategories.description
                 // and create the first instance of the newly created goal description
-                val newGoalInstanceId = PracticeTime.dao.insertGoalInstance(
-                    d.description.createInstance(Calendar.getInstance(), firstTarget)
-                ).toInt()
-                PracticeTime.dao.getGoalInstance(newGoalInstanceId).let { instance ->
-                    PracticeTime.dao.getSessionIds(instance.startTimestamp, instance.startTimestamp + instance.periodInSeconds)
-                        .filter { s -> s.sections.first().timestamp > instance.startTimestamp}.forEach { s ->
-                            PracticeTime.dao.computeGoalProgressForSession(
-                                PracticeTime.dao.getSessionWithSectionsWithCategoriesWithGoals(s.session.id)
-                            ).also { progress ->
-                                instance.progress += progress[d.description.id] ?: 0
-                            }
+                PracticeTime.goalInstanceDao.insertAndGet(
+                    newGoalDescription.createInstance(Calendar.getInstance(), firstTarget)
+                )?.let { newGoalInstance ->
+                    PracticeTime.dao.getSessionIds(
+                        newGoalInstance.startTimestamp,
+                        newGoalInstance.startTimestamp + newGoalInstance.periodInSeconds
+                    ).filter { s -> s.sections.first().timestamp > newGoalInstance.startTimestamp}
+                    .forEach { s ->
+                        PracticeTime.goalDescriptionDao.computeGoalProgressForSession(
+                            PracticeTime.dao.getSessionWithSectionsWithCategoriesWithGoals(s.session.id)
+                        ).also { progress ->
+                            newGoalInstance.progress += progress[newGoalDescription.id] ?: 0
                         }
+                    }
 
-                    PracticeTime.dao.updateGoalInstance(instance)
+                    PracticeTime.goalInstanceDao.update(newGoalInstance)
 
                     goalAdapterData.add(
                         GoalInstanceWithDescriptionWithCategories(
-                            instance = instance,
-                            description = d,
+                            instance = newGoalInstance,
+                            description = newGoalDescriptionWithCategories,
                         )
                     )
                     goalAdapter?.notifyItemInserted(
@@ -292,13 +298,13 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
 
     // the handler for editing goals
     private fun editGoalHandler(
-        newGoalDescriptionWithCategories: GoalDescriptionWithCategories,
+        goalDescriptionId: Long,
         newTarget: Int,
     ) {
         lifecycleScope.launch {
-            PracticeTime.dao.updateGoalTarget(newGoalDescriptionWithCategories.description.id, newTarget)
+            PracticeTime.goalDescriptionDao.updateTarget(goalDescriptionId, newTarget)
             goalAdapterData.indexOfFirst {
-                it.description.description.id == newGoalDescriptionWithCategories.description.id
+                it.description.description.id == goalDescriptionId
             }.also { i ->
                 goalAdapterData[i].instance.target = newTarget
                 goalAdapter?.notifyItemChanged(i)
@@ -314,7 +320,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
             goalAdapterData[it].description.description.id
         }
         lifecycleScope.launch {
-            PracticeTime.dao.archiveGoals(goalDescriptionIds)
+            PracticeTime.goalDescriptionDao.getAndArchive(goalDescriptionIds)
         }
         goalDescriptionIds.forEach { goalDescriptionId ->
             goalAdapterData.indexOfFirst{ (_, d) ->
@@ -340,7 +346,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
             goalAdapterData[it].description.description.id
         }
         lifecycleScope.launch {
-            PracticeTime.dao.deleteGoals(goalDescriptionIds)
+            PracticeTime.goalDescriptionDao.deleteGoals(goalDescriptionIds)
         }
         goalDescriptionIds.forEach { goalDescriptionId ->
             goalAdapterData.indexOfFirst{ (_, d) ->

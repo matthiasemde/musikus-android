@@ -7,6 +7,8 @@ import androidx.room.*
 import androidx.room.migration.AutoMigrationSpec
 import androidx.sqlite.db.*
 import de.practicetime.practicetime.database.daos.CategoryDao
+import de.practicetime.practicetime.database.daos.GoalDescriptionDao
+import de.practicetime.practicetime.database.daos.GoalInstanceDao
 import de.practicetime.practicetime.database.entities.*
 import de.practicetime.practicetime.utils.getCurrTimestamp
 
@@ -32,9 +34,27 @@ import de.practicetime.practicetime.utils.getCurrTimestamp
 abstract class PTDatabase : RoomDatabase() {
     abstract val ptDao : PTDao
     abstract val categoryDao : CategoryDao
+    abstract val goalDescriptionDao : GoalDescriptionDao
+    abstract val goalInstanceDao : GoalInstanceDao
 
     @RenameTable(fromTableName = "Category", toTableName = "category")
     @RenameColumn(tableName = "Category", fromColumnName = "colorIndex", toColumnName = "color_index")
+
+    @RenameTable(fromTableName = "GoalInstance", toTableName = "goal_instance")
+    @RenameColumn(tableName = "GoalInstance", fromColumnName = "goalDescriptionId", toColumnName = "goal_description_id")
+    @RenameColumn(tableName = "GoalInstance", fromColumnName = "startTimestamp", toColumnName = "start_timestamp")
+    @RenameColumn(tableName = "GoalInstance", fromColumnName = "periodInSeconds", toColumnName = "period_in_seconds")
+
+    @RenameTable(fromTableName = "GoalDescription", toTableName = "goal_description")
+    @RenameColumn(tableName = "GoalDescription", fromColumnName = "oneTime", toColumnName = "repeat") // invert all entries :D TODO
+    @RenameColumn(tableName = "GoalDescription", fromColumnName = "periodInPeriodUnits", toColumnName = "period_in_period_units")
+    @RenameColumn(tableName = "GoalDescription", fromColumnName = "periodUnit", toColumnName = "period_unit")
+    @RenameColumn(tableName = "GoalDescription", fromColumnName = "progressType", toColumnName = "progress_type")
+    @RenameColumn(tableName = "GoalDescription", fromColumnName = "profileId", toColumnName = "profile_id")
+
+    @RenameTable(fromTableName = "GoalDescriptionCategoryCrossRef", toTableName = "goal_description_category_cross_ref")
+    @RenameColumn(tableName = "GoalDescriptionCategoryCrossRef", fromColumnName = "goalDescriptionId", toColumnName = "goal_description_id")
+    @RenameColumn(tableName = "GoalDescriptionCategoryCrossRef", fromColumnName = "categoryId", toColumnName = "category_id")
     class AutoMigrationFromOneToTwo : AutoMigrationSpec {
         override fun onPostMigrate(db: SupportSQLiteDatabase) {
             val cursor = db.query(SupportSQLiteQueryBuilder.builder("category").let {

@@ -49,7 +49,7 @@ class GoalDialog(
     private var trackAllCategories = true
 
     private val selectedCategories = ArrayList<Category>()
-    private var selectedGoalDescriptionId = 0
+    private var selectedGoalDescriptionId = 0L
 
     private var alertDialog: AlertDialog? = null
 
@@ -68,10 +68,10 @@ class GoalDialog(
                 if(isComplete()) {
                     // first create the new description
                     val newGoalDescription = GoalDescription(
-                        id = selectedGoalDescriptionId,
+//                        id = selectedGoalDescriptionId, TODO
                         type =  if (trackAllCategories) GoalType.NON_SPECIFIC
                                     else GoalType.CATEGORY_SPECIFIC,
-                        oneTime = !(goalDialogOneTimeGoalView.isChecked),
+                        repeat = goalDialogOneTimeGoalView.isChecked,
                         periodInPeriodUnits = goalDialogPeriodValueView.text.toString().toInt(),
                         periodUnit = GoalPeriodUnit.values()[goalDialogPeriodUnitView.selectedItemPosition],
                     )

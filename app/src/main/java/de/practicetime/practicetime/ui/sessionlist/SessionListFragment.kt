@@ -334,15 +334,15 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
                 val (session, sectionsWithCategories) = adapterData[layoutPosition - 1]
                 val sections = sectionsWithCategories.map { s -> s.section }
 
-                val goalProgress = PracticeTime.dao.computeGoalProgressForSession(
+                val goalProgress = PracticeTime.goalDescriptionDao.computeGoalProgressForSession(
                     PracticeTime.dao.getSessionWithSectionsWithCategoriesWithGoals(session.id),
                     checkArchived = true
                 )
 
                 // get all active goal instances at the time of the session
-                val updatedGoalInstances = PracticeTime.dao.getGoalInstances(
-                    descriptionIds = goalProgress.keys.toList(),
-                    now = sections.first().timestamp
+                val updatedGoalInstances = PracticeTime.goalInstanceDao.get(
+                    goalDescriptionIds = goalProgress.keys.toList(),
+                    from = sections.first().timestamp
                 // subtract the progress
                 ).onEach { instance ->
                     goalProgress[instance.goalDescriptionId].also { progress ->

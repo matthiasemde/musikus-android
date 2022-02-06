@@ -34,12 +34,6 @@ abstract class CategoryDao : BaseDao<Category>(tableName = "category") {
     *   Queries
     */
 
-//    @Query("SELECT * FROM category WHERE id=:id")
-//    abstract override suspend fun get(id: Long): Category?
-//
-//    @Query("SELECT * FROM category WHERE id IN (:ids)")
-//    abstract suspend fun get(ids: List<Long>): List<Category>
-
     @Query("SELECT * FROM category WHERE archived=0 OR archived = NOT :activeOnly")
     abstract suspend fun getAll(activeOnly: Boolean = false): List<Category>
 

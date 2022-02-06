@@ -4,16 +4,14 @@ import de.practicetime.practicetime.database.PTDao
 import de.practicetime.practicetime.database.entities.GoalPeriodUnit
 import java.util.*
 
-suspend fun updateGoals(
-    dao: PTDao
-) {
+suspend fun updateGoals() {
     var notDone = true
     while(notDone) {
-        dao.getOutdatedGoalInstancesWithDescriptions().also {outdatedInstancesWithDescriptions ->
+        PracticeTime.goalInstanceDao.getOutdatedWithDescriptions().also {outdatedInstancesWithDescriptions ->
             // while there are still outdated goals, keep looping and adding new ones
             notDone = outdatedInstancesWithDescriptions.isNotEmpty()
             outdatedInstancesWithDescriptions.forEach { (outdatedInstance, description) ->
-                if (!description.oneTime) {
+                if (description.repeat) {
 
                     // create a new calendar instance, set the time to the instances start timestamp,...
                     val startCalendar = Calendar.getInstance()
@@ -36,7 +34,7 @@ suspend fun updateGoals(
                     }
 
                     // ... and create a new goal with the same groupId, period and target
-                    dao.insertGoalInstance(
+                    PracticeTime.goalInstanceDao.insert(
                         description.createInstance(
                             timeFrame = startCalendar,
                             target = outdatedInstance.target
@@ -46,7 +44,7 @@ suspend fun updateGoals(
 
                 // finally mark the outdated instance as renewed
                 outdatedInstance.renewed = true
-                dao.updateGoalInstance(outdatedInstance)
+                PracticeTime.goalInstanceDao.update(outdatedInstance)
             }
         }
     }

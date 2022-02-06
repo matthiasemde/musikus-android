@@ -9,6 +9,8 @@ import androidx.room.Room
 import de.practicetime.practicetime.database.PTDao
 import de.practicetime.practicetime.database.PTDatabase
 import de.practicetime.practicetime.database.daos.CategoryDao
+import de.practicetime.practicetime.database.daos.GoalDescriptionDao
+import de.practicetime.practicetime.database.daos.GoalInstanceDao
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
@@ -16,8 +18,12 @@ class PracticeTime : Application() {
     val executorService: ExecutorService = Executors.newFixedThreadPool(4)
 
     companion object {
-        lateinit var dao: PTDao         // the central static dao object of the application
+        // the database accessing objects of the application
+        lateinit var dao: PTDao
         lateinit var categoryDao: CategoryDao
+        lateinit var goalDescriptionDao: GoalDescriptionDao
+        lateinit var goalInstanceDao: GoalInstanceDao
+
         var noSessionsYet = true
         var serviceIsRunning = false
         const val PREFERENCES_KEY_FIRSTRUN = "firstrun"
@@ -58,5 +64,7 @@ class PracticeTime : Application() {
         ).build()
         dao = db.ptDao
         categoryDao = db.categoryDao
+        goalDescriptionDao = db.goalDescriptionDao
+        goalInstanceDao = db.goalInstanceDao
     }
 }

@@ -89,11 +89,11 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
     private fun parseSession(sessionId: Int) {
         lifecycleScope.launch {
             val latestSession = PracticeTime.dao.getSessionWithSectionsWithCategoriesWithGoals(sessionId)
-            val goalProgress = PracticeTime.dao.computeGoalProgressForSession(latestSession)
+            val goalProgress = PracticeTime.goalDescriptionDao.computeGoalProgressForSession(latestSession)
 
             // get all active goal instances at the time of the session
-            PracticeTime.dao.getGoalInstancesWithDescriptionsWithCategories(
-                descriptionIds = goalProgress.keys.toList(),
+            PracticeTime.goalInstanceDao.getWithDescriptionsWithCategories(
+                goalDescriptionIds = goalProgress.keys.toList(),
                 checkArchived = false,
                 now = latestSession.sections.first().section.timestamp
             // store the progress in the database
@@ -101,7 +101,7 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
                 goalProgress[d.description.id].also { progress ->
                     if (progress != null && progress > 0) {
                         instance.progress += progress
-                        PracticeTime.dao.updateGoalInstance(instance)
+                        PracticeTime.goalInstanceDao.update(instance)
 
                         // undo the progress locally after updating database for the animation to work
                         instance.progress -= progress
@@ -133,7 +133,7 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
     private fun startProgressAnimation(
         progressedGoals
             : List<GoalInstanceWithDescriptionWithCategories>,
-        goalProgress: Map<Int, Int>
+        goalProgress: Map<Long, Int>
     ) {
 
         skipButton.setOnClickListener { button ->

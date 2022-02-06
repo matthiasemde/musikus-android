@@ -36,7 +36,7 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         lifecycleScope.launch {
-            updateGoals(PracticeTime.dao)    // update the goalInstances if they are outdated
+            updateGoals()    // update the goalInstances if they are outdated
 
             if (getAllSessions().isNotEmpty()) {
                 view.findViewById<NestedScrollView>(R.id.statistics_overview_scrollview).visibility = View.VISIBLE
@@ -49,7 +49,7 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
                 view.findViewById<ImageButton>(R.id.stats_ov_card_last7days_ib_more_details).setOnClickListener(sessionDetailClickListener)
 
                 /** last 5 goals overview */
-                if (PracticeTime.dao.getGoalInstancesWithDescription().isNotEmpty()) {
+                if (PracticeTime.goalInstanceDao.getWithDescription().isNotEmpty()) {
                     view.findViewById<CardView>(R.id.stats_ov_cardview_lastgoals).visibility = View.VISIBLE
 
                     val goalsDetailClickListener = View.OnClickListener {
@@ -194,7 +194,7 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
 
     private fun initLastGoalsCard() {
         lifecycleScope.launch {
-            val lastGoals = PracticeTime.dao.getGoalInstancesWithDescription().takeLast(5)
+            val lastGoals = PracticeTime.goalInstanceDao.getWithDescription().takeLast(5)
             var achievedGoalsCount = 0
             arrayListOf<LinearLayout>(
                 requireView().findViewById(R.id.progressbarlayout_1),
@@ -227,8 +227,9 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
                     if (gd.type == GoalType.CATEGORY_SPECIFIC) {
                         // find out category
                         val catId =
-                            PracticeTime.dao.getGoalDescriptionCategoryCrossRefsWhereDescriptionId(
-                                gd.id).first().categoryId
+                            PracticeTime.goalDescriptionDao.getGoalDescriptionCategoryCrossRefs(
+                                goalDescriptionId = gd.id
+                            ).first().categoryId
                         val cat = PracticeTime.categoryDao.get(catId)
                         val categoryColors =
                             requireContext().resources.getIntArray(R.array.category_colors)
