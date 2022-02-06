@@ -51,6 +51,9 @@ class CategoryDialog (
 
     private var category: Category? = null
 
+    private var selectedName = ""
+    private var selectedColorIndex = -1
+
     private var alertDialog: AlertDialog? = null
 
     init {
@@ -64,27 +67,28 @@ class CategoryDialog (
 
                 // check if all fields are filled out
                 if (isComplete()) {
-
+                    // create the edited / new category
+                    (category?.apply {
+                        name = selectedName
+                        colorIndex = selectedColorIndex
+                    } ?: Category(
+                        name = selectedName,
+                        colorIndex = selectedColorIndex,
                     // and call the submit handler
-                    category?.let { submitHandler(it) }
-                        ?: Log.e("CATEGORY_DIALOG", "Ok clicked, but category is null")
+                    )).let {
+                        submitHandler(it)
+                    }
                 }
 
                 // clear the dialog and dismiss it
-                category = null
-                categoryNameView.text.clear()
-                categoryColorButtonGroupRow1.clearCheck()
-                categoryColorButtonGroupRow2.clearCheck()
+                resetDialog()
                 dialog.dismiss()
             }
 
             // define the callback function for the negative button
             // to clear the dialog and then cancel it
             setNegativeButton(R.string.addCategoryAlertCancel) { dialog, _ ->
-                category = null
-                categoryNameView.text.clear()
-                categoryColorButtonGroupRow1.clearCheck()
-                categoryColorButtonGroupRow2.clearCheck()
+                resetDialog()
                 dialog.cancel()
             }
         }
@@ -98,7 +102,7 @@ class CategoryDialog (
             button.backgroundTintList = ColorStateList.valueOf(categoryColors[index])
             button.setOnCheckedChangeListener { _, isChecked ->
                 if(isChecked) {
-                    category?.colorIndex = index
+                    selectedColorIndex = index
                     if (index < 5) {
                         categoryColorButtonGroupRow2.clearCheck()
                     } else {
@@ -114,22 +118,23 @@ class CategoryDialog (
             R.drawable.dialog_background))
     }
 
+    private fun resetDialog() {
+        categoryNameView.text.clear()
+        categoryColorButtonGroupRow1.clearCheck()
+        categoryColorButtonGroupRow2.clearCheck()
+        category = null
+        selectedName = ""
+        selectedColorIndex = -1
+    }
+
     // the dialog is complete if a name is entered and a color is selected
     private fun isComplete(): Boolean {
-        return category?.let { it.name.isNotEmpty() && it.colorIndex != -1 } ?: false
+        return selectedName.isNotEmpty() && selectedColorIndex != -1
     }
 
     // the public function to show the dialog
     // if a category is passed it will be edited
     fun show(editCategory: Category? = null) {
-
-        // create the new / edited category
-        category = editCategory?.copy() ?: Category(
-            name = "",
-            colorIndex = -1,
-            archived = false,
-            profileId = 0,
-        )
 
         alertDialog?.show()
         alertDialog?.also { dialog ->
@@ -139,15 +144,17 @@ class CategoryDialog (
                 categoryDialogTitleView.setText(R.string.addCategoryDialogTitleEdit)
                 positiveButton.setText(R.string.addCategoryAlertOkEdit)
 
-                category?.let {
+                editCategory.let {
+                    category = it
                     categoryNameView.setText(it.name)
+                    selectedName = it.name
                     categoryColorButtons[it.colorIndex].isChecked = true
                 }
             }
 
             positiveButton.isEnabled = isComplete()
             categoryNameView.addTextChangedListener {
-                category?.name = categoryNameView.text.toString().trim()
+                selectedName = categoryNameView.text.toString().trim()
                 positiveButton.isEnabled = isComplete()
             }
             categoryColorButtonGroupRow1.setOnCheckedChangeListener { _, _ ->

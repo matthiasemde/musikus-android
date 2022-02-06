@@ -9,10 +9,10 @@ import de.practicetime.practicetime.database.entities.Category
 import de.practicetime.practicetime.database.entities.CategoryWithGoalDescriptions
 
 @Dao
-abstract class CategoryDao : BaseDao<Category>() {
+abstract class CategoryDao : BaseDao<Category>(tableName = "category") {
 
-//    @Transaction
-    suspend fun archive(categoryId: Long) : Boolean {
+    @Transaction
+    open suspend fun archive(categoryId: Long) : Boolean {
         // to archive a category, fetch it from the database along with associated goals
         getWithGoalDescriptions(categoryId)?.also {
             val (category, goalDescriptions) = it
@@ -34,11 +34,11 @@ abstract class CategoryDao : BaseDao<Category>() {
     *   Queries
     */
 
-    @Query("SELECT * FROM category WHERE id=:id")
-    abstract override suspend fun get(id: Long): Category?
-
-    @Query("SELECT * FROM category WHERE id IN (:ids)")
-    abstract suspend fun get(ids: List<Long>): List<Category>
+//    @Query("SELECT * FROM category WHERE id=:id")
+//    abstract override suspend fun get(id: Long): Category?
+//
+//    @Query("SELECT * FROM category WHERE id IN (:ids)")
+//    abstract suspend fun get(ids: List<Long>): List<Category>
 
     @Query("SELECT * FROM category WHERE archived=0 OR archived = NOT :activeOnly")
     abstract suspend fun getAll(activeOnly: Boolean = false): List<Category>
