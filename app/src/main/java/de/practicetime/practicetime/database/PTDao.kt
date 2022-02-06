@@ -35,7 +35,8 @@ abstract class BaseDao<T> where T : BaseModel {
 
     abstract suspend fun get(id: Long): T?
 
-    suspend fun insertAndGet(row: T) : T? {
+    @Transaction
+    open suspend fun insertAndGet(row: T) : T? {
         val newId = insert(row)
         return get(newId)
     }
@@ -296,7 +297,7 @@ interface PTDao {
     suspend fun computeGoalProgressForSession(
         session: SessionWithSectionsWithCategoriesWithGoalDescriptions,
         checkArchived: Boolean = false,
-    ) : Map<Int, Int>{
+    ) : Map<Int, Int> {
         var totalSessionDuration = 0
 
         // goalProgress maps the goalDescription-id to its progress
