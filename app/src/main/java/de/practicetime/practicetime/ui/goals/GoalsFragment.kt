@@ -6,6 +6,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.VibrationEffect
 import android.os.VibratorManager
+import android.util.Log
 import android.util.TypedValue
 import android.view.View
 import android.widget.CheckBox
@@ -20,11 +21,12 @@ import com.google.android.material.appbar.CollapsingToolbarLayout
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
-import de.practicetime.practicetime.database.entities.GoalDescription
 import de.practicetime.practicetime.database.entities.GoalDescriptionWithCategories
 import de.practicetime.practicetime.database.entities.GoalInstanceWithDescriptionWithCategories
+import de.practicetime.practicetime.shared.EditTimeDialog
 import de.practicetime.practicetime.shared.setCommonToolbar
 import de.practicetime.practicetime.updateGoals
+import de.practicetime.practicetime.utils.getCurrTimestamp
 import kotlinx.coroutines.launch
 import java.util.*
 
@@ -35,14 +37,15 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
         ArrayList<GoalInstanceWithDescriptionWithCategories>()
     private var goalAdapter : GoalAdapter? = null
 
-    private var addGoalDialog: GoalDialog? = null
-    private var editGoalDialog: GoalDialog? = null
-    private var deleteGoalDialog: AlertDialog? = null
+    private lateinit var addGoalDialog: GoalDialog
+    private lateinit var editGoalDialog: EditTimeDialog
+    private lateinit var deleteGoalDialog: AlertDialog
 
     private lateinit var goalsToolbar: androidx.appcompat.widget.Toolbar
     private lateinit var goalsCollapsingToolbarLayout: CollapsingToolbarLayout
 
     private val selectedGoals = ArrayList<Int>()
+    private var editGoalId : Long? = null
 
     // catch the back press for the case where the selection should be reverted
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -75,14 +78,8 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
             )
         }
 
-        view.findViewById<FloatingActionButton>(R.id.goalsFab).setOnClickListener {
-            clearGoalSelection()
-            resetToolbar()
-            addGoalDialog?.show()
-        }
-
         // create the category dialog for editing categories
-//        editGoalDialog = GoalDialog(requireActivity(), listOf(), ::editGoalHandler)
+        initEditGoalDialog()
 
         // create the dialog for deleting goals
         initDeleteGoalDialog()
@@ -90,9 +87,15 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
         goalsToolbar = view.findViewById(R.id.goalsToolbar)
         goalsCollapsingToolbarLayout = view.findViewById(R.id.collapsing_toolbar_layout)
         resetToolbar()  // initialize the toolbar with all its listeners
+
+        view.findViewById<FloatingActionButton>(R.id.goalsFab).setOnClickListener {
+            clearGoalSelection()
+            resetToolbar()
+            addGoalDialog.show()
+        }
     }
 
-    private fun initGoalList() {
+    private suspend fun initGoalList() {
         goalAdapter = GoalAdapter(
             goalAdapterData,
             selectedGoals,
@@ -112,12 +115,26 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
         }
 
         // load all active goals from the database and notify the adapter
-        lifecycleScope.launch {
-            PracticeTime.goalInstanceDao.getWithDescriptionsWithCategories().let {
-                goalAdapterData.addAll(it)
-                goalAdapter?.notifyItemRangeInserted(0, it.size)
+        PracticeTime.goalInstanceDao.getWithDescriptionsWithCategories().let {
+            goalAdapterData.addAll(it)
+            goalAdapter?.notifyItemRangeInserted(0, it.size)
+        }
+        if (goalAdapterData.isEmpty()) showHint()
+    }
+
+    private fun initEditGoalDialog() {
+        editGoalDialog = EditTimeDialog(
+            requireActivity(),
+            getString(R.string.goalDialogTitleEdit)
+        ) { newTarget ->
+            lifecycleScope.launch {
+                editGoalId?.let {
+                    PracticeTime.goalDescriptionDao.updateTarget(it, newTarget)
+                }
+                editGoalId = null
+                clearGoalSelection()
+                resetToolbar()
             }
-            if (goalAdapterData.isEmpty()) showHint()
         }
     }
 
@@ -148,9 +165,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
     }
 
     // the handler for dealing with short clicks on goals
-    private fun shortClickOnGoalHandler(
-        index: Int,
-    ) {
+    private fun shortClickOnGoalHandler(index: Int) {
         if(selectedGoals.isNotEmpty()) {
             if (selectedGoals.remove(index)) {
                 goalAdapter?.notifyItemChanged(index)
@@ -163,7 +178,10 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
                 longClickOnGoalHandler(index, vibrate = false)
             }
         } else {
-            editGoalDialog?.show(goalAdapterData[index])
+            goalAdapterData[index].let {
+                editGoalId = it.description.description.id
+                editGoalDialog.show(it.instance.target)
+            }
         }
     }
 
@@ -184,11 +202,11 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
                 }
 
                 // set the click listeners for the menu options here
-                setOnMenuItemClickListener {
-                    when (it.itemId) {
+                setOnMenuItemClickListener { clickedItem ->
+                    when (clickedItem.itemId) {
                         R.id.topToolbarSelectionDelete -> {
-                            deleteGoalDialog?.show()
-                            deleteGoalDialog?.also { dialog ->
+                            deleteGoalDialog.show()
+                            deleteGoalDialog.also { dialog ->
                                 dialog.findViewById<TextView>(R.id.deleteGoalDialogMessage).setText(
                                     if(selectedGoals.size > 1) R.string.deleteGoalsDialogMessage
                                     else R.string.deleteGoalDialogMessage
@@ -196,7 +214,10 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
                             }
                         }
                         R.id.topToolbarSelectionEdit -> {
-                            editGoalDialog?.show(goalAdapterData[selectedGoals.first()])
+                            goalAdapterData[selectedGoals.first()].let {
+                                editGoalId = it.description.description.id
+                                editGoalDialog.show(it.instance.target)
+                            }
                         }
                     }
                     return@setOnMenuItemClickListener true
@@ -293,24 +314,6 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
                 }
             }
             if (goalAdapterData.isNotEmpty()) hideHint()
-        }
-    }
-
-    // the handler for editing goals
-    private fun editGoalHandler(
-        goalDescriptionId: Long,
-        newTarget: Int,
-    ) {
-        lifecycleScope.launch {
-            PracticeTime.goalDescriptionDao.updateTarget(goalDescriptionId, newTarget)
-            goalAdapterData.indexOfFirst {
-                it.description.description.id == goalDescriptionId
-            }.also { i ->
-                goalAdapterData[i].instance.target = newTarget
-                goalAdapter?.notifyItemChanged(i)
-            }
-            clearGoalSelection()
-            resetToolbar()
         }
     }
 

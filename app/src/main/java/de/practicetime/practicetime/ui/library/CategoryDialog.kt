@@ -15,7 +15,7 @@ import de.practicetime.practicetime.database.entities.Category
 
 class CategoryDialog (
     context: Activity,
-    submitHandler: (newCategory: Category) -> Unit,
+    submitHandler: (category: Category) -> Unit,
 ) {
 
     // instantiate the builder for the alert dialog
@@ -54,7 +54,7 @@ class CategoryDialog (
     private var selectedName = ""
     private var selectedColorIndex = -1
 
-    private var alertDialog: AlertDialog? = null
+    private var alertDialog: AlertDialog
 
     init {
         // Dialog Setup
@@ -114,7 +114,7 @@ class CategoryDialog (
 
         // finally, we use the alert dialog builder to create the alertDialog
         alertDialog = alertDialogBuilder.create()
-        alertDialog?.window?.setBackgroundDrawable(ContextCompat.getDrawable(context,
+        alertDialog.window?.setBackgroundDrawable(ContextCompat.getDrawable(context,
             R.drawable.dialog_background))
     }
 
@@ -136,20 +136,18 @@ class CategoryDialog (
     // if a category is passed it will be edited
     fun show(editCategory: Category? = null) {
 
-        alertDialog?.show()
-        alertDialog?.also { dialog ->
+        alertDialog.show()
+        alertDialog.also { dialog ->
             val positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
 
-            if(editCategory != null) {
+            // if a category is passed, apply its properties to the dialog
+            editCategory?.let {
                 categoryDialogTitleView.setText(R.string.addCategoryDialogTitleEdit)
                 positiveButton.setText(R.string.addCategoryAlertOkEdit)
-
-                editCategory.let {
-                    category = it
-                    categoryNameView.setText(it.name)
-                    selectedName = it.name
-                    categoryColorButtons[it.colorIndex].isChecked = true
-                }
+                category = it
+                categoryNameView.setText(it.name)
+                selectedName = it.name
+                categoryColorButtons[it.colorIndex].isChecked = true
             }
 
             positiveButton.isEnabled = isComplete()

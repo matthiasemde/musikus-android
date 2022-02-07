@@ -49,6 +49,8 @@ class NumberInput(
         }
     }
 
+    fun value() = text.toString().trim().toIntOrNull()
+
     override fun onFocusChanged(focused: Boolean, direction: Int, previouslyFocusedRect: Rect?) {
         if(focused) {
             firstEdit = true

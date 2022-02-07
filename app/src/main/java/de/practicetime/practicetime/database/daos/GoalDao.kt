@@ -98,7 +98,7 @@ abstract class GoalDescriptionDao : BaseDao<GoalDescription>(tableName = "goal_d
         PracticeTime.goalInstanceDao.apply {
             get(
                 goalDescriptionId = goalDescriptionId,
-                from = getCurrTimestamp() / 1000,
+                from = getCurrTimestamp(),
             ).forEach {
                 it.target = newTarget
                 update(it)
@@ -213,7 +213,7 @@ abstract class GoalInstanceDao : BaseDao<GoalInstance>(tableName = "goal_instanc
     /**
      * Get all [GoalInstance] entities matching a specific pattern
      * @param goalDescriptionIds
-     * @param from optional timestamp in seconds marking beginning of selection. **default**: [getCurrTimestamp]
+     * @param from optional timestamp in seconds marking beginning of selection. **default**: [getCurrTimestamp] / 1000L
      * @param to optional timestamp in seconds marking end of selection. **default** [Long.MAX_VALUE]
      * @param inclusiveFrom decides whether the beginning of the selection is inclusive. **default**: true
      * @param inclusiveTo decides whether the end of the selection is inclusive. **default**: false
@@ -314,7 +314,7 @@ abstract class GoalInstanceDao : BaseDao<GoalInstance>(tableName = "goal_instanc
         "AND start_timestamp + period_in_seconds < :to"
     )
     abstract suspend fun getOutdatedWithDescriptions(
-        to : Long = getCurrTimestamp() / 1000L
+        to : Long = getCurrTimestamp()
     ) : List<GoalInstanceWithDescription>
 
     @Transaction
@@ -324,12 +324,12 @@ abstract class GoalInstanceDao : BaseDao<GoalInstance>(tableName = "goal_instanc
         "AND start_timestamp+period_in_seconds > :now " +
         "AND goal_description_id IN (" +
             "SELECT id FROM goal_description WHERE " +
-            "archived=0 OR archived=:checkArchived" +
+            "archived=0 OR :checkArchived" +
         ")"
     )
     abstract suspend fun getWithDescriptionsWithCategories(
         checkArchived : Boolean = false,
-        now : Long = getCurrTimestamp() / 1000L,
+        now : Long = getCurrTimestamp(),
     ) : List<GoalInstanceWithDescriptionWithCategories>
 
     @Transaction
@@ -340,12 +340,12 @@ abstract class GoalInstanceDao : BaseDao<GoalInstance>(tableName = "goal_instanc
         "AND start_timestamp+period_in_seconds > :now " +
         "AND goal_description_id IN (" +
             "SELECT id FROM goal_description WHERE " +
-            "archived=0 OR archived=:checkArchived" +
+            "archived=0 OR :checkArchived" +
         ")"
     )
     abstract suspend fun getWithDescriptionsWithCategories(
         goalDescriptionIds: List<Long>,
         checkArchived : Boolean = false,
-        now : Long = getCurrTimestamp() / 1000L,
+        now : Long = getCurrTimestamp(),
     ) : List<GoalInstanceWithDescriptionWithCategories>
 }

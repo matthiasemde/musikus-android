@@ -69,6 +69,9 @@ class GoalDescription (
                 timeFrame.add(Calendar.DAY_OF_YEAR, periodInPeriodUnits)
             }
             GoalPeriodUnit.WEEK -> {
+                if(timeFrame.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY) {
+                    timeFrame.add(Calendar.DAY_OF_WEEK, - 1)
+                }
                 timeFrame.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
                 startTimestamp = timeFrame.timeInMillis / 1000L
 

@@ -17,11 +17,16 @@ import de.practicetime.practicetime.R
 import de.practicetime.practicetime.components.NumberInput
 import de.practicetime.practicetime.database.entities.*
 import de.practicetime.practicetime.utils.secondsDurationToHoursMinSec
+import java.util.*
+import kotlin.collections.ArrayList
 
 class GoalDialog(
     private val context: Activity,
     private val categories: List<Category>,
-    onCreateHandler: (newGoal: GoalDescriptionWithCategories, firstTarget: Int) -> Unit,
+    submitHandler: (
+        newGoalDescriptionWithCategories: GoalDescriptionWithCategories,
+        newTarget: Int
+    ) -> Unit,
 ) {
 
     // instantiate the builder for the alert dialog
@@ -33,25 +38,23 @@ class GoalDialog(
     )
 
     // find and save all the views in the dialog view
-    private val goalDialogTitleView = dialogView.findViewById<TextView>(R.id.categoryDialogTitle)
     private val goalDialogAllCategoriesButtonView = dialogView.findViewById<AppCompatButton>(R.id.goalDialogAllCategories)
     private val goalDialogSingleCategoryButtonView = dialogView.findViewById<AppCompatButton>(R.id.goalDialogSpecificCategories)
     private val goalDialogCategorySelectorView = dialogView.findViewById<Spinner>(R.id.goalDialogCategorySelector)
     private val goalDialogCategorySelectorLayoutView = dialogView.findViewById<LinearLayout>(R.id.goalDialogCategorySelectorLayout)
     private val goalDialogOneTimeGoalView = dialogView.findViewById<CheckBox>(R.id.goalDialogOneTimeGoal)
-    private val goalDialogOneTimeGoalTooltipView = dialogView.findViewById<MaterialButton>(R.id.goalDialogOneTimeGoalTooltip)
     private val goalDialogTargetHoursView = dialogView.findViewById<NumberInput>(R.id.goalDialogHours)
     private val goalDialogTargetMinutesView = dialogView.findViewById<NumberInput>(R.id.goalDialogMinutes)
-    private val goalDialogPeriodValueView = dialogView.findViewById<EditText>(R.id.goalDialogPeriodValue)
+    private val goalDialogPeriodValueView = dialogView.findViewById<NumberInput>(R.id.goalDialogPeriodValue)
     private val goalDialogPeriodUnitView = dialogView.findViewById<Spinner>(R.id.goalDialogPeriodUnit)
-    private val goalDialogPeriodUnitTooltipView = dialogView.findViewById<MaterialButton>(R.id.goalDialogPeriodUnitTooltip)
 
-    private var trackAllCategories = true
-
+    private var selectedTarget = 0
+    private var selectedPeriodUnit = GoalPeriodUnit.DAY
+    private var selectedPeriod = 1
+    private var selectedGoalType = GoalType.NON_SPECIFIC
     private val selectedCategories = ArrayList<Category>()
-    private var selectedGoalDescriptionId = 0L
 
-    private var alertDialog: AlertDialog? = null
+    private var alertDialog: AlertDialog
 
     init {
         initCategorySelector()
@@ -65,52 +68,24 @@ class GoalDialog(
 
             // define the callback function for the positive button
             setPositiveButton(R.string.addCategoryAlertOk) { dialog, _ ->
-                if(isComplete()) {
-                    // first create the new description
-                    val newGoalDescription = GoalDescription(
-//                        id = selectedGoalDescriptionId, TODO
-                        type =  if (trackAllCategories) GoalType.NON_SPECIFIC
-                                    else GoalType.CATEGORY_SPECIFIC,
-                        repeat = goalDialogOneTimeGoalView.isChecked,
-                        periodInPeriodUnits = goalDialogPeriodValueView.text.toString().toInt(),
-                        periodUnit = GoalPeriodUnit.values()[goalDialogPeriodUnitView.selectedItemPosition],
-                    )
+                // first create the new description
+                val newGoalDescription = GoalDescription(
+                    type =  selectedGoalType,
+                    repeat = goalDialogOneTimeGoalView.isChecked,
+                    periodInPeriodUnits = selectedPeriod,
+                    periodUnit = selectedPeriodUnit,
+                )
 
-                    Log.d("CREATE", "track: $trackAllCategories\nselectedCategories:$selectedCategories")
-                    // then create a object joining the description with any selected categories
-                    val newGoalDescriptionWithCategories = GoalDescriptionWithCategories(
-                        description = newGoalDescription,
-                        categories = if (!trackAllCategories)
-                            selectedCategories.toList() else emptyList()
-                    )
+                // then create a object joining the description with any selected categories
+                val newGoalDescriptionWithCategories = GoalDescriptionWithCategories(
+                    description = newGoalDescription,
+                    categories = if (selectedGoalType == GoalType.CATEGORY_SPECIFIC)
+                        selectedCategories.toList() else emptyList()
+                )
 
-                    Log.d("CREATE", "$newGoalDescriptionWithCategories")
+                // and call the submit handler, passing the selected target duration
+                submitHandler(newGoalDescriptionWithCategories, selectedTarget)
 
-                    val targetDuration = goalDialogTargetHoursView.text.toString().trim().let{
-                        if(it.isNotEmpty()) it.toInt() * 3600 else 0
-                    } + goalDialogTargetMinutesView.text.toString().trim().let {
-                        if(it.isNotEmpty()) it.toInt() * 60 else 0
-                    }
-
-                    // and call the onCreate handler, passing the selected target duration
-                    onCreateHandler(newGoalDescriptionWithCategories, targetDuration)
-                }
-
-                // clear the dialog and dismiss it
-                selectedGoalDescriptionId = 0
-
-                goalDialogAllCategoriesButtonView.performClick()
-
-                selectedCategories.clear()
-                goalDialogCategorySelectorView.setSelection(0)
-
-                goalDialogOneTimeGoalView.isChecked = true
-
-                goalDialogTargetHoursView.setText("0")
-                goalDialogTargetMinutesView.setText("0")
-                goalDialogPeriodValueView.setText("1")
-
-                goalDialogPeriodUnitView.setSelection(0)
                 dialog.dismiss()
             }
 
@@ -121,18 +96,37 @@ class GoalDialog(
             }
         }
 
-        goalDialogOneTimeGoalTooltipView.setOnClickListener {
+        dialogView.findViewById<MaterialButton>(R.id.goalDialogOneTimeGoalTooltip)
+            .setOnClickListener {
             it.performLongClick()
         }
-        goalDialogPeriodUnitTooltipView.setOnClickListener {
+        dialogView.findViewById<MaterialButton>(R.id.goalDialogPeriodUnitTooltip)
+            .setOnClickListener {
             it.performLongClick()
         }
 
         // finally, we use the alert dialog builder to create the alertDialog
         alertDialog = alertDialogBuilder.create()
-        alertDialog?.window?.setBackgroundDrawable(
+        alertDialog.window?.setBackgroundDrawable(
             ContextCompat.getDrawable(context, R.drawable.dialog_background)
         )
+    }
+
+    private fun resetDialog() {
+        // clear the dialog and dismiss it
+        goalDialogTargetHoursView.setText("0")
+        goalDialogTargetMinutesView.setText("0")
+        goalDialogPeriodValueView.setText("1")
+
+        goalDialogPeriodUnitView.setSelection(0)
+
+        goalDialogAllCategoriesButtonView.performClick()
+
+        goalDialogCategorySelectorView.setSelection(0)
+
+        goalDialogOneTimeGoalView.isChecked = true
+
+        updatePositiveButtonState()
     }
 
     private fun initCategorySelector() {
@@ -143,7 +137,7 @@ class GoalDialog(
         goalDialogCategorySelectorView.isEnabled = false
 
         goalDialogSingleCategoryButtonView.setOnClickListener {
-            trackAllCategories = false
+            selectedGoalType = GoalType.CATEGORY_SPECIFIC
 
             goalDialogSingleCategoryButtonView.isSelected = true
             goalDialogAllCategoriesButtonView.isSelected = false
@@ -154,7 +148,7 @@ class GoalDialog(
         }
 
         goalDialogAllCategoriesButtonView.setOnClickListener {
-            trackAllCategories = true
+            selectedGoalType = GoalType.NON_SPECIFIC
 
             goalDialogSingleCategoryButtonView.isSelected = false
             goalDialogAllCategoriesButtonView.isSelected = true
@@ -169,16 +163,11 @@ class GoalDialog(
                 context,
                 categories,
             )
-            goalDialogCategorySelectorView.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-                override fun onItemSelected(
-                    parent: AdapterView<*>?,
-                    view: View?,
-                    position: Int,
-                    id: Long
-                ) {
+            onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+                override fun onItemSelected(p: AdapterView<*>?, v: View?, pos: Int, id: Long) {
                     selectedCategories.clear()
-                    if (position > 0)
-                        selectedCategories.add(categories[position-1])  // -1 because pos=0 is hint
+                    if (pos > 0)
+                        selectedCategories.add(categories[pos-1])  // -1 because pos=0 is hint
                     updatePositiveButtonState()
                 }
 
@@ -190,79 +179,59 @@ class GoalDialog(
     }
 
     private fun initTimeSelector() {
-        ArrayAdapter(
-            context,
-            android.R.layout.simple_spinner_item,
-            GoalPeriodUnit.values().map { unit ->
-                when(unit) {
-                    GoalPeriodUnit.DAY -> "days"
-                    GoalPeriodUnit.WEEK -> "weeks"
-                    GoalPeriodUnit.MONTH -> "months"
+        goalDialogPeriodUnitView.apply {
+            adapter = ArrayAdapter(
+                context,
+                android.R.layout.simple_spinner_item,
+                GoalPeriodUnit.values().map { unit ->
+                    when(unit) {
+                        GoalPeriodUnit.DAY -> "days"
+                        GoalPeriodUnit.WEEK -> "weeks"
+                        GoalPeriodUnit.MONTH -> "months"
+                    }
                 }
-            },
-        ).also { adapter ->
-            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-            goalDialogPeriodUnitView.adapter = adapter
+            ).let {
+                it.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+                it
+            }
+            onItemSelectedListener  = object : AdapterView.OnItemSelectedListener {
+                override fun onItemSelected(p: AdapterView<*>?, v: View?, pos: Int, id: Long) {
+                    selectedPeriodUnit = GoalPeriodUnit.values()[pos]
+                }
+
+                override fun onNothingSelected(parent: AdapterView<*>?) {}
+            }
         }
     }
 
     // sets the enabled state of the add button depending on valid and complete inputs
     private fun updatePositiveButtonState() {
-        alertDialog?.getButton(AlertDialog.BUTTON_POSITIVE)?.isEnabled = isComplete()
-    }
-
-    // check if all fields in the dialog are filled out
-    private fun isComplete(): Boolean {
-        val targetMinutes = goalDialogTargetMinutesView.text.toString().trim().let {
-            if (it.isNotEmpty()) it.toInt() else 0
-        }
-        val targetHours = goalDialogTargetHoursView.text.toString().trim().let {
-            if (it.isNotEmpty()) it.toInt() else 0
-        }
-        val periodValue = goalDialogPeriodValueView.text.toString().trim().let {
-            if (it.isNotEmpty()) it.toInt() else 0
-        }
-
-        return (targetMinutes + targetHours > 0 && periodValue > 0) &&
-            (selectedCategories.size > 0 || trackAllCategories)
+        alertDialog.getButton(AlertDialog.BUTTON_POSITIVE)?.isEnabled =
+            (selectedTarget > 0 && selectedPeriod > 0) &&
+            (selectedCategories.size > 0 || selectedGoalType == GoalType.NON_SPECIFIC)
     }
 
     // the public function to show the dialog
-    // if a goal is passed it will be edited
-    fun show(goalInstanceWithDescriptionWithCategories: GoalInstanceWithDescriptionWithCategories? = null) {
-        alertDialog?.show()
+    fun show() {
+        resetDialog()
 
-        alertDialog?.also { dialog ->
+        alertDialog.show()
+        alertDialog.also { dialog ->
             val positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
 
-            if(goalInstanceWithDescriptionWithCategories != null) {
-                selectedGoalDescriptionId =
-                    goalInstanceWithDescriptionWithCategories.description.description.id
-                goalDialogTitleView.setText(R.string.goalDialogTitleEdit)
-                positiveButton.setText(R.string.goalDialogOkEdit)
 
-                val (hours, minutes, _) = secondsDurationToHoursMinSec(goalInstanceWithDescriptionWithCategories.instance.target)
-
-                goalDialogTargetHoursView.setText(hours.toString())
-                goalDialogTargetMinutesView.setText(minutes.toString())
-
-                // we need this, to make the positive button clickable - value is ignored
-                trackAllCategories = true
-
-                dialogView.findViewById<View>(R.id.goalDialogNotTarget).visibility = View.GONE
-            } else {
-                goalDialogTargetHoursView.setText("0")
-                goalDialogTargetMinutesView.setText("0")
-            }
-
-            updatePositiveButtonState()
             goalDialogTargetHoursView.addTextChangedListener {
+                selectedTarget = (goalDialogTargetHoursView.value() ?: 0) * 3600 +
+                (goalDialogTargetMinutesView.value() ?: 0) * 60
                 updatePositiveButtonState()
             }
             goalDialogTargetMinutesView.addTextChangedListener {
+                selectedTarget = (goalDialogTargetHoursView.value() ?: 0) * 3600 +
+                (goalDialogTargetMinutesView.value() ?: 0) * 60
                 updatePositiveButtonState()
             }
             goalDialogPeriodValueView.addTextChangedListener {
+                selectedPeriod = goalDialogPeriodValueView.value() ?: 0
                 updatePositiveButtonState()
             }
         }
