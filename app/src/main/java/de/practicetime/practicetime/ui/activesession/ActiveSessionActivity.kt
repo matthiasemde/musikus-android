@@ -33,14 +33,15 @@ import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
 import de.practicetime.practicetime.components.NonDraggableRatingBar
 import de.practicetime.practicetime.database.entities.Category
-import de.practicetime.practicetime.database.entities.PracticeSection
-import de.practicetime.practicetime.database.entities.PracticeSession
+import de.practicetime.practicetime.database.entities.Section
+import de.practicetime.practicetime.database.entities.Session
+import de.practicetime.practicetime.database.entities.SessionWithSections
 import de.practicetime.practicetime.services.RecorderService
 import de.practicetime.practicetime.services.SessionForegroundService
 import de.practicetime.practicetime.ui.goals.ProgressUpdateActivity
 import de.practicetime.practicetime.ui.library.CategoryAdapter
 import de.practicetime.practicetime.ui.library.CategoryDialog
-import de.practicetime.practicetime.updateGoals
+import de.practicetime.practicetime.ui.goals.updateGoals
 import de.practicetime.practicetime.utils.TIME_FORMAT_HMS_DIGITAL
 import de.practicetime.practicetime.utils.getDurationString
 import kotlinx.coroutines.launch
@@ -195,7 +196,7 @@ class ActiveSessionActivity : AppCompatActivity() {
 
         // load all active categories from the database and notify the adapter
         lifecycleScope.launch {
-            PracticeTime.categoryDao.getAll(activeOnly = true).let { activeCategories.addAll(it.reversed())
+            PracticeTime.categoryDao.get(activeOnly = true).let { activeCategories.addAll(it.reversed())
                 categoryAdapter.notifyItemRangeInserted(0, it.size)
             }
             categoryList.apply {
@@ -743,8 +744,8 @@ class ActiveSessionActivity : AppCompatActivity() {
             // when the session start, also update the goals
             lifecycleScope.launch { updateGoals() }
         } else if (mService.sectionBuffer.last().let {         // when session is running, don't allow starting if...
-            (categoryId == it.first.category_id) ||           // ... in the same category
-            (it.first.duration ?: 0 - it.second < 1)          // ... section running for less than 1sec
+            (categoryId == it.first.categoryId) ||           // ... in the same category
+            (it.first.duration ?: 0 - it.second < 1)           // ... section running for less than 1sec
         }) {
             return  // ignore press then
         }
@@ -768,7 +769,7 @@ class ActiveSessionActivity : AppCompatActivity() {
 
         if (mService.sectionBuffer.isNotEmpty()) {
             val categoryName = activeCategories.find { category ->
-                category.id == mService.sectionBuffer.last().first.category_id
+                category.id == mService.sectionBuffer.last().first.categoryId
             }?.name
             sName.text = categoryName
 
@@ -899,28 +900,26 @@ class ActiveSessionActivity : AppCompatActivity() {
             totalBreakDuration += it.second
         }
 
-        // TODO: Check if comment is empty -> insert null
-        val newSession = PracticeSession(
-            0,      // id=0 means not assigned, autoGenerate=true will do it for us
+        val newSession = Session(
             totalBreakDuration,
             rating,
-            comment,
-            1
+            if(comment.isNullOrBlank()) null else comment,
         )
 
         lifecycleScope.launch {
-            // create a new session row and save its id
-            val sessionId = PracticeTime.dao.insertSession(newSession).toInt()
-
             // traverse all sections for post-processing before writing into db
             for (section in mService.sectionBuffer) {
-                // add the new sessionId to every section in the section buffer
-                section.first.practice_session_id = sessionId
                 // update section durations to exclude break durations
                 section.first.duration = section.first.duration?.minus(section.second)
-                // and insert them into the database
-                PracticeTime.dao.insertSection(section.first)
             }
+
+            // and insert it the resulting section list into the database together with the session
+            val sessionId = PracticeTime.sessionDao.insertSessionWithSections(
+                SessionWithSections(
+                    session = newSession,
+                    sections = mService.sectionBuffer.map { it.first }
+                )
+            )
 
             // reset section buffer and session status
             mService.sectionBuffer.clear()
@@ -930,7 +929,7 @@ class ActiveSessionActivity : AppCompatActivity() {
         }
     }
 
-    private fun exitActivity(sessionId: Int) {
+    private fun exitActivity(sessionId: Long) {
         // stop the service
         Intent(this, SessionForegroundService::class.java).also {
             stopService(it)
@@ -938,7 +937,7 @@ class ActiveSessionActivity : AppCompatActivity() {
         // go back to MainActivity, make new intent so MainActivity gets reloaded and shows new session
         val intent = Intent(this, ProgressUpdateActivity::class.java)
         val pBundle = Bundle()
-        pBundle.putInt("KEY_SESSION", sessionId)
+        pBundle.putLong("KEY_SESSION", sessionId)
         intent.putExtras(pBundle)
         intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
         startActivity(intent)
@@ -1091,7 +1090,7 @@ class ActiveSessionActivity : AppCompatActivity() {
      */
     private inner class SectionsListAdapter(
         // TODO this should be a list of SectionWithCategories or a custom data class
-        private val practiceSections: ArrayList<Pair<PracticeSection, Int>>,
+        private val sections: ArrayList<Pair<Section, Int>>,
     ) : RecyclerView.Adapter<SectionsListAdapter.ViewHolder>() {
 
         private val VIEW_TYPE_HEADER = 1
@@ -1117,7 +1116,7 @@ class ActiveSessionActivity : AppCompatActivity() {
 
         override fun getItemViewType(position: Int): Int {
             return when (position) {
-                practiceSections.size-1 -> VIEW_TYPE_HEADER
+                sections.size-1 -> VIEW_TYPE_HEADER
                 else -> VIEW_TYPE_GOAL
             }
         }
@@ -1125,18 +1124,18 @@ class ActiveSessionActivity : AppCompatActivity() {
         // Replace the contents of a view (invoked by the layout manager)
         override fun onBindViewHolder(viewHolder: ViewHolder, position: Int) {
             // immediately return on uppermost view because its height is 0 anyways
-            if (position == practiceSections.size-1) {
+            if (position == sections.size-1) {
                 return
             }
 
             // Get element from your dataset at this position
             val categoryName = activeCategories.find { category ->
-                category.id == practiceSections[position].first.category_id
+                category.id == sections[position].first.categoryId
             }?.name
 
             // calculate duration of each session (minus pauses)
             var sectionDuration: Int
-            practiceSections[position].apply {
+            sections[position].apply {
                 sectionDuration = (first.duration ?: 0).minus(second)
             }
 
@@ -1148,14 +1147,14 @@ class ActiveSessionActivity : AppCompatActivity() {
 
         // Return the size of your dataset (invoked by the layout manager)
         // -1 because don't include most recent item (we have a dedicated TextView for that)
-        override fun getItemCount() = practiceSections.size
+        override fun getItemCount() = sections.size
 
         /**
          * called when section is removed by swipe. Remove it from the list and notify adapter
          */
         fun removeAt(index: Int) {
-            val elem = practiceSections[index]
-            practiceSections.removeAt(index)   // items is a MutableList
+            val elem = sections[index]
+            sections.removeAt(index)   // items is a MutableList
             notifyItemRemoved(index)
 
             Snackbar.make(
@@ -1164,7 +1163,7 @@ class ActiveSessionActivity : AppCompatActivity() {
                 4000
             ).apply {
                 setAction(R.string.undo) {
-                    practiceSections.add(index, elem)
+                    sections.add(index, elem)
                     notifyItemInserted(index)
                     this.dismiss()
                 }

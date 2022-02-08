@@ -588,7 +588,7 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
 
         for (day in VIEWS.DAYS_VIEW.barCount downTo 1) {
             val floatArrDurBarChart = FloatArray(colorAmount) {0f}
-            val sectionsThisDay = PracticeTime.dao.getSectionsWithCategories(
+            val sectionsThisDay = PracticeTime.sectionDao.getWithCategories(
                 getStartOfDayOfWeek(day.toLong(), daysViewWeekOffset).toEpochSecond(),
                 getEndOfDayOfWeek(day.toLong(), daysViewWeekOffset).toEpochSecond()
             )
@@ -629,7 +629,7 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
 
         for (week in 0 downTo -(VIEWS.WEEKS_VIEW.barCount-1)) {     // last 10 weeks
             val floatArrDurBarChart = FloatArray(colorAmount) {0f}
-            val sectionsThisWeek = PracticeTime.dao.getSectionsWithCategories(
+            val sectionsThisWeek = PracticeTime.sectionDao.getWithCategories(
                 getStartOfWeek(week.toLong() + weeksViewWeekOffset).toEpochSecond(),
                 getEndOfWeek(week.toLong() + weeksViewWeekOffset).toEpochSecond()
             )
@@ -668,7 +668,7 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
         val floatArrDurPieChart = FloatArray(colorAmount) {0f}
         for (month in 0 downTo -(VIEWS.MONTHS_VIEW.barCount-1)) {
             val floatArrDurBarChart = FloatArray(colorAmount) {0f}
-            val sectionsThisMonth = PracticeTime.dao.getSectionsWithCategories(
+            val sectionsThisMonth = PracticeTime.sectionDao.getWithCategories(
                 getStartOfMonth(month.toLong() + monthsViewMonthOffset).toEpochSecond(),
                 getEndOfMonth(month.toLong() + monthsViewMonthOffset).toEpochSecond()
             )

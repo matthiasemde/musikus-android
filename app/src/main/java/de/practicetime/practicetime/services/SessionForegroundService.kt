@@ -11,7 +11,7 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
-import de.practicetime.practicetime.database.entities.PracticeSection
+import de.practicetime.practicetime.database.entities.Section
 import de.practicetime.practicetime.ui.activesession.ActiveSessionActivity
 import de.practicetime.practicetime.utils.secondsDurationToHoursMinSec
 import java.util.*
@@ -26,7 +26,7 @@ class SessionForegroundService : Service() {
 
     var sessionActive = false               // keep track of whether a session is active
     // the sectionBuffer will keep track of all the section in the current session
-    var sectionBuffer = ArrayList<Pair<PracticeSection, Int>>()
+    var sectionBuffer = ArrayList<Pair<Section, Int>>()
     var paused = false                      // flag if session is currently paused
     private var lastPausedState = false     // paused variable the last tick (to detect transition)
     private var pauseBeginTimestamp: Long = 0
@@ -174,8 +174,7 @@ class SessionForegroundService : Service() {
         val now = Date().time / 1000L
         sectionBuffer.add(
             Pair(
-                PracticeSection(
-                    0,  // 0 means auto-increment
+                Section(
                     null,
                     categoryId,
                     null,
@@ -207,7 +206,7 @@ class SessionForegroundService : Service() {
     /**
      * calculates total Duration (INCLUDING PAUSES!!!) of a section
      */
-    private fun getDuration(section: PracticeSection): Int {
+    private fun getDuration(section: Section): Int {
         val now = Date().time / 1000L
         return (now - section.timestamp).toInt()
     }

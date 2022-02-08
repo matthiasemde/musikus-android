@@ -8,7 +8,9 @@ import de.practicetime.practicetime.database.entities.*
 import de.practicetime.practicetime.utils.getCurrTimestamp
 
 @Dao
-abstract class GoalDescriptionDao : BaseDao<GoalDescription>(tableName = "goal_description") {
+abstract class GoalDescriptionDao : BaseDao<GoalDescription>(
+    tableName = "goal_description"
+) {
 
     /**
      * @Insert
@@ -111,6 +113,7 @@ abstract class GoalDescriptionDao : BaseDao<GoalDescription>(tableName = "goal_d
      * @Queries
      */
 
+    @Transaction
     @Query(
         "SELECT * FROM goal_description_category_cross_ref " +
         "WHERE goal_description_id=:goalDescriptionId"
@@ -287,6 +290,7 @@ abstract class GoalInstanceDao : BaseDao<GoalInstance>(tableName = "goal_instanc
      * @param inclusiveFrom decides whether the beginning of the selection is inclusive. **default**: true
      * @param inclusiveTo decides whether the end of the selection is inclusive. **default**: false
      */
+    @Transaction
     @Query(
         "SELECT * FROM goal_instance " +
                 "WHERE goal_description_id=:goalDescriptionId " +

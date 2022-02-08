@@ -216,10 +216,7 @@ class GoalDialog(
         resetDialog()
 
         alertDialog.show()
-        alertDialog.also { dialog ->
-            val positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
-
-
+        alertDialog.also { _ ->
             goalDialogTargetHoursView.addTextChangedListener {
                 selectedTarget = (goalDialogTargetHoursView.value() ?: 0) * 3600 +
                 (goalDialogTargetMinutesView.value() ?: 0) * 60

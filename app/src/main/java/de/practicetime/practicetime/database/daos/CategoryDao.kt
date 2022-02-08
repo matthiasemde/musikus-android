@@ -11,6 +11,10 @@ import de.practicetime.practicetime.database.entities.CategoryWithGoalDescriptio
 @Dao
 abstract class CategoryDao : BaseDao<Category>(tableName = "category") {
 
+    /**
+     * @Delete / archive
+     */
+
     @Transaction
     open suspend fun archive(categoryId: Long) : Boolean {
         // to archive a category, fetch it from the database along with associated goals
@@ -30,12 +34,13 @@ abstract class CategoryDao : BaseDao<Category>(tableName = "category") {
         return false
     }
 
+
     /**
-    *   Queries
+    *  @Queries
     */
 
-    @Query("SELECT * FROM category WHERE archived=0 OR archived = NOT :activeOnly")
-    abstract suspend fun getAll(activeOnly: Boolean = false): List<Category>
+    @Query("SELECT * FROM category WHERE archived=0 OR NOT :activeOnly")
+    abstract suspend fun get(activeOnly: Boolean = false): List<Category>
 
     @Transaction
     @Query("SELECT * FROM Category WHERE id=:id")

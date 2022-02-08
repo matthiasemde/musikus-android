@@ -51,7 +51,7 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
         continueButton =  findViewById(R.id.progressUpdateLeave)
         skipButton = findViewById(R.id.progressUpdateSkipAnimation)
 
-        val latestSessionId = intent.extras?.getInt("KEY_SESSION")
+        val latestSessionId = intent.extras?.getLong("KEY_SESSION")
 
         if (latestSessionId != null) {
             parseSession(latestSessionId)
@@ -86,9 +86,9 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
      * Parse latest session and extract goal progress
      *************************************************************************/
 
-    private fun parseSession(sessionId: Int) {
+    private fun parseSession(sessionId: Long) {
         lifecycleScope.launch {
-            val latestSession = PracticeTime.dao.getSessionWithSectionsWithCategoriesWithGoals(sessionId)
+            val latestSession = PracticeTime.sessionDao.getWithSectionsWithCategoriesWithGoals(sessionId)
             val goalProgress = PracticeTime.goalDescriptionDao.computeGoalProgressForSession(latestSession)
 
             // get all active goal instances at the time of the session

@@ -19,7 +19,7 @@ import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.android.material.button.MaterialButton
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
-import de.practicetime.practicetime.database.entities.PracticeSection
+import de.practicetime.practicetime.database.entities.Section
 import de.practicetime.practicetime.database.entities.SectionWithCategory
 import de.practicetime.practicetime.database.entities.SessionWithSectionsWithCategories
 import de.practicetime.practicetime.shared.EditTimeDialog
@@ -43,7 +43,7 @@ class FullscreenSessionActivity : AppCompatActivity() {
     private lateinit var confirmationDialog: AlertDialog
 
     private var sessionWithSectionsWithCategories: SessionWithSectionsWithCategories? = null
-    private var selectedSection: PracticeSection? = null
+    private var selectedSection: Section? = null
 
     private var showCommentPlaceholder = true
 
@@ -80,7 +80,7 @@ class FullscreenSessionActivity : AppCompatActivity() {
             editSectionDurationHandler(selectedSection, it)
         }
 
-        val sessionId = intent.extras?.getInt("KEY_SESSION")
+        val sessionId = intent.extras?.getLong("KEY_SESSION")
 
         if (sessionId != null) {
             showFullscreenSession(sessionId)
@@ -109,7 +109,7 @@ class FullscreenSessionActivity : AppCompatActivity() {
                         setText(R.string.confirm_changes_dialog_ok)
                         setOnClickListener {
                             lifecycleScope.launch {
-                                PracticeTime.dao.updateSession(
+                                PracticeTime.sessionDao.update(
                                     sessionId,
                                     newRating = ratingBarView.rating.toInt(),
                                     newSections = sectionAdapterData,
@@ -129,7 +129,7 @@ class FullscreenSessionActivity : AppCompatActivity() {
 
     }
 
-    private fun showFullscreenSession(id: Int) {
+    private fun showFullscreenSession(sessionId: Long) {
         ratingBarView = findViewById(R.id.fullscreen_session_rating_bar)
         sectionListView = findViewById(R.id.fullscreen_session_section_list)
         commentFieldView = findViewById(R.id.fullscreen_session_comment_field)
@@ -147,7 +147,8 @@ class FullscreenSessionActivity : AppCompatActivity() {
         }
 
         lifecycleScope.launch {
-            sessionWithSectionsWithCategories = PracticeTime.dao.getSessionWithSectionsWithCategories(id)
+            sessionWithSectionsWithCategories =
+                PracticeTime.sessionDao.getWithSectionsWithCategories(sessionId)
             val (session, sectionsWithCategories) = sessionWithSectionsWithCategories!!
 
             ratingBarView.progress = session.rating
@@ -170,7 +171,7 @@ class FullscreenSessionActivity : AppCompatActivity() {
 
     }
 
-    private fun editSectionDurationHandler(section: PracticeSection?, newSectionDuration: Int) {
+    private fun editSectionDurationHandler(section: Section?, newSectionDuration: Int) {
         section?.duration = newSectionDuration
         sectionAdapterData.indexOfFirst {
             it.section.id == section?.id

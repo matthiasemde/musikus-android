@@ -41,7 +41,7 @@ class GoalDescription (
     @ColumnInfo(name="period_unit") val periodUnit: GoalPeriodUnit,
     @ColumnInfo(name="progress_type") val progressType: GoalProgressType = GoalProgressType.TIME,
     @ColumnInfo(name="archived") var archived: Boolean = false,
-    @ColumnInfo(name="profile_id") val profileId: Int = 0,
+    @ColumnInfo(name="profile_id", index = true) val profileId: Int = 0,
     @ColumnInfo(name="order", defaultValue = "0") var order: Int = 0,
     ) : ModelWithTimestamps() {
 

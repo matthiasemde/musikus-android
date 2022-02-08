@@ -106,7 +106,7 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
 
         lifecycleScope.launch {
             // fetch all sessions from the database
-            PracticeTime.dao.getSessionsWithSectionsWithCategories().also { sessions ->
+            PracticeTime.sessionDao.getAllWithSectionsWithCategories().also { sessions ->
                 if (sessions.isEmpty()) {
                     showHint()
                     return@also
@@ -335,7 +335,7 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
                 val sections = sectionsWithCategories.map { s -> s.section }
 
                 val goalProgress = PracticeTime.goalDescriptionDao.computeGoalProgressForSession(
-                    PracticeTime.dao.getSessionWithSectionsWithCategoriesWithGoals(session.id),
+                    PracticeTime.sessionDao.getWithSectionsWithCategoriesWithGoals(session.id),
                     checkArchived = true
                 )
 
@@ -354,7 +354,7 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
                 }
 
                 // update goal instances and delete session in a single transaction
-                PracticeTime.dao.deleteSession(session.id, updatedGoalInstances)
+                PracticeTime.sessionDao.delete(session.id, updatedGoalInstances)
 
                 // find the session in the session list adapter data and delete it
                 adapterData.removeAt(layoutPosition - 1)
@@ -379,10 +379,10 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
         }
     }
 
-    private fun openSessionInFullscreen(sessionId: Int) {
+    private fun openSessionInFullscreen(sessionId: Long) {
         val intent = Intent(requireContext(), FullscreenSessionActivity::class.java)
         val pBundle = Bundle()
-        pBundle.putInt("KEY_SESSION", sessionId)
+        pBundle.putLong("KEY_SESSION", sessionId)
         intent.putExtras(pBundle)
         intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
         startActivity(intent)

@@ -22,7 +22,7 @@ import de.practicetime.practicetime.R
 import de.practicetime.practicetime.database.entities.GoalType
 import de.practicetime.practicetime.database.entities.SessionWithSectionsWithCategories
 import de.practicetime.practicetime.shared.setCommonToolbar
-import de.practicetime.practicetime.updateGoals
+import de.practicetime.practicetime.ui.goals.updateGoals
 import de.practicetime.practicetime.utils.*
 import kotlinx.coroutines.launch
 import java.time.format.DateTimeFormatter
@@ -155,7 +155,7 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
             // get all total durations from the last 7 days
             val barChartArray = arrayListOf<BarEntry>()
             for (day in 0 downTo -6) {
-                val dur = PracticeTime.dao.getSectionsWithCategories(
+                val dur = PracticeTime.sectionDao.getWithCategories(
                         getStartOfDay(day.toLong()).toEpochSecond(),
                         getEndOfDay(day.toLong()).toEpochSecond()
                     ).sumOf {
@@ -270,7 +270,7 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
 
             }
             isRotationEnabled = false
-            setExtraOffsets(0f, 10f, 0f, 6f);
+            setExtraOffsets(0f, 10f, 0f, 6f)
             setEntryLabelColor(PracticeTime.getThemeColor(R.attr.colorOnSurfaceLowerContrast, requireContext()))
             setEntryLabelTextSize(11f)
         }
@@ -287,8 +287,8 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
                 xValuePosition = PieDataSet.ValuePosition.OUTSIDE_SLICE
                 yValuePosition = PieDataSet.ValuePosition.OUTSIDE_SLICE
                 valueLinePart1OffsetPercentage = 100f   // start of value line in % from center of chart
-                valueLinePart1Length = 1f             // lenght of "outgoing" line
-                valueLinePart2Length = 2f             // length of horizonal line
+                valueLinePart1Length = 1f             // length of "outgoing" line
+                valueLinePart2Length = 2f             // length of horizontal line
             }
 
             /** DATA */
@@ -311,7 +311,7 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
         val beginLastMonth = getStartOfMonth(-1).toEpochSecond()
         val endLastMonth = getEndOfMonth(-1).toEpochSecond()
 
-        val totalTime = PracticeTime.dao.getSectionsWithCategories(beginLastMonth, endLastMonth)
+        val totalTime = PracticeTime.sectionDao.getWithCategories(beginLastMonth, endLastMonth)
             .sumOf { it.section.duration ?: 0}
 
         return getDurationString(totalTime, TIME_FORMAT_HUMAN_PRETTY_SHORT)
@@ -327,7 +327,7 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
 
     private suspend fun getAvgBreakTimePerHour(): CharSequence {
         val totalBreakTime = getAllSessions()
-            .sumOf { it.session.break_duration }
+            .sumOf { it.session.breakDuration }
         val totalPracticeHours = getTotalPracticeTime().toFloat() / SECONDS_PER_HOUR.toFloat()
 
         return getDurationString(
@@ -355,7 +355,7 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
 
     private suspend fun getAllSessions(): List<SessionWithSectionsWithCategories> {
         if (!this::allSessions.isInitialized)
-            allSessions = PracticeTime.dao.getSessionsWithSectionsWithCategories()
+            allSessions = PracticeTime.sessionDao.getAllWithSectionsWithCategories()
 
         return allSessions
     }

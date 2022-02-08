@@ -49,9 +49,6 @@ class SessionSummaryAdapter(
             notifyItemRangeInserted(1, sessionsWithSectionsWithCategories.size)
         else
             notifyItemRangeRemoved(1, sessionsWithSectionsWithCategories.size)
-
-//        // notify Adapter that button text has changed
-//        notifyItemChanged(0)
     }
 
     override fun getItemViewType(position: Int) =
@@ -98,7 +95,6 @@ class SessionSummaryAdapter(
                 isExpanded,
                 onHeaderClickListener,
             )
-            else -> {}
         }
     }
 
@@ -151,9 +147,7 @@ class SessionSummaryAdapter(
                 sectionList.adapter = sectionAdapter
             }
 
-            fun bind(
-                dataIndex: Int,
-            ) {
+            fun bind(dataIndex: Int) {
                 // get the session at given position
                 val (session, sectionsWithCategories) = sessionsWithSectionsWithCategories[dataIndex]
 
@@ -240,7 +234,7 @@ class SessionSummaryAdapter(
                     practiceDuration += section.duration ?: 0
                 }
 
-                val breakDuration = session.break_duration
+                val breakDuration = session.breakDuration
 
                 // read the start duration from the first section and bring it to milliseconds
                 val startTimestamp = sectionsWithCategories.first().section.timestamp * 1000L

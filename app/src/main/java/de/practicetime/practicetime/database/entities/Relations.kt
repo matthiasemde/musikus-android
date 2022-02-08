@@ -6,16 +6,16 @@ import androidx.room.Junction
 
 
 data class SessionWithSections(
-    @Embedded val session: PracticeSession,
+    @Embedded val session: Session,
     @Relation(
         parentColumn = "id",
-        entityColumn = "practice_session_id"
+        entityColumn = "session_id"
     )
-    val sections: List<PracticeSection>
+    val sections: List<Section>
 )
 
 data class SectionWithCategory(
-    @Embedded val section: PracticeSection,
+    @Embedded val section: Section,
     @Relation(
         parentColumn = "category_id",
         entityColumn = "id"
@@ -24,11 +24,11 @@ data class SectionWithCategory(
 )
 
 data class SessionWithSectionsWithCategories(
-    @Embedded val session: PracticeSession,
+    @Embedded val session: Session,
     @Relation(
-        entity = PracticeSection::class,
+        entity = Section::class,
         parentColumn = "id",
-        entityColumn = "practice_session_id"
+        entityColumn = "session_id"
     )
     val sections: List<SectionWithCategory>
 )
@@ -77,7 +77,7 @@ data class CategoryWithGoalDescriptionsWithCategories(
 )
 
 data class SectionWithCategoryWithGoalDescriptions(
-    @Embedded val section: PracticeSection,
+    @Embedded val section: Section,
     @Relation(
         entity = Category::class,
         parentColumn = "category_id",
@@ -87,11 +87,11 @@ data class SectionWithCategoryWithGoalDescriptions(
 )
 
 data class SessionWithSectionsWithCategoriesWithGoalDescriptions(
-    @Embedded val session: PracticeSession,
+    @Embedded val session: Session,
     @Relation(
-        entity = PracticeSection::class,
+        entity = Section::class,
         parentColumn = "id",
-        entityColumn = "practice_session_id"
+        entityColumn = "session_id"
     )
     val sections: List<SectionWithCategoryWithGoalDescriptions>
 )

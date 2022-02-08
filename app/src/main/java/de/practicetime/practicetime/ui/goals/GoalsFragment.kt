@@ -6,7 +6,6 @@ import android.os.Build
 import android.os.Bundle
 import android.os.VibrationEffect
 import android.os.VibratorManager
-import android.util.Log
 import android.util.TypedValue
 import android.view.View
 import android.widget.CheckBox
@@ -25,8 +24,6 @@ import de.practicetime.practicetime.database.entities.GoalDescriptionWithCategor
 import de.practicetime.practicetime.database.entities.GoalInstanceWithDescriptionWithCategories
 import de.practicetime.practicetime.shared.EditTimeDialog
 import de.practicetime.practicetime.shared.setCommonToolbar
-import de.practicetime.practicetime.updateGoals
-import de.practicetime.practicetime.utils.getCurrTimestamp
 import kotlinx.coroutines.launch
 import java.util.*
 
@@ -73,7 +70,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
             // create a new goal dialog for adding new goals
             addGoalDialog = GoalDialog(
                 requireActivity(),
-                PracticeTime.categoryDao.getAll(activeOnly = true),
+                PracticeTime.categoryDao.get(activeOnly = true),
                 ::addGoalHandler
             )
         }
@@ -288,13 +285,13 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
                 PracticeTime.goalInstanceDao.insertAndGet(
                     newGoalDescription.createInstance(Calendar.getInstance(), firstTarget)
                 )?.let { newGoalInstance ->
-                    PracticeTime.dao.getSessionIds(
+                    PracticeTime.sessionDao.getSessionsContainingSectionFromTimeFrame(
                         newGoalInstance.startTimestamp,
                         newGoalInstance.startTimestamp + newGoalInstance.periodInSeconds
                     ).filter { s -> s.sections.first().timestamp > newGoalInstance.startTimestamp}
                     .forEach { s ->
                         PracticeTime.goalDescriptionDao.computeGoalProgressForSession(
-                            PracticeTime.dao.getSessionWithSectionsWithCategoriesWithGoals(s.session.id)
+                            PracticeTime.sessionDao.getWithSectionsWithCategoriesWithGoals(s.session.id)
                         ).also { progress ->
                             newGoalInstance.progress += progress[newGoalDescription.id] ?: 0
                         }

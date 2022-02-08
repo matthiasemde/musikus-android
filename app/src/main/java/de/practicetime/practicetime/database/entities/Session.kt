@@ -1,0 +1,13 @@
+package de.practicetime.practicetime.database.entities
+
+import androidx.room.ColumnInfo
+import androidx.room.Entity
+import de.practicetime.practicetime.database.ModelWithTimestamps
+
+@Entity(tableName = "session")
+data class Session (
+    @ColumnInfo(name="break_duration") val breakDuration: Int,
+    @ColumnInfo(name="rating") var rating: Int,
+    @ColumnInfo(name="comment") var comment: String?,
+    @ColumnInfo(name="profile_id", index = true) val profileId: Int = 0,
+) : ModelWithTimestamps()

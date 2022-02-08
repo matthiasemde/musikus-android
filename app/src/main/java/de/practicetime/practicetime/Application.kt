@@ -6,11 +6,8 @@ import android.util.TypedValue
 import androidx.annotation.AttrRes
 import androidx.annotation.ColorInt
 import androidx.room.Room
-import de.practicetime.practicetime.database.PTDao
 import de.practicetime.practicetime.database.PTDatabase
-import de.practicetime.practicetime.database.daos.CategoryDao
-import de.practicetime.practicetime.database.daos.GoalDescriptionDao
-import de.practicetime.practicetime.database.daos.GoalInstanceDao
+import de.practicetime.practicetime.database.daos.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
@@ -19,10 +16,11 @@ class PracticeTime : Application() {
 
     companion object {
         // the database accessing objects of the application
-        lateinit var dao: PTDao
         lateinit var categoryDao: CategoryDao
         lateinit var goalDescriptionDao: GoalDescriptionDao
         lateinit var goalInstanceDao: GoalInstanceDao
+        lateinit var sessionDao: SessionDao
+        lateinit var sectionDao: SectionDao
 
         var noSessionsYet = true
         var serviceIsRunning = false
@@ -62,9 +60,10 @@ class PracticeTime : Application() {
             applicationContext,
             PTDatabase::class.java, "pt-database"
         ).build()
-        dao = db.ptDao
         categoryDao = db.categoryDao
         goalDescriptionDao = db.goalDescriptionDao
         goalInstanceDao = db.goalInstanceDao
+        sessionDao = db.sessionDao
+        sectionDao = db.sectionDao
     }
 }

@@ -1,13 +1,13 @@
-package de.practicetime.practicetime
+package de.practicetime.practicetime.ui.goals
 
-import de.practicetime.practicetime.database.PTDao
+import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.database.entities.GoalPeriodUnit
 import java.util.*
 
 suspend fun updateGoals() {
     var notDone = true
     while(notDone) {
-        PracticeTime.goalInstanceDao.getOutdatedWithDescriptions().also {outdatedInstancesWithDescriptions ->
+        PracticeTime.goalInstanceDao.getOutdatedWithDescriptions().also { outdatedInstancesWithDescriptions ->
             // while there are still outdated goals, keep looping and adding new ones
             notDone = outdatedInstancesWithDescriptions.isNotEmpty()
             outdatedInstancesWithDescriptions.forEach { (outdatedInstance, description) ->
