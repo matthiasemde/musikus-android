@@ -164,10 +164,12 @@
     <string name="headline_stats_session_ratings_subheading">Your session ratings</string>
     <string name="in_month">In %1$s</string>
     <string name="dummy_category_name">Mozart</string>
+    <string name="intro_text_welcome_title">Welcome to Practice Time!</string>
+    <string name="intro_text_welcome">We will present you the main sections of the app.\n\nLet´s go!</string>
+    <string name="intro_text_library">Create library items for any piece, scale or other exercise you want to practice.\n\nLet\'s add your first item!</string>
+    <string name="intro_text_goals">Goals help you practice regularly.\n\nAdd your first goal right now by pressing the button!</string>
+    <string name="intro_text_sessions">Here you can see summaries of your performance in past sessions.\n\nPress here to start your first session!</string>
     <string name="intro_text_done">Not now</string>
-    <string name="intro_text_library">This is the library screen.\nLet\'s add a new library item!</string>
-    <string name="intro_text_goals">This is the goals screen.\nLet\'s add a new goal!</string>
-    <string name="intro_text_sessions">This is the sessions screen.\nLet\'s start a new session!</string>
     <string name="donations_title">Support us!</string>
     <string name="donations_text">If you are enjoying the app and would like to support us, we would be very thankful for a small donation.\n This will help us in developing awesome new features like\n &#8226; Sharable sessions\n &#8226; Integrated tuner\n &#8226; Special layout for tablets\n &#8226; And many more!</string>
     <string name="help_title">Help</string>
@@ -175,6 +177,6 @@
     <string name="help_tips_title">Tips and tricks</string>
     <string name="help_tips_text">Have you tried…\n &#8226; Swiping sections during an active session to delete them,\n&#8226; Long-clicking on sessions, goals or library items to select and delete them?</string>
     <string name="hint_add_new_section">Choose another item to add it to your session</string>
-    <string name="hint_delete_section">You can swipe left on an entry to remove it from your session</string>
+    <string name="hint_delete_section">You can swipe left on an entry to remove it from your session.\n\nStart by pressing the button to add a new item</string>
     <string name="filename_shared_preferences">de.practicetime.practicetime.preferences</string>
 </resources>
