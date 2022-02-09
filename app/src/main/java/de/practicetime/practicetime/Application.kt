@@ -6,10 +6,8 @@ import android.util.TypedValue
 import androidx.annotation.AttrRes
 import androidx.annotation.ColorInt
 import androidx.room.Room
-import androidx.room.migration.Migration
-import androidx.sqlite.db.SupportSQLiteDatabase
 import de.practicetime.practicetime.database.PTDatabase
-import de.practicetime.practicetime.database.pTDatabaseMigrationOneToTwo
+import de.practicetime.practicetime.database.PTDatabaseMigrationOneToTwo
 import de.practicetime.practicetime.database.daos.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -62,11 +60,9 @@ class PracticeTime : Application() {
         val db = Room.databaseBuilder(
             applicationContext,
             PTDatabase::class.java, "pt-database"
-        ).addMigrations(object : Migration(1,2){
-            override fun migrate(database: SupportSQLiteDatabase) {
-                pTDatabaseMigrationOneToTwo(database)
-            }
-        }).build()
+        ).addMigrations(
+            PTDatabaseMigrationOneToTwo
+        ).build()
         categoryDao = db.categoryDao
         goalDescriptionDao = db.goalDescriptionDao
         goalInstanceDao = db.goalInstanceDao

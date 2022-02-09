@@ -194,7 +194,10 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
 
     private fun initLastGoalsCard() {
         lifecycleScope.launch {
-            val lastGoals = PracticeTime.goalInstanceDao.getWithDescription().takeLast(5)
+            val lastGoals = PracticeTime.goalInstanceDao.getWithDescription(
+                from = 0,
+                to = getCurrTimestamp()
+            ).takeLast(5)
             var achievedGoalsCount = 0
             arrayListOf<LinearLayout>(
                 requireView().findViewById(R.id.progressbarlayout_1),

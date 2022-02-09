@@ -11,7 +11,7 @@ suspend fun updateGoals() {
             // while there are still outdated goals, keep looping and adding new ones
             notDone = outdatedInstancesWithDescriptions.isNotEmpty()
             outdatedInstancesWithDescriptions.forEach { (outdatedInstance, description) ->
-                if (description.repeat) {
+                if (description.repeat && !description.archived) {
 
                     // create a new calendar instance, set the time to the instances start timestamp,...
                     val startCalendar = Calendar.getInstance()

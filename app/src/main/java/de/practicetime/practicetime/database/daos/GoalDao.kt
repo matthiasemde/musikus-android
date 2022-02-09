@@ -64,7 +64,10 @@ abstract class GoalDescriptionDao : BaseDao<GoalDescription>(
     open suspend fun deleteGoal(goalDescriptionId: Long) {
         // to delete a goal, first fetch all instances from the database and delete them
         PracticeTime.goalInstanceDao.apply {
-            get(goalDescriptionId = goalDescriptionId).forEach {
+            get(
+                goalDescriptionId = goalDescriptionId,
+                from = 0L
+            ).forEach {
                 delete(it)
             }
         }
