@@ -115,6 +115,7 @@ class SessionSummaryAdapter(
                 layoutPosition: Int,
                 adapter: SessionSummaryAdapter,
             ) -> Boolean,
+            private val isInAdapter: Boolean = true
         ) : ViewHolder(view) {
 
             private val summaryDayLayout: LinearLayout = view.findViewById(R.id.summaryDayLayout)
@@ -165,10 +166,12 @@ class SessionSummaryAdapter(
 
                 // set up short and long click handler for selecting sessions
                 summaryCard.setOnClickListener {
-                    shortClickHandler(
-                        bindingAdapterPosition,
-                        bindingAdapter as SessionSummaryAdapter
-                    )
+                    if (isInAdapter) {
+                        shortClickHandler(
+                            bindingAdapterPosition,
+                            bindingAdapter as SessionSummaryAdapter
+                        )
+                    }
                 }
                 summaryCard.setOnLongClickListener {
                     // tell the event handler we consumed the event

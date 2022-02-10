@@ -43,20 +43,23 @@ class AppIntroActivity : AppIntro() {
             backgroundColorRes = R.color.md_red_300
         ))
 
+        // Library
         val lBundle = Bundle()
         lBundle.putSerializable(FRAGMENT_TYPE_KEY, IntroFragmentType.FRAGMENT_LIBRARY)
-        val libFragment = IntroFragment(R.color.md_blue_800)
+        val libFragment = IntroFragment(R.color.md_indigo_500)
         libFragment.arguments = lBundle
         addSlide(libFragment)
 
         this.goToNextSlide()
 
+        // Goal
         val gBundle = Bundle()
         gBundle.putSerializable(FRAGMENT_TYPE_KEY, IntroFragmentType.FRAGMENT_GOAL)
-        val goalFragment = IntroFragment(R.color.md_pink_300)
+        val goalFragment = IntroFragment(R.color.md_pink_400)
         goalFragment.arguments = gBundle
         addSlide(goalFragment)
 
+        // Session
         val sBundle = Bundle()
         sBundle.putSerializable(FRAGMENT_TYPE_KEY, IntroFragmentType.FRAGMENT_SESSION)
         val sessionFragment = IntroFragment(R.color.md_teal_400)

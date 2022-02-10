@@ -6,6 +6,8 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.annotation.ColorRes
 import androidx.fragment.app.Fragment
@@ -61,18 +63,27 @@ class IntroFragment(
         var description = ""
         var fabClickListener: View.OnClickListener? = null
 
+        val heading = view.findViewById<TextView>(R.id.fragment_intro_title)
+        val icon = view.findViewById<ImageView>(R.id.fragment_intro_iv_tab_icon)
+
         when(fragType) {
             IntroFragmentType.FRAGMENT_LIBRARY -> {
+                heading.text = getString(R.string.navigationLibraryTitle)
+                icon.setImageResource(R.drawable.ic_library)
                 fragment = IntroLibraryFragment()
                 description = getString(R.string.intro_text_library)
                 fabClickListener = libraryClickListener
             }
             IntroFragmentType.FRAGMENT_GOAL -> {
+                heading.text = getString(R.string.navigationGoalsTitle)
+                icon.setImageResource(R.drawable.ic_goals)
                 fragment = IntroGoalsFragment()
                 description = getString(R.string.intro_text_goals)
                 fabClickListener = goalsClickListener
             }
             IntroFragmentType.FRAGMENT_SESSION -> {
+                heading.text = getString(R.string.navigationSessionsTitle)
+                icon.setImageResource(R.drawable.ic_sessions)
                 fragment = IntroSessionsFragment()
                 description = getString(R.string.intro_text_sessions)
                 fabClickListener = sessionsClickListener
@@ -232,17 +243,17 @@ class IntroSessionsFragment : Fragment(R.layout.fragment_intro_sessions) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
 
-    val recView = view.findViewById<RecyclerView>(R.id.introSessionList)
-    val sessionDummyAdapter = SessionSummaryAdapter(
-        context = requireActivity(),
-        isExpanded = true,
-        getDummySessions(),
-    )
+        SessionSummaryAdapter.ViewHolder.ItemViewHolder(
+            view.findViewById(R.id.fragment_intro_sessions_dummyitem),
+            requireContext(),
+            getDummySessions(),
+            listOf(),
+            {_,_ -> },
+            {_,_ -> false },
+            isInAdapter = false
+        ).bind(0)
 
-    recView.apply {
-        layoutManager = LinearLayoutManager(context)
-        adapter = sessionDummyAdapter
-    }
+        view.findViewById<LinearLayout>(R.id.summaryDayLayout).visibility = View.GONE
 }
 
 private fun getDummySessions() =
