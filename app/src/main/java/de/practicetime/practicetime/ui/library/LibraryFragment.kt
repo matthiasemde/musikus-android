@@ -242,11 +242,10 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
     // the handler for editing categories
     private fun editCategoryHandler(category: Category) {
         lifecycleScope.launch {
-            Log.d("EDIT", category.pprint())
             PracticeTime.categoryDao.update(category)
             activeCategories.indexOfFirst { c -> c.id == category.id }.also { i ->
                 assert(i != -1) {
-                    Log.e("EDIT_CATEGORY", "No category with matching id found for\n" + category.pprint())
+                    Log.e("EDIT_CATEGORY", "No category with matching id found for\n$category")
                 }
                 activeCategories[i] = category
                 categoryAdapter?.notifyItemChanged(i)

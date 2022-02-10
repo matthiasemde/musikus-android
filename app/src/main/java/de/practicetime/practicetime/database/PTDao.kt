@@ -4,15 +4,12 @@ import android.util.Log
 import androidx.room.*
 import androidx.sqlite.db.SimpleSQLiteQuery
 import androidx.sqlite.db.SupportSQLiteQuery
-import de.practicetime.practicetime.PracticeTime
-import de.practicetime.practicetime.database.entities.*
 import de.practicetime.practicetime.utils.getCurrTimestamp
 
 abstract class BaseModel (
     @PrimaryKey(autoGenerate = true) var id: Long = 0,
 ) {
-    // pretty print entity id, timestamps (if given) and entity data
-    fun pprint(): String {
+    override fun toString(): String {
         return "Pretty print of ${this.javaClass.simpleName} entity:\n" +
                 "id: ${this.id}:\n" +
             (if (this is ModelWithTimestamps)
