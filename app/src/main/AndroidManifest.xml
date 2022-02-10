@@ -39,6 +39,10 @@
             android:foregroundServiceType="microphone" />
 
         <activity
+            android:name=".ui.goals.ArchivedGoalsActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.MainActivity" />
+        <activity
             android:name=".ui.goals.ProgressUpdateActivity"
             android:exported="false"
             android:parentActivityName=".ui.MainActivity"

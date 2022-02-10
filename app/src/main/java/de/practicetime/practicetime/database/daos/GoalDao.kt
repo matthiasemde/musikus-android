@@ -145,6 +145,11 @@ abstract class GoalDescriptionDao : BaseDao<GoalDescription>(
         type : GoalType
     ) : List<GoalDescription>
 
+    @Transaction
+    @Query("SELECT * FROM goal_description WHERE archived=1")
+    abstract suspend fun getArchivedWithCategories(
+    ) : List<GoalDescriptionWithCategories>
+
 
     /**
      * Goal Progress Update Utility
@@ -355,4 +360,17 @@ abstract class GoalInstanceDao : BaseDao<GoalInstance>(tableName = "goal_instanc
         checkArchived : Boolean = false,
         now : Long = getCurrTimestamp(),
     ) : List<GoalInstanceWithDescriptionWithCategories>
+
+    @Query(
+        "Select * FROM goal_instance WHERE " +
+        "goal_description_id=:goalDescriptionId AND " +
+        "start_timestamp=(" +
+            "SELECT MAX(start_timestamp) FROM goal_instance WHERE " +
+            "goal_description_id = :goalDescriptionId" +
+        ")"
+    )
+    abstract suspend fun getLatest(
+        goalDescriptionId: Long
+    ): GoalInstance
+
 }

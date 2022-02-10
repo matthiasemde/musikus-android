@@ -2,6 +2,7 @@ package de.practicetime.practicetime.ui.goals
 
 import android.app.AlertDialog
 import android.content.Context
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.os.VibrationEffect
@@ -24,6 +25,7 @@ import de.practicetime.practicetime.database.entities.GoalDescriptionWithCategor
 import de.practicetime.practicetime.database.entities.GoalInstanceWithDescriptionWithCategories
 import de.practicetime.practicetime.shared.EditTimeDialog
 import de.practicetime.practicetime.shared.setCommonToolbar
+import de.practicetime.practicetime.ui.intro.AppIntroActivity
 import kotlinx.coroutines.launch
 import java.util.*
 
@@ -261,8 +263,17 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
     private fun resetToolbar() {
         goalsToolbar.apply {
             menu?.clear()
-            setCommonToolbar(requireActivity(), this)
             inflateMenu(R.menu.goals_toolbar_menu_base)
+            setOnMenuItemClickListener {
+                when(it.itemId) {
+                    R.id.goalsToolbarArchivedGoals -> {
+                        val i = Intent(requireActivity(), ArchivedGoalsActivity::class.java)
+                        startActivity(i)
+                    }
+                }
+                return@setOnMenuItemClickListener true
+            }
+            setCommonToolbar(requireActivity(), this)
             navigationIcon = null
         }
         goalsCollapsingToolbarLayout.background = null
