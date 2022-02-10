@@ -40,6 +40,8 @@ suspend fun updateGoals() {
                             target = outdatedInstance.target
                         )
                     )
+                } else if(!description.archived) {
+                    PracticeTime.goalDescriptionDao.archive(description)
                 }
 
                 // finally mark the outdated instance as renewed
