@@ -39,7 +39,8 @@ import java.time.format.DateTimeFormatter
 import kotlin.math.ceil
 import kotlin.math.max
 
-private const val X_AXIS_LABEL_COUNT = 5
+private const val X_AXIS_LABEL_COUNT_NORMAL = 5
+private const val X_AXIS_LABEL_COUNT_ONEDAYGOAL = 7
 
 class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
 
@@ -48,6 +49,22 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
 
     private val goals = ArrayList<GoalListElement>()
     private var selectedGoal = 0
+
+    private var selectedBar = SelectedBar.SELECTED_BAR_NONE
+    private enum class SelectedBar {
+        SELECTED_BAR_RIGHT,
+        SELECTED_BAR_LEFT,
+        SELECTED_BAR_NONE
+    }
+
+    private var limitLinePosition = LimitLineAllowedPos.BOTH
+    private var limitLinePositionSelectedState = LimitLineAllowedPos.BOTH
+    private enum class LimitLineAllowedPos {
+        ONLY_RIGHT,
+        ONLY_LEFT,
+        BOTH,
+        NONE
+    }
 
     // the first Instance of the selected goal currently shown in graph
     private var firstGoalInstShownIndex = 0
@@ -140,7 +157,7 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
         barChart.xAxis.apply {
             setDrawGridLines(false)
             position = XAxis.XAxisPosition.BOTTOM
-            labelCount = X_AXIS_LABEL_COUNT
+//            labelCount = X_AXIS_LABEL_COUNT_NORMAL
             valueFormatter = XAxisValueFormatter()
             textColor = PracticeTime.getThemeColor(R.attr.colorOnSurface, this@GoalStatsActivity)
         }
@@ -165,8 +182,16 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
     }
 
     private fun updateChartData() {
+
         // re-calculate bar data
         val barValues = getGoalsArray()
+
+        barChart.xAxis.labelCount =
+            if (isOneDayGoal()) {
+                X_AXIS_LABEL_COUNT_ONEDAYGOAL
+            } else {
+                X_AXIS_LABEL_COUNT_NORMAL
+            }
 
         val dataSetBarChart: BarDataSet
         if (barChart.data != null && barChart.data.dataSetCount > 0) {
@@ -199,44 +224,127 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
                 isHighlightEnabled = true
             }
 
+            // triggers xAxisValueFormatter with all xValues of barArray each 1x
             barChart.data = barData
         }
 
+
+        /**  Setup the limitline */
+        val t = getGoalInstance(lastGoalInstShownIndex).target.toFloat()    // limitline limit
+        val rightestBar = barValues.find { it.x == dataSetBarChart.xMax }
+        val leftestBar = barValues.find { it.x == dataSetBarChart.xMin }
+
+        // reset allowed positions
+        limitLinePosition = LimitLineAllowedPos.BOTH
+        limitLinePositionSelectedState = LimitLineAllowedPos.BOTH
+
+        // bar heights which are too much for displaying limit line label
+        val tooHighNrml = t * 1.05
+        val tooHighSlc = t * 0.8
+
+        if (rightestBar != null && leftestBar != null) {
+
+            /* Normal state limitline Position */
+            if (leftestBar.y < tooHighNrml && rightestBar.y > tooHighNrml) {
+                // right would cover
+                limitLinePosition = LimitLineAllowedPos.ONLY_LEFT
+            }
+            if (leftestBar.y > tooHighNrml && rightestBar.y < tooHighNrml) {
+                // left would cover
+                limitLinePosition = LimitLineAllowedPos.ONLY_RIGHT
+            }
+            if (leftestBar.y > tooHighNrml && rightestBar.y > tooHighNrml) {
+                // both would cover
+                limitLinePosition = LimitLineAllowedPos.NONE
+            }
+
+            /* Selected state limitline Position */
+            if (leftestBar.y < tooHighSlc && rightestBar.y > tooHighSlc) {
+                // right would cover
+                limitLinePositionSelectedState = LimitLineAllowedPos.ONLY_LEFT
+            }
+            if (leftestBar.y > tooHighSlc && rightestBar.y < tooHighSlc) {
+                // left would cover
+                limitLinePositionSelectedState = LimitLineAllowedPos.ONLY_RIGHT
+            }
+            if (leftestBar.y > tooHighSlc && rightestBar.y > tooHighSlc) {
+                // both would cover
+                limitLinePositionSelectedState = LimitLineAllowedPos.NONE
+            }
+        }
+
         barChart.apply {
-            val t = getGoalInstance(lastGoalInstShownIndex).target.toFloat()
             val (max, cnt) = calculateAxisValues()
 
-            axisLeft.axisMaximum = max
-            axisRight.axisMaximum = max
-            axisRight.setLabelCount(cnt, true)
-            axisRight.removeAllLimitLines()
-            axisRight.addLimitLine(getLimitLime(t))
+            highlightValue(0f, -1, false)   // remove all highlighting
+            if (intervalOffset == 0) {
+                // highlight last value in the beginning
+                highlightValue((goals[selectedGoal].goalInstances.size - 1).toFloat(), 0, false)
+                selectedBar = SelectedBar.SELECTED_BAR_RIGHT
+            }
 
-            highlightValue(-1f, 0, false)   // remove all highlighting
-            // highlight last value in the beginning
-            highlightValue((goals[selectedGoal].goalInstances.size - 1).toFloat(), 0, false)
+            axisLeft.axisMaximum = max
+            axisRight.apply {
+                axisMaximum = max
+                setLabelCount(cnt, true)
+                removeAllLimitLines()
+                addLimitLine(getLimitLime(t))
+            }
 
             // redraw the chart
             animateY(1000, Easing.EaseOutBack)
             notifyDataSetChanged()
+            // Does NOT trigger xAxisValueFormatter
             invalidate()
         }
-
         // update the Heading
         setHeadingTextViews()
     }
 
-    private fun getLimitLime(
-        limit: Float,
-        labelPos: LimitLine.LimitLabelPosition = LimitLine.LimitLabelPosition.RIGHT_TOP
-    ): LimitLine {
-        return LimitLine(limit, getDurationString(limit.toInt(), TIME_FORMAT_HUMAN_PRETTY).toString()).apply {
+    private fun getLimitLime(limit: Float): LimitLine {
+
+        val allowedRightNrm = (limitLinePosition == LimitLineAllowedPos.ONLY_RIGHT ||
+                limitLinePosition == LimitLineAllowedPos.BOTH)
+        val allowedLeftNrm = (limitLinePosition == LimitLineAllowedPos.ONLY_LEFT ||
+                limitLinePosition == LimitLineAllowedPos.BOTH)
+
+        val allowedRightSlc = (limitLinePositionSelectedState == LimitLineAllowedPos.ONLY_RIGHT ||
+                limitLinePositionSelectedState == LimitLineAllowedPos.BOTH)
+        val allowedLeftSlc = (limitLinePositionSelectedState == LimitLineAllowedPos.ONLY_LEFT ||
+                limitLinePositionSelectedState == LimitLineAllowedPos.BOTH)
+
+
+        val wouldCoverLeft = !allowedLeftNrm ||
+                (selectedBar == SelectedBar.SELECTED_BAR_LEFT && !allowedLeftSlc)
+        val wouldCoverRight = !allowedRightNrm ||
+                (selectedBar == SelectedBar.SELECTED_BAR_RIGHT && !allowedRightSlc)
+
+
+        // default labelPos is right...
+        var labelPos = LimitLine.LimitLabelPosition.RIGHT_TOP
+        var drawLabel = true
+
+        if (wouldCoverRight) {      // ...except it would cover...
+            if (!wouldCoverLeft) {
+                // ...then, it is left, but only if it doesn't cover left either
+                labelPos = LimitLine.LimitLabelPosition.LEFT_TOP
+            } else {
+                // if it does, display no label at all
+                drawLabel = false
+            }
+        }
+
+        val label =
+            if (drawLabel) getDurationString(limit.toInt(), TIME_FORMAT_HUMAN_PRETTY).toString()
+            else ""
+
+        return LimitLine(limit, label).apply {
             lineWidth = 1f
-            labelPosition = labelPos
-            textSize = 10f
             enableDashedLine(10f, 10f, 0f)
             lineColor = getChartColor()
             textColor = getChartColor()
+            labelPosition = labelPos
+            textSize = 10f
         }
     }
 
@@ -348,35 +456,47 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
     }
 
     private fun seekPast() {
-        intervalOffset -= X_AXIS_LABEL_COUNT
+        intervalOffset -=
+            if (isOneDayGoal()) X_AXIS_LABEL_COUNT_ONEDAYGOAL
+            else X_AXIS_LABEL_COUNT_NORMAL
         updateChartData()
         setButtonEnabledState()
     }
 
     private fun seekFuture() {
-        intervalOffset += X_AXIS_LABEL_COUNT
+        intervalOffset +=
+            if (isOneDayGoal()) X_AXIS_LABEL_COUNT_ONEDAYGOAL
+            else X_AXIS_LABEL_COUNT_NORMAL
         updateChartData()
         setButtonEnabledState()
     }
 
 
     override fun onValueSelected(e: Entry?, h: Highlight?) {
-
         if (e == null)
             return
 
+        val t = getGoalInstance(lastGoalInstShownIndex).target.toFloat()
+
+        if (e.x == barChart.data.getDataSetByIndex(0).xMax &&
+                e.y > 0.8 * t)     // only change if value would actually cover limitline label
+            selectedBar = SelectedBar.SELECTED_BAR_RIGHT
+
+        else if (e.x == barChart.data.getDataSetByIndex(0).xMin &&
+            e.y > 0.8 * t)     // only change if value would actually cover limitline label
+            selectedBar = SelectedBar.SELECTED_BAR_LEFT
+
+        else
+            selectedBar = SelectedBar.SELECTED_BAR_NONE
+
         barChart.axisRight.apply {
-            val t = getGoalInstance(lastGoalInstShownIndex).target.toFloat()
             removeAllLimitLines()
-            if (e.x == barChart.data.getDataSetByIndex(0).xMax &&
-                    e.y > 0.8 * t && e.y < 1.2 * t)     // only change if bar is ca. same height as LimitLine
-                addLimitLine(getLimitLime(t, LimitLine.LimitLabelPosition.LEFT_TOP))
-            else
-                addLimitLine(getLimitLime(t))
+            addLimitLine(getLimitLime(t))
         }
     }
 
     override fun onNothingSelected() {
+        selectedBar = SelectedBar.SELECTED_BAR_NONE
         barChart.axisRight.apply {
             val t = getGoalInstance(lastGoalInstShownIndex).target.toFloat()
             removeAllLimitLines()
@@ -388,18 +508,26 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
     private fun getGoalsArray(): ArrayList<BarEntry> {
         val barChartArray = arrayListOf<BarEntry>()
 
+        val labelCount =
+            if (isOneDayGoal()) {
+                X_AXIS_LABEL_COUNT_ONEDAYGOAL
+            } else {
+                X_AXIS_LABEL_COUNT_NORMAL
+            }
+
         val allInstances = goals[selectedGoal].goalInstances
         // get X_AXIS_LABEL_COUNT instances from the current interval.
         // intervalOffset == 0 means last X_AXIS_LABEL_COUNT
         // intervalOffset == -1 means get the X_AXIS_LABEL_COUNT before the last X_AXIS_LABEL_COUNT instances etc.
         lastGoalInstShownIndex = allInstances.size-1 + intervalOffset
-        firstGoalInstShownIndex = lastGoalInstShownIndex - X_AXIS_LABEL_COUNT + 1 //add 1 because we want exactly X_AXIS_LABEL_COUNT bars
+        firstGoalInstShownIndex = lastGoalInstShownIndex - labelCount + 1 //add 1 because we want exactly X_AXIS_LABEL_COUNT bars
 
         for (i in firstGoalInstShownIndex..lastGoalInstShownIndex) {
             val yVal =
                 if(i < 0) 0.001f    // all instances exhausted. Make 0.001f to recognize in the ValueFormatter that it is fake
                 else allInstances[i].progress.toFloat()
 
+            // goal is achieved, set the checkmark icon
             if (i >= 0 && yVal >= allInstances[i].target) {
                 val iconDrawable = ContextCompat.getDrawable(this, R.drawable.ic_check_small)!!
                 // tint it like this because iconTintList requires API >=26
@@ -413,15 +541,23 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
         return barChartArray
     }
 
+    private fun isOneDayGoal() = goals[selectedGoal].goalDesc.periodUnit == GoalPeriodUnit.DAY &&
+            goals[selectedGoal].goalDesc.periodInPeriodUnits ==  1
+
     /**
      * formats x axis value according to our time scaling
      */
     private inner class XAxisValueFormatter: ValueFormatter() {
 
         override fun getFormattedValue(value: Float): String {
+            // the library calls getFormattedValue very often, also with outdated indices from former
+            // datasets, if the amount of entries has changed. This is strange behavior, so just ignore it
+            if (value.toInt() >= goals[selectedGoal].goalInstances.size)
+                return value.toString()
 
             // value is index of goalInstance, as set in BarEntry
             val inst = getGoalInstance(value.toInt())
+//            return inst.id.toString()
             val timeStampStart = inst.startTimestamp
             val periodInSecs = inst.periodInSeconds
             // true if goal interval covers more than one [timeUnit]
@@ -432,11 +568,16 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
             when (goals[selectedGoal].goalDesc.periodUnit) {
 
                 GoalPeriodUnit.DAY -> {
-                    // show day of month or range of days in month as xTick
-                    labelString = unixTimeToDayOfMonth(timeStampStart)
-                    if (multiIntervalGoal)
+                    if (multiIntervalGoal) {
+                        // show day of month or range of days in month as xTick
                         // always subtract 1 second to get the right day because of half-open approach
-                        labelString += " - ${unixTimeToDayOfMonth(timeStampStart + periodInSecs - 1)}"
+                        labelString ="${unixTimeToDayOfMonth(timeStampStart)} -" +
+                                " ${unixTimeToDayOfMonth(timeStampStart + periodInSecs - 1)}"
+                    } else {
+                        labelString = unixTimeToWeekDay(timeStampStart)
+                        if (value.toInt() == firstGoalInstShownIndex)
+                            labelString += " (${unixTimeToDayOfMonth(timeStampStart)})"
+                    }
                 }
 
                 GoalPeriodUnit.WEEK -> {
@@ -469,43 +610,47 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
             .format(DateTimeFormatter.ofPattern(DATE_FORMATTER_PATTERN_MONTH_TEXT_ABBREV))
     }
 
+    private fun unixTimeToWeekDay(timestamp: Long): String {
+        return epochSecondsToDate(timestamp)
+            .format(DateTimeFormatter.ofPattern(DATE_FORMATTER_PATTERN_WEEKDAY_ABBREV))
+    }
+
     /** Interface helper method for getting goal instances. Returns a valid instance for index >= 0
      * For index < 0, returns a fake instance which can be used e.g. to calculate the time range of shown interval
      * **/
     private fun getGoalInstance(index: Int): GoalInstance {
 
         if (index >= 0) {
-            // return the real instance
             return goals[selectedGoal].goalInstances[index]
 
         } else {    // return a fake GoalInstance with the correct time range / period
 
-            // borrow some values from the first instance
+            // borrow some values from the first real instance
             val goalDesc = goals[selectedGoal].goalDesc
-            val firstInstance = goals[selectedGoal].goalInstances[0]
-            var periodInSeconds = firstInstance.periodInSeconds
+            val firstRealInstance = goals[selectedGoal].goalInstances[0]
+            var periodInSeconds = firstRealInstance.periodInSeconds
             var startTime = 0L
 
             when (goals[selectedGoal].goalDesc.periodUnit) {
                 GoalPeriodUnit.DAY -> {
                     // calculate plusDays with the API instead of adding periodInSeconds to respect daylight savings
-                    startTime = epochSecondsToDate(firstInstance.startTimestamp)
+                    startTime = epochSecondsToDate(firstRealInstance.startTimestamp)
                         .plusDays((index * goalDesc.periodInPeriodUnits).toLong())  // index is <0
                         .toEpochSecond()
                     // periodInSeconds doesn't change since it is always UTC
 
                 } GoalPeriodUnit.WEEK -> {
-                    startTime = epochSecondsToDate(firstInstance.startTimestamp)
+                    startTime = epochSecondsToDate(firstRealInstance.startTimestamp)
                         .plusWeeks((index * goalDesc.periodInPeriodUnits).toLong())  // index is <0
                         .toEpochSecond()
                     // periodInSeconds doesn't change since it is always UTC
 
                 } GoalPeriodUnit.MONTH -> {
-                    startTime = epochSecondsToDate(firstInstance.startTimestamp)
+                    startTime = epochSecondsToDate(firstRealInstance.startTimestamp)
                         .plusMonths((index * goalDesc.periodInPeriodUnits).toLong())  // index is <0
                         .toEpochSecond()
 
-                    val endTime = epochSecondsToDate(firstInstance.startTimestamp)
+                    val endTime = epochSecondsToDate(firstRealInstance.startTimestamp)
                         .plusMonths(index.toLong() * goalDesc.periodInPeriodUnits + goalDesc.periodInPeriodUnits)
                         .toEpochSecond()
                     // adjust periodInSeconds for month length
@@ -514,10 +659,10 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
             }
 
             return GoalInstance(
-                goalDescriptionId = firstInstance.goalDescriptionId,
+                goalDescriptionId = firstRealInstance.goalDescriptionId,
                 startTimestamp = startTime,
                 periodInSeconds = periodInSeconds,
-                target = firstInstance.target,
+                target = firstRealInstance.target,
                 progress = 0,
                 renewed = true
             )
