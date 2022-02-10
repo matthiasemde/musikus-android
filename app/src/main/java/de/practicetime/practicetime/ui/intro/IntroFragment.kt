@@ -96,7 +96,7 @@ class IntroFragment(
             context = requireActivity(),
         ) { newCategory ->
             lifecycleScope.launch {
-                PracticeTime.dao.insertCategory(newCategory)
+                PracticeTime.categoryDao.insert(newCategory)
                 delay(200)
                 (requireActivity() as AppIntroActivity).changeSlide()
             }
@@ -107,16 +107,18 @@ class IntroFragment(
         lifecycleScope.launch {
             GoalDialog(
                 context = requireActivity(),
-                categories = PracticeTime.dao.getActiveCategories(),
+                categories = PracticeTime.categoryDao.get(activeOnly = true),
             ) { newGoalDescriptionWithCategories, firstTarget ->
                 lifecycleScope.launch {
-                    val newGoalDescriptionId = PracticeTime.dao.insertGoalDescriptionWithCategories(
+                    val newGoalDescriptionId = PracticeTime.goalDescriptionDao
+                        .insertGoalDescriptionWithCategories(
                         newGoalDescriptionWithCategories
                     )
-                    val newGoalInstance = PracticeTime.dao.getGoalWithCategories(
+                    PracticeTime.goalDescriptionDao.getWithCategories(
                         newGoalDescriptionId
-                    ).description.createInstance(Calendar.getInstance(), firstTarget)
-                    PracticeTime.dao.insertGoalInstance(newGoalInstance)
+                    )?.description?.createInstance(Calendar.getInstance(), firstTarget)?.let {
+                        PracticeTime.goalInstanceDao.insert(it)
+                    }
                     delay(200)
                     (requireActivity() as AppIntroActivity).changeSlide()
                 }
@@ -192,7 +194,7 @@ class IntroGoalsFragment : Fragment(R.layout.fragment_intro_goals) {
             GoalDescriptionWithCategories(
                 description = GoalDescription(
                     type = GoalType.NON_SPECIFIC,
-                    oneTime = false,
+                    repeat = true,
                     periodInPeriodUnits = 1,
                     periodUnit = GoalPeriodUnit.DAY,
                 ),
@@ -210,20 +212,18 @@ class IntroGoalsFragment : Fragment(R.layout.fragment_intro_goals) {
             GoalDescriptionWithCategories(
                 description = GoalDescription(
                     type = GoalType.CATEGORY_SPECIFIC,
-                    oneTime = false,
+                    repeat = true,
                     periodInPeriodUnits = 1,
                     periodUnit = GoalPeriodUnit.WEEK,
                 ),
                 listOf(
                     Category(
-                        id = 1,
                         name = getString(R.string.dummy_category_name),
                         colorIndex = 4
                     )
                 )
             ),
         )
-
         return arrayListOf(goal1, goal2)
     }
 }
@@ -248,34 +248,34 @@ class IntroSessionsFragment : Fragment(R.layout.fragment_intro_sessions) {
 private fun getDummySessions() =
     listOf(
         SessionWithSectionsWithCategories(
-            session = PracticeSession(
-                break_duration = 60 * 10,
+            session = Session(
+                breakDuration = 60 * 10,
                 rating = 4,
                 comment = "Great session!"
             ),
             sections = listOf(
                 SectionWithCategory(
-                    PracticeSection(
-                        practice_session_id = 1,
-                        category_id = 1,
+                    Section(
+                        sessionId = 1,
+                        categoryId = 1,
                         duration = 60 * 10,
                         timestamp = getCurrTimestamp()
                     ),
                     Category(name="B-Dur", colorIndex=0),
                 ),
                 SectionWithCategory(
-                    PracticeSection(
-                        practice_session_id = 1,
-                        category_id = 1,
+                    Section(
+                        sessionId = 1,
+                        categoryId = 1,
                         duration = 60 * 23,
                         timestamp = getCurrTimestamp()
                     ),
                     Category(name="Czerny Etude Nr.2", colorIndex=1),
                 ),
                 SectionWithCategory(
-                    PracticeSection(
-                        practice_session_id = 1,
-                        category_id = 1,
+                    Section(
+                        sessionId = 1,
+                        categoryId = 1,
                         duration = 60 * 37,
                         timestamp = getCurrTimestamp()
                     ),
