@@ -50,8 +50,6 @@ class AppIntroActivity : AppIntro() {
         libFragment.arguments = lBundle
         addSlide(libFragment)
 
-        this.goToNextSlide()
-
         // Goal
         val gBundle = Bundle()
         gBundle.putSerializable(FRAGMENT_TYPE_KEY, IntroFragmentType.FRAGMENT_GOAL)

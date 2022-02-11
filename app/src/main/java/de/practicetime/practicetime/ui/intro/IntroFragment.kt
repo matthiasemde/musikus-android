@@ -12,11 +12,13 @@ import android.widget.TextView
 import androidx.annotation.ColorRes
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentContainerView
+import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.github.appintro.SlideBackgroundColorHolder
+import com.github.appintro.SlideSelectionListener
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import de.practicetime.practicetime.BuildConfig
 import de.practicetime.practicetime.PracticeTime
@@ -37,7 +39,7 @@ import kotlin.math.roundToInt
 
 class IntroFragment(
     @ColorRes override val defaultBackgroundColorRes: Int = R.color.md_red_300
-) : Fragment(), SlideBackgroundColorHolder {
+) : Fragment(), SlideSelectionListener, SlideBackgroundColorHolder {
     override val defaultBackgroundColor = 0
 
     private lateinit var fragType: IntroFragmentType
@@ -97,9 +99,9 @@ class IntroFragment(
         view.findViewById<TextView>(R.id.fragment_intro_text).text =
             description
 
-        view.findViewById<FloatingActionButton>(R.id.fragment_intro_fab).setOnClickListener(
-            fabClickListener
-        )
+        val fab = view.findViewById<FloatingActionButton>(R.id.fragment_intro_fab)
+        fab.setOnClickListener(fabClickListener)
+        fab.visibility = View.INVISIBLE
     }
 
     private val libraryClickListener = View.OnClickListener {
@@ -145,6 +147,22 @@ class IntroFragment(
         }
         val i = Intent(requireActivity(), ActiveSessionActivity::class.java)
         requireActivity().startActivity(i)
+    }
+
+    override fun onSlideDeselected() {}
+
+    override fun onSlideSelected() {
+        requireView().findViewById<ImageView>(R.id.fragment_intro_arrow)
+            .animate()
+            .scaleX(1f)
+            .scaleY(1f)
+            .setDuration(1000)
+            .setInterpolator(FastOutSlowInInterpolator())
+            .withEndAction {
+                view?.findViewById<FloatingActionButton>(R.id.fragment_intro_fab)?.show()
+            }
+            .setStartDelay(1500)
+            .start()
     }
 }
 
