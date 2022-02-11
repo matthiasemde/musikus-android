@@ -39,9 +39,10 @@ class MainActivity : AppCompatActivity() {
         bottomNavigationView = findViewById(R.id.bottom_navigation_view)
         bottomNavigationView.setupWithNavController(navController)
 
-        createDatabaseFirstRun()
-
-        launchAppIntroFirstRun()
+        if (BuildConfig.DEBUG) {
+            createDatabaseFirstRun()
+            launchAppIntroFirstRun()
+        }
     }
 
     private fun launchAppIntroFirstRun() {
@@ -70,8 +71,7 @@ class MainActivity : AppCompatActivity() {
                     Category(name="Klaviersonate", colorIndex=7),
                     Category(name="Trauermarsch", colorIndex=8),
                 ).forEach {
-                    if (BuildConfig.DEBUG)
-                        PracticeTime.categoryDao.insert(it)
+                    PracticeTime.categoryDao.insert(it)
                 }
 
                 prefs.edit().putBoolean(PracticeTime.PREFERENCES_KEY_FIRSTRUN, false).apply()
@@ -89,6 +89,8 @@ class MainActivity : AppCompatActivity() {
     // periodically check if session is still running (if it is) to remove the badge if yes
     override fun onResume() {
         super.onResume()
+        if (!BuildConfig.DEBUG)
+            launchAppIntroFirstRun()
         runnable = object : Runnable {
             override fun run() {
                 if (PracticeTime.serviceIsRunning) {
