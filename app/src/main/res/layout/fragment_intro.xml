@@ -7,7 +7,7 @@
     android:layout_height="match_parent"
     android:background="@color/md_red_300"
     android:clipToPadding="false"
-    android:paddingTop="40dp">
+    android:paddingTop="50dp">
 
 
     <TextView

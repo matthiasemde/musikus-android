@@ -39,9 +39,9 @@ import de.practicetime.practicetime.database.entities.SessionWithSections
 import de.practicetime.practicetime.services.RecorderService
 import de.practicetime.practicetime.services.SessionForegroundService
 import de.practicetime.practicetime.ui.goals.ProgressUpdateActivity
+import de.practicetime.practicetime.ui.goals.updateGoals
 import de.practicetime.practicetime.ui.library.CategoryAdapter
 import de.practicetime.practicetime.ui.library.CategoryDialog
-import de.practicetime.practicetime.ui.goals.updateGoals
 import de.practicetime.practicetime.utils.TIME_FORMAT_HMS_DIGITAL
 import de.practicetime.practicetime.utils.getDurationString
 import kotlinx.coroutines.launch
@@ -870,7 +870,7 @@ class ActiveSessionActivity : AppCompatActivity() {
                     if (!PracticeTime.serviceIsRunning)
                         tvHint.visibility = View.VISIBLE
                     tvQuote.visibility = View.GONE
-                }, 7000)
+                }, 11000)
             }
         } else {
             // Session active
