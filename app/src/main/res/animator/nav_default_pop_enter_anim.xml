@@ -1,8 +1,46 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    This software is licensed under the MIT license
+    This Source Code Form is subject to the terms of the Mozilla Public
+    License, v. 2.0. If a copy of the MPL was not distributed with this
+    file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+    Copyright (c) 2022 Matthias Emde
+
+    Parts of this software are licensed under the MIT license
 
     Copyright (c) 2022, Javier Carbone, author Michael Prommersberger
 -->
-<set>
+<set xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt">
+
+    <objectAnimator
+        android:propertyName="alpha"
+        android:duration="@integer/navigation_transition_time"
+        android:valueFrom="0"
+        android:valueTo="0"
+        android:valueType="floatType"/>
+
+    <objectAnimator
+        android:propertyName="translationY"
+        android:duration="1000"
+        android:valueFrom="-100"
+        android:valueTo="0"
+        android:factor="0.1"
+        android:startOffset="@integer/navigation_transition_time"
+        android:valueType="floatType">
+
+        <aapt:attr name="android:interpolator">
+            <decelerateInterpolator
+                android:factor="3"/>
+        </aapt:attr>
+
+    </objectAnimator>
+
+    <objectAnimator
+        android:propertyName="alpha"
+        android:valueFrom="0"
+        android:valueTo="1"
+        android:duration="@integer/navigation_transition_time"
+        android:startOffset="@integer/navigation_transition_time"
+        android:valueType="floatType"/>
 </set>
