@@ -12,7 +12,7 @@ import de.practicetime.practicetime.ui.overflowitems.DonationsActivity
 import de.practicetime.practicetime.ui.overflowitems.HelpActivity
 
 fun setCommonToolbar(context: Activity, toolbar: androidx.appcompat.widget.Toolbar) {
-    val prefs = context.getPreferences(Context.MODE_PRIVATE)
+    val prefs = context.getSharedPreferences(context.getString(R.string.filename_shared_preferences), Context.MODE_PRIVATE)
 
     toolbar.apply {
         inflateMenu(R.menu.common_menu)
