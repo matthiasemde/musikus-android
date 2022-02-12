@@ -66,6 +66,8 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
         NONE
     }
 
+    private var verticalLimitLines = arrayListOf<LimitLine>()
+
     // the first Instance of the selected goal currently shown in graph
     private var firstGoalInstShownIndex = 0
     // the last Instance of the selected goal currently shown in graph
@@ -288,7 +290,12 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
                 axisMaximum = max
                 setLabelCount(cnt, true)
                 removeAllLimitLines()
-                addLimitLine(getLimitLime(t))
+                addLimitLine(getTargetLimitLine(t))
+            }
+            xAxis.apply {
+                verticalLimitLines.forEach {
+                    addLimitLine(it)
+                }
             }
 
             // redraw the chart
@@ -301,7 +308,10 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
         setHeadingTextViews()
     }
 
-    private fun getLimitLime(limit: Float): LimitLine {
+    /**
+     * returns the LimitLine used to visualize the goal target
+     */
+    private fun getTargetLimitLine(limit: Float): LimitLine {
 
         val allowedRightNrm = (limitLinePosition == LimitLineAllowedPos.ONLY_RIGHT ||
                 limitLinePosition == LimitLineAllowedPos.BOTH)
@@ -345,6 +355,20 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
             textColor = getChartColor()
             labelPosition = labelPos
             textSize = 10f
+        }
+    }
+
+    /**
+     * gets the (vertical) LimitLine used to visualize gaps in the time history between goal instances
+     */
+    private fun getVerticalLimitLine(limit: Float, label: String): LimitLine {
+        return LimitLine(limit, label).apply {
+            lineWidth = 3f
+            lineColor = PracticeTime.getThemeColor(R.attr.colorOnSurfaceLowerContrast, this@GoalStatsActivity)
+            labelPosition = LimitLine.LimitLabelPosition.RIGHT_TOP
+            textColor = lineColor
+            textSize = 10f
+            enableDashedLine(20f, 10f, 0f)
         }
     }
 
@@ -491,7 +515,7 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
 
         barChart.axisRight.apply {
             removeAllLimitLines()
-            addLimitLine(getLimitLime(t))
+            addLimitLine(getTargetLimitLine(t))
         }
     }
 
@@ -500,7 +524,7 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
         barChart.axisRight.apply {
             val t = getGoalInstance(lastGoalInstShownIndex).target.toFloat()
             removeAllLimitLines()
-            addLimitLine(getLimitLime(t))
+            addLimitLine(getTargetLimitLine(t))
         }
     }
 
@@ -522,6 +546,11 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
         lastGoalInstShownIndex = allInstances.size-1 + intervalOffset
         firstGoalInstShownIndex = lastGoalInstShownIndex - labelCount + 1 //add 1 because we want exactly X_AXIS_LABEL_COUNT bars
 
+        verticalLimitLines.clear()
+        barChart.xAxis.removeAllLimitLines()
+
+       var endDateOfLastInst = allInstances[max(0,firstGoalInstShownIndex)].startTimestamp
+
         for (i in firstGoalInstShownIndex..lastGoalInstShownIndex) {
             val yVal =
                 if(i < 0) 0.001f    // all instances exhausted. Make 0.001f to recognize in the ValueFormatter that it is fake
@@ -536,6 +565,21 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
                 barChartArray.add(BarEntry(i.toFloat(), yVal, iconDrawable))
             } else
                 barChartArray.add(BarEntry(i.toFloat(), yVal))
+
+            if (i >= 0) {
+                if (allInstances[i].startTimestamp != endDateOfLastInst) {
+                    val pauseBetween = getDurationString(
+                        (allInstances[i].startTimestamp - endDateOfLastInst).toInt(),
+                        TIME_FORMAT_PRETTY_APPROX_SHORT
+                    )
+                    // draw vertical line between this and last bar to indicate break
+                    verticalLimitLines.add(getVerticalLimitLine(
+                        i - 0.5f,
+                        getString(R.string.statistics_paused_practicing_limitline_label, pauseBetween)
+                    ))
+                }
+                endDateOfLastInst = allInstances[i].startTimestamp + allInstances[i].periodInSeconds
+            }
         }
 
         return barChartArray

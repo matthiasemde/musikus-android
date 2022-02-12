@@ -41,8 +41,9 @@ class MainActivity : AppCompatActivity() {
 
         if (BuildConfig.DEBUG) {
             createDatabaseFirstRun()
-            launchAppIntroFirstRun()
+//            launchAppIntroFirstRun()
         }
+        setTheme()
     }
 
     private fun launchAppIntroFirstRun() {
@@ -76,8 +77,6 @@ class MainActivity : AppCompatActivity() {
 
                 prefs.edit().putBoolean(PracticeTime.PREFERENCES_KEY_FIRSTRUN, false).apply()
             }
-
-            setTheme()
         }
     }
 

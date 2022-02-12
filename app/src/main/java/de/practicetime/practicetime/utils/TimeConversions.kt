@@ -19,6 +19,9 @@ const val TIME_FORMAT_HUMAN_PRETTY_SHORT = 1
 /** Format Time rounded to next full day / hour / minute / second, e.g. "22 hours", "32 minutes */
 const val TIME_FORMAT_PRETTY_APPROX = 2
 
+/** Same as TIME_FORMAT_PRETTY_APPROX, but use "days", "h" and "m" instead of "days"/"hours"/"minutes" */
+const val TIME_FORMAT_PRETTY_APPROX_SHORT = 4
+
 /** Fixed format HH:MM:SS */
 const val TIME_FORMAT_HMS_DIGITAL = 3
 
@@ -126,6 +129,24 @@ fun getDurationString(durationSeconds: Int, format: Int, scale: Float = 0.6f): C
                 }
             }
         }
+
+        TIME_FORMAT_PRETTY_APPROX_SHORT -> {
+            return when {
+                days > 1 -> {
+                    // if time left is larger than a day, show the number of begun days
+                    "${days + 1} days"
+                }
+                hours > 1 -> {
+                    // show the number of begun hours
+                    "${hours + 1}h"
+                }
+                else -> {
+                    // show the number of begun minutes
+                    "${minutes + 1}m"
+                }
+            }
+        }
+
         else -> {
             return "TIME_FORMAT_ERR"
         }
