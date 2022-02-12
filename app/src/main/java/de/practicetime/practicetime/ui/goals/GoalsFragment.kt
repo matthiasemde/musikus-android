@@ -110,7 +110,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
             layoutManager = LinearLayoutManager(context)
             adapter = goalAdapter
             itemAnimator?.apply {
-//                addDuration = 500L
+                addDuration = 1L
                 moveDuration = 500L
                 removeDuration = 200L
             }
