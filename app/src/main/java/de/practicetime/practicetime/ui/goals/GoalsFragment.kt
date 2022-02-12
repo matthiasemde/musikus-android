@@ -25,7 +25,6 @@ import de.practicetime.practicetime.database.entities.GoalInstanceWithDescriptio
 import de.practicetime.practicetime.shared.EditTimeDialog
 import de.practicetime.practicetime.shared.setCommonToolbar
 import kotlinx.coroutines.launch
-import java.util.*
 
 
 class GoalsFragment : Fragment(R.layout.fragment_goals) {
@@ -111,7 +110,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
             layoutManager = LinearLayoutManager(context)
             adapter = goalAdapter
             itemAnimator?.apply {
-                addDuration = 500L
+//                addDuration = 500L
                 moveDuration = 500L
                 removeDuration = 200L
             }
