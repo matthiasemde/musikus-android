@@ -903,7 +903,7 @@ class ActiveSessionActivity : AppCompatActivity() {
         val newSession = Session(
             totalBreakDuration,
             rating,
-            if(comment.isNullOrBlank()) null else comment,
+            if(comment.isNullOrBlank()) "" else comment,
         )
 
         lifecycleScope.launch {

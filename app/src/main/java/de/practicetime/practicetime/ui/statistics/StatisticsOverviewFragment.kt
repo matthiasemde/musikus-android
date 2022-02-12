@@ -72,7 +72,11 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
             }
         }
 
-        setCommonToolbar(requireActivity(), view.findViewById(R.id.statsToolbar))
+        setCommonToolbar(requireActivity(), view.findViewById(R.id.statsToolbar)) {
+//                Place menu item click handler here
+//                when(it) {
+//                }
+        }
     }
 
     /**

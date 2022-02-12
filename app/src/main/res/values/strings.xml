@@ -46,24 +46,43 @@
     <string name="goalDialogGoalUnitTooltip">Goals will always start at the beginning of the respective day, week, or month.</string>
     <string name="goalDialogRepeat">Repeat goal</string>
     <string name="goalDialogRepeatTooltip">Repeat the goal after the time has elapsed. If you want to create a one time goal, disable this option.</string>
-    <string name="archivedGoalsTitle">Archived goals</string>
+    <string name="archivedGoalsToolbar">Inactive goals (%d)</string>
+    <string name="archivedGoalsTitle">Inactive goals</string>
     <string name="archivedGoalsUnarchive">Restore</string>
+    <string name="archivedGoalsConfirmUnarchive">Restore this goal?</string>
+    <string name="archivedGoalsConfirmUnarchiveWithCategory">Restore this goal along with the category %s?</string>
+    <string name="archivedGoalsUnarchiveGoalToast">Goal restored</string>
     <string name="archivedGoalsDelete">Delete</string>
+    <string name="archivedGoalsConfirmDelete">Irreversibly delete this goal and all of it\'s data?</string>
     <string name="topToolBarSettings">Settings</string>
     <string name="topToolBarTheme">Theme</string>
     <string name="topToolBarThemeAuto">Automatic</string>
     <string name="topToolBarThemeDark">Dark theme</string>
     <string name="topToolBarThemeLight">Light theme</string>
     <string name="topToolBarEdit">Edit</string>
+    <string name="topToolBarArchive">Archive</string>
     <string name="topToolBarDelete">Delete</string>
     <string name="dialogCancel">Cancel</string>
-    <string name="deleteGoalDialogMessage">Delete selected goal?</string>
-    <string name="deleteGoalsDialogMessage">Delete selected goals?</string>
+    <plurals name="deleteGoalDialogMessage">
+        <item quantity="one">Delete selected goal?</item>
+        <item quantity="other">Delete selected goals?</item>
+    </plurals>
+    <plurals name="archiveGoalDialogMessage">
+        <item quantity="one">Deactivate selected goal?</item>
+        <item quantity="other">Deactivate selected goals?</item>
+    </plurals>
+    <plurals name="archiveGoalToast">
+        <item quantity="one">Goal deactivated</item>
+        <item quantity="other">Goals deactivated</item>
+    </plurals>
+    <string name="archiveGoalConfirm">Deactivate</string>
     <string name="deleteSessionDialogMessage">Delete selected session and lose all goal progress?</string>
     <string name="deleteSessionsDialogMessage">Delete selected sessions and lose all goal progress?</string>
     <string name="deleteGoalDialogFullDeleteCheckbox">Delete goal from statistics as well</string>
-    <string name="deleteGoalToast">Goal deleted</string>
-    <string name="deleteGoalsToast">Goals deleted</string>
+    <plurals name="deleteGoalToast">
+        <item quantity="one">Goal deleted</item>
+        <item quantity="other">Goals deleted</item>
+    </plurals>
     <string name="deleteCategoryDialogMessage">Delete selected item</string>
     <string name="deleteCategoriesDialogMessage">Delete selected items</string>
     <string name="deleteCategorySuccessSnackbar">Library item deleted</string>

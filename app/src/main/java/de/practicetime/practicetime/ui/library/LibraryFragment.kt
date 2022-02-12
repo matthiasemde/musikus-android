@@ -222,7 +222,11 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
     private fun resetToolbar() {
         libraryToolbar.apply {
             menu?.clear()
-            setCommonToolbar(requireActivity(), this)
+            setCommonToolbar(requireActivity(), this) {
+//                Place menu item click handler here
+//                when(it) {
+//                }
+            }
             inflateMenu(R.menu.library_toolbar_menu_base)
             navigationIcon = null
         }

@@ -299,7 +299,11 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
     private fun resetToolbar() {
         sessionListToolbar.apply {
             menu?.clear()
-            setCommonToolbar(requireActivity(), this)
+            setCommonToolbar(requireActivity(), this) {
+//                Place menu item click handler here
+//                when(it) {
+//                }
+            }
             inflateMenu(R.menu.sessions_list_menu_base)
             navigationIcon = null
         }

@@ -11,7 +11,11 @@ import de.practicetime.practicetime.R
 import de.practicetime.practicetime.ui.overflowitems.DonationsActivity
 import de.practicetime.practicetime.ui.overflowitems.HelpActivity
 
-fun setCommonToolbar(context: Activity, toolbar: androidx.appcompat.widget.Toolbar) {
+fun setCommonToolbar(
+    context: Activity,
+    toolbar: androidx.appcompat.widget.Toolbar,
+    uncommonItemHandler: (itemId : Int) -> Unit,
+) {
     val prefs = context.getSharedPreferences(context.getString(R.string.filename_shared_preferences), Context.MODE_PRIVATE)
 
     toolbar.apply {
@@ -44,6 +48,7 @@ fun setCommonToolbar(context: Activity, toolbar: androidx.appcompat.widget.Toolb
                 R.id.commonToolbarHelp -> {
                     context.startActivity(Intent(context, HelpActivity::class.java))
                 }
+                else -> uncommonItemHandler(it.itemId)
             }
             setToolbarIcons(context, toolbar)
             return@setOnMenuItemClickListener true

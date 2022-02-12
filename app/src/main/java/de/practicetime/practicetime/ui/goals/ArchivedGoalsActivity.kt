@@ -1,5 +1,6 @@
 package de.practicetime.practicetime.ui.goals
 
+import android.app.AlertDialog
 import android.content.res.ColorStateList
 import android.os.Bundle
 import android.text.TextUtils
@@ -8,6 +9,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -15,10 +17,9 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.button.MaterialButton
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
-import de.practicetime.practicetime.database.entities.GoalInstanceWithDescriptionWithCategories
-import de.practicetime.practicetime.database.entities.GoalPeriodUnit
-import de.practicetime.practicetime.database.entities.GoalType
+import de.practicetime.practicetime.database.entities.*
 import de.practicetime.practicetime.utils.TIME_FORMAT_HUMAN_PRETTY
+import de.practicetime.practicetime.utils.getCurrTimestamp
 import de.practicetime.practicetime.utils.getDurationString
 import kotlinx.coroutines.launch
 
@@ -27,6 +28,7 @@ class ArchivedGoalsActivity : AppCompatActivity() {
     private lateinit var archivedGoalsAdapter: ArchivedGoalsAdapter
     private val adapterData = ArrayList<GoalInstanceWithDescriptionWithCategories>()
 
+    private lateinit var confirmationDialog: AlertDialog
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -62,25 +64,64 @@ class ArchivedGoalsActivity : AppCompatActivity() {
             layoutManager = LinearLayoutManager(this@ArchivedGoalsActivity)
             adapter = archivedGoalsAdapter
         }
-
     }
 
-    private fun unarchiveHandler(descriptionId: Long, target: Int) {
-
+    private fun unarchiveHandler(archivedGoal: GoalInstanceWithDescriptionWithCategories, position: Int) {
+        val category = archivedGoal.description.categories.firstOrNull()
+        val restoreCategory = category?.archived ?: false
+        AlertDialog.Builder(this).apply {
+            setMessage(
+                if(restoreCategory) resources.getString(
+                    R.string.archivedGoalsConfirmUnarchiveWithCategory
+                ).format(category?.name ?: "")
+                else resources.getString(R.string.archivedGoalsConfirmUnarchive)
+            )
+            setPositiveButton(R.string.archivedGoalsUnarchive) { dialog, _ ->
+                lifecycleScope.launch {
+                    category?.let {
+                        it.archived = false
+                        PracticeTime.categoryDao.update(category)
+                    }
+                    PracticeTime.goalDescriptionDao.unarchive(archivedGoal)
+                }
+                adapterData.remove(adapterData[position])
+                archivedGoalsAdapter.notifyItemRemoved(position)
+                Toast.makeText(context, R.string.archivedGoalsUnarchiveGoalToast, Toast.LENGTH_SHORT).show()
+                dialog.dismiss()
+            }
+            setNegativeButton(R.string.dialogCancel) { dialog, _ ->
+                dialog.cancel()
+            }
+        }.create().show()
     }
 
     private fun deleteHandler(goalDescriptionId: Long, position: Int) {
-        lifecycleScope.launch {
-            PracticeTime.goalDescriptionDao.deleteGoal(goalDescriptionId)
-        }
-        adapterData.remove(adapterData[position])
-        archivedGoalsAdapter.notifyItemRemoved(position)
+        AlertDialog.Builder(this).apply {
+            setMessage(R.string.archivedGoalsConfirmDelete)
+            setPositiveButton(R.string.archivedGoalsDelete) { dialog, _ ->
+                lifecycleScope.launch {
+                    PracticeTime.goalDescriptionDao.deleteGoal(goalDescriptionId)
+                }
+                adapterData.remove(adapterData[position])
+                archivedGoalsAdapter.notifyItemRemoved(position)
+                Toast.makeText(context, context.resources.getQuantityText(
+                    R.plurals.deleteGoalToast, 1
+                ), Toast.LENGTH_SHORT).show()
+                dialog.dismiss()
+            }
+            setNegativeButton(R.string.dialogCancel) { dialog, _ ->
+                dialog.cancel()
+            }
+        }.create().show()
     }
 
     private class ArchivedGoalsAdapter(
         private val context: AppCompatActivity,
         private val archivedGoals: List<GoalInstanceWithDescriptionWithCategories>,
-        private val unarchiveHandler: (descriptionId: Long, target: Int) -> Unit,
+        private val unarchiveHandler: (
+            archivedGoal: GoalInstanceWithDescriptionWithCategories,
+            position: Int
+        ) -> Unit,
         private val deleteHandler: (descriptionId: Long, position: Int) -> Unit,
     ) : RecyclerView.Adapter<ArchivedGoalsAdapter.ViewHolder>() {
 
@@ -99,18 +140,20 @@ class ArchivedGoalsActivity : AppCompatActivity() {
             val description = archivedGoal.description.description
             val categories = archivedGoal.description.categories
 
-            val categoryColor = ColorStateList.valueOf(
-                context.resources.getIntArray(R.array.category_colors)[
-                        categories.firstOrNull()?.colorIndex ?: 0
-                ]
+            val goalColor = categories.firstOrNull()?.colorIndex?.let {
+                ColorStateList.valueOf(
+                    context.resources.getIntArray(R.array.category_colors)[it]
+                )
+            } ?: ColorStateList.valueOf(
+                PracticeTime.getThemeColor(R.attr.colorPrimary, context)
             )
 
             holder.apply {
 
                 /** Section Color */
-                if(archivedGoal.description.description.type != GoalType.NON_SPECIFIC) {
+                if(description.type != GoalType.NON_SPECIFIC) {
                     sectionColorView.visibility = View.VISIBLE
-                    sectionColorView.backgroundTintList = categoryColor
+                    sectionColorView.backgroundTintList = goalColor
                 } else {
                     sectionColorView.visibility = View.GONE
                 }
@@ -140,14 +183,17 @@ class ArchivedGoalsActivity : AppCompatActivity() {
                 )
 
                 unarchiveButtonView.apply {
-                    backgroundTintList = categoryColor
+                    iconTint = goalColor
+                    strokeColor = goalColor
+                    setTextColor(goalColor)
+                    rippleColor = goalColor
                     setOnClickListener {
-                        unarchiveHandler(description.id, archivedGoal.instance.target)
+                        unarchiveHandler(archivedGoal, layoutPosition)
                     }
                 }
 
                 deleteButtonView.apply {
-                    backgroundTintList = categoryColor
+                    backgroundTintList = goalColor
                     setOnClickListener {
                         deleteHandler(description.id, layoutPosition)
                     }

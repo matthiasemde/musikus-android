@@ -77,8 +77,9 @@
                 android:layout_marginEnd="8dp"
                 android:layout_weight="1"
                 android:text="@string/archivedGoalsUnarchive"
-                app:icon="@drawable/ic_unarchive"
-                app:iconTint="?attr/colorOnPrimary"/>
+                app:cornerRadius="14dp"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                app:icon="@drawable/ic_autorenew"/>
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/listitem_archived_goal_btn_delete"
@@ -87,6 +88,7 @@
                 android:layout_marginStart="8dp"
                 android:layout_weight="1"
                 android:text="@string/archivedGoalsDelete"
+                app:cornerRadius="14dp"
                 app:icon="@drawable/ic_delete"
                 app:iconTint="?attr/colorOnPrimary"/>
         </LinearLayout>

@@ -8,6 +8,12 @@
         app:showAsAction="ifRoom"
         android:title="@string/topToolBarEdit" />
     <item
+        android:id="@+id/topToolbarSelectionArchive"
+        android:icon="@drawable/ic_autorenew_off"
+        android:enabled="true"
+        app:showAsAction="ifRoom"
+        android:title="@string/archivedGoalsTitle" />
+    <item
         android:id="@+id/topToolbarSelectionDelete"
         android:icon="@drawable/ic_delete"
         android:enabled="true"

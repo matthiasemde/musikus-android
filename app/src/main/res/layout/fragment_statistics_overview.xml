@@ -14,12 +14,12 @@
             android:id="@+id/collapsing_toolbar_layout"
             style="@style/CollapsingToolbar"
             app:title="@string/navigationStatisticsTitle"
-            app:toolbarId="@+id/goalsToolbar">
+            app:toolbarId="@+id/statsToolbar">
 
             <androidx.appcompat.widget.Toolbar
                 android:id="@+id/statsToolbar"
                 style="@style/Toolbar"
-                app:menu="@menu/goals_toolbar_menu_base" />
+                app:menu="@menu/stats_toolbar_menu_base" />
 
         </com.google.android.material.appbar.CollapsingToolbarLayout>
     </com.google.android.material.appbar.AppBarLayout>

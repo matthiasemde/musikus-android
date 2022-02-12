@@ -6,6 +6,7 @@ import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.database.BaseDao
 import de.practicetime.practicetime.database.entities.*
 import de.practicetime.practicetime.utils.getCurrTimestamp
+import java.util.*
 
 @Dao
 abstract class GoalDescriptionDao : BaseDao<GoalDescription>(
@@ -22,24 +23,52 @@ abstract class GoalDescriptionDao : BaseDao<GoalDescription>(
     ): Long
 
     @Transaction
-    open suspend fun insertGoalDescriptionWithCategories(
+    open suspend fun insertAndGetGoalDescriptionWithCategories(
         goalDescriptionWithCategories: GoalDescriptionWithCategories
-    ): Long {
-        val newGoalDescriptionId = insert(
+    ) : GoalDescriptionWithCategories? {
+        return insertAndGet(
             goalDescriptionWithCategories.description
-        )
+        )?.let { description ->
 
-        // for every category linked with the goal...
-        for (category in goalDescriptionWithCategories.categories) {
-            // insert a row in the cross reference table
-            insertGoalDescriptionCategoryCrossRef(
-                GoalDescriptionCategoryCrossRef(
-                    newGoalDescriptionId,
-                    category.id,
+            // for every category linked with the goal...
+            for (category in goalDescriptionWithCategories.categories) {
+                // insert a row in the cross reference table
+                insertGoalDescriptionCategoryCrossRef(
+                    GoalDescriptionCategoryCrossRef(
+                        description.id,
+                        category.id,
+                    )
                 )
+            }
+            return GoalDescriptionWithCategories(
+                description,
+                goalDescriptionWithCategories.categories
             )
         }
-        return newGoalDescriptionId
+    }
+
+    @Transaction
+    open suspend fun insertGoal(
+        goalDescriptionWithCategories: GoalDescriptionWithCategories,
+        target: Int,
+    ) : GoalInstanceWithDescriptionWithCategories? {
+
+        return insertAndGetGoalDescriptionWithCategories(
+            goalDescriptionWithCategories
+        )?.let { newGoalDescriptionWithCategories ->
+            // Create the first instance of the newly created goal description
+            PracticeTime.goalInstanceDao.insertUpdateAndGet(
+                newGoalDescriptionWithCategories.description.createInstance(
+                    Calendar.getInstance(),
+                    target
+                )
+            )?.let { newGoalInstance ->
+                GoalInstanceWithDescriptionWithCategories(
+                    newGoalInstance,
+                    newGoalDescriptionWithCategories
+                )
+            }
+        }
     }
 
     /**
@@ -111,6 +140,22 @@ abstract class GoalDescriptionDao : BaseDao<GoalDescription>(
         }
     }
 
+    @Transaction
+    open suspend fun unarchive(archivedGoal: GoalInstanceWithDescriptionWithCategories) {
+        val (instance, descriptionWithCategories) = archivedGoal
+        val description = descriptionWithCategories.description
+
+        description.archived = false
+        update(description)
+        if(instance.startTimestamp + instance.periodInSeconds > getCurrTimestamp()) {
+            instance.renewed = false
+            PracticeTime.goalInstanceDao.update(instance)
+        } else {
+            PracticeTime.goalInstanceDao.insertUpdateAndGet(
+                description.createInstance(Calendar.getInstance(), instance.target)
+            )
+        }
+    }
 
     /**
      * @Queries
@@ -204,6 +249,34 @@ abstract class GoalDescriptionDao : BaseDao<GoalDescription>(
 
 @Dao
 abstract class GoalInstanceDao : BaseDao<GoalInstance>(tableName = "goal_instance") {
+
+    /**
+     * @Insert
+     */
+
+    @Transaction
+    open suspend fun insertUpdateAndGet(
+        goalInstance: GoalInstance
+    ) : GoalInstance? {
+        return insertAndGet(
+            goalInstance
+        )?.let { newInstance ->
+            PracticeTime.sessionDao.getSessionsContainingSectionFromTimeFrame(
+                newInstance.startTimestamp,
+                newInstance.startTimestamp + newInstance.periodInSeconds
+            ).filter { s -> s.sections.first().timestamp >= newInstance.startTimestamp }
+            .forEach { s ->
+                PracticeTime.goalDescriptionDao.computeGoalProgressForSession(
+                    PracticeTime.sessionDao.getWithSectionsWithCategoriesWithGoals(s.session.id)
+                ).also { progress ->
+                    newInstance.progress += progress[newInstance.goalDescriptionId] ?: 0
+                }
+            }
+            update(newInstance)
+            newInstance
+        }
+    }
+
 
     /**
      * @Update

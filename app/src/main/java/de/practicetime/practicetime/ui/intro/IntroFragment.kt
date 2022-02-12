@@ -123,15 +123,10 @@ class IntroFragment(
                 categories = PracticeTime.categoryDao.get(activeOnly = true),
             ) { newGoalDescriptionWithCategories, firstTarget ->
                 lifecycleScope.launch {
-                    val newGoalDescriptionId = PracticeTime.goalDescriptionDao
-                        .insertGoalDescriptionWithCategories(
-                        newGoalDescriptionWithCategories
+                    PracticeTime.goalDescriptionDao.insertGoal(
+                        newGoalDescriptionWithCategories,
+                        firstTarget
                     )
-                    PracticeTime.goalDescriptionDao.getWithCategories(
-                        newGoalDescriptionId
-                    )?.description?.createInstance(Calendar.getInstance(), firstTarget)?.let {
-                        PracticeTime.goalInstanceDao.insert(it)
-                    }
                     delay(200)
                     (requireActivity() as AppIntroActivity).changeSlide()
                 }
