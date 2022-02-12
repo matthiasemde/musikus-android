@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/stats_ov_cardview_last7days"
-    style="@style/cardview_statistics_overview" >
+    style="@style/cardview_statistics_overview">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
@@ -57,7 +58,7 @@
             app:layout_constraintHorizontal_bias="0"
             app:layout_constraintTop_toBottomOf="@id/stats_ov_card_last7days_tv_subheadline"
             app:layout_constraintBottom_toBottomOf="parent"
-            android:text="7h 30m" />
+            tools:text="7h 30m" />
 
         <TextView
             android:id="@+id/stats_ov_card_last7days_tv_avg_time_desc"
