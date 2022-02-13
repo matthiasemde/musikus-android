@@ -189,7 +189,7 @@
     <string name="dummy_category_name">Mozart</string>
     <string name="intro_text_welcome_title">Welcome to PracticeTime!</string>
     <string name="intro_text_welcome">PracticeTime helps you while practicing your instrument with time tracking and other smart features.\n\nIt is designed to be a musician\'s tool for everyday practicing.</string>
-    <string name="intro_text_library">📚  Create library items for any piece, scale or other exercise you want to practice.\n\nUse them during your sessions to tell PracticeTime what you are practicing.</string>
+    <string name="intro_text_library">📚 Create library items for any piece, scale or other exercise you want to practice.\n\n🎵 Use them during your sessions to tell PracticeTime what you are practicing.</string>
     <string name="intro_text_library_2">Let\'s add your first item!</string>
     <string name="intro_text_goals">🏁 Goals help you practice consistently and prepare you for your next performance.</string>
     <string name="intro_text_goals_2">Add your first goal right now!</string>
