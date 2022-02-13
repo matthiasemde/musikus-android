@@ -23,8 +23,8 @@
         app:layout_constraintHorizontal_chainStyle="packed"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_chainStyle="spread_inside"
         app:layout_constraintVertical_bias="0"
+        app:layout_constraintVertical_chainStyle="spread_inside"
         tools:text="Headline" />
 
     <ImageView
@@ -56,35 +56,53 @@
 
     <TextView
         android:id="@+id/fragment_intro_text"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="32dp"
         android:layout_marginEnd="32dp"
-        android:layout_marginBottom="16dp"
+        android:layout_marginBottom="18dp"
+        android:gravity="start"
+        android:lineSpacingMultiplier="1.2"
+        android:textColor="?attr/colorOnPrimary"
+        android:textSize="16sp"
+        android:layout_marginStart="32dp"
+        app:layout_constraintBottom_toTopOf="@+id/fragment_intro_fab"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/fragment_intro_frag_container_view"
+        tools:text="@string/intro_text_goals" />
+
+    <TextView
+        android:id="@+id/fragment_intro_arrow_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:alpha="0"
         android:gravity="center"
         android:textColor="?attr/colorOnPrimary"
-        android:textSize="18sp"
-        app:layout_constraintBottom_toTopOf="@+id/fragment_intro_fab"
-        app:layout_constraintTop_toBottomOf="@+id/fragment_intro_frag_container_view"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toTopOf="@+id/fragment_intro_arrow"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintVertical_bias="1"
-        tools:text="@string/intro_text_goals" />
+        tools:alpha="1"
+        tools:text="Let's add it" />
 
     <ImageView
         android:id="@+id/fragment_intro_arrow"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:src="@drawable/intro_arrow"
         android:scaleX="0"
         android:scaleY="0"
-        tools:scaleX="1"
-        tools:scaleY="1"
+        android:src="@drawable/intro_arrow"
         android:transformPivotX="0dp"
         android:transformPivotY="0dp"
         app:layout_constraintBottom_toBottomOf="@id/fragment_intro_fab"
         app:layout_constraintEnd_toStartOf="@+id/fragment_intro_fab"
         app:layout_constraintTop_toTopOf="@+id/fragment_intro_fab"
         app:layout_constraintVertical_bias="1"
-        app:tint="?attr/colorOnPrimary" />
+        app:tint="?attr/colorOnPrimary"
+        tools:scaleX="1"
+        tools:scaleY="1" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fragment_intro_fab"
@@ -95,10 +113,10 @@
         android:layout_marginBottom="95dp"
         android:src="@android:drawable/ic_input_add"
         android:transitionName="transition_fab"
+        android:visibility="invisible"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/fragment_intro_text"
-        android:visibility="invisible"
-        tools:visibility="visible"/>
+        tools:visibility="visible" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

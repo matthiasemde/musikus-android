@@ -14,6 +14,7 @@ class HelpActivity : AppCompatActivity() {
 
         findViewById<MaterialButton>(R.id.help_replay_intro).setOnClickListener {
             val i = Intent(this, AppIntroActivity::class.java)
+            i.flags = Intent.FLAG_ACTIVITY_NO_HISTORY
             startActivity(i)
         }
     }

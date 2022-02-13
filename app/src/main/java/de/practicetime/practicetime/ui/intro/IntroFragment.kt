@@ -33,7 +33,6 @@ import de.practicetime.practicetime.ui.sessionlist.SessionSummaryAdapter
 import de.practicetime.practicetime.utils.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.util.*
 import kotlin.math.roundToInt
 
 
@@ -63,6 +62,7 @@ class IntroFragment(
         val container = view.findViewById<FragmentContainerView>(R.id.fragment_intro_frag_container_view)
         var fragment: Fragment? = null
         var description = ""
+        var arrowText = ""
         var fabClickListener: View.OnClickListener? = null
 
         val heading = view.findViewById<TextView>(R.id.fragment_intro_title)
@@ -74,6 +74,7 @@ class IntroFragment(
                 icon.setImageResource(R.drawable.ic_library)
                 fragment = IntroLibraryFragment()
                 description = getString(R.string.intro_text_library)
+                arrowText = getString(R.string.intro_text_library_2)
                 fabClickListener = libraryClickListener
             }
             IntroFragmentType.FRAGMENT_GOAL -> {
@@ -81,6 +82,7 @@ class IntroFragment(
                 icon.setImageResource(R.drawable.ic_goals)
                 fragment = IntroGoalsFragment()
                 description = getString(R.string.intro_text_goals)
+                arrowText = getString(R.string.intro_text_goals_2)
                 fabClickListener = goalsClickListener
             }
             IntroFragmentType.FRAGMENT_SESSION -> {
@@ -88,6 +90,7 @@ class IntroFragment(
                 icon.setImageResource(R.drawable.ic_sessions)
                 fragment = IntroSessionsFragment()
                 description = getString(R.string.intro_text_sessions)
+                arrowText = getString(R.string.intro_text_sessions_2)
                 fabClickListener = sessionsClickListener
             }
         }
@@ -98,6 +101,9 @@ class IntroFragment(
 
         view.findViewById<TextView>(R.id.fragment_intro_text).text =
             description
+        view.findViewById<TextView>(R.id.fragment_intro_arrow_text).text =
+            arrowText
+
 
         val fab = view.findViewById<FloatingActionButton>(R.id.fragment_intro_fab)
         fab.setOnClickListener(fabClickListener)
@@ -147,6 +153,15 @@ class IntroFragment(
     override fun onSlideDeselected() {}
 
     override fun onSlideSelected() {
+
+
+        requireView().findViewById<TextView>(R.id.fragment_intro_arrow_text)
+            .animate()
+            .alpha(1f)
+            .setDuration(300)
+            .setStartDelay(800)
+            .start()
+
         requireView().findViewById<ImageView>(R.id.fragment_intro_arrow)
             .animate()
             .scaleX(1f)
@@ -156,7 +171,7 @@ class IntroFragment(
             .withEndAction {
                 view?.findViewById<FloatingActionButton>(R.id.fragment_intro_fab)?.show()
             }
-            .setStartDelay(1500)
+            .setStartDelay(1000)
             .start()
     }
 }
@@ -275,7 +290,7 @@ private fun getDummySessions() =
             session = Session(
                 breakDuration = 60 * 10,
                 rating = 4,
-                comment = "Great session!"
+                comment = "Great session! \uD83D\uDE80"
             ),
             sections = listOf(
                 SectionWithCategory(

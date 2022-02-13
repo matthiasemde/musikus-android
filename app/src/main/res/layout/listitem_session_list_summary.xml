@@ -206,6 +206,7 @@
                     android:layout_marginTop="4dp"
                     android:layout_marginEnd="24dp"
                     android:ems="10"
+                    android:textColor="?attr/colorOnSurfaceLowerContrast"
                     android:gravity="start|top"
                     tools:text="This is a comment"
                     android:textSize="16sp"

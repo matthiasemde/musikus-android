@@ -38,8 +38,8 @@ class AppIntroActivity : AppIntro() {
         // Call addSlide passing your Fragments.
         // You can use AppIntroFragment to use a pre-built fragment
         addSlide(AppIntroFragment.createInstance(
-            title = "Welcome...",
-            description = "This is the beginning of a new era",
+            title = getString(R.string.intro_text_welcome_title),
+            description = getString(R.string.intro_text_welcome),
             backgroundColorRes = R.color.md_red_300
         ))
 
