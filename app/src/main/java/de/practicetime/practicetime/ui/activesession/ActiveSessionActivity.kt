@@ -394,7 +394,19 @@ class ActiveSessionActivity : AppCompatActivity() {
         syncUIToNewBPM()
     }
 
+    private var slowlyFlag = false
+
     private fun syncUIToNewBPM() {
+        if(mService.metronomeBeatsPerMinute == mService.metronomeMinBpm) {
+            slowlyFlag = true
+            Handler(Looper.getMainLooper()).postDelayed({slowlyFlag = false}, 300)
+        } else if(mService.metronomeBeatsPerMinute == mService.metronomeMaxBpm && slowlyFlag) {
+            Toast.makeText(
+                this,
+                "If you can play it slowly, you can play it quickly \uD83C\uDFBB\uD83C\uDFBB\uD83D\uDC1D",
+                Toast.LENGTH_LONG
+            ).show()
+        }
         findViewById<TextView>(R.id.metronome_sheet_bpm)
             .text = mService.metronomeBeatsPerMinute.toString()
         findViewById<TextView>(R.id.metronome_sheet_tempo_description)
