@@ -174,11 +174,13 @@ class SessionSummaryAdapter(
                     }
                 }
                 summaryCard.setOnLongClickListener {
-                    // tell the event handler we consumed the event
-                    return@setOnLongClickListener longClickHandler(
-                        bindingAdapterPosition,
-                        bindingAdapter as SessionSummaryAdapter
-                    )
+                    return@setOnLongClickListener if (isInAdapter) {
+                        // tell the event handler we consumed the event
+                        longClickHandler(
+                            bindingAdapterPosition,
+                            bindingAdapter as SessionSummaryAdapter
+                        )
+                    } else false
                 }
 
                 val currentSessionDate = Calendar.getInstance().apply {
