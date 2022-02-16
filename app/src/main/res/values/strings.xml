@@ -53,7 +53,7 @@
     <string name="archivedGoalsConfirmUnarchiveWithCategory">Restore this goal along with the category %s?</string>
     <string name="archivedGoalsUnarchiveGoalToast">Goal restored</string>
     <string name="archivedGoalsDelete">Delete</string>
-    <string name="archivedGoalsConfirmDelete">Irreversibly delete this goal and all of it\'s data?</string>
+    <string name="archivedGoalsConfirmDelete">Irreversibly delete this goal and all of its data?</string>
     <string name="topToolBarSettings">Settings</string>
     <string name="topToolBarTheme">Theme</string>
     <string name="topToolBarThemeAuto">Automatic</string>
@@ -189,11 +189,11 @@
     <string name="dummy_category_name">Mozart</string>
     <string name="intro_text_welcome_title">Welcome to PracticeTime!</string>
     <string name="intro_text_welcome">PracticeTime helps you while practicing your instrument with time tracking and other smart features.\n\nIt is designed to be a musician\'s tool for everyday practicing.</string>
-    <string name="intro_text_library">📚 Create library items for any piece, scale or other exercise you want to practice.\n\n🎵 Use them during your sessions to tell PracticeTime what you are practicing.</string>
+    <string name="intro_text_library">Create library items for any piece, scale or other exercise you want to practice.\n\nUse them during your sessions to tell PracticeTime what you are practicing.</string>
     <string name="intro_text_library_2">Let\'s add your first item!</string>
-    <string name="intro_text_goals">🏁 Goals help you practice consistently and prepare you for your next performance.</string>
+    <string name="intro_text_goals">Goals help you practice consistently and prepare you for your next performance.</string>
     <string name="intro_text_goals_2">Add your first goal right now!</string>
-    <string name="intro_text_sessions">📈 Summaries of your practice sessions as well as insightful statistics help you to stay on top of your practice habits.</string>
+    <string name="intro_text_sessions">Summaries of your practice sessions as well as insightful statistics help you to stay on top of your practice habits.</string>
     <string name="intro_text_sessions_2">Press here to start your first session!</string>
     <string name="intro_text_done">Not now</string>
     <string name="help_replay_intro">Replay app introduction</string>

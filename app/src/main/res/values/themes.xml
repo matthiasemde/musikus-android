@@ -2,13 +2,13 @@
     <!-- Base application theme. -->
     <style name="Theme.PracticeTime" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <!-- Primary brand color. -->
-        <item name="colorPrimary">@color/teal</item>
-        <item name="colorPrimaryVariant">@color/teal_dark</item>
+        <item name="colorPrimary">@color/primary_light</item>
+        <item name="colorPrimaryVariant">@color/primary_light</item>
         <item name="colorOnPrimary">@color/white</item>
         <!-- Secondary brand color. -->
-        <item name="colorSecondary">@color/md_yellow_600</item>
-        <item name="colorSecondaryVariant">@color/yellow_dark</item>
-        <item name="colorOnSecondary">@color/black</item>
+        <item name="colorSecondary">@color/secondary_light</item>
+        <item name="colorSecondaryVariant">@color/secondary_light</item>
+        <item name="colorOnSecondary">@color/white</item>
         <item name="colorSurface">@color/white</item>
         <item name="colorOnSurface">@color/black</item>
         <item name="colorError">@color/md_red_500</item>

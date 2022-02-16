@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <color name="primary_light">#007792</color>
+    <color name="secondary_light">@color/primary_light</color>
+    <color name="primary_dark">#009FBF</color>
+    <color name="secondary_dark">@color/primary_dark</color>
+
     <color name="black">#000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="teal">#009688</color>
@@ -16,6 +21,16 @@
     <color name="dark_grey_lighter">#292929</color>
     <color name="dark_grey_darker">#080808</color>
 
+    <color name="category_color_1">#f7a397</color>
+    <color name="category_color_2">#E03F54</color>
+    <color name="category_color_3">#FF8F33</color>
+    <color name="category_color_4">#FFC233</color>
+    <color name="category_color_5">#997099</color>
+    <color name="category_color_6">#5474BF</color>
+    <color name="category_color_7">#80995C</color>
+    <color name="category_color_8">#29CCAE</color>
+    <color name="category_color_9">#748EA7</color>
+    <color name="category_color_10">#A8684C</color>
 
     <!--_____________________________________________________________________________________-->
 
