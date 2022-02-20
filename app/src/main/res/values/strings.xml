@@ -196,13 +196,28 @@
     <string name="intro_text_sessions">📈 Summaries of your practice sessions as well as insightful statistics help you to stay on top of your practice habits.</string>
     <string name="intro_text_sessions_2">Press here to start your first session!</string>
     <string name="intro_text_done">Not now</string>
-    <string name="donations_title">Support us!</string>
-    <string name="donations_text">If you are enjoying the app and would like to support us, we would be very thankful for a small donation.\n This will help us in developing awesome new features like\n &#8226; Sharable sessions\n &#8226; Integrated tuner\n &#8226; Special layout for tablets\n &#8226; And many more!</string>
-    <string name="help_title">Help</string>
     <string name="help_replay_intro">Replay app introduction</string>
-    <string name="help_tips_title">Tips and tricks</string>
-    <string name="help_tips_text">Have you tried…\n &#8226; Swiping sections during an active session to delete them,\n&#8226; Long-clicking on sessions, goals or library items to select and delete them?</string>
     <string name="hint_add_new_section">Choose another item to add it to your session</string>
     <string name="hint_delete_section">You can swipe left on an entry to remove it from your session.</string>
     <string name="filename_shared_preferences">de.practicetime.practicetime.preferences</string>
+
+    <string name="help_title">Help</string>
+    <string name="help_tips_title">Tips and tricks</string>
+    <string name="help_tips_text">Have you tried…</string>
+    <string-array name="array_help_tips_text_bulletlist">
+        <item>Swiping sections during an active session to delete them</item>
+        <item>Long-clicking on sessions, goals or library items to select and delete them?</item>
+    </string-array>
+
+    <string name="donations_title">Support us!</string>
+    <string name="donations_text">If you are enjoying the app and would like to support us, we would be very thankful for a small donation.\n\nThis will help us in developing awesome new features like:</string>
+    <string-array name="array_donations_text_bulletlist">
+        <item>Sharable sessions</item>
+        <item>Integrated tuner</item>
+        <item>Special layout for tablets</item>
+        <item>And many more!</item>
+    </string-array>
+
+
+
 </resources>

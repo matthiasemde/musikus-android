@@ -49,6 +49,11 @@ class PracticeTime : Application() {
         fun getRandomQuote(context: Context) : CharSequence {
             return context.resources.getTextArray(R.array.quotes).random()
         }
+
+        fun dp(context: Context, dp: Int): Float {
+            return context.resources.displayMetrics.density * dp;
+        }
+
     }
 
     override fun onCreate() {
@@ -69,4 +74,5 @@ class PracticeTime : Application() {
         sessionDao = db.sessionDao
         sectionDao = db.sectionDao
     }
+
 }
