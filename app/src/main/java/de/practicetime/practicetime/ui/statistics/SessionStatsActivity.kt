@@ -320,7 +320,6 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
 
                 val endDate = getEndOfMonth(lastBarXVal.toLong())
                     .minusDays(1)   // subtract one day because of half-open approach
-                    .plusMonths(lastBarXVal.toLong())
 
                 var formatStrStart = DATE_FORMATTER_PATTERN_MONTH_TEXT_FULL
                 var formatStrEnd = "$DATE_FORMATTER_PATTERN_MONTH_TEXT_FULL $DATE_FORMATTER_PATTERN_YEAR"
