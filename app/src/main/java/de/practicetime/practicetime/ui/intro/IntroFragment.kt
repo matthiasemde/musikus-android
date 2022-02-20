@@ -36,6 +36,17 @@ import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 
+private const val DUMMY_MAIN_CATEGORY_INDEX = 5
+
+private val dummyCategories = listOf(
+    Category(name="B-Dur", colorIndex = 8),
+    Category(name="Czerny Etude Nr.2", colorIndex = 1),
+    Category(name="Trauermarsch c-Moll", colorIndex = 0),
+    Category(name="Andantino", colorIndex = 6),
+    Category(name="Klaviersonate", colorIndex = 7),
+    Category(name="Mozart", colorIndex = 3)
+)
+
 class IntroFragment(
     @ColorRes override val defaultBackgroundColorRes: Int = R.color.md_red_300
 ) : Fragment(), SlideSelectionListener, SlideBackgroundColorHolder {
@@ -183,7 +194,7 @@ class IntroLibraryFragment : Fragment(R.layout.fragment_intro_library) {
 
         val recView = view.findViewById<RecyclerView>(R.id.introCategoryList)
         val catDummyAdapter = CategoryAdapter(
-            getDummyCategories(),
+            dummyCategories,
             context = requireActivity(),
         )
 
@@ -192,16 +203,6 @@ class IntroLibraryFragment : Fragment(R.layout.fragment_intro_library) {
             adapter = catDummyAdapter
         }
     }
-
-    private fun getDummyCategories() =
-        listOf(
-            Category(name="B-Dur", colorIndex=0),
-            Category(name="Czerny Etude Nr.2", colorIndex=1),
-            Category(name="Trauermarsch c-Moll", colorIndex=3),
-            Category(name="Andantino", colorIndex=6),
-            Category(name="Klaviersonate", colorIndex=7),
-            Category(name=getString(R.string.dummy_category_name), colorIndex = 4)
-        )
 
 }
 
@@ -256,10 +257,7 @@ class IntroGoalsFragment : Fragment(R.layout.fragment_intro_goals) {
                     periodUnit = GoalPeriodUnit.WEEK,
                 ),
                 listOf(
-                    Category(
-                        name = getString(R.string.dummy_category_name),
-                        colorIndex = 4
-                    )
+                    dummyCategories[DUMMY_MAIN_CATEGORY_INDEX]
                 )
             ),
         )
@@ -300,7 +298,7 @@ private fun getDummySessions() =
                         duration = 60 * 10,
                         timestamp = getCurrTimestamp()
                     ),
-                    Category(name="B-Dur", colorIndex=0),
+                    dummyCategories[0]
                 ),
                 SectionWithCategory(
                     Section(
@@ -309,7 +307,7 @@ private fun getDummySessions() =
                         duration = 60 * 23,
                         timestamp = getCurrTimestamp()
                     ),
-                    Category(name="Czerny Etude Nr.2", colorIndex=1),
+                    dummyCategories[1]
                 ),
                 SectionWithCategory(
                     Section(
@@ -318,7 +316,7 @@ private fun getDummySessions() =
                         duration = 60 * 37,
                         timestamp = getCurrTimestamp()
                     ),
-                    Category(name=getString(R.string.dummy_category_name), colorIndex = 4)
+                    dummyCategories[DUMMY_MAIN_CATEGORY_INDEX]
                 ),
             )
         )

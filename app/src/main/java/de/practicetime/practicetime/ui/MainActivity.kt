@@ -41,7 +41,7 @@ class MainActivity : AppCompatActivity() {
 
         if (BuildConfig.DEBUG) {
             createDatabaseFirstRun()
-//            launchAppIntroFirstRun()
+            launchAppIntroFirstRun()
         }
         setTheme()
     }
