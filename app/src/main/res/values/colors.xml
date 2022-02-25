@@ -5,7 +5,8 @@
     <color name="primary_light_variant">#003543</color>
     <color name="secondary_light">@color/primary_light</color>
     <color name="primary_dark">#009FBF</color>
-    <color name="secondary_dark">@color/primary_dark</color>
+<!--    <color name="primary_dark">#0091AB</color>-->
+    <color name="secondary_dark">#0091AB</color>
 
     <color name="black">#000000</color>
     <color name="white">#FFFFFFFF</color>

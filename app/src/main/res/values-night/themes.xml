@@ -8,7 +8,7 @@
         <!-- Secondary brand color. -->
         <item name="colorSecondary">@color/secondary_dark</item>
         <item name="colorSecondaryVariant">@color/secondary_dark</item>
-        <item name="colorOnSecondary">@color/black</item>
+        <item name="colorOnSecondary">@color/white</item>
         <item name="colorSurface">@color/dark_grey_lighter</item>
         <item name="colorOnSurface">@color/white</item>
         <item name="colorError">@color/md_red_400</item>
@@ -24,5 +24,7 @@
         <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">false</item>
         <item name="android:navigationBarDividerColor" tools:targetApi="o_mr1">@color/md_grey_700</item>
         <item name="android:windowLayoutInDisplayCutoutMode" tools:targetApi="o_mr1">shortEdges</item>
+
+        <item name="colorControlActivated">@color/md_yellow_700</item>
     </style>
 </resources>
