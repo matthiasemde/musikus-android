@@ -45,6 +45,14 @@
 
             <View style="@style/about_entry_divider"/>
 
+            <!--       Support     -->
+
+            <TextView
+                android:id="@+id/about_tv_support"
+                style="@style/about_entry"
+                android:text="@string/donations_title" />
+
+            <View style="@style/about_entry_divider"/>
 
             <!--       Help     -->
 
@@ -52,15 +60,6 @@
                 android:id="@+id/about_tv_help"
                 android:text="@string/help_title"
                 style="@style/about_entry"/>
-
-            <View style="@style/about_entry_divider"/>
-
-            <!--       Support     -->
-
-            <TextView
-                android:id="@+id/about_tv_support"
-                style="@style/about_entry"
-                android:text="@string/donations_title" />
 
             <View style="@style/about_entry_divider"/>
 

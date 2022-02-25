@@ -27,6 +27,7 @@
 
         <TextView
             android:id="@+id/help_tips_title"
+            android:layout_marginTop="16dp"
             android:text="@string/help_tips_title"
             style="@style/heading_about_pages"/>
 

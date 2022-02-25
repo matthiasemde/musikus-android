@@ -236,5 +236,6 @@
     <string name="development_text">Matthias Emde\nMichael Prommersberger</string>
     <string name="about_appicon_title">App Icon</string>
     <string name="about_appicon_text">Alejandra Contreras Westermeyer</string>
+    <string name="url_donate">https://ko-fi.com/practicetime</string>
 
 </resources>
