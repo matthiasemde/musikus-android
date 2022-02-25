@@ -18,6 +18,13 @@ class DonationsActivity : AppCompatActivity(){
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_donations)
 
+        setSupportActionBar(findViewById(R.id.donations_toolbar))
+        supportActionBar?.apply {
+            setDisplayHomeAsUpEnabled(true)
+            setDisplayShowHomeEnabled(true)
+            title = getString(R.string.donations_title)
+        }
+
         val arr = resources.getStringArray(R.array.array_donations_text_bulletlist)
         val ssb = SpannableStringBuilder()
 

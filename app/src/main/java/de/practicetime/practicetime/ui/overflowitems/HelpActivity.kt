@@ -19,6 +19,13 @@ class HelpActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_help)
 
+        setSupportActionBar(findViewById(R.id.help_toolbar))
+        supportActionBar?.apply {
+            setDisplayHomeAsUpEnabled(true)
+            setDisplayShowHomeEnabled(true)
+            title = getString(R.string.help_title)
+        }
+
         findViewById<MaterialButton>(R.id.help_replay_intro).setOnClickListener {
             val i = Intent(this, AppIntroActivity::class.java)
             i.flags = Intent.FLAG_ACTIVITY_NO_HISTORY

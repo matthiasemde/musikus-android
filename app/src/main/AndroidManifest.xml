@@ -20,16 +20,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.PracticeTime">
-        <activity
-            android:name=".ui.intro.AppIntroActivity"
-            android:screenOrientation="portrait"
-            android:exported="false" />
-        <activity
-            android:name=".ui.statistics.GoalStatsActivity"
-            android:exported="false" />
-        <activity
-            android:name=".ui.statistics.SessionStatsActivity"
-            android:exported="false" />
+
 
         <service
             android:name=".services.SessionForegroundService"
@@ -42,6 +33,16 @@
             android:foregroundServiceType="microphone" />
 
         <activity
+            android:name=".ui.intro.AppIntroActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".ui.statistics.GoalStatsActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.statistics.SessionStatsActivity"
+            android:exported="false" />
+        <activity
             android:name=".ui.goals.ArchivedGoalsActivity"
             android:exported="false"
             android:parentActivityName=".ui.MainActivity" />
@@ -50,14 +51,6 @@
             android:exported="false"
             android:parentActivityName=".ui.MainActivity"
             android:windowSoftInputMode="adjustNothing" />
-        <activity
-            android:name=".ui.overflowitems.DonationsActivity"
-            android:exported="false"
-            android:parentActivityName=".ui.MainActivity" />
-        <activity
-            android:name=".ui.overflowitems.HelpActivity"
-            android:exported="false"
-            android:parentActivityName=".ui.MainActivity" />
         <activity
             android:name=".ui.sessionlist.FullscreenSessionActivity"
             android:exported="false"
@@ -79,6 +72,26 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".ui.overflowitems.AboutActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.MainActivity" />
+        <activity
+            android:name=".ui.overflowitems.DonationsActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.overflowitems.AboutActivity" />
+        <activity
+            android:name=".ui.overflowitems.HelpActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.overflowitems.AboutActivity" />
+        <activity
+            android:name=".ui.overflowitems.LegalActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.overflowitems.AboutActivity" />
+        <activity
+            android:name=".ui.overflowitems.AboutAppActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.overflowitems.AboutActivity"  />
     </application>
 
 </manifest>

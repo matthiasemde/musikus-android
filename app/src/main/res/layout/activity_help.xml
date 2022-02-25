@@ -3,51 +3,61 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:padding="32dp">
+    android:layout_height="match_parent">
 
-    <TextView
-        android:id="@+id/help_title"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/help_title"
-        android:textSize="34sp"
-        app:layout_constraintBottom_toTopOf="@+id/help_tips_title"
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/help_toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="?attr/colorSurface"
+        android:elevation="4dp"
+        android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"/>
+        app:layout_constraintTop_toTopOf="parent"
+        app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
 
-    <TextView
-        android:id="@+id/help_tips_title"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/help_tips_title"
-        android:textSize="22sp"
-        android:layout_marginTop="32dp"
-        app:layout_constraintBottom_toTopOf="@+id/help_tips_text"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/help_title" />
 
-    <TextView
-        android:id="@+id/help_tips_text"
-        android:layout_width="337dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="32dp"
-        android:lineSpacingMultiplier="1.5"
-        tools:text="Help text set here"
-        android:textSize="16sp"
-        app:layout_constraintBottom_toTopOf="@+id/help_replay_intro"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/help_tips_title" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:orientation="vertical"
+        app:layout_constraintTop_toBottomOf="@+id/help_toolbar"
+        android:padding="32dp">
+
+        <TextView
+            android:id="@+id/help_tips_title"
+            android:text="@string/help_tips_title"
+            style="@style/heading_about_pages"/>
+
+        <TextView
+            android:id="@+id/help_tips_text"
+            tools:text="Help text set here"
+            android:layout_width="match_parent"
+            style="@style/text_about_pages" />
+
+        <View
+            android:id="@+id/divider"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="32dp"
+            android:background="?android:attr/listDivider"
+            android:backgroundTint="?attr/colorOnSurfaceLowerContrast"/>
+
+        <TextView
+            style="@style/heading_about_pages"
+            android:text="@string/help_tutorial_title"/>
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/help_replay_intro"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
         android:layout_width="wrap_content"
-        android:layout_marginTop="32dp"
+        android:layout_marginTop="16dp"
         android:layout_height="wrap_content"
-        android:background="@drawable/background_bottom_btn"
         android:text="@string/help_replay_intro"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/help_tips_text" />
+        android:layout_marginBottom="32dp"/>
+
+    </LinearLayout>
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

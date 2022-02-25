@@ -8,8 +8,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.DrawableCompat
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
-import de.practicetime.practicetime.ui.overflowitems.DonationsActivity
-import de.practicetime.practicetime.ui.overflowitems.HelpActivity
+import de.practicetime.practicetime.ui.overflowitems.AboutActivity
 
 fun setCommonToolbar(
     context: Activity,
@@ -42,11 +41,8 @@ fun setCommonToolbar(
                         PracticeTime.PREFERENCES_KEY_THEME,
                         AppCompatDelegate.MODE_NIGHT_NO).apply()
                 }
-                R.id.commonToolbarDonations -> {
-                    context.startActivity(Intent(context, DonationsActivity::class.java))
-                }
-                R.id.commonToolbarHelp -> {
-                    context.startActivity(Intent(context, HelpActivity::class.java))
+                R.id.commonToolbarInfo -> {
+                    context.startActivity(Intent(context, AboutActivity::class.java))
                 }
                 else -> uncommonItemHandler(it.itemId)
             }

@@ -210,6 +210,7 @@
 
     <string name="donations_title">Support us!</string>
     <string name="donations_text">If you are enjoying the app and would like to support us, we would be very thankful for a small donation.\n\nThis will help us in developing awesome new features like:</string>
+    <string name="app_info">App info</string>
     <string-array name="array_donations_text_bulletlist">
         <item>Sharable sessions</item>
         <item>Integrated tuner</item>
@@ -219,5 +220,21 @@
 
     <string name="recorder_permissions_toast">You have denied necessary permissions for the recorder. To\u00A0enable\u00A0go\u00A0to\u00A0Settings\u00A0>\u00A0Permissions.</string>
 
+    <string name="legal_title">Legal Info</string>
+    <string name="legal_project_hint">This project has been financed by the German music promotion program “Neustart Kultur“ by the GVL (Gesellschaft zur Verwertung von Leistungsschutzrechten mbH)</string>
+    <string name="publisher">Publisher</string>
+    <string name="legal_text">Javier Carbone (Freelance)\nJakob Felder Weg 36\n55128, Mainz, Germany\npracticetimeapp@gmail.com</string>
+    <string name="privacy_policy_title">Privacy policy</string>
+    <string name="privacy_policy">Practice Time! does not collect, share or store any personal Data.\n\nExceptions: When getting in contact with us through E-mail, we will remove your Personal Information from our records within 30 days. This information will not be shared.</string>
+    <string name="help_tutorial_title">Tutorial</string>
+    <string name="licences_title">Open source licences</string>
+    <string name="donations_button_text">Donate</string>
+    <string name="about_app_title">About the app</string>
+    <string name="concept_title">Concept</string>
+    <string name="concept_text">Javier Carbone</string>
+    <string name="development_title">Design &amp; Development</string>
+    <string name="development_text">Matthias Emde\nMichael Prommersberger</string>
+    <string name="about_appicon_title">App Icon</string>
+    <string name="about_appicon_text">Alejandra Contreras Westermeyer</string>
 
 </resources>
