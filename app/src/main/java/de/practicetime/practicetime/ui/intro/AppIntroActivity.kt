@@ -2,9 +2,11 @@ package de.practicetime.practicetime.ui.intro
 
 import android.content.Context
 import android.os.Bundle
+import androidx.annotation.ColorRes
 import androidx.fragment.app.Fragment
 import com.github.appintro.AppIntro
 import com.github.appintro.AppIntroFragment
+import com.github.appintro.SlideBackgroundColorHolder
 import de.practicetime.practicetime.BuildConfig
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
@@ -37,12 +39,24 @@ class AppIntroActivity : AppIntro() {
 
         // Call addSlide passing your Fragments.
         // You can use AppIntroFragment to use a pre-built fragment
-        addSlide(AppIntroFragment.createInstance(
-            title = getString(R.string.intro_text_welcome_title),
-            description = getString(R.string.intro_text_welcome),
-            backgroundColorRes = R.color.primary_light,
-            imageDrawable = R.drawable.ic_launcher_foreground_large
-        ))
+        class WelcomeSlide : Fragment(R.layout.fragment_intro_welcome), SlideBackgroundColorHolder {
+            override val defaultBackgroundColor = 0
+            override val defaultBackgroundColorRes = R.color.primary_light
+
+            override fun setBackgroundColor(backgroundColor: Int) {
+                requireView().setBackgroundColor(backgroundColor)
+            }
+        }
+
+        addSlide(WelcomeSlide())
+
+
+//        addSlide(AppIntroFragment.createInstance(
+//            title = getString(R.string.intro_text_welcome_title),
+//            description = getString(R.string.intro_text_welcome),
+//            backgroundColorRes = R.color.primary_light,
+//            imageDrawable = R.drawable.ic_launcher_foreground_large
+//        ))
 
         // Library
         val lBundle = Bundle()
