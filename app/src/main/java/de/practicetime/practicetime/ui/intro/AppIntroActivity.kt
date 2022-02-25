@@ -2,10 +2,8 @@ package de.practicetime.practicetime.ui.intro
 
 import android.content.Context
 import android.os.Bundle
-import androidx.annotation.ColorRes
 import androidx.fragment.app.Fragment
 import com.github.appintro.AppIntro
-import com.github.appintro.AppIntroFragment
 import com.github.appintro.SlideBackgroundColorHolder
 import de.practicetime.practicetime.BuildConfig
 import de.practicetime.practicetime.PracticeTime
@@ -49,14 +47,6 @@ class AppIntroActivity : AppIntro() {
         }
 
         addSlide(WelcomeSlide())
-
-
-//        addSlide(AppIntroFragment.createInstance(
-//            title = getString(R.string.intro_text_welcome_title),
-//            description = getString(R.string.intro_text_welcome),
-//            backgroundColorRes = R.color.primary_light,
-//            imageDrawable = R.drawable.ic_launcher_foreground_large
-//        ))
 
         // Library
         val lBundle = Bundle()

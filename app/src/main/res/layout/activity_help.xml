@@ -51,7 +51,7 @@
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/help_replay_intro"
-        style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
+        android:background="@drawable/background_bottom_btn"
         android:layout_width="wrap_content"
         android:layout_marginTop="16dp"
         android:layout_height="wrap_content"

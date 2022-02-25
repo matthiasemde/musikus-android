@@ -31,7 +31,7 @@ class AboutActivity : AppCompatActivity() {
         }
 
         findViewById<TextView>(R.id.about_tv_licences).setOnClickListener {
-            // TODO
+            startActivity(Intent(this, LicenseActivity::class.java))
         }
 
         findViewById<TextView>(R.id.about_appinfo).setOnClickListener {

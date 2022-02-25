@@ -21,7 +21,6 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.PracticeTime">
 
-
         <service
             android:name=".services.SessionForegroundService"
             android:enabled="true"
@@ -91,7 +90,11 @@
         <activity
             android:name=".ui.overflowitems.AboutAppActivity"
             android:exported="false"
-            android:parentActivityName=".ui.overflowitems.AboutActivity"  />
+            android:parentActivityName=".ui.overflowitems.AboutActivity" />
+        <activity
+            android:name=".ui.overflowitems.LicenseActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.overflowitems.AboutActivity" />
     </application>
 
 </manifest>
