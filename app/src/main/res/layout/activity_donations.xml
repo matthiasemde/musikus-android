@@ -17,41 +17,54 @@
         app:layout_constraintTop_toTopOf="parent"
         app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
 
-    <LinearLayout
-        app:layout_constraintTop_toBottomOf="@id/donations_toolbar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="32dp">
-
-        <ImageView
-            android:id="@+id/imageView2"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/ic_launcher_foreground"
-            app:tint="?attr/colorPrimary"
-            android:layout_gravity="center"/>
-
-        <TextView
-            android:id="@+id/donations_text"
+        <ScrollView
+            android:id="@+id/scrollview"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:lineSpacingMultiplier="1.5"
-            android:layout_marginTop="32dp"
-            android:text="@string/donations_text"
-            android:textColor="?attr/colorOnSurface"
-            android:textSize="16sp" />
+            android:layout_height="0dp"
+            android:clipToPadding="false"
+            android:scrollbarStyle="outsideOverlay"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/donations_toolbar">
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/donate_btn"
-            android:layout_width="match_parent"
-            android:layout_marginTop="32dp"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:background="@drawable/background_bottom_btn"
-            android:text="@string/donations_button_text"
-            android:layout_marginBottom="32dp"/>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
 
-    </LinearLayout>
+
+            <ImageView
+                android:id="@+id/appbanner"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:adjustViewBounds="true"
+                android:src="@drawable/app_banner"
+                android:layout_gravity="center"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="32dp" >
+
+                <TextView
+                    android:id="@+id/donations_text"
+                    style="@style/text_about_pages"
+                    android:text="@string/donations_text" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/donate_btn"
+                    android:layout_width="match_parent"
+                    android:layout_marginTop="32dp"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:background="@drawable/background_bottom_btn"
+                    android:text="@string/donations_button_text"
+                    android:layout_marginBottom="32dp"/>
+
+            </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
