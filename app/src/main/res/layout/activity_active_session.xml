@@ -299,18 +299,22 @@
 
 
     <androidx.coordinatorlayout.widget.CoordinatorLayout
+        android:id="@+id/active_session_bottom_sheet_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_gravity="bottom"
         android:layout_marginBottom="56dp"
         android:animateLayoutChanges="true"
+        android:visibility="invisible"
         tools:visibility="visible">
 
-        <include layout="@layout/bottom_sheet_dialog_metronome"
-            tools:visibility="gone"/>
+        <include
+            layout="@layout/bottom_sheet_dialog_metronome"
+            tools:visibility="gone" />
 
-        <include layout="@layout/bottom_sheet_dialog_record"
-            tools:visibility="gone"/>
+        <include
+            layout="@layout/bottom_sheet_dialog_record"
+            tools:visibility="gone" />
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
 

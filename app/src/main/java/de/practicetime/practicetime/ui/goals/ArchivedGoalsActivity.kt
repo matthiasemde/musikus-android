@@ -29,8 +29,6 @@ class ArchivedGoalsActivity : AppCompatActivity() {
     private lateinit var archivedGoalsAdapter: ArchivedGoalsAdapter
     private val adapterData = ArrayList<GoalInstanceWithDescriptionWithCategories>()
 
-    private lateinit var confirmationDialog: AlertDialog
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_archived_goals)

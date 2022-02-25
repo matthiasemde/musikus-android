@@ -16,9 +16,11 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.*
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.content.ContextCompat
 import androidx.core.widget.NestedScrollView
 import androidx.lifecycle.lifecycleScope
@@ -43,6 +45,7 @@ import de.practicetime.practicetime.ui.goals.updateGoals
 import de.practicetime.practicetime.ui.library.CategoryAdapter
 import de.practicetime.practicetime.ui.library.CategoryDialog
 import de.practicetime.practicetime.utils.TIME_FORMAT_HMS_DIGITAL
+import de.practicetime.practicetime.utils.getCurrTimestamp
 import de.practicetime.practicetime.utils.getDurationString
 import kotlinx.coroutines.launch
 import java.io.File
@@ -51,7 +54,6 @@ import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.math.abs
 import kotlin.math.round
-
 
 class ActiveSessionActivity : AppCompatActivity() {
 
@@ -164,6 +166,11 @@ class ActiveSessionActivity : AppCompatActivity() {
         quote = PracticeTime.getRandomQuote(this)
         findViewById<TextView>(R.id.tv_overlay_pause).text = quote
         findViewById<TextView>(R.id.tv_quote).text = quote
+    }
+
+    override fun onRestart() {
+        super.onRestart()
+        updateRecordingsList()
     }
 
     private fun initCategoryList() {
@@ -379,6 +386,7 @@ class ActiveSessionActivity : AppCompatActivity() {
         metronomeBottomSheetBehaviour.state = BottomSheetBehavior.STATE_HIDDEN
 
         findViewById<MaterialButton>(R.id.bottom_metronome).setOnClickListener {
+            findViewById<CoordinatorLayout>(R.id.active_session_bottom_sheet_container).visibility = View.VISIBLE
             if (metronomeBottomSheetBehaviour.state == BottomSheetBehavior.STATE_HIDDEN) {
                 metronomeBottomSheetBehaviour.state = BottomSheetBehavior.STATE_EXPANDED
                 recordingBottomSheetBehaviour.state = BottomSheetBehavior.STATE_HIDDEN
@@ -446,6 +454,99 @@ class ActiveSessionActivity : AppCompatActivity() {
     private val recordingList = mutableListOf<Recording>()
     private val recordingListAdapter = RecordingListAdapter(recordingList)
 
+    private val recordingPermissions =
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { granted ->
+            if(granted.all { it.value }) {
+                updateRecordingsList()
+                recordingBottomSheetBehaviour.state = BottomSheetBehavior.STATE_HALF_EXPANDED
+            } else {
+                Toast.makeText(this, R.string.recorder_permissions_toast, Toast.LENGTH_LONG).show()
+            }
+        }
+
+    private fun requestRecorderPermissions(): Boolean {
+        val permissions = arrayListOf<String>()
+
+        if(checkSelfPermission(Manifest.permission.RECORD_AUDIO)
+                != PackageManager.PERMISSION_GRANTED) {
+            permissions.add(Manifest.permission.RECORD_AUDIO)
+        }
+        if(Build.VERSION.SDK_INT < Build.VERSION_CODES.Q &&
+            checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED) {
+            permissions.add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+            permissions.add(Manifest.permission.READ_EXTERNAL_STORAGE)
+        }
+
+        recordingPermissions.launch(permissions.toTypedArray())
+        return permissions.isEmpty()
+    }
+
+    private fun updateRecordingsList() {
+        if(Build.VERSION.SDK_INT < Build.VERSION_CODES.Q &&
+            checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE)
+            != PackageManager.PERMISSION_GRANTED) return
+
+        // load recordings from recordings directory
+        val collection =
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                MediaStore.Audio.Media.getContentUri(
+                    MediaStore.VOLUME_EXTERNAL
+                )
+            } else {
+                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+            }
+
+        val projection = arrayOf(
+            MediaStore.Audio.Media._ID,
+            MediaStore.Audio.Media.DISPLAY_NAME,
+            MediaStore.Audio.Media.DURATION,
+        )
+
+        val selection = "${MediaStore.Audio.Media.ALBUM} = 'Practice Time'"
+
+        val sortOrder = "${MediaStore.Audio.Media.DATE_ADDED} DESC"
+
+        val oldRecordingList = recordingList.toList()
+        recordingList.clear()
+
+        contentResolver.query(
+            collection,
+            projection,
+            selection,
+            null,
+            sortOrder
+        )?.use { cursor ->
+            val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media._ID)
+            val displayNameColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DISPLAY_NAME)
+            val durationColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION)
+
+            while(cursor.moveToNext()) {
+                val id = cursor.getLong(idColumn)
+                val displayName = cursor.getString(displayNameColumn)
+                val duration = cursor.getString(durationColumn) as String?
+                val contentUri = ContentUris.withAppendedId(
+                    MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                    id
+                )
+                recordingList.add(Recording(id, displayName, duration ?: "0", contentUri))
+            }
+        }
+
+        // find all removed recordings
+        oldRecordingList.forEachIndexed { pos, recording ->
+            if(!recordingList.contains(recording)) {
+                recordingListAdapter.notifyItemRemoved(pos)
+            }
+        }
+        // find all newly inserted recordings
+        recordingList.forEachIndexed { pos, newRecording ->
+            if(!oldRecordingList.contains(newRecording)) {
+                recordingListAdapter.notifyItemInserted(pos)
+            }
+        }
+    }
+
     private val updateRecordTimeReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             intent?.extras?.getString("DURATION")?.toInt()?.also {
@@ -484,13 +585,13 @@ class ActiveSessionActivity : AppCompatActivity() {
 
                 cursor.moveToNext()
                 val id = cursor.getLong(idColumn)
-                val duration = cursor.getString(durationColumn)
+                val duration = cursor.getString(durationColumn) as String?
                 val contentUri = ContentUris.withAppendedId(
                     MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
                     id
                 )
                 RecorderService.recordingName?.let {
-                    recordingList.add(0, Recording(id, it, duration, contentUri))
+                    recordingList.add(0, Recording(id, it, duration ?: "0", contentUri))
                 }
                 recordingListAdapter.notifyItemInserted(0)
             }
@@ -561,33 +662,37 @@ class ActiveSessionActivity : AppCompatActivity() {
             }, 1000L)
 
             if(!RecorderService.recording) {
-                if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-                    requestPermissions(Array(1) { Manifest.permission.RECORD_AUDIO }, 69)
-                } else {
-
+                if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
                     val displayName = (if(mService.sectionBuffer.isNotEmpty()) mService.currCategoryName
                     else "PracticeTime") + recordingNameFormat.format(Date().time)
 
                     val contentValues = ContentValues().apply {
                         put(MediaStore.Audio.Media.DISPLAY_NAME, displayName)
+                        put(MediaStore.Audio.Media.TITLE, displayName)
                         put(MediaStore.Audio.Media.MIME_TYPE, "audio/mp4")
                         put(MediaStore.Audio.Media.ALBUM, "Practice Time")
-                        put(MediaStore.Audio.Media.ARTIST, "Practice Time")
+                        put(MediaStore.Audio.Media.DATE_ADDED, getCurrTimestamp())
+                        put(MediaStore.Audio.Media.IS_MUSIC, 1)
                     }
 
                     try {
                         val newRecordingUri = if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                            contentValues.put(MediaStore.MediaColumns.RELATIVE_PATH, "Music/Practice Time/")
+                            contentValues.put(MediaStore.MediaColumns.RELATIVE_PATH, "Music/Practice Time")
                             contentValues.put(MediaStore.MediaColumns.IS_PENDING, true)
+                            when {
+                                Build.VERSION.SDK_INT >= Build.VERSION_CODES.R -> {
+                                    contentValues.put(MediaStore.Audio.Media.GENRE, "Recording")
+                                }
+                                Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
+                                    contentValues.put(MediaStore.Audio.Media.IS_RECORDING, 1)
+                                }
+                            }
 
                             MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
 
                         } else {
                             if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                                != PackageManager.PERMISSION_GRANTED) {
-                                requestPermissions(arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE), 1)
-                                return@setOnClickListener
-                            }
+                                != PackageManager.PERMISSION_GRANTED) return@setOnClickListener
                             val ptDir = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC).toString() + "/Practice Time")
                             if (!ptDir.exists()) {
                                 ptDir.mkdirs()
@@ -632,61 +737,19 @@ class ActiveSessionActivity : AppCompatActivity() {
             }
         }
 
-        // load recordings from recordings directory
-        val collection =
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                MediaStore.Audio.Media.getContentUri(
-                    MediaStore.VOLUME_EXTERNAL
-                )
-            } else {
-                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
-            }
-
-        val projection = arrayOf(
-            MediaStore.Audio.Media._ID,
-            MediaStore.Audio.Media.DISPLAY_NAME,
-            MediaStore.Audio.Media.DURATION,
-        )
-
-        val selection = "${MediaStore.Audio.Media.ALBUM} = 'Practice Time'"
-
-        val sortOrder = "${MediaStore.Audio.Media.DATE_ADDED} DESC"
-
-        contentResolver.query(
-            collection,
-            projection,
-            selection,
-            null,
-            sortOrder
-        )?.use { cursor ->
-            val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media._ID)
-            val displayNameColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DISPLAY_NAME)
-            val durationColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION)
-
-            while(cursor.moveToNext()) {
-                val id = cursor.getLong(idColumn)
-                val displayName = cursor.getString(displayNameColumn)
-                val duration = cursor.getString(durationColumn)
-                val contentUri = ContentUris.withAppendedId(
-                    MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-                    id
-                )
-                recordingList.add(Recording(id, displayName, duration, contentUri))
-            }
-        }
-
         findViewById<RecyclerView>(R.id.record_sheet_list).apply {
             layoutManager = LinearLayoutManager(this@ActiveSessionActivity)
             adapter = recordingListAdapter
         }
 
-        recordingListAdapter.notifyItemRangeInserted(0, recordingList.size)
-
         findViewById<MaterialButton>(R.id.bottom_record).setOnClickListener {
+            findViewById<CoordinatorLayout>(R.id.active_session_bottom_sheet_container).visibility = View.VISIBLE
             if(recordingBottomSheetBehaviour.state == BottomSheetBehavior.STATE_HIDDEN) {
-                recordingBottomSheetBehaviour.halfExpandedRatio = 0.34F
-                recordingBottomSheetBehaviour.state = BottomSheetBehavior.STATE_HALF_EXPANDED
                 metronomeBottomSheetBehaviour.state = BottomSheetBehavior.STATE_HIDDEN
+                if(requestRecorderPermissions()) {
+                    recordingBottomSheetBehaviour.halfExpandedRatio = 0.34F
+                    recordingBottomSheetBehaviour.state = BottomSheetBehavior.STATE_HALF_EXPANDED
+                }
             } else {
                 recordingBottomSheetBehaviour.state = BottomSheetBehavior.STATE_HIDDEN
                 recordingBottomSheet.scrollY = 0

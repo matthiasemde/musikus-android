@@ -217,6 +217,7 @@
         <item>And many more!</item>
     </string-array>
 
+    <string name="recorder_permissions_toast">You have denied necessary permissions for the recorder. To\u00A0enable\u00A0go\u00A0to\u00A0Settings\u00A0>\u00A0Permissions.</string>
 
 
 </resources>
