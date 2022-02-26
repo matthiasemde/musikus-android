@@ -106,7 +106,9 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
 
         lifecycleScope.launch {
             // fetch all sessions from the database
-            PracticeTime.sessionDao.getAllWithSectionsWithCategories().also { sessions ->
+            PracticeTime.sessionDao.getAllWithSectionsWithCategories().sortedBy {
+                it.sections.firstOrNull()?.section?.timestamp ?: 0L
+            }.also { sessions ->
                 if (sessions.isEmpty()) {
                     showHint()
                     return@also
