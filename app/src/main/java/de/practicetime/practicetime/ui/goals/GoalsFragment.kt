@@ -127,7 +127,9 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
                 goalAdapterData.add(index, goalInstanceWithDescriptionWithCategories)
                 goalAdapter.notifyItemInserted(index)
             }
-            if (goalAdapterData.isEmpty()) showHint()
+        }
+        if (goalAdapterData.isEmpty()) {
+            showHint()
         }
     }
 
