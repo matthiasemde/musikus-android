@@ -111,7 +111,7 @@
     <string name="progressUpdateTitle">Goal progress</string>
     <string name="goalsFragmentHint">Create some goals to get started on tracking your progress.</string>
     <string name="libraryHint">Create library items for any piece, scale or other exercise you want to practice.</string>
-    <string name="sessionsHint">Press the \"+\" button to start your first Practice Session.</string>
+    <string name="sessionsHint">Press the \"+\" button to start your first practice session.</string>
     <string name="statisticsHint">Complete a session to see your statistics here.</string>
     <string name="new_session_fab">Start a new session</string>
     <string name="running_session_fab">Return to running session</string>
