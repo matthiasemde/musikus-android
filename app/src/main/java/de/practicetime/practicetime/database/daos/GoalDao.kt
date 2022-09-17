@@ -226,7 +226,7 @@ abstract class GoalDescriptionDao : BaseDao<GoalDescription>(
             goalDescriptions.filter {d -> checkArchived || !d.archived}.forEach { description ->
                 when (description.progressType) {
                     GoalProgressType.TIME -> goalProgress[description.id] =
-                        goalProgress[description.id] ?: 0 + (section.duration ?: 0)
+                        goalProgress[description.id] ?: (0 + (section.duration ?: 0))
                     GoalProgressType.SESSION_COUNT -> goalProgress[description.id] = 1
                 }
             }

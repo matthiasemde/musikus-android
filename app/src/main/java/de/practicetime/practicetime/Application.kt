@@ -58,7 +58,7 @@ class PracticeTime : Application() {
         }
 
         fun dp(context: Context, dp: Int): Float {
-            return context.resources.displayMetrics.density * dp;
+            return context.resources.displayMetrics.density * dp
         }
 
     }

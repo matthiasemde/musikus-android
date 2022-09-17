@@ -9,7 +9,6 @@ package de.practicetime.practicetime.ui.goals
 import android.app.Activity
 import android.content.Context
 import android.content.res.ColorStateList
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -22,12 +21,9 @@ import com.google.android.material.button.MaterialButton
 import de.practicetime.practicetime.R
 import de.practicetime.practicetime.components.NumberInput
 import de.practicetime.practicetime.database.entities.*
-import de.practicetime.practicetime.utils.secondsDurationToHoursMinSec
-import java.util.*
-import kotlin.collections.ArrayList
 
 class GoalDialog(
-    private val context: Activity,
+    context: Activity,
     private val categories: List<Category>,
     submitHandler: (
         newGoalDescriptionWithCategories: GoalDescriptionWithCategories,
@@ -222,7 +218,7 @@ class GoalDialog(
         resetDialog()
 
         alertDialog.show()
-        alertDialog.also { _ ->
+        alertDialog.also {
             goalDialogTargetHoursView.addTextChangedListener {
                 selectedTarget = (goalDialogTargetHoursView.value() ?: 0) * 3600 +
                 (goalDialogTargetMinutesView.value() ?: 0) * 60

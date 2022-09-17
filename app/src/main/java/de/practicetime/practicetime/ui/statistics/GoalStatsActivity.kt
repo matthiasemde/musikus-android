@@ -508,16 +508,14 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
 
         val t = getGoalInstance(lastGoalInstShownIndex).target.toFloat()
 
-        if (e.x == barChart.data.getDataSetByIndex(0).xMax &&
-                e.y > 0.8 * t)     // only change if value would actually cover limitline label
-            selectedBar = SelectedBar.SELECTED_BAR_RIGHT
-
+        selectedBar = if (e.x == barChart.data.getDataSetByIndex(0).xMax &&
+            e.y > 0.8 * t)     // only change if value would actually cover limitline label
+            SelectedBar.SELECTED_BAR_RIGHT
         else if (e.x == barChart.data.getDataSetByIndex(0).xMin &&
             e.y > 0.8 * t)     // only change if value would actually cover limitline label
-            selectedBar = SelectedBar.SELECTED_BAR_LEFT
-
+            SelectedBar.SELECTED_BAR_LEFT
         else
-            selectedBar = SelectedBar.SELECTED_BAR_NONE
+            SelectedBar.SELECTED_BAR_NONE
 
         barChart.axisRight.apply {
             removeAllLimitLines()

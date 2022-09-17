@@ -531,7 +531,7 @@ class ActiveSessionActivity : AppCompatActivity() {
             while(cursor.moveToNext()) {
                 val id = cursor.getLong(idColumn)
                 val displayName = cursor.getString(displayNameColumn)
-                val duration = cursor.getString(durationColumn) as String?
+                val duration = cursor.getString(durationColumn)
                 val contentUri = ContentUris.withAppendedId(
                     MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
                     id
@@ -592,7 +592,7 @@ class ActiveSessionActivity : AppCompatActivity() {
 
                 cursor.moveToNext()
                 val id = cursor.getLong(idColumn)
-                val duration = cursor.getString(durationColumn) as String?
+                val duration = cursor.getString(durationColumn)
                 val contentUri = ContentUris.withAppendedId(
                     MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
                     id
@@ -826,8 +826,9 @@ class ActiveSessionActivity : AppCompatActivity() {
             // when the session start, also update the goals
             lifecycleScope.launch { updateGoals() }
         } else if (mService.sectionBuffer.last().let {         // when session is running, don't allow starting if...
-            (categoryId == it.first.categoryId) ||           // ... in the same category
-            (it.first.duration ?: 0 - it.second < 1)           // ... section running for less than 1sec
+                (categoryId == it.first.categoryId) ||           // ... in the same category
+                        ((it.first.duration
+                            ?: (0 - it.second)) < 1)           // ... section running for less than 1sec
         }) {
             return  // ignore press then
         }

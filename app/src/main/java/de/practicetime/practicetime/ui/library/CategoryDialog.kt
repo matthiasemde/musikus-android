@@ -8,7 +8,6 @@ package de.practicetime.practicetime.ui.library
 
 import android.app.Activity
 import android.content.res.ColorStateList
-import android.util.Log
 import android.widget.EditText
 import android.widget.RadioButton
 import android.widget.RadioGroup
