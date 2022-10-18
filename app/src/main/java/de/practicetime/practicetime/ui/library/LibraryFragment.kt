@@ -1,5 +1,11 @@
 /*
- * This software is licensed under the MIT license
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ *
+ * Copyright (c) 2022 Matthias Emde
+ *
+ * Parts of this software are licensed under the MIT license
  *
  * Copyright (c) 2022, Javier Carbone, author Matthias Emde
  */
@@ -18,9 +24,10 @@ import android.view.View
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
+import androidx.core.content.ContextCompat
+import androidx.core.graphics.drawable.DrawableCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.appbar.CollapsingToolbarLayout
@@ -31,6 +38,14 @@ import de.practicetime.practicetime.R
 import de.practicetime.practicetime.database.entities.Category
 import de.practicetime.practicetime.shared.setCommonToolbar
 import kotlinx.coroutines.launch
+
+enum class LibrarySortMode {
+    DATE_ADDED,
+    LAST_MODIFIED,
+    NAME,
+    COLOR,
+    CUSTOM
+}
 
 class LibraryFragment : Fragment(R.layout.fragment_library) {
 
@@ -43,6 +58,9 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
 
     private lateinit var libraryToolbar: androidx.appcompat.widget.Toolbar
     private lateinit var libraryCollapsingToolbarLayout: CollapsingToolbarLayout
+
+    private lateinit var sortMode: LibrarySortMode
+    private var sortDirection: Boolean = true
 
     private val selectedCategories = ArrayList<Int>()
 
@@ -64,6 +82,16 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        sortMode = try {
+            LibrarySortMode.valueOf(
+                PracticeTime.prefs.getString(
+                    PracticeTime.PREFERENCES_KEY_LIBRARY_SORT_MODE,
+                    LibrarySortMode.DATE_ADDED.toString()
+                ) ?: LibrarySortMode.DATE_ADDED.toString()
+            )
+        } catch (ex: Exception) {
+            LibrarySortMode.DATE_ADDED
+        }
 
         initCategoryList()
 
@@ -87,6 +115,48 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
         resetToolbar()  // initialize the toolbar with all its listeners
     }
 
+    private fun sortCategoryList(mode: LibrarySortMode) {
+        if(mode == sortMode) {
+            sortDirection = !sortDirection
+        } else {
+            sortDirection = true
+            sortMode = mode
+            when (sortMode) {
+                LibrarySortMode.DATE_ADDED -> activeCategories.sortBy { it.createdAt }
+                LibrarySortMode.NAME -> activeCategories.sortBy { it.name }
+                LibrarySortMode.COLOR -> activeCategories.sortBy { it.colorIndex }
+                LibrarySortMode.LAST_MODIFIED -> activeCategories.sortBy { it.modifiedAt }
+                LibrarySortMode.CUSTOM -> activeCategories.sortBy { it.createdAt } // TODO: Not implemented yet
+            }
+            val itemToSetIcon = when(sortMode) {
+                LibrarySortMode.DATE_ADDED -> R.id.libraryToolbarSortModeDateAdded
+                LibrarySortMode.LAST_MODIFIED -> R.id.libraryToolbarSortModeLastModified
+                LibrarySortMode.NAME -> R.id.libraryToolbarSortModeName
+                LibrarySortMode.COLOR -> R.id.libraryToolbarSortModeColor
+                LibrarySortMode.CUSTOM -> R.id.libraryToolbarSortModeCustom
+            }
+            libraryToolbar.menu.findItem(itemToSetIcon).apply {
+                val iconDrawable = ContextCompat.getDrawable(requireContext(), R.drawable.ic_arrow_drop_down)!!
+                // tint it like this because iconTintList requires API >=26
+                DrawableCompat.setTint(iconDrawable, PracticeTime.getThemeColor(R.attr.colorOnSurfaceLowerContrast, requireContext()))
+                icon = iconDrawable
+            }
+        }
+
+
+
+        if(sortDirection) {
+            activeCategories.reverse()
+        }
+        PracticeTime.prefs.edit().putString(
+            PracticeTime.PREFERENCES_KEY_LIBRARY_SORT_MODE,
+            sortMode.toString()
+        ).apply()
+//        categoryAdapter?.notifyItemRangeRemoved(0, activeCategories.size)
+//        categoryAdapter?.notifyItemRangeInserted(0, activeCategories.size)
+        categoryAdapter?.notifyItemRangeChanged(0, activeCategories.size)
+    }
+
     private fun initCategoryList() {
         categoryAdapter = CategoryAdapter(
             activeCategories,
@@ -99,8 +169,11 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
         // load all active categories from the database and notify the adapter
         lifecycleScope.launch {
             PracticeTime.categoryDao.get(activeOnly = true).let {
-                activeCategories.addAll(it.reversed())
-                categoryAdapter?.notifyItemRangeInserted(0, it.size)
+                // sort categories depending on the current sort mode
+                activeCategories.addAll(it)
+                Log.d("LIBRARY","$sortMode")
+                sortCategoryList(sortMode)
+//                categoryAdapter?.notifyItemRangeInserted(0, it.size) // sortCategoryList() already notifies the adapter
             }
 
             requireActivity().findViewById<RecyclerView>(R.id.libraryCategoryList).apply {
@@ -231,9 +304,14 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
         libraryToolbar.apply {
             menu?.clear()
             setCommonToolbar(requireActivity(), this) {
-//                Place menu item click handler here
-//                when(it) {
-//                }
+                when(it) {
+                    R.id.libraryToolbarSortModeDateAdded -> sortCategoryList(LibrarySortMode.DATE_ADDED)
+                    R.id.libraryToolbarSortModeLastModified -> sortCategoryList(LibrarySortMode.LAST_MODIFIED)
+                    R.id.libraryToolbarSortModeName -> sortCategoryList(LibrarySortMode.NAME)
+                    R.id.libraryToolbarSortModeColor -> sortCategoryList(LibrarySortMode.COLOR)
+                    R.id.libraryToolbarSortModeCustom -> sortCategoryList(LibrarySortMode.CUSTOM)
+                    else -> {}
+                }
             }
             inflateMenu(R.menu.library_toolbar_menu_base)
             navigationIcon = null

@@ -30,13 +30,10 @@ class MainActivity : AppCompatActivity() {
     private lateinit var bottomNavigationView: BottomNavigationView
     private lateinit var handler: Handler
     private lateinit var runnable: Runnable
-    private lateinit var prefs: SharedPreferences
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
-        prefs = getSharedPreferences(getString(R.string.filename_shared_preferences), Context.MODE_PRIVATE)
 
         val navHostFragment =
             supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
@@ -53,7 +50,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun launchAppIntroFirstRun() {
-        if (!prefs.getBoolean(PracticeTime.PREFERENCES_KEY_APPINTRO_DONE, false)) {
+        if (!PracticeTime.prefs.getBoolean(PracticeTime.PREFERENCES_KEY_APPINTRO_DONE, false)) {
             val i = Intent(this, AppIntroActivity::class.java)
             i.flags = Intent.FLAG_ACTIVITY_NO_HISTORY
             startActivity(i)
@@ -64,7 +61,7 @@ class MainActivity : AppCompatActivity() {
         lifecycleScope.launch {
 
             // FIRST RUN routine
-            if (prefs.getBoolean(PracticeTime.PREFERENCES_KEY_FIRSTRUN, true)) {
+            if (PracticeTime.prefs.getBoolean(PracticeTime.PREFERENCES_KEY_FIRSTRUN, true)) {
 
                 // populate the category table on first run
                 listOf(
@@ -81,13 +78,13 @@ class MainActivity : AppCompatActivity() {
                     PracticeTime.categoryDao.insert(it)
                 }
 
-                prefs.edit().putBoolean(PracticeTime.PREFERENCES_KEY_FIRSTRUN, false).apply()
+                PracticeTime.prefs.edit().putBoolean(PracticeTime.PREFERENCES_KEY_FIRSTRUN, false).apply()
             }
         }
     }
 
     private fun setTheme() {
-        val chosenTheme = prefs.getInt(PracticeTime.PREFERENCES_KEY_THEME, AppCompatDelegate.MODE_NIGHT_UNSPECIFIED)
+        val chosenTheme = PracticeTime.prefs.getInt(PracticeTime.PREFERENCES_KEY_THEME, AppCompatDelegate.MODE_NIGHT_UNSPECIFIED)
         AppCompatDelegate.setDefaultNightMode(chosenTheme)
     }
 

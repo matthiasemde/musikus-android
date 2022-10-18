@@ -1,5 +1,11 @@
 /*
- * This software is licensed under the MIT license
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ *
+ * Copyright (c) 2022 Matthias Emde
+ *
+ * Parts of this software are licensed under the MIT license
  *
  * Copyright (c) 2022, Javier Carbone, author Matthias Emde
  * Additions and modifications, author Michael Prommersberger
@@ -9,6 +15,7 @@ package de.practicetime.practicetime
 
 import android.app.Application
 import android.content.Context
+import android.content.SharedPreferences
 import android.util.TypedValue
 import androidx.annotation.AttrRes
 import androidx.annotation.ColorInt
@@ -32,9 +39,14 @@ class PracticeTime : Application() {
 
         var noSessionsYet = true
         var serviceIsRunning = false
+
+        lateinit var prefs: SharedPreferences
+
         const val PREFERENCES_KEY_FIRSTRUN = "firstrun"
         const val PREFERENCES_KEY_THEME = "theme"
         const val PREFERENCES_KEY_APPINTRO_DONE = "appintro_done"
+        const val PREFERENCES_KEY_LIBRARY_SORT_MODE = "library_sort_mode"
+        const val PREFERENCES_KEY_GOALS_SORT_MODE = "goals_sort_mode"
 
         /**
          * Get a color int from a theme attribute.
@@ -65,6 +77,9 @@ class PracticeTime : Application() {
 
     override fun onCreate() {
         super.onCreate()
+
+        prefs = getSharedPreferences(getString(R.string.filename_shared_preferences), Context.MODE_PRIVATE)
+
         openDatabase()
     }
 
