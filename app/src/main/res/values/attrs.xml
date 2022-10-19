@@ -14,6 +14,7 @@
 <resources>
     <attr name="colorOnSurfaceLowerContrast" format="color" />
     <attr name="colorStaffLines" format="color" />
+    <attr name="backgroundToolbarCollapsed" format="color" />
 
     <declare-styleable name="numberInput">
         <attr name="showLeadingZeroes" format="boolean"/>

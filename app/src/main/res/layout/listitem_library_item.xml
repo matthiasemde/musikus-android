@@ -12,14 +12,14 @@
     android:id="@+id/library_item_card"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:layout_margin="4dp"
     android:foreground="@drawable/foreground_simple_overlay"
     app:cardBackgroundColor="?attr/colorSurface"
-    app:cardCornerRadius="12dp"
-    android:layout_margin="4dp">
+    app:cardCornerRadius="12dp">
 
     <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="50dp"
+        android:layout_height="wrap_content"
         android:layout_margin="8dp">
 
         <LinearLayout
@@ -68,14 +68,14 @@
                 android:layout_weight="1" />
 
             <ImageView
-                android:layout_height="2dp"
                 android:layout_width="match_parent"
+                android:layout_height="2dp"
                 android:background="?attr/colorStaffLines" />
         </LinearLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:orientation="horizontal">
 
             <ImageView
@@ -90,24 +90,26 @@
                 android:layout_height="match_parent"
                 android:layout_marginEnd="8dp"
                 android:background="@drawable/color_rect_cat_indicator"
-                android:backgroundTint="?attr/colorStaffLines"/>
+                android:backgroundTint="?attr/colorStaffLines" />
 
-<!--            <ImageView-->
-<!--                android:layout_width="25dp"-->
-<!--                android:layout_height="match_parent"-->
-<!--                android:layout_marginEnd="12dp"-->
-<!--                android:background="@drawable/ic_treble_clef"-->
-<!--                android:backgroundTint="?attr/colorStaffLines"/>-->
+            <!--            <ImageView-->
+            <!--                android:layout_width="25dp"-->
+            <!--                android:layout_height="match_parent"-->
+            <!--                android:layout_marginEnd="12dp"-->
+            <!--                android:background="@drawable/ic_treble_clef"-->
+            <!--                android:backgroundTint="?attr/colorStaffLines"/>-->
 
             <TextView
                 android:id="@+id/library_item_name"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
+                android:layout_marginTop="12dp"
+                android:layout_marginBottom="12dp"
                 android:layout_weight="1"
+                android:gravity="center_vertical"
                 android:textColor="?attr/colorOnSurfaceLowerContrast"
                 android:textSize="20sp"
                 android:textStyle="italic"
-                android:gravity="center_vertical"
                 app:lineHeight="25dp"
                 tools:text="Category Name" />
 

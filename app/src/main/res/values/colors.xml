@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
 
     <color name="primary_light">#007792</color>
     <color name="primary_light_variant">#003543</color>
@@ -7,6 +7,11 @@
     <color name="primary_dark">#009FBF</color>
 <!--    <color name="primary_dark">#0091AB</color>-->
     <color name="secondary_dark">#0091AB</color>
+
+    <color name="primary_very_dark">#212526</color>
+
+    <color name="abc_decor_view_status_guard_light" tools:override="true">@android:color/transparent</color>
+    <color name="abc_decor_view_status_guard" tools:override="true">@android:color/transparent</color>
 
     <color name="black">#000000</color>
     <color name="white">#FFFFFFFF</color>

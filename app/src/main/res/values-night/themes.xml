@@ -12,15 +12,23 @@
 -->
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
-    <style name="Theme.PracticeTime" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+    <style name="Theme.PracticeTime" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Primary brand color. -->
         <item name="colorPrimary">@color/primary_dark</item>
-        <item name="colorPrimaryVariant">@color/primary_dark</item>
+        <item name="colorPrimaryContainer">@color/primary_dark</item>
+        <item name="colorPrimaryVariant">@color/primary_dark</item> <!-- DEPRECATED -->
         <item name="colorOnPrimary">@color/white</item>
+        <item name="colorOnPrimaryContainer">@color/white</item>
         <!-- Secondary brand color. -->
         <item name="colorSecondary">@color/secondary_dark</item>
+        <item name="colorSecondaryContainer">@color/secondary_dark</item>
         <item name="colorSecondaryVariant">@color/secondary_dark</item>
         <item name="colorOnSecondary">@color/white</item>
+        <item name="colorOnSecondaryContainer">@color/white</item>
+        <!-- Tertiary brand color. -->
+        <item name="colorTertiary">@color/secondary_dark</item>
+        <item name="colorOnTertiary">@color/white</item>
+        <!-- Surface colors. -->
         <item name="colorSurface">@color/dark_grey_lighter</item>
         <item name="colorOnSurface">@color/white</item>
         <item name="colorError">@color/md_red_400</item>
@@ -28,9 +36,9 @@
         <item name="android:colorBackground">@color/dark_grey</item>
         <item name="colorOnBackground">@color/white</item>
         <!-- Status bar color. -->
-        <item name="android:statusBarColor" tools:targetApi="l">@color/dark_grey_darker</item>
+        <item name="android:statusBarColor" tools:targetApi="l">@android:color/transparent</item>
         <!-- #404040 = colorSurface + 6dp elevation overlay-->
-        <item name="android:navigationBarColor">#404040</item>
+        <item name="android:navigationBarColor">@color/primary_very_dark</item>
         <!-- Customize your theme here. -->
         <item name="colorOnSurfaceLowerContrast">@color/md_grey_400</item>
         <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">false</item>
@@ -39,5 +47,13 @@
         <item name="colorStaffLines">@color/md_grey_800</item>
 
         <item name="colorControlActivated">@color/md_yellow_700</item>
+
+        <item name="windowActionModeOverlay">true</item>
+        <item name="actionModeStyle">@style/Widget.App.ActionMode</item>
+        <item name="actionModeCloseButtonStyle">@style/actionModeCloseButton</item>
+        <item name="actionBarTheme">@style/ThemeOverlay.MaterialComponents.Dark.ActionBar</item>
+
+        <item name="backgroundToolbarCollapsed">@color/primary_very_dark</item>
+
     </style>
 </resources>
