@@ -6,6 +6,7 @@
 
 package de.practicetime.practicetime.ui.library
 
+import de.practicetime.practicetime.PracticeTime
 import android.app.Activity
 import android.content.res.ColorStateList
 import android.widget.EditText
@@ -105,6 +106,7 @@ class CategoryDialog (
         // which ensures only one color is selected at a time
         categoryColorButtons.forEachIndexed { index, button ->
             button.backgroundTintList = ColorStateList.valueOf(categoryColors[index])
+            button.buttonTintList = ColorStateList.valueOf(PracticeTime.getThemeColor(R.attr.colorOnPrimary, context))
             button.setOnCheckedChangeListener { _, isChecked ->
                 if(isChecked) {
                     selectedColorIndex = index

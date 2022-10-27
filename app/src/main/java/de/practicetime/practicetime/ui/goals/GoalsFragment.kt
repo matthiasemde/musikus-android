@@ -24,6 +24,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.appbar.CollapsingToolbarLayout
+import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
@@ -43,7 +44,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
     private lateinit var addGoalDialog: GoalDialog
     private lateinit var editGoalDialog: EditTimeDialog
 
-    private lateinit var goalsToolbar: androidx.appcompat.widget.Toolbar
+    private lateinit var goalsToolbar: MaterialToolbar
     private lateinit var goalsCollapsingToolbarLayout: CollapsingToolbarLayout
 
     private val selectedGoals = ArrayList<Int>()

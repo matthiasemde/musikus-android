@@ -30,7 +30,7 @@
                 app:title="@string/fullscreen_session_title"
                 app:toolbarId="@+id/fullscreen_session_toolbar">
 
-                <androidx.appcompat.widget.Toolbar
+                <com.google.android.material.appbar.MaterialToolbar
                     android:id="@+id/fullscreen_session_toolbar"
                     style="@style/Toolbar"
                     app:menu="@menu/goals_toolbar_menu_base" />

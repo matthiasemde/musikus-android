@@ -10,6 +10,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
     tools:context=".ui.goals.GoalsFragment">
 
     <com.google.android.material.appbar.AppBarLayout
@@ -22,7 +23,7 @@
             app:title="@string/navigationGoalsTitle"
             app:toolbarId="@+id/goalsToolbar">
 
-            <androidx.appcompat.widget.Toolbar
+            <com.google.android.material.appbar.MaterialToolbar
                 android:id="@+id/goalsToolbar"
                 style="@style/Toolbar"
                 app:menu="@menu/goals_toolbar_menu_base" />

@@ -26,49 +26,50 @@
     <style name="CollapsingToolbar" parent="">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:clipToPadding">false</item>
+<!--        <item name="android:clipToPadding">false</item>-->
         <item name="android:paddingBottom">?attr/actionBarSize</item>
         <item name="android:fitsSystemWindows">true</item>
         <item name="collapsedTitleTextAppearance">@style/ToolbarTitleCollapsed</item>
         <item name="expandedTitleTextAppearance">@style/ToolbarTitleExpanded</item>
-<!--        <item name="expandedTitleMarginTop">56dp</item>-->
         <item name="expandedTitleMarginBottom">20dp</item>
         <item name="expandedTitleMarginStart">16dp</item>
-        <item name="layout_scrollFlags">scroll|exitUntilCollapsed|snap</item>
+        <item name="layout_scrollFlags">scroll|exitUntilCollapsed</item>
         <item name="titleCollapseMode">fade</item>
         <item name="contentScrim">?attr/backgroundToolbarCollapsed</item>
         <item name="statusBarScrim">@android:color/transparent</item>
-        <item name="scrimAnimationDuration">200</item>
+<!--        <item name="scrimAnimationDuration">200</item>-->
 <!--        <item name="scrimVisibleHeightTrigger">128dp</item>-->
-        <item name="collapsedTitleGravity">center_horizontal</item>
-        <item name="expandedTitleGravity">start|bottom</item>
+        <item name="collapsedTitleGravity">start</item>
+<!--        <item name="expandedTitleGravity">start|bottom</item>-->
+        <item name="overlapAnchor">false</item>
+        <item name="android:dropDownVerticalOffset">?attr/actionBarSize</item>
     </style>
 
-    <style name="ToolbarTitleCollapsed" parent="@style/TextAppearance.Material3.TitleLarge">
+    <style name="ToolbarTitleCollapsed" parent="">
         <item name="android:textColor">?attr/colorOnSurfaceLowerContrast</item>
     </style>
-    <style name="ToolbarTitleExpanded" parent="@style/TextAppearance.Material3.HeadlineLarge">
-<!--        <item name="android:textColor">?attr/colorOnSurfaceLowerContrast</item>-->
+    <style name="ToolbarTitleExpanded" parent="">
+        <item name="android:textColor">?attr/colorOnSurfaceLowerContrast</item>
     </style>
 
     <style name="Toolbar" parent="">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">?attr/actionBarSize</item>
         <item name="layout_collapseMode">pin</item>
-<!--        <item name="android:fitsSystemWindows">true</item>-->
     </style>
 
-    <style name="Widget.App.ActionMode" parent="Widget.AppCompat.ActionMode">
-        <item name="titleTextStyle">@style/actionModeTitle</item>
+    <style name="ActionMode" parent="">
+        <item name="actionModeCloseButtonStyle">@style/ActionModeCloseButton</item>
+        <item name="titleTextStyle">@style/ActionModeTitle</item>
         <item name="background">?attr/colorSurface</item>
     </style>
 
-    <style name="actionModeCloseButton">
+    <style name="ActionModeCloseButton">
         <item name="android:src">@drawable/ic_nav_back</item>
         <item name="android:tint">?attr/colorOnSurfaceLowerContrast</item>
     </style>
 
-    <style name="actionModeTitle"   parent="">
+    <style name="ActionModeTitle"   parent="">
         <item name="android:textColor">?attr/colorOnSurfaceLowerContrast</item>
         <item name="android:textSize">20sp</item>
     </style>

@@ -11,7 +11,7 @@
     android:layout_height="match_parent"
     tools:context=".ui.overflowitems.AboutAppActivity">
 
-    <androidx.appcompat.widget.Toolbar
+    <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/about_appinfo_toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"

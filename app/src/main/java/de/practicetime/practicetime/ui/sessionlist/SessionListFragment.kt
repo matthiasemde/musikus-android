@@ -21,6 +21,7 @@ import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.appbar.CollapsingToolbarLayout
+import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
@@ -42,7 +43,7 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
     private lateinit var sessionListAdapter: ConcatAdapter
     private val sessionListAdapterData = ArrayList<ArrayList<SessionWithSectionsWithCategories>>()
 
-    private lateinit var sessionListToolbar: androidx.appcompat.widget.Toolbar
+    private lateinit var sessionListToolbar: MaterialToolbar
     private lateinit var sessionListCollapsingToolbarLayout: CollapsingToolbarLayout
 
     private lateinit var deleteSessionDialog: AlertDialog

@@ -11,25 +11,32 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/library_item_card"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="56dp"
     android:layout_margin="4dp"
     android:foreground="@drawable/foreground_simple_overlay"
+    android:animateLayoutChanges="false"
     app:cardBackgroundColor="?attr/colorSurface"
-    app:cardCornerRadius="12dp">
+    app:cardCornerRadius="16dp">
 
     <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="8dp">
+        android:layout_height="match_parent"
+        android:foreground="?android:selectableItemBackground"
+        android:layout_margin="0dp">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="vertical">
 
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="2" />
+
             <ImageView
                 android:layout_width="match_parent"
-                android:layout_height="2dp"
+                android:layout_height="1dp"
                 android:background="?attr/colorStaffLines" />
 
             <Space
@@ -39,7 +46,7 @@
 
             <ImageView
                 android:layout_width="match_parent"
-                android:layout_height="2dp"
+                android:layout_height="1dp"
                 android:background="?attr/colorStaffLines" />
 
             <Space
@@ -49,7 +56,7 @@
 
             <ImageView
                 android:layout_width="match_parent"
-                android:layout_height="2dp"
+                android:layout_height="1dp"
                 android:background="?attr/colorStaffLines" />
 
             <Space
@@ -59,7 +66,7 @@
 
             <ImageView
                 android:layout_width="match_parent"
-                android:layout_height="2dp"
+                android:layout_height="1dp"
                 android:background="?attr/colorStaffLines" />
 
             <Space
@@ -69,28 +76,45 @@
 
             <ImageView
                 android:layout_width="match_parent"
-                android:layout_height="2dp"
+                android:layout_height="1dp"
                 android:background="?attr/colorStaffLines" />
+
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="2" />
         </LinearLayout>
+
+<!--        <ImageView-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="match_parent"-->
+<!--            android:minWidth="12dp"-->
+<!--            android:background="@drawable/clip"/>-->
+
+        <ImageView
+            android:id="@+id/library_item_color_overlay"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="?attr/colorPrimary"
+            android:alpha="0.0"/>
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:orientation="horizontal">
 
             <ImageView
                 android:id="@+id/library_item_color_indicator"
-                android:layout_width="10dp"
+                android:layout_width="12dp"
                 android:layout_height="match_parent"
-                android:layout_marginEnd="4dp"
-                android:background="@drawable/color_rect_cat_indicator" />
+                android:background="?attr/colorPrimary" />
 
-            <ImageView
-                android:layout_width="4dp"
-                android:layout_height="match_parent"
-                android:layout_marginEnd="8dp"
-                android:background="@drawable/color_rect_cat_indicator"
-                android:backgroundTint="?attr/colorStaffLines" />
+<!--            <ImageView-->
+<!--                android:layout_width="4dp"-->
+<!--                android:layout_height="match_parent"-->
+<!--                android:layout_marginEnd="8dp"-->
+<!--                android:background="@drawable/color_rect_cat_indicator"-->
+<!--                android:backgroundTint="?attr/colorStaffLines" />-->
 
             <!--            <ImageView-->
             <!--                android:layout_width="25dp"-->
@@ -99,33 +123,39 @@
             <!--                android:background="@drawable/ic_treble_clef"-->
             <!--                android:backgroundTint="?attr/colorStaffLines"/>-->
 
+<!--            android:gravity="center_vertical"-->
             <TextView
                 android:id="@+id/library_item_name"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_marginTop="12dp"
-                android:layout_marginBottom="12dp"
-                android:layout_weight="1"
-                android:gravity="center_vertical"
-                android:textColor="?attr/colorOnSurfaceLowerContrast"
-                android:textSize="20sp"
-                android:textStyle="italic"
-                app:lineHeight="25dp"
-                tools:text="Category Name" />
-
-            <ImageView
-                android:layout_width="4dp"
-                android:layout_height="match_parent"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:layout_marginStart="12dp"
-                android:background="@drawable/color_rect_cat_indicator"
-                android:backgroundTint="?attr/colorStaffLines" />
+                android:layout_marginEnd="12dp"
+                android:maxLines="2"
+                android:ellipsize="end"
+                android:textColor="?attr/colorOnSurfaceLowerContrast"
+                android:textSize="18sp"
+                android:layout_gravity="center_vertical"
+                app:lineHeight="20dp"
+                tools:text="Category Name" />
+<!--                android:textStyle="italic"-->
 
-            <ImageView
-                android:layout_width="6dp"
-                android:layout_height="match_parent"
-                android:layout_marginStart="4dp"
-                android:background="@drawable/color_rect_cat_indicator"
-                android:backgroundTint="?attr/colorStaffLines" />
+
+<!--            <Space-->
+<!--                android:layout_width="0dp"-->
+<!--                android:layout_weight="1"-->
+<!--                android:layout_height="match_parent" />-->
+
+<!--            <ImageView-->
+<!--                android:layout_width="4dp"-->
+<!--                android:layout_height="match_parent"-->
+<!--                android:layout_marginStart="12dp"-->
+<!--                android:background="?attr/colorStaffLines" />-->
+
+<!--            <ImageView-->
+<!--                android:layout_width="6dp"-->
+<!--                android:layout_height="match_parent"-->
+<!--                android:layout_marginStart="4dp"-->
+<!--                android:background="?attr/colorStaffLines" />-->
 
         </LinearLayout>
     </FrameLayout>

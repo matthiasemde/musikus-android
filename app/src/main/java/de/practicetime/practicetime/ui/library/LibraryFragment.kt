@@ -16,26 +16,44 @@ import android.animation.ArgbEvaluator
 import android.animation.ValueAnimator
 import android.app.AlertDialog
 import android.content.Context
+import android.content.res.ColorStateList
 import android.os.Build
 import android.os.Bundle
 import android.os.VibrationEffect
 import android.os.VibratorManager
+import android.text.method.TextKeyListener.clear
 import android.util.Log
-import android.view.ActionMode
-import android.view.Menu
-import android.view.MenuItem
-import android.view.View
+import android.view.*
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
+import androidx.cardview.widget.CardView
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.*
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.rememberNestedScrollInteropConnection
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.ColorUtils
 import androidx.core.graphics.drawable.DrawableCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.room.util.TableInfo
 import com.google.android.material.appbar.CollapsingToolbarLayout
+import com.google.android.material.appbar.MaterialToolbar
+import com.google.android.material.composethemeadapter3.Mdc3Theme
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
 import de.practicetime.practicetime.PracticeTime
@@ -43,7 +61,6 @@ import de.practicetime.practicetime.R
 import de.practicetime.practicetime.database.entities.Category
 import de.practicetime.practicetime.shared.setCommonToolbar
 import kotlinx.coroutines.launch
-
 
 enum class LibrarySortMode {
     DATE_ADDED,
@@ -62,7 +79,7 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
     private var editCategoryDialog: CategoryDialog? = null
     private var deleteCategoryDialog: AlertDialog? = null
 
-    private lateinit var libraryToolbar: androidx.appcompat.widget.Toolbar
+    private lateinit var libraryToolbar: MaterialToolbar
     private lateinit var libraryCollapsingToolbarLayout: CollapsingToolbarLayout
 
     private var actionMode: ActionMode? = null
@@ -88,7 +105,87 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
         })
     }
 
+    @Composable
+    fun LibraryItemComposable(
+        category: Category,
+//        itemClickedCallback: (callbackListDataItem: CallbackListDataItem) -> Unit,
+    ) {
+        AndroidView(
+            factory = { context ->
+                val view = LayoutInflater.from(context).inflate(R.layout.listitem_library_item, null)
+
+                val cardView = view.findViewById<CardView>(R.id.library_item_card)
+                val colorIndicatorView = view.findViewById<ImageView>(R.id.library_item_color_indicator)
+                val colorOverlayView = view.findViewById<ImageView>(R.id.library_item_color_overlay)
+                val nameView = view.findViewById<TextView>(R.id.library_item_name)
+
+                cardView.isSelected = selectedCategories.contains(category.id.toInt())
+                colorOverlayView.backgroundTintList = ColorStateList.valueOf(
+                    PracticeTime.getCategoryColors(requireContext())[category.colorIndex]
+                )
+                colorIndicatorView.backgroundTintList = ColorStateList.valueOf(
+                    PracticeTime.getCategoryColors(requireContext())[category.colorIndex]
+                )
+
+                nameView.text = category.name
+
+                view // return the view
+            },
+            modifier = Modifier.fillMaxWidth().height(56.dp),
+            update = { view ->
+                // Update the view
+            }
+        )
+    }
+
+    @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+//        libraryToolbar = view.findViewById(R.id.libraryToolbar)
+//        libraryCollapsingToolbarLayout = view.findViewById(R.id.libraryToolbarLayout)
+//        initToolbar()  // initialize the toolbar with all its listeners
+
+
+        lifecycleScope.launch {
+            PracticeTime.categoryDao.get(activeOnly = true).let {
+                // sort categories depending on the current sort mode
+                activeCategories.addAll(it)
+    //                                    sortCategoryList(sortMode)
+            }
+            Log.d("LibraryFragment", activeCategories.toString())
+            view.findViewById<ComposeView>(R.id.library_appbar_compose).setContent {
+                val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+
+                Mdc3Theme() {
+                    Scaffold(
+                        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+                        topBar = {
+                           LargeTopAppBar(
+                                scrollBehavior = scrollBehavior,
+                                title = {
+                                    Text(text = "Library")
+                                }
+                            )
+                        },
+                        content = { contentPadding ->
+                            LazyColumn(
+                                modifier = Modifier
+                                    .padding(top = 12.dp)
+                                    .padding(horizontal = 8.dp),
+                                contentPadding = contentPadding,
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                items(activeCategories) { item ->
+                                    LibraryItemComposable(
+                                        category = item,
+                                    )
+                                }
+                            }
+                        }
+                    )
+                }
+            }
+        }
+
         sortMode = try {
             LibrarySortMode.valueOf(
                 PracticeTime.prefs.getString(
@@ -100,7 +197,7 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
             LibrarySortMode.DATE_ADDED
         }
 
-        initCategoryList()
+//        initCategoryList()
 
         // create a new category dialog for adding new categories
         addCategoryDialog = CategoryDialog(requireActivity(), ::addCategoryHandler)
@@ -115,10 +212,6 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
 
         // create the dialog for archiving categories
         initDeleteCategoryDialog()
-
-        libraryToolbar = view.findViewById(R.id.libraryToolbar)
-        libraryCollapsingToolbarLayout = view.findViewById(R.id.library_collapsing_toolbar_layout)
-        initToolbar()  // initialize the toolbar with all its listeners
     }
 
     private fun sortCategoryList(mode: LibrarySortMode) {
@@ -182,16 +275,16 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
 //                categoryAdapter?.notifyItemRangeInserted(0, it.size) // sortCategoryList() already notifies the adapter
             }
 
-            requireActivity().findViewById<RecyclerView>(R.id.libraryCategoryList).apply {
-//                layoutManager = GridLayoutManager(context, 2)
-                layoutManager = LinearLayoutManager(context)
-                adapter = categoryAdapter
-                itemAnimator?.apply {
-                    addDuration = 500L
-                    moveDuration = 500L
-                    removeDuration = 200L
-                }
-            }
+//            requireActivity().findViewById<RecyclerView>(R.id.libraryCategoryList).apply {
+////                layoutManager = GridLayoutManager(context, 2)
+//                layoutManager = LinearLayoutManager(context)
+//                adapter = categoryAdapter
+//                itemAnimator?.apply {
+//                    addDuration = 500L
+//                    moveDuration = 500L
+//                    removeDuration = 200L
+//                }
+//            }
 
             if (activeCategories.isEmpty()) showHint()
         }
@@ -357,7 +450,7 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
                 }
             }
             inflateMenu(R.menu.library_toolbar_menu_base)
-            navigationIcon = null
+//            setNavigationIcon(R.drawable.ic_account)
         }
     }
 
@@ -423,14 +516,14 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
     private fun showHint() {
         requireView().apply {
             findViewById<TextView>(R.id.libraryHint).visibility = View.VISIBLE
-            findViewById<RecyclerView>(R.id.libraryCategoryList).visibility = View.GONE
+//            findViewById<RecyclerView>(R.id.libraryCategoryList).visibility = View.GONE
         }
     }
 
     private fun hideHint() {
         requireView().apply {
             findViewById<TextView>(R.id.libraryHint).visibility = View.GONE
-            findViewById<RecyclerView>(R.id.libraryCategoryList).visibility = View.VISIBLE
+//            findViewById<RecyclerView>(R.id.libraryCategoryList).visibility = View.VISIBLE
         }
     }
 }

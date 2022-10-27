@@ -11,6 +11,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:animateLayoutChanges="true"
+    android:fitsSystemWindows="true"
     tools:context=".ui.sessionlist.SessionListFragment">
 
     <com.google.android.material.appbar.AppBarLayout
@@ -23,7 +24,7 @@
             app:title="@string/sessionListTitle"
             app:toolbarId="@+id/session_list_toolbar">
 
-            <androidx.appcompat.widget.Toolbar
+            <com.google.android.material.appbar.MaterialToolbar
                 android:id="@+id/session_list_toolbar"
                 style="@style/Toolbar"
                 app:menu="@menu/sessions_list_menu_base" />

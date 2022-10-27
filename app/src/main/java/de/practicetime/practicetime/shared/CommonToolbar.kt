@@ -13,13 +13,14 @@ import android.content.Intent
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.DrawableCompat
+import com.google.android.material.appbar.MaterialToolbar
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
 import de.practicetime.practicetime.ui.overflowitems.AboutActivity
 
 fun setCommonToolbar(
     context: Activity,
-    toolbar: androidx.appcompat.widget.Toolbar,
+    toolbar: MaterialToolbar,
     uncommonItemHandler: (itemId : Int) -> Unit,
 ) {
     val prefs = context.getSharedPreferences(context.getString(R.string.filename_shared_preferences), Context.MODE_PRIVATE)
@@ -60,7 +61,7 @@ fun setCommonToolbar(
 
 }
 
-private fun setToolbarIcons(context: Activity, toolbar: androidx.appcompat.widget.Toolbar) {
+private fun setToolbarIcons(context: Activity, toolbar: MaterialToolbar) {
     toolbar.menu.findItem(R.id.commonToolbarThemeSwitchAuto).icon = null
     toolbar.menu.findItem(R.id.commonToolbarThemeSwitchDark).icon = null
     toolbar.menu.findItem(R.id.commonToolbarThemeSwitchLight).icon = null

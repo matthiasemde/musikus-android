@@ -49,11 +49,9 @@
         <item name="colorControlActivated">@color/md_yellow_700</item>
 
         <item name="windowActionModeOverlay">true</item>
-        <item name="actionModeStyle">@style/Widget.App.ActionMode</item>
-        <item name="actionModeCloseButtonStyle">@style/actionModeCloseButton</item>
-        <item name="actionBarTheme">@style/ThemeOverlay.MaterialComponents.Dark.ActionBar</item>
+        <item name="actionModeStyle">@style/ActionMode</item>
+        <item name="actionBarTheme">@style/ThemeOverlay.Material3.Dark.ActionBar</item>
 
         <item name="backgroundToolbarCollapsed">@color/primary_very_dark</item>
-
     </style>
 </resources>

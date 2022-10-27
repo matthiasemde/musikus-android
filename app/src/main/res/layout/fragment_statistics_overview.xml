@@ -5,10 +5,11 @@
     Copyright (c) 2022, Javier Carbone, author Michael Prommersberger
 -->
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:fitsSystemWindows="true"
     tools:context=".ui.statistics.StatisticsOverviewFragment">
 
     <com.google.android.material.appbar.AppBarLayout
@@ -21,7 +22,7 @@
             app:title="@string/navigationStatisticsTitle"
             app:toolbarId="@+id/statsToolbar">
 
-            <androidx.appcompat.widget.Toolbar
+            <com.google.android.material.appbar.MaterialToolbar
                 android:id="@+id/statsToolbar"
                 style="@style/Toolbar"
                 app:menu="@menu/stats_toolbar_menu_base" />

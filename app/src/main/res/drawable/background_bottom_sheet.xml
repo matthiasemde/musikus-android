@@ -9,8 +9,8 @@
         <shape
             android:shape="rectangle">
             <corners
-                android:topLeftRadius="24dp"
-                android:topRightRadius="24dp" />
+                android:topLeftRadius="28dp"
+                android:topRightRadius="28dp" />
             <solid
                 android:color="?attr/colorSurface" />
         </shape>

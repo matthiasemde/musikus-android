@@ -11,50 +11,55 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
+
     tools:context=".ui.library.LibraryFragment">
 
-    <com.google.android.material.appbar.AppBarLayout
-        android:id="@+id/libraryAppbar"
-        style="@style/AppBar">
+<!--    <com.google.android.material.appbar.AppBarLayout-->
+<!--        android:id="@+id/libraryAppbar"-->
+<!--        style="@style/AppBar">-->
 
-        <com.google.android.material.appbar.CollapsingToolbarLayout
-            android:id="@+id/library_collapsing_toolbar_layout"
-            style="@style/CollapsingToolbar"
+<!--        <com.google.android.material.appbar.CollapsingToolbarLayout-->
+<!--            android:id="@+id/libraryToolbarLayout"-->
+<!--            style="@style/CollapsingToolbar"-->
+<!--            app:title="@string/navigationLibraryTitle"-->
+<!--            app:toolbarId="@+id/libraryToolbar">-->
 
-            app:title="@string/navigationLibraryTitle"
-            app:toolbarId="@+id/libraryToolbar">
+<!--            <com.google.android.material.appbar.MaterialToolbar-->
+<!--                android:id="@+id/libraryToolbar"-->
+<!--                style="@style/Toolbar"-->
+<!--                app:menu="@menu/library_toolbar_menu_base" />-->
 
-            <androidx.appcompat.widget.Toolbar
-                android:id="@+id/libraryToolbar"
-                style="@style/Toolbar"
-                app:menu="@menu/library_toolbar_menu_base" />
+<!--        </com.google.android.material.appbar.CollapsingToolbarLayout>-->
+<!--    </com.google.android.material.appbar.AppBarLayout>-->
 
-        </com.google.android.material.appbar.CollapsingToolbarLayout>
-    </com.google.android.material.appbar.AppBarLayout>
+    <androidx.compose.ui.platform.ComposeView
+        android:id="@+id/library_appbar_compose"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+<!--    <LinearLayout-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:orientation="vertical"-->
+<!--        app:layout_behavior="@string/appbar_scrolling_view_behavior"-->
+<!--        app:layout_constraintEnd_toEndOf="parent"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:layout_constraintTop_toTopOf="parent">-->
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/libraryCategoryList"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_marginEnd="8dp"
-            android:clipToPadding="false"
-            android:paddingTop="12dp"
-            android:paddingBottom="80dp"
-            tools:itemCount="2"
-            tools:listitem="@layout/listitem_category" />
+<!--        <androidx.recyclerview.widget.RecyclerView-->
+<!--            android:id="@+id/libraryCategoryList"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:layout_marginStart="8dp"-->
+<!--            android:layout_marginEnd="8dp"-->
+<!--            android:clipToPadding="false"-->
+<!--            android:paddingTop="12dp"-->
+<!--            android:paddingBottom="80dp"-->
+<!--            tools:itemCount="2"-->
+<!--            tools:listitem="@layout/listitem_category" />-->
 
 
-    </LinearLayout>
+<!--    </LinearLayout>-->
 
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
