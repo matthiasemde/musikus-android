@@ -34,6 +34,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -80,31 +81,42 @@ class LibraryState() {
 
     var items = mutableStateListOf<Category>()
 
-    var sortMode = mutableStateOf(LibrarySortMode.DATE_ADDED)
+    var sortMode = mutableStateOf(try {
+        LibrarySortMode.valueOf(
+            PracticeTime.prefs.getString(
+                PracticeTime.PREFERENCES_KEY_LIBRARY_SORT_MODE,
+                LibrarySortMode.DATE_ADDED.toString()
+            ) ?: LibrarySortMode.DATE_ADDED.toString()
+        )
+    } catch (ex: Exception) {
+        LibrarySortMode.DATE_ADDED
+    })
+
     var sortDirection = mutableStateOf(true)
 
-    fun sortItems(mode: LibrarySortMode) {
-        if(mode == sortMode.value) {
-            sortDirection.value = !sortDirection.value
-        } else {
-            sortDirection.value = true
-            sortMode.value = mode
-            when (sortMode.value) {
-                LibrarySortMode.DATE_ADDED -> items.sortBy { it.createdAt }
-                LibrarySortMode.NAME -> items.sortBy { it.name }
-                LibrarySortMode.COLOR -> items.sortBy { it.colorIndex }
-                LibrarySortMode.LAST_MODIFIED -> items.sortBy { it.modifiedAt }
-                LibrarySortMode.CUSTOM -> items.sortBy { it.createdAt } // TODO: Not implemented yet
+    fun sortItems(mode: LibrarySortMode? = null) {
+        if(mode != null) {
+            if (mode == sortMode.value) {
+                sortDirection.value = !sortDirection.value
+            } else {
+                sortDirection.value = true
+                sortMode.value = mode
+                PracticeTime.prefs.edit().putString(
+                    PracticeTime.PREFERENCES_KEY_LIBRARY_SORT_MODE,
+                    sortMode.toString()
+                ).apply()
             }
         }
-        if(sortDirection.value) {
+        when (sortMode.value) {
+            LibrarySortMode.DATE_ADDED -> items.sortBy { it.createdAt }
+            LibrarySortMode.NAME -> items.sortBy { it.name }
+            LibrarySortMode.COLOR -> items.sortBy { it.colorIndex }
+            LibrarySortMode.LAST_MODIFIED -> items.sortBy { it.modifiedAt }
+            LibrarySortMode.CUSTOM -> items.sortBy { it.createdAt } // TODO: Not implemented yet
+        }
+        if (sortDirection.value) {
             items.reverse()
         }
-
-        PracticeTime.prefs.edit().putString(
-            PracticeTime.PREFERENCES_KEY_LIBRARY_SORT_MODE,
-            sortMode.toString()
-        ).apply()
     }
 }
 
@@ -157,22 +169,11 @@ class LibraryFragment : Fragment() {
                 val libraryState = rememberLibraryState()
                 val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
-                val sortMode = try {
-                    LibrarySortMode.valueOf(
-                        PracticeTime.prefs.getString(
-                            PracticeTime.PREFERENCES_KEY_LIBRARY_SORT_MODE,
-                            LibrarySortMode.DATE_ADDED.toString()
-                        ) ?: LibrarySortMode.DATE_ADDED.toString()
-                    )
-                } catch (ex: Exception) {
-                    LibrarySortMode.DATE_ADDED
-                }
-
                 LaunchedEffect(true) {
                     PracticeTime.categoryDao.get(activeOnly = true).let {
                         // sort categories depending on the current sort mode
                         libraryState.items.addAll(it)
-                        libraryState.sortItems(sortMode)
+                        libraryState.sortItems()
                     }
                 }
 
@@ -379,7 +380,10 @@ class LibraryFragment : Fragment() {
             contentPadding = contentPadding,
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            items(items) { item ->
+            items(
+                items=items,
+                key = { item -> item.id }
+            ) { item ->
                 LibraryItemComposable(
                     category = item,
                     selected = selectedItems.contains(item.id)

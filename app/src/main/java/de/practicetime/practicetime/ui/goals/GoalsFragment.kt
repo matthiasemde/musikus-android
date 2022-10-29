@@ -194,7 +194,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
                 inflateMenu(R.menu.goals_toolbar_menu_for_selection)
 
                 // set the back button and its click listener
-                setNavigationIcon(R.drawable.ic_nav_back)
+//                setNavigationIcon(R.drawable.ic_nav_back)
                 setNavigationOnClickListener {
                     clearGoalSelection()
                     resetToolbar()
