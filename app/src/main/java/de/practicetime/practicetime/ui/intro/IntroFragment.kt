@@ -34,8 +34,8 @@ import de.practicetime.practicetime.database.entities.*
 import de.practicetime.practicetime.ui.activesession.ActiveSessionActivity
 import de.practicetime.practicetime.ui.goals.GoalAdapter
 import de.practicetime.practicetime.ui.goals.GoalDialog
-import de.practicetime.practicetime.ui.library.CategoryAdapter
-import de.practicetime.practicetime.ui.library.CategoryDialog
+import de.practicetime.practicetime.ui.library.LibraryItemAdapter
+import de.practicetime.practicetime.ui.library.LibraryItemDialog
 import de.practicetime.practicetime.ui.sessionlist.SessionSummaryAdapter
 import de.practicetime.practicetime.utils.*
 import kotlinx.coroutines.delay
@@ -45,13 +45,13 @@ import kotlin.math.roundToInt
 
 private const val DUMMY_MAIN_CATEGORY_INDEX = 5
 
-private val dummyCategories = listOf(
-    Category(name="B-Dur", colorIndex = 8),
-    Category(name="Czerny Etude Nr.2", colorIndex = 1),
-    Category(name="Trauermarsch c-Moll", colorIndex = 0),
-    Category(name="Andantino", colorIndex = 6),
-    Category(name="Klaviersonate", colorIndex = 7),
-    Category(name="Mozart", colorIndex = 3)
+private val dummyLibraryItems = listOf(
+    LibraryItem(name="B-Dur", colorIndex = 8),
+    LibraryItem(name="Czerny Etude Nr.2", colorIndex = 1),
+    LibraryItem(name="Trauermarsch c-Moll", colorIndex = 0),
+    LibraryItem(name="Andantino", colorIndex = 6),
+    LibraryItem(name="Klaviersonate", colorIndex = 7),
+    LibraryItem(name="Mozart", colorIndex = 3)
 )
 
 class IntroFragment(
@@ -129,11 +129,11 @@ class IntroFragment(
     }
 
     private val libraryClickListener = View.OnClickListener {
-        CategoryDialog(
+        LibraryItemDialog(
             context = requireActivity(),
-        ) { newCategory ->
+        ) { newLibraryItem ->
             lifecycleScope.launch {
-                PracticeTime.categoryDao.insert(newCategory)
+                PracticeTime.libraryItemDao.insert(newLibraryItem)
                 delay(200)
                 (requireActivity() as AppIntroActivity).changeSlide()
             }
@@ -144,11 +144,11 @@ class IntroFragment(
         lifecycleScope.launch {
             GoalDialog(
                 context = requireActivity(),
-                categories = PracticeTime.categoryDao.get(activeOnly = true),
-            ) { newGoalDescriptionWithCategories, firstTarget ->
+                libraryItems = PracticeTime.libraryItemDao.get(activeOnly = true),
+            ) { newGoalDescriptionWithLibraryItems, firstTarget ->
                 lifecycleScope.launch {
                     PracticeTime.goalDescriptionDao.insertGoal(
-                        newGoalDescriptionWithCategories,
+                        newGoalDescriptionWithLibraryItems,
                         firstTarget
                     )
                     delay(200)
@@ -199,9 +199,9 @@ class IntroLibraryFragment : Fragment(R.layout.fragment_intro_library) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
 
-        val recView = view.findViewById<RecyclerView>(R.id.introCategoryList)
-        val catDummyAdapter = CategoryAdapter(
-            dummyCategories,
+        val recView = view.findViewById<RecyclerView>(R.id.introLibraryItemList)
+        val catDummyAdapter = LibraryItemAdapter(
+            dummyLibraryItems,
             context = requireActivity(),
         )
 
@@ -229,8 +229,8 @@ class IntroGoalsFragment : Fragment(R.layout.fragment_intro_goals) {
         }
     }
 
-    private fun getDummyGoals(): List<GoalInstanceWithDescriptionWithCategories> {
-        val goal1 = GoalInstanceWithDescriptionWithCategories(
+    private fun getDummyGoals(): List<GoalInstanceWithDescriptionWithLibraryItems> {
+        val goal1 = GoalInstanceWithDescriptionWithLibraryItems(
             GoalInstance(
                 goalDescriptionId = 1,
                 startTimestamp = getStartOfDay(0).toEpochSecond(),
@@ -238,7 +238,7 @@ class IntroGoalsFragment : Fragment(R.layout.fragment_intro_goals) {
                 target = SECONDS_PER_HOUR,
                 progress = (SECONDS_PER_HOUR * 0.7f).roundToInt()
             ),
-            GoalDescriptionWithCategories(
+            GoalDescriptionWithLibraryItems(
                 description = GoalDescription(
                     type = GoalType.NON_SPECIFIC,
                     repeat = true,
@@ -248,7 +248,7 @@ class IntroGoalsFragment : Fragment(R.layout.fragment_intro_goals) {
                 listOf()
             ),
         )
-        val goal2 = GoalInstanceWithDescriptionWithCategories(
+        val goal2 = GoalInstanceWithDescriptionWithLibraryItems(
             GoalInstance(
                 goalDescriptionId = 1,
                 startTimestamp = getStartOfWeek(0).toEpochSecond(),
@@ -256,15 +256,15 @@ class IntroGoalsFragment : Fragment(R.layout.fragment_intro_goals) {
                 target = (SECONDS_PER_HOUR * 5.5f).roundToInt(),
                 progress = (SECONDS_PER_HOUR * 2f).roundToInt()
             ),
-            GoalDescriptionWithCategories(
+            GoalDescriptionWithLibraryItems(
                 description = GoalDescription(
-                    type = GoalType.CATEGORY_SPECIFIC,
+                    type = GoalType.ITEM_SPECIFIC,
                     repeat = true,
                     periodInPeriodUnits = 1,
                     periodUnit = GoalPeriodUnit.WEEK,
                 ),
                 listOf(
-                    dummyCategories[DUMMY_MAIN_CATEGORY_INDEX]
+                    dummyLibraryItems[DUMMY_MAIN_CATEGORY_INDEX]
                 )
             ),
         )
@@ -291,39 +291,39 @@ class IntroSessionsFragment : Fragment(R.layout.fragment_intro_sessions) {
 
 private fun getDummySessions() =
     listOf(
-        SessionWithSectionsWithCategories(
+        SessionWithSectionsWithLibraryItems(
             session = Session(
                 breakDuration = 60 * 10,
                 rating = 4,
                 comment = "Great session! \uD83D\uDE80"
             ),
             sections = listOf(
-                SectionWithCategory(
+                SectionWithLibraryItem(
                     Section(
                         sessionId = 1,
-                        categoryId = 1,
+                        libraryItemId = 1,
                         duration = 60 * 10,
                         timestamp = getCurrTimestamp()
                     ),
-                    dummyCategories[0]
+                    dummyLibraryItems[0]
                 ),
-                SectionWithCategory(
+                SectionWithLibraryItem(
                     Section(
                         sessionId = 1,
-                        categoryId = 1,
+                        libraryItemId = 1,
                         duration = 60 * 23,
                         timestamp = getCurrTimestamp()
                     ),
-                    dummyCategories[1]
+                    dummyLibraryItems[1]
                 ),
-                SectionWithCategory(
+                SectionWithLibraryItem(
                     Section(
                         sessionId = 1,
-                        categoryId = 1,
+                        libraryItemId = 1,
                         duration = 60 * 37,
                         timestamp = getCurrTimestamp()
                     ),
-                    dummyCategories[DUMMY_MAIN_CATEGORY_INDEX]
+                    dummyLibraryItems[DUMMY_MAIN_CATEGORY_INDEX]
                 ),
             )
         )

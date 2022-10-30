@@ -14,7 +14,7 @@
     android:orientation="horizontal">
 
     <CheckBox
-        android:id="@+id/checkbox_category"
+        android:id="@+id/checkbox_libraryItem"
         android:layout_width="0dp"
         android:layout_height="45dp"
         android:layout_weight="1"
@@ -22,7 +22,7 @@
         android:textSize="16sp" />
 
     <TextView
-        android:id="@+id/total_time_category"
+        android:id="@+id/total_time_libraryItem"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         tools:text="1 h 32 min"

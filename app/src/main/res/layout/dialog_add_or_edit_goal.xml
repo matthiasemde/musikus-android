@@ -13,7 +13,7 @@
     android:orientation="vertical">
 
     <TextView
-        android:id="@+id/categoryDialogTitle"
+        android:id="@+id/libraryItemDialogTitle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?attr/colorPrimary"
@@ -195,27 +195,27 @@
             android:orientation="horizontal">
 
             <androidx.appcompat.widget.AppCompatButton
-                android:id="@+id/goalDialogAllCategories"
+                android:id="@+id/goalDialogAllLibraryItems"
                 style="@style/ToggleButton"
                 android:layout_width="0dp"
                 android:layout_weight="1"
                 android:background="@drawable/bg_toggle_button_left"
                 android:gravity="center|center_vertical"
-                android:text="@string/goalDialogUseAllCategories" />
+                android:text="@string/goalDialogUseAllLibraryItems" />
 
             <androidx.appcompat.widget.AppCompatButton
-                android:id="@+id/goalDialogSpecificCategories"
+                android:id="@+id/goalDialogSpecificLibraryItems"
                 style="@style/ToggleButton"
                 android:background="@drawable/bg_toggle_button_right"
                 android:layout_width="0dp"
                 android:layout_weight="1"
                 android:gravity="center|center_vertical"
-                android:text="@string/goalDialogUseSpecificCategories" />
+                android:text="@string/goalDialogUseSpecificLibraryItems" />
 
         </LinearLayout>
 
         <LinearLayout
-            android:id="@+id/goalDialogCategorySelectorLayout"
+            android:id="@+id/goalDialogLibraryItemSelectorLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
@@ -232,7 +232,7 @@
                 android:padding="5dp">
 
                 <Spinner
-                    android:id="@+id/goalDialogCategorySelector"
+                    android:id="@+id/goalDialogLibraryItemSelector"
                     android:layout_width="match_parent"
                     android:layout_height="36dp"
                     android:layout_gravity="center"

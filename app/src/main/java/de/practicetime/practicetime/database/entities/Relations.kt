@@ -1,5 +1,11 @@
 /*
- * This software is licensed under the MIT license
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ *
+ * Copyright (c) 2022 Matthias Emde
+ *
+ * Parts of this software are licensed under the MIT license
  *
  * Copyright (c) 2022, Javier Carbone, author Matthias Emde
  */
@@ -20,86 +26,95 @@ data class SessionWithSections(
     val sections: List<Section>
 )
 
-data class SectionWithCategory(
+data class SectionWithLibraryItem(
     @Embedded val section: Section,
     @Relation(
-        parentColumn = "category_id",
+        parentColumn = "library_item_id",
         entityColumn = "id"
     )
-    val category: Category
+    val libraryItem: LibraryItem
 )
 
-data class SessionWithSectionsWithCategories(
+data class SessionWithSectionsWithLibraryItems(
     @Embedded val session: Session,
     @Relation(
         entity = Section::class,
         parentColumn = "id",
         entityColumn = "session_id"
     )
-    val sections: List<SectionWithCategory>
+    val sections: List<SectionWithLibraryItem>
 )
 
-data class GoalDescriptionWithCategories(
+data class GoalDescriptionWithLibraryItems(
     @Embedded val description: GoalDescription,
     @Relation(
         parentColumn = "id",
         entityColumn = "id",
         associateBy = Junction(
-            GoalDescriptionCategoryCrossRef::class,
+            GoalDescriptionLibraryItemCrossRef::class,
             parentColumn = "goal_description_id",
-            entityColumn = "category_id"
+            entityColumn = "library_item_id"
         )
     )
-    val categories: List<Category>
+    val libraryItems: List<LibraryItem>
 )
 
-data class CategoryWithGoalDescriptions(
-    @Embedded val category: Category,
+data class LibraryFolderWithItems(
+    @Embedded val folder: LibraryFolder,
+    @Relation(
+        parentColumn = "id",
+        entityColumn = "library_folder_id"
+    )
+    val items: List<LibraryItem>
+)
+
+data class LibraryItemWithGoalDescriptions(
+    @Embedded val libraryItem: LibraryItem,
     @Relation(
         parentColumn = "id",
         entityColumn = "id",
         associateBy = Junction(
-            GoalDescriptionCategoryCrossRef::class,
-            parentColumn = "category_id",
+            GoalDescriptionLibraryItemCrossRef::class,
+            parentColumn = "library_item_id",
             entityColumn = "goal_description_id"
         )
     )
     val descriptions: List<GoalDescription>
 )
 
-data class CategoryWithGoalDescriptionsWithCategories(
-    @Embedded val category: Category,
+data class LibraryItemWithGoalDescriptionsWithLibraryItems(
+    @Embedded val libraryItem: LibraryItem,
     @Relation(
         entity = GoalDescription::class,
         parentColumn = "id",
         entityColumn = "id",
         associateBy = Junction(
-            GoalDescriptionCategoryCrossRef::class,
-            parentColumn = "category_id",
+            GoalDescriptionLibraryItemCrossRef::class,
+            parentColumn = "library_item_id",
             entityColumn = "goal_description_id"
         )
     )
-    val descriptions: List<GoalDescriptionWithCategories>
+    val descriptions: List<GoalDescriptionWithLibraryItems>
 )
 
-data class SectionWithCategoryWithGoalDescriptions(
+data class SectionWithLibraryItemWithGoalDescriptions(
     @Embedded val section: Section,
     @Relation(
-        entity = Category::class,
-        parentColumn = "category_id",
+        entity = LibraryItem::class,
+        parentColumn = "library_item_id",
         entityColumn = "id"
     )
-    val category: CategoryWithGoalDescriptions
+    val libraryItem: LibraryItemWithGoalDescriptions
 )
 
-data class SessionWithSectionsWithCategoriesWithGoalDescriptions(
+data class SessionWithSectionsWithLibraryItemsWithGoalDescriptions(
     @Embedded val session: Session,
     @Relation(
         entity = Section::class,
         parentColumn = "id",
         entityColumn = "session_id"
     )
-    val sections: List<SectionWithCategoryWithGoalDescriptions>
+    val sections: List<SectionWithLibraryItemWithGoalDescriptions>
 )
 
 data class GoalInstanceWithDescription(
@@ -120,12 +135,12 @@ data class GoalInstanceWithDescription(
 //    val instances: List<GoalInstance>
 //)
 
-data class GoalInstanceWithDescriptionWithCategories(
+data class GoalInstanceWithDescriptionWithLibraryItems(
     @Embedded val instance: GoalInstance,
     @Relation(
         entity = GoalDescription::class,
         parentColumn = "goal_description_id",
         entityColumn = "id"
     )
-    val description: GoalDescriptionWithCategories
+    val description: GoalDescriptionWithLibraryItems
 )

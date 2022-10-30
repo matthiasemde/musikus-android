@@ -1,5 +1,11 @@
 /*
- * This software is licensed under the MIT license
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ *
+ * Copyright (c) 2022 Matthias Emde
+ *
+ * Parts of this software are licensed under the MIT license
  *
  * Copyright (c) 2022, Javier Carbone, author Matthias Emde
  */
@@ -24,9 +30,9 @@ import de.practicetime.practicetime.database.entities.*
 
 class GoalDialog(
     context: Activity,
-    private val categories: List<Category>,
+    private val libraryItems: List<LibraryItem>,
     submitHandler: (
-        newGoalDescriptionWithCategories: GoalDescriptionWithCategories,
+        newGoalDescriptionWithLibraryItems: GoalDescriptionWithLibraryItems,
         newTarget: Int
     ) -> Unit,
 ) {
@@ -40,10 +46,10 @@ class GoalDialog(
     )
 
     // find and save all the views in the dialog view
-    private val goalDialogAllCategoriesButtonView = dialogView.findViewById<AppCompatButton>(R.id.goalDialogAllCategories)
-    private val goalDialogSingleCategoryButtonView = dialogView.findViewById<AppCompatButton>(R.id.goalDialogSpecificCategories)
-    private val goalDialogCategorySelectorView = dialogView.findViewById<Spinner>(R.id.goalDialogCategorySelector)
-    private val goalDialogCategorySelectorLayoutView = dialogView.findViewById<LinearLayout>(R.id.goalDialogCategorySelectorLayout)
+    private val goalDialogAllLibraryItemsButtonView = dialogView.findViewById<AppCompatButton>(R.id.goalDialogAllLibraryItems)
+    private val goalDialogSingleLibraryItemButtonView = dialogView.findViewById<AppCompatButton>(R.id.goalDialogSpecificLibraryItems)
+    private val goalDialogLibraryItemSelectorView = dialogView.findViewById<Spinner>(R.id.goalDialogLibraryItemSelector)
+    private val goalDialogLibraryItemSelectorLayoutView = dialogView.findViewById<LinearLayout>(R.id.goalDialogLibraryItemSelectorLayout)
     private val goalDialogOneTimeGoalView = dialogView.findViewById<CheckBox>(R.id.goalDialogOneTimeGoal)
     private val goalDialogTargetHoursView = dialogView.findViewById<NumberInput>(R.id.goalDialogHours)
     private val goalDialogTargetMinutesView = dialogView.findViewById<NumberInput>(R.id.goalDialogMinutes)
@@ -54,12 +60,12 @@ class GoalDialog(
     private var selectedPeriodUnit = GoalPeriodUnit.DAY
     private var selectedPeriod = 1
     private var selectedGoalType = GoalType.NON_SPECIFIC
-    private val selectedCategories = ArrayList<Category>()
+    private val selectedLibraryItems = ArrayList<LibraryItem>()
 
     private var alertDialog: AlertDialog
 
     init {
-        initCategorySelector()
+        initLibraryItemSelector()
 
         initTimeSelector()
 
@@ -69,7 +75,7 @@ class GoalDialog(
             setView(dialogView)
 
             // define the callback function for the positive button
-            setPositiveButton(R.string.addCategoryAlertOk) { dialog, _ ->
+            setPositiveButton(R.string.addLibraryItemAlertOk) { dialog, _ ->
                 // first create the new description
                 val newGoalDescription = GoalDescription(
                     type =  selectedGoalType,
@@ -78,22 +84,22 @@ class GoalDialog(
                     periodUnit = selectedPeriodUnit,
                 )
 
-                // then create a object joining the description with any selected categories
-                val newGoalDescriptionWithCategories = GoalDescriptionWithCategories(
+                // then create a object joining the description with any selected libraryItems
+                val newGoalDescriptionWithLibraryItems = GoalDescriptionWithLibraryItems(
                     description = newGoalDescription,
-                    categories = if (selectedGoalType == GoalType.CATEGORY_SPECIFIC)
-                        selectedCategories.toList() else emptyList()
+                    libraryItems = if (selectedGoalType == GoalType.ITEM_SPECIFIC)
+                        selectedLibraryItems.toList() else emptyList()
                 )
 
                 // and call the submit handler, passing the selected target duration
-                submitHandler(newGoalDescriptionWithCategories, selectedTarget)
+                submitHandler(newGoalDescriptionWithLibraryItems, selectedTarget)
 
                 dialog.dismiss()
             }
 
             // define the callback function for the negative button
             // to clear the dialog and then cancel it
-            setNegativeButton(R.string.addCategoryAlertCancel) { dialog, _ ->
+            setNegativeButton(R.string.addLibraryItemAlertCancel) { dialog, _ ->
                 dialog.cancel()
             }
         }
@@ -122,59 +128,59 @@ class GoalDialog(
 
         goalDialogPeriodUnitView.setSelection(0)
 
-        goalDialogAllCategoriesButtonView.performClick()
+        goalDialogAllLibraryItemsButtonView.performClick()
 
-        goalDialogCategorySelectorView.setSelection(0)
+        goalDialogLibraryItemSelectorView.setSelection(0)
 
         goalDialogOneTimeGoalView.isChecked = true
 
         updatePositiveButtonState()
     }
 
-    private fun initCategorySelector() {
+    private fun initLibraryItemSelector() {
 
-        goalDialogAllCategoriesButtonView.isSelected = true
+        goalDialogAllLibraryItemsButtonView.isSelected = true
 
-        goalDialogCategorySelectorLayoutView.alpha = 0.5f
-        goalDialogCategorySelectorView.isEnabled = false
+        goalDialogLibraryItemSelectorLayoutView.alpha = 0.5f
+        goalDialogLibraryItemSelectorView.isEnabled = false
 
-        goalDialogSingleCategoryButtonView.setOnClickListener {
-            selectedGoalType = GoalType.CATEGORY_SPECIFIC
+        goalDialogSingleLibraryItemButtonView.setOnClickListener {
+            selectedGoalType = GoalType.ITEM_SPECIFIC
 
-            goalDialogSingleCategoryButtonView.isSelected = true
-            goalDialogAllCategoriesButtonView.isSelected = false
+            goalDialogSingleLibraryItemButtonView.isSelected = true
+            goalDialogAllLibraryItemsButtonView.isSelected = false
 
-            goalDialogCategorySelectorLayoutView.alpha = 1f
-            goalDialogCategorySelectorView.isEnabled = true
+            goalDialogLibraryItemSelectorLayoutView.alpha = 1f
+            goalDialogLibraryItemSelectorView.isEnabled = true
             updatePositiveButtonState()
         }
 
-        goalDialogAllCategoriesButtonView.setOnClickListener {
+        goalDialogAllLibraryItemsButtonView.setOnClickListener {
             selectedGoalType = GoalType.NON_SPECIFIC
 
-            goalDialogSingleCategoryButtonView.isSelected = false
-            goalDialogAllCategoriesButtonView.isSelected = true
+            goalDialogSingleLibraryItemButtonView.isSelected = false
+            goalDialogAllLibraryItemsButtonView.isSelected = true
 
-            goalDialogCategorySelectorLayoutView.alpha = 0.5f
-            goalDialogCategorySelectorView.isEnabled = false
+            goalDialogLibraryItemSelectorLayoutView.alpha = 0.5f
+            goalDialogLibraryItemSelectorView.isEnabled = false
             updatePositiveButtonState()
         }
 
-        goalDialogCategorySelectorView.apply {
-            adapter = CategoryDropDownAdapter(
+        goalDialogLibraryItemSelectorView.apply {
+            adapter = LibraryItemDropDownAdapter(
                 context,
-                categories,
+                libraryItems,
             )
             onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
                 override fun onItemSelected(p: AdapterView<*>?, v: View?, pos: Int, id: Long) {
-                    selectedCategories.clear()
+                    selectedLibraryItems.clear()
                     if (pos > 0)
-                        selectedCategories.add(categories[pos-1])  // -1 because pos=0 is hint
+                        selectedLibraryItems.add(libraryItems[pos-1])  // -1 because pos=0 is hint
                     updatePositiveButtonState()
                 }
 
                 override fun onNothingSelected(parent: AdapterView<*>?) {
-                    selectedCategories.clear()
+                    selectedLibraryItems.clear()
                 }
             }
         }
@@ -210,7 +216,7 @@ class GoalDialog(
     private fun updatePositiveButtonState() {
         alertDialog.getButton(AlertDialog.BUTTON_POSITIVE)?.isEnabled =
             (selectedTarget > 0 && selectedPeriod > 0) &&
-            (selectedCategories.size > 0 || selectedGoalType == GoalType.NON_SPECIFIC)
+            (selectedLibraryItems.size > 0 || selectedGoalType == GoalType.NON_SPECIFIC)
     }
 
     // the public function to show the dialog
@@ -236,9 +242,9 @@ class GoalDialog(
         }
     }
 
-    private class CategoryDropDownAdapter(
+    private class LibraryItemDropDownAdapter(
         private val context: Context,
-        private val categories: List<Category>
+        private val libraryItems: List<LibraryItem>
     ) : BaseAdapter() {
 
         private val inflater: LayoutInflater =
@@ -257,11 +263,11 @@ class GoalDialog(
             }
             if (position != 0) {
                 vh.color?.visibility  = View.VISIBLE
-                vh.name?.text = categories[position - 1].name
-                // set the color to the category color
-                val categoryColors = context.resources.getIntArray(R.array.category_colors)
+                vh.name?.text = libraryItems[position - 1].name
+                // set the color to the libraryItem color
+                val libraryItemColors = context.resources.getIntArray(R.array.library_item_colors)
                 vh.color?.backgroundTintList = ColorStateList.valueOf(
-                    categoryColors[categories[position - 1].colorIndex]
+                    libraryItemColors[libraryItems[position - 1].colorIndex]
                 )
             } else {
                 vh.color?.visibility  = View.GONE
@@ -271,15 +277,15 @@ class GoalDialog(
             return view
         }
 
-        override fun getItem(position: Int) = categories[position]
+        override fun getItem(position: Int) = libraryItems[position]
 
-        override fun getCount() = categories.size + 1
+        override fun getCount() = libraryItems.size + 1
 
         override fun getItemId(position: Int) = position.toLong()
 
         private class ItemHolder(row: View?) {
-            val color = row?.findViewById<ImageView>(R.id.categorySpinnerColor)
-            val name = row?.findViewById<TextView>(R.id.categorySpinnerName)
+            val color = row?.findViewById<ImageView>(R.id.libraryItemSpinnerColor)
+            val name = row?.findViewById<TextView>(R.id.libraryItemSpinnerName)
         }
     }
 }

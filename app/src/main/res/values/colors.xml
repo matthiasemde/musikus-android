@@ -28,16 +28,16 @@
     <color name="dark_grey_lighter">#292929</color>
     <color name="dark_grey_darker">#080808</color>
 
-    <color name="category_color_1">#f7a397</color>
-    <color name="category_color_2">#E03F54</color>
-    <color name="category_color_3">#FF8F33</color>
-    <color name="category_color_4">#FFC233</color>
-    <color name="category_color_5">#997099</color>
-    <color name="category_color_6">#5474BF</color>
-    <color name="category_color_7">#80995C</color>
-    <color name="category_color_8">#29CCAE</color>
-    <color name="category_color_9">#748EA7</color>
-    <color name="category_color_10">#A8684C</color>
+    <color name="library_item_color_1">#f7a397</color>
+    <color name="library_item_color_2">#E03F54</color>
+    <color name="library_item_color_3">#FF8F33</color>
+    <color name="library_item_color_4">#FFC233</color>
+    <color name="library_item_color_5">#997099</color>
+    <color name="library_item_color_6">#5474BF</color>
+    <color name="library_item_color_7">#80995C</color>
+    <color name="library_item_color_8">#29CCAE</color>
+    <color name="library_item_color_9">#748EA7</color>
+    <color name="library_item_color_10">#A8684C</color>
 
     <!--_____________________________________________________________________________________-->
 

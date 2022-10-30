@@ -16,30 +16,30 @@
         android:orientation="horizontal">
 
         <TextView
-            android:id="@+id/categoryDialogTitle"
+            android:id="@+id/libraryItemDialogTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:layout_marginTop="8dp"
             android:layout_marginBottom="8dp"
-            android:text="@string/addCategoryDialogTitle"
+            android:text="@string/addLibraryItemDialogTitle"
             android:textColor="?attr/colorOnPrimary"
             android:textSize="28sp" />
 
     </LinearLayout>
 
     <EditText
-        android:id="@+id/addCategoryDialogName"
+        android:id="@+id/addLibraryItemDialogName"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="12dp"
         android:ems="12"
-        android:hint="@string/addCategoryDialogNameHint"
+        android:hint="@string/addLibraryItemDialogNameHint"
         android:inputType="textPersonName"
         android:maxLength="30" />
 
     <RadioGroup
-        android:id="@+id/addCategoryDialogColorRow1"
+        android:id="@+id/addLibraryItemDialogColorRow1"
         android:layout_width="match_parent"
         android:layout_height="36dp"
         android:layout_marginStart="8dp"
@@ -53,7 +53,7 @@
             android:layout_weight="1" />
 
         <RadioButton
-            android:id="@+id/addCategoryDialogColor1"
+            android:id="@+id/addLibraryItemDialogColor1"
             android:layout_width="32dp"
             android:layout_height="32dp"
             android:layout_gravity="center"
@@ -69,7 +69,7 @@
             android:layout_weight="3" />
 
         <RadioButton
-            android:id="@+id/addCategoryDialogColor2"
+            android:id="@+id/addLibraryItemDialogColor2"
             android:layout_width="32dp"
             android:layout_height="32dp"
             android:layout_gravity="center"
@@ -85,7 +85,7 @@
             android:layout_weight="3" />
 
         <RadioButton
-            android:id="@+id/addCategoryDialogColor3"
+            android:id="@+id/addLibraryItemDialogColor3"
             android:layout_width="32dp"
             android:layout_height="32dp"
             android:layout_gravity="center"
@@ -101,7 +101,7 @@
             android:layout_weight="3" />
 
         <RadioButton
-            android:id="@+id/addCategoryDialogColor4"
+            android:id="@+id/addLibraryItemDialogColor4"
             android:layout_width="32dp"
             android:layout_height="32dp"
             android:layout_gravity="center"
@@ -117,7 +117,7 @@
             android:layout_weight="3" />
 
         <RadioButton
-            android:id="@+id/addCategoryDialogColor5"
+            android:id="@+id/addLibraryItemDialogColor5"
             android:layout_width="32dp"
             android:layout_height="32dp"
             android:layout_gravity="center"
@@ -135,7 +135,7 @@
     </RadioGroup>
 
     <RadioGroup
-        android:id="@+id/addCategoryDialogColorRow2"
+        android:id="@+id/addLibraryItemDialogColorRow2"
         android:layout_width="match_parent"
         android:layout_height="36dp"
         android:layout_marginStart="8dp"
@@ -148,7 +148,7 @@
             android:layout_weight="1" />
 
         <RadioButton
-            android:id="@+id/addCategoryDialogColor6"
+            android:id="@+id/addLibraryItemDialogColor6"
             android:layout_width="32dp"
             android:layout_height="32dp"
             android:layout_gravity="center"
@@ -164,7 +164,7 @@
             android:layout_weight="3" />
 
         <RadioButton
-            android:id="@+id/addCategoryDialogColor7"
+            android:id="@+id/addLibraryItemDialogColor7"
             android:layout_width="32dp"
             android:layout_height="32dp"
             android:layout_gravity="center"
@@ -180,7 +180,7 @@
             android:layout_weight="3" />
 
         <RadioButton
-            android:id="@+id/addCategoryDialogColor8"
+            android:id="@+id/addLibraryItemDialogColor8"
             android:layout_width="32dp"
             android:layout_height="32dp"
             android:layout_gravity="center"
@@ -196,7 +196,7 @@
             android:layout_weight="3" />
 
         <RadioButton
-            android:id="@+id/addCategoryDialogColor9"
+            android:id="@+id/addLibraryItemDialogColor9"
             android:layout_width="32dp"
             android:layout_height="32dp"
             android:layout_gravity="center"
@@ -212,7 +212,7 @@
             android:layout_weight="3" />
 
         <RadioButton
-            android:id="@+id/addCategoryDialogColor10"
+            android:id="@+id/addLibraryItemDialogColor10"
             android:layout_width="32dp"
             android:layout_height="32dp"
             android:layout_gravity="center"

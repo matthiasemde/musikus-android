@@ -1,5 +1,11 @@
 /*
- * This software is licensed under the MIT license
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ *
+ * Copyright (c) 2022 Matthias Emde
+ *
+ * Parts of this software are licensed under the MIT license
  *
  * Copyright (c) 2022, Javier Carbone, author Matthias Emde
  * Additions and modifications, author Michael Prommersberger
@@ -20,19 +26,21 @@ import de.practicetime.practicetime.database.entities.*
 import de.practicetime.practicetime.utils.getCurrTimestamp
 
 @Database(
-    version = 2,
+    version = 3,
     entities = [
         Session::class,
         Section::class,
-        Category::class,
+        LibraryItem::class,
+        LibraryFolder::class,
         GoalDescription::class,
         GoalInstance::class,
-        GoalDescriptionCategoryCrossRef::class,
+        GoalDescriptionLibraryItemCrossRef::class,
     ],
     exportSchema = true,
 )
 abstract class PTDatabase : RoomDatabase() {
-    abstract val categoryDao : CategoryDao
+    abstract val libraryItemDao : LibraryItemDao
+    abstract val libraryFolderDao : LibraryFolderDao
     abstract val goalDescriptionDao : GoalDescriptionDao
     abstract val goalInstanceDao : GoalInstanceDao
     abstract val sessionDao : SessionDao
@@ -111,3 +119,9 @@ object PTDatabaseMigrationOneToTwo : Migration(1,2) {
         Log.d("POST_MIGRATION", "Post Migration complete")
     }
 }
+
+//@RenameColumn(tableName = "goal_description", fromColumnName = "oneTime", toColumnName = "repeat")
+//@RenameColumn(tableName = "goal_description", fromColumnName = "oneTime", toColumnName = "repeat")
+//@RenameColumn(tableName = "goal_description", fromColumnName = "oneTime", toColumnName = "repeat")
+//object PTDatabaseMigrationTwoToThree : Migration(2,3) {
+//}

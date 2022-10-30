@@ -29,7 +29,7 @@
         <item name="colorTertiary">@color/secondary_dark</item>
         <item name="colorOnTertiary">@color/white</item>
         <!-- Surface colors. -->
-        <item name="colorSurface">@color/dark_grey_lighter</item>
+        <item name="colorSurface">@color/dark_grey</item>
         <item name="colorOnSurface">@color/white</item>
         <item name="colorError">@color/md_red_400</item>
         <item name="colorOnError">@color/white</item>

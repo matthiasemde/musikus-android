@@ -26,8 +26,8 @@ import com.google.android.material.button.MaterialButton
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
 import de.practicetime.practicetime.database.entities.Section
-import de.practicetime.practicetime.database.entities.SectionWithCategory
-import de.practicetime.practicetime.database.entities.SessionWithSectionsWithCategories
+import de.practicetime.practicetime.database.entities.SectionWithLibraryItem
+import de.practicetime.practicetime.database.entities.SessionWithSectionsWithLibraryItems
 import de.practicetime.practicetime.shared.EditTimeDialog
 import de.practicetime.practicetime.ui.MainActivity
 import de.practicetime.practicetime.utils.TIME_FORMAT_HUMAN_PRETTY
@@ -43,12 +43,12 @@ class FullscreenSessionActivity : AppCompatActivity() {
     private lateinit var commentFieldView: TextView
 
     private lateinit var sectionAdapter: SectionAdapter
-    private val sectionAdapterData = ArrayList<SectionWithCategory>()
+    private val sectionAdapterData = ArrayList<SectionWithLibraryItem>()
 
     private lateinit var editSectionTimeDialog: EditTimeDialog
     private lateinit var confirmationDialog: AlertDialog
 
-    private var sessionWithSectionsWithCategories: SessionWithSectionsWithCategories? = null
+    private var sessionWithSectionsWithLibraryItems: SessionWithSectionsWithLibraryItems? = null
     private var selectedSection: Section? = null
 
     private var showCommentPlaceholder = true
@@ -153,9 +153,9 @@ class FullscreenSessionActivity : AppCompatActivity() {
         }
 
         lifecycleScope.launch {
-            sessionWithSectionsWithCategories =
-                PracticeTime.sessionDao.getWithSectionsWithCategories(sessionId)
-            val (session, sectionsWithCategories) = sessionWithSectionsWithCategories!!
+            sessionWithSectionsWithLibraryItems =
+                PracticeTime.sessionDao.getWithSectionsWithLibraryItems(sessionId)
+            val (session, sectionsWithLibraryItems) = sessionWithSectionsWithLibraryItems!!
 
             ratingBarView.progress = session.rating
             ratingBarView.setOnRatingBarChangeListener { _, _, _ ->
@@ -171,8 +171,8 @@ class FullscreenSessionActivity : AppCompatActivity() {
 
             commentFieldView.setOnClickListener { showCommentDialog() }
 
-            sectionAdapterData.addAll(sectionsWithCategories)
-            sectionAdapter.notifyItemRangeInserted(0, sectionsWithCategories.size)
+            sectionAdapterData.addAll(sectionsWithLibraryItems)
+            sectionAdapter.notifyItemRangeInserted(0, sectionsWithLibraryItems.size)
         }
 
     }
@@ -204,7 +204,7 @@ class FullscreenSessionActivity : AppCompatActivity() {
      *************************************************************************/
 
     private inner class SectionAdapter(
-        private val sectionsWithCategories: List<SectionWithCategory>,
+        private val sectionsWithLibraryItems: List<SectionWithLibraryItem>,
         private val context: Context
     ) : RecyclerView.Adapter<SectionAdapter.ViewHolder>() {
 
@@ -226,18 +226,18 @@ class FullscreenSessionActivity : AppCompatActivity() {
         // Replace the contents of a view (invoked by the layout manager)
         override fun onBindViewHolder(viewHolder: ViewHolder, position: Int) {
             // Get element from your dataset at this position
-            val (section, category) = sectionsWithCategories[position]
+            val (section, libraryItem) = sectionsWithLibraryItems[position]
 
-            // set the color to the category color
-            val categoryColors =  context.resources.getIntArray(R.array.category_colors)
+            // set the color to the libraryItem color
+            val libraryItemColors =  context.resources.getIntArray(R.array.library_item_colors)
             viewHolder.sectionColor.backgroundTintList = ColorStateList.valueOf(
-                categoryColors[category.colorIndex]
+                libraryItemColors[libraryItem.colorIndex]
             )
 
             val sectionDuration = section.duration ?: 0
 
             // contents of the view with that element
-            viewHolder.sectionName.text = category.name
+            viewHolder.sectionName.text = libraryItem.name
             viewHolder.sectionDuration.text = getDurationString(sectionDuration, TIME_FORMAT_HUMAN_PRETTY)
 
             viewHolder.itemView.setOnClickListener {
@@ -257,7 +257,7 @@ class FullscreenSessionActivity : AppCompatActivity() {
         }
 
         // Return the size of your dataset (invoked by the layout manager)
-        override fun getItemCount() = sectionsWithCategories.size
+        override fun getItemCount() = sectionsWithLibraryItems.size
     }
 
     /*************************************************************************

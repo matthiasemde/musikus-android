@@ -1,14 +1,18 @@
 /*
- * This software is licensed under the MIT license
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ *
+ * Copyright (c) 2022 Matthias Emde
+ *
+ * Parts of this software are licensed under the MIT license
  *
  * Copyright (c) 2022, Javier Carbone, author Michael Prommersberger
  */
 
 package de.practicetime.practicetime.ui
 
-import android.content.Context
 import android.content.Intent
-import android.content.SharedPreferences
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -21,7 +25,8 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 import de.practicetime.practicetime.BuildConfig
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
-import de.practicetime.practicetime.database.entities.Category
+import de.practicetime.practicetime.database.entities.LibraryFolder
+import de.practicetime.practicetime.database.entities.LibraryItem
 import de.practicetime.practicetime.ui.intro.AppIntroActivity
 import kotlinx.coroutines.launch
 
@@ -63,19 +68,27 @@ class MainActivity : AppCompatActivity() {
             // FIRST RUN routine
             if (PracticeTime.prefs.getBoolean(PracticeTime.PREFERENCES_KEY_FIRSTRUN, true)) {
 
-                // populate the category table on first run
                 listOf(
-                    Category(name="Die Schöpfung", colorIndex=0),
-                    Category(name="Beethoven Septett", colorIndex=1),
-                    Category(name="Schostakowitsch 9.", colorIndex=2),
-                    Category(name="Trauermarsch c-Moll", colorIndex=3),
-                    Category(name="Adagio", colorIndex=4),
-                    Category(name="Eine kleine Gigue", colorIndex=5),
-                    Category(name="Andantino", colorIndex=6),
-                    Category(name="Klaviersonate", colorIndex=7),
-                    Category(name="Trauermarsch", colorIndex=8),
+                    LibraryFolder(name="Schupra"),
+                    LibraryFolder(name="Fagott"),
+                    LibraryFolder(name="Gesang"),
                 ).forEach {
-                    PracticeTime.categoryDao.insert(it)
+                    PracticeTime.libraryFolderDao.insert(it)
+                }
+
+                // populate the libraryItem table on first run
+                listOf(
+                    LibraryItem(name="Die Schöpfung", colorIndex=0, libraryFolderId = 1),
+                    LibraryItem(name="Beethoven Septett", colorIndex=1, libraryFolderId = 1),
+                    LibraryItem(name="Schostakowitsch 9.", colorIndex=2, libraryFolderId = 2),
+                    LibraryItem(name="Trauermarsch c-Moll", colorIndex=3, libraryFolderId = 2),
+                    LibraryItem(name="Adagio", colorIndex=4, libraryFolderId = 3),
+                    LibraryItem(name="Eine kleine Gigue", colorIndex=5, libraryFolderId = 3),
+                    LibraryItem(name="Andantino", colorIndex=6),
+                    LibraryItem(name="Klaviersonate", colorIndex=7),
+                    LibraryItem(name="Trauermarsch", colorIndex=8),
+                ).forEach {
+                    PracticeTime.libraryItemDao.insert(it)
                 }
 
                 PracticeTime.prefs.edit().putBoolean(PracticeTime.PREFERENCES_KEY_FIRSTRUN, false).apply()

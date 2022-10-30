@@ -21,25 +21,24 @@ import android.widget.Button
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.RecyclerView
 import de.practicetime.practicetime.R
-import de.practicetime.practicetime.database.entities.Category
+import de.practicetime.practicetime.database.entities.LibraryItem
 
 
 /**
- *  Adapter for the Category selection button grid.
+ *  Adapter for the LibraryItem selection button grid.
  */
 
-class CategoryAdapter(
-    private val categories: List<Category>,
-    private val selectedCategories: List<Int> = listOf(),
+class LibraryItemAdapter(
+    private val libraryItems: List<LibraryItem>,
+    private val selectedLibraryItems: List<Int> = listOf(),
     private val context: Activity,
     private val showInActiveSession: Boolean = false,
     private val shortClickHandler: (index: Int) -> Unit = {},
     private val longClickHandler: (index: Int) -> Boolean = { false },
-    private val addCategoryHandler: () -> Unit = {},
-    ) : RecyclerView.Adapter<CategoryAdapter.ViewHolder>() {
+    private val addLibraryItemHandler: () -> Unit = {},
+    ) : RecyclerView.Adapter<LibraryItemAdapter.ViewHolder>() {
 
     companion object {
         private const val VIEW_TYPE_CATEGORY = 1
@@ -48,39 +47,39 @@ class CategoryAdapter(
 
     // returns the view type (ADD_NEW button on last position)
     override fun getItemViewType(position: Int): Int {
-        return if (position < categories.size)
+        return if (position < libraryItems.size)
             VIEW_TYPE_CATEGORY
         else
             VIEW_TYPE_ADD_NEW
     }
 
-    // return the amount of categories (+1 for the add new button if shown in active session )
-    override fun getItemCount() = categories.size + if(showInActiveSession) 1 else 0
+    // return the amount of library items (+1 for the add new button if shown in active session )
+    override fun getItemCount() = libraryItems.size + if(showInActiveSession) 1 else 0
 
     // create new views depending on view type
     override fun onCreateViewHolder(viewGroup: ViewGroup, viewType: Int): ViewHolder {
         val inflater = LayoutInflater.from(viewGroup.context)
         return when (viewType) {
-            VIEW_TYPE_CATEGORY -> ViewHolder.CategoryViewHolder(
+            VIEW_TYPE_CATEGORY -> ViewHolder.ListItemViewHolder(
                 inflater.inflate(
-                    if(showInActiveSession) R.layout.listitem_category
+                    if(showInActiveSession) R.layout.listitem_library_item_old
                     else R.layout.listitem_library_item,
                     viewGroup,
                     false
                 ),
                 showInActiveSession,
                 context,
-                selectedCategories,
+                selectedLibraryItems,
                 shortClickHandler,
                 longClickHandler,
             )
-            else -> ViewHolder.AddNewCategoryViewHolder(
+            else -> ViewHolder.AddNewLibraryItemViewHolder(
                 inflater.inflate(
-                    R.layout.listitem_add_new_category,
+                    R.layout.listitem_add_new_library_item,
                     viewGroup,
                     false
                 ),
-                addCategoryHandler,
+                addLibraryItemHandler,
             )
         }
     }
@@ -88,28 +87,28 @@ class CategoryAdapter(
     // Replace the contents of a view (invoked by the layout manager)
     override fun onBindViewHolder(viewHolder: ViewHolder, position: Int) {
         when (viewHolder) {
-            is ViewHolder.CategoryViewHolder -> viewHolder.bind(
-                categories[position]
+            is ViewHolder.ListItemViewHolder -> viewHolder.bind(
+                libraryItems[position]
             )
-            is ViewHolder.AddNewCategoryViewHolder -> viewHolder.bind()
+            is ViewHolder.AddNewLibraryItemViewHolder -> viewHolder.bind()
         }
     }
 
     sealed class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
 
-        class CategoryViewHolder(
+        class ListItemViewHolder(
             private val view: View,
             private val showInActiveSession: Boolean,
             private val context: Activity,
-            private val selectedCategories: List<Int>,
+            private val selectedLibraryItems: List<Int>,
             private val shortClickHandler: (index: Int) -> Unit,
             private val longClickHandler: (index: Int) -> Boolean,
         ) : ViewHolder(view) {
 
-            fun bind(category: Category) {
-                val categoryColors = context.resources.getIntArray(R.array.category_colors)
+            fun bind(libraryItem: LibraryItem) {
+                val libraryItemColors = context.resources.getIntArray(R.array.library_item_colors)
 
-                // set up short and long click handler for selecting categories
+                // set up short and long click handler for selecting library items
                 itemView.setOnClickListener { shortClickHandler(layoutPosition) }
                 itemView.setOnLongClickListener {
                     // tell the event handler we consumed the event
@@ -117,48 +116,48 @@ class CategoryAdapter(
                 }
 
                 if(showInActiveSession) {
-                    val button = view.findViewById<Button>(R.id.categoryButton)
-                    button.isSelected = selectedCategories.contains(layoutPosition)
+                    val button = view.findViewById<Button>(R.id.libraryItemButton)
+                    button.isSelected = selectedLibraryItems.contains(layoutPosition)
 
 
-                    // store the id of the category on the button
-                    button.tag = category.id
+                    // store the id of the library item on the button
+                    button.tag = libraryItem.id
 
-                    // archived categories should not be displayed
-                    if (category.archived) {
+                    // archived library items should not be displayed
+                    if (libraryItem.archived) {
                         button.visibility = View.GONE
                     }
 
                     // contents of the view with that element
-                    button.text = category.name
+                    button.text = libraryItem.name
 
                     button.backgroundTintList = ColorStateList.valueOf(
-                        categoryColors[category.colorIndex]
+                        libraryItemColors[libraryItem.colorIndex]
                     )
                 } else {
-                    val cardView = view.findViewById<CardView>(R.id.library_item_card)
+//                    val cardView = view.findViewById<CardView>(R.id.library_item_card)
                     val colorIndicatorView = view.findViewById<ImageView>(R.id.library_item_color_indicator)
                     val nameView = view.findViewById<TextView>(R.id.library_item_name)
 
-                    cardView.isSelected = selectedCategories.contains(layoutPosition)
+//                    cardView.isSelected = selectedLibraryItems.contains(layoutPosition)
                     colorIndicatorView.backgroundTintList = ColorStateList.valueOf(
-                        categoryColors[category.colorIndex]
+                        libraryItemColors[libraryItem.colorIndex]
                     )
 
-                    nameView.text = category.name
+                    nameView.text = libraryItem.name
                 }
             }
         }
 
-        class AddNewCategoryViewHolder(
+        class AddNewLibraryItemViewHolder(
             view: View,
-            private val addCategoryHandler: () -> Unit,
+            private val addLibraryItemHandler: () -> Unit,
         ) : ViewHolder(view) {
 
-            private val button: ImageButton = view.findViewById(R.id.addNewCategory)
+            private val button: ImageButton = view.findViewById(R.id.addNewLibraryItem)
 
             fun bind() {
-                button.setOnClickListener { addCategoryHandler() }
+                button.setOnClickListener { addLibraryItemHandler() }
             }
         }
     }

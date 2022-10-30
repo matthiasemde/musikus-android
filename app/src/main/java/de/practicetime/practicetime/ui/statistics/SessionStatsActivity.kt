@@ -32,7 +32,7 @@ import com.github.mikephil.charting.listener.OnChartValueSelectedListener
 import com.google.android.material.tabs.TabLayout
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
-import de.practicetime.practicetime.database.entities.Category
+import de.practicetime.practicetime.database.entities.LibraryItem
 import de.practicetime.practicetime.utils.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -44,16 +44,16 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
 
     private lateinit var barChart: BarChart
     private lateinit var pieChart: PieChart
-    private lateinit var categoryListAdapter: CategoryStatsAdapter
+    private lateinit var libraryItemListAdapter: LibraryItemStatsAdapter
     private var daysViewWeekOffset = 0L
     private var weeksViewWeekOffset = 0L
     private var monthsViewMonthOffset = 0L
     private var colorAmount = 0
 
-    private val categories = ArrayList<CategoryListElement>()
+    private val libraryItems = ArrayList<LibraryItemListElement>()
 
-    data class CategoryListElement(
-        val category: Category,
+    data class LibraryItemListElement(
+        val libraryItem: LibraryItem,
         var totalDuration: Int = 0,
         var selected: Boolean,
         var visible: Boolean,
@@ -93,10 +93,10 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
             seekFuture()
         }
 
-        colorAmount = resources?.getIntArray(R.array.category_colors)?.toCollection(mutableListOf())?.size ?: 0
+        colorAmount = resources?.getIntArray(R.array.library_item_colors)?.toCollection(mutableListOf())?.size ?: 0
         initBarChart()
         initPieChart()
-        initCategoryList()
+        initLibraryItemList()
 
         updateChartData()
         setBtnEnabledState()
@@ -170,24 +170,24 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
         }
     }
 
-    /** initialize the checkbox list with the categories */
-    private fun initCategoryList() {
+    /** initialize the checkbox list with the libraryItems */
+    private fun initLibraryItemList() {
         lifecycleScope.launch {
-            PracticeTime.categoryDao.getAll().forEach {
-                categories.add(
-                    CategoryListElement(
+            PracticeTime.libraryItemDao.getAll().forEach {
+                libraryItems.add(
+                    LibraryItemListElement(
                         it,
                         selected = true,
                         visible = false
                     )
                 )
             }
-            categoryListAdapter = CategoryStatsAdapter()
+            libraryItemListAdapter = LibraryItemStatsAdapter()
 
-            val categoryRecyclerView = findViewById<RecyclerView>(R.id.recyclerview_statistics)
-            categoryRecyclerView.apply {
+            val libraryItemRecyclerView = findViewById<RecyclerView>(R.id.recyclerview_statistics)
+            libraryItemRecyclerView.apply {
                 layoutManager = LinearLayoutManager(this@SessionStatsActivity)
-                adapter = categoryListAdapter
+                adapter = libraryItemListAdapter
             }
         }
     }
@@ -400,16 +400,16 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
                 dataSetBarChart = BarDataSet(barValues, "Label")
                 dataSetPieChart = PieDataSet(pieValues, "Label")
 
-                val categoryColors = resources?.getIntArray(R.array.category_colors)
+                val libraryItemColors = resources?.getIntArray(R.array.library_item_colors)
                     ?.toCollection(mutableListOf())
                 dataSetBarChart.apply {
-                    colors = categoryColors
+                    colors = libraryItemColors
                     setDrawValues(true)
                     highLightColor = PracticeTime.getThemeColor(R.attr.colorOnSurface, this@SessionStatsActivity)
                     highLightAlpha = 80    // 150 out of 255 (0=fully transparent)
                 }
                 dataSetPieChart.apply {
-                    colors = categoryColors
+                    colors = libraryItemColors
                     setDrawValues(true)
                     sliceSpace = 3f
 
@@ -473,9 +473,9 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
             // update the Heading
             setHeadingTextViews()
 
-            // don't recalculate the total durations for each category if explicitly told so to prevent flashing
+            // don't recalculate the total durations for each libraryItem if explicitly told so to prevent flashing
             if (recalculateDurs)
-                categoryListAdapter.notifyItemRangeChanged(0, categories.filter { it.visible }.size)
+                libraryItemListAdapter.notifyItemRangeChanged(0, libraryItems.filter { it.visible }.size)
 
             delay(50)  // TODO this is needed in order to make movePieChart work (halfway) the first time. Don't know why. Still buggy tho
             movePieChart()
@@ -584,38 +584,38 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
     private suspend fun getMoToFrArray(): Pair< ArrayList<BarEntry>, ArrayList<PieEntry> > {
         val barChartArray = arrayListOf<BarEntry>()
         val pieChartArray = arrayListOf<PieEntry>()
-        val visibleCategories = ArrayList<Long>()
+        val visibleLibraryItems = ArrayList<Long>()
 
-        categories.forEach { it.totalDuration = 0 }
+        libraryItems.forEach { it.totalDuration = 0 }
 
         // init pie chart array here because we sum over all days
         val floatArrDurPieChart = FloatArray(colorAmount) {0f}
 
         for (day in VIEWS.DAYS_VIEW.barCount downTo 1) {
             val floatArrDurBarChart = FloatArray(colorAmount) {0f}
-            val sectionsThisDay = PracticeTime.sectionDao.getWithCategories(
+            val sectionsThisDay = PracticeTime.sectionDao.getWithLibraryItems(
                 getStartOfDayOfWeek(day.toLong(), daysViewWeekOffset).toEpochSecond(),
                 getEndOfDayOfWeek(day.toLong(), daysViewWeekOffset).toEpochSecond()
             )
-            sectionsThisDay.forEach { (section, category) ->
+            sectionsThisDay.forEach { (section, libraryItem) ->
                 // only show selected entries (checkbox enabled)
-                if(categories.any { it.selected && it.category.id == category.id }) {
-                    // sum all section duration with same color (regardless whether they are actually the same category)
-                    floatArrDurBarChart[category.colorIndex] += (section.duration ?: 0).toFloat()
-                    floatArrDurPieChart[category.colorIndex] += (section.duration ?: 0).toFloat()
+                if(libraryItems.any { it.selected && it.libraryItem.id == libraryItem.id }) {
+                    // sum all section duration with same color (regardless whether they are actually the same libraryItem)
+                    floatArrDurBarChart[libraryItem.colorIndex] += (section.duration ?: 0).toFloat()
+                    floatArrDurPieChart[libraryItem.colorIndex] += (section.duration ?: 0).toFloat()
                 }
-                visibleCategories.add(category.id)
-                categories.first { it.category.id == category.id}.totalDuration += section.duration ?: 0
+                visibleLibraryItems.add(libraryItem.id)
+                libraryItems.first { it.libraryItem.id == libraryItem.id}.totalDuration += section.duration ?: 0
             }
             // add the entry to the BEGINNING of the array otherwise the bars will not be clickable (probably a bug?)
             barChartArray.add(0, BarEntry(day.toFloat(), floatArrDurBarChart))
         }
 
         floatArrDurPieChart.forEachIndexed { cat_id, dur ->
-            pieChartArray.add(PieEntry(dur, "Category $cat_id"))
+            pieChartArray.add(PieEntry(dur, "LibraryItem $cat_id"))
         }
 
-        updateVisibleCategories(visibleCategories)
+        updateVisibleLibraryItems(visibleLibraryItems)
         return Pair(barChartArray, pieChartArray)
     }
 
@@ -625,37 +625,37 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
     private suspend fun getWeeksArray(): Pair< ArrayList<BarEntry>, ArrayList<PieEntry> > {
         val chartArray = arrayListOf<BarEntry>()
         val pieChartArray = arrayListOf<PieEntry>()
-        val visibleCategories = ArrayList<Long>()
+        val visibleLibraryItems = ArrayList<Long>()
 
-        categories.forEach { it.totalDuration = 0 }
+        libraryItems.forEach { it.totalDuration = 0 }
 
         // init pie chart array here because we sum over all days
         val floatArrDurPieChart = FloatArray(colorAmount) {0f}
 
         for (week in 0 downTo -(VIEWS.WEEKS_VIEW.barCount-1)) {     // last 10 weeks
             val floatArrDurBarChart = FloatArray(colorAmount) {0f}
-            val sectionsThisWeek = PracticeTime.sectionDao.getWithCategories(
+            val sectionsThisWeek = PracticeTime.sectionDao.getWithLibraryItems(
                 getStartOfWeek(week.toLong() + weeksViewWeekOffset).toEpochSecond(),
                 getEndOfWeek(week.toLong() + weeksViewWeekOffset).toEpochSecond()
             )
-            sectionsThisWeek.forEach { (section, category) ->
+            sectionsThisWeek.forEach { (section, libraryItem) ->
                 // only show selected entries (checkbox enabled)
-                if(categories.any { it.selected && it.category.id == category.id }) {
-                    floatArrDurBarChart[category.colorIndex] += (section.duration ?: 0).toFloat()
-                    floatArrDurPieChart[category.colorIndex] += (section.duration ?: 0).toFloat()
+                if(libraryItems.any { it.selected && it.libraryItem.id == libraryItem.id }) {
+                    floatArrDurBarChart[libraryItem.colorIndex] += (section.duration ?: 0).toFloat()
+                    floatArrDurPieChart[libraryItem.colorIndex] += (section.duration ?: 0).toFloat()
                 }
-                visibleCategories.add(category.id)
-                categories.first { it.category.id == category.id}.totalDuration += section.duration ?: 0
+                visibleLibraryItems.add(libraryItem.id)
+                libraryItems.first { it.libraryItem.id == libraryItem.id}.totalDuration += section.duration ?: 0
             }
             // add the entry to the BEGINNING of the array otherwise the bars will not be clickable (probably a bug?)
             chartArray.add(0, BarEntry((week + weeksViewWeekOffset).toFloat(), floatArrDurBarChart))
         }
 
         floatArrDurPieChart.forEachIndexed { cat_id, dur ->
-            pieChartArray.add(PieEntry(dur, "Category $cat_id"))
+            pieChartArray.add(PieEntry(dur, "LibraryItem $cat_id"))
         }
 
-        updateVisibleCategories(visibleCategories)
+        updateVisibleLibraryItems(visibleLibraryItems)
         return Pair(chartArray, pieChartArray)
     }
 
@@ -665,60 +665,60 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
     private suspend fun getMonthsArray(): Pair< ArrayList<BarEntry>, ArrayList<PieEntry> > {
         val barChartArray = arrayListOf<BarEntry>()
         val pieChartArray = arrayListOf<PieEntry>()
-        val visibleCategories = ArrayList<Long>()
+        val visibleLibraryItems = ArrayList<Long>()
 
-        categories.forEach { it.totalDuration = 0 }
+        libraryItems.forEach { it.totalDuration = 0 }
 
         // init pie chart array here because we sum over all days
         val floatArrDurPieChart = FloatArray(colorAmount) {0f}
         for (month in 0 downTo -(VIEWS.MONTHS_VIEW.barCount-1)) {
             val floatArrDurBarChart = FloatArray(colorAmount) {0f}
-            val sectionsThisMonth = PracticeTime.sectionDao.getWithCategories(
+            val sectionsThisMonth = PracticeTime.sectionDao.getWithLibraryItems(
                 getStartOfMonth(month.toLong() + monthsViewMonthOffset).toEpochSecond(),
                 getEndOfMonth(month.toLong() + monthsViewMonthOffset).toEpochSecond()
             )
-            sectionsThisMonth.forEach { (section, category) ->
+            sectionsThisMonth.forEach { (section, libraryItem) ->
                 // only show selected entries (checkbox enabled)
-                if(categories.any { it.selected && it.category.id == category.id }) {
-                    floatArrDurBarChart[category.colorIndex] += (section.duration ?: 0).toFloat()
-                    floatArrDurPieChart[category.colorIndex] += (section.duration ?: 0).toFloat()
+                if(libraryItems.any { it.selected && it.libraryItem.id == libraryItem.id }) {
+                    floatArrDurBarChart[libraryItem.colorIndex] += (section.duration ?: 0).toFloat()
+                    floatArrDurPieChart[libraryItem.colorIndex] += (section.duration ?: 0).toFloat()
                 }
-                visibleCategories.add(category.id)
-                categories.first { it.category.id == category.id}.totalDuration += section.duration ?: 0
+                visibleLibraryItems.add(libraryItem.id)
+                libraryItems.first { it.libraryItem.id == libraryItem.id}.totalDuration += section.duration ?: 0
             }
             // add the entry to the BEGINNING of the array otherwise the bars will not be clickable (probably a bug?)
             barChartArray.add(0, BarEntry((month + monthsViewMonthOffset).toFloat(), floatArrDurBarChart))
         }
 
         floatArrDurPieChart.forEachIndexed { cat_id, dur ->
-            pieChartArray.add(PieEntry(dur, "Category $cat_id"))
+            pieChartArray.add(PieEntry(dur, "LibraryItem $cat_id"))
         }
 
-        updateVisibleCategories(visibleCategories)
+        updateVisibleLibraryItems(visibleLibraryItems)
         return Pair(barChartArray, pieChartArray)
     }
 
     /** updates the shown Elements in the checkbox list according to the data in the chart */
-    private fun updateVisibleCategories(visibleCategories: List<Long>) {
+    private fun updateVisibleLibraryItems(visibleLibraryItems: List<Long>) {
         var elemRemovedOrInserted = false
         // traverse in reverse order so that newly inserted/removed items don't affect list indices
-        categories.asReversed().forEach { elem ->
-            if (visibleCategories.contains(elem.category.id)) {
-                if (!elem.visible) {   // category was hidden before, should now be shown
+        libraryItems.asReversed().forEach { elem ->
+            if (visibleLibraryItems.contains(elem.libraryItem.id)) {
+                if (!elem.visible) {   // libraryItem was hidden before, should now be shown
                     elem.visible = true
-                    categories.filter { it.visible }    // convert to same list as adapter uses
-                        .indexOfFirst { it.category.id == elem.category.id }    // find newly "inserted" item position
+                    libraryItems.filter { it.visible }    // convert to same list as adapter uses
+                        .indexOfFirst { it.libraryItem.id == elem.libraryItem.id }    // find newly "inserted" item position
                         .let { position ->
-                            categoryListAdapter.notifyItemInserted(position)    // notify adapter about new element
+                            libraryItemListAdapter.notifyItemInserted(position)    // notify adapter about new element
                         }
                     elemRemovedOrInserted = true
                 }
             } else {
-                if (elem.visible) {     // category was shown, should now be hidden
-                    categories.filter { it.visible }    // convert to same list as adapter uses
-                        .indexOfFirst { it.category.id == elem.category.id }    // find newly "removed" item position
+                if (elem.visible) {     // libraryItem was shown, should now be hidden
+                    libraryItems.filter { it.visible }    // convert to same list as adapter uses
+                        .indexOfFirst { it.libraryItem.id == elem.libraryItem.id }    // find newly "removed" item position
                         .let { position ->
-                            categoryListAdapter.notifyItemRemoved(position)    // notify adapter about deleted element
+                            libraryItemListAdapter.notifyItemRemoved(position)    // notify adapter about deleted element
                         }
                     elem.visible = false
                     elemRemovedOrInserted = true
@@ -729,7 +729,7 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
         if(elemRemovedOrInserted) findViewById<RecyclerView>(R.id.recyclerview_statistics).scrollToPosition(0)
 
         // if list is empty, show shrug
-        if (categories.none { it.visible }) {
+        if (libraryItems.none { it.visible }) {
             findViewById<LinearLayout>(R.id.shrug_layout).visibility = View.VISIBLE
             findViewById<TextView>(R.id.shrug_text_1).text = resources.getString(R.string.no_sessions)
             findViewById<TextView>(R.id.shrug_text_2).visibility = View.GONE
@@ -866,11 +866,11 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
         }
     }
 
-    private inner class CategoryStatsAdapter : RecyclerView.Adapter<CategoryStatsAdapter.ViewHolder>() {
+    private inner class LibraryItemStatsAdapter : RecyclerView.Adapter<LibraryItemStatsAdapter.ViewHolder>() {
 
         inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-            val catCheckBox: CheckBox = view.findViewById(R.id.checkbox_category)
-            val catTimeView: TextView = view.findViewById(R.id.total_time_category)
+            val catCheckBox: CheckBox = view.findViewById(R.id.checkbox_libraryItem)
+            val catTimeView: TextView = view.findViewById(R.id.total_time_libraryItem)
         }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -883,14 +883,14 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
 
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
 
-            val elem = categories.filter { it.visible }[position]
-            val categoryColors = resources.getIntArray(R.array.category_colors)
+            val elem = libraryItems.filter { it.visible }[position]
+            val libraryItemColors = resources.getIntArray(R.array.library_item_colors)
 
-            holder.catCheckBox.text = elem.category.name
+            holder.catCheckBox.text = elem.libraryItem.name
             holder.catCheckBox.setOnCheckedChangeListener(null)
             holder.catCheckBox.isChecked = elem.selected
             holder.catCheckBox.buttonTintList = ColorStateList.valueOf(
-                categoryColors[elem.category.colorIndex]
+                libraryItemColors[elem.libraryItem.colorIndex]
             )
             holder.catCheckBox.setOnCheckedChangeListener { _, isChecked ->
                 elem.selected = isChecked   // sync list with UI
@@ -900,7 +900,7 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
             holder.catTimeView.text = getDurationString(elem.totalDuration, TIME_FORMAT_HUMAN_PRETTY)
         }
 
-        override fun getItemCount(): Int = categories.filter { it.visible }.size
+        override fun getItemCount(): Int = libraryItems.filter { it.visible }.size
 
     }
 

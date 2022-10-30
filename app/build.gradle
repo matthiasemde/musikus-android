@@ -74,6 +74,8 @@ dependencies {
         // Live Data
         implementation 'androidx.compose.runtime:runtime-livedata:1.4.0-alpha01'
 
+        implementation "com.google.accompanist:accompanist-systemuicontroller:0.17.0"
+
     // Room
     def room_version = "2.4.3"
     implementation "androidx.room:room-runtime:$room_version"

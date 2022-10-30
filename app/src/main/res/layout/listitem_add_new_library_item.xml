@@ -6,11 +6,11 @@
 -->
 <ImageButton xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/addNewCategory"
+    android:id="@+id/addNewLibraryItem"
     android:layout_width="150dp"
     android:layout_height="50dp"
     android:layout_margin="4dp"
-    android:background="@drawable/add_category_button"
+    android:background="@drawable/add_library_item_button"
     android:src="@drawable/ic_library_add"
     app:tint="?attr/colorPrimary">
 

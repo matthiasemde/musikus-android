@@ -47,7 +47,7 @@ import com.google.android.material.snackbar.Snackbar
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
 import de.practicetime.practicetime.components.NonDraggableRatingBar
-import de.practicetime.practicetime.database.entities.Category
+import de.practicetime.practicetime.database.entities.LibraryItem
 import de.practicetime.practicetime.database.entities.Section
 import de.practicetime.practicetime.database.entities.Session
 import de.practicetime.practicetime.database.entities.SessionWithSections
@@ -55,8 +55,8 @@ import de.practicetime.practicetime.services.RecorderService
 import de.practicetime.practicetime.services.SessionForegroundService
 import de.practicetime.practicetime.ui.goals.ProgressUpdateActivity
 import de.practicetime.practicetime.ui.goals.updateGoals
-import de.practicetime.practicetime.ui.library.CategoryAdapter
-import de.practicetime.practicetime.ui.library.CategoryDialog
+import de.practicetime.practicetime.ui.library.LibraryItemAdapter
+import de.practicetime.practicetime.ui.library.LibraryItemDialog
 import de.practicetime.practicetime.utils.TIME_FORMAT_HMS_DIGITAL
 import de.practicetime.practicetime.utils.TIME_FORMAT_MS_DIGITAL
 import de.practicetime.practicetime.utils.getCurrTimestamp
@@ -72,9 +72,9 @@ import kotlin.math.round
 
 class ActiveSessionActivity : AppCompatActivity() {
 
-    private var activeCategories = ArrayList<Category>()
+    private var activeLibraryItems = ArrayList<LibraryItem>()
 
-    private var addCategoryDialog: CategoryDialog? = null
+    private var addLibraryItemDialog: LibraryItemDialog? = null
     private var discardSessionDialog: AlertDialog? = null
 
     private lateinit var sectionsListAdapter: SectionsListAdapter
@@ -142,8 +142,8 @@ class ActiveSessionActivity : AppCompatActivity() {
 
         practiceTimer()
 
-        // initialize adapter and recyclerView for showing category buttons from database
-        initCategoryList()
+        // initialize adapter and recyclerView for showing libraryItem buttons from database
+        initLibraryItemList()
 
         // create the dialog for finishing the current session
         initEndSessionDialog()
@@ -186,27 +186,27 @@ class ActiveSessionActivity : AppCompatActivity() {
         updateRecordingsList()
     }
 
-    private fun initCategoryList() {
-        val categoryAdapter = CategoryAdapter(
-            activeCategories,
+    private fun initLibraryItemList() {
+        val libraryItemAdapter = LibraryItemAdapter(
+            activeLibraryItems,
             context = this,
             showInActiveSession = true,
-            shortClickHandler = ::categoryPressed,
-            addCategoryHandler = { addCategoryDialog?.show() }
+            shortClickHandler = ::libraryItemPressed,
+            addLibraryItemHandler = { addLibraryItemDialog?.show() }
         )
 
-        val categoryList = findViewById<RecyclerView>(R.id.categoryList)
+        val libraryItemList = findViewById<RecyclerView>(R.id.libraryItemList)
 
         val rowNums = 3
 
-        categoryList.apply {
+        libraryItemList.apply {
             layoutManager = GridLayoutManager(
                 context,
                 rowNums,
                 GridLayoutManager.HORIZONTAL,
                 false
             )
-            adapter = categoryAdapter
+            adapter = libraryItemAdapter
             itemAnimator?.apply {
 //                addDuration = 200L
 //                moveDuration = 500L
@@ -214,12 +214,12 @@ class ActiveSessionActivity : AppCompatActivity() {
             }
         }
 
-        // load all active categories from the database and notify the adapter
+        // load all active libraryItems from the database and notify the adapter
         lifecycleScope.launch {
-            PracticeTime.categoryDao.get(activeOnly = true).let { activeCategories.addAll(it.reversed())
-                categoryAdapter.notifyItemRangeInserted(0, it.size)
+            PracticeTime.libraryItemDao.get(activeOnly = true).let { activeLibraryItems.addAll(it.reversed())
+                libraryItemAdapter.notifyItemRangeInserted(0, it.size)
             }
-            categoryList.apply {
+            libraryItemList.apply {
                 scrollToPosition(0)
                 visibility = View.VISIBLE
             }
@@ -227,28 +227,28 @@ class ActiveSessionActivity : AppCompatActivity() {
             adjustSpanCountCatList()
         }
 
-        // the handler for creating new categories
-        fun addCategoryHandler(newCategory: Category) {
+        // the handler for creating new libraryItems
+        fun addLibraryItemHandler(newLibraryItem: LibraryItem) {
             lifecycleScope.launch {
-                PracticeTime.categoryDao.insertAndGet(newCategory)?.let {
-                    activeCategories.add(0, it)
-                    categoryAdapter.notifyItemInserted(0)
-                    categoryList.scrollToPosition(0)
+                PracticeTime.libraryItemDao.insertAndGet(newLibraryItem)?.let {
+                    activeLibraryItems.add(0, it)
+                    libraryItemAdapter.notifyItemInserted(0)
+                    libraryItemList.scrollToPosition(0)
                     adjustSpanCountCatList()
                 }
             }
         }
 
-        // create a new category dialog for adding new categories
-        addCategoryDialog = CategoryDialog(this, ::addCategoryHandler)
+        // create a new library item dialog for adding new libraryItems
+        addLibraryItemDialog = LibraryItemDialog(this, ::addLibraryItemHandler)
     }
 
     private fun adjustSpanCountCatList() {
-        // change the span count if only few categories are displayed
-        val l = findViewById<RecyclerView>(R.id.categoryList).layoutManager as GridLayoutManager
+        // change the span count if only few libraryItems are displayed
+        val l = findViewById<RecyclerView>(R.id.libraryItemList).layoutManager as GridLayoutManager
         l.spanCount = when {
-            (activeCategories.size < 3) -> 1
-            (activeCategories.size < 6) -> 2
+            (activeLibraryItems.size < 3) -> 1
+            (activeLibraryItems.size < 6) -> 2
             else -> 3
         }
     }
@@ -654,7 +654,7 @@ class ActiveSessionActivity : AppCompatActivity() {
         } else {
             val recordingNameFormat = SimpleDateFormat("_dd-MM-yyyy'T'H_mm_ss", Locale.getDefault())
 
-            val displayName = (if(mService.sectionBuffer.isNotEmpty()) mService.currCategoryName
+            val displayName = (if(mService.sectionBuffer.isNotEmpty()) mService.currLibraryItemName
             else "PracticeTime") + recordingNameFormat.format(Date().time)
 
             val contentValues = ContentValues().apply {
@@ -1143,9 +1143,9 @@ class ActiveSessionActivity : AppCompatActivity() {
      *  Timing stuff
      ********************************************/
 
-    // the routine for handling presses to category buttons
-    private fun categoryPressed(index: Int) {
-        val categoryId = activeCategories[index].id
+    // the routine for handling presses to library item buttons
+    private fun libraryItemPressed(index: Int) {
+        val libraryItemId = activeLibraryItems[index].id
 
         if (!mService.sessionActive) {   // session starts now
 
@@ -1158,15 +1158,15 @@ class ActiveSessionActivity : AppCompatActivity() {
             // when the session start, also update the goals
             lifecycleScope.launch { updateGoals() }
         } else if (mService.sectionBuffer.last().let {         // when session is running, don't allow starting if...
-                (categoryId == it.first.categoryId) ||           // ... in the same category
+                (libraryItemId == it.first.libraryItemId) ||   // ... in the same library item
                         ((it.first.duration
                             ?: (0 - it.second)) < 1)           // ... section running for less than 1sec
         }) {
             return  // ignore press then
         }
 
-        // start a new section for the chosen category
-        mService.startNewSection(categoryId, activeCategories[index].name)
+        // start a new section for the chosen library item
+        mService.startNewSection(libraryItemId, activeLibraryItems[index].name)
 
         updateActiveSectionView()
         adaptBottomTextView(true)
@@ -1183,10 +1183,10 @@ class ActiveSessionActivity : AppCompatActivity() {
         val sDur = findViewById<TextView>(R.id.running_section_duration)
 
         if (mService.sectionBuffer.isNotEmpty()) {
-            val categoryName = activeCategories.find { category ->
-                category.id == mService.sectionBuffer.last().first.categoryId
+            val libraryItemName = activeLibraryItems.find { libraryItem ->
+                libraryItem.id == mService.sectionBuffer.last().first.libraryItemId
             }?.name
-            sName.text = categoryName
+            sName.text = libraryItemName
 
             var sectionDur: Int
             mService.sectionBuffer.last().apply {
@@ -1504,7 +1504,7 @@ class ActiveSessionActivity : AppCompatActivity() {
      * Adapter for SectionList RecyclerView.
      */
     private inner class SectionsListAdapter(
-        // TODO this should be a list of SectionWithCategories or a custom data class
+        // TODO this should be a list of SectionWithLibraryItems or a custom data class
         private val sections: ArrayList<Pair<Section, Int>>,
     ) : RecyclerView.Adapter<SectionsListAdapter.ViewHolder>() {
 
@@ -1544,8 +1544,8 @@ class ActiveSessionActivity : AppCompatActivity() {
             }
 
             // Get element from your dataset at this position
-            val categoryName = activeCategories.find { category ->
-                category.id == sections[position].first.categoryId
+            val libraryItemName = activeLibraryItems.find { libraryItem ->
+                libraryItem.id == sections[position].first.libraryItemId
             }?.name
 
             // calculate duration of each session (minus pauses)
@@ -1555,7 +1555,7 @@ class ActiveSessionActivity : AppCompatActivity() {
             }
 
             // contents of the view with that element
-            viewHolder.sectionName.text = categoryName
+            viewHolder.sectionName.text = libraryItemName
             viewHolder.sectionDuration.text = getDurationString(sectionDuration, TIME_FORMAT_HMS_DIGITAL)
 
         }

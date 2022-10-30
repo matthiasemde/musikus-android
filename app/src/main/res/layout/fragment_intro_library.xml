@@ -13,12 +13,12 @@
     android:background="@android:color/transparent">
 
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/introCategoryList"
+        android:id="@+id/introLibraryItemList"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:overScrollMode="never"
         tools:itemCount="3"
-        tools:listitem="@layout/listitem_category" />
+        tools:listitem="@layout/listitem_library_item" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

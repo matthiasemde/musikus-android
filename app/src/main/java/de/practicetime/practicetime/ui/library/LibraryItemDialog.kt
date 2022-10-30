@@ -17,45 +17,45 @@ import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.core.widget.addTextChangedListener
 import de.practicetime.practicetime.R
-import de.practicetime.practicetime.database.entities.Category
+import de.practicetime.practicetime.database.entities.LibraryItem
 
-class CategoryDialog (
+class LibraryItemDialog (
     context: Activity,
-    submitHandler: (category: Category) -> Unit,
+    submitHandler: (libraryItem: LibraryItem) -> Unit,
 ) {
 
     // instantiate the builder for the alert dialog
     private val alertDialogBuilder = AlertDialog.Builder(context)
     private val inflater = context.layoutInflater
     private val dialogView = inflater.inflate(
-        R.layout.dialog_add_or_change_category,
+        R.layout.dialog_add_or_change_library_item,
         null,
     )
 
     // find and save all the views in the dialog view
-    private val categoryDialogTitleView =
-        dialogView.findViewById<TextView>(R.id.categoryDialogTitle)
-    private val categoryNameView =
-        dialogView.findViewById<EditText>(R.id.addCategoryDialogName)
-    private val categoryColorButtonGroupRow1 =
-        dialogView.findViewById<RadioGroup>(R.id.addCategoryDialogColorRow1)
-    private val categoryColorButtonGroupRow2 =
-        dialogView.findViewById<RadioGroup>(R.id.addCategoryDialogColorRow2)
+    private val libraryItemDialogTitleView =
+        dialogView.findViewById<TextView>(R.id.libraryItemDialogTitle)
+    private val libraryItemNameView =
+        dialogView.findViewById<EditText>(R.id.addLibraryItemDialogName)
+    private val libraryItemColorButtonGroupRow1 =
+        dialogView.findViewById<RadioGroup>(R.id.addLibraryItemDialogColorRow1)
+    private val libraryItemColorButtonGroupRow2 =
+        dialogView.findViewById<RadioGroup>(R.id.addLibraryItemDialogColorRow2)
 
-    private val categoryColorButtons = listOf<RadioButton>(
-        dialogView.findViewById(R.id.addCategoryDialogColor1),
-        dialogView.findViewById(R.id.addCategoryDialogColor2),
-        dialogView.findViewById(R.id.addCategoryDialogColor3),
-        dialogView.findViewById(R.id.addCategoryDialogColor4),
-        dialogView.findViewById(R.id.addCategoryDialogColor5),
-        dialogView.findViewById(R.id.addCategoryDialogColor6),
-        dialogView.findViewById(R.id.addCategoryDialogColor7),
-        dialogView.findViewById(R.id.addCategoryDialogColor8),
-        dialogView.findViewById(R.id.addCategoryDialogColor9),
-        dialogView.findViewById(R.id.addCategoryDialogColor10),
+    private val libraryItemColorButtons = listOf<RadioButton>(
+        dialogView.findViewById(R.id.addLibraryItemDialogColor1),
+        dialogView.findViewById(R.id.addLibraryItemDialogColor2),
+        dialogView.findViewById(R.id.addLibraryItemDialogColor3),
+        dialogView.findViewById(R.id.addLibraryItemDialogColor4),
+        dialogView.findViewById(R.id.addLibraryItemDialogColor5),
+        dialogView.findViewById(R.id.addLibraryItemDialogColor6),
+        dialogView.findViewById(R.id.addLibraryItemDialogColor7),
+        dialogView.findViewById(R.id.addLibraryItemDialogColor8),
+        dialogView.findViewById(R.id.addLibraryItemDialogColor9),
+        dialogView.findViewById(R.id.addLibraryItemDialogColor10),
     )
 
-    private var category: Category? = null
+    private var libraryItem: LibraryItem? = null
 
     private var selectedName = ""
     private var selectedColorIndex = -1
@@ -69,15 +69,15 @@ class CategoryDialog (
             setView(dialogView)
 
             // define the callback function for the positive button
-            setPositiveButton(R.string.addCategoryAlertOk) { dialog, _ ->
+            setPositiveButton(R.string.addLibraryItemAlertOk) { dialog, _ ->
 
                 // check if all fields are filled out
                 if (isComplete()) {
-                    // create the edited / new category
-                    (category?.apply {
+                    // create the edited / new libraryItem
+                    (libraryItem?.apply {
                         name = selectedName
                         colorIndex = selectedColorIndex
-                    } ?: Category(
+                    } ?: LibraryItem(
                         name = selectedName,
                         colorIndex = selectedColorIndex,
                     // and call the submit handler
@@ -93,27 +93,27 @@ class CategoryDialog (
 
             // define the callback function for the negative button
             // to clear the dialog and then cancel it
-            setNegativeButton(R.string.addCategoryAlertCancel) { dialog, _ ->
+            setNegativeButton(R.string.addLibraryItemAlertCancel) { dialog, _ ->
                 resetDialog()
                 dialog.cancel()
             }
         }
 
-        // fetch the colors for the categories from the resources
-        val categoryColors =  context.resources.getIntArray(R.array.category_colors)
+        // fetch the colors for the libraryItems from the resources
+        val libraryItemColors =  context.resources.getIntArray(R.array.library_item_colors)
 
         // and apply them to the radio buttons as well as set the event listener
         // which ensures only one color is selected at a time
-        categoryColorButtons.forEachIndexed { index, button ->
-            button.backgroundTintList = ColorStateList.valueOf(categoryColors[index])
+        libraryItemColorButtons.forEachIndexed { index, button ->
+            button.backgroundTintList = ColorStateList.valueOf(libraryItemColors[index])
             button.buttonTintList = ColorStateList.valueOf(PracticeTime.getThemeColor(R.attr.colorOnPrimary, context))
             button.setOnCheckedChangeListener { _, isChecked ->
                 if(isChecked) {
                     selectedColorIndex = index
                     if (index < 5) {
-                        categoryColorButtonGroupRow2.clearCheck()
+                        libraryItemColorButtonGroupRow2.clearCheck()
                     } else {
-                        categoryColorButtonGroupRow1.clearCheck()
+                        libraryItemColorButtonGroupRow1.clearCheck()
                     }
                 }
             }
@@ -126,10 +126,10 @@ class CategoryDialog (
     }
 
     private fun resetDialog() {
-        categoryNameView.text.clear()
-        categoryColorButtonGroupRow1.clearCheck()
-        categoryColorButtonGroupRow2.clearCheck()
-        category = null
+        libraryItemNameView.text.clear()
+        libraryItemColorButtonGroupRow1.clearCheck()
+        libraryItemColorButtonGroupRow2.clearCheck()
+        libraryItem = null
         selectedName = ""
         selectedColorIndex = -1
     }
@@ -140,32 +140,32 @@ class CategoryDialog (
     }
 
     // the public function to show the dialog
-    // if a category is passed it will be edited
-    fun show(editCategory: Category? = null) {
+    // if a libraryItem is passed it will be edited
+    fun show(editLibraryItem: LibraryItem? = null) {
 
         alertDialog.show()
         alertDialog.also { dialog ->
             val positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
 
-            // if a category is passed, apply its properties to the dialog
-            editCategory?.let {
-                categoryDialogTitleView.setText(R.string.addCategoryDialogTitleEdit)
-                positiveButton.setText(R.string.addCategoryAlertOkEdit)
-                category = it
-                categoryNameView.setText(it.name)
+            // if a libraryItem is passed, apply its properties to the dialog
+            editLibraryItem?.let {
+                libraryItemDialogTitleView.setText(R.string.addLibraryItemDialogTitleEdit)
+                positiveButton.setText(R.string.addLibraryItemAlertOkEdit)
+                libraryItem = it
+                libraryItemNameView.setText(it.name)
                 selectedName = it.name
-                categoryColorButtons[it.colorIndex].isChecked = true
+                libraryItemColorButtons[it.colorIndex].isChecked = true
             }
 
             positiveButton.isEnabled = isComplete()
-            categoryNameView.addTextChangedListener {
-                selectedName = categoryNameView.text.toString().trim()
+            libraryItemNameView.addTextChangedListener {
+                selectedName = libraryItemNameView.text.toString().trim()
                 positiveButton.isEnabled = isComplete()
             }
-            categoryColorButtonGroupRow1.setOnCheckedChangeListener { _, _ ->
+            libraryItemColorButtonGroupRow1.setOnCheckedChangeListener { _, _ ->
                 positiveButton.isEnabled = isComplete()
             }
-            categoryColorButtonGroupRow2.setOnCheckedChangeListener { _, _ ->
+            libraryItemColorButtonGroupRow2.setOnCheckedChangeListener { _, _ ->
                 positiveButton.isEnabled = isComplete()
             }
         }

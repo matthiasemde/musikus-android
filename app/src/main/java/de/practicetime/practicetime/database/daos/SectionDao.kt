@@ -11,7 +11,7 @@ import androidx.room.Query
 import androidx.room.Transaction
 import de.practicetime.practicetime.database.BaseDao
 import de.practicetime.practicetime.database.entities.Section
-import de.practicetime.practicetime.database.entities.SectionWithCategory
+import de.practicetime.practicetime.database.entities.SectionWithLibraryItem
 
 @Dao
 abstract class SectionDao : BaseDao<Section>(tableName = "section") {
@@ -26,8 +26,8 @@ abstract class SectionDao : BaseDao<Section>(tableName = "section") {
 
     @Transaction
     @Query("SELECT * FROM section WHERE timestamp>=:beginTimeStamp AND timestamp<=:endTimeStamp")
-    abstract suspend fun getWithCategories(
+    abstract suspend fun getWithLibraryItems(
         beginTimeStamp: Long,
         endTimeStamp: Long
-    ): List<SectionWithCategory>
+    ): List<SectionWithLibraryItem>
 }

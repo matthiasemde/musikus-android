@@ -52,17 +52,17 @@
             android:textSize="15sp" />
 
         <TextView
-            android:id="@+id/categories_label"
+            android:id="@+id/library_items_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:layout_marginTop="50dp"
-            android:text="@string/categories"
+            android:text="@string/library_items"
             android:textSize="20sp"
             android:textStyle="bold" />
 
         <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/categoryList"
+            android:id="@+id/libraryItemList"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
@@ -75,7 +75,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintVertical_bias="2"
-            tools:listitem="@layout/listitem_category"
+            tools:listitem="@layout/listitem_library_item"
             tools:itemCount="2"
             tools:visibility="visible" />
 

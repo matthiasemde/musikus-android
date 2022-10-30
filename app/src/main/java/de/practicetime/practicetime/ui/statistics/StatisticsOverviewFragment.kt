@@ -26,7 +26,7 @@ import com.github.mikephil.charting.formatter.ValueFormatter
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
 import de.practicetime.practicetime.database.entities.GoalType
-import de.practicetime.practicetime.database.entities.SessionWithSectionsWithCategories
+import de.practicetime.practicetime.database.entities.SessionWithSectionsWithLibraryItems
 import de.practicetime.practicetime.shared.setCommonToolbar
 import de.practicetime.practicetime.ui.goals.updateGoals
 import de.practicetime.practicetime.utils.*
@@ -37,7 +37,7 @@ import kotlin.math.min
 
 class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overview) {
 
-    private lateinit var allSessions: List<SessionWithSectionsWithCategories>
+    private lateinit var allSessions: List<SessionWithSectionsWithLibraryItems>
     private var totalPracticeTime: Int = -1
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -165,7 +165,7 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
             // get all total durations from the last 7 days
             val barChartArray = arrayListOf<BarEntry>()
             for (day in 0 downTo -6) {
-                val dur = PracticeTime.sectionDao.getWithCategories(
+                val dur = PracticeTime.sectionDao.getWithLibraryItems(
                         getStartOfDay(day.toLong()).toEpochSecond(),
                         getEndOfDay(day.toLong()).toEpochSecond()
                     ).sumOf {
@@ -236,18 +236,18 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
                         achievedGoalsCount++
                     }
 
-                    // change color according to category
+                    // change color according to libraryItem
                     val gd = lastGoals[i].description
-                    if (gd.type == GoalType.CATEGORY_SPECIFIC) {
-                        // find out category
+                    if (gd.type == GoalType.ITEM_SPECIFIC) {
+                        // find out libraryItem
                         val catId =
-                            PracticeTime.goalDescriptionDao.getGoalDescriptionCategoryCrossRefs(
+                            PracticeTime.goalDescriptionDao.getGoalDescriptionLibraryItemCrossRefs(
                                 goalDescriptionId = gd.id
-                            ).first().categoryId
-                        val cat = PracticeTime.categoryDao.get(catId)
-                        val categoryColors =
-                            requireContext().resources.getIntArray(R.array.category_colors)
-                        val color = ColorStateList.valueOf(categoryColors[cat?.colorIndex ?: 0])
+                            ).first().libraryItemId
+                        val cat = PracticeTime.libraryItemDao.get(catId)
+                        val libraryItemColors =
+                            requireContext().resources.getIntArray(R.array.library_item_colors)
+                        val color = ColorStateList.valueOf(libraryItemColors[cat?.colorIndex ?: 0])
 
                         pBar.progressTintList = color
                         check.imageTintList = color
@@ -294,7 +294,7 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
             /** DATASET */
             val dataset = PieDataSet(getRatingsPieArray(), "LABEL")
             dataset.apply {
-                colors = PracticeTime.getCategoryColors(requireContext())
+                colors = PracticeTime.getLibraryItemColors(requireContext())
                 setDrawValues(false)
                 isUsingSliceColorAsValueLineColor = true
                 sliceSpace = 2f
@@ -325,7 +325,7 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
         val beginLastMonth = getStartOfMonth(-1).toEpochSecond()
         val endLastMonth = getEndOfMonth(-1).toEpochSecond()
 
-        val totalTime = PracticeTime.sectionDao.getWithCategories(beginLastMonth, endLastMonth)
+        val totalTime = PracticeTime.sectionDao.getWithLibraryItems(beginLastMonth, endLastMonth)
             .sumOf { it.section.duration ?: 0}
 
         return getDurationString(totalTime, TIME_FORMAT_HUMAN_PRETTY_SHORT)
@@ -367,9 +367,9 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
         return totalPracticeTime
     }
 
-    private suspend fun getAllSessions(): List<SessionWithSectionsWithCategories> {
+    private suspend fun getAllSessions(): List<SessionWithSectionsWithLibraryItems> {
         if (!this::allSessions.isInitialized)
-            allSessions = PracticeTime.sessionDao.getAllWithSectionsWithCategories()
+            allSessions = PracticeTime.sessionDao.getAllWithSectionsWithLibraryItems()
 
         return allSessions
     }

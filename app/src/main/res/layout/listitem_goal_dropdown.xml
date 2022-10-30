@@ -13,14 +13,14 @@
     android:padding="4dp">
 
     <ImageView
-        android:id="@+id/categorySpinnerColor"
+        android:id="@+id/libraryItemSpinnerColor"
         android:layout_width="6dp"
         android:layout_height="match_parent"
         android:layout_gravity="center"
         android:background="@drawable/color_rect_cat_indicator"
         android:layout_marginEnd="5dp" />
     <TextView
-        android:id="@+id/categorySpinnerName"
+        android:id="@+id/libraryItemSpinnerName"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:lines="1"

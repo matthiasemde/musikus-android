@@ -20,13 +20,13 @@ import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.chip.Chip
 import de.practicetime.practicetime.R
-import de.practicetime.practicetime.database.entities.GoalInstanceWithDescriptionWithCategories
+import de.practicetime.practicetime.database.entities.GoalInstanceWithDescriptionWithLibraryItems
 import de.practicetime.practicetime.database.entities.GoalPeriodUnit
 import de.practicetime.practicetime.database.entities.GoalType
 import de.practicetime.practicetime.utils.*
 
 class GoalAdapter(
-    private val goals: List<GoalInstanceWithDescriptionWithCategories>,
+    private val goals: List<GoalInstanceWithDescriptionWithLibraryItems>,
     private val selectedGoals: List<Int> = listOf(),
     private val context: Activity,
     private val shortClickHandler: (index: Int) -> Unit = {},
@@ -81,14 +81,14 @@ class GoalAdapter(
             }
         }
 
-        val (instance, descriptionWithCategories) = goals[goalPosition]
-        val (description, categories) = descriptionWithCategories
+        val (instance, descriptionWithLibraryItems) = goals[goalPosition]
+        val (description, libraryItems) = descriptionWithLibraryItems
 
-        // get the category color for later use in different UI elements
-        var categoryColor: ColorStateList? = null
+        // get the libraryItem color for later use in different UI elements
+        var libraryItemColor: ColorStateList? = null
         if(description.type != GoalType.NON_SPECIFIC) {
-            categoryColor = ColorStateList.valueOf(
-                context.resources.getIntArray(R.array.category_colors)[categories.firstOrNull()?.colorIndex ?: 0]
+            libraryItemColor = ColorStateList.valueOf(
+                context.resources.getIntArray(R.array.library_item_colors)[libraryItems.firstOrNull()?.colorIndex ?: 0]
             )
         }
 
@@ -106,7 +106,7 @@ class GoalAdapter(
             viewHolder.goalNameView.text = context.getString(R.string.goal_name_non_specific)
         } else {
             viewHolder.goalNameView.apply {
-                text = categories.firstOrNull()?.name ?: "Delete me!"
+                text = libraryItems.firstOrNull()?.name ?: "Delete me!"
             }
         }
 
@@ -132,8 +132,8 @@ class GoalAdapter(
         // tint progressbar
         if(description.type != GoalType.NON_SPECIFIC) {
             viewHolder.sectionColorView.visibility = View.VISIBLE
-            viewHolder.progressBarView.progressTintList = categoryColor
-            viewHolder.sectionColorView.backgroundTintList = categoryColor
+            viewHolder.progressBarView.progressTintList = libraryItemColor
+            viewHolder.sectionColorView.backgroundTintList = libraryItemColor
         } else {
             viewHolder.sectionColorView.visibility = View.GONE
             viewHolder.progressBarView.progressTintList = null

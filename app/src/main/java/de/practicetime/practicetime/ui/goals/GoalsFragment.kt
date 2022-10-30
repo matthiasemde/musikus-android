@@ -28,8 +28,8 @@ import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
-import de.practicetime.practicetime.database.entities.GoalDescriptionWithCategories
-import de.practicetime.practicetime.database.entities.GoalInstanceWithDescriptionWithCategories
+import de.practicetime.practicetime.database.entities.GoalDescriptionWithLibraryItems
+import de.practicetime.practicetime.database.entities.GoalInstanceWithDescriptionWithLibraryItems
 import de.practicetime.practicetime.shared.EditTimeDialog
 import de.practicetime.practicetime.shared.setCommonToolbar
 import kotlinx.coroutines.launch
@@ -38,7 +38,7 @@ import kotlinx.coroutines.launch
 class GoalsFragment : Fragment(R.layout.fragment_goals) {
 
     private val goalAdapterData =
-        ArrayList<GoalInstanceWithDescriptionWithCategories>()
+        ArrayList<GoalInstanceWithDescriptionWithLibraryItems>()
     private lateinit var goalAdapter : GoalAdapter
 
     private lateinit var addGoalDialog: GoalDialog
@@ -86,12 +86,12 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
             // create a new goal dialog for adding new goals
             addGoalDialog = GoalDialog(
                 requireActivity(),
-                PracticeTime.categoryDao.get(activeOnly = true),
+                PracticeTime.libraryItemDao.get(activeOnly = true),
                 ::addGoalHandler
             )
         }
 
-        // create the category dialog for editing categories
+        // create the libraryItem dialog for editing libraryItems
         initEditGoalDialog()
 
         goalsToolbar = view.findViewById(R.id.goalsToolbar)
@@ -127,12 +127,12 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
 
     private suspend fun refreshGoalList() {
         // load all active goals from the database and notify the adapter
-        PracticeTime.goalInstanceDao.getWithDescriptionsWithCategories(
-        ).forEachIndexed { index, goalInstanceWithDescriptionWithCategories ->
+        PracticeTime.goalInstanceDao.getWithDescriptionsWithLibraryItems(
+        ).forEachIndexed { index, goalInstanceWithDescriptionWithLibraryItems ->
             if(goalAdapterData.none {
-                    it.instance.id == goalInstanceWithDescriptionWithCategories.instance.id
+                    it.instance.id == goalInstanceWithDescriptionWithLibraryItems.instance.id
             }) {
-                goalAdapterData.add(index, goalInstanceWithDescriptionWithCategories)
+                goalAdapterData.add(index, goalInstanceWithDescriptionWithLibraryItems)
                 goalAdapter.notifyItemInserted(index)
             }
         }
@@ -269,7 +269,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
                 menu.findItem(R.id.goalsToolbarArchivedGoals).title = requireActivity().getString(
                     R.string.archivedGoalsToolbar
                 ). format(
-                    PracticeTime.goalDescriptionDao.getArchivedWithCategories().size
+                    PracticeTime.goalDescriptionDao.getArchivedWithLibraryItems().size
                 )
             }
             navigationIcon = null
@@ -279,12 +279,12 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
 
     // the handler for creating new goals
     private fun addGoalHandler(
-        newGoalDescriptionWithCategories: GoalDescriptionWithCategories,
+        newGoalDescriptionWithLibraryItems: GoalDescriptionWithLibraryItems,
         target: Int,
     ) {
         lifecycleScope.launch {
             PracticeTime.goalDescriptionDao.insertGoal(
-                newGoalDescriptionWithCategories,
+                newGoalDescriptionWithLibraryItems,
                 target
             )?.let {
                 goalAdapterData.add(it)

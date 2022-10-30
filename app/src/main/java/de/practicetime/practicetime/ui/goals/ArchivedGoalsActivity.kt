@@ -23,7 +23,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.button.MaterialButton
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
-import de.practicetime.practicetime.database.entities.GoalInstanceWithDescriptionWithCategories
+import de.practicetime.practicetime.database.entities.GoalInstanceWithDescriptionWithLibraryItems
 import de.practicetime.practicetime.database.entities.GoalPeriodUnit
 import de.practicetime.practicetime.database.entities.GoalType
 import de.practicetime.practicetime.utils.TIME_FORMAT_HUMAN_PRETTY
@@ -33,7 +33,7 @@ import kotlinx.coroutines.launch
 class ArchivedGoalsActivity : AppCompatActivity() {
 
     private lateinit var archivedGoalsAdapter: ArchivedGoalsAdapter
-    private val adapterData = ArrayList<GoalInstanceWithDescriptionWithCategories>()
+    private val adapterData = ArrayList<GoalInstanceWithDescriptionWithLibraryItems>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -54,9 +54,9 @@ class ArchivedGoalsActivity : AppCompatActivity() {
         )
 
         lifecycleScope.launch {
-            PracticeTime.goalDescriptionDao.getArchivedWithCategories().forEach {
+            PracticeTime.goalDescriptionDao.getArchivedWithLibraryItems().forEach {
                 adapterData.add(
-                    GoalInstanceWithDescriptionWithCategories(
+                    GoalInstanceWithDescriptionWithLibraryItems(
                         instance = PracticeTime.goalInstanceDao.getLatest(it.description.id),
                         description = it
                     )
@@ -71,21 +71,21 @@ class ArchivedGoalsActivity : AppCompatActivity() {
         }
     }
 
-    private fun unarchiveHandler(archivedGoal: GoalInstanceWithDescriptionWithCategories, position: Int) {
-        val category = archivedGoal.description.categories.firstOrNull()
-        val restoreCategory = category?.archived ?: false
+    private fun unarchiveHandler(archivedGoal: GoalInstanceWithDescriptionWithLibraryItems, position: Int) {
+        val libraryItem = archivedGoal.description.libraryItems.firstOrNull()
+        val restoreLibraryItem = libraryItem?.archived ?: false
         AlertDialog.Builder(this).apply {
             setMessage(
-                if(restoreCategory) resources.getString(
-                    R.string.archivedGoalsConfirmUnarchiveWithCategory
-                ).format(category?.name ?: "")
+                if(restoreLibraryItem) resources.getString(
+                    R.string.archivedGoalsConfirmUnarchiveWithLibraryItem
+                ).format(libraryItem?.name ?: "")
                 else resources.getString(R.string.archivedGoalsConfirmUnarchive)
             )
             setPositiveButton(R.string.archivedGoalsUnarchive) { dialog, _ ->
                 lifecycleScope.launch {
-                    category?.let {
+                    libraryItem?.let {
                         it.archived = false
-                        PracticeTime.categoryDao.update(category)
+                        PracticeTime.libraryItemDao.update(libraryItem)
                     }
                     PracticeTime.goalDescriptionDao.unarchive(archivedGoal)
                 }
@@ -122,9 +122,9 @@ class ArchivedGoalsActivity : AppCompatActivity() {
 
     private class ArchivedGoalsAdapter(
         private val context: AppCompatActivity,
-        private val archivedGoals: List<GoalInstanceWithDescriptionWithCategories>,
+        private val archivedGoals: List<GoalInstanceWithDescriptionWithLibraryItems>,
         private val unarchiveHandler: (
-            archivedGoal: GoalInstanceWithDescriptionWithCategories,
+            archivedGoal: GoalInstanceWithDescriptionWithLibraryItems,
             position: Int
         ) -> Unit,
         private val deleteHandler: (descriptionId: Long, position: Int) -> Unit,
@@ -143,11 +143,11 @@ class ArchivedGoalsActivity : AppCompatActivity() {
             val archivedGoal = archivedGoals[position]
 
             val description = archivedGoal.description.description
-            val categories = archivedGoal.description.categories
+            val libraryItems = archivedGoal.description.libraryItems
 
-            val goalColor = categories.firstOrNull()?.colorIndex?.let {
+            val goalColor = libraryItems.firstOrNull()?.colorIndex?.let {
                 ColorStateList.valueOf(
-                    context.resources.getIntArray(R.array.category_colors)[it]
+                    context.resources.getIntArray(R.array.library_item_colors)[it]
                 )
             } ?: ColorStateList.valueOf(
                 PracticeTime.getThemeColor(R.attr.colorPrimary, context)
@@ -168,7 +168,7 @@ class ArchivedGoalsActivity : AppCompatActivity() {
                     goalNameView.text = context.getString(R.string.goal_name_non_specific)
                 } else {
                     goalNameView.apply {
-                        text = categories.firstOrNull()?.name ?: "Delete me!"
+                        text = libraryItems.firstOrNull()?.name ?: "Delete me!"
                     }
                 }
 

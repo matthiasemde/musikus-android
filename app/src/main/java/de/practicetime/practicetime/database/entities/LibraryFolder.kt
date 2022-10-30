@@ -1,7 +1,9 @@
 /*
- * This software is licensed under the MIT license
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2022, Javier Carbone, author Matthias Emde
+ * Copyright (c) 2022 Matthias Emde
  */
 
 package de.practicetime.practicetime.database.entities
@@ -10,11 +12,9 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import de.practicetime.practicetime.database.ModelWithTimestamps
 
-@Entity(tableName = "category")
-data class Category (
+@Entity(tableName = "library_folder")
+data class LibraryFolder (
     @ColumnInfo(name="name") var name: String,
-    @ColumnInfo(name="color_index") var colorIndex: Int,
-    @ColumnInfo(name="archived") var archived: Boolean = false,
     @ColumnInfo(name="profile_id", index = true) val profileId: Int = 0,
     @ColumnInfo(name="order", defaultValue = "0") var order: Int = 0,
 ) : ModelWithTimestamps()

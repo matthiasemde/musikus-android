@@ -35,10 +35,10 @@ import com.github.mikephil.charting.utils.MPPointF
 import com.google.android.material.tabs.TabLayout
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
-import de.practicetime.practicetime.database.entities.Category
 import de.practicetime.practicetime.database.entities.GoalDescription
 import de.practicetime.practicetime.database.entities.GoalInstance
 import de.practicetime.practicetime.database.entities.GoalPeriodUnit
+import de.practicetime.practicetime.database.entities.LibraryItem
 import de.practicetime.practicetime.utils.*
 import kotlinx.coroutines.launch
 import java.time.format.DateTimeFormatter
@@ -85,7 +85,7 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
     data class GoalListElement(
         val goalInstances: List<GoalInstance>,
         val goalDesc: GoalDescription,
-        val category: Category?,
+        val libraryItem: LibraryItem?,
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -127,21 +127,21 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
 
     /** get the goals from the database */
     private suspend fun initGoalsList() {
-        PracticeTime.goalDescriptionDao.getAllWithCategories().forEach { (desc, cat) ->
+        PracticeTime.goalDescriptionDao.getAllWithLibraryItems().forEach { (desc, cat) ->
             goals.add(
                 GoalListElement(
                     goalInstances = PracticeTime.goalInstanceDao.get(desc.id, from = 0L),
                     goalDesc = desc,
-                    category = cat.firstOrNull()
+                    libraryItem = cat.firstOrNull()
                 )
             )
         }
         goalListAdapter = GoalStatsAdapter()
         val layoutManager = LinearLayoutManager(this@GoalStatsActivity)
 
-        val categoryRecyclerView = findViewById<RecyclerView>(R.id.recyclerview_statistics)
-        categoryRecyclerView.layoutManager = layoutManager
-        categoryRecyclerView.adapter = goalListAdapter
+        val libraryItemRecyclerView = findViewById<RecyclerView>(R.id.recyclerview_statistics)
+        libraryItemRecyclerView.layoutManager = layoutManager
+        libraryItemRecyclerView.adapter = goalListAdapter
     }
 
 
@@ -477,9 +477,9 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
     }
 
     private fun getChartColor(): Int {
-        return if(goals[selectedGoal].category != null) {
-                val categoryColors = resources.getIntArray(R.array.category_colors).toCollection(mutableListOf())
-                categoryColors[goals[selectedGoal].category!!.colorIndex]
+        return if(goals[selectedGoal].libraryItem != null) {
+                val libraryItemColors = resources.getIntArray(R.array.library_item_colors).toCollection(mutableListOf())
+                libraryItemColors[goals[selectedGoal].libraryItem!!.colorIndex]
             } else {
                 PracticeTime.getThemeColor(R.attr.colorPrimary, this)
             }
@@ -772,15 +772,15 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
         override fun onBindViewHolder(holder: GoalStatsAdapter.ViewHolder, position: Int) {
             val elem = goals[position]
 
-            val categoryColors = resources.getIntArray(R.array.category_colors)
+            val libraryItemColors = resources.getIntArray(R.array.library_item_colors)
 
             // adapt entry to selected state
-            setGoalItemBackgroundColor(holder.llContainer, position, categoryColors)
+            setGoalItemBackgroundColor(holder.llContainer, position, libraryItemColors)
 
-            /** goal entry (radiobutton + progressbar) and set name depending on category */
-            if (elem.category != null) {
-                val catColor = ColorStateList.valueOf(categoryColors[elem.category.colorIndex])
-                holder.goalTitleTv.text = elem.category.name
+            /** goal entry (radiobutton + progressbar) and set name depending on libraryItem */
+            if (elem.libraryItem != null) {
+                val catColor = ColorStateList.valueOf(libraryItemColors[elem.libraryItem.colorIndex])
+                holder.goalTitleTv.text = elem.libraryItem.name
                 holder.goalRadioButton.buttonTintList = catColor
                 holder.progressGoal.progressTintList = catColor
 
@@ -823,7 +823,7 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
                 notifyItemChanged(oldSel)
                 holder.goalRadioButton.isChecked = true
 
-                setGoalItemBackgroundColor(holder.llContainer, position, categoryColors)
+                setGoalItemBackgroundColor(holder.llContainer, position, libraryItemColors)
 
                 val sv = findViewById<NestedScrollView>(R.id.scrollview_statistics)
                 // only scroll to top if already more than 100px scrolled to prevent blocking the UI for scroll duration
@@ -852,8 +852,8 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
 
                 var color = ColorStateList.valueOf(
                     PracticeTime.getThemeColor(R.attr.colorPrimary, this@GoalStatsActivity))
-                if (goals[position].category != null)
-                    color = ColorStateList.valueOf(catColors[goals[position].category!!.colorIndex])
+                if (goals[position].libraryItem != null)
+                    color = ColorStateList.valueOf(catColors[goals[position].libraryItem!!.colorIndex])
 
                 backgroundTintList = color
                 isSelected = true

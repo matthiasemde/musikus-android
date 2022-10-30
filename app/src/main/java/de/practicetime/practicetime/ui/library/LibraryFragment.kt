@@ -16,41 +16,42 @@ import android.animation.ArgbEvaluator
 import android.animation.ValueAnimator
 import android.app.AlertDialog
 import android.content.Context
-import android.content.res.ColorStateList
 import android.os.Build
 import android.os.Bundle
 import android.os.VibrationEffect
 import android.os.VibratorManager
 import android.view.*
-import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
-import androidx.cardview.widget.CardView
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.graphics.ColorUtils
 import androidx.fragment.app.Fragment
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.google.android.material.appbar.CollapsingToolbarLayout
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.composethemeadapter3.Mdc3Theme
-import com.google.android.material.composethemeadapter3.Theme3Parameters
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
-import de.practicetime.practicetime.database.entities.Category
+import de.practicetime.practicetime.database.entities.LibraryFolder
+import de.practicetime.practicetime.database.entities.LibraryItem
 
 enum class LibrarySortMode {
     DATE_ADDED,
@@ -59,6 +60,7 @@ enum class LibrarySortMode {
     COLOR,
     CUSTOM
 }
+
 
 enum class LibraryMenuSelections {
     SORT_BY,
@@ -79,7 +81,11 @@ class LibraryState() {
     var showThemeSubMenu = mutableStateOf(false)
     var showSortModeSubMenu = mutableStateOf(false)
 
-    var items = mutableStateListOf<Category>()
+    var folders = mutableStateListOf<LibraryFolder>()
+    var items = mutableStateListOf<LibraryItem>()
+
+    fun showDivider() = folders.isNotEmpty() && items.isNotEmpty()
+    fun showHint() = folders.isEmpty() && items.isEmpty()
 
     var sortMode = mutableStateOf(try {
         LibrarySortMode.valueOf(
@@ -125,11 +131,11 @@ fun rememberLibraryState() = remember() { LibraryState() }
 
 class LibraryFragment : Fragment() {
 
-    private var categoryAdapter : CategoryAdapter? = null
+    private var libraryItemAdapter : LibraryItemAdapter? = null
 
-    private var addCategoryDialog: CategoryDialog? = null
-    private var editCategoryDialog: CategoryDialog? = null
-    private var deleteCategoryDialog: AlertDialog? = null
+    private var addLibraryItemDialog: LibraryItemDialog? = null
+    private var editLibraryItemDialog: LibraryItemDialog? = null
+    private var deleteLibraryItemDialog: AlertDialog? = null
 
     private lateinit var libraryToolbar: MaterialToolbar
     private lateinit var libraryCollapsingToolbarLayout: CollapsingToolbarLayout
@@ -159,30 +165,35 @@ class LibraryFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-//        libraryToolbar = view.findViewById(R.id.libraryToolbar)
-//        libraryCollapsingToolbarLayout = view.findViewById(R.id.libraryToolbarLayout)
-//        initToolbar()  // initialize the toolbar with all its listeners
-
 
         return ComposeView(requireContext()).apply {
             setContent {
+                val systemUiController = rememberSystemUiController()
+
                 val libraryState = rememberLibraryState()
                 val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
                 LaunchedEffect(true) {
-                    PracticeTime.categoryDao.get(activeOnly = true).let {
-                        // sort categories depending on the current sort mode
+                    PracticeTime.libraryFolderDao.get().let {
+                        libraryState.folders.addAll(it)
+                    }
+                }
+
+                LaunchedEffect(true) {
+                    PracticeTime.libraryItemDao.get(activeOnly = true).let {
+                        // sort libraryItems depending on the current sort mode
                         libraryState.items.addAll(it)
                         libraryState.sortItems()
                     }
                 }
 
                 Mdc3Theme {
+                    systemUiController.setStatusBarColor(Color.Transparent)
                     Scaffold(
                         modifier = Modifier
                             .nestedScroll(scrollBehavior.nestedScrollConnection),
                         topBar = {
-                            MediumTopAppBar(
+                            LargeTopAppBar(
                                 scrollBehavior = scrollBehavior,
                                 title = {
                                     Text(text = "Library")
@@ -225,42 +236,37 @@ class LibraryFragment : Fragment() {
                             )
                         },
                         content = { contentPadding ->
-                            LibraryItemListComposable(
+                            LibraryContent(
+                                contentPadding = contentPadding,
+                                folders = libraryState.folders,
                                 items = libraryState.items,
                                 selectedItems = selectedItems,
-                                contentPadding = contentPadding,
                             )
+                            if(libraryState.showHint()) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Text(text = stringResource(id = R.string.libraryHint))
+                                }
+                            }
                         }
                     )
                 }
             }
         }
-//        sortMode = try {
-//            LibrarySortMode.valueOf(
-//                PracticeTime.prefs.getString(
-//                    PracticeTime.PREFERENCES_KEY_LIBRARY_SORT_MODE,
-//                    LibrarySortMode.DATE_ADDED.toString()
-//                ) ?: LibrarySortMode.DATE_ADDED.toString()
-//            )
-//        } catch (ex: Exception) {
-//            LibrarySortMode.DATE_ADDED
-//        }
+////        initLibraryItemList()
 //
-////        initCategoryList()
-//
-//        // create a new category dialog for adding new categories
-//        addCategoryDialog = CategoryDialog(requireActivity(), ::addCategoryHandler)
+//        // create a new libraryItem dialog for adding new libraryItems
+//        addLibraryItemDialog = LibraryItemDialog(requireActivity(), ::addLibraryItemHandler)
 //
 //        view.findViewById<FloatingActionButton>(R.id.libraryFab).setOnClickListener {
 //            actionMode?.finish()
-//            addCategoryDialog?.show()
+//            addLibraryItemDialog?.show()
 //        }
 //
-//        // create the category dialog for editing categories
-//        editCategoryDialog = CategoryDialog(requireActivity(), ::editCategoryHandler)
+//        // create the libraryItem dialog for editing libraryItems
+//        editLibraryItemDialog = LibraryItemDialog(requireActivity(), ::editLibraryItemHandler)
 //
-//        // create the dialog for archiving categories
-//        initDeleteCategoryDialog()
+//        // create the dialog for archiving libraryItems
+//        initDeleteLibraryItemDialog()
     }
 
     @Composable
@@ -368,90 +374,148 @@ class LibraryFragment : Fragment() {
     }
 
     @Composable
-    fun LibraryItemListComposable(
-        items: List<Category>,
-        selectedItems: List<Long>,
-        contentPadding: PaddingValues
+    fun LibraryFolderComposable(
+        folder: LibraryFolder
     ) {
-        LazyColumn(
+        Button(
             modifier = Modifier
-                .padding(top = 12.dp)
-                .padding(horizontal = 8.dp),
-            contentPadding = contentPadding,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+                .size(150.dp),
+            colors = ButtonDefaults.elevatedButtonColors(),
+            shape = RoundedCornerShape(16.dp),
+            elevation = ButtonDefaults.elevatedButtonElevation(),
+            onClick = {}
         ) {
-            items(
-                items=items,
-                key = { item -> item.id }
-            ) { item ->
-                LibraryItemComposable(
-                    category = item,
-                    selected = selectedItems.contains(item.id)
-                )
-            }
+            Text(text = folder.name, style = MaterialTheme.typography.titleMedium)
         }
     }
 
     @Composable
     fun LibraryItemComposable(
-        category: Category,
+        contentPadding: PaddingValues,
+        libraryItem: LibraryItem,
         selected: Boolean
 //        itemClickedCallback: (callbackListDataItem: CallbackListDataItem) -> Unit,
     ) {
-        AndroidView(
-            factory = { context ->
-                val view = LayoutInflater.from(context).inflate(R.layout.listitem_library_item, null)
-
-                val cardView = view.findViewById<CardView>(R.id.library_item_card)
-                val colorIndicatorView = view.findViewById<ImageView>(R.id.library_item_color_indicator)
-                val colorOverlayView = view.findViewById<ImageView>(R.id.library_item_color_overlay)
-                val nameView = view.findViewById<TextView>(R.id.library_item_name)
-
-                cardView.isSelected = selected
-                colorOverlayView.backgroundTintList = ColorStateList.valueOf(
-                    PracticeTime.getCategoryColors(requireContext())[category.colorIndex]
-                )
-                colorIndicatorView.backgroundTintList = ColorStateList.valueOf(
-                    PracticeTime.getCategoryColors(requireContext())[category.colorIndex]
-                )
-
-                nameView.text = category.name
-
-                view // return the view
-            },
+        Row(
             modifier = Modifier
+                .padding(contentPadding)
                 .fillMaxWidth()
-                .height(56.dp),
-            update = { view ->
-                // Update the view
+                .height(IntrinsicSize.Min)
+        ) {
+            Box(
+                modifier = Modifier
+                    .width(10.dp)
+                    .fillMaxHeight()
+                    .clip(RoundedCornerShape(5.dp))
+                    .align(Alignment.CenterVertically)
+                    .background(
+                        Color(PracticeTime.getLibraryItemColors(requireContext())[libraryItem.colorIndex])
+                    ),
+            )
+            Column(
+                modifier = Modifier
+                    .padding(start = 12.dp),
+            ) {
+                Text(
+                    text = libraryItem.name,
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                Text(
+                    text = "last practiced: yesterday",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                )
             }
-        )
+
+        }
+    }
+
+    @Composable
+    fun LibraryContent(
+        contentPadding: PaddingValues,
+        folders: List<LibraryFolder>,
+        items: List<LibraryItem>,
+        selectedItems: List<Long>,
+    ) {
+        LazyColumn(
+            contentPadding = contentPadding,
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            if(folders.isNotEmpty()) {
+                item {
+                    Text(
+                        modifier = Modifier
+                            .padding(top = 16.dp)
+                            .padding(horizontal = 16.dp),
+                        text = "Folders", style = MaterialTheme.typography.titleLarge
+                    )
+                }
+                item {
+                    LazyRow(
+                        contentPadding = PaddingValues(horizontal = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        items(
+                            items = folders,
+                            key = { folder -> folder.id }
+                        ) { folder ->
+                            LibraryFolderComposable(
+                                folder = folder,
+                            )
+                        }
+                    }
+                }
+            }
+            if(items.isNotEmpty()) {
+                item {
+                    Text(
+                        modifier = Modifier
+                            .padding(top = 16.dp)
+                            .padding(horizontal = 16.dp),
+                        text="Items",
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                }
+                items(
+                    items=items,
+                    key = { item -> item.id }
+                ) { item ->
+                    LibraryItemComposable(
+                        contentPadding = PaddingValues(horizontal = 16.dp),
+                        libraryItem = item,
+                        selected = selectedItems.contains(item.id)
+                    )
+                }
+            }
+            item { Spacer(modifier = Modifier.height(80.dp)) } // maybe solve this using content value padding instead
+        }
     }
 
 
-//    private fun initCategoryList() {
-//        categoryAdapter = CategoryAdapter(
+
+//    private fun initLibraryItemList() {
+//        libraryItemAdapter = LibraryItemAdapter(
 //            libraryItems,
 //            selectedItems,
 //            context = requireActivity(),
-//            shortClickHandler = ::shortClickOnCategoryHandler,
-//            longClickHandler = ::longClickOnCategoryHandler,
+//            shortClickHandler = ::shortClickOnLibraryItemHandler,
+//            longClickHandler = ::longClickOnLibraryItemHandler,
 //        )
 //
-//        // load all active categories from the database and notify the adapter
+//        // load all active libraryItems from the database and notify the adapter
 //        lifecycleScope.launch {
-//            PracticeTime.categoryDao.get(activeOnly = true).let {
-//                // sort categories depending on the current sort mode
+//            PracticeTime.libraryItemDao.get(activeOnly = true).let {
+//                // sort libraryItems depending on the current sort mode
 //                libraryItems.addAll(it)
 //                Log.d("LIBRARY","$sortMode")
-//                sortCategoryList(sortMode)
-////                categoryAdapter?.notifyItemRangeInserted(0, it.size) // sortCategoryList() already notifies the adapter
+//                sortLibraryItemList(sortMode)
+////                libraryItemAdapter?.notifyItemRangeInserted(0, it.size) // sortLibraryItemList() already notifies the adapter
 //            }
 //
-////            requireActivity().findViewById<RecyclerView>(R.id.libraryCategoryList).apply {
+////            requireActivity().findViewById<RecyclerView>(R.id.libraryLibraryItemList).apply {
 //////                layoutManager = GridLayoutManager(context, 2)
 ////                layoutManager = LinearLayoutManager(context)
-////                adapter = categoryAdapter
+////                adapter = libraryItemAdapter
 ////                itemAnimator?.apply {
 ////                    addDuration = 500L
 ////                    moveDuration = 500L
@@ -463,11 +527,11 @@ class LibraryFragment : Fragment() {
 //        }
 //    }
 
-    // initialize the category delete dialog
-    private fun initDeleteCategoryDialog() {
-        deleteCategoryDialog = AlertDialog.Builder(requireActivity()).apply {
+    // initialize the libraryItem delete dialog
+    private fun initDeleteLibraryItemDialog() {
+        deleteLibraryItemDialog = AlertDialog.Builder(requireActivity()).apply {
             setPositiveButton(R.string.deleteDialogConfirm) { dialog, _ ->
-//                deleteCategoriesHandler()
+//                deleteLibraryItemsHandler()
                 dialog.dismiss()
             }
             setNegativeButton(R.string.dialogCancel) { dialog, _ ->
@@ -494,18 +558,18 @@ class LibraryFragment : Fragment() {
             override fun onActionItemClicked(mode: ActionMode?, item: MenuItem?): Boolean {
                 return when(item?.itemId) {
                     R.id.topToolbarSelectionEdit -> {
-                        // editCategoryDialog?.show(libraryItems[selectedItems.first().toInt()])
+                        // editLibraryItemDialog?.show(libraryItems[selectedItems.first().toInt()])
                         true
                     }
                     R.id.topToolbarSelectionDelete -> {
                         if(PracticeTime.serviceIsRunning)
                             Toast.makeText(context, getString(R.string.cannot_delete_error), Toast.LENGTH_SHORT).show()
                         else {
-                            deleteCategoryDialog?.apply {
+                            deleteLibraryItemDialog?.apply {
                                 setMessage(
                                     context.getString(
-                                        if (selectedItems.size > 1) R.string.deleteCategoriesDialogMessage
-                                        else R.string.deleteCategoryDialogMessage
+                                        if (selectedItems.size > 1) R.string.deleteLibraryItemsDialogMessage
+                                        else R.string.deleteLibraryItemDialogMessage
                                     )
                                 )
                                 show()
@@ -518,7 +582,7 @@ class LibraryFragment : Fragment() {
             }
 
             override fun onDestroyActionMode(mode: ActionMode?) {
-                clearCategorySelection()
+                clearLibraryItemSelection()
                 val transparentSurfaceColor =
                     ColorUtils.setAlphaComponent(PracticeTime.getThemeColor(R.attr.colorSurface, requireContext()), 0)
                 libraryCollapsingToolbarLayout.apply {
@@ -551,29 +615,29 @@ class LibraryFragment : Fragment() {
         }
     }
 
-    private fun shortClickOnCategoryHandler(index: Int) {
-        // if there are already categories selected,
-        // add or remove the clicked category from the selection
+    private fun shortClickOnLibraryItemHandler(index: Int) {
+        // if there are already libraryItems selected,
+        // add or remove the clicked libraryItem from the selection
 //        if(selectedItems.isNotEmpty()) {
 //            if(selectedItems.removeAt(index)) {
-//                categoryAdapter?.notifyItemChanged(index)
+//                libraryItemAdapter?.notifyItemChanged(index)
 //                if(selectedItems.size == 1) {
 //                    actionMode?.menu?.findItem(R.id.topToolbarSelectionEdit)?.isVisible = true
 //                } else if(selectedItems.isEmpty()) {
 //                    actionMode?.finish()
 //                }
 //            } else {
-//                longClickOnCategoryHandler(index, vibrate = false)
+//                longClickOnLibraryItemHandler(index, vibrate = false)
 //            }
 //            actionMode?.title = "${selectedItems.size} selected"
 //        } else {
-//            editCategoryDialog?.show(libraryItems[index])
+//            editLibraryItemDialog?.show(libraryItems[index])
 //        }
     }
 
-    // the handler for dealing with long clicks on category
-    private fun longClickOnCategoryHandler(index: Int, vibrate: Boolean = true): Boolean {
-        // if there is no category selected already, change the toolbar
+    // the handler for dealing with long clicks on libraryItem
+    private fun longClickOnLibraryItemHandler(index: Int, vibrate: Boolean = true): Boolean {
+        // if there is no libraryItem selected already, change the toolbar
         if(selectedItems.isEmpty()) {
             actionMode = libraryToolbar.startActionMode(actionModeCallback())
             actionMode?.title = "1 selected"
@@ -590,9 +654,9 @@ class LibraryFragment : Fragment() {
                         )
                     }
             }
-            // now add the newly selected category to the list...
+            // now add the newly selected libraryItem to the list...
             selectedItems.add(index.toLong())
-            categoryAdapter?.notifyItemChanged(index)
+            libraryItemAdapter?.notifyItemChanged(index)
         }
 
         actionMode?.menu?.findItem(R.id.topToolbarSelectionEdit)?.isVisible =
@@ -602,10 +666,10 @@ class LibraryFragment : Fragment() {
         return true
     }
 
-    private fun clearCategorySelection() {
+    private fun clearLibraryItemSelection() {
         val tmpCopy = selectedItems.toList()
         selectedItems.clear()
-        tmpCopy.forEach { categoryAdapter?.notifyItemChanged(it.toInt()) }
+        tmpCopy.forEach { libraryItemAdapter?.notifyItemChanged(it.toInt()) }
     }
 
     // init the toolbar and associated data
@@ -614,11 +678,11 @@ class LibraryFragment : Fragment() {
 //            menu?.clear()
 //            setCommonToolbar(requireActivity(), this) {
 //                when(it) {
-//                    R.id.libraryToolbarSortModeDateAdded -> sortCategoryList(LibrarySortMode.DATE_ADDED)
-//                    R.id.libraryToolbarSortModeLastModified -> sortCategoryList(LibrarySortMode.LAST_MODIFIED)
-//                    R.id.libraryToolbarSortModeName -> sortCategoryList(LibrarySortMode.NAME)
-//                    R.id.libraryToolbarSortModeColor -> sortCategoryList(LibrarySortMode.COLOR)
-//                    R.id.libraryToolbarSortModeCustom -> sortCategoryList(LibrarySortMode.CUSTOM)
+//                    R.id.libraryToolbarSortModeDateAdded -> sortLibraryItemList(LibrarySortMode.DATE_ADDED)
+//                    R.id.libraryToolbarSortModeLastModified -> sortLibraryItemList(LibrarySortMode.LAST_MODIFIED)
+//                    R.id.libraryToolbarSortModeName -> sortLibraryItemList(LibrarySortMode.NAME)
+//                    R.id.libraryToolbarSortModeColor -> sortLibraryItemList(LibrarySortMode.COLOR)
+//                    R.id.libraryToolbarSortModeCustom -> sortLibraryItemList(LibrarySortMode.CUSTOM)
 //                    else -> {}
 //                }
 //            }
@@ -627,39 +691,39 @@ class LibraryFragment : Fragment() {
 //        }
 //    }
 
-//    // the handler for creating new categories
-//    private fun addCategoryHandler(newCategory: Category) {
+//    // the handler for creating new libraryItems
+//    private fun addLibraryItemHandler(newLibraryItem: LibraryItem) {
 //        lifecycleScope.launch {
-//            PracticeTime.categoryDao.insertAndGet(newCategory)
+//            PracticeTime.libraryItemDao.insertAndGet(newLibraryItem)
 //                ?.let { libraryItems.add(0, it) }
-//            categoryAdapter?.notifyItemInserted(0)
+//            libraryItemAdapter?.notifyItemInserted(0)
 //            if(libraryItems.isNotEmpty()) hideHint()
 //        }
 //    }
 //
-//    // the handler for editing categories
-//    private fun editCategoryHandler(category: Category) {
+//    // the handler for editing libraryItems
+//    private fun editLibraryItemHandler(libraryItem: LibraryItem) {
 //        lifecycleScope.launch {
-//            PracticeTime.categoryDao.update(category)
-//            libraryItems.indexOfFirst { c -> c.id == category.id }.also { i ->
+//            PracticeTime.libraryItemDao.update(libraryItem)
+//            libraryItems.indexOfFirst { c -> c.id == libraryItem.id }.also { i ->
 //                assert(i != -1) {
-//                    Log.e("EDIT_CATEGORY", "No category with matching id found for\n$category")
+//                    Log.e("EDIT_CATEGORY", "No libraryItem with matching id found for\n$libraryItem")
 //                }
-//                libraryItems[i] = category
-//                categoryAdapter?.notifyItemChanged(i)
+//                libraryItems[i] = libraryItem
+//                libraryItemAdapter?.notifyItemChanged(i)
 //            }
 //            actionMode?.finish()
 //        }
 //    }
 //
-//    // the handler for deleting categories
-//    private fun deleteCategoriesHandler() {
+//    // the handler for deleting libraryItems
+//    private fun deleteLibraryItemsHandler() {
 //        var failedDeleteFlag = false
 //        lifecycleScope.launch {
 //            selectedItems.sortedByDescending { it }.forEach { index ->
-//                if(PracticeTime.categoryDao.archive(libraryItems[index.toInt()].id)) {
+//                if(PracticeTime.libraryItemDao.archive(libraryItems[index.toInt()].id)) {
 //                    libraryItems.removeAt(index.toInt())
-//                    categoryAdapter?.notifyItemRemoved(index.toInt())
+//                    libraryItemAdapter?.notifyItemRemoved(index.toInt())
 //                } else {
 //                    failedDeleteFlag = true
 //                }
@@ -668,15 +732,15 @@ class LibraryFragment : Fragment() {
 //            if(failedDeleteFlag) {
 //                Snackbar.make(
 //                    requireView(),
-//                    if(selectedItems.size > 1) R.string.deleteCategoriesFailSnackbar
-//                    else R.string.deleteCategoryFailSnackbar,
+//                    if(selectedItems.size > 1) R.string.deleteLibraryItemsFailSnackbar
+//                    else R.string.deleteLibraryItemFailSnackbar,
 //                    5000
 //                ).show()
 //            } else {
 //                Toast.makeText(
 //                    requireActivity(),
-//                    if(selectedItems.size > 1) R.string.deleteCategoriesSuccessSnackbar
-//                    else R.string.deleteCategorySuccessSnackbar,
+//                    if(selectedItems.size > 1) R.string.deleteLibraryItemsSuccessSnackbar
+//                    else R.string.deleteLibraryItemSuccessSnackbar,
 //                    Toast.LENGTH_SHORT
 //                ).show()
 //            }
@@ -689,14 +753,14 @@ class LibraryFragment : Fragment() {
     private fun showHint() {
         requireView().apply {
             findViewById<TextView>(R.id.libraryHint).visibility = View.VISIBLE
-//            findViewById<RecyclerView>(R.id.libraryCategoryList).visibility = View.GONE
+//            findViewById<RecyclerView>(R.id.libraryLibraryItemList).visibility = View.GONE
         }
     }
 
     private fun hideHint() {
         requireView().apply {
             findViewById<TextView>(R.id.libraryHint).visibility = View.GONE
-//            findViewById<RecyclerView>(R.id.libraryCategoryList).visibility = View.VISIBLE
+//            findViewById<RecyclerView>(R.id.libraryLibraryItemList).visibility = View.VISIBLE
         }
     }
 }

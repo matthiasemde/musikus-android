@@ -25,7 +25,7 @@ import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
-import de.practicetime.practicetime.database.entities.SessionWithSectionsWithCategories
+import de.practicetime.practicetime.database.entities.SessionWithSectionsWithLibraryItems
 import de.practicetime.practicetime.shared.setCommonToolbar
 import de.practicetime.practicetime.ui.activesession.ActiveSessionActivity
 import kotlinx.coroutines.Runnable
@@ -41,7 +41,7 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
     private var runnable: Runnable = Runnable { }
 
     private lateinit var sessionListAdapter: ConcatAdapter
-    private val sessionListAdapterData = ArrayList<ArrayList<SessionWithSectionsWithCategories>>()
+    private val sessionListAdapterData = ArrayList<ArrayList<SessionWithSectionsWithLibraryItems>>()
 
     private lateinit var sessionListToolbar: MaterialToolbar
     private lateinit var sessionListCollapsingToolbarLayout: CollapsingToolbarLayout
@@ -114,7 +114,7 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
 
         lifecycleScope.launch {
             // fetch all sessions from the database
-            PracticeTime.sessionDao.getAllWithSectionsWithCategories().sortedBy {
+            PracticeTime.sessionDao.getAllWithSectionsWithLibraryItems().sortedBy {
                 it.sections.firstOrNull()?.section?.timestamp ?: 0L
             }.also { sessions ->
                 if (sessions.isEmpty()) {
@@ -345,11 +345,11 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
                 val adapterIndex = sessionListAdapter.adapters.indexOf(adapter)
                 val adapterData = sessionListAdapterData[adapterIndex]
 
-                val (session, sectionsWithCategories) = adapterData[layoutPosition - 1]
-                val sections = sectionsWithCategories.map { s -> s.section }
+                val (session, sectionsWithLibraryItems) = adapterData[layoutPosition - 1]
+                val sections = sectionsWithLibraryItems.map { s -> s.section }
 
                 val goalProgress = PracticeTime.goalDescriptionDao.computeGoalProgressForSession(
-                    PracticeTime.sessionDao.getWithSectionsWithCategoriesWithGoals(session.id),
+                    PracticeTime.sessionDao.getWithSectionsWithLibraryItemsWithGoals(session.id),
                     checkArchived = true
                 )
 

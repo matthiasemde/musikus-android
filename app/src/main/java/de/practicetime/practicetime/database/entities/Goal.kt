@@ -13,9 +13,9 @@ import de.practicetime.practicetime.database.ModelWithTimestamps
 import java.util.*
 
 // shows, whether a goal will count all sections
-// or only the one from specific categories
+// or only the one from specific libraryItems
 enum class GoalType {
-    NON_SPECIFIC, CATEGORY_SPECIFIC
+    NON_SPECIFIC, ITEM_SPECIFIC
 }
 
 // shows, whether a goal will track practice time

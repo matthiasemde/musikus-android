@@ -24,54 +24,54 @@ abstract class GoalDescriptionDao : BaseDao<GoalDescription>(
      */
 
     @Insert(onConflict = OnConflictStrategy.ABORT)
-    abstract suspend fun insertGoalDescriptionCategoryCrossRef(
-        crossRef: GoalDescriptionCategoryCrossRef
+    abstract suspend fun insertGoalDescriptionLibraryItemCrossRef(
+        crossRef: GoalDescriptionLibraryItemCrossRef
     ): Long
 
     @Transaction
-    open suspend fun insertAndGetGoalDescriptionWithCategories(
-        goalDescriptionWithCategories: GoalDescriptionWithCategories
-    ) : GoalDescriptionWithCategories? {
+    open suspend fun insertAndGetGoalDescriptionWithLibraryItems(
+        goalDescriptionWithLibraryItems: GoalDescriptionWithLibraryItems
+    ) : GoalDescriptionWithLibraryItems? {
         return insertAndGet(
-            goalDescriptionWithCategories.description
+            goalDescriptionWithLibraryItems.description
         )?.let { description ->
 
-            // for every category linked with the goal...
-            for (category in goalDescriptionWithCategories.categories) {
+            // for every library item linked with the goal...
+            for (libraryItem in goalDescriptionWithLibraryItems.libraryItems) {
                 // insert a row in the cross reference table
-                insertGoalDescriptionCategoryCrossRef(
-                    GoalDescriptionCategoryCrossRef(
+                insertGoalDescriptionLibraryItemCrossRef(
+                    GoalDescriptionLibraryItemCrossRef(
                         description.id,
-                        category.id,
+                        libraryItem.id,
                     )
                 )
             }
-            return GoalDescriptionWithCategories(
+            return GoalDescriptionWithLibraryItems(
                 description,
-                goalDescriptionWithCategories.categories
+                goalDescriptionWithLibraryItems.libraryItems
             )
         }
     }
 
     @Transaction
     open suspend fun insertGoal(
-        goalDescriptionWithCategories: GoalDescriptionWithCategories,
+        goalDescriptionWithLibraryItems: GoalDescriptionWithLibraryItems,
         target: Int,
-    ) : GoalInstanceWithDescriptionWithCategories? {
+    ) : GoalInstanceWithDescriptionWithLibraryItems? {
 
-        return insertAndGetGoalDescriptionWithCategories(
-            goalDescriptionWithCategories
-        )?.let { newGoalDescriptionWithCategories ->
+        return insertAndGetGoalDescriptionWithLibraryItems(
+            goalDescriptionWithLibraryItems
+        )?.let { newGoalDescriptionWithLibraryItems ->
             // Create the first instance of the newly created goal description
             PracticeTime.goalInstanceDao.insertUpdateAndGet(
-                newGoalDescriptionWithCategories.description.createInstance(
+                newGoalDescriptionWithLibraryItems.description.createInstance(
                     Calendar.getInstance(),
                     target
                 )
             )?.let { newGoalInstance ->
-                GoalInstanceWithDescriptionWithCategories(
+                GoalInstanceWithDescriptionWithLibraryItems(
                     newGoalInstance,
-                    newGoalDescriptionWithCategories
+                    newGoalDescriptionWithLibraryItems
                 )
             }
         }
@@ -107,8 +107,8 @@ abstract class GoalDescriptionDao : BaseDao<GoalDescription>(
             }
         }
         // we also need to remove all entries in the cross reference table
-        deleteGoalDescriptionCategoryCrossRefs(
-            getGoalDescriptionCategoryCrossRefs(goalDescriptionId)
+        deleteGoalDescriptionLibraryItemCrossRefs(
+            getGoalDescriptionLibraryItemCrossRefs(goalDescriptionId)
         )
         // finally, we can delete the description
         getAndDelete(goalDescriptionId)
@@ -119,13 +119,13 @@ abstract class GoalDescriptionDao : BaseDao<GoalDescription>(
     }
 
     @Delete
-    abstract suspend fun deleteGoalDescriptionCategoryCrossRef(
-        crossRef: GoalDescriptionCategoryCrossRef
+    abstract suspend fun deleteGoalDescriptionLibraryItemCrossRef(
+        crossRef: GoalDescriptionLibraryItemCrossRef
     )
 
     @Delete
-    abstract suspend fun deleteGoalDescriptionCategoryCrossRefs(
-        crossRefs: List<GoalDescriptionCategoryCrossRef>
+    abstract suspend fun deleteGoalDescriptionLibraryItemCrossRefs(
+        crossRefs: List<GoalDescriptionLibraryItemCrossRef>
     )
 
 
@@ -147,9 +147,9 @@ abstract class GoalDescriptionDao : BaseDao<GoalDescription>(
     }
 
     @Transaction
-    open suspend fun unarchive(archivedGoal: GoalInstanceWithDescriptionWithCategories) {
-        val (instance, descriptionWithCategories) = archivedGoal
-        val description = descriptionWithCategories.description
+    open suspend fun unarchive(archivedGoal: GoalInstanceWithDescriptionWithLibraryItems) {
+        val (instance, descriptionWithLibraryItems) = archivedGoal
+        val description = descriptionWithLibraryItems.description
 
         description.archived = false
         update(description)
@@ -169,22 +169,22 @@ abstract class GoalDescriptionDao : BaseDao<GoalDescription>(
 
     @Transaction
     @Query(
-        "SELECT * FROM goal_description_category_cross_ref " +
+        "SELECT * FROM goal_description_library_item_cross_ref " +
         "WHERE goal_description_id=:goalDescriptionId"
     )
-    abstract suspend fun getGoalDescriptionCategoryCrossRefs(
+    abstract suspend fun getGoalDescriptionLibraryItemCrossRefs(
         goalDescriptionId: Long
-    ) : List<GoalDescriptionCategoryCrossRef>
+    ) : List<GoalDescriptionLibraryItemCrossRef>
 
 
     @Transaction
     @Query("SELECT * FROM goal_description WHERE id=:goalDescriptionId")
-    abstract suspend fun getWithCategories(goalDescriptionId: Long)
-        : GoalDescriptionWithCategories?
+    abstract suspend fun getWithLibraryItems(goalDescriptionId: Long)
+        : GoalDescriptionWithLibraryItems?
 
     @Transaction
     @Query("SELECT * FROM goal_description")
-    abstract suspend fun getAllWithCategories(): List<GoalDescriptionWithCategories>
+    abstract suspend fun getAllWithLibraryItems(): List<GoalDescriptionWithLibraryItems>
 
     @Query(
         "SELECT * FROM goal_description " +
@@ -198,8 +198,8 @@ abstract class GoalDescriptionDao : BaseDao<GoalDescription>(
 
     @Transaction
     @Query("SELECT * FROM goal_description WHERE archived=1")
-    abstract suspend fun getArchivedWithCategories(
-    ) : List<GoalDescriptionWithCategories>
+    abstract suspend fun getArchivedWithLibraryItems(
+    ) : List<GoalDescriptionWithLibraryItems>
 
 
     /**
@@ -208,7 +208,7 @@ abstract class GoalDescriptionDao : BaseDao<GoalDescription>(
 
     @Transaction
     open suspend fun computeGoalProgressForSession(
-        session: SessionWithSectionsWithCategoriesWithGoalDescriptions,
+        session: SessionWithSectionsWithLibraryItemsWithGoalDescriptions,
         checkArchived: Boolean = false,
     ) : Map<Long, Int> {
         var totalSessionDuration = 0
@@ -217,10 +217,10 @@ abstract class GoalDescriptionDao : BaseDao<GoalDescription>(
         val goalProgress = mutableMapOf<Long, Int>()
 
         // go through all the sections in the session...
-        session.sections.forEach { (section, categoryWithGoalDescriptions) ->
-            // ... using the respective categories, find the goals,
+        session.sections.forEach { (section, libraryItemWithGoalDescriptions) ->
+            // ... using the respective libraryItems, find the goals,
             // to which the sections are contributing to...
-            val (_, goalDescriptions) = categoryWithGoalDescriptions
+            val (_, goalDescriptions) = libraryItemWithGoalDescriptions
 
             // ... and loop through those goals, summing up the duration
             goalDescriptions.filter {d -> checkArchived || !d.archived}.forEach { description ->
@@ -273,7 +273,7 @@ abstract class GoalInstanceDao : BaseDao<GoalInstance>(tableName = "goal_instanc
             ).filter { s -> s.sections.first().timestamp >= newInstance.startTimestamp }
             .forEach { s ->
                 PracticeTime.goalDescriptionDao.computeGoalProgressForSession(
-                    PracticeTime.sessionDao.getWithSectionsWithCategoriesWithGoals(s.session.id)
+                    PracticeTime.sessionDao.getWithSectionsWithLibraryItemsWithGoals(s.session.id)
                 ).also { progress ->
                     newInstance.progress += progress[newInstance.goalDescriptionId] ?: 0
                 }
@@ -370,7 +370,7 @@ abstract class GoalInstanceDao : BaseDao<GoalInstance>(tableName = "goal_instanc
     ) : List<GoalInstanceWithDescription>
 
     /**
-     * Get all [GoalInstanceWithDescriptionWithCategories] entities matching a specific pattern
+     * Get all [GoalInstanceWithDescriptionWithLibraryItems] entities matching a specific pattern
      * @param goalDescriptionId
      * @param from optional timestamp in seconds marking beginning of selection. **default**: [getCurrTimestamp]
      * @param to optional timestamp in seconds marking end of selection. **default** [Long.MAX_VALUE]
@@ -390,13 +390,13 @@ abstract class GoalInstanceDao : BaseDao<GoalInstance>(tableName = "goal_instanc
                 "start_timestamp+period_in_seconds<:to AND NOT :inclusiveTo" +
                 ")"
     )
-    abstract suspend fun getWithDescriptionWithCategories(
+    abstract suspend fun getWithDescriptionWithLibraryItems(
         goalDescriptionId: Long,
         from: Long = getCurrTimestamp(),
         to: Long = Long.MAX_VALUE,
         inclusiveFrom: Boolean = true,
         inclusiveTo: Boolean = false,
-    ): List<GoalInstanceWithDescriptionWithCategories>
+    ): List<GoalInstanceWithDescriptionWithLibraryItems>
 
     @Transaction
     @Query(
@@ -418,10 +418,10 @@ abstract class GoalInstanceDao : BaseDao<GoalInstance>(tableName = "goal_instanc
             "archived=0 OR :checkArchived" +
         ")"
     )
-    abstract suspend fun getWithDescriptionsWithCategories(
+    abstract suspend fun getWithDescriptionsWithLibraryItems(
         checkArchived : Boolean = false,
         now : Long = getCurrTimestamp(),
-    ) : List<GoalInstanceWithDescriptionWithCategories>
+    ) : List<GoalInstanceWithDescriptionWithLibraryItems>
 
     @Transaction
     @Query(
@@ -434,11 +434,11 @@ abstract class GoalInstanceDao : BaseDao<GoalInstance>(tableName = "goal_instanc
             "archived=0 OR :checkArchived" +
         ")"
     )
-    abstract suspend fun getWithDescriptionsWithCategories(
+    abstract suspend fun getWithDescriptionsWithLibraryItems(
         goalDescriptionIds: List<Long>,
         checkArchived : Boolean = false,
         now : Long = getCurrTimestamp(),
-    ) : List<GoalInstanceWithDescriptionWithCategories>
+    ) : List<GoalInstanceWithDescriptionWithLibraryItems>
 
     @Query(
         "Select * FROM goal_instance WHERE " +

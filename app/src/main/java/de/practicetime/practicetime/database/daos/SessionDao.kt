@@ -66,20 +66,20 @@ abstract class SessionDao : BaseDao<Session>(tableName = "session") {
 
     @Transaction
     @Query("SELECT * FROM session WHERE id=:sessionId")
-    abstract suspend fun getWithSectionsWithCategories(
+    abstract suspend fun getWithSectionsWithLibraryItems(
         sessionId: Long
-    ): SessionWithSectionsWithCategories
+    ): SessionWithSectionsWithLibraryItems
 
     @Transaction
     @Query("SELECT * FROM session")
-    abstract suspend fun getAllWithSectionsWithCategories(
-    ): List<SessionWithSectionsWithCategories>
+    abstract suspend fun getAllWithSectionsWithLibraryItems(
+    ): List<SessionWithSectionsWithLibraryItems>
 
     @Transaction
     @Query("SELECT * FROM session WHERE id=:sessionId")
-    abstract suspend fun getWithSectionsWithCategoriesWithGoals(
+    abstract suspend fun getWithSectionsWithLibraryItemsWithGoals(
         sessionId: Long
-    ) : SessionWithSectionsWithCategoriesWithGoalDescriptions
+    ) : SessionWithSectionsWithLibraryItemsWithGoalDescriptions
 
     @Transaction
     @Query(
@@ -98,22 +98,22 @@ abstract class SessionDao : BaseDao<Session>(tableName = "session") {
     open suspend fun update(
         sessionId: Long,
         newRating: Int,
-        newSections: List<SectionWithCategory>,
+        newSections: List<SectionWithLibraryItem>,
         newComment: String,
     ) {
         // the difference session will save the difference in the section duration
         // between the original session and the edited sections
-        val sessionWithSectionsWithCategoriesWithGoals =
-            getWithSectionsWithCategoriesWithGoals(sessionId)
+        val sessionWithSectionsWithLibraryItemsWithGoals =
+            getWithSectionsWithLibraryItemsWithGoals(sessionId)
 
-        sessionWithSectionsWithCategoriesWithGoals.sections.forEach { (section, _) ->
+        sessionWithSectionsWithLibraryItemsWithGoals.sections.forEach { (section, _) ->
             section.duration = (newSections.find {
                 it.section.id == section.id
             }?.section?.duration ?: 0) - (section.duration ?: 0)
         }
 
         val goalProgress = PracticeTime.goalDescriptionDao.computeGoalProgressForSession(
-            sessionWithSectionsWithCategoriesWithGoals,
+            sessionWithSectionsWithLibraryItemsWithGoals,
             checkArchived = true
         )
 
@@ -121,7 +121,7 @@ abstract class SessionDao : BaseDao<Session>(tableName = "session") {
         PracticeTime.goalInstanceDao.apply {
             get(
                 goalDescriptionIds = goalProgress.keys.toList(),
-                from = sessionWithSectionsWithCategoriesWithGoals.sections.first().section.timestamp
+                from = sessionWithSectionsWithLibraryItemsWithGoals.sections.first().section.timestamp
                 // add the progress
             ).onEach { instance ->
                 goalProgress[instance.goalDescriptionId].also { progress ->
@@ -139,11 +139,11 @@ abstract class SessionDao : BaseDao<Session>(tableName = "session") {
             PracticeTime.sectionDao.update(section)
         }
 
-        sessionWithSectionsWithCategoriesWithGoals.session.apply {
+        sessionWithSectionsWithLibraryItemsWithGoals.session.apply {
             comment = newComment
             rating = newRating
         }
 
-        update(sessionWithSectionsWithCategoriesWithGoals.session)
+        update(sessionWithSectionsWithLibraryItemsWithGoals.session)
     }
 }

@@ -22,8 +22,8 @@ import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import de.practicetime.practicetime.R
-import de.practicetime.practicetime.database.entities.SectionWithCategory
-import de.practicetime.practicetime.database.entities.SessionWithSectionsWithCategories
+import de.practicetime.practicetime.database.entities.SectionWithLibraryItem
+import de.practicetime.practicetime.database.entities.SessionWithSectionsWithLibraryItems
 import de.practicetime.practicetime.utils.SCALE_FACTOR_FOR_SMALL_TEXT
 import de.practicetime.practicetime.utils.TIME_FORMAT_HUMAN_PRETTY
 import de.practicetime.practicetime.utils.getDurationString
@@ -33,7 +33,7 @@ import java.util.*
 class SessionSummaryAdapter(
     private val context: Context,
     var isExpanded: Boolean,
-    private val sessionsWithSectionsWithCategories: List<SessionWithSectionsWithCategories>,
+    private val sessionsWithSectionsWithLibraryItems: List<SessionWithSectionsWithLibraryItems>,
     private val selectedSessions: List<Pair<Int, SessionSummaryAdapter>> = listOf(),
     private val shortClickHandler: (
         layoutPosition: Int,
@@ -53,16 +53,16 @@ class SessionSummaryAdapter(
     private val onHeaderClickListener = View.OnClickListener {
         isExpanded = !isExpanded
         if(isExpanded)
-            notifyItemRangeInserted(1, sessionsWithSectionsWithCategories.size)
+            notifyItemRangeInserted(1, sessionsWithSectionsWithLibraryItems.size)
         else
-            notifyItemRangeRemoved(1, sessionsWithSectionsWithCategories.size)
+            notifyItemRangeRemoved(1, sessionsWithSectionsWithLibraryItems.size)
     }
 
     override fun getItemViewType(position: Int) =
         if (position == 0) VIEW_TYPE_HEADER else VIEW_TYPE_ITEM
 
     override fun getItemCount() : Int {
-        return if (isExpanded) sessionsWithSectionsWithCategories.size + 1 else 1
+        return if (isExpanded) sessionsWithSectionsWithLibraryItems.size + 1 else 1
     }
 
     // Create new views (invoked by the layout manager)
@@ -83,7 +83,7 @@ class SessionSummaryAdapter(
                     false
                 ),
                 context,
-                sessionsWithSectionsWithCategories,
+                sessionsWithSectionsWithLibraryItems,
                 selectedSessions,
                 shortClickHandler,
                 longClickHandler,
@@ -98,7 +98,7 @@ class SessionSummaryAdapter(
                 dataIndex = position - 1,
             )
             is ViewHolder.HeaderViewHolder -> viewHolder.bind(
-                sessionsWithSectionsWithCategories.first().sections.first().section.timestamp,
+                sessionsWithSectionsWithLibraryItems.first().sections.first().section.timestamp,
                 isExpanded,
                 onHeaderClickListener,
             )
@@ -112,7 +112,7 @@ class SessionSummaryAdapter(
         class ItemViewHolder(
             view: View,
             private val context: Context,
-            private val sessionsWithSectionsWithCategories: List<SessionWithSectionsWithCategories>,
+            private val sessionsWithSectionsWithLibraryItems: List<SessionWithSectionsWithLibraryItems>,
             private val selectedSessions: List<Pair<Int, SessionSummaryAdapter>>,
             private val shortClickHandler: (
                 layoutPosition: Int,
@@ -139,7 +139,7 @@ class SessionSummaryAdapter(
             private val commentField: TextView = view.findViewById(R.id.commentField)
             private val commentSection: View = view.findViewById(R.id.commentSection)
 
-            private val sectionsWithCategoriesList = ArrayList<SectionWithCategory>()
+            private val sectionsWithLibraryItemsList = ArrayList<SectionWithLibraryItem>()
 
             // define the time and date format
             private val timeFormat: SimpleDateFormat = SimpleDateFormat("H:mm", Locale.getDefault())
@@ -149,7 +149,7 @@ class SessionSummaryAdapter(
 
             init {
                 // define the layout and adapter for the section list
-                val sectionAdapter = SectionAdapter(sectionsWithCategoriesList, context)
+                val sectionAdapter = SectionAdapter(sectionsWithLibraryItemsList, context)
                 val layoutManager = LinearLayoutManager(context)
                 sectionList.layoutManager = layoutManager
                 sectionList.adapter = sectionAdapter
@@ -157,7 +157,7 @@ class SessionSummaryAdapter(
 
             fun bind(dataIndex: Int) {
                 // get the session at given position
-                val (session, sectionsWithCategories) = sessionsWithSectionsWithCategories[dataIndex]
+                val (session, sectionsWithLibraryItems) = sessionsWithSectionsWithLibraryItems[dataIndex]
 
                 summaryCard.apply {
                     if (selectedSessions.map { t -> t.first }.contains(bindingAdapterPosition)) {
@@ -191,13 +191,13 @@ class SessionSummaryAdapter(
                 }
 
                 val currentSessionDate = Calendar.getInstance().apply {
-                    timeInMillis = sectionsWithCategories.first().section.timestamp * 1000L
+                    timeInMillis = sectionsWithLibraryItems.first().section.timestamp * 1000L
                 }
 
                 // detect, if this session is either the last session of a day or the whole month
                 val lastSessionOfTheDay = if (dataIndex == 0) true else {
                     val nextSessionDate = Calendar.getInstance().apply {
-                        timeInMillis = sessionsWithSectionsWithCategories[dataIndex - 1]
+                        timeInMillis = sessionsWithSectionsWithLibraryItems[dataIndex - 1]
                             .sections.first().section.timestamp * 1000L
                     }
                     currentSessionDate.get(Calendar.DAY_OF_YEAR) !=
@@ -207,16 +207,16 @@ class SessionSummaryAdapter(
                 // if so, calculate the total time practiced that day and display it
                 if(lastSessionOfTheDay) {
                     var totalPracticeDuration = 0
-                    for (i in dataIndex until sessionsWithSectionsWithCategories.size) {
-                        val (_, pastSectionsWithCategories) = sessionsWithSectionsWithCategories[i]
+                    for (i in dataIndex until sessionsWithSectionsWithLibraryItems.size) {
+                        val (_, pastSectionsWithLibraryItems) = sessionsWithSectionsWithLibraryItems[i]
                         val date = Calendar.getInstance().apply {
-                            timeInMillis = pastSectionsWithCategories.first().section.timestamp * 1000L
+                            timeInMillis = pastSectionsWithLibraryItems.first().section.timestamp * 1000L
                         }
                         if(currentSessionDate.get(Calendar.DAY_OF_YEAR) !=
                             date.get(Calendar.DAY_OF_YEAR)) {
                             break
                         } else {
-                            pastSectionsWithCategories.forEach { (section, _) ->
+                            pastSectionsWithLibraryItems.forEach { (section, _) ->
                                 totalPracticeDuration += section.duration ?: 0
                             }
                         }
@@ -242,14 +242,14 @@ class SessionSummaryAdapter(
 
                 // compute the total practice time
                 var practiceDuration = 0
-                sectionsWithCategories.forEach { (section, _) ->
+                sectionsWithLibraryItems.forEach { (section, _) ->
                     practiceDuration += section.duration ?: 0
                 }
 
                 val breakDuration = session.breakDuration
 
                 // read the start duration from the first section and bring it to milliseconds
-                val startTimestamp = sectionsWithCategories.first().section.timestamp * 1000L
+                val startTimestamp = sectionsWithLibraryItems.first().section.timestamp * 1000L
 
                 // set the time field accordingly
                 summaryTimeView.text = timeFormat.format(Date(startTimestamp))
@@ -261,9 +261,9 @@ class SessionSummaryAdapter(
                 breakDurationView.text = getDurationString(breakDuration, TIME_FORMAT_HUMAN_PRETTY, SCALE_FACTOR_FOR_SMALL_TEXT)
 
                 // set the sections and update the section adapter about the change
-                sectionsWithCategoriesList.clear()
-                sectionsWithCategoriesList.addAll(sectionsWithCategories)
-                sectionList.adapter?.notifyItemRangeInserted(0,sectionsWithCategories.size)
+                sectionsWithLibraryItemsList.clear()
+                sectionsWithLibraryItemsList.addAll(sectionsWithLibraryItems)
+                sectionList.adapter?.notifyItemRangeInserted(0,sectionsWithLibraryItems.size)
 
                 //set the rating bar to the correct star rating
                 ratingBar.rating = session.rating.toFloat()
@@ -278,7 +278,7 @@ class SessionSummaryAdapter(
             }
 
             private inner class SectionAdapter(
-                private val sectionsWithCategories: ArrayList<SectionWithCategory>,
+                private val sectionsWithLibraryItems: ArrayList<SectionWithLibraryItem>,
                 private val context: Context
             ) : RecyclerView.Adapter<SectionAdapter.ViewHolder>() {
 
@@ -300,24 +300,24 @@ class SessionSummaryAdapter(
                 // Replace the contents of a view (invoked by the layout manager)
                 override fun onBindViewHolder(viewHolder: ViewHolder, position: Int) {
                     // Get element from your dataset at this position
-                    val (section, category) = sectionsWithCategories[position]
+                    val (section, libraryItem) = sectionsWithLibraryItems[position]
 
-                    // set the color to the category color
-                    val categoryColors =  context.resources.getIntArray(R.array.category_colors)
+                    // set the color to the libraryItem color
+                    val libraryItemColors =  context.resources.getIntArray(R.array.library_item_colors)
                     viewHolder.sectionColor.backgroundTintList = ColorStateList.valueOf(
-                        categoryColors[category.colorIndex]
+                        libraryItemColors[libraryItem.colorIndex]
                     )
 
 
                     val sectionDuration = section.duration ?: 0
 
                     // contents of the view with that element
-                    viewHolder.sectionName.text = category.name
+                    viewHolder.sectionName.text = libraryItem.name
                     viewHolder.sectionDuration.text = getDurationString(sectionDuration, TIME_FORMAT_HUMAN_PRETTY, SCALE_FACTOR_FOR_SMALL_TEXT)
                 }
 
                 // Return the size of your dataset (invoked by the layout manager)
-                override fun getItemCount() = sectionsWithCategories.size
+                override fun getItemCount() = sectionsWithLibraryItems.size
             }
         }
 

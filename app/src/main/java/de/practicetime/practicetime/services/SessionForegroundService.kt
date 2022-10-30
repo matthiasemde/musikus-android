@@ -39,7 +39,7 @@ class SessionForegroundService : Service() {
     private var pauseBeginTimestamp: Long = 0
     private var pauseDurationBuffer = 0     // just a buffer to
     var pauseDuration = 0                   // pause duration, ONLY for displaying on the fab, section pause duration is saved in sectionBuffer!
-    var currCategoryName = ""                   // the name of the active category
+    var currLibraryItemName = ""                   // the name of the active libraryItem
 
     var stopDialogTimestamp: Long = 0
 
@@ -120,7 +120,7 @@ class SessionForegroundService : Service() {
         val desc = if (paused) {
             getString(R.string.paused_practicing)
         } else {
-            currCategoryName
+            currLibraryItemName
         }
 
         val notification: Notification = getNotification(title, desc)
@@ -176,14 +176,14 @@ class SessionForegroundService : Service() {
         return binder
     }
 
-    fun startNewSection(categoryId: Long, categoryName: String) {
-        currCategoryName = categoryName
+    fun startNewSection(libraryItemId: Long, libraryItemName: String) {
+        currLibraryItemName = libraryItemName
         val now = Date().time / 1000L
         sectionBuffer.add(
             Pair(
                 Section(
                     null,
-                    categoryId,
+                    libraryItemId,
                     null,
                     now,
                 ),

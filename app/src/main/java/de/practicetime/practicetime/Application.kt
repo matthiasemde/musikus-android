@@ -31,7 +31,8 @@ class PracticeTime : Application() {
 
     companion object {
         // the database accessing objects of the application
-        lateinit var categoryDao: CategoryDao
+        lateinit var libraryItemDao: LibraryItemDao
+        lateinit var libraryFolderDao: LibraryFolderDao
         lateinit var goalDescriptionDao: GoalDescriptionDao
         lateinit var goalInstanceDao: GoalInstanceDao
         lateinit var sessionDao: SessionDao
@@ -60,8 +61,8 @@ class PracticeTime : Application() {
             return typedValue.data
         }
 
-        fun getCategoryColors(context: Context): MutableList<Int> {
-            return context.resources?.getIntArray(R.array.category_colors)
+        fun getLibraryItemColors(context: Context): MutableList<Int> {
+            return context.resources?.getIntArray(R.array.library_item_colors)
                 ?.toCollection(mutableListOf()) ?: mutableListOf()
         }
 
@@ -90,7 +91,8 @@ class PracticeTime : Application() {
         ).addMigrations(
             PTDatabaseMigrationOneToTwo
         ).build()
-        categoryDao = db.categoryDao
+        libraryItemDao = db.libraryItemDao
+        libraryFolderDao = db.libraryFolderDao
         goalDescriptionDao = db.goalDescriptionDao
         goalInstanceDao = db.goalInstanceDao
         sessionDao = db.sessionDao

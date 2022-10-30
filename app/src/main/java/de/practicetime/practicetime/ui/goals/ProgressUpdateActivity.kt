@@ -20,7 +20,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.button.MaterialButton
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
-import de.practicetime.practicetime.database.entities.GoalInstanceWithDescriptionWithCategories
+import de.practicetime.practicetime.database.entities.GoalInstanceWithDescriptionWithLibraryItems
 import de.practicetime.practicetime.ui.MainActivity
 import de.practicetime.practicetime.utils.TIME_FORMAT_HUMAN_PRETTY
 import de.practicetime.practicetime.utils.getDurationString
@@ -32,7 +32,7 @@ const val PROGRESS_UPDATED = 1337
 class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_update) {
 
     private val progressAdapterData =
-        ArrayList<GoalInstanceWithDescriptionWithCategories>()
+        ArrayList<GoalInstanceWithDescriptionWithLibraryItems>()
 
     private var progressAdapter: GoalAdapter? = null
 
@@ -94,11 +94,11 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
 
     private fun parseSession(sessionId: Long) {
         lifecycleScope.launch {
-            val latestSession = PracticeTime.sessionDao.getWithSectionsWithCategoriesWithGoals(sessionId)
+            val latestSession = PracticeTime.sessionDao.getWithSectionsWithLibraryItemsWithGoals(sessionId)
             val goalProgress = PracticeTime.goalDescriptionDao.computeGoalProgressForSession(latestSession)
 
             // get all active goal instances at the time of the session
-            PracticeTime.goalInstanceDao.getWithDescriptionsWithCategories(
+            PracticeTime.goalInstanceDao.getWithDescriptionsWithLibraryItems(
                 goalDescriptionIds = goalProgress.keys.toList(),
                 checkArchived = false,
                 now = latestSession.sections.first().section.timestamp
@@ -138,7 +138,7 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
 
     private fun startProgressAnimation(
         progressedGoals
-            : List<GoalInstanceWithDescriptionWithCategories>,
+            : List<GoalInstanceWithDescriptionWithLibraryItems>,
         goalProgress: Map<Long, Int>
     ) {
 
