@@ -25,6 +25,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -36,6 +37,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -43,6 +46,7 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.ColorUtils
+import androidx.core.view.WindowCompat
 import androidx.fragment.app.Fragment
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.google.android.material.appbar.CollapsingToolbarLayout
@@ -52,6 +56,10 @@ import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
 import de.practicetime.practicetime.database.entities.LibraryFolder
 import de.practicetime.practicetime.database.entities.LibraryItem
+import de.practicetime.practicetime.shared.MiniFAB
+import de.practicetime.practicetime.shared.MiniFABData
+import de.practicetime.practicetime.shared.MultiFAB
+import de.practicetime.practicetime.shared.MultiFABState
 
 enum class LibrarySortMode {
     DATE_ADDED,
@@ -80,6 +88,8 @@ class LibraryState() {
     var showMainMenu = mutableStateOf(false)
     var showThemeSubMenu = mutableStateOf(false)
     var showSortModeSubMenu = mutableStateOf(false)
+
+    var multiFABState = mutableStateOf(MultiFABState.COLLAPSED)
 
     var folders = mutableStateListOf<LibraryFolder>()
     var items = mutableStateListOf<LibraryItem>()
@@ -147,7 +157,7 @@ class LibraryFragment : Fragment() {
     // catch the back press for the case where the selection should be reverted
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
+
         activity?.onBackPressedDispatcher?.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 if(selectedItems.isNotEmpty()){
@@ -167,6 +177,7 @@ class LibraryFragment : Fragment() {
     ): View {
 
         return ComposeView(requireContext()).apply {
+            WindowCompat.setDecorFitsSystemWindows(requireActivity().window, false)
             setContent {
                 val systemUiController = rememberSystemUiController()
 
@@ -192,6 +203,22 @@ class LibraryFragment : Fragment() {
                     Scaffold(
                         modifier = Modifier
                             .nestedScroll(scrollBehavior.nestedScrollConnection),
+                        floatingActionButton = { MultiFAB(
+                            state = libraryState.multiFABState.value,
+                            onStateChange = { libraryState.multiFABState.value = it },
+                            miniFABs = listOf(
+                                MiniFABData(
+                                    onClick = { addLibraryItemDialog?.show() },
+                                    label = "Item",
+                                    icon = Icons.Default.Favorite
+                                ),
+                                MiniFABData(
+                                    onClick = { addLibraryItemDialog?.show() },
+                                    label = "Folder",
+                                    icon = Icons.Default.Face
+                                )
+                            ),
+                        ) },
                         topBar = {
                             LargeTopAppBar(
                                 scrollBehavior = scrollBehavior,
@@ -246,6 +273,14 @@ class LibraryFragment : Fragment() {
                                 Box(contentAlignment = Alignment.Center) {
                                     Text(text = stringResource(id = R.string.libraryHint))
                                 }
+                            }
+                            if(libraryState.multiFABState.value == MultiFABState.EXPANDED) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .background(Color.Black.copy(alpha = 0.8f))
+                                        .clickable(onClick = { libraryState.multiFABState.value = MultiFABState.COLLAPSED })
+                                )
                             }
                         }
                     )
@@ -426,7 +461,6 @@ class LibraryFragment : Fragment() {
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                 )
             }
-
         }
     }
 
@@ -487,7 +521,7 @@ class LibraryFragment : Fragment() {
                     )
                 }
             }
-            item { Spacer(modifier = Modifier.height(80.dp)) } // maybe solve this using content value padding instead
+            item { Spacer(modifier = Modifier.height(50.dp)) } // maybe solve this using content value padding instead
         }
     }
 
