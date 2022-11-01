@@ -1,5 +1,11 @@
 /*
- * This software is licensed under the MIT license
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ *
+ * Copyright (c) 2022 Matthias Emde
+ *
+ * Parts of this software are licensed under the MIT license
  *
  * Copyright (c) 2022, Javier Carbone, author Michael Prommersberger
  * Additions and modifications, author Matthias Emde 
@@ -15,6 +21,8 @@ import android.util.TypedValue
 import android.view.View
 import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.viewinterop.AndroidViewBinding
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.ConcatAdapter
@@ -26,6 +34,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
 import de.practicetime.practicetime.database.entities.SessionWithSectionsWithLibraryItems
+import de.practicetime.practicetime.databinding.FragmentContainerSessionsListBinding
 import de.practicetime.practicetime.shared.setCommonToolbar
 import de.practicetime.practicetime.ui.activesession.ActiveSessionActivity
 import kotlinx.coroutines.Runnable
@@ -33,10 +42,16 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.*
 
+@Composable
+fun SessionListFragmentHolder() {
+    AndroidViewBinding(FragmentContainerSessionsListBinding::inflate)
+}
+
 class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
 
-    private lateinit var fabNewSession: FloatingActionButton
-    private lateinit var fabRunningSession: FloatingActionButton
+    private lateinit var fabNewSessionView: FloatingActionButton
+    private lateinit var fabRunningSessionView: FloatingActionButton
+    private lateinit var sessionListView: RecyclerView
     private var handler: Handler = Handler(Looper.getMainLooper())
     private var runnable: Runnable = Runnable { }
 
@@ -69,6 +84,10 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        fabNewSessionView = view.findViewById(R.id.fab_new_session)
+        fabRunningSessionView = view.findViewById(R.id.fab_running_session)
+
+        sessionListView = view.findViewById(R.id.sessionList)
 
         // create the dialog for deleting sessions
         initDeleteSessionDialog()
@@ -76,8 +95,6 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
         // initialize the sessions list
         initSessionList()
 
-        fabNewSession = view.findViewById(R.id.fab_new_session)
-        fabRunningSession = view.findViewById(R.id.fab_running_session)
         val clickListener = View.OnClickListener {
             selectedSessions.clear()
             notifyAllItems()
@@ -87,8 +104,8 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
             requireActivity().startActivity(i)
             requireActivity().overridePendingTransition(R.anim.slide_in_up, R.anim.fake_anim)
         }
-        fabNewSession.setOnClickListener(clickListener)
-        fabRunningSession.setOnClickListener(clickListener)
+        fabNewSessionView.setOnClickListener(clickListener)
+        fabRunningSessionView.setOnClickListener(clickListener)
 
         sessionListToolbar = view.findViewById(R.id.session_list_toolbar)
         sessionListCollapsingToolbarLayout = view.findViewById(R.id.session_list_collapsing_toolbar_layout)
@@ -102,8 +119,8 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
             it.build()
         })
 
-        requireActivity().findViewById<RecyclerView>(R.id.sessionList).apply {
-            layoutManager = LinearLayoutManager(context)
+        sessionListView.apply {
+            layoutManager = LinearLayoutManager(requireContext())
             adapter = sessionListAdapter
             itemAnimator?.apply{
                 changeDuration = 100L // default is 250
@@ -413,11 +430,11 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
                 if (PracticeTime.serviceIsRunning) {
                     // apparently there is a bug with hide() / View.GONE which causes the Toolbar to jump down
                     // so use Invisible so that views don't get broken
-                    fabNewSession.visibility = View.INVISIBLE
+                    fabNewSessionView.visibility = View.INVISIBLE
                     fabRunningSession.show()
                 } else {
                     fabRunningSession.visibility = View.INVISIBLE
-                    fabNewSession.show()
+                    fabNewSessionView.show()
                 }
                 if (PracticeTime.serviceIsRunning)
                     handler.postDelayed(this, 500)

@@ -79,7 +79,7 @@ fun MultiFAB(
 fun MiniFAB(
     data: MiniFABData,
 ) {
-    Row (
+    Row(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
@@ -97,23 +97,4 @@ fun MiniFAB(
             )
         }
     }
-//    Canvas(
-//        modifier = Modifier
-//            .size(32.dp)
-//            .clickable(
-//                interactionSource = MutableInteractionSource(),
-//                onClick = data.onClick,
-//                indication = rememberRipple(
-//                    bounded = false,
-//                    radius = 20.dp,
-//                    color = MaterialTheme.colorScheme.onSurface
-//                )
-//            ),
-//        ) {
-//        drawCircle(
-//            color = MaterialTheme.colorScheme.primaryContainer,
-//            radius = 36f
-//        )
-//        Icon(data.icon, contentDescription = data.label)
-//    }
 }
