@@ -1,5 +1,11 @@
 /*
- * This software is licensed under the MIT license
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ *
+ * Copyright (c) 2022 Matthias Emde
+ *
+ * Parts of this software are licensed under the MIT license
  *
  * Copyright (c) 2022, Javier Carbone, author Matthias Emde
  * Additions and modifications, author Michael Prommersberger
@@ -8,7 +14,6 @@
 package de.practicetime.practicetime.shared
 
 import android.app.Activity
-import android.content.Context
 import android.content.Intent
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.ContextCompat
@@ -23,8 +28,6 @@ fun setCommonToolbar(
     toolbar: MaterialToolbar,
     uncommonItemHandler: (itemId : Int) -> Unit,
 ) {
-    val prefs = context.getSharedPreferences(context.getString(R.string.filename_shared_preferences), Context.MODE_PRIVATE)
-
     toolbar.apply {
         inflateMenu(R.menu.common_menu)
 
@@ -33,19 +36,19 @@ fun setCommonToolbar(
             when (it.itemId) {
                 R.id.commonToolbarThemeSwitchAuto -> {
                     AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
-                    prefs.edit().putInt(
+                    PracticeTime.prefs.edit().putInt(
                         PracticeTime.PREFERENCES_KEY_THEME,
                         AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM).apply()
                 }
                 R.id.commonToolbarThemeSwitchDark -> {
                     AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
-                    prefs.edit().putInt(
+                    PracticeTime.prefs.edit().putInt(
                         PracticeTime.PREFERENCES_KEY_THEME,
                         AppCompatDelegate.MODE_NIGHT_YES).apply()
                 }
                 R.id.commonToolbarThemeSwitchLight -> {
                     AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
-                    prefs.edit().putInt(
+                    PracticeTime.prefs.edit().putInt(
                         PracticeTime.PREFERENCES_KEY_THEME,
                         AppCompatDelegate.MODE_NIGHT_NO).apply()
                 }

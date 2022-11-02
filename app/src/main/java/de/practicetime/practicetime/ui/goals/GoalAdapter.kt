@@ -7,7 +7,7 @@
 
 package de.practicetime.practicetime.ui.goals
 
-import android.app.Activity
+import android.content.Context
 import android.content.res.ColorStateList
 import android.text.TextUtils
 import android.view.LayoutInflater
@@ -28,7 +28,7 @@ import de.practicetime.practicetime.utils.*
 class GoalAdapter(
     private val goals: List<GoalInstanceWithDescriptionWithLibraryItems>,
     private val selectedGoals: List<Int> = listOf(),
-    private val context: Activity,
+    private val context: Context,
     private val shortClickHandler: (index: Int) -> Unit = {},
     private val longClickHandler: (index: Int) -> Boolean = { false },
     private val showEmptyHeader: Boolean = false

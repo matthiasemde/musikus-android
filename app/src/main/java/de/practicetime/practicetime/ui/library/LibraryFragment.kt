@@ -13,8 +13,13 @@
 package de.practicetime.practicetime.ui.library
 
 import android.view.*
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -33,8 +38,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.google.accompanist.systemuicontroller.rememberSystemUiController
-import com.google.android.material.composethemeadapter3.Mdc3Theme
+import androidx.compose.ui.zIndex
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
 import de.practicetime.practicetime.database.entities.LibraryFolder
@@ -42,6 +46,7 @@ import de.practicetime.practicetime.database.entities.LibraryItem
 import de.practicetime.practicetime.shared.MiniFABData
 import de.practicetime.practicetime.shared.MultiFAB
 import de.practicetime.practicetime.shared.MultiFABState
+import de.practicetime.practicetime.ui.MainState
 
 enum class LibrarySortMode {
     DATE_ADDED,
@@ -62,6 +67,7 @@ enum class CommonMenuSelections {
 }
 
 enum class ThemeSubMenuSelections {
+    SYSTEM,
     DAY,
     NIGHT,
 }
@@ -77,6 +83,7 @@ class LibraryState() {
     val items = mutableStateListOf<LibraryItem>()
     val selectedItems = mutableStateListOf<Long>()
 
+    val showTopBarScrim = multiFABState.value == MultiFABState.EXPANDED
 
     fun showHint() = folders.isEmpty() && items.isEmpty()
 
@@ -120,7 +127,7 @@ class LibraryState() {
 }
 
 @Composable
-fun rememberLibraryState() = remember() { LibraryState() }
+fun rememberLibraryState() = remember { LibraryState() }
 
 //class LibraryFragment : Fragment() {
 //
@@ -164,10 +171,11 @@ fun rememberLibraryState() = remember() { LibraryState() }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LibraryComposable() {
-//            WindowCompat.setDecorFitsSystemWindows(requireActivity().window, false)
-    val systemUiController = rememberSystemUiController()
-
+fun LibraryComposable(
+    contentPadding: PaddingValues,
+    mainState: MainState,
+    showNavBarScrim: (Boolean) -> Unit
+) {
     val libraryState = rememberLibraryState()
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
@@ -185,99 +193,131 @@ fun LibraryComposable() {
         }
     }
 
-    Mdc3Theme {
-        systemUiController.setStatusBarColor(Color.Transparent)
-        Scaffold(
-            modifier = Modifier
-                .nestedScroll(scrollBehavior.nestedScrollConnection),
-            floatingActionButton = {
-                MultiFAB(
-                    state = libraryState.multiFABState.value,
-                    onStateChange = { libraryState.multiFABState.value = it },
-                    miniFABs = listOf(
-                        MiniFABData(
-                            onClick = { },//addLibraryItemDialog?.show() },
-                            label = "Item",
-                            icon = Icons.Default.Favorite
-                        ),
-                        MiniFABData(
-                            onClick = { },//addLibraryItemDialog?.show() },
-                            label = "Folder",
-                            icon = Icons.Default.Face
-                        )
+    Scaffold(
+        contentWindowInsets = WindowInsets(bottom = 0.dp),
+        modifier = Modifier
+            .nestedScroll(scrollBehavior.nestedScrollConnection),
+        floatingActionButton = {
+            MultiFAB(
+                state = libraryState.multiFABState.value,
+                onStateChange = { state ->
+                    libraryState.multiFABState.value = state
+                    showNavBarScrim(state == MultiFABState.EXPANDED)
+                },
+                miniFABs = listOf(
+                    MiniFABData(
+                        onClick = { },//addLibraryItemDialog?.show() },
+                        label = "Item",
+                        icon = Icons.Default.Favorite
                     ),
+                    MiniFABData(
+                        onClick = { },//addLibraryItemDialog?.show() },
+                        label = "Folder",
+                        icon = Icons.Default.Face
+                    )
                 )
-            },
-            topBar = {
-                LargeTopAppBar(
-                    scrollBehavior = scrollBehavior,
-                    title = {
-                        Text(text = "Library")
-                    },
-                    actions = {
-                        IconButton(onClick = {
-                            libraryState.showMainMenu.value = !libraryState.showMainMenu.value
-                        }) {
-                            Icon(Icons.Default.MoreVert, contentDescription = "more")
+            )
+        },
+        topBar = {
+            LargeTopAppBar(
+                scrollBehavior = scrollBehavior,
+                title = {
+                    Text(text = "Library")
+                },
+                actions = {
+                    IconButton(onClick = {
+                        libraryState.showMainMenu.value = !libraryState.showMainMenu.value
+                    }) {
+                        Icon(Icons.Default.MoreVert, contentDescription = "more")
+                    }
+                    MainMenu(
+                        show = libraryState.showMainMenu.value,
+                        onDismissHandler = { libraryState.showMainMenu.value = false },
+                        onSelectionHandler = { librarySelection, commonSelection ->
+                            libraryState.showMainMenu.value = false
+                            when (librarySelection) {
+                                LibraryMenuSelections.SORT_BY -> {
+                                    libraryState.showSortModeSubMenu.value = true
+                                }
+                                null -> {}
+                            }
+                            when (commonSelection) {
+                                CommonMenuSelections.APP_INFO -> {}
+                                CommonMenuSelections.THEME -> {
+                                    libraryState.showThemeSubMenu.value = true
+                                }
+                                null -> {}
+                            }
                         }
-                        MainMenu(
-                            show = libraryState.showMainMenu.value,
-                            onDismissHandler = { libraryState.showMainMenu.value = false },
-                            onSelectionHandler = { librarySelection, commonSelection ->
-                                libraryState.showMainMenu.value = false
-                                when (librarySelection) {
-                                    LibraryMenuSelections.SORT_BY -> {
-                                        libraryState.showSortModeSubMenu.value = true
-                                    }
-                                    null -> {}
+                    )
+                    ThemeSubMenu(
+                        show = libraryState.showThemeSubMenu.value,
+                        onDismissHandler = { libraryState.showThemeSubMenu.value = false },
+                        onSelectionHandler = { theme ->
+                            libraryState.showThemeSubMenu.value = false
+                            when(theme) {
+                                ThemeSubMenuSelections.SYSTEM -> {
+                                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
                                 }
-                                when (commonSelection) {
-                                    CommonMenuSelections.APP_INFO -> {}
-                                    CommonMenuSelections.THEME -> {
-                                        libraryState.showThemeSubMenu.value = true
-                                    }
-                                    null -> {}
+                                ThemeSubMenuSelections.DAY -> {
+                                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+                                }
+                                ThemeSubMenuSelections.NIGHT -> {
+                                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
                                 }
                             }
-                        )
-                        LibrarySubMenuSortMode(
-                            show = libraryState.showSortModeSubMenu.value,
-                            onDismissHandler = { libraryState.showSortModeSubMenu.value = false },
-                            sortMode = libraryState.sortMode.value,
-                            sortDirection = libraryState.sortDirection.value,
-                            onSelectionHandler = { sortMode ->
-                                libraryState.showSortModeSubMenu.value = false
-                                libraryState.sortItems(sortMode)
-                            }
-                        )
-                    }
-                )
-            },
-            content = { contentPadding ->
-                LibraryContent(
-                    contentPadding = contentPadding,
-                    folders = libraryState.folders,
-                    items = libraryState.items,
-                    selectedItems = libraryState.selectedItems,
-                )
-                if (libraryState.showHint()) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Text(text = stringResource(id = R.string.libraryHint))
-                    }
-                }
-                if (libraryState.multiFABState.value == MultiFABState.EXPANDED) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(Color.Black.copy(alpha = 0.8f))
-                            .clickable(onClick = {
-                                libraryState.multiFABState.value = MultiFABState.COLLAPSED
-                            })
+                        }
+                    )
+                    LibrarySubMenuSortMode(
+                        show = libraryState.showSortModeSubMenu.value,
+                        onDismissHandler = { libraryState.showSortModeSubMenu.value = false },
+                        sortMode = libraryState.sortMode.value,
+                        sortDirection = libraryState.sortDirection.value,
+                        onSelectionHandler = { sortMode ->
+                            libraryState.showSortModeSubMenu.value = false
+                            libraryState.sortItems(sortMode)
+                        }
                     )
                 }
+            )
+        },
+        content = { innerPadding ->
+            LibraryContent(
+                contentPadding = PaddingValues(
+                    top = innerPadding.calculateTopPadding(),
+                ),
+                folders = libraryState.folders,
+                items = libraryState.items,
+                selectedItems = libraryState.selectedItems,
+            )
+            if (libraryState.showHint()) {
+                Box(contentAlignment = Alignment.Center) {
+                    Text(text = stringResource(id = R.string.libraryHint))
+                }
             }
-        )
-    }
+
+            AnimatedVisibility(
+                modifier = Modifier
+                    .zIndex(1f),
+                visible = libraryState.multiFABState.value == MultiFABState.EXPANDED,
+                enter = fadeIn(),
+                exit = fadeOut()
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.9f))
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                        ) {
+                            libraryState.multiFABState.value = MultiFABState.COLLAPSED
+                            showNavBarScrim(false)
+                        }
+                )
+            }
+        }
+    )
 }
 ////        initLibraryItemList()
 //
@@ -294,6 +334,29 @@ fun LibraryComposable() {
 //
 //        // create the dialog for archiving libraryItems
 //        initDeleteLibraryItemDialog()
+
+
+@Composable
+fun ThemeSubMenu(
+    show: Boolean,
+    onDismissHandler: () -> Unit,
+    onSelectionHandler: (ThemeSubMenuSelections) -> Unit,
+) {
+    DropdownMenu(expanded = show, onDismissRequest = onDismissHandler) {
+        DropdownMenuItem(
+            text = { Text(text = "Automatic") },
+            onClick = { onSelectionHandler(ThemeSubMenuSelections.SYSTEM)
+        })
+        DropdownMenuItem(
+            text = { Text(text = "Light") },
+            onClick = { onSelectionHandler(ThemeSubMenuSelections.DAY)
+        })
+        DropdownMenuItem(
+            text = { Text(text = "Dark") },
+            onClick = { onSelectionHandler(ThemeSubMenuSelections.NIGHT)
+        })
+    }
+}
 
 @Composable
 fun CommonMenuItems(
@@ -513,7 +576,7 @@ fun LibraryContent(
                 )
             }
         }
-        item { Spacer(modifier = Modifier.height(50.dp)) } // maybe solve this using content value padding instead
+        item { Spacer(modifier = Modifier.height(0.dp)) } // maybe solve this using content value padding instead
     }
 }
 

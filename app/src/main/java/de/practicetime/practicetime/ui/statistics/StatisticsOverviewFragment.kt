@@ -13,6 +13,8 @@ import android.text.TextUtils
 import android.view.View
 import android.widget.*
 import androidx.cardview.widget.CardView
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.viewinterop.AndroidViewBinding
 import androidx.core.widget.NestedScrollView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -27,6 +29,8 @@ import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
 import de.practicetime.practicetime.database.entities.GoalType
 import de.practicetime.practicetime.database.entities.SessionWithSectionsWithLibraryItems
+import de.practicetime.practicetime.databinding.FragmentContainerSessionsListBinding
+import de.practicetime.practicetime.databinding.FragmentContainerStatisticsBinding
 import de.practicetime.practicetime.shared.setCommonToolbar
 import de.practicetime.practicetime.ui.goals.updateGoals
 import de.practicetime.practicetime.utils.*
@@ -34,6 +38,10 @@ import kotlinx.coroutines.launch
 import java.time.format.DateTimeFormatter
 import kotlin.math.min
 
+@Composable
+fun StatisticsFragmentHolder() {
+    AndroidViewBinding(FragmentContainerStatisticsBinding::inflate)
+}
 
 class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overview) {
 

@@ -1,5 +1,11 @@
 /*
- * This software is licensed under the MIT license
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ *
+ * Copyright (c) 2022 Matthias Emde
+ *
+ * Parts of this software are licensed under the MIT license
  *
  * Copyright (c) 2022, Javier Carbone, author Matthias Emde
  * Additions and modifications, author Michael Prommersberger
@@ -19,6 +25,8 @@ import android.view.View
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.viewinterop.AndroidViewBinding
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -30,15 +38,21 @@ import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
 import de.practicetime.practicetime.database.entities.GoalDescriptionWithLibraryItems
 import de.practicetime.practicetime.database.entities.GoalInstanceWithDescriptionWithLibraryItems
+import de.practicetime.practicetime.databinding.FragmentContainerGoalsBinding
 import de.practicetime.practicetime.shared.EditTimeDialog
 import de.practicetime.practicetime.shared.setCommonToolbar
 import kotlinx.coroutines.launch
 
+@Composable
+fun GoalsFragmentHolder() {
+    AndroidViewBinding(FragmentContainerGoalsBinding::inflate)
+}
 
 class GoalsFragment : Fragment(R.layout.fragment_goals) {
 
     private val goalAdapterData =
         ArrayList<GoalInstanceWithDescriptionWithLibraryItems>()
+    private lateinit var goalListView: RecyclerView
     private lateinit var goalAdapter : GoalAdapter
 
     private lateinit var addGoalDialog: GoalDialog
@@ -76,6 +90,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        goalListView = view.findViewById(R.id.goalList)
 
         initGoalList()
 
@@ -109,13 +124,13 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
         goalAdapter = GoalAdapter(
             goalAdapterData,
             selectedGoals,
-            context = requireActivity(),
+            context = requireContext(),
             ::shortClickOnGoalHandler,
             ::longClickOnGoalHandler,
         )
 
-        requireActivity().findViewById<RecyclerView>(R.id.goalList).apply {
-            layoutManager = LinearLayoutManager(context)
+        goalListView.apply {
+            layoutManager = LinearLayoutManager(requireContext())
             adapter = goalAdapter
             itemAnimator?.apply {
                 addDuration = 1L

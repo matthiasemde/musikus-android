@@ -22,6 +22,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 
 enum class MultiFABState {
     EXPANDED,
@@ -49,20 +50,25 @@ fun MultiFAB(
         if (it == MultiFABState.EXPANDED) 1f else 0f
     }
 
-    Column(
+    Column(modifier = Modifier
+        .zIndex(1f),
         horizontalAlignment = Alignment.End
     ) {
         if (transition.targetState == MultiFABState.EXPANDED || transition.currentState == MultiFABState.EXPANDED) {
             Column(
                 horizontalAlignment = Alignment.End,
                 modifier = Modifier
-                    .offset(y = (-8 * miniFabScale).dp)
-                    .alpha(miniFabScale)
+                    .offset(y = (8 * (1 - miniFabScale)).dp)
+                    .alpha(miniFabScale),
             ) {
-                miniFABs.forEach { miniFAB ->
-                    MiniFAB(data = miniFAB)
+                miniFABs.forEachIndexed { i, miniFAB ->
+                    MiniFAB(
+                        modifier = Modifier
+                            .padding(8.dp)
+                            .padding(bottom = (if (i+1 == miniFABs.size) 16 else 0).dp),
+                        data = miniFAB
+                    )
                 }
-                Spacer(modifier = Modifier.size(16.dp))
             }
         }
         FloatingActionButton(
@@ -77,19 +83,23 @@ fun MultiFAB(
 
 @Composable
 fun MiniFAB(
+    modifier: Modifier,
     data: MiniFABData,
 ) {
     Row(
+        modifier = modifier,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
+            modifier = Modifier
+                .padding(end = 20.dp),
             text = data.label,
             style = MaterialTheme.typography.titleMedium
         )
-        IconButton(
-            onClick = data.onClick,
+        SmallFloatingActionButton(
             modifier = Modifier
-                .size(48.dp)
+                .size(40.dp),
+            onClick = data.onClick,
         ) {
             Icon(
                 imageVector = data.icon,
