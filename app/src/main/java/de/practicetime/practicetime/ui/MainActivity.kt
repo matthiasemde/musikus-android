@@ -86,6 +86,10 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
+        if (BuildConfig.DEBUG) {
+            createDatabaseFirstRun()
+//            launchAppIntroFirstRun()
+        }
 
         setTheme()
 
@@ -148,8 +152,6 @@ class MainActivity : AppCompatActivity() {
                         composable(Screen.Goals.route) { GoalsFragmentHolder() }
                         composable(Screen.Statistics.route) { StatisticsFragmentHolder() }
                         composable(Screen.Library.route) { LibraryComposable (
-                            contentPadding = innerPadding,
-                            mainState = mainState,
                             showNavBarScrim = { show -> mainState.showNavBarScrim.value = show }
                         ) }
                     }
@@ -180,21 +182,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
-//        setContentView(R.layout.activity_main)
-
-//        val navController = rememberNavController()
-//
-//        val navHostFragment =
-//            supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
-//        val navController = navHostFragment.navController
-//
-//        bottomNavigationView = findViewById(R.id.bottom_navigation_view)
-//        bottomNavigationView.setupWithNavController(navController)
-//
-//        if (BuildConfig.DEBUG) {
-//            createDatabaseFirstRun()
-////            launchAppIntroFirstRun()
-//        }
 
     private fun launchAppIntroFirstRun() {
         if (!PracticeTime.prefs.getBoolean(PracticeTime.PREFERENCES_KEY_APPINTRO_DONE, false)) {
