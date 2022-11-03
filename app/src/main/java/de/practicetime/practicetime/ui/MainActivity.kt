@@ -13,7 +13,6 @@
 package de.practicetime.practicetime.ui
 
 import android.content.Intent
-import android.content.res.Resources
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.annotation.DrawableRes
@@ -109,14 +108,16 @@ class MainActivity : AppCompatActivity() {
         setContent {
             val mainState = rememberMainState()
 
-            mainState.setTheme(
+            mainState.setTheme(try {
                 PracticeTime.prefs.getInt(
                     PracticeTime.PREFERENCES_KEY_THEME,
                     ThemeSelections.SYSTEM.ordinal
-                ).let {
-                    ordinal -> ThemeSelections.values().first {it.ordinal == ordinal}
+                ).let { ordinal ->
+                    ThemeSelections.values().first { it.ordinal == ordinal }
                 }
-            )
+            } catch (ex: Exception) {
+                ThemeSelections.SYSTEM
+            })
 
             Mdc3Theme {
                 val navController = rememberNavController()

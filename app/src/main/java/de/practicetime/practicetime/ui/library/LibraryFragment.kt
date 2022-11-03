@@ -14,10 +14,10 @@ package de.practicetime.practicetime.ui.library
 
 import android.util.Log
 import android.view.*
-import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -52,6 +52,8 @@ import de.practicetime.practicetime.database.entities.LibraryItem
 import de.practicetime.practicetime.shared.*
 import de.practicetime.practicetime.ui.MainState
 import de.practicetime.practicetime.ui.ThemeSelections
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 enum class LibrarySortMode {
     DATE_ADDED,
@@ -66,13 +68,20 @@ enum class LibraryMenuSelections {
     SORT_BY,
 }
 
+enum class SortDirection {
+    ASCENDING,
+    DESCENDING
+}
+
 enum class CommonMenuSelections {
     THEME,
     APP_INFO
 }
 
 
-class LibraryState() {
+class LibraryState(
+    private val coroutineScope: CoroutineScope,
+) {
     var showMainMenu = mutableStateOf(false)
     var showThemeSubMenu = mutableStateOf(false)
     var showSortModeSubMenu = mutableStateOf(false)
@@ -91,30 +100,43 @@ class LibraryState() {
     val selectedItems = mutableStateListOf<Long>()
 
     var sortMode = mutableStateOf(try {
-        LibrarySortMode.valueOf(
-            PracticeTime.prefs.getString(
-                PracticeTime.PREFERENCES_KEY_LIBRARY_SORT_MODE,
-                LibrarySortMode.DATE_ADDED.toString()
-            ) ?: LibrarySortMode.DATE_ADDED.toString()
-        )
+        PracticeTime.prefs.getString(
+            PracticeTime.PREFERENCES_KEY_LIBRARY_SORT_MODE,
+            LibrarySortMode.DATE_ADDED.name
+        )?.let { LibrarySortMode.valueOf(it) } ?: LibrarySortMode.DATE_ADDED
     } catch (ex: Exception) {
         LibrarySortMode.DATE_ADDED
     })
 
-    var sortDirection = mutableStateOf(true)
+    var sortDirection = mutableStateOf(try {
+        PracticeTime.prefs.getString(
+            PracticeTime.PREFERENCES_KEY_LIBRARY_SORT_DIRECTION,
+            SortDirection.ASCENDING.name
+        )?.let { SortDirection.valueOf(it) } ?: SortDirection.ASCENDING
+    } catch (ex: Exception) {
+        SortDirection.ASCENDING
+    })
+
 
     fun sortItems(mode: LibrarySortMode? = null) {
         if(mode != null) {
             if (mode == sortMode.value) {
-                sortDirection.value = !sortDirection.value
+                when (sortDirection.value) {
+                    SortDirection.ASCENDING -> sortDirection.value = SortDirection.DESCENDING
+                    SortDirection.DESCENDING -> sortDirection.value = SortDirection.ASCENDING
+                }
             } else {
-                sortDirection.value = true
+                sortDirection.value = SortDirection.ASCENDING
                 sortMode.value = mode
                 PracticeTime.prefs.edit().putString(
                     PracticeTime.PREFERENCES_KEY_LIBRARY_SORT_MODE,
-                    sortMode.toString()
+                    sortMode.value.name
                 ).apply()
             }
+            PracticeTime.prefs.edit().putString(
+                PracticeTime.PREFERENCES_KEY_LIBRARY_SORT_DIRECTION,
+                sortDirection.value.name
+            ).apply()
         }
         when (sortMode.value) {
             LibrarySortMode.DATE_ADDED -> items.sortBy { it.createdAt }
@@ -123,12 +145,29 @@ class LibraryState() {
             LibrarySortMode.LAST_MODIFIED -> items.sortBy { it.modifiedAt }
             LibrarySortMode.CUSTOM -> items.sortBy { it.createdAt } // TODO: Not implemented yet
         }
-        if (sortDirection.value) {
+        if (sortDirection.value == SortDirection.DESCENDING) {
             items.reverse()
 //            val tmp = items
 //            items.clear()
 //            items.addAll(tmp.reversed())
 //            Log.d("items", items.toString())
+        }
+    }
+
+    fun addFolder(newFolder: LibraryFolder) {
+        coroutineScope.launch {
+            PracticeTime.libraryFolderDao.insertAndGet(newFolder)?.let {
+                folders.add(0, it)
+            }
+        }
+    }
+
+    fun addItem(newItem: LibraryItem) {
+        coroutineScope.launch {
+            PracticeTime.libraryItemDao.insertAndGet(newItem)?.let {
+                items.add(0, it)
+                sortItems()
+            }
         }
     }
 //
@@ -138,7 +177,9 @@ class LibraryState() {
 
 
 @Composable
-fun rememberLibraryState() = remember { LibraryState() }
+fun rememberLibraryState(
+    coroutineScope: CoroutineScope = rememberCoroutineScope(),
+) = remember(coroutineScope) { LibraryState(coroutineScope) }
 
 //
 //    // catch the back press for the case where the selection should be reverted
@@ -169,6 +210,7 @@ fun LibraryComposable(
     LaunchedEffect(true) {
         PracticeTime.libraryFolderDao.get().let {
             libraryState.folders.addAll(it)
+            libraryState.folders.reverse()
         }
     }
 
@@ -276,6 +318,8 @@ fun LibraryComposable(
                 items = libraryState.items,
                 selectedItems = libraryState.selectedItems,
             )
+
+            // Show hint if no items or folders are in the library
             if (libraryState.folders.isEmpty() && libraryState.items.isEmpty()) {
                 Box(
                     modifier = Modifier
@@ -298,7 +342,11 @@ fun LibraryComposable(
                     onDismissHandler = { create ->
                         libraryState.showAddFolderDialog.value = false
                         if(create) {
-                            libraryState.newFolderName.value = ""
+                            libraryState.addFolder(
+                                LibraryFolder(
+                                    name = libraryState.newFolderName.value,
+                                )
+                            )
                         }
                     },
                 )
@@ -313,7 +361,17 @@ fun LibraryComposable(
                         Log.d("color", it.toString())
                         libraryState.newItemColorIndex.value = it
                      },
-                    onDismissHandler = { libraryState.showAddItemDialog.value = false },
+                    onDismissHandler = { create ->
+                        libraryState.showAddItemDialog.value = false
+                        if(create) {
+                            libraryState.addItem(
+                                LibraryItem(
+                                    name = libraryState.newItemName.value,
+                                    colorIndex = libraryState.newItemColorIndex.value,
+                                )
+                            )
+                        }
+                    },
                 )
             }
 
@@ -340,22 +398,7 @@ fun LibraryComposable(
             }
         }
     )
-//    libraryState.addLibraryItemDialog = LibraryItemDialog(requireActivity(), ::addLibraryItemHandler)
 }
-////        initLibraryItemList()
-//
-        // create a new libraryItem dialog for adding new libraryItems
-//
-//        view.findViewById<FloatingActionButton>(R.id.libraryFab).setOnClickListener {
-//            actionMode?.finish()
-//            addLibraryItemDialog?.show()
-//        }
-//
-//        // create the libraryItem dialog for editing libraryItems
-//        editLibraryItemDialog = LibraryItemDialog(requireActivity(), ::editLibraryItemHandler)
-//
-//        // create the dialog for archiving libraryItems
-//        initDeleteLibraryItemDialog()
 
 
 @Composable
@@ -366,6 +409,15 @@ fun ThemeSubMenu(
     onSelectionHandler: (ThemeSelections) -> Unit,
 ) {
     DropdownMenu(expanded = show, onDismissRequest = onDismissHandler) {
+        // Menu Header
+        Text(
+            modifier = Modifier.padding(12.dp),
+            text = "Theme",
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+        )
+
+        // Menu Items
         DropdownMenuItem(
             text = { Text(text = "Automatic") },
             onClick = { onSelectionHandler(ThemeSelections.SYSTEM) },
@@ -403,7 +455,6 @@ fun CommonMenuItems(
         onClick = { onSelectionHandler(CommonMenuSelections.THEME) }
     )
     DropdownMenuItem(
-        modifier = Modifier.padding(end = 50.dp),
         text = { Text(text = "App Info") },
         onClick = { onSelectionHandler(CommonMenuSelections.APP_INFO) }
     )
@@ -414,18 +465,31 @@ fun LibrarySubMenuSortMode(
     show: Boolean,
     onDismissHandler: () -> Unit,
     sortMode: LibrarySortMode,
-    sortDirection: Boolean,
+    sortDirection: SortDirection,
     onSelectionHandler: (LibrarySortMode) -> Unit
 ) {
     DropdownMenu(
         expanded = show,
         onDismissRequest = onDismissHandler,
     ) {
+        // Menu Header
+        Text(
+            modifier = Modifier.padding(12.dp),
+            text = "Sort by",
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+        )
+
+        // Menu Body
         val directionIcon: @Composable () -> Unit = {
-            if (sortDirection)
-                Icon(Icons.Default.KeyboardArrowUp, contentDescription = null)
-            else
-                Icon(Icons.Default.KeyboardArrowDown, contentDescription = null)
+            Icon(
+                imageVector = when (sortDirection) {
+                    SortDirection.ASCENDING -> Icons.Default.KeyboardArrowUp
+                    SortDirection.DESCENDING -> Icons.Default.KeyboardArrowDown
+                },
+                tint = MaterialTheme.colorScheme.primary,
+                contentDescription = null
+            )
         }
         val primaryColor = MaterialTheme.colorScheme.primary
         DropdownMenuItem(
@@ -453,7 +517,6 @@ fun LibrarySubMenuSortMode(
             trailingIcon = if (sortMode == LibrarySortMode.NAME) directionIcon else null
         )
         DropdownMenuItem(
-            modifier = Modifier.padding(end = 50.dp),
             text = { Text(
                 text = "Color",
                 color = if (sortMode == LibrarySortMode.COLOR) primaryColor else Color.Unspecified
@@ -554,6 +617,7 @@ fun LibraryItemComposable(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun LibraryContent(
     contentPadding: PaddingValues,
@@ -577,17 +641,23 @@ fun LibraryContent(
             }
             item {
                 LazyRow(
-                    contentPadding = PaddingValues(horizontal = 16.dp),
+//                    contentPadding = PaddingValues(horizontal = 16.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
+                    // header and footer items replace contentPadding
+                    // but also serve to fixate the list when inserting items
+                    item { Spacer(modifier = Modifier.width(4.dp)) }
                     items(
                         items = folders,
                         key = { folder -> folder.id }
                     ) { folder ->
-                        LibraryFolderComposable(
-                            folder = folder,
-                        )
+                        Row(
+                            modifier = Modifier.animateItemPlacement()
+                        ) {
+                            LibraryFolderComposable(folder = folder)
+                        }
                     }
+                    item { Spacer(modifier = Modifier.width(4.dp)) }
                 }
             }
         }
@@ -605,11 +675,15 @@ fun LibraryContent(
                 items=items,
                 key = { item -> item.id }
             ) { item ->
-                LibraryItemComposable(
-                    contentPadding = PaddingValues(horizontal = 16.dp),
-                    libraryItem = item,
-                    selected = selectedItems.contains(item.id)
-                )
+                Row(
+                    modifier = Modifier.animateItemPlacement()
+                ) {
+                    LibraryItemComposable(
+                        contentPadding = PaddingValues(horizontal = 16.dp),
+                        libraryItem = item,
+                        selected = selectedItems.contains(item.id)
+                    )
+                }
             }
         }
         item { Spacer(modifier = Modifier.height(0.dp)) } // maybe solve this using content value padding instead
