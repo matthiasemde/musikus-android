@@ -13,6 +13,7 @@
 package de.practicetime.practicetime.ui
 
 import android.content.Intent
+import android.content.res.Resources
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.annotation.DrawableRes
@@ -58,8 +59,21 @@ import de.practicetime.practicetime.ui.sessionlist.SessionListFragmentHolder
 import de.practicetime.practicetime.ui.statistics.StatisticsFragmentHolder
 import kotlinx.coroutines.launch
 
+enum class ThemeSelections {
+    SYSTEM,
+    DAY,
+    NIGHT,
+}
+
 class MainState() {
+    val activeTheme = mutableStateOf(ThemeSelections.SYSTEM)
     val showNavBarScrim = mutableStateOf(false)
+
+    fun setTheme(theme: ThemeSelections) {
+        PracticeTime.prefs.edit().putInt(PracticeTime.PREFERENCES_KEY_THEME, theme.ordinal).apply()
+        activeTheme.value = theme
+        AppCompatDelegate.setDefaultNightMode(theme.ordinal)
+    }
 }
 
 @Composable
@@ -91,10 +105,19 @@ class MainActivity : AppCompatActivity() {
 //            launchAppIntroFirstRun()
         }
 
-        setTheme()
 
         setContent {
             val mainState = rememberMainState()
+
+            mainState.setTheme(
+                PracticeTime.prefs.getInt(
+                    PracticeTime.PREFERENCES_KEY_THEME,
+                    ThemeSelections.SYSTEM.ordinal
+                ).let {
+                    ordinal -> ThemeSelections.values().first {it.ordinal == ordinal}
+                }
+            )
+
             Mdc3Theme {
                 val navController = rememberNavController()
                 Scaffold(
@@ -152,7 +175,8 @@ class MainActivity : AppCompatActivity() {
                         composable(Screen.Goals.route) { GoalsFragmentHolder() }
                         composable(Screen.Statistics.route) { StatisticsFragmentHolder() }
                         composable(Screen.Library.route) { LibraryComposable (
-                            showNavBarScrim = { show -> mainState.showNavBarScrim.value = show }
+                            mainState = mainState,
+                            showNavBarScrim = { show -> mainState.showNavBarScrim.value = show },
                         ) }
                     }
                     AnimatedVisibility(
@@ -223,11 +247,6 @@ class MainActivity : AppCompatActivity() {
                 PracticeTime.prefs.edit().putBoolean(PracticeTime.PREFERENCES_KEY_FIRSTRUN, false).apply()
             }
         }
-    }
-
-    private fun setTheme() {
-        val chosenTheme = PracticeTime.prefs.getInt(PracticeTime.PREFERENCES_KEY_THEME, AppCompatDelegate.MODE_NIGHT_UNSPECIFIED)
-        AppCompatDelegate.setDefaultNightMode(chosenTheme)
     }
 
     // periodically check if session is still running (if it is) to remove the badge if yes

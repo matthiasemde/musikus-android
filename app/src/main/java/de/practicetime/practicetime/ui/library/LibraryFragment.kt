@@ -50,6 +50,8 @@ import de.practicetime.practicetime.R
 import de.practicetime.practicetime.database.entities.LibraryFolder
 import de.practicetime.practicetime.database.entities.LibraryItem
 import de.practicetime.practicetime.shared.*
+import de.practicetime.practicetime.ui.MainState
+import de.practicetime.practicetime.ui.ThemeSelections
 
 enum class LibrarySortMode {
     DATE_ADDED,
@@ -69,11 +71,6 @@ enum class CommonMenuSelections {
     APP_INFO
 }
 
-enum class ThemeSubMenuSelections {
-    SYSTEM,
-    DAY,
-    NIGHT,
-}
 
 class LibraryState() {
     var showMainMenu = mutableStateOf(false)
@@ -83,9 +80,9 @@ class LibraryState() {
     var showAddFolderDialog = mutableStateOf(false)
     var newFolderName = mutableStateOf("")
 
-    var showAddItemDialog = mutableStateOf(true)
+    var showAddItemDialog = mutableStateOf(false)
     var newItemName = mutableStateOf("")
-    var newItemColorIndex = mutableStateOf(1)
+    var newItemColorIndex = mutableStateOf(0)
 
     var multiFABState = mutableStateOf(MultiFABState.COLLAPSED)
 
@@ -135,7 +132,6 @@ class LibraryState() {
         }
     }
 //
-    var addLibraryItemDialog: LibraryItemDialog? = null
 //    var editLibraryItemDialog: LibraryItemDialog? = null
 //    var deleteLibraryItemDialog: AlertDialog? = null
 }
@@ -164,7 +160,8 @@ fun rememberLibraryState() = remember { LibraryState() }
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LibraryComposable(
-    showNavBarScrim: (Boolean) -> Unit
+    mainState: MainState,
+    showNavBarScrim: (Boolean) -> Unit,
 ) {
     val libraryState = rememberLibraryState()
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
@@ -250,20 +247,11 @@ fun LibraryComposable(
                     )
                     ThemeSubMenu(
                         show = libraryState.showThemeSubMenu.value,
+                        currentTheme = mainState.activeTheme.value,
                         onDismissHandler = { libraryState.showThemeSubMenu.value = false },
                         onSelectionHandler = { theme ->
                             libraryState.showThemeSubMenu.value = false
-                            when(theme) {
-                                ThemeSubMenuSelections.SYSTEM -> {
-                                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
-                                }
-                                ThemeSubMenuSelections.DAY -> {
-                                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
-                                }
-                                ThemeSubMenuSelections.NIGHT -> {
-                                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
-                                }
-                            }
+                            mainState.setTheme(theme)
                         }
                     )
                     LibrarySubMenuSortMode(
@@ -373,22 +361,35 @@ fun LibraryComposable(
 @Composable
 fun ThemeSubMenu(
     show: Boolean,
+    currentTheme: ThemeSelections,
     onDismissHandler: () -> Unit,
-    onSelectionHandler: (ThemeSubMenuSelections) -> Unit,
+    onSelectionHandler: (ThemeSelections) -> Unit,
 ) {
     DropdownMenu(expanded = show, onDismissRequest = onDismissHandler) {
         DropdownMenuItem(
             text = { Text(text = "Automatic") },
-            onClick = { onSelectionHandler(ThemeSubMenuSelections.SYSTEM)
-        })
+            onClick = { onSelectionHandler(ThemeSelections.SYSTEM) },
+            trailingIcon = {
+                if(currentTheme == ThemeSelections.SYSTEM)
+                    Icon(Icons.Default.Check, contentDescription = null)
+            }
+        )
         DropdownMenuItem(
             text = { Text(text = "Light") },
-            onClick = { onSelectionHandler(ThemeSubMenuSelections.DAY)
-        })
+            onClick = { onSelectionHandler(ThemeSelections.DAY) },
+            trailingIcon = {
+                if(currentTheme == ThemeSelections.DAY)
+                    Icon(Icons.Default.Check, contentDescription = null)
+            }
+       )
         DropdownMenuItem(
             text = { Text(text = "Dark") },
-            onClick = { onSelectionHandler(ThemeSubMenuSelections.NIGHT)
-        })
+            onClick = { onSelectionHandler(ThemeSelections.NIGHT) },
+            trailingIcon = {
+                if(currentTheme == ThemeSelections.NIGHT)
+                    Icon(Icons.Default.Check, contentDescription = null)
+            }
+        )
     }
 }
 
@@ -561,6 +562,7 @@ fun LibraryContent(
     selectedItems: List<Long>,
 ) {
     LazyColumn(
+        modifier = Modifier.fillMaxWidth(),
         contentPadding = contentPadding,
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
