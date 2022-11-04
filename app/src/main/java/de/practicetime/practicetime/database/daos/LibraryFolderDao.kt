@@ -35,9 +35,9 @@ abstract class LibraryFolderDao : BaseDao<LibraryFolder>(tableName = "library_fo
     /**
      *  @Queries
      */
-
-    @Query("SELECT * FROM library_folder")
-    abstract suspend fun get(): List<LibraryFolder>
+//
+//    @Query("SELECT * FROM library_folder")
+//    abstract suspend fun get(): List<LibraryFolder>
 
     @Transaction
     @Query("SELECT * FROM library_folder WHERE id=:id")

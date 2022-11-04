@@ -12,8 +12,8 @@
 
 package de.practicetime.practicetime.ui.library
 
-import android.util.Log
 import android.view.*
+import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -22,7 +22,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -41,9 +40,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -52,6 +49,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.zIndex
+import androidx.core.content.ContentProviderCompat.requireContext
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
 import de.practicetime.practicetime.database.entities.LibraryFolder
@@ -60,7 +58,6 @@ import de.practicetime.practicetime.shared.*
 import de.practicetime.practicetime.ui.MainState
 import de.practicetime.practicetime.ui.ThemeSelections
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 enum class LibrarySortMode {
@@ -109,21 +106,23 @@ class LibraryState(
     var itemDialogName = mutableStateOf("")
     var itemDialogColorIndex = mutableStateOf(0)
     var itemDialogFolderId = mutableStateOf<Long?>(null)
-    var itemDialogFolderSelectorExpanded = mutableStateOf(false)
+    var itemDialogFolderSelectorExpanded = mutableStateOf(SpinnerState.COLLAPSED)
 
     var multiFABState = mutableStateOf(MultiFABState.COLLAPSED)
 
     val folders = mutableStateListOf<LibraryFolder>()
     var items = mutableStateListOf<LibraryItem>()
-    val selectedItems = mutableStateListOf<LibraryItem>()
+    val selectedItemIds = mutableStateListOf<Long>()
 
-    fun deleteSelectedItems() {
+    fun archivedSelectedItems() {
         coroutineScope.launch {
-            PracticeTime.libraryItemDao.delete(selectedItems)
-            selectedItems.forEach { item ->
-                items.remove(item)
+            selectedItemIds.forEach { itemId ->
+                if (PracticeTime.libraryItemDao.archive(itemId)) // returns false in case item couldnt be archived
+                    items.remove(items.find { it.id == itemId })
+                else
+                    TODO("Show error message")
             }
-            selectedItems.clear()
+            selectedItemIds.clear()
             actionMode.value = false
         }
     }
@@ -196,7 +195,22 @@ class LibraryState(
         itemDialogName.value = ""
         itemDialogColorIndex.value = 0
         itemDialogFolderId.value = null
-        itemDialogFolderSelectorExpanded.value = false
+        itemDialogFolderSelectorExpanded.value = SpinnerState.COLLAPSED
+    }
+
+    fun loadItems() {
+        coroutineScope.launch {
+            items.clear()
+            items.addAll(PracticeTime.libraryItemDao.get(activeOnly = true))
+            sortItems()
+        }
+    }
+
+    fun loadFolders() {
+        coroutineScope.launch {
+            folders.clear()
+            folders.addAll(PracticeTime.libraryFolderDao.getAll().reversed())
+        }
     }
 
     fun addItem(item: LibraryItem) {
@@ -247,23 +261,11 @@ fun LibraryComposable(
     mainState: MainState,
     showNavBarScrim: (Boolean) -> Unit,
 ) {
-    val libraryState = rememberLibraryState()
+    val libraryState = rememberLibraryState().apply {
+        loadItems()
+        loadFolders()
+    }
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
-
-    LaunchedEffect(true) {
-        PracticeTime.libraryFolderDao.get().let {
-            libraryState.folders.addAll(it)
-            libraryState.folders.reverse()
-        }
-    }
-
-    LaunchedEffect(true) {
-        PracticeTime.libraryItemDao.get(activeOnly = true).let {
-            // sort libraryItems depending on the current sort mode
-            libraryState.items.addAll(it)
-            libraryState.sortItems()
-        }
-    }
 
     Scaffold(
         contentWindowInsets = WindowInsets(bottom = 0.dp),
@@ -376,12 +378,12 @@ fun LibraryComposable(
             )
             if(libraryState.actionMode.value) {
                 ActionBar(
-                    numSelectedItems = libraryState.selectedItems.size,
+                    numSelectedItems = libraryState.selectedItemIds.size,
                     onDismissHandler = {
                         libraryState.actionMode.value = false
-                        libraryState.selectedItems.clear()
+                        libraryState.selectedItemIds.clear()
                     },
-                    onDeleteHandler = { libraryState.deleteSelectedItems() }
+                    onDeleteHandler = { libraryState.archivedSelectedItems() }
                 )
             }
         },
@@ -392,16 +394,16 @@ fun LibraryComposable(
                 ),
                 folders = libraryState.folders,
                 items = libraryState.items,
-                selectedItems = libraryState.selectedItems,
+                selectedItemIds = libraryState.selectedItemIds,
                 onLibraryItemShortClicked = { item ->
                     if (libraryState.actionMode.value) {
-                        if (libraryState.selectedItems.contains(item)) {
-                            libraryState.selectedItems.remove(item)
-                            if(libraryState.selectedItems.isEmpty()){
+                        if (libraryState.selectedItemIds.contains(item.id)) {
+                            libraryState.selectedItemIds.remove(item.id)
+                            if(libraryState.selectedItemIds.isEmpty()){
                                 libraryState.actionMode.value = false
                             }
                         } else {
-                            libraryState.selectedItems.add(item)
+                            libraryState.selectedItemIds.add(item.id)
                         }
                     } else {
                         libraryState.apply {
@@ -415,8 +417,8 @@ fun LibraryComposable(
                     }
                 },
                 onLibraryItemLongClicked = { item ->
-                    if(!libraryState.selectedItems.contains(item)) {
-                        libraryState.selectedItems.add(item)
+                    if(!libraryState.selectedItemIds.contains(item.id)) {
+                        libraryState.selectedItemIds.add(item.id)
                         libraryState.actionMode.value = true
                     }
                 },
@@ -467,7 +469,7 @@ fun LibraryComposable(
                     onColorIndexChange = { libraryState.itemDialogColorIndex.value = it },
                     onFolderIdChange = {
                         libraryState.itemDialogFolderId.value = it
-                        libraryState.itemDialogFolderSelectorExpanded.value = false
+                        libraryState.itemDialogFolderSelectorExpanded.value = SpinnerState.COLLAPSED
                     },
                     onFolderSelectorExpandedChange = { libraryState.itemDialogFolderSelectorExpanded.value = it },
                     onDismissHandler = { cancel ->
@@ -787,7 +789,7 @@ fun LibraryContent(
     contentPadding: PaddingValues,
     folders: List<LibraryFolder>,
     items: List<LibraryItem>,
-    selectedItems: List<LibraryItem>,
+    selectedItemIds: List<Long>,
     onLibraryItemShortClicked: (LibraryItem) -> Unit,
     onLibraryItemLongClicked: (LibraryItem) -> Unit,
 ) {
@@ -853,7 +855,7 @@ fun LibraryContent(
                             libraryItem = item,
                         )
                     }
-                    if(selectedItems.contains(item)) {
+                    if(selectedItemIds.contains(item.id)) {
                         Box(
                             modifier = Modifier
                                 .matchParentSize()
@@ -947,11 +949,11 @@ fun LibraryItemDialog(
     name: String,
     colorIndex: Int,
     folderId: Long?,
-    folderSelectorExpanded: Boolean,
+    folderSelectorExpanded: SpinnerState,
     onNameChange: (String) -> Unit,
     onColorIndexChange: (Int) -> Unit,
     onFolderIdChange: (Long?) -> Unit,
-    onFolderSelectorExpandedChange: (Boolean) -> Unit,
+    onFolderSelectorExpandedChange: (SpinnerState) -> Unit,
     onDismissHandler: (Boolean) -> Unit, // true if dialog was canceled
 ) {
     Dialog(
@@ -959,7 +961,7 @@ fun LibraryItemDialog(
             dismissOnBackPress = true,
             dismissOnClickOutside = true
         ),
-        onDismissRequest = { onDismissHandler(false) }
+        onDismissRequest = { onDismissHandler(true) }
     ) {
         Column(
             modifier = Modifier
@@ -986,85 +988,40 @@ fun LibraryItemDialog(
                 modifier = Modifier
                     .background(colorScheme.surface)
             ) {
-                Box(
-                    modifier = Modifier
-                        .padding(top = 16.dp)
-                        .padding(horizontal = 24.dp)
-                ) {
-                    var size by remember { mutableStateOf(10) }
-                    Column {
-                        OutlinedTextField(
-                            modifier = Modifier
-                                .onGloballyPositioned {
-                                    size = it.size.width
-                                },
-    //                        shape = MaterialTheme.shapes.medium,
-                            value = folders.firstOrNull { it.id == folderId }?.name ?: "No folder",
-                            label = { Text(text = "Folder") },
-                            onValueChange = {},
-                            readOnly = true,
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = Icons.Default.Folder,
-                                    contentDescription = "Folder",
-                                    tint = colorScheme.onSurface.copy(alpha = 0.6f)
-                                )
-                            },
-                            trailingIcon = {
-                                if(folderSelectorExpanded) {
-                                    Icon(Icons.Default.ArrowDropUp, contentDescription = "Collapse")
-                                } else {
-                                    Icon(Icons.Default.ArrowDropDown, contentDescription = "Expand")
-                                }
-                            },
-//                            interactionSource = remember { MutableInteractionSource() }.also {
-//                                 LaunchedEffect(it) {
-//                                     it.interactions.collect() { interaction ->
-//                                         if(interaction is PressInteraction.Release) {
-//                                             onFolderSelectorExpandedChange(!folderSelectorExpanded)
-//                                         }
-//                                     }
-//                                 }
-//                            },
-                        )
-                        DropdownMenu(
-                            modifier = Modifier
-                                .width(with(LocalDensity.current) { size.toDp() }),
-                            expanded = folderSelectorExpanded,
-                            onDismissRequest = { onFolderSelectorExpandedChange(false) },
-
-                        ) {
-                            DropdownMenuItem(
-                                text = { Text(text = "No folder") },
-                                onClick = { onFolderIdChange(null) }
-                            )
-                            Divider()
-                            folders.forEach { folder ->
-                                DropdownMenuItem(
-                                    onClick = { onFolderIdChange(folder.id)  },
-                                    text = { Text(text = folder.name)}
-                                )
-                            }
-                        }
-                    }
-                    Box(modifier = Modifier
-                        .matchParentSize()
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null,
-                        ) {
-                            onFolderSelectorExpandedChange(true)
-                        }
-                    )
-                }
                 OutlinedTextField(
                     modifier = Modifier
                         .padding(top = 16.dp)
                         .padding(horizontal = 24.dp),
                     value = name,
                     onValueChange = onNameChange,
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.MusicNote,
+                            contentDescription = "Item name",
+                            tint = colorScheme.onSurface.copy(alpha = 0.6f)
+                        )
+                    },
                     label = { Text(text = "Item name") },
                     singleLine = true,
+                )
+                SelectionSpinner(
+                    modifier = Modifier
+                        .padding(top = 16.dp)
+                        .padding(horizontal = 24.dp),
+                    state = folderSelectorExpanded,
+                    label = { Text(text = "Folder") },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Folder,
+                            contentDescription = "Folder",
+                            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                        )
+                    },
+                    options = folders.map { folder -> Pair(folder.id, folder.name) },
+                    selected = folderId,
+                    defaultOption = "No folder",
+                    onStateChange = onFolderSelectorExpandedChange,
+                    onSelectedChange = onFolderIdChange,
                 )
                 Row(
                     modifier = Modifier
