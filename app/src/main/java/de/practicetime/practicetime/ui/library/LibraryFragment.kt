@@ -20,6 +20,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -28,9 +29,11 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Folder
 import androidx.compose.material.icons.rounded.MusicNote
 import androidx.compose.material3.*
+import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -78,10 +81,16 @@ enum class CommonMenuSelections {
     APP_INFO
 }
 
+enum class ItemDialogMode {
+    ADD,
+    EDIT
+}
 
 class LibraryState(
     private val coroutineScope: CoroutineScope,
 ) {
+    var actionMode = mutableStateOf(false)
+
     var showMainMenu = mutableStateOf(false)
     var showThemeSubMenu = mutableStateOf(false)
     var showSortModeSubMenu = mutableStateOf(false)
@@ -89,15 +98,29 @@ class LibraryState(
     var showAddFolderDialog = mutableStateOf(false)
     var newFolderName = mutableStateOf("")
 
-    var showAddItemDialog = mutableStateOf(false)
-    var newItemName = mutableStateOf("")
-    var newItemColorIndex = mutableStateOf(0)
+    var showItemDialog = mutableStateOf(false)
+    var editableItem = mutableStateOf<LibraryItem?>(null)
+    var itemDialogMode = mutableStateOf(ItemDialogMode.ADD)
+    var itemDialogName = mutableStateOf("")
+    var itemDialogColorIndex = mutableStateOf(0)
+    var itemDialogFolderId = mutableStateOf<Long?>(null)
 
     var multiFABState = mutableStateOf(MultiFABState.COLLAPSED)
 
     val folders = mutableStateListOf<LibraryFolder>()
     var items = mutableStateListOf<LibraryItem>()
-    val selectedItems = mutableStateListOf<Long>()
+    val selectedItems = mutableStateListOf<LibraryItem>()
+
+    fun deleteSelectedItems() {
+        coroutineScope.launch {
+            PracticeTime.libraryItemDao.delete(selectedItems)
+            selectedItems.forEach { item ->
+                items.remove(item)
+            }
+            selectedItems.clear()
+            actionMode.value = false
+        }
+    }
 
     var sortMode = mutableStateOf(try {
         PracticeTime.prefs.getString(
@@ -158,21 +181,35 @@ class LibraryState(
         coroutineScope.launch {
             PracticeTime.libraryFolderDao.insertAndGet(newFolder)?.let {
                 folders.add(0, it)
+                newFolderName.value = ""
             }
         }
     }
 
-    fun addItem(newItem: LibraryItem) {
+    private fun clearItemDialog() {
+        itemDialogName.value = ""
+        itemDialogColorIndex.value = 0
+        itemDialogFolderId.value = null
+    }
+
+    fun addItem(item: LibraryItem) {
         coroutineScope.launch {
-            PracticeTime.libraryItemDao.insertAndGet(newItem)?.let {
+            PracticeTime.libraryItemDao.insertAndGet(item)?.let {
                 items.add(0, it)
                 sortItems()
+                clearItemDialog()
             }
         }
     }
-//
-//    var editLibraryItemDialog: LibraryItemDialog? = null
-//    var deleteLibraryItemDialog: AlertDialog? = null
+
+    fun editItem(item: LibraryItem) {
+        Log.d("editItem", item.toString())
+        coroutineScope.launch {
+            PracticeTime.libraryItemDao.update(item)
+            sortItems()
+            clearItemDialog()
+        }
+    }
 }
 
 
@@ -236,7 +273,8 @@ fun LibraryComposable(
                 miniFABs = listOf(
                     MiniFABData(
                         onClick = {
-                            libraryState.showAddItemDialog.value = true
+                            libraryState.itemDialogMode.value = ItemDialogMode.ADD
+                            libraryState.showItemDialog.value = true
                             libraryState.multiFABState.value = MultiFABState.COLLAPSED
                             showNavBarScrim(false)
                         },
@@ -258,9 +296,7 @@ fun LibraryComposable(
         topBar = {
             LargeTopAppBar(
                 scrollBehavior = scrollBehavior,
-                title = {
-                    Text(text = "Library")
-                },
+                title = { Text(text = "Library") },
                 actions = {
                     IconButton(onClick = {
                         libraryState.showMainMenu.value = !libraryState.showMainMenu.value
@@ -308,6 +344,16 @@ fun LibraryComposable(
                     )
                 }
             )
+            if(libraryState.actionMode.value) {
+                ActionBar(
+                    numSelectedItems = libraryState.selectedItems.size,
+                    onDismissHandler = {
+                        libraryState.actionMode.value = false
+                        libraryState.selectedItems.clear()
+                    },
+                    onDeleteHandler = { libraryState.deleteSelectedItems() }
+                )
+            }
         },
         content = { innerPadding ->
             LibraryContent(
@@ -317,6 +363,33 @@ fun LibraryComposable(
                 folders = libraryState.folders,
                 items = libraryState.items,
                 selectedItems = libraryState.selectedItems,
+                onLibraryItemShortClicked = { item ->
+                    if (libraryState.actionMode.value) {
+                        if (libraryState.selectedItems.contains(item)) {
+                            libraryState.selectedItems.remove(item)
+                            if(libraryState.selectedItems.isEmpty()){
+                                libraryState.actionMode.value = false
+                            }
+                        } else {
+                            libraryState.selectedItems.add(item)
+                        }
+                    } else {
+                        libraryState.apply {
+                            editableItem.value = item
+                            itemDialogMode.value = ItemDialogMode.EDIT
+                            itemDialogName.value = item.name
+                            itemDialogColorIndex.value = item.colorIndex
+                            itemDialogFolderId.value = item.libraryFolderId
+                            showItemDialog.value = true
+                        }
+                    }
+                },
+                onLibraryItemLongClicked = { item ->
+                    if(!libraryState.selectedItems.contains(item)) {
+                        libraryState.selectedItems.add(item)
+                        libraryState.actionMode.value = true
+                    }
+                },
             )
 
             // Show hint if no items or folders are in the library
@@ -352,25 +425,40 @@ fun LibraryComposable(
                 )
             }
 
-            if(libraryState.showAddItemDialog.value) {
+            if(libraryState.showItemDialog.value) {
                 LibraryItemDialog(
-                    itemName = libraryState.newItemName.value,
-                    colorIndex = libraryState.newItemColorIndex.value,
-                    onItemNameChange = { libraryState.newItemName.value = it },
-                    onColorIndexChange = {
-                        Log.d("color", it.toString())
-                        libraryState.newItemColorIndex.value = it
-                     },
-                    onDismissHandler = { create ->
-                        libraryState.showAddItemDialog.value = false
-                        if(create) {
-                            libraryState.addItem(
-                                LibraryItem(
-                                    name = libraryState.newItemName.value,
-                                    colorIndex = libraryState.newItemColorIndex.value,
-                                )
-                            )
+                    mode = libraryState.itemDialogMode.value,
+                    name = libraryState.itemDialogName.value,
+                    colorIndex = libraryState.itemDialogColorIndex.value,
+                    folderId = libraryState.itemDialogFolderId.value,
+                    onNameChange = { libraryState.itemDialogName.value = it },
+                    onColorIndexChange = { libraryState.itemDialogColorIndex.value = it },
+                    onFolderIdChange = { libraryState.itemDialogFolderId.value = it },
+                    onDismissHandler = { cancel ->
+                        Log.d("dismiss", libraryState.itemDialogMode.value.name)
+                        if(!cancel) {
+                            when(libraryState.itemDialogMode.value) {
+                                ItemDialogMode.ADD -> {
+                                    libraryState.addItem(
+                                        LibraryItem(
+                                            name = libraryState.itemDialogName.value,
+                                            colorIndex = libraryState.itemDialogColorIndex.value,
+                                            libraryFolderId = libraryState.itemDialogFolderId.value
+                                        )
+                                    )
+                                }
+                                ItemDialogMode.EDIT -> {
+                                    Log.d("dismiss", libraryState.editableItem.value?.toString() ?: "item null")
+                                    libraryState.editableItem.value?.apply {
+                                        name = libraryState.itemDialogName.value
+                                        colorIndex = libraryState.itemDialogColorIndex.value
+                                        libraryFolderId = libraryState.itemDialogFolderId.value
+                                        libraryState.editItem(this)
+                                    }
+                                }
+                            }
                         }
+                        libraryState.showItemDialog.value = false
                     },
                 )
             }
@@ -386,7 +474,7 @@ fun LibraryComposable(
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.9f))
+                        .background(colorScheme.surface.copy(alpha = 0.9f))
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null,
@@ -414,32 +502,41 @@ fun ThemeSubMenu(
             modifier = Modifier.padding(12.dp),
             text = "Theme",
             style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+            color = colorScheme.onSurface.copy(alpha = 0.8f)
         )
 
         // Menu Items
         DropdownMenuItem(
-            text = { Text(text = "Automatic") },
+            text = { Text(
+                text = "Automatic",
+                color = if (currentTheme == ThemeSelections.SYSTEM) colorScheme.primary else Color.Unspecified
+            ) },
             onClick = { onSelectionHandler(ThemeSelections.SYSTEM) },
             trailingIcon = {
                 if(currentTheme == ThemeSelections.SYSTEM)
-                    Icon(Icons.Default.Check, contentDescription = null)
+                    Icon(Icons.Default.Check, contentDescription = null, tint = colorScheme.primary)
             }
         )
         DropdownMenuItem(
-            text = { Text(text = "Light") },
+            text = { Text(
+                text = "Light",
+                color = if (currentTheme == ThemeSelections.DAY) colorScheme.primary else Color.Unspecified
+            ) },
             onClick = { onSelectionHandler(ThemeSelections.DAY) },
             trailingIcon = {
                 if(currentTheme == ThemeSelections.DAY)
-                    Icon(Icons.Default.Check, contentDescription = null)
+                    Icon(Icons.Default.Check, contentDescription = null, tint = colorScheme.primary)
             }
        )
         DropdownMenuItem(
-            text = { Text(text = "Dark") },
+            text = { Text(
+                text = "Dark",
+                color = if (currentTheme == ThemeSelections.NIGHT) colorScheme.primary else Color.Unspecified
+            ) },
             onClick = { onSelectionHandler(ThemeSelections.NIGHT) },
             trailingIcon = {
                 if(currentTheme == ThemeSelections.NIGHT)
-                    Icon(Icons.Default.Check, contentDescription = null)
+                    Icon(Icons.Default.Check, contentDescription = null, tint = colorScheme.primary)
             }
         )
     }
@@ -477,21 +574,21 @@ fun LibrarySubMenuSortMode(
             modifier = Modifier.padding(12.dp),
             text = "Sort by",
             style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+            color = colorScheme.onSurface.copy(alpha = 0.8f)
         )
 
         // Menu Body
         val directionIcon: @Composable () -> Unit = {
             Icon(
                 imageVector = when (sortDirection) {
-                    SortDirection.ASCENDING -> Icons.Default.KeyboardArrowUp
-                    SortDirection.DESCENDING -> Icons.Default.KeyboardArrowDown
+                    SortDirection.ASCENDING -> Icons.Default.ArrowUpward
+                    SortDirection.DESCENDING -> Icons.Default.ArrowDownward
                 },
-                tint = MaterialTheme.colorScheme.primary,
+                tint = colorScheme.primary,
                 contentDescription = null
             )
         }
-        val primaryColor = MaterialTheme.colorScheme.primary
+        val primaryColor = colorScheme.primary
         DropdownMenuItem(
             text = { Text(
                 text = "Date Added",
@@ -561,6 +658,39 @@ fun MainMenu(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ActionBar(
+    numSelectedItems: Int,
+    onDismissHandler: () -> Unit,
+    onDeleteHandler: () -> Unit
+) {
+    TopAppBar(
+        title = { Text(text = "$numSelectedItems selected") },
+        colors = TopAppBarDefaults.largeTopAppBarColors(containerColor = colorScheme.primaryContainer),
+        navigationIcon = {
+            IconButton(onClick = onDismissHandler) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Back",
+                    tint = colorScheme.onPrimaryContainer
+                )
+            }
+        },
+        actions = {
+            IconButton(onClick = {
+                onDeleteHandler()
+            }) {
+                Icon(
+                    imageVector = Icons.Rounded.Delete,
+                    contentDescription = "Delete",
+                    tint = colorScheme.onPrimaryContainer
+                )
+            }
+        }
+    )
+}
+
 @Composable
 fun LibraryFolderComposable(
     folder: LibraryFolder
@@ -579,14 +709,11 @@ fun LibraryFolderComposable(
 
 @Composable
 fun LibraryItemComposable(
-    contentPadding: PaddingValues,
+    modifier: Modifier,
     libraryItem: LibraryItem,
-    selected: Boolean
-//        itemClickedCallback: (callbackListDataItem: CallbackListDataItem) -> Unit,
 ) {
     Row(
-        modifier = Modifier
-            .padding(contentPadding)
+        modifier = modifier
             .fillMaxWidth()
             .height(IntrinsicSize.Min)
     ) {
@@ -611,7 +738,7 @@ fun LibraryItemComposable(
             Text(
                 text = "last practiced: yesterday",
                 style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                color = colorScheme.onSurface.copy(alpha = 0.6f)
             )
         }
     }
@@ -623,19 +750,20 @@ fun LibraryContent(
     contentPadding: PaddingValues,
     folders: List<LibraryFolder>,
     items: List<LibraryItem>,
-    selectedItems: List<Long>,
+    selectedItems: List<LibraryItem>,
+    onLibraryItemShortClicked: (LibraryItem) -> Unit,
+    onLibraryItemLongClicked: (LibraryItem) -> Unit,
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxWidth(),
         contentPadding = contentPadding,
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+//        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         if(folders.isNotEmpty()) {
             item {
                 Text(
                     modifier = Modifier
-                        .padding(top = 16.dp)
-                        .padding(horizontal = 16.dp),
+                        .padding(16.dp),
                     text = "Folders", style = MaterialTheme.typography.titleLarge
                 )
             }
@@ -652,7 +780,8 @@ fun LibraryContent(
                         key = { folder -> folder.id }
                     ) { folder ->
                         Row(
-                            modifier = Modifier.animateItemPlacement()
+                            modifier = Modifier
+                                .animateItemPlacement()
                         ) {
                             LibraryFolderComposable(folder = folder)
                         }
@@ -665,8 +794,8 @@ fun LibraryContent(
             item {
                 Text(
                     modifier = Modifier
-                        .padding(top = 16.dp)
-                        .padding(horizontal = 16.dp),
+                        .padding(16.dp)
+                        .padding(top = 32.dp),
                     text="Items",
                     style = MaterialTheme.typography.titleLarge
                 )
@@ -675,14 +804,27 @@ fun LibraryContent(
                 items=items,
                 key = { item -> item.id }
             ) { item ->
-                Row(
-                    modifier = Modifier.animateItemPlacement()
+                Box(
+                    modifier = Modifier
+                        .animateItemPlacement()
+                        .combinedClickable(
+                            onLongClick = { onLibraryItemLongClicked(item) },
+                            onClick = { onLibraryItemShortClicked(item) }
+                        )
                 ) {
-                    LibraryItemComposable(
-                        contentPadding = PaddingValues(horizontal = 16.dp),
-                        libraryItem = item,
-                        selected = selectedItems.contains(item.id)
-                    )
+                    Row {
+                        LibraryItemComposable(
+                            modifier = Modifier.padding(vertical = 8.dp, horizontal = 16.dp),
+                            libraryItem = item,
+                        )
+                    }
+                    if(selectedItems.contains(item)) {
+                        Box(
+                            modifier = Modifier
+                                .matchParentSize()
+                                .background(colorScheme.onSurface.copy(alpha = 0.1f))
+                        )
+                    }
                 }
             }
         }
@@ -710,7 +852,7 @@ fun LibraryFolderDialog(
         ) {
             Row(
                 modifier = Modifier
-                    .background(MaterialTheme.colorScheme.primaryContainer)
+                    .background(colorScheme.primaryContainer)
             ) {
                 Text(
                     modifier = Modifier
@@ -719,12 +861,12 @@ fun LibraryFolderDialog(
                         .padding(top = 24.dp, bottom = 16.dp),
                     text = "Create folder",
                     style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    color = colorScheme.onPrimaryContainer,
                 )
             }
             Column (
                 modifier = Modifier
-                    .background(MaterialTheme.colorScheme.surface)
+                    .background(colorScheme.surface)
             ) {
                 OutlinedTextField(
                     modifier = Modifier
@@ -742,7 +884,7 @@ fun LibraryFolderDialog(
                     TextButton(
                         onClick = { onDismissHandler(false) },
                         colors = ButtonDefaults.textButtonColors(
-                            contentColor = MaterialTheme.colorScheme.primary
+                            contentColor = colorScheme.primary
                         )
                     ) {
                         Text(text = "Cancel")
@@ -751,7 +893,7 @@ fun LibraryFolderDialog(
                         onClick = { onDismissHandler(true) },
                         enabled = folderName.isNotEmpty(),
                         colors = ButtonDefaults.textButtonColors(
-                            contentColor = MaterialTheme.colorScheme.primary
+                            contentColor = colorScheme.primary
                         )
                     ) {
                         Text(text = "Create")
@@ -765,11 +907,14 @@ fun LibraryFolderDialog(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LibraryItemDialog(
-    itemName: String,
+    mode: ItemDialogMode,
+    name: String,
     colorIndex: Int,
-    onItemNameChange: (String) -> Unit,
+    folderId: Long?,
+    onNameChange: (String) -> Unit,
     onColorIndexChange: (Int) -> Unit,
-    onDismissHandler: (Boolean) -> Unit, // true if item was created
+    onFolderIdChange: (Long) -> Unit,
+    onDismissHandler: (Boolean) -> Unit, // true if dialog was canceled
 ) {
     Dialog(
         properties = DialogProperties(
@@ -784,28 +929,33 @@ fun LibraryItemDialog(
         ) {
             Row(
                 modifier = Modifier
-                    .background(MaterialTheme.colorScheme.primaryContainer)
+                    .background(colorScheme.primaryContainer)
             ) {
                 Text(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 24.dp)
                         .padding(top = 24.dp, bottom = 16.dp),
-                    text = "Create item",
+                    text = when(mode) {
+                        ItemDialogMode.ADD -> "Create item"
+                        ItemDialogMode.EDIT -> "Edit item"
+                    },
                     style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    color = colorScheme.onPrimaryContainer,
                 )
             }
             Column (
                 modifier = Modifier
-                    .background(MaterialTheme.colorScheme.surface)
+                    .background(colorScheme.surface)
             ) {
                 OutlinedTextField(
                     modifier = Modifier
                         .padding(top = 16.dp)
                         .padding(horizontal = 24.dp),
-                    value = itemName, onValueChange = onItemNameChange,
+                    value = name,
+                    onValueChange = onNameChange,
                     label = { Text(text = "Item name") },
+                    maxLines = 1,
                 )
                 Row(
                     modifier = Modifier
@@ -818,16 +968,13 @@ fun LibraryItemDialog(
                         Column(
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            ColorSelectRadioButton(
-                                color = Color(PracticeTime.getLibraryItemColors(LocalContext.current)[i]),
-                                selected = colorIndex == i,
-                                onClick = { onColorIndexChange(i) }
-                            )
-                            ColorSelectRadioButton(
-                                color = Color(PracticeTime.getLibraryItemColors(LocalContext.current)[i+5]),
-                                selected = colorIndex == i+5,
-                                onClick = { onColorIndexChange(i+5) }
-                            )
+                            for (j in 0..1) {
+                                ColorSelectRadioButton(
+                                    color = Color(PracticeTime.getLibraryItemColors(LocalContext.current)[2*i+j]),
+                                    selected = colorIndex == 2*i+j,
+                                    onClick = { onColorIndexChange(2*i+j) }
+                                )
+                            }
                         }
                     }
                 }
@@ -838,21 +985,24 @@ fun LibraryItemDialog(
                     horizontalArrangement = Arrangement.End
                 ) {
                     TextButton(
-                        onClick = { onDismissHandler(false) },
+                        onClick = { onDismissHandler(true) },
                         colors = ButtonDefaults.textButtonColors(
-                            contentColor = MaterialTheme.colorScheme.primary
+                            contentColor = colorScheme.primary
                         )
                     ) {
                         Text(text = "Cancel")
                     }
                     TextButton(
-                        onClick = { onDismissHandler(true) },
-                        enabled = itemName.isNotEmpty(),
+                        onClick = { onDismissHandler(false) },
+                        enabled = name.isNotEmpty(),
                         colors = ButtonDefaults.textButtonColors(
-                            contentColor = MaterialTheme.colorScheme.primary
+                            contentColor = colorScheme.primary
                         )
                     ) {
-                        Text(text = "Create")
+                        Text(text = when(mode) {
+                            ItemDialogMode.ADD -> "Create"
+                            ItemDialogMode.EDIT -> "Edit"
+                        })
                     }
                 }
             }

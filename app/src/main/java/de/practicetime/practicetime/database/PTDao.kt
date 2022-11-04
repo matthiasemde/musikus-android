@@ -1,5 +1,11 @@
 /*
- * This software is licensed under the MIT license
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ *
+ * Copyright (c) 2022 Matthias Emde
+ *
+ * Parts of this software are licensed under the MIT license
  *
  * Copyright (c) 2022, Javier Carbone, author Matthias Emde
  */
@@ -16,13 +22,8 @@ abstract class BaseModel (
     @PrimaryKey(autoGenerate = true) var id: Long = 0,
 ) {
     override fun toString(): String {
-        return "Pretty print of ${this.javaClass.simpleName} entity:\n" +
-                "id: ${this.id}:\n" +
-            (if (this is ModelWithTimestamps)
-                "\tcreated at: \t${this.createdAt}\n" +
-                "\tmodified_at: \t${this.modifiedAt}\n"
-            else "") +
-            "\tentity: \t\t$this"
+        return "\nPretty print of ${this.javaClass.simpleName} entity:\n" +
+            "\tid: \t\t\t\t${this.id}\n"
     }
 }
 
@@ -33,7 +34,13 @@ abstract class BaseModel (
 abstract class ModelWithTimestamps (
     @ColumnInfo(name="created_at", defaultValue = "0") var createdAt: Long = getCurrTimestamp(),
     @ColumnInfo(name="modified_at", defaultValue = "0") var modifiedAt: Long = getCurrTimestamp(),
-) : BaseModel()
+) : BaseModel() {
+    override fun toString(): String {
+        return super.toString() +
+            "\tcreated at: \t\t${this.createdAt}\n" +
+            "\tmodified_at: \t\t${this.modifiedAt}\n"
+    }
+}
 
 /**
  * @Dao Base dao
