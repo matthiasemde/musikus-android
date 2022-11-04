@@ -22,6 +22,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -40,10 +41,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -56,6 +60,7 @@ import de.practicetime.practicetime.shared.*
 import de.practicetime.practicetime.ui.MainState
 import de.practicetime.practicetime.ui.ThemeSelections
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 enum class LibrarySortMode {
@@ -104,6 +109,7 @@ class LibraryState(
     var itemDialogName = mutableStateOf("")
     var itemDialogColorIndex = mutableStateOf(0)
     var itemDialogFolderId = mutableStateOf<Long?>(null)
+    var itemDialogFolderSelectorExpanded = mutableStateOf(false)
 
     var multiFABState = mutableStateOf(MultiFABState.COLLAPSED)
 
@@ -190,6 +196,7 @@ class LibraryState(
         itemDialogName.value = ""
         itemDialogColorIndex.value = 0
         itemDialogFolderId.value = null
+        itemDialogFolderSelectorExpanded.value = false
     }
 
     fun addItem(item: LibraryItem) {
@@ -203,7 +210,6 @@ class LibraryState(
     }
 
     fun editItem(item: LibraryItem) {
-        Log.d("editItem", item.toString())
         coroutineScope.launch {
             PracticeTime.libraryItemDao.update(item)
             sortItems()
@@ -298,50 +304,74 @@ fun LibraryComposable(
                 scrollBehavior = scrollBehavior,
                 title = { Text(text = "Library") },
                 actions = {
+                    TextButton(
+                        onClick = { libraryState.showSortModeSubMenu.value = true })
+                    {
+                        Text(
+                            modifier = Modifier.padding(end = 8.dp),
+                            color = colorScheme.onSurface,
+                            text = when (libraryState.sortMode.value) {
+                            LibrarySortMode.DATE_ADDED -> "Date added"
+                            LibrarySortMode.NAME -> "Name"
+                            LibrarySortMode.COLOR -> "Color"
+                            LibrarySortMode.LAST_MODIFIED -> "Last modified"
+                            LibrarySortMode.CUSTOM -> "Custom"
+                        })
+                        Icon(
+                            modifier = Modifier.size(20.dp),
+                            imageVector = when (libraryState.sortDirection.value) {
+                                SortDirection.ASCENDING -> Icons.Default.ArrowUpward
+                                SortDirection.DESCENDING -> Icons.Default.ArrowDownward
+                            },
+                            tint = colorScheme.onSurface,
+                            contentDescription = null
+                        )
+                        LibrarySubMenuSortMode(
+                            offset = DpOffset((-10).dp, 10.dp),
+                            show = libraryState.showSortModeSubMenu.value,
+                            onDismissHandler = { libraryState.showSortModeSubMenu.value = false },
+                            sortMode = libraryState.sortMode.value,
+                            sortDirection = libraryState.sortDirection.value,
+                            onSelectionHandler = { sortMode ->
+                                libraryState.showSortModeSubMenu.value = false
+                                libraryState.sortItems(sortMode)
+                            }
+                        )
+                    }
                     IconButton(onClick = {
-                        libraryState.showMainMenu.value = !libraryState.showMainMenu.value
+                        libraryState.showMainMenu.value = true
                     }) {
                         Icon(Icons.Default.MoreVert, contentDescription = "more")
+                        MainMenu(
+                            show = libraryState.showMainMenu.value,
+                            onDismissHandler = { libraryState.showMainMenu.value = false },
+                            onSelectionHandler = { librarySelection, commonSelection ->
+                                libraryState.showMainMenu.value = false
+                                when (librarySelection) {
+                                    LibraryMenuSelections.SORT_BY -> {
+                                        libraryState.showSortModeSubMenu.value = true
+                                    }
+                                    null -> {}
+                                }
+                                when (commonSelection) {
+                                    CommonMenuSelections.APP_INFO -> {}
+                                    CommonMenuSelections.THEME -> {
+                                        libraryState.showThemeSubMenu.value = true
+                                    }
+                                    null -> {}
+                                }
+                            }
+                        )
+                        ThemeSubMenu(
+                            show = libraryState.showThemeSubMenu.value,
+                            currentTheme = mainState.activeTheme.value,
+                            onDismissHandler = { libraryState.showThemeSubMenu.value = false },
+                            onSelectionHandler = { theme ->
+                                libraryState.showThemeSubMenu.value = false
+                                mainState.setTheme(theme)
+                            }
+                        )
                     }
-                    MainMenu(
-                        show = libraryState.showMainMenu.value,
-                        onDismissHandler = { libraryState.showMainMenu.value = false },
-                        onSelectionHandler = { librarySelection, commonSelection ->
-                            libraryState.showMainMenu.value = false
-                            when (librarySelection) {
-                                LibraryMenuSelections.SORT_BY -> {
-                                    libraryState.showSortModeSubMenu.value = true
-                                }
-                                null -> {}
-                            }
-                            when (commonSelection) {
-                                CommonMenuSelections.APP_INFO -> {}
-                                CommonMenuSelections.THEME -> {
-                                    libraryState.showThemeSubMenu.value = true
-                                }
-                                null -> {}
-                            }
-                        }
-                    )
-                    ThemeSubMenu(
-                        show = libraryState.showThemeSubMenu.value,
-                        currentTheme = mainState.activeTheme.value,
-                        onDismissHandler = { libraryState.showThemeSubMenu.value = false },
-                        onSelectionHandler = { theme ->
-                            libraryState.showThemeSubMenu.value = false
-                            mainState.setTheme(theme)
-                        }
-                    )
-                    LibrarySubMenuSortMode(
-                        show = libraryState.showSortModeSubMenu.value,
-                        onDismissHandler = { libraryState.showSortModeSubMenu.value = false },
-                        sortMode = libraryState.sortMode.value,
-                        sortDirection = libraryState.sortDirection.value,
-                        onSelectionHandler = { sortMode ->
-                            libraryState.showSortModeSubMenu.value = false
-                            libraryState.sortItems(sortMode)
-                        }
-                    )
                 }
             )
             if(libraryState.actionMode.value) {
@@ -428,14 +458,19 @@ fun LibraryComposable(
             if(libraryState.showItemDialog.value) {
                 LibraryItemDialog(
                     mode = libraryState.itemDialogMode.value,
+                    folders = libraryState.folders,
                     name = libraryState.itemDialogName.value,
                     colorIndex = libraryState.itemDialogColorIndex.value,
                     folderId = libraryState.itemDialogFolderId.value,
+                    folderSelectorExpanded = libraryState.itemDialogFolderSelectorExpanded.value,
                     onNameChange = { libraryState.itemDialogName.value = it },
                     onColorIndexChange = { libraryState.itemDialogColorIndex.value = it },
-                    onFolderIdChange = { libraryState.itemDialogFolderId.value = it },
+                    onFolderIdChange = {
+                        libraryState.itemDialogFolderId.value = it
+                        libraryState.itemDialogFolderSelectorExpanded.value = false
+                    },
+                    onFolderSelectorExpandedChange = { libraryState.itemDialogFolderSelectorExpanded.value = it },
                     onDismissHandler = { cancel ->
-                        Log.d("dismiss", libraryState.itemDialogMode.value.name)
                         if(!cancel) {
                             when(libraryState.itemDialogMode.value) {
                                 ItemDialogMode.ADD -> {
@@ -448,7 +483,6 @@ fun LibraryComposable(
                                     )
                                 }
                                 ItemDialogMode.EDIT -> {
-                                    Log.d("dismiss", libraryState.editableItem.value?.toString() ?: "item null")
                                     libraryState.editableItem.value?.apply {
                                         name = libraryState.itemDialogName.value
                                         colorIndex = libraryState.itemDialogColorIndex.value
@@ -559,6 +593,7 @@ fun CommonMenuItems(
 
 @Composable
 fun LibrarySubMenuSortMode(
+    offset: DpOffset,
     show: Boolean,
     onDismissHandler: () -> Unit,
     sortMode: LibrarySortMode,
@@ -566,6 +601,7 @@ fun LibrarySubMenuSortMode(
     onSelectionHandler: (LibrarySortMode) -> Unit
 ) {
     DropdownMenu(
+        offset = offset,
         expanded = show,
         onDismissRequest = onDismissHandler,
     ) {
@@ -580,6 +616,7 @@ fun LibrarySubMenuSortMode(
         // Menu Body
         val directionIcon: @Composable () -> Unit = {
             Icon(
+                modifier = Modifier.size(20.dp),
                 imageVector = when (sortDirection) {
                     SortDirection.ASCENDING -> Icons.Default.ArrowUpward
                     SortDirection.DESCENDING -> Icons.Default.ArrowDownward
@@ -757,7 +794,6 @@ fun LibraryContent(
     LazyColumn(
         modifier = Modifier.fillMaxWidth(),
         contentPadding = contentPadding,
-//        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         if(folders.isNotEmpty()) {
             item {
@@ -769,7 +805,6 @@ fun LibraryContent(
             }
             item {
                 LazyRow(
-//                    contentPadding = PaddingValues(horizontal = 16.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     // header and footer items replace contentPadding
@@ -908,12 +943,15 @@ fun LibraryFolderDialog(
 @Composable
 fun LibraryItemDialog(
     mode: ItemDialogMode,
+    folders: List<LibraryFolder>,
     name: String,
     colorIndex: Int,
     folderId: Long?,
+    folderSelectorExpanded: Boolean,
     onNameChange: (String) -> Unit,
     onColorIndexChange: (Int) -> Unit,
-    onFolderIdChange: (Long) -> Unit,
+    onFolderIdChange: (Long?) -> Unit,
+    onFolderSelectorExpandedChange: (Boolean) -> Unit,
     onDismissHandler: (Boolean) -> Unit, // true if dialog was canceled
 ) {
     Dialog(
@@ -948,6 +986,77 @@ fun LibraryItemDialog(
                 modifier = Modifier
                     .background(colorScheme.surface)
             ) {
+                Box(
+                    modifier = Modifier
+                        .padding(top = 16.dp)
+                        .padding(horizontal = 24.dp)
+                ) {
+                    var size by remember { mutableStateOf(10) }
+                    Column {
+                        OutlinedTextField(
+                            modifier = Modifier
+                                .onGloballyPositioned {
+                                    size = it.size.width
+                                },
+    //                        shape = MaterialTheme.shapes.medium,
+                            value = folders.firstOrNull { it.id == folderId }?.name ?: "No folder",
+                            label = { Text(text = "Folder") },
+                            onValueChange = {},
+                            readOnly = true,
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.Folder,
+                                    contentDescription = "Folder",
+                                    tint = colorScheme.onSurface.copy(alpha = 0.6f)
+                                )
+                            },
+                            trailingIcon = {
+                                if(folderSelectorExpanded) {
+                                    Icon(Icons.Default.ArrowDropUp, contentDescription = "Collapse")
+                                } else {
+                                    Icon(Icons.Default.ArrowDropDown, contentDescription = "Expand")
+                                }
+                            },
+//                            interactionSource = remember { MutableInteractionSource() }.also {
+//                                 LaunchedEffect(it) {
+//                                     it.interactions.collect() { interaction ->
+//                                         if(interaction is PressInteraction.Release) {
+//                                             onFolderSelectorExpandedChange(!folderSelectorExpanded)
+//                                         }
+//                                     }
+//                                 }
+//                            },
+                        )
+                        DropdownMenu(
+                            modifier = Modifier
+                                .width(with(LocalDensity.current) { size.toDp() }),
+                            expanded = folderSelectorExpanded,
+                            onDismissRequest = { onFolderSelectorExpandedChange(false) },
+
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text(text = "No folder") },
+                                onClick = { onFolderIdChange(null) }
+                            )
+                            Divider()
+                            folders.forEach { folder ->
+                                DropdownMenuItem(
+                                    onClick = { onFolderIdChange(folder.id)  },
+                                    text = { Text(text = folder.name)}
+                                )
+                            }
+                        }
+                    }
+                    Box(modifier = Modifier
+                        .matchParentSize()
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                        ) {
+                            onFolderSelectorExpandedChange(true)
+                        }
+                    )
+                }
                 OutlinedTextField(
                     modifier = Modifier
                         .padding(top = 16.dp)
@@ -955,7 +1064,7 @@ fun LibraryItemDialog(
                     value = name,
                     onValueChange = onNameChange,
                     label = { Text(text = "Item name") },
-                    maxLines = 1,
+                    singleLine = true,
                 )
                 Row(
                     modifier = Modifier
