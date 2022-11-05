@@ -24,12 +24,12 @@ abstract class LibraryFolderDao : BaseDao<LibraryFolder>(tableName = "library_fo
      */
 
     @Transaction
-    open suspend fun deleteAndResetItems(folder: LibraryFolder) {
-        PracticeTime.libraryItemDao.getFromFolder(folder.id).forEach {
+    open suspend fun deleteAndResetItems(folderId: Long) {
+        PracticeTime.libraryItemDao.getFromFolder(folderId).forEach {
             it.libraryFolderId = null
             PracticeTime.libraryItemDao.update(it)
         }
-        delete(folder)
+        getAndDelete(folderId)
     }
 
     /**

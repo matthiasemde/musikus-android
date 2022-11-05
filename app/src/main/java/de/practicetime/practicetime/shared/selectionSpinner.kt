@@ -65,8 +65,6 @@ fun SelectionSpinner(
             colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
         )
         ExposedDropdownMenu(
-            modifier = Modifier
-                .heightIn(max = 350.dp),
             expanded = state == SpinnerState.EXPANDED,
             onDismissRequest = { onStateChange(SpinnerState.COLLAPSED) },
         ) {

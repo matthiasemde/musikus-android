@@ -12,8 +12,8 @@
 
 package de.practicetime.practicetime.ui.library
 
+import android.os.FileObserver.CREATE
 import android.view.*
-import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -29,9 +29,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.rounded.Delete
-import androidx.compose.material.icons.rounded.Folder
-import androidx.compose.material.icons.rounded.MusicNote
+import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.runtime.*
@@ -49,7 +47,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.zIndex
-import androidx.core.content.ContentProviderCompat.requireContext
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
 import de.practicetime.practicetime.database.entities.LibraryFolder
@@ -83,7 +80,7 @@ enum class CommonMenuSelections {
     APP_INFO
 }
 
-enum class ItemDialogMode {
+enum class DialogMode {
     ADD,
     EDIT
 }
@@ -97,24 +94,43 @@ class LibraryState(
     var showThemeSubMenu = mutableStateOf(false)
     var showSortModeSubMenu = mutableStateOf(false)
 
-    var showAddFolderDialog = mutableStateOf(false)
-    var newFolderName = mutableStateOf("")
+    var showFolderDialog = mutableStateOf(false)
+    var editableFolder = mutableStateOf<LibraryFolder?>(null)
+    var folderDialogMode = mutableStateOf(DialogMode.ADD)
+    var folderDialogName = mutableStateOf("")
+
+    fun clearFolderDialog() {
+        showFolderDialog.value = false
+        editableFolder.value = null
+        folderDialogName.value = ""
+    }
 
     var showItemDialog = mutableStateOf(false)
     var editableItem = mutableStateOf<LibraryItem?>(null)
-    var itemDialogMode = mutableStateOf(ItemDialogMode.ADD)
+    var itemDialogMode = mutableStateOf(DialogMode.ADD)
     var itemDialogName = mutableStateOf("")
     var itemDialogColorIndex = mutableStateOf(0)
     var itemDialogFolderId = mutableStateOf<Long?>(null)
     var itemDialogFolderSelectorExpanded = mutableStateOf(SpinnerState.COLLAPSED)
+
+    fun clearItemDialog() {
+        showItemDialog.value = false
+        editableItem.value = null
+        itemDialogName.value = ""
+        itemDialogColorIndex.value = 0
+        itemDialogFolderId.value = null
+        itemDialogFolderSelectorExpanded.value = SpinnerState.COLLAPSED
+    }
 
     var multiFABState = mutableStateOf(MultiFABState.COLLAPSED)
 
     val folders = mutableStateListOf<LibraryFolder>()
     var items = mutableStateListOf<LibraryItem>()
     val selectedItemIds = mutableStateListOf<Long>()
+    val selectedFolderIds = mutableStateListOf<Long>()
+    val activeFolder = mutableStateOf<LibraryFolder?>(null)
 
-    fun archivedSelectedItems() {
+    fun archiveSelectedItems() {
         coroutineScope.launch {
             selectedItemIds.forEach { itemId ->
                 if (PracticeTime.libraryItemDao.archive(itemId)) // returns false in case item couldnt be archived
@@ -123,6 +139,18 @@ class LibraryState(
                     TODO("Show error message")
             }
             selectedItemIds.clear()
+            actionMode.value = false
+        }
+    }
+
+    fun deleteSelectedFolders() {
+        coroutineScope.launch {
+            selectedFolderIds.forEach { folderId ->
+                PracticeTime.libraryFolderDao.deleteAndResetItems(folderId)
+                folders.remove(folders.find { it.id == folderId })
+            }
+            loadItems() // reload items to show those which were in a folder
+            selectedFolderIds.clear()
             actionMode.value = false
         }
     }
@@ -166,19 +194,25 @@ class LibraryState(
                 sortDirection.value.name
             ).apply()
         }
-        when (sortMode.value) {
-            LibrarySortMode.DATE_ADDED -> items.sortBy { it.createdAt }
-            LibrarySortMode.NAME -> items.sortBy { it.name }
-            LibrarySortMode.COLOR -> items.sortBy { it.colorIndex }
-            LibrarySortMode.LAST_MODIFIED -> items.sortBy { it.modifiedAt }
-            LibrarySortMode.CUSTOM -> items.sortBy { it.createdAt } // TODO: Not implemented yet
-        }
-        if (sortDirection.value == SortDirection.DESCENDING) {
-            items.reverse()
-//            val tmp = items
-//            items.clear()
-//            items.addAll(tmp.reversed())
-//            Log.d("items", items.toString())
+        when (sortDirection.value) {
+            SortDirection.ASCENDING -> {
+                when (sortMode.value) {
+                    LibrarySortMode.DATE_ADDED -> items.sortBy { it.createdAt }
+                    LibrarySortMode.LAST_MODIFIED -> items.sortBy { it.modifiedAt }
+                    LibrarySortMode.NAME -> items.sortBy { it.name }
+                    LibrarySortMode.COLOR -> items.sortBy { it.colorIndex }
+                    LibrarySortMode.CUSTOM -> TODO()
+                }
+            }
+            SortDirection.DESCENDING -> {
+                when (sortMode.value) {
+                    LibrarySortMode.DATE_ADDED -> items.sortByDescending { it.createdAt }
+                    LibrarySortMode.LAST_MODIFIED -> items.sortByDescending { it.modifiedAt }
+                    LibrarySortMode.NAME -> items.sortByDescending { it.name }
+                    LibrarySortMode.COLOR -> items.sortByDescending { it.colorIndex }
+                    LibrarySortMode.CUSTOM -> TODO()
+                }
+            }
         }
     }
 
@@ -186,22 +220,39 @@ class LibraryState(
         coroutineScope.launch {
             PracticeTime.libraryFolderDao.insertAndGet(newFolder)?.let {
                 folders.add(0, it)
-                newFolderName.value = ""
             }
+            clearFolderDialog()
         }
     }
 
-    private fun clearItemDialog() {
-        itemDialogName.value = ""
-        itemDialogColorIndex.value = 0
-        itemDialogFolderId.value = null
-        itemDialogFolderSelectorExpanded.value = SpinnerState.COLLAPSED
+    fun editFolder(folder: LibraryFolder) {
+        coroutineScope.launch {
+            PracticeTime.libraryFolderDao.update(folder)
+            folders.removeIf { it.id == folder.id }
+            folders.add(folder)
+            clearFolderDialog()
+        }
+    }
+
+    fun clearActionMode() {
+        selectedItemIds.clear()
+        selectedFolderIds.clear()
+        actionMode.value = false
     }
 
     fun loadItems() {
         coroutineScope.launch {
             items.clear()
-            items.addAll(PracticeTime.libraryItemDao.get(activeOnly = true))
+            PracticeTime.libraryItemDao.get(activeOnly = true).forEach { item ->
+                // check if the items folderId actually exists
+                item.libraryFolderId?.let {
+                    if(PracticeTime.libraryFolderDao.get(it) == null) {
+                        item.libraryFolderId = null
+                        PracticeTime.libraryItemDao.update(item)
+                    }
+                }
+                items.add(item)
+            }
             sortItems()
         }
     }
@@ -272,16 +323,31 @@ fun LibraryComposable(
         modifier = Modifier
             .nestedScroll(scrollBehavior.nestedScrollConnection),
         floatingActionButton = {
-            MultiFAB(
+            libraryState.activeFolder.value?.let { folder ->
+                FloatingActionButton(
+                    onClick = {
+                        libraryState.itemDialogMode.value = DialogMode.ADD
+                        libraryState.itemDialogFolderId.value = folder.id
+                        libraryState.showItemDialog.value = true
+                        libraryState.multiFABState.value = MultiFABState.COLLAPSED
+                        showNavBarScrim(false)
+                    },
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "New item")
+                }
+            } ?: MultiFAB(
                 state = libraryState.multiFABState.value,
                 onStateChange = { state ->
                     libraryState.multiFABState.value = state
                     showNavBarScrim(state == MultiFABState.EXPANDED)
+                    if(state == MultiFABState.EXPANDED) {
+                        libraryState.clearActionMode()
+                    }
                 },
                 miniFABs = listOf(
                     MiniFABData(
                         onClick = {
-                            libraryState.itemDialogMode.value = ItemDialogMode.ADD
+                            libraryState.itemDialogMode.value = DialogMode.ADD
                             libraryState.showItemDialog.value = true
                             libraryState.multiFABState.value = MultiFABState.COLLAPSED
                             showNavBarScrim(false)
@@ -291,7 +357,8 @@ fun LibraryComposable(
                     ),
                     MiniFABData(
                         onClick = {
-                            libraryState.showAddFolderDialog.value = true
+                            libraryState.folderDialogMode.value = DialogMode.ADD
+                            libraryState.showFolderDialog.value = true
                             libraryState.multiFABState.value = MultiFABState.COLLAPSED
                             showNavBarScrim(false)
                         },
@@ -304,7 +371,16 @@ fun LibraryComposable(
         topBar = {
             LargeTopAppBar(
                 scrollBehavior = scrollBehavior,
-                title = { Text(text = "Library") },
+                title = { Text(text = libraryState.activeFolder.value?.name ?: "Library") },
+                navigationIcon = {
+                    if(libraryState.activeFolder.value != null){
+                        IconButton(onClick = {
+                            libraryState.activeFolder.value = null
+                        }) {
+                            Icon(Icons.Rounded.ArrowBack, contentDescription = "Back")
+                        }
+                    }
+                },
                 actions = {
                     TextButton(
                         onClick = { libraryState.showSortModeSubMenu.value = true })
@@ -378,12 +454,38 @@ fun LibraryComposable(
             )
             if(libraryState.actionMode.value) {
                 ActionBar(
-                    numSelectedItems = libraryState.selectedItemIds.size,
+                    numSelectedItems =
+                        libraryState.selectedItemIds.size +
+                        libraryState.selectedFolderIds.size,
                     onDismissHandler = {
-                        libraryState.actionMode.value = false
-                        libraryState.selectedItemIds.clear()
+                        libraryState.clearActionMode()
                     },
-                    onDeleteHandler = { libraryState.archivedSelectedItems() }
+                    onEditHandler = {
+                        libraryState.apply {
+                            items.firstOrNull { item ->
+                                selectedItemIds.firstOrNull()?.let { it == item.id } ?: false
+                            }?.let { item ->
+                                editableItem.value = item
+                                itemDialogMode.value = DialogMode.EDIT
+                                itemDialogName.value = item.name
+                                itemDialogColorIndex.value = item.colorIndex
+                                itemDialogFolderId.value = item.libraryFolderId
+                                showItemDialog.value = true
+                            } ?: folders.firstOrNull { folder ->
+                                selectedFolderIds.firstOrNull()?.let { it == folder.id } ?: false
+                            }?.let { folder ->
+                                editableFolder.value = folder
+                                folderDialogMode.value = DialogMode.EDIT
+                                folderDialogName.value = folder.name
+                                showFolderDialog.value = true
+                            }
+                        }
+                        libraryState.clearActionMode()
+                    },
+                    onDeleteHandler = {
+                        libraryState.archiveSelectedItems()
+                        libraryState.deleteSelectedFolders()
+                    }
                 )
             }
         },
@@ -392,34 +494,63 @@ fun LibraryComposable(
                 contentPadding = PaddingValues(
                     top = innerPadding.calculateTopPadding(),
                 ),
-                folders = libraryState.folders,
-                items = libraryState.items,
+                folders = if(libraryState.activeFolder.value == null) libraryState.folders else listOf(),
+                items = libraryState.items.filter { it.libraryFolderId == libraryState.activeFolder.value?.id },
                 selectedItemIds = libraryState.selectedItemIds,
-                onLibraryItemShortClicked = { item ->
-                    if (libraryState.actionMode.value) {
-                        if (libraryState.selectedItemIds.contains(item.id)) {
-                            libraryState.selectedItemIds.remove(item.id)
-                            if(libraryState.selectedItemIds.isEmpty()){
-                                libraryState.actionMode.value = false
+                selectedFolderIds = libraryState.selectedFolderIds,
+                onLibraryFolderShortClicked = { folder ->
+                    libraryState.apply {
+                        if(actionMode.value) {
+                            if(selectedFolderIds.contains(folder.id)) {
+                                selectedFolderIds.remove(folder.id)
+                                if(selectedFolderIds.isEmpty() && selectedItemIds.isEmpty()) {
+                                    actionMode.value = false
+                                }
+                            } else {
+                                selectedFolderIds.add(folder.id)
                             }
                         } else {
-                            libraryState.selectedItemIds.add(item.id)
+                            activeFolder.value = folder
+                            clearActionMode()
                         }
-                    } else {
-                        libraryState.apply {
+                    }
+                },
+                onLibraryFolderLongClicked = { folder ->
+                    libraryState.apply {
+                        if (!selectedFolderIds.contains(folder.id)) {
+                            selectedFolderIds.add(folder.id)
+                            actionMode.value = true
+                        }
+                    }
+                },
+                onLibraryItemShortClicked = { item ->
+                    libraryState.apply {
+                        if (actionMode.value) {
+                            if (selectedItemIds.contains(item.id)) {
+                                selectedItemIds.remove(item.id)
+                                if (selectedItemIds.isEmpty() && selectedFolderIds.isEmpty()) {
+                                    actionMode.value = false
+                                }
+                            } else {
+                                selectedItemIds.add(item.id)
+                            }
+                        } else {
                             editableItem.value = item
-                            itemDialogMode.value = ItemDialogMode.EDIT
+                            itemDialogMode.value = DialogMode.EDIT
                             itemDialogName.value = item.name
                             itemDialogColorIndex.value = item.colorIndex
                             itemDialogFolderId.value = item.libraryFolderId
                             showItemDialog.value = true
+                            clearActionMode()
                         }
                     }
                 },
                 onLibraryItemLongClicked = { item ->
-                    if(!libraryState.selectedItemIds.contains(item.id)) {
-                        libraryState.selectedItemIds.add(item.id)
-                        libraryState.actionMode.value = true
+                    libraryState.apply {
+                        if (!selectedItemIds.contains(item.id)) {
+                            selectedItemIds.add(item.id)
+                            actionMode.value = true
+                        }
                     }
                 },
             )
@@ -440,19 +571,30 @@ fun LibraryComposable(
                 }
             }
 
-            if(libraryState.showAddFolderDialog.value) {
+            if(libraryState.showFolderDialog.value) {
                 LibraryFolderDialog(
-                    folderName = libraryState.newFolderName.value,
-                    onFolderNameChange = { libraryState.newFolderName.value = it },
+                    mode = libraryState.folderDialogMode.value,
+                    folderName = libraryState.folderDialogName.value,
+                    onFolderNameChange = { libraryState.folderDialogName.value = it },
                     onDismissHandler = { create ->
-                        libraryState.showAddFolderDialog.value = false
                         if(create) {
-                            libraryState.addFolder(
-                                LibraryFolder(
-                                    name = libraryState.newFolderName.value,
-                                )
-                            )
+                            when(libraryState.folderDialogMode.value) {
+                                DialogMode.ADD -> {
+                                    libraryState.addFolder(
+                                        LibraryFolder(
+                                            name = libraryState.folderDialogName.value,
+                                        )
+                                    )
+                                }
+                                DialogMode.EDIT -> {
+                                    libraryState.editableFolder.value?.apply {
+                                        name = libraryState.folderDialogName.value
+                                        libraryState.editFolder(this)
+                                    }
+                                }
+                            }
                         }
+                        libraryState.clearFolderDialog()
                     },
                 )
             }
@@ -475,7 +617,7 @@ fun LibraryComposable(
                     onDismissHandler = { cancel ->
                         if(!cancel) {
                             when(libraryState.itemDialogMode.value) {
-                                ItemDialogMode.ADD -> {
+                                DialogMode.ADD -> {
                                     libraryState.addItem(
                                         LibraryItem(
                                             name = libraryState.itemDialogName.value,
@@ -484,7 +626,7 @@ fun LibraryComposable(
                                         )
                                     )
                                 }
-                                ItemDialogMode.EDIT -> {
+                                DialogMode.EDIT -> {
                                     libraryState.editableItem.value?.apply {
                                         name = libraryState.itemDialogName.value
                                         colorIndex = libraryState.itemDialogColorIndex.value
@@ -494,7 +636,7 @@ fun LibraryComposable(
                                 }
                             }
                         }
-                        libraryState.showItemDialog.value = false
+                        libraryState.clearItemDialog()
                     },
                 )
             }
@@ -702,6 +844,7 @@ fun MainMenu(
 fun ActionBar(
     numSelectedItems: Int,
     onDismissHandler: () -> Unit,
+    onEditHandler: () -> Unit,
     onDeleteHandler: () -> Unit
 ) {
     TopAppBar(
@@ -717,6 +860,17 @@ fun ActionBar(
             }
         },
         actions = {
+            if(numSelectedItems == 1) {
+                IconButton(onClick = {
+                    onEditHandler()
+                }) {
+                    Icon(
+                        imageVector = Icons.Rounded.Edit,
+                        contentDescription = "Edit",
+                        tint = colorScheme.onPrimaryContainer
+                    )
+                }
+            }
             IconButton(onClick = {
                 onDeleteHandler()
             }) {
@@ -730,19 +884,49 @@ fun ActionBar(
     )
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun LibraryFolderComposable(
-    folder: LibraryFolder
+    folder: LibraryFolder,
+    selected: Boolean,
+    onShortClick: () -> Unit,
+    onLongClick: () -> Unit,
 ) {
-    Button(
-        modifier = Modifier
-            .size(150.dp),
-        colors = ButtonDefaults.elevatedButtonColors(),
-        shape = RoundedCornerShape(16.dp),
-        elevation = ButtonDefaults.elevatedButtonElevation(),
-        onClick = {}
-    ) {
-        Text(text = folder.name, style = MaterialTheme.typography.titleMedium)
+    Box {
+        Surface(
+            modifier = Modifier
+                .size(150.dp)
+                .clip(MaterialTheme.shapes.large)
+                .combinedClickable (
+                    onClick = onShortClick,
+                    onLongClick = onLongClick
+                ),
+            color = colorScheme.surface,
+            shape = MaterialTheme.shapes.large,
+            tonalElevation = 1.dp,
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize(),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    modifier = Modifier.padding(4.dp),
+                    text = folder.name,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = colorScheme.primary,
+                    textAlign = TextAlign.Center,
+                )
+            }
+        }
+        if(selected) {
+            Box(
+                modifier = Modifier
+                    .clip(MaterialTheme.shapes.large)
+                    .matchParentSize()
+                    .background(color = colorScheme.onSurface.copy(alpha = 0.2f))
+            )
+        }
     }
 }
 
@@ -790,6 +974,9 @@ fun LibraryContent(
     folders: List<LibraryFolder>,
     items: List<LibraryItem>,
     selectedItemIds: List<Long>,
+    selectedFolderIds: List<Long>,
+    onLibraryFolderShortClicked: (LibraryFolder) -> Unit,
+    onLibraryFolderLongClicked: (LibraryFolder) -> Unit,
     onLibraryItemShortClicked: (LibraryItem) -> Unit,
     onLibraryItemLongClicked: (LibraryItem) -> Unit,
 ) {
@@ -820,7 +1007,12 @@ fun LibraryContent(
                             modifier = Modifier
                                 .animateItemPlacement()
                         ) {
-                            LibraryFolderComposable(folder = folder)
+                            LibraryFolderComposable(
+                                folder = folder,
+                                selected = selectedFolderIds.contains(folder.id),
+                                onShortClick = { onLibraryFolderShortClicked(folder) },
+                                onLongClick = { onLibraryFolderLongClicked(folder) }
+                            )
                         }
                     }
                     item { Spacer(modifier = Modifier.width(4.dp)) }
@@ -831,8 +1023,7 @@ fun LibraryContent(
             item {
                 Text(
                     modifier = Modifier
-                        .padding(16.dp)
-                        .padding(top = 32.dp),
+                        .padding(16.dp),
                     text="Items",
                     style = MaterialTheme.typography.titleLarge
                 )
@@ -865,13 +1056,14 @@ fun LibraryContent(
                 }
             }
         }
-        item { Spacer(modifier = Modifier.height(0.dp)) } // maybe solve this using content value padding instead
+        item { Spacer(modifier = Modifier.height(40.dp)) } // maybe solve this using content value padding instead
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LibraryFolderDialog(
+    mode: DialogMode,
     folderName: String,
     onFolderNameChange: (String) -> Unit,
     onDismissHandler: (Boolean) -> Unit, // true if folder was created
@@ -896,7 +1088,10 @@ fun LibraryFolderDialog(
                         .fillMaxWidth()
                         .padding(horizontal = 24.dp)
                         .padding(top = 24.dp, bottom = 16.dp),
-                    text = "Create folder",
+                    text = when(mode) {
+                        DialogMode.ADD -> "Create folder"
+                        DialogMode.EDIT -> "Edit folder"
+                    },
                     style = MaterialTheme.typography.titleLarge,
                     color = colorScheme.onPrimaryContainer,
                 )
@@ -933,7 +1128,10 @@ fun LibraryFolderDialog(
                             contentColor = colorScheme.primary
                         )
                     ) {
-                        Text(text = "Create")
+                        Text(text = when(mode) {
+                            DialogMode.ADD -> "Create"
+                            DialogMode.EDIT -> "Edit"
+                        })
                     }
                 }
             }
@@ -944,7 +1142,7 @@ fun LibraryFolderDialog(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LibraryItemDialog(
-    mode: ItemDialogMode,
+    mode: DialogMode,
     folders: List<LibraryFolder>,
     name: String,
     colorIndex: Int,
@@ -977,8 +1175,8 @@ fun LibraryItemDialog(
                         .padding(horizontal = 24.dp)
                         .padding(top = 24.dp, bottom = 16.dp),
                     text = when(mode) {
-                        ItemDialogMode.ADD -> "Create item"
-                        ItemDialogMode.EDIT -> "Edit item"
+                        DialogMode.ADD -> "Create item"
+                        DialogMode.EDIT -> "Edit item"
                     },
                     style = MaterialTheme.typography.titleLarge,
                     color = colorScheme.onPrimaryContainer,
@@ -1004,25 +1202,27 @@ fun LibraryItemDialog(
                     label = { Text(text = "Item name") },
                     singleLine = true,
                 )
-                SelectionSpinner(
-                    modifier = Modifier
-                        .padding(top = 16.dp)
-                        .padding(horizontal = 24.dp),
-                    state = folderSelectorExpanded,
-                    label = { Text(text = "Folder") },
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Default.Folder,
-                            contentDescription = "Folder",
-                            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                        )
-                    },
-                    options = folders.map { folder -> Pair(folder.id, folder.name) },
-                    selected = folderId,
-                    defaultOption = "No folder",
-                    onStateChange = onFolderSelectorExpandedChange,
-                    onSelectedChange = onFolderIdChange,
-                )
+                if(folders.isNotEmpty()) {
+                    SelectionSpinner(
+                        modifier = Modifier
+                            .padding(top = 16.dp)
+                            .padding(horizontal = 24.dp),
+                        state = folderSelectorExpanded,
+                        label = { Text(text = "Folder") },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Folder,
+                                contentDescription = "Folder",
+                                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                            )
+                        },
+                        options = folders.map { folder -> Pair(folder.id, folder.name) },
+                        selected = folderId,
+                        defaultOption = "No folder",
+                        onStateChange = onFolderSelectorExpandedChange,
+                        onSelectedChange = onFolderIdChange,
+                    )
+                }
                 Row(
                     modifier = Modifier
                         .padding(top = 16.dp)
@@ -1066,8 +1266,8 @@ fun LibraryItemDialog(
                         )
                     ) {
                         Text(text = when(mode) {
-                            ItemDialogMode.ADD -> "Create"
-                            ItemDialogMode.EDIT -> "Edit"
+                            DialogMode.ADD -> "Create"
+                            DialogMode.EDIT -> "Edit"
                         })
                     }
                 }
@@ -1098,276 +1298,3 @@ fun ColorSelectRadioButton(
         )
     }
 }
-
-
-//    private fun initLibraryItemList() {
-//        libraryItemAdapter = LibraryItemAdapter(
-//            libraryItems,
-//            selectedItems,
-//            context = requireActivity(),
-//            shortClickHandler = ::shortClickOnLibraryItemHandler,
-//            longClickHandler = ::longClickOnLibraryItemHandler,
-//        )
-//
-//        // load all active libraryItems from the database and notify the adapter
-//        lifecycleScope.launch {
-//            PracticeTime.libraryItemDao.get(activeOnly = true).let {
-//                // sort libraryItems depending on the current sort mode
-//                libraryItems.addAll(it)
-//                Log.d("LIBRARY","$sortMode")
-//                sortLibraryItemList(sortMode)
-////                libraryItemAdapter?.notifyItemRangeInserted(0, it.size) // sortLibraryItemList() already notifies the adapter
-//            }
-//
-////            requireActivity().findViewById<RecyclerView>(R.id.libraryLibraryItemList).apply {
-//////                layoutManager = GridLayoutManager(context, 2)
-////                layoutManager = LinearLayoutManager(context)
-////                adapter = libraryItemAdapter
-////                itemAnimator?.apply {
-////                    addDuration = 500L
-////                    moveDuration = 500L
-////                    removeDuration = 200L
-////                }
-////            }
-//
-//            if (libraryItems.isEmpty()) showHint()
-//        }
-//    }
-
-    // initialize the libraryItem delete dialog
-//    private fun initDeleteLibraryItemDialog() {
-//        deleteLibraryItemDialog = AlertDialog.Builder(requireActivity()).apply {
-//            setPositiveButton(R.string.deleteDialogConfirm) { dialog, _ ->
-////                deleteLibraryItemsHandler()
-//                dialog.dismiss()
-//            }
-//            setNegativeButton(R.string.dialogCancel) { dialog, _ ->
-//                dialog.cancel()
-//            }
-//        }.create()
-//    }
-//
-//    private fun actionModeCallback(): ActionMode.Callback {
-//        return object : ActionMode.Callback {
-//            override fun onCreateActionMode(mode: ActionMode?, menu: Menu?): Boolean {
-//                mode?.menuInflater?.inflate(R.menu.library_toolbar_menu_for_selection, menu)
-//                libraryCollapsingToolbarLayout.apply {
-//                    setBackgroundColor(PracticeTime.getThemeColor(R.attr.colorSurface, requireContext()))
-//                    contentScrim = null
-//                }
-//                return true
-//            }
-//
-//            override fun onPrepareActionMode(mode: ActionMode?, menu: Menu?): Boolean {
-//                return false
-//            }
-//
-//            override fun onActionItemClicked(mode: ActionMode?, item: MenuItem?): Boolean {
-//                return when(item?.itemId) {
-//                    R.id.topToolbarSelectionEdit -> {
-//                        // editLibraryItemDialog?.show(libraryItems[selectedItems.first().toInt()])
-//                        true
-//                    }
-//                    R.id.topToolbarSelectionDelete -> {
-//                        if(PracticeTime.serviceIsRunning)
-//                            Toast.makeText(context, getString(R.string.cannot_delete_error), Toast.LENGTH_SHORT).show()
-//                        else {
-//                            deleteLibraryItemDialog?.apply {
-//                                setMessage(
-//                                    context.getString(
-//                                        if (selectedItems.size > 1) R.string.deleteLibraryItemsDialogMessage
-//                                        else R.string.deleteLibraryItemDialogMessage
-//                                    )
-//                                )
-//                                show()
-//                            }
-//                        }
-//                        true
-//                    }
-//                    else -> false
-//                }
-//            }
-//
-//            override fun onDestroyActionMode(mode: ActionMode?) {
-//                clearLibraryItemSelection()
-//                val transparentSurfaceColor =
-//                    ColorUtils.setAlphaComponent(PracticeTime.getThemeColor(R.attr.colorSurface, requireContext()), 0)
-//                libraryCollapsingToolbarLayout.apply {
-//                    val backgroundColorAnimation = ValueAnimator.ofObject(
-//                        ArgbEvaluator(),
-//                        PracticeTime.getThemeColor(R.attr.colorSurface, requireContext()),
-//                        transparentSurfaceColor
-//                    )
-//                    backgroundColorAnimation.duration = 500 // milliseconds
-//
-//                    backgroundColorAnimation.addUpdateListener { animator ->
-//                        setBackgroundColor(animator.animatedValue as Int)
-//                    }
-//                    backgroundColorAnimation.start()
-//
-//                    val scrimColorAnimation = ValueAnimator.ofObject(
-//                        ArgbEvaluator(),
-//                        PracticeTime.getThemeColor(R.attr.colorSurface, requireContext()),
-//                        transparentSurfaceColor
-//                    )
-//                    scrimColorAnimation.duration = 340 // milliseconds
-//
-//                    scrimColorAnimation.addUpdateListener { animator ->
-//                        setStatusBarScrimColor(animator.animatedValue as Int)
-//                    }
-//                    scrimColorAnimation.start()
-//                    setContentScrimColor(PracticeTime.getThemeColor(R.attr.backgroundToolbarCollapsed, requireContext()))
-//                }
-//            }
-//        }
-//    }
-//
-//    private fun shortClickOnLibraryItemHandler(index: Int) {
-//        // if there are already libraryItems selected,
-//        // add or remove the clicked libraryItem from the selection
-////        if(selectedItems.isNotEmpty()) {
-////            if(selectedItems.removeAt(index)) {
-////                libraryItemAdapter?.notifyItemChanged(index)
-////                if(selectedItems.size == 1) {
-////                    actionMode?.menu?.findItem(R.id.topToolbarSelectionEdit)?.isVisible = true
-////                } else if(selectedItems.isEmpty()) {
-////                    actionMode?.finish()
-////                }
-////            } else {
-////                longClickOnLibraryItemHandler(index, vibrate = false)
-////            }
-////            actionMode?.title = "${selectedItems.size} selected"
-////        } else {
-////            editLibraryItemDialog?.show(libraryItems[index])
-////        }
-//    }
-//
-//    // the handler for dealing with long clicks on libraryItem
-//    private fun longClickOnLibraryItemHandler(index: Int, vibrate: Boolean = true): Boolean {
-//        // if there is no libraryItem selected already, change the toolbar
-//        if(selectedItems.isEmpty()) {
-//            actionMode = libraryToolbar.startActionMode(actionModeCallback())
-//            actionMode?.title = "1 selected"
-//        }
-//
-//        if(!selectedItems.contains(index.toLong())) {
-//            if (vibrate && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-//                (requireContext().getSystemService(
-//                    Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
-//                        ).defaultVibrator.apply {
-//                        cancel()
-//                        vibrate(
-//                            VibrationEffect.createOneShot(100,100)
-//                        )
-//                    }
-//            }
-//            // now add the newly selected libraryItem to the list...
-//            selectedItems.add(index.toLong())
-//            libraryItemAdapter?.notifyItemChanged(index)
-//        }
-//
-//        actionMode?.menu?.findItem(R.id.topToolbarSelectionEdit)?.isVisible =
-//            selectedItems.size == 1
-//
-//        // we consumed the event so we return true
-//        return true
-//    }
-//
-//    private fun clearLibraryItemSelection() {
-//        val tmpCopy = selectedItems.toList()
-//        selectedItems.clear()
-//        tmpCopy.forEach { libraryItemAdapter?.notifyItemChanged(it.toInt()) }
-//    }
-
-    // init the toolbar and associated data
-//    private fun initToolbar() {
-//        libraryToolbar.apply {
-//            menu?.clear()
-//            setCommonToolbar(requireActivity(), this) {
-//                when(it) {
-//                    R.id.libraryToolbarSortModeDateAdded -> sortLibraryItemList(LibrarySortMode.DATE_ADDED)
-//                    R.id.libraryToolbarSortModeLastModified -> sortLibraryItemList(LibrarySortMode.LAST_MODIFIED)
-//                    R.id.libraryToolbarSortModeName -> sortLibraryItemList(LibrarySortMode.NAME)
-//                    R.id.libraryToolbarSortModeColor -> sortLibraryItemList(LibrarySortMode.COLOR)
-//                    R.id.libraryToolbarSortModeCustom -> sortLibraryItemList(LibrarySortMode.CUSTOM)
-//                    else -> {}
-//                }
-//            }
-//            inflateMenu(R.menu.library_toolbar_menu_base)
-////            setNavigationIcon(R.drawable.ic_account)
-//        }
-//    }
-
-//    // the handler for creating new libraryItems
-//    private fun addLibraryItemHandler(newLibraryItem: LibraryItem) {
-//        lifecycleScope.launch {
-//            PracticeTime.libraryItemDao.insertAndGet(newLibraryItem)
-//                ?.let { libraryItems.add(0, it) }
-//            libraryItemAdapter?.notifyItemInserted(0)
-//            if(libraryItems.isNotEmpty()) hideHint()
-//        }
-//    }
-//
-//    // the handler for editing libraryItems
-//    private fun editLibraryItemHandler(libraryItem: LibraryItem) {
-//        lifecycleScope.launch {
-//            PracticeTime.libraryItemDao.update(libraryItem)
-//            libraryItems.indexOfFirst { c -> c.id == libraryItem.id }.also { i ->
-//                assert(i != -1) {
-//                    Log.e("EDIT_CATEGORY", "No libraryItem with matching id found for\n$libraryItem")
-//                }
-//                libraryItems[i] = libraryItem
-//                libraryItemAdapter?.notifyItemChanged(i)
-//            }
-//            actionMode?.finish()
-//        }
-//    }
-//
-//    // the handler for deleting libraryItems
-//    private fun deleteLibraryItemsHandler() {
-//        var failedDeleteFlag = false
-//        lifecycleScope.launch {
-//            selectedItems.sortedByDescending { it }.forEach { index ->
-//                if(PracticeTime.libraryItemDao.archive(libraryItems[index.toInt()].id)) {
-//                    libraryItems.removeAt(index.toInt())
-//                    libraryItemAdapter?.notifyItemRemoved(index.toInt())
-//                } else {
-//                    failedDeleteFlag = true
-//                }
-//            }
-//
-//            if(failedDeleteFlag) {
-//                Snackbar.make(
-//                    requireView(),
-//                    if(selectedItems.size > 1) R.string.deleteLibraryItemsFailSnackbar
-//                    else R.string.deleteLibraryItemFailSnackbar,
-//                    5000
-//                ).show()
-//            } else {
-//                Toast.makeText(
-//                    requireActivity(),
-//                    if(selectedItems.size > 1) R.string.deleteLibraryItemsSuccessSnackbar
-//                    else R.string.deleteLibraryItemSuccessSnackbar,
-//                    Toast.LENGTH_SHORT
-//                ).show()
-//            }
-//
-//            if(libraryItems.isEmpty()) showHint()
-//            actionMode?.finish()
-//        }
-//    }
-
-//    private fun showHint() {
-//        requireView().apply {
-//            findViewById<TextView>(R.id.libraryHint).visibility = View.VISIBLE
-////            findViewById<RecyclerView>(R.id.libraryLibraryItemList).visibility = View.GONE
-//        }
-//    }
-//
-//    private fun hideHint() {
-//        requireView().apply {
-//            findViewById<TextView>(R.id.libraryHint).visibility = View.GONE
-////            findViewById<RecyclerView>(R.id.libraryLibraryItemList).visibility = View.VISIBLE
-//        }
-//    }
-//}
