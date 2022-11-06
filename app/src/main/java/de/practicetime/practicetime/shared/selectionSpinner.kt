@@ -17,6 +17,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 enum class SpinnerState {
@@ -81,11 +82,13 @@ fun SelectionSpinner(
                 defaultOption?.let {
                     item {
                         DropdownMenuItem(
-                            modifier = Modifier.height(46.dp),
+                            modifier = Modifier
+                                .padding(end= 12.dp)
+                                .height(46.dp),
                             text = { Text(text = it) },
                             onClick = { onSelectedChange(null) }
                         )
-                        Divider(thickness = 2.dp)
+                        Divider(Modifier.padding(end = 12.dp), thickness = Dp.Hairline)
                     }
                 }
                 items(
@@ -93,7 +96,9 @@ fun SelectionSpinner(
                     key = { it.first },
                 ) { item ->
                     DropdownMenuItem(
-                        modifier = Modifier.height(48.dp),
+                        modifier = Modifier
+                            .padding(end= 12.dp)
+                            .height(48.dp),
                         onClick = { onSelectedChange(item.first)  },
                         text = { Text(text = item.second) }
                     )

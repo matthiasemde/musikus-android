@@ -25,7 +25,6 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun Modifier.simpleVerticalScrollbar(
     state: LazyListState,
-    height: Float = 0.2f,
     width: Dp = 3.dp,
     color: Color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
 ): Modifier {
@@ -33,24 +32,36 @@ fun Modifier.simpleVerticalScrollbar(
         drawContent()
         val totalItemCount = state.layoutInfo.totalItemsCount.toFloat()
 
-        val itemHeight = state.layoutInfo.visibleItemsInfo.first().size
+        var visibleItemHeight = 0f
+        state.layoutInfo.visibleItemsInfo.forEach { visibleItemHeight += it.size.toFloat() }
+        val avgVisibleItemHeight = visibleItemHeight / state.layoutInfo.visibleItemsInfo.size
 
-        val missingItems = (totalItemCount * itemHeight - state.layoutInfo.viewportSize.height) / itemHeight
+        val approximatedTotalItemHeight = totalItemCount * avgVisibleItemHeight
 
-        if(missingItems > 1) {
-            val scrollbarHeight = state.layoutInfo.viewportSize.height.toFloat() * height // in pixels
-            val scrollPerItem = (state.layoutInfo.viewportSize.height - scrollbarHeight) / missingItems
+        val percentageShowing = state.layoutInfo.viewportSize.height / approximatedTotalItemHeight
 
-            val offsetPercentage = state.firstVisibleItemScrollOffset.toFloat() / itemHeight
+        val firstVisibleItemHeight =
+            state.layoutInfo.visibleItemsInfo.firstOrNull()?.size?.toFloat() ?: 0f
+        val firstVisibleItemOffsetPercentage = state.firstVisibleItemScrollOffset.toFloat() / firstVisibleItemHeight
 
+        val scrollbarHeight = state.layoutInfo.viewportSize.height.toFloat() * percentageShowing // in pixels
+        val scrollPerItem = (state.layoutInfo.viewportSize.height - scrollbarHeight) / (totalItemCount * (1 - percentageShowing)) // in pixels
+
+        if(state.layoutInfo.viewportSize.height - scrollbarHeight > 2) {
             val firstIndex = state.firstVisibleItemIndex.toFloat()
-            val scrollbarOffsetY = (firstIndex + offsetPercentage) * scrollPerItem
+            val scrollbarOffsetY = (firstIndex + firstVisibleItemOffsetPercentage) * scrollPerItem
 
             drawRoundRect(
                 cornerRadius = CornerRadius(width.toPx() / 2),
                 color = color,
                 topLeft = Offset(this.size.width - (width + 5.dp).toPx(), scrollbarOffsetY),
                 size = Size(width.toPx(), scrollbarHeight),
+            )
+            drawRoundRect(
+                cornerRadius = CornerRadius(width.toPx() / 2),
+                color = color.copy(alpha = 0.2f),
+                topLeft = Offset(this.size.width - (width + 5.dp).toPx(), 0f),
+                size = Size(width.toPx(), state.layoutInfo.viewportSize.height.toFloat()),
             )
         }
     }
