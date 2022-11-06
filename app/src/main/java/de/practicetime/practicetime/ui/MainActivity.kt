@@ -14,14 +14,17 @@ package de.practicetime.practicetime.ui
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.animation.AccelerateInterpolator
 import androidx.activity.compose.setContent
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
+import androidx.compose.animation.*
+import androidx.compose.animation.core.Easing
+import androidx.compose.animation.core.FiniteAnimationSpec
+import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.graphics.ExperimentalAnimationGraphicsApi
 import androidx.compose.animation.graphics.res.animatedVectorResource
 import androidx.compose.animation.graphics.res.rememberAnimatedVectorPainter
@@ -39,15 +42,16 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.rememberNavController
+import com.google.accompanist.navigation.animation.AnimatedNavHost
+import com.google.accompanist.navigation.animation.composable
+import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import com.google.android.material.composethemeadapter3.Mdc3Theme
 import de.practicetime.practicetime.BuildConfig
 import de.practicetime.practicetime.PracticeTime
@@ -128,7 +132,9 @@ class MainActivity : AppCompatActivity() {
         Screen.Library
     )
 
-    @OptIn(ExperimentalMaterial3Api::class, ExperimentalAnimationGraphicsApi::class)
+    @OptIn(ExperimentalMaterial3Api::class, ExperimentalAnimationGraphicsApi::class,
+        ExperimentalAnimationApi::class
+    )
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
@@ -154,7 +160,7 @@ class MainActivity : AppCompatActivity() {
             })
 
             Mdc3Theme {
-                val navController = rememberNavController()
+                val navController = rememberAnimatedNavController()
                 Scaffold(
                     bottomBar = {
                         NavigationBar {
@@ -200,15 +206,40 @@ class MainActivity : AppCompatActivity() {
                         }
                     }
                 ) { innerPadding ->
-                    NavHost(
+                    AnimatedNavHost(
                         navController,
-                        startDestination = Screen.Library.route,
+                        startDestination = Screen.Sessions.route,
                         Modifier.padding(bottom = innerPadding.calculateBottomPadding())
                     ) {
-                        composable(Screen.Sessions.route) { SessionListFragmentHolder() }
-                        composable(Screen.Goals.route) { GoalsFragmentHolder() }
-                        composable(Screen.Statistics.route) { StatisticsFragmentHolder() }
-                        composable(Screen.Library.route) { LibraryComposable (
+                        val animationDuration = 500
+                        val enterTransition = slideInVertically(
+                            animationSpec = tween(animationDuration),
+                            initialOffsetY = { fullHeight -> -(fullHeight / 10) }
+                        ) + fadeIn(animationSpec = tween(animationDuration / 2, animationDuration / 2))
+                        val exitTransition = slideOutVertically(
+                            animationSpec = tween(animationDuration),
+                            targetOffsetY = { fullHeight -> (fullHeight / 10) }
+                        ) + fadeOut(animationSpec = tween(animationDuration / 2))
+                        composable(
+                            route = Screen.Sessions.route,
+                            enterTransition = { enterTransition },
+                            exitTransition = { exitTransition },
+                        ) { SessionListFragmentHolder() }
+                        composable(
+                            route = Screen.Goals.route,
+                            enterTransition = { enterTransition },
+                            exitTransition = { exitTransition }
+                        ) { GoalsFragmentHolder() }
+                        composable(
+                            route = Screen.Statistics.route,
+                            enterTransition = { enterTransition },
+                            exitTransition = { exitTransition }
+                        ) { StatisticsFragmentHolder() }
+                        composable(
+                            route = Screen.Library.route,
+                            enterTransition = { enterTransition },
+                            exitTransition = { exitTransition }
+                        ) { LibraryComposable (
                             mainState = mainState,
                             showNavBarScrim = { show -> mainState.showNavBarScrim.value = show },
                         ) }

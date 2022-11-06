@@ -88,6 +88,11 @@ enum class DialogMode {
 class LibraryState(
     private val coroutineScope: CoroutineScope,
 ) {
+    init {
+        loadItems()
+        loadFolders()
+    }
+
     var actionMode = mutableStateOf(false)
 
     var showMainMenu = mutableStateOf(false)
@@ -312,10 +317,7 @@ fun LibraryComposable(
     mainState: MainState,
     showNavBarScrim: (Boolean) -> Unit,
 ) {
-    val libraryState = rememberLibraryState().apply {
-        loadItems()
-        loadFolders()
-    }
+    val libraryState = rememberLibraryState()
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
     Scaffold(
