@@ -35,7 +35,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.zIndex
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.lifecycleScope
@@ -56,6 +59,7 @@ import de.practicetime.practicetime.ui.intro.AppIntroActivity
 import de.practicetime.practicetime.ui.library.LibraryComposable
 import de.practicetime.practicetime.ui.sessionlist.SessionListFragmentHolder
 import de.practicetime.practicetime.ui.statistics.StatisticsFragmentHolder
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 enum class ThemeSelections {
@@ -64,7 +68,9 @@ enum class ThemeSelections {
     NIGHT,
 }
 
-class MainState() {
+class MainState(
+    val coroutineScope: CoroutineScope
+) {
     val activeTheme = mutableStateOf(ThemeSelections.SYSTEM)
     val showNavBarScrim = mutableStateOf(false)
 
@@ -73,16 +79,44 @@ class MainState() {
         activeTheme.value = theme
         AppCompatDelegate.setDefaultNightMode(theme.ordinal)
     }
+
 }
 
 @Composable
-fun rememberMainState() = remember() { MainState() }
+fun rememberMainState(
+    coroutineScope: CoroutineScope = rememberCoroutineScope()
+) = remember(coroutineScope) { MainState(coroutineScope) }
 
-sealed class Screen(val route: String, @StringRes val resourceId: Int, @DrawableRes val icon: Int) {
-    object Sessions : Screen("sessionList", R.string.navigationSessionsTitle, R.drawable.avd_sessions)
-    object Goals : Screen("goals", R.string.navigationGoalsTitle, R.drawable.avd_goals)
-    object Statistics : Screen("statisticsOverview", R.string.navigationStatisticsTitle, R.drawable.avd_bar_chart)
-    object Library : Screen("library", R.string.navigationLibraryTitle, R.drawable.avd_library)
+sealed class Screen(
+    val route: String,
+    @StringRes val title: Int,
+    @DrawableRes val staticIcon: Int,
+    @DrawableRes val animatedIcon: Int
+) {
+    object Sessions : Screen(
+        route = "sessionList",
+        title = R.string.navigationSessionsTitle,
+        staticIcon = R.drawable.ic_sessions,
+        animatedIcon = R.drawable.avd_sessions,
+    )
+    object Goals : Screen(
+        route = "goals",
+        title = R.string.navigationGoalsTitle,
+        staticIcon = R.drawable.ic_goals,
+        animatedIcon = R.drawable.avd_goals
+    )
+    object Statistics : Screen(
+        route = "statisticsOverview",
+        title = R.string.navigationStatisticsTitle,
+        staticIcon = R.drawable.ic_bar_chart,
+        animatedIcon = R.drawable.avd_bar_chart
+    )
+    object Library : Screen(
+        route = "library",
+        title = R.string.navigationLibraryTitle,
+        staticIcon = R.drawable.ic_library,
+        animatedIcon = R.drawable.avd_library
+    )
 }
 
 class MainActivity : AppCompatActivity() {
@@ -127,27 +161,26 @@ class MainActivity : AppCompatActivity() {
                             val navBackStackEntry by navController.currentBackStackEntryAsState()
                             val currentDestination = navBackStackEntry?.destination
                             navItems.forEach { screen ->
-                                var atEnd by remember { mutableStateOf(false) }
-                                var icon by remember { mutableStateOf(screen.icon) }
+                                val selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true
+                                val painterCount = 5
+                                var activePainter by remember { mutableStateOf(0)}
+                                val painter = rememberVectorPainter(image = ImageVector.vectorResource(screen.staticIcon))
+                                val animatedPainters = (0..painterCount).map {
+                                    rememberAnimatedVectorPainter(
+                                        animatedImageVector = AnimatedImageVector.animatedVectorResource(screen.animatedIcon),
+                                        atEnd = selected && activePainter == it
+                                    )
+                                }
                                 NavigationBarItem(
-                                    icon = {
-                                        val image = AnimatedImageVector.animatedVectorResource(icon)
-                                        Image(
-                                            painter = rememberAnimatedVectorPainter(
-                                                animatedImageVector = image,
-                                                atEnd = atEnd
-                                            ),
-                                            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface),
-                                            contentDescription = null
-                                        )
-                                    },
-                                    label = { Text(stringResource(screen.resourceId)) },
-                                    selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
+                                    icon = { Image(
+                                        painter = if(selected) animatedPainters[activePainter] else painter,
+                                        colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface),
+                                        contentDescription = null
+                                    ) },
+                                    label = { Text(stringResource(screen.title)) },
+                                    selected = selected,
                                     onClick = {
-                                        atEnd = true
-                                        lifecycleScope.launch {
-                                            icon = screen.icon
-                                        }
+                                        if(!selected) activePainter = (activePainter + 1) % painterCount
                                         navController.navigate(screen.route) {
                                             // Pop up to the start destination of the graph to
                                             // avoid building up a large stack of destinations
