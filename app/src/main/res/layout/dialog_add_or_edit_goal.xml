@@ -8,20 +8,20 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
     android:orientation="vertical">
 
     <TextView
         android:id="@+id/libraryItemDialogTitle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="?attr/colorPrimary"
+        android:background="?attr/colorPrimaryContainer"
         android:paddingStart="16dp"
         android:paddingTop="8dp"
         android:paddingBottom="8dp"
         android:text="@string/addGoalDialogTitle"
-        android:textColor="?attr/colorOnPrimary"
+        android:textColor="?attr/colorOnPrimaryContainer"
         android:textSize="28sp" />
 
 
@@ -276,6 +276,26 @@
                 android:tooltipText="@string/goalDialogRepeatTooltip"
                 app:icon="@drawable/ic_info"
                 app:iconTint="?attr/colorOnSurfaceLowerContrast" />
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="16dp"
+            android:gravity="end"
+            android:orientation="horizontal">
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/goalDialogCancel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Cancel"
+                style="@style/Widget.Material3.Button.TextButton.Dialog"/>
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/goalDialogCreate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Create"
+                style="@style/Widget.Material3.Button.TextButton.Dialog"/>
+
         </LinearLayout>
 
     </LinearLayout>

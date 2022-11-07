@@ -12,35 +12,33 @@
 
 package de.practicetime.practicetime.ui.goals
 
-import android.app.Activity
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.res.ColorStateList
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.AppCompatButton
-import androidx.core.content.ContextCompat
 import androidx.core.widget.addTextChangedListener
 import com.google.android.material.button.MaterialButton
 import de.practicetime.practicetime.R
 import de.practicetime.practicetime.components.NumberInput
 import de.practicetime.practicetime.database.entities.*
 
+@SuppressLint("ViewConstructor")
 class GoalDialog(
-    context: Activity,
+    context: Context,
     private val libraryItems: List<LibraryItem>,
     submitHandler: (
         newGoalDescriptionWithLibraryItems: GoalDescriptionWithLibraryItems,
         newTarget: Int
     ) -> Unit,
-) {
+): LinearLayout(context) {
 
     // instantiate the builder for the alert dialog
-    private val alertDialogBuilder = AlertDialog.Builder(context)
-    private val inflater = context.layoutInflater
-    private val dialogView = inflater.inflate(
+    private val dialogView: View = LayoutInflater.from(context).inflate(
         R.layout.dialog_add_or_edit_goal,
         null,
     )
@@ -55,6 +53,8 @@ class GoalDialog(
     private val goalDialogTargetMinutesView = dialogView.findViewById<NumberInput>(R.id.goalDialogMinutes)
     private val goalDialogPeriodValueView = dialogView.findViewById<NumberInput>(R.id.goalDialogPeriodValue)
     private val goalDialogPeriodUnitView = dialogView.findViewById<Spinner>(R.id.goalDialogPeriodUnit)
+    private val goalDialogCancelView = dialogView.findViewById<MaterialButton>(R.id.goalDialogCancel)
+    private val goalDialogCreateView = dialogView.findViewById<MaterialButton>(R.id.goalDialogCreate)
 
     private var selectedTarget = 0
     private var selectedPeriodUnit = GoalPeriodUnit.DAY
@@ -62,46 +62,38 @@ class GoalDialog(
     private var selectedGoalType = GoalType.NON_SPECIFIC
     private val selectedLibraryItems = ArrayList<LibraryItem>()
 
-    private var alertDialog: AlertDialog
-
     init {
         initLibraryItemSelector()
 
         initTimeSelector()
 
-        // dialog Setup
-        alertDialogBuilder.apply {
-            // pass the dialogView to the builder
-            setView(dialogView)
+        // define the callback function for the positive button
+        goalDialogCreateView.setOnClickListener {
+            // first create the new description
+            val newGoalDescription = GoalDescription(
+                type =  selectedGoalType,
+                repeat = goalDialogOneTimeGoalView.isChecked,
+                periodInPeriodUnits = selectedPeriod,
+                periodUnit = selectedPeriodUnit,
+            )
 
-            // define the callback function for the positive button
-            setPositiveButton(R.string.addLibraryItemAlertOk) { dialog, _ ->
-                // first create the new description
-                val newGoalDescription = GoalDescription(
-                    type =  selectedGoalType,
-                    repeat = goalDialogOneTimeGoalView.isChecked,
-                    periodInPeriodUnits = selectedPeriod,
-                    periodUnit = selectedPeriodUnit,
-                )
+            // then create a object joining the description with any selected libraryItems
+            val newGoalDescriptionWithLibraryItems = GoalDescriptionWithLibraryItems(
+                description = newGoalDescription,
+                libraryItems = if (selectedGoalType == GoalType.ITEM_SPECIFIC)
+                    selectedLibraryItems.toList() else emptyList()
+            )
 
-                // then create a object joining the description with any selected libraryItems
-                val newGoalDescriptionWithLibraryItems = GoalDescriptionWithLibraryItems(
-                    description = newGoalDescription,
-                    libraryItems = if (selectedGoalType == GoalType.ITEM_SPECIFIC)
-                        selectedLibraryItems.toList() else emptyList()
-                )
+            // and call the submit handler, passing the selected target duration
+            submitHandler(newGoalDescriptionWithLibraryItems, selectedTarget)
 
-                // and call the submit handler, passing the selected target duration
-                submitHandler(newGoalDescriptionWithLibraryItems, selectedTarget)
+//            TODO("dialog.dismiss()")
+        }
 
-                dialog.dismiss()
-            }
-
-            // define the callback function for the negative button
-            // to clear the dialog and then cancel it
-            setNegativeButton(R.string.addLibraryItemAlertCancel) { dialog, _ ->
-                dialog.cancel()
-            }
+        // define the callback function for the negative button
+        // to clear the dialog and then cancel it
+        goalDialogCancelView.setOnClickListener {
+//            TODO("dialog.cancel()")
         }
 
         dialogView.findViewById<MaterialButton>(R.id.goalDialogOneTimeGoalTooltip)
@@ -113,28 +105,26 @@ class GoalDialog(
             it.performLongClick()
         }
 
-        // finally, we use the alert dialog builder to create the alertDialog
-        alertDialog = alertDialogBuilder.create()
-        alertDialog.window?.setBackgroundDrawable(
-            ContextCompat.getDrawable(context, R.drawable.dialog_background)
-        )
+        goalDialogTargetHoursView.addTextChangedListener {
+            selectedTarget = (goalDialogTargetHoursView.value() ?: 0) * 3600 +
+                    (goalDialogTargetMinutesView.value() ?: 0) * 60
+            updatePositiveButtonState()
+        }
+        goalDialogTargetMinutesView.addTextChangedListener {
+            selectedTarget = (goalDialogTargetHoursView.value() ?: 0) * 3600 +
+                    (goalDialogTargetMinutesView.value() ?: 0) * 60
+            updatePositiveButtonState()
+        }
+        goalDialogPeriodValueView.addTextChangedListener {
+            selectedPeriod = goalDialogPeriodValueView.value() ?: 0
+            updatePositiveButtonState()
+        }
+
+        super.addView(dialogView)
     }
 
-    private fun resetDialog() {
-        // clear the dialog and dismiss it
-        goalDialogTargetHoursView.setText("0")
-        goalDialogTargetMinutesView.setText("0")
-        goalDialogPeriodValueView.setText("1")
+    fun update() {
 
-        goalDialogPeriodUnitView.setSelection(0)
-
-        goalDialogAllLibraryItemsButtonView.performClick()
-
-        goalDialogLibraryItemSelectorView.setSelection(0)
-
-        goalDialogOneTimeGoalView.isChecked = true
-
-        updatePositiveButtonState()
     }
 
     private fun initLibraryItemSelector() {
@@ -214,32 +204,9 @@ class GoalDialog(
 
     // sets the enabled state of the add button depending on valid and complete inputs
     private fun updatePositiveButtonState() {
-        alertDialog.getButton(AlertDialog.BUTTON_POSITIVE)?.isEnabled =
+        goalDialogCreateView.isEnabled =
             (selectedTarget > 0 && selectedPeriod > 0) &&
             (selectedLibraryItems.size > 0 || selectedGoalType == GoalType.NON_SPECIFIC)
-    }
-
-    // the public function to show the dialog
-    fun show() {
-        resetDialog()
-
-        alertDialog.show()
-        alertDialog.also {
-            goalDialogTargetHoursView.addTextChangedListener {
-                selectedTarget = (goalDialogTargetHoursView.value() ?: 0) * 3600 +
-                (goalDialogTargetMinutesView.value() ?: 0) * 60
-                updatePositiveButtonState()
-            }
-            goalDialogTargetMinutesView.addTextChangedListener {
-                selectedTarget = (goalDialogTargetHoursView.value() ?: 0) * 3600 +
-                (goalDialogTargetMinutesView.value() ?: 0) * 60
-                updatePositiveButtonState()
-            }
-            goalDialogPeriodValueView.addTextChangedListener {
-                selectedPeriod = goalDialogPeriodValueView.value() ?: 0
-                updatePositiveButtonState()
-            }
-        }
     }
 
     private class LibraryItemDropDownAdapter(

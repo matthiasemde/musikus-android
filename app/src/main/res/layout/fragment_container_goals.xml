@@ -11,5 +11,4 @@
     android:id="@+id/goals_fragment_container"
     android:layout_height="match_parent"
     android:layout_width="match_parent"
-    android:paddingTop="56dp"
     android:name="de.practicetime.practicetime.ui.goals.GoalsFragment" />

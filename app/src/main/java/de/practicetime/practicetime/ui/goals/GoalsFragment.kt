@@ -20,12 +20,30 @@ import android.os.Build
 import android.os.Bundle
 import android.os.VibrationEffect
 import android.os.VibratorManager
+import android.util.AttributeSet
 import android.util.TypedValue
+import android.view.LayoutInflater
 import android.view.View
-import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.*
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.viewinterop.AndroidViewBinding
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -33,19 +51,80 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.appbar.CollapsingToolbarLayout
 import com.google.android.material.appbar.MaterialToolbar
-import com.google.android.material.floatingactionbutton.FloatingActionButton
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
 import de.practicetime.practicetime.database.entities.GoalDescriptionWithLibraryItems
 import de.practicetime.practicetime.database.entities.GoalInstanceWithDescriptionWithLibraryItems
+import de.practicetime.practicetime.database.entities.LibraryItem
+import de.practicetime.practicetime.databinding.DialogAddOrEditGoalBinding
 import de.practicetime.practicetime.databinding.FragmentContainerGoalsBinding
 import de.practicetime.practicetime.shared.EditTimeDialog
 import de.practicetime.practicetime.shared.setCommonToolbar
+import de.practicetime.practicetime.ui.library.LibraryState
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import org.w3c.dom.Attr
+
+class GoalsState(
+    private val coroutineScope: CoroutineScope,
+) {
+    val showGoalDialog = mutableStateOf(false)
+}
 
 @Composable
+fun rememberGoalsState(
+    coroutineScope: CoroutineScope = rememberCoroutineScope(),
+) = remember(coroutineScope) { GoalsState(coroutineScope) }
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
 fun GoalsFragmentHolder() {
-    AndroidViewBinding(FragmentContainerGoalsBinding::inflate)
+    val goalsState = rememberGoalsState()
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+
+    Scaffold(
+        contentWindowInsets = WindowInsets(bottom = 0.dp),
+        modifier = Modifier
+            .nestedScroll(scrollBehavior.nestedScrollConnection),
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { goalsState.showGoalDialog.value = true },
+            ) {
+                Icon(Icons.Filled.Add, contentDescription = "Add")
+            }
+        },
+        topBar = {
+            LargeTopAppBar(
+                title = { Text( text="Goals") },
+                scrollBehavior = scrollBehavior,
+            )
+        },
+    ) { paddingValues ->
+        Box(modifier = Modifier.padding(paddingValues)) {
+            AndroidViewBinding(FragmentContainerGoalsBinding::inflate)
+        }
+        if(goalsState.showGoalDialog.value) {
+            Dialog(
+                onDismissRequest = { goalsState.showGoalDialog.value = false },
+            ) {
+                Box(
+                    modifier = Modifier
+                        .clip(MaterialTheme.shapes.large)
+                        .background(MaterialTheme.colorScheme.surface)
+                ) {
+                    AndroidView(
+                        factory = {
+                            GoalDialog(it, listOf<LibraryItem>()) { _, _ -> }
+                        },
+                        update = { goalDialog ->
+                            goalDialog.update()
+                        }
+                    )
+                }
+            }
+        }
+    }
 }
 
 class GoalsFragment : Fragment(R.layout.fragment_goals) {
@@ -81,13 +160,13 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
         })
     }
 
-    override fun onResume() {
-        super.onResume()
-        lifecycleScope.launch {
-            refreshGoalList()
-            resetToolbar()
-        }
-    }
+//    override fun onResume() {
+//        super.onResume()
+//        lifecycleScope.launch {
+//            refreshGoalList()
+//            resetToolbar()
+//        }
+//    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         goalListView = view.findViewById(R.id.goalList)
@@ -99,25 +178,25 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
             updateGoals()
             refreshGoalList()
             // create a new goal dialog for adding new goals
-            addGoalDialog = GoalDialog(
-                requireActivity(),
-                PracticeTime.libraryItemDao.get(activeOnly = true),
-                ::addGoalHandler
-            )
+//            addGoalDialog = GoalDialog(
+//                requireActivity(),
+//                PracticeTime.libraryItemDao.get(activeOnly = true),
+//                ::addGoalHandler
+//            )
         }
 
         // create the libraryItem dialog for editing libraryItems
-        initEditGoalDialog()
+//        initEditGoalDialog()
 
-        goalsToolbar = view.findViewById(R.id.goalsToolbar)
-        goalsCollapsingToolbarLayout = view.findViewById(R.id.collapsing_toolbar_layout)
-        resetToolbar()  // initialize the toolbar with all its listeners
-
-        view.findViewById<FloatingActionButton>(R.id.goalsFab).setOnClickListener {
-            clearGoalSelection()
-            resetToolbar()
-            addGoalDialog.show()
-        }
+//        goalsToolbar = view.findViewById(R.id.goalsToolbar)
+//        goalsCollapsingToolbarLayout = view.findViewById(R.id.collapsing_toolbar_layout)
+//        resetToolbar()  // initialize the toolbar with all its listeners
+//
+//        view.findViewById<FloatingActionButton>(R.id.goalsFab).setOnClickListener {
+//            clearGoalSelection()
+//            resetToolbar()
+//            addGoalDialog.show()
+//        }
     }
 
     private fun initGoalList() {
@@ -152,7 +231,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
             }
         }
         if (goalAdapterData.isEmpty()) {
-            showHint()
+//            showHint()
         }
     }
 
@@ -304,7 +383,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
             )?.let {
                 goalAdapterData.add(it)
                 goalAdapter.notifyItemInserted(goalAdapterData.size)
-                hideHint()
+//                hideHint()
             }
         }
     }
@@ -333,7 +412,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
                     Toast.makeText(context, context.resources.getQuantityText(
                         R.plurals.archiveGoalToast, sortedDescriptionIds.size
                     ), Toast.LENGTH_SHORT).show()
-                    if (goalAdapterData.isEmpty()) showHint()
+//                    if (goalAdapterData.isEmpty()) showHint()
                     clearGoalSelection()
                     resetToolbar()
                     dialog.dismiss()
@@ -369,7 +448,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
                     Toast.makeText(context, context.resources.getQuantityText(
                         R.plurals.deleteGoalToast, sortedDescriptionIds.size
                     ), Toast.LENGTH_SHORT).show()
-                    if (goalAdapterData.isEmpty()) showHint()
+//                    if (goalAdapterData.isEmpty()) showHint()
                     clearGoalSelection()
                     resetToolbar()
                     dialog.dismiss()
@@ -381,17 +460,17 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
         }.create().show()
     }
 
-    private fun showHint() {
-        requireView().apply {
-            findViewById<TextView>(R.id.goalsHint).visibility = View.VISIBLE
-            findViewById<RecyclerView>(R.id.goalList).visibility = View.GONE
-        }
-    }
-
-    private fun hideHint() {
-        requireView().apply {
-            findViewById<TextView>(R.id.goalsHint).visibility = View.GONE
-            findViewById<RecyclerView>(R.id.goalList).visibility = View.VISIBLE
-        }
-    }
+//    private fun showHint() {
+//        requireView().apply {
+//            findViewById<TextView>(R.id.goalsHint).visibility = View.VISIBLE
+//            findViewById<RecyclerView>(R.id.goalList).visibility = View.GONE
+//        }
+//    }
+//
+//    private fun hideHint() {
+//        requireView().apply {
+//            findViewById<TextView>(R.id.goalsHint).visibility = View.GONE
+//            findViewById<RecyclerView>(R.id.goalList).visibility = View.VISIBLE
+//        }
+//    }
 }

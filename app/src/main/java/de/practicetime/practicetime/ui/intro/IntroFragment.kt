@@ -33,7 +33,6 @@ import de.practicetime.practicetime.R
 import de.practicetime.practicetime.database.entities.*
 import de.practicetime.practicetime.ui.activesession.ActiveSessionActivity
 import de.practicetime.practicetime.ui.goals.GoalAdapter
-import de.practicetime.practicetime.ui.goals.GoalDialog
 import de.practicetime.practicetime.ui.library.LibraryItemAdapter
 import de.practicetime.practicetime.ui.library.LibraryItemDialog
 import de.practicetime.practicetime.ui.sessionlist.SessionSummaryAdapter
@@ -141,21 +140,21 @@ class IntroFragment(
     }
 
     private val goalsClickListener = View.OnClickListener {
-        lifecycleScope.launch {
-            GoalDialog(
-                context = requireActivity(),
-                libraryItems = PracticeTime.libraryItemDao.get(activeOnly = true),
-            ) { newGoalDescriptionWithLibraryItems, firstTarget ->
-                lifecycleScope.launch {
-                    PracticeTime.goalDescriptionDao.insertGoal(
-                        newGoalDescriptionWithLibraryItems,
-                        firstTarget
-                    )
-                    delay(200)
-                    (requireActivity() as AppIntroActivity).changeSlide()
-                }
-            }.show()
-        }
+//        lifecycleScope.launch {
+//            GoalDialog(
+//                context = requireActivity(),
+//                libraryItems = PracticeTime.libraryItemDao.get(activeOnly = true),
+//            ) { newGoalDescriptionWithLibraryItems, firstTarget ->
+//                lifecycleScope.launch {
+//                    PracticeTime.goalDescriptionDao.insertGoal(
+//                        newGoalDescriptionWithLibraryItems,
+//                        firstTarget
+//                    )
+//                    delay(200)
+//                    (requireActivity() as AppIntroActivity).changeSlide()
+//                }
+//            }.show()
+//        }
     }
 
     private val sessionsClickListener = View.OnClickListener {
