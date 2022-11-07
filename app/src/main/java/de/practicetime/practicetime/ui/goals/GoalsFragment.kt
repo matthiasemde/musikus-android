@@ -34,10 +34,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.window.Dialog
@@ -60,6 +57,7 @@ import de.practicetime.practicetime.databinding.DialogAddOrEditGoalBinding
 import de.practicetime.practicetime.databinding.FragmentContainerGoalsBinding
 import de.practicetime.practicetime.shared.EditTimeDialog
 import de.practicetime.practicetime.shared.setCommonToolbar
+import de.practicetime.practicetime.ui.MainState
 import de.practicetime.practicetime.ui.library.LibraryState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -68,7 +66,25 @@ import org.w3c.dom.Attr
 class GoalsState(
     private val coroutineScope: CoroutineScope,
 ) {
+    init {
+        coroutineScope.launch {
+            updateGoals()
+            loadGoals()
+        }
+    }
+
+    val goals = mutableStateListOf<GoalInstanceWithDescriptionWithLibraryItems>()
     val showGoalDialog = mutableStateOf(false)
+
+    private suspend fun loadGoals() {
+        goals.clear()
+        PracticeTime.goalInstanceDao.getWithDescriptionsWithLibraryItems()
+            .forEach { goal ->
+                if (goals.find {
+                    it.description.description.id == goal.description.description.id
+                } != null) goals.add(goal)
+            }
+    }
 }
 
 @Composable
@@ -79,7 +95,7 @@ fun rememberGoalsState(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun GoalsFragmentHolder() {
+fun GoalsFragmentHolder(mainState: MainState) {
     val goalsState = rememberGoalsState()
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
@@ -115,7 +131,7 @@ fun GoalsFragmentHolder() {
                 ) {
                     AndroidView(
                         factory = {
-                            GoalDialog(it, listOf<LibraryItem>()) { _, _ -> }
+                            GoalDialog(it, mainState.libraryItems.value) { _, _ -> }
                         },
                         update = { goalDialog ->
                             goalDialog.update()

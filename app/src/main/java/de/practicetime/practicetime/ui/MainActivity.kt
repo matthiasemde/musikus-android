@@ -14,16 +14,11 @@ package de.practicetime.practicetime.ui
 
 import android.content.Intent
 import android.os.Bundle
-import android.view.animation.AccelerateInterpolator
 import androidx.activity.compose.setContent
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.animation.*
-import androidx.compose.animation.core.Easing
-import androidx.compose.animation.core.FiniteAnimationSpec
-import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.graphics.ExperimentalAnimationGraphicsApi
 import androidx.compose.animation.graphics.res.animatedVectorResource
@@ -42,7 +37,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.lifecycleScope
@@ -63,33 +57,8 @@ import de.practicetime.practicetime.ui.intro.AppIntroActivity
 import de.practicetime.practicetime.ui.library.LibraryComposable
 import de.practicetime.practicetime.ui.sessionlist.SessionListFragmentHolder
 import de.practicetime.practicetime.ui.statistics.StatisticsFragmentHolder
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
-enum class ThemeSelections {
-    SYSTEM,
-    DAY,
-    NIGHT,
-}
-
-class MainState(
-    val coroutineScope: CoroutineScope
-) {
-    val activeTheme = mutableStateOf(ThemeSelections.SYSTEM)
-    val showNavBarScrim = mutableStateOf(false)
-
-    fun setTheme(theme: ThemeSelections) {
-        PracticeTime.prefs.edit().putInt(PracticeTime.PREFERENCES_KEY_THEME, theme.ordinal).apply()
-        activeTheme.value = theme
-        AppCompatDelegate.setDefaultNightMode(theme.ordinal)
-    }
-
-}
-
-@Composable
-fun rememberMainState(
-    coroutineScope: CoroutineScope = rememberCoroutineScope()
-) = remember(coroutineScope) { MainState(coroutineScope) }
 
 sealed class Screen(
     val route: String,
@@ -229,7 +198,7 @@ class MainActivity : AppCompatActivity() {
                             route = Screen.Goals.route,
                             enterTransition = { enterTransition },
                             exitTransition = { exitTransition }
-                        ) { GoalsFragmentHolder() }
+                        ) { GoalsFragmentHolder(mainState) }
                         composable(
                             route = Screen.Statistics.route,
                             enterTransition = { enterTransition },
@@ -239,10 +208,7 @@ class MainActivity : AppCompatActivity() {
                             route = Screen.Library.route,
                             enterTransition = { enterTransition },
                             exitTransition = { exitTransition }
-                        ) { LibraryComposable (
-                            mainState = mainState,
-                            showNavBarScrim = { show -> mainState.showNavBarScrim.value = show },
-                        ) }
+                        ) { LibraryComposable (mainState) }
                     }
                     AnimatedVisibility(
                         modifier = Modifier

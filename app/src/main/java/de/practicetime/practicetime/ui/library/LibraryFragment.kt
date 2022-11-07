@@ -12,7 +12,6 @@
 
 package de.practicetime.practicetime.ui.library
 
-import android.os.FileObserver.CREATE
 import android.view.*
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -52,27 +51,15 @@ import de.practicetime.practicetime.R
 import de.practicetime.practicetime.database.entities.LibraryFolder
 import de.practicetime.practicetime.database.entities.LibraryItem
 import de.practicetime.practicetime.shared.*
+import de.practicetime.practicetime.ui.LibrarySortMode
 import de.practicetime.practicetime.ui.MainState
+import de.practicetime.practicetime.ui.SortDirection
 import de.practicetime.practicetime.ui.ThemeSelections
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
-
-enum class LibrarySortMode {
-    DATE_ADDED,
-    LAST_MODIFIED,
-    NAME,
-    COLOR,
-    CUSTOM
-}
-
+import kotlinx.coroutines.flow.firstOrNull
 
 enum class LibraryMenuSelections {
     SORT_BY,
-}
-
-enum class SortDirection {
-    ASCENDING,
-    DESCENDING
 }
 
 enum class CommonMenuSelections {
@@ -88,17 +75,14 @@ enum class DialogMode {
 class LibraryState(
     private val coroutineScope: CoroutineScope,
 ) {
-    init {
-        loadItems()
-        loadFolders()
-    }
-
-    var actionMode = mutableStateOf(false)
-
+    // Menu
     var showMainMenu = mutableStateOf(false)
     var showThemeSubMenu = mutableStateOf(false)
     var showSortModeSubMenu = mutableStateOf(false)
 
+    val activeFolder = mutableStateOf<LibraryFolder?>(null)
+
+    // Folder dialog
     var showFolderDialog = mutableStateOf(false)
     var editableFolder = mutableStateOf<LibraryFolder?>(null)
     var folderDialogMode = mutableStateOf(DialogMode.ADD)
@@ -110,6 +94,7 @@ class LibraryState(
         folderDialogName.value = ""
     }
 
+    // Item dialog
     var showItemDialog = mutableStateOf(false)
     var editableItem = mutableStateOf<LibraryItem?>(null)
     var itemDialogMode = mutableStateOf(DialogMode.ADD)
@@ -127,164 +112,19 @@ class LibraryState(
         itemDialogFolderSelectorExpanded.value = SpinnerState.COLLAPSED
     }
 
+    // Multi FAB
     var multiFABState = mutableStateOf(MultiFABState.COLLAPSED)
 
-    val folders = mutableStateListOf<LibraryFolder>()
-    var items = mutableStateListOf<LibraryItem>()
+    // Action mode
+    var actionMode = mutableStateOf(false)
+
     val selectedItemIds = mutableStateListOf<Long>()
     val selectedFolderIds = mutableStateListOf<Long>()
-    val activeFolder = mutableStateOf<LibraryFolder?>(null)
-
-    fun archiveSelectedItems() {
-        coroutineScope.launch {
-            selectedItemIds.forEach { itemId ->
-                if (PracticeTime.libraryItemDao.archive(itemId)) // returns false in case item couldnt be archived
-                    items.remove(items.find { it.id == itemId })
-                else
-                    TODO("Show error message")
-            }
-            selectedItemIds.clear()
-            actionMode.value = false
-        }
-    }
-
-    fun deleteSelectedFolders() {
-        coroutineScope.launch {
-            selectedFolderIds.forEach { folderId ->
-                PracticeTime.libraryFolderDao.deleteAndResetItems(folderId)
-                folders.remove(folders.find { it.id == folderId })
-            }
-            loadItems() // reload items to show those which were in a folder
-            selectedFolderIds.clear()
-            actionMode.value = false
-        }
-    }
-
-    var sortMode = mutableStateOf(try {
-        PracticeTime.prefs.getString(
-            PracticeTime.PREFERENCES_KEY_LIBRARY_SORT_MODE,
-            LibrarySortMode.DATE_ADDED.name
-        )?.let { LibrarySortMode.valueOf(it) } ?: LibrarySortMode.DATE_ADDED
-    } catch (ex: Exception) {
-        LibrarySortMode.DATE_ADDED
-    })
-
-    var sortDirection = mutableStateOf(try {
-        PracticeTime.prefs.getString(
-            PracticeTime.PREFERENCES_KEY_LIBRARY_SORT_DIRECTION,
-            SortDirection.ASCENDING.name
-        )?.let { SortDirection.valueOf(it) } ?: SortDirection.ASCENDING
-    } catch (ex: Exception) {
-        SortDirection.ASCENDING
-    })
-
-
-    fun sortItems(mode: LibrarySortMode? = null) {
-        if(mode != null) {
-            if (mode == sortMode.value) {
-                when (sortDirection.value) {
-                    SortDirection.ASCENDING -> sortDirection.value = SortDirection.DESCENDING
-                    SortDirection.DESCENDING -> sortDirection.value = SortDirection.ASCENDING
-                }
-            } else {
-                sortDirection.value = SortDirection.ASCENDING
-                sortMode.value = mode
-                PracticeTime.prefs.edit().putString(
-                    PracticeTime.PREFERENCES_KEY_LIBRARY_SORT_MODE,
-                    sortMode.value.name
-                ).apply()
-            }
-            PracticeTime.prefs.edit().putString(
-                PracticeTime.PREFERENCES_KEY_LIBRARY_SORT_DIRECTION,
-                sortDirection.value.name
-            ).apply()
-        }
-        when (sortDirection.value) {
-            SortDirection.ASCENDING -> {
-                when (sortMode.value) {
-                    LibrarySortMode.DATE_ADDED -> items.sortBy { it.createdAt }
-                    LibrarySortMode.LAST_MODIFIED -> items.sortBy { it.modifiedAt }
-                    LibrarySortMode.NAME -> items.sortBy { it.name }
-                    LibrarySortMode.COLOR -> items.sortBy { it.colorIndex }
-                    LibrarySortMode.CUSTOM -> TODO()
-                }
-            }
-            SortDirection.DESCENDING -> {
-                when (sortMode.value) {
-                    LibrarySortMode.DATE_ADDED -> items.sortByDescending { it.createdAt }
-                    LibrarySortMode.LAST_MODIFIED -> items.sortByDescending { it.modifiedAt }
-                    LibrarySortMode.NAME -> items.sortByDescending { it.name }
-                    LibrarySortMode.COLOR -> items.sortByDescending { it.colorIndex }
-                    LibrarySortMode.CUSTOM -> TODO()
-                }
-            }
-        }
-    }
-
-    fun addFolder(newFolder: LibraryFolder) {
-        coroutineScope.launch {
-            PracticeTime.libraryFolderDao.insertAndGet(newFolder)?.let {
-                folders.add(0, it)
-            }
-            clearFolderDialog()
-        }
-    }
-
-    fun editFolder(folder: LibraryFolder) {
-        coroutineScope.launch {
-            PracticeTime.libraryFolderDao.update(folder)
-            folders.removeIf { it.id == folder.id }
-            folders.add(folder)
-            clearFolderDialog()
-        }
-    }
 
     fun clearActionMode() {
         selectedItemIds.clear()
         selectedFolderIds.clear()
         actionMode.value = false
-    }
-
-    fun loadItems() {
-        coroutineScope.launch {
-            items.clear()
-            PracticeTime.libraryItemDao.get(activeOnly = true).forEach { item ->
-                // check if the items folderId actually exists
-                item.libraryFolderId?.let {
-                    if(PracticeTime.libraryFolderDao.get(it) == null) {
-                        item.libraryFolderId = null
-                        PracticeTime.libraryItemDao.update(item)
-                    }
-                }
-                items.add(item)
-            }
-            sortItems()
-        }
-    }
-
-    fun loadFolders() {
-        coroutineScope.launch {
-            folders.clear()
-            folders.addAll(PracticeTime.libraryFolderDao.getAll().reversed())
-        }
-    }
-
-    fun addItem(item: LibraryItem) {
-        coroutineScope.launch {
-            PracticeTime.libraryItemDao.insertAndGet(item)?.let {
-                items.add(0, it)
-                sortItems()
-                clearItemDialog()
-            }
-        }
-    }
-
-    fun editItem(item: LibraryItem) {
-        coroutineScope.launch {
-            PracticeTime.libraryItemDao.update(item)
-            sortItems()
-            clearItemDialog()
-        }
     }
 }
 
@@ -313,10 +153,7 @@ fun rememberLibraryState(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LibraryComposable(
-    mainState: MainState,
-    showNavBarScrim: (Boolean) -> Unit,
-) {
+fun LibraryComposable(mainState: MainState) {
     val libraryState = rememberLibraryState()
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
@@ -332,7 +169,7 @@ fun LibraryComposable(
                         libraryState.itemDialogFolderId.value = folder.id
                         libraryState.showItemDialog.value = true
                         libraryState.multiFABState.value = MultiFABState.COLLAPSED
-                        showNavBarScrim(false)
+                        mainState.showNavBarScrim.value = false
                     },
                 ) {
                     Icon(Icons.Default.Add, contentDescription = "New item")
@@ -341,7 +178,7 @@ fun LibraryComposable(
                 state = libraryState.multiFABState.value,
                 onStateChange = { state ->
                     libraryState.multiFABState.value = state
-                    showNavBarScrim(state == MultiFABState.EXPANDED)
+                    mainState.showNavBarScrim.value = (state == MultiFABState.EXPANDED)
                     if(state == MultiFABState.EXPANDED) {
                         libraryState.clearActionMode()
                     }
@@ -352,7 +189,7 @@ fun LibraryComposable(
                             libraryState.itemDialogMode.value = DialogMode.ADD
                             libraryState.showItemDialog.value = true
                             libraryState.multiFABState.value = MultiFABState.COLLAPSED
-                            showNavBarScrim(false)
+                            mainState.showNavBarScrim.value = false
                         },
                         label = "Item",
                         icon = Icons.Rounded.MusicNote
@@ -362,7 +199,7 @@ fun LibraryComposable(
                             libraryState.folderDialogMode.value = DialogMode.ADD
                             libraryState.showFolderDialog.value = true
                             libraryState.multiFABState.value = MultiFABState.COLLAPSED
-                            showNavBarScrim(false)
+                            mainState.showNavBarScrim.value = false
                         },
                         label = "Folder",
                         icon = Icons.Rounded.Folder
@@ -390,7 +227,7 @@ fun LibraryComposable(
                         Text(
                             modifier = Modifier.padding(end = 8.dp),
                             color = colorScheme.onSurface,
-                            text = when (libraryState.sortMode.value) {
+                            text = when (mainState.librarySortMode.value) {
                             LibrarySortMode.DATE_ADDED -> "Date added"
                             LibrarySortMode.NAME -> "Name"
                             LibrarySortMode.COLOR -> "Color"
@@ -399,7 +236,7 @@ fun LibraryComposable(
                         })
                         Icon(
                             modifier = Modifier.size(20.dp),
-                            imageVector = when (libraryState.sortDirection.value) {
+                            imageVector = when (mainState.librarySortDirection.value) {
                                 SortDirection.ASCENDING -> Icons.Default.ArrowUpward
                                 SortDirection.DESCENDING -> Icons.Default.ArrowDownward
                             },
@@ -410,11 +247,11 @@ fun LibraryComposable(
                             offset = DpOffset((-10).dp, 10.dp),
                             show = libraryState.showSortModeSubMenu.value,
                             onDismissHandler = { libraryState.showSortModeSubMenu.value = false },
-                            sortMode = libraryState.sortMode.value,
-                            sortDirection = libraryState.sortDirection.value,
+                            sortMode = mainState.librarySortMode.value,
+                            sortDirection = mainState.librarySortDirection.value,
                             onSelectionHandler = { sortMode ->
                                 libraryState.showSortModeSubMenu.value = false
-                                libraryState.sortItems(sortMode)
+                                mainState.sortLibrary(sortMode)
                             }
                         )
                     }
@@ -464,7 +301,7 @@ fun LibraryComposable(
                     },
                     onEditHandler = {
                         libraryState.apply {
-                            items.firstOrNull { item ->
+                            mainState.libraryItems.value.firstOrNull { item ->
                                 selectedItemIds.firstOrNull()?.let { it == item.id } ?: false
                             }?.let { item ->
                                 editableItem.value = item
@@ -473,7 +310,7 @@ fun LibraryComposable(
                                 itemDialogColorIndex.value = item.colorIndex
                                 itemDialogFolderId.value = item.libraryFolderId
                                 showItemDialog.value = true
-                            } ?: folders.firstOrNull { folder ->
+                            } ?: mainState.libraryFolders.value.firstOrNull { folder ->
                                 selectedFolderIds.firstOrNull()?.let { it == folder.id } ?: false
                             }?.let { folder ->
                                 editableFolder.value = folder
@@ -485,8 +322,9 @@ fun LibraryComposable(
                         libraryState.clearActionMode()
                     },
                     onDeleteHandler = {
-                        libraryState.archiveSelectedItems()
-                        libraryState.deleteSelectedFolders()
+                        mainState.archiveItems(libraryState.selectedItemIds.toList())
+                        mainState.deleteFolders(libraryState.selectedFolderIds.toList())
+                        libraryState.clearActionMode()
                     }
                 )
             }
@@ -496,8 +334,9 @@ fun LibraryComposable(
                 contentPadding = PaddingValues(
                     top = innerPadding.calculateTopPadding(),
                 ),
-                folders = if(libraryState.activeFolder.value == null) libraryState.folders else listOf(),
-                items = libraryState.items.filter { it.libraryFolderId == libraryState.activeFolder.value?.id },
+                folders = mainState.libraryFolders.collectAsState().value,
+                activeFolder = libraryState.activeFolder.value,
+                items = mainState.libraryItems.collectAsState().value,
                 selectedItemIds = libraryState.selectedItemIds,
                 selectedFolderIds = libraryState.selectedFolderIds,
                 onLibraryFolderShortClicked = { folder ->
@@ -558,7 +397,10 @@ fun LibraryComposable(
             )
 
             // Show hint if no items or folders are in the library
-            if (libraryState.folders.isEmpty() && libraryState.items.isEmpty()) {
+            if (
+                mainState.libraryFolders.collectAsState().value.isEmpty() &&
+                mainState.libraryItems.collectAsState().value.isEmpty()
+            ) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -582,7 +424,7 @@ fun LibraryComposable(
                         if(create) {
                             when(libraryState.folderDialogMode.value) {
                                 DialogMode.ADD -> {
-                                    libraryState.addFolder(
+                                    mainState.addLibraryFolder(
                                         LibraryFolder(
                                             name = libraryState.folderDialogName.value,
                                         )
@@ -591,7 +433,7 @@ fun LibraryComposable(
                                 DialogMode.EDIT -> {
                                     libraryState.editableFolder.value?.apply {
                                         name = libraryState.folderDialogName.value
-                                        libraryState.editFolder(this)
+                                        mainState.editFolder(this)
                                     }
                                 }
                             }
@@ -604,7 +446,7 @@ fun LibraryComposable(
             if(libraryState.showItemDialog.value) {
                 LibraryItemDialog(
                     mode = libraryState.itemDialogMode.value,
-                    folders = libraryState.folders,
+                    folders = mainState.libraryFolders.collectAsState().value,
                     name = libraryState.itemDialogName.value,
                     colorIndex = libraryState.itemDialogColorIndex.value,
                     folderId = libraryState.itemDialogFolderId.value,
@@ -620,7 +462,7 @@ fun LibraryComposable(
                         if(!cancel) {
                             when(libraryState.itemDialogMode.value) {
                                 DialogMode.ADD -> {
-                                    libraryState.addItem(
+                                    mainState.addLibraryItem(
                                         LibraryItem(
                                             name = libraryState.itemDialogName.value,
                                             colorIndex = libraryState.itemDialogColorIndex.value,
@@ -633,7 +475,7 @@ fun LibraryComposable(
                                         name = libraryState.itemDialogName.value
                                         colorIndex = libraryState.itemDialogColorIndex.value
                                         libraryFolderId = libraryState.itemDialogFolderId.value
-                                        libraryState.editItem(this)
+                                        mainState.editItem(this)
                                     }
                                 }
                             }
@@ -660,7 +502,7 @@ fun LibraryComposable(
                             indication = null,
                         ) {
                             libraryState.multiFABState.value = MultiFABState.COLLAPSED
-                            showNavBarScrim(false)
+                            mainState.showNavBarScrim.value = false
                         }
                 )
             }
@@ -890,6 +732,7 @@ fun ActionBar(
 @Composable
 fun LibraryFolderComposable(
     folder: LibraryFolder,
+    numItems: Int,
     selected: Boolean,
     onShortClick: () -> Unit,
     onLongClick: () -> Unit,
@@ -899,7 +742,7 @@ fun LibraryFolderComposable(
             modifier = Modifier
                 .size(150.dp)
                 .clip(MaterialTheme.shapes.large)
-                .combinedClickable (
+                .combinedClickable(
                     onClick = onShortClick,
                     onLongClick = onLongClick
                 ),
@@ -912,13 +755,24 @@ fun LibraryFolderComposable(
                     .fillMaxSize(),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(
-                    modifier = Modifier.padding(4.dp),
-                    text = folder.name,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = colorScheme.primary,
-                    textAlign = TextAlign.Center,
-                )
+                Column(
+                    modifier = Modifier.padding(8.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Text(
+                        text = folder.name,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = colorScheme.primary,
+                        textAlign = TextAlign.Center,
+                    )
+                    Text(
+                        modifier = Modifier.padding(top = 4.dp),
+                        text = "$numItems items",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = colorScheme.onSurface.copy(alpha = 0.8f),
+                        textAlign = TextAlign.Center,
+                    )
+                }
             }
         }
         if(selected) {
@@ -974,6 +828,7 @@ fun LibraryItemComposable(
 fun LibraryContent(
     contentPadding: PaddingValues,
     folders: List<LibraryFolder>,
+    activeFolder: LibraryFolder?,
     items: List<LibraryItem>,
     selectedItemIds: List<Long>,
     selectedFolderIds: List<Long>,
@@ -986,7 +841,8 @@ fun LibraryContent(
         modifier = Modifier.fillMaxWidth(),
         contentPadding = contentPadding,
     ) {
-        if(folders.isNotEmpty()) {
+        // if active folder ist null, we are in the top level
+        if(activeFolder == null) {
             item {
                 Text(
                     modifier = Modifier
@@ -1011,6 +867,7 @@ fun LibraryContent(
                         ) {
                             LibraryFolderComposable(
                                 folder = folder,
+                                numItems = items.filter { it.libraryFolderId == folder.id }.size,
                                 selected = selectedFolderIds.contains(folder.id),
                                 onShortClick = { onLibraryFolderShortClicked(folder) },
                                 onLongClick = { onLibraryFolderLongClicked(folder) }
@@ -1021,7 +878,8 @@ fun LibraryContent(
                 }
             }
         }
-        if(items.isNotEmpty()) {
+        val itemsInActiveFolder = items.filter { it.libraryFolderId == activeFolder?.id }
+        if(itemsInActiveFolder.isNotEmpty()) {
             item {
                 Text(
                     modifier = Modifier
@@ -1031,7 +889,7 @@ fun LibraryContent(
                 )
             }
             items(
-                items=items,
+                items=itemsInActiveFolder,
                 key = { item -> item.id }
             ) { item ->
                 Box(
@@ -1165,7 +1023,7 @@ fun LibraryItemDialog(
     ) {
         Column(
             modifier = Modifier
-                .clip(RoundedCornerShape(28.dp))
+                .clip(MaterialTheme.shapes.extraLarge)
         ) {
             Row(
                 modifier = Modifier
@@ -1215,7 +1073,7 @@ fun LibraryItemDialog(
                             Icon(
                                 imageVector = Icons.Default.Folder,
                                 contentDescription = "Folder",
-                                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                tint = colorScheme.onSurface.copy(alpha = 0.6f)
                             )
                         },
                         options = folders.map { folder -> Pair(folder.id, folder.name) },
