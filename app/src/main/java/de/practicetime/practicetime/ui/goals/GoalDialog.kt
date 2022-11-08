@@ -101,14 +101,12 @@ class GoalDialog(
 
             // and call the submit handler, passing the selected target duration
             submitHandler(newGoalDescriptionWithLibraryItems, selectedTarget)
-
-//            TODO("dialog.dismiss()")
         }
 
         // define the callback function for the negative button
         // to clear the dialog and then cancel it
         goalDialogCancelView.setOnClickListener {
-//            TODO("dialog.cancel()")
+            onDismissRequest()
         }
 
         dialogView.findViewById<MaterialButton>(R.id.goalDialogOneTimeGoalTooltip)
