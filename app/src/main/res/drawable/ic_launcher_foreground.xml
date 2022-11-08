@@ -26,7 +26,7 @@
                   "/>
           </group>
           <group android:name="clockBackground">
-              <path android:fillColor="@color/primary_light_variant"
+              <path android:fillColor="@color/md_theme_light_primary"
                   android:pathData="M 100,50.1
                       A 1,1, 0 0 0 100, 149.9
                       A 1,1, 0 0 0 100, 50.1
