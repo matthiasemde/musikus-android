@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    This software is licensed under the MIT license
+    This Source Code Form is subject to the terms of the Mozilla Public
+    License, v. 2.0. If a copy of the MPL was not distributed with this
+    file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+    Copyright (c) 2022 Matthias Emde
+
+    Parts of this software are licensed under the MIT license
 
     Copyright (c) 2022, Javier Carbone, author Matthias Emde
     Additions and modifications, author Michael Prommersberger
@@ -31,82 +37,11 @@
         android:gravity="center"
         android:padding="8dp">
 
-        <androidx.constraintlayout.widget.ConstraintLayout
+        <androidx.compose.ui.platform.ComposeView
+            android:id="@+id/goalDialogTarget"
             android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_marginEnd="8dp">
-
-            <de.practicetime.practicetime.components.NumberInput
-                android:id="@+id/goalDialogHours"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@android:color/transparent"
-                android:cursorVisible="false"
-                android:imeOptions="actionNext"
-                android:inputType="number"
-                android:textColor="@color/edittext_color"
-                android:textSize="40sp"
-                android:textStyle="bold"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:maxValue="99"
-                app:showLeadingZeroes="true"
-                tools:text="00" />
-
-            <TextView
-                android:id="@+id/goalDialogHoursText"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="bottom"
-                android:layout_weight="0"
-                android:labelFor="@id/goalDialogHours"
-                android:text="@string/goalDialogHoursText"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                app:layout_constraintBaseline_toBaselineOf="@+id/goalDialogHours"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toEndOf="@+id/goalDialogHours"
-                tools:layout_editor_absoluteY="32dp" />
-        </androidx.constraintlayout.widget.ConstraintLayout>
-
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent">
-
-            <de.practicetime.practicetime.components.NumberInput
-                android:id="@+id/goalDialogMinutes"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@android:color/transparent"
-                android:cursorVisible="false"
-                android:imeOptions="actionNext"
-                android:inputType="number"
-                android:textColor="@color/edittext_color"
-                android:textSize="40sp"
-                android:textStyle="bold"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:maxValue="99"
-                app:showLeadingZeroes="true"
-                tools:text="00" />
-
-            <TextView
-                android:id="@+id/goalDialogMinutesText"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="bottom"
-                android:layout_weight="0"
-                android:labelFor="@id/goalDialogMinutes"
-                android:text="@string/goalDialogMinutesText"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                app:layout_constraintBaseline_toBaselineOf="@+id/goalDialogMinutes"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toEndOf="@+id/goalDialogMinutes"
-                tools:layout_editor_absoluteY="32dp" />
-        </androidx.constraintlayout.widget.ConstraintLayout>
+            android:layout_height="wrap_content"
+        />
 
     </LinearLayout>
 
@@ -133,21 +68,11 @@
                 android:textStyle="bold" />
 
 
-            <de.practicetime.practicetime.components.NumberInput
+            <androidx.compose.ui.platform.ComposeView
                 android:id="@+id/goalDialogPeriodValue"
-                android:layout_width="40dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:layout_marginEnd="12dp"
-                android:cursorVisible="false"
-                android:gravity="center"
-                android:inputType="number"
-                android:text="1"
-                android:textColor="@color/edittext_color"
-                android:textSize="20sp"
-                android:textStyle="bold"
-                app:maxValue="99"
-                app:showLeadingZeroes="false" />
+            />
 
             <LinearLayout
                 android:layout_width="wrap_content"

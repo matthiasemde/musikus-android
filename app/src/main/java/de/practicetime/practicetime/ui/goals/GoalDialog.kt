@@ -21,6 +21,21 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import androidx.appcompat.widget.AppCompatButton
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.widget.addTextChangedListener
 import com.google.android.material.button.MaterialButton
 import de.practicetime.practicetime.R
@@ -49,9 +64,8 @@ class GoalDialog(
     private val goalDialogLibraryItemSelectorView = dialogView.findViewById<Spinner>(R.id.goalDialogLibraryItemSelector)
     private val goalDialogLibraryItemSelectorLayoutView = dialogView.findViewById<LinearLayout>(R.id.goalDialogLibraryItemSelectorLayout)
     private val goalDialogOneTimeGoalView = dialogView.findViewById<CheckBox>(R.id.goalDialogOneTimeGoal)
-    private val goalDialogTargetHoursView = dialogView.findViewById<NumberInput>(R.id.goalDialogHours)
-    private val goalDialogTargetMinutesView = dialogView.findViewById<NumberInput>(R.id.goalDialogMinutes)
-    private val goalDialogPeriodValueView = dialogView.findViewById<NumberInput>(R.id.goalDialogPeriodValue)
+    private val goalDialogTargetView = dialogView.findViewById<ComposeView>(R.id.goalDialogTarget)
+    private val goalDialogPeriodValueView = dialogView.findViewById<ComposeView>(R.id.goalDialogPeriodValue)
     private val goalDialogPeriodUnitView = dialogView.findViewById<Spinner>(R.id.goalDialogPeriodUnit)
     private val goalDialogCancelView = dialogView.findViewById<MaterialButton>(R.id.goalDialogCancel)
     private val goalDialogCreateView = dialogView.findViewById<MaterialButton>(R.id.goalDialogCreate)
@@ -105,19 +119,66 @@ class GoalDialog(
             it.performLongClick()
         }
 
-        goalDialogTargetHoursView.addTextChangedListener {
-            selectedTarget = (goalDialogTargetHoursView.value() ?: 0) * 3600 +
-                    (goalDialogTargetMinutesView.value() ?: 0) * 60
-            updatePositiveButtonState()
+        goalDialogTargetView.setContent {
+            var minutes by remember { mutableStateOf("00") } // remember here to act like view
+            var hours by remember { mutableStateOf("00") }
+            Row {
+                NumberInput(
+                    value = hours,
+                    onValueChange = {
+                        hours = it
+                        selectedTarget =
+                            (hours.toIntOrNull() ?: 0) * 3600 +
+                            (minutes.toIntOrNull() ?: 0) * 60
+                        updatePositiveButtonState()
+                    },
+                    showLeadingZero = true,
+                    textSize = 40.sp,
+                    maxValue = 99,
+                    imeAction = ImeAction.Next,
+                    label = { modifier ->
+                        Text(modifier = modifier, text = "h", style = MaterialTheme.typography.labelLarge)
+                    }
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                NumberInput(
+                    value = minutes,
+                    onValueChange = {
+                        minutes = it
+                        selectedTarget =
+                            (hours.toIntOrNull() ?: 0) * 3600 +
+                            (minutes.toIntOrNull() ?: 0) * 60
+                        updatePositiveButtonState()
+                    },
+                    showLeadingZero = true,
+                    textSize = 40.sp,
+                    maxValue = 59,
+                    imeAction = ImeAction.Done,
+                    label = { modifier ->
+                        Text(modifier = modifier, text = "m", style = MaterialTheme.typography.labelLarge)
+                    }
+                )
+            }
         }
-        goalDialogTargetMinutesView.addTextChangedListener {
-            selectedTarget = (goalDialogTargetHoursView.value() ?: 0) * 3600 +
-                    (goalDialogTargetMinutesView.value() ?: 0) * 60
-            updatePositiveButtonState()
-        }
-        goalDialogPeriodValueView.addTextChangedListener {
-            selectedPeriod = goalDialogPeriodValueView.value() ?: 0
-            updatePositiveButtonState()
+
+        goalDialogPeriodValueView.setContent {
+            val defaultValue = 1
+            var period by remember { mutableStateOf("") }
+            NumberInput(
+                modifier = Modifier.padding(horizontal = 16.dp),
+                value = period,
+                onValueChange = {
+                    period = it
+                    selectedPeriod = period.toIntOrNull() ?: defaultValue
+                    updatePositiveButtonState()
+                },
+                textSize = 20.sp,
+                minValue = 0,
+                maxValue = 99,
+                imeAction = ImeAction.Done,
+                placeHolder = defaultValue.toString(),
+                underlined = true,
+            )
         }
 
         super.addView(dialogView)
