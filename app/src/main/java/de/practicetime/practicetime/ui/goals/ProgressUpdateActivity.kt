@@ -1,5 +1,11 @@
 /*
- * This software is licensed under the MIT license
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ *
+ * Copyright (c) 2022 Matthias Emde
+ *
+ * Parts of this software are licensed under the MIT license
  *
  * Copyright (c) 2022, Javier Carbone, author Matthias Emde
  */
@@ -9,12 +15,9 @@ package de.practicetime.practicetime.ui.goals
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
-import android.view.animation.Animation
-import android.view.animation.Transformation
 import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.button.MaterialButton
@@ -22,8 +25,6 @@ import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
 import de.practicetime.practicetime.database.entities.GoalInstanceWithDescriptionWithLibraryItems
 import de.practicetime.practicetime.ui.MainActivity
-import de.practicetime.practicetime.utils.TIME_FORMAT_HUMAN_PRETTY
-import de.practicetime.practicetime.utils.getDurationString
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -80,11 +81,11 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
         findViewById<RecyclerView>(R.id.progessUpdateGoalList).apply {
             layoutManager = LinearLayoutManager(context)
             adapter = progressAdapter
-            itemAnimator = CustomAnimator(
-                progressDuration = { if(skipAnimation) 400L else 1300L },
-                addDuration = { if(skipAnimation) 300L else 250L },
-                moveDuration = { if(skipAnimation) 400L else 500L },
-            )
+//            itemAnimator = CustomAnimator(
+//                progressDuration = { if(skipAnimation) 400L else 1300L },
+//                addDuration = { if(skipAnimation) 300L else 250L },
+//                moveDuration = { if(skipAnimation) 400L else 500L },
+//            )
         }
     }
 
@@ -219,110 +220,110 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
      * Progress bar animation
      *************************************************************************/
 
-    private class ProgressBarAnimation(
-        private val viewHolder: GoalAdapter.ViewHolder,
-        private val from: Int,
-        private val to: Int
-    ) : Animation() {
-        override fun applyTransformation(interpolatedTime: Float, t: Transformation?) {
-            super.applyTransformation(interpolatedTime, t)
-            var progress = (from + (to - from) * interpolatedTime).toInt()
+//    private class ProgressBarAnimation(
+//        private val viewHolder: GoalAdapter.ViewHolder,
+//        private val from: Int,
+//        private val to: Int
+//    ) : Animation() {
+//        override fun applyTransformation(interpolatedTime: Float, t: Transformation?) {
+//            super.applyTransformation(interpolatedTime, t)
+//            var progress = (from + (to - from) * interpolatedTime).toInt()
 
-            viewHolder.progressBarView.progress = progress
-
-            // correct for the fps scaling factor
-            val target = viewHolder.progressBarView.max / 60
-            progress /= 60
-
-            /** progress Indicator Text */
-            val progressLeft = maxOf(0, target - progress)
-             if(progressLeft > 0) {
-
-                 viewHolder.goalProgressDoneIndicatorView.text = getDurationString(
-                     progress,
-                     TIME_FORMAT_HUMAN_PRETTY
-                 )
-
-                 viewHolder.goalProgressLeftIndicatorView.text = getDurationString(
-                     progressLeft,
-                     TIME_FORMAT_HUMAN_PRETTY
-                 )
-
-                 viewHolder.goalProgressAchievedView.visibility = View.INVISIBLE
-                 viewHolder.goalProgressDoneIndicatorView.visibility = View.VISIBLE
-                 viewHolder.goalProgressLeftIndicatorView.visibility = View.VISIBLE
-             } else {
-                viewHolder.goalProgressAchievedView.visibility = View.VISIBLE
-                viewHolder.goalProgressDoneIndicatorView.visibility = View.GONE
-                viewHolder.goalProgressLeftIndicatorView.visibility = View.GONE
-            }
-        }
-    }
+//            viewHolder.progressBarView.progress = progress
+//
+//            // correct for the fps scaling factor
+//            val target = viewHolder.progressBarView.max / 60
+//            progress /= 60
+//
+//            /** progress Indicator Text */
+//            val progressLeft = maxOf(0, target - progress)
+//             if(progressLeft > 0) {
+//
+//                 viewHolder.goalProgressDoneIndicatorView.text = getDurationString(
+//                     progress,
+//                     TIME_FORMAT_HUMAN_PRETTY
+//                 )
+//
+//                 viewHolder.goalProgressLeftIndicatorView.text = getDurationString(
+//                     progressLeft,
+//                     TIME_FORMAT_HUMAN_PRETTY
+//                 )
+//
+//                 viewHolder.goalProgressAchievedView.visibility = View.INVISIBLE
+//                 viewHolder.goalProgressDoneIndicatorView.visibility = View.VISIBLE
+//                 viewHolder.goalProgressLeftIndicatorView.visibility = View.VISIBLE
+//             } else {
+//                viewHolder.goalProgressAchievedView.visibility = View.VISIBLE
+//                viewHolder.goalProgressDoneIndicatorView.visibility = View.GONE
+//                viewHolder.goalProgressLeftIndicatorView.visibility = View.GONE
+//            }
+//        }
+//    }
 
     /*************************************************************************
      * Custom animator
      *************************************************************************/
 
-    private class CustomAnimator(
-        val progressDuration: () -> Long,
-        val addDuration: () -> Long,
-        val moveDuration: () -> Long,
-    ) : DefaultItemAnimator() {
-        // change the duration of the fade in and move animation
-        override fun getAddDuration() = addDuration()
-        override fun getMoveDuration() = moveDuration()
-
-        override fun animateChange(
-            oldHolder: RecyclerView.ViewHolder,
-            newHolder: RecyclerView.ViewHolder,
-            preInfo: ItemHolderInfo,
-            postInfo: ItemHolderInfo
-        ): Boolean {
-
-            if (preInfo is GoalItemHolderInfo) {
-                val progressBar = (newHolder as GoalAdapter.ViewHolder).progressBarView
-                // multiply by 60 to grantee at least 60 fps
-                progressBar.max *= 60
-                val animator = ProgressBarAnimation(
-                    newHolder,
-                    preInfo.progress * 60,
-                    (progressBar.progress * 60).let { if (it < progressBar.max) it else progressBar.max}
-                )
-                animator.duration = progressDuration()
-                progressBar.startAnimation(animator)
-                return true
-            }
-
-            return super.animateChange(oldHolder, newHolder, preInfo, postInfo)
-        }
-
-        override fun canReuseUpdatedViewHolder(
-            viewHolder: RecyclerView.ViewHolder, payloads: MutableList<Any>
-        ) = true
-
-        override fun canReuseUpdatedViewHolder(viewHolder: RecyclerView.ViewHolder) = true
-
-
-        override fun recordPreLayoutInformation(
-            state: RecyclerView.State,
-            viewHolder: RecyclerView.ViewHolder,
-            changeFlags: Int,
-            payloads: MutableList<Any>
-        ): ItemHolderInfo {
-
-            if (changeFlags == FLAG_CHANGED) {
-                if (payloads[0] as? Int == PROGRESS_UPDATED) {
-                    //Get the info from the viewHolder and save it to GoalItemHolderInfo
-                    return GoalItemHolderInfo(
-                        (viewHolder as GoalAdapter.ViewHolder).progressBarView.progress,
-                    )
-                }
-            }
-            return super.recordPreLayoutInformation(state, viewHolder, changeFlags, payloads)
-        }
-
-        class GoalItemHolderInfo(val progress: Int) : ItemHolderInfo()
-    }
+//    private class CustomAnimator(
+//        val progressDuration: () -> Long,
+//        val addDuration: () -> Long,
+//        val moveDuration: () -> Long,
+//    ) : DefaultItemAnimator() {
+//        // change the duration of the fade in and move animation
+//        override fun getAddDuration() = addDuration()
+//        override fun getMoveDuration() = moveDuration()
+//
+//        override fun animateChange(
+//            oldHolder: RecyclerView.ViewHolder,
+//            newHolder: RecyclerView.ViewHolder,
+//            preInfo: ItemHolderInfo,
+//            postInfo: ItemHolderInfo
+//        ): Boolean {
+//
+//            if (preInfo is GoalItemHolderInfo) {
+//                val progressBar = (newHolder as GoalAdapter.ViewHolder).progressBarView
+//                // multiply by 60 to grantee at least 60 fps
+//                progressBar.max *= 60
+//                val animator = ProgressBarAnimation(
+//                    newHolder,
+//                    preInfo.progress * 60,
+//                    (progressBar.progress * 60).let { if (it < progressBar.max) it else progressBar.max}
+//                )
+//                animator.duration = progressDuration()
+//                progressBar.startAnimation(animator)
+//                return true
+//            }
+//
+//            return super.animateChange(oldHolder, newHolder, preInfo, postInfo)
+//        }
+//
+//        override fun canReuseUpdatedViewHolder(
+//            viewHolder: RecyclerView.ViewHolder, payloads: MutableList<Any>
+//        ) = true
+//
+//        override fun canReuseUpdatedViewHolder(viewHolder: RecyclerView.ViewHolder) = true
+//
+//
+//        override fun recordPreLayoutInformation(
+//            state: RecyclerView.State,
+//            viewHolder: RecyclerView.ViewHolder,
+//            changeFlags: Int,
+//            payloads: MutableList<Any>
+//        ): ItemHolderInfo {
+//
+//            if (changeFlags == FLAG_CHANGED) {
+//                if (payloads[0] as? Int == PROGRESS_UPDATED) {
+//                    //Get the info from the viewHolder and save it to GoalItemHolderInfo
+//                    return GoalItemHolderInfo(
+//                        (viewHolder as GoalAdapter.ViewHolder).progressBarView.progress,
+//                    )
+//                }
+//            }
+//            return super.recordPreLayoutInformation(state, viewHolder, changeFlags, payloads)
+//        }
+//
+//        class GoalItemHolderInfo(val progress: Int) : ItemHolderInfo()
+//    }
 }
 
 

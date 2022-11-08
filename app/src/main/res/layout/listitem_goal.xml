@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    This software is licensed under the MIT license
+    This Source Code Form is subject to the terms of the Mozilla Public
+    License, v. 2.0. If a copy of the MPL was not distributed with this
+    file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+    Copyright (c) 2022 Matthias Emde
+
+    Parts of this software are licensed under the MIT license
 
     Copyright (c) 2022, Javier Carbone, author Matthias Emde
     Additions and modifications, author Michael Prommersberger
@@ -84,68 +90,15 @@
             tools:text="20h 30m in 7 weeks" />
 
 
-        <ProgressBar
-            android:id="@+id/goalProgressBar"
-            style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+        <androidx.compose.ui.platform.ComposeView
+            android:id="@+id/goalProgressBarC"
             android:layout_width="match_parent"
-            android:layout_height="40dp"
-            android:layout_gravity="center"
-            android:layout_marginTop="16dp"
-            android:layout_marginBottom="8dp"
-            android:layout_weight="1"
-            android:background="@drawable/background_goal_progress_bar"
-            android:backgroundTint="@color/progressbar_tint_bg"
-            android:indeterminate="false"
-            android:progressDrawable="@drawable/progress_goal_progress_bar"
-            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_height="wrap_content"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/goalDescription"
-            tools:progress="42" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="horizontal"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp"
-            app:layout_constraintBottom_toBottomOf="@+id/goalProgressBar"
-            app:layout_constraintEnd_toEndOf="@+id/goalProgressBar"
-            app:layout_constraintStart_toStartOf="@+id/goalProgressBar"
-            app:layout_constraintTop_toTopOf="@+id/goalProgressBar">
-
-            <TextView
-                android:id="@+id/goalProgressDoneIndicator"
-                android:layout_width="70dp"
-                android:layout_height="match_parent"
-                android:gravity="left|center_vertical"
-                android:textColor="?attr/colorOnSurface"
-                android:textSize="16sp"
-                android:textStyle="normal"
-                tools:text="02:04" />
-
-            <TextView
-                android:id="@+id/goalProgressAchieved"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:gravity="center_horizontal"
-                android:text="@string/goal_description_achieved"
-                android:textColor="?attr/colorOnSurface"
-                android:textSize="20sp"
-                android:textStyle="bold"
-                android:visibility="invisible"
-                tools:visibility="visible" />
-
-            <TextView
-                android:id="@+id/goalProgressLeftIndicator"
-                android:layout_width="70dp"
-                android:layout_height="match_parent"
-                android:gravity="right|center_vertical"
-                android:textColor="?attr/colorOnSurface"
-                android:textSize="16sp"
-                tools:text="4:02" />
-        </LinearLayout>
+            app:layout_constraintBottom_toBottomOf="parent"
+        />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

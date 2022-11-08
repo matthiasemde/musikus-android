@@ -54,7 +54,7 @@ class MainState(
     private val coroutineScope: CoroutineScope
 ) {
 
-    // Initialization
+    /** Initialization */
 
     init {
         coroutineScope.launch {
@@ -67,11 +67,11 @@ class MainState(
         }
     }
 
-    // Content Scrim over NavBar for Multi FAB etc
+    /** Content Scrim over NavBar for Multi FAB etc */
     val showNavBarScrim = mutableStateOf(false)
 
 
-    // Theme
+    /** Theme */
 
     val activeTheme = mutableStateOf(ThemeSelections.SYSTEM)
 
@@ -82,7 +82,7 @@ class MainState(
     }
 
 
-    // Library Items and Folders
+    /** Library Items and Folders */
 
     private val _libraryFolders = MutableStateFlow(emptyList<LibraryFolder>())
     private val _libraryItems = MutableStateFlow(emptyList<LibraryItem>())
@@ -108,8 +108,8 @@ class MainState(
         SortDirection.ASCENDING
     })
 
-    // Accessors
-    // Load
+    /** Accessors */
+    /** Load */
     private suspend fun loadLibraryFolders() {
         _libraryFolders.update { PracticeTime.libraryFolderDao.getAll() }
     }
@@ -120,6 +120,7 @@ class MainState(
                 // check if the items folderId actually exists
                 item.libraryFolderId?.let {
                     if(PracticeTime.libraryFolderDao.get(it) == null) {
+                        // and return item to the main screen if it doesn't
                         item.libraryFolderId = null
                         PracticeTime.libraryItemDao.update(item)
                     }
@@ -129,8 +130,8 @@ class MainState(
         }
     }
 
-    // Mutators
-    // Add
+    /** Mutators */
+    /** Add */
     fun addLibraryFolder(newFolder: LibraryFolder) {
         coroutineScope.launch {
             PracticeTime.libraryFolderDao.insertAndGet(newFolder)?.let { insertedFolder ->
@@ -149,7 +150,7 @@ class MainState(
         }
     }
 
-    // Edit
+    /** Edit */
     fun editFolder(editedFolder: LibraryFolder) {
         coroutineScope.launch {
             PracticeTime.libraryFolderDao.update(editedFolder)
@@ -167,7 +168,7 @@ class MainState(
         }
     }
 
-    // Delete / Archive
+    /** Delete / Archive */
     fun deleteFolders(folderIds: List<Long>) {
         coroutineScope.launch {
             folderIds.forEach { folderId ->
@@ -194,7 +195,7 @@ class MainState(
         }
     }
 
-    // Sort
+    /** Sort */
     fun sortLibrary(mode: LibrarySortMode? = null) {
         if(mode != null) {
             if (mode == librarySortMode.value) {
@@ -261,7 +262,7 @@ class MainState(
         }
     }
 
-    // Goals
+    /** Goals */
     private val _goals = MutableStateFlow(emptyList<GoalInstanceWithDescriptionWithLibraryItems>())
     val goals = _goals.asStateFlow()
 
@@ -283,16 +284,16 @@ class MainState(
         SortDirection.ASCENDING
     })
 
-    // Accessors
-    // Load
+    /** Accessors */
+    /** Load */
     private suspend fun loadGoals() {
         _goals.update {
             PracticeTime.goalInstanceDao.getWithDescriptionsWithLibraryItems()
         }
     }
 
-    // Mutators
-    // Add
+    /** Mutators */
+    /** Add */
     fun addGoal(
         newGoal: GoalDescriptionWithLibraryItems,
         target: Int,
@@ -308,7 +309,7 @@ class MainState(
         }
     }
 
-    // Edit
+    /** Edit */
     fun editGoalTarget(
         editedGoalDescriptionId: Long,
         newTarget: Int,
@@ -326,7 +327,7 @@ class MainState(
         }
     }
 
-    // Archive
+    /** Archive */
     fun archiveGoals(goalDescriptionIds: List<Long>) {
         coroutineScope.launch {
             PracticeTime.goalDescriptionDao.getAndArchive(goalDescriptionIds)
@@ -336,7 +337,7 @@ class MainState(
         }
     }
 
-    // Sort
+    /** Sort */
     private fun sortGoals(mode: GoalsSortMode? = null) {
         if(mode != null) {
             if (mode == goalsSortMode.value) {

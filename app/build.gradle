@@ -40,6 +40,7 @@ android {
 
     composeOptions {
         kotlinCompilerExtensionVersion = "1.3.2"
+        kotlinCompilerVersion = "1.7.10"
     }
     compileOptions {
         // Flag to enable support for the new language APIs

@@ -1,5 +1,11 @@
 /*
- * This software is licensed under the MIT license
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ *
+ * Copyright (c) 2022 Matthias Emde
+ *
+ * Parts of this software are licensed under the MIT license
  *
  * Copyright (c) 2022, Javier Carbone, author Matthias Emde
  * Additions and modifications, author Michael Prommersberger
@@ -8,13 +14,11 @@
 package de.practicetime.practicetime.ui.goals
 
 import android.content.Context
-import android.content.res.ColorStateList
 import android.text.TextUtils
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
-import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.RecyclerView
@@ -23,7 +27,10 @@ import de.practicetime.practicetime.R
 import de.practicetime.practicetime.database.entities.GoalInstanceWithDescriptionWithLibraryItems
 import de.practicetime.practicetime.database.entities.GoalPeriodUnit
 import de.practicetime.practicetime.database.entities.GoalType
-import de.practicetime.practicetime.utils.*
+import de.practicetime.practicetime.utils.TIME_FORMAT_HUMAN_PRETTY
+import de.practicetime.practicetime.utils.TIME_FORMAT_PRETTY_APPROX
+import de.practicetime.practicetime.utils.getCurrTimestamp
+import de.practicetime.practicetime.utils.getDurationString
 
 class GoalAdapter(
     private val goals: List<GoalInstanceWithDescriptionWithLibraryItems>,
@@ -84,14 +91,6 @@ class GoalAdapter(
         val (instance, descriptionWithLibraryItems) = goals[goalPosition]
         val (description, libraryItems) = descriptionWithLibraryItems
 
-        // get the libraryItem color for later use in different UI elements
-        var libraryItemColor: ColorStateList? = null
-        if(description.type != GoalType.NON_SPECIFIC) {
-            libraryItemColor = ColorStateList.valueOf(
-                context.resources.getIntArray(R.array.library_item_colors)[libraryItems.firstOrNull()?.colorIndex ?: 0]
-            )
-        }
-
         /** set Click listener */
         viewHolder.itemView.setOnClickListener {
             shortClickHandler(viewHolder.layoutPosition)
@@ -125,44 +124,44 @@ class GoalAdapter(
             periodFormatted
         )
 
-        /** ProgressBar */
-        viewHolder.progressBarView.max = instance.target
-        viewHolder.progressBarView.progress = instance.progress
+//        /** ProgressBar */
+//        viewHolder.progressBarView.max = instance.target
+//        viewHolder.progressBarView.progress = instance.progress
+//
+//        // tint progressbar
+//        if(description.type != GoalType.NON_SPECIFIC) {
+//            viewHolder.sectionColorView.visibility = View.VISIBLE
+//            viewHolder.progressBarView.progressTintList = libraryItemColor
+//            viewHolder.sectionColorView.backgroundTintList = libraryItemColor
+//        } else {
+//            viewHolder.sectionColorView.visibility = View.GONE
+//            viewHolder.progressBarView.progressTintList = null
+//        }
 
-        // tint progressbar
-        if(description.type != GoalType.NON_SPECIFIC) {
-            viewHolder.sectionColorView.visibility = View.VISIBLE
-            viewHolder.progressBarView.progressTintList = libraryItemColor
-            viewHolder.sectionColorView.backgroundTintList = libraryItemColor
-        } else {
-            viewHolder.sectionColorView.visibility = View.GONE
-            viewHolder.progressBarView.progressTintList = null
-        }
-
-        /** progress Indicator Text */
-        val progressLeft = maxOf(0, instance.target - instance.progress)
-        if(progressLeft > 0) {
-
-            viewHolder.goalProgressDoneIndicatorView.text = getDurationString(
-                instance.progress,
-                TIME_FORMAT_HUMAN_PRETTY,
-                SCALE_FACTOR_FOR_SMALL_TEXT
-            )
-
-            viewHolder.goalProgressLeftIndicatorView.text = getDurationString(
-                progressLeft,
-                TIME_FORMAT_HUMAN_PRETTY,
-                SCALE_FACTOR_FOR_SMALL_TEXT
-            )
-
-            viewHolder.goalProgressAchievedView.visibility = View.INVISIBLE
-            viewHolder.goalProgressDoneIndicatorView.visibility = View.VISIBLE
-            viewHolder.goalProgressLeftIndicatorView.visibility = View.VISIBLE
-        } else {
-            viewHolder.goalProgressAchievedView.visibility = View.VISIBLE
-            viewHolder.goalProgressDoneIndicatorView.visibility = View.GONE
-            viewHolder.goalProgressLeftIndicatorView.visibility = View.GONE
-        }
+//        /** progress Indicator Text */
+//        val progressLeft = maxOf(0, instance.target - instance.progress)
+//        if(progressLeft > 0) {
+//
+//            viewHolder.goalProgressDoneIndicatorView.text = getDurationString(
+//                instance.progress,
+//                TIME_FORMAT_HUMAN_PRETTY,
+//                SCALE_FACTOR_FOR_SMALL_TEXT
+//            )
+//
+//            viewHolder.goalProgressLeftIndicatorView.text = getDurationString(
+//                progressLeft,
+//                TIME_FORMAT_HUMAN_PRETTY,
+//                SCALE_FACTOR_FOR_SMALL_TEXT
+//            )
+//
+//            viewHolder.goalProgressAchievedView.visibility = View.INVISIBLE
+//            viewHolder.goalProgressDoneIndicatorView.visibility = View.VISIBLE
+//            viewHolder.goalProgressLeftIndicatorView.visibility = View.VISIBLE
+//        } else {
+//            viewHolder.goalProgressAchievedView.visibility = View.VISIBLE
+//            viewHolder.goalProgressDoneIndicatorView.visibility = View.GONE
+//            viewHolder.goalProgressLeftIndicatorView.visibility = View.GONE
+//        }
 
         // remaining time
         val remainingTime = (instance.startTimestamp + instance.periodInSeconds) - getCurrTimestamp()
@@ -175,13 +174,13 @@ class GoalAdapter(
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val goalCardView: CardView = view.findViewById(R.id.cardView_goal_item)
-        val progressBarView: ProgressBar = view.findViewById(R.id.goalProgressBar)
+//        val progressBarView: ProgressBar = view.findViewById(R.id.goalProgressBar)
         val goalNameView: TextView = view.findViewById(R.id.goalName)
         val goalDescriptionView: TextView = view.findViewById(R.id.goalDescription)
         val remainingTimeView: Chip = view.findViewById(R.id.goalRemainingTime)
-        val goalProgressDoneIndicatorView: TextView = view.findViewById(R.id.goalProgressDoneIndicator)
-        val goalProgressLeftIndicatorView: TextView = view.findViewById(R.id.goalProgressLeftIndicator)
-        val goalProgressAchievedView: TextView = view.findViewById(R.id.goalProgressAchieved)
+//        val goalProgressDoneIndicatorView: TextView = view.findViewById(R.id.goalProgressDoneIndicator)
+//        val goalProgressLeftIndicatorView: TextView = view.findViewById(R.id.goalProgressLeftIndicator)
+//        val goalProgressAchievedView: TextView = view.findViewById(R.id.goalProgressAchieved)
         val sectionColorView: ImageView = view.findViewById(R.id.sectionColor)
     }
 }
