@@ -50,6 +50,7 @@ class GoalDialog(
         newGoalDescriptionWithLibraryItems: GoalDescriptionWithLibraryItems,
         newTarget: Int
     ) -> Unit,
+    onDismissRequest: () -> Unit
 ): LinearLayout(context) {
 
     // instantiate the builder for the alert dialog

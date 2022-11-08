@@ -839,7 +839,10 @@ fun LibraryContent(
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxWidth(),
-        contentPadding = contentPadding,
+        contentPadding = PaddingValues(
+            top = contentPadding.calculateTopPadding() + 16.dp,
+            bottom = contentPadding.calculateBottomPadding() + 56.dp,
+        ),
     ) {
         // if active folder ist null, we are in the top level
         if(activeFolder == null) {
@@ -916,7 +919,6 @@ fun LibraryContent(
                 }
             }
         }
-        item { Spacer(modifier = Modifier.height(40.dp)) } // maybe solve this using content value padding instead
     }
 }
 

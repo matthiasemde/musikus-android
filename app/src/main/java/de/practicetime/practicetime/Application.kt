@@ -49,6 +49,7 @@ class PracticeTime : Application() {
         const val PREFERENCES_KEY_LIBRARY_SORT_MODE = "library_sort_mode"
         const val PREFERENCES_KEY_LIBRARY_SORT_DIRECTION = "library_sort_direction"
         const val PREFERENCES_KEY_GOALS_SORT_MODE = "goals_sort_mode"
+        const val PREFERENCES_KEY_GOALS_SORT_DIRECTION = "goals_sort_direction"
 
         /**
          * Get a color int from a theme attribute.

@@ -26,11 +26,13 @@ import android.view.LayoutInflater
 import android.view.View
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
@@ -58,7 +60,9 @@ import de.practicetime.practicetime.databinding.FragmentContainerGoalsBinding
 import de.practicetime.practicetime.shared.EditTimeDialog
 import de.practicetime.practicetime.shared.setCommonToolbar
 import de.practicetime.practicetime.ui.MainState
+import de.practicetime.practicetime.ui.library.LibraryItemComposable
 import de.practicetime.practicetime.ui.library.LibraryState
+import de.practicetime.practicetime.ui.rememberMainState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.w3c.dom.Attr
@@ -69,22 +73,12 @@ class GoalsState(
     init {
         coroutineScope.launch {
             updateGoals()
-            loadGoals()
         }
     }
 
-    val goals = mutableStateListOf<GoalInstanceWithDescriptionWithLibraryItems>()
     val showGoalDialog = mutableStateOf(false)
 
-    private suspend fun loadGoals() {
-        goals.clear()
-        PracticeTime.goalInstanceDao.getWithDescriptionsWithLibraryItems()
-            .forEach { goal ->
-                if (goals.find {
-                    it.description.description.id == goal.description.description.id
-                } != null) goals.add(goal)
-            }
-    }
+    val selectedGoalIds = mutableStateOf(listOf<Long>())
 }
 
 @Composable
@@ -93,7 +87,7 @@ fun rememberGoalsState(
 ) = remember(coroutineScope) { GoalsState(coroutineScope) }
 
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun GoalsFragmentHolder(mainState: MainState) {
     val goalsState = rememberGoalsState()
@@ -116,31 +110,91 @@ fun GoalsFragmentHolder(mainState: MainState) {
                 scrollBehavior = scrollBehavior,
             )
         },
-    ) { paddingValues ->
-        Box(modifier = Modifier.padding(paddingValues)) {
-            AndroidViewBinding(FragmentContainerGoalsBinding::inflate)
-        }
-        if(goalsState.showGoalDialog.value) {
-            Dialog(
-                onDismissRequest = { goalsState.showGoalDialog.value = false },
+        content = { paddingValues ->
+    //        Box(modifier = Modifier.padding(paddingValues)) {
+    //            AndroidViewBinding(FragmentContainerGoalsBinding::inflate)
+    //        }
+
+
+            // Goal List
+
+            val goals = mainState.goals.collectAsState().value
+            LazyColumn(
+                modifier = Modifier
+                    .padding(horizontal = 16.dp)
+                    .fillMaxWidth(),
+                contentPadding = PaddingValues(
+                    top = paddingValues.calculateTopPadding() + 16.dp,
+                    bottom = paddingValues.calculateBottomPadding() + 56.dp,
+                ),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
-                Box(
-                    modifier = Modifier
-                        .clip(MaterialTheme.shapes.large)
-                        .background(MaterialTheme.colorScheme.surface)
-                ) {
-                    AndroidView(
-                        factory = {
-                            GoalDialog(it, mainState.libraryItems.value) { _, _ -> }
-                        },
-                        update = { goalDialog ->
-                            goalDialog.update()
+                items(
+                    items=goals,
+                    key = { it.description.description.id },
+                ) { goal ->
+                    ElevatedCard() {
+                        Box(
+                            modifier = Modifier
+                                .animateItemPlacement()
+                                .combinedClickable(
+                                    onLongClick = { },
+                                    onClick = { }
+                                )
+                        ) {
+                            AndroidView(
+                                factory = { context ->
+                                    GoalCard(context, goal)
+                                },
+                                update = { goalCard ->
+                                    goalCard.update()
+                                }
+                            )
+                            if (goal.description.description.id in goalsState.selectedGoalIds.value) {
+                                Box(
+                                    modifier = Modifier
+                                        .matchParentSize()
+                                        .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
+                                )
+                            }
                         }
-                    )
+                    }
+                }
+            }
+
+
+            // Goal Dialog
+
+            if(goalsState.showGoalDialog.value) {
+                Dialog(
+                    onDismissRequest = { goalsState.showGoalDialog.value = false },
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .clip(MaterialTheme.shapes.large)
+                            .background(MaterialTheme.colorScheme.surface)
+                    ) {
+                        AndroidView(
+                            factory = {
+                                GoalDialog(
+                                    context = it,
+                                    libraryItems = mainState.libraryItems.value,
+                                    submitHandler = { newGoal, target ->
+                                        mainState.addGoal(newGoal, target)
+                                        goalsState.showGoalDialog.value = false
+                                    },
+                                    onDismissRequest = { goalsState.showGoalDialog.value = false },
+                                )
+                            },
+                            update = { goalDialog ->
+                                goalDialog.update()
+                            }
+                        )
+                    }
                 }
             }
         }
-    }
+    )
 }
 
 class GoalsFragment : Fragment(R.layout.fragment_goals) {
@@ -313,8 +367,8 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
                 // set the click listeners for the menu options here
                 setOnMenuItemClickListener { clickedItem ->
                     when (clickedItem.itemId) {
-                        R.id.topToolbarSelectionDelete -> deleteGoalHandler()
-                        R.id.topToolbarSelectionArchive -> archiveGoalHandler()
+//                        R.id.topToolbarSelectionDelete -> deleteGoalHandler()
+//                        R.id.topToolbarSelectionArchive -> archiveGoalHandler()
                         R.id.topToolbarSelectionEdit -> {
                             goalAdapterData[selectedGoals.first()].let {
                                 editGoalId = it.description.description.id
@@ -387,94 +441,94 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
         goalsCollapsingToolbarLayout.background = null
     }
 
-    // the handler for creating new goals
-    private fun addGoalHandler(
-        newGoalDescriptionWithLibraryItems: GoalDescriptionWithLibraryItems,
-        target: Int,
-    ) {
-        lifecycleScope.launch {
-            PracticeTime.goalDescriptionDao.insertGoal(
-                newGoalDescriptionWithLibraryItems,
-                target
-            )?.let {
-                goalAdapterData.add(it)
-                goalAdapter.notifyItemInserted(goalAdapterData.size)
-//                hideHint()
-            }
-        }
-    }
+//    // the handler for creating new goals
+//    private fun addGoalHandler(
+//        newGoalDescriptionWithLibraryItems: GoalDescriptionWithLibraryItems,
+//        target: Int,
+//    ) {
+//        lifecycleScope.launch {
+//            PracticeTime.goalDescriptionDao.insertGoal(
+//                newGoalDescriptionWithLibraryItems,
+//                target
+//            )?.let {
+//                goalAdapterData.add(it)
+//                goalAdapter.notifyItemInserted(goalAdapterData.size)
+////                hideHint()
+//            }
+//        }
+//    }
 
-    // the handler for archiving goals
-    private fun archiveGoalHandler() {
-        val sortedDescriptionIds = selectedGoals.sortedDescending().map {
-            goalAdapterData[it].description.description.id
-        }
-
-        AlertDialog.Builder(requireActivity()).apply {
-            setMessage(context.resources.getQuantityText(
-                R.plurals.archiveGoalDialogMessage, sortedDescriptionIds.size)
-            )
-            setPositiveButton(R.string.archiveGoalConfirm) { dialog, _ ->
-                lifecycleScope.launch {
-                    PracticeTime.goalDescriptionDao.getAndArchive(sortedDescriptionIds)
-                    sortedDescriptionIds.forEach { goalDescriptionId ->
-                        goalAdapterData.indexOfFirst{ (_, d) ->
-                            d.description.id == goalDescriptionId
-                        }.also { index ->
-                            goalAdapterData.removeAt(index)
-                            goalAdapter.notifyItemRemoved(index)
-                        }
-                    }
-                    Toast.makeText(context, context.resources.getQuantityText(
-                        R.plurals.archiveGoalToast, sortedDescriptionIds.size
-                    ), Toast.LENGTH_SHORT).show()
-//                    if (goalAdapterData.isEmpty()) showHint()
-                    clearGoalSelection()
-                    resetToolbar()
-                    dialog.dismiss()
-                }
-            }
-            setNegativeButton(R.string.dialogCancel) { dialog, _ ->
-                dialog.cancel()
-            }
-        }.create().show()
-    }
-
-    // the handler for deleting goals
-    private fun deleteGoalHandler() {
-        val sortedDescriptionIds = selectedGoals.sortedDescending().map {
-            goalAdapterData[it].description.description.id
-        }
-
-        AlertDialog.Builder(requireActivity()).apply {
-            setMessage(context.resources.getQuantityText(
-                R.plurals.deleteGoalDialogMessage, sortedDescriptionIds.size)
-            )
-            setPositiveButton(R.string.deleteDialogConfirm) { dialog, _ ->
-                lifecycleScope.launch {
-                    PracticeTime.goalDescriptionDao.deleteGoals(sortedDescriptionIds)
-                    sortedDescriptionIds.forEach { goalDescriptionId ->
-                        goalAdapterData.indexOfFirst{ (_, d) ->
-                            d.description.id == goalDescriptionId
-                        }.also { index ->
-                            goalAdapterData.removeAt(index)
-                            goalAdapter.notifyItemRemoved(index)
-                        }
-                    }
-                    Toast.makeText(context, context.resources.getQuantityText(
-                        R.plurals.deleteGoalToast, sortedDescriptionIds.size
-                    ), Toast.LENGTH_SHORT).show()
-//                    if (goalAdapterData.isEmpty()) showHint()
-                    clearGoalSelection()
-                    resetToolbar()
-                    dialog.dismiss()
-                }
-            }
-            setNegativeButton(R.string.dialogCancel) { dialog, _ ->
-                dialog.cancel()
-            }
-        }.create().show()
-    }
+//    // the handler for archiving goals
+//    private fun archiveGoalHandler() {
+//        val sortedDescriptionIds = selectedGoals.sortedDescending().map {
+//            goalAdapterData[it].description.description.id
+//        }
+//
+//        AlertDialog.Builder(requireActivity()).apply {
+//            setMessage(context.resources.getQuantityText(
+//                R.plurals.archiveGoalDialogMessage, sortedDescriptionIds.size)
+//            )
+//            setPositiveButton(R.string.archiveGoalConfirm) { dialog, _ ->
+//                lifecycleScope.launch {
+//                    PracticeTime.goalDescriptionDao.getAndArchive(sortedDescriptionIds)
+//                    sortedDescriptionIds.forEach { goalDescriptionId ->
+//                        goalAdapterData.indexOfFirst{ (_, d) ->
+//                            d.description.id == goalDescriptionId
+//                        }.also { index ->
+//                            goalAdapterData.removeAt(index)
+//                            goalAdapter.notifyItemRemoved(index)
+//                        }
+//                    }
+//                    Toast.makeText(context, context.resources.getQuantityText(
+//                        R.plurals.archiveGoalToast, sortedDescriptionIds.size
+//                    ), Toast.LENGTH_SHORT).show()
+////                    if (goalAdapterData.isEmpty()) showHint()
+//                    clearGoalSelection()
+//                    resetToolbar()
+//                    dialog.dismiss()
+//                }
+//            }
+//            setNegativeButton(R.string.dialogCancel) { dialog, _ ->
+//                dialog.cancel()
+//            }
+//        }.create().show()
+//    }
+//
+//    // the handler for deleting goals
+//    private fun deleteGoalHandler() {
+//        val sortedDescriptionIds = selectedGoals.sortedDescending().map {
+//            goalAdapterData[it].description.description.id
+//        }
+//
+//        AlertDialog.Builder(requireActivity()).apply {
+//            setMessage(context.resources.getQuantityText(
+//                R.plurals.deleteGoalDialogMessage, sortedDescriptionIds.size)
+//            )
+//            setPositiveButton(R.string.deleteDialogConfirm) { dialog, _ ->
+//                lifecycleScope.launch {
+//                    PracticeTime.goalDescriptionDao.deleteGoals(sortedDescriptionIds)
+//                    sortedDescriptionIds.forEach { goalDescriptionId ->
+//                        goalAdapterData.indexOfFirst{ (_, d) ->
+//                            d.description.id == goalDescriptionId
+//                        }.also { index ->
+//                            goalAdapterData.removeAt(index)
+//                            goalAdapter.notifyItemRemoved(index)
+//                        }
+//                    }
+//                    Toast.makeText(context, context.resources.getQuantityText(
+//                        R.plurals.deleteGoalToast, sortedDescriptionIds.size
+//                    ), Toast.LENGTH_SHORT).show()
+////                    if (goalAdapterData.isEmpty()) showHint()
+//                    clearGoalSelection()
+//                    resetToolbar()
+//                    dialog.dismiss()
+//                }
+//            }
+//            setNegativeButton(R.string.dialogCancel) { dialog, _ ->
+//                dialog.cancel()
+//            }
+//        }.create().show()
+//    }
 
 //    private fun showHint() {
 //        requireView().apply {
