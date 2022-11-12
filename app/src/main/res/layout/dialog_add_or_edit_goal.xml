@@ -35,6 +35,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
+        android:layout_marginVertical="8dp"
         android:padding="8dp">
 
         <androidx.compose.ui.platform.ComposeView
@@ -108,7 +109,7 @@
             android:layout_height="1dp"
             android:layout_marginTop="32dp"
             android:layout_marginBottom="32dp"
-            android:background="?android:attr/listDivider" />
+            android:background="?attr/colorOutline" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -169,39 +170,6 @@
 
         </LinearLayout>
 
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_marginTop="32dp"
-            android:layout_marginBottom="16dp"
-            android:background="?android:attr/listDivider" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginEnd="16dp"
-            android:orientation="horizontal">
-
-            <CheckBox
-                android:id="@+id/goalDialogOneTimeGoal"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="8dp"
-                android:checked="true"
-                android:text="@string/goalDialogRepeat"
-                android:textSize="16sp" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/goalDialogOneTimeGoalTooltip"
-                style="@style/IconOnlyButton"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:background="@android:color/transparent"
-                android:tooltipText="@string/goalDialogRepeatTooltip"
-                app:icon="@drawable/ic_info"
-                app:iconTint="?attr/colorOnSurfaceLowerContrast" />
-        </LinearLayout>
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

@@ -16,7 +16,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
@@ -24,7 +25,6 @@
         android:clipToPadding="false"
         android:foreground="@drawable/foreground_simple_overlay"
         android:background="?android:selectableItemBackground"
-        android:orientation="vertical"
         android:padding="16dp">
 
 
@@ -89,17 +89,17 @@
             app:layout_constraintTop_toBottomOf="@id/divider"
             tools:text="20h 30m in 7 weeks" />
 
-
-        <androidx.compose.ui.platform.ComposeView
-            android:id="@+id/goalProgressBarC"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/goalDescription"
-            app:layout_constraintBottom_toBottomOf="parent"
-        />
-
     </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.compose.ui.platform.ComposeView
+        android:id="@+id/goalProgressBar"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+    />
+<!--        app:layout_constraintEnd_toEndOf="parent"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:layout_constraintTop_toBottomOf="@id/goalDescription"-->
+<!--        app:layout_constraintBottom_toBottomOf="parent"-->
+
 
 </LinearLayout>

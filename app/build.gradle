@@ -61,6 +61,8 @@ dependencies {
 
     def composeBom = platform 'androidx.compose:compose-bom:2022.10.00'
 
+    // https://developer.android.com/jetpack/androidx/releases/compose-kotlin
+
     implementation composeBom
     androidTestImplementation composeBom
     // Compose

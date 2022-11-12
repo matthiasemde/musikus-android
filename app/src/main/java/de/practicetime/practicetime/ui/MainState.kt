@@ -12,33 +12,15 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.runtime.*
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.database.entities.*
+import de.practicetime.practicetime.shared.ThemeSelections
+import de.practicetime.practicetime.ui.goals.GoalsSortMode
+import de.practicetime.practicetime.ui.library.LibrarySortMode
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-
-enum class ThemeSelections {
-    SYSTEM,
-    DAY,
-    NIGHT,
-}
-
-enum class LibrarySortMode {
-    DATE_ADDED,
-    LAST_MODIFIED,
-    NAME,
-    COLOR,
-    CUSTOM
-}
-
-enum class GoalsSortMode {
-    DATE_ADDED,
-    TARGET,
-    PERIOD,
-    CUSTOM
-}
 
 enum class SortDirection {
     ASCENDING,
@@ -67,7 +49,15 @@ class MainState(
         }
     }
 
+
+    /** Menu */
+
+    var showMainMenu = mutableStateOf(false)
+    var showThemeSubMenu = mutableStateOf(false)
+
+
     /** Content Scrim over NavBar for Multi FAB etc */
+
     val showNavBarScrim = mutableStateOf(false)
 
 
@@ -338,7 +328,7 @@ class MainState(
     }
 
     /** Sort */
-    private fun sortGoals(mode: GoalsSortMode? = null) {
+    fun sortGoals(mode: GoalsSortMode? = null) {
         if(mode != null) {
             if (mode == goalsSortMode.value) {
                 when (goalsSortDirection.value) {

@@ -13,37 +13,40 @@
 
 package de.practicetime.practicetime.ui.goals
 
-import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.os.VibrationEffect
 import android.os.VibratorManager
-import android.util.AttributeSet
 import android.util.TypedValue
-import android.view.LayoutInflater
 import android.view.View
-import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowDownward
+import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.LocalFireDepartment
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.rounded.Repeat
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.compose.ui.viewinterop.AndroidViewBinding
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -52,20 +55,32 @@ import com.google.android.material.appbar.CollapsingToolbarLayout
 import com.google.android.material.appbar.MaterialToolbar
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
-import de.practicetime.practicetime.database.entities.GoalDescriptionWithLibraryItems
+import de.practicetime.practicetime.database.entities.GoalInstance
+import de.practicetime.practicetime.database.entities.GoalInstanceWithDescription
 import de.practicetime.practicetime.database.entities.GoalInstanceWithDescriptionWithLibraryItems
-import de.practicetime.practicetime.database.entities.LibraryItem
-import de.practicetime.practicetime.databinding.DialogAddOrEditGoalBinding
-import de.practicetime.practicetime.databinding.FragmentContainerGoalsBinding
-import de.practicetime.practicetime.shared.EditTimeDialog
-import de.practicetime.practicetime.shared.setCommonToolbar
+import de.practicetime.practicetime.shared.*
 import de.practicetime.practicetime.ui.MainState
-import de.practicetime.practicetime.ui.library.LibraryItemComposable
-import de.practicetime.practicetime.ui.library.LibraryState
-import de.practicetime.practicetime.ui.rememberMainState
+import de.practicetime.practicetime.ui.SortDirection
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import org.w3c.dom.Attr
+
+enum class GoalsSortMode {
+    DATE_ADDED,
+    TARGET,
+    PERIOD,
+    CUSTOM;
+
+    companion object {
+        fun toString(sortMode: GoalsSortMode): String {
+            return when (sortMode) {
+                DATE_ADDED -> "Date added"
+                TARGET -> "Target"
+                PERIOD -> "Period"
+                CUSTOM -> "Custom"
+            }
+        }
+    }
+}
 
 class GoalsState(
     private val coroutineScope: CoroutineScope,
@@ -76,9 +91,28 @@ class GoalsState(
         }
     }
 
-    val showGoalDialog = mutableStateOf(false)
+    // Menu
+    var showSortModeMenu = mutableStateOf(false)
 
-    val selectedGoalIds = mutableStateOf(listOf<Long>())
+    // Goal dialog
+    val showGoalDialog = mutableStateOf(false)
+    val goalDialogRepeat = mutableStateOf(true)
+
+    val showEditGoalDialog = mutableStateOf(false)
+    val editableGoal = mutableStateOf<GoalInstanceWithDescriptionWithLibraryItems?>(null)
+
+    // MultiFAB
+    var multiFABState = mutableStateOf(MultiFABState.COLLAPSED)
+
+    // Action mode
+    var actionMode = mutableStateOf(false)
+
+    val selectedGoalIds = mutableStateListOf<Long>()
+
+    fun clearActionMode() {
+        selectedGoalIds.clear()
+        actionMode.value = false
+    }
 }
 
 @Composable
@@ -94,31 +128,151 @@ fun GoalsFragmentHolder(mainState: MainState) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
     Scaffold(
-        contentWindowInsets = WindowInsets(bottom = 0.dp),
+        contentWindowInsets = WindowInsets(bottom = 0.dp), // makes sure FAB is not shifted up
         modifier = Modifier
             .nestedScroll(scrollBehavior.nestedScrollConnection),
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = { goalsState.showGoalDialog.value = true },
-            ) {
-                Icon(Icons.Filled.Add, contentDescription = "Add")
-            }
+            MultiFAB(
+                state = goalsState.multiFABState.value,
+                onStateChange = { state ->
+                    goalsState.multiFABState.value = state
+                    mainState.showNavBarScrim.value = (state == MultiFABState.EXPANDED)
+                    if(state == MultiFABState.EXPANDED) {
+                        goalsState.clearActionMode()
+                    }
+                },
+                miniFABs = listOf(
+                    MiniFABData(
+                        onClick = {
+                            goalsState.goalDialogRepeat.value = false
+                            goalsState.showGoalDialog.value = true
+                            goalsState.multiFABState.value = MultiFABState.COLLAPSED
+                            mainState.showNavBarScrim.value = false
+                        },
+                        label = "One shot goal",
+                        icon = Icons.Filled.LocalFireDepartment,
+                    ),
+                    MiniFABData(
+                        onClick = {
+                            goalsState.goalDialogRepeat.value = true
+                            goalsState.showGoalDialog.value = true
+                            goalsState.multiFABState.value = MultiFABState.COLLAPSED
+                            mainState.showNavBarScrim.value = false
+                        },
+                        label = "Regular goal",
+                        icon = Icons.Rounded.Repeat,
+                    )
+                ))
         },
         topBar = {
             LargeTopAppBar(
                 title = { Text( text="Goals") },
                 scrollBehavior = scrollBehavior,
+                actions = {
+                    TextButton(
+                        onClick = { goalsState.showSortModeMenu.value = true })
+                    {
+                        Text(
+                            modifier = Modifier.padding(end = 8.dp),
+                            color = MaterialTheme.colorScheme.onSurface,
+                            text = GoalsSortMode.toString(mainState.goalsSortMode.value)
+                        )
+                        Icon(
+                            modifier = Modifier.size(20.dp),
+                            imageVector = when (mainState.goalsSortDirection.value) {
+                                SortDirection.ASCENDING -> Icons.Default.ArrowUpward
+                                SortDirection.DESCENDING -> Icons.Default.ArrowDownward
+                            },
+                            tint = MaterialTheme.colorScheme.onSurface,
+                            contentDescription = null
+                        )
+                        SortMenu(
+                            offset = DpOffset((-10).dp, 10.dp),
+                            show = goalsState.showSortModeMenu.value,
+                            sortModes = GoalsSortMode.values().toList(),
+                            label = { GoalsSortMode.toString(it) },
+                            onDismissHandler = { goalsState.showSortModeMenu.value = false },
+                            currentSortMode = mainState.goalsSortMode.value,
+                            currentSortDirection = mainState.goalsSortDirection.value,
+                            onSelectionHandler = { sortMode ->
+                                goalsState.showSortModeMenu.value = false
+                                mainState.sortGoals(sortMode)
+                            }
+                        )
+                    }
+                    IconButton(onClick = {
+                        mainState.showMainMenu.value = true
+                    }) {
+                        Icon(Icons.Default.MoreVert, contentDescription = "more")
+                        MainMenu (
+                            show = mainState.showMainMenu.value,
+                            onDismissHandler = { mainState.showMainMenu.value = false },
+                            onSelectionHandler = { commonSelection ->
+                                mainState.showMainMenu.value = false
+
+                                when (commonSelection) {
+                                    CommonMenuSelections.APP_INFO -> {}
+                                    CommonMenuSelections.THEME -> {
+                                        mainState.showThemeSubMenu.value = true
+                                    }
+                                }
+                            },
+                            uniqueMenuItems = { /* TODO UNIQUE GOAL MENU */ }
+                        )
+                        ThemeMenu(
+                            expanded = mainState.showThemeSubMenu.value,
+                            currentTheme = mainState.activeTheme.value,
+                            onDismissHandler = { mainState.showThemeSubMenu.value = false },
+                            onSelectionHandler = { theme ->
+                                mainState.showThemeSubMenu.value = false
+                                mainState.setTheme(theme)
+                            }
+                        )
+                    }
+                }
+
             )
+
+            // Action bar
+
+            if(goalsState.actionMode.value) {
+                ActionBar(
+                    numSelectedItems = goalsState.selectedGoalIds.size,
+                    onDismissHandler = { goalsState.clearActionMode() },
+                    onEditHandler = {
+//                        goalsState.apply {
+//                            mainState.libraryItems.value.firstOrNull { item ->
+//                                selectedItemIds.firstOrNull()?.let { it == item.id } ?: false
+//                            }?.let { item ->
+//                                editableItem.value = item
+//                                itemDialogMode.value = DialogMode.EDIT
+//                                itemDialogName.value = item.name
+//                                itemDialogColorIndex.value = item.colorIndex
+//                                itemDialogFolderId.value = item.libraryFolderId
+//                                showItemDialog.value = true
+//                            } ?: mainState.libraryFolders.value.firstOrNull { folder ->
+//                                selectedFolderIds.firstOrNull()?.let { it == folder.id } ?: false
+//                            }?.let { folder ->
+//                                editableFolder.value = folder
+//                                folderDialogMode.value = DialogMode.EDIT
+//                                folderDialogName.value = folder.name
+//                                showFolderDialog.value = true
+//                            }
+//                        }
+                        goalsState.clearActionMode()
+                    },
+                    onDeleteHandler = {
+                        mainState.archiveGoals(goalsState.selectedGoalIds.toList())
+                        goalsState.clearActionMode()
+                    }
+                )
+            }
         },
         content = { paddingValues ->
-    //        Box(modifier = Modifier.padding(paddingValues)) {
-    //            AndroidViewBinding(FragmentContainerGoalsBinding::inflate)
-    //        }
-
 
             // Goal List
 
-            val goals = mainState.goals.collectAsState().value
+            val goals = mainState.goals.collectAsState()
             LazyColumn(
                 modifier = Modifier
                     .padding(horizontal = 16.dp)
@@ -130,40 +284,46 @@ fun GoalsFragmentHolder(mainState: MainState) {
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 items(
-                    items=goals,
+                    items=goals.value,
                     key = { it.description.description.id },
                 ) { goal ->
-                    ElevatedCard() {
-                        Box(
-                            modifier = Modifier
-                                .animateItemPlacement()
-                                .combinedClickable(
-                                    onLongClick = { },
-                                    onClick = { }
-                                )
-                        ) {
-                            AndroidView(
-                                factory = { context ->
-                                    GoalCard(context, goal)
-                                },
-                                update = { goalCard ->
-                                    goalCard.update()
+                    val goalDescriptionId = goal.description.description.id
+                    Selectable(
+                        modifier = Modifier.animateItemPlacement(),
+                        selected = goalDescriptionId in goalsState.selectedGoalIds,
+                        onShortClick = {
+                            goalsState.apply {
+                                if(actionMode.value) {
+                                    if(selectedGoalIds.contains(goalDescriptionId)) {
+                                        selectedGoalIds.remove(goalDescriptionId)
+                                        if(selectedGoalIds.isEmpty()) {
+                                            actionMode.value = false
+                                        }
+                                    } else {
+                                        selectedGoalIds.add(goalDescriptionId)
+                                    }
+                                } else {
+                                    showEditGoalDialog.value = true
+                                    editableGoal.value = goal
                                 }
-                            )
-                            if (goal.description.description.id in goalsState.selectedGoalIds.value) {
-                                Box(
-                                    modifier = Modifier
-                                        .matchParentSize()
-                                        .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
-                                )
+                            }
+                        },
+                        onLongClick = {
+                            goalsState.apply {
+                                if (goalDescriptionId !in selectedGoalIds) {
+                                    selectedGoalIds.add(goalDescriptionId)
+                                    actionMode.value = true
+                                }
                             }
                         }
+                    ) {
+                        GoalCard(goal = goal)
                     }
                 }
             }
 
 
-            // Goal Dialog
+            // Create Goal Dialog
 
             if(goalsState.showGoalDialog.value) {
                 Dialog(
@@ -179,6 +339,7 @@ fun GoalsFragmentHolder(mainState: MainState) {
                                 GoalDialog(
                                     context = it,
                                     libraryItems = mainState.libraryItems.value,
+                                    repeat = goalsState.goalDialogRepeat.value,
                                     submitHandler = { newGoal, target ->
                                         mainState.addGoal(newGoal, target)
                                         goalsState.showGoalDialog.value = false
@@ -192,6 +353,48 @@ fun GoalsFragmentHolder(mainState: MainState) {
                         )
                     }
                 }
+            }
+
+            // Edit Goal Dialog
+
+            if(goalsState.showEditGoalDialog.value) {
+                goalsState.editableGoal.value?.let { goal ->
+                    EditGoalDialog(
+                        value = goal.instance.target,
+                        onValueChanged = { goal.instance.target = it },
+                        onDismissHandler = {
+                            goalsState.showEditGoalDialog.value = false
+                            mainState.editGoalTarget(
+                                editedGoalDescriptionId = goal.description.description.id,
+                                newTarget = goal.instance.target
+                            )
+                        }
+                    )
+                }
+            }
+
+
+            // Content Scrim for multiFAB
+
+            AnimatedVisibility(
+                modifier = Modifier
+                    .zIndex(1f),
+                visible = goalsState.multiFABState.value == MultiFABState.EXPANDED,
+                enter = fadeIn(),
+                exit = fadeOut()
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.9f))
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                        ) {
+                            goalsState.multiFABState.value = MultiFABState.COLLAPSED
+                            mainState.showNavBarScrim.value = false
+                        }
+                )
             }
         }
     )

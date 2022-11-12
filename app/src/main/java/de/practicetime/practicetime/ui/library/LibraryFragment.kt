@@ -19,7 +19,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -43,96 +42,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.zIndex
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
 import de.practicetime.practicetime.database.entities.LibraryFolder
 import de.practicetime.practicetime.database.entities.LibraryItem
 import de.practicetime.practicetime.shared.*
-import de.practicetime.practicetime.ui.LibrarySortMode
 import de.practicetime.practicetime.ui.MainState
 import de.practicetime.practicetime.ui.SortDirection
-import de.practicetime.practicetime.ui.ThemeSelections
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.firstOrNull
 
-enum class LibraryMenuSelections {
-    SORT_BY,
-}
-
-enum class CommonMenuSelections {
-    THEME,
-    APP_INFO
-}
-
-enum class DialogMode {
-    ADD,
-    EDIT
-}
-
-class LibraryState(
-    private val coroutineScope: CoroutineScope,
-) {
-    // Menu
-    var showMainMenu = mutableStateOf(false)
-    var showThemeSubMenu = mutableStateOf(false)
-    var showSortModeSubMenu = mutableStateOf(false)
-
-    val activeFolder = mutableStateOf<LibraryFolder?>(null)
-
-    // Folder dialog
-    var showFolderDialog = mutableStateOf(false)
-    var editableFolder = mutableStateOf<LibraryFolder?>(null)
-    var folderDialogMode = mutableStateOf(DialogMode.ADD)
-    var folderDialogName = mutableStateOf("")
-
-    fun clearFolderDialog() {
-        showFolderDialog.value = false
-        editableFolder.value = null
-        folderDialogName.value = ""
-    }
-
-    // Item dialog
-    var showItemDialog = mutableStateOf(false)
-    var editableItem = mutableStateOf<LibraryItem?>(null)
-    var itemDialogMode = mutableStateOf(DialogMode.ADD)
-    var itemDialogName = mutableStateOf("")
-    var itemDialogColorIndex = mutableStateOf(0)
-    var itemDialogFolderId = mutableStateOf<Long?>(null)
-    var itemDialogFolderSelectorExpanded = mutableStateOf(SpinnerState.COLLAPSED)
-
-    fun clearItemDialog() {
-        showItemDialog.value = false
-        editableItem.value = null
-        itemDialogName.value = ""
-        itemDialogColorIndex.value = 0
-        itemDialogFolderId.value = null
-        itemDialogFolderSelectorExpanded.value = SpinnerState.COLLAPSED
-    }
-
-    // Multi FAB
-    var multiFABState = mutableStateOf(MultiFABState.COLLAPSED)
-
-    // Action mode
-    var actionMode = mutableStateOf(false)
-
-    val selectedItemIds = mutableStateListOf<Long>()
-    val selectedFolderIds = mutableStateListOf<Long>()
-
-    fun clearActionMode() {
-        selectedItemIds.clear()
-        selectedFolderIds.clear()
-        actionMode.value = false
-    }
-}
-
-
-@Composable
-fun rememberLibraryState(
-    coroutineScope: CoroutineScope = rememberCoroutineScope(),
-) = remember(coroutineScope) { LibraryState(coroutineScope) }
 
 //
 //    // catch the back press for the case where the selection should be reverted
@@ -153,12 +71,12 @@ fun rememberLibraryState(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LibraryComposable(mainState: MainState) {
+fun Library(mainState: MainState) {
     val libraryState = rememberLibraryState()
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
     Scaffold(
-        contentWindowInsets = WindowInsets(bottom = 0.dp),
+        contentWindowInsets = WindowInsets(bottom = 0.dp), // makes sure FAB is not shifted up
         modifier = Modifier
             .nestedScroll(scrollBehavior.nestedScrollConnection),
         floatingActionButton = {
@@ -222,18 +140,13 @@ fun LibraryComposable(mainState: MainState) {
                 },
                 actions = {
                     TextButton(
-                        onClick = { libraryState.showSortModeSubMenu.value = true })
+                        onClick = { libraryState.showSortModeMenu.value = true })
                     {
                         Text(
                             modifier = Modifier.padding(end = 8.dp),
                             color = colorScheme.onSurface,
-                            text = when (mainState.librarySortMode.value) {
-                            LibrarySortMode.DATE_ADDED -> "Date added"
-                            LibrarySortMode.NAME -> "Name"
-                            LibrarySortMode.COLOR -> "Color"
-                            LibrarySortMode.LAST_MODIFIED -> "Last modified"
-                            LibrarySortMode.CUSTOM -> "Custom"
-                        })
+                            text = LibrarySortMode.toString(mainState.librarySortMode.value)
+                        )
                         Icon(
                             modifier = Modifier.size(20.dp),
                             imageVector = when (mainState.librarySortDirection.value) {
@@ -243,54 +156,63 @@ fun LibraryComposable(mainState: MainState) {
                             tint = colorScheme.onSurface,
                             contentDescription = null
                         )
-                        LibrarySubMenuSortMode(
+
+                        SortMenu(
                             offset = DpOffset((-10).dp, 10.dp),
-                            show = libraryState.showSortModeSubMenu.value,
-                            onDismissHandler = { libraryState.showSortModeSubMenu.value = false },
-                            sortMode = mainState.librarySortMode.value,
-                            sortDirection = mainState.librarySortDirection.value,
+                            show = libraryState.showSortModeMenu.value,
+                            sortModes = LibrarySortMode.values().toList(),
+                            label = { LibrarySortMode.toString(it) },
+                            onDismissHandler = { libraryState.showSortModeMenu.value = false },
+                            currentSortMode = mainState.librarySortMode.value,
+                            currentSortDirection = mainState.librarySortDirection.value,
                             onSelectionHandler = { sortMode ->
-                                libraryState.showSortModeSubMenu.value = false
+                                libraryState.showSortModeMenu.value = false
                                 mainState.sortLibrary(sortMode)
                             }
                         )
                     }
                     IconButton(onClick = {
-                        libraryState.showMainMenu.value = true
+                        mainState.showMainMenu.value = true
                     }) {
                         Icon(Icons.Default.MoreVert, contentDescription = "more")
-                        MainMenu(
-                            show = libraryState.showMainMenu.value,
-                            onDismissHandler = { libraryState.showMainMenu.value = false },
-                            onSelectionHandler = { librarySelection, commonSelection ->
-                                libraryState.showMainMenu.value = false
-                                when (librarySelection) {
-                                    LibraryMenuSelections.SORT_BY -> {
-                                        libraryState.showSortModeSubMenu.value = true
-                                    }
-                                    null -> {}
-                                }
+                        MainMenu (
+                            show = mainState.showMainMenu.value,
+                            onDismissHandler = { mainState.showMainMenu.value = false },
+                            onSelectionHandler = { commonSelection ->
+                                mainState.showMainMenu.value = false
+
                                 when (commonSelection) {
                                     CommonMenuSelections.APP_INFO -> {}
                                     CommonMenuSelections.THEME -> {
-                                        libraryState.showThemeSubMenu.value = true
+                                        mainState.showThemeSubMenu.value = true
                                     }
-                                    null -> {}
                                 }
-                            }
+                            },
+                            uniqueMenuItems = { LibraryMenuItems(
+                                onSelectionHandler = { librarySelection ->
+                                    when (librarySelection) {
+                                        LibraryMenuSelections.SORT_BY -> {
+                                            libraryState.showSortModeMenu.value = true
+                                        }
+                                    }
+                                }
+                            ) }
                         )
-                        ThemeSubMenu(
-                            show = libraryState.showThemeSubMenu.value,
+                        ThemeMenu(
+                            expanded = mainState.showThemeSubMenu.value,
                             currentTheme = mainState.activeTheme.value,
-                            onDismissHandler = { libraryState.showThemeSubMenu.value = false },
+                            onDismissHandler = { mainState.showThemeSubMenu.value = false },
                             onSelectionHandler = { theme ->
-                                libraryState.showThemeSubMenu.value = false
+                                mainState.showThemeSubMenu.value = false
                                 mainState.setTheme(theme)
                             }
                         )
                     }
                 }
             )
+
+            // Action bar
+
             if(libraryState.actionMode.value) {
                 ActionBar(
                     numSelectedItems =
@@ -510,145 +432,6 @@ fun LibraryComposable(mainState: MainState) {
     )
 }
 
-
-@Composable
-fun ThemeSubMenu(
-    show: Boolean,
-    currentTheme: ThemeSelections,
-    onDismissHandler: () -> Unit,
-    onSelectionHandler: (ThemeSelections) -> Unit,
-) {
-    DropdownMenu(expanded = show, onDismissRequest = onDismissHandler) {
-        // Menu Header
-        Text(
-            modifier = Modifier.padding(12.dp),
-            text = "Theme",
-            style = MaterialTheme.typography.labelMedium,
-            color = colorScheme.onSurface.copy(alpha = 0.8f)
-        )
-
-        // Menu Items
-        DropdownMenuItem(
-            text = { Text(
-                text = "Automatic",
-                color = if (currentTheme == ThemeSelections.SYSTEM) colorScheme.primary else Color.Unspecified
-            ) },
-            onClick = { onSelectionHandler(ThemeSelections.SYSTEM) },
-            trailingIcon = {
-                if(currentTheme == ThemeSelections.SYSTEM)
-                    Icon(Icons.Default.Check, contentDescription = null, tint = colorScheme.primary)
-            }
-        )
-        DropdownMenuItem(
-            text = { Text(
-                text = "Light",
-                color = if (currentTheme == ThemeSelections.DAY) colorScheme.primary else Color.Unspecified
-            ) },
-            onClick = { onSelectionHandler(ThemeSelections.DAY) },
-            trailingIcon = {
-                if(currentTheme == ThemeSelections.DAY)
-                    Icon(Icons.Default.Check, contentDescription = null, tint = colorScheme.primary)
-            }
-       )
-        DropdownMenuItem(
-            text = { Text(
-                text = "Dark",
-                color = if (currentTheme == ThemeSelections.NIGHT) colorScheme.primary else Color.Unspecified
-            ) },
-            onClick = { onSelectionHandler(ThemeSelections.NIGHT) },
-            trailingIcon = {
-                if(currentTheme == ThemeSelections.NIGHT)
-                    Icon(Icons.Default.Check, contentDescription = null, tint = colorScheme.primary)
-            }
-        )
-    }
-}
-
-@Composable
-fun CommonMenuItems(
-    onSelectionHandler: (CommonMenuSelections) -> Unit
-) {
-    DropdownMenuItem(
-        text = { Text(text = "Theme") },
-        trailingIcon = { Icon(Icons.Default.KeyboardArrowRight, contentDescription = null) },
-        onClick = { onSelectionHandler(CommonMenuSelections.THEME) }
-    )
-    DropdownMenuItem(
-        text = { Text(text = "App Info") },
-        onClick = { onSelectionHandler(CommonMenuSelections.APP_INFO) }
-    )
-}
-
-@Composable
-fun LibrarySubMenuSortMode(
-    offset: DpOffset,
-    show: Boolean,
-    onDismissHandler: () -> Unit,
-    sortMode: LibrarySortMode,
-    sortDirection: SortDirection,
-    onSelectionHandler: (LibrarySortMode) -> Unit
-) {
-    DropdownMenu(
-        offset = offset,
-        expanded = show,
-        onDismissRequest = onDismissHandler,
-    ) {
-        // Menu Header
-        Text(
-            modifier = Modifier.padding(12.dp),
-            text = "Sort by",
-            style = MaterialTheme.typography.labelMedium,
-            color = colorScheme.onSurface.copy(alpha = 0.8f)
-        )
-
-        // Menu Body
-        val directionIcon: @Composable () -> Unit = {
-            Icon(
-                modifier = Modifier.size(20.dp),
-                imageVector = when (sortDirection) {
-                    SortDirection.ASCENDING -> Icons.Default.ArrowUpward
-                    SortDirection.DESCENDING -> Icons.Default.ArrowDownward
-                },
-                tint = colorScheme.primary,
-                contentDescription = null
-            )
-        }
-        val primaryColor = colorScheme.primary
-        DropdownMenuItem(
-            text = { Text(
-                text = "Date Added",
-                color = if (sortMode == LibrarySortMode.DATE_ADDED) primaryColor else Color.Unspecified
-            ) },
-            onClick = { onSelectionHandler(LibrarySortMode.DATE_ADDED) },
-            trailingIcon = if (sortMode == LibrarySortMode.DATE_ADDED) directionIcon else null
-        )
-        DropdownMenuItem(
-            text = { Text(
-                text = "Last modified",
-                color = if (sortMode == LibrarySortMode.LAST_MODIFIED) primaryColor else Color.Unspecified
-            ) },
-            onClick = { onSelectionHandler(LibrarySortMode.LAST_MODIFIED) },
-            trailingIcon = if (sortMode == LibrarySortMode.LAST_MODIFIED) directionIcon else null
-        )
-        DropdownMenuItem(
-            text = { Text(
-                text = "Name",
-                color = (if (sortMode == LibrarySortMode.NAME) primaryColor else Color.Unspecified)
-            ) },
-            onClick = { onSelectionHandler(LibrarySortMode.NAME) },
-            trailingIcon = if (sortMode == LibrarySortMode.NAME) directionIcon else null
-        )
-        DropdownMenuItem(
-            text = { Text(
-                text = "Color",
-                color = if (sortMode == LibrarySortMode.COLOR) primaryColor else Color.Unspecified
-            ) },
-            onClick = { onSelectionHandler(LibrarySortMode.COLOR) },
-            trailingIcon = if (sortMode == LibrarySortMode.COLOR) directionIcon else null
-        )
-    }
-}
-
 @Preview
 @Composable
 fun LibraryMenuItems(
@@ -659,168 +442,6 @@ fun LibraryMenuItems(
         onClick = { onSelectionHandler(LibraryMenuSelections.SORT_BY) },
         trailingIcon = { Icon(Icons.Default.KeyboardArrowRight, contentDescription = null) }
     )
-}
-
-@Composable
-fun MainMenu(
-    show: Boolean,
-    onDismissHandler: () -> Unit,
-    onSelectionHandler: (
-        librarySelection: LibraryMenuSelections?,
-        commonSelection: CommonMenuSelections?
-    ) -> Unit
-) {
-    DropdownMenu(
-        expanded = show,
-        onDismissRequest = onDismissHandler,
-    ) {
-        LibraryMenuItems(
-            onSelectionHandler = { onSelectionHandler(it, null) }
-        )
-        CommonMenuItems(
-            onSelectionHandler = { onSelectionHandler( null, it) }
-        )
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun ActionBar(
-    numSelectedItems: Int,
-    onDismissHandler: () -> Unit,
-    onEditHandler: () -> Unit,
-    onDeleteHandler: () -> Unit
-) {
-    TopAppBar(
-        title = { Text(text = "$numSelectedItems selected") },
-        colors = TopAppBarDefaults.largeTopAppBarColors(containerColor = colorScheme.primaryContainer),
-        navigationIcon = {
-            IconButton(onClick = onDismissHandler) {
-                Icon(
-                    imageVector = Icons.Default.Close,
-                    contentDescription = "Back",
-                    tint = colorScheme.onPrimaryContainer
-                )
-            }
-        },
-        actions = {
-            if(numSelectedItems == 1) {
-                IconButton(onClick = {
-                    onEditHandler()
-                }) {
-                    Icon(
-                        imageVector = Icons.Rounded.Edit,
-                        contentDescription = "Edit",
-                        tint = colorScheme.onPrimaryContainer
-                    )
-                }
-            }
-            IconButton(onClick = {
-                onDeleteHandler()
-            }) {
-                Icon(
-                    imageVector = Icons.Rounded.Delete,
-                    contentDescription = "Delete",
-                    tint = colorScheme.onPrimaryContainer
-                )
-            }
-        }
-    )
-}
-
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-fun LibraryFolderComposable(
-    folder: LibraryFolder,
-    numItems: Int,
-    selected: Boolean,
-    onShortClick: () -> Unit,
-    onLongClick: () -> Unit,
-) {
-    Box {
-        Surface(
-            modifier = Modifier
-                .size(150.dp)
-                .clip(MaterialTheme.shapes.large)
-                .combinedClickable(
-                    onClick = onShortClick,
-                    onLongClick = onLongClick
-                ),
-            color = colorScheme.surface,
-            shape = MaterialTheme.shapes.large,
-            tonalElevation = 1.dp,
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize(),
-                contentAlignment = Alignment.Center,
-            ) {
-                Column(
-                    modifier = Modifier.padding(8.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Text(
-                        text = folder.name,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = colorScheme.primary,
-                        textAlign = TextAlign.Center,
-                    )
-                    Text(
-                        modifier = Modifier.padding(top = 4.dp),
-                        text = "$numItems items",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = colorScheme.onSurface.copy(alpha = 0.8f),
-                        textAlign = TextAlign.Center,
-                    )
-                }
-            }
-        }
-        if(selected) {
-            Box(
-                modifier = Modifier
-                    .clip(MaterialTheme.shapes.large)
-                    .matchParentSize()
-                    .background(color = colorScheme.onSurface.copy(alpha = 0.2f))
-            )
-        }
-    }
-}
-
-@Composable
-fun LibraryItemComposable(
-    modifier: Modifier,
-    libraryItem: LibraryItem,
-) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(IntrinsicSize.Min)
-    ) {
-        Box(
-            modifier = Modifier
-                .width(10.dp)
-                .fillMaxHeight()
-                .clip(RoundedCornerShape(5.dp))
-                .align(Alignment.CenterVertically)
-                .background(
-                    Color(PracticeTime.getLibraryItemColors(LocalContext.current)[libraryItem.colorIndex])
-                ),
-        )
-        Column(
-            modifier = Modifier
-                .padding(start = 12.dp),
-        ) {
-            Text(
-                text = libraryItem.name,
-                style = MaterialTheme.typography.titleMedium,
-            )
-            Text(
-                text = "last practiced: yesterday",
-                style = MaterialTheme.typography.labelMedium,
-                color = colorScheme.onSurface.copy(alpha = 0.6f)
-            )
-        }
-    }
 }
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -868,7 +489,7 @@ fun LibraryContent(
                             modifier = Modifier
                                 .animateItemPlacement()
                         ) {
-                            LibraryFolderComposable(
+                            LibraryFolder(
                                 folder = folder,
                                 numItems = items.filter { it.libraryFolderId == folder.id }.size,
                                 selected = selectedFolderIds.contains(folder.id),
@@ -895,268 +516,106 @@ fun LibraryContent(
                 items=itemsInActiveFolder,
                 key = { item -> item.id }
             ) { item ->
-                Box(
-                    modifier = Modifier
-                        .animateItemPlacement()
-                        .combinedClickable(
-                            onLongClick = { onLibraryItemLongClicked(item) },
-                            onClick = { onLibraryItemShortClicked(item) }
-                        )
-                ) {
-                    Row {
-                        LibraryItemComposable(
-                            modifier = Modifier.padding(vertical = 8.dp, horizontal = 16.dp),
-                            libraryItem = item,
-                        )
-                    }
-                    if(selectedItemIds.contains(item.id)) {
-                        Box(
-                            modifier = Modifier
-                                .matchParentSize()
-                                .background(colorScheme.onSurface.copy(alpha = 0.1f))
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun LibraryFolderDialog(
-    mode: DialogMode,
-    folderName: String,
-    onFolderNameChange: (String) -> Unit,
-    onDismissHandler: (Boolean) -> Unit, // true if folder was created
-) {
-    Dialog(
-        properties = DialogProperties(
-            dismissOnBackPress = true,
-            dismissOnClickOutside = true
-        ),
-        onDismissRequest = { onDismissHandler(false) }
-    ) {
-        Column(
-            modifier = Modifier
-                .clip(RoundedCornerShape(28.dp))
-        ) {
-            Row(
-                modifier = Modifier
-                    .background(colorScheme.primaryContainer)
-            ) {
-                Text(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 24.dp)
-                        .padding(top = 24.dp, bottom = 16.dp),
-                    text = when(mode) {
-                        DialogMode.ADD -> "Create folder"
-                        DialogMode.EDIT -> "Edit folder"
-                    },
-                    style = MaterialTheme.typography.titleLarge,
-                    color = colorScheme.onPrimaryContainer,
+                LibraryItem(
+                    modifier = Modifier.padding(vertical = 8.dp, horizontal = 16.dp),
+                    libraryItem = item,
+                    selected = item.id in selectedItemIds,
+                    onShortClick = { onLibraryItemShortClicked(item) },
+                    onLongClick = { onLibraryItemLongClicked(item) }
                 )
-            }
-            Column (
-                modifier = Modifier
-                    .background(colorScheme.surface)
-            ) {
-                OutlinedTextField(
-                    modifier = Modifier
-                        .padding(top = 16.dp)
-                        .padding(horizontal = 24.dp),
-                    value = folderName, onValueChange = onFolderNameChange,
-                    label = { Text(text = "Folder name") },
-                )
-                Row(
-                    modifier = Modifier
-                        .padding(24.dp)
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
-                ) {
-                    TextButton(
-                        onClick = { onDismissHandler(false) },
-                        colors = ButtonDefaults.textButtonColors(
-                            contentColor = colorScheme.primary
-                        )
-                    ) {
-                        Text(text = "Cancel")
-                    }
-                    TextButton(
-                        onClick = { onDismissHandler(true) },
-                        enabled = folderName.isNotEmpty(),
-                        colors = ButtonDefaults.textButtonColors(
-                            contentColor = colorScheme.primary
-                        )
-                    ) {
-                        Text(text = when(mode) {
-                            DialogMode.ADD -> "Create"
-                            DialogMode.EDIT -> "Edit"
-                        })
-                    }
-                }
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun LibraryItemDialog(
-    mode: DialogMode,
-    folders: List<LibraryFolder>,
-    name: String,
-    colorIndex: Int,
-    folderId: Long?,
-    folderSelectorExpanded: SpinnerState,
-    onNameChange: (String) -> Unit,
-    onColorIndexChange: (Int) -> Unit,
-    onFolderIdChange: (Long?) -> Unit,
-    onFolderSelectorExpandedChange: (SpinnerState) -> Unit,
-    onDismissHandler: (Boolean) -> Unit, // true if dialog was canceled
-) {
-    Dialog(
-        properties = DialogProperties(
-            dismissOnBackPress = true,
-            dismissOnClickOutside = true
-        ),
-        onDismissRequest = { onDismissHandler(true) }
-    ) {
-        Column(
-            modifier = Modifier
-                .clip(MaterialTheme.shapes.extraLarge)
-        ) {
-            Row(
-                modifier = Modifier
-                    .background(colorScheme.primaryContainer)
-            ) {
-                Text(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 24.dp)
-                        .padding(top = 24.dp, bottom = 16.dp),
-                    text = when(mode) {
-                        DialogMode.ADD -> "Create item"
-                        DialogMode.EDIT -> "Edit item"
-                    },
-                    style = MaterialTheme.typography.titleLarge,
-                    color = colorScheme.onPrimaryContainer,
-                )
-            }
-            Column (
-                modifier = Modifier
-                    .background(colorScheme.surface)
-            ) {
-                OutlinedTextField(
-                    modifier = Modifier
-                        .padding(top = 16.dp)
-                        .padding(horizontal = 24.dp),
-                    value = name,
-                    onValueChange = onNameChange,
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Default.MusicNote,
-                            contentDescription = "Item name",
-                            tint = colorScheme.onSurface.copy(alpha = 0.6f)
-                        )
-                    },
-                    label = { Text(text = "Item name") },
-                    singleLine = true,
-                )
-                if(folders.isNotEmpty()) {
-                    SelectionSpinner(
-                        modifier = Modifier
-                            .padding(top = 16.dp)
-                            .padding(horizontal = 24.dp),
-                        state = folderSelectorExpanded,
-                        label = { Text(text = "Folder") },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.Folder,
-                                contentDescription = "Folder",
-                                tint = colorScheme.onSurface.copy(alpha = 0.6f)
-                            )
-                        },
-                        options = folders.map { folder -> Pair(folder.id, folder.name) },
-                        selected = folderId,
-                        defaultOption = "No folder",
-                        onStateChange = onFolderSelectorExpandedChange,
-                        onSelectedChange = onFolderIdChange,
-                    )
-                }
-                Row(
-                    modifier = Modifier
-                        .padding(top = 16.dp)
-                        .padding(horizontal = 24.dp)
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceAround
-                ) {
-                    for(i in 0..4) {
-                        Column(
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            for (j in 0..1) {
-                                ColorSelectRadioButton(
-                                    color = Color(PracticeTime.getLibraryItemColors(LocalContext.current)[2*i+j]),
-                                    selected = colorIndex == 2*i+j,
-                                    onClick = { onColorIndexChange(2*i+j) }
-                                )
-                            }
-                        }
-                    }
-                }
-                Row(
-                    modifier = Modifier
-                        .padding(24.dp)
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
-                ) {
-                    TextButton(
-                        onClick = { onDismissHandler(true) },
-                        colors = ButtonDefaults.textButtonColors(
-                            contentColor = colorScheme.primary
-                        )
-                    ) {
-                        Text(text = "Cancel")
-                    }
-                    TextButton(
-                        onClick = { onDismissHandler(false) },
-                        enabled = name.isNotEmpty(),
-                        colors = ButtonDefaults.textButtonColors(
-                            contentColor = colorScheme.primary
-                        )
-                    ) {
-                        Text(text = when(mode) {
-                            DialogMode.ADD -> "Create"
-                            DialogMode.EDIT -> "Edit"
-                        })
-                    }
-                }
             }
         }
     }
 }
 
 @Composable
-fun ColorSelectRadioButton(
-    color: Color,
+fun LibraryFolder(
+    folder: LibraryFolder,
+    numItems: Int,
     selected: Boolean,
-    onClick: () -> Unit
+    onShortClick: () -> Unit,
+    onLongClick: () -> Unit,
 ) {
-    Box(
-        modifier = Modifier
-            .size(35.dp)
-            .clip(RoundedCornerShape(100))
-            .background(color)
+    Selectable(
+        selected = selected,
+        onShortClick = onShortClick,
+        onLongClick = onLongClick,
+        shape = MaterialTheme.shapes.large,
     ) {
-        RadioButton(
-            colors = RadioButtonDefaults.colors(
-                selectedColor = Color.White,
-                unselectedColor = Color.White,
-            ),
-            selected = selected,
-            onClick = onClick
-        )
+        Surface(
+            modifier = Modifier
+                .size(150.dp),
+            color = colorScheme.surface,
+            tonalElevation = 1.dp,
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(8.dp)
+                    .fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = folder.name,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = colorScheme.primary,
+                    textAlign = TextAlign.Center,
+                )
+                Text(
+                    modifier = Modifier.padding(top = 4.dp),
+                    text = "$numItems items",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = colorScheme.onSurface.copy(alpha = 0.8f),
+                    textAlign = TextAlign.Center,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun LibraryItem(
+    modifier: Modifier,
+    libraryItem: LibraryItem,
+    selected: Boolean,
+    onShortClick: () -> Unit,
+    onLongClick: () -> Unit,
+) {
+    Selectable(
+        selected = selected,
+        onShortClick = onShortClick,
+        onLongClick = onLongClick,
+        shape = RoundedCornerShape(0.dp),
+    ) {
+        Row(
+            modifier = modifier
+                .fillMaxWidth()
+                .height(IntrinsicSize.Min)
+        ) {
+            Box(
+                modifier = Modifier
+                    .width(10.dp)
+                    .fillMaxHeight()
+                    .clip(RoundedCornerShape(5.dp))
+                    .align(Alignment.CenterVertically)
+                    .background(
+                        Color(PracticeTime.getLibraryItemColors(LocalContext.current)[libraryItem.colorIndex])
+                    ),
+            )
+            Column(
+                modifier = Modifier
+                    .padding(start = 12.dp),
+            ) {
+                Text(
+                    text = libraryItem.name,
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                Text(
+                    text = "last practiced: yesterday",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = colorScheme.onSurface.copy(alpha = 0.6f)
+                )
+            }
+        }
     }
 }

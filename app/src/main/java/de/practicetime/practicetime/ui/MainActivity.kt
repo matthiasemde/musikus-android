@@ -37,6 +37,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.zIndex
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.lifecycleScope
@@ -52,9 +53,10 @@ import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
 import de.practicetime.practicetime.database.entities.LibraryFolder
 import de.practicetime.practicetime.database.entities.LibraryItem
+import de.practicetime.practicetime.shared.ThemeSelections
 import de.practicetime.practicetime.ui.goals.GoalsFragmentHolder
 import de.practicetime.practicetime.ui.intro.AppIntroActivity
-import de.practicetime.practicetime.ui.library.LibraryComposable
+import de.practicetime.practicetime.ui.library.Library
 import de.practicetime.practicetime.ui.sessionlist.SessionListFragmentHolder
 import de.practicetime.practicetime.ui.statistics.StatisticsFragmentHolder
 import kotlinx.coroutines.launch
@@ -152,7 +154,10 @@ class MainActivity : AppCompatActivity() {
                                         colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface),
                                         contentDescription = null
                                     ) },
-                                    label = { Text(stringResource(screen.title)) },
+                                    label = { Text(
+                                        text = stringResource(screen.title),
+                                        fontWeight = if(selected) FontWeight.Bold else FontWeight.Normal,
+                                    ) },
                                     selected = selected,
                                     onClick = {
                                         if(!selected) activePainter = (activePainter + 1) % painterCount
@@ -208,7 +213,7 @@ class MainActivity : AppCompatActivity() {
                             route = Screen.Library.route,
                             enterTransition = { enterTransition },
                             exitTransition = { exitTransition }
-                        ) { LibraryComposable (mainState) }
+                        ) { Library (mainState) }
                     }
                     AnimatedVisibility(
                         modifier = Modifier

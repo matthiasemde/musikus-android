@@ -21,31 +21,36 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import androidx.appcompat.widget.AppCompatButton
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.core.widget.addTextChangedListener
 import com.google.android.material.button.MaterialButton
 import de.practicetime.practicetime.R
 import de.practicetime.practicetime.components.NumberInput
 import de.practicetime.practicetime.database.entities.*
+import de.practicetime.practicetime.shared.DialogHeader
+import de.practicetime.practicetime.ui.library.DialogMode
 
 @SuppressLint("ViewConstructor")
 class GoalDialog(
     context: Context,
     private val libraryItems: List<LibraryItem>,
+    private val repeat: Boolean = false,
     submitHandler: (
         newGoalDescriptionWithLibraryItems: GoalDescriptionWithLibraryItems,
         newTarget: Int
@@ -64,7 +69,6 @@ class GoalDialog(
     private val goalDialogSingleLibraryItemButtonView = dialogView.findViewById<AppCompatButton>(R.id.goalDialogSpecificLibraryItems)
     private val goalDialogLibraryItemSelectorView = dialogView.findViewById<Spinner>(R.id.goalDialogLibraryItemSelector)
     private val goalDialogLibraryItemSelectorLayoutView = dialogView.findViewById<LinearLayout>(R.id.goalDialogLibraryItemSelectorLayout)
-    private val goalDialogOneTimeGoalView = dialogView.findViewById<CheckBox>(R.id.goalDialogOneTimeGoal)
     private val goalDialogTargetView = dialogView.findViewById<ComposeView>(R.id.goalDialogTarget)
     private val goalDialogPeriodValueView = dialogView.findViewById<ComposeView>(R.id.goalDialogPeriodValue)
     private val goalDialogPeriodUnitView = dialogView.findViewById<Spinner>(R.id.goalDialogPeriodUnit)
@@ -87,7 +91,7 @@ class GoalDialog(
             // first create the new description
             val newGoalDescription = GoalDescription(
                 type =  selectedGoalType,
-                repeat = goalDialogOneTimeGoalView.isChecked,
+                repeat = repeat,
                 periodInPeriodUnits = selectedPeriod,
                 periodUnit = selectedPeriodUnit,
             )
@@ -109,10 +113,6 @@ class GoalDialog(
             onDismissRequest()
         }
 
-        dialogView.findViewById<MaterialButton>(R.id.goalDialogOneTimeGoalTooltip)
-            .setOnClickListener {
-            it.performLongClick()
-        }
         dialogView.findViewById<MaterialButton>(R.id.goalDialogPeriodUnitTooltip)
             .setOnClickListener {
             it.performLongClick()
@@ -313,6 +313,93 @@ class GoalDialog(
         private class ItemHolder(row: View?) {
             val color = row?.findViewById<ImageView>(R.id.libraryItemSpinnerColor)
             val name = row?.findViewById<TextView>(R.id.libraryItemSpinnerName)
+        }
+    }
+}
+
+@Composable
+fun EditGoalDialog(
+    value: Int,
+    onValueChanged: (Int) -> Unit,
+    onDismissHandler: (Boolean) -> Unit,
+) {
+    Dialog(
+        onDismissRequest = { onDismissHandler(true) }
+    ) {
+        Column(
+            modifier = Modifier
+                .clip(MaterialTheme.shapes.extraLarge)
+                .background(MaterialTheme.colorScheme.surface)
+        ) {
+            DialogHeader(title = stringResource(id = R.string.goalDialogTitleEdit))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                var hours by remember {
+                    mutableStateOf((value / 3600).toString().padStart(2, '0'))
+                }
+                var minutes by remember {
+                    mutableStateOf(((value % 3600) / 60).toString().padStart(2, '0'))
+                }
+                NumberInput(
+                    value = hours,
+                    onValueChange = {
+                        hours = it
+                        onValueChanged((hours.toIntOrNull() ?: 0) * 3600 +
+                            (minutes.toIntOrNull() ?: 0) * 60
+                        )
+                    },
+                    showLeadingZero = true,
+                    textSize = 40.sp,
+                    maxValue = 99,
+                    imeAction = ImeAction.Next,
+                    label = { modifier ->
+                        Text(modifier = modifier, text = "h", style = MaterialTheme.typography.labelLarge)
+                    }
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                NumberInput(
+                    value = minutes,
+                    onValueChange = {
+                        minutes = it
+                        onValueChanged((hours.toIntOrNull() ?: 0) * 3600 +
+                            (minutes.toIntOrNull() ?: 0) * 60
+                        )
+                    },
+                    showLeadingZero = true,
+                    textSize = 40.sp,
+                    maxValue = 59,
+                    imeAction = ImeAction.Done,
+                    label = { modifier ->
+                        Text(modifier = modifier, text = "m", style = MaterialTheme.typography.labelLarge)
+                    }
+                )
+            }
+            Row(
+                modifier = Modifier
+                    .padding(24.dp)
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
+                TextButton(
+                    onClick = { onDismissHandler(true) },
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.primary
+                    )
+                ) {
+                    Text(text = "Cancel")
+                }
+                TextButton(
+                    onClick = { onDismissHandler(false) },
+//                    enabled = name.isNotEmpty(),
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.primary
+                    )
+                ) {
+                    Text(text = stringResource(id = R.string.goalDialogOkEdit))
+                }
+            }
         }
     }
 }
