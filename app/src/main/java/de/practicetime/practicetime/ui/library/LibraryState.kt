@@ -16,7 +16,6 @@ import de.practicetime.practicetime.shared.SpinnerState
 import kotlinx.coroutines.CoroutineScope
 
 enum class LibraryMenuSelections {
-    SORT_BY,
 }
 
 enum class LibraryItemSortMode {

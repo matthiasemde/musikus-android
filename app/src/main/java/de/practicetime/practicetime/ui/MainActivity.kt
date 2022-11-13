@@ -123,7 +123,7 @@ class MainActivity : AppCompatActivity() {
 //            launchAppIntroFirstRun()
         }
 
-        var reloadDatabase = mutableStateOf(0)
+        val reloadDatabase = mutableStateOf(0)
 
         PracticeTime.exportLauncher = registerForActivityResult(
             ExportDatabaseContract()

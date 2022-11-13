@@ -162,13 +162,7 @@ fun Library(mainState: MainState) {
                                 }
                             },
                             uniqueMenuItems = { LibraryMenuItems(
-                                onSelectionHandler = { librarySelection ->
-                                    when (librarySelection) {
-                                        LibraryMenuSelections.SORT_BY -> {
-                                            libraryState.showItemSortModeMenu.value = true
-                                        }
-                                    }
-                                }
+                                onSelectionHandler = { }
                             ) }
                         )
                         ThemeMenu(
@@ -425,13 +419,7 @@ fun Library(mainState: MainState) {
 @Composable
 fun LibraryMenuItems(
     onSelectionHandler: (LibraryMenuSelections) -> Unit = {}
-) {
-    DropdownMenuItem(
-        text = { Text(text = "Sort by") },
-        onClick = { onSelectionHandler(LibraryMenuSelections.SORT_BY) },
-        trailingIcon = { Icon(Icons.Default.KeyboardArrowRight, contentDescription = null) }
-    )
-}
+) { }
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
