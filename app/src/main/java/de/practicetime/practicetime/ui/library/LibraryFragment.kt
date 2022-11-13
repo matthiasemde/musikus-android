@@ -156,6 +156,9 @@ fun Library(mainState: MainState) {
                                     CommonMenuSelections.THEME -> {
                                         mainState.showThemeSubMenu.value = true
                                     }
+                                    CommonMenuSelections.BACKUP -> {
+                                        mainState.showExportImportDialog.value = true
+                                    }
                                 }
                             },
                             uniqueMenuItems = { LibraryMenuItems(

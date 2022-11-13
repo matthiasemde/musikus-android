@@ -196,6 +196,9 @@ fun GoalsFragmentHolder(mainState: MainState) {
                                     CommonMenuSelections.THEME -> {
                                         mainState.showThemeSubMenu.value = true
                                     }
+                                    CommonMenuSelections.BACKUP -> {
+                                        mainState.showExportImportDialog.value = true
+                                    }
                                 }
                             },
                             uniqueMenuItems = { /* TODO UNIQUE GOAL MENU */ }

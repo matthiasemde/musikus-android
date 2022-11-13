@@ -1,8 +1,13 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ *
+ * Copyright (c) 2022 Matthias Emde
+ */
+
 package de.practicetime.practicetime.shared
 
-import android.widget.Toast
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
@@ -11,9 +16,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import de.practicetime.practicetime.PracticeTime
 
 enum class ThemeSelections {
     SYSTEM,
@@ -23,17 +26,14 @@ enum class ThemeSelections {
 
 enum class CommonMenuSelections {
     THEME,
-    APP_INFO
+    APP_INFO,
+    BACKUP
 }
 
 @Composable
 fun CommonMenuItems(
     onSelectionHandler: (CommonMenuSelections) -> Unit
 ) {
-    val context = LocalContext.current
-    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-        Toast.makeText(context, "Settings Activity Result", Toast.LENGTH_SHORT).show()
-    }
     DropdownMenuItem(
         text = { Text(text = "Theme") },
         trailingIcon = { Icon(Icons.Default.KeyboardArrowRight, contentDescription = null) },
@@ -43,14 +43,10 @@ fun CommonMenuItems(
         text = { Text(text = "App Info") },
         onClick = { onSelectionHandler(CommonMenuSelections.APP_INFO) }
     )
-//    DropdownMenuItem(
-//        text = { Text(text="Export") },
-//        onClick = { PracticeTime.exportDatabase(context, launcher) }
-//    )
-//    DropdownMenuItem(
-//        text = { Text(text="Import") },
-//        onClick = { PracticeTime.importDatabase() }
-//    )
+    DropdownMenuItem(
+        text = { Text(text="Backup") },
+        onClick = { onSelectionHandler(CommonMenuSelections.BACKUP) }
+    )
 }
 
 @Composable

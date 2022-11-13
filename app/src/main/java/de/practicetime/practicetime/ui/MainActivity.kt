@@ -14,7 +14,9 @@ package de.practicetime.practicetime.ui
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
@@ -39,6 +41,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.zIndex
+import androidx.core.content.ContextCompat.startActivity
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -53,12 +56,16 @@ import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
 import de.practicetime.practicetime.database.entities.LibraryFolder
 import de.practicetime.practicetime.database.entities.LibraryItem
+import de.practicetime.practicetime.getActivity
 import de.practicetime.practicetime.shared.ThemeSelections
 import de.practicetime.practicetime.ui.goals.GoalsFragmentHolder
 import de.practicetime.practicetime.ui.intro.AppIntroActivity
 import de.practicetime.practicetime.ui.library.Library
 import de.practicetime.practicetime.ui.sessionlist.SessionListFragmentHolder
 import de.practicetime.practicetime.ui.statistics.StatisticsFragmentHolder
+import de.practicetime.practicetime.utils.ExportDatabaseContract
+import de.practicetime.practicetime.utils.ExportImportDialog
+import de.practicetime.practicetime.utils.ImportDatabaseContract
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -116,9 +123,25 @@ class MainActivity : AppCompatActivity() {
 //            launchAppIntroFirstRun()
         }
 
+        var reloadDatabase = mutableStateOf(0)
+
+        PracticeTime.exportLauncher = registerForActivityResult(
+            ExportDatabaseContract()
+        ) { PracticeTime.exportDatabaseCallback(applicationContext, it) }
+
+        PracticeTime.importLauncher = registerForActivityResult(
+            ImportDatabaseContract()
+        ) {
+            PracticeTime.importDatabaseCallback(applicationContext, it)
+            reloadDatabase.value++
+        }
 
         setContent {
             val mainState = rememberMainState()
+
+            LaunchedEffect(reloadDatabase.value) {
+                mainState.loadDatabase()
+            }
 
             mainState.setTheme(try {
                 PracticeTime.prefs.getInt(
@@ -216,6 +239,15 @@ class MainActivity : AppCompatActivity() {
                             exitTransition = { exitTransition }
                         ) { Library (mainState) }
                     }
+
+                    /** Export / Import Dialog */
+                    ExportImportDialog(
+                        show = mainState.showExportImportDialog.value,
+                        onDismissHandler = { mainState.showExportImportDialog.value = false }
+                    )
+
+
+                    /** Navbar Scrim */
                     AnimatedVisibility(
                         modifier = Modifier
                             .zIndex(1f),

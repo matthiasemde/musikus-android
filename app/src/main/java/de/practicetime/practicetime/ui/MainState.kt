@@ -44,6 +44,10 @@ class MainState(
     /** Initialization */
 
     init {
+        loadDatabase()
+    }
+
+    fun loadDatabase() {
         coroutineScope.launch {
             loadLibraryFolders()
             sortLibraryFolders()
@@ -56,12 +60,13 @@ class MainState(
         }
     }
 
-
     /** Menu */
 
     var showMainMenu = mutableStateOf(false)
     var showThemeSubMenu = mutableStateOf(false)
 
+    /** Import/Export */
+    var showExportImportDialog = mutableStateOf(false)
 
     /** Content Scrim over NavBar for Multi FAB etc */
 
