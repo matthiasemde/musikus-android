@@ -1,3 +1,11 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ *
+ * Copyright (c) 2022 Matthias Emde
+ */
+
 package de.practicetime.practicetime.ui.library
 
 import androidx.compose.foundation.background
@@ -15,7 +23,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
 import de.practicetime.practicetime.database.entities.LibraryFolder
@@ -32,30 +39,20 @@ fun LibraryFolderDialog(
     onFolderNameChange: (String) -> Unit,
     onDismissHandler: (Boolean) -> Unit, // true if folder was created
 ) {
-    Dialog(
-        properties = DialogProperties(
-            dismissOnBackPress = true,
-            dismissOnClickOutside = true
-        ),
-        onDismissRequest = { onDismissHandler(false) }
-    ) {
+    Dialog(onDismissRequest = { onDismissHandler(false) }) {
         Column(
             modifier = Modifier
                 .clip(MaterialTheme.shapes.extraLarge)
+                .background(MaterialTheme.colorScheme.surface)
         ) {
             DialogHeader(title = when(mode) {
                     DialogMode.ADD -> "Create folder"
                     DialogMode.EDIT -> "Edit folder"
                 },
             )
-            Column (
-                modifier = Modifier
-                    .background(MaterialTheme.colorScheme.surface)
-            ) {
+            Column {
                 OutlinedTextField(
-                    modifier = Modifier
-                        .padding(top = 16.dp)
-                        .padding(horizontal = 24.dp),
+                    modifier = Modifier.padding(horizontal = 24.dp),
                     value = folderName, onValueChange = onFolderNameChange,
                     label = { Text(text = "Folder name") },
                     singleLine = true,
@@ -107,29 +104,19 @@ fun LibraryItemDialog(
     onFolderSelectorExpandedChange: (SpinnerState) -> Unit,
     onDismissHandler: (Boolean) -> Unit, // true if dialog was canceled
 ) {
-    Dialog(
-        properties = DialogProperties(
-            dismissOnBackPress = true,
-            dismissOnClickOutside = true
-        ),
-        onDismissRequest = { onDismissHandler(true) }
-    ) {
+    Dialog(onDismissRequest = { onDismissHandler(true) }) {
         Column(
             modifier = Modifier
                 .clip(MaterialTheme.shapes.extraLarge)
+                .background(MaterialTheme.colorScheme.surface)
         ) {
             DialogHeader(title = when(mode) {
                 DialogMode.ADD -> stringResource(id = R.string.addLibraryItemDialogTitle)
                 DialogMode.EDIT -> stringResource(id = R.string.addLibraryItemDialogTitleEdit)
             })
-            Column (
-                modifier = Modifier
-                    .background(MaterialTheme.colorScheme.surface)
-            ) {
+            Column {
                 OutlinedTextField(
-                    modifier = Modifier
-                        .padding(top = 16.dp)
-                        .padding(horizontal = 24.dp),
+                    modifier = Modifier.padding(horizontal = 24.dp),
                     value = name,
                     onValueChange = onNameChange,
                     leadingIcon = {

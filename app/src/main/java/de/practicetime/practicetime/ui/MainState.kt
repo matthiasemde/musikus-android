@@ -14,17 +14,22 @@ import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.database.entities.*
 import de.practicetime.practicetime.shared.ThemeSelections
 import de.practicetime.practicetime.ui.goals.GoalsSortMode
-import de.practicetime.practicetime.ui.library.LibrarySortMode
+import de.practicetime.practicetime.ui.library.LibraryFolderSortMode
+import de.practicetime.practicetime.ui.library.LibraryItemSortMode
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 enum class SortDirection {
     ASCENDING,
-    DESCENDING
+    DESCENDING;
+
+    fun toggle() = when (this) {
+        ASCENDING -> DESCENDING
+        DESCENDING -> ASCENDING
+    }
 }
 
 @Composable
@@ -40,9 +45,11 @@ class MainState(
 
     init {
         coroutineScope.launch {
-            loadLibraryItems()
             loadLibraryFolders()
-            sortLibrary()
+            sortLibraryFolders()
+
+            loadLibraryItems()
+            sortLibraryItems()
 
             loadGoals()
             sortGoals()
@@ -80,18 +87,36 @@ class MainState(
     val libraryFolders = _libraryFolders.asStateFlow()
     var libraryItems = _libraryItems.asStateFlow()
 
-    var librarySortMode = mutableStateOf(try {
+    var libraryItemSortMode = mutableStateOf(try {
         PracticeTime.prefs.getString(
-            PracticeTime.PREFERENCES_KEY_LIBRARY_SORT_MODE,
-            LibrarySortMode.DATE_ADDED.name
-        )?.let { LibrarySortMode.valueOf(it) } ?: LibrarySortMode.DATE_ADDED
+            PracticeTime.PREFERENCES_KEY_LIBRARY_ITEM_SORT_MODE,
+            LibraryItemSortMode.DATE_ADDED.name
+        )?.let { LibraryItemSortMode.valueOf(it) } ?: LibraryItemSortMode.DATE_ADDED
     } catch (ex: Exception) {
-        LibrarySortMode.DATE_ADDED
+        LibraryItemSortMode.DATE_ADDED
     })
 
-    var librarySortDirection = mutableStateOf(try {
+    var libraryItemSortDirection = mutableStateOf(try {
         PracticeTime.prefs.getString(
-            PracticeTime.PREFERENCES_KEY_LIBRARY_SORT_DIRECTION,
+            PracticeTime.PREFERENCES_KEY_LIBRARY_ITEM_SORT_DIRECTION,
+            SortDirection.ASCENDING.name
+        )?.let { SortDirection.valueOf(it) } ?: SortDirection.ASCENDING
+    } catch (ex: Exception) {
+        SortDirection.ASCENDING
+    })
+
+    var libraryFolderSortMode = mutableStateOf(try {
+        PracticeTime.prefs.getString(
+            PracticeTime.PREFERENCES_KEY_LIBRARY_ITEM_SORT_MODE,
+            LibraryFolderSortMode.DATE_ADDED.name
+        )?.let { LibraryFolderSortMode.valueOf(it) } ?: LibraryFolderSortMode.DATE_ADDED
+    } catch (ex: Exception) {
+        LibraryFolderSortMode.DATE_ADDED
+    })
+
+    var libraryFolderSortDirection = mutableStateOf(try {
+        PracticeTime.prefs.getString(
+            PracticeTime.PREFERENCES_KEY_LIBRARY_ITEM_SORT_DIRECTION,
             SortDirection.ASCENDING.name
         )?.let { SortDirection.valueOf(it) } ?: SortDirection.ASCENDING
     } catch (ex: Exception) {
@@ -126,7 +151,7 @@ class MainState(
         coroutineScope.launch {
             PracticeTime.libraryFolderDao.insertAndGet(newFolder)?.let { insertedFolder ->
                 _libraryFolders.update { listOf(insertedFolder) + it }
-                sortLibrary()
+                sortLibraryFolders()
             }
         }
     }
@@ -135,7 +160,7 @@ class MainState(
         coroutineScope.launch {
             PracticeTime.libraryItemDao.insertAndGet(item)?.let { insertedItem ->
                 _libraryItems.update { listOf(insertedItem) + it }
-                sortLibrary()
+                sortLibraryItems()
             }
         }
     }
@@ -147,14 +172,14 @@ class MainState(
             _libraryFolders.update { folders ->
                 folders.map { if (it.id == editedFolder.id) editedFolder else it }
             }
-            sortLibrary()
+            sortLibraryFolders()
         }
     }
 
     fun editItem(item: LibraryItem) {
         coroutineScope.launch {
             PracticeTime.libraryItemDao.update(item)
-            sortLibrary()
+            sortLibraryItems()
         }
     }
 
@@ -168,7 +193,8 @@ class MainState(
                 folders.filter { it.id !in folderIds }
             }
             loadLibraryItems() // reload items to show those which were in a folder
-            sortLibrary()
+            sortLibraryItems()
+            sortLibraryFolders()
         }
     }
 
@@ -186,67 +212,105 @@ class MainState(
     }
 
     /** Sort */
-    fun sortLibrary(mode: LibrarySortMode? = null) {
+    fun sortLibraryFolders(mode: LibraryFolderSortMode? = null) {
         if(mode != null) {
-            if (mode == librarySortMode.value) {
-                when (librarySortDirection.value) {
-                    SortDirection.ASCENDING -> librarySortDirection.value = SortDirection.DESCENDING
-                    SortDirection.DESCENDING -> librarySortDirection.value = SortDirection.ASCENDING
+            if (mode == libraryFolderSortMode.value) {
+                when (libraryFolderSortDirection.value) {
+                    SortDirection.ASCENDING -> libraryFolderSortDirection.value = SortDirection.DESCENDING
+                    SortDirection.DESCENDING -> libraryFolderSortDirection.value = SortDirection.ASCENDING
                 }
             } else {
-                librarySortDirection.value = SortDirection.ASCENDING
-                librarySortMode.value = mode
+                libraryFolderSortDirection.value = SortDirection.ASCENDING
+                libraryFolderSortMode.value = mode
                 PracticeTime.prefs.edit().putString(
-                    PracticeTime.PREFERENCES_KEY_LIBRARY_SORT_MODE,
-                    librarySortMode.value.name
+                    PracticeTime.PREFERENCES_KEY_LIBRARY_FOLDER_SORT_MODE,
+                    libraryFolderSortMode.value.name
                 ).apply()
             }
             PracticeTime.prefs.edit().putString(
-                PracticeTime.PREFERENCES_KEY_LIBRARY_SORT_DIRECTION,
-                librarySortDirection.value.name
+                PracticeTime.PREFERENCES_KEY_LIBRARY_FOLDER_SORT_DIRECTION,
+                libraryFolderSortDirection.value.name
             ).apply()
         }
-        when (librarySortDirection.value) {
+        when (libraryFolderSortDirection.value) {
             SortDirection.ASCENDING -> {
-                when (librarySortMode.value) {
-                    LibrarySortMode.DATE_ADDED -> {
-                        _libraryItems.update { items -> items.sortedBy { it.createdAt } }
+                when (libraryFolderSortMode.value) {
+                    LibraryFolderSortMode.DATE_ADDED -> {
                         _libraryFolders.update { folders -> folders.sortedBy { it.createdAt } }
                     }
-                    LibrarySortMode.LAST_MODIFIED -> {
-                        _libraryItems.update { items -> items.sortedBy { it.modifiedAt } }
+                    LibraryFolderSortMode.LAST_MODIFIED -> {
                         _libraryFolders.update { folders -> folders.sortedBy { it.modifiedAt } }
                     }
-                    LibrarySortMode.NAME -> {
-                        _libraryItems.update { items -> items.sortedBy { it.name } }
-                        _libraryFolders.update { folders -> folders.sortedBy { it.name } }
-                    }
-                    LibrarySortMode.COLOR -> {
-                        _libraryItems.update { items -> items.sortedBy { it.colorIndex } }
-                        _libraryFolders.update { folders -> folders.sortedBy { it.createdAt } }// problem ?
-                    }
-                    LibrarySortMode.CUSTOM -> TODO()
+                    LibraryFolderSortMode.CUSTOM -> {}
                 }
             }
             SortDirection.DESCENDING -> {
-                when (librarySortMode.value) {
-                    LibrarySortMode.DATE_ADDED -> {
-                        _libraryItems.update { items -> items.sortedByDescending { it.createdAt } }
+                when (libraryFolderSortMode.value) {
+                    LibraryFolderSortMode.DATE_ADDED -> {
                         _libraryFolders.update { folders -> folders.sortedByDescending { it.createdAt } }
                     }
-                    LibrarySortMode.LAST_MODIFIED -> {
-                        _libraryItems.update { items -> items.sortedByDescending { it.modifiedAt } }
+                    LibraryFolderSortMode.LAST_MODIFIED -> {
                         _libraryFolders.update { folders -> folders.sortedByDescending { it.modifiedAt } }
                     }
-                    LibrarySortMode.NAME -> {
+                    LibraryFolderSortMode.CUSTOM -> {}
+                }
+            }
+        }
+    }
+
+    fun sortLibraryItems(mode: LibraryItemSortMode? = null) {
+        if(mode != null) {
+            if (mode == libraryItemSortMode.value) {
+                when (libraryItemSortDirection.value) {
+                    SortDirection.ASCENDING -> libraryItemSortDirection.value = SortDirection.DESCENDING
+                    SortDirection.DESCENDING -> libraryItemSortDirection.value = SortDirection.ASCENDING
+                }
+            } else {
+                libraryItemSortDirection.value = SortDirection.ASCENDING
+                libraryItemSortMode.value = mode
+                PracticeTime.prefs.edit().putString(
+                    PracticeTime.PREFERENCES_KEY_LIBRARY_ITEM_SORT_MODE,
+                    libraryItemSortMode.value.name
+                ).apply()
+            }
+            PracticeTime.prefs.edit().putString(
+                PracticeTime.PREFERENCES_KEY_LIBRARY_ITEM_SORT_DIRECTION,
+                libraryItemSortDirection.value.name
+            ).apply()
+        }
+        when (libraryItemSortDirection.value) {
+            SortDirection.ASCENDING -> {
+                when (libraryItemSortMode.value) {
+                    LibraryItemSortMode.DATE_ADDED -> {
+                        _libraryItems.update { items -> items.sortedBy { it.createdAt } }
+                    }
+                    LibraryItemSortMode.LAST_MODIFIED -> {
+                        _libraryItems.update { items -> items.sortedBy { it.modifiedAt } }
+                    }
+                    LibraryItemSortMode.NAME -> {
+                        _libraryItems.update { items -> items.sortedBy { it.name } }
+                    }
+                    LibraryItemSortMode.COLOR -> {
+                        _libraryItems.update { items -> items.sortedBy { it.colorIndex } }
+                    }
+                    LibraryItemSortMode.CUSTOM -> { }
+                }
+            }
+            SortDirection.DESCENDING -> {
+                when (libraryItemSortMode.value) {
+                    LibraryItemSortMode.DATE_ADDED -> {
+                        _libraryItems.update { items -> items.sortedByDescending { it.createdAt } }
+                    }
+                    LibraryItemSortMode.LAST_MODIFIED -> {
+                        _libraryItems.update { items -> items.sortedByDescending { it.modifiedAt } }
+                    }
+                    LibraryItemSortMode.NAME -> {
                         _libraryItems.update { items -> items.sortedByDescending { it.name } }
-                        _libraryFolders.update { folders -> folders.sortedByDescending { it.name } }
                     }
-                    LibrarySortMode.COLOR -> {
+                    LibraryItemSortMode.COLOR -> {
                         _libraryItems.update { items -> items.sortedByDescending { it.colorIndex } }
-                        _libraryFolders.update { folders -> folders.sortedByDescending { it.createdAt } }// problem ?
                     }
-                    LibrarySortMode.CUSTOM -> TODO()
+                    LibraryItemSortMode.CUSTOM -> { }
                 }
             }
         }
@@ -339,12 +403,12 @@ class MainState(
                 goalsSortDirection.value = SortDirection.ASCENDING
                 goalsSortMode.value = mode
                 PracticeTime.prefs.edit().putString(
-                    PracticeTime.PREFERENCES_KEY_LIBRARY_SORT_MODE,
+                    PracticeTime.PREFERENCES_KEY_LIBRARY_ITEM_SORT_MODE,
                     goalsSortMode.value.name
                 ).apply()
             }
             PracticeTime.prefs.edit().putString(
-                PracticeTime.PREFERENCES_KEY_LIBRARY_SORT_DIRECTION,
+                PracticeTime.PREFERENCES_KEY_LIBRARY_ITEM_SORT_DIRECTION,
                 goalsSortDirection.value.name
             ).apply()
         }

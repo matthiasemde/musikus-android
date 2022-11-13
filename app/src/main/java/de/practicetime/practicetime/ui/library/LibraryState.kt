@@ -1,3 +1,11 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ *
+ * Copyright (c) 2022 Matthias Emde
+ */
+
 package de.practicetime.practicetime.ui.library
 
 import androidx.compose.runtime.*
@@ -11,7 +19,7 @@ enum class LibraryMenuSelections {
     SORT_BY,
 }
 
-enum class LibrarySortMode {
+enum class LibraryItemSortMode {
     DATE_ADDED,
     LAST_MODIFIED,
     NAME,
@@ -19,14 +27,26 @@ enum class LibrarySortMode {
     CUSTOM;
 
     companion object {
-        fun toString(sortMode: LibrarySortMode): String {
-            return when (sortMode) {
-                DATE_ADDED -> "Date added"
-                LAST_MODIFIED -> "Last modified"
-                NAME -> "Name"
-                COLOR -> "Color"
-                CUSTOM -> "Custom"
-            }
+        fun toString(sortMode: LibraryItemSortMode) = when (sortMode) {
+            DATE_ADDED -> "Date added"
+            LAST_MODIFIED -> "Last modified"
+            NAME -> "Name"
+            COLOR -> "Color"
+            CUSTOM -> "Custom"
+        }
+    }
+}
+
+enum class LibraryFolderSortMode {
+    DATE_ADDED,
+    LAST_MODIFIED,
+    CUSTOM;
+
+    companion object {
+        fun toString(sortMode: LibraryFolderSortMode) = when (sortMode) {
+            DATE_ADDED -> "Date added"
+            LAST_MODIFIED -> "Last modified"
+            CUSTOM -> "Custom"
         }
     }
 }
@@ -40,7 +60,8 @@ class LibraryState(
     private val coroutineScope: CoroutineScope,
 ) {
     // Menu
-    var showSortModeMenu = mutableStateOf(false)
+    var showFolderSortModeMenu = mutableStateOf(false)
+    var showItemSortModeMenu = mutableStateOf(false)
 
     val activeFolder = mutableStateOf<LibraryFolder?>(null)
 

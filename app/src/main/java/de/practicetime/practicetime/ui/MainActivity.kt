@@ -59,6 +59,7 @@ import de.practicetime.practicetime.ui.intro.AppIntroActivity
 import de.practicetime.practicetime.ui.library.Library
 import de.practicetime.practicetime.ui.sessionlist.SessionListFragmentHolder
 import de.practicetime.practicetime.ui.statistics.StatisticsFragmentHolder
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 
@@ -263,6 +264,7 @@ class MainActivity : AppCompatActivity() {
                     LibraryFolder(name="Gesang"),
                 ).forEach {
                     PracticeTime.libraryFolderDao.insert(it)
+                    delay(1000) //make sure folders have different createdAt values
                 }
 
                 // populate the libraryItem table on first run
@@ -278,6 +280,7 @@ class MainActivity : AppCompatActivity() {
                     LibraryItem(name="Trauermarsch", colorIndex=8),
                 ).forEach {
                     PracticeTime.libraryItemDao.insert(it)
+                    delay(1000) //make sure items have different createdAt values
                 }
 
                 PracticeTime.prefs.edit().putBoolean(PracticeTime.PREFERENCES_KEY_FIRSTRUN, false).apply()

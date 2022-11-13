@@ -169,37 +169,18 @@ fun GoalsFragmentHolder(mainState: MainState) {
                 title = { Text( text="Goals") },
                 scrollBehavior = scrollBehavior,
                 actions = {
-                    TextButton(
-                        onClick = { goalsState.showSortModeMenu.value = true })
-                    {
-                        Text(
-                            modifier = Modifier.padding(end = 8.dp),
-                            color = MaterialTheme.colorScheme.onSurface,
-                            text = GoalsSortMode.toString(mainState.goalsSortMode.value)
-                        )
-                        Icon(
-                            modifier = Modifier.size(20.dp),
-                            imageVector = when (mainState.goalsSortDirection.value) {
-                                SortDirection.ASCENDING -> Icons.Default.ArrowUpward
-                                SortDirection.DESCENDING -> Icons.Default.ArrowDownward
-                            },
-                            tint = MaterialTheme.colorScheme.onSurface,
-                            contentDescription = null
-                        )
-                        SortMenu(
-                            offset = DpOffset((-10).dp, 10.dp),
-                            show = goalsState.showSortModeMenu.value,
-                            sortModes = GoalsSortMode.values().toList(),
-                            label = { GoalsSortMode.toString(it) },
-                            onDismissHandler = { goalsState.showSortModeMenu.value = false },
-                            currentSortMode = mainState.goalsSortMode.value,
-                            currentSortDirection = mainState.goalsSortDirection.value,
-                            onSelectionHandler = { sortMode ->
-                                goalsState.showSortModeMenu.value = false
-                                mainState.sortGoals(sortMode)
-                            }
-                        )
-                    }
+                    SortMenu(
+                        show = goalsState.showSortModeMenu.value,
+                        sortModes = GoalsSortMode.values().toList(),
+                        currentSortMode = mainState.goalsSortMode.value,
+                        currentSortDirection = mainState.goalsSortDirection.value,
+                        label = { GoalsSortMode.toString(it) },
+                        onShowMenuChanged = { goalsState.showSortModeMenu.value = it },
+                        onSelectionHandler = { sortMode ->
+                            goalsState.showSortModeMenu.value = false
+                            mainState.sortGoals(sortMode)
+                        }
+                    )
                     IconButton(onClick = {
                         mainState.showMainMenu.value = true
                     }) {

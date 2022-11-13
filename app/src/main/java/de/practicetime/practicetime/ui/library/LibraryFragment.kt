@@ -14,6 +14,8 @@ package de.practicetime.practicetime.ui.library
 
 import android.view.*
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -139,38 +141,6 @@ fun Library(mainState: MainState) {
                     }
                 },
                 actions = {
-                    TextButton(
-                        onClick = { libraryState.showSortModeMenu.value = true })
-                    {
-                        Text(
-                            modifier = Modifier.padding(end = 8.dp),
-                            color = colorScheme.onSurface,
-                            text = LibrarySortMode.toString(mainState.librarySortMode.value)
-                        )
-                        Icon(
-                            modifier = Modifier.size(20.dp),
-                            imageVector = when (mainState.librarySortDirection.value) {
-                                SortDirection.ASCENDING -> Icons.Default.ArrowUpward
-                                SortDirection.DESCENDING -> Icons.Default.ArrowDownward
-                            },
-                            tint = colorScheme.onSurface,
-                            contentDescription = null
-                        )
-
-                        SortMenu(
-                            offset = DpOffset((-10).dp, 10.dp),
-                            show = libraryState.showSortModeMenu.value,
-                            sortModes = LibrarySortMode.values().toList(),
-                            label = { LibrarySortMode.toString(it) },
-                            onDismissHandler = { libraryState.showSortModeMenu.value = false },
-                            currentSortMode = mainState.librarySortMode.value,
-                            currentSortDirection = mainState.librarySortDirection.value,
-                            onSelectionHandler = { sortMode ->
-                                libraryState.showSortModeMenu.value = false
-                                mainState.sortLibrary(sortMode)
-                            }
-                        )
-                    }
                     IconButton(onClick = {
                         mainState.showMainMenu.value = true
                     }) {
@@ -192,7 +162,7 @@ fun Library(mainState: MainState) {
                                 onSelectionHandler = { librarySelection ->
                                     when (librarySelection) {
                                         LibraryMenuSelections.SORT_BY -> {
-                                            libraryState.showSortModeMenu.value = true
+                                            libraryState.showItemSortModeMenu.value = true
                                         }
                                     }
                                 }
@@ -256,11 +226,27 @@ fun Library(mainState: MainState) {
                 contentPadding = PaddingValues(
                     top = innerPadding.calculateTopPadding(),
                 ),
-                folders = mainState.libraryFolders.collectAsState().value,
                 activeFolder = libraryState.activeFolder.value,
+                showFolderSortMenu = libraryState.showFolderSortModeMenu.value,
+                folderSortMode = mainState.libraryFolderSortMode.value,
+                folderSortDirection = mainState.libraryFolderSortDirection.value,
+                folders = mainState.libraryFolders.collectAsState().value,
+                selectedFolderIds = libraryState.selectedFolderIds,
+                showItemSortMenu = libraryState.showItemSortModeMenu.value,
+                itemSortMode = mainState.libraryItemSortMode.value,
+                itemSortDirection = mainState.libraryItemSortDirection.value,
                 items = mainState.libraryItems.collectAsState().value,
                 selectedItemIds = libraryState.selectedItemIds,
-                selectedFolderIds = libraryState.selectedFolderIds,
+                onShowFolderSortMenuChange = { libraryState.showFolderSortModeMenu.value = it },
+                onFolderSortModeSelected = {
+                    mainState.sortLibraryFolders(it)
+                    libraryState.showFolderSortModeMenu.value = false
+                },
+                onShowItemSortMenuChange = { libraryState.showItemSortModeMenu.value = it },
+                onItemSortModeSelected = {
+                    mainState.sortLibraryItems(it)
+                    libraryState.showItemSortModeMenu.value = false
+                },
                 onLibraryFolderShortClicked = { folder ->
                     libraryState.apply {
                         if(actionMode.value) {
@@ -448,11 +434,21 @@ fun LibraryMenuItems(
 @Composable
 fun LibraryContent(
     contentPadding: PaddingValues,
-    folders: List<LibraryFolder>,
     activeFolder: LibraryFolder?,
+    showFolderSortMenu: Boolean,
+    folderSortMode: LibraryFolderSortMode,
+    folderSortDirection: SortDirection,
+    folders: List<LibraryFolder>,
+    selectedFolderIds: List<Long>,
+    showItemSortMenu: Boolean,
+    itemSortMode: LibraryItemSortMode,
+    itemSortDirection: SortDirection,
     items: List<LibraryItem>,
     selectedItemIds: List<Long>,
-    selectedFolderIds: List<Long>,
+    onShowFolderSortMenuChange: (Boolean) -> Unit,
+    onFolderSortModeSelected: (LibraryFolderSortMode) -> Unit,
+    onShowItemSortMenuChange: (Boolean) -> Unit,
+    onItemSortModeSelected: (LibraryItemSortMode) -> Unit,
     onLibraryFolderShortClicked: (LibraryFolder) -> Unit,
     onLibraryFolderLongClicked: (LibraryFolder) -> Unit,
     onLibraryItemShortClicked: (LibraryItem) -> Unit,
@@ -468,11 +464,27 @@ fun LibraryContent(
         // if active folder ist null, we are in the top level
         if(activeFolder == null) {
             item {
-                Text(
+                Row(
                     modifier = Modifier
-                        .padding(16.dp),
-                    text = "Folders", style = MaterialTheme.typography.titleLarge
-                )
+                        .fillMaxWidth()
+                        .padding(8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        modifier = Modifier.padding(8.dp),
+                        text = "Folders", style = MaterialTheme.typography.titleLarge
+                    )
+                    SortMenu(
+                        show = showFolderSortMenu,
+                        sortModes = LibraryFolderSortMode.values().toList(),
+                        currentSortMode = folderSortMode,
+                        currentSortDirection = folderSortDirection,
+                        label = { LibraryFolderSortMode.toString(it) },
+                        onShowMenuChanged = onShowFolderSortMenuChange,
+                        onSelectionHandler = onFolderSortModeSelected
+                    )
+                }
             }
             item {
                 LazyRow(
@@ -505,24 +517,46 @@ fun LibraryContent(
         val itemsInActiveFolder = items.filter { it.libraryFolderId == activeFolder?.id }
         if(itemsInActiveFolder.isNotEmpty()) {
             item {
-                Text(
+                Row(
                     modifier = Modifier
-                        .padding(16.dp),
-                    text="Items",
-                    style = MaterialTheme.typography.titleLarge
-                )
+                        .fillMaxWidth()
+                        .padding(8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        modifier = Modifier
+                            .padding(8.dp),
+                        text = "Items",
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                    SortMenu(
+                        show = showItemSortMenu,
+                        sortModes = LibraryItemSortMode.values().toList(),
+                        currentSortMode = itemSortMode,
+                        currentSortDirection = itemSortDirection,
+                        label = { LibraryItemSortMode.toString(it) },
+                        onShowMenuChanged = onShowItemSortMenuChange,
+                        onSelectionHandler = onItemSortModeSelected
+                    )
+                }
             }
             items(
                 items=itemsInActiveFolder,
                 key = { item -> item.id }
             ) { item ->
-                LibraryItem(
-                    modifier = Modifier.padding(vertical = 8.dp, horizontal = 16.dp),
-                    libraryItem = item,
-                    selected = item.id in selectedItemIds,
-                    onShortClick = { onLibraryItemShortClicked(item) },
-                    onLongClick = { onLibraryItemLongClicked(item) }
-                )
+                Box(
+                    modifier = Modifier.animateItemPlacement()
+                ) {
+                    LibraryItem(
+                        modifier = Modifier
+                            .padding(vertical = 8.dp, horizontal = 16.dp),
+                        libraryItem = item,
+                        selected = item.id in selectedItemIds,
+                        onShortClick = { onLibraryItemShortClicked(item) },
+                        onLongClick = { onLibraryItemLongClicked(item) }
+                    )
+                }
             }
         }
     }
