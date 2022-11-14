@@ -1,5 +1,11 @@
 /*
- * This software is licensed under the MIT license
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ *
+ * Copyright (c) 2022 Matthias Emde
+ *
+ * Parts of this software are licensed under the MIT license
  *
  * Copyright (c) 2022, Javier Carbone, author Matthias Emde
  * Additions and modifications, author Michael Prommersberger 
@@ -15,7 +21,6 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
-import android.widget.LinearLayout
 import android.widget.RatingBar
 import android.widget.TextView
 import androidx.cardview.widget.CardView
@@ -125,11 +130,11 @@ class SessionSummaryAdapter(
             private val isInAdapter: Boolean = true
         ) : ViewHolder(view) {
 
-            private val summaryDayLayout: LinearLayout = view.findViewById(R.id.summaryDayLayout)
-            private val summaryDate: TextView = view.findViewById(R.id.summaryDate)
-            private val summaryDayDuration: TextView = view.findViewById(R.id.summaryDayDuration)
-
-            private val summaryCard = view.findViewById(R.id.summaryCardWrapper) as InterceptTouchCardView
+//            private val summaryDayLayout: LinearLayout = view.findViewById(R.id.summaryDayLayout)
+//            private val summaryDate: TextView = view.findViewById(R.id.summaryDate)
+//            private val summaryDayDuration: TextView = view.findViewById(R.id.summaryDayDuration)
+//
+//            private val summaryCard = view.findViewById(R.id.summaryCardWrapper) as InterceptTouchCardView
 
             private val summaryTimeView: TextView = view.findViewById(R.id.summaryTime)
             private val breakDurationView: TextView = view.findViewById(R.id.breakDuration)
@@ -159,36 +164,36 @@ class SessionSummaryAdapter(
                 // get the session at given position
                 val (session, sectionsWithLibraryItems) = sessionsWithSectionsWithLibraryItems[dataIndex]
 
-                summaryCard.apply {
-                    if (selectedSessions.map { t -> t.first }.contains(bindingAdapterPosition)) {
-                        isSelected = true // set selected so that background changes
-                        // remove Card Elevation because in Light theme it would look ugly
-                        cardElevation = 0f
-                    } else {
-                        isSelected = false // set selected so that background changes
-                        // restore card Elevation
-                        cardElevation = defaultCardElevation
-                    }
-                }
-
-                // set up short and long click handler for selecting sessions
-                summaryCard.setOnClickListener {
-                    if (isInAdapter) {
-                        shortClickHandler(
-                            bindingAdapterPosition,
-                            bindingAdapter as SessionSummaryAdapter
-                        )
-                    }
-                }
-                summaryCard.setOnLongClickListener {
-                    return@setOnLongClickListener if (isInAdapter) {
-                        // tell the event handler we consumed the event
-                        longClickHandler(
-                            bindingAdapterPosition,
-                            bindingAdapter as SessionSummaryAdapter
-                        )
-                    } else false
-                }
+//                summaryCard.apply {
+//                    if (selectedSessions.map { t -> t.first }.contains(bindingAdapterPosition)) {
+//                        isSelected = true // set selected so that background changes
+//                        // remove Card Elevation because in Light theme it would look ugly
+//                        cardElevation = 0f
+//                    } else {
+//                        isSelected = false // set selected so that background changes
+//                        // restore card Elevation
+//                        cardElevation = defaultCardElevation
+//                    }
+//                }
+//
+//                // set up short and long click handler for selecting sessions
+//                summaryCard.setOnClickListener {
+//                    if (isInAdapter) {
+//                        shortClickHandler(
+//                            bindingAdapterPosition,
+//                            bindingAdapter as SessionSummaryAdapter
+//                        )
+//                    }
+//                }
+//                summaryCard.setOnLongClickListener {
+//                    return@setOnLongClickListener if (isInAdapter) {
+//                        // tell the event handler we consumed the event
+//                        longClickHandler(
+//                            bindingAdapterPosition,
+//                            bindingAdapter as SessionSummaryAdapter
+//                        )
+//                    } else false
+//                }
 
                 val currentSessionDate = Calendar.getInstance().apply {
                     timeInMillis = sectionsWithLibraryItems.first().section.timestamp * 1000L
@@ -228,16 +233,16 @@ class SessionSummaryAdapter(
                         it.get(Calendar.DAY_OF_YEAR)
                     }
 
-                    summaryDayLayout.visibility = View.VISIBLE
-                    summaryDate.text = when(currentSessionDate.get(Calendar.DAY_OF_YEAR)) {
-                        today -> context.getString(R.string.today)
-                        yesterday -> context.getString(R.string.yesterday)
-                        else -> dateFormat.format(currentSessionDate.timeInMillis)
-                    }
-                    summaryDayDuration.text = getDurationString(totalPracticeDuration, TIME_FORMAT_HUMAN_PRETTY)
+//                    summaryDayLayout.visibility = View.VISIBLE
+//                    summaryDate.text = when(currentSessionDate.get(Calendar.DAY_OF_YEAR)) {
+//                        today -> context.getString(R.string.today)
+//                        yesterday -> context.getString(R.string.yesterday)
+//                        else -> dateFormat.format(currentSessionDate.timeInMillis)
+//                    }
+//                    summaryDayDuration.text = getDurationString(totalPracticeDuration, TIME_FORMAT_HUMAN_PRETTY)
 
                 } else {
-                    summaryDayLayout.visibility = View.GONE
+//                    summaryDayLayout.visibility = View.GONE
                 }
 
                 // compute the total practice time

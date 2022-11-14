@@ -222,7 +222,7 @@ class MainActivity : AppCompatActivity() {
                             route = Screen.Sessions.route,
                             enterTransition = { enterTransition },
                             exitTransition = { exitTransition },
-                        ) { SessionListFragmentHolder() }
+                        ) { SessionListFragmentHolder(mainState, getActivity()) }
                         composable(
                             route = Screen.Goals.route,
                             enterTransition = { enterTransition },

@@ -307,3 +307,22 @@ fun epochSecondsToDate(epochSecs: Long): ZonedDateTime {
     return ZonedDateTime
         .ofInstant(Instant.ofEpochSecond(epochSecs), ZoneId.systemDefault())
 }
+
+/**
+ * Get specific month as in
+ * January 2011 is different from January 2020
+ */
+
+fun getSpecificMonth(epochSeconds: Long) =
+    epochSecondsToDate(epochSeconds).let { date->
+        date.monthValue + date.year * 12
+    }
+
+/**
+ * Get specificDay index
+ */
+
+fun getSpecificDay(epochSeconds: Long) =
+    epochSecondsToDate(epochSeconds).let { date->
+        date.dayOfYear + date.year * 366
+    }

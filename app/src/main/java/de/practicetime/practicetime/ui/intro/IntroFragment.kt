@@ -284,8 +284,6 @@ class IntroSessionsFragment : Fragment(R.layout.fragment_intro_sessions) {
             {_,_ -> false },
             isInAdapter = false
         ).bind(0)
-
-        view.findViewById<LinearLayout>(R.id.summaryDayLayout).visibility = View.GONE
 }
 
 private fun getDummySessions() =

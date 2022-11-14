@@ -66,7 +66,7 @@ class ProgressUpdateActivity  : AppCompatActivity(R.layout.activity_progress_upd
             exitActivity()
         }
 
-        initProgressedGoalList()
+//        initProgressedGoalList()
 
         continueButton.setOnClickListener { exitActivity() }
     }

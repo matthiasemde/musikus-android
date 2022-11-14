@@ -16,10 +16,15 @@ import de.practicetime.practicetime.shared.ThemeSelections
 import de.practicetime.practicetime.ui.goals.GoalsSortMode
 import de.practicetime.practicetime.ui.library.LibraryFolderSortMode
 import de.practicetime.practicetime.ui.library.LibraryItemSortMode
+import de.practicetime.practicetime.ui.sessionlist.SessionsForDay
+import de.practicetime.practicetime.ui.sessionlist.SessionsForDaysForMonth
+import de.practicetime.practicetime.utils.getSpecificDay
+import de.practicetime.practicetime.utils.getSpecificMonth
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.updateAndGet
 import kotlinx.coroutines.launch
 
 enum class SortDirection {
@@ -49,6 +54,8 @@ class MainState(
 
     fun loadDatabase() {
         coroutineScope.launch {
+            loadSessions()
+
             loadLibraryFolders()
             sortLibraryFolders()
 
@@ -81,6 +88,158 @@ class MainState(
         PracticeTime.prefs.edit().putInt(PracticeTime.PREFERENCES_KEY_THEME, theme.ordinal).apply()
         activeTheme.value = theme
         AppCompatDelegate.setDefaultNightMode(theme.ordinal)
+    }
+
+
+    /** Sessions */
+
+    private val _sessions = MutableStateFlow(emptyList<SessionsForDaysForMonth>())
+    val sessions = _sessions.asStateFlow()
+
+    /** Accessors */
+    /** Load */
+    private suspend fun loadSessions() {
+        _sessions.update {
+            val sessionsForDaysForMonths = mutableListOf<SessionsForDaysForMonth>()
+            // fetch all sessions from the database
+            PracticeTime.sessionDao.getAllWithSectionsWithLibraryItems().takeUnless {
+                it.isEmpty()
+            }?.sortedByDescending { it.sections.first().section.timestamp }?.let { fetchedSessions ->
+                // initialize variables to keep track of the current month, current day,
+                // the index of its first session and the total duration of the current day
+                var (currentDay, currentMonth) = fetchedSessions.first()
+                    .sections.first()
+                    .section.timestamp.let { timestamp ->
+                    Pair(getSpecificDay(timestamp), getSpecificMonth(timestamp))
+                }
+                var firstSessionOfDayIndex = 0
+                var totalPracticeDuration = 0
+
+
+                val sessionsForDaysForMonth = mutableListOf<SessionsForDay>()
+
+                // then loop trough all of the sessions...
+                fetchedSessions.forEachIndexed { index, session ->
+                    // ...get the month and day...
+                    val sessionTimestamp = session.sections.first().section.timestamp
+                    val (day, month) = sessionTimestamp.let { timestamp ->
+                        Pair(getSpecificDay(timestamp), getSpecificMonth(timestamp))
+                    }
+
+                    totalPracticeDuration += session.sections.sumOf { it.section.duration ?: 0 }
+
+                    // ...and compare them to the current day first.
+                    // if it differs, create a new SessionsForDay object
+                    // with the respective subList of sessions
+                    if(day == currentDay) return@forEachIndexed
+
+                    sessionsForDaysForMonth.add(SessionsForDay(
+                        specificDay = currentDay,
+                        totalPracticeDuration = totalPracticeDuration,
+                        sessions = fetchedSessions.slice(firstSessionOfDayIndex until index)
+                    ))
+
+                    // reset / set tracking variables appropriately
+                    currentDay = day
+                    firstSessionOfDayIndex = index
+                    totalPracticeDuration = 0
+
+                    // then compare the month to the current month.
+                    // if it differs, create a new SessionsForDaysForMonth object
+                    // storing the specific month along with the list of SessionsForDay objects
+                    if(month == currentMonth) return@forEachIndexed
+
+                    sessionsForDaysForMonths.add(SessionsForDaysForMonth(
+                        specificMonth = currentMonth,
+                        sessionsForDays = sessionsForDaysForMonth.toList()
+                    ))
+
+                    // set tracking variable and reset list
+                    currentMonth = month
+                    sessionsForDaysForMonth.clear()
+                }
+
+                // importantly, add the last SessionsForDaysForMonth object
+                sessionsForDaysForMonth.add(SessionsForDay(
+                    specificDay = currentDay,
+                    totalPracticeDuration = totalPracticeDuration,
+                    sessions = fetchedSessions.slice(firstSessionOfDayIndex until fetchedSessions.size)
+                ))
+                sessionsForDaysForMonths.add(SessionsForDaysForMonth(
+                    specificMonth = currentMonth,
+                    sessionsForDays = sessionsForDaysForMonth
+                ))
+            }
+            sessionsForDaysForMonths.toList()
+        }
+    }
+
+    /** Mutators */
+    /** Add */
+    fun addSession(
+        newSession: SessionWithSections,
+    ) {
+        coroutineScope.launch {
+            val insertedSessionId = PracticeTime.sessionDao.insertSessionWithSections(newSession)
+            val insertedSession = PracticeTime.sessionDao.getWithSectionsWithLibraryItems(insertedSessionId)
+
+            val (day, month) = newSession.sections.first().timestamp.let { timestamp ->
+                Pair(getSpecificDay(timestamp), getSpecificMonth(timestamp))
+            }
+
+            _sessions.update { sessionsForDaysForMonths ->
+                sessionsForDaysForMonths.map { sessionsForDaysForMonth ->
+                    if (sessionsForDaysForMonth.specificMonth != month)
+                        sessionsForDaysForMonth
+                    else {
+                        sessionsForDaysForMonth.copy(
+                            sessionsForDays = sessionsForDaysForMonth.sessionsForDays.map { sessionsForDay ->
+                                if (sessionsForDay.specificDay != day)
+                                    sessionsForDay
+                                else
+                                    sessionsForDay.copy(
+                                        sessions = (sessionsForDay.sessions + insertedSession).sortedByDescending {
+                                            it.sections.first().section.timestamp
+                                        }
+                                    )
+                            }
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+
+    /** Edit */
+    fun editSession(
+        editedSession: Session,
+    ) {
+        // TODO: Implement
+    }
+
+    /** Archive */
+    fun deleteSessions(sessionIds: List<Long>) {
+        coroutineScope.launch {
+            PracticeTime.sessionDao.getAndDelete(sessionIds)
+            _sessions.update { sessions ->
+                sessions.map { sessionsForDaysForMonth ->
+                    sessionsForDaysForMonth.copy(
+                        sessionsForDays = sessionsForDaysForMonth.sessionsForDays.map { sessionsForDay ->
+                            val filteredSessions = sessionsForDay.sessions.filter {
+                                it.session.id !in sessionIds
+                            }
+                            sessionsForDay.copy(
+                                sessions = filteredSessions,
+                                totalPracticeDuration = filteredSessions.sumOf { session ->
+                                    session.sections.sumOf { it.section.duration ?: 0 }
+                                }
+                            )
+                        }.filter { it.sessions.isNotEmpty() }
+                    )
+                }.filter { it.sessionsForDays.isNotEmpty() }
+            }
+        }
     }
 
 

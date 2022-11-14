@@ -8,7 +8,7 @@
  * Parts of this software are licensed under the MIT license
  *
  * Copyright (c) 2022, Javier Carbone, author Michael Prommersberger
- * Additions and modifications, author Matthias Emde 
+ * Additions and modifications, author Matthias Emde
  */
 
 package de.practicetime.practicetime.ui.sessionlist
@@ -17,12 +17,25 @@ import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.os.*
+import android.util.Log
 import android.util.TypedValue
 import android.view.View
 import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.viewinterop.AndroidViewBinding
+import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.animation.*
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.unit.dp
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.ConcatAdapter
@@ -34,17 +47,291 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
 import de.practicetime.practicetime.database.entities.SessionWithSectionsWithLibraryItems
-import de.practicetime.practicetime.databinding.FragmentContainerSessionsListBinding
-import de.practicetime.practicetime.shared.setCommonToolbar
+import de.practicetime.practicetime.shared.*
+import de.practicetime.practicetime.spacing
+import de.practicetime.practicetime.ui.MainState
 import de.practicetime.practicetime.ui.activesession.ActiveSessionActivity
+import de.practicetime.practicetime.utils.TIME_FORMAT_HUMAN_PRETTY
+import de.practicetime.practicetime.utils.epochSecondsToDate
+import de.practicetime.practicetime.utils.getDurationString
+import de.practicetime.practicetime.utils.getSpecificMonth
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Runnable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.sql.Timestamp
+import java.text.SimpleDateFormat
 import java.util.*
 
+data class SessionsForDaysForMonth (
+    val specificMonth: Int,
+    val sessionsForDays: List<SessionsForDay>
+)
+
+data class SessionsForDay (
+    val specificDay: Int,
+    val totalPracticeDuration: Int,
+    val sessions: List<SessionWithSectionsWithLibraryItems>
+)
+
+
+class SessionListState(
+    private val coroutineScope: CoroutineScope,
+) {
+    init {
+
+    }
+
+    val inVisibleMonths = mutableStateListOf<Int>()
+
+
+    // Action mode
+    var actionMode = mutableStateOf(false)
+
+    val selectedSessionIds = mutableStateListOf<Long>()
+
+    fun clearActionMode() {
+        selectedSessionIds.clear()
+        actionMode.value = false
+    }
+}
+
 @Composable
-fun SessionListFragmentHolder() {
-    AndroidViewBinding(FragmentContainerSessionsListBinding::inflate)
+fun rememberSessionListState(
+    coroutineScope: CoroutineScope = rememberCoroutineScope(),
+) = remember(coroutineScope) { SessionListState(coroutineScope) }
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class,
+    ExperimentalAnimationApi::class
+)
+@Composable
+fun SessionListFragmentHolder(
+    mainState: MainState,
+    activity: AppCompatActivity?,
+) {
+    val sessionListState = rememberSessionListState()
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    
+    Scaffold(
+        contentWindowInsets = WindowInsets(bottom = 0.dp),
+        modifier = Modifier
+            .nestedScroll(scrollBehavior.nestedScrollConnection),
+        floatingActionButton = {
+            ExtendedFloatingActionButton(
+                onClick = {
+                    activity?.let {
+                        val i = Intent(it, ActiveSessionActivity::class.java)
+                        it.startActivity(i)
+                        it.overridePendingTransition(R.anim.slide_in_up, R.anim.fake_anim)
+                    }
+                }
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "new session"
+                )
+                Spacer(Modifier.width(12.dp))
+                Text(text = "New Session")
+            }
+        },
+        topBar = {
+            LargeTopAppBar(
+                title = { Text(text = "PracticeTime!") },
+                scrollBehavior = scrollBehavior,
+                actions = {
+                    IconButton(onClick = {
+                        mainState.showMainMenu.value = true
+                    }) {
+                        Icon(Icons.Default.MoreVert, contentDescription = "more")
+                        MainMenu (
+                            show = mainState.showMainMenu.value,
+                            onDismissHandler = { mainState.showMainMenu.value = false },
+                            onSelectionHandler = { commonSelection ->
+                                mainState.showMainMenu.value = false
+
+                                when (commonSelection) {
+                                    CommonMenuSelections.APP_INFO -> {}
+                                    CommonMenuSelections.THEME -> {
+                                        mainState.showThemeSubMenu.value = true
+                                    }
+                                    CommonMenuSelections.BACKUP -> {
+                                        mainState.showExportImportDialog.value = true
+                                    }
+                                }
+                            },
+                            uniqueMenuItems = { /* TODO UNIQUE Session MENU */ }
+                        )
+                        ThemeMenu(
+                            expanded = mainState.showThemeSubMenu.value,
+                            currentTheme = mainState.activeTheme.value,
+                            onDismissHandler = { mainState.showThemeSubMenu.value = false },
+                            onSelectionHandler = { theme ->
+                                mainState.showThemeSubMenu.value = false
+                                mainState.setTheme(theme)
+                            }
+                        )
+                    }
+                }
+            )
+
+            // Action bar
+            if(sessionListState.actionMode.value) {
+                ActionBar(
+                    numSelectedItems = sessionListState.selectedSessionIds.size,
+                    onDismissHandler = { sessionListState.clearActionMode() },
+                    onEditHandler = {
+                        // TODO
+                        sessionListState.clearActionMode()
+                    },
+                    onDeleteHandler = {
+                        mainState.deleteSessions(sessionListState.selectedSessionIds.toList())
+                        sessionListState.clearActionMode()
+                    }
+                )
+            }
+        },
+        content = { paddingValues ->
+            // Session list
+            val sessions = mainState.sessions.collectAsState()
+            sessions.value.forEach { month ->
+                month.sessionsForDays.forEach { day ->
+                    day.sessions.forEach {
+                        Log.d("SessionListFragment", "Session: ${it.session.id}")
+                    }
+                }
+
+            }
+            LazyColumn(
+                modifier = Modifier
+                    .padding(horizontal = 24.dp)
+                    .fillMaxWidth(),
+                contentPadding = PaddingValues(
+                    top = paddingValues.calculateTopPadding() + 16.dp,
+                    bottom = paddingValues.calculateBottomPadding() + 56.dp,
+                ),
+                verticalArrangement = Arrangement.spacedBy(24.dp)
+            ) {
+                sessions.value.forEach { sessionsForDaysForMonth ->
+                    item {
+                        Row (
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .animateItemPlacement(),
+                        ) {
+                            MonthHeader(
+                                month = epochSecondsToDate(
+                                    sessionsForDaysForMonth.sessionsForDays.first().sessions.first().sections.first().section.timestamp
+                                ).month.name,
+                                onClickHandler = {
+                                    if(sessionsForDaysForMonth.specificMonth in sessionListState.inVisibleMonths) {
+                                        sessionListState.inVisibleMonths.remove(sessionsForDaysForMonth.specificMonth)
+                                    } else {
+                                        sessionListState.inVisibleMonths.add(sessionsForDaysForMonth.specificMonth)
+                                    }
+                                }
+                            )
+                        }
+                    }
+                    sessionsForDaysForMonth.sessionsForDays.forEach { sessionsForDay ->
+                        item {
+                            DayHeader(
+                                timestamp = sessionsForDay.sessions.first().sections.first().section.timestamp,
+                                totalPracticeDuration = sessionsForDay.totalPracticeDuration
+                            )
+                        }
+                        items(
+                            items = sessionsForDay.sessions,
+                            key = { it.session.id }
+                        ) { session ->
+                            AnimatedVisibility(
+                                modifier = Modifier.animateItemPlacement(),
+                                visible = sessionsForDaysForMonth.specificMonth !in sessionListState.inVisibleMonths,
+                                enter = scaleIn(),
+                                exit = fadeOut()
+                            ) {
+                                val sessionId = session.session.id
+                                Selectable(
+                                    selected = sessionId in sessionListState.selectedSessionIds,
+                                    onShortClick = {
+                                        sessionListState.apply {
+                                            if (actionMode.value) {
+                                                if (selectedSessionIds.contains(sessionId)) {
+                                                    selectedSessionIds.remove(sessionId)
+                                                    if (selectedSessionIds.isEmpty()) {
+                                                        actionMode.value = false
+                                                    }
+                                                } else {
+                                                    selectedSessionIds.add(sessionId)
+                                                }
+                                            } else {
+                                                // TODO
+                                            }
+                                        }
+                                    },
+                                    onLongClick = {
+                                        sessionListState.apply {
+                                            if (sessionId !in selectedSessionIds) {
+                                                selectedSessionIds.add(sessionId)
+                                                actionMode.value = true
+                                            }
+                                        }
+                                    },
+                                ) {
+                                    SessionCard(sessionWithSectionsWithLibraryItems = session)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    )
+}
+
+@Composable
+fun MonthHeader(
+    month: String,
+    onClickHandler: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = MaterialTheme.spacing.medium),
+        horizontalArrangement = Arrangement.Center
+    ) {
+        OutlinedButton(
+            onClick = onClickHandler
+        ) {
+            Text(
+                text = month,
+                style = MaterialTheme.typography.titleMedium
+            )
+        }
+    }
+}
+
+@Composable
+fun DayHeader(
+    timestamp: Long,
+    totalPracticeDuration: Int,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = MaterialTheme.spacing.medium),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        val dateFormat = SimpleDateFormat("E dd.MM.yyyy", Locale.getDefault())
+
+        Text(
+            text = dateFormat.format(Date(timestamp * 1000)),
+            style = MaterialTheme.typography.bodyLarge
+        )
+        Text(
+            text = getDurationString(totalPracticeDuration, TIME_FORMAT_HUMAN_PRETTY).toString(),
+            style = MaterialTheme.typography.bodyLarge
+        )
+    }
 }
 
 class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
