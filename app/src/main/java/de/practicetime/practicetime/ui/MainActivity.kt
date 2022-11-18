@@ -40,6 +40,7 @@ import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.core.content.ContextCompat.startActivity
 import androidx.core.view.WindowCompat
@@ -59,6 +60,7 @@ import de.practicetime.practicetime.database.entities.LibraryItem
 import de.practicetime.practicetime.getActivity
 import de.practicetime.practicetime.shared.ThemeSelections
 import de.practicetime.practicetime.ui.goals.GoalsFragmentHolder
+import de.practicetime.practicetime.ui.goals.ProgressUpdate
 import de.practicetime.practicetime.ui.intro.AppIntroActivity
 import de.practicetime.practicetime.ui.library.Library
 import de.practicetime.practicetime.ui.sessionlist.SessionListFragmentHolder
@@ -72,33 +74,48 @@ import kotlinx.coroutines.launch
 
 sealed class Screen(
     val route: String,
-    @StringRes val title: Int,
-    @DrawableRes val staticIcon: Int,
-    @DrawableRes val animatedIcon: Int
+    val navigationBarData: NavigationBarData? = null
 ) {
     object Sessions : Screen(
         route = "sessionList",
-        title = R.string.navigationSessionsTitle,
-        staticIcon = R.drawable.ic_sessions,
-        animatedIcon = R.drawable.avd_sessions,
+        NavigationBarData(
+            title = R.string.navigationSessionsTitle,
+            staticIcon = R.drawable.ic_sessions,
+            animatedIcon = R.drawable.avd_sessions,
+        )
     )
     object Goals : Screen(
         route = "goals",
-        title = R.string.navigationGoalsTitle,
-        staticIcon = R.drawable.ic_goals,
-        animatedIcon = R.drawable.avd_goals
+        NavigationBarData(
+            title = R.string.navigationGoalsTitle,
+            staticIcon = R.drawable.ic_goals,
+            animatedIcon = R.drawable.avd_goals
+        )
     )
     object Statistics : Screen(
         route = "statisticsOverview",
-        title = R.string.navigationStatisticsTitle,
-        staticIcon = R.drawable.ic_bar_chart,
-        animatedIcon = R.drawable.avd_bar_chart
+        NavigationBarData(
+            title = R.string.navigationStatisticsTitle,
+            staticIcon = R.drawable.ic_bar_chart,
+            animatedIcon = R.drawable.avd_bar_chart
+        )
     )
     object Library : Screen(
         route = "library",
-        title = R.string.navigationLibraryTitle,
-        staticIcon = R.drawable.ic_library,
-        animatedIcon = R.drawable.avd_library
+        NavigationBarData(
+            title = R.string.navigationLibraryTitle,
+            staticIcon = R.drawable.ic_library,
+            animatedIcon = R.drawable.avd_library
+        )
+    )
+    object ProgressUpdate : Screen(
+        route = "progressUpdate",
+    )
+
+    data class NavigationBarData(
+        @StringRes val title: Int,
+        @DrawableRes val staticIcon: Int,
+        @DrawableRes val animatedIcon: Int
     )
 }
 
@@ -155,57 +172,87 @@ class MainActivity : AppCompatActivity() {
             })
 
             Mdc3Theme {
-                val navController = rememberAnimatedNavController()
                 Scaffold(
                     bottomBar = {
-                        NavigationBar {
-                            val navBackStackEntry by navController.currentBackStackEntryAsState()
-                            val currentDestination = navBackStackEntry?.destination
-                            navItems.forEach { screen ->
-                                val selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true
-                                val painterCount = 5
-                                var activePainter by remember { mutableStateOf(0)}
-                                val painter = rememberVectorPainter(image = ImageVector.vectorResource(screen.staticIcon))
-                                val animatedPainters = (0..painterCount).map {
-                                    rememberAnimatedVectorPainter(
-                                        animatedImageVector = AnimatedImageVector.animatedVectorResource(screen.animatedIcon),
-                                        atEnd = selected && activePainter == it
+                        val navBackStackEntry by mainState.navController.currentBackStackEntryAsState()
+                        val currentDestination = navBackStackEntry?.destination
+                        val showNavigationBar = currentDestination?.hierarchy?.any { dest ->
+                            navItems.any { it.route == dest.route }
+                        } == true
+                        if (showNavigationBar) {
+                            Box {
+                                NavigationBar {
+                                    navItems.forEach { screen ->
+                                        val selected =
+                                            currentDestination?.hierarchy?.any { it.route == screen.route } == true
+                                        val painterCount = 5
+                                        var activePainter by remember { mutableStateOf(0) }
+                                        val painter = rememberVectorPainter(
+                                            image = ImageVector.vectorResource(screen.navigationBarData!!.staticIcon)
+                                        )
+                                        val animatedPainters = (0..painterCount).map {
+                                            rememberAnimatedVectorPainter(
+                                                animatedImageVector = AnimatedImageVector.animatedVectorResource(
+                                                    screen.navigationBarData.animatedIcon
+                                                ),
+                                                atEnd = selected && activePainter == it
+                                            )
+                                        }
+                                        NavigationBarItem(
+                                            icon = {
+                                                Image(
+                                                    painter = if (selected) animatedPainters[activePainter] else painter,
+                                                    colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface),
+                                                    contentDescription = null
+                                                )
+                                            },
+                                            label = {
+                                                Text(
+                                                    text = stringResource(screen.navigationBarData.title),
+                                                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+                                                )
+                                            },
+                                            selected = selected,
+                                            onClick = {
+                                                if (!selected) activePainter =
+                                                    (activePainter + 1) % painterCount
+                                                mainState.navController.navigate(screen.route) {
+                                                    // Pop up to the start destination of the graph to
+                                                    // avoid building up a large stack of destinations
+                                                    // on the back stack as users select items
+                                                    popUpTo(mainState.navController.graph.findStartDestination().id) {
+                                                        saveState = true
+                                                    }
+                                                    // Avoid multiple copies of the same destination when
+                                                    // reselecting the same item
+                                                    launchSingleTop = true
+                                                    // Restore state when reselecting a previously selected item
+                                                    restoreState = true
+                                                }
+                                            }
+                                        )
+                                    }
+                                }
+
+                                /** Navbar Scrim */
+                                AnimatedVisibility(
+                                    modifier = Modifier
+                                        .matchParentSize()
+                                        .zIndex(1f),
+                                    visible = mainState.showNavBarScrim.value,
+                                    enter = fadeIn(),
+                                    exit = fadeOut()
+                                ) {
+                                    Box(modifier = Modifier
+                                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.9f))
                                     )
                                 }
-                                NavigationBarItem(
-                                    icon = { Image(
-                                        painter = if(selected) animatedPainters[activePainter] else painter,
-                                        colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface),
-                                        contentDescription = null
-                                    ) },
-                                    label = { Text(
-                                        text = stringResource(screen.title),
-                                        fontWeight = if(selected) FontWeight.Bold else FontWeight.Normal,
-                                    ) },
-                                    selected = selected,
-                                    onClick = {
-                                        if(!selected) activePainter = (activePainter + 1) % painterCount
-                                        navController.navigate(screen.route) {
-                                            // Pop up to the start destination of the graph to
-                                            // avoid building up a large stack of destinations
-                                            // on the back stack as users select items
-                                            popUpTo(navController.graph.findStartDestination().id) {
-                                                saveState = true
-                                            }
-                                            // Avoid multiple copies of the same destination when
-                                            // reselecting the same item
-                                            launchSingleTop = true
-                                            // Restore state when reselecting a previously selected item
-                                            restoreState = true
-                                        }
-                                    }
-                                )
                             }
                         }
                     }
                 ) { innerPadding ->
                     AnimatedNavHost(
-                        navController,
+                        mainState.navController,
                         startDestination = Screen.Sessions.route,
                         Modifier.padding(bottom = innerPadding.calculateBottomPadding())
                     ) {
@@ -238,6 +285,11 @@ class MainActivity : AppCompatActivity() {
                             enterTransition = { enterTransition },
                             exitTransition = { exitTransition }
                         ) { Library (mainState) }
+                        composable(
+                            route = Screen.ProgressUpdate.route,
+                            enterTransition = { enterTransition },
+                            exitTransition = { exitTransition }
+                        ) { ProgressUpdate(mainState) }
                     }
 
                     /** Export / Import Dialog */
@@ -246,30 +298,10 @@ class MainActivity : AppCompatActivity() {
                         onDismissHandler = { mainState.showExportImportDialog.value = false }
                     )
 
-
-                    /** Navbar Scrim */
-                    AnimatedVisibility(
-                        modifier = Modifier
-                            .zIndex(1f),
-                        visible = mainState.showNavBarScrim.value,
-                        enter = fadeIn(),
-                        exit = fadeOut()
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxSize(),
-                            verticalArrangement = Arrangement.Bottom
-                        ) {
-                            Box(modifier = Modifier
-                                .fillMaxWidth()
-                                .height(innerPadding.calculateBottomPadding())
-                                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.9f))
-                                .clickable(
-                                    interactionSource = remember { MutableInteractionSource() },
-                                    indication = null
-                                ) {}
-                            )
-                        }
+                    // if there is a new session added to the intent, navigate to progress update
+                    intent.extras?.getLong("KEY_SESSION")?.let { newSessionId ->
+                        intent.removeExtra("KEY_SESSION")
+                        mainState.navigateTo(Screen.ProgressUpdate.route)
                     }
                 }
             }

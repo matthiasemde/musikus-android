@@ -53,7 +53,7 @@ import de.practicetime.practicetime.database.entities.Session
 import de.practicetime.practicetime.database.entities.SessionWithSections
 import de.practicetime.practicetime.services.RecorderService
 import de.practicetime.practicetime.services.SessionForegroundService
-import de.practicetime.practicetime.ui.goals.ProgressUpdateActivity
+import de.practicetime.practicetime.ui.MainActivity
 import de.practicetime.practicetime.ui.goals.updateGoals
 import de.practicetime.practicetime.ui.library.LibraryItemAdapter
 import de.practicetime.practicetime.ui.library.LibraryItemDialog
@@ -1350,7 +1350,7 @@ class ActiveSessionActivity : AppCompatActivity() {
             stopService(it)
         }
         // go back to MainActivity, make new intent so MainActivity gets reloaded and shows new session
-        val intent = Intent(this, ProgressUpdateActivity::class.java)
+        val intent = Intent(this, MainActivity::class.java)
         val pBundle = Bundle()
         pBundle.putLong("KEY_SESSION", sessionId)
         intent.putExtras(pBundle)

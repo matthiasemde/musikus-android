@@ -8,8 +8,13 @@
 
 package de.practicetime.practicetime.ui
 
+import android.util.Log
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.runtime.*
+import androidx.navigation.NavController
+import androidx.navigation.NavHostController
+import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.database.entities.*
 import de.practicetime.practicetime.shared.ThemeSelections
@@ -37,13 +42,16 @@ enum class SortDirection {
     }
 }
 
+@OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun rememberMainState(
-    coroutineScope: CoroutineScope = rememberCoroutineScope()
-) = remember(coroutineScope) { MainState(coroutineScope) }
+    coroutineScope: CoroutineScope = rememberCoroutineScope(),
+    navController: NavHostController = rememberAnimatedNavController()
+) = remember(coroutineScope) { MainState(coroutineScope, navController) }
 
 class MainState(
-    private val coroutineScope: CoroutineScope
+    private val coroutineScope: CoroutineScope,
+    val navController: NavHostController,
 ) {
 
     /** Initialization */
@@ -65,6 +73,14 @@ class MainState(
             loadGoals()
             sortGoals()
         }
+    }
+
+
+    /** Navigation */
+
+    fun navigateTo(destination: String) {
+        Log.d("MainState", "navigateTo: $destination")
+        navController.navigate(destination)
     }
 
     /** Menu */

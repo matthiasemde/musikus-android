@@ -30,6 +30,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Factory
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -50,6 +51,7 @@ import de.practicetime.practicetime.database.entities.SessionWithSectionsWithLib
 import de.practicetime.practicetime.shared.*
 import de.practicetime.practicetime.spacing
 import de.practicetime.practicetime.ui.MainState
+import de.practicetime.practicetime.ui.Screen
 import de.practicetime.practicetime.ui.activesession.ActiveSessionActivity
 import de.practicetime.practicetime.utils.TIME_FORMAT_HUMAN_PRETTY
 import de.practicetime.practicetime.utils.epochSecondsToDate
@@ -130,8 +132,8 @@ fun SessionListFragmentHolder(
                     imageVector = Icons.Default.Add,
                     contentDescription = "new session"
                 )
-                Spacer(Modifier.width(12.dp))
-                Text(text = "New Session")
+                Spacer(Modifier.width(MaterialTheme.spacing.small))
+                Text(text = "Start Session")
             }
         },
         topBar = {
@@ -139,6 +141,14 @@ fun SessionListFragmentHolder(
                 title = { Text(text = "PracticeTime!") },
                 scrollBehavior = scrollBehavior,
                 actions = {
+                    IconButton(onClick = {
+                        mainState.navigateTo(Screen.ProgressUpdate.route)
+                    }) {
+                        Icon(
+                            imageVector = Icons.Default.Factory,
+                            contentDescription = "settings"
+                        )
+                    }
                     IconButton(onClick = {
                         mainState.showMainMenu.value = true
                     }) {
@@ -193,14 +203,6 @@ fun SessionListFragmentHolder(
         content = { paddingValues ->
             // Session list
             val sessions = mainState.sessions.collectAsState()
-            sessions.value.forEach { month ->
-                month.sessionsForDays.forEach { day ->
-                    day.sessions.forEach {
-                        Log.d("SessionListFragment", "Session: ${it.session.id}")
-                    }
-                }
-
-            }
             LazyColumn(
                 modifier = Modifier
                     .padding(horizontal = 24.dp)
