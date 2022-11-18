@@ -179,7 +179,18 @@ class MainActivity : AppCompatActivity() {
                         val showNavigationBar = currentDestination?.hierarchy?.any { dest ->
                             navItems.any { it.route == dest.route }
                         } == true
-                        if (showNavigationBar) {
+
+                        AnimatedVisibility(
+                            visible = showNavigationBar,
+                            enter = slideInVertically(
+                                initialOffsetY = { it },
+                                animationSpec = tween(400)
+                            ),
+                            exit = slideOutVertically(
+                                targetOffsetY = { it },
+                                animationSpec = tween(400)
+                            )
+                        ) {
                             Box {
                                 NavigationBar {
                                     navItems.forEach { screen ->
@@ -251,44 +262,49 @@ class MainActivity : AppCompatActivity() {
                         }
                     }
                 ) { innerPadding ->
+                    val animationDuration = 400
                     AnimatedNavHost(
                         mainState.navController,
                         startDestination = Screen.Sessions.route,
-                        Modifier.padding(bottom = innerPadding.calculateBottomPadding())
+                        Modifier.padding(bottom = innerPadding.calculateBottomPadding()),
+                        enterTransition = {
+                            slideInVertically(
+                                animationSpec = tween(animationDuration),
+                                initialOffsetY = { fullHeight -> -(fullHeight / 10) }
+                            ) + fadeIn(
+                                animationSpec = tween(
+                                    animationDuration / 2,
+                                    animationDuration / 2
+                                )
+                            )
+                        },
+                        exitTransition = {
+                            slideOutVertically(
+                                animationSpec = tween(animationDuration),
+                                targetOffsetY = { fullHeight -> (fullHeight / 10) }
+                            ) + fadeOut(animationSpec = tween(animationDuration / 2))
+                        }
                     ) {
-                        val animationDuration = 500
-                        val enterTransition = slideInVertically(
-                            animationSpec = tween(animationDuration),
-                            initialOffsetY = { fullHeight -> -(fullHeight / 10) }
-                        ) + fadeIn(animationSpec = tween(animationDuration / 2, animationDuration / 2))
-                        val exitTransition = slideOutVertically(
-                            animationSpec = tween(animationDuration),
-                            targetOffsetY = { fullHeight -> (fullHeight / 10) }
-                        ) + fadeOut(animationSpec = tween(animationDuration / 2))
                         composable(
                             route = Screen.Sessions.route,
-                            enterTransition = { enterTransition },
-                            exitTransition = { exitTransition },
+                            exitTransition = {
+                                if(initialState.destination.route == Screen.ProgressUpdate.route) {
+                                    fadeOut(tween(0))
+                                } else null
+                            }
                         ) { SessionListFragmentHolder(mainState, getActivity()) }
                         composable(
                             route = Screen.Goals.route,
-                            enterTransition = { enterTransition },
-                            exitTransition = { exitTransition }
                         ) { GoalsFragmentHolder(mainState) }
                         composable(
                             route = Screen.Statistics.route,
-                            enterTransition = { enterTransition },
-                            exitTransition = { exitTransition }
                         ) { StatisticsFragmentHolder() }
                         composable(
                             route = Screen.Library.route,
-                            enterTransition = { enterTransition },
-                            exitTransition = { exitTransition }
                         ) { Library (mainState) }
                         composable(
                             route = Screen.ProgressUpdate.route,
-                            enterTransition = { enterTransition },
-                            exitTransition = { exitTransition }
+                            enterTransition = { fadeIn(tween(0)) }
                         ) { ProgressUpdate(mainState) }
                     }
 
