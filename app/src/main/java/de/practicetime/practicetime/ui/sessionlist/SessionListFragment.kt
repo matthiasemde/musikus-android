@@ -142,14 +142,6 @@ fun SessionListFragmentHolder(
                 scrollBehavior = scrollBehavior,
                 actions = {
                     IconButton(onClick = {
-                        mainState.navigateTo(Screen.ProgressUpdate.route)
-                    }) {
-                        Icon(
-                            imageVector = Icons.Default.Factory,
-                            contentDescription = "settings"
-                        )
-                    }
-                    IconButton(onClick = {
                         mainState.showMainMenu.value = true
                     }) {
                         Icon(Icons.Default.MoreVert, contentDescription = "more")
@@ -234,12 +226,20 @@ fun SessionListFragmentHolder(
                             )
                         }
                     }
+                    val monthVisible = sessionsForDaysForMonth.specificMonth !in sessionListState.inVisibleMonths
                     sessionsForDaysForMonth.sessionsForDays.forEach { sessionsForDay ->
                         item {
-                            DayHeader(
-                                timestamp = sessionsForDay.sessions.first().sections.first().section.timestamp,
-                                totalPracticeDuration = sessionsForDay.totalPracticeDuration
-                            )
+                            AnimatedVisibility(
+                                modifier = Modifier.animateItemPlacement(),
+                                visible = monthVisible,
+                                enter = scaleIn(),
+                                exit = fadeOut()
+                            ) {
+                                DayHeader(
+                                    timestamp = sessionsForDay.sessions.first().sections.first().section.timestamp,
+                                    totalPracticeDuration = sessionsForDay.totalPracticeDuration
+                                )
+                            }
                         }
                         items(
                             items = sessionsForDay.sessions,
@@ -247,7 +247,7 @@ fun SessionListFragmentHolder(
                         ) { session ->
                             AnimatedVisibility(
                                 modifier = Modifier.animateItemPlacement(),
-                                visible = sessionsForDaysForMonth.specificMonth !in sessionListState.inVisibleMonths,
+                                visible = monthVisible,
                                 enter = scaleIn(),
                                 exit = fadeOut()
                             ) {
@@ -319,8 +319,7 @@ fun DayHeader(
 ) {
     Row(
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = MaterialTheme.spacing.medium),
+            .fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         val dateFormat = SimpleDateFormat("E dd.MM.yyyy", Locale.getDefault())
