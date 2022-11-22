@@ -180,17 +180,7 @@ class MainActivity : AppCompatActivity() {
                             navItems.any { it.route == dest.route }
                         } == true
 
-                        AnimatedVisibility(
-                            visible = showNavigationBar,
-                            enter = slideInVertically(
-                                initialOffsetY = { it },
-                                animationSpec = tween(400)
-                            ),
-                            exit = slideOutVertically(
-                                targetOffsetY = { it },
-                                animationSpec = tween(400)
-                            )
-                        ) {
+                        if(showNavigationBar) {
                             Box {
                                 NavigationBar {
                                     navItems.forEach { screen ->
