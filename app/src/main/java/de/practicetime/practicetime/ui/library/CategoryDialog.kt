@@ -1,3 +1,9 @@
+/*
+ * This software is licensed under the MIT license
+ *
+ * Copyright (c) 2022, Javier Carbone, author Matthias Emde
+ */
+
 package de.practicetime.practicetime.ui.library
 
 import android.app.Activity

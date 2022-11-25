@@ -1,3 +1,9 @@
+/*
+ * This software is licensed under the MIT license
+ *
+ * Copyright (c) 2022, Javier Carbone, author Michael Prommersberger
+ */
+
 package de.practicetime.practicetime.ui.overflowitems
 
 import android.content.Intent
@@ -45,13 +51,16 @@ class HelpActivity : AppCompatActivity() {
             )
             ssb.append(ss)
 
-            //avoid last "\n"
+            //avoid last "
+"
             if (i != arr.lastIndex)
-                ssb.append("\n")
+                ssb.append("
+")
         }
         findViewById<TextView>(R.id.help_tips_text).text = TextUtils.concat(
             getString(R.string.help_tips_text),
-            "\n",
+            "
+",
             ssb
         )
 

@@ -1,3 +1,10 @@
+/*
+ * This software is licensed under the MIT license
+ *
+ * Copyright (c) 2022, Javier Carbone, author Michael Prommersberger
+ * Additions and modifications, author Matthias Emde 
+ */
+
 package de.practicetime.practicetime.ui.activesession
 
 import android.Manifest
@@ -411,7 +418,7 @@ class ActiveSessionActivity : AppCompatActivity() {
         } else if(mService.metronomeBeatsPerMinute == mService.metronomeMaxBpm && slowlyFlag) {
             Toast.makeText(
                 this,
-                "If you can play it slowly, you can play it quickly \uD83C\uDFBB\uD83C\uDFBB\uD83D\uDC1D",
+                "If you can play it slowly, you can play it quickly ������������������",
                 Toast.LENGTH_LONG
             ).show()
         }

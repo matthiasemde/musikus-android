@@ -1,3 +1,10 @@
+/*
+ * This software is licensed under the MIT license
+ *
+ * Copyright (c) 2022, Javier Carbone, author Michael Prommersberger
+ * Additions and modifications, author Matthias Emde 
+ */
+
 package de.practicetime.practicetime.ui.intro
 
 import android.content.Context
@@ -288,7 +295,7 @@ private fun getDummySessions() =
             session = Session(
                 breakDuration = 60 * 10,
                 rating = 4,
-                comment = "Great session! \uD83D\uDE80"
+                comment = "Great session! ������"
             ),
             sections = listOf(
                 SectionWithCategory(

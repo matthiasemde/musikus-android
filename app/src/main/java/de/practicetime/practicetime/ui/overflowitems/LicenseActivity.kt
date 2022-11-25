@@ -1,3 +1,9 @@
+/*
+ * This software is licensed under the MIT license
+ *
+ * Copyright (c) 2022, Javier Carbone, author Michael Prommersberger
+ */
+
 package de.practicetime.practicetime.ui.overflowitems
 
 import android.content.Intent
@@ -75,7 +81,8 @@ class LicenseActivity : AppCompatActivity() {
             val licenseText = StringBuilder()
             var line: String?
             while (reader.readLine().also { line = it } != null) {
-                licenseText.append(line).append("\n")
+                licenseText.append(line).append("
+")
             }
             AlertDialog.Builder(this)
                 .setMessage(licenseText)

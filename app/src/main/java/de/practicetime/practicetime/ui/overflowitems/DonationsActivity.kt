@@ -1,3 +1,9 @@
+/*
+ * This software is licensed under the MIT license
+ *
+ * Copyright (c) 2022, Javier Carbone, author Michael Prommersberger
+ */
+
 package de.practicetime.practicetime.ui.overflowitems
 
 import android.content.Intent
@@ -47,11 +53,13 @@ class DonationsActivity : AppCompatActivity(){
             ssb.append(ss)
 
             if (index != arr.lastIndex)
-                ssb.append("\n")
+                ssb.append("
+")
         }
         findViewById<TextView>(R.id.donations_text).text = TextUtils.concat(
             getString(R.string.donations_text),
-            "\n",
+            "
+",
             ssb
         )
     }

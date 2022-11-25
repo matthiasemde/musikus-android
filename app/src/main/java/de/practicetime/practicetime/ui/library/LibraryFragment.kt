@@ -1,3 +1,9 @@
+/*
+ * This software is licensed under the MIT license
+ *
+ * Copyright (c) 2022, Javier Carbone, author Matthias Emde
+ */
+
 package de.practicetime.practicetime.ui.library
 
 import android.app.AlertDialog
@@ -249,7 +255,8 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
             PracticeTime.categoryDao.update(category)
             activeCategories.indexOfFirst { c -> c.id == category.id }.also { i ->
                 assert(i != -1) {
-                    Log.e("EDIT_CATEGORY", "No category with matching id found for\n$category")
+                    Log.e("EDIT_CATEGORY", "No category with matching id found for
+$category")
                 }
                 activeCategories[i] = category
                 categoryAdapter?.notifyItemChanged(i)

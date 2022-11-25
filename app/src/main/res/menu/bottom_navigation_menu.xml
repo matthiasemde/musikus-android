@@ -1,4 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    This software is licensed under the MIT license
+
+    Copyright (c) 2022, Javier Carbone, author Michael Prommersberger
+    Additions and modifications, author Matthias Emde
+-->
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:id="@+id/sessionListFragment"
