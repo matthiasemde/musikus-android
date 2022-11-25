@@ -255,8 +255,7 @@ class LibraryFragment : Fragment(R.layout.fragment_library) {
             PracticeTime.categoryDao.update(category)
             activeCategories.indexOfFirst { c -> c.id == category.id }.also { i ->
                 assert(i != -1) {
-                    Log.e("EDIT_CATEGORY", "No category with matching id found for
-$category")
+                    Log.e("EDIT_CATEGORY", "No category with matching id found for $category")
                 }
                 activeCategories[i] = category
                 categoryAdapter?.notifyItemChanged(i)

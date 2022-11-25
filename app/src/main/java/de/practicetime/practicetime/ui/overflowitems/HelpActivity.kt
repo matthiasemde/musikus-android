@@ -51,16 +51,13 @@ class HelpActivity : AppCompatActivity() {
             )
             ssb.append(ss)
 
-            //avoid last "
-"
+            //avoid last ""
             if (i != arr.lastIndex)
-                ssb.append("
-")
+                ssb.append("")
         }
         findViewById<TextView>(R.id.help_tips_text).text = TextUtils.concat(
             getString(R.string.help_tips_text),
-            "
-",
+            "",
             ssb
         )
 
