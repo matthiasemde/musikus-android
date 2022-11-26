@@ -418,7 +418,7 @@ class ActiveSessionActivity : AppCompatActivity() {
         } else if(mService.metronomeBeatsPerMinute == mService.metronomeMaxBpm && slowlyFlag) {
             Toast.makeText(
                 this,
-                "If you can play it slowly, you can play it quickly ������������������",
+                "If you can play it slowly, you can play it quickly \uD83C\uDFBB\uD83C\uDFBB\uD83D\uDC1D",
                 Toast.LENGTH_LONG
             ).show()
         }

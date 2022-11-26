@@ -53,11 +53,11 @@ class DonationsActivity : AppCompatActivity(){
             ssb.append(ss)
 
             if (index != arr.lastIndex)
-                ssb.append("")
+                ssb.append("\n")
         }
         findViewById<TextView>(R.id.donations_text).text = TextUtils.concat(
             getString(R.string.donations_text),
-            "",
+            "\n",
             ssb
         )
     }

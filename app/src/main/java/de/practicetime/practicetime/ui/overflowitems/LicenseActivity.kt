@@ -81,7 +81,7 @@ class LicenseActivity : AppCompatActivity() {
             val licenseText = StringBuilder()
             var line: String?
             while (reader.readLine().also { line = it } != null) {
-                licenseText.append(line).append("")
+                licenseText.append(line).append("\n")
             }
             AlertDialog.Builder(this)
                 .setMessage(licenseText)

@@ -295,7 +295,7 @@ private fun getDummySessions() =
             session = Session(
                 breakDuration = 60 * 10,
                 rating = 4,
-                comment = "Great session! ������"
+                comment = "Great session! \uD83D\uDE80"
             ),
             sections = listOf(
                 SectionWithCategory(
