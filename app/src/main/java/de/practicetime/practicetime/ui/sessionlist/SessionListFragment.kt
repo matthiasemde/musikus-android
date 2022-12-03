@@ -17,20 +17,21 @@ import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.os.*
-import android.util.Log
 import android.util.TypedValue
 import android.view.View
 import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.animation.*
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Factory
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -51,17 +52,14 @@ import de.practicetime.practicetime.database.entities.SessionWithSectionsWithLib
 import de.practicetime.practicetime.shared.*
 import de.practicetime.practicetime.spacing
 import de.practicetime.practicetime.ui.MainState
-import de.practicetime.practicetime.ui.Screen
 import de.practicetime.practicetime.ui.activesession.ActiveSessionActivity
 import de.practicetime.practicetime.utils.TIME_FORMAT_HUMAN_PRETTY
 import de.practicetime.practicetime.utils.epochSecondsToDate
 import de.practicetime.practicetime.utils.getDurationString
-import de.practicetime.practicetime.utils.getSpecificMonth
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Runnable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.sql.Timestamp
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -90,7 +88,7 @@ class SessionListState(
     // Action mode
     var actionMode = mutableStateOf(false)
 
-    val selectedSessionIds = mutableStateListOf<Long>()
+    val selectedSessionIds = mutableStateListOf<UUID>()
 
     fun clearActionMode() {
         selectedSessionIds.clear()
@@ -698,10 +696,10 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
         }
     }
 
-    private fun openSessionInFullscreen(sessionId: Long) {
+    private fun openSessionInFullscreen(sessionId: UUID) {
         val intent = Intent(requireContext(), FullscreenSessionActivity::class.java)
         val pBundle = Bundle()
-        pBundle.putLong("KEY_SESSION", sessionId)
+//        pBundle.putLong("KEY_SESSION", sessionId)
         intent.putExtras(pBundle)
         intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
         startActivity(intent)

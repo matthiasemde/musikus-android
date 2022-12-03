@@ -24,12 +24,8 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.scaleIn
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.CornerBasedShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -37,7 +33,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
@@ -53,7 +48,6 @@ import de.practicetime.practicetime.database.entities.GoalInstanceWithDescriptio
 import de.practicetime.practicetime.database.entities.GoalPeriodUnit
 import de.practicetime.practicetime.database.entities.GoalType
 import de.practicetime.practicetime.utils.*
-import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalAnimationApi::class)
 @SuppressLint("ViewConstructor")
@@ -240,7 +234,9 @@ class GoalCard(
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalAnimationApi::class)
 @Composable
 fun GoalCard(
+    modifier: Modifier = Modifier,
     goal: GoalInstanceWithDescriptionWithLibraryItems,
+    progressOffset: Int = 0
 ) {
     val (instance, descriptionWithLibraryItems) = goal
     val (description, libraryItems) = descriptionWithLibraryItems
@@ -249,7 +245,7 @@ fun GoalCard(
         Color(PracticeTime.getLibraryItemColors(LocalContext.current)[libraryItems.first().colorIndex])
     } else null
 
-    ElevatedCard {
+    ElevatedCard(modifier = modifier) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
                 modifier = Modifier
@@ -321,10 +317,10 @@ fun GoalCard(
             /** ProgressBar */
             val target = goal.instance.target
             val animatedProgress by animateIntAsState(
-                targetValue = goal.instance.progress,
+                targetValue = goal.instance.progress + progressOffset,
                 animationSpec = spring(
                     dampingRatio = Spring.DampingRatioNoBouncy,
-                    stiffness = Spring.StiffnessVeryLow / goal.instance.target
+                    stiffness = Spring.StiffnessHigh / goal.instance.target
                 )
             )
 

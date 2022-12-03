@@ -13,6 +13,7 @@ import androidx.room.Transaction
 import de.practicetime.practicetime.database.BaseDao
 import de.practicetime.practicetime.database.entities.LibraryItem
 import de.practicetime.practicetime.database.entities.LibraryItemWithGoalDescriptions
+import java.util.*
 
 @Dao
 abstract class LibraryItemDao : BaseDao<LibraryItem>(tableName = "library_item") {
@@ -22,7 +23,7 @@ abstract class LibraryItemDao : BaseDao<LibraryItem>(tableName = "library_item")
      */
 
     @Transaction
-    open suspend fun archive(libraryItemId: Long) : Boolean {
+    open suspend fun archive(libraryItemId: UUID) : Boolean {
         // to archive a libraryItem, fetch it from the database along with associated goals
         getWithGoalDescriptions(libraryItemId)?.also {
             val (libraryItem, goalDescriptions) = it
@@ -49,9 +50,9 @@ abstract class LibraryItemDao : BaseDao<LibraryItem>(tableName = "library_item")
     abstract suspend fun get(activeOnly: Boolean = false): List<LibraryItem>
 
     @Query("SELECT * FROM library_item WHERE library_folder_id=:libraryFolderId")
-    abstract suspend fun getFromFolder(libraryFolderId: Long): List<LibraryItem>
+    abstract suspend fun getFromFolder(libraryFolderId: UUID): List<LibraryItem>
 
     @Transaction
     @Query("SELECT * FROM library_item WHERE id=:id")
-    abstract suspend fun getWithGoalDescriptions(id: Long): LibraryItemWithGoalDescriptions?
+    abstract suspend fun getWithGoalDescriptions(id: UUID): LibraryItemWithGoalDescriptions?
 }

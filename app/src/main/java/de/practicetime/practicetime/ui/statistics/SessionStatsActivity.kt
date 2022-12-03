@@ -37,6 +37,8 @@ import de.practicetime.practicetime.utils.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.time.format.DateTimeFormatter
+import java.util.*
+import kotlin.collections.ArrayList
 import kotlin.math.ceil
 import kotlin.math.roundToInt
 
@@ -584,7 +586,7 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
     private suspend fun getMoToFrArray(): Pair< ArrayList<BarEntry>, ArrayList<PieEntry> > {
         val barChartArray = arrayListOf<BarEntry>()
         val pieChartArray = arrayListOf<PieEntry>()
-        val visibleLibraryItems = ArrayList<Long>()
+        val visibleLibraryItems = ArrayList<UUID>()
 
         libraryItems.forEach { it.totalDuration = 0 }
 
@@ -625,7 +627,7 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
     private suspend fun getWeeksArray(): Pair< ArrayList<BarEntry>, ArrayList<PieEntry> > {
         val chartArray = arrayListOf<BarEntry>()
         val pieChartArray = arrayListOf<PieEntry>()
-        val visibleLibraryItems = ArrayList<Long>()
+        val visibleLibraryItems = ArrayList<UUID>()
 
         libraryItems.forEach { it.totalDuration = 0 }
 
@@ -665,7 +667,7 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
     private suspend fun getMonthsArray(): Pair< ArrayList<BarEntry>, ArrayList<PieEntry> > {
         val barChartArray = arrayListOf<BarEntry>()
         val pieChartArray = arrayListOf<PieEntry>()
-        val visibleLibraryItems = ArrayList<Long>()
+        val visibleLibraryItems = ArrayList<UUID>()
 
         libraryItems.forEach { it.totalDuration = 0 }
 
@@ -699,7 +701,7 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
     }
 
     /** updates the shown Elements in the checkbox list according to the data in the chart */
-    private fun updateVisibleLibraryItems(visibleLibraryItems: List<Long>) {
+    private fun updateVisibleLibraryItems(visibleLibraryItems: List<UUID>) {
         var elemRemovedOrInserted = false
         // traverse in reverse order so that newly inserted/removed items don't affect list indices
         libraryItems.asReversed().forEach { elem ->

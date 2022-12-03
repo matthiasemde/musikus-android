@@ -93,7 +93,7 @@ class RecorderService : Service() {
         recordingTimeHandler.removeCallbacks(incrementRecordingTime)
         stopForeground(true)
         super.onDestroy()
-        (application as PracticeTime).executorService.execute {
+        PracticeTime.executorService.execute {
             stopRecording()
         }
         Log.d("RecService", "Destroyed")

@@ -12,6 +12,7 @@ import androidx.room.Transaction
 import de.practicetime.practicetime.database.BaseDao
 import de.practicetime.practicetime.database.entities.Section
 import de.practicetime.practicetime.database.entities.SectionWithLibraryItem
+import java.util.*
 
 @Dao
 abstract class SectionDao : BaseDao<Section>(tableName = "section") {
@@ -22,7 +23,7 @@ abstract class SectionDao : BaseDao<Section>(tableName = "section") {
      */
 
     @Query("SELECT * FROM section WHERE session_id=:sessionId")
-    abstract suspend fun getFromSession(sessionId: Long): List<Section>
+    abstract suspend fun getFromSession(sessionId: UUID): List<Section>
 
     @Transaction
     @Query("SELECT * FROM section WHERE timestamp>=:beginTimeStamp AND timestamp<=:endTimeStamp")

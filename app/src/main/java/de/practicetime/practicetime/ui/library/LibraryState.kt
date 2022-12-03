@@ -14,6 +14,7 @@ import de.practicetime.practicetime.database.entities.LibraryItem
 import de.practicetime.practicetime.shared.MultiFABState
 import de.practicetime.practicetime.shared.SpinnerState
 import kotlinx.coroutines.CoroutineScope
+import java.util.*
 
 enum class LibraryMenuSelections {
 }
@@ -82,7 +83,7 @@ class LibraryState(
     var itemDialogMode = mutableStateOf(DialogMode.ADD)
     var itemDialogName = mutableStateOf("")
     var itemDialogColorIndex = mutableStateOf(0)
-    var itemDialogFolderId = mutableStateOf<Long?>(null)
+    var itemDialogFolderId = mutableStateOf<UUID?>(null)
     var itemDialogFolderSelectorExpanded = mutableStateOf(SpinnerState.COLLAPSED)
 
     fun clearItemDialog() {
@@ -100,8 +101,8 @@ class LibraryState(
     // Action mode
     var actionMode = mutableStateOf(false)
 
-    val selectedItemIds = mutableStateListOf<Long>()
-    val selectedFolderIds = mutableStateListOf<Long>()
+    val selectedItemIds = mutableStateListOf<UUID>()
+    val selectedFolderIds = mutableStateListOf<UUID>()
 
     fun clearActionMode() {
         selectedItemIds.clear()

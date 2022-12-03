@@ -15,5 +15,5 @@ data class Session (
     @ColumnInfo(name="break_duration") val breakDuration: Int,
     @ColumnInfo(name="rating") var rating: Int,
     @ColumnInfo(name="comment") var comment: String?,
-    @ColumnInfo(name="profile_id", index = true) val profileId: Int = 0,
+//    @ColumnInfo(name="profile_id", index = true) val profileId: UUID? = null,
 ) : ModelWithTimestamps()

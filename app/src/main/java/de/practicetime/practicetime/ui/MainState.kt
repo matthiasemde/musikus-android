@@ -12,7 +12,6 @@ import android.util.Log
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.runtime.*
-import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import de.practicetime.practicetime.PracticeTime
@@ -29,8 +28,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.flow.updateAndGet
 import kotlinx.coroutines.launch
+import java.util.*
 
 enum class SortDirection {
     ASCENDING,
@@ -196,8 +195,8 @@ class MainState(
         newSession: SessionWithSections,
     ) {
         coroutineScope.launch {
-            val insertedSessionId = PracticeTime.sessionDao.insertSessionWithSections(newSession)
-            val insertedSession = PracticeTime.sessionDao.getWithSectionsWithLibraryItems(insertedSessionId)
+            PracticeTime.sessionDao.insertSessionWithSections(newSession)
+            val insertedSession = PracticeTime.sessionDao.getWithSectionsWithLibraryItems(newSession.session.id)
 
             val (day, month) = newSession.sections.first().timestamp.let { timestamp ->
                 Pair(getSpecificDay(timestamp), getSpecificMonth(timestamp))
@@ -235,7 +234,7 @@ class MainState(
     }
 
     /** Archive */
-    fun deleteSessions(sessionIds: List<Long>) {
+    fun deleteSessions(sessionIds: List<UUID>) {
         coroutineScope.launch {
             PracticeTime.sessionDao.getAndDelete(sessionIds)
             _sessions.update { sessions ->
@@ -315,11 +314,11 @@ class MainState(
                 // check if the items folderId actually exists
                 item.libraryFolderId?.let {
                     if(PracticeTime.libraryFolderDao.get(it) == null) {
+                        Log.d("MainState", "Library item ${item.id} has a folderId ($it) that doesn't exist. Setting to null.")
                         // and return item to the main screen if it doesn't
                         item.libraryFolderId = null
                         PracticeTime.libraryItemDao.update(item)
                     }
-
                 }
             }
         }
@@ -329,19 +328,17 @@ class MainState(
     /** Add */
     fun addLibraryFolder(newFolder: LibraryFolder) {
         coroutineScope.launch {
-            PracticeTime.libraryFolderDao.insertAndGet(newFolder)?.let { insertedFolder ->
-                _libraryFolders.update { listOf(insertedFolder) + it }
-                sortLibraryFolders()
-            }
+            PracticeTime.libraryFolderDao.insert(newFolder)
+            _libraryFolders.update { listOf(newFolder) + it }
+            sortLibraryFolders()
         }
     }
 
-    fun addLibraryItem(item: LibraryItem) {
+    fun addLibraryItem(newItem: LibraryItem) {
         coroutineScope.launch {
-            PracticeTime.libraryItemDao.insertAndGet(item)?.let { insertedItem ->
-                _libraryItems.update { listOf(insertedItem) + it }
-                sortLibraryItems()
-            }
+            PracticeTime.libraryItemDao.insert(newItem)
+            _libraryItems.update { listOf(newItem) + it }
+            sortLibraryItems()
         }
     }
 
@@ -364,7 +361,7 @@ class MainState(
     }
 
     /** Delete / Archive */
-    fun deleteFolders(folderIds: List<Long>) {
+    fun deleteFolders(folderIds: List<UUID>) {
         coroutineScope.launch {
             folderIds.forEach { folderId ->
                 PracticeTime.libraryFolderDao.deleteAndResetItems(folderId)
@@ -378,10 +375,10 @@ class MainState(
         }
     }
 
-    fun archiveItems(itemIds: List<Long>) {
+    fun archiveItems(itemIds: List<UUID>) {
         coroutineScope.launch {
             itemIds.forEach { itemId ->
-                // returns false in case item couldnt be archived
+                // returns false in case item couldn't be archived
                 if (PracticeTime.libraryItemDao.archive(itemId)) {
                     _libraryItems.update { items ->
                         items.filter { it.id != itemId }
@@ -545,7 +542,7 @@ class MainState(
 
     /** Edit */
     fun editGoalTarget(
-        editedGoalDescriptionId: Long,
+        editedGoalDescriptionId: UUID,
         newTarget: Int,
     ) {
         coroutineScope.launch {
@@ -562,7 +559,7 @@ class MainState(
     }
 
     /** Archive */
-    fun archiveGoals(goalDescriptionIds: List<Long>) {
+    fun archiveGoals(goalDescriptionIds: List<UUID>) {
         coroutineScope.launch {
             PracticeTime.goalDescriptionDao.getAndArchive(goalDescriptionIds)
             _goals.update { goals ->

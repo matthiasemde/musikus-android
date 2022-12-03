@@ -14,16 +14,19 @@
 package de.practicetime.practicetime.database
 
 import android.content.ContentValues
+import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.util.Log
-import androidx.room.Database
-import androidx.room.RoomDatabase
+import androidx.room.*
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import androidx.sqlite.db.SupportSQLiteQueryBuilder
+import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.database.daos.*
 import de.practicetime.practicetime.database.entities.*
 import de.practicetime.practicetime.utils.getCurrTimestamp
+import java.nio.ByteBuffer
+import java.util.*
 
 @Database(
     version = 3,
@@ -38,6 +41,7 @@ import de.practicetime.practicetime.utils.getCurrTimestamp
     ],
     exportSchema = true,
 )
+@TypeConverters(UUIDConverter::class)
 abstract class PTDatabase : RoomDatabase() {
     abstract val libraryItemDao : LibraryItemDao
     abstract val libraryFolderDao : LibraryFolderDao
@@ -45,6 +49,117 @@ abstract class PTDatabase : RoomDatabase() {
     abstract val goalInstanceDao : GoalInstanceDao
     abstract val sessionDao : SessionDao
     abstract val sectionDao : SectionDao
+
+    companion object {
+        private const val DATABASE_NAME = "pt-database"
+
+        @Volatile private var INSTANCE: PTDatabase? = null
+
+        fun getInstance(context: Context) =
+            INSTANCE ?: synchronized(this) {
+                INSTANCE ?: buildDatabase(context).also { INSTANCE = it }
+            }
+
+        private fun buildDatabase(context: Context) =
+            Room.databaseBuilder(
+                context.applicationContext,
+                PTDatabase::class.java,
+                DATABASE_NAME
+            ).addMigrations(
+                PTDatabaseMigrationOneToTwo
+            ).addCallback(object : Callback() {
+                // prepopulate the database after onCreate was called
+                override fun onCreate(db: SupportSQLiteDatabase) {
+                    super.onCreate(db)
+                    populateDatabase(context)
+                }
+            }).build()
+    }
+}
+
+/** Source: https://android.googlesource.com/platform/frameworks/support/+/refs/heads/androidx-main/room/integration-tests/kotlintestapp/src/androidTest/java/androidx/room/integration/kotlintestapp/test/UuidColumnTypeAdapterTest.kt */
+class UUIDConverter {
+    @TypeConverter
+    fun fromByte(bytes: ByteArray? = null): UUID? {
+        if (bytes == null) return null
+        val bb = ByteBuffer.wrap(bytes)
+        //        Log.d("UUIDConverter", "fromByte: ${bytes.joinToString(separator = " ") { "%02x".format(it) }} -> $uuid")
+        return UUID(bb.long, bb.long)
+    }
+
+    @TypeConverter
+    fun toByte(uuid: UUID? = null): ByteArray? {
+        if (uuid == null) return null
+        val bb = ByteBuffer.wrap(ByteArray(16))
+        bb.putLong(uuid.mostSignificantBits)
+        bb.putLong(uuid.leastSignificantBits)
+        //        Log.d("UUIDConverter", "toByte: $uuid -> ${bytes.joinToString(separator = " ") { "%02x".format(it) }}")
+        return bb.array()
+    }
+
+    fun fromString(string: String): UUID {
+        return UUID.fromString(string)
+    }
+
+    fun toString(uuid: UUID): String {
+        return uuid.toString()
+    }
+
+    fun toDBString(uuid: UUID): String {
+        return toByte(uuid)!!.joinToString(separator="") { "%02x".format(it) }
+    }
+}
+
+private fun populateDatabase(context: Context) {
+    // insert the data on the IO Thread
+    PracticeTime.ioThread {
+        val folders = listOf(
+            LibraryFolder(name = "Schupra"),
+            LibraryFolder(name = "Fagott"),
+            LibraryFolder(name = "Gesang"),
+        )
+
+        // populate the libraryItem table on first run
+        val items = listOf(
+            LibraryItem(name = "Die Schöpfung", colorIndex = 0, libraryFolderId = folders[0].id),
+            LibraryItem(
+                name = "Beethoven Septett",
+                colorIndex = 1,
+                libraryFolderId = folders[0].id
+            ),
+            LibraryItem(
+                name = "Schostakowitsch 9.",
+                colorIndex = 2,
+                libraryFolderId = folders[1].id
+            ),
+            LibraryItem(
+                name = "Trauermarsch c-Moll",
+                colorIndex = 3,
+                libraryFolderId = folders[1].id
+            ),
+            LibraryItem(name = "Adagio", colorIndex = 4, libraryFolderId = folders[2].id),
+            LibraryItem(
+                name = "Eine kleine Gigue",
+                colorIndex = 5,
+                libraryFolderId = folders[2].id
+            ),
+            LibraryItem(name = "Andantino", colorIndex = 6),
+            LibraryItem(name = "Klaviersonate", colorIndex = 7),
+            LibraryItem(name = "Trauermarsch", colorIndex = 8),
+        )
+
+        folders.forEach {
+            Log.d("MainActivity", "Folder ${it.name} created")
+            PTDatabase.getInstance(context).libraryFolderDao.insert(it)
+            Thread.sleep(1500) //make sure folders have different createdAt values
+        }
+
+        items.forEach {
+            PTDatabase.getInstance(context).libraryItemDao.insert(it)
+            Log.d("MainActivity", "LibraryItem ${it.name} created")
+            Thread.sleep(1500) //make sure items have different createdAt values
+        }
+    }
 }
 
 object PTDatabaseMigrationOneToTwo : Migration(1,2) {

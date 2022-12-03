@@ -15,23 +15,24 @@ package de.practicetime.practicetime.database.entities
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import de.practicetime.practicetime.database.ModelWithTimestamps
+import java.util.*
 
 @Entity(tableName = "library_item")
 data class LibraryItem (
     @ColumnInfo(name="name") var name: String,
     @ColumnInfo(name="color_index") var colorIndex: Int,
     @ColumnInfo(name="library_folder_id", index = true, defaultValue = "null")
-    var libraryFolderId: Long? = null,
-    @ColumnInfo(name="profile_id", index = true) val profileId: Int = 0,
+    var libraryFolderId: UUID? = null,
+//    @ColumnInfo(name="profile_id", index = true) val profileId: UUID? = null,
     @ColumnInfo(name="archived") var archived: Boolean = false,
-    @ColumnInfo(name="order", defaultValue = "0") var order: Int = 0,
+    @ColumnInfo(name="order", defaultValue = "0") var order: Int? = null,
 ) : ModelWithTimestamps() {
     override fun toString(): String {
         return super.toString() +
             "\tname: \t\t\t\t${this.name}\n" +
             "\tcolor_index: \t\t${this.colorIndex}\n" +
             "\tlibrary_folder_id: \t${this.libraryFolderId}\n" +
-            "\tprofile_id: \t\t${this.profileId}\n" +
+//            "\tprofile_id: \t\t${this.profileId}\n" +
             "\tarchived: \t\t\t${this.archived}\n" +
             "\torder: \t\t\t\t${this.order}\n"
     }

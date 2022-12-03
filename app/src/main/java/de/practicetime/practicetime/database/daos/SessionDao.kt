@@ -12,6 +12,7 @@ import androidx.room.Transaction
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.database.BaseDao
 import de.practicetime.practicetime.database.entities.*
+import java.util.*
 
 @Dao
 abstract class SessionDao : BaseDao<Session>(tableName = "session") {
@@ -23,16 +24,15 @@ abstract class SessionDao : BaseDao<Session>(tableName = "session") {
     @Transaction
     open suspend fun insertSessionWithSections(
         sessionWithSections: SessionWithSections,
-    ) : Long {
-        val newSessionId = insert(sessionWithSections.session)
+    ) {
+        insert(sessionWithSections.session)
 
         // add the new sessionId to every section...
         for (section in sessionWithSections.sections) {
-            section.sessionId = newSessionId
+            section.sessionId = sessionWithSections.session.id
             // and insert them into the database
             PracticeTime.sectionDao.insert(section)
         }
-        return newSessionId
     }
 
 
@@ -45,7 +45,7 @@ abstract class SessionDao : BaseDao<Session>(tableName = "session") {
 //    }
 
     @Transaction
-    open suspend fun delete(sessionId: Long, updatedGoalInstances: List<GoalInstance>) {
+    open suspend fun delete(sessionId: UUID, updatedGoalInstances: List<GoalInstance>) {
         get(sessionId)?.let { session ->
             updatedGoalInstances.forEach { PracticeTime.goalInstanceDao.update(it) }
             PracticeTime.sectionDao.apply {
@@ -62,12 +62,12 @@ abstract class SessionDao : BaseDao<Session>(tableName = "session") {
 
     @Transaction
     @Query("SELECT * FROM session WHERE id=:sessionId")
-    abstract suspend fun getWithSections(sessionId: Long): SessionWithSections
+    abstract suspend fun getWithSections(sessionId: UUID): SessionWithSections
 
     @Transaction
     @Query("SELECT * FROM session WHERE id=:sessionId")
     abstract suspend fun getWithSectionsWithLibraryItems(
-        sessionId: Long
+        sessionId: UUID
     ): SessionWithSectionsWithLibraryItems
 
     @Transaction
@@ -78,7 +78,7 @@ abstract class SessionDao : BaseDao<Session>(tableName = "session") {
     @Transaction
     @Query("SELECT * FROM session WHERE id=:sessionId")
     abstract suspend fun getWithSectionsWithLibraryItemsWithGoals(
-        sessionId: Long
+        sessionId: UUID
     ) : SessionWithSectionsWithLibraryItemsWithGoalDescriptions
 
     @Transaction
@@ -96,7 +96,7 @@ abstract class SessionDao : BaseDao<Session>(tableName = "session") {
 
     @Transaction
     open suspend fun update(
-        sessionId: Long,
+        sessionId: UUID,
         newRating: Int,
         newSections: List<SectionWithLibraryItem>,
         newComment: String,

@@ -19,6 +19,7 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import java.util.*
 
 enum class SpinnerState {
     EXPANDED,
@@ -32,11 +33,11 @@ fun SelectionSpinner(
     state: SpinnerState,
     label: @Composable () -> Unit,
     leadingIcon: @Composable () -> Unit,
-    options: List<Pair<Long, String>>,
-    selected: Long?,
+    options: List<Pair<UUID, String>>,
+    selected: UUID?,
     defaultOption: String?,
     onStateChange: (SpinnerState) -> Unit,
-    onSelectedChange: (Long?) -> Unit
+    onSelectedChange: (UUID?) -> Unit
 ) {
     ExposedDropdownMenuBox(
         modifier = modifier,

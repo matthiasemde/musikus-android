@@ -15,6 +15,6 @@ import de.practicetime.practicetime.database.ModelWithTimestamps
 @Entity(tableName = "library_folder")
 data class LibraryFolder (
     @ColumnInfo(name="name") var name: String,
-    @ColumnInfo(name="profile_id", index = true) val profileId: Int = 0,
-    @ColumnInfo(name="order", defaultValue = "0") var order: Int = 0,
+//    @ColumnInfo(name="profile_id", index = true) val profileId: UUID? = null,
+    @ColumnInfo(name="order", defaultValue = "0") var order: Int? = null,
 ) : ModelWithTimestamps()

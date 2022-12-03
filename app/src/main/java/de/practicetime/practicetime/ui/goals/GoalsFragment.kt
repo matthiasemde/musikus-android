@@ -63,6 +63,8 @@ import de.practicetime.practicetime.ui.MainState
 import de.practicetime.practicetime.ui.SortDirection
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import java.util.*
+import kotlin.collections.ArrayList
 
 enum class GoalsSortMode {
     DATE_ADDED,
@@ -107,7 +109,7 @@ class GoalsState(
     // Action mode
     var actionMode = mutableStateOf(false)
 
-    val selectedGoalIds = mutableStateListOf<Long>()
+    val selectedGoalIds = mutableStateListOf<UUID>()
 
     fun clearActionMode() {
         selectedGoalIds.clear()
@@ -398,7 +400,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
     private lateinit var goalsCollapsingToolbarLayout: CollapsingToolbarLayout
 
     private val selectedGoals = ArrayList<Int>()
-    private var editGoalId : Long? = null
+    private var editGoalId : UUID? = null
 
     // catch the back press for the case where the selection should be reverted
     override fun onCreate(savedInstanceState: Bundle?) {

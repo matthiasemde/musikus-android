@@ -14,8 +14,6 @@ package de.practicetime.practicetime.ui.library
 
 import android.view.*
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -42,7 +40,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import de.practicetime.practicetime.PracticeTime
@@ -52,6 +49,7 @@ import de.practicetime.practicetime.database.entities.LibraryItem
 import de.practicetime.practicetime.shared.*
 import de.practicetime.practicetime.ui.MainState
 import de.practicetime.practicetime.ui.SortDirection
+import java.util.*
 
 
 //
@@ -430,12 +428,12 @@ fun LibraryContent(
     folderSortMode: LibraryFolderSortMode,
     folderSortDirection: SortDirection,
     folders: List<LibraryFolder>,
-    selectedFolderIds: List<Long>,
+    selectedFolderIds: List<UUID>,
     showItemSortMenu: Boolean,
     itemSortMode: LibraryItemSortMode,
     itemSortDirection: SortDirection,
     items: List<LibraryItem>,
-    selectedItemIds: List<Long>,
+    selectedItemIds: List<UUID>,
     onShowFolderSortMenuChange: (Boolean) -> Unit,
     onFolderSortModeSelected: (LibraryFolderSortMode) -> Unit,
     onShowItemSortMenuChange: (Boolean) -> Unit,

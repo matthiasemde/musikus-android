@@ -30,7 +30,7 @@ enum class GoalPeriodUnit {
 
 @Entity(tableName = "goal_instance")
 data class GoalInstance(
-    @ColumnInfo(name="goal_description_id") val goalDescriptionId: Long,
+    @ColumnInfo(name="goal_description_id") val goalDescriptionId: UUID,
     @ColumnInfo(name="start_timestamp") val startTimestamp: Long,
     @ColumnInfo(name="period_in_seconds") val periodInSeconds: Int,
     @ColumnInfo(name="target") var target: Int,
@@ -47,8 +47,8 @@ class GoalDescription (
     @ColumnInfo(name="period_unit") val periodUnit: GoalPeriodUnit,
     @ColumnInfo(name="progress_type") val progressType: GoalProgressType = GoalProgressType.TIME,
     @ColumnInfo(name="archived") var archived: Boolean = false,
-    @ColumnInfo(name="profile_id", index = true) val profileId: Int = 0,
-    @ColumnInfo(name="order", defaultValue = "0") var order: Int = 0,
+//    @ColumnInfo(name="profile_id", index = true) val profileId: UUID? = null,
+    @ColumnInfo(name="order", defaultValue = "0") var order: Int? = null,
     ) : ModelWithTimestamps() {
 
     // create a new instance of this goal, storing the target and progress during a single period

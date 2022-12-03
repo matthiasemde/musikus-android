@@ -29,6 +29,7 @@ import de.practicetime.practicetime.database.entities.LibraryFolder
 import de.practicetime.practicetime.shared.DialogHeader
 import de.practicetime.practicetime.shared.SelectionSpinner
 import de.practicetime.practicetime.shared.SpinnerState
+import java.util.*
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -96,11 +97,11 @@ fun LibraryItemDialog(
     folders: List<LibraryFolder>,
     name: String,
     colorIndex: Int,
-    folderId: Long?,
+    folderId: UUID?,
     folderSelectorExpanded: SpinnerState,
     onNameChange: (String) -> Unit,
     onColorIndexChange: (Int) -> Unit,
-    onFolderIdChange: (Long?) -> Unit,
+    onFolderIdChange: (UUID?) -> Unit,
     onFolderSelectorExpandedChange: (SpinnerState) -> Unit,
     onDismissHandler: (Boolean) -> Unit, // true if dialog was canceled
 ) {

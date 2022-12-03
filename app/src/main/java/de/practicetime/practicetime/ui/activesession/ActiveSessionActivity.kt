@@ -230,12 +230,11 @@ class ActiveSessionActivity : AppCompatActivity() {
         // the handler for creating new libraryItems
         fun addLibraryItemHandler(newLibraryItem: LibraryItem) {
             lifecycleScope.launch {
-                PracticeTime.libraryItemDao.insertAndGet(newLibraryItem)?.let {
-                    activeLibraryItems.add(0, it)
-                    libraryItemAdapter.notifyItemInserted(0)
-                    libraryItemList.scrollToPosition(0)
-                    adjustSpanCountCatList()
-                }
+                PracticeTime.libraryItemDao.insert(newLibraryItem)
+                activeLibraryItems.add(0, newLibraryItem)
+                libraryItemAdapter.notifyItemInserted(0)
+                libraryItemList.scrollToPosition(0)
+                adjustSpanCountCatList()
             }
         }
 
@@ -1329,7 +1328,7 @@ class ActiveSessionActivity : AppCompatActivity() {
             }
 
             // and insert it the resulting section list into the database together with the session
-            val sessionId = PracticeTime.sessionDao.insertSessionWithSections(
+            PracticeTime.sessionDao.insertSessionWithSections(
                 SessionWithSections(
                     session = newSession,
                     sections = mService.sectionBuffer.map { it.first }
@@ -1340,11 +1339,11 @@ class ActiveSessionActivity : AppCompatActivity() {
             mService.sectionBuffer.clear()
             // refresh the adapter otherwise the app will crash because of "inconsistency detected"
             findViewById<RecyclerView>(R.id.currentSections).adapter = sectionsListAdapter
-            exitActivity(sessionId)
+            exitActivity(newSession.id)
         }
     }
 
-    private fun exitActivity(sessionId: Long) {
+    private fun exitActivity(sessionId: UUID) {
         // stop the service
         Intent(this, SessionForegroundService::class.java).also {
             stopService(it)
@@ -1352,7 +1351,7 @@ class ActiveSessionActivity : AppCompatActivity() {
         // go back to MainActivity, make new intent so MainActivity gets reloaded and shows new session
         val intent = Intent(this, MainActivity::class.java)
         val pBundle = Bundle()
-        pBundle.putLong("KEY_SESSION", sessionId)
+//        pBundle.putLong("KEY_SESSION", sessionId)
         intent.putExtras(pBundle)
         intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
         startActivity(intent)

@@ -29,6 +29,7 @@ import de.practicetime.practicetime.database.entities.GoalType
 import de.practicetime.practicetime.utils.TIME_FORMAT_HUMAN_PRETTY
 import de.practicetime.practicetime.utils.getDurationString
 import kotlinx.coroutines.launch
+import java.util.*
 
 class ArchivedGoalsActivity : AppCompatActivity() {
 
@@ -100,7 +101,7 @@ class ArchivedGoalsActivity : AppCompatActivity() {
         }.create().show()
     }
 
-    private fun deleteHandler(goalDescriptionId: Long, position: Int) {
+    private fun deleteHandler(goalDescriptionId: UUID, position: Int) {
         AlertDialog.Builder(this).apply {
             setMessage(R.string.archivedGoalsConfirmDelete)
             setPositiveButton(R.string.archivedGoalsDelete) { dialog, _ ->
@@ -127,7 +128,7 @@ class ArchivedGoalsActivity : AppCompatActivity() {
             archivedGoal: GoalInstanceWithDescriptionWithLibraryItems,
             position: Int
         ) -> Unit,
-        private val deleteHandler: (descriptionId: Long, position: Int) -> Unit,
+        private val deleteHandler: (descriptionId: UUID, position: Int) -> Unit,
     ) : RecyclerView.Adapter<ArchivedGoalsAdapter.ViewHolder>() {
 
         override fun onCreateViewHolder(

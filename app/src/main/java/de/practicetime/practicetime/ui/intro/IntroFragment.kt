@@ -14,7 +14,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
-import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.annotation.ColorRes
 import androidx.fragment.app.Fragment
@@ -39,6 +38,7 @@ import de.practicetime.practicetime.ui.sessionlist.SessionSummaryAdapter
 import de.practicetime.practicetime.utils.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.util.*
 import kotlin.math.roundToInt
 
 
@@ -231,7 +231,7 @@ class IntroGoalsFragment : Fragment(R.layout.fragment_intro_goals) {
     private fun getDummyGoals(): List<GoalInstanceWithDescriptionWithLibraryItems> {
         val goal1 = GoalInstanceWithDescriptionWithLibraryItems(
             GoalInstance(
-                goalDescriptionId = 1,
+                goalDescriptionId = UUID.randomUUID(), // we don't care about id but it can't be null
                 startTimestamp = getStartOfDay(0).toEpochSecond(),
                 periodInSeconds = SECONDS_PER_DAY,
                 target = SECONDS_PER_HOUR,
@@ -249,7 +249,7 @@ class IntroGoalsFragment : Fragment(R.layout.fragment_intro_goals) {
         )
         val goal2 = GoalInstanceWithDescriptionWithLibraryItems(
             GoalInstance(
-                goalDescriptionId = 1,
+                goalDescriptionId = UUID.randomUUID(), // we don't care about id but it can't be null
                 startTimestamp = getStartOfWeek(0).toEpochSecond(),
                 periodInSeconds = SECONDS_PER_DAY * 7,
                 target = (SECONDS_PER_HOUR * 5.5f).roundToInt(),
@@ -297,8 +297,8 @@ private fun getDummySessions() =
             sections = listOf(
                 SectionWithLibraryItem(
                     Section(
-                        sessionId = 1,
-                        libraryItemId = 1,
+                        sessionId = UUID.randomUUID(), // we don't care about id but it can't be null
+                        libraryItemId = UUID.randomUUID(), // we don't care about id but it can't be null
                         duration = 60 * 10,
                         timestamp = getCurrTimestamp()
                     ),
@@ -306,8 +306,8 @@ private fun getDummySessions() =
                 ),
                 SectionWithLibraryItem(
                     Section(
-                        sessionId = 1,
-                        libraryItemId = 1,
+                        sessionId = UUID.randomUUID(), // we don't care about id but it can't be null
+                        libraryItemId = UUID.randomUUID(), // we don't care about id but it can't be null
                         duration = 60 * 23,
                         timestamp = getCurrTimestamp()
                     ),
@@ -315,8 +315,8 @@ private fun getDummySessions() =
                 ),
                 SectionWithLibraryItem(
                     Section(
-                        sessionId = 1,
-                        libraryItemId = 1,
+                        sessionId = UUID.randomUUID(), // we don't care about id but it can't be null
+                        libraryItemId = UUID.randomUUID(), // we don't care about id but it can't be null
                         duration = 60 * 37,
                         timestamp = getCurrTimestamp()
                     ),

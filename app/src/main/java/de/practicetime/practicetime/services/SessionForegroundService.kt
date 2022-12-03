@@ -176,7 +176,7 @@ class SessionForegroundService : Service() {
         return binder
     }
 
-    fun startNewSection(libraryItemId: Long, libraryItemName: String) {
+    fun startNewSection(libraryItemId: UUID, libraryItemName: String) {
         currLibraryItemName = libraryItemName
         val now = Date().time / 1000L
         sectionBuffer.add(
@@ -316,7 +316,7 @@ class SessionForegroundService : Service() {
 
         track.play()
 
-        (application as PracticeTime).executorService.execute {
+        PracticeTime.executorService.execute {
             var intervalInBytes = 0
             var clickDuration = 0
             var silenceDuration = 0

@@ -24,9 +24,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.annotation.AttrRes
 import androidx.annotation.ColorInt
 import androidx.appcompat.app.AppCompatActivity
-import androidx.room.Room
 import de.practicetime.practicetime.database.PTDatabase
-import de.practicetime.practicetime.database.PTDatabaseMigrationOneToTwo
 import de.practicetime.practicetime.database.daos.*
 import java.io.File
 import java.util.concurrent.ExecutorService
@@ -39,9 +37,15 @@ fun Context.getActivity(): AppCompatActivity? = when (this) {
 }
 
 class PracticeTime : Application() {
-    val executorService: ExecutorService = Executors.newFixedThreadPool(4)
 
     companion object {
+        val executorService: ExecutorService = Executors.newFixedThreadPool(4)
+        private val IO_EXECUTOR = Executors.newSingleThreadExecutor()
+
+        fun ioThread(f : () -> Unit) {
+            IO_EXECUTOR.execute(f)
+        }
+
         private lateinit var db: PTDatabase
         private lateinit var dbFile: File
 
@@ -61,7 +65,6 @@ class PracticeTime : Application() {
 
         lateinit var prefs: SharedPreferences
 
-        const val PREFERENCES_KEY_FIRSTRUN = "firstrun"
         const val PREFERENCES_KEY_THEME = "theme"
         const val PREFERENCES_KEY_APPINTRO_DONE = "appintro_done"
         const val PREFERENCES_KEY_LIBRARY_FOLDER_SORT_MODE = "library_folder_sort_mode"
@@ -74,21 +77,14 @@ class PracticeTime : Application() {
         const val DATABASE_NAME = "pt-database"
 
         private fun openDatabase(applicationContext: Context) {
-            db = Room.databaseBuilder(
-                applicationContext,
-                PTDatabase::class.java,
-                DATABASE_NAME
-            ).addMigrations(
-                PTDatabaseMigrationOneToTwo
-            ).build()
-                .also {
-                    libraryItemDao = it.libraryItemDao
-                    libraryFolderDao = it.libraryFolderDao
-                    goalDescriptionDao = it.goalDescriptionDao
-                    goalInstanceDao = it.goalInstanceDao
-                    sessionDao = it.sessionDao
-                    sectionDao = it.sectionDao
-                }
+            db = PTDatabase.getInstance(applicationContext)
+
+            libraryItemDao = db.libraryItemDao
+            libraryFolderDao = db.libraryFolderDao
+            goalDescriptionDao = db.goalDescriptionDao
+            goalInstanceDao = db.goalInstanceDao
+            sessionDao = db.sessionDao
+            sectionDao = db.sectionDao
 
             dbFile = applicationContext.getDatabasePath(DATABASE_NAME)
         }

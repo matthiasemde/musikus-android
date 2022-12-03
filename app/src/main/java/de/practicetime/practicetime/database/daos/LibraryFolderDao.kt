@@ -9,12 +9,11 @@
 package de.practicetime.practicetime.database.daos
 
 import androidx.room.Dao
-import androidx.room.Query
 import androidx.room.Transaction
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.database.BaseDao
 import de.practicetime.practicetime.database.entities.LibraryFolder
-import de.practicetime.practicetime.database.entities.LibraryFolderWithItems
+import java.util.*
 
 @Dao
 abstract class LibraryFolderDao : BaseDao<LibraryFolder>(tableName = "library_folder") {
@@ -24,7 +23,7 @@ abstract class LibraryFolderDao : BaseDao<LibraryFolder>(tableName = "library_fo
      */
 
     @Transaction
-    open suspend fun deleteAndResetItems(folderId: Long) {
+    open suspend fun deleteAndResetItems(folderId: UUID) {
         PracticeTime.libraryItemDao.getFromFolder(folderId).forEach {
             it.libraryFolderId = null
             PracticeTime.libraryItemDao.update(it)
@@ -39,7 +38,7 @@ abstract class LibraryFolderDao : BaseDao<LibraryFolder>(tableName = "library_fo
 //    @Query("SELECT * FROM library_folder")
 //    abstract suspend fun get(): List<LibraryFolder>
 
-    @Transaction
-    @Query("SELECT * FROM library_folder WHERE id=:id")
-    abstract suspend fun getWithItems(id: Long): LibraryFolderWithItems
+//    @Transaction
+//    @Query("SELECT * FROM library_folder WHERE id=:id")
+//    abstract suspend fun getWithItems(id: UUID): LibraryFolderWithItems
 }
