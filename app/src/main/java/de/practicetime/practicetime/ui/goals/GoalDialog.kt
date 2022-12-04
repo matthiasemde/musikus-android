@@ -15,7 +15,6 @@ package de.practicetime.practicetime.ui.goals
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.res.ColorStateList
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -23,7 +22,6 @@ import android.widget.*
 import androidx.appcompat.widget.AppCompatButton
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -37,14 +35,12 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
-import androidx.core.widget.addTextChangedListener
 import com.google.android.material.button.MaterialButton
 import de.practicetime.practicetime.R
 import de.practicetime.practicetime.components.NumberInput
+import de.practicetime.practicetime.database.GoalDescriptionWithLibraryItems
 import de.practicetime.practicetime.database.entities.*
 import de.practicetime.practicetime.shared.DialogHeader
-import de.practicetime.practicetime.ui.library.DialogMode
 
 @SuppressLint("ViewConstructor")
 class GoalDialog(

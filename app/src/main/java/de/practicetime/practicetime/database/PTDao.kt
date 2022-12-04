@@ -49,7 +49,7 @@ abstract class ModelWithTimestamps (
  */
 
 abstract class BaseDao<T>(
-    private val tableName: String
+    private val tableName: String,
 ) where T : BaseModel {
 
     /**
@@ -70,7 +70,7 @@ abstract class BaseDao<T>(
     }
 
     @Insert(onConflict = OnConflictStrategy.ABORT)
-    protected  abstract suspend fun directInsert(rows: List<T>)
+    protected abstract suspend fun directInsert(rows: List<T>)
 
     suspend fun insert(rows: List<T>) {
         rows.forEach {
@@ -136,7 +136,7 @@ abstract class BaseDao<T>(
 
     open suspend fun get(id: UUID): T? {
         return getSingle(
-            SimpleSQLiteQuery("SELECT * FROM $tableName WHERE id=x'${uuidConverter.toDBString(id)}'")
+            SimpleSQLiteQuery("SELECT * FROM $tableName WHERE id=x'${UUIDConverter.toDBString(id)}'")
         )
     }
 
@@ -145,7 +145,7 @@ abstract class BaseDao<T>(
 
     open suspend fun get(ids: List<UUID>): List<T> {
         return getMultiple(
-            SimpleSQLiteQuery("SELECT * FROM $tableName WHERE id IN (${ids.joinToString(",") { id -> uuidConverter.toDBString(id) }})")
+            SimpleSQLiteQuery("SELECT * FROM $tableName WHERE id IN (${ids.joinToString(",") { id -> "x'${UUIDConverter.toDBString(id)}'" }})")
         )
     }
 
@@ -154,9 +154,5 @@ abstract class BaseDao<T>(
 
     open suspend fun getAll(): List<T> {
         return getAll(SimpleSQLiteQuery("SELECT * FROM $tableName"))
-    }
-
-    companion object {
-        val uuidConverter = UUIDConverter()
     }
 }

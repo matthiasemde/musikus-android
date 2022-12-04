@@ -12,7 +12,7 @@ import androidx.room.Query
 import androidx.room.Transaction
 import de.practicetime.practicetime.database.BaseDao
 import de.practicetime.practicetime.database.entities.LibraryItem
-import de.practicetime.practicetime.database.entities.LibraryItemWithGoalDescriptions
+import de.practicetime.practicetime.database.LibraryItemWithGoalDescriptions
 import java.util.*
 
 @Dao

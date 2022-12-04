@@ -47,7 +47,7 @@ import de.practicetime.practicetime.R
 import de.practicetime.practicetime.database.entities.LibraryFolder
 import de.practicetime.practicetime.database.entities.LibraryItem
 import de.practicetime.practicetime.shared.*
-import de.practicetime.practicetime.ui.MainState
+import de.practicetime.practicetime.ui.MainViewModel
 import de.practicetime.practicetime.ui.SortDirection
 import java.util.*
 
@@ -71,7 +71,7 @@ import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Library(mainState: MainState) {
+fun Library(mainViewModel: MainViewModel) {
     val libraryState = rememberLibraryState()
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
@@ -87,7 +87,7 @@ fun Library(mainState: MainState) {
                         libraryState.itemDialogFolderId.value = folder.id
                         libraryState.showItemDialog.value = true
                         libraryState.multiFABState.value = MultiFABState.COLLAPSED
-                        mainState.showNavBarScrim.value = false
+                        mainViewModel.showNavBarScrim.value = false
                     },
                 ) {
                     Icon(Icons.Default.Add, contentDescription = "New item")
@@ -96,7 +96,7 @@ fun Library(mainState: MainState) {
                 state = libraryState.multiFABState.value,
                 onStateChange = { state ->
                     libraryState.multiFABState.value = state
-                    mainState.showNavBarScrim.value = (state == MultiFABState.EXPANDED)
+                    mainViewModel.showNavBarScrim.value = (state == MultiFABState.EXPANDED)
                     if(state == MultiFABState.EXPANDED) {
                         libraryState.clearActionMode()
                     }
@@ -107,7 +107,7 @@ fun Library(mainState: MainState) {
                             libraryState.itemDialogMode.value = DialogMode.ADD
                             libraryState.showItemDialog.value = true
                             libraryState.multiFABState.value = MultiFABState.COLLAPSED
-                            mainState.showNavBarScrim.value = false
+                            mainViewModel.showNavBarScrim.value = false
                         },
                         label = "Item",
                         icon = Icons.Rounded.MusicNote
@@ -117,7 +117,7 @@ fun Library(mainState: MainState) {
                             libraryState.folderDialogMode.value = DialogMode.ADD
                             libraryState.showFolderDialog.value = true
                             libraryState.multiFABState.value = MultiFABState.COLLAPSED
-                            mainState.showNavBarScrim.value = false
+                            mainViewModel.showNavBarScrim.value = false
                         },
                         label = "Folder",
                         icon = Icons.Rounded.Folder
@@ -140,22 +140,22 @@ fun Library(mainState: MainState) {
                 },
                 actions = {
                     IconButton(onClick = {
-                        mainState.showMainMenu.value = true
+                        mainViewModel.showMainMenu.value = true
                     }) {
                         Icon(Icons.Default.MoreVert, contentDescription = "more")
                         MainMenu (
-                            show = mainState.showMainMenu.value,
-                            onDismissHandler = { mainState.showMainMenu.value = false },
+                            show = mainViewModel.showMainMenu.value,
+                            onDismissHandler = { mainViewModel.showMainMenu.value = false },
                             onSelectionHandler = { commonSelection ->
-                                mainState.showMainMenu.value = false
+                                mainViewModel.showMainMenu.value = false
 
                                 when (commonSelection) {
                                     CommonMenuSelections.APP_INFO -> {}
                                     CommonMenuSelections.THEME -> {
-                                        mainState.showThemeSubMenu.value = true
+                                        mainViewModel.showThemeSubMenu.value = true
                                     }
                                     CommonMenuSelections.BACKUP -> {
-                                        mainState.showExportImportDialog.value = true
+                                        mainViewModel.showExportImportDialog.value = true
                                     }
                                 }
                             },
@@ -164,12 +164,12 @@ fun Library(mainState: MainState) {
                             ) }
                         )
                         ThemeMenu(
-                            expanded = mainState.showThemeSubMenu.value,
-                            currentTheme = mainState.activeTheme.value,
-                            onDismissHandler = { mainState.showThemeSubMenu.value = false },
+                            expanded = mainViewModel.showThemeSubMenu.value,
+                            currentTheme = mainViewModel.activeTheme.collectAsState().value,
+                            onDismissHandler = { mainViewModel.showThemeSubMenu.value = false },
                             onSelectionHandler = { theme ->
-                                mainState.showThemeSubMenu.value = false
-                                mainState.setTheme(theme)
+                                mainViewModel.showThemeSubMenu.value = false
+                                mainViewModel.setTheme(theme)
                             }
                         )
                     }
@@ -188,7 +188,7 @@ fun Library(mainState: MainState) {
                     },
                     onEditHandler = {
                         libraryState.apply {
-                            mainState.libraryItems.value.firstOrNull { item ->
+                            mainViewModel.libraryItems.value.firstOrNull { item ->
                                 selectedItemIds.firstOrNull()?.let { it == item.id } ?: false
                             }?.let { item ->
                                 editableItem.value = item
@@ -197,7 +197,7 @@ fun Library(mainState: MainState) {
                                 itemDialogColorIndex.value = item.colorIndex
                                 itemDialogFolderId.value = item.libraryFolderId
                                 showItemDialog.value = true
-                            } ?: mainState.libraryFolders.value.firstOrNull { folder ->
+                            } ?: mainViewModel.libraryFolders.value.firstOrNull { folder ->
                                 selectedFolderIds.firstOrNull()?.let { it == folder.id } ?: false
                             }?.let { folder ->
                                 editableFolder.value = folder
@@ -209,8 +209,8 @@ fun Library(mainState: MainState) {
                         libraryState.clearActionMode()
                     },
                     onDeleteHandler = {
-                        mainState.archiveItems(libraryState.selectedItemIds.toList())
-                        mainState.deleteFolders(libraryState.selectedFolderIds.toList())
+                        mainViewModel.archiveItems(libraryState.selectedItemIds.toList())
+                        mainViewModel.deleteFolders(libraryState.selectedFolderIds.toList())
                         libraryState.clearActionMode()
                     }
                 )
@@ -223,23 +223,23 @@ fun Library(mainState: MainState) {
                 ),
                 activeFolder = libraryState.activeFolder.value,
                 showFolderSortMenu = libraryState.showFolderSortModeMenu.value,
-                folderSortMode = mainState.libraryFolderSortMode.value,
-                folderSortDirection = mainState.libraryFolderSortDirection.value,
-                folders = mainState.libraryFolders.collectAsState().value,
+                folderSortMode = mainViewModel.libraryFolderSortMode.value,
+                folderSortDirection = mainViewModel.libraryFolderSortDirection.value,
+                folders = mainViewModel.libraryFolders.collectAsState().value,
                 selectedFolderIds = libraryState.selectedFolderIds,
                 showItemSortMenu = libraryState.showItemSortModeMenu.value,
-                itemSortMode = mainState.libraryItemSortMode.value,
-                itemSortDirection = mainState.libraryItemSortDirection.value,
-                items = mainState.libraryItems.collectAsState().value,
+                itemSortMode = mainViewModel.libraryItemSortMode.value,
+                itemSortDirection = mainViewModel.libraryItemSortDirection.value,
+                items = mainViewModel.libraryItems.collectAsState().value,
                 selectedItemIds = libraryState.selectedItemIds,
                 onShowFolderSortMenuChange = { libraryState.showFolderSortModeMenu.value = it },
                 onFolderSortModeSelected = {
-                    mainState.sortLibraryFolders(it)
+                    mainViewModel.sortLibraryFolders(it)
                     libraryState.showFolderSortModeMenu.value = false
                 },
                 onShowItemSortMenuChange = { libraryState.showItemSortModeMenu.value = it },
                 onItemSortModeSelected = {
-                    mainState.sortLibraryItems(it)
+                    mainViewModel.sortLibraryItems(it)
                     libraryState.showItemSortModeMenu.value = false
                 },
                 onLibraryFolderShortClicked = { folder ->
@@ -301,8 +301,8 @@ fun Library(mainState: MainState) {
 
             // Show hint if no items or folders are in the library
             if (
-                mainState.libraryFolders.collectAsState().value.isEmpty() &&
-                mainState.libraryItems.collectAsState().value.isEmpty()
+                mainViewModel.libraryFolders.collectAsState().value.isEmpty() &&
+                mainViewModel.libraryItems.collectAsState().value.isEmpty()
             ) {
                 Box(
                     modifier = Modifier
@@ -327,7 +327,7 @@ fun Library(mainState: MainState) {
                         if(create) {
                             when(libraryState.folderDialogMode.value) {
                                 DialogMode.ADD -> {
-                                    mainState.addLibraryFolder(
+                                    mainViewModel.addLibraryFolder(
                                         LibraryFolder(
                                             name = libraryState.folderDialogName.value,
                                         )
@@ -336,7 +336,7 @@ fun Library(mainState: MainState) {
                                 DialogMode.EDIT -> {
                                     libraryState.editableFolder.value?.apply {
                                         name = libraryState.folderDialogName.value
-                                        mainState.editFolder(this)
+                                        mainViewModel.editFolder(this)
                                     }
                                 }
                             }
@@ -349,7 +349,7 @@ fun Library(mainState: MainState) {
             if(libraryState.showItemDialog.value) {
                 LibraryItemDialog(
                     mode = libraryState.itemDialogMode.value,
-                    folders = mainState.libraryFolders.collectAsState().value,
+                    folders = mainViewModel.libraryFolders.collectAsState().value,
                     name = libraryState.itemDialogName.value,
                     colorIndex = libraryState.itemDialogColorIndex.value,
                     folderId = libraryState.itemDialogFolderId.value,
@@ -365,7 +365,7 @@ fun Library(mainState: MainState) {
                         if(!cancel) {
                             when(libraryState.itemDialogMode.value) {
                                 DialogMode.ADD -> {
-                                    mainState.addLibraryItem(
+                                    mainViewModel.addLibraryItem(
                                         LibraryItem(
                                             name = libraryState.itemDialogName.value,
                                             colorIndex = libraryState.itemDialogColorIndex.value,
@@ -378,7 +378,7 @@ fun Library(mainState: MainState) {
                                         name = libraryState.itemDialogName.value
                                         colorIndex = libraryState.itemDialogColorIndex.value
                                         libraryFolderId = libraryState.itemDialogFolderId.value
-                                        mainState.editItem(this)
+                                        mainViewModel.editItem(this)
                                     }
                                 }
                             }
@@ -405,7 +405,7 @@ fun Library(mainState: MainState) {
                             indication = null,
                         ) {
                             libraryState.multiFABState.value = MultiFABState.COLLAPSED
-                            mainState.showNavBarScrim.value = false
+                            mainViewModel.showNavBarScrim.value = false
                         }
                 )
             }

@@ -50,7 +50,7 @@ import de.practicetime.practicetime.components.NonDraggableRatingBar
 import de.practicetime.practicetime.database.entities.LibraryItem
 import de.practicetime.practicetime.database.entities.Section
 import de.practicetime.practicetime.database.entities.Session
-import de.practicetime.practicetime.database.entities.SessionWithSections
+import de.practicetime.practicetime.database.SessionWithSections
 import de.practicetime.practicetime.services.RecorderService
 import de.practicetime.practicetime.services.SessionForegroundService
 import de.practicetime.practicetime.ui.MainActivity
@@ -1328,7 +1328,7 @@ class ActiveSessionActivity : AppCompatActivity() {
             }
 
             // and insert it the resulting section list into the database together with the session
-            PracticeTime.sessionDao.insertSessionWithSections(
+            PracticeTime.sessionDao.insert(
                 SessionWithSections(
                     session = newSession,
                     sections = mService.sectionBuffer.map { it.first }

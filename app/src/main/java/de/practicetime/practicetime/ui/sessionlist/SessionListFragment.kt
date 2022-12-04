@@ -48,10 +48,10 @@ import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
-import de.practicetime.practicetime.database.entities.SessionWithSectionsWithLibraryItems
+import de.practicetime.practicetime.database.SessionWithSectionsWithLibraryItems
 import de.practicetime.practicetime.shared.*
 import de.practicetime.practicetime.spacing
-import de.practicetime.practicetime.ui.MainState
+import de.practicetime.practicetime.ui.MainViewModel
 import de.practicetime.practicetime.ui.activesession.ActiveSessionActivity
 import de.practicetime.practicetime.utils.TIME_FORMAT_HUMAN_PRETTY
 import de.practicetime.practicetime.utils.epochSecondsToDate
@@ -106,7 +106,7 @@ fun rememberSessionListState(
 )
 @Composable
 fun SessionListFragmentHolder(
-    mainState: MainState,
+    mainViewModel: MainViewModel,
     activity: AppCompatActivity?,
 ) {
     val sessionListState = rememberSessionListState()
@@ -140,34 +140,34 @@ fun SessionListFragmentHolder(
                 scrollBehavior = scrollBehavior,
                 actions = {
                     IconButton(onClick = {
-                        mainState.showMainMenu.value = true
+                        mainViewModel.showMainMenu.value = true
                     }) {
                         Icon(Icons.Default.MoreVert, contentDescription = "more")
                         MainMenu (
-                            show = mainState.showMainMenu.value,
-                            onDismissHandler = { mainState.showMainMenu.value = false },
+                            show = mainViewModel.showMainMenu.value,
+                            onDismissHandler = { mainViewModel.showMainMenu.value = false },
                             onSelectionHandler = { commonSelection ->
-                                mainState.showMainMenu.value = false
+                                mainViewModel.showMainMenu.value = false
 
                                 when (commonSelection) {
                                     CommonMenuSelections.APP_INFO -> {}
                                     CommonMenuSelections.THEME -> {
-                                        mainState.showThemeSubMenu.value = true
+                                        mainViewModel.showThemeSubMenu.value = true
                                     }
                                     CommonMenuSelections.BACKUP -> {
-                                        mainState.showExportImportDialog.value = true
+                                        mainViewModel.showExportImportDialog.value = true
                                     }
                                 }
                             },
                             uniqueMenuItems = { /* TODO UNIQUE Session MENU */ }
                         )
                         ThemeMenu(
-                            expanded = mainState.showThemeSubMenu.value,
-                            currentTheme = mainState.activeTheme.value,
-                            onDismissHandler = { mainState.showThemeSubMenu.value = false },
+                            expanded = mainViewModel.showThemeSubMenu.value,
+                            currentTheme = mainViewModel.activeTheme.collectAsState().value,
+                            onDismissHandler = { mainViewModel.showThemeSubMenu.value = false },
                             onSelectionHandler = { theme ->
-                                mainState.showThemeSubMenu.value = false
-                                mainState.setTheme(theme)
+                                mainViewModel.showThemeSubMenu.value = false
+                                mainViewModel.setTheme(theme)
                             }
                         )
                     }
@@ -184,7 +184,7 @@ fun SessionListFragmentHolder(
                         sessionListState.clearActionMode()
                     },
                     onDeleteHandler = {
-                        mainState.deleteSessions(sessionListState.selectedSessionIds.toList())
+                        mainViewModel.deleteSessions(sessionListState.selectedSessionIds.toList())
                         sessionListState.clearActionMode()
                     }
                 )
@@ -192,7 +192,7 @@ fun SessionListFragmentHolder(
         },
         content = { paddingValues ->
             // Session list
-            val sessions = mainState.sessions.collectAsState()
+            val sessions = mainViewModel.sessions.collectAsState()
             LazyColumn(
                 modifier = Modifier
                     .padding(horizontal = 24.dp)

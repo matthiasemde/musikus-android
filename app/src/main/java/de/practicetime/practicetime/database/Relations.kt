@@ -10,11 +10,12 @@
  * Copyright (c) 2022, Javier Carbone, author Matthias Emde
  */
 
-package de.practicetime.practicetime.database.entities
+package de.practicetime.practicetime.database
 
-import androidx.room.Relation
 import androidx.room.Embedded
 import androidx.room.Junction
+import androidx.room.Relation
+import de.practicetime.practicetime.database.entities.*
 
 
 data class SessionWithSections(
@@ -126,14 +127,14 @@ data class GoalInstanceWithDescription(
     val description: GoalDescription
 )
 
-//data class GoalDescriptionWithInstances(
-//    @Embedded val description: GoalDescription,
-//    @Relation(
-//        parentColumn = "id",
-//        entityColumn = "goalDescriptionId"
-//    )
-//    val instances: List<GoalInstance>
-//)
+data class GoalDescriptionWithInstances(
+    @Embedded val description: GoalDescription,
+    @Relation(
+        parentColumn = "id",
+        entityColumn = "goalDescriptionId"
+    )
+    val instances: List<GoalInstance>
+)
 
 data class GoalInstanceWithDescriptionWithLibraryItems(
     @Embedded val instance: GoalInstance,

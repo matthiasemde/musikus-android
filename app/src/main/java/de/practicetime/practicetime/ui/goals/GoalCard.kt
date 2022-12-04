@@ -44,7 +44,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
-import de.practicetime.practicetime.database.entities.GoalInstanceWithDescriptionWithLibraryItems
+import de.practicetime.practicetime.database.GoalInstanceWithDescriptionWithLibraryItems
 import de.practicetime.practicetime.database.entities.GoalPeriodUnit
 import de.practicetime.practicetime.database.entities.GoalType
 import de.practicetime.practicetime.utils.*

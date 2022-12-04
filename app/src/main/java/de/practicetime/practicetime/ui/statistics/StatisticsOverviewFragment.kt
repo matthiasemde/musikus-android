@@ -28,8 +28,7 @@ import com.github.mikephil.charting.formatter.ValueFormatter
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
 import de.practicetime.practicetime.database.entities.GoalType
-import de.practicetime.practicetime.database.entities.SessionWithSectionsWithLibraryItems
-import de.practicetime.practicetime.databinding.FragmentContainerSessionsListBinding
+import de.practicetime.practicetime.database.SessionWithSectionsWithLibraryItems
 import de.practicetime.practicetime.databinding.FragmentContainerStatisticsBinding
 import de.practicetime.practicetime.shared.setCommonToolbar
 import de.practicetime.practicetime.ui.goals.updateGoals

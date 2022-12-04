@@ -33,20 +33,18 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDownward
-import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.rounded.Repeat
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.*
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.zIndex
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -55,16 +53,12 @@ import com.google.android.material.appbar.CollapsingToolbarLayout
 import com.google.android.material.appbar.MaterialToolbar
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
-import de.practicetime.practicetime.database.entities.GoalInstance
-import de.practicetime.practicetime.database.entities.GoalInstanceWithDescription
-import de.practicetime.practicetime.database.entities.GoalInstanceWithDescriptionWithLibraryItems
+import de.practicetime.practicetime.database.GoalInstanceWithDescriptionWithLibraryItems
 import de.practicetime.practicetime.shared.*
-import de.practicetime.practicetime.ui.MainState
-import de.practicetime.practicetime.ui.SortDirection
+import de.practicetime.practicetime.ui.MainViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.util.*
-import kotlin.collections.ArrayList
 
 enum class GoalsSortMode {
     DATE_ADDED,
@@ -125,7 +119,7 @@ fun rememberGoalsState(
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
-fun GoalsFragmentHolder(mainState: MainState) {
+fun GoalsFragmentHolder(mainViewModel: MainViewModel) {
     val goalsState = rememberGoalsState()
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
@@ -138,7 +132,7 @@ fun GoalsFragmentHolder(mainState: MainState) {
                 state = goalsState.multiFABState.value,
                 onStateChange = { state ->
                     goalsState.multiFABState.value = state
-                    mainState.showNavBarScrim.value = (state == MultiFABState.EXPANDED)
+                    mainViewModel.showNavBarScrim.value = (state == MultiFABState.EXPANDED)
                     if(state == MultiFABState.EXPANDED) {
                         goalsState.clearActionMode()
                     }
@@ -149,7 +143,7 @@ fun GoalsFragmentHolder(mainState: MainState) {
                             goalsState.goalDialogRepeat.value = false
                             goalsState.showGoalDialog.value = true
                             goalsState.multiFABState.value = MultiFABState.COLLAPSED
-                            mainState.showNavBarScrim.value = false
+                            mainViewModel.showNavBarScrim.value = false
                         },
                         label = "One shot goal",
                         icon = Icons.Filled.LocalFireDepartment,
@@ -159,7 +153,7 @@ fun GoalsFragmentHolder(mainState: MainState) {
                             goalsState.goalDialogRepeat.value = true
                             goalsState.showGoalDialog.value = true
                             goalsState.multiFABState.value = MultiFABState.COLLAPSED
-                            mainState.showNavBarScrim.value = false
+                            mainViewModel.showNavBarScrim.value = false
                         },
                         label = "Regular goal",
                         icon = Icons.Rounded.Repeat,
@@ -174,44 +168,44 @@ fun GoalsFragmentHolder(mainState: MainState) {
                     SortMenu(
                         show = goalsState.showSortModeMenu.value,
                         sortModes = GoalsSortMode.values().toList(),
-                        currentSortMode = mainState.goalsSortMode.value,
-                        currentSortDirection = mainState.goalsSortDirection.value,
+                        currentSortMode = mainViewModel.goalsSortMode.value,
+                        currentSortDirection = mainViewModel.goalsSortDirection.value,
                         label = { GoalsSortMode.toString(it) },
                         onShowMenuChanged = { goalsState.showSortModeMenu.value = it },
                         onSelectionHandler = { sortMode ->
                             goalsState.showSortModeMenu.value = false
-                            mainState.sortGoals(sortMode)
+                            mainViewModel.sortGoals(sortMode)
                         }
                     )
                     IconButton(onClick = {
-                        mainState.showMainMenu.value = true
+                        mainViewModel.showMainMenu.value = true
                     }) {
                         Icon(Icons.Default.MoreVert, contentDescription = "more")
                         MainMenu (
-                            show = mainState.showMainMenu.value,
-                            onDismissHandler = { mainState.showMainMenu.value = false },
+                            show = mainViewModel.showMainMenu.value,
+                            onDismissHandler = { mainViewModel.showMainMenu.value = false },
                             onSelectionHandler = { commonSelection ->
-                                mainState.showMainMenu.value = false
+                                mainViewModel.showMainMenu.value = false
 
                                 when (commonSelection) {
                                     CommonMenuSelections.APP_INFO -> {}
                                     CommonMenuSelections.THEME -> {
-                                        mainState.showThemeSubMenu.value = true
+                                        mainViewModel.showThemeSubMenu.value = true
                                     }
                                     CommonMenuSelections.BACKUP -> {
-                                        mainState.showExportImportDialog.value = true
+                                        mainViewModel.showExportImportDialog.value = true
                                     }
                                 }
                             },
                             uniqueMenuItems = { /* TODO UNIQUE GOAL MENU */ }
                         )
                         ThemeMenu(
-                            expanded = mainState.showThemeSubMenu.value,
-                            currentTheme = mainState.activeTheme.value,
-                            onDismissHandler = { mainState.showThemeSubMenu.value = false },
+                            expanded = mainViewModel.showThemeSubMenu.value,
+                            currentTheme = mainViewModel.activeTheme.collectAsState().value,
+                            onDismissHandler = { mainViewModel.showThemeSubMenu.value = false },
                             onSelectionHandler = { theme ->
-                                mainState.showThemeSubMenu.value = false
-                                mainState.setTheme(theme)
+                                mainViewModel.showThemeSubMenu.value = false
+                                mainViewModel.setTheme(theme)
                             }
                         )
                     }
@@ -248,7 +242,7 @@ fun GoalsFragmentHolder(mainState: MainState) {
                         goalsState.clearActionMode()
                     },
                     onDeleteHandler = {
-                        mainState.archiveGoals(goalsState.selectedGoalIds.toList())
+                        mainViewModel.archiveGoals(goalsState.selectedGoalIds.toList())
                         goalsState.clearActionMode()
                     }
                 )
@@ -258,7 +252,7 @@ fun GoalsFragmentHolder(mainState: MainState) {
 
             // Goal List
 
-            val goals = mainState.goals.collectAsState()
+            val goals = mainViewModel.goals.collectAsState()
             LazyColumn(
                 modifier = Modifier
                     .padding(horizontal = 16.dp)
@@ -324,10 +318,10 @@ fun GoalsFragmentHolder(mainState: MainState) {
                             factory = {
                                 GoalDialog(
                                     context = it,
-                                    libraryItems = mainState.libraryItems.value,
+                                    libraryItems = mainViewModel.libraryItems.value,
                                     repeat = goalsState.goalDialogRepeat.value,
                                     submitHandler = { newGoal, target ->
-                                        mainState.addGoal(newGoal, target)
+                                        mainViewModel.addGoal(newGoal, target)
                                         goalsState.showGoalDialog.value = false
                                     },
                                     onDismissRequest = { goalsState.showGoalDialog.value = false },
@@ -350,7 +344,7 @@ fun GoalsFragmentHolder(mainState: MainState) {
                         onValueChanged = { goal.instance.target = it },
                         onDismissHandler = {
                             goalsState.showEditGoalDialog.value = false
-                            mainState.editGoalTarget(
+                            mainViewModel.editGoalTarget(
                                 editedGoalDescriptionId = goal.description.description.id,
                                 newTarget = goal.instance.target
                             )
@@ -378,7 +372,7 @@ fun GoalsFragmentHolder(mainState: MainState) {
                             indication = null,
                         ) {
                             goalsState.multiFABState.value = MultiFABState.COLLAPSED
-                            mainState.showNavBarScrim.value = false
+                            mainViewModel.showNavBarScrim.value = false
                         }
                 )
             }

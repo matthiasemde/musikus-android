@@ -26,8 +26,8 @@ import com.google.android.material.button.MaterialButton
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
 import de.practicetime.practicetime.database.entities.Section
-import de.practicetime.practicetime.database.entities.SectionWithLibraryItem
-import de.practicetime.practicetime.database.entities.SessionWithSectionsWithLibraryItems
+import de.practicetime.practicetime.database.SectionWithLibraryItem
+import de.practicetime.practicetime.database.SessionWithSectionsWithLibraryItems
 import de.practicetime.practicetime.shared.EditTimeDialog
 import de.practicetime.practicetime.ui.MainActivity
 import de.practicetime.practicetime.utils.TIME_FORMAT_HUMAN_PRETTY

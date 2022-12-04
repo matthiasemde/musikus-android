@@ -76,7 +76,7 @@ class PracticeTime : Application() {
 
         const val DATABASE_NAME = "pt-database"
 
-        private fun openDatabase(applicationContext: Context) {
+        fun openDatabase(applicationContext: Context) {
             db = PTDatabase.getInstance(applicationContext)
 
             libraryItemDao = db.libraryItemDao
@@ -174,6 +174,6 @@ class PracticeTime : Application() {
 
         prefs = getSharedPreferences(getString(R.string.filename_shared_preferences), Context.MODE_PRIVATE)
 
-        openDatabase(applicationContext)
+//        openDatabase(applicationContext)
     }
 }

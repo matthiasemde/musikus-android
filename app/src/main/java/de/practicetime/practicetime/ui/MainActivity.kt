@@ -39,11 +39,14 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.zIndex
 import androidx.core.view.WindowCompat
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.composable
+import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import com.google.android.material.composethemeadapter3.Mdc3Theme
 import de.practicetime.practicetime.BuildConfig
 import de.practicetime.practicetime.PracticeTime
@@ -59,6 +62,8 @@ import de.practicetime.practicetime.ui.statistics.StatisticsFragmentHolder
 import de.practicetime.practicetime.utils.ExportDatabaseContract
 import de.practicetime.practicetime.utils.ExportImportDialog
 import de.practicetime.practicetime.utils.ImportDatabaseContract
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 
 sealed class Screen(
@@ -141,14 +146,23 @@ class MainActivity : AppCompatActivity() {
             reloadDatabase.value++
         }
 
+        // temporary fix
+        lifecycleScope.launch {
+            delay(2000)
+            PracticeTime.openDatabase(applicationContext)
+        }
+
         setContent {
-            val mainState = rememberMainState()
+            val mainViewModel = viewModel<MainViewModel>()
+            val navController = rememberAnimatedNavController()
+
+            mainViewModel.loadDatabase()
 
             LaunchedEffect(reloadDatabase.value) {
-                mainState.loadDatabase()
+                mainViewModel.loadDatabase()
             }
 
-            mainState.setTheme(try {
+            mainViewModel.setTheme(try {
                 PracticeTime.prefs.getInt(
                     PracticeTime.PREFERENCES_KEY_THEME,
                     ThemeSelections.SYSTEM.ordinal
@@ -162,7 +176,7 @@ class MainActivity : AppCompatActivity() {
             Mdc3Theme {
                 Scaffold(
                     bottomBar = {
-                        val navBackStackEntry by mainState.navController.currentBackStackEntryAsState()
+                        val navBackStackEntry by navController.currentBackStackEntryAsState()
                         val currentDestination = navBackStackEntry?.destination
                         val showNavigationBar = currentDestination?.hierarchy?.any { dest ->
                             navItems.any { it.route == dest.route }
@@ -205,11 +219,11 @@ class MainActivity : AppCompatActivity() {
                                             onClick = {
                                                 if (!selected) activePainter =
                                                     (activePainter + 1) % painterCount
-                                                mainState.navController.navigate(screen.route) {
+                                                navController.navigate(screen.route) {
                                                     // Pop up to the start destination of the graph to
                                                     // avoid building up a large stack of destinations
                                                     // on the back stack as users select items
-                                                    popUpTo(mainState.navController.graph.findStartDestination().id) {
+                                                    popUpTo(navController.graph.findStartDestination().id) {
                                                         saveState = true
                                                     }
                                                     // Avoid multiple copies of the same destination when
@@ -228,7 +242,7 @@ class MainActivity : AppCompatActivity() {
                                     modifier = Modifier
                                         .matchParentSize()
                                         .zIndex(1f),
-                                    visible = mainState.showNavBarScrim.value,
+                                    visible = mainViewModel.showNavBarScrim.value,
                                     enter = fadeIn(),
                                     exit = fadeOut()
                                 ) {
@@ -242,7 +256,7 @@ class MainActivity : AppCompatActivity() {
                 ) { innerPadding ->
                     val animationDuration = 400
                     AnimatedNavHost(
-                        mainState.navController,
+                        navController,
                         startDestination = Screen.Sessions.route,
                         Modifier.padding(bottom = innerPadding.calculateBottomPadding()),
                         enterTransition = {
@@ -270,32 +284,32 @@ class MainActivity : AppCompatActivity() {
                                     fadeOut(tween(0))
                                 } else null
                             }
-                        ) { SessionListFragmentHolder(mainState, getActivity()) }
+                        ) { SessionListFragmentHolder(mainViewModel, getActivity()) }
                         composable(
                             route = Screen.Goals.route,
-                        ) { GoalsFragmentHolder(mainState) }
+                        ) { GoalsFragmentHolder(mainViewModel) }
                         composable(
                             route = Screen.Statistics.route,
                         ) { StatisticsFragmentHolder() }
                         composable(
                             route = Screen.Library.route,
-                        ) { Library (mainState) }
+                        ) { Library (mainViewModel) }
                         composable(
                             route = Screen.ProgressUpdate.route,
                             enterTransition = { fadeIn(tween(0)) }
-                        ) { ProgressUpdate(mainState) }
+                        ) { ProgressUpdate(mainViewModel) }
                     }
 
                     /** Export / Import Dialog */
                     ExportImportDialog(
-                        show = mainState.showExportImportDialog.value,
-                        onDismissHandler = { mainState.showExportImportDialog.value = false }
+                        show = mainViewModel.showExportImportDialog.value,
+                        onDismissHandler = { mainViewModel.showExportImportDialog.value = false }
                     )
 
                     // if there is a new session added to the intent, navigate to progress update
                     intent.extras?.getLong("KEY_SESSION")?.let { newSessionId ->
                         intent.removeExtra("KEY_SESSION")
-                        mainState.navigateTo(Screen.ProgressUpdate.route)
+//                        mainViewModel.navigateTo(Screen.ProgressUpdate.route)
                     }
                 }
             }

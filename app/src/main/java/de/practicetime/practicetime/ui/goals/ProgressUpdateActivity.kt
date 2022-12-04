@@ -24,8 +24,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import de.practicetime.practicetime.R
 import de.practicetime.practicetime.spacing
-import de.practicetime.practicetime.ui.MainState
-import de.practicetime.practicetime.ui.Screen
+import de.practicetime.practicetime.ui.MainViewModel
 import kotlinx.coroutines.CoroutineScope
 import java.util.*
 
@@ -58,7 +57,7 @@ fun rememberProgressUpdateState(
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun ProgressUpdate(
-    mainState: MainState,
+    mainViewModel: MainViewModel,
 ) {
     val progressUpdateState = rememberProgressUpdateState()
 
@@ -102,7 +101,8 @@ fun ProgressUpdate(
                         )
                     } else {
                         TextButton(
-                            onClick = { mainState.navigateTo(Screen.Sessions.route) },
+                            onClick = {},
+//                            onClick = { mainViewModel.navigateTo(Screen.Sessions.route) },
                             content = { Text(stringResource(id = R.string.progressUpdateContinue)) }
                         )
                     }
@@ -111,7 +111,7 @@ fun ProgressUpdate(
         }
     ) { paddingValues ->
 
-        val goals = mainState.goals.collectAsState()
+        val goals = mainViewModel.goals.collectAsState()
 
         LazyColumn(
             modifier = Modifier

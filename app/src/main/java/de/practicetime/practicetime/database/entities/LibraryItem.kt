@@ -14,10 +14,21 @@ package de.practicetime.practicetime.database.entities
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
+import androidx.room.ForeignKey
 import de.practicetime.practicetime.database.ModelWithTimestamps
 import java.util.*
 
-@Entity(tableName = "library_item")
+@Entity(
+    tableName = "library_item",
+    foreignKeys = [
+        ForeignKey(
+            entity = LibraryFolder::class,
+            parentColumns = ["id"],
+            childColumns = ["library_folder_id"],
+            onDelete = ForeignKey.SET_NULL
+        )
+    ]
+)
 data class LibraryItem (
     @ColumnInfo(name="name") var name: String,
     @ColumnInfo(name="color_index") var colorIndex: Int,

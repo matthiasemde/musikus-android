@@ -24,7 +24,7 @@ import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.chip.Chip
 import de.practicetime.practicetime.R
-import de.practicetime.practicetime.database.entities.GoalInstanceWithDescriptionWithLibraryItems
+import de.practicetime.practicetime.database.GoalInstanceWithDescriptionWithLibraryItems
 import de.practicetime.practicetime.database.entities.GoalPeriodUnit
 import de.practicetime.practicetime.database.entities.GoalType
 import de.practicetime.practicetime.utils.TIME_FORMAT_HUMAN_PRETTY

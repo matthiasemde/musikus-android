@@ -9,27 +9,26 @@
 package de.practicetime.practicetime.database.daos
 
 import androidx.room.Dao
-import androidx.room.Transaction
-import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.database.BaseDao
 import de.practicetime.practicetime.database.entities.LibraryFolder
-import java.util.*
 
 @Dao
-abstract class LibraryFolderDao : BaseDao<LibraryFolder>(tableName = "library_folder") {
+abstract class LibraryFolderDao : BaseDao<LibraryFolder>(
+    tableName = "library_folder"
+) {
 
     /**
      * @Delete / archive
      */
 
-    @Transaction
-    open suspend fun deleteAndResetItems(folderId: UUID) {
-        PracticeTime.libraryItemDao.getFromFolder(folderId).forEach {
-            it.libraryFolderId = null
-            PracticeTime.libraryItemDao.update(it)
-        }
-        getAndDelete(folderId)
-    }
+//    @Transaction
+//    open suspend fun deleteAndResetItems(folderId: UUID) {
+//        PracticeTime.libraryItemDao.getFromFolder(folderId).forEach {
+//            it.libraryFolderId = null
+//            PracticeTime.libraryItemDao.update(it)
+//        }
+//        getAndDelete(folderId)
+//    }
 
     /**
      *  @Queries

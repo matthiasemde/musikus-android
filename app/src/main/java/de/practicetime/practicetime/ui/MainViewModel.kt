@@ -8,14 +8,20 @@
 
 package de.practicetime.practicetime.ui
 
+import android.app.Application
 import android.util.Log
 import androidx.appcompat.app.AppCompatDelegate
-import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.runtime.*
-import androidx.navigation.NavHostController
-import com.google.accompanist.navigation.animation.rememberAnimatedNavController
+import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
 import de.practicetime.practicetime.PracticeTime
-import de.practicetime.practicetime.database.entities.*
+import de.practicetime.practicetime.database.GoalDescriptionWithLibraryItems
+import de.practicetime.practicetime.database.GoalInstanceWithDescriptionWithLibraryItems
+import de.practicetime.practicetime.database.PTDatabase
+import de.practicetime.practicetime.database.SessionWithSections
+import de.practicetime.practicetime.database.entities.LibraryFolder
+import de.practicetime.practicetime.database.entities.LibraryItem
+import de.practicetime.practicetime.database.entities.Session
 import de.practicetime.practicetime.shared.ThemeSelections
 import de.practicetime.practicetime.ui.goals.GoalsSortMode
 import de.practicetime.practicetime.ui.library.LibraryFolderSortMode
@@ -24,7 +30,7 @@ import de.practicetime.practicetime.ui.sessionlist.SessionsForDay
 import de.practicetime.practicetime.ui.sessionlist.SessionsForDaysForMonth
 import de.practicetime.practicetime.utils.getSpecificDay
 import de.practicetime.practicetime.utils.getSpecificMonth
-import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -41,26 +47,18 @@ enum class SortDirection {
     }
 }
 
-@OptIn(ExperimentalAnimationApi::class)
-@Composable
-fun rememberMainState(
-    coroutineScope: CoroutineScope = rememberCoroutineScope(),
-    navController: NavHostController = rememberAnimatedNavController()
-) = remember(coroutineScope) { MainState(coroutineScope, navController) }
-
-class MainState(
-    private val coroutineScope: CoroutineScope,
-    val navController: NavHostController,
-) {
+class MainViewModel(
+    application: Application
+) : AndroidViewModel(application) {
 
     /** Initialization */
 
-    init {
-        loadDatabase()
-    }
+
+    /** Database */
+    private val database = PTDatabase.getInstance(application, ::prepopulateDatabase)
 
     fun loadDatabase() {
-        coroutineScope.launch {
+        viewModelScope.launch {
             loadSessions()
 
             loadLibraryFolders()
@@ -74,13 +72,47 @@ class MainState(
         }
     }
 
+    private fun prepopulateDatabase() {
+        val folders = listOf(
+            LibraryFolder(name = "Schupra"),
+            LibraryFolder(name = "Fagott"),
+            LibraryFolder(name = "Gesang"),
+        )
 
-    /** Navigation */
+        // populate the libraryItem table on first run
+        val items = listOf(
+            LibraryItem(name = "Die Schöpfung", colorIndex = 0, libraryFolderId = folders[0].id),
+            LibraryItem(name = "Beethoven Septett",colorIndex = 1,libraryFolderId = folders[0].id),
+            LibraryItem(name = "Schostakowitsch 9.", colorIndex = 2, libraryFolderId = folders[1].id),
+            LibraryItem(name = "Trauermarsch c-Moll", colorIndex = 3, libraryFolderId = folders[1].id),
+            LibraryItem(name = "Adagio", colorIndex = 4, libraryFolderId = folders[2].id),
+            LibraryItem(name = "Eine kleine Gigue", colorIndex = 5, libraryFolderId = folders[2].id),
+            LibraryItem(name = "Andantino", colorIndex = 6),
+            LibraryItem(name = "Klaviersonate", colorIndex = 7),
+            LibraryItem(name = "Trauermarsch", colorIndex = 8),
+        )
+        viewModelScope.launch {
+            folders.forEach {
+                Log.d("MainActivity", "Folder ${it.name} created")
+                addLibraryFolder(it)
+                delay(1500) //make sure folders have different createdAt values
+            }
 
-    fun navigateTo(destination: String) {
-        Log.d("MainState", "navigateTo: $destination")
-        navController.navigate(destination)
+            items.forEach {
+                addLibraryItem(it)
+                Log.d("MainActivity", "LibraryItem ${it.name} created")
+                delay(1500) //make sure items have different createdAt values
+            }
+        }
+
     }
+//
+//    /** Navigation */
+//
+//    fun navigateTo(destination: String) {
+//        Log.d("MainState", "navigateTo: $destination")
+//        navController.navigate(destination)
+//    }
 
     /** Menu */
 
@@ -97,11 +129,12 @@ class MainState(
 
     /** Theme */
 
-    val activeTheme = mutableStateOf(ThemeSelections.SYSTEM)
+    private val _activeTheme = MutableStateFlow(ThemeSelections.SYSTEM)
+    val activeTheme = _activeTheme.asStateFlow()
 
     fun setTheme(theme: ThemeSelections) {
         PracticeTime.prefs.edit().putInt(PracticeTime.PREFERENCES_KEY_THEME, theme.ordinal).apply()
-        activeTheme.value = theme
+        _activeTheme.value = theme
         AppCompatDelegate.setDefaultNightMode(theme.ordinal)
     }
 
@@ -117,7 +150,7 @@ class MainState(
         _sessions.update {
             val sessionsForDaysForMonths = mutableListOf<SessionsForDaysForMonth>()
             // fetch all sessions from the database
-            PracticeTime.sessionDao.getAllWithSectionsWithLibraryItems().takeUnless {
+            database.sessionDao.getAllWithSectionsWithLibraryItems().takeUnless {
                 it.isEmpty()
             }?.sortedByDescending { it.sections.first().section.timestamp }?.let { fetchedSessions ->
                 // initialize variables to keep track of the current month, current day,
@@ -194,9 +227,9 @@ class MainState(
     fun addSession(
         newSession: SessionWithSections,
     ) {
-        coroutineScope.launch {
-            PracticeTime.sessionDao.insertSessionWithSections(newSession)
-            val insertedSession = PracticeTime.sessionDao.getWithSectionsWithLibraryItems(newSession.session.id)
+        viewModelScope.launch {
+            database.sessionDao.insert(newSession)
+            val insertedSession = database.sessionDao.getWithSectionsWithLibraryItems(newSession.session.id)
 
             val (day, month) = newSession.sections.first().timestamp.let { timestamp ->
                 Pair(getSpecificDay(timestamp), getSpecificMonth(timestamp))
@@ -235,8 +268,8 @@ class MainState(
 
     /** Archive */
     fun deleteSessions(sessionIds: List<UUID>) {
-        coroutineScope.launch {
-            PracticeTime.sessionDao.getAndDelete(sessionIds)
+        viewModelScope.launch {
+            database.sessionDao.getAndDelete(sessionIds)
             _sessions.update { sessions ->
                 sessions.map { sessionsForDaysForMonth ->
                     sessionsForDaysForMonth.copy(
@@ -305,19 +338,19 @@ class MainState(
     /** Accessors */
     /** Load */
     private suspend fun loadLibraryFolders() {
-        _libraryFolders.update { PracticeTime.libraryFolderDao.getAll() }
+        _libraryFolders.update { database.libraryFolderDao.getAll() }
     }
 
     private suspend fun loadLibraryItems() {
         _libraryItems.update {
-            PracticeTime.libraryItemDao.get(activeOnly = true).onEach { item ->
+            database.libraryItemDao.get(activeOnly = true).onEach { item ->
                 // check if the items folderId actually exists
                 item.libraryFolderId?.let {
-                    if(PracticeTime.libraryFolderDao.get(it) == null) {
+                    if(database.libraryFolderDao.get(it) == null) {
                         Log.d("MainState", "Library item ${item.id} has a folderId ($it) that doesn't exist. Setting to null.")
                         // and return item to the main screen if it doesn't
                         item.libraryFolderId = null
-                        PracticeTime.libraryItemDao.update(item)
+                        database.libraryItemDao.update(item)
                     }
                 }
             }
@@ -327,25 +360,25 @@ class MainState(
     /** Mutators */
     /** Add */
     fun addLibraryFolder(newFolder: LibraryFolder) {
-        coroutineScope.launch {
-            PracticeTime.libraryFolderDao.insert(newFolder)
+        viewModelScope.launch {
+            database.libraryFolderDao.insert(newFolder)
             _libraryFolders.update { listOf(newFolder) + it }
             sortLibraryFolders()
         }
     }
 
     fun addLibraryItem(newItem: LibraryItem) {
-        coroutineScope.launch {
-            PracticeTime.libraryItemDao.insert(newItem)
+        viewModelScope.launch {
+            database.libraryItemDao.insert(newItem)
             _libraryItems.update { listOf(newItem) + it }
-            sortLibraryItems()
+//            sortLibraryItems()
         }
     }
 
     /** Edit */
     fun editFolder(editedFolder: LibraryFolder) {
-        coroutineScope.launch {
-            PracticeTime.libraryFolderDao.update(editedFolder)
+        viewModelScope.launch {
+            database.libraryFolderDao.update(editedFolder)
             _libraryFolders.update { folders ->
                 folders.map { if (it.id == editedFolder.id) editedFolder else it }
             }
@@ -354,18 +387,16 @@ class MainState(
     }
 
     fun editItem(item: LibraryItem) {
-        coroutineScope.launch {
-            PracticeTime.libraryItemDao.update(item)
+        viewModelScope.launch {
+            database.libraryItemDao.update(item)
             sortLibraryItems()
         }
     }
 
     /** Delete / Archive */
     fun deleteFolders(folderIds: List<UUID>) {
-        coroutineScope.launch {
-            folderIds.forEach { folderId ->
-                PracticeTime.libraryFolderDao.deleteAndResetItems(folderId)
-            }
+        viewModelScope.launch {
+            database.libraryFolderDao.getAndDelete(folderIds)
             _libraryFolders.update { folders ->
                 folders.filter { it.id !in folderIds }
             }
@@ -376,10 +407,10 @@ class MainState(
     }
 
     fun archiveItems(itemIds: List<UUID>) {
-        coroutineScope.launch {
+        viewModelScope.launch {
             itemIds.forEach { itemId ->
                 // returns false in case item couldn't be archived
-                if (PracticeTime.libraryItemDao.archive(itemId)) {
+                if (database.libraryItemDao.archive(itemId)) {
                     _libraryItems.update { items ->
                         items.filter { it.id != itemId }
                     }
@@ -519,7 +550,7 @@ class MainState(
     /** Load */
     private suspend fun loadGoals() {
         _goals.update {
-            PracticeTime.goalInstanceDao.getWithDescriptionsWithLibraryItems()
+            database.goalInstanceDao.getWithDescriptionsWithLibraryItems()
         }
     }
 
@@ -529,14 +560,19 @@ class MainState(
         newGoal: GoalDescriptionWithLibraryItems,
         target: Int,
     ) {
-        coroutineScope.launch {
-            PracticeTime.goalDescriptionDao.insertGoal(
-                newGoal,
-                target,
-            )?.let { insertedGoal ->
-                _goals.update { listOf(insertedGoal) + it }
-                sortGoals()
+        database.goalDescriptionDao.insert(
+            newGoal,
+            target,
+        )?.let { newGoalInstance ->
+            _goals.update {
+                listOf(
+                    GoalInstanceWithDescriptionWithLibraryItems(
+                        newGoalInstance,
+                        newGoal
+                    )
+                ) + it
             }
+            sortGoals()
         }
     }
 
@@ -545,8 +581,8 @@ class MainState(
         editedGoalDescriptionId: UUID,
         newTarget: Int,
     ) {
-        coroutineScope.launch {
-            PracticeTime.goalDescriptionDao.updateTarget(editedGoalDescriptionId, newTarget)
+        viewModelScope.launch {
+            database.goalDescriptionDao.updateTarget(editedGoalDescriptionId, newTarget)
             _goals.update { goals ->
                 goals.map {
                     if (it.description.description.id == editedGoalDescriptionId)
@@ -560,8 +596,8 @@ class MainState(
 
     /** Archive */
     fun archiveGoals(goalDescriptionIds: List<UUID>) {
-        coroutineScope.launch {
-            PracticeTime.goalDescriptionDao.getAndArchive(goalDescriptionIds)
+        viewModelScope.launch {
+            database.goalDescriptionDao.getAndArchive(goalDescriptionIds)
             _goals.update { goals ->
                 goals.filter { it.description.description.id !in goalDescriptionIds }
             }

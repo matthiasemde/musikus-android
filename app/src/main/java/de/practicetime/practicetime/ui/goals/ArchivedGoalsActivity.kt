@@ -23,7 +23,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.button.MaterialButton
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
-import de.practicetime.practicetime.database.entities.GoalInstanceWithDescriptionWithLibraryItems
+import de.practicetime.practicetime.database.GoalInstanceWithDescriptionWithLibraryItems
 import de.practicetime.practicetime.database.entities.GoalPeriodUnit
 import de.practicetime.practicetime.database.entities.GoalType
 import de.practicetime.practicetime.utils.TIME_FORMAT_HUMAN_PRETTY
@@ -106,7 +106,7 @@ class ArchivedGoalsActivity : AppCompatActivity() {
             setMessage(R.string.archivedGoalsConfirmDelete)
             setPositiveButton(R.string.archivedGoalsDelete) { dialog, _ ->
                 lifecycleScope.launch {
-                    PracticeTime.goalDescriptionDao.deleteGoal(goalDescriptionId)
+                    PracticeTime.goalDescriptionDao.getAndDelete(goalDescriptionId)
                 }
                 adapterData.remove(adapterData[position])
                 archivedGoalsAdapter.notifyItemRemoved(position)

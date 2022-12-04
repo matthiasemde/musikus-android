@@ -38,11 +38,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.color.MaterialColors
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
-import de.practicetime.practicetime.database.entities.SectionWithLibraryItem
-import de.practicetime.practicetime.database.entities.SessionWithSectionsWithLibraryItems
+import de.practicetime.practicetime.database.SectionWithLibraryItem
+import de.practicetime.practicetime.database.SessionWithSectionsWithLibraryItems
 import de.practicetime.practicetime.utils.SCALE_FACTOR_FOR_SMALL_TEXT
 import de.practicetime.practicetime.utils.TIME_FORMAT_HUMAN_PRETTY
 import de.practicetime.practicetime.utils.getDurationString

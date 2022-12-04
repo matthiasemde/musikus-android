@@ -29,6 +29,10 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 import de.practicetime.practicetime.BuildConfig
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
+import de.practicetime.practicetime.database.GoalDescriptionWithLibraryItems
+import de.practicetime.practicetime.database.GoalInstanceWithDescriptionWithLibraryItems
+import de.practicetime.practicetime.database.SectionWithLibraryItem
+import de.practicetime.practicetime.database.SessionWithSectionsWithLibraryItems
 import de.practicetime.practicetime.database.entities.*
 import de.practicetime.practicetime.ui.activesession.ActiveSessionActivity
 import de.practicetime.practicetime.ui.goals.GoalAdapter
