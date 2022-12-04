@@ -47,10 +47,11 @@ import com.google.android.material.snackbar.Snackbar
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
 import de.practicetime.practicetime.components.NonDraggableRatingBar
+import de.practicetime.practicetime.database.PTDatabase
+import de.practicetime.practicetime.database.SessionWithSections
 import de.practicetime.practicetime.database.entities.LibraryItem
 import de.practicetime.practicetime.database.entities.Section
 import de.practicetime.practicetime.database.entities.Session
-import de.practicetime.practicetime.database.SessionWithSections
 import de.practicetime.practicetime.services.RecorderService
 import de.practicetime.practicetime.services.SessionForegroundService
 import de.practicetime.practicetime.ui.MainActivity
@@ -216,7 +217,7 @@ class ActiveSessionActivity : AppCompatActivity() {
 
         // load all active libraryItems from the database and notify the adapter
         lifecycleScope.launch {
-            PracticeTime.libraryItemDao.get(activeOnly = true).let { activeLibraryItems.addAll(it.reversed())
+            PTDatabase.getInstance(applicationContext).libraryItemDao.get(activeOnly = true).let { activeLibraryItems.addAll(it.reversed())
                 libraryItemAdapter.notifyItemRangeInserted(0, it.size)
             }
             libraryItemList.apply {
@@ -230,7 +231,7 @@ class ActiveSessionActivity : AppCompatActivity() {
         // the handler for creating new libraryItems
         fun addLibraryItemHandler(newLibraryItem: LibraryItem) {
             lifecycleScope.launch {
-                PracticeTime.libraryItemDao.insert(newLibraryItem)
+                PTDatabase.getInstance(applicationContext).libraryItemDao.insert(newLibraryItem)
                 activeLibraryItems.add(0, newLibraryItem)
                 libraryItemAdapter.notifyItemInserted(0)
                 libraryItemList.scrollToPosition(0)
@@ -1155,7 +1156,7 @@ class ActiveSessionActivity : AppCompatActivity() {
             setPauseStopBtnVisibility(true)
 
             // when the session start, also update the goals
-            lifecycleScope.launch { updateGoals() }
+            lifecycleScope.launch { updateGoals(applicationContext) }
         } else if (mService.sectionBuffer.last().let {         // when session is running, don't allow starting if...
                 (libraryItemId == it.first.libraryItemId) ||   // ... in the same library item
                         ((it.first.duration
@@ -1328,7 +1329,7 @@ class ActiveSessionActivity : AppCompatActivity() {
             }
 
             // and insert it the resulting section list into the database together with the session
-            PracticeTime.sessionDao.insert(
+            PTDatabase.getInstance(applicationContext).sessionDao.insert(
                 SessionWithSections(
                     session = newSession,
                     sections = mService.sectionBuffer.map { it.first }

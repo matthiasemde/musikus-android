@@ -8,12 +8,14 @@
 
 package de.practicetime.practicetime.ui.library
 
-import androidx.compose.runtime.*
+import android.util.Log
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.ViewModel
 import de.practicetime.practicetime.database.entities.LibraryFolder
 import de.practicetime.practicetime.database.entities.LibraryItem
 import de.practicetime.practicetime.shared.MultiFABState
 import de.practicetime.practicetime.shared.SpinnerState
-import kotlinx.coroutines.CoroutineScope
 import java.util.*
 
 enum class LibraryMenuSelections {
@@ -56,9 +58,14 @@ enum class DialogMode {
     EDIT
 }
 
-class LibraryState(
-    private val coroutineScope: CoroutineScope,
-) {
+class LibraryViewModel(
+
+) : ViewModel() {
+
+    init {
+        Log.d("LibraryViewModel", "initialized")
+    }
+
     // Menu
     var showFolderSortModeMenu = mutableStateOf(false)
     var showItemSortModeMenu = mutableStateOf(false)
@@ -110,8 +117,3 @@ class LibraryState(
         actionMode.value = false
     }
 }
-
-@Composable
-fun rememberLibraryState(
-    coroutineScope: CoroutineScope = rememberCoroutineScope(),
-) = remember(coroutineScope) { LibraryState(coroutineScope) }

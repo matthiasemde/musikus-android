@@ -25,7 +25,7 @@ import java.util.*
             entity = LibraryFolder::class,
             parentColumns = ["id"],
             childColumns = ["library_folder_id"],
-            onDelete = ForeignKey.SET_NULL
+            onDelete = ForeignKey.SET_DEFAULT
         )
     ]
 )
@@ -36,7 +36,7 @@ data class LibraryItem (
     var libraryFolderId: UUID? = null,
 //    @ColumnInfo(name="profile_id", index = true) val profileId: UUID? = null,
     @ColumnInfo(name="archived") var archived: Boolean = false,
-    @ColumnInfo(name="order", defaultValue = "0") var order: Int? = null,
+    @ColumnInfo(name="order", defaultValue = "null") var order: Int? = null,
 ) : ModelWithTimestamps() {
     override fun toString(): String {
         return super.toString() +

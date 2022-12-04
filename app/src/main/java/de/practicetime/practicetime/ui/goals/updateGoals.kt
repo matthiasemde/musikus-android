@@ -6,14 +6,15 @@
 
 package de.practicetime.practicetime.ui.goals
 
-import de.practicetime.practicetime.PracticeTime
+import android.content.Context
+import de.practicetime.practicetime.database.PTDatabase
 import de.practicetime.practicetime.database.entities.GoalPeriodUnit
 import java.util.*
 
-suspend fun updateGoals() {
+suspend fun updateGoals(context: Context) {
     var notDone = true
     while(notDone) {
-        PracticeTime.goalInstanceDao.getOutdatedWithDescriptions().also { outdatedInstancesWithDescriptions ->
+        PTDatabase.getInstance(context).goalInstanceDao.getOutdatedWithDescriptions().also { outdatedInstancesWithDescriptions ->
             // while there are still outdated goals, keep looping and adding new ones
             notDone = outdatedInstancesWithDescriptions.isNotEmpty()
             outdatedInstancesWithDescriptions.forEach { (outdatedInstance, description) ->
@@ -40,19 +41,19 @@ suspend fun updateGoals() {
                     }
 
                     // ... and create a new goal with the same groupId, period and target
-                    PracticeTime.goalInstanceDao.insert(
+                    PTDatabase.getInstance(context).goalInstanceDao.insert(
                         description.createInstance(
                             timeFrame = startCalendar,
                             target = outdatedInstance.target
                         )
                     )
                 } else if(!description.archived) {
-                    PracticeTime.goalDescriptionDao.archive(description)
+                    PTDatabase.getInstance(context).goalDescriptionDao.archive(description)
                 }
 
                 // finally mark the outdated instance as renewed
                 outdatedInstance.renewed = true
-                PracticeTime.goalInstanceDao.update(outdatedInstance)
+                PTDatabase.getInstance(context).goalInstanceDao.update(outdatedInstance)
             }
         }
     }

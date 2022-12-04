@@ -12,6 +12,7 @@
 
 package de.practicetime.practicetime.ui.library
 
+import android.util.Log
 import android.view.*
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -42,6 +43,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
+import androidx.lifecycle.viewmodel.compose.viewModel
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
 import de.practicetime.practicetime.database.entities.LibraryFolder
@@ -72,7 +75,8 @@ import java.util.*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Library(mainViewModel: MainViewModel) {
-    val libraryState = rememberLibraryState()
+    Log.d("Library", "${LocalViewModelStoreOwner.current}")
+    val libraryViewModel = viewModel<LibraryViewModel>()
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
     Scaffold(
@@ -80,33 +84,33 @@ fun Library(mainViewModel: MainViewModel) {
         modifier = Modifier
             .nestedScroll(scrollBehavior.nestedScrollConnection),
         floatingActionButton = {
-            libraryState.activeFolder.value?.let { folder ->
+            libraryViewModel.activeFolder.value?.let { folder ->
                 FloatingActionButton(
                     onClick = {
-                        libraryState.itemDialogMode.value = DialogMode.ADD
-                        libraryState.itemDialogFolderId.value = folder.id
-                        libraryState.showItemDialog.value = true
-                        libraryState.multiFABState.value = MultiFABState.COLLAPSED
+                        libraryViewModel.itemDialogMode.value = DialogMode.ADD
+                        libraryViewModel.itemDialogFolderId.value = folder.id
+                        libraryViewModel.showItemDialog.value = true
+                        libraryViewModel.multiFABState.value = MultiFABState.COLLAPSED
                         mainViewModel.showNavBarScrim.value = false
                     },
                 ) {
                     Icon(Icons.Default.Add, contentDescription = "New item")
                 }
             } ?: MultiFAB(
-                state = libraryState.multiFABState.value,
+                state = libraryViewModel.multiFABState.value,
                 onStateChange = { state ->
-                    libraryState.multiFABState.value = state
+                    libraryViewModel.multiFABState.value = state
                     mainViewModel.showNavBarScrim.value = (state == MultiFABState.EXPANDED)
                     if(state == MultiFABState.EXPANDED) {
-                        libraryState.clearActionMode()
+                        libraryViewModel.clearActionMode()
                     }
                 },
                 miniFABs = listOf(
                     MiniFABData(
                         onClick = {
-                            libraryState.itemDialogMode.value = DialogMode.ADD
-                            libraryState.showItemDialog.value = true
-                            libraryState.multiFABState.value = MultiFABState.COLLAPSED
+                            libraryViewModel.itemDialogMode.value = DialogMode.ADD
+                            libraryViewModel.showItemDialog.value = true
+                            libraryViewModel.multiFABState.value = MultiFABState.COLLAPSED
                             mainViewModel.showNavBarScrim.value = false
                         },
                         label = "Item",
@@ -114,9 +118,9 @@ fun Library(mainViewModel: MainViewModel) {
                     ),
                     MiniFABData(
                         onClick = {
-                            libraryState.folderDialogMode.value = DialogMode.ADD
-                            libraryState.showFolderDialog.value = true
-                            libraryState.multiFABState.value = MultiFABState.COLLAPSED
+                            libraryViewModel.folderDialogMode.value = DialogMode.ADD
+                            libraryViewModel.showFolderDialog.value = true
+                            libraryViewModel.multiFABState.value = MultiFABState.COLLAPSED
                             mainViewModel.showNavBarScrim.value = false
                         },
                         label = "Folder",
@@ -128,11 +132,11 @@ fun Library(mainViewModel: MainViewModel) {
         topBar = {
             LargeTopAppBar(
                 scrollBehavior = scrollBehavior,
-                title = { Text(text = libraryState.activeFolder.value?.name ?: "Library") },
+                title = { Text(text = libraryViewModel.activeFolder.value?.name ?: "Library") },
                 navigationIcon = {
-                    if(libraryState.activeFolder.value != null){
+                    if(libraryViewModel.activeFolder.value != null){
                         IconButton(onClick = {
-                            libraryState.activeFolder.value = null
+                            libraryViewModel.activeFolder.value = null
                         }) {
                             Icon(Icons.Rounded.ArrowBack, contentDescription = "Back")
                         }
@@ -178,16 +182,16 @@ fun Library(mainViewModel: MainViewModel) {
 
             // Action bar
 
-            if(libraryState.actionMode.value) {
+            if(libraryViewModel.actionMode.value) {
                 ActionBar(
                     numSelectedItems =
-                        libraryState.selectedItemIds.size +
-                        libraryState.selectedFolderIds.size,
+                        libraryViewModel.selectedItemIds.size +
+                        libraryViewModel.selectedFolderIds.size,
                     onDismissHandler = {
-                        libraryState.clearActionMode()
+                        libraryViewModel.clearActionMode()
                     },
                     onEditHandler = {
-                        libraryState.apply {
+                        libraryViewModel.apply {
                             mainViewModel.libraryItems.value.firstOrNull { item ->
                                 selectedItemIds.firstOrNull()?.let { it == item.id } ?: false
                             }?.let { item ->
@@ -206,12 +210,12 @@ fun Library(mainViewModel: MainViewModel) {
                                 showFolderDialog.value = true
                             }
                         }
-                        libraryState.clearActionMode()
+                        libraryViewModel.clearActionMode()
                     },
                     onDeleteHandler = {
-                        mainViewModel.archiveItems(libraryState.selectedItemIds.toList())
-                        mainViewModel.deleteFolders(libraryState.selectedFolderIds.toList())
-                        libraryState.clearActionMode()
+                        mainViewModel.archiveItems(libraryViewModel.selectedItemIds.toList())
+                        mainViewModel.deleteFolders(libraryViewModel.selectedFolderIds.toList())
+                        libraryViewModel.clearActionMode()
                     }
                 )
             }
@@ -221,29 +225,29 @@ fun Library(mainViewModel: MainViewModel) {
                 contentPadding = PaddingValues(
                     top = innerPadding.calculateTopPadding(),
                 ),
-                activeFolder = libraryState.activeFolder.value,
-                showFolderSortMenu = libraryState.showFolderSortModeMenu.value,
+                activeFolder = libraryViewModel.activeFolder.value,
+                showFolderSortMenu = libraryViewModel.showFolderSortModeMenu.value,
                 folderSortMode = mainViewModel.libraryFolderSortMode.value,
                 folderSortDirection = mainViewModel.libraryFolderSortDirection.value,
                 folders = mainViewModel.libraryFolders.collectAsState().value,
-                selectedFolderIds = libraryState.selectedFolderIds,
-                showItemSortMenu = libraryState.showItemSortModeMenu.value,
+                selectedFolderIds = libraryViewModel.selectedFolderIds,
+                showItemSortMenu = libraryViewModel.showItemSortModeMenu.value,
                 itemSortMode = mainViewModel.libraryItemSortMode.value,
                 itemSortDirection = mainViewModel.libraryItemSortDirection.value,
                 items = mainViewModel.libraryItems.collectAsState().value,
-                selectedItemIds = libraryState.selectedItemIds,
-                onShowFolderSortMenuChange = { libraryState.showFolderSortModeMenu.value = it },
+                selectedItemIds = libraryViewModel.selectedItemIds,
+                onShowFolderSortMenuChange = { libraryViewModel.showFolderSortModeMenu.value = it },
                 onFolderSortModeSelected = {
                     mainViewModel.sortLibraryFolders(it)
-                    libraryState.showFolderSortModeMenu.value = false
+                    libraryViewModel.showFolderSortModeMenu.value = false
                 },
-                onShowItemSortMenuChange = { libraryState.showItemSortModeMenu.value = it },
+                onShowItemSortMenuChange = { libraryViewModel.showItemSortModeMenu.value = it },
                 onItemSortModeSelected = {
                     mainViewModel.sortLibraryItems(it)
-                    libraryState.showItemSortModeMenu.value = false
+                    libraryViewModel.showItemSortModeMenu.value = false
                 },
                 onLibraryFolderShortClicked = { folder ->
-                    libraryState.apply {
+                    libraryViewModel.apply {
                         if(actionMode.value) {
                             if(selectedFolderIds.contains(folder.id)) {
                                 selectedFolderIds.remove(folder.id)
@@ -260,7 +264,7 @@ fun Library(mainViewModel: MainViewModel) {
                     }
                 },
                 onLibraryFolderLongClicked = { folder ->
-                    libraryState.apply {
+                    libraryViewModel.apply {
                         if (!selectedFolderIds.contains(folder.id)) {
                             selectedFolderIds.add(folder.id)
                             actionMode.value = true
@@ -268,7 +272,7 @@ fun Library(mainViewModel: MainViewModel) {
                     }
                 },
                 onLibraryItemShortClicked = { item ->
-                    libraryState.apply {
+                    libraryViewModel.apply {
                         if (actionMode.value) {
                             if (selectedItemIds.contains(item.id)) {
                                 selectedItemIds.remove(item.id)
@@ -290,7 +294,7 @@ fun Library(mainViewModel: MainViewModel) {
                     }
                 },
                 onLibraryItemLongClicked = { item ->
-                    libraryState.apply {
+                    libraryViewModel.apply {
                         if (!selectedItemIds.contains(item.id)) {
                             selectedItemIds.add(item.id)
                             actionMode.value = true
@@ -318,72 +322,72 @@ fun Library(mainViewModel: MainViewModel) {
                 }
             }
 
-            if(libraryState.showFolderDialog.value) {
+            if(libraryViewModel.showFolderDialog.value) {
                 LibraryFolderDialog(
-                    mode = libraryState.folderDialogMode.value,
-                    folderName = libraryState.folderDialogName.value,
-                    onFolderNameChange = { libraryState.folderDialogName.value = it },
+                    mode = libraryViewModel.folderDialogMode.value,
+                    folderName = libraryViewModel.folderDialogName.value,
+                    onFolderNameChange = { libraryViewModel.folderDialogName.value = it },
                     onDismissHandler = { create ->
                         if(create) {
-                            when(libraryState.folderDialogMode.value) {
+                            when(libraryViewModel.folderDialogMode.value) {
                                 DialogMode.ADD -> {
                                     mainViewModel.addLibraryFolder(
                                         LibraryFolder(
-                                            name = libraryState.folderDialogName.value,
+                                            name = libraryViewModel.folderDialogName.value,
                                         )
                                     )
                                 }
                                 DialogMode.EDIT -> {
-                                    libraryState.editableFolder.value?.apply {
-                                        name = libraryState.folderDialogName.value
+                                    libraryViewModel.editableFolder.value?.apply {
+                                        name = libraryViewModel.folderDialogName.value
                                         mainViewModel.editFolder(this)
                                     }
                                 }
                             }
                         }
-                        libraryState.clearFolderDialog()
+                        libraryViewModel.clearFolderDialog()
                     },
                 )
             }
 
-            if(libraryState.showItemDialog.value) {
+            if(libraryViewModel.showItemDialog.value) {
                 LibraryItemDialog(
-                    mode = libraryState.itemDialogMode.value,
+                    mode = libraryViewModel.itemDialogMode.value,
                     folders = mainViewModel.libraryFolders.collectAsState().value,
-                    name = libraryState.itemDialogName.value,
-                    colorIndex = libraryState.itemDialogColorIndex.value,
-                    folderId = libraryState.itemDialogFolderId.value,
-                    folderSelectorExpanded = libraryState.itemDialogFolderSelectorExpanded.value,
-                    onNameChange = { libraryState.itemDialogName.value = it },
-                    onColorIndexChange = { libraryState.itemDialogColorIndex.value = it },
+                    name = libraryViewModel.itemDialogName.value,
+                    colorIndex = libraryViewModel.itemDialogColorIndex.value,
+                    folderId = libraryViewModel.itemDialogFolderId.value,
+                    folderSelectorExpanded = libraryViewModel.itemDialogFolderSelectorExpanded.value,
+                    onNameChange = { libraryViewModel.itemDialogName.value = it },
+                    onColorIndexChange = { libraryViewModel.itemDialogColorIndex.value = it },
                     onFolderIdChange = {
-                        libraryState.itemDialogFolderId.value = it
-                        libraryState.itemDialogFolderSelectorExpanded.value = SpinnerState.COLLAPSED
+                        libraryViewModel.itemDialogFolderId.value = it
+                        libraryViewModel.itemDialogFolderSelectorExpanded.value = SpinnerState.COLLAPSED
                     },
-                    onFolderSelectorExpandedChange = { libraryState.itemDialogFolderSelectorExpanded.value = it },
+                    onFolderSelectorExpandedChange = { libraryViewModel.itemDialogFolderSelectorExpanded.value = it },
                     onDismissHandler = { cancel ->
                         if(!cancel) {
-                            when(libraryState.itemDialogMode.value) {
+                            when(libraryViewModel.itemDialogMode.value) {
                                 DialogMode.ADD -> {
                                     mainViewModel.addLibraryItem(
                                         LibraryItem(
-                                            name = libraryState.itemDialogName.value,
-                                            colorIndex = libraryState.itemDialogColorIndex.value,
-                                            libraryFolderId = libraryState.itemDialogFolderId.value
+                                            name = libraryViewModel.itemDialogName.value,
+                                            colorIndex = libraryViewModel.itemDialogColorIndex.value,
+                                            libraryFolderId = libraryViewModel.itemDialogFolderId.value
                                         )
                                     )
                                 }
                                 DialogMode.EDIT -> {
-                                    libraryState.editableItem.value?.apply {
-                                        name = libraryState.itemDialogName.value
-                                        colorIndex = libraryState.itemDialogColorIndex.value
-                                        libraryFolderId = libraryState.itemDialogFolderId.value
+                                    libraryViewModel.editableItem.value?.apply {
+                                        name = libraryViewModel.itemDialogName.value
+                                        colorIndex = libraryViewModel.itemDialogColorIndex.value
+                                        libraryFolderId = libraryViewModel.itemDialogFolderId.value
                                         mainViewModel.editItem(this)
                                     }
                                 }
                             }
                         }
-                        libraryState.clearItemDialog()
+                        libraryViewModel.clearItemDialog()
                     },
                 )
             }
@@ -392,7 +396,7 @@ fun Library(mainViewModel: MainViewModel) {
             AnimatedVisibility(
                 modifier = Modifier
                     .zIndex(1f),
-                visible = libraryState.multiFABState.value == MultiFABState.EXPANDED,
+                visible = libraryViewModel.multiFABState.value == MultiFABState.EXPANDED,
                 enter = fadeIn(),
                 exit = fadeOut()
             ) {
@@ -404,7 +408,7 @@ fun Library(mainViewModel: MainViewModel) {
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null,
                         ) {
-                            libraryState.multiFABState.value = MultiFABState.COLLAPSED
+                            libraryViewModel.multiFABState.value = MultiFABState.COLLAPSED
                             mainViewModel.showNavBarScrim.value = false
                         }
                 )

@@ -35,6 +35,7 @@ import com.github.mikephil.charting.utils.MPPointF
 import com.google.android.material.tabs.TabLayout
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
+import de.practicetime.practicetime.database.PTDatabase
 import de.practicetime.practicetime.database.entities.GoalDescription
 import de.practicetime.practicetime.database.entities.GoalInstance
 import de.practicetime.practicetime.database.entities.GoalPeriodUnit
@@ -127,10 +128,10 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
 
     /** get the goals from the database */
     private suspend fun initGoalsList() {
-        PracticeTime.goalDescriptionDao.getAllWithLibraryItems().forEach { (desc, cat) ->
+        PTDatabase.getInstance(applicationContext).goalDescriptionDao.getAllWithLibraryItems().forEach { (desc, cat) ->
             goals.add(
                 GoalListElement(
-                    goalInstances = PracticeTime.goalInstanceDao.get(desc.id, from = 0L),
+                    goalInstances = PTDatabase.getInstance(applicationContext).goalInstanceDao.get(desc.id, from = 0L),
                     goalDesc = desc,
                     libraryItem = cat.firstOrNull()
                 )

@@ -48,6 +48,7 @@ import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
+import de.practicetime.practicetime.database.PTDatabase
 import de.practicetime.practicetime.database.SessionWithSectionsWithLibraryItems
 import de.practicetime.practicetime.shared.*
 import de.practicetime.practicetime.spacing
@@ -417,7 +418,7 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
 
         lifecycleScope.launch {
             // fetch all sessions from the database
-            PracticeTime.sessionDao.getAllWithSectionsWithLibraryItems().sortedBy {
+            PTDatabase.getInstance(requireContext()).sessionDao.getAllWithSectionsWithLibraryItems().sortedBy {
                 it.sections.firstOrNull()?.section?.timestamp ?: 0L
             }.also { sessions ->
                 if (sessions.isEmpty()) {
@@ -651,13 +652,13 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
                 val (session, sectionsWithLibraryItems) = adapterData[layoutPosition - 1]
                 val sections = sectionsWithLibraryItems.map { s -> s.section }
 
-                val goalProgress = PracticeTime.goalDescriptionDao.computeGoalProgressForSession(
-                    PracticeTime.sessionDao.getWithSectionsWithLibraryItemsWithGoals(session.id),
+                val goalProgress = PTDatabase.getInstance(requireContext()).goalDescriptionDao.computeGoalProgressForSession(
+                    PTDatabase.getInstance(requireContext()).sessionDao.getWithSectionsWithLibraryItemsWithGoals(session.id),
                     checkArchived = true
                 )
 
                 // get all active goal instances at the time of the session
-                val updatedGoalInstances = PracticeTime.goalInstanceDao.get(
+                val updatedGoalInstances = PTDatabase.getInstance(requireContext()).goalInstanceDao.get(
                     goalDescriptionIds = goalProgress.keys.toList(),
                     from = sections.first().timestamp
                 // subtract the progress
@@ -671,7 +672,7 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
                 }
 
                 // update goal instances and delete session in a single transaction
-                PracticeTime.sessionDao.delete(session.id, updatedGoalInstances)
+                PTDatabase.getInstance(requireContext()).sessionDao.delete(session.id, updatedGoalInstances)
 
                 // find the session in the session list adapter data and delete it
                 adapterData.removeAt(layoutPosition - 1)

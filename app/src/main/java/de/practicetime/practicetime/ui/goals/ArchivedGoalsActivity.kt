@@ -24,6 +24,7 @@ import com.google.android.material.button.MaterialButton
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
 import de.practicetime.practicetime.database.GoalInstanceWithDescriptionWithLibraryItems
+import de.practicetime.practicetime.database.PTDatabase
 import de.practicetime.practicetime.database.entities.GoalPeriodUnit
 import de.practicetime.practicetime.database.entities.GoalType
 import de.practicetime.practicetime.utils.TIME_FORMAT_HUMAN_PRETTY
@@ -55,10 +56,10 @@ class ArchivedGoalsActivity : AppCompatActivity() {
         )
 
         lifecycleScope.launch {
-            PracticeTime.goalDescriptionDao.getArchivedWithLibraryItems().forEach {
+            PTDatabase.getInstance(applicationContext).goalDescriptionDao.getArchivedWithLibraryItems().forEach {
                 adapterData.add(
                     GoalInstanceWithDescriptionWithLibraryItems(
-                        instance = PracticeTime.goalInstanceDao.getLatest(it.description.id),
+                        instance = PTDatabase.getInstance(applicationContext).goalInstanceDao.getLatest(it.description.id),
                         description = it
                     )
                 )
@@ -86,9 +87,9 @@ class ArchivedGoalsActivity : AppCompatActivity() {
                 lifecycleScope.launch {
                     libraryItem?.let {
                         it.archived = false
-                        PracticeTime.libraryItemDao.update(libraryItem)
+                        PTDatabase.getInstance(applicationContext).libraryItemDao.update(libraryItem)
                     }
-                    PracticeTime.goalDescriptionDao.unarchive(archivedGoal)
+                    PTDatabase.getInstance(applicationContext).goalDescriptionDao.unarchive(archivedGoal)
                 }
                 adapterData.remove(adapterData[position])
                 archivedGoalsAdapter.notifyItemRemoved(position)
@@ -106,7 +107,7 @@ class ArchivedGoalsActivity : AppCompatActivity() {
             setMessage(R.string.archivedGoalsConfirmDelete)
             setPositiveButton(R.string.archivedGoalsDelete) { dialog, _ ->
                 lifecycleScope.launch {
-                    PracticeTime.goalDescriptionDao.getAndDelete(goalDescriptionId)
+                    PTDatabase.getInstance(applicationContext).goalDescriptionDao.getAndDelete(goalDescriptionId)
                 }
                 adapterData.remove(adapterData[position])
                 archivedGoalsAdapter.notifyItemRemoved(position)

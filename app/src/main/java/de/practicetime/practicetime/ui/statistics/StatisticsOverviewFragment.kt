@@ -27,8 +27,9 @@ import com.github.mikephil.charting.data.*
 import com.github.mikephil.charting.formatter.ValueFormatter
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
-import de.practicetime.practicetime.database.entities.GoalType
+import de.practicetime.practicetime.database.PTDatabase
 import de.practicetime.practicetime.database.SessionWithSectionsWithLibraryItems
+import de.practicetime.practicetime.database.entities.GoalType
 import de.practicetime.practicetime.databinding.FragmentContainerStatisticsBinding
 import de.practicetime.practicetime.shared.setCommonToolbar
 import de.practicetime.practicetime.ui.goals.updateGoals
@@ -49,7 +50,7 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         lifecycleScope.launch {
-            updateGoals()    // update the goalInstances if they are outdated
+            updateGoals(requireContext())    // update the goalInstances if they are outdated
 
             if (getAllSessions().isNotEmpty()) {
                 view.findViewById<NestedScrollView>(R.id.statistics_overview_scrollview).visibility = View.VISIBLE
@@ -62,7 +63,7 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
                 view.findViewById<ImageButton>(R.id.stats_ov_card_last7days_ib_more_details).setOnClickListener(sessionDetailClickListener)
 
                 /** last 5 goals overview */
-                if (PracticeTime.goalInstanceDao.getWithDescription().isNotEmpty()) {
+                if (PTDatabase.getInstance(requireContext()).goalInstanceDao.getWithDescription().isNotEmpty()) {
                     view.findViewById<CardView>(R.id.stats_ov_cardview_lastgoals).visibility = View.VISIBLE
 
                     val goalsDetailClickListener = View.OnClickListener {
@@ -172,7 +173,7 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
             // get all total durations from the last 7 days
             val barChartArray = arrayListOf<BarEntry>()
             for (day in 0 downTo -6) {
-                val dur = PracticeTime.sectionDao.getWithLibraryItems(
+                val dur = PTDatabase.getInstance(requireContext()).sectionDao.getWithLibraryItems(
                         getStartOfDay(day.toLong()).toEpochSecond(),
                         getEndOfDay(day.toLong()).toEpochSecond()
                     ).sumOf {
@@ -211,7 +212,7 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
 
     private fun initLastGoalsCard() {
         lifecycleScope.launch {
-            val lastGoals = PracticeTime.goalInstanceDao.getWithDescription(
+            val lastGoals = PTDatabase.getInstance(requireContext()).goalInstanceDao.getWithDescription(
                 from = 0,
                 to = getCurrTimestamp()
             )   .sortedBy { it.instance.startTimestamp +  it.instance.periodInSeconds}  // sort by end date
@@ -248,10 +249,10 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
                     if (gd.type == GoalType.ITEM_SPECIFIC) {
                         // find out libraryItem
                         val catId =
-                            PracticeTime.goalDescriptionDao.getGoalDescriptionLibraryItemCrossRefs(
+                            PTDatabase.getInstance(requireContext()).goalDescriptionDao.getGoalDescriptionLibraryItemCrossRefs(
                                 goalDescriptionId = gd.id
                             ).first().libraryItemId
-                        val cat = PracticeTime.libraryItemDao.get(catId)
+                        val cat = PTDatabase.getInstance(requireContext()).libraryItemDao.get(catId)
                         val libraryItemColors =
                             requireContext().resources.getIntArray(R.array.library_item_colors)
                         val color = ColorStateList.valueOf(libraryItemColors[cat?.colorIndex ?: 0])
@@ -332,7 +333,7 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
         val beginLastMonth = getStartOfMonth(-1).toEpochSecond()
         val endLastMonth = getEndOfMonth(-1).toEpochSecond()
 
-        val totalTime = PracticeTime.sectionDao.getWithLibraryItems(beginLastMonth, endLastMonth)
+        val totalTime = PTDatabase.getInstance(requireContext()).sectionDao.getWithLibraryItems(beginLastMonth, endLastMonth)
             .sumOf { it.section.duration ?: 0}
 
         return getDurationString(totalTime, TIME_FORMAT_HUMAN_PRETTY_SHORT)
@@ -376,7 +377,7 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
 
     private suspend fun getAllSessions(): List<SessionWithSectionsWithLibraryItems> {
         if (!this::allSessions.isInitialized)
-            allSessions = PracticeTime.sessionDao.getAllWithSectionsWithLibraryItems()
+            allSessions = PTDatabase.getInstance(requireContext()).sessionDao.getAllWithSectionsWithLibraryItems()
 
         return allSessions
     }

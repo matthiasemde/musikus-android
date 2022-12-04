@@ -93,8 +93,8 @@ class MainViewModel(
         )
         viewModelScope.launch {
             folders.forEach {
-                Log.d("MainActivity", "Folder ${it.name} created")
                 addLibraryFolder(it)
+                Log.d("MainActivity", "Folder ${it.name} created")
                 delay(1500) //make sure folders have different createdAt values
             }
 
@@ -104,7 +104,6 @@ class MainViewModel(
                 delay(1500) //make sure items have different createdAt values
             }
         }
-
     }
 //
 //    /** Navigation */
@@ -371,7 +370,7 @@ class MainViewModel(
         viewModelScope.launch {
             database.libraryItemDao.insert(newItem)
             _libraryItems.update { listOf(newItem) + it }
-//            sortLibraryItems()
+            sortLibraryItems()
         }
     }
 

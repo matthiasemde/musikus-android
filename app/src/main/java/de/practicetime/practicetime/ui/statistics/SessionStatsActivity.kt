@@ -32,13 +32,13 @@ import com.github.mikephil.charting.listener.OnChartValueSelectedListener
 import com.google.android.material.tabs.TabLayout
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
+import de.practicetime.practicetime.database.PTDatabase
 import de.practicetime.practicetime.database.entities.LibraryItem
 import de.practicetime.practicetime.utils.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.time.format.DateTimeFormatter
 import java.util.*
-import kotlin.collections.ArrayList
 import kotlin.math.ceil
 import kotlin.math.roundToInt
 
@@ -175,7 +175,7 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
     /** initialize the checkbox list with the libraryItems */
     private fun initLibraryItemList() {
         lifecycleScope.launch {
-            PracticeTime.libraryItemDao.getAll().forEach {
+            PTDatabase.getInstance(applicationContext).libraryItemDao.getAll().forEach {
                 libraryItems.add(
                     LibraryItemListElement(
                         it,
@@ -595,7 +595,7 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
 
         for (day in VIEWS.DAYS_VIEW.barCount downTo 1) {
             val floatArrDurBarChart = FloatArray(colorAmount) {0f}
-            val sectionsThisDay = PracticeTime.sectionDao.getWithLibraryItems(
+            val sectionsThisDay = PTDatabase.getInstance(applicationContext).sectionDao.getWithLibraryItems(
                 getStartOfDayOfWeek(day.toLong(), daysViewWeekOffset).toEpochSecond(),
                 getEndOfDayOfWeek(day.toLong(), daysViewWeekOffset).toEpochSecond()
             )
@@ -636,7 +636,7 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
 
         for (week in 0 downTo -(VIEWS.WEEKS_VIEW.barCount-1)) {     // last 10 weeks
             val floatArrDurBarChart = FloatArray(colorAmount) {0f}
-            val sectionsThisWeek = PracticeTime.sectionDao.getWithLibraryItems(
+            val sectionsThisWeek = PTDatabase.getInstance(applicationContext).sectionDao.getWithLibraryItems(
                 getStartOfWeek(week.toLong() + weeksViewWeekOffset).toEpochSecond(),
                 getEndOfWeek(week.toLong() + weeksViewWeekOffset).toEpochSecond()
             )
@@ -675,7 +675,7 @@ class SessionStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
         val floatArrDurPieChart = FloatArray(colorAmount) {0f}
         for (month in 0 downTo -(VIEWS.MONTHS_VIEW.barCount-1)) {
             val floatArrDurBarChart = FloatArray(colorAmount) {0f}
-            val sectionsThisMonth = PracticeTime.sectionDao.getWithLibraryItems(
+            val sectionsThisMonth = PTDatabase.getInstance(applicationContext).sectionDao.getWithLibraryItems(
                 getStartOfMonth(month.toLong() + monthsViewMonthOffset).toEpochSecond(),
                 getEndOfMonth(month.toLong() + monthsViewMonthOffset).toEpochSecond()
             )

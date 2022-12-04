@@ -70,16 +70,18 @@ abstract class BaseDao<T>(
     }
 
     @Insert(onConflict = OnConflictStrategy.ABORT)
-    protected abstract suspend fun directInsert(rows: List<T>)
+    protected abstract fun directInsert(rows: List<T>)
 
-    suspend fun insert(rows: List<T>) {
-        rows.forEach {
-            if(it is ModelWithTimestamps) {
-                it.createdAt = getCurrTimestamp()
-                it.modifiedAt = getCurrTimestamp()
+    fun insert(rows: List<T>) {
+        ioThread {
+            rows.forEach {
+                if (it is ModelWithTimestamps) {
+                    it.createdAt = getCurrTimestamp()
+                    it.modifiedAt = getCurrTimestamp()
+                }
             }
+            directInsert(rows)
         }
-        directInsert(rows)
     }
 
     /**
@@ -107,23 +109,29 @@ abstract class BaseDao<T>(
      */
 
     @Update(onConflict = OnConflictStrategy.ABORT)
-    protected abstract suspend fun directUpdate(row: T)
+    protected abstract fun directUpdate(row: T)
 
-    suspend fun update(row: T) {
-        if(row is ModelWithTimestamps) {
-            row.modifiedAt = getCurrTimestamp()
+    fun update(row: T) {
+        ioThread {
+            if(row is ModelWithTimestamps) {
+                row.modifiedAt = getCurrTimestamp()
+            }
+            directUpdate(row)
         }
-        directUpdate(row)
     }
 
     @Update(onConflict = OnConflictStrategy.ABORT)
-    protected abstract suspend fun directUpdate(rows: List<T>)
+    protected abstract fun directUpdate(rows: List<T>)
 
-    suspend fun update(rows: List<T>) {
-        if(rows.firstOrNull() is ModelWithTimestamps) {
-            rows.forEach { (it as ModelWithTimestamps).modifiedAt = getCurrTimestamp() }
+    fun update(rows: List<T>) {
+        ioThread {
+            rows.forEach {
+                if (it is ModelWithTimestamps) {
+                    it.modifiedAt = getCurrTimestamp()
+                }
+            }
+            directUpdate(rows)
         }
-        directUpdate(rows)
     }
 
 

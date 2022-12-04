@@ -13,6 +13,7 @@
 
 package de.practicetime.practicetime.ui.goals
 
+import android.app.Application
 import android.content.Context
 import android.content.Intent
 import android.os.Build
@@ -46,17 +47,19 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.zIndex
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.appbar.CollapsingToolbarLayout
 import com.google.android.material.appbar.MaterialToolbar
-import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
 import de.practicetime.practicetime.database.GoalInstanceWithDescriptionWithLibraryItems
+import de.practicetime.practicetime.database.PTDatabase
 import de.practicetime.practicetime.shared.*
 import de.practicetime.practicetime.ui.MainViewModel
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.util.*
 
@@ -78,12 +81,12 @@ enum class GoalsSortMode {
     }
 }
 
-class GoalsState(
-    private val coroutineScope: CoroutineScope,
-) {
+class GoalsViewModel(
+    application: Application
+) : AndroidViewModel(application) {
     init {
-        coroutineScope.launch {
-            updateGoals()
+        viewModelScope.launch {
+            updateGoals(application)
         }
     }
 
@@ -111,16 +114,16 @@ class GoalsState(
     }
 }
 
-@Composable
-fun rememberGoalsState(
-    coroutineScope: CoroutineScope = rememberCoroutineScope(),
-) = remember(coroutineScope) { GoalsState(coroutineScope) }
-
+//@Composable
+//fun rememberGoalsState(
+//    coroutineScope: CoroutineScope = rememberCoroutineScope(),
+//) = remember(coroutineScope) { GoalsState(coroutineScope) }
+//
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun GoalsFragmentHolder(mainViewModel: MainViewModel) {
-    val goalsState = rememberGoalsState()
+    val goalsViewModel = viewModel<GoalsViewModel>()
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
     Scaffold(
@@ -129,20 +132,20 @@ fun GoalsFragmentHolder(mainViewModel: MainViewModel) {
             .nestedScroll(scrollBehavior.nestedScrollConnection),
         floatingActionButton = {
             MultiFAB(
-                state = goalsState.multiFABState.value,
+                state = goalsViewModel.multiFABState.value,
                 onStateChange = { state ->
-                    goalsState.multiFABState.value = state
+                    goalsViewModel.multiFABState.value = state
                     mainViewModel.showNavBarScrim.value = (state == MultiFABState.EXPANDED)
                     if(state == MultiFABState.EXPANDED) {
-                        goalsState.clearActionMode()
+                        goalsViewModel.clearActionMode()
                     }
                 },
                 miniFABs = listOf(
                     MiniFABData(
                         onClick = {
-                            goalsState.goalDialogRepeat.value = false
-                            goalsState.showGoalDialog.value = true
-                            goalsState.multiFABState.value = MultiFABState.COLLAPSED
+                            goalsViewModel.goalDialogRepeat.value = false
+                            goalsViewModel.showGoalDialog.value = true
+                            goalsViewModel.multiFABState.value = MultiFABState.COLLAPSED
                             mainViewModel.showNavBarScrim.value = false
                         },
                         label = "One shot goal",
@@ -150,9 +153,9 @@ fun GoalsFragmentHolder(mainViewModel: MainViewModel) {
                     ),
                     MiniFABData(
                         onClick = {
-                            goalsState.goalDialogRepeat.value = true
-                            goalsState.showGoalDialog.value = true
-                            goalsState.multiFABState.value = MultiFABState.COLLAPSED
+                            goalsViewModel.goalDialogRepeat.value = true
+                            goalsViewModel.showGoalDialog.value = true
+                            goalsViewModel.multiFABState.value = MultiFABState.COLLAPSED
                             mainViewModel.showNavBarScrim.value = false
                         },
                         label = "Regular goal",
@@ -166,14 +169,14 @@ fun GoalsFragmentHolder(mainViewModel: MainViewModel) {
                 scrollBehavior = scrollBehavior,
                 actions = {
                     SortMenu(
-                        show = goalsState.showSortModeMenu.value,
+                        show = goalsViewModel.showSortModeMenu.value,
                         sortModes = GoalsSortMode.values().toList(),
                         currentSortMode = mainViewModel.goalsSortMode.value,
                         currentSortDirection = mainViewModel.goalsSortDirection.value,
                         label = { GoalsSortMode.toString(it) },
-                        onShowMenuChanged = { goalsState.showSortModeMenu.value = it },
+                        onShowMenuChanged = { goalsViewModel.showSortModeMenu.value = it },
                         onSelectionHandler = { sortMode ->
-                            goalsState.showSortModeMenu.value = false
+                            goalsViewModel.showSortModeMenu.value = false
                             mainViewModel.sortGoals(sortMode)
                         }
                     )
@@ -215,10 +218,10 @@ fun GoalsFragmentHolder(mainViewModel: MainViewModel) {
 
             // Action bar
 
-            if(goalsState.actionMode.value) {
+            if(goalsViewModel.actionMode.value) {
                 ActionBar(
-                    numSelectedItems = goalsState.selectedGoalIds.size,
-                    onDismissHandler = { goalsState.clearActionMode() },
+                    numSelectedItems = goalsViewModel.selectedGoalIds.size,
+                    onDismissHandler = { goalsViewModel.clearActionMode() },
                     onEditHandler = {
 //                        goalsState.apply {
 //                            mainState.libraryItems.value.firstOrNull { item ->
@@ -239,11 +242,11 @@ fun GoalsFragmentHolder(mainViewModel: MainViewModel) {
 //                                showFolderDialog.value = true
 //                            }
 //                        }
-                        goalsState.clearActionMode()
+                        goalsViewModel.clearActionMode()
                     },
                     onDeleteHandler = {
-                        mainViewModel.archiveGoals(goalsState.selectedGoalIds.toList())
-                        goalsState.clearActionMode()
+                        mainViewModel.archiveGoals(goalsViewModel.selectedGoalIds.toList())
+                        goalsViewModel.clearActionMode()
                     }
                 )
             }
@@ -270,9 +273,9 @@ fun GoalsFragmentHolder(mainViewModel: MainViewModel) {
                     val goalDescriptionId = goal.description.description.id
                     Selectable(
                         modifier = Modifier.animateItemPlacement(),
-                        selected = goalDescriptionId in goalsState.selectedGoalIds,
+                        selected = goalDescriptionId in goalsViewModel.selectedGoalIds,
                         onShortClick = {
-                            goalsState.apply {
+                            goalsViewModel.apply {
                                 if(actionMode.value) {
                                     if(selectedGoalIds.contains(goalDescriptionId)) {
                                         selectedGoalIds.remove(goalDescriptionId)
@@ -289,7 +292,7 @@ fun GoalsFragmentHolder(mainViewModel: MainViewModel) {
                             }
                         },
                         onLongClick = {
-                            goalsState.apply {
+                            goalsViewModel.apply {
                                 if (goalDescriptionId !in selectedGoalIds) {
                                     selectedGoalIds.add(goalDescriptionId)
                                     actionMode.value = true
@@ -305,9 +308,9 @@ fun GoalsFragmentHolder(mainViewModel: MainViewModel) {
 
             // Create Goal Dialog
 
-            if(goalsState.showGoalDialog.value) {
+            if(goalsViewModel.showGoalDialog.value) {
                 Dialog(
-                    onDismissRequest = { goalsState.showGoalDialog.value = false },
+                    onDismissRequest = { goalsViewModel.showGoalDialog.value = false },
                 ) {
                     Box(
                         modifier = Modifier
@@ -319,12 +322,12 @@ fun GoalsFragmentHolder(mainViewModel: MainViewModel) {
                                 GoalDialog(
                                     context = it,
                                     libraryItems = mainViewModel.libraryItems.value,
-                                    repeat = goalsState.goalDialogRepeat.value,
+                                    repeat = goalsViewModel.goalDialogRepeat.value,
                                     submitHandler = { newGoal, target ->
                                         mainViewModel.addGoal(newGoal, target)
-                                        goalsState.showGoalDialog.value = false
+                                        goalsViewModel.showGoalDialog.value = false
                                     },
-                                    onDismissRequest = { goalsState.showGoalDialog.value = false },
+                                    onDismissRequest = { goalsViewModel.showGoalDialog.value = false },
                                 )
                             },
                             update = { goalDialog ->
@@ -337,13 +340,13 @@ fun GoalsFragmentHolder(mainViewModel: MainViewModel) {
 
             // Edit Goal Dialog
 
-            if(goalsState.showEditGoalDialog.value) {
-                goalsState.editableGoal.value?.let { goal ->
+            if(goalsViewModel.showEditGoalDialog.value) {
+                goalsViewModel.editableGoal.value?.let { goal ->
                     EditGoalDialog(
                         value = goal.instance.target,
                         onValueChanged = { goal.instance.target = it },
                         onDismissHandler = {
-                            goalsState.showEditGoalDialog.value = false
+                            goalsViewModel.showEditGoalDialog.value = false
                             mainViewModel.editGoalTarget(
                                 editedGoalDescriptionId = goal.description.description.id,
                                 newTarget = goal.instance.target
@@ -359,7 +362,7 @@ fun GoalsFragmentHolder(mainViewModel: MainViewModel) {
             AnimatedVisibility(
                 modifier = Modifier
                     .zIndex(1f),
-                visible = goalsState.multiFABState.value == MultiFABState.EXPANDED,
+                visible = goalsViewModel.multiFABState.value == MultiFABState.EXPANDED,
                 enter = fadeIn(),
                 exit = fadeOut()
             ) {
@@ -371,7 +374,7 @@ fun GoalsFragmentHolder(mainViewModel: MainViewModel) {
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null,
                         ) {
-                            goalsState.multiFABState.value = MultiFABState.COLLAPSED
+                            goalsViewModel.multiFABState.value = MultiFABState.COLLAPSED
                             mainViewModel.showNavBarScrim.value = false
                         }
                 )
@@ -428,7 +431,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
 
         lifecycleScope.launch {
             // trigger update routine and set adapter (initGoalList()) when it is ready
-            updateGoals()
+//            updateGoals()
             refreshGoalList()
             // create a new goal dialog for adding new goals
 //            addGoalDialog = GoalDialog(
@@ -474,7 +477,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
 
     private suspend fun refreshGoalList() {
         // load all active goals from the database and notify the adapter
-        PracticeTime.goalInstanceDao.getWithDescriptionsWithLibraryItems(
+        PTDatabase.getInstance(requireContext()).goalInstanceDao.getWithDescriptionsWithLibraryItems(
         ).forEachIndexed { index, goalInstanceWithDescriptionWithLibraryItems ->
             if(goalAdapterData.none {
                     it.instance.id == goalInstanceWithDescriptionWithLibraryItems.instance.id
@@ -495,7 +498,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
         ) { newTarget ->
             lifecycleScope.launch {
                 editGoalId?.let { descriptionId ->
-                    PracticeTime.goalDescriptionDao.updateTarget(descriptionId, newTarget)
+                    PTDatabase.getInstance(requireContext()).goalDescriptionDao.updateTarget(descriptionId, newTarget)
                     goalAdapterData.indexOfFirst {
                         it.description.description.id == descriptionId
                     }.let {
@@ -616,7 +619,7 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
                 menu.findItem(R.id.goalsToolbarArchivedGoals).title = requireActivity().getString(
                     R.string.archivedGoalsToolbar
                 ). format(
-                    PracticeTime.goalDescriptionDao.getArchivedWithLibraryItems().size
+                    PTDatabase.getInstance(requireContext()).goalDescriptionDao.getArchivedWithLibraryItems().size
                 )
             }
             navigationIcon = null

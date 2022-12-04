@@ -61,6 +61,10 @@ dependencies {
 
     def composeBom = platform 'androidx.compose:compose-bom:2022.10.00'
 
+    def lifecycle_version = "2.5.1"
+    def room_version = "2.4.3"
+    def nav_version = "2.5.3"
+
     // https://developer.android.com/jetpack/androidx/releases/compose-kotlin
     // https://developer.android.com/jetpack/compose/setup#bom-version-mapping
 
@@ -98,11 +102,10 @@ dependencies {
         implementation "com.google.accompanist:accompanist-systemuicontroller:0.17.0"
 
         // Lifecycle
-        implementation "androidx.lifecycle:lifecycle-runtime-compose:2.6.0-alpha03"
-        implementation "androidx.lifecycle:lifecycle-viewmodel-compose:2.6.0-alpha03"
+        implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle_version"
+        implementation "androidx.lifecycle:lifecycle-viewmodel-compose:$lifecycle_version"
 
     // Room
-    def room_version = "2.4.3"
     implementation "androidx.room:room-runtime:$room_version"
     kapt "androidx.room:room-compiler:$room_version"
     // Kotlin Extensions and Coroutines support for Room
@@ -114,7 +117,6 @@ dependencies {
     implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.5.1'
 
     // Navigation
-    def nav_version = "2.5.3"
     implementation "androidx.navigation:navigation-fragment-ktx:$nav_version"
     implementation "androidx.navigation:navigation-ui-ktx:$nav_version"
     implementation "com.google.accompanist:accompanist-navigation-animation:0.21.1-beta"

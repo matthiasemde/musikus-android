@@ -23,11 +23,11 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.android.material.button.MaterialButton
-import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
-import de.practicetime.practicetime.database.entities.Section
+import de.practicetime.practicetime.database.PTDatabase
 import de.practicetime.practicetime.database.SectionWithLibraryItem
 import de.practicetime.practicetime.database.SessionWithSectionsWithLibraryItems
+import de.practicetime.practicetime.database.entities.Section
 import de.practicetime.practicetime.shared.EditTimeDialog
 import de.practicetime.practicetime.ui.MainActivity
 import de.practicetime.practicetime.utils.TIME_FORMAT_HUMAN_PRETTY
@@ -136,7 +136,7 @@ class FullscreenSessionActivity : AppCompatActivity() {
 
     }
 
-    private fun showFullscreenSession(sessionId: UUID) {
+    private fun showFullscreenSession(sessionId: UUID, context: Context) {
         ratingBarView = findViewById(R.id.fullscreen_session_rating_bar)
         sectionListView = findViewById(R.id.fullscreen_session_section_list)
         commentFieldView = findViewById(R.id.fullscreen_session_comment_field)
@@ -155,7 +155,7 @@ class FullscreenSessionActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             sessionWithSectionsWithLibraryItems =
-                PracticeTime.sessionDao.getWithSectionsWithLibraryItems(sessionId)
+                PTDatabase.getInstance(context).sessionDao.getWithSectionsWithLibraryItems(sessionId)
             val (session, sectionsWithLibraryItems) = sessionWithSectionsWithLibraryItems!!
 
             ratingBarView.progress = session.rating

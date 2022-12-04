@@ -14,6 +14,7 @@ package de.practicetime.practicetime.ui
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.compose.setContent
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
@@ -40,6 +41,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.zIndex
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -153,7 +155,8 @@ class MainActivity : AppCompatActivity() {
         }
 
         setContent {
-            val mainViewModel = viewModel<MainViewModel>()
+
+            val mainViewModel: MainViewModel = viewModel()
             val navController = rememberAnimatedNavController()
 
             mainViewModel.loadDatabase()
@@ -174,6 +177,7 @@ class MainActivity : AppCompatActivity() {
             })
 
             Mdc3Theme {
+                Log.d("MainActivity", "${LocalViewModelStoreOwner.current}")
                 Scaffold(
                     bottomBar = {
                         val navBackStackEntry by navController.currentBackStackEntryAsState()

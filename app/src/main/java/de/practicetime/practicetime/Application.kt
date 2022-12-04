@@ -25,7 +25,6 @@ import androidx.annotation.AttrRes
 import androidx.annotation.ColorInt
 import androidx.appcompat.app.AppCompatActivity
 import de.practicetime.practicetime.database.PTDatabase
-import de.practicetime.practicetime.database.daos.*
 import java.io.File
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -53,12 +52,12 @@ class PracticeTime : Application() {
         var importLauncher: ActivityResultLauncher<Array<String>>? = null
 
         // the database accessing objects of the application
-        lateinit var libraryItemDao: LibraryItemDao
-        lateinit var libraryFolderDao: LibraryFolderDao
-        lateinit var goalDescriptionDao: GoalDescriptionDao
-        lateinit var goalInstanceDao: GoalInstanceDao
-        lateinit var sessionDao: SessionDao
-        lateinit var sectionDao: SectionDao
+//        lateinit var libraryItemDao: LibraryItemDao
+//        lateinit var libraryFolderDao: LibraryFolderDao
+//        lateinit var goalDescriptionDao: GoalDescriptionDao
+//        lateinit var goalInstanceDao: GoalInstanceDao
+//        lateinit var sessionDao: SessionDao
+//        lateinit var sectionDao: SectionDao
 
         var noSessionsYet = true
         var serviceIsRunning = false
@@ -77,16 +76,16 @@ class PracticeTime : Application() {
         const val DATABASE_NAME = "pt-database"
 
         fun openDatabase(applicationContext: Context) {
-            db = PTDatabase.getInstance(applicationContext)
+//            db = PTDatabase.getInstance(applicationContext)
 
-            libraryItemDao = db.libraryItemDao
-            libraryFolderDao = db.libraryFolderDao
-            goalDescriptionDao = db.goalDescriptionDao
-            goalInstanceDao = db.goalInstanceDao
-            sessionDao = db.sessionDao
-            sectionDao = db.sectionDao
+//            libraryItemDao = db.libraryItemDao
+//            libraryFolderDao = db.libraryFolderDao
+//            goalDescriptionDao = db.goalDescriptionDao
+//            goalInstanceDao = db.goalInstanceDao
+//            sessionDao = db.sessionDao
+//            sectionDao = db.sectionDao
 
-            dbFile = applicationContext.getDatabasePath(DATABASE_NAME)
+//            dbFile = applicationContext.getDatabasePath(DATABASE_NAME)
         }
 
         /**
