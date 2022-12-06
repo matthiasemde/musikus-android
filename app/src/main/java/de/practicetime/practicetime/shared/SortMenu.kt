@@ -19,7 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
-import de.practicetime.practicetime.ui.SortDirection
+import de.practicetime.practicetime.datastore.SortDirection
 
 @Composable
 fun <T> SortMenu(

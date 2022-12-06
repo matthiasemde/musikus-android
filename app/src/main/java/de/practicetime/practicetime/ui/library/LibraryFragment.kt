@@ -49,9 +49,15 @@ import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
 import de.practicetime.practicetime.database.entities.LibraryFolder
 import de.practicetime.practicetime.database.entities.LibraryItem
+import de.practicetime.practicetime.datastore.LibraryFolderSortMode
+import de.practicetime.practicetime.datastore.LibraryItemSortMode
+import de.practicetime.practicetime.datastore.SortDirection
+import de.practicetime.practicetime.datastore.ThemeSelections
 import de.practicetime.practicetime.shared.*
-import de.practicetime.practicetime.ui.MainViewModel
-import de.practicetime.practicetime.ui.SortDirection
+import de.practicetime.practicetime.viewmodel.DialogMode
+import de.practicetime.practicetime.viewmodel.LibraryMenuSelections
+import de.practicetime.practicetime.viewmodel.LibraryViewModel
+import de.practicetime.practicetime.viewmodel.MainViewModel
 import java.util.*
 
 
@@ -169,7 +175,7 @@ fun Library(mainViewModel: MainViewModel) {
                         )
                         ThemeMenu(
                             expanded = mainViewModel.showThemeSubMenu.value,
-                            currentTheme = mainViewModel.activeTheme.collectAsState().value,
+                            currentTheme = mainViewModel.activeTheme.collectAsState(initial = ThemeSelections.DAY).value,
                             onDismissHandler = { mainViewModel.showThemeSubMenu.value = false },
                             onSelectionHandler = { theme ->
                                 mainViewModel.showThemeSubMenu.value = false
@@ -191,30 +197,30 @@ fun Library(mainViewModel: MainViewModel) {
                         libraryViewModel.clearActionMode()
                     },
                     onEditHandler = {
-                        libraryViewModel.apply {
-                            mainViewModel.libraryItems.value.firstOrNull { item ->
-                                selectedItemIds.firstOrNull()?.let { it == item.id } ?: false
-                            }?.let { item ->
-                                editableItem.value = item
-                                itemDialogMode.value = DialogMode.EDIT
-                                itemDialogName.value = item.name
-                                itemDialogColorIndex.value = item.colorIndex
-                                itemDialogFolderId.value = item.libraryFolderId
-                                showItemDialog.value = true
-                            } ?: mainViewModel.libraryFolders.value.firstOrNull { folder ->
-                                selectedFolderIds.firstOrNull()?.let { it == folder.id } ?: false
-                            }?.let { folder ->
-                                editableFolder.value = folder
-                                folderDialogMode.value = DialogMode.EDIT
-                                folderDialogName.value = folder.name
-                                showFolderDialog.value = true
-                            }
-                        }
+//                        libraryViewModel.apply {
+//                            libraryViewModel.items.value.firstOrNull { item ->
+//                                selectedItemIds.firstOrNull()?.let { it == item.id } ?: false
+//                            }?.let { item ->
+//                                editableItem.value = item
+//                                itemDialogMode.value = DialogMode.EDIT
+//                                itemDialogName.value = item.name
+//                                itemDialogColorIndex.value = item.colorIndex
+//                                itemDialogFolderId.value = item.libraryFolderId
+//                                showItemDialog.value = true
+//                            } ?: mainViewModel.libraryFolders.value.firstOrNull { folder ->
+//                                selectedFolderIds.firstOrNull()?.let { it == folder.id } ?: false
+//                            }?.let { folder ->
+//                                editableFolder.value = folder
+//                                folderDialogMode.value = DialogMode.EDIT
+//                                folderDialogName.value = folder.name
+//                                showFolderDialog.value = true
+//                            }
+//                        }
                         libraryViewModel.clearActionMode()
                     },
                     onDeleteHandler = {
-                        mainViewModel.archiveItems(libraryViewModel.selectedItemIds.toList())
-                        mainViewModel.deleteFolders(libraryViewModel.selectedFolderIds.toList())
+//                        mainViewModel.archiveItems(libraryViewModel.selectedItemIds.toList())
+//                        mainViewModel.deleteFolders(libraryViewModel.selectedFolderIds.toList())
                         libraryViewModel.clearActionMode()
                     }
                 )
@@ -227,23 +233,23 @@ fun Library(mainViewModel: MainViewModel) {
                 ),
                 activeFolder = libraryViewModel.activeFolder.value,
                 showFolderSortMenu = libraryViewModel.showFolderSortModeMenu.value,
-                folderSortMode = mainViewModel.libraryFolderSortMode.value,
-                folderSortDirection = mainViewModel.libraryFolderSortDirection.value,
-                folders = mainViewModel.libraryFolders.collectAsState().value,
+                folderSortMode = libraryViewModel.folderSortMode.collectAsState(initial = LibraryFolderSortMode.DATE_ADDED).value,
+                folderSortDirection = libraryViewModel.folderSortDirection.collectAsState(initial = SortDirection.ASCENDING).value,
+                folders = libraryViewModel.folders.collectAsState(initial = emptyList()).value,
                 selectedFolderIds = libraryViewModel.selectedFolderIds,
                 showItemSortMenu = libraryViewModel.showItemSortModeMenu.value,
-                itemSortMode = mainViewModel.libraryItemSortMode.value,
-                itemSortDirection = mainViewModel.libraryItemSortDirection.value,
-                items = mainViewModel.libraryItems.collectAsState().value,
+                itemSortMode = libraryViewModel.itemSortMode.collectAsState(initial = LibraryItemSortMode.DATE_ADDED).value,
+                itemSortDirection = libraryViewModel.itemSortDirection.collectAsState(initial = SortDirection.ASCENDING).value,
+                items = libraryViewModel.items.collectAsState(initial = emptyList()).value,
                 selectedItemIds = libraryViewModel.selectedItemIds,
                 onShowFolderSortMenuChange = { libraryViewModel.showFolderSortModeMenu.value = it },
                 onFolderSortModeSelected = {
-                    mainViewModel.sortLibraryFolders(it)
+//                    mainViewModel.sortLibraryFolders(it)
                     libraryViewModel.showFolderSortModeMenu.value = false
                 },
                 onShowItemSortMenuChange = { libraryViewModel.showItemSortModeMenu.value = it },
                 onItemSortModeSelected = {
-                    mainViewModel.sortLibraryItems(it)
+//                    mainViewModel.sortLibraryItems(it)
                     libraryViewModel.showItemSortModeMenu.value = false
                 },
                 onLibraryFolderShortClicked = { folder ->
@@ -305,8 +311,9 @@ fun Library(mainViewModel: MainViewModel) {
 
             // Show hint if no items or folders are in the library
             if (
-                mainViewModel.libraryFolders.collectAsState().value.isEmpty() &&
-                mainViewModel.libraryItems.collectAsState().value.isEmpty()
+//                libraryViewModel.folders.collectAsState(initial = emptyList()).value.isEmpty() &&
+//                libraryViewModel.items.collectAsState(initial = emptyList()).value.isEmpty()
+                false
             ) {
                 Box(
                     modifier = Modifier
@@ -329,21 +336,7 @@ fun Library(mainViewModel: MainViewModel) {
                     onFolderNameChange = { libraryViewModel.folderDialogName.value = it },
                     onDismissHandler = { create ->
                         if(create) {
-                            when(libraryViewModel.folderDialogMode.value) {
-                                DialogMode.ADD -> {
-                                    mainViewModel.addLibraryFolder(
-                                        LibraryFolder(
-                                            name = libraryViewModel.folderDialogName.value,
-                                        )
-                                    )
-                                }
-                                DialogMode.EDIT -> {
-                                    libraryViewModel.editableFolder.value?.apply {
-                                        name = libraryViewModel.folderDialogName.value
-                                        mainViewModel.editFolder(this)
-                                    }
-                                }
-                            }
+                            libraryViewModel.onFolderDialogConfirmed()
                         }
                         libraryViewModel.clearFolderDialog()
                     },
@@ -353,7 +346,7 @@ fun Library(mainViewModel: MainViewModel) {
             if(libraryViewModel.showItemDialog.value) {
                 LibraryItemDialog(
                     mode = libraryViewModel.itemDialogMode.value,
-                    folders = mainViewModel.libraryFolders.collectAsState().value,
+                    folders = libraryViewModel.folders.collectAsState(initial = emptyList()).value,
                     name = libraryViewModel.itemDialogName.value,
                     colorIndex = libraryViewModel.itemDialogColorIndex.value,
                     folderId = libraryViewModel.itemDialogFolderId.value,
@@ -367,25 +360,7 @@ fun Library(mainViewModel: MainViewModel) {
                     onFolderSelectorExpandedChange = { libraryViewModel.itemDialogFolderSelectorExpanded.value = it },
                     onDismissHandler = { cancel ->
                         if(!cancel) {
-                            when(libraryViewModel.itemDialogMode.value) {
-                                DialogMode.ADD -> {
-                                    mainViewModel.addLibraryItem(
-                                        LibraryItem(
-                                            name = libraryViewModel.itemDialogName.value,
-                                            colorIndex = libraryViewModel.itemDialogColorIndex.value,
-                                            libraryFolderId = libraryViewModel.itemDialogFolderId.value
-                                        )
-                                    )
-                                }
-                                DialogMode.EDIT -> {
-                                    libraryViewModel.editableItem.value?.apply {
-                                        name = libraryViewModel.itemDialogName.value
-                                        colorIndex = libraryViewModel.itemDialogColorIndex.value
-                                        libraryFolderId = libraryViewModel.itemDialogFolderId.value
-                                        mainViewModel.editItem(this)
-                                    }
-                                }
-                            }
+                            libraryViewModel.onItemDialogConfirmed()
                         }
                         libraryViewModel.clearItemDialog()
                     },

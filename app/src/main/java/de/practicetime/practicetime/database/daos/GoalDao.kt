@@ -14,16 +14,19 @@ package de.practicetime.practicetime.database.daos
 
 import android.util.Log
 import androidx.room.*
-import de.practicetime.practicetime.PracticeTime.Companion.ioThread
 import de.practicetime.practicetime.database.*
 import de.practicetime.practicetime.database.entities.*
 import de.practicetime.practicetime.utils.getCurrTimestamp
+import kotlinx.coroutines.flow.Flow
 import java.util.*
 
 @Dao
 abstract class GoalDescriptionDao(
     private val database : PTDatabase
-) : BaseDao<GoalDescription>(tableName = "goal_description") {
+) : BaseDao<GoalDescription>(
+    tableName = "goal_description",
+    database = database
+) {
 
     /**
      * @Insert
@@ -31,13 +34,13 @@ abstract class GoalDescriptionDao(
 
     @Transaction
     @Insert(onConflict = OnConflictStrategy.ABORT)
-    abstract fun directInsert(
+    abstract suspend fun directInsert(
         goalDescription: GoalDescription,
         crossRefs: List<GoalDescriptionLibraryItemCrossRef>,
         firstGoalInstance: GoalInstance
     )
 
-    open fun insert(
+    open suspend fun insert(
         goalDescriptionWithLibraryItems: GoalDescriptionWithLibraryItems,
         target: Int,
     ) : GoalInstance? {
@@ -48,20 +51,18 @@ abstract class GoalDescriptionDao(
             target
         )
 
-        ioThread {
-            directInsert(
-                goalDescriptionWithLibraryItems.description,
-                goalDescriptionWithLibraryItems.libraryItems.map {
-                    GoalDescriptionLibraryItemCrossRef(
-                        goalDescriptionWithLibraryItems.description.id,
-                        it.id
-                    )
-                },
-                firstGoalInstance
-            )
+        directInsert(
+            goalDescriptionWithLibraryItems.description,
+            goalDescriptionWithLibraryItems.libraryItems.map {
+                GoalDescriptionLibraryItemCrossRef(
+                    goalDescriptionWithLibraryItems.description.id,
+                    it.id
+                )
+            },
+            firstGoalInstance
+        )
 
 //            database.goalInstanceDao.insertWithProgress(firstGoalInstance)
-        }
         return firstGoalInstance
     }
 
@@ -210,7 +211,10 @@ abstract class GoalDescriptionDao(
 @Dao
 abstract class GoalInstanceDao(
     private val database : PTDatabase
-) : BaseDao<GoalInstance>(tableName = "goal_instance") {
+) : BaseDao<GoalInstance>(
+    tableName = "goal_instance",
+    database = database
+) {
 
     /**
      * @Insert
@@ -369,10 +373,10 @@ abstract class GoalInstanceDao(
             "archived=0 OR :checkArchived" +
         ")"
     )
-    abstract suspend fun getWithDescriptionsWithLibraryItems(
+    abstract fun getWithDescriptionsWithLibraryItems(
         checkArchived : Boolean = false,
         now : Long = getCurrTimestamp(),
-    ) : List<GoalInstanceWithDescriptionWithLibraryItems>
+    ) : Flow<List<GoalInstanceWithDescriptionWithLibraryItems>>
 
     @Transaction
     @Query(

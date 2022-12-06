@@ -7,7 +7,6 @@
 
 package de.practicetime.practicetime.ui.intro
 
-import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -27,7 +26,6 @@ import com.github.appintro.SlideBackgroundColorHolder
 import com.github.appintro.SlideSelectionListener
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import de.practicetime.practicetime.BuildConfig
-import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
 import de.practicetime.practicetime.database.*
 import de.practicetime.practicetime.database.entities.*
@@ -160,9 +158,9 @@ class IntroFragment(
 
     private val sessionsClickListener = View.OnClickListener {
         if (!BuildConfig.DEBUG) {
-            val prefs = requireActivity().getSharedPreferences(
-                getString(R.string.filename_shared_preferences), Context.MODE_PRIVATE)
-            prefs.edit().putBoolean(PracticeTime.PREFERENCES_KEY_APPINTRO_DONE, true).apply()
+//            val prefs = requireActivity().getSharedPreferences(
+//                getString(R.string.filename_shared_preferences), Context.MODE_PRIVATE)
+//            prefs.edit().putBoolean(PracticeTime.PREFERENCES_KEY_APPINTRO_DONE, true).apply()
         }
         val i = Intent(requireActivity(), ActiveSessionActivity::class.java)
         requireActivity().startActivity(i)

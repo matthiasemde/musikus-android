@@ -7,13 +7,11 @@
 
 package de.practicetime.practicetime.ui.intro
 
-import android.content.Context
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import com.github.appintro.AppIntro
 import com.github.appintro.SlideBackgroundColorHolder
 import de.practicetime.practicetime.BuildConfig
-import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
 
 const val FRAGMENT_TYPE_KEY = "introfragment"
@@ -87,9 +85,9 @@ class AppIntroActivity : AppIntro() {
         super.onDonePressed(currentFragment)
         // Decide what to do when the user clicks on "Done"
         if (!BuildConfig.DEBUG) {
-            val prefs = getSharedPreferences(
-                getString(R.string.filename_shared_preferences), Context.MODE_PRIVATE)
-            prefs.edit().putBoolean(PracticeTime.PREFERENCES_KEY_APPINTRO_DONE, true).apply()
+//            val prefs = getSharedPreferences(
+//                getString(R.string.filename_shared_preferences), Context.MODE_PRIVATE)
+//            prefs.edit().putBoolean(PracticeTime.PREFERENCES_KEY_APPINTRO_DONE, true).apply()
         }
         finish()
     }

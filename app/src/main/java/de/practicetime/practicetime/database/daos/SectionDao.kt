@@ -16,12 +16,18 @@ import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.Transaction
 import de.practicetime.practicetime.database.BaseDao
+import de.practicetime.practicetime.database.PTDatabase
 import de.practicetime.practicetime.database.SectionWithLibraryItem
 import de.practicetime.practicetime.database.entities.Section
 import java.util.*
 
 @Dao
-abstract class SectionDao : BaseDao<Section>(tableName = "section") {
+abstract class SectionDao(
+    database: PTDatabase
+) : BaseDao<Section>(
+    tableName = "section",
+    database = database
+) {
 
 
     /**

@@ -10,11 +10,15 @@ package de.practicetime.practicetime.database.daos
 
 import androidx.room.Dao
 import de.practicetime.practicetime.database.BaseDao
+import de.practicetime.practicetime.database.PTDatabase
 import de.practicetime.practicetime.database.entities.LibraryFolder
 
 @Dao
-abstract class LibraryFolderDao : BaseDao<LibraryFolder>(
-    tableName = "library_folder"
+abstract class LibraryFolderDao(
+    database: PTDatabase
+) : BaseDao<LibraryFolder>(
+    tableName = "library_folder",
+    database = database
 ) {
 
     /**
@@ -40,4 +44,19 @@ abstract class LibraryFolderDao : BaseDao<LibraryFolder>(
 //    @Transaction
 //    @Query("SELECT * FROM library_folder WHERE id=:id")
 //    abstract suspend fun getWithItems(id: UUID): LibraryFolderWithItems
+
+
+//    @RawQuery(observedEntities = [LibraryFolder::class])
+//    protected abstract fun getAsFlow(query: SupportSQLiteQuery): Flow<LibraryFolder>
+//
+//    open fun getAsFlow(id: UUID): Flow<LibraryFolder> {
+//        return getAsFlow(SimpleSQLiteQuery("SELECT * FROM library_folder WHERE id=x'${UUIDConverter.toDBString(id)}'"))
+//    }
+//
+//    @RawQuery(observedEntities = [LibraryFolder::class])
+//    protected abstract fun getAllAsFlow(query: SupportSQLiteQuery): Flow<List<LibraryFolder>>
+//
+//    open fun getAllAsFlow(): Flow<List<LibraryFolder>> {
+//        return getAllAsFlow(SimpleSQLiteQuery("SELECT * FROM library_folder"))
+//    }
 }

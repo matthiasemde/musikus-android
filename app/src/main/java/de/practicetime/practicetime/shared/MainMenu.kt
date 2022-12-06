@@ -17,12 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-
-enum class ThemeSelections {
-    SYSTEM,
-    DAY,
-    NIGHT,
-}
+import de.practicetime.practicetime.datastore.ThemeSelections
 
 enum class CommonMenuSelections {
     THEME,

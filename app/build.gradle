@@ -116,6 +116,9 @@ dependencies {
     // Lifecycle-Scope support for Coroutines
     implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.5.1'
 
+    // Data store
+    implementation "androidx.datastore:datastore-preferences:1.0.0"
+
     // Navigation
     implementation "androidx.navigation:navigation-fragment-ktx:$nav_version"
     implementation "androidx.navigation:navigation-ui-ktx:$nav_version"

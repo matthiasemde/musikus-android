@@ -21,7 +21,10 @@ import java.util.*
 @Dao
 abstract class SessionDao(
     private val database : PTDatabase
-) : BaseDao<Session>(tableName = "session") {
+) : BaseDao<Session>(
+    tableName = "session",
+    database = database
+) {
 
     /**
      * @Insert

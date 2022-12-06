@@ -18,13 +18,20 @@ import android.content.Context
 import android.content.ContextWrapper
 import android.content.SharedPreferences
 import android.net.Uri
+import android.util.Log
 import android.util.TypedValue
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.annotation.AttrRes
 import androidx.annotation.ColorInt
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.datastore.preferences.preferencesDataStore
 import de.practicetime.practicetime.database.PTDatabase
+import de.practicetime.practicetime.repository.UserPreferencesRepository
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import java.io.File
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -34,6 +41,8 @@ fun Context.getActivity(): AppCompatActivity? = when (this) {
     is ContextWrapper -> baseContext.getActivity()
     else -> null
 }
+
+val Context.dataStore by preferencesDataStore(name = PracticeTime.USER_PREFERENCES_NAME)
 
 class PracticeTime : Application() {
 
@@ -64,29 +73,9 @@ class PracticeTime : Application() {
 
         lateinit var prefs: SharedPreferences
 
-        const val PREFERENCES_KEY_THEME = "theme"
-        const val PREFERENCES_KEY_APPINTRO_DONE = "appintro_done"
-        const val PREFERENCES_KEY_LIBRARY_FOLDER_SORT_MODE = "library_folder_sort_mode"
-        const val PREFERENCES_KEY_LIBRARY_FOLDER_SORT_DIRECTION = "library_folder_sort_direction"
-        const val PREFERENCES_KEY_LIBRARY_ITEM_SORT_MODE = "library_item_sort_mode"
-        const val PREFERENCES_KEY_LIBRARY_ITEM_SORT_DIRECTION = "library_item_sort_direction"
-        const val PREFERENCES_KEY_GOALS_SORT_MODE = "goals_sort_mode"
-        const val PREFERENCES_KEY_GOALS_SORT_DIRECTION = "goals_sort_direction"
+        const val USER_PREFERENCES_NAME = "user_preferences"
 
-        const val DATABASE_NAME = "pt-database"
 
-        fun openDatabase(applicationContext: Context) {
-//            db = PTDatabase.getInstance(applicationContext)
-
-//            libraryItemDao = db.libraryItemDao
-//            libraryFolderDao = db.libraryFolderDao
-//            goalDescriptionDao = db.goalDescriptionDao
-//            goalInstanceDao = db.goalInstanceDao
-//            sessionDao = db.sessionDao
-//            sectionDao = db.sectionDao
-
-//            dbFile = applicationContext.getDatabasePath(DATABASE_NAME)
-        }
 
         /**
          * Get a color int from a theme attribute.
@@ -138,7 +127,7 @@ class PracticeTime : Application() {
                 }
 
                 // open new database
-                openDatabase(context)
+//                openDatabase(context)
             }
         }
 
@@ -163,7 +152,7 @@ class PracticeTime : Application() {
                 }
 
                 // open database again
-                openDatabase(context)
+//                openDatabase(context)
             }
         }
     }
@@ -173,6 +162,17 @@ class PracticeTime : Application() {
 
         prefs = getSharedPreferences(getString(R.string.filename_shared_preferences), Context.MODE_PRIVATE)
 
-//        openDatabase(applicationContext)
+        val userPreferencesRepository = UserPreferencesRepository(dataStore, applicationContext)
+
+        MainScope().launch {
+            userPreferencesRepository.userPreferences.map { preferences ->
+                preferences.theme
+            }.collect {
+                Log.d("Theme", "Theme changed to ${it.name}")
+                AppCompatDelegate.setDefaultNightMode(it.ordinal)
+            }
+        }
+
+        dbFile = getDatabasePath("practice_time.db")
     }
 }

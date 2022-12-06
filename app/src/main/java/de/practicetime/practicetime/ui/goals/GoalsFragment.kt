@@ -13,7 +13,6 @@
 
 package de.practicetime.practicetime.ui.goals
 
-import android.app.Application
 import android.content.Context
 import android.content.Intent
 import android.os.Build
@@ -38,7 +37,9 @@ import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.rounded.Repeat
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -47,9 +48,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.zIndex
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -58,67 +57,15 @@ import com.google.android.material.appbar.MaterialToolbar
 import de.practicetime.practicetime.R
 import de.practicetime.practicetime.database.GoalInstanceWithDescriptionWithLibraryItems
 import de.practicetime.practicetime.database.PTDatabase
+import de.practicetime.practicetime.datastore.GoalsSortMode
+import de.practicetime.practicetime.datastore.SortDirection
+import de.practicetime.practicetime.datastore.ThemeSelections
 import de.practicetime.practicetime.shared.*
-import de.practicetime.practicetime.ui.MainViewModel
+import de.practicetime.practicetime.viewmodel.GoalsViewModel
+import de.practicetime.practicetime.viewmodel.MainViewModel
 import kotlinx.coroutines.launch
 import java.util.*
 
-enum class GoalsSortMode {
-    DATE_ADDED,
-    TARGET,
-    PERIOD,
-    CUSTOM;
-
-    companion object {
-        fun toString(sortMode: GoalsSortMode): String {
-            return when (sortMode) {
-                DATE_ADDED -> "Date added"
-                TARGET -> "Target"
-                PERIOD -> "Period"
-                CUSTOM -> "Custom"
-            }
-        }
-    }
-}
-
-class GoalsViewModel(
-    application: Application
-) : AndroidViewModel(application) {
-    init {
-        viewModelScope.launch {
-            updateGoals(application)
-        }
-    }
-
-    // Menu
-    var showSortModeMenu = mutableStateOf(false)
-
-    // Goal dialog
-    val showGoalDialog = mutableStateOf(false)
-    val goalDialogRepeat = mutableStateOf(true)
-
-    val showEditGoalDialog = mutableStateOf(false)
-    val editableGoal = mutableStateOf<GoalInstanceWithDescriptionWithLibraryItems?>(null)
-
-    // MultiFAB
-    var multiFABState = mutableStateOf(MultiFABState.COLLAPSED)
-
-    // Action mode
-    var actionMode = mutableStateOf(false)
-
-    val selectedGoalIds = mutableStateListOf<UUID>()
-
-    fun clearActionMode() {
-        selectedGoalIds.clear()
-        actionMode.value = false
-    }
-}
-
-//@Composable
-//fun rememberGoalsState(
-//    coroutineScope: CoroutineScope = rememberCoroutineScope(),
-//) = remember(coroutineScope) { GoalsState(coroutineScope) }
-//
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -171,13 +118,12 @@ fun GoalsFragmentHolder(mainViewModel: MainViewModel) {
                     SortMenu(
                         show = goalsViewModel.showSortModeMenu.value,
                         sortModes = GoalsSortMode.values().toList(),
-                        currentSortMode = mainViewModel.goalsSortMode.value,
-                        currentSortDirection = mainViewModel.goalsSortDirection.value,
+                        currentSortMode = goalsViewModel.sortMode.collectAsState(initial = GoalsSortMode.DATE_ADDED).value,
+                        currentSortDirection = goalsViewModel.sortDirection.collectAsState(initial = SortDirection.ASCENDING).value,
                         label = { GoalsSortMode.toString(it) },
                         onShowMenuChanged = { goalsViewModel.showSortModeMenu.value = it },
                         onSelectionHandler = { sortMode ->
                             goalsViewModel.showSortModeMenu.value = false
-                            mainViewModel.sortGoals(sortMode)
                         }
                     )
                     IconButton(onClick = {
@@ -204,7 +150,7 @@ fun GoalsFragmentHolder(mainViewModel: MainViewModel) {
                         )
                         ThemeMenu(
                             expanded = mainViewModel.showThemeSubMenu.value,
-                            currentTheme = mainViewModel.activeTheme.collectAsState().value,
+                            currentTheme = mainViewModel.activeTheme.collectAsState(initial = ThemeSelections.DAY).value,
                             onDismissHandler = { mainViewModel.showThemeSubMenu.value = false },
                             onSelectionHandler = { theme ->
                                 mainViewModel.showThemeSubMenu.value = false
@@ -245,7 +191,7 @@ fun GoalsFragmentHolder(mainViewModel: MainViewModel) {
                         goalsViewModel.clearActionMode()
                     },
                     onDeleteHandler = {
-                        mainViewModel.archiveGoals(goalsViewModel.selectedGoalIds.toList())
+//                        mainViewModel.archiveGoals(goalsViewModel.selectedGoalIds.toList())
                         goalsViewModel.clearActionMode()
                     }
                 )
@@ -255,7 +201,7 @@ fun GoalsFragmentHolder(mainViewModel: MainViewModel) {
 
             // Goal List
 
-            val goals = mainViewModel.goals.collectAsState()
+            val goals = goalsViewModel.goals.collectAsState(initial = emptyList())
             LazyColumn(
                 modifier = Modifier
                     .padding(horizontal = 16.dp)
@@ -307,6 +253,7 @@ fun GoalsFragmentHolder(mainViewModel: MainViewModel) {
 
 
             // Create Goal Dialog
+            val libraryItems = goalsViewModel.libraryItems.collectAsState(initial = emptyList())
 
             if(goalsViewModel.showGoalDialog.value) {
                 Dialog(
@@ -321,10 +268,10 @@ fun GoalsFragmentHolder(mainViewModel: MainViewModel) {
                             factory = {
                                 GoalDialog(
                                     context = it,
-                                    libraryItems = mainViewModel.libraryItems.value,
+                                    libraryItems = libraryItems.value,
                                     repeat = goalsViewModel.goalDialogRepeat.value,
                                     submitHandler = { newGoal, target ->
-                                        mainViewModel.addGoal(newGoal, target)
+//                                        mainViewModel.addGoal(newGoal, target)
                                         goalsViewModel.showGoalDialog.value = false
                                     },
                                     onDismissRequest = { goalsViewModel.showGoalDialog.value = false },
@@ -347,10 +294,10 @@ fun GoalsFragmentHolder(mainViewModel: MainViewModel) {
                         onValueChanged = { goal.instance.target = it },
                         onDismissHandler = {
                             goalsViewModel.showEditGoalDialog.value = false
-                            mainViewModel.editGoalTarget(
-                                editedGoalDescriptionId = goal.description.description.id,
-                                newTarget = goal.instance.target
-                            )
+//                            mainViewModel.editGoalTarget(
+//                                editedGoalDescriptionId = goal.description.description.id,
+//                                newTarget = goal.instance.target
+//                            )
                         }
                     )
                 }
@@ -476,19 +423,19 @@ class GoalsFragment : Fragment(R.layout.fragment_goals) {
     }
 
     private suspend fun refreshGoalList() {
-        // load all active goals from the database and notify the adapter
-        PTDatabase.getInstance(requireContext()).goalInstanceDao.getWithDescriptionsWithLibraryItems(
-        ).forEachIndexed { index, goalInstanceWithDescriptionWithLibraryItems ->
-            if(goalAdapterData.none {
-                    it.instance.id == goalInstanceWithDescriptionWithLibraryItems.instance.id
-            }) {
-                goalAdapterData.add(index, goalInstanceWithDescriptionWithLibraryItems)
-                goalAdapter.notifyItemInserted(index)
-            }
-        }
-        if (goalAdapterData.isEmpty()) {
-//            showHint()
-        }
+//        // load all active goals from the database and notify the adapter
+//        PTDatabase.getInstance(requireContext()).goalInstanceDao.getWithDescriptionsWithLibraryItems(
+//        ).forEachIndexed { index, goalInstanceWithDescriptionWithLibraryItems ->
+//            if(goalAdapterData.none {
+//                    it.instance.id == goalInstanceWithDescriptionWithLibraryItems.instance.id
+//            }) {
+//                goalAdapterData.add(index, goalInstanceWithDescriptionWithLibraryItems)
+//                goalAdapter.notifyItemInserted(index)
+//            }
+//        }
+//        if (goalAdapterData.isEmpty()) {
+////            showHint()
+//        }
     }
 
     private fun initEditGoalDialog() {

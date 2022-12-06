@@ -29,6 +29,7 @@ import de.practicetime.practicetime.database.entities.LibraryFolder
 import de.practicetime.practicetime.shared.DialogHeader
 import de.practicetime.practicetime.shared.SelectionSpinner
 import de.practicetime.practicetime.shared.SpinnerState
+import de.practicetime.practicetime.viewmodel.DialogMode
 import java.util.*
 
 

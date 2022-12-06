@@ -23,8 +23,9 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import de.practicetime.practicetime.R
+import de.practicetime.practicetime.database.GoalInstanceWithDescriptionWithLibraryItems
 import de.practicetime.practicetime.spacing
-import de.practicetime.practicetime.ui.MainViewModel
+import de.practicetime.practicetime.viewmodel.MainViewModel
 import kotlinx.coroutines.CoroutineScope
 import java.util.*
 
@@ -111,7 +112,7 @@ fun ProgressUpdate(
         }
     ) { paddingValues ->
 
-        val goals = mainViewModel.goals.collectAsState()
+        val goals = emptyList<GoalInstanceWithDescriptionWithLibraryItems>()
 
         LazyColumn(
             modifier = Modifier
@@ -124,7 +125,7 @@ fun ProgressUpdate(
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             items(
-                items = goals.value.filter {
+                items = goals.filter {
                     it.description.description.id in progressUpdateState.updatedGoalIds
                 }.reversed(),
                 key = { it.description.description.id }

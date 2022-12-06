@@ -35,22 +35,22 @@ fun setCommonToolbar(
         setOnMenuItemClickListener {
             when (it.itemId) {
                 R.id.commonToolbarThemeSwitchAuto -> {
-                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
-                    PracticeTime.prefs.edit().putInt(
-                        PracticeTime.PREFERENCES_KEY_THEME,
-                        AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM).apply()
+//                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
+//                    PracticeTime.prefs.edit().putInt(
+//                        PracticeTime.PREFERENCES_KEY_THEME,
+//                        AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM).apply()
                 }
                 R.id.commonToolbarThemeSwitchDark -> {
-                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
-                    PracticeTime.prefs.edit().putInt(
-                        PracticeTime.PREFERENCES_KEY_THEME,
-                        AppCompatDelegate.MODE_NIGHT_YES).apply()
+//                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+//                    PracticeTime.prefs.edit().putInt(
+//                        PracticeTime.PREFERENCES_KEY_THEME,
+//                        AppCompatDelegate.MODE_NIGHT_YES).apply()
                 }
                 R.id.commonToolbarThemeSwitchLight -> {
-                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
-                    PracticeTime.prefs.edit().putInt(
-                        PracticeTime.PREFERENCES_KEY_THEME,
-                        AppCompatDelegate.MODE_NIGHT_NO).apply()
+//                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+//                    PracticeTime.prefs.edit().putInt(
+//                        PracticeTime.PREFERENCES_KEY_THEME,
+//                        AppCompatDelegate.MODE_NIGHT_NO).apply()
                 }
                 R.id.commonToolbarInfo -> {
                     context.startActivity(Intent(context, AboutActivity::class.java))

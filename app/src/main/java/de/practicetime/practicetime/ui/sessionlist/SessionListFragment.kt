@@ -50,13 +50,14 @@ import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
 import de.practicetime.practicetime.database.PTDatabase
 import de.practicetime.practicetime.database.SessionWithSectionsWithLibraryItems
+import de.practicetime.practicetime.datastore.ThemeSelections
 import de.practicetime.practicetime.shared.*
 import de.practicetime.practicetime.spacing
-import de.practicetime.practicetime.ui.MainViewModel
 import de.practicetime.practicetime.ui.activesession.ActiveSessionActivity
 import de.practicetime.practicetime.utils.TIME_FORMAT_HUMAN_PRETTY
 import de.practicetime.practicetime.utils.epochSecondsToDate
 import de.practicetime.practicetime.utils.getDurationString
+import de.practicetime.practicetime.viewmodel.MainViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Runnable
 import kotlinx.coroutines.delay
@@ -164,7 +165,7 @@ fun SessionListFragmentHolder(
                         )
                         ThemeMenu(
                             expanded = mainViewModel.showThemeSubMenu.value,
-                            currentTheme = mainViewModel.activeTheme.collectAsState().value,
+                            currentTheme = mainViewModel.activeTheme.collectAsState(initial = ThemeSelections.DAY).value,
                             onDismissHandler = { mainViewModel.showThemeSubMenu.value = false },
                             onSelectionHandler = { theme ->
                                 mainViewModel.showThemeSubMenu.value = false

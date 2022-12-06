@@ -18,6 +18,11 @@ import androidx.sqlite.db.SimpleSQLiteQuery
 import androidx.sqlite.db.SupportSQLiteQuery
 import de.practicetime.practicetime.PracticeTime.Companion.ioThread
 import de.practicetime.practicetime.utils.getCurrTimestamp
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.sync.Semaphore
 import java.util.*
 
 abstract class BaseModel (
@@ -48,9 +53,10 @@ abstract class ModelWithTimestamps (
  * @Dao Base dao
  */
 
-abstract class BaseDao<T>(
+abstract class BaseDao<T : BaseModel>(
     private val tableName: String,
-) where T : BaseModel {
+    private val database: PTDatabase
+) {
 
     /**
      * @Insert queries
@@ -144,7 +150,7 @@ abstract class BaseDao<T>(
 
     open suspend fun get(id: UUID): T? {
         return getSingle(
-            SimpleSQLiteQuery("SELECT * FROM $tableName WHERE id=x'${UUIDConverter.toDBString(id)}'")
+            SimpleSQLiteQuery("SELECT * FROM $tableName WHERE id=x'${UUIDConverter.toDBString(id)}';")
         )
     }
 
@@ -153,7 +159,7 @@ abstract class BaseDao<T>(
 
     open suspend fun get(ids: List<UUID>): List<T> {
         return getMultiple(
-            SimpleSQLiteQuery("SELECT * FROM $tableName WHERE id IN (${ids.joinToString(",") { id -> "x'${UUIDConverter.toDBString(id)}'" }})")
+            SimpleSQLiteQuery("SELECT * FROM $tableName WHERE id IN (${ids.joinToString(",") { id -> "x'${UUIDConverter.toDBString(id)}'" }});")
         )
     }
 
@@ -161,6 +167,51 @@ abstract class BaseDao<T>(
     protected abstract suspend fun getAll(query: SupportSQLiteQuery): List<T>
 
     open suspend fun getAll(): List<T> {
-        return getAll(SimpleSQLiteQuery("SELECT * FROM $tableName"))
+        return getAll(SimpleSQLiteQuery("SELECT * FROM $tableName;"))
+    }
+
+    /**
+     * Flow getters
+     */
+
+    fun getAsFlow(from: String, id: UUID): Flow<T?> = getAsFlow(from, listOf(id)).map { it.firstOrNull() }
+    fun getAsFlow(from: String, ids: List<UUID>): Flow<List<T>> = subscribeTo(from) { get(ids) }
+    fun getAllAsFlow(from: String): Flow<List<T>> = subscribeTo(from) { getAll() }
+
+    private fun subscribeTo(from: String, query: suspend () -> List<T>): Flow<List<T>> {
+        val invalidations = Semaphore(permits = 1, acquiredPermits = 0)
+
+        val id = UUID.randomUUID().toString()
+
+        var observer: InvalidationTracker.Observer? = null
+
+        Log.d("BASE_DAO", "$tableName, $id from $from: subscribedTo")
+        return flow {
+            observer = object : InvalidationTracker.Observer(tableName) {
+                override fun onInvalidated(tables: Set<String>) {
+                    Log.d("BASE_DAO", "$tableName, $id from $from: invalidated")
+                    try {
+                        invalidations.release()
+                        Log.d("BASE_DAO", "$tableName, $id from $from: permit released")
+                    } catch (e: Exception) {
+                        Log.e("BASE_DAO", "Semaphore already released")
+                    }
+                }
+            }.also {
+                database.invalidationTracker.addObserver(it)
+                Log.d("BASE_DAO", "$tableName, $id from $from: observer added")
+            }
+
+            while (true) {
+                invalidations.acquire()
+                Log.d("BASE_DAO", "$tableName, $id from $from: acquired permit")
+                emit(query())
+            }
+        }.onCompletion {
+            observer?.let {
+                database.invalidationTracker.removeObserver(it)
+            }
+            Log.d("BASE_DAO", "$tableName, $id from $from: observer removed")
+        }
     }
 }

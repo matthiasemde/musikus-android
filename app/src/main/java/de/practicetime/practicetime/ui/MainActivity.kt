@@ -12,7 +12,6 @@
 
 package de.practicetime.practicetime.ui
 
-import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.compose.setContent
@@ -30,7 +29,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -40,7 +42,6 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.zIndex
 import androidx.core.view.WindowCompat
-import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -54,18 +55,15 @@ import de.practicetime.practicetime.BuildConfig
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
 import de.practicetime.practicetime.getActivity
-import de.practicetime.practicetime.shared.ThemeSelections
 import de.practicetime.practicetime.ui.goals.GoalsFragmentHolder
 import de.practicetime.practicetime.ui.goals.ProgressUpdate
-import de.practicetime.practicetime.ui.intro.AppIntroActivity
 import de.practicetime.practicetime.ui.library.Library
 import de.practicetime.practicetime.ui.sessionlist.SessionListFragmentHolder
 import de.practicetime.practicetime.ui.statistics.StatisticsFragmentHolder
 import de.practicetime.practicetime.utils.ExportDatabaseContract
 import de.practicetime.practicetime.utils.ExportImportDialog
 import de.practicetime.practicetime.utils.ImportDatabaseContract
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import de.practicetime.practicetime.viewmodel.MainViewModel
 
 
 sealed class Screen(
@@ -148,33 +146,10 @@ class MainActivity : AppCompatActivity() {
             reloadDatabase.value++
         }
 
-        // temporary fix
-        lifecycleScope.launch {
-            delay(2000)
-            PracticeTime.openDatabase(applicationContext)
-        }
-
         setContent {
 
             val mainViewModel: MainViewModel = viewModel()
             val navController = rememberAnimatedNavController()
-
-            mainViewModel.loadDatabase()
-
-            LaunchedEffect(reloadDatabase.value) {
-                mainViewModel.loadDatabase()
-            }
-
-            mainViewModel.setTheme(try {
-                PracticeTime.prefs.getInt(
-                    PracticeTime.PREFERENCES_KEY_THEME,
-                    ThemeSelections.SYSTEM.ordinal
-                ).let { ordinal ->
-                    ThemeSelections.values().first { it.ordinal == ordinal }
-                }
-            } catch (ex: Exception) {
-                ThemeSelections.SYSTEM
-            })
 
             Mdc3Theme {
                 Log.d("MainActivity", "${LocalViewModelStoreOwner.current}")
@@ -321,11 +296,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun launchAppIntroFirstRun() {
-        if (!PracticeTime.prefs.getBoolean(PracticeTime.PREFERENCES_KEY_APPINTRO_DONE, false)) {
-            val i = Intent(this, AppIntroActivity::class.java)
-            i.flags = Intent.FLAG_ACTIVITY_NO_HISTORY
-            startActivity(i)
-        }
+//        if (!PracticeTime.prefs.getBoolean(PracticeTime.PREFERENCES_KEY_APPINTRO_DONE, false)) {
+//            val i = Intent(this, AppIntroActivity::class.java)
+//            i.flags = Intent.FLAG_ACTIVITY_NO_HISTORY
+//            startActivity(i)
+//        }
     }
 
     // periodically check if session is still running (if it is) to remove the badge if yes
