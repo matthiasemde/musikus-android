@@ -235,23 +235,17 @@ fun Library(mainViewModel: MainViewModel) {
                 showFolderSortMenu = libraryViewModel.showFolderSortModeMenu.value,
                 folderSortMode = libraryViewModel.folderSortMode.collectAsState(initial = LibraryFolderSortMode.DATE_ADDED).value,
                 folderSortDirection = libraryViewModel.folderSortDirection.collectAsState(initial = SortDirection.ASCENDING).value,
-                folders = libraryViewModel.folders.collectAsState(initial = emptyList()).value,
+                folders = libraryViewModel.sortedFolders.collectAsState().value,
                 selectedFolderIds = libraryViewModel.selectedFolderIds,
                 showItemSortMenu = libraryViewModel.showItemSortModeMenu.value,
                 itemSortMode = libraryViewModel.itemSortMode.collectAsState(initial = LibraryItemSortMode.DATE_ADDED).value,
                 itemSortDirection = libraryViewModel.itemSortDirection.collectAsState(initial = SortDirection.ASCENDING).value,
-                items = libraryViewModel.items.collectAsState(initial = emptyList()).value,
+                items = libraryViewModel.sortedItems.collectAsState().value,
                 selectedItemIds = libraryViewModel.selectedItemIds,
                 onShowFolderSortMenuChange = { libraryViewModel.showFolderSortModeMenu.value = it },
-                onFolderSortModeSelected = {
-//                    mainViewModel.sortLibraryFolders(it)
-                    libraryViewModel.showFolderSortModeMenu.value = false
-                },
+                onFolderSortModeSelected = libraryViewModel::onFolderSortModeSelected,
                 onShowItemSortMenuChange = { libraryViewModel.showItemSortModeMenu.value = it },
-                onItemSortModeSelected = {
-//                    mainViewModel.sortLibraryItems(it)
-                    libraryViewModel.showItemSortModeMenu.value = false
-                },
+                onItemSortModeSelected = libraryViewModel::onItemSortModeSelected,
                 onLibraryFolderShortClicked = { folder ->
                     libraryViewModel.apply {
                         if(actionMode.value) {
@@ -346,7 +340,7 @@ fun Library(mainViewModel: MainViewModel) {
             if(libraryViewModel.showItemDialog.value) {
                 LibraryItemDialog(
                     mode = libraryViewModel.itemDialogMode.value,
-                    folders = libraryViewModel.folders.collectAsState(initial = emptyList()).value,
+                    folders = libraryViewModel.sortedFolders.collectAsState().value,
                     name = libraryViewModel.itemDialogName.value,
                     colorIndex = libraryViewModel.itemDialogColorIndex.value,
                     folderId = libraryViewModel.itemDialogFolderId.value,

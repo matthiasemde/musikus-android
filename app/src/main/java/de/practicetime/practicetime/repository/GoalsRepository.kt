@@ -53,7 +53,7 @@ class GoalsRepository(
         goals: List<GoalInstanceWithDescriptionWithLibraryItems>,
         mode: GoalsSortMode,
         direction: SortDirection,
-    ): List<GoalInstanceWithDescriptionWithLibraryItems> {
+    ) =
 //        if(mode != null) {
 //            if (mode == goalsSortMode.value) {
 //                when (goalsSortDirection.value) {
@@ -73,22 +73,21 @@ class GoalsRepository(
 //                goalsSortDirection.value.name
 //            ).apply()
 //        }
-        return when (direction) {
-            SortDirection.ASCENDING -> {
-                when (mode) {
-                    GoalsSortMode.DATE_ADDED -> goals.sortedBy { it.description.description.createdAt }
-                    GoalsSortMode.TARGET -> goals.sortedBy { it.instance.target }
-                    GoalsSortMode.PERIOD -> goals.sortedBy { it.instance.periodInSeconds }
-                    GoalsSortMode.CUSTOM -> goals // TODO
-                }
+    when (direction) {
+        SortDirection.ASCENDING -> {
+            when (mode) {
+                GoalsSortMode.DATE_ADDED -> goals.sortedBy { it.description.description.createdAt }
+                GoalsSortMode.TARGET -> goals.sortedBy { it.instance.target }
+                GoalsSortMode.PERIOD -> goals.sortedBy { it.instance.periodInSeconds }
+                GoalsSortMode.CUSTOM -> goals // TODO
             }
-            SortDirection.DESCENDING -> {
-                when (mode) {
-                    GoalsSortMode.DATE_ADDED -> goals.sortedByDescending { it.description.description.createdAt }
-                    GoalsSortMode.TARGET -> goals.sortedByDescending { it.instance.target }
-                    GoalsSortMode.PERIOD -> goals.sortedByDescending { it.instance.periodInSeconds }
-                    GoalsSortMode.CUSTOM -> goals // TODO()
-                }
+        }
+        SortDirection.DESCENDING -> {
+            when (mode) {
+                GoalsSortMode.DATE_ADDED -> goals.sortedByDescending { it.description.description.createdAt }
+                GoalsSortMode.TARGET -> goals.sortedByDescending { it.instance.target }
+                GoalsSortMode.PERIOD -> goals.sortedByDescending { it.instance.periodInSeconds }
+                GoalsSortMode.CUSTOM -> goals // TODO()
             }
         }
     }

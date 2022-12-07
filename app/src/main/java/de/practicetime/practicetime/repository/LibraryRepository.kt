@@ -13,7 +13,7 @@ import de.practicetime.practicetime.database.entities.LibraryFolder
 import de.practicetime.practicetime.database.entities.LibraryItem
 import de.practicetime.practicetime.datastore.LibraryFolderSortMode
 import de.practicetime.practicetime.datastore.LibraryItemSortMode
-import kotlinx.coroutines.flow.map
+import de.practicetime.practicetime.datastore.SortDirection
 import java.util.*
 
 class LibraryRepository(
@@ -23,8 +23,8 @@ class LibraryRepository(
     private val itemDao = database.libraryItemDao
     private val folderDao = database.libraryFolderDao
 
-    val items = itemDao.getAllAsFlow(from).map { items -> items.sortedBy { it.name } }
-    val folders = folderDao.getAllAsFlow(from).map { folders -> folders.sortedBy { it.name } }
+    val items = itemDao.getAllAsFlow(from)
+    val folders = folderDao.getAllAsFlow(from)
 
 
     /** Mutators */
@@ -59,53 +59,34 @@ class LibraryRepository(
     }
 
     /** Sort */
-    fun sortLibraryFolders(mode: LibraryFolderSortMode? = null) {
-//        if(mode != null) {
-//            if (mode == folderSortMode.value) {
-//                when (folderSortDirection.value) {
-//                    SortDirection.ASCENDING -> folderSortDirection.value = SortDirection.DESCENDING
-//                    SortDirection.DESCENDING -> folderSortDirection.value = SortDirection.ASCENDING
-//                }
-//            } else {
-//                folderSortDirection.value = SortDirection.ASCENDING
-//                folderSortMode.value = mode
-//                PracticeTime.prefs.edit().putString(
-//                    PracticeTime.PREFERENCES_KEY_LIBRARY_FOLDER_SORT_MODE,
-//                    folderSortMode.value.name
-//                ).apply()
-//            }
-//            PracticeTime.prefs.edit().putString(
-//                PracticeTime.PREFERENCES_KEY_LIBRARY_FOLDER_SORT_DIRECTION,
-//                folderSortDirection.value.name
-//            ).apply()
-//        }
-//        when (folderSortDirection.value) {
-//            SortDirection.ASCENDING -> {
-//                when (folderSortMode.value) {
-//                    LibraryFolderSortMode.DATE_ADDED -> {
-//                        _folders.update { folders -> folders.sortedBy { it.createdAt } }
-//                    }
-//                    LibraryFolderSortMode.LAST_MODIFIED -> {
-//                        _folders.update { folders -> folders.sortedBy { it.modifiedAt } }
-//                    }
-//                    LibraryFolderSortMode.CUSTOM -> {}
-//                }
-//            }
-//            SortDirection.DESCENDING -> {
-//                when (folderSortMode.value) {
-//                    LibraryFolderSortMode.DATE_ADDED -> {
-//                        _folders.update { folders -> folders.sortedByDescending { it.createdAt } }
-//                    }
-//                    LibraryFolderSortMode.LAST_MODIFIED -> {
-//                        _folders.update { folders -> folders.sortedByDescending { it.modifiedAt } }
-//                    }
-//                    LibraryFolderSortMode.CUSTOM -> {}
-//                }
-//            }
-//        }
+    fun sortFolders(
+        folders: List<LibraryFolder>,
+        mode: LibraryFolderSortMode,
+        direction: SortDirection,
+    ) =
+
+    when (direction) {
+        SortDirection.ASCENDING -> {
+            when (mode) {
+                LibraryFolderSortMode.DATE_ADDED -> folders.sortedBy { it.createdAt }
+                LibraryFolderSortMode.LAST_MODIFIED -> folders.sortedBy { it.modifiedAt }
+                LibraryFolderSortMode.CUSTOM -> folders // TODO
+            }
+        }
+        SortDirection.DESCENDING -> {
+            when (mode) {
+                LibraryFolderSortMode.DATE_ADDED -> folders.sortedByDescending { it.createdAt }
+                LibraryFolderSortMode.LAST_MODIFIED -> folders.sortedByDescending { it.modifiedAt }
+                LibraryFolderSortMode.CUSTOM -> folders // TODO
+            }
+        }
     }
 
-    fun sortLibraryItems(mode: LibraryItemSortMode? = null) {
+    fun sortItems(
+        items: List<LibraryItem>,
+        mode: LibraryItemSortMode,
+        direction: SortDirection,
+    ) =
 //        if(mode != null) {
 //            if (mode == itemSortMode.value) {
 //                when (itemSortDirection.value) {
@@ -125,41 +106,24 @@ class LibraryRepository(
 //                itemSortDirection.value.name
 //            ).apply()
 //        }
-//        when (itemSortDirection.value) {
-//            SortDirection.ASCENDING -> {
-//                when (itemSortMode.value) {
-//                    LibraryItemSortMode.DATE_ADDED -> {
-//                        _items.update { items -> items.sortedBy { it.createdAt } }
-//                    }
-//                    LibraryItemSortMode.LAST_MODIFIED -> {
-//                        _items.update { items -> items.sortedBy { it.modifiedAt } }
-//                    }
-//                    LibraryItemSortMode.NAME -> {
-//                        _items.update { items -> items.sortedBy { it.name } }
-//                    }
-//                    LibraryItemSortMode.COLOR -> {
-//                        _items.update { items -> items.sortedBy { it.colorIndex } }
-//                    }
-//                    LibraryItemSortMode.CUSTOM -> { }
-//                }
-//            }
-//            SortDirection.DESCENDING -> {
-//                when (itemSortMode.value) {
-//                    LibraryItemSortMode.DATE_ADDED -> {
-//                        _items.update { items -> items.sortedByDescending { it.createdAt } }
-//                    }
-//                    LibraryItemSortMode.LAST_MODIFIED -> {
-//                        _items.update { items -> items.sortedByDescending { it.modifiedAt } }
-//                    }
-//                    LibraryItemSortMode.NAME -> {
-//                        _items.update { items -> items.sortedByDescending { it.name } }
-//                    }
-//                    LibraryItemSortMode.COLOR -> {
-//                        _items.update { items -> items.sortedByDescending { it.colorIndex } }
-//                    }
-//                    LibraryItemSortMode.CUSTOM -> { }
-//                }
-//            }
-//        }
+    when (direction) {
+        SortDirection.ASCENDING -> {
+            when (mode) {
+                LibraryItemSortMode.DATE_ADDED -> items.sortedBy { it.createdAt }
+                LibraryItemSortMode.LAST_MODIFIED -> items.sortedBy { it.modifiedAt }
+                LibraryItemSortMode.NAME -> items.sortedBy { it.name }
+                LibraryItemSortMode.COLOR -> items.sortedBy { it.colorIndex }
+                LibraryItemSortMode.CUSTOM -> items // TODO
+            }
+        }
+        SortDirection.DESCENDING -> {
+            when (mode) {
+                LibraryItemSortMode.DATE_ADDED -> items.sortedByDescending { it.createdAt }
+                LibraryItemSortMode.LAST_MODIFIED -> items.sortedByDescending { it.modifiedAt }
+                LibraryItemSortMode.NAME -> items.sortedByDescending { it.name }
+                LibraryItemSortMode.COLOR -> items.sortedByDescending { it.colorIndex }
+                LibraryItemSortMode.CUSTOM -> items // TODO
+            }
+        }
     }
 }

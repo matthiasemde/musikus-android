@@ -73,6 +73,8 @@ enum class LibraryItemSortMode {
     CUSTOM;
 
     companion object {
+        val defaultValue: LibraryItemSortMode = DATE_ADDED
+
         fun toString(sortMode: LibraryItemSortMode) = when (sortMode) {
             DATE_ADDED -> "Date added"
             LAST_MODIFIED -> "Last modified"

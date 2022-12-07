@@ -194,7 +194,7 @@ abstract class BaseDao<T : BaseModel>(
                         invalidations.release()
                         Log.d("BASE_DAO", "$tableName, $id from $from: permit released")
                     } catch (e: Exception) {
-                        Log.e("BASE_DAO", "Semaphore already released")
+                        Log.w("BASE_DAO", "Semaphore already released. Is your query taking a long time?")
                     }
                 }
             }.also {

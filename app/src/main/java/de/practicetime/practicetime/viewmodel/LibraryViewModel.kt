@@ -13,15 +13,22 @@ import android.util.Log
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
 import de.practicetime.practicetime.dataStore
 import de.practicetime.practicetime.database.PTDatabase
 import de.practicetime.practicetime.database.entities.LibraryFolder
 import de.practicetime.practicetime.database.entities.LibraryItem
+import de.practicetime.practicetime.datastore.LibraryFolderSortMode
+import de.practicetime.practicetime.datastore.LibraryItemSortMode
 import de.practicetime.practicetime.repository.LibraryRepository
 import de.practicetime.practicetime.repository.UserPreferencesRepository
 import de.practicetime.practicetime.shared.MultiFABState
 import de.practicetime.practicetime.shared.SpinnerState
+import kotlinx.coroutines.flow.SharingStarted.Companion.WhileSubscribed
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import java.util.*
 
 enum class LibraryMenuSelections {
@@ -49,17 +56,63 @@ class LibraryViewModel(
         Log.d("LibraryViewModel", "initialized")
     }
 
+    private val userPreferences = userPreferencesRepository.userPreferences
+
     // Folders
-    val folders = libraryRepository.folders
+    private val folders = libraryRepository.folders
 
     val folderSortMode = userPreferencesRepository.userPreferences.map { it.libraryFolderSortMode }
     val folderSortDirection = userPreferencesRepository.userPreferences.map { it.libraryFolderSortDirection }
 
-    // Items
-    val items = libraryRepository.items
+    fun onFolderSortModeSelected(sortMode: LibraryFolderSortMode) {
+        showFolderSortModeMenu.value = false
+        viewModelScope.launch {
+            userPreferencesRepository.updateLibraryFolderSortMode(sortMode)
+        }
+    }
 
-    val itemSortMode = userPreferencesRepository.userPreferences.map { it.libraryItemSortMode }
+    val sortedFolders = folders.combine(userPreferences) { folders, preferences ->
+        libraryRepository.sortFolders(
+            folders = folders,
+            mode = preferences.libraryFolderSortMode,
+            direction = preferences.libraryFolderSortDirection
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
+
+    // Items
+    private val items = libraryRepository.items
+
+    val sortedItems = items.combine(userPreferences) { items, preferences ->
+        libraryRepository.sortItems(
+            items = items,
+            mode = preferences.libraryItemSortMode,
+            direction = preferences.libraryItemSortDirection
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
+
+    val itemSortMode = userPreferencesRepository.userPreferences.map {
+        it.libraryItemSortMode
+    }.stateIn(
+        scope = viewModelScope,
+        started = WhileSubscribed(5000),
+        initialValue = LibraryItemSortMode.NAME
+    )
     val itemSortDirection = userPreferencesRepository.userPreferences.map { it.libraryItemSortDirection }
+
+    fun onItemSortModeSelected(selection: LibraryItemSortMode) {
+        showItemSortModeMenu.value = false
+        viewModelScope.launch {
+            userPreferencesRepository.updateLibraryItemSortMode(selection)
+        }
+    }
 
     // Menu
     var showFolderSortModeMenu = mutableStateOf(false)
