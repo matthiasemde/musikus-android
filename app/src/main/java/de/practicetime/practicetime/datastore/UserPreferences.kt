@@ -18,11 +18,14 @@ enum class SortDirection {
     }
 
     companion object {
+        val defaultValue = ASCENDING
+
         fun fromBoolean(boolean: Boolean) = if (boolean) ASCENDING else DESCENDING
+
         fun valueOrDefault(string: String?) = try {
             valueOf(string ?: "")
         } catch (e: Exception) {
-            ASCENDING
+            defaultValue
         }
     }
 }
@@ -33,10 +36,12 @@ enum class ThemeSelections {
     NIGHT;
 
     companion object {
+        val defaultValue = SYSTEM
+
         fun valueOrDefault(string: String?) = try {
             valueOf(string ?: "")
         } catch (e: Exception) {
-            DAY
+            defaultValue
         }
     }
 }
@@ -48,6 +53,8 @@ enum class GoalsSortMode {
     CUSTOM;
 
     companion object {
+        val defaultValue = DATE_ADDED
+
         fun toString(sortMode: GoalsSortMode): String {
             return when (sortMode) {
                 DATE_ADDED -> "Date added"
@@ -60,7 +67,7 @@ enum class GoalsSortMode {
         fun valueOrDefault(string: String?) = try {
             valueOf(string ?: "")
         } catch (e: Exception) {
-            DATE_ADDED
+            defaultValue
         }
     }
 }
@@ -73,7 +80,7 @@ enum class LibraryItemSortMode {
     CUSTOM;
 
     companion object {
-        val defaultValue: LibraryItemSortMode = DATE_ADDED
+        val defaultValue = DATE_ADDED
 
         fun toString(sortMode: LibraryItemSortMode) = when (sortMode) {
             DATE_ADDED -> "Date added"
@@ -86,7 +93,7 @@ enum class LibraryItemSortMode {
         fun valueOrDefault(string: String?) = try {
             valueOf(string ?: "")
         } catch (e: Exception) {
-            DATE_ADDED
+            defaultValue
         }
     }
 }
@@ -97,6 +104,8 @@ enum class LibraryFolderSortMode {
     CUSTOM;
 
     companion object {
+        val defaultValue = DATE_ADDED
+
         fun toString(sortMode: LibraryFolderSortMode) = when (sortMode) {
             DATE_ADDED -> "Date added"
             LAST_MODIFIED -> "Last modified"
@@ -106,7 +115,7 @@ enum class LibraryFolderSortMode {
         fun valueOrDefault(string: String?) = try {
             valueOf(string ?: "")
         } catch (e: Exception) {
-            DATE_ADDED
+            defaultValue
         }
     }
 }

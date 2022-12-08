@@ -188,41 +188,14 @@ fun Library(mainViewModel: MainViewModel) {
 
             // Action bar
 
-            if(libraryViewModel.actionMode.value) {
+            if(libraryViewModel.actionMode.collectAsState().value) {
                 ActionBar(
                     numSelectedItems =
-                        libraryViewModel.selectedItemIds.size +
-                        libraryViewModel.selectedFolderIds.size,
-                    onDismissHandler = {
-                        libraryViewModel.clearActionMode()
-                    },
-                    onEditHandler = {
-//                        libraryViewModel.apply {
-//                            libraryViewModel.items.value.firstOrNull { item ->
-//                                selectedItemIds.firstOrNull()?.let { it == item.id } ?: false
-//                            }?.let { item ->
-//                                editableItem.value = item
-//                                itemDialogMode.value = DialogMode.EDIT
-//                                itemDialogName.value = item.name
-//                                itemDialogColorIndex.value = item.colorIndex
-//                                itemDialogFolderId.value = item.libraryFolderId
-//                                showItemDialog.value = true
-//                            } ?: mainViewModel.libraryFolders.value.firstOrNull { folder ->
-//                                selectedFolderIds.firstOrNull()?.let { it == folder.id } ?: false
-//                            }?.let { folder ->
-//                                editableFolder.value = folder
-//                                folderDialogMode.value = DialogMode.EDIT
-//                                folderDialogName.value = folder.name
-//                                showFolderDialog.value = true
-//                            }
-//                        }
-                        libraryViewModel.clearActionMode()
-                    },
-                    onDeleteHandler = {
-//                        mainViewModel.archiveItems(libraryViewModel.selectedItemIds.toList())
-//                        mainViewModel.deleteFolders(libraryViewModel.selectedFolderIds.toList())
-                        libraryViewModel.clearActionMode()
-                    }
+                        libraryViewModel.selectedItems.collectAsState().value.size +
+                        libraryViewModel.selectedFolders.collectAsState().value.size,
+                    onDismissHandler = libraryViewModel::clearActionMode,
+                    onEditHandler = libraryViewModel::onEditAction,
+                    onDeleteHandler = libraryViewModel::onDeleteAction
                 )
             }
         },
@@ -233,82 +206,25 @@ fun Library(mainViewModel: MainViewModel) {
                 ),
                 activeFolder = libraryViewModel.activeFolder.value,
                 showFolderSortMenu = libraryViewModel.showFolderSortModeMenu.value,
-                folderSortMode = libraryViewModel.folderSortMode.collectAsState(initial = LibraryFolderSortMode.DATE_ADDED).value,
-                folderSortDirection = libraryViewModel.folderSortDirection.collectAsState(initial = SortDirection.ASCENDING).value,
+                folderSortMode = libraryViewModel.folderSortMode.collectAsState().value,
+                folderSortDirection = libraryViewModel.folderSortDirection.collectAsState().value,
                 folders = libraryViewModel.sortedFolders.collectAsState().value,
-                selectedFolderIds = libraryViewModel.selectedFolderIds,
+                selectedFolders = libraryViewModel.selectedFolders.collectAsState().value,
                 showItemSortMenu = libraryViewModel.showItemSortModeMenu.value,
-                itemSortMode = libraryViewModel.itemSortMode.collectAsState(initial = LibraryItemSortMode.DATE_ADDED).value,
-                itemSortDirection = libraryViewModel.itemSortDirection.collectAsState(initial = SortDirection.ASCENDING).value,
+                itemSortMode = libraryViewModel.itemSortMode.collectAsState().value,
+                itemSortDirection = libraryViewModel.itemSortDirection.collectAsState().value,
                 items = libraryViewModel.sortedItems.collectAsState().value,
-                selectedItemIds = libraryViewModel.selectedItemIds,
+                selectedItems = libraryViewModel.selectedItems.collectAsState().value,
                 onShowFolderSortMenuChange = { libraryViewModel.showFolderSortModeMenu.value = it },
                 onFolderSortModeSelected = libraryViewModel::onFolderSortModeSelected,
                 onShowItemSortMenuChange = { libraryViewModel.showItemSortModeMenu.value = it },
                 onItemSortModeSelected = libraryViewModel::onItemSortModeSelected,
-                onLibraryFolderShortClicked = { folder ->
-                    libraryViewModel.apply {
-                        if(actionMode.value) {
-                            if(selectedFolderIds.contains(folder.id)) {
-                                selectedFolderIds.remove(folder.id)
-                                if(selectedFolderIds.isEmpty() && selectedItemIds.isEmpty()) {
-                                    actionMode.value = false
-                                }
-                            } else {
-                                selectedFolderIds.add(folder.id)
-                            }
-                        } else {
-                            activeFolder.value = folder
-                            clearActionMode()
-                        }
-                    }
-                },
-                onLibraryFolderLongClicked = { folder ->
-                    libraryViewModel.apply {
-                        if (!selectedFolderIds.contains(folder.id)) {
-                            selectedFolderIds.add(folder.id)
-                            actionMode.value = true
-                        }
-                    }
-                },
-                onLibraryItemShortClicked = { item ->
-                    libraryViewModel.apply {
-                        if (actionMode.value) {
-                            if (selectedItemIds.contains(item.id)) {
-                                selectedItemIds.remove(item.id)
-                                if (selectedItemIds.isEmpty() && selectedFolderIds.isEmpty()) {
-                                    actionMode.value = false
-                                }
-                            } else {
-                                selectedItemIds.add(item.id)
-                            }
-                        } else {
-                            editableItem.value = item
-                            itemDialogMode.value = DialogMode.EDIT
-                            itemDialogName.value = item.name
-                            itemDialogColorIndex.value = item.colorIndex
-                            itemDialogFolderId.value = item.libraryFolderId
-                            showItemDialog.value = true
-                            clearActionMode()
-                        }
-                    }
-                },
-                onLibraryItemLongClicked = { item ->
-                    libraryViewModel.apply {
-                        if (!selectedItemIds.contains(item.id)) {
-                            selectedItemIds.add(item.id)
-                            actionMode.value = true
-                        }
-                    }
-                },
+                onFolderClicked = libraryViewModel::onFolderClicked,
+                onItemClicked = libraryViewModel::onItemClicked,
             )
 
             // Show hint if no items or folders are in the library
-            if (
-//                libraryViewModel.folders.collectAsState(initial = emptyList()).value.isEmpty() &&
-//                libraryViewModel.items.collectAsState(initial = emptyList()).value.isEmpty()
-                false
-            ) {
+            if (libraryViewModel.showHint.collectAsState().value) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -401,20 +317,18 @@ fun LibraryContent(
     folderSortMode: LibraryFolderSortMode,
     folderSortDirection: SortDirection,
     folders: List<LibraryFolder>,
-    selectedFolderIds: List<UUID>,
+    selectedFolders: Set<LibraryFolder>,
     showItemSortMenu: Boolean,
     itemSortMode: LibraryItemSortMode,
     itemSortDirection: SortDirection,
     items: List<LibraryItem>,
-    selectedItemIds: List<UUID>,
+    selectedItems: Set<LibraryItem>,
     onShowFolderSortMenuChange: (Boolean) -> Unit,
     onFolderSortModeSelected: (LibraryFolderSortMode) -> Unit,
     onShowItemSortMenuChange: (Boolean) -> Unit,
     onItemSortModeSelected: (LibraryItemSortMode) -> Unit,
-    onLibraryFolderShortClicked: (LibraryFolder) -> Unit,
-    onLibraryFolderLongClicked: (LibraryFolder) -> Unit,
-    onLibraryItemShortClicked: (LibraryItem) -> Unit,
-    onLibraryItemLongClicked: (LibraryItem) -> Unit,
+    onFolderClicked: (LibraryFolder, Boolean) -> Unit,
+    onItemClicked: (LibraryItem, Boolean) -> Unit,
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxWidth(),
@@ -424,7 +338,7 @@ fun LibraryContent(
         ),
     ) {
         // if active folder ist null, we are in the top level
-        if(activeFolder == null) {
+        if(activeFolder == null && folders.isNotEmpty()) {
             item {
                 Row(
                     modifier = Modifier
@@ -466,9 +380,9 @@ fun LibraryContent(
                             LibraryFolder(
                                 folder = folder,
                                 numItems = items.filter { it.libraryFolderId == folder.id }.size,
-                                selected = selectedFolderIds.contains(folder.id),
-                                onShortClick = { onLibraryFolderShortClicked(folder) },
-                                onLongClick = { onLibraryFolderLongClicked(folder) }
+                                selected = folder in selectedFolders,
+                                onShortClick = { onFolderClicked(folder, false) },
+                                onLongClick = { onFolderClicked(folder, true) }
                             )
                         }
                     }
@@ -514,9 +428,9 @@ fun LibraryContent(
                         modifier = Modifier
                             .padding(vertical = 8.dp, horizontal = 16.dp),
                         libraryItem = item,
-                        selected = item.id in selectedItemIds,
-                        onShortClick = { onLibraryItemShortClicked(item) },
-                        onLongClick = { onLibraryItemLongClicked(item) }
+                        selected = item in selectedItems,
+                        onShortClick = { onItemClicked(item, false) },
+                        onLongClick = { onItemClicked(item, true) }
                     )
                 }
             }

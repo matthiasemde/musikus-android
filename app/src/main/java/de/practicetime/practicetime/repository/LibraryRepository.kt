@@ -29,32 +29,48 @@ class LibraryRepository(
 
     /** Mutators */
     /** Add */
-    fun addFolder(newFolder: LibraryFolder) {
+    suspend fun addFolder(newFolder: LibraryFolder) {
         folderDao.insert(newFolder)
     }
 
-    fun addItem(newItem: LibraryItem) {
+    suspend fun addItem(newItem: LibraryItem) {
         itemDao.insert(newItem)
     }
 
     /** Edit */
-    fun editFolder(editedFolder: LibraryFolder) {
-        folderDao.update(editedFolder)
+    suspend fun editFolder(
+        folder: LibraryFolder,
+        newName: String,
+    ) {
+        folder.apply {
+            name = newName
+        }
+        folderDao.update(folder)
     }
 
-    fun editItem(item: LibraryItem) {
+    suspend fun editItem(
+        item: LibraryItem,
+        newName: String,
+        newColorIndex: Int,
+        newFolderId: UUID?,
+    ) {
+        item.apply {
+            name = newName
+            colorIndex = newColorIndex
+            libraryFolderId = newFolderId
+        }
         itemDao.update(item)
     }
 
     /** Delete / Archive */
-    fun deleteFolders(folderIds: List<UUID>) {
-//        folderDao.getAndDelete(folderIds)
-//        loadLibraryItems() // reload items to show those which were in a folder
+    suspend fun deleteFolders(folders: Set<LibraryFolder>) {
+        folderDao.delete(folders.toList())
     }
 
-    fun archiveItems(itemIds: List<UUID>) {
-        itemIds.forEach { itemId ->
-            itemDao.archive(itemId)
+    suspend fun archiveItems(items: Set<LibraryItem>) {
+        items.forEach { item ->
+            item.archived = true
+            itemDao.update(item)
         }
     }
 
