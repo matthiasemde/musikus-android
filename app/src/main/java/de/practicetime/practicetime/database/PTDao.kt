@@ -146,29 +146,20 @@ abstract class BaseDao<T : BaseModel>(
      */
 
     @RawQuery
-    protected abstract suspend fun getSingle(query: SupportSQLiteQuery): T?
+    protected abstract suspend fun get(query: SupportSQLiteQuery): List<T>
 
-    open suspend fun get(id: UUID): T? {
-        return getSingle(
-            SimpleSQLiteQuery("SELECT * FROM $tableName WHERE id=x'${UUIDConverter.toDBString(id)}';")
+    open suspend fun get(id: UUID) = get(listOf(id)).firstOrNull()
+
+    open suspend fun get(ids: List<UUID>) = get(
+        SimpleSQLiteQuery(
+            "SELECT * FROM $tableName WHERE id IN (${ids.joinToString(separator = ",") { "?" }});",
+            ids.map { UUIDConverter().toByte(it) }.toTypedArray()
         )
-    }
+    )
 
-    @RawQuery
-    protected abstract suspend fun getMultiple(query: SupportSQLiteQuery): List<T>
-
-    open suspend fun get(ids: List<UUID>): List<T> {
-        return getMultiple(
-            SimpleSQLiteQuery("SELECT * FROM $tableName WHERE id IN (${ids.joinToString(",") { id -> "x'${UUIDConverter.toDBString(id)}'" }});")
-        )
-    }
-
-    @RawQuery
-    protected abstract suspend fun getAll(query: SupportSQLiteQuery): List<T>
-
-    open suspend fun getAll(): List<T> {
-        return getAll(SimpleSQLiteQuery("SELECT * FROM $tableName;"))
-    }
+    open suspend fun getAll() = get(
+        SimpleSQLiteQuery("SELECT * FROM $tableName;")
+    )
 
     /**
      * Flow getters
