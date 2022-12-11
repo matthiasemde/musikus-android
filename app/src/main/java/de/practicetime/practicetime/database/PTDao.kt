@@ -174,6 +174,9 @@ abstract class BaseDao<T : BaseModel>(
                 database.invalidationTracker.addObserver(it)
             })
 
+            // emit the initial value
+            emit(query())
+
             notify.collect {
                 emit(query())
             }

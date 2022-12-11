@@ -56,8 +56,13 @@ data class LibraryActionModeUiState(
     val numberOfSelections: Int,
 )
 
+data class LibraryFolderWithItemCount(
+    val folder: LibraryFolder,
+    val itemCount: Int,
+)
+
 data class LibraryFoldersUiState(
-    val folders: List<LibraryFolder>,
+    val foldersWithItemCount: List<LibraryFolderWithItemCount>,
     val selectedFolders: Set<LibraryFolder>,
 
     val showSortMenu: Boolean,
@@ -160,7 +165,6 @@ class LibraryViewModel(
     var multiFABState = mutableStateOf(MultiFABState.COLLAPSED)
 
     // Action mode
-
     private val _selectedFolders = MutableStateFlow<Set<LibraryFolder>>(emptySet())
     private val _selectedItems = MutableStateFlow<Set<LibraryItem>>(emptySet())
 
@@ -204,10 +208,11 @@ class LibraryViewModel(
 
     private val foldersUiState = combine(
         folders,
+        items,
         _selectedFolders,
         _showFolderSortMenu,
         userPreferences,
-    ) { folders, selectedFolders ,showSortMenu, preferences ->
+    ) { folders, items, selectedFolders ,showSortMenu, preferences ->
         if(folders.isEmpty()) return@combine null
 
         val folderSortMode = preferences.libraryFolderSortMode
@@ -219,8 +224,13 @@ class LibraryViewModel(
             direction = folderSortDirection
         )
 
+        val sortedFoldersWithItemCount = sortedFolders.map { folder ->
+            val itemCount = items.count { it.libraryFolderId == folder.id }
+            LibraryFolderWithItemCount(folder, itemCount)
+        }
+
         LibraryFoldersUiState(
-            folders = sortedFolders,
+            foldersWithItemCount = sortedFoldersWithItemCount,
             selectedFolders = selectedFolders,
             showSortMenu = showSortMenu,
             sortMode = folderSortMode,
@@ -239,12 +249,11 @@ class LibraryViewModel(
         _showItemSortMenu,
         userPreferences,
     ) { items, selectedItems, activeFolder, showSortMenu, preferences ->
-        if(items.isEmpty()) return@combine null
+        val itemsInFolder = items.filter { it.libraryFolderId == activeFolder?.id }
+        if(itemsInFolder.isEmpty()) return@combine null
 
         val itemSortMode = preferences.libraryItemSortMode
         val itemSortDirection = preferences.libraryItemSortDirection
-
-        val itemsInFolder = items.filter { it.libraryFolderId == activeFolder?.id }
 
         val itemsInFolderSorted = libraryRepository.sortItems(
             items = itemsInFolder,
@@ -400,40 +409,6 @@ class LibraryViewModel(
         _activeFolder.update { null }
     }
 
-    fun onItemDialogConfirmed() {
-        viewModelScope.launch {
-            val itemData = _itemEditData.value ?: return@launch
-            _itemToEdit.value?.let {
-                libraryRepository.editItem(
-                    item = it,
-                    newName = itemData.name,
-                    newColorIndex = itemData.colorIndex,
-                    newFolderId = itemData.folderId
-                )
-            } ?: libraryRepository.addItem(
-                LibraryItem(
-                    name = itemData.name,
-                    colorIndex = itemData.colorIndex,
-                    libraryFolderId = itemData.folderId
-                )
-            )
-        }
-    }
-
-    fun onFolderDialogConfirmed() {
-        viewModelScope.launch {
-            val folderData = _folderEditData.value ?: return@launch
-            _folderToEdit.value?.let {
-                libraryRepository.editFolder(
-                    folder = it,
-                    newName = folderData.name
-                )
-            } ?: libraryRepository.addFolder(
-                LibraryFolder(name = folderData.name)
-            )
-        }
-    }
-
     fun onFolderClicked(
         folder: LibraryFolder,
         longClick: Boolean = false
@@ -570,6 +545,42 @@ class LibraryViewModel(
         _itemToEdit.update { null }
         _itemEditData.update { null }
         _isFolderSelectorExpanded.update { false }
+    }
+
+    fun onFolderDialogConfirmed() {
+        viewModelScope.launch {
+            val folderData = _folderEditData.value ?: return@launch
+            _folderToEdit.value?.let {
+                libraryRepository.editFolder(
+                    folder = it,
+                    newName = folderData.name
+                )
+            } ?: libraryRepository.addFolder(
+                LibraryFolder(name = folderData.name)
+            )
+            clearFolderDialog()
+        }
+    }
+
+    fun onItemDialogConfirmed() {
+        viewModelScope.launch {
+            val itemData = _itemEditData.value ?: return@launch
+            _itemToEdit.value?.let {
+                libraryRepository.editItem(
+                    item = it,
+                    newName = itemData.name,
+                    newColorIndex = itemData.colorIndex,
+                    newFolderId = itemData.folderId
+                )
+            } ?: libraryRepository.addItem(
+                LibraryItem(
+                    name = itemData.name,
+                    colorIndex = itemData.colorIndex,
+                    libraryFolderId = itemData.folderId
+                )
+            )
+            clearItemDialog()
+        }
     }
 
     fun clearActionMode() {

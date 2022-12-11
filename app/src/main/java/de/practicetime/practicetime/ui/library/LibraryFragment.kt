@@ -370,18 +370,16 @@ fun LibraryContent(
                     // but also serve to fixate the list when inserting items
                     item { Spacer(modifier = Modifier.width(4.dp)) }
                     items(
-                        items = foldersUiState.folders,
-                        key = { folder -> folder.id }
-                    ) { folder ->
+                        items = foldersUiState.foldersWithItemCount,
+                        key = { it.folder.id }
+                    ) { (folder, itemCount) ->
                         Row(
                             modifier = Modifier
                                 .animateItemPlacement()
                         ) {
                             LibraryFolder(
                                 folder = folder,
-                                numItems = itemsUiState?.items?.filter {
-                                    it.libraryFolderId == folder.id
-                                }?.size ?: 0,
+                                numItems = itemCount,
                                 selected = folder in foldersUiState.selectedFolders,
                                 onShortClick = { onFolderClicked(folder, false) },
                                 onLongClick = { onFolderClicked(folder, true) }
