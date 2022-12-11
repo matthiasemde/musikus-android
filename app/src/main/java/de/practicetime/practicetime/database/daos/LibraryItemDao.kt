@@ -15,11 +15,11 @@ package de.practicetime.practicetime.database.daos
 import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.Transaction
-import de.practicetime.practicetime.PracticeTime.Companion.ioThread
 import de.practicetime.practicetime.database.BaseDao
 import de.practicetime.practicetime.database.LibraryItemWithGoalDescriptions
 import de.practicetime.practicetime.database.PTDatabase
 import de.practicetime.practicetime.database.entities.LibraryItem
+import kotlinx.coroutines.flow.Flow
 import java.util.*
 
 @Dao
@@ -31,25 +31,11 @@ abstract class LibraryItemDao(
 ) {
 
     /**
-     * @Delete / archive
-     */
-
-    @Transaction
-    open fun archive(libraryItemId: UUID){
-        ioThread {
-//            val libraryItem = getAsFlow(libraryItemId).value
-//            libraryItem.archived = true
-//            update(libraryItem)
-        }
-    }
-
-
-    /**
     *  @Queries
     */
 
     @Query("SELECT * FROM library_item WHERE archived=0 OR NOT :activeOnly")
-    abstract suspend fun get(activeOnly: Boolean = false): List<LibraryItem>
+    abstract fun get(activeOnly: Boolean = false): Flow<List<LibraryItem>>
 
     @Query("SELECT * FROM library_item WHERE library_folder_id=:libraryFolderId")
     abstract suspend fun getFromFolder(libraryFolderId: UUID): List<LibraryItem>

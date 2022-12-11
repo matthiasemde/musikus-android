@@ -21,33 +21,24 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import java.util.*
 
-enum class SpinnerState {
-    EXPANDED,
-    COLLAPSED
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SelectionSpinner(
     modifier: Modifier = Modifier,
-    state: SpinnerState,
+    isExpanded: Boolean,
     label: @Composable () -> Unit,
     leadingIcon: @Composable () -> Unit,
     options: List<Pair<UUID, String>>,
     selected: UUID?,
     defaultOption: String?,
-    onStateChange: (SpinnerState) -> Unit,
+    onIsExpandedChange: (Boolean) -> Unit,
     onSelectedChange: (UUID?) -> Unit
 ) {
     ExposedDropdownMenuBox(
         modifier = modifier,
-        expanded = state == SpinnerState.EXPANDED,
-        onExpandedChange = {
-            when (state) {
-                SpinnerState.EXPANDED -> onStateChange(SpinnerState.COLLAPSED)
-                SpinnerState.COLLAPSED -> onStateChange(SpinnerState.EXPANDED)
-            }
-        }
+        expanded = isExpanded,
+        onExpandedChange = onIsExpandedChange,
     ) {
         var size by remember { mutableStateOf(0) }
         OutlinedTextField(
@@ -62,13 +53,13 @@ fun SelectionSpinner(
             readOnly = true,
             leadingIcon = leadingIcon,
             trailingIcon = {
-                ExposedDropdownMenuDefaults.TrailingIcon(expanded = state == SpinnerState.EXPANDED)
+                ExposedDropdownMenuDefaults.TrailingIcon(expanded = isExpanded)
             },
             colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
         )
         ExposedDropdownMenu(
-            expanded = state == SpinnerState.EXPANDED,
-            onDismissRequest = { onStateChange(SpinnerState.COLLAPSED) },
+            expanded = isExpanded,
+            onDismissRequest = { onIsExpandedChange(false) },
         ) {
 
             val listState = rememberLazyListState()

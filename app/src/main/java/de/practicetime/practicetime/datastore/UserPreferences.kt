@@ -18,14 +18,14 @@ enum class SortDirection {
     }
 
     companion object {
-        val defaultValue = ASCENDING
+        val DEFAULT = ASCENDING
 
         fun fromBoolean(boolean: Boolean) = if (boolean) ASCENDING else DESCENDING
 
         fun valueOrDefault(string: String?) = try {
             valueOf(string ?: "")
         } catch (e: Exception) {
-            defaultValue
+            DEFAULT
         }
     }
 }
@@ -36,12 +36,12 @@ enum class ThemeSelections {
     NIGHT;
 
     companion object {
-        val defaultValue = SYSTEM
+        val DEFAULT = SYSTEM
 
         fun valueOrDefault(string: String?) = try {
             valueOf(string ?: "")
         } catch (e: Exception) {
-            defaultValue
+            DEFAULT
         }
     }
 }
@@ -53,7 +53,7 @@ enum class GoalsSortMode {
     CUSTOM;
 
     companion object {
-        val defaultValue = DATE_ADDED
+        val DEFAULT = DATE_ADDED
 
         fun toString(sortMode: GoalsSortMode): String {
             return when (sortMode) {
@@ -67,7 +67,7 @@ enum class GoalsSortMode {
         fun valueOrDefault(string: String?) = try {
             valueOf(string ?: "")
         } catch (e: Exception) {
-            defaultValue
+            DEFAULT
         }
     }
 }
@@ -80,7 +80,7 @@ enum class LibraryItemSortMode {
     CUSTOM;
 
     companion object {
-        val defaultValue = DATE_ADDED
+        val DEFAULT = DATE_ADDED
 
         fun toString(sortMode: LibraryItemSortMode) = when (sortMode) {
             DATE_ADDED -> "Date added"
@@ -93,7 +93,7 @@ enum class LibraryItemSortMode {
         fun valueOrDefault(string: String?) = try {
             valueOf(string ?: "")
         } catch (e: Exception) {
-            defaultValue
+            DEFAULT
         }
     }
 }
@@ -101,21 +101,23 @@ enum class LibraryItemSortMode {
 enum class LibraryFolderSortMode {
     DATE_ADDED,
     LAST_MODIFIED,
+    NAME,
     CUSTOM;
 
     companion object {
-        val defaultValue = DATE_ADDED
+        val DEFAULT = DATE_ADDED
 
         fun toString(sortMode: LibraryFolderSortMode) = when (sortMode) {
             DATE_ADDED -> "Date added"
             LAST_MODIFIED -> "Last modified"
+            NAME -> "Name"
             CUSTOM -> "Custom"
         }
 
         fun valueOrDefault(string: String?) = try {
             valueOf(string ?: "")
         } catch (e: Exception) {
-            defaultValue
+            DEFAULT
         }
     }
 }

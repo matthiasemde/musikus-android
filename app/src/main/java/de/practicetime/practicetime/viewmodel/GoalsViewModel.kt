@@ -35,7 +35,7 @@ class GoalsViewModel(
     private val database = PTDatabase.getInstance(application)
 
     /** Repositories */
-    private val libraryRepository = LibraryRepository("GoalsViewModel", database)
+    private val libraryRepository = LibraryRepository(database)
     private val goalsRepository = GoalsRepository(database)
     private val userPreferencesRepository = UserPreferencesRepository(application.dataStore, application)
 

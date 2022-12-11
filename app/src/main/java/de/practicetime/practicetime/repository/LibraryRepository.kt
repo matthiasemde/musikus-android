@@ -17,14 +17,13 @@ import de.practicetime.practicetime.datastore.SortDirection
 import java.util.*
 
 class LibraryRepository(
-    from: String,
     database: PTDatabase
 ) {
     private val itemDao = database.libraryItemDao
     private val folderDao = database.libraryFolderDao
 
-    val items = itemDao.getAllAsFlow(from)
-    val folders = folderDao.getAllAsFlow(from)
+    val items = itemDao.get(activeOnly = true)
+    val folders = folderDao.getAllAsFlow()
 
 
     /** Mutators */
@@ -79,13 +78,12 @@ class LibraryRepository(
         folders: List<LibraryFolder>,
         mode: LibraryFolderSortMode,
         direction: SortDirection,
-    ) =
-
-    when (direction) {
+    ) = when (direction) {
         SortDirection.ASCENDING -> {
             when (mode) {
                 LibraryFolderSortMode.DATE_ADDED -> folders.sortedBy { it.createdAt }
                 LibraryFolderSortMode.LAST_MODIFIED -> folders.sortedBy { it.modifiedAt }
+                LibraryFolderSortMode.NAME -> folders.sortedBy { it.name }
                 LibraryFolderSortMode.CUSTOM -> folders // TODO
             }
         }
@@ -93,6 +91,7 @@ class LibraryRepository(
             when (mode) {
                 LibraryFolderSortMode.DATE_ADDED -> folders.sortedByDescending { it.createdAt }
                 LibraryFolderSortMode.LAST_MODIFIED -> folders.sortedByDescending { it.modifiedAt }
+                LibraryFolderSortMode.NAME -> folders.sortedByDescending { it.name }
                 LibraryFolderSortMode.CUSTOM -> folders // TODO
             }
         }
@@ -102,27 +101,7 @@ class LibraryRepository(
         items: List<LibraryItem>,
         mode: LibraryItemSortMode,
         direction: SortDirection,
-    ) =
-//        if(mode != null) {
-//            if (mode == itemSortMode.value) {
-//                when (itemSortDirection.value) {
-//                    SortDirection.ASCENDING -> itemSortDirection.value = SortDirection.DESCENDING
-//                    SortDirection.DESCENDING -> itemSortDirection.value = SortDirection.ASCENDING
-//                }
-//            } else {
-//                itemSortDirection.value = SortDirection.ASCENDING
-//                itemSortMode.value = mode
-//                PracticeTime.prefs.edit().putString(
-//                    PracticeTime.PREFERENCES_KEY_LIBRARY_ITEM_SORT_MODE,
-//                    itemSortMode.value.name
-//                ).apply()
-//            }
-//            PracticeTime.prefs.edit().putString(
-//                PracticeTime.PREFERENCES_KEY_LIBRARY_ITEM_SORT_DIRECTION,
-//                itemSortDirection.value.name
-//            ).apply()
-//        }
-    when (direction) {
+    ) = when (direction) {
         SortDirection.ASCENDING -> {
             when (mode) {
                 LibraryItemSortMode.DATE_ADDED -> items.sortedBy { it.createdAt }

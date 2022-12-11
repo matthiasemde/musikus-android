@@ -47,7 +47,7 @@ class   MainViewModel(
 
     /** Repositories */
     private val userPreferencesRepository = UserPreferencesRepository(application.dataStore, application)
-    private val libraryRepository = LibraryRepository("MainViewModel", database)
+    private val libraryRepository = LibraryRepository(database)
 
     private fun prepopulateDatabase() {
         Log.d("MainViewModel", "prepopulateDatabase")

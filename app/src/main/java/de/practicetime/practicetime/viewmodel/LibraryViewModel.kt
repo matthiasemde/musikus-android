@@ -23,7 +23,6 @@ import de.practicetime.practicetime.datastore.SortDirection
 import de.practicetime.practicetime.repository.LibraryRepository
 import de.practicetime.practicetime.repository.UserPreferencesRepository
 import de.practicetime.practicetime.shared.MultiFABState
-import de.practicetime.practicetime.shared.SpinnerState
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.flow.SharingStarted.Companion.WhileSubscribed
 import kotlinx.coroutines.launch
@@ -37,207 +36,125 @@ enum class DialogMode {
     EDIT
 }
 
+data class LibraryFolderEditData(
+    val name: String,
+)
+
+data class LibraryItemEditData(
+    val name: String,
+    val colorIndex: Int,
+    val folderId: UUID?,
+)
+
+data class LibraryTopBarUiState(
+    val title: String,
+    val showBackButton: Boolean,
+)
+
+data class LibraryActionModeUiState(
+    val isActionMode: Boolean,
+    val numberOfSelections: Int,
+)
+
+data class LibraryFoldersUiState(
+    val folders: List<LibraryFolder>,
+    val selectedFolders: Set<LibraryFolder>,
+
+    val showSortMenu: Boolean,
+
+    val sortMode: LibraryFolderSortMode,
+    val sortDirection: SortDirection,
+)
+
+data class LibraryItemsUiState(
+    val items: List<LibraryItem>,
+    val selectedItems: Set<LibraryItem>,
+
+    val showSortMenu: Boolean,
+
+    val sortMode: LibraryItemSortMode,
+    val sortDirection: SortDirection,
+)
+
+data class LibraryContentUiState(
+    val foldersUiState: LibraryFoldersUiState?,
+    val itemsUiState: LibraryItemsUiState?,
+
+    val showHint: Boolean,
+)
+
+data class LibraryFolderDialogUiState(
+    val mode: DialogMode,
+    val folderData: LibraryFolderEditData,
+    val confirmButtonEnabled: Boolean,
+    val folderToEdit: LibraryFolder?,
+)
+
+data class LibraryItemDialogUiState(
+    val mode: DialogMode,
+    val itemData: LibraryItemEditData,
+    val folders : List<LibraryFolder>,
+    val isFolderSelectorExpanded: Boolean,
+    val confirmButtonEnabled: Boolean,
+    val itemToEdit: LibraryItem?,
+)
+
+data class LibraryDialogState(
+    val folderDialogUiState: LibraryFolderDialogUiState?,
+    val itemDialogUiState: LibraryItemDialogUiState?,
+)
+
+data class LibraryFabUiState(
+    val activeFolder: LibraryFolder?,
+)
+
+data class LibraryUiState (
+    val topBarUiState: LibraryTopBarUiState,
+    val actionModeUiState: LibraryActionModeUiState,
+    val contentUiState: LibraryContentUiState,
+    val dialogUiState: LibraryDialogState,
+    val fabUiState: LibraryFabUiState,
+)
+
 class LibraryViewModel(
     application: Application
 ) : AndroidViewModel(application) {
 
-    /** Initialization */
-
     /** Database */
     private val database = PTDatabase.getInstance(application)
 
+
     /** Repositories */
-    private val libraryRepository = LibraryRepository("LibraryViewModel", database)
+    private val libraryRepository = LibraryRepository(database)
     private val userPreferencesRepository = UserPreferencesRepository(application.dataStore, application)
 
-    init {
-        Log.d("LibraryViewModel", "initialized")
-    }
 
-    val userPreferences = userPreferencesRepository.userPreferences.stateIn(
-        scope = viewModelScope,
-        started = WhileSubscribed(5000),
-        initialValue = null
-    )
+    /** Imported flows */
 
-    // Folders
-    val folders = libraryRepository.folders.stateIn(
-        scope = viewModelScope,
-        started = WhileSubscribed(5000),
-        initialValue = listOf()
-    )
+    private val userPreferences = userPreferencesRepository.userPreferences
 
-    val folderSortMode = userPreferencesRepository.userPreferences.map {
-        it.libraryFolderSortMode
-    }.stateIn(
-        scope = viewModelScope,
-        started = WhileSubscribed(5000),
-        initialValue = LibraryFolderSortMode.defaultValue
-    )
-    val folderSortDirection = userPreferencesRepository.userPreferences.map {
-        it.libraryFolderSortDirection
-    }.stateIn(
-        scope = viewModelScope,
-        started = WhileSubscribed(5000),
-        initialValue = SortDirection.defaultValue
-    )
+    private val folders = libraryRepository.folders
 
-    fun onFolderSortModeSelected(sortMode: LibraryFolderSortMode) {
-        showFolderSortModeMenu.value = false
-        viewModelScope.launch {
-            userPreferencesRepository.updateLibraryFolderSortMode(sortMode)
-        }
-    }
+    private val items = libraryRepository.items
 
-    val sortedFolders = folders.combine(userPreferences) { folders, preferences ->
-        if(preferences == null) return@combine folders
-        libraryRepository.sortFolders(
-            folders = folders,
-            mode = preferences.libraryFolderSortMode,
-            direction = preferences.libraryFolderSortDirection
-        )
-    }.stateIn(
-        scope = viewModelScope,
-        started = WhileSubscribed(5000),
-        initialValue = emptyList()
-    )
 
-    // Items
-    private val items = libraryRepository.items.stateIn(
-        scope = viewModelScope,
-        started = WhileSubscribed(5000),
-        initialValue = emptyList()
-    )
-
-    val sortedItems = items.combine(userPreferences) { items, preferences ->
-        if(preferences == null) return@combine items
-        libraryRepository.sortItems(
-            items = items,
-            mode = preferences.libraryItemSortMode,
-            direction = preferences.libraryItemSortDirection
-        )
-    }.stateIn(
-        scope = viewModelScope,
-        started = WhileSubscribed(5000),
-        initialValue = emptyList()
-    )
-
-    val itemSortMode = userPreferencesRepository.userPreferences.map {
-        it.libraryItemSortMode
-    }.stateIn(
-        scope = viewModelScope,
-        started = WhileSubscribed(5000),
-        initialValue = LibraryItemSortMode.defaultValue
-    )
-
-    val itemSortDirection = userPreferencesRepository.userPreferences.map {
-        it.libraryItemSortDirection
-    }.stateIn(
-        scope = viewModelScope,
-        started = WhileSubscribed(5000),
-        initialValue = SortDirection.defaultValue
-    )
-
-    fun onItemSortModeSelected(selection: LibraryItemSortMode) {
-        showItemSortModeMenu.value = false
-        viewModelScope.launch {
-            userPreferencesRepository.updateLibraryItemSortMode(selection)
-        }
-    }
+    /** Own state flows */
 
     // Menu
-    var showFolderSortModeMenu = mutableStateOf(false)
-    var showItemSortModeMenu = mutableStateOf(false)
+    private var _showFolderSortMenu = MutableStateFlow(false)
+    private var _showItemSortMenu = MutableStateFlow(false)
 
-    val activeFolder = mutableStateOf<LibraryFolder?>(null)
+    private val _activeFolder = MutableStateFlow<LibraryFolder?>(null)
 
     // Folder dialog
-    var showFolderDialog = mutableStateOf(false)
-    var editableFolder = mutableStateOf<LibraryFolder?>(null)
-    var folderDialogMode = mutableStateOf(DialogMode.ADD)
-    var folderDialogName = mutableStateOf("")
-
-    fun clearFolderDialog() {
-        showFolderDialog.value = false
-        editableFolder.value = null
-        folderDialogName.value = ""
-    }
+    private val _folderEditData = MutableStateFlow<LibraryFolderEditData?>(null)
+    private val _folderToEdit = MutableStateFlow<LibraryFolder?>(null)
 
     // Item dialog
-    var showItemDialog = mutableStateOf(false)
+    private val _itemEditData = MutableStateFlow<LibraryItemEditData?>(null)
+    private val _itemToEdit = MutableStateFlow<LibraryItem?>(null)
 
-    private var editableItem: LibraryItem? = null
-
-    var itemDialogMode = mutableStateOf(DialogMode.ADD)
-    var itemDialogName = mutableStateOf("")
-    var itemDialogColorIndex = mutableStateOf(0)
-    var itemDialogFolderId = mutableStateOf<UUID?>(null)
-    var itemDialogFolderSelectorExpanded = mutableStateOf(SpinnerState.COLLAPSED)
-
-    fun clearItemDialog() {
-        showItemDialog.value = false
-        editableItem = null
-        itemDialogName.value = ""
-        itemDialogColorIndex.value = 0
-        itemDialogFolderId.value = null
-        itemDialogFolderSelectorExpanded.value = SpinnerState.COLLAPSED
-    }
-
-    fun onItemDialogConfirmed() {
-        viewModelScope.launch {
-            when (itemDialogMode.value) {
-                DialogMode.ADD -> {
-                    libraryRepository.addItem(
-                        LibraryItem(
-                            name = itemDialogName.value,
-                            colorIndex = itemDialogColorIndex.value,
-                            libraryFolderId = itemDialogFolderId.value
-                        )
-                    )
-                }
-                DialogMode.EDIT -> {
-                    editableItem?.let {
-                        libraryRepository.editItem(
-                            item = it,
-                            newName = itemDialogName.value,
-                            newColorIndex = itemDialogColorIndex.value,
-                            newFolderId = itemDialogFolderId.value
-                        )
-                    }
-                }
-            }
-        }
-    }
-
-    fun onFolderDialogConfirmed() {
-        viewModelScope.launch {
-            when (folderDialogMode.value) {
-                DialogMode.ADD -> {
-                    libraryRepository.addFolder(
-                        LibraryFolder(name = folderDialogName.value)
-                    )
-                }
-                DialogMode.EDIT -> {
-                    editableFolder.value?.let {
-                        libraryRepository.editFolder(
-                            folder = it,
-                            newName = folderDialogName.value
-                        )
-                    }
-                }
-            }
-        }
-    }
-
-    // Hint
-    val showHint = folders.combine(items) { folders, items ->
-        Log.d("LibraryViewModel", "showHint: folders = $folders, items = $items")
-        folders.isEmpty() && items.isEmpty()
-    }.stateIn(
-        scope = viewModelScope,
-        started = WhileSubscribed(5000),
-        initialValue = true
-    )
+    private val _isFolderSelectorExpanded = MutableStateFlow(false)
 
     // Multi FAB
     var multiFABState = mutableStateOf(MultiFABState.COLLAPSED)
@@ -245,18 +162,277 @@ class LibraryViewModel(
     // Action mode
 
     private val _selectedFolders = MutableStateFlow<Set<LibraryFolder>>(emptySet())
-    val selectedFolders = _selectedFolders.asStateFlow()
-
     private val _selectedItems = MutableStateFlow<Set<LibraryItem>>(emptySet())
-    val selectedItems = _selectedItems.asStateFlow()
 
-    var actionMode = _selectedFolders.combine(_selectedItems) { selectedFolders, selectedItems ->
-        selectedFolders.isNotEmpty() || selectedItems.isNotEmpty()
+
+    /**
+     * Composing the Ui state
+     */
+    private val topBarUiState = _activeFolder.map { activeFolder ->
+        val title = activeFolder?.name ?: "Library"
+        val showBackButton = activeFolder != null
+
+        LibraryTopBarUiState(
+            title = title,
+            showBackButton = showBackButton,
+        ).also { Log.d("LibraryViewModel", "topBarUiState updated") }
     }.stateIn(
         scope = viewModelScope,
         started = WhileSubscribed(5000),
-        initialValue = false
+        initialValue = LibraryTopBarUiState(
+            title = "Library",
+            showBackButton = false,
+        )
     )
+
+    private val actionModeUiState = combine(
+        _selectedFolders,
+        _selectedItems,
+    ) { selectedFolders, selectedItems ->
+        LibraryActionModeUiState(
+            isActionMode = selectedFolders.isNotEmpty() || selectedItems.isNotEmpty(),
+            numberOfSelections = selectedFolders.size + selectedItems.size,
+        ).also { Log.d("LibraryViewModel", "actionModeUiState updated") }
+    }.stateIn(
+        scope = viewModelScope,
+        started = WhileSubscribed(5000),
+        initialValue = LibraryActionModeUiState(
+            isActionMode = false,
+            numberOfSelections = 0,
+        )
+    )
+
+    private val foldersUiState = combine(
+        folders,
+        _selectedFolders,
+        _showFolderSortMenu,
+        userPreferences,
+    ) { folders, selectedFolders ,showSortMenu, preferences ->
+        if(folders.isEmpty()) return@combine null
+
+        val folderSortMode = preferences.libraryFolderSortMode
+        val folderSortDirection = preferences.libraryFolderSortDirection
+
+        val sortedFolders = libraryRepository.sortFolders(
+            folders = folders,
+            mode = folderSortMode,
+            direction = folderSortDirection
+        )
+
+        LibraryFoldersUiState(
+            folders = sortedFolders,
+            selectedFolders = selectedFolders,
+            showSortMenu = showSortMenu,
+            sortMode = folderSortMode,
+            sortDirection = folderSortDirection,
+        ).also { Log.d("LibraryViewModel", "foldersUiState updated") }
+    }.stateIn(
+        scope = viewModelScope,
+        started = WhileSubscribed(5000),
+        initialValue = null
+    )
+
+    private val itemsUiState = combine(
+        items,
+        _selectedItems,
+        _activeFolder,
+        _showItemSortMenu,
+        userPreferences,
+    ) { items, selectedItems, activeFolder, showSortMenu, preferences ->
+        if(items.isEmpty()) return@combine null
+
+        val itemSortMode = preferences.libraryItemSortMode
+        val itemSortDirection = preferences.libraryItemSortDirection
+
+        val itemsInFolder = items.filter { it.libraryFolderId == activeFolder?.id }
+
+        val itemsInFolderSorted = libraryRepository.sortItems(
+            items = itemsInFolder,
+            mode = itemSortMode,
+            direction = itemSortDirection
+        )
+
+        LibraryItemsUiState(
+            items = itemsInFolderSorted,
+            selectedItems = selectedItems,
+            showSortMenu = showSortMenu,
+            sortMode = itemSortMode,
+            sortDirection = itemSortDirection,
+        ).also { Log.d("LibraryViewModel", "itemsUiState updated") }
+    }.stateIn(
+        scope = viewModelScope,
+        started = WhileSubscribed(5000),
+        initialValue = null
+    )
+
+    private val contentUiState = combine(
+        foldersUiState,
+        _activeFolder.asStateFlow(),
+        itemsUiState,
+    ) { foldersUiState, activeFolder, itemsUiState ->
+        LibraryContentUiState(
+            foldersUiState = if (activeFolder == null) foldersUiState else null,
+            itemsUiState = itemsUiState,
+            showHint = foldersUiState == null && itemsUiState == null,
+        ).also { Log.d("LibraryViewModel", "contentUiState updated") }
+    }.stateIn(
+        scope = viewModelScope,
+        started = WhileSubscribed(5000),
+        initialValue = LibraryContentUiState(
+            foldersUiState = foldersUiState.value,
+            itemsUiState = itemsUiState.value,
+            showHint = true,
+        )
+    )
+
+    private val folderDialogUiState = combine(
+        _folderEditData,
+        _folderToEdit,
+    ) { editData, folderToEdit ->
+        if(editData == null) return@combine null
+        val confirmButtonEnabled = editData.name.isNotBlank()
+
+        LibraryFolderDialogUiState(
+            mode = if (folderToEdit == null) DialogMode.ADD else DialogMode.EDIT,
+            folderData = editData,
+            confirmButtonEnabled = confirmButtonEnabled,
+            folderToEdit = folderToEdit,
+        ).also { Log.d("LibraryViewModel", "folderDialogUiState updated") }
+    }.stateIn(
+        scope = viewModelScope,
+        started = WhileSubscribed(5000),
+        initialValue = null
+    )
+
+    private val itemDialogUiState = combine(
+        _itemEditData,
+        _itemToEdit,
+        folders,
+        _isFolderSelectorExpanded,
+    ) { editData, itemToEdit, folders, isFolderSelectorExpanded ->
+        Log.d("LibraryViewModel", "itemDialogUiState: $editData")
+        if(editData == null) return@combine null
+        val confirmButtonEnabled = editData.name.isNotBlank()
+
+        LibraryItemDialogUiState(
+            mode = if (itemToEdit == null) DialogMode.ADD else DialogMode.EDIT,
+            itemData = editData,
+            folders = folders,
+            isFolderSelectorExpanded = isFolderSelectorExpanded,
+            confirmButtonEnabled = confirmButtonEnabled,
+            itemToEdit = itemToEdit,
+        ).also {
+            Log.d("LibraryViewModel", "itemDialogUiState updated")
+        }
+    }.stateIn(
+        scope = viewModelScope,
+        started = WhileSubscribed(5000),
+        initialValue = null
+    )
+
+    private val dialogUiState = combine(
+        folderDialogUiState,
+        itemDialogUiState,
+    ) { folderDialogUiState, itemDialogUiState ->
+        assert (folderDialogUiState == null || itemDialogUiState == null)
+        LibraryDialogState(
+            folderDialogUiState = folderDialogUiState,
+            itemDialogUiState = itemDialogUiState,
+        ).also {
+            Log.d("LibraryViewModel", "dialogUiState updated $it")
+        }
+    }.stateIn(
+        scope = viewModelScope,
+        started = WhileSubscribed(5000),
+        initialValue = LibraryDialogState(
+            folderDialogUiState = folderDialogUiState.value,
+            itemDialogUiState = itemDialogUiState.value,
+        )
+    )
+
+    private val fabUiState = _activeFolder.map { activeFolder ->
+        LibraryFabUiState(
+            activeFolder = activeFolder,
+        ).also {
+            Log.d("LibraryViewModel", "fabUiState updated")
+        }
+    }.stateIn(
+        scope = viewModelScope,
+        started = WhileSubscribed(5000),
+        initialValue = LibraryFabUiState(
+            activeFolder = null,
+        )
+    )
+
+    val libraryUiState = combine(
+        topBarUiState,
+        actionModeUiState,
+        contentUiState,
+        dialogUiState,
+        fabUiState,
+    ) { topBarUiState, actionModeUiState, contentUiState, dialogUiState, fabUiState ->
+        LibraryUiState(
+            topBarUiState = topBarUiState,
+            actionModeUiState = actionModeUiState,
+            contentUiState = contentUiState,
+            dialogUiState = dialogUiState,
+            fabUiState = fabUiState,
+        ).also {
+            Log.d("LibraryViewModel", "UiState updated")
+        }
+    }.stateIn(
+        scope = viewModelScope,
+        started = WhileSubscribed(5000),
+        initialValue = LibraryUiState(
+            topBarUiState = topBarUiState.value,
+            actionModeUiState = actionModeUiState.value,
+            contentUiState = contentUiState.value,
+            dialogUiState = dialogUiState.value,
+            fabUiState = fabUiState.value,
+        )
+    )
+
+    /**
+     * Mutators
+     */
+
+    fun onTopBarBackPressed() {
+        _activeFolder.update { null }
+    }
+
+    fun onItemDialogConfirmed() {
+        viewModelScope.launch {
+            val itemData = _itemEditData.value ?: return@launch
+            _itemToEdit.value?.let {
+                libraryRepository.editItem(
+                    item = it,
+                    newName = itemData.name,
+                    newColorIndex = itemData.colorIndex,
+                    newFolderId = itemData.folderId
+                )
+            } ?: libraryRepository.addItem(
+                LibraryItem(
+                    name = itemData.name,
+                    colorIndex = itemData.colorIndex,
+                    libraryFolderId = itemData.folderId
+                )
+            )
+        }
+    }
+
+    fun onFolderDialogConfirmed() {
+        viewModelScope.launch {
+            val folderData = _folderEditData.value ?: return@launch
+            _folderToEdit.value?.let {
+                libraryRepository.editFolder(
+                    folder = it,
+                    newName = folderData.name
+                )
+            } ?: libraryRepository.addFolder(
+                LibraryFolder(name = folderData.name)
+            )
+        }
+    }
 
     fun onFolderClicked(
         folder: LibraryFolder,
@@ -268,8 +444,8 @@ class LibraryViewModel(
         }
 
         // Short Click
-        if(!actionMode.value) {
-            activeFolder.value = folder
+        if(!libraryUiState.value.actionModeUiState.isActionMode) {
+            _activeFolder.value = folder
         } else {
             if(_selectedFolders.value.contains(folder)) {
                 _selectedFolders.update { it - folder }
@@ -277,6 +453,10 @@ class LibraryViewModel(
                 _selectedFolders.update { it + folder }
             }
         }
+    }
+
+    fun onFolderSortMenuChanged(show: Boolean) {
+        _showFolderSortMenu.update { show }
     }
 
     fun onItemClicked(
@@ -289,13 +469,15 @@ class LibraryViewModel(
         }
 
         // Short Click
-        if(!actionMode.value) {
-            editableItem = item
-            itemDialogMode.value = DialogMode.EDIT
-            itemDialogName.value = item.name
-            itemDialogColorIndex.value = item.colorIndex
-            itemDialogFolderId.value = item.libraryFolderId
-            showItemDialog.value = true
+        if(!libraryUiState.value.actionModeUiState.isActionMode) {
+            _itemToEdit.update { item }
+            _itemEditData.update {
+                LibraryItemEditData(
+                    name = item.name,
+                    colorIndex = item.colorIndex,
+                    folderId = item.libraryFolderId
+                )
+            }
         } else {
             if(_selectedItems.value.contains(item)) {
                 _selectedItems.update { it - item }
@@ -303,6 +485,10 @@ class LibraryViewModel(
                 _selectedItems.update { it + item }
             }
         }
+    }
+
+    fun onItemSortMenuChanged(show: Boolean) {
+        _showItemSortMenu.update { show }
     }
 
     fun onDeleteAction() {
@@ -315,24 +501,93 @@ class LibraryViewModel(
 
     fun onEditAction() {
 //        assert(_selectedFolders.value.size + _selectedItems.value.size == 1) // TODO: DO we need this?
-        _selectedFolders.value.firstOrNull()?.let {
-            editableFolder.value = it
-            folderDialogMode.value = DialogMode.EDIT
-            folderDialogName.value = it.name
-            showFolderDialog.value = true
-        } ?: _selectedItems.value.firstOrNull()?.let {
-            editableItem = it
-            itemDialogMode.value = DialogMode.EDIT
-            itemDialogName.value = it.name
-            itemDialogColorIndex.value = it.colorIndex
-            itemDialogFolderId.value = it.libraryFolderId
-            showItemDialog.value = true
+        _selectedFolders.value.firstOrNull()?.let { folderToEdit ->
+            _folderToEdit.update { folderToEdit }
+            _folderEditData.update {
+                LibraryFolderEditData(
+                    name = folderToEdit.name
+                )
+            }
+        } ?: _selectedItems.value.firstOrNull()?.let { itemToEdit ->
+            _itemToEdit.update { itemToEdit }
+            _itemEditData.update {
+                LibraryItemEditData(
+                    name = itemToEdit.name,
+                    colorIndex = itemToEdit.colorIndex,
+                    folderId = itemToEdit.libraryFolderId
+                )
+            }
         }
         clearActionMode()
+    }
+
+    fun showFolderDialog() {
+        _folderEditData.update {
+            LibraryFolderEditData(
+                name = ""
+            )
+        }
+    }
+
+    fun showItemDialog(folderId: UUID? = null) {
+        _itemEditData.update {
+            LibraryItemEditData(
+                name = "",
+                colorIndex = (Math.random() * 10).toInt(),
+                folderId = folderId
+            )
+        }
+        Log.d("LibraryViewModel", "showItemDialog: ${_itemEditData.value}")
+    }
+
+    fun onFolderDialogNameChanged(newName: String) {
+        _folderEditData.update { it?.copy(name = newName) }
+    }
+
+    fun onItemDialogNameChanged(newName: String) {
+        _itemEditData.update { it?.copy(name = newName) }
+    }
+
+    fun onItemDialogColorIndexChanged(newColorIndex: Int) {
+        _itemEditData.update { it?.copy(colorIndex = newColorIndex) }
+    }
+
+    fun onItemDialogFolderIdChanged(newFolderId: UUID?) {
+        _itemEditData.update { it?.copy(folderId = newFolderId) }
+        _isFolderSelectorExpanded.update { false }
+    }
+
+    fun onIsFolderSelectorExpandedChanged(isExpanded: Boolean) {
+        _isFolderSelectorExpanded.update { isExpanded }
+    }
+
+    fun clearFolderDialog() {
+        _folderToEdit.update { null }
+        _folderEditData.update { null }
+    }
+
+    fun clearItemDialog() {
+        _itemToEdit.update { null }
+        _itemEditData.update { null }
+        _isFolderSelectorExpanded.update { false }
     }
 
     fun clearActionMode() {
         _selectedItems.update { emptySet() }
         _selectedFolders.update { emptySet() }
+    }
+
+    fun onFolderSortModeSelected(sortMode: LibraryFolderSortMode) {
+        _showFolderSortMenu.update { false }
+        viewModelScope.launch {
+            userPreferencesRepository.updateLibraryFolderSortMode(sortMode)
+        }
+    }
+
+    fun onItemSortModeSelected(selection: LibraryItemSortMode) {
+        _showItemSortMenu.update { false }
+        viewModelScope.launch {
+            userPreferencesRepository.updateLibraryItemSortMode(selection)
+        }
     }
 }

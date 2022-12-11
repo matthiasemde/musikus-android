@@ -62,6 +62,7 @@ import de.practicetime.practicetime.utils.TIME_FORMAT_HMS_DIGITAL
 import de.practicetime.practicetime.utils.TIME_FORMAT_MS_DIGITAL
 import de.practicetime.practicetime.utils.getCurrTimestamp
 import de.practicetime.practicetime.utils.getDurationString
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.IOException
@@ -217,7 +218,7 @@ class ActiveSessionActivity : AppCompatActivity() {
 
         // load all active libraryItems from the database and notify the adapter
         lifecycleScope.launch {
-            PTDatabase.getInstance(applicationContext).libraryItemDao.get(activeOnly = true).let { activeLibraryItems.addAll(it.reversed())
+            PTDatabase.getInstance(applicationContext).libraryItemDao.get(activeOnly = true).first().let { activeLibraryItems.addAll(it.reversed())
                 libraryItemAdapter.notifyItemRangeInserted(0, it.size)
             }
             libraryItemList.apply {

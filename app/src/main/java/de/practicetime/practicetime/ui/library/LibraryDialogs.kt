@@ -28,8 +28,9 @@ import de.practicetime.practicetime.R
 import de.practicetime.practicetime.database.entities.LibraryFolder
 import de.practicetime.practicetime.shared.DialogHeader
 import de.practicetime.practicetime.shared.SelectionSpinner
-import de.practicetime.practicetime.shared.SpinnerState
 import de.practicetime.practicetime.viewmodel.DialogMode
+import de.practicetime.practicetime.viewmodel.LibraryFolderEditData
+import de.practicetime.practicetime.viewmodel.LibraryItemEditData
 import java.util.*
 
 
@@ -37,11 +38,12 @@ import java.util.*
 @Composable
 fun LibraryFolderDialog(
     mode: DialogMode,
-    folderName: String,
+    folderData: LibraryFolderEditData,
     onFolderNameChange: (String) -> Unit,
-    onDismissHandler: (Boolean) -> Unit, // true if folder was created
+    onConfirmHandler: () -> Unit,
+    onDismissHandler: () -> Unit,
 ) {
-    Dialog(onDismissRequest = { onDismissHandler(false) }) {
+    Dialog(onDismissRequest = onDismissHandler) {
         Column(
             modifier = Modifier
                 .clip(MaterialTheme.shapes.extraLarge)
@@ -55,7 +57,7 @@ fun LibraryFolderDialog(
             Column {
                 OutlinedTextField(
                     modifier = Modifier.padding(horizontal = 24.dp),
-                    value = folderName, onValueChange = onFolderNameChange,
+                    value = folderData.name, onValueChange = onFolderNameChange,
                     label = { Text(text = "Folder name") },
                     singleLine = true,
                 )
@@ -66,7 +68,7 @@ fun LibraryFolderDialog(
                     horizontalArrangement = Arrangement.End
                 ) {
                     TextButton(
-                        onClick = { onDismissHandler(false) },
+                        onClick = onDismissHandler,
                         colors = ButtonDefaults.textButtonColors(
                             contentColor = MaterialTheme.colorScheme.primary
                         )
@@ -74,8 +76,8 @@ fun LibraryFolderDialog(
                         Text(text = "Cancel")
                     }
                     TextButton(
-                        onClick = { onDismissHandler(true) },
-                        enabled = folderName.isNotEmpty(),
+                        onClick = onConfirmHandler,
+                        enabled = folderData.name.isNotEmpty(),
                         colors = ButtonDefaults.textButtonColors(
                             contentColor = MaterialTheme.colorScheme.primary
                         )
@@ -96,17 +98,16 @@ fun LibraryFolderDialog(
 fun LibraryItemDialog(
     mode: DialogMode,
     folders: List<LibraryFolder>,
-    name: String,
-    colorIndex: Int,
-    folderId: UUID?,
-    folderSelectorExpanded: SpinnerState,
+    itemData: LibraryItemEditData,
+    isFolderSelectorExpanded: Boolean,
     onNameChange: (String) -> Unit,
     onColorIndexChange: (Int) -> Unit,
     onFolderIdChange: (UUID?) -> Unit,
-    onFolderSelectorExpandedChange: (SpinnerState) -> Unit,
-    onDismissHandler: (Boolean) -> Unit, // true if dialog was canceled
+    onIsFolderSelectorExpandedChange: (Boolean) -> Unit,
+    onConfirmHandler: () -> Unit,
+    onDismissHandler: () -> Unit,
 ) {
-    Dialog(onDismissRequest = { onDismissHandler(true) }) {
+    Dialog(onDismissRequest = onDismissHandler) {
         Column(
             modifier = Modifier
                 .clip(MaterialTheme.shapes.extraLarge)
@@ -119,7 +120,7 @@ fun LibraryItemDialog(
             Column {
                 OutlinedTextField(
                     modifier = Modifier.padding(horizontal = 24.dp),
-                    value = name,
+                    value = itemData.name,
                     onValueChange = onNameChange,
                     leadingIcon = {
                         Icon(
@@ -136,7 +137,7 @@ fun LibraryItemDialog(
                         modifier = Modifier
                             .padding(top = 16.dp)
                             .padding(horizontal = 24.dp),
-                        state = folderSelectorExpanded,
+                        isExpanded = isFolderSelectorExpanded,
                         label = { Text(text = "Folder") },
                         leadingIcon = {
                             Icon(
@@ -146,9 +147,9 @@ fun LibraryItemDialog(
                             )
                         },
                         options = folders.map { folder -> Pair(folder.id, folder.name) },
-                        selected = folderId,
+                        selected = itemData.folderId,
                         defaultOption = "No folder",
-                        onStateChange = onFolderSelectorExpandedChange,
+                        onIsExpandedChange = onIsFolderSelectorExpandedChange,
                         onSelectedChange = onFolderIdChange,
                     )
                 }
@@ -166,7 +167,7 @@ fun LibraryItemDialog(
                             for (j in 0..1) {
                                 ColorSelectRadioButton(
                                     color = Color(PracticeTime.getLibraryItemColors(LocalContext.current)[2*i+j]),
-                                    selected = colorIndex == 2*i+j,
+                                    selected = itemData.colorIndex == 2*i+j,
                                     onClick = { onColorIndexChange(2*i+j) }
                                 )
                             }
@@ -180,7 +181,7 @@ fun LibraryItemDialog(
                     horizontalArrangement = Arrangement.End
                 ) {
                     TextButton(
-                        onClick = { onDismissHandler(true) },
+                        onClick = onDismissHandler,
                         colors = ButtonDefaults.textButtonColors(
                             contentColor = MaterialTheme.colorScheme.primary
                         )
@@ -188,8 +189,8 @@ fun LibraryItemDialog(
                         Text(text = "Cancel")
                     }
                     TextButton(
-                        onClick = { onDismissHandler(false) },
-                        enabled = name.isNotEmpty(),
+                        onClick = onConfirmHandler,
+                        enabled = itemData.name.isNotEmpty(),
                         colors = ButtonDefaults.textButtonColors(
                             contentColor = MaterialTheme.colorScheme.primary
                         )
