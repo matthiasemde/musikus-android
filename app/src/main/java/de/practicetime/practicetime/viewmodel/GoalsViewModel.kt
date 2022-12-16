@@ -37,7 +37,7 @@ class GoalsViewModel(
     /** Repositories */
     private val libraryRepository = LibraryRepository(database)
     private val goalsRepository = GoalsRepository(database)
-    private val userPreferencesRepository = UserPreferencesRepository(application.dataStore, application)
+    private val userPreferencesRepository = UserPreferencesRepository(application.dataStore)
 
     init {
         viewModelScope.launch {

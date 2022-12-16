@@ -12,7 +12,6 @@
 
 package de.practicetime.practicetime.ui.library
 
-import android.util.Log
 import android.view.*
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -43,7 +42,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
-import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
@@ -80,38 +78,9 @@ fun Library(
     mainViewModel: MainViewModel,
     libraryViewModel: LibraryViewModel = viewModel()
 ) {
-    Log.d("Library", "${LocalViewModelStoreOwner.current}")
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
     val libraryUiState by libraryViewModel.libraryUiState.collectAsState()
-
-//    LaunchedEffect(true) {
-//        libraryViewModel.flowState.collect {
-//            Log.d("TEST", "flowState: $it")
-//        }
-//    }
-//    LaunchedEffect(true) {
-//        libraryViewModel.testFlow.collect {
-//            Log.d("TEST", "testFlow: $it")
-//        }
-//    }
-//    LaunchedEffect(true) {
-//        libraryViewModel.dialogUiState.collect {
-//            Log.d("TEST", "dialogUiStata: $it")
-//        }
-//    }
-//    LaunchedEffect(true) {
-//        libraryViewModel.itemDialogUiState.collect {
-//            Log.d("TEST", "itemDialogUiStata: $it")
-//        }
-//    }
-
-//    LaunchedEffect(true) {
-//        while(true) {
-//            Log.d("TEST", "${libraryUiState.dialogUiState.itemDialogUiState} | ${libraryViewModel.itemEditData.value}")
-//            delay(1000)
-//        }
-//    }
 
     Scaffold(
         contentWindowInsets = WindowInsets(bottom = 0.dp), // makes sure FAB is not shifted up
@@ -351,11 +320,12 @@ fun LibraryContent(
                         modifier = Modifier.padding(8.dp),
                         text = "Folders", style = MaterialTheme.typography.titleLarge
                     )
+                    val sortMenuUiState = foldersUiState.sortMenuUiState
                     SortMenu(
-                        show = foldersUiState.showSortMenu,
+                        show = sortMenuUiState.show,
                         sortModes = LibraryFolderSortMode.values().toList(),
-                        currentSortMode = foldersUiState.sortMode,
-                        currentSortDirection = foldersUiState.sortDirection,
+                        currentSortMode = sortMenuUiState.mode,
+                        currentSortDirection = sortMenuUiState.direction,
                         label = { LibraryFolderSortMode.toString(it) },
                         onShowMenuChanged = onShowFolderSortMenuChange,
                         onSelectionHandler = onFolderSortModeSelected
@@ -407,11 +377,12 @@ fun LibraryContent(
                         text = "Items",
                         style = MaterialTheme.typography.titleLarge
                     )
+                    val sortMenuUiState = itemsUiState.sortMenuUiState
                     SortMenu(
-                        show = itemsUiState.showSortMenu,
+                        show = sortMenuUiState.show,
                         sortModes = LibraryItemSortMode.values().toList(),
-                        currentSortMode = itemsUiState.sortMode,
-                        currentSortDirection = itemsUiState.sortDirection,
+                        currentSortMode = sortMenuUiState.mode,
+                        currentSortDirection = sortMenuUiState.direction,
                         label = { LibraryItemSortMode.toString(it) },
                         onShowMenuChanged = onShowItemSortMenuChange,
                         onSelectionHandler = onItemSortModeSelected

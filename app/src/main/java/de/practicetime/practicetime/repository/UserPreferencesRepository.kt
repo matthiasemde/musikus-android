@@ -8,7 +8,6 @@
 
 package de.practicetime.practicetime.repository
 
-import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
@@ -31,7 +30,6 @@ object PreferenceKeys {
 
 class UserPreferencesRepository(
     private val dataStore: DataStore<Preferences>,
-    context: Context
 ) {
     val userPreferences = dataStore.data.map { preferences ->
         UserPreferences(

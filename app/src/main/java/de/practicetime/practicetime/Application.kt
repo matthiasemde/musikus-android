@@ -162,7 +162,7 @@ class PracticeTime : Application() {
 
         prefs = getSharedPreferences(getString(R.string.filename_shared_preferences), Context.MODE_PRIVATE)
 
-        val userPreferencesRepository = UserPreferencesRepository(dataStore, applicationContext)
+        val userPreferencesRepository = UserPreferencesRepository(dataStore)
 
         MainScope().launch {
             userPreferencesRepository.userPreferences.map { preferences ->

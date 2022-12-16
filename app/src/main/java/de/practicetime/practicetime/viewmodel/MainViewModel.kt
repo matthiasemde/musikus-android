@@ -46,7 +46,7 @@ class   MainViewModel(
     private val database = PTDatabase.getInstance(application, ::prepopulateDatabase)
 
     /** Repositories */
-    private val userPreferencesRepository = UserPreferencesRepository(application.dataStore, application)
+    private val userPreferencesRepository = UserPreferencesRepository(application.dataStore)
     private val libraryRepository = LibraryRepository(database)
 
     private fun prepopulateDatabase() {

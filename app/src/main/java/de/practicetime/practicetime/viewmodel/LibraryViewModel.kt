@@ -40,6 +40,11 @@ data class LibraryFolderEditData(
     val name: String,
 )
 
+data class LibraryFolderWithItemCount(
+    val folder: LibraryFolder,
+    val itemCount: Int,
+)
+
 data class LibraryItemEditData(
     val name: String,
     val colorIndex: Int,
@@ -56,29 +61,32 @@ data class LibraryActionModeUiState(
     val numberOfSelections: Int,
 )
 
-data class LibraryFolderWithItemCount(
-    val folder: LibraryFolder,
-    val itemCount: Int,
+data class LibraryFoldersSortMenuUiState(
+    val show: Boolean,
+
+    val mode: LibraryFolderSortMode,
+    val direction: SortDirection,
 )
 
 data class LibraryFoldersUiState(
     val foldersWithItemCount: List<LibraryFolderWithItemCount>,
     val selectedFolders: Set<LibraryFolder>,
 
-    val showSortMenu: Boolean,
+    val sortMenuUiState: LibraryFoldersSortMenuUiState
+)
 
-    val sortMode: LibraryFolderSortMode,
-    val sortDirection: SortDirection,
+data class LibraryItemsSortMenuUiState(
+    val show: Boolean,
+
+    val mode: LibraryItemSortMode,
+    val direction: SortDirection,
 )
 
 data class LibraryItemsUiState(
     val items: List<LibraryItem>,
     val selectedItems: Set<LibraryItem>,
 
-    val showSortMenu: Boolean,
-
-    val sortMode: LibraryItemSortMode,
-    val sortDirection: SortDirection,
+    val sortMenuUiState: LibraryItemsSortMenuUiState
 )
 
 data class LibraryContentUiState(
@@ -131,16 +139,72 @@ class LibraryViewModel(
 
     /** Repositories */
     private val libraryRepository = LibraryRepository(database)
-    private val userPreferencesRepository = UserPreferencesRepository(application.dataStore, application)
+    private val userPreferencesRepository = UserPreferencesRepository(application.dataStore)
 
 
     /** Imported flows */
 
-    private val userPreferences = userPreferencesRepository.userPreferences
+    private val foldersSortMode = userPreferencesRepository.userPreferences.map {
+      it.libraryFolderSortMode
+    }.stateIn(
+        scope = viewModelScope,
+        started = WhileSubscribed(5000),
+        initialValue = LibraryFolderSortMode.DEFAULT
+    )
 
-    private val folders = libraryRepository.folders
+    private val foldersSortDirection = userPreferencesRepository.userPreferences.map {
+      it.libraryFolderSortDirection
+    }.stateIn(
+        scope = viewModelScope,
+        started = WhileSubscribed(5000),
+        initialValue = SortDirection.DEFAULT
+    )
+
+    private val itemsSortMode = userPreferencesRepository.userPreferences.map {
+      it.libraryItemSortMode
+    }.stateIn(
+        scope = viewModelScope,
+        started = WhileSubscribed(5000),
+        initialValue = LibraryItemSortMode.DEFAULT
+    )
+
+    private val itemsSortDirection = userPreferencesRepository.userPreferences.map {
+      it.libraryItemSortDirection
+    }.stateIn(
+        scope = viewModelScope,
+        started = WhileSubscribed(5000),
+        initialValue = SortDirection.DEFAULT
+    )
+
+    private val folders = libraryRepository.folders.stateIn(
+        scope = viewModelScope,
+        started = WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
 
     private val items = libraryRepository.items
+
+    private val sortedFoldersWithItemCount = combine(
+        folders,
+        foldersSortMode,
+        foldersSortDirection,
+        items
+    ) { folders, sortMode, sortDirection, items ->
+        val sortedFolders = libraryRepository.sortFolders(
+            folders = folders,
+            mode = sortMode,
+            direction = sortDirection
+        )
+
+        sortedFolders.map { folder ->
+            val itemCount = items.count { it.libraryFolderId == folder.id }
+            LibraryFolderWithItemCount(folder, itemCount)
+        }
+    }.stateIn(
+        scope = viewModelScope,
+        started = WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
 
 
     /** Own state flows */
@@ -168,6 +232,35 @@ class LibraryViewModel(
     private val _selectedFolders = MutableStateFlow<Set<LibraryFolder>>(emptySet())
     private val _selectedItems = MutableStateFlow<Set<LibraryItem>>(emptySet())
 
+
+    /** Combining imported and own flows */
+
+    private val sortedItems = combine(
+        items,
+        itemsSortMode,
+        itemsSortDirection
+    ) { items, sortMode, sortDirection ->
+        libraryRepository.sortItems(
+            items = items,
+            mode = sortMode,
+            direction = sortDirection
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
+
+    private val sortedItemsInActiveFolder = combine(
+        sortedItems,
+        _activeFolder,
+    ) { sortedItems, activeFolder ->
+        sortedItems.filter { it.libraryFolderId == activeFolder?.id }
+    }.stateIn(
+        scope = viewModelScope,
+        started = WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
 
     /**
      * Composing the Ui state
@@ -206,35 +299,37 @@ class LibraryViewModel(
         )
     )
 
-    private val foldersUiState = combine(
-        folders,
-        items,
-        _selectedFolders,
+    private val foldersSortMenuUiState = combine(
         _showFolderSortMenu,
-        userPreferences,
-    ) { folders, items, selectedFolders ,showSortMenu, preferences ->
-        if(folders.isEmpty()) return@combine null
-
-        val folderSortMode = preferences.libraryFolderSortMode
-        val folderSortDirection = preferences.libraryFolderSortDirection
-
-        val sortedFolders = libraryRepository.sortFolders(
-            folders = folders,
-            mode = folderSortMode,
-            direction = folderSortDirection
+        foldersSortMode,
+        foldersSortDirection,
+    ) { showMenu, sortMode, sortDirection ->
+        LibraryFoldersSortMenuUiState(
+            show = showMenu,
+            mode = sortMode,
+            direction = sortDirection,
+        ).also { Log.d("LibraryViewModel", "foldersSortMenuUiState updated") }
+    }.stateIn(
+        scope = viewModelScope,
+        started = WhileSubscribed(5000),
+        initialValue = LibraryFoldersSortMenuUiState(
+            show = false,
+            mode = LibraryFolderSortMode.DEFAULT,
+            direction = SortDirection.DEFAULT,
         )
+    )
 
-        val sortedFoldersWithItemCount = sortedFolders.map { folder ->
-            val itemCount = items.count { it.libraryFolderId == folder.id }
-            LibraryFolderWithItemCount(folder, itemCount)
-        }
+    private val foldersUiState = combine(
+        sortedFoldersWithItemCount,
+        _selectedFolders,
+        foldersSortMenuUiState,
+    ) { sortedFoldersWithItemCount, selectedFolders, sortMenuUiState ->
+        if(sortedFoldersWithItemCount.isEmpty()) return@combine null
 
         LibraryFoldersUiState(
             foldersWithItemCount = sortedFoldersWithItemCount,
             selectedFolders = selectedFolders,
-            showSortMenu = showSortMenu,
-            sortMode = folderSortMode,
-            sortDirection = folderSortDirection,
+            sortMenuUiState = sortMenuUiState,
         ).also { Log.d("LibraryViewModel", "foldersUiState updated") }
     }.stateIn(
         scope = viewModelScope,
@@ -242,31 +337,37 @@ class LibraryViewModel(
         initialValue = null
     )
 
-    private val itemsUiState = combine(
-        items,
-        _selectedItems,
-        _activeFolder,
+    private val itemsSortMenuUiState = combine(
         _showItemSortMenu,
-        userPreferences,
-    ) { items, selectedItems, activeFolder, showSortMenu, preferences ->
-        val itemsInFolder = items.filter { it.libraryFolderId == activeFolder?.id }
-        if(itemsInFolder.isEmpty()) return@combine null
-
-        val itemSortMode = preferences.libraryItemSortMode
-        val itemSortDirection = preferences.libraryItemSortDirection
-
-        val itemsInFolderSorted = libraryRepository.sortItems(
-            items = itemsInFolder,
-            mode = itemSortMode,
-            direction = itemSortDirection
+        itemsSortMode,
+        itemsSortDirection,
+    ) { showMenu, sortMode, sortDirection ->
+        LibraryItemsSortMenuUiState(
+            show = showMenu,
+            mode = sortMode,
+            direction = sortDirection,
+        ).also { Log.d("LibraryViewModel", "itemsSortMenuUiState updated") }
+    }.stateIn(
+        scope = viewModelScope,
+        started = WhileSubscribed(5000),
+        initialValue = LibraryItemsSortMenuUiState(
+            show = false,
+            mode = LibraryItemSortMode.DEFAULT,
+            direction = SortDirection.DEFAULT,
         )
+    )
+
+    private val itemsUiState = combine(
+        sortedItemsInActiveFolder,
+        _selectedItems,
+        itemsSortMenuUiState,
+    ) { sortedItemsInActiveFolder, selectedItems, sortMenuUiState ->
+        if(sortedItemsInActiveFolder.isEmpty()) return@combine null
 
         LibraryItemsUiState(
-            items = itemsInFolderSorted,
+            items = sortedItemsInActiveFolder,
             selectedItems = selectedItems,
-            showSortMenu = showSortMenu,
-            sortMode = itemSortMode,
-            sortDirection = itemSortDirection,
+            sortMenuUiState = sortMenuUiState,
         ).also { Log.d("LibraryViewModel", "itemsUiState updated") }
     }.stateIn(
         scope = viewModelScope,
@@ -276,7 +377,7 @@ class LibraryViewModel(
 
     private val contentUiState = combine(
         foldersUiState,
-        _activeFolder.asStateFlow(),
+        _activeFolder,
         itemsUiState,
     ) { foldersUiState, activeFolder, itemsUiState ->
         LibraryContentUiState(
@@ -319,7 +420,6 @@ class LibraryViewModel(
         folders,
         _isFolderSelectorExpanded,
     ) { editData, itemToEdit, folders, isFolderSelectorExpanded ->
-        Log.d("LibraryViewModel", "itemDialogUiState: $editData")
         if(editData == null) return@combine null
         val confirmButtonEnabled = editData.name.isNotBlank()
 
@@ -348,7 +448,7 @@ class LibraryViewModel(
             folderDialogUiState = folderDialogUiState,
             itemDialogUiState = itemDialogUiState,
         ).also {
-            Log.d("LibraryViewModel", "dialogUiState updated $it")
+            Log.d("LibraryViewModel", "dialogUiState updated")
         }
     }.stateIn(
         scope = viewModelScope,
@@ -420,7 +520,7 @@ class LibraryViewModel(
 
         // Short Click
         if(!libraryUiState.value.actionModeUiState.isActionMode) {
-            _activeFolder.value = folder
+            _activeFolder.update { folder }
         } else {
             if(_selectedFolders.value.contains(folder)) {
                 _selectedFolders.update { it - folder }
@@ -512,7 +612,6 @@ class LibraryViewModel(
                 folderId = folderId
             )
         }
-        Log.d("LibraryViewModel", "showItemDialog: ${_itemEditData.value}")
     }
 
     fun onFolderDialogNameChanged(newName: String) {
