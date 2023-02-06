@@ -28,6 +28,7 @@ import de.practicetime.practicetime.R
 import de.practicetime.practicetime.database.entities.LibraryFolder
 import de.practicetime.practicetime.shared.DialogHeader
 import de.practicetime.practicetime.shared.SelectionSpinner
+import de.practicetime.practicetime.shared.UUIDSelectionSpinnerOption
 import de.practicetime.practicetime.viewmodel.DialogMode
 import de.practicetime.practicetime.viewmodel.LibraryFolderEditData
 import de.practicetime.practicetime.viewmodel.LibraryItemEditData
@@ -146,11 +147,11 @@ fun LibraryItemDialog(
                                 tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                             )
                         },
-                        options = folders.map { folder -> Pair(folder.id, folder.name) },
-                        selected = itemData.folderId,
-                        defaultOption = "No folder",
+                        options = folders.map { folder -> UUIDSelectionSpinnerOption(folder.id, folder.name) },
+                        selected = itemData.folderId?.let { UUIDSelectionSpinnerOption(it, itemData.name) },
+                        specialOption = UUIDSelectionSpinnerOption(null, "No folder"),
                         onIsExpandedChange = onIsFolderSelectorExpandedChange,
-                        onSelectedChange = onFolderIdChange,
+                        onSelectedChange = { onFolderIdChange((it as UUIDSelectionSpinnerOption).id) },
                     )
                 }
                 Row(

@@ -55,7 +55,7 @@ import de.practicetime.practicetime.BuildConfig
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
 import de.practicetime.practicetime.getActivity
-import de.practicetime.practicetime.ui.goals.GoalsFragmentHolder
+import de.practicetime.practicetime.ui.goals.Goals
 import de.practicetime.practicetime.ui.goals.ProgressUpdate
 import de.practicetime.practicetime.ui.library.Library
 import de.practicetime.practicetime.ui.sessionlist.SessionListFragmentHolder
@@ -266,7 +266,7 @@ class MainActivity : AppCompatActivity() {
                         ) { SessionListFragmentHolder(mainViewModel, getActivity()) }
                         composable(
                             route = Screen.Goals.route,
-                        ) { GoalsFragmentHolder(mainViewModel) }
+                        ) { Goals(mainViewModel) }
                         composable(
                             route = Screen.Statistics.route,
                         ) { StatisticsFragmentHolder() }

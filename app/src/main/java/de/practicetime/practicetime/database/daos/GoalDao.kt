@@ -112,9 +112,9 @@ abstract class GoalDescriptionDao(
             instance.renewed = false
             database.goalInstanceDao.update(instance)
         } else {
-            database.goalInstanceDao.insertWithProgress(
-                description.createInstance(Calendar.getInstance(), instance.target)
-            )
+//            database.goalInstanceDao.insertWithProgress(
+//                description.createInstance(Calendar.getInstance(), instance.target)
+//            )
         }
     }
 
@@ -220,23 +220,23 @@ abstract class GoalInstanceDao(
      * @Insert
      */
 
-    @Transaction
-    open suspend fun insertWithProgress(
-        goalInstance: GoalInstance
-    ){
-        database.sessionDao.getSessionsContainingSectionFromTimeFrame(
-            goalInstance.startTimestamp,
-            goalInstance.startTimestamp + goalInstance.periodInSeconds
-        ).filter { s -> s.sections.first().timestamp >= goalInstance.startTimestamp }
-        .forEach { s ->
-            database.goalDescriptionDao.computeGoalProgressForSession(
-                database.sessionDao.getWithSectionsWithLibraryItemsWithGoals(s.session.id)
-            ).also { progress ->
-                goalInstance.progress += progress[goalInstance.goalDescriptionId] ?: 0
-            }
-        }
-        insert(goalInstance)
-    }
+//    @Transaction
+//    open suspend fun insertWithProgress(
+//        goalInstance: GoalInstance
+//    ){
+//        database.sessionDao.getSessionsContainingSectionFromTimeFrame(
+//            goalInstance.startTimestamp,
+//            goalInstance.startTimestamp + goalInstance.periodInSeconds
+//        ).filter { s -> s.sections.first().timestamp >= goalInstance.startTimestamp }
+//        .forEach { s ->
+//            database.goalDescriptionDao.computeGoalProgressForSession(
+//                database.sessionDao.getWithSectionsWithLibraryItemsWithGoals(s.session.id)
+//            ).also { progress ->
+//                goalInstance.progress += progress[goalInstance.goalDescriptionId] ?: 0
+//            }
+//        }
+//        insert(goalInstance)
+//    }
 
 
     /**

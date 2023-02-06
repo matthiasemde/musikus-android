@@ -140,7 +140,8 @@ class GoalCard(
             view.findViewById<ComposeView>(R.id.goalProgressBar).setContent {
                 Log.d("GOAL_CARD", "setContent")
                 val progress by remember { mutableStateOf(
-                    goal.instance.progress
+//                    goal.instance.progress
+                    0
                 ) }
                 val target = goal.instance.target
                 val animatedProgress by animateIntAsState(
@@ -236,6 +237,7 @@ class GoalCard(
 fun GoalCard(
     modifier: Modifier = Modifier,
     goal: GoalInstanceWithDescriptionWithLibraryItems,
+    progress: Int = 0,
     progressOffset: Int = 0
 ) {
     val (instance, descriptionWithLibraryItems) = goal
@@ -317,7 +319,7 @@ fun GoalCard(
             /** ProgressBar */
             val target = goal.instance.target
             val animatedProgress by animateIntAsState(
-                targetValue = goal.instance.progress + progressOffset,
+                targetValue = progress + progressOffset,
                 animationSpec = spring(
                     dampingRatio = Spring.DampingRatioNoBouncy,
                     stiffness = Spring.StiffnessHigh / goal.instance.target

@@ -78,7 +78,8 @@
     <string name="libraryToolbarSortModeName">Name</string>
     <string name="libraryToolbarSortModeColor">Color</string>
     <string name="libraryToolbarSortModeCustom">Custom</string>
-    <string name="dialogCancel">Cancel</string>
+    <string name="dialogDismiss">Cancel</string>
+    <string name="dialogConfirm">Confirm</string>
     <plurals name="deleteGoalDialogMessage">
         <item quantity="one">Delete selected goal?</item>
         <item quantity="other">Delete selected goals?</item>

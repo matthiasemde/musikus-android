@@ -19,6 +19,7 @@ import de.practicetime.practicetime.database.BaseDao
 import de.practicetime.practicetime.database.PTDatabase
 import de.practicetime.practicetime.database.SectionWithLibraryItem
 import de.practicetime.practicetime.database.entities.Section
+import kotlinx.coroutines.flow.Flow
 import java.util.*
 
 @Dao
@@ -29,7 +30,6 @@ abstract class SectionDao(
     database = database
 ) {
 
-
     /**
      * @Queries
      */
@@ -38,9 +38,16 @@ abstract class SectionDao(
     abstract suspend fun getFromSession(sessionId: UUID): List<Section>
 
     @Transaction
-    @Query("SELECT * FROM section WHERE timestamp>=:beginTimeStamp AND timestamp<=:endTimeStamp")
+    @Query("SELECT * FROM section WHERE timestamp>=:startTimeStamp AND timestamp<=:endTimeStamp")
     abstract suspend fun getWithLibraryItems(
-        beginTimeStamp: Long,
+        startTimeStamp: Long,
         endTimeStamp: Long
     ): List<SectionWithLibraryItem>
+
+    @Query("SELECT * FROM section WHERE timestamp>=:startTimeStamp AND timestamp<=:endTimeStamp AND library_item_id IN (:itemIds)")
+    abstract fun get(
+        startTimeStamp: Long,
+        endTimeStamp: Long,
+        itemIds: List<UUID>
+    ): Flow<List<Section>>
 }

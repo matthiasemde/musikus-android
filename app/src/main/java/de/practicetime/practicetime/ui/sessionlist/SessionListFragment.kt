@@ -635,7 +635,7 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
                     deleteSessionsHandler()
                     dialog.dismiss()
                 }
-                setNegativeButton(R.string.dialogCancel) { dialog, _ ->
+                setNegativeButton(R.string.dialogDismiss) { dialog, _ ->
                     dialog.cancel()
                 }
             }

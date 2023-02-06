@@ -23,6 +23,11 @@ import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
 import de.practicetime.practicetime.ui.overflowitems.AboutActivity
 
+interface TopBarUiState {
+    val title: String
+    val showBackButton: Boolean
+}
+
 fun setCommonToolbar(
     context: Activity,
     toolbar: MaterialToolbar,

@@ -96,7 +96,7 @@ class ArchivedGoalsActivity : AppCompatActivity() {
                 Toast.makeText(context, R.string.archivedGoalsUnarchiveGoalToast, Toast.LENGTH_SHORT).show()
                 dialog.dismiss()
             }
-            setNegativeButton(R.string.dialogCancel) { dialog, _ ->
+            setNegativeButton(R.string.dialogDismiss) { dialog, _ ->
                 dialog.cancel()
             }
         }.create().show()
@@ -116,7 +116,7 @@ class ArchivedGoalsActivity : AppCompatActivity() {
                 ), Toast.LENGTH_SHORT).show()
                 dialog.dismiss()
             }
-            setNegativeButton(R.string.dialogCancel) { dialog, _ ->
+            setNegativeButton(R.string.dialogDismiss) { dialog, _ ->
                 dialog.cancel()
             }
         }.create().show()

@@ -21,6 +21,10 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import java.util.*
 
+sealed class SelectionSpinnerOption(val name: String)
+class UUIDSelectionSpinnerOption(val id: UUID?, name: String) : SelectionSpinnerOption(name)
+class IntSelectionSpinnerOption(val id: Int?, name: String) : SelectionSpinnerOption(name)
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -29,11 +33,11 @@ fun SelectionSpinner(
     isExpanded: Boolean,
     label: @Composable () -> Unit,
     leadingIcon: @Composable () -> Unit,
-    options: List<Pair<UUID, String>>,
-    selected: UUID?,
-    defaultOption: String?,
+    options: List<SelectionSpinnerOption>,
+    selected: SelectionSpinnerOption?,
+    specialOption: SelectionSpinnerOption? = null,
     onIsExpandedChange: (Boolean) -> Unit,
-    onSelectedChange: (UUID?) -> Unit
+    onSelectedChange: (SelectionSpinnerOption?) -> Unit
 ) {
     ExposedDropdownMenuBox(
         modifier = modifier,
@@ -47,7 +51,7 @@ fun SelectionSpinner(
                 .onGloballyPositioned {
                     size = it.size.width
                 },
-            value = options.firstOrNull { it.first == selected }?.second ?: defaultOption?: "",
+            value = (selected?: specialOption ?: options.first()).name,
             label = label,
             onValueChange = {},
             readOnly = true,
@@ -68,16 +72,16 @@ fun SelectionSpinner(
                 contentPadding = PaddingValues(0.dp),
                 modifier = Modifier
                     .width(with(LocalDensity.current) { size.toDp() })
-                    .height((48 * (options.size + if(defaultOption != null) 1 else 0)).coerceAtMost(240).dp)
+                    .height((48 * (options.size + if(specialOption != null) 1 else 0)).coerceAtMost(240).dp)
                     .simpleVerticalScrollbar(listState)
             ) {
-                defaultOption?.let {
+                specialOption?.let {
                     item {
                         DropdownMenuItem(
                             modifier = Modifier
                                 .padding(end= 12.dp)
                                 .height(46.dp),
-                            text = { Text(text = it) },
+                            text = { Text(text = it.name) },
                             onClick = { onSelectedChange(null) }
                         )
                         Divider(Modifier.padding(end = 12.dp), thickness = Dp.Hairline)
@@ -85,14 +89,19 @@ fun SelectionSpinner(
                 }
                 items(
                     items = options,
-                    key = { it.first },
+                    key = {
+                        when (it) {
+                            is UUIDSelectionSpinnerOption -> it.id!!
+                            is IntSelectionSpinnerOption -> it.id!!
+                        }
+                    },
                 ) { item ->
                     DropdownMenuItem(
                         modifier = Modifier
                             .padding(end= 12.dp)
                             .height(48.dp),
-                        onClick = { onSelectedChange(item.first)  },
-                        text = { Text(text = item.second) }
+                        onClick = { onSelectedChange(item) },
+                        text = { Text(text = item.name) }
                     )
                 }
             }

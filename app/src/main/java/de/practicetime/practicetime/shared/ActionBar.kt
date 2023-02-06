@@ -15,6 +15,10 @@ import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 
+interface ActionModeUiState {
+    val isActionMode: Boolean
+    val numberOfSelections: Int
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

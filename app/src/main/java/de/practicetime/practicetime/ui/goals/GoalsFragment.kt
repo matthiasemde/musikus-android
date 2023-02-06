@@ -39,13 +39,11 @@ import androidx.compose.material.icons.rounded.Repeat
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
-import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.zIndex
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -58,7 +56,6 @@ import de.practicetime.practicetime.R
 import de.practicetime.practicetime.database.GoalInstanceWithDescriptionWithLibraryItems
 import de.practicetime.practicetime.database.PTDatabase
 import de.practicetime.practicetime.datastore.GoalsSortMode
-import de.practicetime.practicetime.datastore.SortDirection
 import de.practicetime.practicetime.datastore.ThemeSelections
 import de.practicetime.practicetime.shared.*
 import de.practicetime.practicetime.viewmodel.GoalsViewModel
@@ -69,9 +66,13 @@ import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
-fun GoalsFragmentHolder(mainViewModel: MainViewModel) {
-    val goalsViewModel = viewModel<GoalsViewModel>()
+fun Goals(
+    mainViewModel: MainViewModel,
+    goalsViewModel: GoalsViewModel = viewModel(),
+) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+
+    val goalsUiState by goalsViewModel.goalsUiState.collectAsState()
 
     Scaffold(
         contentWindowInsets = WindowInsets(bottom = 0.dp), // makes sure FAB is not shifted up
@@ -90,8 +91,7 @@ fun GoalsFragmentHolder(mainViewModel: MainViewModel) {
                 miniFABs = listOf(
                     MiniFABData(
                         onClick = {
-                            goalsViewModel.goalDialogRepeat.value = false
-                            goalsViewModel.showGoalDialog.value = true
+                            goalsViewModel.showDialog(oneShot = true)
                             goalsViewModel.multiFABState.value = MultiFABState.COLLAPSED
                             mainViewModel.showNavBarScrim.value = false
                         },
@@ -100,8 +100,7 @@ fun GoalsFragmentHolder(mainViewModel: MainViewModel) {
                     ),
                     MiniFABData(
                         onClick = {
-                            goalsViewModel.goalDialogRepeat.value = true
-                            goalsViewModel.showGoalDialog.value = true
+                            goalsViewModel.showDialog(oneShot = false)
                             goalsViewModel.multiFABState.value = MultiFABState.COLLAPSED
                             mainViewModel.showNavBarScrim.value = false
                         },
@@ -111,20 +110,20 @@ fun GoalsFragmentHolder(mainViewModel: MainViewModel) {
                 ))
         },
         topBar = {
+            val  topBarUiState = goalsUiState.topBarUiState
             LargeTopAppBar(
-                title = { Text( text="Goals") },
+                title = { Text( text = topBarUiState.title) },
                 scrollBehavior = scrollBehavior,
                 actions = {
+                    val sortMenuUiState = topBarUiState.sortMenuUiState
                     SortMenu(
-                        show = goalsViewModel.showSortModeMenu.value,
+                        show = sortMenuUiState.show,
                         sortModes = GoalsSortMode.values().toList(),
-                        currentSortMode = goalsViewModel.sortMode.collectAsState(initial = GoalsSortMode.DATE_ADDED).value,
-                        currentSortDirection = goalsViewModel.sortDirection.collectAsState(initial = SortDirection.ASCENDING).value,
+                        currentSortMode = sortMenuUiState.mode,
+                        currentSortDirection = sortMenuUiState.direction,
                         label = { GoalsSortMode.toString(it) },
-                        onShowMenuChanged = { goalsViewModel.showSortModeMenu.value = it },
-                        onSelectionHandler = { sortMode ->
-                            goalsViewModel.showSortModeMenu.value = false
-                        }
+                        onShowMenuChanged = goalsViewModel::onSortMenuShowChanged,
+                        onSelectionHandler = goalsViewModel::onSortModeSelected
                     )
                     IconButton(onClick = {
                         mainViewModel.showMainMenu.value = true
@@ -163,12 +162,14 @@ fun GoalsFragmentHolder(mainViewModel: MainViewModel) {
             )
 
             // Action bar
+            val actionModeUiState = goalsUiState.actionModeUiState
 
-            if(goalsViewModel.actionMode.value) {
+            if(actionModeUiState.isActionMode) {
                 ActionBar(
-                    numSelectedItems = goalsViewModel.selectedGoalIds.size,
-                    onDismissHandler = { goalsViewModel.clearActionMode() },
-                    onEditHandler = {
+                    numSelectedItems = actionModeUiState.numberOfSelections,
+                    onDismissHandler = goalsViewModel::clearActionMode,
+                    onEditHandler = goalsViewModel::onEditAction,
+                    onDeleteHandler = goalsViewModel::onDeleteAction
 //                        goalsState.apply {
 //                            mainState.libraryItems.value.firstOrNull { item ->
 //                                selectedItemIds.firstOrNull()?.let { it == item.id } ?: false
@@ -188,20 +189,15 @@ fun GoalsFragmentHolder(mainViewModel: MainViewModel) {
 //                                showFolderDialog.value = true
 //                            }
 //                        }
-                        goalsViewModel.clearActionMode()
-                    },
-                    onDeleteHandler = {
-//                        mainViewModel.archiveGoals(goalsViewModel.selectedGoalIds.toList())
-                        goalsViewModel.clearActionMode()
-                    }
+//                        goalsViewModel.clearActionMode()
+//                    },
                 )
             }
         },
         content = { paddingValues ->
+            val contentUiState = goalsUiState.contentUiState
 
             // Goal List
-
-            val goals = goalsViewModel.goals.collectAsState(initial = emptyList())
             LazyColumn(
                 modifier = Modifier
                     .padding(horizontal = 16.dp)
@@ -213,94 +209,75 @@ fun GoalsFragmentHolder(mainViewModel: MainViewModel) {
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 items(
-                    items=goals.value,
-                    key = { it.description.description.id },
-                ) { goal ->
-                    val goalDescriptionId = goal.description.description.id
+                    items= contentUiState.goalsWithProgress,
+                    key = { it.goal.description.description.id },
+                ) { (goal, progress) ->
                     Selectable(
                         modifier = Modifier.animateItemPlacement(),
-                        selected = goalDescriptionId in goalsViewModel.selectedGoalIds,
-                        onShortClick = {
-                            goalsViewModel.apply {
-                                if(actionMode.value) {
-                                    if(selectedGoalIds.contains(goalDescriptionId)) {
-                                        selectedGoalIds.remove(goalDescriptionId)
-                                        if(selectedGoalIds.isEmpty()) {
-                                            actionMode.value = false
-                                        }
-                                    } else {
-                                        selectedGoalIds.add(goalDescriptionId)
-                                    }
-                                } else {
-                                    showEditGoalDialog.value = true
-                                    editableGoal.value = goal
-                                }
-                            }
-                        },
-                        onLongClick = {
-                            goalsViewModel.apply {
-                                if (goalDescriptionId !in selectedGoalIds) {
-                                    selectedGoalIds.add(goalDescriptionId)
-                                    actionMode.value = true
-                                }
-                            }
-                        }
+                        selected = goal in contentUiState.selectedGoals,
+                        onShortClick = { goalsViewModel.onGoalClicked(goal, false) },
+                        onLongClick = { goalsViewModel.onGoalClicked(goal, true) }
                     ) {
-                        GoalCard(goal = goal)
+                        GoalCard(goal = goal, progress = progress)
                     }
                 }
             }
 
+            /** Goal Dialog */
+            val dialogUiState = goalsUiState.dialogUiState
 
-            // Create Goal Dialog
-            val libraryItems = goalsViewModel.libraryItems.collectAsState(initial = emptyList())
-
-            if(goalsViewModel.showGoalDialog.value) {
-                Dialog(
-                    onDismissRequest = { goalsViewModel.showGoalDialog.value = false },
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .clip(MaterialTheme.shapes.large)
-                            .background(MaterialTheme.colorScheme.surface)
-                    ) {
-                        AndroidView(
-                            factory = {
-                                GoalDialog(
-                                    context = it,
-                                    libraryItems = libraryItems.value,
-                                    repeat = goalsViewModel.goalDialogRepeat.value,
-                                    submitHandler = { newGoal, target ->
-//                                        mainViewModel.addGoal(newGoal, target)
-                                        goalsViewModel.showGoalDialog.value = false
-                                    },
-                                    onDismissRequest = { goalsViewModel.showGoalDialog.value = false },
-                                )
-                            },
-                            update = { goalDialog ->
-                                goalDialog.update()
-                            }
-                        )
-                    }
-                }
-            }
-
-            // Edit Goal Dialog
-
-            if(goalsViewModel.showEditGoalDialog.value) {
-                goalsViewModel.editableGoal.value?.let { goal ->
-                    EditGoalDialog(
-                        value = goal.instance.target,
-                        onValueChanged = { goal.instance.target = it },
-                        onDismissHandler = {
-                            goalsViewModel.showEditGoalDialog.value = false
-//                            mainViewModel.editGoalTarget(
-//                                editedGoalDescriptionId = goal.description.description.id,
-//                                newTarget = goal.instance.target
+            if(dialogUiState != null) {
+                GoalDialog(
+                    dialogData = dialogUiState.dialogData,
+                    itemsSelectorExpanded = dialogUiState.isItemSelectorExpanded,
+                    periodUnitSelectorExpanded = dialogUiState.isItemSelectorExpanded,
+                    onTargetChanged = goalsViewModel::onTargetChanged,
+                    onPeriodChanged = goalsViewModel::onPeriodChanged,
+                    onPeriodUnitChanged = goalsViewModel::onPeriodUnitChanged,
+                    onPeriodUnitSelectionExpandedChanged = goalsViewModel::onPeriodUnitSelectionExpandedChanged,
+                    onGoalTypeChanged = goalsViewModel::onGoalTypeChanged,
+                    onLibraryItemsChanged = goalsViewModel::onLibraryItemsChanged,
+                    onConfirmHandler = goalsViewModel::onDialogConfirm,
+                    onDismissHandler = goalsViewModel::clearDialog,
+                )
+//                if(dialogUiState.goalToEdit != null) {
+//                    EditGoalDialog(
+//                        value = dialogUiState.goalToEdit.instance.target,
+//                        onValueChanged = { dialogUiState.goalToEdit.instance.target = it },
+//                        onConfirmHandler = goalsViewModel::onEditDialogConfirm,
+//                        onDismissHandler = goalsViewModel::clearDialog,
+//                    )
+//                } else {
+//                    Dialog(
+//                        onDismissRequest = goalsViewModel::clearDialog,
+//                    ) {
+//                        Box(
+//                            modifier = Modifier
+//                                .clip(MaterialTheme.shapes.large)
+//                                .background(MaterialTheme.colorScheme.surface)
+//                        ) {
+//                            AndroidView(
+//                                factory = {
+//                                    GoalDialog(
+//                                        context = it,
+//                                        libraryItems = dialogUiState.items,
+//                                        repeat = !(dialogUiState.dialogData.oneShot),
+//                                        submitHandler = { newGoal, target ->
+//                                            //                                        mainViewModel.addGoal(newGoal, target)
+//                                            goalsViewModel.showGoalDialog.value = false
+//                                        },
+//                                        onDismissRequest = {
+//                                            goalsViewModel.showGoalDialog.value = false
+//                                        },
+//                                    )
+//                                },
+//                                update = { goalDialog ->
+//                                    goalDialog.update()
+//                                }
 //                            )
-                        }
-                    )
-                }
+//                        }
+//                    }
+//                }
             }
 
 

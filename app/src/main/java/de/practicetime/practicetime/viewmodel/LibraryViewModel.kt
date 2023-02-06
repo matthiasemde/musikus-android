@@ -23,6 +23,7 @@ import de.practicetime.practicetime.datastore.SortDirection
 import de.practicetime.practicetime.repository.LibraryRepository
 import de.practicetime.practicetime.repository.UserPreferencesRepository
 import de.practicetime.practicetime.shared.MultiFABState
+import de.practicetime.practicetime.shared.TopBarUiState
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.flow.SharingStarted.Companion.WhileSubscribed
 import kotlinx.coroutines.launch
@@ -52,9 +53,9 @@ data class LibraryItemEditData(
 )
 
 data class LibraryTopBarUiState(
-    val title: String,
-    val showBackButton: Boolean,
-)
+    override val title: String,
+    override val showBackButton: Boolean,
+) : TopBarUiState
 
 data class LibraryActionModeUiState(
     val isActionMode: Boolean,
@@ -182,7 +183,11 @@ class LibraryViewModel(
         initialValue = emptyList()
     )
 
-    private val items = libraryRepository.items
+    private val items = libraryRepository.items.stateIn(
+        scope = viewModelScope,
+        started = WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
 
     private val sortedFoldersWithItemCount = combine(
         folders,
@@ -210,8 +215,8 @@ class LibraryViewModel(
     /** Own state flows */
 
     // Menu
-    private var _showFolderSortMenu = MutableStateFlow(false)
-    private var _showItemSortMenu = MutableStateFlow(false)
+    private val _showFolderSortMenu = MutableStateFlow(false)
+    private val _showItemSortMenu = MutableStateFlow(false)
 
     private val _activeFolder = MutableStateFlow<LibraryFolder?>(null)
 
@@ -225,7 +230,7 @@ class LibraryViewModel(
 
     private val _isFolderSelectorExpanded = MutableStateFlow(false)
 
-    // Multi FAB
+    // Multi FAB TODO
     var multiFABState = mutableStateOf(MultiFABState.COLLAPSED)
 
     // Action mode

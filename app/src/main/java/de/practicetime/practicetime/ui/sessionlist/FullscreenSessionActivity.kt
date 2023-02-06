@@ -193,7 +193,7 @@ class FullscreenSessionActivity : AppCompatActivity() {
             setPositiveButton(R.string.discard_dialog_ok) { dialog, _ ->
                 dialog.dismiss()
             }
-            setNegativeButton(R.string.dialogCancel) { dialog, _ ->
+            setNegativeButton(R.string.dialogDismiss) { dialog, _ ->
                 dialog.cancel()
             }
         }.create()

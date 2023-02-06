@@ -11,17 +11,18 @@ package de.practicetime.practicetime.repository
 import de.practicetime.practicetime.database.GoalDescriptionWithLibraryItems
 import de.practicetime.practicetime.database.GoalInstanceWithDescriptionWithLibraryItems
 import de.practicetime.practicetime.database.PTDatabase
+import de.practicetime.practicetime.database.entities.GoalDescription
 import de.practicetime.practicetime.datastore.GoalsSortMode
 import de.practicetime.practicetime.datastore.SortDirection
 import java.util.*
 
-class GoalsRepository(
+class GoalRepository(
     database: PTDatabase
 ) {
     private val goalInstanceDao = database.goalInstanceDao
     private val goalDescriptionDao = database.goalDescriptionDao
 
-    val goals = goalInstanceDao.getWithDescriptionsWithLibraryItems()
+    val currentGoals = goalInstanceDao.getWithDescriptionsWithLibraryItems()
 
     /** Mutators */
     /** Add */
@@ -44,36 +45,24 @@ class GoalsRepository(
     }
 
     /** Archive */
-    suspend fun archiveGoals(goalDescriptionIds: List<UUID>) {
-        goalDescriptionDao.getAndArchive(goalDescriptionIds)
+
+    suspend fun archive(goalDescription: GoalDescription) {
+        goalDescription.archived = true
+        goalDescriptionDao.update(goalDescription)
     }
 
-    /** Sort */
+    suspend fun archive(goalDescriptions: List<GoalDescription>) {
+        goalDescriptions.forEach { archive(it) }
+    }
+
+    /** Utility functions */
+
+    // Sort
     fun sortGoals(
         goals: List<GoalInstanceWithDescriptionWithLibraryItems>,
         mode: GoalsSortMode,
         direction: SortDirection,
-    ) =
-//        if(mode != null) {
-//            if (mode == goalsSortMode.value) {
-//                when (goalsSortDirection.value) {
-//                    SortDirection.ASCENDING -> goalsSortDirection.value = SortDirection.DESCENDING
-//                    SortDirection.DESCENDING -> goalsSortDirection.value = SortDirection.ASCENDING
-//                }
-//            } else {
-//                goalsSortDirection.value = SortDirection.ASCENDING
-//                goalsSortMode.value = mode
-//                PracticeTime.prefs.edit().putString(
-//                    PracticeTime.PREFERENCES_KEY_LIBRARY_ITEM_SORT_MODE,
-//                    goalsSortMode.value.name
-//                ).apply()
-//            }
-//            PracticeTime.prefs.edit().putString(
-//                PracticeTime.PREFERENCES_KEY_LIBRARY_ITEM_SORT_DIRECTION,
-//                goalsSortDirection.value.name
-//            ).apply()
-//        }
-    when (direction) {
+    ) = when (direction) {
         SortDirection.ASCENDING -> {
             when (mode) {
                 GoalsSortMode.DATE_ADDED -> goals.sortedBy { it.description.description.createdAt }
