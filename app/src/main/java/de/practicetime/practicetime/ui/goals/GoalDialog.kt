@@ -24,6 +24,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.ComposeView
@@ -32,6 +34,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.google.android.material.button.MaterialButton
 import de.practicetime.practicetime.R
 import de.practicetime.practicetime.components.NumberInput
@@ -39,6 +42,7 @@ import de.practicetime.practicetime.database.GoalDescriptionWithLibraryItems
 import de.practicetime.practicetime.database.entities.*
 import de.practicetime.practicetime.shared.*
 import de.practicetime.practicetime.viewmodel.GoalDialogData
+import java.util.*
 
 @SuppressLint("ViewConstructor")
 class GoalDialog(
@@ -370,9 +374,11 @@ fun PeriodInput(
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.Center
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
     ) {
         Text(text = "in")
+        Spacer(modifier = Modifier.width(8.dp))
         NumberInput(
             value = periodInPeriodUnits.toString(),
             onValueChange = { onPeriodChanged(it.toIntOrNull() ?: 0) },
@@ -380,75 +386,128 @@ fun PeriodInput(
             maxValue = 99,
             imeAction = ImeAction.Next,
         )
+        Spacer(modifier = Modifier.width(8.dp))
         SelectionSpinner(
-            isExpanded = periodUnitSelectorExpanded,
-            label = { }, // no label required
-            leadingIcon = { }, // no leading icon required
-            options = GoalPeriodUnit.values().map { IntSelectionSpinnerOption(it.ordinal, it.name) },
-            selected = IntSelectionSpinnerOption(periodUnit.ordinal, periodUnit.name),
-            onIsExpandedChange = onPeriodUnitSelectorExpandedChanged,
+            modifier = Modifier.width(130.dp),
+            expanded = periodUnitSelectorExpanded,
+            options = GoalPeriodUnit.values().map { IntSelectionSpinnerOption(it.ordinal, GoalPeriodUnit.toString(it)) },
+            selected = IntSelectionSpinnerOption(periodUnit.ordinal, GoalPeriodUnit.toString(periodUnit)),
+            onExpandedChange = onPeriodUnitSelectorExpandedChanged,
             onSelectedChange = {selection ->
                 onPeriodUnitChanged(GoalPeriodUnit.values()[(selection as IntSelectionSpinnerOption?)?.id ?: 0])
+                onPeriodUnitSelectorExpandedChanged(false)
             }
         )
     }
 }
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun GoalDialog(
     dialogData: GoalDialogData,
     periodUnitSelectorExpanded: Boolean,
-    itemsSelectorExpanded: Boolean,
+    libraryItems: List<LibraryItem>,
+    libraryItemsSelectorExpanded: Boolean,
     onTargetChanged: (Int) -> Unit,
     onPeriodChanged: (Int) -> Unit,
     onPeriodUnitChanged: (GoalPeriodUnit) -> Unit,
-    onPeriodUnitSelectionExpandedChanged: (Boolean) -> Unit,
+    onPeriodUnitSelectorExpandedChanged: (Boolean) -> Unit,
     onGoalTypeChanged: (GoalType) -> Unit,
-    onLibraryItemsChanged: (List<LibraryItem>) -> Unit,
+    onLibraryItemsSelectorExpandedChanged: (Boolean) -> Unit,
+    onSelectedLibraryItemsChanged: (List<LibraryItem>) -> Unit,
     onConfirmHandler: () -> Unit,
     onDismissHandler: () -> Unit,
 ) {
     Dialog(
-        onDismissRequest = onDismissHandler
+        onDismissRequest = onDismissHandler,
+        properties = DialogProperties(
+            dismissOnBackPress = true,
+            dismissOnClickOutside = true,
+            usePlatformDefaultWidth = false,
+        )
     ) {
         Column(
             modifier = Modifier
+                .padding(24.dp) // TODO: figure out a better way to do this
                 .clip(MaterialTheme.shapes.extraLarge)
-                .background(MaterialTheme.colorScheme.surface)
+                .background(MaterialTheme.colorScheme.surface),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             DialogHeader(title = stringResource(id = R.string.addGoalDialogTitle))
-            // bit of a dirty hack because some properties are null when the dialog is in edit mode
+
             var confirmButtonEnabled = true
-//                dialogData.target > 0 &&
-//                (dialogData.periodInPeriodUnits ?: 1) > 0 &&
-//                ((dialogData.libraryItems?.isNotEmpty() ?: true )|| dialogData.goalType == GoalType.NON_SPECIFIC)
             TimeInput(dialogData.target, onTargetChanged)
             confirmButtonEnabled = confirmButtonEnabled && dialogData.target > 0
 
             if(dialogData.periodUnit != null && dialogData.periodInPeriodUnits != null) {
+                Spacer(modifier = Modifier.height(12.dp))
                 PeriodInput(
                     periodInPeriodUnits = dialogData.periodInPeriodUnits,
                     periodUnit = dialogData.periodUnit,
                     periodUnitSelectorExpanded = periodUnitSelectorExpanded,
                     onPeriodChanged = onPeriodChanged,
                     onPeriodUnitChanged = onPeriodUnitChanged,
-                    onPeriodUnitSelectorExpandedChanged = onPeriodUnitSelectionExpandedChanged
+                    onPeriodUnitSelectorExpandedChanged = onPeriodUnitSelectorExpandedChanged
                 )
                 confirmButtonEnabled = confirmButtonEnabled && dialogData.periodInPeriodUnits > 0
             }
 
-            if(dialogData.goalType != null && dialogData.libraryItems != null) {
+            if(dialogData.goalType != null && dialogData.selectedLibraryItems != null) {
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Row(modifier = Modifier.padding(horizontal = 32.dp)){Divider()}
+
+                Spacer(modifier = Modifier.height(12.dp))
+
                 MyToggleButton(
-                    options = GoalType.values().map { ToggleButtonOption(it.ordinal, it.name) },
-                    selected = ToggleButtonOption(dialogData.goalType.ordinal, dialogData.goalType.name),
+                    modifier = Modifier.padding(horizontal = 32.dp),
+                    options = GoalType.values().map {
+                        ToggleButtonOption(it.ordinal, GoalType.toString(it))
+                    },
+                    selected = ToggleButtonOption(
+                        dialogData.goalType.ordinal,
+                        GoalType.toString(dialogData.goalType)
+                    ),
                     onSelectedChanged = { option ->
                         onGoalTypeChanged(GoalType.values()[option.id])
                     }
                 )
+
+                if(dialogData.goalType == GoalType.ITEM_SPECIFIC) {
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    if(libraryItems.isNotEmpty()) {
+                        SelectionSpinner(
+                            expanded = libraryItemsSelectorExpanded,
+                            options = libraryItems.map {
+                                UUIDSelectionSpinnerOption(
+                                    it.id,
+                                    it.name
+                                )
+                            },
+                            selected = dialogData.selectedLibraryItems.firstOrNull()?.let {
+                                UUIDSelectionSpinnerOption(it.id, it.name)
+                            } ?: libraryItems.first().let {
+                                UUIDSelectionSpinnerOption(it.id, it.name)
+                            },
+                            onExpandedChange = onLibraryItemsSelectorExpandedChanged,
+                            onSelectedChange = { selection ->
+                                onSelectedLibraryItemsChanged(libraryItems.filter {
+                                    it.id == (selection as UUIDSelectionSpinnerOption).id
+                                })
+                                onLibraryItemsSelectorExpandedChanged(false)
+                            }
+                        )
+                    } else {
+                        Text(text = "No items in your library.")
+
+                    }
+                }
+
                 confirmButtonEnabled = confirmButtonEnabled &&
                     (
                         dialogData.goalType == GoalType.NON_SPECIFIC ||
-                        dialogData.libraryItems.isNotEmpty()
+                        dialogData.selectedLibraryItems.isNotEmpty()
                     )
             }
 

@@ -100,11 +100,11 @@ fun LibraryItemDialog(
     mode: DialogMode,
     folders: List<LibraryFolder>,
     itemData: LibraryItemEditData,
-    isFolderSelectorExpanded: Boolean,
+    folderSelectorExpanded: Boolean,
     onNameChange: (String) -> Unit,
     onColorIndexChange: (Int) -> Unit,
-    onFolderIdChange: (UUID?) -> Unit,
-    onIsFolderSelectorExpandedChange: (Boolean) -> Unit,
+    onSelectedFolderIdChange: (UUID?) -> Unit,
+    onFolderSelectorExpandedChange: (Boolean) -> Unit,
     onConfirmHandler: () -> Unit,
     onDismissHandler: () -> Unit,
 ) {
@@ -138,7 +138,7 @@ fun LibraryItemDialog(
                         modifier = Modifier
                             .padding(top = 16.dp)
                             .padding(horizontal = 24.dp),
-                        isExpanded = isFolderSelectorExpanded,
+                        expanded = folderSelectorExpanded,
                         label = { Text(text = "Folder") },
                         leadingIcon = {
                             Icon(
@@ -148,10 +148,16 @@ fun LibraryItemDialog(
                             )
                         },
                         options = folders.map { folder -> UUIDSelectionSpinnerOption(folder.id, folder.name) },
-                        selected = itemData.folderId?.let { UUIDSelectionSpinnerOption(it, itemData.name) },
-                        specialOption = UUIDSelectionSpinnerOption(null, "No folder"),
-                        onIsExpandedChange = onIsFolderSelectorExpandedChange,
-                        onSelectedChange = { onFolderIdChange((it as UUIDSelectionSpinnerOption).id) },
+                        selected = UUIDSelectionSpinnerOption(
+                            id = itemData.folderId,
+                            name = folders.firstOrNull {
+                                it.id == itemData.folderId
+                            }?.name ?: "No folder" ),
+                        defaultOption = UUIDSelectionSpinnerOption(null, "No folder"),
+                        onExpandedChange = onFolderSelectorExpandedChange,
+                        onSelectedChange = {
+                            onSelectedFolderIdChange((it as UUIDSelectionSpinnerOption).id)
+                        },
                     )
                 }
                 Row(

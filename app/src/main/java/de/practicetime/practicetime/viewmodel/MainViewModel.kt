@@ -35,7 +35,7 @@ import kotlinx.coroutines.launch
 import java.util.*
 
 
-class   MainViewModel(
+class MainViewModel(
     application: Application
 ) : AndroidViewModel(application) {
 

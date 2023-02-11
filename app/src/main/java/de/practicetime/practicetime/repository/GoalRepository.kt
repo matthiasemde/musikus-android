@@ -26,7 +26,7 @@ class GoalRepository(
 
     /** Mutators */
     /** Add */
-    suspend fun addGoal(
+    suspend fun add(
         newGoal: GoalDescriptionWithLibraryItems,
         target: Int,
     ) {
@@ -58,7 +58,7 @@ class GoalRepository(
     /** Utility functions */
 
     // Sort
-    fun sortGoals(
+    fun sort(
         goals: List<GoalInstanceWithDescriptionWithLibraryItems>,
         mode: GoalsSortMode,
         direction: SortDirection,

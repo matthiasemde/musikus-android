@@ -22,7 +22,16 @@ import java.util.*
 // shows, whether a goal will count all sections
 // or only the one from specific libraryItems
 enum class GoalType {
-    NON_SPECIFIC, ITEM_SPECIFIC
+    NON_SPECIFIC, ITEM_SPECIFIC;
+
+    companion object {
+        fun toString(type: GoalType): String {
+            return when (type) {
+                NON_SPECIFIC -> "All items"
+                ITEM_SPECIFIC -> "Specific item"
+            }
+        }
+    }
 }
 
 // shows, whether a goal will track practice time
@@ -32,7 +41,17 @@ enum class GoalProgressType {
 }
 
 enum class GoalPeriodUnit {
-    DAY, WEEK, MONTH
+    DAY, WEEK, MONTH;
+
+    companion object {
+        fun toString(periodUnit: GoalPeriodUnit): String {
+            return when (periodUnit) {
+                DAY -> "Day"
+                WEEK -> "Week"
+                MONTH -> "Month"
+            }
+        }
+    }
 }
 
 @Entity(

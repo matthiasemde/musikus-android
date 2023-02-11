@@ -32,14 +32,12 @@ abstract class GoalDescriptionDao(
      * @Insert
      */
 
-    @Transaction
     @Insert(onConflict = OnConflictStrategy.ABORT)
-    abstract suspend fun directInsert(
-        goalDescription: GoalDescription,
-        crossRefs: List<GoalDescriptionLibraryItemCrossRef>,
-        firstGoalInstance: GoalInstance
-    )
+    abstract suspend fun insertGoalDescriptionLibraryItemCrossRef(
+        crossRef: GoalDescriptionLibraryItemCrossRef
+    ): Long
 
+    @Transaction
     open suspend fun insert(
         goalDescriptionWithLibraryItems: GoalDescriptionWithLibraryItems,
         target: Int,
@@ -51,18 +49,17 @@ abstract class GoalDescriptionDao(
             target
         )
 
-        directInsert(
-            goalDescriptionWithLibraryItems.description,
-            goalDescriptionWithLibraryItems.libraryItems.map {
+        insert(goalDescriptionWithLibraryItems.description)
+        database.goalInstanceDao.insert(firstGoalInstance)
+        goalDescriptionWithLibraryItems.libraryItems.forEach { libraryItem ->
+            insertGoalDescriptionLibraryItemCrossRef(
                 GoalDescriptionLibraryItemCrossRef(
-                    goalDescriptionWithLibraryItems.description.id,
-                    it.id
+                    goalDescriptionId = goalDescriptionWithLibraryItems.description.id,
+                    libraryItemId = libraryItem.id
                 )
-            },
-            firstGoalInstance
-        )
+            )
+        }
 
-//            database.goalInstanceDao.insertWithProgress(firstGoalInstance)
         return firstGoalInstance
     }
 
@@ -406,5 +403,4 @@ abstract class GoalInstanceDao(
     abstract suspend fun getLatest(
         goalDescriptionId: UUID
     ): GoalInstance
-
 }

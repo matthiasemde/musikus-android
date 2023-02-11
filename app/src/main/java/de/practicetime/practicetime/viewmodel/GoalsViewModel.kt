@@ -9,12 +9,15 @@
 package de.practicetime.practicetime.viewmodel
 
 import android.app.Application
+import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import de.practicetime.practicetime.dataStore
+import de.practicetime.practicetime.database.GoalDescriptionWithLibraryItems
 import de.practicetime.practicetime.database.GoalInstanceWithDescriptionWithLibraryItems
 import de.practicetime.practicetime.database.PTDatabase
+import de.practicetime.practicetime.database.entities.GoalDescription
 import de.practicetime.practicetime.database.entities.GoalPeriodUnit
 import de.practicetime.practicetime.database.entities.GoalType
 import de.practicetime.practicetime.database.entities.LibraryItem
@@ -28,6 +31,7 @@ import de.practicetime.practicetime.repository.UserPreferencesRepository
 import de.practicetime.practicetime.shared.MultiFABState
 import de.practicetime.practicetime.shared.TopBarUiState
 import de.practicetime.practicetime.ui.goals.updateGoals
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
@@ -42,7 +46,7 @@ data class GoalDialogData(
     val periodUnit: GoalPeriodUnit? = null,
     val goalType: GoalType? = null,
     val oneShot: Boolean? = null,
-    val libraryItems: List<LibraryItem>? = null,
+    val selectedLibraryItems: List<LibraryItem>? = null,
 )
 
 /**
@@ -76,10 +80,9 @@ data class GoalsDialogUiState(
     val mode: DialogMode,
     val goalToEdit: GoalInstanceWithDescriptionWithLibraryItems?,
     val dialogData: GoalDialogData,
-    val isPeriodUnitSelectorExpanded: Boolean,
-    val items: List<LibraryItem>,
-    val isItemSelectorExpanded: Boolean,
-    val confirmButtonEnabled: Boolean,
+    val periodUnitSelectorExpanded: Boolean,
+    val libraryItems: List<LibraryItem>,
+    val itemSelectorExpanded: Boolean,
 )
 
 data class GoalsUiState (
@@ -91,7 +94,7 @@ data class GoalsUiState (
 )
 
 class GoalsViewModel(
-    application: Application
+    application: Application,
 ) : AndroidViewModel(application) {
 
     /** Database */
@@ -151,11 +154,11 @@ class GoalsViewModel(
         initialValue = emptyList()
     )
 
-    private val sortedGoalsWithProgress = combine(
+    private val sortedGoals = combine(
         currentGoals,
         userPreferences
     ) { goals, preferences ->
-        goalRepository.sortGoals(
+        goalRepository.sort(
             goals,
             preferences.goalsSortMode,
             preferences.goalsSortDirection
@@ -166,22 +169,26 @@ class GoalsViewModel(
         initialValue = emptyList()
     )
 
-    private val currentGoalsWithProgress = sortedGoalsWithProgress.map { currentGoals ->
-        currentGoals.map { goal ->
-
-            val progress = sessionRepository.sectionsForGoal(goal).stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(5000),
-                initialValue = emptyList()
-            ).value.sumOf { section ->
-                section.duration ?: 0
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val goalProgress = currentGoals.flatMapLatest { currentGoals ->
+        Log.d("GoalsViewModel", "goalProgress: $currentGoals")
+        val sections = currentGoals.map { goal ->
+            sessionRepository.sectionsForGoal(goal).map { sections->
+                goal to sections
             }
-            GoalWithProgress(goal, progress)
+        }
+
+        combine(sections) { combinedGoalsWithSections ->
+            combinedGoalsWithSections.associate { (goal, sections) ->
+                goal.instance.id to sections.sumOf { section ->
+                    section.duration ?: 0
+                }
+            }
         }
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = emptyList()
+        initialValue = emptyMap()
     )
 
     private val items = libraryRepository.items.stateIn(
@@ -215,9 +222,9 @@ class GoalsViewModel(
     private val _goalDialogData = MutableStateFlow<GoalDialogData?>(null)
     private val _goalToEdit = MutableStateFlow<GoalInstanceWithDescriptionWithLibraryItems?>(null)
 
-    private val _isPeriodUnitSelectorExpanded = MutableStateFlow(false)
+    private val _periodUnitSelectorExpanded = MutableStateFlow(false)
 
-    private val _isItemSelectorExpanded = MutableStateFlow(false)
+    private val _libraryItemsSelectorExpanded = MutableStateFlow(false)
 
     // MultiFAB TODO
     var multiFABState = mutableStateOf(MultiFABState.COLLAPSED)
@@ -280,13 +287,20 @@ class GoalsViewModel(
     )
 
     private val contentUiState = combine(
-        currentGoalsWithProgress,
+        sortedGoals,
+        goalProgress,
         _selectedGoals,
-    ) { goals, selectedGoals ->
+    ) { sortedGoals, goalProgress, selectedGoals ->
+        val goalsWithProgress = sortedGoals.map { goal ->
+            GoalWithProgress(
+                goal = goal,
+                progress = goalProgress[goal.instance.id] ?: 0,
+            )
+        }
         GoalsContentUiState(
-            goalsWithProgress = goals,
+            goalsWithProgress = goalsWithProgress,
             selectedGoals = selectedGoals,
-            showHint = goals.isEmpty(),
+            showHint = goalsWithProgress.isEmpty(),
         )
     }.stateIn(
         scope = viewModelScope,
@@ -302,20 +316,18 @@ class GoalsViewModel(
         _goalDialogData,
         _goalToEdit,
         sortedItems,
-        _isPeriodUnitSelectorExpanded,
-        _isItemSelectorExpanded
-    ) { dialogData, goalToEdit, sortedItems, isPeriodUnitSelectorExpanded, isItemSelectorExpanded ->
+        _periodUnitSelectorExpanded,
+        _libraryItemsSelectorExpanded
+    ) { dialogData, goalToEdit, sortedItems, periodUnitSelectorExpanded, itemSelectorExpanded ->
         if(dialogData == null) return@combine null // if data == null, the ui state should be null ergo we don't show the dialog
-        val confirmButtonEnabled = true //TODO
 
         GoalsDialogUiState(
             mode = if (goalToEdit == null) DialogMode.ADD else DialogMode.EDIT,
             dialogData = dialogData,
             goalToEdit = goalToEdit,
-            isPeriodUnitSelectorExpanded = isPeriodUnitSelectorExpanded,
-            items = sortedItems,
-            isItemSelectorExpanded = isItemSelectorExpanded,
-            confirmButtonEnabled = confirmButtonEnabled,
+            periodUnitSelectorExpanded = periodUnitSelectorExpanded,
+            libraryItems = sortedItems,
+            itemSelectorExpanded = itemSelectorExpanded,
         )
     }.stateIn(
         scope = viewModelScope,
@@ -352,15 +364,17 @@ class GoalsViewModel(
         _goalDialogData.update {
             GoalDialogData(
                 target = 0,
-                periodInPeriodUnits = 0,
+                periodInPeriodUnits = 1,
                 periodUnit = GoalPeriodUnit.DAY,
                 goalType = GoalType.NON_SPECIFIC,
                 oneShot = oneShot,
-                libraryItems = emptyList(),
+                selectedLibraryItems = sortedItems.value.firstOrNull()?.let {
+                    listOf(it)
+                } ?: emptyList(),
             )
         }
-        _isPeriodUnitSelectorExpanded.update { false }
-        _isItemSelectorExpanded.update { false }
+        _periodUnitSelectorExpanded.update { false }
+        _libraryItemsSelectorExpanded.update { false }
     }
 
     fun onSortMenuShowChanged(show: Boolean) {
@@ -441,61 +455,53 @@ class GoalsViewModel(
         _goalDialogData.update { it?.copy(periodUnit = unit) }
     }
 
-    fun onPeriodUnitSelectionExpandedChanged(expanded: Boolean) {
-        _isPeriodUnitSelectorExpanded.update { expanded }
+    fun onPeriodUnitSelectorExpandedChanged(expanded: Boolean) {
+        _periodUnitSelectorExpanded.update { expanded }
     }
     fun onGoalTypeChanged(type: GoalType) {
         _goalDialogData.update { it?.copy(goalType = type) }
     }
 
+    fun onLibraryItemsSelectorExpandedChanged(expanded: Boolean) {
+        _libraryItemsSelectorExpanded.update { expanded }
+    }
+
     fun onLibraryItemsChanged(items: List<LibraryItem>) {
-        _goalDialogData.update { it?.copy(libraryItems = items) }
+        _goalDialogData.update { it?.copy(selectedLibraryItems = items) }
     }
 
     fun clearDialog() {
         _goalDialogData.update { null }
         _goalToEdit.update { null }
-        _isPeriodUnitSelectorExpanded.update { false }
-        _isItemSelectorExpanded.update { false }
+        _periodUnitSelectorExpanded.update { false }
+        _libraryItemsSelectorExpanded.update { false }
     }
 
     fun onDialogConfirm() {
-//        when(dialogUiState.value?.mode) {
-//            DialogMode.ADD -> onAddDialogConfirm()
-//            DialogMode.EDIT -> onEditDialogConfirm()
-//            null -> {}
-//        }
-        clearDialog()
+        dialogUiState.value?.let { uiState ->
+            val dialogData = uiState.dialogData
+            viewModelScope.launch {
+                if (uiState.goalToEdit == null) {
+                    goalRepository.add(
+                        newGoal = GoalDescriptionWithLibraryItems(
+                            description = GoalDescription(
+                                type = dialogData.goalType ?: throw IllegalStateException("Goal type can not be null"),
+                                repeat = !(dialogData.oneShot ?: throw IllegalStateException("One shot can not be null")),
+                                periodInPeriodUnits = dialogData.periodInPeriodUnits ?: throw IllegalStateException("Period can not be null"),
+                                periodUnit = dialogData.periodUnit ?: throw IllegalStateException("Period unit can not be null"),
+                            ),
+                            libraryItems = dialogData.selectedLibraryItems ?: throw IllegalStateException("Library items can not be null"),
+                        ),
+                        target = dialogData.target,
+                    )
+                } else {
+                    goalRepository.editGoalTarget(
+                        editedGoalDescriptionId = uiState.goalToEdit.description.description.id,
+                        newTarget = dialogData.target
+                    )
+                }
+                clearDialog()
+            }
+        }
     }
-    fun onEditDialogConfirm() { //TODO
-//        viewModelScope.launch {
-//            val dialogData = _goalDialogData.value ?: return@launch
-//            val goalToEdit = _goalToEdit.value
-//            val target = dialogData.targetHours * 60 + dialogData.targetMinutes
-//            val period = dialogData.periodInPeriodUnits * dialogData.periodUnit.toMinutes()
-//            val goalType = dialogData.goalType
-//            val libraryItems = dialogData.libraryItems
-//
-//            if(goalToEdit == null) {
-//                goalRepository.add(
-//                    target = target,
-//                    period = period,
-//                    goalType = goalType,
-//                    libraryItems = libraryItems,
-//                    oneShot = dialogData.oneShot,
-//                )
-//            } else {
-//                goalRepository.update(
-//                    goalToEdit.instance.id,
-//                    target = target,
-//                    period = period,
-//                    goalType = goalType,
-//                    libraryItems = libraryItems,
-//                    oneShot = dialogData.oneShot,
-//                )
-//            }
-            clearDialog()
-//        }
-    }
-
 }

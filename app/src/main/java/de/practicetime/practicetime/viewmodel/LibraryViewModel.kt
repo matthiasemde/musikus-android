@@ -228,7 +228,7 @@ class LibraryViewModel(
     private val _itemEditData = MutableStateFlow<LibraryItemEditData?>(null)
     private val _itemToEdit = MutableStateFlow<LibraryItem?>(null)
 
-    private val _isFolderSelectorExpanded = MutableStateFlow(false)
+    private val _folderSelectorExpanded = MutableStateFlow(false)
 
     // Multi FAB TODO
     var multiFABState = mutableStateOf(MultiFABState.COLLAPSED)
@@ -423,7 +423,7 @@ class LibraryViewModel(
         _itemEditData,
         _itemToEdit,
         folders,
-        _isFolderSelectorExpanded,
+        _folderSelectorExpanded,
     ) { editData, itemToEdit, folders, isFolderSelectorExpanded ->
         if(editData == null) return@combine null
         val confirmButtonEnabled = editData.name.isNotBlank()
@@ -633,11 +633,11 @@ class LibraryViewModel(
 
     fun onItemDialogFolderIdChanged(newFolderId: UUID?) {
         _itemEditData.update { it?.copy(folderId = newFolderId) }
-        _isFolderSelectorExpanded.update { false }
+        _folderSelectorExpanded.update { false }
     }
 
-    fun onIsFolderSelectorExpandedChanged(isExpanded: Boolean) {
-        _isFolderSelectorExpanded.update { isExpanded }
+    fun onFolderSelectorExpandedChanged(isExpanded: Boolean) {
+        _folderSelectorExpanded.update { isExpanded }
     }
 
     fun clearFolderDialog() {
@@ -648,7 +648,7 @@ class LibraryViewModel(
     fun clearItemDialog() {
         _itemToEdit.update { null }
         _itemEditData.update { null }
-        _isFolderSelectorExpanded.update { false }
+        _folderSelectorExpanded.update { false }
     }
 
     fun onFolderDialogConfirmed() {

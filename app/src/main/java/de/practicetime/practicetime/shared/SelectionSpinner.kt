@@ -30,19 +30,19 @@ class IntSelectionSpinnerOption(val id: Int?, name: String) : SelectionSpinnerOp
 @Composable
 fun SelectionSpinner(
     modifier: Modifier = Modifier,
-    isExpanded: Boolean,
-    label: @Composable () -> Unit,
-    leadingIcon: @Composable () -> Unit,
+    expanded: Boolean,
+    label: @Composable (() -> Unit)? = null,
+    leadingIcon: @Composable (() -> Unit)? = null,
     options: List<SelectionSpinnerOption>,
     selected: SelectionSpinnerOption?,
-    specialOption: SelectionSpinnerOption? = null,
-    onIsExpandedChange: (Boolean) -> Unit,
-    onSelectedChange: (SelectionSpinnerOption?) -> Unit
+    defaultOption: SelectionSpinnerOption? = null,
+    onExpandedChange: (Boolean) -> Unit,
+    onSelectedChange: (SelectionSpinnerOption) -> Unit
 ) {
     ExposedDropdownMenuBox(
         modifier = modifier,
-        expanded = isExpanded,
-        onExpandedChange = onIsExpandedChange,
+        expanded = expanded,
+        onExpandedChange = onExpandedChange,
     ) {
         var size by remember { mutableStateOf(0) }
         OutlinedTextField(
@@ -51,19 +51,19 @@ fun SelectionSpinner(
                 .onGloballyPositioned {
                     size = it.size.width
                 },
-            value = (selected?: specialOption ?: options.first()).name,
+            value = (selected?: defaultOption ?: options.first()).name,
             label = label,
             onValueChange = {},
             readOnly = true,
             leadingIcon = leadingIcon,
             trailingIcon = {
-                ExposedDropdownMenuDefaults.TrailingIcon(expanded = isExpanded)
+                ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
             },
             colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
         )
         ExposedDropdownMenu(
-            expanded = isExpanded,
-            onDismissRequest = { onIsExpandedChange(false) },
+            expanded = expanded,
+            onDismissRequest = { onExpandedChange(false) },
         ) {
 
             val listState = rememberLazyListState()
@@ -72,17 +72,17 @@ fun SelectionSpinner(
                 contentPadding = PaddingValues(0.dp),
                 modifier = Modifier
                     .width(with(LocalDensity.current) { size.toDp() })
-                    .height((48 * (options.size + if(specialOption != null) 1 else 0)).coerceAtMost(240).dp)
+                    .height((48 * (options.size + if(defaultOption != null) 1 else 0)).coerceAtMost(240).dp)
                     .simpleVerticalScrollbar(listState)
             ) {
-                specialOption?.let {
+                defaultOption?.let {
                     item {
                         DropdownMenuItem(
                             modifier = Modifier
                                 .padding(end= 12.dp)
                                 .height(46.dp),
                             text = { Text(text = it.name) },
-                            onClick = { onSelectedChange(null) }
+                            onClick = { onSelectedChange(it) }
                         )
                         Divider(Modifier.padding(end = 12.dp), thickness = Dp.Hairline)
                     }

@@ -44,6 +44,12 @@ abstract class SectionDao(
         endTimeStamp: Long
     ): List<SectionWithLibraryItem>
 
+    @Query("SELECT * FROM section WHERE timestamp>=:startTimeStamp AND timestamp<=:endTimeStamp")
+    abstract fun get(
+        startTimeStamp: Long,
+        endTimeStamp: Long,
+    ): Flow<List<Section>>
+
     @Query("SELECT * FROM section WHERE timestamp>=:startTimeStamp AND timestamp<=:endTimeStamp AND library_item_id IN (:itemIds)")
     abstract fun get(
         startTimeStamp: Long,

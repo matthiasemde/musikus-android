@@ -13,7 +13,6 @@
 package de.practicetime.practicetime.database.daos
 
 import androidx.room.*
-import de.practicetime.practicetime.PracticeTime.Companion.ioThread
 import de.practicetime.practicetime.database.*
 import de.practicetime.practicetime.database.entities.*
 import java.util.*
@@ -30,16 +29,14 @@ abstract class SessionDao(
      * @Insert
       */
 
-    @Insert(onConflict = OnConflictStrategy.ABORT)
-    protected abstract fun directInsert(session: Session, sections: List<Section>)
-
     @Transaction
     open suspend fun insert(
         sessionWithSections: SessionWithSections,
     ) {
-        ioThread {
-            directInsert(sessionWithSections.session, sessionWithSections.sections)
-        }
+        insert(sessionWithSections.session)
+        database.sectionDao.insert(sessionWithSections.sections.map {
+            it.copy(sessionId = sessionWithSections.session.id) }
+        )
     }
 
 
