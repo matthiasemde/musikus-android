@@ -377,7 +377,8 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
 
     private suspend fun getAllSessions(): List<SessionWithSectionsWithLibraryItems> {
         if (!this::allSessions.isInitialized)
-            allSessions = PTDatabase.getInstance(requireContext()).sessionDao.getAllWithSectionsWithLibraryItems()
+//            allSessions = PTDatabase.getInstance(requireContext()).sessionDao.getAllWithSectionsWithLibraryItems()
+            allSessions = emptyList()
 
         return allSessions
     }

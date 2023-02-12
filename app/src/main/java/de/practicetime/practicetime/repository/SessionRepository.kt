@@ -4,6 +4,7 @@ import de.practicetime.practicetime.database.GoalInstanceWithDescriptionWithLibr
 import de.practicetime.practicetime.database.PTDatabase
 import de.practicetime.practicetime.database.SessionWithSections
 import de.practicetime.practicetime.database.entities.GoalType
+import de.practicetime.practicetime.database.entities.Session
 
 class SessionRepository(
     database: PTDatabase
@@ -15,6 +16,8 @@ class SessionRepository(
     /** Accessors */
     val sessions = sessionDao.getAllAsFlow()
     val sections = sectionDao.getAllAsFlow()
+
+    val sessionsWithSectionsWithLibraryItems = sessionDao.getAllWithSectionsWithLibraryItems()
 
     fun sectionsForGoal (goal: GoalInstanceWithDescriptionWithLibraryItems) =
         when(goal.description.description.type) {
@@ -31,7 +34,16 @@ class SessionRepository(
 
     /** Mutators */
     /** Add */
-    suspend fun addSession(newSessionWithSections: SessionWithSections) {
+    suspend fun add(newSessionWithSections: SessionWithSections) {
         sessionDao.insert(newSessionWithSections)
+    }
+
+    /** Delete */
+    suspend fun delete(session: Session) {
+        sessionDao.delete(session)
+    }
+
+    suspend fun delete(sessions: List<Session>) {
+        sessionDao.delete(sessions)
     }
 }

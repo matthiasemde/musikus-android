@@ -153,7 +153,7 @@ fun LibraryItemDialog(
                             name = folders.firstOrNull {
                                 it.id == itemData.folderId
                             }?.name ?: "No folder" ),
-                        defaultOption = UUIDSelectionSpinnerOption(null, "No folder"),
+                        specialOption = UUIDSelectionSpinnerOption(null, "No folder"),
                         onExpandedChange = onFolderSelectorExpandedChange,
                         onSelectedChange = {
                             onSelectedFolderIdChange((it as UUIDSelectionSpinnerOption).id)

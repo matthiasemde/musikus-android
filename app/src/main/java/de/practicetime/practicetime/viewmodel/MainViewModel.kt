@@ -22,10 +22,6 @@ import de.practicetime.practicetime.database.entities.Session
 import de.practicetime.practicetime.datastore.ThemeSelections
 import de.practicetime.practicetime.repository.LibraryRepository
 import de.practicetime.practicetime.repository.UserPreferencesRepository
-import de.practicetime.practicetime.ui.sessionlist.SessionsForDay
-import de.practicetime.practicetime.ui.sessionlist.SessionsForDaysForMonth
-import de.practicetime.practicetime.utils.getSpecificDay
-import de.practicetime.practicetime.utils.getSpecificMonth
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -122,81 +118,81 @@ class MainViewModel(
 
     /** Accessors */
     /** Load */
-    private suspend fun loadSessions() {
-        _sessions.update {
-            val sessionsForDaysForMonths = mutableListOf<SessionsForDaysForMonth>()
-            // fetch all sessions from the database
-            database.sessionDao.getAllWithSectionsWithLibraryItems().takeUnless {
-                it.isEmpty()
-            }?.sortedByDescending { it.sections.first().section.timestamp }?.let { fetchedSessions ->
-                // initialize variables to keep track of the current month, current day,
-                // the index of its first session and the total duration of the current day
-                var (currentDay, currentMonth) = fetchedSessions.first()
-                    .sections.first()
-                    .section.timestamp.let { timestamp ->
-                    Pair(getSpecificDay(timestamp), getSpecificMonth(timestamp))
-                }
-                var firstSessionOfDayIndex = 0
-                var totalPracticeDuration = 0
-
-
-                val sessionsForDaysForMonth = mutableListOf<SessionsForDay>()
-
-                // then loop trough all of the sessions...
-                fetchedSessions.forEachIndexed { index, session ->
-                    // ...get the month and day...
-                    val sessionTimestamp = session.sections.first().section.timestamp
-                    val (day, month) = sessionTimestamp.let { timestamp ->
-                        Pair(getSpecificDay(timestamp), getSpecificMonth(timestamp))
-                    }
-
-                    totalPracticeDuration += session.sections.sumOf { it.section.duration ?: 0 }
-
-                    // ...and compare them to the current day first.
-                    // if it differs, create a new SessionsForDay object
-                    // with the respective subList of sessions
-                    if(day == currentDay) return@forEachIndexed
-
-                    sessionsForDaysForMonth.add(SessionsForDay(
-                        specificDay = currentDay,
-                        totalPracticeDuration = totalPracticeDuration,
-                        sessions = fetchedSessions.slice(firstSessionOfDayIndex until index)
-                    ))
-
-                    // reset / set tracking variables appropriately
-                    currentDay = day
-                    firstSessionOfDayIndex = index
-                    totalPracticeDuration = 0
-
-                    // then compare the month to the current month.
-                    // if it differs, create a new SessionsForDaysForMonth object
-                    // storing the specific month along with the list of SessionsForDay objects
-                    if(month == currentMonth) return@forEachIndexed
-
-                    sessionsForDaysForMonths.add(SessionsForDaysForMonth(
-                        specificMonth = currentMonth,
-                        sessionsForDays = sessionsForDaysForMonth.toList()
-                    ))
-
-                    // set tracking variable and reset list
-                    currentMonth = month
-                    sessionsForDaysForMonth.clear()
-                }
-
-                // importantly, add the last SessionsForDaysForMonth object
-                sessionsForDaysForMonth.add(SessionsForDay(
-                    specificDay = currentDay,
-                    totalPracticeDuration = totalPracticeDuration,
-                    sessions = fetchedSessions.slice(firstSessionOfDayIndex until fetchedSessions.size)
-                ))
-                sessionsForDaysForMonths.add(SessionsForDaysForMonth(
-                    specificMonth = currentMonth,
-                    sessionsForDays = sessionsForDaysForMonth
-                ))
-            }
-            sessionsForDaysForMonths.toList()
-        }
-    }
+//    private suspend fun loadSessions() {
+//        _sessions.update {
+//            val sessionsForDaysForMonths = mutableListOf<SessionsForDaysForMonth>()
+//            // fetch all sessions from the database
+//            database.sessionDao.getAllWithSectionsWithLibraryItems().takeUnless {
+//                it.isEmpty()
+//            }?.sortedByDescending { it.sections.first().section.timestamp }?.let { fetchedSessions ->
+//                // initialize variables to keep track of the current month, current day,
+//                // the index of its first session and the total duration of the current day
+//                var (currentDay, currentMonth) = fetchedSessions.first()
+//                    .sections.first()
+//                    .section.timestamp.let { timestamp ->
+//                    Pair(getSpecificDay(timestamp), getSpecificMonth(timestamp))
+//                }
+//                var firstSessionOfDayIndex = 0
+//                var totalPracticeDuration = 0
+//
+//
+//                val sessionsForDaysForMonth = mutableListOf<SessionsForDay>()
+//
+//                // then loop trough all of the sessions...
+//                fetchedSessions.forEachIndexed { index, session ->
+//                    // ...get the month and day...
+//                    val sessionTimestamp = session.sections.first().section.timestamp
+//                    val (day, month) = sessionTimestamp.let { timestamp ->
+//                        Pair(getSpecificDay(timestamp), getSpecificMonth(timestamp))
+//                    }
+//
+//                    totalPracticeDuration += session.sections.sumOf { it.section.duration ?: 0 }
+//
+//                    // ...and compare them to the current day first.
+//                    // if it differs, create a new SessionsForDay object
+//                    // with the respective subList of sessions
+//                    if(day == currentDay) return@forEachIndexed
+//
+//                    sessionsForDaysForMonth.add(SessionsForDay(
+//                        specificDay = currentDay,
+//                        totalPracticeDuration = totalPracticeDuration,
+//                        sessions = fetchedSessions.slice(firstSessionOfDayIndex until index)
+//                    ))
+//
+//                    // reset / set tracking variables appropriately
+//                    currentDay = day
+//                    firstSessionOfDayIndex = index
+//                    totalPracticeDuration = 0
+//
+//                    // then compare the month to the current month.
+//                    // if it differs, create a new SessionsForDaysForMonth object
+//                    // storing the specific month along with the list of SessionsForDay objects
+//                    if(month == currentMonth) return@forEachIndexed
+//
+//                    sessionsForDaysForMonths.add(SessionsForDaysForMonth(
+//                        specificMonth = currentMonth,
+//                        sessionsForDays = sessionsForDaysForMonth.toList()
+//                    ))
+//
+//                    // set tracking variable and reset list
+//                    currentMonth = month
+//                    sessionsForDaysForMonth.clear()
+//                }
+//
+//                // importantly, add the last SessionsForDaysForMonth object
+//                sessionsForDaysForMonth.add(SessionsForDay(
+//                    specificDay = currentDay,
+//                    totalPracticeDuration = totalPracticeDuration,
+//                    sessions = fetchedSessions.slice(firstSessionOfDayIndex until fetchedSessions.size)
+//                ))
+//                sessionsForDaysForMonths.add(SessionsForDaysForMonth(
+//                    specificMonth = currentMonth,
+//                    sessionsForDays = sessionsForDaysForMonth
+//                ))
+//            }
+//            sessionsForDaysForMonths.toList()
+//        }
+//    }
 
     /** Mutators */
     /** Add */
@@ -205,32 +201,32 @@ class MainViewModel(
     ) {
         viewModelScope.launch {
             database.sessionDao.insert(newSession)
-            val insertedSession = database.sessionDao.getWithSectionsWithLibraryItems(newSession.session.id)
-
-            val (day, month) = newSession.sections.first().timestamp.let { timestamp ->
-                Pair(getSpecificDay(timestamp), getSpecificMonth(timestamp))
-            }
-
-            _sessions.update { sessionsForDaysForMonths ->
-                sessionsForDaysForMonths.map { sessionsForDaysForMonth ->
-                    if (sessionsForDaysForMonth.specificMonth != month)
-                        sessionsForDaysForMonth
-                    else {
-                        sessionsForDaysForMonth.copy(
-                            sessionsForDays = sessionsForDaysForMonth.sessionsForDays.map { sessionsForDay ->
-                                if (sessionsForDay.specificDay != day)
-                                    sessionsForDay
-                                else
-                                    sessionsForDay.copy(
-                                        sessions = (sessionsForDay.sessions + insertedSession).sortedByDescending {
-                                            it.sections.first().section.timestamp
-                                        }
-                                    )
-                            }
-                        )
-                    }
-                }
-            }
+//            val insertedSession = database.sessionDao.getWithSectionsWithLibraryItems(newSession.session.id)
+//
+//            val (day, month) = newSession.sections.first().timestamp.let { timestamp ->
+//                Pair(getSpecificDay(timestamp), getSpecificMonth(timestamp))
+//            }
+//
+//            _sessions.update { sessionsForDaysForMonths ->
+//                sessionsForDaysForMonths.map { sessionsForDaysForMonth ->
+//                    if (sessionsForDaysForMonth.specificMonth != month)
+//                        sessionsForDaysForMonth
+//                    else {
+//                        sessionsForDaysForMonth.copy(
+//                            sessionsForDays = sessionsForDaysForMonth.sessionsForDays.map { sessionsForDay ->
+//                                if (sessionsForDay.specificDay != day)
+//                                    sessionsForDay
+//                                else
+//                                    sessionsForDay.copy(
+//                                        sessions = (sessionsForDay.sessions + insertedSession).sortedByDescending {
+//                                            it.sections.first().section.timestamp
+//                                        }
+//                                    )
+//                            }
+//                        )
+//                    }
+//                }
+//            }
         }
     }
 

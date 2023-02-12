@@ -15,6 +15,7 @@ package de.practicetime.practicetime.database.daos
 import androidx.room.*
 import de.practicetime.practicetime.database.*
 import de.practicetime.practicetime.database.entities.*
+import kotlinx.coroutines.flow.Flow
 import java.util.*
 
 @Dao
@@ -76,8 +77,8 @@ abstract class SessionDao(
 
     @Transaction
     @Query("SELECT * FROM session")
-    abstract suspend fun getAllWithSectionsWithLibraryItems(
-    ): List<SessionWithSectionsWithLibraryItems>
+    abstract fun getAllWithSectionsWithLibraryItems(
+    ): Flow<List<SessionWithSectionsWithLibraryItems>>
 
     @Transaction
     @Query("SELECT * FROM session WHERE id=:sessionId")

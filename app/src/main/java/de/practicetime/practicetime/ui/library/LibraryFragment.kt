@@ -181,10 +181,10 @@ fun Library(
             )
 
             // Action bar
-
-            if(libraryUiState.actionModeUiState.isActionMode) {
+            val actionModeUiState = libraryUiState.actionModeUiState
+            if(actionModeUiState.isActionMode) {
                 ActionBar(
-                    numSelectedItems = libraryUiState.actionModeUiState.numberOfSelections,
+                    numSelectedItems = actionModeUiState.numberOfSelections,
                     onDismissHandler = libraryViewModel::clearActionMode,
                     onEditHandler = libraryViewModel::onEditAction,
                     onDeleteHandler = libraryViewModel::onDeleteAction

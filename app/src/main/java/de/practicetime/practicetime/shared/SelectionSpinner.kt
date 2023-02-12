@@ -34,8 +34,8 @@ fun SelectionSpinner(
     label: @Composable (() -> Unit)? = null,
     leadingIcon: @Composable (() -> Unit)? = null,
     options: List<SelectionSpinnerOption>,
-    selected: SelectionSpinnerOption?,
-    defaultOption: SelectionSpinnerOption? = null,
+    selected: SelectionSpinnerOption,
+    specialOption: SelectionSpinnerOption? = null,
     onExpandedChange: (Boolean) -> Unit,
     onSelectedChange: (SelectionSpinnerOption) -> Unit
 ) {
@@ -51,7 +51,7 @@ fun SelectionSpinner(
                 .onGloballyPositioned {
                     size = it.size.width
                 },
-            value = (selected?: defaultOption ?: options.first()).name,
+            value = selected.name,
             label = label,
             onValueChange = {},
             readOnly = true,
@@ -72,10 +72,10 @@ fun SelectionSpinner(
                 contentPadding = PaddingValues(0.dp),
                 modifier = Modifier
                     .width(with(LocalDensity.current) { size.toDp() })
-                    .height((48 * (options.size + if(defaultOption != null) 1 else 0)).coerceAtMost(240).dp)
+                    .height((48 * (options.size + if(specialOption != null) 1 else 0)).coerceAtMost(240).dp)
                     .simpleVerticalScrollbar(listState)
             ) {
-                defaultOption?.let {
+                specialOption?.let {
                     item {
                         DropdownMenuItem(
                             modifier = Modifier
