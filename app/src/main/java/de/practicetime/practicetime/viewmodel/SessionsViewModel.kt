@@ -16,6 +16,8 @@ import de.practicetime.practicetime.database.PTDatabase
 import de.practicetime.practicetime.database.SessionWithSectionsWithLibraryItems
 import de.practicetime.practicetime.repository.SessionRepository
 import de.practicetime.practicetime.shared.TopBarUiState
+import de.practicetime.practicetime.utils.getSpecificDay
+import de.practicetime.practicetime.utils.getSpecificMonth
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
@@ -67,7 +69,7 @@ class SessionsViewModel(
     private val sessionRepository = SessionRepository(database)
 
     /** Imported Flows */
-    val sessions = sessionRepository.sessionsWithSectionsWithLibraryItems.stateIn(
+    private val sessions = sessionRepository.sessionsWithSectionsWithLibraryItems.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = emptyList()
@@ -79,6 +81,94 @@ class SessionsViewModel(
 
     private val _expandedMonths = MutableStateFlow<Set<Int>>(emptySet())
 
+
+    /** Combining imported and own state flows */
+
+
+    private val sessionsForDaysForMonths = sessions.map { sessions ->
+        if(sessions.isEmpty()) {
+            return@map emptyList()
+        }
+
+        val sessionsForDaysForMonths = mutableListOf<SessionsForDaysForMonth>()
+
+        // initialize variables to keep track of the current month, current day,
+        // the index of its first session and the total duration of the current day
+        var (currentDay, currentMonth) = sessions.first()
+            .sections.first()
+            .section.timestamp.let { timestamp ->
+                Pair(getSpecificDay(timestamp), getSpecificMonth(timestamp))
+            }
+
+        var firstSessionOfDayIndex = 0
+        var totalPracticeDuration = 0
+
+        val sessionsForDaysForMonth = mutableListOf<SessionsForDay>()
+
+        // then loop trough all of the sessions...
+        sessions.forEachIndexed { index, session ->
+            // ...get the month and day...
+            val sessionTimestamp = session.sections.first().section.timestamp
+            val (day, month) = sessionTimestamp.let { timestamp ->
+                Pair(getSpecificDay(timestamp), getSpecificMonth(timestamp))
+            }
+
+            totalPracticeDuration += session.sections.sumOf { it.section.duration ?: 0 }
+
+            // ...and compare them to the current day first.
+            // if it differs, create a new SessionsForDay object
+            // with the respective subList of sessions
+            if(day == currentDay) return@forEachIndexed
+
+            sessionsForDaysForMonth.add(SessionsForDay(
+                specificDay = currentDay,
+                totalPracticeDuration = totalPracticeDuration,
+                sessions = sessions.slice(firstSessionOfDayIndex until index)
+            ))
+
+            // reset / set tracking variables appropriately
+            currentDay = day
+            firstSessionOfDayIndex = index
+            totalPracticeDuration = 0
+
+            // then compare the month to the current month.
+            // if it differs, create a new SessionsForDaysForMonth object
+            // storing the specific month along with the list of SessionsForDay objects
+            if(month == currentMonth) return@forEachIndexed
+
+            sessionsForDaysForMonths.add(SessionsForDaysForMonth(
+                specificMonth = currentMonth,
+                sessionsForDays = sessionsForDaysForMonth.toList()
+            ))
+
+            // set tracking variable and reset list
+            currentMonth = month
+            sessionsForDaysForMonth.clear()
+        }
+
+        // importantly, add the last SessionsForDaysForMonth object
+        sessionsForDaysForMonth.add(SessionsForDay(
+            specificDay = currentDay,
+            totalPracticeDuration = totalPracticeDuration,
+            sessions = sessions.slice(firstSessionOfDayIndex until sessions.size)
+        ))
+        sessionsForDaysForMonths.add(SessionsForDaysForMonth(
+            specificMonth = currentMonth,
+            sessionsForDays = sessionsForDaysForMonth
+        ))
+
+        // if there are no expanded months, expand the latest month
+        if(_expandedMonths.value.isEmpty()) {
+            _expandedMonths.update { setOf(sessionsForDaysForMonths.last().specificMonth) }
+        }
+
+        // finally return the list as immutable
+            sessionsForDaysForMonths.toList()
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
 
     /** Composing the Ui state */
     private val topBarUiState = MutableStateFlow(
@@ -103,22 +193,15 @@ class SessionsViewModel(
     )
 
     private val contentUiState = combine(
-        sessions,
+        sessionsForDaysForMonths,
         _selectedSessions,
         _expandedMonths,
-    ) { sessions, selectedSessions, expandedMonths ->
+    ) { sessionsForDaysForMonths, selectedSessions, expandedMonths ->
         SessionsContentUiState(
-            sessionsForDaysForMonths = listOf(SessionsForDaysForMonth(
-                specificMonth = 1,
-                sessionsForDays = listOf(SessionsForDay(
-                    specificDay = 1,
-                    totalPracticeDuration = 1,
-                    sessions = sessions
-                ))
-            )).takeUnless { sessions.isEmpty() } ?: emptyList(),
+            sessionsForDaysForMonths = sessionsForDaysForMonths,
             selectedSessions = selectedSessions,
             expandedMonths = expandedMonths,
-            showHint = sessions.isEmpty(),
+            showHint = sessionsForDaysForMonths.isEmpty(),
         )
     }.stateIn(
         scope = viewModelScope,
