@@ -163,7 +163,7 @@ class SessionsViewModel(
         }
 
         // finally return the list as immutable
-            sessionsForDaysForMonths.toList()
+        sessionsForDaysForMonths.toList()
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),

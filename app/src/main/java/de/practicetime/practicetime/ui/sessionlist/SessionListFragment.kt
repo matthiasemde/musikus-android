@@ -14,7 +14,6 @@
 package de.practicetime.practicetime.ui.sessionlist
 
 import android.content.Intent
-import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -24,13 +23,12 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
@@ -48,36 +46,9 @@ import de.practicetime.practicetime.viewmodel.SessionsViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 
-
-
-
-//class SessionListState(
-//    private val coroutineScope: CoroutineScope,
-//) {
-//    init {
-//
-//    }
-//
-//    val inVisibleMonths = mutableStateListOf<Int>()
-//
-//
-//    // Action mode
-//    var actionMode = mutableStateOf(false)
-//
-//    val selectedSessionIds = mutableStateListOf<UUID>()
-//
-//    fun clearActionMode() {
-//        selectedSessionIds.clear()
-//        actionMode.value = false
-//    }
-//}
-//
-//@Composable
-//fun rememberSessionListState(
-//    coroutineScope: CoroutineScope = rememberCoroutineScope(),
-//) = remember(coroutineScope) { SessionListState(coroutineScope) }
-
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class,
+@OptIn(
+    ExperimentalMaterial3Api::class,
+    ExperimentalFoundationApi::class,
     ExperimentalAnimationApi::class
 )
 @Composable
@@ -86,10 +57,18 @@ fun SessionListFragmentHolder(
     activity: AppCompatActivity?,
     sessionsViewModel: SessionsViewModel = viewModel(),
 ) {
-//    val sessionListState = rememberSessionListState()
+    val sessionsUiState by sessionsViewModel.sessionsUiState.collectAsState()
+
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
-    val sessionsUiState by sessionsViewModel.sessionsUiState.collectAsState()
+    val sessionsListState = rememberLazyListState()
+    // The FAB is initially expanded. Once the first visible item is past the first item we
+    // collapse the FAB. We use a remembered derived state to minimize unnecessary compositions.
+    val fabExpanded by remember {
+        derivedStateOf {
+            sessionsListState.firstVisibleItemIndex == 0
+        }
+    }
 
     Scaffold(
         contentWindowInsets = WindowInsets(bottom = 0.dp),
@@ -97,21 +76,22 @@ fun SessionListFragmentHolder(
             .nestedScroll(scrollBehavior.nestedScrollConnection),
         floatingActionButton = {
             ExtendedFloatingActionButton(
+                icon = {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "new session"
+                    )
+                },
+                text = { Text(text = "Start Session") },
                 onClick = {
                     activity?.let {
                         val i = Intent(it, ActiveSessionActivity::class.java)
                         it.startActivity(i)
                         it.overridePendingTransition(R.anim.slide_in_up, R.anim.fake_anim)
                     }
-                }
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = "new session"
-                )
-                Spacer(Modifier.width(MaterialTheme.spacing.small))
-                Text(text = "Start Session")
-            }
+                },
+                expanded = fabExpanded,
+            )
         },
         topBar = {
             val topBarUiState = sessionsUiState.topBarUiState
@@ -177,10 +157,10 @@ fun SessionListFragmentHolder(
                     top = paddingValues.calculateTopPadding() + 16.dp,
                     bottom = paddingValues.calculateBottomPadding() + 56.dp,
                 ),
-                verticalArrangement = Arrangement.spacedBy(24.dp)
+                verticalArrangement = Arrangement.spacedBy(24.dp),
+                state = sessionsListState,
             ) {
                 contentUiState.sessionsForDaysForMonths.forEach { sessionsForDaysForMonth ->
-                    Log.d("SessionListFragment", "sessionsForDaysForMonth: $sessionsForDaysForMonth")
                     item {
                         Row (
                             modifier = Modifier
