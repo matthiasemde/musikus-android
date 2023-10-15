@@ -2,15 +2,20 @@ plugins {
     id 'com.android.application'
     id 'kotlin-android'
     id 'kotlin-kapt'
+    id 'com.google.devtools.ksp'
+}
+
+kotlin {
+    jvmToolchain(19)
 }
 
 android {
-    compileSdk 33
+    compileSdk 34
 
     defaultConfig {
         applicationId "de.practicetime.practicetime"
         minSdk 23
-        targetSdk 33
+        targetSdkVersion compileSdk
         versionCode 8
         versionName "1.0.1"
 
@@ -23,7 +28,7 @@ android {
         }
     }
 
-    applicationVariants.all { variant ->
+    applicationVariants.configureEach { variant ->
         variant.resValue "string", "versionName", "Version " + variant.versionName
     }
 
@@ -33,37 +38,35 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+
     buildFeatures {
         compose true
         viewBinding true
     }
 
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.3.2"
-        kotlinCompilerVersion = "1.7.10"
+        kotlinCompilerExtensionVersion = "1.5.2"
     }
+
     compileOptions {
         // Flag to enable support for the new language APIs
         coreLibraryDesugaringEnabled true
-        // Sets Java compatibility to Java 8
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
     }
-    kotlinOptions {
-        jvmTarget = '1.8'
-    }
+
     namespace 'de.practicetime.practicetime'
 }
 
 dependencies {
+    ksp 'androidx.room:room-compiler:2.5.2'
+
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
-    implementation 'androidx.navigation:navigation-runtime-ktx:2.5.3'
+    implementation 'androidx.navigation:navigation-runtime-ktx:2.7.2'
 
-    def composeBom = platform 'androidx.compose:compose-bom:2023.01.00'
+    def composeBom = platform 'androidx.compose:compose-bom:2023.09.00'
 
-    def lifecycle_version = "2.5.1"
-    def room_version = "2.4.3"
-    def nav_version = "2.5.3"
+    def lifecycle_version = "2.6.2"
+    def room_version = "2.5.2"
+    def nav_version = "2.7.2"
 
     // https://developer.android.com/jetpack/androidx/releases/compose-kotlin
     // https://developer.android.com/jetpack/compose/setup#bom-version-mapping
@@ -97,7 +100,7 @@ dependencies {
         debugImplementation 'androidx.compose.ui:ui-tooling'
 
         // When using a MDC theme
-        implementation "androidx.activity:activity-compose:1.6.1"
+        implementation "androidx.activity:activity-compose:1.7.2"
         implementation 'com.google.android.material:compose-theme-adapter-3:1.1.1'
         implementation "com.google.accompanist:accompanist-systemuicontroller:0.17.0"
 
@@ -107,14 +110,14 @@ dependencies {
 
     // Room
     implementation "androidx.room:room-runtime:$room_version"
-    kapt "androidx.room:room-compiler:$room_version"
+    ksp "androidx.room:room-compiler:$room_version"
     // Kotlin Extensions and Coroutines support for Room
     implementation "androidx.room:room-ktx:$room_version"
 
     // Coroutines
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3'
     // Lifecycle-Scope support for Coroutines
-    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.5.1'
+    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.6.2'
 
     // Data store
     implementation "androidx.datastore:datastore-preferences:1.0.0"
@@ -122,23 +125,23 @@ dependencies {
     // Navigation
     implementation "androidx.navigation:navigation-fragment-ktx:$nav_version"
     implementation "androidx.navigation:navigation-ui-ktx:$nav_version"
-    implementation "com.google.accompanist:accompanist-navigation-animation:0.21.1-beta"
+    implementation 'com.google.accompanist:accompanist-navigation-animation:0.33.1-alpha'
 
     // Charts
     implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0'
 
     // Backport java.Time to SDK < 23
-    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.1.5'
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.3'
 
     // AppIntro
     implementation 'com.github.AppIntro:AppIntro:6.2.0'
 
-    implementation 'androidx.core:core-ktx:1.9.0'
-    implementation 'androidx.appcompat:appcompat:1.5.1'
-    implementation 'com.google.android.material:material:1.7.0'
+    implementation 'androidx.core:core-ktx:1.12.0'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.android.material:material:1.10.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
-    implementation "androidx.recyclerview:recyclerview:1.2.1"
-    testImplementation 'junit:junit:4.+'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.3'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
+    implementation "androidx.recyclerview:recyclerview:1.3.1"
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
 }

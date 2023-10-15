@@ -60,14 +60,6 @@ class PracticeTime : Application() {
         var exportLauncher: ActivityResultLauncher<String>? = null
         var importLauncher: ActivityResultLauncher<Array<String>>? = null
 
-        // the database accessing objects of the application
-//        lateinit var libraryItemDao: LibraryItemDao
-//        lateinit var libraryFolderDao: LibraryFolderDao
-//        lateinit var goalDescriptionDao: GoalDescriptionDao
-//        lateinit var goalInstanceDao: GoalInstanceDao
-//        lateinit var sessionDao: SessionDao
-//        lateinit var sectionDao: SectionDao
-
         var noSessionsYet = true
         var serviceIsRunning = false
 

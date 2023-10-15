@@ -25,7 +25,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.ComposeView
@@ -401,7 +400,6 @@ fun PeriodInput(
     }
 }
 
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun GoalDialog(
     dialogData: GoalDialogData,
@@ -455,7 +453,7 @@ fun GoalDialog(
             if(dialogData.goalType != null && dialogData.selectedLibraryItems != null) {
                 Spacer(modifier = Modifier.height(12.dp))
 
-                Row(modifier = Modifier.padding(horizontal = 32.dp)){Divider()}
+                Row(modifier = Modifier.padding(horizontal = 32.dp)){ Divider() }
 
                 Spacer(modifier = Modifier.height(12.dp))
 

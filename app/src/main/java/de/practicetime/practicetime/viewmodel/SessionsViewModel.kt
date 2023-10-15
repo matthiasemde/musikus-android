@@ -18,8 +18,14 @@ import de.practicetime.practicetime.repository.SessionRepository
 import de.practicetime.practicetime.shared.TopBarUiState
 import de.practicetime.practicetime.utils.getSpecificDay
 import de.practicetime.practicetime.utils.getSpecificMonth
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.UUID
 
 data class SessionsForDaysForMonth (
     val specificMonth: Int,
@@ -236,9 +242,9 @@ class SessionsViewModel(
 
     /** Mutators */
 
-    fun onEditAction() {
+    fun onEditAction(editSession: (id: UUID) -> Unit) {
         _selectedSessions.value.firstOrNull()?.let {
-            // TODO go to edit session screen with sessionToEdit
+            editSession(it.session.id)
         } ?: Log.d("SessionsViewModel", "Tried to edit with no session selected")
         clearActionMode()
     }

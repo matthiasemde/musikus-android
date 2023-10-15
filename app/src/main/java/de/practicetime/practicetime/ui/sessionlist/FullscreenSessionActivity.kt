@@ -16,7 +16,11 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
-import android.widget.*
+import android.widget.EditText
+import android.widget.ImageButton
+import android.widget.ImageView
+import android.widget.RatingBar
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -24,7 +28,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.android.material.button.MaterialButton
 import de.practicetime.practicetime.R
-import de.practicetime.practicetime.database.PTDatabase
 import de.practicetime.practicetime.database.SectionWithLibraryItem
 import de.practicetime.practicetime.database.SessionWithSectionsWithLibraryItems
 import de.practicetime.practicetime.database.entities.Section
@@ -34,7 +37,7 @@ import de.practicetime.practicetime.utils.TIME_FORMAT_HUMAN_PRETTY
 import de.practicetime.practicetime.utils.getDurationString
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.util.*
+import java.util.UUID
 
 
 class FullscreenSessionActivity : AppCompatActivity() {
@@ -154,8 +157,8 @@ class FullscreenSessionActivity : AppCompatActivity() {
         }
 
         lifecycleScope.launch {
-            sessionWithSectionsWithLibraryItems =
-                PTDatabase.getInstance(context).sessionDao.getWithSectionsWithLibraryItems(sessionId)
+//            sessionWithSectionsWithLibraryItems =
+//                PTDatabase.getInstance(context).sessionDao.getWithSectionsWithLibraryItems(sessionId)
             val (session, sectionsWithLibraryItems) = sessionWithSectionsWithLibraryItems!!
 
             ratingBarView.progress = session.rating

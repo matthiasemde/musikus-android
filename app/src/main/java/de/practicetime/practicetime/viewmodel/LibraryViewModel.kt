@@ -24,10 +24,14 @@ import de.practicetime.practicetime.repository.LibraryRepository
 import de.practicetime.practicetime.repository.UserPreferencesRepository
 import de.practicetime.practicetime.shared.MultiFABState
 import de.practicetime.practicetime.shared.TopBarUiState
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted.Companion.WhileSubscribed
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.util.*
+import java.util.UUID
 
 enum class LibraryMenuSelections {
 }
@@ -51,6 +55,8 @@ data class LibraryItemEditData(
     val colorIndex: Int,
     val folderId: UUID?,
 )
+
+/** Ui state data classes */
 
 data class LibraryTopBarUiState(
     override val title: String,

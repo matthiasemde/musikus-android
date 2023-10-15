@@ -5,6 +5,7 @@ import de.practicetime.practicetime.database.PTDatabase
 import de.practicetime.practicetime.database.SessionWithSections
 import de.practicetime.practicetime.database.entities.GoalType
 import de.practicetime.practicetime.database.entities.Session
+import java.util.UUID
 
 class SessionRepository(
     database: PTDatabase
@@ -17,7 +18,8 @@ class SessionRepository(
     val sessions = sessionDao.getAllAsFlow()
     val sections = sectionDao.getAllAsFlow()
 
-    val sessionsWithSectionsWithLibraryItems = sessionDao.getAllWithSectionsWithLibraryItems()
+    val sessionsWithSectionsWithLibraryItems = sessionDao.getAllWithSectionsWithLibraryItemsAsFlow()
+    fun sessionWithSectionsWithLibraryItems(id: UUID) = sessionDao.getWithSectionsWithLibraryItemsAsFlow(id)
 
     fun sectionsForGoal (goal: GoalInstanceWithDescriptionWithLibraryItems) =
         when(goal.description.description.type) {

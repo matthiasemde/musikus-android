@@ -16,26 +16,47 @@ package de.practicetime.practicetime.ui.sessionlist
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LargeTopAppBar
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import de.practicetime.practicetime.R
 import de.practicetime.practicetime.datastore.ThemeSelections
-import de.practicetime.practicetime.shared.*
+import de.practicetime.practicetime.shared.ActionBar
+import de.practicetime.practicetime.shared.CommonMenuSelections
+import de.practicetime.practicetime.shared.MainMenu
+import de.practicetime.practicetime.shared.Selectable
+import de.practicetime.practicetime.shared.ThemeMenu
 import de.practicetime.practicetime.spacing
 import de.practicetime.practicetime.ui.activesession.ActiveSessionActivity
 import de.practicetime.practicetime.utils.TIME_FORMAT_HUMAN_PRETTY
@@ -44,18 +65,20 @@ import de.practicetime.practicetime.utils.getDurationString
 import de.practicetime.practicetime.viewmodel.MainViewModel
 import de.practicetime.practicetime.viewmodel.SessionsViewModel
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
+import java.util.Locale
+import java.util.UUID
 
 @OptIn(
     ExperimentalMaterial3Api::class,
     ExperimentalFoundationApi::class,
-    ExperimentalAnimationApi::class
 )
 @Composable
-fun SessionListFragmentHolder(
+fun Sessions(
     mainViewModel: MainViewModel,
     activity: AppCompatActivity?,
     sessionsViewModel: SessionsViewModel = viewModel(),
+    editSession: (sessionId: UUID) -> Unit,
 ) {
     val sessionsUiState by sessionsViewModel.sessionsUiState.collectAsState()
 
@@ -140,7 +163,9 @@ fun SessionListFragmentHolder(
                 ActionBar(
                     numSelectedItems = actionModeUiState.numberOfSelections,
                     onDismissHandler = sessionsViewModel::clearActionMode,
-                    onEditHandler = sessionsViewModel::onEditAction,
+                    onEditHandler = {
+                        sessionsViewModel.onEditAction(editSession)
+                    },
                     onDeleteHandler = sessionsViewModel::onDeleteAction,
                 )
             }

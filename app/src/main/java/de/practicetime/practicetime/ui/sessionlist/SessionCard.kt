@@ -19,12 +19,15 @@ import android.widget.LinearLayout
 import android.widget.RatingBar
 import android.widget.TextView
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -35,6 +38,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -54,22 +58,19 @@ fun RatingBar(
     total: Int = 7,
     image: ImageVector,
     color: Color = Color(0xFFFFB300),
+    size: Dp = 16.dp,
+    onRatingChanged: (Int) -> Unit = {}
 ) {
-    val size = 16.dp
-    Row() {
-        for(i in 1..rating) {
+    Row {
+        val interactionSource = remember { MutableInteractionSource() }
+        for(i in 1..total) {
             Icon(
-                modifier = Modifier.size(size),
+                modifier = Modifier
+                    .size(size)
+                    .clickable(interactionSource, indication = null) { onRatingChanged(i) },
                 imageVector = image,
-                tint = color,
-                contentDescription = null
-            )
-        }
-        for(i in rating + 1..total) {
-            Icon(
-                modifier = Modifier.size(size),
-                imageVector = image,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                tint = if (i <= rating) color else
+                    MaterialTheme.colorScheme.onSurfaceVariant,
                 contentDescription = null
             )
         }

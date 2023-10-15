@@ -9,12 +9,25 @@
 package de.practicetime.practicetime.ui.library
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.MusicNote
-import androidx.compose.material3.*
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.RadioButtonDefaults
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,10 +45,9 @@ import de.practicetime.practicetime.shared.UUIDSelectionSpinnerOption
 import de.practicetime.practicetime.viewmodel.DialogMode
 import de.practicetime.practicetime.viewmodel.LibraryFolderEditData
 import de.practicetime.practicetime.viewmodel.LibraryItemEditData
-import java.util.*
+import java.util.UUID
 
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LibraryFolderDialog(
     mode: DialogMode,
@@ -58,7 +70,8 @@ fun LibraryFolderDialog(
             Column {
                 OutlinedTextField(
                     modifier = Modifier.padding(horizontal = 24.dp),
-                    value = folderData.name, onValueChange = onFolderNameChange,
+                    value = folderData.name,
+                    onValueChange = onFolderNameChange,
                     label = { Text(text = "Folder name") },
                     singleLine = true,
                 )
@@ -94,7 +107,6 @@ fun LibraryFolderDialog(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LibraryItemDialog(
     mode: DialogMode,

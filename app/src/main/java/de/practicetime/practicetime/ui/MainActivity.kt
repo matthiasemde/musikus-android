@@ -18,18 +18,29 @@ import androidx.activity.compose.setContent
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.animation.*
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.graphics.ExperimentalAnimationGraphicsApi
 import androidx.compose.animation.graphics.res.animatedVectorResource
 import androidx.compose.animation.graphics.res.rememberAnimatedVectorPainter
 import androidx.compose.animation.graphics.vector.AnimatedImageVector
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.*
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -46,10 +57,12 @@ import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavType
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
-import com.google.accompanist.navigation.animation.AnimatedNavHost
-import com.google.accompanist.navigation.animation.composable
-import com.google.accompanist.navigation.animation.rememberAnimatedNavController
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.google.android.material.composethemeadapter3.Mdc3Theme
 import de.practicetime.practicetime.BuildConfig
 import de.practicetime.practicetime.PracticeTime
@@ -58,19 +71,21 @@ import de.practicetime.practicetime.getActivity
 import de.practicetime.practicetime.ui.goals.Goals
 import de.practicetime.practicetime.ui.goals.ProgressUpdate
 import de.practicetime.practicetime.ui.library.Library
-import de.practicetime.practicetime.ui.sessionlist.SessionListFragmentHolder
+import de.practicetime.practicetime.ui.sessionlist.EditSession
+import de.practicetime.practicetime.ui.sessionlist.Sessions
 import de.practicetime.practicetime.ui.statistics.StatisticsFragmentHolder
 import de.practicetime.practicetime.utils.ExportDatabaseContract
 import de.practicetime.practicetime.utils.ExportImportDialog
 import de.practicetime.practicetime.utils.ImportDatabaseContract
 import de.practicetime.practicetime.viewmodel.MainViewModel
+import java.util.UUID
 
 
 sealed class Screen(
     val route: String,
     val navigationBarData: NavigationBarData? = null
 ) {
-    object Sessions : Screen(
+    data object Sessions : Screen(
         route = "sessionList",
         NavigationBarData(
             title = R.string.navigationSessionsTitle,
@@ -78,7 +93,11 @@ sealed class Screen(
             animatedIcon = R.drawable.avd_sessions,
         )
     )
-    object Goals : Screen(
+
+    data object EditSession : Screen(
+        route = "editSession/{sessionId}",
+    )
+    data object Goals : Screen(
         route = "goals",
         NavigationBarData(
             title = R.string.navigationGoalsTitle,
@@ -86,7 +105,7 @@ sealed class Screen(
             animatedIcon = R.drawable.avd_goals
         )
     )
-    object Statistics : Screen(
+    data object Statistics : Screen(
         route = "statisticsOverview",
         NavigationBarData(
             title = R.string.navigationStatisticsTitle,
@@ -94,7 +113,7 @@ sealed class Screen(
             animatedIcon = R.drawable.avd_bar_chart
         )
     )
-    object Library : Screen(
+    data object Library : Screen(
         route = "library",
         NavigationBarData(
             title = R.string.navigationLibraryTitle,
@@ -102,7 +121,7 @@ sealed class Screen(
             animatedIcon = R.drawable.avd_library
         )
     )
-    object ProgressUpdate : Screen(
+    data object ProgressUpdate : Screen(
         route = "progressUpdate",
     )
 
@@ -122,8 +141,9 @@ class MainActivity : AppCompatActivity() {
         Screen.Library
     )
 
-    @OptIn(ExperimentalMaterial3Api::class, ExperimentalAnimationGraphicsApi::class,
-        ExperimentalAnimationApi::class
+    @OptIn(
+        ExperimentalAnimationGraphicsApi::class,
+        ExperimentalAnimationApi::class, ExperimentalLayoutApi::class
     )
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -133,7 +153,7 @@ class MainActivity : AppCompatActivity() {
 //            launchAppIntroFirstRun()
         }
 
-        val reloadDatabase = mutableStateOf(0)
+        val reloadDatabase = mutableIntStateOf(0)
 
         PracticeTime.exportLauncher = registerForActivityResult(
             ExportDatabaseContract()
@@ -143,25 +163,25 @@ class MainActivity : AppCompatActivity() {
             ImportDatabaseContract()
         ) {
             PracticeTime.importDatabaseCallback(applicationContext, it)
-            reloadDatabase.value++
+            reloadDatabase.intValue++
         }
 
         setContent {
 
             val mainViewModel: MainViewModel = viewModel()
-            val navController = rememberAnimatedNavController()
+            val navController = rememberNavController()
+
+            val navBackStackEntry by navController.currentBackStackEntryAsState()
+            val currentDestination = navBackStackEntry?.destination
+            val showNavigationBar = currentDestination?.hierarchy?.any { dest ->
+                navItems.any { it.route == dest.route }
+            } == true
 
             Mdc3Theme {
                 Log.d("MainActivity", "${LocalViewModelStoreOwner.current}")
                 Scaffold(
                     bottomBar = {
-                        val navBackStackEntry by navController.currentBackStackEntryAsState()
-                        val currentDestination = navBackStackEntry?.destination
-                        val showNavigationBar = currentDestination?.hierarchy?.any { dest ->
-                            navItems.any { it.route == dest.route }
-                        } == true
-
-                        if(showNavigationBar) {
+                        if (showNavigationBar) {
                             Box {
                                 NavigationBar {
                                     navItems.forEach { screen ->
@@ -225,16 +245,18 @@ class MainActivity : AppCompatActivity() {
                                     enter = fadeIn(),
                                     exit = fadeOut()
                                 ) {
-                                    Box(modifier = Modifier
-                                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.9f))
+                                    Box(
+                                        modifier = Modifier
+                                            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.9f))
                                     )
                                 }
                             }
                         }
                     }
                 ) { innerPadding ->
+                    Log.d("MainActivity", "innerPadding($currentDestination): $innerPadding")
                     val animationDuration = 400
-                    AnimatedNavHost(
+                    NavHost(
                         navController,
                         startDestination = Screen.Sessions.route,
                         Modifier.padding(bottom = innerPadding.calculateBottomPadding()),
@@ -263,7 +285,16 @@ class MainActivity : AppCompatActivity() {
                                     fadeOut(tween(0))
                                 } else null
                             }
-                        ) { SessionListFragmentHolder(mainViewModel, getActivity()) }
+                        ) {
+                            Sessions(mainViewModel, getActivity()) { sessionId: UUID ->
+                                navController.navigate(
+                                    Screen.EditSession.route.replace(
+                                        "{sessionId}",
+                                        sessionId.toString()
+                                    )
+                                )
+                            }
+                        }
                         composable(
                             route = Screen.Goals.route,
                         ) { Goals(mainViewModel) }
@@ -277,6 +308,15 @@ class MainActivity : AppCompatActivity() {
                             route = Screen.ProgressUpdate.route,
                             enterTransition = { fadeIn(tween(0)) }
                         ) { ProgressUpdate(mainViewModel) }
+                        composable(
+                            route = Screen.EditSession.route,
+                            arguments = listOf(navArgument("sessionId") { type = NavType.StringType})
+                        ) {backStackEntry ->
+                            val sessionId = backStackEntry.arguments?.getString("sessionId")
+                                ?: return@composable navController.navigate(Screen.Sessions.route)
+
+                            EditSession(sessionToEditId = UUID.fromString(sessionId))
+                        }
                     }
 
                     /** Export / Import Dialog */

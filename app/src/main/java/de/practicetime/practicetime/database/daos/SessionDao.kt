@@ -71,13 +71,13 @@ abstract class SessionDao(
 
     @Transaction
     @Query("SELECT * FROM session WHERE id=:sessionId")
-    abstract suspend fun getWithSectionsWithLibraryItems(
+    abstract fun getWithSectionsWithLibraryItemsAsFlow(
         sessionId: UUID
-    ): SessionWithSectionsWithLibraryItems
+    ): Flow<SessionWithSectionsWithLibraryItems>
 
     @Transaction
     @Query("SELECT * FROM session")
-    abstract fun getAllWithSectionsWithLibraryItems(
+    abstract fun getAllWithSectionsWithLibraryItemsAsFlow(
     ): Flow<List<SessionWithSectionsWithLibraryItems>>
 
     @Transaction
