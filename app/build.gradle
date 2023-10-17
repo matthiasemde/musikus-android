@@ -13,7 +13,7 @@ android {
     compileSdk 34
 
     defaultConfig {
-        applicationId "de.practicetime.practicetime"
+        applicationId "app.musikus"
         minSdk 23
         targetSdkVersion compileSdk
         versionCode 8
@@ -53,7 +53,7 @@ android {
         coreLibraryDesugaringEnabled true
     }
 
-    namespace 'de.practicetime.practicetime'
+    namespace 'app.musikus'
 }
 
 dependencies {

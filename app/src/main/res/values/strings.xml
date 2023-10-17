@@ -9,7 +9,7 @@
     Additions and modifications, author Matthias Emde
 -->
 <resources>
-    <string name="app_name">PracticeTime!</string>
+    <string name="app_name">Musikus</string>
     <string name="sessionSummaryComment">Comment</string>
     <string name="sessionSummaryPracticeTime">Practice time</string>
     <string name="sessionSummaryBreakTime">Break time</string>
@@ -217,7 +217,7 @@
     <string name="help_replay_intro">Replay app introduction</string>
     <string name="hint_add_new_section">Choose another item to add it to your session</string>
     <string name="hint_delete_section">You can swipe left on an entry to remove it from your session.</string>
-    <string name="filename_shared_preferences">de.practicetime.practicetime.preferences</string>
+    <string name="filename_shared_preferences">app.musikus.preferences</string>
 
     <string name="help_title">Help</string>
     <string name="help_tips_title">Tips and tricks</string>

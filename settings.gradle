@@ -9,5 +9,5 @@ dependencyResolutionManagement {
         maven { url 'https://jitpack.io' }
     }
 }
-rootProject.name = "PracticeTime!"
+rootProject.name = "Musikus"
 include ':app'

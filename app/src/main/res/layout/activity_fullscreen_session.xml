@@ -73,7 +73,7 @@
                     android:layout_height="match_parent"
                     android:orientation="horizontal">
 
-                    <de.practicetime.practicetime.components.NonDraggableRatingBar
+                    <app.musikus.components.NonDraggableRatingBar
                         android:id="@+id/fullscreen_session_rating_bar"
                         style="@style/Widget.AppCompat.RatingBar"
                         android:layout_width="wrap_content"

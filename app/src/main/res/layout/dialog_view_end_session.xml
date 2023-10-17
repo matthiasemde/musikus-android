@@ -20,7 +20,7 @@
         android:textSize="28sp"
         android:background="?attr/colorPrimary" />
 
-    <de.practicetime.practicetime.components.NonDraggableRatingBar
+    <app.musikus.components.NonDraggableRatingBar
         android:id="@+id/dialogRatingBar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

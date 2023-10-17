@@ -35,7 +35,7 @@
             android:layout_height="wrap_content"
             android:layout_marginEnd="8dp">
 
-            <de.practicetime.practicetime.components.NumberInput
+            <app.musikus.components.NumberInput
                 android:id="@+id/time_dialog_hours"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -71,7 +71,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content">
 
-            <de.practicetime.practicetime.components.NumberInput
+            <app.musikus.components.NumberInput
                 android:id="@+id/time_dialog_minutes"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
