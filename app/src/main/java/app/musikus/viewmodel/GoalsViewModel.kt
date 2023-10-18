@@ -124,6 +124,14 @@ class GoalsViewModel(
 
     private val userPreferences = userPreferencesRepository.userPreferences
 
+    private val showPausedGoals = userPreferences.map {
+        it.showPausedGoals
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = true
+    )
+
     private val itemsSortMode = userPreferences.map {
         it.libraryItemSortMode
     }.stateIn(
@@ -188,7 +196,6 @@ class GoalsViewModel(
 
     // Menu
     private val _showSortModeMenu = MutableStateFlow(false)
-    private val _showPausedGoals = MutableStateFlow(false)
 
     // Goal dialog
     private val _goalDialogData = MutableStateFlow<GoalDialogData?>(null)
@@ -207,7 +214,7 @@ class GoalsViewModel(
     /** Combining imported and own state flows */
     private val filteredGoals = combine(
         currentGoals,
-        _showPausedGoals
+        showPausedGoals
     ) { goals, showPausedGoals ->
         goals.filter { goal ->
             showPausedGoals || !goal.description.description.paused
@@ -275,7 +282,7 @@ class GoalsViewModel(
         )
     )
 
-    private val overflowMenuUiState = _showPausedGoals.map {
+    private val overflowMenuUiState = showPausedGoals.map {
         GoalsOverflowMenuUiState(
             showPausedGoals = it
         )
@@ -283,7 +290,7 @@ class GoalsViewModel(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = GoalsOverflowMenuUiState(
-            showPausedGoals = _showPausedGoals.value
+            showPausedGoals = showPausedGoals.value
         )
     )
 
@@ -455,7 +462,9 @@ class GoalsViewModel(
         }
     }
     fun onPausedGoalsChanged(newValue: Boolean) {
-        _showPausedGoals.update { newValue }
+        viewModelScope.launch {
+            userPreferencesRepository.updateShowPausedGoals(newValue)
+        }
     }
 
 //    fun onDeactivateAction() {

@@ -13,7 +13,12 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
-import app.musikus.datastore.*
+import app.musikus.datastore.GoalsSortMode
+import app.musikus.datastore.LibraryFolderSortMode
+import app.musikus.datastore.LibraryItemSortMode
+import app.musikus.datastore.SortDirection
+import app.musikus.datastore.ThemeSelections
+import app.musikus.datastore.UserPreferences
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
@@ -26,6 +31,7 @@ object PreferenceKeys {
     val LIBRARY_ITEM_SORT_DIRECTION = stringPreferencesKey("library_item_sort_direction")
     val GOALS_SORT_MODE = stringPreferencesKey("goals_sort_mode")
     val GOALS_SORT_DIRECTION = stringPreferencesKey("goals_sort_direction")
+    val SHOW_PAUSED_GOALS = booleanPreferencesKey("show_paused_goals")
 }
 
 class UserPreferencesRepository(
@@ -44,7 +50,9 @@ class UserPreferencesRepository(
             libraryItemSortDirection = SortDirection.valueOrDefault(preferences[PreferenceKeys.LIBRARY_ITEM_SORT_DIRECTION]),
 
             goalsSortMode = GoalsSortMode.valueOrDefault(preferences[PreferenceKeys.GOALS_SORT_MODE]),
-            goalsSortDirection = SortDirection.valueOrDefault(preferences[PreferenceKeys.GOALS_SORT_DIRECTION])
+            goalsSortDirection = SortDirection.valueOrDefault(preferences[PreferenceKeys.GOALS_SORT_DIRECTION]),
+
+            showPausedGoals =  preferences[PreferenceKeys.SHOW_PAUSED_GOALS] ?: true,
         )
     }
 
@@ -108,6 +116,12 @@ class UserPreferencesRepository(
                         currentDirection.toggle().name
                 }
             }
+        }
+    }
+
+    suspend fun updateShowPausedGoals(value: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[PreferenceKeys.SHOW_PAUSED_GOALS] = value
         }
     }
 }

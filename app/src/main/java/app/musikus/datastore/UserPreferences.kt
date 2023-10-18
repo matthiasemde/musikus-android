@@ -136,4 +136,7 @@ data class UserPreferences (
 
     val goalsSortMode: GoalsSortMode,
     val goalsSortDirection: SortDirection,
+
+    // Show paused goals
+    val showPausedGoals: Boolean,
 )
