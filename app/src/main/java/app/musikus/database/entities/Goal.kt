@@ -17,7 +17,8 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import app.musikus.database.ModelWithTimestamps
-import java.util.*
+import java.util.Calendar
+import java.util.UUID
 
 // shows, whether a goal will count all sections
 // or only the one from specific libraryItems
@@ -83,6 +84,7 @@ class GoalDescription (
     @ColumnInfo(name="period_unit") val periodUnit: GoalPeriodUnit,
     @ColumnInfo(name="progress_type") val progressType: GoalProgressType = GoalProgressType.TIME,
     @ColumnInfo(name="archived") var archived: Boolean = false,
+    @ColumnInfo(name="paused") var paused: Boolean = false,
 //    @ColumnInfo(name="profile_id", index = true) val profileId: UUID? = null,
     @ColumnInfo(name="order", defaultValue = "0") var order: Int? = null,
     ) : ModelWithTimestamps() {

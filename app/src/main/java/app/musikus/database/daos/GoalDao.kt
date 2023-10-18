@@ -64,58 +64,6 @@ abstract class GoalDescriptionDao(
     }
 
     /**
-     * @DELETE / archive
-     */
-
-    suspend fun archive(goalDescription: GoalDescription) {
-        goalDescription.archived = true
-        update(goalDescription)
-    }
-
-    suspend fun archive(goalDescriptions: List<GoalDescription>) {
-        goalDescriptions.forEach { it.archived = true }
-        update(goalDescriptions)
-    }
-
-    suspend fun getAndArchive(goalDescriptionIds: List<UUID>) {
-        archive(get(goalDescriptionIds))
-    }
-
-    /**
-     * @Update
-     */
-
-    @Transaction
-    open suspend fun updateTarget(goalDescriptionId: UUID, newTarget: Int) {
-        database.goalInstanceDao.apply {
-            get(
-                goalDescriptionId = goalDescriptionId,
-                from = getCurrTimestamp(),
-            ).forEach {
-                it.target = newTarget
-                update(it)
-            }
-        }
-    }
-
-    @Transaction
-    open suspend fun unarchive(archivedGoal: GoalInstanceWithDescriptionWithLibraryItems) {
-        val (instance, descriptionWithLibraryItems) = archivedGoal
-        val description = descriptionWithLibraryItems.description
-
-        description.archived = false
-        update(description)
-        if(instance.startTimestamp + instance.periodInSeconds > getCurrTimestamp()) {
-            instance.renewed = false
-            database.goalInstanceDao.update(instance)
-        } else {
-//            database.goalInstanceDao.insertWithProgress(
-//                description.createInstance(Calendar.getInstance(), instance.target)
-//            )
-        }
-    }
-
-    /**
      * @Queries
      */
 
@@ -207,34 +155,11 @@ abstract class GoalDescriptionDao(
 
 @Dao
 abstract class GoalInstanceDao(
-    private val database : PTDatabase
+    database : PTDatabase
 ) : BaseDao<GoalInstance>(
     tableName = "goal_instance",
     database = database
 ) {
-
-    /**
-     * @Insert
-     */
-
-//    @Transaction
-//    open suspend fun insertWithProgress(
-//        goalInstance: GoalInstance
-//    ){
-//        database.sessionDao.getSessionsContainingSectionFromTimeFrame(
-//            goalInstance.startTimestamp,
-//            goalInstance.startTimestamp + goalInstance.periodInSeconds
-//        ).filter { s -> s.sections.first().timestamp >= goalInstance.startTimestamp }
-//        .forEach { s ->
-//            database.goalDescriptionDao.computeGoalProgressForSession(
-//                database.sessionDao.getWithSectionsWithLibraryItemsWithGoals(s.session.id)
-//            ).also { progress ->
-//                goalInstance.progress += progress[goalInstance.goalDescriptionId] ?: 0
-//            }
-//        }
-//        insert(goalInstance)
-//    }
-
 
     /**
      * @Update

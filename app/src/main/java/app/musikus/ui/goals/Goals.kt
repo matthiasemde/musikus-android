@@ -32,7 +32,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.Repeat
+import androidx.compose.material.icons.rounded.Replay
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -184,6 +186,24 @@ fun Goals(
             if(actionModeUiState.isActionMode) {
                 ActionBar(
                     numSelectedItems = actionModeUiState.numberOfSelections,
+                    uniqueActions = {
+                        if(actionModeUiState.showPauseAction) {
+                            IconButton(onClick = goalsViewModel::onPauseAction) {
+                                Icon(
+                                    imageVector = Icons.Rounded.Pause,
+                                    contentDescription = "Pause",
+                                )
+                            }
+                        }
+                        if(actionModeUiState.showUnpauseAction) {
+                            IconButton(onClick = goalsViewModel::onUnpauseAction) {
+                                Icon(
+                                    imageVector = Icons.Rounded.Replay,
+                                    contentDescription = "Unpause",
+                                )
+                            }
+                        }
+                    },
                     onDismissHandler = goalsViewModel::clearActionMode,
                     onEditHandler = goalsViewModel::onEditAction,
                     onDeleteHandler = goalsViewModel::onDeleteAction

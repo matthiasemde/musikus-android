@@ -8,13 +8,16 @@
 
 package app.musikus.repository
 
+import androidx.room.Transaction
 import app.musikus.database.GoalDescriptionWithLibraryItems
 import app.musikus.database.GoalInstanceWithDescriptionWithLibraryItems
 import app.musikus.database.PTDatabase
 import app.musikus.database.entities.GoalDescription
 import app.musikus.datastore.GoalsSortMode
 import app.musikus.datastore.SortDirection
-import java.util.*
+import app.musikus.utils.getCurrTimestamp
+import java.util.Calendar
+import java.util.UUID
 
 class GoalRepository(
     database: PTDatabase
@@ -25,6 +28,7 @@ class GoalRepository(
     val currentGoals = goalInstanceDao.getWithDescriptionsWithLibraryItems()
 
     /** Mutators */
+
     /** Add */
     suspend fun add(
         newGoal: GoalDescriptionWithLibraryItems,
@@ -41,7 +45,51 @@ class GoalRepository(
         editedGoalDescriptionId: UUID,
         newTarget: Int,
     ) {
-        goalDescriptionDao.updateTarget(editedGoalDescriptionId, newTarget)
+        goalInstanceDao.apply {
+            get(
+                goalDescriptionId = editedGoalDescriptionId,
+                from = getCurrTimestamp(),
+            ).forEach {
+                it.target = newTarget
+                update(it)
+            }
+        }
+    }
+
+    /** Pause/Unpause */
+    @Transaction
+    suspend fun pause(goal: GoalInstanceWithDescriptionWithLibraryItems) {
+        val description = goal.description.description
+
+        description.paused = true
+        goalDescriptionDao.update(description)
+    }
+
+    @Transaction
+    suspend fun pause(goals: List<GoalInstanceWithDescriptionWithLibraryItems>) {
+        goals.forEach { pause(it) }
+    }
+
+    @Transaction
+    suspend fun unpause(pausedGoal: GoalInstanceWithDescriptionWithLibraryItems) {
+        val (instance, descriptionWithLibraryItems) = pausedGoal
+        val description = descriptionWithLibraryItems.description
+
+        description.paused = false
+        goalDescriptionDao.update(description)
+        if(instance.startTimestamp + instance.periodInSeconds > getCurrTimestamp()) {
+            instance.renewed = false
+            goalInstanceDao.update(instance)
+        } else {
+            goalInstanceDao.insert(
+                description.createInstance(Calendar.getInstance(), instance.target)
+            )
+        }
+    }
+
+    @Transaction
+    suspend fun unpause(pausedGoals: List<GoalInstanceWithDescriptionWithLibraryItems>) {
+        pausedGoals.forEach { unpause(it) }
     }
 
     /** Archive */

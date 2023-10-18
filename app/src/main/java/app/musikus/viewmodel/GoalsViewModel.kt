@@ -73,12 +73,13 @@ data class GoalsTopBarUiState(
 data class GoalsActionModeUiState(
     val isActionMode: Boolean,
     val numberOfSelections: Int,
+    val showPauseAction: Boolean,
+    val showUnpauseAction: Boolean,
 )
 
 data class GoalsContentUiState(
     val goalsWithProgress: List<GoalWithProgress>,
     val selectedGoals: Set<GoalInstanceWithDescriptionWithLibraryItems>,
-    val showPausedGoals: Boolean,
 
     val showHint: Boolean,
 )
@@ -161,43 +162,6 @@ class GoalsViewModel(
         initialValue = emptyList()
     )
 
-    private val sortedGoals = combine(
-        currentGoals,
-        userPreferences
-    ) { goals, preferences ->
-        goalRepository.sort(
-            goals,
-            preferences.goalsSortMode,
-            preferences.goalsSortDirection
-        )
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = emptyList()
-    )
-
-    @OptIn(ExperimentalCoroutinesApi::class)
-    private val goalProgress = currentGoals.flatMapLatest { currentGoals ->
-        Log.d("GoalsViewModel", "goalProgress: $currentGoals")
-        val sections = currentGoals.map { goal ->
-            sessionRepository.sectionsForGoal(goal).map { sections->
-                goal to sections
-            }
-        }
-
-        combine(sections) { combinedGoalsWithSections ->
-            combinedGoalsWithSections.associate { (goal, sections) ->
-                goal.instance.id to sections.sumOf { section ->
-                    section.duration ?: 0
-                }
-            }
-        }
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = emptyMap()
-    )
-
     private val items = libraryRepository.items.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
@@ -239,6 +203,53 @@ class GoalsViewModel(
 
     // Action mode
     private val _selectedGoals = MutableStateFlow<Set<GoalInstanceWithDescriptionWithLibraryItems>>(emptySet())
+
+    /** Combining imported and own state flows */
+    private val filteredGoals = combine(
+        currentGoals,
+        _showPausedGoals
+    ) { goals, showPausedGoals ->
+        goals.filter { goal ->
+            showPausedGoals || !goal.description.description.paused
+        }
+    }
+
+    private val sortedGoals = combine(
+        filteredGoals,
+        userPreferences
+    ) { goals, preferences ->
+        goalRepository.sort(
+            goals,
+            preferences.goalsSortMode,
+            preferences.goalsSortDirection
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val goalProgress = filteredGoals.flatMapLatest { goals ->
+        Log.d("GoalsViewModel", "goalProgress: $goals")
+        val sections = goals.map { goal ->
+            sessionRepository.sectionsForGoal(goal).map { sections->
+                goal to sections
+            }
+        }
+
+        combine(sections) { combinedGoalsWithSections ->
+            combinedGoalsWithSections.associate { (goal, sections) ->
+                goal.instance.id to sections.sumOf { section ->
+                    section.duration ?: 0
+                }
+            }
+        }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyMap()
+    )
 
 
     /**
@@ -300,14 +311,18 @@ class GoalsViewModel(
     private val actionModeUiState = _selectedGoals.map {
         GoalsActionModeUiState(
             isActionMode = it.isNotEmpty(),
-            numberOfSelections = it.size
+            numberOfSelections = it.size,
+            showPauseAction = it.any { goal -> !goal.description.description.paused },
+            showUnpauseAction = it.any { goal -> goal.description.description.paused },
         )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = GoalsActionModeUiState(
             isActionMode = false,
-            numberOfSelections = 0
+            numberOfSelections = 0,
+            showPauseAction = false,
+            showUnpauseAction = false,
         )
     )
 
@@ -327,7 +342,6 @@ class GoalsViewModel(
             goalsWithProgress = goalsWithProgress,
             selectedGoals = selectedGoals,
             showHint = goalsWithProgress.isEmpty(),
-            showPausedGoals = showPausedGoals,
         )
     }.stateIn(
         scope = viewModelScope,
@@ -336,7 +350,6 @@ class GoalsViewModel(
             goalsWithProgress = emptyList(),
             selectedGoals = emptySet(),
             showHint = true,
-            showPausedGoals = false,
         )
     )
 
@@ -428,6 +441,19 @@ class GoalsViewModel(
         clearActionMode()
     }
 
+    fun onPauseAction() {
+        viewModelScope.launch {
+            goalRepository.pause(_selectedGoals.value.toList())
+            clearActionMode()
+        }
+    }
+
+    fun onUnpauseAction() {
+        viewModelScope.launch {
+            goalRepository.unpause(_selectedGoals.value.toList())
+            clearActionMode()
+        }
+    }
     fun onPausedGoalsChanged(newValue: Boolean) {
         _showPausedGoals.update { newValue }
     }

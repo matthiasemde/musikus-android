@@ -9,7 +9,7 @@ package app.musikus.ui.goals
 import android.content.Context
 import app.musikus.database.PTDatabase
 import app.musikus.database.entities.GoalPeriodUnit
-import java.util.*
+import java.util.Calendar
 
 suspend fun updateGoals(context: Context) {
     var notDone = true
@@ -48,7 +48,7 @@ suspend fun updateGoals(context: Context) {
                         )
                     )
                 } else if(!description.archived) {
-                    PTDatabase.getInstance(context).goalDescriptionDao.archive(description)
+//                    PTDatabase.getInstance(context).goalDescriptionDao.archive(description) // TODO move to repository
                 }
 
                 // finally mark the outdated instance as renewed

@@ -15,15 +15,11 @@ import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 
-interface ActionModeUiState {
-    val isActionMode: Boolean
-    val numberOfSelections: Int
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ActionBar(
     numSelectedItems: Int,
+    uniqueActions: @Composable () -> Unit = {},
     onDismissHandler: () -> Unit,
     onEditHandler: () -> Unit,
     onDeleteHandler: () -> Unit
@@ -45,19 +41,16 @@ fun ActionBar(
             }
         },
         actions = {
+            uniqueActions()
             if(numSelectedItems == 1) {
-                IconButton(onClick = {
-                    onEditHandler()
-                }) {
+                IconButton(onClick = onEditHandler) {
                     Icon(
                         imageVector = Icons.Rounded.Edit,
                         contentDescription = "Edit",
                     )
                 }
             }
-            IconButton(onClick = {
-                onDeleteHandler()
-            }) {
+            IconButton(onClick = onDeleteHandler) {
                 Icon(
                     imageVector = Icons.Rounded.Delete,
                     contentDescription = "Delete",
