@@ -330,12 +330,12 @@ class GoalsViewModel(
         sortedGoals,
         goalProgress,
         _selectedGoals,
-        _showPausedGoals,
-    ) { sortedGoals, goalProgress, selectedGoals, showPausedGoals ->
+    ) { sortedGoals, goalProgress, selectedGoals ->
         val goalsWithProgress = sortedGoals.map { goal ->
             GoalWithProgress(
                 goal = goal,
-                progress = goalProgress[goal.instance.id] ?: 0,
+                progress = if (goal.description.description.paused) 0 else
+                    goalProgress[goal.instance.id] ?: 0,
             )
         }
         GoalsContentUiState(
@@ -486,11 +486,13 @@ class GoalsViewModel(
 
         // Short Click
         if(!actionModeUiState.value.isActionMode) {
-            _goalToEdit.update { goal }
-            _goalDialogData.update {
-                GoalDialogData(
-                    target = goal.instance.target,
-                )
+            if(!goal.description.description.paused) {
+                _goalToEdit.update { goal }
+                _goalDialogData.update {
+                    GoalDialogData(
+                        target = goal.instance.target,
+                    )
+                }
             }
         } else {
             if(_selectedGoals.value.contains(goal)) {

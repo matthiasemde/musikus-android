@@ -31,7 +31,7 @@ fun Selectable(
                     onLongClick = onLongClick
                 )
                 .background(
-                    if (selected) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
+                    if (selected) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
                     else Color.Transparent,
                 )
         )
