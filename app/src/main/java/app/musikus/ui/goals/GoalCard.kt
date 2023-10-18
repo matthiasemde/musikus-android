@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -74,10 +75,11 @@ fun GoalCard(
         Color(Musikus.getLibraryItemColors(LocalContext.current)[libraryItems.first().colorIndex])
     } else null
 
-    ElevatedCard(modifier = modifier) {
+    ElevatedCard(modifier = modifier
+        .blur(if (description.paused) 1.5.dp else 0.dp)
+    ) {
         Box {
             Column(modifier = Modifier
-                .blur(if (description.paused) 2.dp else 0.dp)
                 .padding(16.dp)
             ) {
                 Row(
@@ -232,13 +234,17 @@ fun GoalCard(
             if(description.paused) {
                 Icon(
                     modifier = Modifier
-                        .matchParentSize()
-                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.4f))
-                        .padding(24.dp)
-                    ,
+                        .size(72.dp)
+                        .align(Alignment.Center),
                     imageVector = Icons.Default.Pause,
                     contentDescription = "Paused Goal",
                     tint = MaterialTheme.colorScheme.onSurface
+                )
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.2f))
+
                 )
             }
         }

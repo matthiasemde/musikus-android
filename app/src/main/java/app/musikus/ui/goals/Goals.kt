@@ -33,8 +33,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.rounded.Pause
+import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Repeat
-import androidx.compose.material.icons.rounded.Replay
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -198,7 +198,7 @@ fun Goals(
                         if(actionModeUiState.showUnpauseAction) {
                             IconButton(onClick = goalsViewModel::onUnpauseAction) {
                                 Icon(
-                                    imageVector = Icons.Rounded.Replay,
+                                    imageVector = Icons.Rounded.PlayArrow,
                                     contentDescription = "Unpause",
                                 )
                             }
