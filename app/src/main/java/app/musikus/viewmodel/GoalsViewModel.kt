@@ -58,10 +58,16 @@ data class GoalsSortMenuUiState(
     val mode: GoalsSortMode,
     val direction: SortDirection,
 )
+
+data class GoalsOverflowMenuUiState(
+    val showPausedGoals: Boolean,
+)
+
 data class GoalsTopBarUiState(
     override val title: String,
     override val showBackButton: Boolean,
-    val sortMenuUiState: GoalsSortMenuUiState
+    val sortMenuUiState: GoalsSortMenuUiState,
+    val overflowMenuUiState: GoalsOverflowMenuUiState,
 ) : TopBarUiState
 
 data class GoalsActionModeUiState(
@@ -72,6 +78,7 @@ data class GoalsActionModeUiState(
 data class GoalsContentUiState(
     val goalsWithProgress: List<GoalWithProgress>,
     val selectedGoals: Set<GoalInstanceWithDescriptionWithLibraryItems>,
+    val showPausedGoals: Boolean,
 
     val showHint: Boolean,
 )
@@ -217,6 +224,7 @@ class GoalsViewModel(
 
     // Menu
     private val _showSortModeMenu = MutableStateFlow(false)
+    private val _showPausedGoals = MutableStateFlow(false)
 
     // Goal dialog
     private val _goalDialogData = MutableStateFlow<GoalDialogData?>(null)
@@ -256,11 +264,27 @@ class GoalsViewModel(
         )
     )
 
-    private val topBarUiState = sortMenuUiState.map {
+    private val overflowMenuUiState = _showPausedGoals.map {
+        GoalsOverflowMenuUiState(
+            showPausedGoals = it
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = GoalsOverflowMenuUiState(
+            showPausedGoals = _showPausedGoals.value
+        )
+    )
+
+    private val topBarUiState = combine(
+        sortMenuUiState,
+        overflowMenuUiState,
+    ) { sortMenuUiState, overflowMenuUiState ->
         GoalsTopBarUiState(
             title = "Goals",
             showBackButton = false,
-            sortMenuUiState = it
+            sortMenuUiState = sortMenuUiState,
+            overflowMenuUiState = overflowMenuUiState,
         )
     }.stateIn(
         scope = viewModelScope,
@@ -268,7 +292,8 @@ class GoalsViewModel(
         initialValue = GoalsTopBarUiState(
             title = "Goals",
             showBackButton = false,
-            sortMenuUiState = sortMenuUiState.value
+            sortMenuUiState = sortMenuUiState.value,
+            overflowMenuUiState = overflowMenuUiState.value,
         )
     )
 
@@ -290,7 +315,8 @@ class GoalsViewModel(
         sortedGoals,
         goalProgress,
         _selectedGoals,
-    ) { sortedGoals, goalProgress, selectedGoals ->
+        _showPausedGoals,
+    ) { sortedGoals, goalProgress, selectedGoals, showPausedGoals ->
         val goalsWithProgress = sortedGoals.map { goal ->
             GoalWithProgress(
                 goal = goal,
@@ -301,6 +327,7 @@ class GoalsViewModel(
             goalsWithProgress = goalsWithProgress,
             selectedGoals = selectedGoals,
             showHint = goalsWithProgress.isEmpty(),
+            showPausedGoals = showPausedGoals,
         )
     }.stateIn(
         scope = viewModelScope,
@@ -309,6 +336,7 @@ class GoalsViewModel(
             goalsWithProgress = emptyList(),
             selectedGoals = emptySet(),
             showHint = true,
+            showPausedGoals = false,
         )
     )
 
@@ -398,6 +426,10 @@ class GoalsViewModel(
             }
         }
         clearActionMode()
+    }
+
+    fun onPausedGoalsChanged(newValue: Boolean) {
+        _showPausedGoals.update { newValue }
     }
 
 //    fun onDeactivateAction() {
