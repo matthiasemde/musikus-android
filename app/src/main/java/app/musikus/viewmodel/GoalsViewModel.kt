@@ -73,6 +73,7 @@ data class GoalsTopBarUiState(
 data class GoalsActionModeUiState(
     val isActionMode: Boolean,
     val numberOfSelections: Int,
+    val showEditAction: Boolean,
     val showPauseAction: Boolean,
     val showUnpauseAction: Boolean,
 )
@@ -319,6 +320,7 @@ class GoalsViewModel(
         GoalsActionModeUiState(
             isActionMode = it.isNotEmpty(),
             numberOfSelections = it.size,
+            showEditAction = it.size == 1 && it.none { goal -> goal.description.description.paused },
             showPauseAction = it.any { goal -> !goal.description.description.paused },
             showUnpauseAction = it.any { goal -> goal.description.description.paused },
         )
@@ -328,6 +330,7 @@ class GoalsViewModel(
         initialValue = GoalsActionModeUiState(
             isActionMode = false,
             numberOfSelections = 0,
+            showEditAction = false,
             showPauseAction = false,
             showUnpauseAction = false,
         )
@@ -467,12 +470,12 @@ class GoalsViewModel(
         }
     }
 
-//    fun onDeactivateAction() {
-//        viewModelScope.launch {
-//            goalRepository.deactivate(_selectedGoals.value.map { it.description.description })
-//            clearActionMode()
-//        }
-//    }
+    fun onArchiveAction() {
+        viewModelScope.launch {
+            goalRepository.archive(_selectedGoals.value.map { it.description.description })
+            clearActionMode()
+        }
+    }
     fun onDeleteAction() {
         viewModelScope.launch {
             goalRepository.archive(_selectedGoals.value.map { it.description.description })

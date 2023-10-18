@@ -20,6 +20,7 @@ import androidx.compose.runtime.Composable
 fun ActionBar(
     numSelectedItems: Int,
     uniqueActions: @Composable () -> Unit = {},
+    editActionEnabled: () -> Boolean = { numSelectedItems == 1 },
     onDismissHandler: () -> Unit,
     onEditHandler: () -> Unit,
     onDeleteHandler: () -> Unit
@@ -42,7 +43,7 @@ fun ActionBar(
         },
         actions = {
             uniqueActions()
-            if(numSelectedItems == 1) {
+            if(editActionEnabled()) {
                 IconButton(onClick = onEditHandler) {
                     Icon(
                         imageVector = Icons.Rounded.Edit,

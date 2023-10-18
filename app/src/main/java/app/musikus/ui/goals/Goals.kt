@@ -32,6 +32,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.rounded.Archive
 import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Repeat
@@ -203,7 +204,15 @@ fun Goals(
                                 )
                             }
                         }
+                        IconButton(onClick = goalsViewModel::onArchiveAction) {
+                            Icon(
+                                imageVector = Icons.Rounded.Archive,
+                                contentDescription = "Archive",
+                            )
+                        }
+
                     },
+                    editActionEnabled = { actionModeUiState.showEditAction },
                     onDismissHandler = goalsViewModel::clearActionMode,
                     onEditHandler = goalsViewModel::onEditAction,
                     onDeleteHandler = goalsViewModel::onDeleteAction
