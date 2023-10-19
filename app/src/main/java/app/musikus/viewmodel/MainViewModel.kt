@@ -10,6 +10,9 @@ package app.musikus.viewmodel
 
 import android.app.Application
 import android.util.Log
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -21,6 +24,7 @@ import app.musikus.datastore.ThemeSelections
 import app.musikus.repository.LibraryRepository
 import app.musikus.repository.UserPreferencesRepository
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
@@ -86,6 +90,28 @@ class MainViewModel(
 
     val showNavBarScrim = mutableStateOf(false)
 
+
+    /** Snackbar */
+
+    val snackbarHostState = MutableStateFlow(SnackbarHostState())
+
+    fun showSnackbar(message: String, onUndo: (() -> Unit)? = null) {
+        viewModelScope.launch {
+            val result = snackbarHostState.value.showSnackbar(
+                message,
+                actionLabel = if(onUndo != null) "Undo" else null,
+                duration = SnackbarDuration.Long
+            )
+            when(result) {
+                SnackbarResult.ActionPerformed -> {
+                    onUndo?.invoke()
+                }
+                SnackbarResult.Dismissed -> {
+                    // do nothing
+                }
+            }
+        }
+    }
 
     /** Theme */
 

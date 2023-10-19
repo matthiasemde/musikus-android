@@ -204,7 +204,13 @@ fun Goals(
                                 )
                             }
                         }
-                        IconButton(onClick = goalsViewModel::onArchiveAction) {
+                        IconButton(onClick = {
+                            goalsViewModel.onArchiveAction()
+                            mainViewModel.showSnackbar(
+                                message = "Archived",
+                                onUndo = goalsViewModel::onUndoArchiveAction
+                            )
+                        }) {
                             Icon(
                                 imageVector = Icons.Rounded.Archive,
                                 contentDescription = "Archive",

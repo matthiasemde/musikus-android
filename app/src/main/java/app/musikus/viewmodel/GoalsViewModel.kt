@@ -211,6 +211,7 @@ class GoalsViewModel(
 
     // Action mode
     private val _selectedGoals = MutableStateFlow<Set<GoalInstanceWithDescriptionWithLibraryItems>>(emptySet())
+    private var _goalsCache: List<GoalInstanceWithDescriptionWithLibraryItems> = emptyList()
 
     /** Combining imported and own state flows */
     private val filteredGoals = combine(
@@ -220,7 +221,11 @@ class GoalsViewModel(
         goals.filter { goal ->
             showPausedGoals || !goal.description.description.paused
         }
-    }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
 
     private val sortedGoals = combine(
         filteredGoals,
@@ -472,10 +477,18 @@ class GoalsViewModel(
 
     fun onArchiveAction() {
         viewModelScope.launch {
+            _goalsCache = _selectedGoals.value.toList()
             goalRepository.archive(_selectedGoals.value.map { it.description.description })
             clearActionMode()
         }
     }
+
+    fun onUndoArchiveAction() {
+        viewModelScope.launch {
+            goalRepository.unarchive(_goalsCache.map { it.description.description })
+        }
+    }
+
     fun onDeleteAction() {
         viewModelScope.launch {
             goalRepository.archive(_selectedGoals.value.map { it.description.description })

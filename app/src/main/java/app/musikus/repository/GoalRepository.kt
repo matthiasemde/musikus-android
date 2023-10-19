@@ -103,6 +103,16 @@ class GoalRepository(
         goalDescriptions.forEach { archive(it) }
     }
 
+    suspend fun unarchive(goalDescription: GoalDescription) {
+        goalDescription.archived = false
+        // TODO possible create new instance
+        goalDescriptionDao.update(goalDescription)
+    }
+
+    suspend fun unarchive(goalDescriptions: List<GoalDescription>) {
+        goalDescriptions.forEach { unarchive(it) }
+    }
+
     /** Utility functions */
 
     // Sort

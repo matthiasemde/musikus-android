@@ -19,7 +19,6 @@ import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -32,13 +31,14 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.Text
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -143,7 +143,6 @@ class MainActivity : AppCompatActivity() {
 
     @OptIn(
         ExperimentalAnimationGraphicsApi::class,
-        ExperimentalAnimationApi::class, ExperimentalLayoutApi::class
     )
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -180,6 +179,10 @@ class MainActivity : AppCompatActivity() {
             Mdc3Theme {
                 Log.d("MainActivity", "${LocalViewModelStoreOwner.current}")
                 Scaffold(
+                    snackbarHost = {
+                        val hostState by mainViewModel.snackbarHostState.collectAsState()
+                        SnackbarHost(hostState = hostState)
+                   },
                     bottomBar = {
                         if (showNavigationBar) {
                             Box {
