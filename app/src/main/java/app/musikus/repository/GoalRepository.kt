@@ -113,6 +113,22 @@ class GoalRepository(
         goalDescriptions.forEach { unarchive(it) }
     }
 
+    /** Delete */
+    suspend fun delete(goalDescriptions: List<GoalDescription>) {
+        goalDescriptionDao.delete(goalDescriptions)
+    }
+
+    suspend fun restore(goalDescriptions: List<GoalDescription>) {
+        goalDescriptionDao.restore(goalDescriptions)
+    }
+
+    /** Clean */
+
+    suspend fun clean() {
+        goalDescriptionDao.clean()
+    }
+
+
     /** Utility functions */
 
     // Sort

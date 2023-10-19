@@ -41,11 +41,16 @@ class SessionRepository(
     }
 
     /** Delete */
-    suspend fun delete(session: Session) {
-        sessionDao.delete(session)
-    }
-
     suspend fun delete(sessions: List<Session>) {
         sessionDao.delete(sessions)
+    }
+
+    suspend fun restore(sessions: List<Session>) {
+        sessionDao.restore(sessions)
+    }
+
+    /** Clean */
+    suspend fun clean() {
+        sessionDao.clean()
     }
 }

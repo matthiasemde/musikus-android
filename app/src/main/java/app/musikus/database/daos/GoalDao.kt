@@ -23,7 +23,7 @@ import java.util.*
 @Dao
 abstract class GoalDescriptionDao(
     private val database : PTDatabase
-) : BaseDao<GoalDescription>(
+) : SoftDeleteDao<GoalDescription>(
     tableName = "goal_description",
     database = database
 ) {
@@ -96,57 +96,52 @@ abstract class GoalDescriptionDao(
         type : GoalType
     ) : List<GoalDescription>
 
-    @Transaction
-    @Query("SELECT * FROM goal_description WHERE archived=1")
-    abstract suspend fun getArchivedWithLibraryItems(
-    ) : List<GoalDescriptionWithLibraryItems>
 
-
-    /**
-     * Goal Progress Update Utility
-     */
-
-    @Transaction
-    open suspend fun computeGoalProgressForSession(
-        session: SessionWithSectionsWithLibraryItemsWithGoalDescriptions,
-        checkArchived: Boolean = false,
-    ) : Map<UUID, Int> {
-        var totalSessionDuration = 0
-
-        // goalProgress maps the goalDescription-id to its progress
-        val goalProgress = mutableMapOf<UUID, Int>()
-
-        // go through all the sections in the session...
-        session.sections.forEach { (section, libraryItemWithGoalDescriptions) ->
-            // ... using the respective libraryItems, find the goals,
-            // to which the sections are contributing to...
-            val (_, goalDescriptions) = libraryItemWithGoalDescriptions
-
-            // ... and loop through those goals, summing up the duration
-            goalDescriptions.filter {d -> checkArchived || !d.archived}.forEach { description ->
-                when (description.progressType) {
-                    GoalProgressType.TIME -> goalProgress[description.id] =
-                        goalProgress[description.id] ?: (0 + (section.duration ?: 0))
-                    GoalProgressType.SESSION_COUNT -> goalProgress[description.id] = 1
-                }
-            }
-
-            // simultaneously sum up the total session duration
-            totalSessionDuration += section.duration ?: 0
-        }
-
-        // query all goal descriptions which have type NON-SPECIFIC
-        getGoalDescriptions(
-            checkArchived,
-            GoalType.NON_SPECIFIC,
-        ).forEach { totalTimeGoal ->
-            goalProgress[totalTimeGoal.id] = when (totalTimeGoal.progressType) {
-                GoalProgressType.TIME -> totalSessionDuration
-                GoalProgressType.SESSION_COUNT -> 1
-            }
-        }
-        return goalProgress
-    }
+//    /**
+//     * Goal Progress Update Utility
+//     */
+//
+//    @Transaction
+//    open suspend fun computeGoalProgressForSession(
+//        session: SessionWithSectionsWithLibraryItemsWithGoalDescriptions,
+//        checkArchived: Boolean = false,
+//    ) : Map<UUID, Int> {
+//        var totalSessionDuration = 0
+//
+//        // goalProgress maps the goalDescription-id to its progress
+//        val goalProgress = mutableMapOf<UUID, Int>()
+//
+//        // go through all the sections in the session...
+//        session.sections.forEach { (section, libraryItemWithGoalDescriptions) ->
+//            // ... using the respective libraryItems, find the goals,
+//            // to which the sections are contributing to...
+//            val (_, goalDescriptions) = libraryItemWithGoalDescriptions
+//
+//            // ... and loop through those goals, summing up the duration
+//            goalDescriptions.filter {d -> checkArchived || !d.archived}.forEach { description ->
+//                when (description.progressType) {
+//                    GoalProgressType.TIME -> goalProgress[description.id] =
+//                        goalProgress[description.id] ?: (0 + (section.duration ?: 0))
+//                    GoalProgressType.SESSION_COUNT -> goalProgress[description.id] = 1
+//                }
+//            }
+//
+//            // simultaneously sum up the total session duration
+//            totalSessionDuration += section.duration ?: 0
+//        }
+//
+//        // query all goal descriptions which have type NON-SPECIFIC
+//        getGoalDescriptions(
+//            checkArchived,
+//            GoalType.NON_SPECIFIC,
+//        ).forEach { totalTimeGoal ->
+//            goalProgress[totalTimeGoal.id] = when (totalTimeGoal.progressType) {
+//                GoalProgressType.TIME -> totalSessionDuration
+//                GoalProgressType.SESSION_COUNT -> 1
+//            }
+//        }
+//        return goalProgress
+//    }
 }
 
 /**
@@ -156,7 +151,7 @@ abstract class GoalDescriptionDao(
 @Dao
 abstract class GoalInstanceDao(
     database : PTDatabase
-) : BaseDao<GoalInstance>(
+) : TimestampDao<GoalInstance>(
     tableName = "goal_instance",
     database = database
 ) {
@@ -256,16 +251,16 @@ abstract class GoalInstanceDao(
      */
     @Transaction
     @Query(
-        "SELECT * FROM goal_instance " +
-                "WHERE goal_description_id=:goalDescriptionId " +
-                "AND (" +
-                "start_timestamp>:from AND NOT :inclusiveFrom OR " +
-                "start_timestamp+period_in_seconds>:from AND :inclusiveFrom" +
-                ")" +
-                "AND (" +
-                "start_timestamp<:to AND :inclusiveTo OR " +
-                "start_timestamp+period_in_seconds<:to AND NOT :inclusiveTo" +
-                ")"
+        "SELECT * FROM goal_instance WHERE " +
+            "goal_description_id=:goalDescriptionId " +
+        "AND (" +
+            "start_timestamp>:from AND NOT :inclusiveFrom OR " +
+            "start_timestamp+period_in_seconds>:from AND :inclusiveFrom" +
+        ")" +
+        "AND (" +
+            "start_timestamp<:to AND :inclusiveTo OR " +
+            "start_timestamp+period_in_seconds<:to AND NOT :inclusiveTo" +
+        ")"
     )
     abstract suspend fun getWithDescriptionWithLibraryItems(
         goalDescriptionId: UUID,
@@ -277,8 +272,8 @@ abstract class GoalInstanceDao(
 
     @Transaction
     @Query(
-        "SELECT * FROM goal_instance " +
-        "WHERE renewed=0 " +
+        "SELECT * FROM goal_instance WHERE " +
+        "renewed=0 " +
         "AND start_timestamp + period_in_seconds < :to"
     )
     abstract suspend fun getOutdatedWithDescriptions(

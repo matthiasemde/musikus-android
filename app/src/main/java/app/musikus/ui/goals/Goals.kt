@@ -221,7 +221,13 @@ fun Goals(
                     editActionEnabled = { actionModeUiState.showEditAction },
                     onDismissHandler = goalsViewModel::clearActionMode,
                     onEditHandler = goalsViewModel::onEditAction,
-                    onDeleteHandler = goalsViewModel::onDeleteAction
+                    onDeleteHandler = {
+                        goalsViewModel.onDeleteAction()
+                        mainViewModel.showSnackbar(
+                            message = "Deleted",
+                            onUndo = goalsViewModel::onRestoreAction
+                        )
+                    }
                 )
             }
         },

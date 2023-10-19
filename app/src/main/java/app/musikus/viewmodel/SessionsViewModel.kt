@@ -14,6 +14,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import app.musikus.database.PTDatabase
 import app.musikus.database.SessionWithSectionsWithLibraryItems
+import app.musikus.database.entities.Session
 import app.musikus.repository.SessionRepository
 import app.musikus.shared.TopBarUiState
 import app.musikus.utils.getSpecificDay
@@ -67,6 +68,8 @@ data class SessionsUiState(
 class SessionsViewModel(
     application: Application
 ) : AndroidViewModel(application) {
+
+    private var _sessionsCache = emptyList<Session>()
 
     /** Database */
     private val database = PTDatabase.getInstance(application)
@@ -259,8 +262,15 @@ class SessionsViewModel(
 
     fun onDeleteAction() {
         viewModelScope.launch {
-            sessionRepository.delete(_selectedSessions.value.map { it.session })
+            _sessionsCache = _selectedSessions.value.map { it.session }
+            sessionRepository.delete(_sessionsCache)
             clearActionMode()
+        }
+    }
+
+    fun onRestoreAction() {
+        viewModelScope.launch {
+            sessionRepository.restore(_sessionsCache)
         }
     }
 

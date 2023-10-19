@@ -187,7 +187,13 @@ fun Library(
                     numSelectedItems = actionModeUiState.numberOfSelections,
                     onDismissHandler = libraryViewModel::clearActionMode,
                     onEditHandler = libraryViewModel::onEditAction,
-                    onDeleteHandler = libraryViewModel::onDeleteAction
+                    onDeleteHandler = {
+                        libraryViewModel.onDeleteAction()
+                        mainViewModel.showSnackbar(
+                            message = "Deleted ${actionModeUiState.numberOfSelections} items",
+                            onUndo = libraryViewModel::onRestoreAction
+                        )
+                    }
                 )
             }
         },

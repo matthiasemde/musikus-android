@@ -242,7 +242,7 @@ class ActiveSessionActivity : AppCompatActivity() {
 
         // load all active libraryItems from the database and notify the adapter
         lifecycleScope.launch {
-            PTDatabase.getInstance(applicationContext).libraryItemDao.get(activeOnly = true).first().let { activeLibraryItems.addAll(it.reversed())
+            PTDatabase.getInstance(applicationContext).libraryItemDao.getAsFlow(activeOnly = true).first().let { activeLibraryItems.addAll(it.reversed())
                 libraryItemAdapter.notifyItemRangeInserted(0, it.size)
             }
             libraryItemList.apply {

@@ -140,6 +140,11 @@ class LibraryViewModel(
     application: Application
 ) : AndroidViewModel(application) {
 
+    /** Private variables */
+    private var _foldersCache = emptyList<LibraryFolder>()
+    private var _itemsCache = emptyList<LibraryItem>()
+
+
     /** Database */
     private val database = PTDatabase.getInstance(application)
 
@@ -579,12 +584,22 @@ class LibraryViewModel(
 
     fun onDeleteAction() {
         viewModelScope.launch {
-            libraryRepository.deleteFolders(_selectedFolders.value)
-            libraryRepository.archiveItems(_selectedItems.value)
+            _foldersCache = _selectedFolders.value.toList()
+            _itemsCache = _selectedItems.value.toList()
+
+            libraryRepository.deleteFolders(_foldersCache)
+            libraryRepository.deleteItems(_itemsCache)
+
             clearActionMode()
         }
     }
 
+    fun onRestoreAction() {
+        viewModelScope.launch {
+            libraryRepository.restoreFolders(_foldersCache)
+            libraryRepository.restoreItems(_itemsCache)
+        }
+    }
     fun onEditAction() {
 //        assert(_selectedFolders.value.size + _selectedItems.value.size == 1) // TODO: DO we need this?
         _selectedFolders.value.firstOrNull()?.let { folderToEdit ->

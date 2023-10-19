@@ -21,7 +21,9 @@ import app.musikus.database.PTDatabase
 import app.musikus.database.entities.LibraryFolder
 import app.musikus.database.entities.LibraryItem
 import app.musikus.datastore.ThemeSelections
+import app.musikus.repository.GoalRepository
 import app.musikus.repository.LibraryRepository
+import app.musikus.repository.SessionRepository
 import app.musikus.repository.UserPreferencesRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -33,11 +35,19 @@ class MainViewModel(
     application: Application
 ) : AndroidViewModel(application) {
 
-    /** Initialization */
-
-
     /** Database */
     private val database = PTDatabase.getInstance(application, ::prepopulateDatabase)
+
+    /** Initialization */
+    init {
+        // Clean up soft-deleted items
+        viewModelScope.launch {
+            Log.d("Musikus", "Clean up soft-deleted items")
+            SessionRepository(database).clean()
+            GoalRepository(database).clean()
+            LibraryRepository(database).clean()
+        }
+    }
 
     /** Repositories */
     private val userPreferencesRepository = UserPreferencesRepository(application.dataStore)

@@ -156,6 +156,8 @@ class Musikus : Application() {
 
         val userPreferencesRepository = UserPreferencesRepository(dataStore)
 
+        dbFile = getDatabasePath("practice_time.db")
+
         MainScope().launch {
             userPreferencesRepository.userPreferences.map { preferences ->
                 preferences.theme
@@ -164,7 +166,5 @@ class Musikus : Application() {
                 AppCompatDelegate.setDefaultNightMode(it.ordinal)
             }
         }
-
-        dbFile = getDatabasePath("practice_time.db")
     }
 }

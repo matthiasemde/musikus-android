@@ -10,11 +10,11 @@ package app.musikus.database.entities
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
-import app.musikus.database.ModelWithTimestamps
+import app.musikus.database.SoftDeleteModel
 
 @Entity(tableName = "library_folder")
 data class LibraryFolder (
     @ColumnInfo(name="name") var name: String,
 //    @ColumnInfo(name="profile_id", index = true) val profileId: UUID? = null,
     @ColumnInfo(name="order", defaultValue = "0") var order: Int? = null,
-) : ModelWithTimestamps()
+) : SoftDeleteModel()

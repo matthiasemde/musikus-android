@@ -166,7 +166,13 @@ fun Sessions(
                     onEditHandler = {
                         sessionsViewModel.onEditAction(editSession)
                     },
-                    onDeleteHandler = sessionsViewModel::onDeleteAction,
+                    onDeleteHandler = {
+                        sessionsViewModel.onDeleteAction()
+                        mainViewModel.showSnackbar(
+                            message = "Deleted ${actionModeUiState.numberOfSelections} sessions",
+                            onUndo = sessionsViewModel::onRestoreAction
+                        )
+                    }
                 )
             }
         },

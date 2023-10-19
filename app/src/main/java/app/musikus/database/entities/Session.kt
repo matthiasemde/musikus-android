@@ -8,7 +8,7 @@ package app.musikus.database.entities
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
-import app.musikus.database.ModelWithTimestamps
+import app.musikus.database.SoftDeleteModel
 
 @Entity(tableName = "session")
 data class Session (
@@ -16,4 +16,4 @@ data class Session (
     @ColumnInfo(name="rating") var rating: Int,
     @ColumnInfo(name="comment") var comment: String?,
 //    @ColumnInfo(name="profile_id", index = true) val profileId: UUID? = null,
-) : ModelWithTimestamps()
+) : SoftDeleteModel()

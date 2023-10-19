@@ -15,8 +15,8 @@ package app.musikus.database.entities
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
-import app.musikus.database.ModelWithTimestamps
-import java.util.*
+import app.musikus.database.SoftDeleteModel
+import java.util.UUID
 
 @Entity(
     tableName = "library_item",
@@ -36,8 +36,8 @@ data class LibraryItem (
     var libraryFolderId: UUID? = null,
 //    @ColumnInfo(name="profile_id", index = true) val profileId: UUID? = null,
     @ColumnInfo(name="archived") var archived: Boolean = false,
-    @ColumnInfo(name="order", defaultValue = "null") var order: Int? = null,
-) : ModelWithTimestamps() {
+    @ColumnInfo(name="custom_order", defaultValue = "null") var order: Int? = null,
+) : SoftDeleteModel() {
     override fun toString(): String {
         return super.toString() +
             "\tname: \t\t\t\t${this.name}\n" +

@@ -17,6 +17,7 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import app.musikus.database.ModelWithTimestamps
+import app.musikus.database.SoftDeleteModel
 import java.util.Calendar
 import java.util.UUID
 
@@ -83,11 +84,11 @@ class GoalDescription (
     @ColumnInfo(name="period_in_period_units") val periodInPeriodUnits: Int,
     @ColumnInfo(name="period_unit") val periodUnit: GoalPeriodUnit,
     @ColumnInfo(name="progress_type") val progressType: GoalProgressType = GoalProgressType.TIME,
-    @ColumnInfo(name="archived") var archived: Boolean = false,
     @ColumnInfo(name="paused") var paused: Boolean = false,
+    @ColumnInfo(name="archived") var archived: Boolean = false,
 //    @ColumnInfo(name="profile_id", index = true) val profileId: UUID? = null,
     @ColumnInfo(name="order", defaultValue = "0") var order: Int? = null,
-    ) : ModelWithTimestamps() {
+) : SoftDeleteModel() {
 
     // create a new instance of this goal, storing the target and progress during a single period
     fun createInstance(

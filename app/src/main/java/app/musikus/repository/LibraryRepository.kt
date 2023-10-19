@@ -14,7 +14,7 @@ import app.musikus.database.entities.LibraryItem
 import app.musikus.datastore.LibraryFolderSortMode
 import app.musikus.datastore.LibraryItemSortMode
 import app.musikus.datastore.SortDirection
-import java.util.*
+import java.util.UUID
 
 class LibraryRepository(
     database: PTDatabase
@@ -22,7 +22,7 @@ class LibraryRepository(
     private val itemDao = database.libraryItemDao
     private val folderDao = database.libraryFolderDao
 
-    val items = itemDao.get(activeOnly = true)
+    val items = itemDao.getAsFlow(activeOnly = true)
     val folders = folderDao.getAllAsFlow()
 
 
@@ -61,16 +61,29 @@ class LibraryRepository(
         itemDao.update(item)
     }
 
-    /** Delete / Archive */
-    suspend fun deleteFolders(folders: Set<LibraryFolder>) {
-        folderDao.delete(folders.toList())
+    /** Delete / restore */
+
+    suspend fun deleteItems(items: List<LibraryItem>) {
+        itemDao.delete(items)
     }
 
-    suspend fun archiveItems(items: Set<LibraryItem>) {
-        items.forEach { item ->
-            item.archived = true
-            itemDao.update(item)
-        }
+    suspend fun restoreItems(items: List<LibraryItem>) {
+        itemDao.restore(items)
+    }
+
+    suspend fun deleteFolders(folders: List<LibraryFolder>) {
+        folderDao.delete(folders)
+    }
+
+    suspend fun restoreFolders(folders: List<LibraryFolder>) {
+        folderDao.restore(folders)
+    }
+
+    /** Clean */
+
+    suspend fun clean() {
+        folderDao.clean()
+        itemDao.clean()
     }
 
     /** Sort */

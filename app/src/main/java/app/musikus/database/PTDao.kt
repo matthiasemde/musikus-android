@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2022 Matthias Emde
+ * Copyright (c) 2023 Matthias Emde
  *
  * Parts of this software are licensed under the MIT license
  *
@@ -13,14 +13,25 @@
 package app.musikus.database
 
 import android.util.Log
-import androidx.room.*
+import androidx.room.ColumnInfo
+import androidx.room.Delete
+import androidx.room.Insert
+import androidx.room.InvalidationTracker
+import androidx.room.OnConflictStrategy
+import androidx.room.PrimaryKey
+import androidx.room.RawQuery
+import androidx.room.Update
 import androidx.sqlite.db.SimpleSQLiteQuery
 import androidx.sqlite.db.SupportSQLiteQuery
 import app.musikus.Musikus
 import app.musikus.utils.getCurrTimestamp
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.runBlocking
-import java.util.*
+import java.util.UUID
 
 abstract class BaseModel (
     @PrimaryKey var id: UUID = UUID.randomUUID(),
@@ -47,6 +58,19 @@ abstract class ModelWithTimestamps (
 }
 
 /**
+ * @Model Soft delete model
+ */
+
+abstract class SoftDeleteModel (
+    @ColumnInfo(name="deleted", defaultValue = "false") var deleted: Boolean = false,
+) : ModelWithTimestamps() {
+    override fun toString(): String {
+        return super.toString() +
+            "\tdeleted: ${deleted}\n"
+    }
+}
+
+/**
  * @Dao Base dao
  */
 
@@ -62,24 +86,14 @@ abstract class BaseDao<T : BaseModel>(
     @Insert(onConflict = OnConflictStrategy.ABORT)
     protected abstract suspend fun directInsert(row: T)
 
-    suspend fun insert(row: T) {
-        if(row is ModelWithTimestamps) {
-            row.createdAt = getCurrTimestamp()
-            row.modifiedAt = getCurrTimestamp()
-        }
+    open suspend fun insert(row: T) {
         directInsert(row)
     }
 
     @Insert(onConflict = OnConflictStrategy.ABORT)
     protected abstract suspend fun directInsert(rows: List<T>)
 
-    suspend fun insert(rows: List<T>) {
-        rows.forEach {
-            if (it is ModelWithTimestamps) {
-                it.createdAt = getCurrTimestamp()
-                it.modifiedAt = getCurrTimestamp()
-            }
-        }
+    open suspend fun insert(rows: List<T>) {
         directInsert(rows)
     }
 
@@ -110,22 +124,14 @@ abstract class BaseDao<T : BaseModel>(
     @Update(onConflict = OnConflictStrategy.ABORT)
     protected abstract suspend fun directUpdate(row: T)
 
-    suspend fun update(row: T) {
-        if(row is ModelWithTimestamps) {
-            row.modifiedAt = getCurrTimestamp()
-        }
+    open suspend fun update(row: T) {
         directUpdate(row)
     }
 
     @Update(onConflict = OnConflictStrategy.ABORT)
     protected abstract suspend fun directUpdate(rows: List<T>)
 
-    suspend fun update(rows: List<T>) {
-        rows.forEach {
-            if (it is ModelWithTimestamps) {
-                it.modifiedAt = getCurrTimestamp()
-            }
-        }
+    open suspend fun update(rows: List<T>) {
         directUpdate(rows)
     }
 
@@ -137,7 +143,7 @@ abstract class BaseDao<T : BaseModel>(
     @RawQuery
     protected abstract suspend fun get(query: SupportSQLiteQuery): List<T>
 
-    open suspend fun get(id: UUID) = get(listOf(id)).firstOrNull()
+    suspend fun get(id: UUID) = get(listOf(id)).firstOrNull()
 
     open suspend fun get(ids: List<UUID>) = get(
         SimpleSQLiteQuery(
@@ -186,4 +192,92 @@ abstract class BaseDao<T : BaseModel>(
             }
         }
     }
+}
+
+abstract class TimestampDao<T : ModelWithTimestamps>(
+    tableName: String,
+    database: PTDatabase
+) : BaseDao<T>(
+    tableName = tableName,
+    database = database
+) {
+    override suspend fun insert(row: T) {
+        row.createdAt = getCurrTimestamp()
+        row.modifiedAt = getCurrTimestamp()
+        super.insert(row)
+    }
+
+    override suspend fun insert(rows: List<T>) {
+        rows.forEach {
+            it.createdAt = getCurrTimestamp()
+            it.modifiedAt = getCurrTimestamp()
+        }
+        super.insert(rows)
+    }
+
+    override suspend fun update(row: T) {
+        row.modifiedAt = getCurrTimestamp()
+        super.update(row)
+    }
+
+    override suspend fun update(rows: List<T>) {
+        rows.forEach {
+            it.modifiedAt = getCurrTimestamp()
+        }
+        super.update(rows)
+    }
+}
+
+abstract class SoftDeleteDao<T : SoftDeleteModel>(
+    private val tableName: String,
+    private val database: PTDatabase
+) : TimestampDao<T>(
+    tableName = tableName,
+    database = database
+) {
+    override suspend fun delete(row: T) {
+        row.deleted = true
+        super.update(row)
+    }
+
+    override suspend fun delete(rows: List<T>) {
+        rows.forEach {
+            it.deleted = true
+        }
+        super.update(rows)
+    }
+
+    suspend fun restore(row: T) {
+        row.deleted = false
+        super.update(row)
+    }
+
+    suspend fun restore(rows: List<T>) {
+        rows.forEach {
+            it.deleted = false
+        }
+        super.update(rows)
+    }
+
+    override suspend fun get(ids: List<UUID>) = get(
+        SimpleSQLiteQuery(
+            query = "SELECT * FROM $tableName WHERE " +
+                "id IN (${ids.joinToString(separator = ",") { "?" }}) AND deleted=0;",
+            ids.map { UUIDConverter().toByte(it) }.toTypedArray()
+        )
+    )
+
+    override suspend fun getAll() = get(
+        SimpleSQLiteQuery("SELECT * FROM $tableName WHERE deleted=0;")
+    )
+
+    @RawQuery
+    abstract suspend fun clean(
+        query: SimpleSQLiteQuery = SimpleSQLiteQuery(
+            query = "DELETE FROM $tableName WHERE " +
+                "deleted=1 " +
+                "AND (modified_at+5<${getCurrTimestamp()});"
+//                    "AND (modified_at+2592000<${getCurrTimestamp()});"
+        )
+    ) : Int
 }

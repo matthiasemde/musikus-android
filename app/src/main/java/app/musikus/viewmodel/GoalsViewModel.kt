@@ -106,6 +106,8 @@ class GoalsViewModel(
     application: Application,
 ) : AndroidViewModel(application) {
 
+    private var _goalsCache: List<GoalDescription> = emptyList()
+
     /** Database */
     private val database = PTDatabase.getInstance(application)
 
@@ -211,7 +213,6 @@ class GoalsViewModel(
 
     // Action mode
     private val _selectedGoals = MutableStateFlow<Set<GoalInstanceWithDescriptionWithLibraryItems>>(emptySet())
-    private var _goalsCache: List<GoalInstanceWithDescriptionWithLibraryItems> = emptyList()
 
     /** Combining imported and own state flows */
     private val filteredGoals = combine(
@@ -477,22 +478,29 @@ class GoalsViewModel(
 
     fun onArchiveAction() {
         viewModelScope.launch {
-            _goalsCache = _selectedGoals.value.toList()
-            goalRepository.archive(_selectedGoals.value.map { it.description.description })
+            _goalsCache = _selectedGoals.value.map { it.description.description }
+            goalRepository.archive(_goalsCache)
             clearActionMode()
         }
     }
 
     fun onUndoArchiveAction() {
         viewModelScope.launch {
-            goalRepository.unarchive(_goalsCache.map { it.description.description })
+            goalRepository.unarchive(_goalsCache)
         }
     }
 
     fun onDeleteAction() {
         viewModelScope.launch {
-            goalRepository.archive(_selectedGoals.value.map { it.description.description })
+            _goalsCache = _selectedGoals.value.map { it.description.description }
+            goalRepository.delete(_goalsCache)
             clearActionMode()
+        }
+    }
+
+    fun onRestoreAction() {
+        viewModelScope.launch {
+            goalRepository.restore(_goalsCache)
         }
     }
 
