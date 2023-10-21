@@ -34,13 +34,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import com.google.android.material.button.MaterialButton
 import app.musikus.R
 import app.musikus.components.NumberInput
 import app.musikus.database.GoalDescriptionWithLibraryItems
 import app.musikus.database.entities.*
 import app.musikus.shared.*
 import app.musikus.viewmodel.GoalDialogData
+import com.google.android.material.button.MaterialButton
 import java.util.*
 
 @SuppressLint("ViewConstructor")
@@ -291,7 +291,7 @@ class GoalDialog(
                 // set the color to the libraryItem color
                 val libraryItemColors = context.resources.getIntArray(R.array.library_item_colors)
                 vh.color?.backgroundTintList = ColorStateList.valueOf(
-                    libraryItemColors[libraryItems[position - 1].colorIndex]
+                    libraryItemColors[libraryItems[position - 1].colorIndex ?: 1]
                 )
             } else {
                 vh.color?.visibility  = View.GONE
@@ -480,13 +480,13 @@ fun GoalDialog(
                             options = libraryItems.map {
                                 UUIDSelectionSpinnerOption(
                                     it.id,
-                                    it.name
+                                    it.name ?: "WHOOPS"
                                 )
                             },
                             selected = dialogData.selectedLibraryItems.firstOrNull()?.let {
-                                UUIDSelectionSpinnerOption(it.id, it.name)
+                                UUIDSelectionSpinnerOption(it.id, it.name ?: "WHOOPS")
                             } ?: libraryItems.first().let {
-                                UUIDSelectionSpinnerOption(it.id, it.name)
+                                UUIDSelectionSpinnerOption(it.id, it.name ?: "WHOOPS")
                             },
                             onExpandedChange = onLibraryItemsSelectorExpandedChanged,
                             onSelectedChange = { selection ->

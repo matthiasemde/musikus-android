@@ -106,12 +106,12 @@ fun EditSession(
                                     .clip(RoundedCornerShape(4.dp))
                                     .background(
                                         Color(
-                                            Musikus.getLibraryItemColors(LocalContext.current)[sectionWithLibraryItem.libraryItem.colorIndex]
+                                            Musikus.getLibraryItemColors(LocalContext.current)[sectionWithLibraryItem.libraryItem.colorIndex ?: 69]
                                         )
                                     )
                             )
                             Text(
-                                text = sectionWithLibraryItem.libraryItem.name,
+                                text = sectionWithLibraryItem.libraryItem.name ?: "whhoopsi",
                                 style = MaterialTheme.typography.bodyMedium
                             )
                         }

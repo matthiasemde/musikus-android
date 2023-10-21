@@ -20,6 +20,7 @@ import app.musikus.dataStore
 import app.musikus.database.PTDatabase
 import app.musikus.database.entities.LibraryFolder
 import app.musikus.database.entities.LibraryItem
+import app.musikus.database.entities.LibraryItemCreationAttributes
 import app.musikus.datastore.ThemeSelections
 import app.musikus.repository.GoalRepository
 import app.musikus.repository.LibraryRepository
@@ -81,7 +82,11 @@ class MainViewModel(
             }
 
             items.forEach {
-                libraryRepository.addItem(it)
+                libraryRepository.addItem(LibraryItemCreationAttributes(
+                    it.name ?: "",
+                    it.colorIndex ?: 1,
+                    it.libraryFolderId,
+                ))
                 Log.d("MainActivity", "LibraryItem ${it.name} created")
                 delay(1500) //make sure items have different createdAt values
             }

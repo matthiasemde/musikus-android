@@ -164,7 +164,7 @@ abstract class GoalInstanceDao(
     open suspend fun renewGoalInstance(id: UUID) {
         get(id)?.also { g ->
             g.renewed = true
-            update(g)
+//            update(g)
         } ?: Log.e("GOAL_INSTANCE_DAO", "Trying to renew goal instance with id: $id failed")
     }
 

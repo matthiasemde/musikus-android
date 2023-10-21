@@ -53,7 +53,7 @@ suspend fun updateGoals(context: Context) {
 
                 // finally mark the outdated instance as renewed
                 outdatedInstance.renewed = true
-                PTDatabase.getInstance(context).goalInstanceDao.update(outdatedInstance)
+//                PTDatabase.getInstance(context).goalInstanceDao.update(outdatedInstance)
             }
         }
     }

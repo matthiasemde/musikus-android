@@ -72,7 +72,7 @@ fun GoalCard(
     val (description, libraryItems) = descriptionWithLibraryItems
 
     val libraryItemColor = if(description.type == GoalType.ITEM_SPECIFIC) {
-        Color(Musikus.getLibraryItemColors(LocalContext.current)[libraryItems.first().colorIndex])
+        Color(Musikus.getLibraryItemColors(LocalContext.current)[libraryItems.first().colorIndex ?: 1])
     } else null
 
     ElevatedCard(modifier = modifier

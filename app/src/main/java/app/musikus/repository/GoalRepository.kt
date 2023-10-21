@@ -51,7 +51,7 @@ class GoalRepository(
                 from = getCurrTimestamp(),
             ).forEach {
                 it.target = newTarget
-                update(it)
+//                update(it)
             }
         }
     }
@@ -62,7 +62,7 @@ class GoalRepository(
         val description = goal.description.description
 
         description.paused = true
-        goalDescriptionDao.update(description)
+//        goalDescriptionDao.update(description)
     }
 
     @Transaction
@@ -76,10 +76,10 @@ class GoalRepository(
         val description = descriptionWithLibraryItems.description
 
         description.paused = false
-        goalDescriptionDao.update(description)
+//        goalDescriptionDao.update(description)
         if(instance.startTimestamp + instance.periodInSeconds > getCurrTimestamp()) {
             instance.renewed = false
-            goalInstanceDao.update(instance)
+//            goalInstanceDao.update(instance)
         } else {
             goalInstanceDao.insert(
                 description.createInstance(Calendar.getInstance(), instance.target)
@@ -96,7 +96,7 @@ class GoalRepository(
 
     suspend fun archive(goalDescription: GoalDescription) {
         goalDescription.archived = true
-        goalDescriptionDao.update(goalDescription)
+//        goalDescriptionDao.update(goalDescription)
     }
 
     suspend fun archive(goalDescriptions: List<GoalDescription>) {
@@ -106,7 +106,7 @@ class GoalRepository(
     suspend fun unarchive(goalDescription: GoalDescription) {
         goalDescription.archived = false
         // TODO possible create new instance
-        goalDescriptionDao.update(goalDescription)
+//        goalDescriptionDao.update(goalDescription)
     }
 
     suspend fun unarchive(goalDescriptions: List<GoalDescription>) {
@@ -115,11 +115,11 @@ class GoalRepository(
 
     /** Delete */
     suspend fun delete(goalDescriptions: List<GoalDescription>) {
-        goalDescriptionDao.delete(goalDescriptions)
+        goalDescriptionDao.delete(goalDescriptions.map { it.id })
     }
 
     suspend fun restore(goalDescriptions: List<GoalDescription>) {
-        goalDescriptionDao.restore(goalDescriptions)
+        goalDescriptionDao.restore(goalDescriptions.map { it.id })
     }
 
     /** Clean */

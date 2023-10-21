@@ -42,11 +42,11 @@ class SessionRepository(
 
     /** Delete */
     suspend fun delete(sessions: List<Session>) {
-        sessionDao.delete(sessions)
+        sessionDao.delete(sessions.map { it.id })
     }
 
     suspend fun restore(sessions: List<Session>) {
-        sessionDao.restore(sessions)
+        sessionDao.restore(sessions.map { it.id })
     }
 
     /** Clean */

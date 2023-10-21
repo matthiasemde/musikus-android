@@ -62,12 +62,14 @@ fun RatingBar(
     onRatingChanged: (Int) -> Unit = {}
 ) {
     Row {
-        val interactionSource = remember { MutableInteractionSource() }
         for(i in 1..total) {
             Icon(
                 modifier = Modifier
                     .size(size)
-                    .clickable(interactionSource, indication = null) { onRatingChanged(i) },
+                    .clickable(
+                        remember { MutableInteractionSource() },
+                        indication = null
+                    ) { onRatingChanged(i) },
                 imageVector = image,
                 tint = if (i <= rating) color else
                     MaterialTheme.colorScheme.onSurfaceVariant,
@@ -172,12 +174,12 @@ fun SessionCard(
                                 .clip(RoundedCornerShape(4.dp))
                                 .background(
                                     Color(
-                                        Musikus.getLibraryItemColors(LocalContext.current)[sectionWithLibraryItem.libraryItem.colorIndex]
+                                        Musikus.getLibraryItemColors(LocalContext.current)[sectionWithLibraryItem.libraryItem.colorIndex ?: 69]
                                     )
                                 )
                         )
                         Text(
-                            text = sectionWithLibraryItem.libraryItem.name,
+                            text = sectionWithLibraryItem.libraryItem.name ?: "whoopsie",
                             style = MaterialTheme.typography.bodyMedium
                         )
                     }
@@ -321,7 +323,7 @@ class SessionCard(
             // set the color to the libraryItem color
             val libraryItemColors =  context.resources.getIntArray(R.array.library_item_colors)
             viewHolder.sectionColor.backgroundTintList = ColorStateList.valueOf(
-                libraryItemColors[libraryItem.colorIndex]
+                libraryItemColors[libraryItem.colorIndex ?: 69]
             )
 
 

@@ -17,6 +17,8 @@ import app.musikus.dataStore
 import app.musikus.database.PTDatabase
 import app.musikus.database.entities.LibraryFolder
 import app.musikus.database.entities.LibraryItem
+import app.musikus.database.entities.LibraryItemCreationAttributes
+import app.musikus.database.entities.LibraryItemUpdateAttributes
 import app.musikus.datastore.LibraryFolderSortMode
 import app.musikus.datastore.LibraryItemSortMode
 import app.musikus.datastore.SortDirection
@@ -194,7 +196,10 @@ class LibraryViewModel(
         initialValue = emptyList()
     )
 
-    private val items = libraryRepository.items.stateIn(
+    private val items = libraryRepository.items.map{
+        Log.d("LibraryViewModel", "items updated")
+        it
+    }.stateIn(
         scope = viewModelScope,
         started = WhileSubscribed(5000),
         initialValue = emptyList()
@@ -222,6 +227,22 @@ class LibraryViewModel(
         initialValue = emptyList()
     )
 
+    private val sortedItems = combine(
+        items,
+        itemsSortMode,
+        itemsSortDirection
+    ) { items, sortMode, sortDirection ->
+        Log.d("LibraryViewModel", "sortedItems updated")
+        libraryRepository.sortItems(
+            items = items,
+            mode = sortMode,
+            direction = sortDirection
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
 
     /** Own state flows */
 
@@ -251,21 +272,6 @@ class LibraryViewModel(
 
     /** Combining imported and own flows */
 
-    private val sortedItems = combine(
-        items,
-        itemsSortMode,
-        itemsSortDirection
-    ) { items, sortMode, sortDirection ->
-        libraryRepository.sortItems(
-            items = items,
-            mode = sortMode,
-            direction = sortDirection
-        )
-    }.stateIn(
-        scope = viewModelScope,
-        started = WhileSubscribed(5000),
-        initialValue = emptyList()
-    )
 
     private val sortedItemsInActiveFolder = combine(
         sortedItems,
@@ -564,8 +570,8 @@ class LibraryViewModel(
             _itemToEdit.update { item }
             _itemEditData.update {
                 LibraryItemEditData(
-                    name = item.name,
-                    colorIndex = item.colorIndex,
+                    name = item.name ?: "",
+                    colorIndex = item.colorIndex ?: 1,
                     folderId = item.libraryFolderId
                 )
             }
@@ -613,8 +619,8 @@ class LibraryViewModel(
             _itemToEdit.update { itemToEdit }
             _itemEditData.update {
                 LibraryItemEditData(
-                    name = itemToEdit.name,
-                    colorIndex = itemToEdit.colorIndex,
+                    name = itemToEdit.name ?: "",
+                    colorIndex = itemToEdit.colorIndex ?: 1,
                     folderId = itemToEdit.libraryFolderId
                 )
             }
@@ -692,13 +698,15 @@ class LibraryViewModel(
             val itemData = _itemEditData.value ?: return@launch
             _itemToEdit.value?.let {
                 libraryRepository.editItem(
-                    item = it,
-                    newName = itemData.name,
-                    newColorIndex = itemData.colorIndex,
-                    newFolderId = itemData.folderId
+                    LibraryItemUpdateAttributes(
+                        id = it.id,
+                        name = itemData.name,
+                        colorIndex = itemData.colorIndex,
+                        libraryFolderId = itemData.folderId
+                    )
                 )
             } ?: libraryRepository.addItem(
-                LibraryItem(
+                LibraryItemCreationAttributes(
                     name = itemData.name,
                     colorIndex = itemData.colorIndex,
                     libraryFolderId = itemData.folderId

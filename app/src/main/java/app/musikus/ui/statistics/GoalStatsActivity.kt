@@ -494,7 +494,7 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
     private fun getChartColor(): Int {
         return if(goals[selectedGoal].libraryItem != null) {
                 val libraryItemColors = resources.getIntArray(R.array.library_item_colors).toCollection(mutableListOf())
-                libraryItemColors[goals[selectedGoal].libraryItem!!.colorIndex]
+                libraryItemColors[goals[selectedGoal].libraryItem!!.colorIndex ?: 69]
             } else {
                 Musikus.getThemeColor(R.attr.colorPrimary, this)
             }
@@ -794,7 +794,7 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
 
             /** goal entry (radiobutton + progressbar) and set name depending on libraryItem */
             if (elem.libraryItem != null) {
-                val catColor = ColorStateList.valueOf(libraryItemColors[elem.libraryItem.colorIndex])
+                val catColor = ColorStateList.valueOf(libraryItemColors[elem.libraryItem.colorIndex ?: 69])
                 holder.goalTitleTv.text = elem.libraryItem.name
                 holder.goalRadioButton.buttonTintList = catColor
                 holder.progressGoal.progressTintList = catColor
@@ -868,7 +868,7 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
                 var color = ColorStateList.valueOf(
                     Musikus.getThemeColor(R.attr.colorPrimary, this@GoalStatsActivity))
                 if (goals[position].libraryItem != null)
-                    color = ColorStateList.valueOf(catColors[goals[position].libraryItem!!.colorIndex])
+                    color = ColorStateList.valueOf(catColors[goals[position].libraryItem!!.colorIndex ?: 69])
 
                 backgroundTintList = color
                 isSelected = true

@@ -487,7 +487,7 @@ fun LibraryItem(
                     .clip(RoundedCornerShape(5.dp))
                     .align(Alignment.CenterVertically)
                     .background(
-                        Color(Musikus.getLibraryItemColors(LocalContext.current)[libraryItem.colorIndex])
+                        Color(Musikus.getLibraryItemColors(LocalContext.current)[libraryItem.colorIndex ?: 69])
                     ),
             )
             Column(
@@ -495,7 +495,7 @@ fun LibraryItem(
                     .padding(start = 12.dp),
             ) {
                 Text(
-                    text = libraryItem.name,
+                    text = libraryItem.name  ?: "whoopsie",
                     style = MaterialTheme.typography.titleMedium,
                 )
                 Text(

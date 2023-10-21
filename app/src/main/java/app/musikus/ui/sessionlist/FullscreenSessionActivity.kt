@@ -25,8 +25,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-import com.google.android.material.button.MaterialButton
 import app.musikus.R
 import app.musikus.database.SectionWithLibraryItem
 import app.musikus.database.SessionWithSectionsWithLibraryItems
@@ -35,6 +33,8 @@ import app.musikus.shared.EditTimeDialog
 import app.musikus.ui.MainActivity
 import app.musikus.utils.TIME_FORMAT_HUMAN_PRETTY
 import app.musikus.utils.getDurationString
+import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import com.google.android.material.button.MaterialButton
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.UUID
@@ -235,7 +235,7 @@ class FullscreenSessionActivity : AppCompatActivity() {
             // set the color to the libraryItem color
             val libraryItemColors =  context.resources.getIntArray(R.array.library_item_colors)
             viewHolder.sectionColor.backgroundTintList = ColorStateList.valueOf(
-                libraryItemColors[libraryItem.colorIndex]
+                libraryItemColors[libraryItem.colorIndex ?: 69]
             )
 
             val sectionDuration = section.duration ?: 0

@@ -11,10 +11,11 @@ package app.musikus.repository
 import app.musikus.database.PTDatabase
 import app.musikus.database.entities.LibraryFolder
 import app.musikus.database.entities.LibraryItem
+import app.musikus.database.entities.LibraryItemCreationAttributes
+import app.musikus.database.entities.LibraryItemUpdateAttributes
 import app.musikus.datastore.LibraryFolderSortMode
 import app.musikus.datastore.LibraryItemSortMode
 import app.musikus.datastore.SortDirection
-import java.util.UUID
 
 class LibraryRepository(
     database: PTDatabase
@@ -22,7 +23,7 @@ class LibraryRepository(
     private val itemDao = database.libraryItemDao
     private val folderDao = database.libraryFolderDao
 
-    val items = itemDao.getAsFlow(activeOnly = true)
+    val items = itemDao.getAllAsFlow()
     val folders = folderDao.getAllAsFlow()
 
 
@@ -32,8 +33,8 @@ class LibraryRepository(
         folderDao.insert(newFolder)
     }
 
-    suspend fun addItem(newItem: LibraryItem) {
-        itemDao.insert(newItem)
+    suspend fun addItem(creationAttributes: LibraryItemCreationAttributes) {
+        itemDao.insert(LibraryItem(creationAttributes))
     }
 
     /** Edit */
@@ -44,39 +45,29 @@ class LibraryRepository(
         folder.apply {
             name = newName
         }
-        folderDao.update(folder)
+//        folderDao.update(folder)
     }
 
-    suspend fun editItem(
-        item: LibraryItem,
-        newName: String,
-        newColorIndex: Int,
-        newFolderId: UUID?,
-    ) {
-        item.apply {
-            name = newName
-            colorIndex = newColorIndex
-            libraryFolderId = newFolderId
-        }
-        itemDao.update(item)
+    suspend fun editItem(updateAttributes: LibraryItemUpdateAttributes) {
+        itemDao.update(LibraryItem(updateAttributes))
     }
 
     /** Delete / restore */
 
     suspend fun deleteItems(items: List<LibraryItem>) {
-        itemDao.delete(items)
+        itemDao.delete(items.map { it.id })
     }
 
     suspend fun restoreItems(items: List<LibraryItem>) {
-        itemDao.restore(items)
+        itemDao.restore(items.map{ it.id })
     }
 
     suspend fun deleteFolders(folders: List<LibraryFolder>) {
-        folderDao.delete(folders)
+        folderDao.delete(folders.map { it.id })
     }
 
     suspend fun restoreFolders(folders: List<LibraryFolder>) {
-        folderDao.restore(folders)
+        folderDao.restore(folders.map { it.id })
     }
 
     /** Clean */

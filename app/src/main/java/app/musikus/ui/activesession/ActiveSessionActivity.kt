@@ -76,7 +76,6 @@ import app.musikus.services.SessionForegroundService
 import app.musikus.ui.MainActivity
 import app.musikus.ui.goals.updateGoals
 import app.musikus.ui.library.LibraryItemAdapter
-import app.musikus.ui.library.LibraryItemDialog
 import app.musikus.utils.TIME_FORMAT_HMS_DIGITAL
 import app.musikus.utils.TIME_FORMAT_MS_DIGITAL
 import app.musikus.utils.getCurrTimestamp
@@ -100,7 +99,7 @@ class ActiveSessionActivity : AppCompatActivity() {
 
     private var activeLibraryItems = ArrayList<LibraryItem>()
 
-    private var addLibraryItemDialog: LibraryItemDialog? = null
+//    private var addLibraryItemDialog: LibraryItemDialog? = null
     private var discardSessionDialog: AlertDialog? = null
 
     private lateinit var sectionsListAdapter: SectionsListAdapter
@@ -218,7 +217,7 @@ class ActiveSessionActivity : AppCompatActivity() {
             context = this,
             showInActiveSession = true,
             shortClickHandler = ::libraryItemPressed,
-            addLibraryItemHandler = { addLibraryItemDialog?.show() }
+//            addLibraryItemHandler = { addLibraryItemDialog?.show() }
         )
 
         val libraryItemList = findViewById<RecyclerView>(R.id.libraryItemList)
@@ -242,7 +241,7 @@ class ActiveSessionActivity : AppCompatActivity() {
 
         // load all active libraryItems from the database and notify the adapter
         lifecycleScope.launch {
-            PTDatabase.getInstance(applicationContext).libraryItemDao.getAsFlow(activeOnly = true).first().let { activeLibraryItems.addAll(it.reversed())
+            PTDatabase.getInstance(applicationContext).libraryItemDao.getAllAsFlow().first().let { activeLibraryItems.addAll(it.reversed())
                 libraryItemAdapter.notifyItemRangeInserted(0, it.size)
             }
             libraryItemList.apply {
@@ -265,7 +264,7 @@ class ActiveSessionActivity : AppCompatActivity() {
         }
 
         // create a new library item dialog for adding new libraryItems
-        addLibraryItemDialog = LibraryItemDialog(this, ::addLibraryItemHandler)
+//        addLibraryItemDialog = LibraryItemDialog(this, ::addLibraryItemHandler)
     }
 
     private fun adjustSpanCountCatList() {
@@ -1192,7 +1191,7 @@ class ActiveSessionActivity : AppCompatActivity() {
         }
 
         // start a new section for the chosen library item
-        mService.startNewSection(libraryItemId, activeLibraryItems[index].name)
+        mService.startNewSection(libraryItemId, activeLibraryItems[index].name ?: "")
 
         updateActiveSectionView()
         adaptBottomTextView(true)

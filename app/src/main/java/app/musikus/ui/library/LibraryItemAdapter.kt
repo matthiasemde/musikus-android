@@ -123,16 +123,11 @@ class LibraryItemAdapter(
                     // store the id of the library item on the button
                     button.tag = libraryItem.id
 
-                    // archived library items should not be displayed
-                    if (libraryItem.archived) {
-                        button.visibility = View.GONE
-                    }
-
                     // contents of the view with that element
                     button.text = libraryItem.name
 
                     button.backgroundTintList = ColorStateList.valueOf(
-                        libraryItemColors[libraryItem.colorIndex]
+                        libraryItemColors[libraryItem.colorIndex ?: 69]
                     )
                 } else {
 //                    val cardView = view.findViewById<CardView>(R.id.library_item_card)
@@ -141,7 +136,7 @@ class LibraryItemAdapter(
 
 //                    cardView.isSelected = selectedLibraryItems.contains(layoutPosition)
                     colorIndicatorView.backgroundTintList = ColorStateList.valueOf(
-                        libraryItemColors[libraryItem.colorIndex]
+                        libraryItemColors[libraryItem.colorIndex ?: 69]
                     )
 
                     nameView.text = libraryItem.name

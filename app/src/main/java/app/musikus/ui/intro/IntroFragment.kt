@@ -18,26 +18,34 @@ import androidx.annotation.ColorRes
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentContainerView
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator
-import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.github.appintro.SlideBackgroundColorHolder
-import com.github.appintro.SlideSelectionListener
-import com.google.android.material.floatingactionbutton.FloatingActionButton
 import app.musikus.BuildConfig
 import app.musikus.R
-import app.musikus.database.*
-import app.musikus.database.entities.*
+import app.musikus.database.GoalDescriptionWithLibraryItems
+import app.musikus.database.GoalInstanceWithDescriptionWithLibraryItems
+import app.musikus.database.SectionWithLibraryItem
+import app.musikus.database.SessionWithSectionsWithLibraryItems
+import app.musikus.database.entities.GoalDescription
+import app.musikus.database.entities.GoalInstance
+import app.musikus.database.entities.GoalPeriodUnit
+import app.musikus.database.entities.GoalType
+import app.musikus.database.entities.LibraryItem
+import app.musikus.database.entities.Section
+import app.musikus.database.entities.Session
 import app.musikus.ui.activesession.ActiveSessionActivity
 import app.musikus.ui.goals.GoalAdapter
 import app.musikus.ui.library.LibraryItemAdapter
-import app.musikus.ui.library.LibraryItemDialog
-import app.musikus.ui.sessionlist.SessionSummaryAdapter
-import app.musikus.utils.*
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import java.util.*
+import app.musikus.utils.SECONDS_PER_DAY
+import app.musikus.utils.SECONDS_PER_HOUR
+import app.musikus.utils.getCurrTimestamp
+import app.musikus.utils.getStartOfDay
+import app.musikus.utils.getStartOfWeek
+import com.github.appintro.SlideBackgroundColorHolder
+import com.github.appintro.SlideSelectionListener
+import com.google.android.material.floatingactionbutton.FloatingActionButton
+import java.util.UUID
 import kotlin.math.roundToInt
 
 
@@ -127,15 +135,15 @@ class IntroFragment(
     }
 
     private val libraryClickListener = View.OnClickListener {
-        LibraryItemDialog(
-            context = requireActivity(),
-        ) { newLibraryItem ->
-            lifecycleScope.launch {
-                PTDatabase.getInstance(requireContext()).libraryItemDao.insert(newLibraryItem)
-                delay(200)
-                (requireActivity() as AppIntroActivity).changeSlide()
-            }
-        }.show()
+//        LibraryItemDialog(
+//            context = requireActivity(),
+//        ) { newLibraryItem ->
+//            lifecycleScope.launch {
+//                PTDatabase.getInstance(requireContext()).libraryItemDao.insert(newLibraryItem)
+//                delay(200)
+//                (requireActivity() as AppIntroActivity).changeSlide()
+//            }
+//        }.show()
     }
 
     private val goalsClickListener = View.OnClickListener {
@@ -274,15 +282,15 @@ class IntroSessionsFragment : Fragment(R.layout.fragment_intro_sessions) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
 
-        SessionSummaryAdapter.ViewHolder.ItemViewHolder(
-            view.findViewById(R.id.fragment_intro_sessions_dummyitem),
-            requireContext(),
-            getDummySessions(),
-            listOf(),
-            {_,_ -> },
-            {_,_ -> false },
-            isInAdapter = false
-        ).bind(0)
+//        SessionSummaryAdapter.ViewHolder.ItemViewHolder(
+//            view.findViewById(R.id.fragment_intro_sessions_dummyitem),
+//            requireContext(),
+//            getDummySessions(),
+//            listOf(),
+//            {_,_ -> },
+//            {_,_ -> false },
+//            isInAdapter = false
+//        ).bind(0)
 }
 
 private fun getDummySessions() =

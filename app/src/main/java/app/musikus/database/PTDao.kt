@@ -33,9 +33,22 @@ import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.runBlocking
 import java.util.UUID
 
-abstract class BaseModel (
-    @PrimaryKey var id: UUID = UUID.randomUUID(),
-) {
+abstract class BaseModelCreationAttributes
+abstract class BaseModelUpdateAttributes(
+    val id: UUID,
+)
+
+abstract class BaseModel {
+    @PrimaryKey var id: UUID = UUID.randomUUID()
+
+    // Creation Constructor
+    constructor()
+
+    // Update Constructor
+    constructor(updateAttributes: BaseModelUpdateAttributes) {
+        id = updateAttributes.id
+    }
+
     override fun toString(): String {
         return "\nPretty print of ${this.javaClass.simpleName} entity:\n" +
             "\tid: \t\t\t\t${this.id}\n"
@@ -46,10 +59,21 @@ abstract class BaseModel (
  * @Model Model with timestamps
  */
 
-abstract class ModelWithTimestamps (
-    @ColumnInfo(name="created_at", defaultValue = "0") var createdAt: Long = 0,
-    @ColumnInfo(name="modified_at", defaultValue = "0") var modifiedAt: Long = 0,
-) : BaseModel() {
+abstract class ModelWithTimestampsCreationAttributes : BaseModelCreationAttributes()
+abstract class ModelWithTimestampsUpdateAttributes(
+    id: UUID,
+) : BaseModelUpdateAttributes(id)
+
+abstract class ModelWithTimestamps : BaseModel {
+    @ColumnInfo(name="created_at", defaultValue = "0") var createdAt: Long? = null
+    @ColumnInfo(name="modified_at", defaultValue = "0") var modifiedAt: Long? = null
+
+    // Creation Constructor
+    constructor() : super()
+
+    // Update Constructor
+    constructor(updateAttributes: ModelWithTimestampsUpdateAttributes) : super(updateAttributes)
+
     override fun toString(): String {
         return super.toString() +
             "\tcreated at: \t\t${this.createdAt}\n" +
@@ -61,9 +85,23 @@ abstract class ModelWithTimestamps (
  * @Model Soft delete model
  */
 
-abstract class SoftDeleteModel (
-    @ColumnInfo(name="deleted", defaultValue = "false") var deleted: Boolean = false,
-) : ModelWithTimestamps() {
+abstract class SoftDeleteModelCreationAttributes : ModelWithTimestampsCreationAttributes()
+abstract class SoftDeleteModelUpdateAttributes(
+    id: UUID,
+    val deleted: Boolean? = null,
+) : ModelWithTimestampsUpdateAttributes(id)
+
+abstract class SoftDeleteModel : ModelWithTimestamps {
+    @ColumnInfo(name="deleted", defaultValue = "false") var deleted: Boolean? = false
+
+    // Creation Constructor
+    constructor() : super()
+
+    // Update Constructor
+    constructor(updateAttributes: SoftDeleteModelUpdateAttributes) : super(updateAttributes) {
+        deleted = updateAttributes.deleted
+    }
+
     override fun toString(): String {
         return super.toString() +
             "\tdeleted: ${deleted}\n"
@@ -102,39 +140,42 @@ abstract class BaseDao<T : BaseModel>(
      */
 
     @Delete
-    abstract suspend fun delete(row: T)
+    protected abstract suspend fun directDelete(row: T) // TODO: make these protected / private
 
     @Delete
-    abstract suspend fun delete(rows: List<T>)
+    protected abstract suspend fun directDelete(rows: List<T>) // TODO: make these protected / private
 
-    suspend fun getAndDelete(id: UUID) {
-        get(id)?.let { delete(it) }
+    open suspend fun delete(id: UUID) {
+        get(id)?.let { directDelete(it) }
             ?: Log.e("BASE_DAO", "id: $id not found while trying to delete")
     }
 
-    suspend fun getAndDelete(ids: List<UUID>) {
-        delete(get(ids))
+    open suspend fun delete(ids: List<UUID>) {
+        directDelete(get(ids))
     }
 
 
     /**
      * @Update queries
      */
-
-    @Update(onConflict = OnConflictStrategy.ABORT)
-    protected abstract suspend fun directUpdate(row: T)
-
-    open suspend fun update(row: T) {
-        directUpdate(row)
-    }
-
-    @Update(onConflict = OnConflictStrategy.ABORT)
+    @Update
     protected abstract suspend fun directUpdate(rows: List<T>)
 
-    open suspend fun update(rows: List<T>) {
-        directUpdate(rows)
+    open suspend fun update(row: T) {
+        update(listOf(row))
     }
 
+    open suspend fun update(rows: List<T>) {
+        directUpdate(
+            get(rows.map {
+                it.id
+            }).zip(rows).map { (old, new) ->
+                merge(old, new)
+            }
+        )
+    }
+
+    protected open fun merge(old: T, new: T): T = old
 
     /**
      * @RawQueries for standard getters
@@ -143,16 +184,16 @@ abstract class BaseDao<T : BaseModel>(
     @RawQuery
     protected abstract suspend fun get(query: SupportSQLiteQuery): List<T>
 
-    suspend fun get(id: UUID) = get(listOf(id)).firstOrNull()
+    protected suspend fun get(id: UUID) = get(listOf(id)).firstOrNull()
 
-    open suspend fun get(ids: List<UUID>) = get(
+    protected open suspend fun get(ids: List<UUID>) = get(
         SimpleSQLiteQuery(
-            "SELECT * FROM $tableName WHERE id IN (${ids.joinToString(separator = ",") { "?" }});",
+            query = "SELECT * FROM $tableName WHERE id IN (${ids.joinToString(separator = ",") { "?" }});",
             ids.map { UUIDConverter().toByte(it) }.toTypedArray()
         )
     )
 
-    open suspend fun getAll() = get(
+    protected open suspend fun getAll() = get(
         SimpleSQLiteQuery("SELECT * FROM $tableName;")
     )
 
@@ -162,7 +203,7 @@ abstract class BaseDao<T : BaseModel>(
 
     fun getAsFlow(id: UUID): Flow<T?> = getAsFlow(listOf(id)).map { it.firstOrNull() }
     fun getAsFlow(ids: List<UUID>): Flow<List<T>> = subscribeTo { get(ids) }
-    fun getAllAsFlow(): Flow<List<T>> = subscribeTo { getAll() }
+    open fun getAllAsFlow(): Flow<List<T>> = subscribeTo { getAll() }
 
     private fun subscribeTo(query: suspend () -> List<T>): Flow<List<T>> {
         val notify = MutableSharedFlow<String>()
@@ -202,22 +243,20 @@ abstract class TimestampDao<T : ModelWithTimestamps>(
     database = database
 ) {
     override suspend fun insert(row: T) {
-        row.createdAt = getCurrTimestamp()
-        row.modifiedAt = getCurrTimestamp()
-        super.insert(row)
+        insert(listOf(row))
     }
 
     override suspend fun insert(rows: List<T>) {
+        val now = getCurrTimestamp()
         rows.forEach {
-            it.createdAt = getCurrTimestamp()
-            it.modifiedAt = getCurrTimestamp()
+            it.createdAt = now
+            it.modifiedAt = now
         }
         super.insert(rows)
     }
 
     override suspend fun update(row: T) {
-        row.modifiedAt = getCurrTimestamp()
-        super.update(row)
+        update(listOf(row))
     }
 
     override suspend fun update(rows: List<T>) {
@@ -226,37 +265,45 @@ abstract class TimestampDao<T : ModelWithTimestamps>(
         }
         super.update(rows)
     }
+
+    override fun merge(old: T, new: T): T {
+        return super.merge(old, new).apply {
+            modifiedAt = getCurrTimestamp()
+        }
+    }
 }
 
 abstract class SoftDeleteDao<T : SoftDeleteModel>(
     private val tableName: String,
-    private val database: PTDatabase
+    database: PTDatabase
 ) : TimestampDao<T>(
     tableName = tableName,
     database = database
 ) {
-    override suspend fun delete(row: T) {
-        row.deleted = true
-        super.update(row)
+    override suspend fun delete(id: UUID) {
+        delete(listOf(id))
     }
 
-    override suspend fun delete(rows: List<T>) {
-        rows.forEach {
-            it.deleted = true
+    override suspend fun delete(ids: List<UUID>) {
+        get(ids).onEach { it.deleted = true }.let {
+            super.update(it)
         }
-        super.update(rows)
     }
 
-    suspend fun restore(row: T) {
-        row.deleted = false
-        super.update(row)
+    suspend fun restore(id: UUID) {
+        restore(listOf(id))
     }
 
-    suspend fun restore(rows: List<T>) {
-        rows.forEach {
-            it.deleted = false
+    suspend fun restore(ids: List<UUID>) {
+        get(ids).onEach { it.deleted = false }.let {
+            super.update(it)
         }
-        super.update(rows)
+    }
+
+    override fun merge(old: T, new: T): T {
+        return super.merge(old, new).apply {
+            deleted = new.deleted ?: old.deleted
+        }
     }
 
     override suspend fun get(ids: List<UUID>) = get(
