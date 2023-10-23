@@ -7,13 +7,22 @@
 
 package app.musikus.services
 
-import android.app.*
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.app.Service
+import android.app.TaskStackBuilder
 import android.content.Context
 import android.content.Intent
 import android.media.AudioAttributes
 import android.media.AudioFormat
 import android.media.AudioTrack
-import android.os.*
+import android.os.Binder
+import android.os.Build
+import android.os.Handler
+import android.os.IBinder
+import android.os.Looper
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import app.musikus.Musikus
@@ -21,7 +30,8 @@ import app.musikus.R
 import app.musikus.database.entities.Section
 import app.musikus.ui.activesession.ActiveSessionActivity
 import app.musikus.utils.secondsDurationToHoursMinSec
-import java.util.*
+import java.util.Date
+import java.util.UUID
 import kotlin.math.roundToInt
 
 
@@ -179,17 +189,17 @@ class SessionForegroundService : Service() {
     fun startNewSection(libraryItemId: UUID, libraryItemName: String) {
         currLibraryItemName = libraryItemName
         val now = Date().time / 1000L
-        sectionBuffer.add(
-            Pair(
-                Section(
-                    null,
-                    libraryItemId,
-                    null,
-                    now,
-                ),
-                0
-            )
-        )
+//        sectionBuffer.add(
+//            Pair(
+//                Section(
+//                    null,
+//                    libraryItemId,
+//                    null,
+//                    now,
+//                ),
+//                0
+//            )
+//        )
     }
 
     /**
@@ -203,10 +213,10 @@ class SessionForegroundService : Service() {
                 sectionBuffer.last().copy(second = sectionBuffer.last().second - timePassed.toInt())
         } else {
             // subtract from regular duration
-            sectionBuffer.last().first.duration =
-                sectionBuffer.last().first.duration?.minus(
-                    timePassed.toInt()
-                )
+//            sectionBuffer.last().first.duration =
+//                sectionBuffer.last().first.duration?.minus(
+//                    timePassed.toInt()
+//                )
         }
     }
 

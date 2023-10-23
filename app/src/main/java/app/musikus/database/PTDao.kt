@@ -12,7 +12,6 @@
 
 package app.musikus.database
 
-import android.util.Log
 import androidx.room.ColumnInfo
 import androidx.room.Delete
 import androidx.room.Insert
@@ -33,21 +32,20 @@ import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.runBlocking
 import java.util.UUID
 
-abstract class BaseModelCreationAttributes
-abstract class BaseModelUpdateAttributes(
-    val id: UUID,
+interface IBaseModelCreationAttributes
+interface IBaseModelUpdateAttributes
+
+abstract class BaseModelCreationAttributes : IBaseModelCreationAttributes
+
+abstract class BaseModelUpdateAttributes : IBaseModelUpdateAttributes
+
+abstract class BaseModelDisplayAttributes(
+    @ColumnInfo(name = "id") var id: UUID = UUID.randomUUID()
 )
 
-abstract class BaseModel {
+abstract class BaseModel(
     @PrimaryKey var id: UUID = UUID.randomUUID()
-
-    // Creation Constructor
-    constructor()
-
-    // Update Constructor
-    constructor(updateAttributes: BaseModelUpdateAttributes) {
-        id = updateAttributes.id
-    }
+) : IBaseModelCreationAttributes, IBaseModelUpdateAttributes {
 
     override fun toString(): String {
         return "\nPretty print of ${this.javaClass.simpleName} entity:\n" +
@@ -59,20 +57,24 @@ abstract class BaseModel {
  * @Model Model with timestamps
  */
 
-abstract class ModelWithTimestampsCreationAttributes : BaseModelCreationAttributes()
-abstract class ModelWithTimestampsUpdateAttributes(
-    id: UUID,
-) : BaseModelUpdateAttributes(id)
+interface ITimestampModelCreationAttributes : IBaseModelCreationAttributes
+interface ITimestampModelUpdateAttributes : IBaseModelUpdateAttributes
 
-abstract class ModelWithTimestamps : BaseModel {
-    @ColumnInfo(name="created_at", defaultValue = "0") var createdAt: Long? = null
+abstract class TimestampModelCreationAttributes
+    : BaseModelCreationAttributes(), ITimestampModelCreationAttributes
+
+abstract class TimestampModelUpdateAttributes
+    : BaseModelUpdateAttributes(), ITimestampModelUpdateAttributes
+
+abstract class TimestampModelDisplayAttributes(
+    @ColumnInfo(name = "created_at") var createdAt: Long = 0,
+    @ColumnInfo(name = "modified_at") var modifiedAt: Long = 0
+) : BaseModelDisplayAttributes()
+
+abstract class TimestampModel(
+    @ColumnInfo(name="created_at", defaultValue = "0") var createdAt: Long? = null,
     @ColumnInfo(name="modified_at", defaultValue = "0") var modifiedAt: Long? = null
-
-    // Creation Constructor
-    constructor() : super()
-
-    // Update Constructor
-    constructor(updateAttributes: ModelWithTimestampsUpdateAttributes) : super(updateAttributes)
+) : BaseModel(), ITimestampModelCreationAttributes, ITimestampModelUpdateAttributes {
 
     override fun toString(): String {
         return super.toString() +
@@ -85,22 +87,21 @@ abstract class ModelWithTimestamps : BaseModel {
  * @Model Soft delete model
  */
 
-abstract class SoftDeleteModelCreationAttributes : ModelWithTimestampsCreationAttributes()
-abstract class SoftDeleteModelUpdateAttributes(
-    id: UUID,
-    val deleted: Boolean? = null,
-) : ModelWithTimestampsUpdateAttributes(id)
+interface ISoftDeleteModelCreationAttributes : ITimestampModelCreationAttributes
+interface ISoftDeleteModelUpdateAttributes : ITimestampModelUpdateAttributes
 
-abstract class SoftDeleteModel : ModelWithTimestamps {
-    @ColumnInfo(name="deleted", defaultValue = "false") var deleted: Boolean? = false
+abstract class SoftDeleteModelCreationAttributes
+    : TimestampModelCreationAttributes(), ISoftDeleteModelCreationAttributes
 
-    // Creation Constructor
-    constructor() : super()
+abstract class SoftDeleteModelUpdateAttributes
+    : TimestampModelUpdateAttributes(), ISoftDeleteModelUpdateAttributes
 
-    // Update Constructor
-    constructor(updateAttributes: SoftDeleteModelUpdateAttributes) : super(updateAttributes) {
-        deleted = updateAttributes.deleted
-    }
+abstract class SoftDeleteModelDisplayAttributes
+    : TimestampModelDisplayAttributes()
+
+abstract class SoftDeleteModel(
+    @ColumnInfo(name="deleted", defaultValue = "false") var deleted: Boolean = false
+) : TimestampModel(), ISoftDeleteModelCreationAttributes, ISoftDeleteModelUpdateAttributes {
 
     override fun toString(): String {
         return super.toString() +
@@ -112,46 +113,48 @@ abstract class SoftDeleteModel : ModelWithTimestamps {
  * @Dao Base dao
  */
 
-abstract class BaseDao<T : BaseModel>(
+abstract class BaseDao<
+    T : BaseModel,
+    U : BaseModelUpdateAttributes,
+    D
+//    D : BaseModelDisplayAttributes
+>(
     private val tableName: String,
-    private val database: PTDatabase
+    private val database: PTDatabase,
+    displayAttributes: List<String>
 ) {
+
+    protected val displayAttributesString = "id, " + displayAttributes.joinToString(separator = ", ")
+
 
     /**
      * @Insert queries
      */
-
-    @Insert(onConflict = OnConflictStrategy.ABORT)
-    protected abstract suspend fun directInsert(row: T)
-
-    open suspend fun insert(row: T) {
-        directInsert(row)
-    }
-
     @Insert(onConflict = OnConflictStrategy.ABORT)
     protected abstract suspend fun directInsert(rows: List<T>)
+
+    open suspend fun insert(row: T) {
+        directInsert(listOf(row))
+    }
 
     open suspend fun insert(rows: List<T>) {
         directInsert(rows)
     }
+
 
     /**
      * @Delete queries
      */
 
     @Delete
-    protected abstract suspend fun directDelete(row: T) // TODO: make these protected / private
-
-    @Delete
-    protected abstract suspend fun directDelete(rows: List<T>) // TODO: make these protected / private
+    protected abstract suspend fun directDelete(rows: List<T>)
 
     open suspend fun delete(id: UUID) {
-        get(id)?.let { directDelete(it) }
-            ?: Log.e("BASE_DAO", "id: $id not found while trying to delete")
+        delete(listOf(id))
     }
 
     open suspend fun delete(ids: List<UUID>) {
-        directDelete(get(ids))
+        directDelete(getModels(ids))
     }
 
 
@@ -161,51 +164,71 @@ abstract class BaseDao<T : BaseModel>(
     @Update
     protected abstract suspend fun directUpdate(rows: List<T>)
 
-    open suspend fun update(row: T) {
-        update(listOf(row))
+    open suspend fun update(id: UUID, updateAttributes: U) {
+        update(listOf(Pair(id, updateAttributes)))
     }
 
-    open suspend fun update(rows: List<T>) {
-        directUpdate(
-            get(rows.map {
-                it.id
-            }).zip(rows).map { (old, new) ->
-                merge(old, new)
-            }
+    open suspend fun update(rows: List<Pair<UUID, U>>) {
+        rows.unzip().let { (ids, updateAttributes) ->
+            directUpdate(
+                getModels(ids).zip(updateAttributes).map { (old, updateAttributes) ->
+                    applyUpdateAttributes(old, updateAttributes)
+                }
+            )
+        }
+    }
+
+    protected open fun applyUpdateAttributes(old: T, updateAttributes: U): T = old
+
+
+    /**
+     * @RawQueries of all properties for update function
+     */
+
+    @RawQuery
+    protected abstract suspend fun getModels(query: SupportSQLiteQuery): List<T>
+
+    protected suspend fun getModel(id: UUID) = getModels(listOf(id)).firstOrNull()
+
+    protected open suspend fun getModels(ids: List<UUID>) = getModels(
+        SimpleSQLiteQuery(
+            query = "SELECT * FROM $tableName WHERE " +
+                "id IN (${ids.joinToString(separator = ",") { "?" }});",
+            ids.map { UUIDConverter().toByte(it) }.toTypedArray()
         )
-    }
+    )
 
-    protected open fun merge(old: T, new: T): T = old
 
     /**
      * @RawQueries for standard getters
      */
 
     @RawQuery
-    protected abstract suspend fun get(query: SupportSQLiteQuery): List<T>
+    protected abstract suspend fun get(query: SupportSQLiteQuery): List<D>
 
     protected suspend fun get(id: UUID) = get(listOf(id)).firstOrNull()
 
     protected open suspend fun get(ids: List<UUID>) = get(
         SimpleSQLiteQuery(
-            query = "SELECT * FROM $tableName WHERE id IN (${ids.joinToString(separator = ",") { "?" }});",
+            query = "SELECT $displayAttributesString FROM $tableName WHERE " +
+                "id IN (${ids.joinToString(separator = ",") { "?" }});",
             ids.map { UUIDConverter().toByte(it) }.toTypedArray()
         )
     )
 
     protected open suspend fun getAll() = get(
-        SimpleSQLiteQuery("SELECT * FROM $tableName;")
+        SimpleSQLiteQuery("SELECT $displayAttributesString FROM $tableName;")
     )
 
     /**
      * Flow getters
      */
 
-    fun getAsFlow(id: UUID): Flow<T?> = getAsFlow(listOf(id)).map { it.firstOrNull() }
-    fun getAsFlow(ids: List<UUID>): Flow<List<T>> = subscribeTo { get(ids) }
-    open fun getAllAsFlow(): Flow<List<T>> = subscribeTo { getAll() }
+    fun getAsFlow(id: UUID): Flow<D?> = getAsFlow(listOf(id)).map { it.firstOrNull() }
+    fun getAsFlow(ids: List<UUID>): Flow<List<D>> = subscribeTo { get(ids) }
+    open fun getAllAsFlow(): Flow<List<D>> = subscribeTo { getAll() }
 
-    private fun subscribeTo(query: suspend () -> List<T>): Flow<List<T>> {
+    private fun subscribeTo(query: suspend () -> List<D>): Flow<List<D>> {
         val notify = MutableSharedFlow<String>()
 
         var observer: InvalidationTracker.Observer? = null
@@ -235,12 +258,19 @@ abstract class BaseDao<T : BaseModel>(
     }
 }
 
-abstract class TimestampDao<T : ModelWithTimestamps>(
+abstract class TimestampDao<
+    T : TimestampModel,
+    U : TimestampModelUpdateAttributes,
+    D
+//    D : TimestampModelDisplayAttributes
+>(
     tableName: String,
-    database: PTDatabase
-) : BaseDao<T>(
+    database: PTDatabase,
+    displayAttributes: List<String>
+) : BaseDao<T, U, D>(
     tableName = tableName,
-    database = database
+    database = database,
+    displayAttributes = listOf("created_at", "modified_at") + displayAttributes
 ) {
     override suspend fun insert(row: T) {
         insert(listOf(row))
@@ -248,46 +278,43 @@ abstract class TimestampDao<T : ModelWithTimestamps>(
 
     override suspend fun insert(rows: List<T>) {
         val now = getCurrTimestamp()
-        rows.forEach {
+        super.insert(rows.onEach {
             it.createdAt = now
             it.modifiedAt = now
-        }
-        super.insert(rows)
+        })
     }
 
-    override suspend fun update(row: T) {
-        update(listOf(row))
-    }
-
-    override suspend fun update(rows: List<T>) {
-        rows.forEach {
-            it.modifiedAt = getCurrTimestamp()
-        }
-        super.update(rows)
-    }
-
-    override fun merge(old: T, new: T): T {
-        return super.merge(old, new).apply {
-            modifiedAt = getCurrTimestamp()
-        }
+    override fun applyUpdateAttributes(
+        old: T,
+        updateAttributes: U
+    ): T = super.applyUpdateAttributes(old, updateAttributes).apply{
+        modifiedAt = getCurrTimestamp()
     }
 }
 
-abstract class SoftDeleteDao<T : SoftDeleteModel>(
+abstract class SoftDeleteDao<
+    T : SoftDeleteModel,
+    U : SoftDeleteModelUpdateAttributes,
+    D
+//    D : SoftDeleteModelDisplayAttributes
+>(
     private val tableName: String,
-    database: PTDatabase
-) : TimestampDao<T>(
+    database: PTDatabase,
+    displayAttributes: List<String>
+) : TimestampDao<T, U, D>(
     tableName = tableName,
-    database = database
+    database = database,
+    displayAttributes = displayAttributes
 ) {
+    @Update
+    abstract override suspend fun directUpdate(rows: List<T>)
+
     override suspend fun delete(id: UUID) {
         delete(listOf(id))
     }
 
     override suspend fun delete(ids: List<UUID>) {
-        get(ids).onEach { it.deleted = true }.let {
-            super.update(it)
-        }
+        directUpdate(getModels(ids).onEach { it.deleted = true })
     }
 
     suspend fun restore(id: UUID) {
@@ -295,20 +322,12 @@ abstract class SoftDeleteDao<T : SoftDeleteModel>(
     }
 
     suspend fun restore(ids: List<UUID>) {
-        get(ids).onEach { it.deleted = false }.let {
-            super.update(it)
-        }
-    }
-
-    override fun merge(old: T, new: T): T {
-        return super.merge(old, new).apply {
-            deleted = new.deleted ?: old.deleted
-        }
+        directUpdate(getModels(ids).onEach { it.deleted = false })
     }
 
     override suspend fun get(ids: List<UUID>) = get(
         SimpleSQLiteQuery(
-            query = "SELECT * FROM $tableName WHERE " +
+            query = "SELECT ${super.displayAttributesString} FROM $tableName WHERE " +
                 "id IN (${ids.joinToString(separator = ",") { "?" }}) AND deleted=0;",
             ids.map { UUIDConverter().toByte(it) }.toTypedArray()
         )

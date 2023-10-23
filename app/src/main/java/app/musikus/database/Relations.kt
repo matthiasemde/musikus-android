@@ -15,7 +15,14 @@ package app.musikus.database
 import androidx.room.Embedded
 import androidx.room.Junction
 import androidx.room.Relation
-import app.musikus.database.entities.*
+import app.musikus.database.daos.LibraryItem
+import app.musikus.database.entities.GoalDescription
+import app.musikus.database.entities.GoalDescriptionLibraryItemCrossRef
+import app.musikus.database.entities.GoalInstance
+import app.musikus.database.entities.LibraryFolder
+import app.musikus.database.entities.LibraryItemModel
+import app.musikus.database.entities.Section
+import app.musikus.database.entities.Session
 
 
 data class SessionWithSections(
@@ -33,7 +40,7 @@ data class SectionWithLibraryItem(
         parentColumn = "library_item_id",
         entityColumn = "id"
     )
-    val libraryItem: LibraryItem
+    val libraryItem: LibraryItemModel
 )
 
 data class SessionWithSectionsWithLibraryItems(
@@ -57,7 +64,7 @@ data class GoalDescriptionWithLibraryItems(
             entityColumn = "library_item_id"
         )
     )
-    val libraryItems: List<LibraryItem>
+    val libraryItems: List<LibraryItemModel>
 )
 
 data class LibraryFolderWithItems(

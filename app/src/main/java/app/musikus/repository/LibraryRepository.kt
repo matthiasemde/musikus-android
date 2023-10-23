@@ -9,13 +9,16 @@
 package app.musikus.repository
 
 import app.musikus.database.PTDatabase
+import app.musikus.database.daos.LibraryItem
 import app.musikus.database.entities.LibraryFolder
-import app.musikus.database.entities.LibraryItem
+import app.musikus.database.entities.LibraryFolderCreationAttributes
 import app.musikus.database.entities.LibraryItemCreationAttributes
+import app.musikus.database.entities.LibraryItemModel
 import app.musikus.database.entities.LibraryItemUpdateAttributes
 import app.musikus.datastore.LibraryFolderSortMode
 import app.musikus.datastore.LibraryItemSortMode
 import app.musikus.datastore.SortDirection
+import java.util.UUID
 
 class LibraryRepository(
     database: PTDatabase
@@ -29,12 +32,22 @@ class LibraryRepository(
 
     /** Mutators */
     /** Add */
-    suspend fun addFolder(newFolder: LibraryFolder) {
-        folderDao.insert(newFolder)
+    suspend fun addFolder(creationAttributesImpl: LibraryFolderCreationAttributes) {
+        folderDao.insert(
+            LibraryFolder(
+                name = creationAttributesImpl.name,
+            )
+        )
     }
 
     suspend fun addItem(creationAttributes: LibraryItemCreationAttributes) {
-        itemDao.insert(LibraryItem(creationAttributes))
+        itemDao.insert(
+            LibraryItemModel(
+                name = creationAttributes.name,
+                colorIndex = creationAttributes.colorIndex,
+                libraryFolderId = creationAttributes.libraryFolderId,
+            )
+        )
     }
 
     /** Edit */
@@ -48,12 +61,17 @@ class LibraryRepository(
 //        folderDao.update(folder)
     }
 
-    suspend fun editItem(updateAttributes: LibraryItemUpdateAttributes) {
-        itemDao.update(LibraryItem(updateAttributes))
+    suspend fun editItem(
+        id: UUID,
+        updateAttributes: LibraryItemUpdateAttributes
+    ) {
+        itemDao.update(
+            id = id,
+            updateAttributes = updateAttributes
+        )
     }
 
     /** Delete / restore */
-
     suspend fun deleteItems(items: List<LibraryItem>) {
         itemDao.delete(items.map { it.id })
     }
@@ -71,7 +89,6 @@ class LibraryRepository(
     }
 
     /** Clean */
-
     suspend fun clean() {
         folderDao.clean()
         itemDao.clean()

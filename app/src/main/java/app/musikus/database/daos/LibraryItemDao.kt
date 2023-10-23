@@ -12,36 +12,48 @@
 
 package app.musikus.database.daos
 
+import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Query
-import androidx.room.Update
 import app.musikus.database.PTDatabase
 import app.musikus.database.SoftDeleteDao
-import app.musikus.database.entities.LibraryItem
+import app.musikus.database.SoftDeleteModelDisplayAttributes
+import app.musikus.database.entities.LibraryItemModel
+import app.musikus.database.entities.LibraryItemUpdateAttributes
 import kotlinx.coroutines.flow.Flow
 import java.util.*
 
+data class LibraryItem(
+    @ColumnInfo(name = "name") val name: String,
+    @ColumnInfo(name = "color_index") val colorIndex: Int,
+    @ColumnInfo(name = "custom_order") val order: Int,
+    @ColumnInfo(name = "library_folder_id") val libraryFolderId: UUID?
+) : SoftDeleteModelDisplayAttributes()
 @Dao
 abstract class LibraryItemDao(
     database: PTDatabase
-) : SoftDeleteDao<LibraryItem>(
+) : SoftDeleteDao<
+    LibraryItemModel,
+    LibraryItemUpdateAttributes,
+    LibraryItem
+>(
     tableName = "library_item",
-    database = database
+    database = database,
+    displayAttributes = listOf("name", "color_index", "library_folder_id")
 ) {
 
-    // Merge all LibraryItemUpdateAttributes
-    override fun merge(old: LibraryItem, new: LibraryItem): LibraryItem {
-        return super.merge(old, new).apply {
-            name = new.name ?: old.name
-            colorIndex = new.colorIndex ?: old.colorIndex
-            libraryFolderId = new.libraryFolderId ?: old.libraryFolderId
-            order = new.order ?: old.order
-        }
-    }
+    /**
+     * @Update
+     */
 
-    @Update
-    override suspend fun update(row: LibraryItem) {
-        super.update(row)
+    override fun applyUpdateAttributes(
+        old: LibraryItemModel,
+        updateAttributes: LibraryItemUpdateAttributes
+    ): LibraryItemModel = super.applyUpdateAttributes(old, updateAttributes).apply{
+        name = updateAttributes.name ?: old.name
+        colorIndex = updateAttributes.colorIndex ?: old.colorIndex
+        libraryFolderId = updateAttributes.libraryFolderId ?: old.libraryFolderId
+        order = updateAttributes.order ?: old.order
     }
 
     /**
@@ -59,7 +71,6 @@ abstract class LibraryItemDao(
                 "library_item.name, " +
                 "library_item.color_index, " +
                 "library_item.custom_order, " +
-                "library_item.deleted, " +
                 "library_item.created_at, " +
                 "library_item.modified_at, " +
             "CASE WHEN library_folder.deleted=1 THEN NULL ELSE library_folder.id END AS library_folder_id" +

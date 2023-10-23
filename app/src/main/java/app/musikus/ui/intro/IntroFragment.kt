@@ -25,21 +25,18 @@ import app.musikus.BuildConfig
 import app.musikus.R
 import app.musikus.database.GoalDescriptionWithLibraryItems
 import app.musikus.database.GoalInstanceWithDescriptionWithLibraryItems
-import app.musikus.database.SectionWithLibraryItem
 import app.musikus.database.SessionWithSectionsWithLibraryItems
+import app.musikus.database.daos.LibraryItem
 import app.musikus.database.entities.GoalDescription
 import app.musikus.database.entities.GoalInstance
 import app.musikus.database.entities.GoalPeriodUnit
 import app.musikus.database.entities.GoalType
-import app.musikus.database.entities.LibraryItem
-import app.musikus.database.entities.Section
 import app.musikus.database.entities.Session
 import app.musikus.ui.activesession.ActiveSessionActivity
 import app.musikus.ui.goals.GoalAdapter
 import app.musikus.ui.library.LibraryItemAdapter
 import app.musikus.utils.SECONDS_PER_DAY
 import app.musikus.utils.SECONDS_PER_HOUR
-import app.musikus.utils.getCurrTimestamp
 import app.musikus.utils.getStartOfDay
 import app.musikus.utils.getStartOfWeek
 import com.github.appintro.SlideBackgroundColorHolder
@@ -51,14 +48,18 @@ import kotlin.math.roundToInt
 
 private const val DUMMY_MAIN_CATEGORY_INDEX = 5
 
-private val dummyLibraryItems = listOf(
-    LibraryItem(name="B-Dur", colorIndex = 8),
-    LibraryItem(name="Czerny Etude Nr.2", colorIndex = 1),
-    LibraryItem(name="Trauermarsch c-Moll", colorIndex = 0),
-    LibraryItem(name="Andantino", colorIndex = 6),
-    LibraryItem(name="Klaviersonate", colorIndex = 7),
-    LibraryItem(name="Mozart", colorIndex = 3)
-)
+
+
+private val dummyLibraryItems = emptyList<LibraryItem>()
+
+//private val dummyLibraryItems = listOf(
+//    LibraryItem(name="B-Dur", colorIndex = 8),
+//    LibraryItem(name="Czerny Etude Nr.2", colorIndex = 1),
+//    LibraryItem(name="Trauermarsch c-Moll", colorIndex = 0),
+//    LibraryItem(name="Andantino", colorIndex = 6),
+//    LibraryItem(name="Klaviersonate", colorIndex = 7),
+//    LibraryItem(name="Mozart", colorIndex = 3)
+//)
 
 class IntroFragment(
     @ColorRes override val defaultBackgroundColorRes: Int = R.color.md_red_300
@@ -270,8 +271,10 @@ class IntroGoalsFragment : Fragment(R.layout.fragment_intro_goals) {
                     periodUnit = GoalPeriodUnit.WEEK,
                 ),
                 listOf(
-                    dummyLibraryItems[DUMMY_MAIN_CATEGORY_INDEX]
                 )
+//                listOf(
+//                    dummyLibraryItems[DUMMY_MAIN_CATEGORY_INDEX]
+//                )
             ),
         )
         return arrayListOf(goal1, goal2)
@@ -302,33 +305,33 @@ private fun getDummySessions() =
                 comment = "Great session! \uD83D\uDE80"
             ),
             sections = listOf(
-                SectionWithLibraryItem(
-                    Section(
-                        sessionId = UUID.randomUUID(), // we don't care about id but it can't be null
-                        libraryItemId = UUID.randomUUID(), // we don't care about id but it can't be null
-                        duration = 60 * 10,
-                        timestamp = getCurrTimestamp()
-                    ),
-                    dummyLibraryItems[0]
-                ),
-                SectionWithLibraryItem(
-                    Section(
-                        sessionId = UUID.randomUUID(), // we don't care about id but it can't be null
-                        libraryItemId = UUID.randomUUID(), // we don't care about id but it can't be null
-                        duration = 60 * 23,
-                        timestamp = getCurrTimestamp()
-                    ),
-                    dummyLibraryItems[1]
-                ),
-                SectionWithLibraryItem(
-                    Section(
-                        sessionId = UUID.randomUUID(), // we don't care about id but it can't be null
-                        libraryItemId = UUID.randomUUID(), // we don't care about id but it can't be null
-                        duration = 60 * 37,
-                        timestamp = getCurrTimestamp()
-                    ),
-                    dummyLibraryItems[DUMMY_MAIN_CATEGORY_INDEX]
-                ),
+//                SectionWithLibraryItem(
+//                    Section(
+//                        sessionId = UUID.randomUUID(), // we don't care about id but it can't be null
+//                        libraryItemId = UUID.randomUUID(), // we don't care about id but it can't be null
+//                        duration = 60 * 10,
+//                        timestamp = getCurrTimestamp()
+//                    ),
+//                    dummyLibraryItems[0]
+//                ),
+//                SectionWithLibraryItem(
+//                    Section(
+//                        sessionId = UUID.randomUUID(), // we don't care about id but it can't be null
+//                        libraryItemId = UUID.randomUUID(), // we don't care about id but it can't be null
+//                        duration = 60 * 23,
+//                        timestamp = getCurrTimestamp()
+//                    ),
+//                    dummyLibraryItems[1]
+//                ),
+//                SectionWithLibraryItem(
+//                    Section(
+//                        sessionId = UUID.randomUUID(), // we don't care about id but it can't be null
+//                        libraryItemId = UUID.randomUUID(), // we don't care about id but it can't be null
+//                        duration = 60 * 37,
+//                        timestamp = getCurrTimestamp()
+//                    ),
+//                    dummyLibraryItems[DUMMY_MAIN_CATEGORY_INDEX]
+//                ),
             )
         )
     )

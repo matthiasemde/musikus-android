@@ -15,11 +15,13 @@ package app.musikus.database.entities
 import android.util.Log
 import androidx.room.ColumnInfo
 import androidx.room.Entity
-import androidx.room.ForeignKey
-import app.musikus.database.ModelWithTimestamps
+import app.musikus.database.ISoftDeleteModelCreationAttributes
+import app.musikus.database.ISoftDeleteModelUpdateAttributes
+import app.musikus.database.Nullable
 import app.musikus.database.SoftDeleteModel
+import app.musikus.database.SoftDeleteModelCreationAttributes
+import app.musikus.database.SoftDeleteModelUpdateAttributes
 import java.util.Calendar
-import java.util.UUID
 
 // shows, whether a goal will count all sections
 // or only the one from specific libraryItems
@@ -56,39 +58,49 @@ enum class GoalPeriodUnit {
     }
 }
 
-@Entity(
-    tableName = "goal_instance",
-    foreignKeys = [
-        ForeignKey(
-            entity = GoalDescription::class,
-            parentColumns = ["id"],
-            childColumns = ["goal_description_id"],
-            onDelete = ForeignKey.CASCADE
-        )
-    ]
-)
-data class GoalInstance(
-    @ColumnInfo(name="goal_description_id", index = true) val goalDescriptionId: UUID,
-    @ColumnInfo(name="start_timestamp") val startTimestamp: Long,
-    @ColumnInfo(name="period_in_seconds") val periodInSeconds: Int,
-    @ColumnInfo(name="target") var target: Int,
-    @ColumnInfo(name="progress") var progress: Int = 0,
-    @ColumnInfo(name="renewed") var renewed: Boolean = false,
-) : ModelWithTimestamps()
+private interface IGoalDescriptionCreationAttributes : ISoftDeleteModelCreationAttributes {
+    val type: GoalType
+    val repeat: Boolean
+    val periodInPeriodUnits: Int
+    val periodUnit: GoalPeriodUnit
+    val progressType: GoalProgressType
+}
+
+private interface IGoalDescriptionUpdateAttributes : ISoftDeleteModelUpdateAttributes {
+    val paused: Boolean?
+    val archived: Boolean?
+    val order: Nullable<Int>?
+}
+
+data class GoalDescriptionCreationAttributes(
+    override val type: GoalType,
+    override val repeat: Boolean,
+    override val periodInPeriodUnits: Int,
+    override val periodUnit: GoalPeriodUnit,
+    override val progressType: GoalProgressType,
+) : SoftDeleteModelCreationAttributes(), IGoalDescriptionCreationAttributes
+
+data class GoalDescriptionUpdateAttributes(
+    override val paused: Boolean? = null,
+    override val archived: Boolean? = null,
+    override val order: Nullable<Int>? = null,
+) : SoftDeleteModelUpdateAttributes(), IGoalDescriptionUpdateAttributes
+
 
 
 @Entity(tableName = "goal_description")
-class GoalDescription (
-    @ColumnInfo(name="type") val type: GoalType,
-    @ColumnInfo(name="repeat") val repeat: Boolean,
-    @ColumnInfo(name="period_in_period_units") val periodInPeriodUnits: Int,
-    @ColumnInfo(name="period_unit") val periodUnit: GoalPeriodUnit,
-    @ColumnInfo(name="progress_type") val progressType: GoalProgressType = GoalProgressType.TIME,
-    @ColumnInfo(name="paused") var paused: Boolean = false,
-    @ColumnInfo(name="archived") var archived: Boolean = false,
-//    @ColumnInfo(name="profile_id", index = true) val profileId: UUID? = null,
-    @ColumnInfo(name="order", defaultValue = "0") var order: Int? = null,
-) : SoftDeleteModel() {
+data class GoalDescription (
+    @ColumnInfo(name="type") override val type: GoalType,
+    @ColumnInfo(name="repeat") override val repeat: Boolean,
+    @ColumnInfo(name="period_in_period_units") override val periodInPeriodUnits: Int,
+    @ColumnInfo(name="period_unit") override val periodUnit: GoalPeriodUnit,
+    @ColumnInfo(name="progress_type")
+    override val progressType: GoalProgressType = GoalProgressType.TIME,
+    @ColumnInfo(name="paused") override var paused: Boolean = false,
+    @ColumnInfo(name="archived") override var archived: Boolean = false,
+//    @ColumnInfo(name="profile_id", index = true) override val profileId: UUID? = null,
+    @ColumnInfo(name="order", defaultValue = "null") override var order: Nullable<Int>? = null,
+) : SoftDeleteModel(), IGoalDescriptionCreationAttributes, IGoalDescriptionUpdateAttributes {
 
     // create a new instance of this goal, storing the target and progress during a single period
     fun createInstance(
@@ -138,7 +150,7 @@ class GoalDescription (
         }
 
         return GoalInstance(
-            goalDescriptionId = id,
+            goalDescriptionId = Nullable(id),
             startTimestamp = startTimestamp,
             periodInSeconds = periodInSeconds,
             target = target

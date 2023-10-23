@@ -12,30 +12,42 @@
 
 package app.musikus.database.entities
 
-import android.util.Log
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
+import app.musikus.database.ISoftDeleteModelCreationAttributes
+import app.musikus.database.ISoftDeleteModelUpdateAttributes
+import app.musikus.database.Nullable
 import app.musikus.database.SoftDeleteModel
 import app.musikus.database.SoftDeleteModelCreationAttributes
 import app.musikus.database.SoftDeleteModelUpdateAttributes
 import java.util.UUID
 
-class LibraryItemCreationAttributes(
-    val name: String,
-    val colorIndex: Int,
-    val libraryFolderId: UUID? = null,
-) : SoftDeleteModelCreationAttributes()
+private interface ILibraryItemCreationAttributes : ISoftDeleteModelCreationAttributes {
+    val name: String
+    val colorIndex: Int
+    val libraryFolderId: Nullable<UUID>?
+}
 
-class LibraryItemUpdateAttributes(
-    id: UUID,
-    val name: String? = null,
-    val colorIndex: Int? = null,
-    val libraryFolderId: UUID? = null,
-    val order: Int? = null,
-) : SoftDeleteModelUpdateAttributes(
-    id = id,
-)
+private interface ILibraryItemUpdateAttributes : ISoftDeleteModelUpdateAttributes {
+    val name: String?
+    val colorIndex: Int?
+    val libraryFolderId: Nullable<UUID>?
+    val order: Nullable<Int>?
+}
+
+data class LibraryItemCreationAttributes(
+    override val name: String,
+    override val colorIndex: Int,
+    override val libraryFolderId: Nullable<UUID>? = Nullable(null), // default value because attr is optional
+) : SoftDeleteModelCreationAttributes(), ILibraryItemCreationAttributes
+
+data class LibraryItemUpdateAttributes(
+    override val name: String? = null,
+    override val colorIndex: Int? = null,
+    override val libraryFolderId: Nullable<UUID>? = null,
+    override val order: Nullable<Int>? = null,
+) : SoftDeleteModelUpdateAttributes(), ILibraryItemUpdateAttributes
 
 @Entity(
     tableName = "library_item",
@@ -48,46 +60,14 @@ class LibraryItemUpdateAttributes(
         )
     ]
 )
-class LibraryItem : SoftDeleteModel {
-    @ColumnInfo(name="name") var name: String?
-    @ColumnInfo(name="color_index") var colorIndex: Int?
+data class LibraryItemModel(
+    @ColumnInfo(name="name") override var name: String,
+    @ColumnInfo(name="color_index") override var colorIndex: Int,
     @ColumnInfo(name="library_folder_id", index = true, defaultValue = "null")
-    var libraryFolderId: UUID?
-//    @ColumnInfo(name="profile_id", index = true) lateinit var profileId: UUID? = null
-    @ColumnInfo(name="custom_order", defaultValue = "null") var order: Int? = null
-
-    constructor(
-        name: String,
-        colorIndex: Int,
-        libraryFolderId: UUID? = null,
-        order: Int? = null,
-    ) : super() {
-        this.name = name
-        this.colorIndex = colorIndex
-        this.libraryFolderId = libraryFolderId
-        this.order = order
-
-        Log.e("LibraryItem","Use LibraryItemCreationAttributes instead")
-//        throw NotImplementedError("Use LibraryItemCreationAttributes instead")
-    }
-
-    // Creation Constructor
-    constructor(creationAttributes: LibraryItemCreationAttributes) : super() {
-        name = creationAttributes.name
-        colorIndex = creationAttributes.colorIndex
-        libraryFolderId = creationAttributes.libraryFolderId
-    }
-
-    // Update Constructor
-    constructor(updateAttributes: LibraryItemUpdateAttributes) : super(
-        updateAttributes
-    ) {
-        name = updateAttributes.name
-        colorIndex = updateAttributes.colorIndex
-        libraryFolderId = updateAttributes.libraryFolderId
-        order = updateAttributes.order
-    }
-
+    override var libraryFolderId: Nullable<UUID>?,
+//    @ColumnInfo(name="profile_id", index = true) override var profileId: UUID? = null,
+    @ColumnInfo(name="custom_order", defaultValue = "null") override var order: Nullable<Int>? = null,
+) : SoftDeleteModel(), ILibraryItemCreationAttributes, ILibraryItemUpdateAttributes {
 
     override fun toString(): String {
         return super.toString() +

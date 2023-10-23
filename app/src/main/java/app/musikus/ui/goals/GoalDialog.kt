@@ -37,6 +37,7 @@ import androidx.compose.ui.window.DialogProperties
 import app.musikus.R
 import app.musikus.components.NumberInput
 import app.musikus.database.GoalDescriptionWithLibraryItems
+import app.musikus.database.daos.LibraryItem
 import app.musikus.database.entities.*
 import app.musikus.shared.*
 import app.musikus.viewmodel.GoalDialogData
@@ -94,14 +95,14 @@ class GoalDialog(
             )
 
             // then create a object joining the description with any selected libraryItems
-            val newGoalDescriptionWithLibraryItems = GoalDescriptionWithLibraryItems(
-                description = newGoalDescription,
-                libraryItems = if (selectedGoalType == GoalType.ITEM_SPECIFIC)
-                    selectedLibraryItems.toList() else emptyList()
-            )
+//            val newGoalDescriptionWithLibraryItems = GoalDescriptionWithLibraryItems( TODO
+//                description = newGoalDescription,
+//                libraryItems = if (selectedGoalType == GoalType.ITEM_SPECIFIC)
+//                    selectedLibraryItems.toList() else emptyList()
+//            )
 
             // and call the submit handler, passing the selected target duration
-            submitHandler(newGoalDescriptionWithLibraryItems, selectedTarget)
+//            submitHandler(newGoalDescriptionWithLibraryItems, selectedTarget) TODO
         }
 
         // define the callback function for the negative button

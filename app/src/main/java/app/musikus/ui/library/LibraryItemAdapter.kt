@@ -23,7 +23,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import app.musikus.R
-import app.musikus.database.entities.LibraryItem
+import app.musikus.database.daos.LibraryItem
 
 
 /**

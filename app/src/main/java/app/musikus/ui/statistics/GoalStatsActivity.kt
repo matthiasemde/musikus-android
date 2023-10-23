@@ -27,10 +27,10 @@ import androidx.recyclerview.widget.RecyclerView
 import app.musikus.Musikus
 import app.musikus.R
 import app.musikus.database.PTDatabase
+import app.musikus.database.daos.LibraryItem
 import app.musikus.database.entities.GoalDescription
 import app.musikus.database.entities.GoalInstance
 import app.musikus.database.entities.GoalPeriodUnit
-import app.musikus.database.entities.LibraryItem
 import app.musikus.utils.DATE_FORMATTER_PATTERN_DAY_OF_MONTH
 import app.musikus.utils.DATE_FORMATTER_PATTERN_DAY_OF_MONTH_PADDED
 import app.musikus.utils.DATE_FORMATTER_PATTERN_MONTH_TEXT_ABBREV
@@ -143,13 +143,13 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
     /** get the goals from the database */
     private suspend fun initGoalsList() {
         PTDatabase.getInstance(applicationContext).goalDescriptionDao.getAllWithLibraryItems().forEach { (desc, cat) ->
-            goals.add(
-                GoalListElement(
-                    goalInstances = PTDatabase.getInstance(applicationContext).goalInstanceDao.get(desc.id, from = 0L),
-                    goalDesc = desc,
-                    libraryItem = cat.firstOrNull()
-                )
-            )
+//            goals.add( TODO
+//                GoalListElement(
+//                    goalInstances = PTDatabase.getInstance(applicationContext).goalInstanceDao.get(desc.id, from = 0L),
+//                    goalDesc = desc,
+//                    libraryItem = cat.firstOrNull()
+//                )
+//            )
         }
         goalListAdapter = GoalStatsAdapter()
         val layoutManager = LinearLayoutManager(this@GoalStatsActivity)

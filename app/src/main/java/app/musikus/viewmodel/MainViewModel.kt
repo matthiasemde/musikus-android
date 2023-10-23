@@ -17,9 +17,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import app.musikus.dataStore
+import app.musikus.database.Nullable
 import app.musikus.database.PTDatabase
-import app.musikus.database.entities.LibraryFolder
-import app.musikus.database.entities.LibraryItem
+import app.musikus.database.entities.LibraryFolderCreationAttributes
 import app.musikus.database.entities.LibraryItemCreationAttributes
 import app.musikus.datastore.ThemeSelections
 import app.musikus.repository.GoalRepository
@@ -56,39 +56,36 @@ class MainViewModel(
 
     private fun prepopulateDatabase() {
         Log.d("MainViewModel", "prepopulateDatabase")
-        val folders = listOf(
-            LibraryFolder(name = "Schupra"),
-            LibraryFolder(name = "Fagott"),
-            LibraryFolder(name = "Gesang"),
-        )
-
-        // populate the libraryItem table on first run
-        val items = listOf(
-            LibraryItem(name = "Die Schöpfung", colorIndex = 0, libraryFolderId = folders[0].id),
-            LibraryItem(name = "Beethoven Septett",colorIndex = 1,libraryFolderId = folders[0].id),
-            LibraryItem(name = "Schostakowitsch 9.", colorIndex = 2, libraryFolderId = folders[1].id),
-            LibraryItem(name = "Trauermarsch c-Moll", colorIndex = 3, libraryFolderId = folders[1].id),
-            LibraryItem(name = "Adagio", colorIndex = 4, libraryFolderId = folders[2].id),
-            LibraryItem(name = "Eine kleine Gigue", colorIndex = 5, libraryFolderId = folders[2].id),
-            LibraryItem(name = "Andantino", colorIndex = 6),
-            LibraryItem(name = "Klaviersonate", colorIndex = 7),
-            LibraryItem(name = "Trauermarsch", colorIndex = 8),
-        )
         viewModelScope.launch {
-            folders.forEach {
+            listOf(
+                LibraryFolderCreationAttributes(name = "Schupra"),
+                LibraryFolderCreationAttributes(name = "Fagott"),
+                LibraryFolderCreationAttributes(name = "Gesang"),
+            ).forEach {
                 libraryRepository.addFolder(it)
                 Log.d("MainActivity", "Folder ${it.name} created")
                 delay(1500) //make sure folders have different createdAt values
             }
 
-            items.forEach {
-                libraryRepository.addItem(LibraryItemCreationAttributes(
-                    it.name ?: "",
-                    it.colorIndex ?: 1,
-                    it.libraryFolderId,
-                ))
-                Log.d("MainActivity", "LibraryItem ${it.name} created")
-                delay(1500) //make sure items have different createdAt values
+            libraryRepository.folders.collect { folders ->
+                // populate the libraryItem table on first run
+                val items = listOf(
+                    LibraryItemCreationAttributes(name = "Die Schöpfung", colorIndex = 0, libraryFolderId = Nullable(folders[0].id)),
+                    LibraryItemCreationAttributes(name = "Beethoven Septett",colorIndex = 1,libraryFolderId = Nullable(folders[0].id)),
+                    LibraryItemCreationAttributes(name = "Schostakowitsch 9.", colorIndex = 2, libraryFolderId = Nullable(folders[1].id)),
+                    LibraryItemCreationAttributes(name = "Trauermarsch c-Moll", colorIndex = 3, libraryFolderId = Nullable(folders[1].id)),
+                    LibraryItemCreationAttributes(name = "Adagio", colorIndex = 4, libraryFolderId = Nullable(folders[2].id)),
+                    LibraryItemCreationAttributes(name = "Eine kleine Gigue", colorIndex = 5, libraryFolderId = Nullable(folders[2].id)),
+                    LibraryItemCreationAttributes(name = "Andantino", colorIndex = 6),
+                    LibraryItemCreationAttributes(name = "Klaviersonate", colorIndex = 7),
+                    LibraryItemCreationAttributes(name = "Trauermarsch", colorIndex = 8),
+                )
+
+                items.forEach {
+                    libraryRepository.addItem(it)
+                    Log.d("MainActivity", "LibraryItem ${it.name} created")
+                    delay(1500) //make sure items have different createdAt values
+                }
             }
         }
     }

@@ -14,9 +14,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import app.musikus.dataStore
+import app.musikus.database.Nullable
 import app.musikus.database.PTDatabase
+import app.musikus.database.daos.LibraryItem
 import app.musikus.database.entities.LibraryFolder
-import app.musikus.database.entities.LibraryItem
+import app.musikus.database.entities.LibraryFolderCreationAttributes
 import app.musikus.database.entities.LibraryItemCreationAttributes
 import app.musikus.database.entities.LibraryItemUpdateAttributes
 import app.musikus.datastore.LibraryFolderSortMode
@@ -570,8 +572,8 @@ class LibraryViewModel(
             _itemToEdit.update { item }
             _itemEditData.update {
                 LibraryItemEditData(
-                    name = item.name ?: "",
-                    colorIndex = item.colorIndex ?: 1,
+                    name = item.name,
+                    colorIndex = item.colorIndex,
                     folderId = item.libraryFolderId
                 )
             }
@@ -687,7 +689,7 @@ class LibraryViewModel(
                     newName = folderData.name
                 )
             } ?: libraryRepository.addFolder(
-                LibraryFolder(name = folderData.name)
+                LibraryFolderCreationAttributes(name = folderData.name)
             )
             clearFolderDialog()
         }
@@ -698,18 +700,18 @@ class LibraryViewModel(
             val itemData = _itemEditData.value ?: return@launch
             _itemToEdit.value?.let {
                 libraryRepository.editItem(
-                    LibraryItemUpdateAttributes(
-                        id = it.id,
+                    id = it.id,
+                    LibraryItemUpdateAttributes (
                         name = itemData.name,
                         colorIndex = itemData.colorIndex,
-                        libraryFolderId = itemData.folderId
+                        libraryFolderId = Nullable(itemData.folderId),
                     )
                 )
             } ?: libraryRepository.addItem(
                 LibraryItemCreationAttributes(
                     name = itemData.name,
                     colorIndex = itemData.colorIndex,
-                    libraryFolderId = itemData.folderId
+                    libraryFolderId = Nullable(itemData.folderId)
                 )
             )
             clearItemDialog()

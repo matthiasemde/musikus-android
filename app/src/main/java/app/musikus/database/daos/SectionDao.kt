@@ -19,16 +19,33 @@ import app.musikus.database.BaseDao
 import app.musikus.database.PTDatabase
 import app.musikus.database.SectionWithLibraryItem
 import app.musikus.database.entities.Section
+import app.musikus.database.entities.SectionUpdateAttributes
 import kotlinx.coroutines.flow.Flow
 import java.util.*
 
 @Dao
 abstract class SectionDao(
     database: PTDatabase
-) : BaseDao<Section>(
+) : BaseDao<
+    Section,
+    SectionUpdateAttributes,
+    Section
+>(
     tableName = "section",
-    database = database
+    database = database,
+    displayAttributes = listOf("session_id", "library_item_id", "duration", "timestamp")
 ) {
+
+    /**
+     * @Update
+     */
+
+    override fun applyUpdateAttributes(
+        old: Section,
+        updateAttributes: SectionUpdateAttributes
+    ): Section = super.applyUpdateAttributes(old, updateAttributes).apply {
+        duration = updateAttributes.duration ?: old.duration
+    }
 
     /**
      * @Queries

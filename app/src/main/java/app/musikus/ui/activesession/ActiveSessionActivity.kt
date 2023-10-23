@@ -68,7 +68,7 @@ import app.musikus.R
 import app.musikus.components.NonDraggableRatingBar
 import app.musikus.database.PTDatabase
 import app.musikus.database.SessionWithSections
-import app.musikus.database.entities.LibraryItem
+import app.musikus.database.daos.LibraryItem
 import app.musikus.database.entities.Section
 import app.musikus.database.entities.Session
 import app.musikus.services.RecorderService
@@ -255,7 +255,7 @@ class ActiveSessionActivity : AppCompatActivity() {
         // the handler for creating new libraryItems
         fun addLibraryItemHandler(newLibraryItem: LibraryItem) {
             lifecycleScope.launch {
-                PTDatabase.getInstance(applicationContext).libraryItemDao.insert(newLibraryItem)
+//                PTDatabase.getInstance(applicationContext).libraryItemDao.insert(newLibraryItem) TODO
                 activeLibraryItems.add(0, newLibraryItem)
                 libraryItemAdapter.notifyItemInserted(0)
                 libraryItemList.scrollToPosition(0)
@@ -1350,7 +1350,7 @@ class ActiveSessionActivity : AppCompatActivity() {
             // traverse all sections for post-processing before writing into db
             for (section in mService.sectionBuffer) {
                 // update section durations to exclude break durations
-                section.first.duration = section.first.duration?.minus(section.second)
+                section.first.duration = section.first.duration.minus(section.second)
             }
 
             // and insert it the resulting section list into the database together with the session

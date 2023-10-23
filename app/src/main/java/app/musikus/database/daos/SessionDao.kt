@@ -21,10 +21,27 @@ import java.util.*
 @Dao
 abstract class SessionDao(
     private val database : PTDatabase
-) : SoftDeleteDao<Session>(
+) : SoftDeleteDao<
+    Session,
+    SessionUpdateAttributes,
+    Session
+>(
     tableName = "session",
-    database = database
+    database = database,
+    displayAttributes = listOf("break_duration", "rating", "comment")
 ) {
+
+    /**
+     * @Update
+     */
+
+    override fun applyUpdateAttributes(
+        old: Session,
+        updateAttributes: SessionUpdateAttributes
+    ): Session = super.applyUpdateAttributes(old, updateAttributes).apply {
+        rating = updateAttributes.rating ?: old.rating
+        comment = updateAttributes.comment ?: old.comment
+    }
 
     /**
      * @Insert

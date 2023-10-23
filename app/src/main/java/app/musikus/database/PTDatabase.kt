@@ -17,23 +17,37 @@ import android.content.ContentValues
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.util.Log
-import androidx.room.*
+import androidx.room.Database
+import androidx.room.Room
+import androidx.room.RoomDatabase
+import androidx.room.TypeConverter
+import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import androidx.sqlite.db.SupportSQLiteQueryBuilder
-import app.musikus.database.daos.*
-import app.musikus.database.entities.*
+import app.musikus.database.daos.GoalDescriptionDao
+import app.musikus.database.daos.GoalInstanceDao
+import app.musikus.database.daos.LibraryFolderDao
+import app.musikus.database.daos.LibraryItemDao
+import app.musikus.database.daos.SectionDao
+import app.musikus.database.daos.SessionDao
+import app.musikus.database.entities.GoalDescription
+import app.musikus.database.entities.GoalDescriptionLibraryItemCrossRef
+import app.musikus.database.entities.GoalInstance
+import app.musikus.database.entities.LibraryFolder
+import app.musikus.database.entities.LibraryItemModel
+import app.musikus.database.entities.Section
+import app.musikus.database.entities.Session
 import app.musikus.utils.getCurrTimestamp
-import kotlinx.coroutines.*
 import java.nio.ByteBuffer
-import java.util.*
+import java.util.UUID
 
 @Database(
     version = 3,
     entities = [
         Session::class,
         Section::class,
-        LibraryItem::class,
+        LibraryItemModel::class,
         LibraryFolder::class,
         GoalDescription::class,
         GoalInstance::class,
@@ -41,7 +55,11 @@ import java.util.*
     ],
     exportSchema = true,
 )
-@TypeConverters(UUIDConverter::class)
+@TypeConverters(
+    UUIDConverter::class,
+    NullableUUIDConverter::class,
+    NullableIntConverter::class
+)
 abstract class PTDatabase : RoomDatabase() {
     abstract val libraryItemDao : LibraryItemDao
     abstract val libraryFolderDao : LibraryFolderDao
@@ -105,6 +123,25 @@ class UUIDConverter {
             }
     }
 }
+
+data class Nullable<T>(
+    val value: T?
+)
+
+abstract class NullableConverter<T> {
+    @TypeConverter
+    fun fromNullable(nullable: Nullable<T>? = null): T? {
+        return nullable?.value
+    }
+
+    @TypeConverter
+    fun toNullable(value: T): Nullable<T> {
+        return Nullable(value)
+    }
+}
+
+class NullableUUIDConverter : NullableConverter<UUID>()
+class NullableIntConverter : NullableConverter<Int>()
 
 
 object PTDatabaseMigrationOneToTwo : Migration(1,2) {

@@ -16,7 +16,33 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import app.musikus.database.BaseModel
-import java.util.*
+import app.musikus.database.BaseModelCreationAttributes
+import app.musikus.database.IBaseModelCreationAttributes
+import app.musikus.database.IBaseModelUpdateAttributes
+import app.musikus.database.Nullable
+import java.util.UUID
+
+private interface ISectionCreationAttributes : IBaseModelCreationAttributes {
+    val sessionId: Nullable<UUID>
+    val libraryItemId: Nullable<UUID>
+    val duration: Int
+    val timestamp: Long
+}
+
+private interface ISectionUpdateAttributes : IBaseModelUpdateAttributes {
+    val duration: Int?
+}
+
+data class SectionCreationAttributesImpl(
+    override val sessionId: Nullable<UUID>,
+    override val libraryItemId: Nullable<UUID>,
+    override val duration: Int,
+    override val timestamp: Long,
+) : BaseModelCreationAttributes(), ISectionCreationAttributes
+
+data class SectionUpdateAttributes(
+    override val duration: Int? = null,
+) : BaseModelUpdateAttributes(), ISectionUpdateAttributes
 
 @Entity(
     tableName = "section",
@@ -28,7 +54,7 @@ import java.util.*
             onDelete = ForeignKey.CASCADE
         ),
         ForeignKey(
-            entity = LibraryItem::class,
+            entity = LibraryItemModel::class,
             parentColumns = ["id"],
             childColumns = ["library_item_id"],
             onDelete = ForeignKey.NO_ACTION
@@ -36,8 +62,8 @@ import java.util.*
     ]
 )
 data class Section (
-    @ColumnInfo(name="session_id", index = true) var sessionId: UUID?,
-    @ColumnInfo(name="library_item_id", index = true) val libraryItemId: UUID,
-    @ColumnInfo(name="duration") var duration: Int?,
-    @ColumnInfo(name="timestamp") val timestamp: Long,
-) : BaseModel()
+    @ColumnInfo(name="session_id", index = true) override val sessionId: Nullable<UUID>,
+    @ColumnInfo(name="library_item_id", index = true) override val libraryItemId: Nullable<UUID>,
+    @ColumnInfo(name="duration") override var duration: Int,
+    @ColumnInfo(name="timestamp") override val timestamp: Long,
+) : BaseModel(), ISectionCreationAttributes, ISectionUpdateAttributes

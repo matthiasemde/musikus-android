@@ -11,7 +11,7 @@ package app.musikus.database.entities
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
-import java.util.*
+import java.util.UUID
 
 @Entity(
     tableName = "goal_description_library_item_cross_ref",
@@ -25,7 +25,7 @@ import java.util.*
 //            deferred = true
         ),
         ForeignKey(
-            entity = LibraryItem::class,
+            entity = LibraryItemModel::class,
             parentColumns = ["id"],
             childColumns = ["library_item_id"],
             onDelete = ForeignKey.NO_ACTION
