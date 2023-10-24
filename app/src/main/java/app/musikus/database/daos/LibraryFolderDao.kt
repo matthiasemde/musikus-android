@@ -8,17 +8,24 @@
 
 package app.musikus.database.daos
 
+import androidx.room.ColumnInfo
 import androidx.room.Dao
 import app.musikus.database.PTDatabase
 import app.musikus.database.SoftDeleteDao
-import app.musikus.database.entities.LibraryFolder
+import app.musikus.database.SoftDeleteModelDisplayAttributes
+import app.musikus.database.entities.LibraryFolderModel
 import app.musikus.database.entities.LibraryFolderUpdateAttributes
+
+data class LibraryFolder(
+    @ColumnInfo(name = "name") val name: String,
+    @ColumnInfo(name = "order") val order: Int?,
+) : SoftDeleteModelDisplayAttributes()
 
 @Dao
 abstract class LibraryFolderDao(
     database: PTDatabase
 ) : SoftDeleteDao<
-    LibraryFolder,
+    LibraryFolderModel,
     LibraryFolderUpdateAttributes,
     LibraryFolder
 >(
@@ -32,9 +39,9 @@ abstract class LibraryFolderDao(
      */
 
     override fun applyUpdateAttributes(
-        old: LibraryFolder,
+        old: LibraryFolderModel,
         updateAttributes: LibraryFolderUpdateAttributes
-    ): LibraryFolder = super.applyUpdateAttributes(old, updateAttributes).apply {
+    ): LibraryFolderModel = super.applyUpdateAttributes(old, updateAttributes).apply {
         name = updateAttributes.name ?: old.name
         order = updateAttributes.order ?: old.order
     }

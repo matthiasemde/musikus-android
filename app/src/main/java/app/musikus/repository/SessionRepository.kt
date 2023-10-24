@@ -2,9 +2,11 @@ package app.musikus.repository
 
 import app.musikus.database.GoalInstanceWithDescriptionWithLibraryItems
 import app.musikus.database.PTDatabase
-import app.musikus.database.SessionWithSections
+import app.musikus.database.daos.Session
 import app.musikus.database.entities.GoalType
-import app.musikus.database.entities.Session
+import app.musikus.database.entities.SectionCreationAttributes
+import app.musikus.database.entities.SessionCreationAttributes
+import app.musikus.database.entities.SessionModel
 import java.util.UUID
 
 class SessionRepository(
@@ -36,11 +38,20 @@ class SessionRepository(
 
     /** Mutators */
     /** Add */
-    suspend fun add(newSessionWithSections: SessionWithSections) {
-        sessionDao.insert(newSessionWithSections)
+    suspend fun add(
+        session: SessionCreationAttributes,
+        sections: List<SectionCreationAttributes>
+    ) : UUID {
+        val newSession = SessionModel(
+            breakDuration = session.breakDuration,
+            rating = session.rating,
+            comment = session.comment,
+        )
+        sessionDao.insert(newSession, sections)
+        return newSession.id
     }
 
-    /** Delete */
+    /** Delete / Restore */
     suspend fun delete(sessions: List<Session>) {
         sessionDao.delete(sessions.map { it.id })
     }

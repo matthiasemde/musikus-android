@@ -17,6 +17,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import app.musikus.database.BaseModel
 import app.musikus.database.BaseModelCreationAttributes
+import app.musikus.database.BaseModelUpdateAttributes
 import app.musikus.database.IBaseModelCreationAttributes
 import app.musikus.database.IBaseModelUpdateAttributes
 import app.musikus.database.Nullable
@@ -33,10 +34,10 @@ private interface ISectionUpdateAttributes : IBaseModelUpdateAttributes {
     val duration: Int?
 }
 
-data class SectionCreationAttributesImpl(
+data class SectionCreationAttributes(
     override val sessionId: Nullable<UUID>,
     override val libraryItemId: Nullable<UUID>,
-    override val duration: Int,
+    override var duration: Int,
     override val timestamp: Long,
 ) : BaseModelCreationAttributes(), ISectionCreationAttributes
 
@@ -48,7 +49,7 @@ data class SectionUpdateAttributes(
     tableName = "section",
     foreignKeys = [
         ForeignKey(
-            entity = Session::class,
+            entity = SessionModel::class,
             parentColumns = ["id"],
             childColumns = ["session_id"],
             onDelete = ForeignKey.CASCADE
@@ -61,7 +62,7 @@ data class SectionUpdateAttributes(
         )
     ]
 )
-data class Section (
+data class SectionModel (
     @ColumnInfo(name="session_id", index = true) override val sessionId: Nullable<UUID>,
     @ColumnInfo(name="library_item_id", index = true) override val libraryItemId: Nullable<UUID>,
     @ColumnInfo(name="duration") override var duration: Int,

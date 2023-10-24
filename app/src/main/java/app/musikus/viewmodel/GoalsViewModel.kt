@@ -14,10 +14,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import app.musikus.dataStore
+import app.musikus.database.GoalInstanceWithDescription
 import app.musikus.database.GoalInstanceWithDescriptionWithLibraryItems
 import app.musikus.database.PTDatabase
+import app.musikus.database.daos.GoalDescription
 import app.musikus.database.daos.LibraryItem
-import app.musikus.database.entities.GoalDescription
 import app.musikus.database.entities.GoalPeriodUnit
 import app.musikus.database.entities.GoalType
 import app.musikus.datastore.GoalsSortMode
@@ -254,7 +255,7 @@ class GoalsViewModel(
         combine(sections) { combinedGoalsWithSections ->
             combinedGoalsWithSections.associate { (goal, sections) ->
                 goal.instance.id to sections.sumOf { section ->
-                    section.duration ?: 0
+                    section.duration
                 }
             }
         }
@@ -458,14 +459,21 @@ class GoalsViewModel(
 
     fun onPauseAction() {
         viewModelScope.launch {
-            goalRepository.pause(_selectedGoals.value.toList())
+            goalRepository.pause(_selectedGoals.value.toList().map {
+                it.description.description // TODO save UUID instead of description
+            })
             clearActionMode()
         }
     }
 
     fun onUnpauseAction() {
         viewModelScope.launch {
-            goalRepository.unpause(_selectedGoals.value.toList())
+            goalRepository.unpause(_selectedGoals.value.toList().map {
+                GoalInstanceWithDescription(
+                    instance = it.instance,
+                    description = it.description.description,
+                ) // TODO save UUID instead of description
+            })
             clearActionMode()
         }
     }
@@ -588,7 +596,7 @@ class GoalsViewModel(
 //                    )
                 } else {
                     goalRepository.editGoalTarget(
-                        editedGoalDescriptionId = uiState.goalToEdit.description.description.id,
+                        goal = uiState.goalToEdit.instance,
                         newTarget = dialogData.target
                     )
                 }

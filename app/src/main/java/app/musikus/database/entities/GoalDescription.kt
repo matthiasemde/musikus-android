@@ -89,7 +89,7 @@ data class GoalDescriptionUpdateAttributes(
 
 
 @Entity(tableName = "goal_description")
-data class GoalDescription (
+data class GoalDescriptionModel (
     @ColumnInfo(name="type") override val type: GoalType,
     @ColumnInfo(name="repeat") override val repeat: Boolean,
     @ColumnInfo(name="period_in_period_units") override val periodInPeriodUnits: Int,
@@ -106,7 +106,7 @@ data class GoalDescription (
     fun createInstance(
         timeFrame: Calendar,
         target: Int,
-    ): GoalInstance {
+    ): GoalInstanceModel {
         var startTimestamp = 0L
 
         // to find the correct starting point and period for the goal, we execute these steps:
@@ -149,7 +149,7 @@ data class GoalDescription (
             Log.e("Assertion Failed", "startTimeStamp can not be 0")
         }
 
-        return GoalInstance(
+        return GoalInstanceModel(
             goalDescriptionId = Nullable(id),
             startTimestamp = startTimestamp,
             periodInSeconds = periodInSeconds,

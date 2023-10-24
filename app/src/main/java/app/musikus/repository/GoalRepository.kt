@@ -9,15 +9,18 @@
 package app.musikus.repository
 
 import androidx.room.Transaction
-import app.musikus.database.GoalDescriptionWithLibraryItems
+import app.musikus.database.GoalInstanceWithDescription
 import app.musikus.database.GoalInstanceWithDescriptionWithLibraryItems
 import app.musikus.database.PTDatabase
-import app.musikus.database.entities.GoalDescription
+import app.musikus.database.daos.GoalDescription
+import app.musikus.database.daos.GoalInstance
+import app.musikus.database.daos.LibraryItem
+import app.musikus.database.entities.GoalDescriptionCreationAttributes
+import app.musikus.database.entities.GoalDescriptionModel
+import app.musikus.database.entities.GoalDescriptionUpdateAttributes
+import app.musikus.database.entities.GoalInstanceUpdateAttributes
 import app.musikus.datastore.GoalsSortMode
 import app.musikus.datastore.SortDirection
-import app.musikus.utils.getCurrTimestamp
-import java.util.Calendar
-import java.util.UUID
 
 class GoalRepository(
     database: PTDatabase
@@ -25,101 +28,127 @@ class GoalRepository(
     private val goalInstanceDao = database.goalInstanceDao
     private val goalDescriptionDao = database.goalDescriptionDao
 
+    private suspend fun update(
+        goals: List<GoalDescription>,
+        updateAttributes: GoalDescriptionUpdateAttributes
+    ) {
+        goalDescriptionDao.update(
+            goals.map {
+                Pair(
+                    it.id,
+                    updateAttributes
+                )
+            }
+        )
+    }
+
+
     val currentGoals = goalInstanceDao.getWithDescriptionsWithLibraryItems()
 
     /** Mutators */
 
     /** Add */
     suspend fun add(
-        newGoal: GoalDescriptionWithLibraryItems,
+        goalDescriptionCreationAttributes: GoalDescriptionCreationAttributes,
+        libraryItems: List<LibraryItem>,
         target: Int,
+    ) = goalDescriptionDao.insert(
+        GoalDescriptionModel(
+            type = goalDescriptionCreationAttributes.type,
+            repeat = goalDescriptionCreationAttributes.repeat,
+            periodInPeriodUnits = goalDescriptionCreationAttributes.periodInPeriodUnits,
+            periodUnit = goalDescriptionCreationAttributes.periodUnit,
+        ),
+        libraryItems.map { it.id },
+        target,
+    )
+
+
+    /** Edit Target */
+    suspend fun editGoalTarget(
+        goal: GoalInstance,
+        newTarget: Int,
     ) {
-        goalDescriptionDao.insert(
-            newGoal,
-            target,
+        goalInstanceDao.update(
+            goal.id,
+            GoalInstanceUpdateAttributes(target = newTarget)
         )
     }
 
-    /** Edit */
-    suspend fun editGoalTarget(
-        editedGoalDescriptionId: UUID,
-        newTarget: Int,
-    ) {
-        goalInstanceDao.apply {
-            get(
-                goalDescriptionId = editedGoalDescriptionId,
-                from = getCurrTimestamp(),
-            ).forEach {
-                it.target = newTarget
-//                update(it)
-            }
-        }
-    }
 
-    /** Pause/Unpause */
+    /** Pause / Unpause */
     @Transaction
-    suspend fun pause(goal: GoalInstanceWithDescriptionWithLibraryItems) {
-        val description = goal.description.description
-
-        description.paused = true
-//        goalDescriptionDao.update(description)
+    suspend fun pause(goal: GoalDescription) {
+        pause(listOf(goal))
     }
 
     @Transaction
-    suspend fun pause(goals: List<GoalInstanceWithDescriptionWithLibraryItems>) {
-        goals.forEach { pause(it) }
+    suspend fun pause(goals: List<GoalDescription>) {
+        update(
+            goals,
+            GoalDescriptionUpdateAttributes(paused = true)
+        )
+
+        // TODO delete current goal instances
+
     }
 
     @Transaction
-    suspend fun unpause(pausedGoal: GoalInstanceWithDescriptionWithLibraryItems) {
-        val (instance, descriptionWithLibraryItems) = pausedGoal
-        val description = descriptionWithLibraryItems.description
-
-        description.paused = false
-//        goalDescriptionDao.update(description)
-        if(instance.startTimestamp + instance.periodInSeconds > getCurrTimestamp()) {
-            instance.renewed = false
-//            goalInstanceDao.update(instance)
-        } else {
-            goalInstanceDao.insert(
-                description.createInstance(Calendar.getInstance(), instance.target)
-            )
-        }
+    suspend fun unpause(goal: GoalInstanceWithDescription) {
+        unpause(listOf(goal))
     }
 
     @Transaction
-    suspend fun unpause(pausedGoals: List<GoalInstanceWithDescriptionWithLibraryItems>) {
-        pausedGoals.forEach { unpause(it) }
+    suspend fun unpause(goals: List<GoalInstanceWithDescription>) {
+        update(
+            goals.map { it.description },
+            GoalDescriptionUpdateAttributes(paused = false)
+        )
+
+        // TODO create new goal instances
+
     }
 
-    /** Archive */
+    /** Archive / Unarchive */
 
-    suspend fun archive(goalDescription: GoalDescription) {
-        goalDescription.archived = true
-//        goalDescriptionDao.update(goalDescription)
+    suspend fun archive(goal: GoalDescription) {
+        archive(listOf(goal))
     }
 
-    suspend fun archive(goalDescriptions: List<GoalDescription>) {
-        goalDescriptions.forEach { archive(it) }
+    suspend fun archive(goals: List<GoalDescription>) {
+        update(
+            goals,
+            GoalDescriptionUpdateAttributes(archived = true)
+        )
     }
 
-    suspend fun unarchive(goalDescription: GoalDescription) {
-        goalDescription.archived = false
-        // TODO possible create new instance
-//        goalDescriptionDao.update(goalDescription)
+    suspend fun unarchive(goal: GoalDescription) {
+        unarchive(listOf(goal))
     }
 
-    suspend fun unarchive(goalDescriptions: List<GoalDescription>) {
-        goalDescriptions.forEach { unarchive(it) }
+    suspend fun unarchive(goals: List<GoalDescription>) {
+        update(
+            goals,
+            GoalDescriptionUpdateAttributes(archived = false)
+        )
     }
 
-    /** Delete */
-    suspend fun delete(goalDescriptions: List<GoalDescription>) {
-        goalDescriptionDao.delete(goalDescriptions.map { it.id })
+    /** Delete / Restore */
+
+    suspend fun delete(goal: GoalDescription) {
+        delete(listOf(goal))
     }
 
-    suspend fun restore(goalDescriptions: List<GoalDescription>) {
-        goalDescriptionDao.restore(goalDescriptions.map { it.id })
+    suspend fun delete(goals: List<GoalDescription>) {
+        goalDescriptionDao.delete(goals.map { it.id })
+    }
+
+    suspend fun restore(goal: GoalDescription) {
+        restore(listOf(goal))
+    }
+
+    suspend fun restore(goals: List<GoalDescription>) {
+        goalDescriptionDao.restore(goals.map { it.id })
     }
 
     /** Clean */

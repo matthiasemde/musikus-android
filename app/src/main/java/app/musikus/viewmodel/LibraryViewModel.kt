@@ -16,9 +16,10 @@ import androidx.lifecycle.viewModelScope
 import app.musikus.dataStore
 import app.musikus.database.Nullable
 import app.musikus.database.PTDatabase
+import app.musikus.database.daos.LibraryFolder
 import app.musikus.database.daos.LibraryItem
-import app.musikus.database.entities.LibraryFolder
 import app.musikus.database.entities.LibraryFolderCreationAttributes
+import app.musikus.database.entities.LibraryFolderUpdateAttributes
 import app.musikus.database.entities.LibraryItemCreationAttributes
 import app.musikus.database.entities.LibraryItemUpdateAttributes
 import app.musikus.datastore.LibraryFolderSortMode
@@ -621,8 +622,8 @@ class LibraryViewModel(
             _itemToEdit.update { itemToEdit }
             _itemEditData.update {
                 LibraryItemEditData(
-                    name = itemToEdit.name ?: "",
-                    colorIndex = itemToEdit.colorIndex ?: 1,
+                    name = itemToEdit.name,
+                    colorIndex = itemToEdit.colorIndex,
                     folderId = itemToEdit.libraryFolderId
                 )
             }
@@ -685,8 +686,10 @@ class LibraryViewModel(
             val folderData = _folderEditData.value ?: return@launch
             _folderToEdit.value?.let {
                 libraryRepository.editFolder(
-                    folder = it,
-                    newName = folderData.name
+                    id = it.id,
+                    updateAttributes = LibraryFolderUpdateAttributes(
+                        name = folderData.name
+                    )
                 )
             } ?: libraryRepository.addFolder(
                 LibraryFolderCreationAttributes(name = folderData.name)

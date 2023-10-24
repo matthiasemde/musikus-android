@@ -45,8 +45,8 @@ import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.musikus.Musikus
 import app.musikus.R
+import app.musikus.database.daos.LibraryFolder
 import app.musikus.database.daos.LibraryItem
-import app.musikus.database.entities.LibraryFolder
 import app.musikus.datastore.LibraryFolderSortMode
 import app.musikus.datastore.LibraryItemSortMode
 import app.musikus.datastore.ThemeSelections
@@ -487,7 +487,7 @@ fun LibraryItem(
                     .clip(RoundedCornerShape(5.dp))
                     .align(Alignment.CenterVertically)
                     .background(
-                        Color(Musikus.getLibraryItemColors(LocalContext.current)[libraryItem.colorIndex ?: 69])
+                        Color(Musikus.getLibraryItemColors(LocalContext.current)[libraryItem.colorIndex])
                     ),
             )
             Column(
@@ -495,7 +495,7 @@ fun LibraryItem(
                     .padding(start = 12.dp),
             ) {
                 Text(
-                    text = libraryItem.name  ?: "whoopsie",
+                    text = libraryItem.name,
                     style = MaterialTheme.typography.titleMedium,
                 )
                 Text(

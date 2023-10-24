@@ -127,7 +127,7 @@ class LibraryItemAdapter(
                     button.text = libraryItem.name
 
                     button.backgroundTintList = ColorStateList.valueOf(
-                        libraryItemColors[libraryItem.colorIndex ?: 69]
+                        libraryItemColors[libraryItem.colorIndex]
                     )
                 } else {
 //                    val cardView = view.findViewById<CardView>(R.id.library_item_card)
@@ -136,7 +136,7 @@ class LibraryItemAdapter(
 
 //                    cardView.isSelected = selectedLibraryItems.contains(layoutPosition)
                     colorIndicatorView.backgroundTintList = ColorStateList.valueOf(
-                        libraryItemColors[libraryItem.colorIndex ?: 69]
+                        libraryItemColors[libraryItem.colorIndex]
                     )
 
                     nameView.text = libraryItem.name

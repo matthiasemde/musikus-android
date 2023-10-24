@@ -31,13 +31,13 @@ import app.musikus.database.daos.LibraryFolderDao
 import app.musikus.database.daos.LibraryItemDao
 import app.musikus.database.daos.SectionDao
 import app.musikus.database.daos.SessionDao
-import app.musikus.database.entities.GoalDescription
-import app.musikus.database.entities.GoalDescriptionLibraryItemCrossRef
-import app.musikus.database.entities.GoalInstance
-import app.musikus.database.entities.LibraryFolder
+import app.musikus.database.entities.GoalDescriptionLibraryItemCrossRefModel
+import app.musikus.database.entities.GoalDescriptionModel
+import app.musikus.database.entities.GoalInstanceModel
+import app.musikus.database.entities.LibraryFolderModel
 import app.musikus.database.entities.LibraryItemModel
-import app.musikus.database.entities.Section
-import app.musikus.database.entities.Session
+import app.musikus.database.entities.SectionModel
+import app.musikus.database.entities.SessionModel
 import app.musikus.utils.getCurrTimestamp
 import java.nio.ByteBuffer
 import java.util.UUID
@@ -45,13 +45,13 @@ import java.util.UUID
 @Database(
     version = 3,
     entities = [
-        Session::class,
-        Section::class,
+        SessionModel::class,
+        SectionModel::class,
         LibraryItemModel::class,
-        LibraryFolder::class,
-        GoalDescription::class,
-        GoalInstance::class,
-        GoalDescriptionLibraryItemCrossRef::class,
+        LibraryFolderModel::class,
+        GoalDescriptionModel::class,
+        GoalInstanceModel::class,
+        GoalDescriptionLibraryItemCrossRefModel::class,
     ],
     exportSchema = true,
 )

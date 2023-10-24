@@ -14,7 +14,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import app.musikus.database.PTDatabase
 import app.musikus.database.SessionWithSectionsWithLibraryItems
-import app.musikus.database.entities.Session
+import app.musikus.database.daos.Session
 import app.musikus.repository.SessionRepository
 import app.musikus.shared.TopBarUiState
 import app.musikus.utils.getSpecificDay
@@ -122,7 +122,7 @@ class SessionsViewModel(
                 Pair(getSpecificDay(timestamp), getSpecificMonth(timestamp))
             }
 
-            totalPracticeDuration += session.sections.sumOf { it.section.duration ?: 0 }
+            totalPracticeDuration += session.sections.sumOf { it.section.duration }
 
             // ...and compare them to the current day first.
             // if it differs, create a new SessionsForDay object

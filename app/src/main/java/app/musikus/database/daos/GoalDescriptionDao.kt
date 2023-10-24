@@ -17,17 +17,37 @@ import app.musikus.database.*
 import app.musikus.database.entities.*
 import java.util.*
 
+data class GoalDescription(
+    @ColumnInfo(name="type") val type: GoalType,
+    @ColumnInfo(name="repeat") val repeat: Boolean,
+    @ColumnInfo(name="period_in_period_units") val periodInPeriodUnits: Int,
+    @ColumnInfo(name="period_unit") val periodUnit: GoalPeriodUnit,
+    @ColumnInfo(name="progress_type") val progressType: GoalProgressType,
+    @ColumnInfo(name="paused") val paused: Boolean,
+    @ColumnInfo(name="archived") val archived: Boolean,
+//    @ColumnInfo(name="profile_id") val profileId: UUID?,
+    @ColumnInfo(name="order") val order: Int?,
+) : SoftDeleteModelDisplayAttributes()
+
 @Dao
 abstract class GoalDescriptionDao(
     private val database : PTDatabase
 ) : SoftDeleteDao<
-    GoalDescription,
+    GoalDescriptionModel,
     GoalDescriptionUpdateAttributes,
     GoalDescription
 >(
     tableName = "goal_description",
     database = database,
-    displayAttributes = listOf("name", "type", "progress_type", "archived", "paused", "order")
+    displayAttributes = listOf(
+        "type",
+        "progress_type",
+        "period_in_period_units",
+        "period_unit",
+        "archived",
+        "paused",
+        "order"
+    )
 ) {
 
     /**
@@ -35,9 +55,9 @@ abstract class GoalDescriptionDao(
      */
 
     override fun applyUpdateAttributes(
-        old: GoalDescription,
+        old: GoalDescriptionModel,
         updateAttributes: GoalDescriptionUpdateAttributes
-    ): GoalDescription = super.applyUpdateAttributes(old, updateAttributes).apply {
+    ): GoalDescriptionModel = super.applyUpdateAttributes(old, updateAttributes).apply {
         paused = updateAttributes.paused ?: old.paused
         archived = updateAttributes.archived ?: old.archived
         order = updateAttributes.order ?: old.order
@@ -50,31 +70,32 @@ abstract class GoalDescriptionDao(
 
     @Insert(onConflict = OnConflictStrategy.ABORT)
     abstract suspend fun insertGoalDescriptionLibraryItemCrossRef(
-        crossRef: GoalDescriptionLibraryItemCrossRef
+        crossRef: GoalDescriptionLibraryItemCrossRefModel
     ): Long
 
     @Transaction
     open suspend fun insert(
-        goalDescriptionWithLibraryItems: GoalDescriptionWithLibraryItems,
+        goalDescription: GoalDescriptionModel,
+        libraryItemIds: List<UUID>,
         target: Int,
-    ) : GoalInstance? {
+    ) : GoalInstanceModel {
 
         // Create the first instance of the newly created goal description
-        val firstGoalInstance = goalDescriptionWithLibraryItems.description.createInstance(
+        val firstGoalInstance = goalDescription.createInstance(
             Calendar.getInstance(),
             target
         )
 
-        insert(goalDescriptionWithLibraryItems.description)
-//        database.goalInstanceDao.insert(firstGoalInstance) TODO:fix
-//        goalDescriptionWithLibraryItems.libraryItems.forEach { libraryItem ->
-//            insertGoalDescriptionLibraryItemCrossRef(
-//                GoalDescriptionLibraryItemCrossRef(
-//                    goalDescriptionId = goalDescriptionWithLibraryItems.description.id,
-//                    libraryItemId = libraryItem.id
-//                )
-//            )
-//        }
+        insert(goalDescription)
+        database.goalInstanceDao.insert(firstGoalInstance)
+        libraryItemIds.forEach { libraryItemId ->
+            insertGoalDescriptionLibraryItemCrossRef(
+                GoalDescriptionLibraryItemCrossRefModel(
+                    goalDescriptionId = goalDescription.id,
+                    libraryItemId = libraryItemId
+                )
+            )
+        }
 
         return firstGoalInstance
     }
@@ -84,27 +105,31 @@ abstract class GoalDescriptionDao(
      */
 
     @Transaction
+    @RewriteQueriesToDropUnusedColumns
     @Query(
-        "SELECT * FROM goal_description_library_item_cross_ref " +
-        "WHERE goal_description_id=:goalDescriptionId"
+        "SELECT * FROM goal_description_library_item_cross_ref WHERE " +
+        "goal_description_id=:goalDescriptionId"
     )
     abstract suspend fun getGoalDescriptionLibraryItemCrossRefs(
         goalDescriptionId: UUID
-    ) : List<GoalDescriptionLibraryItemCrossRef>
+    ) : List<GoalDescriptionLibraryItemCrossRefModel>
 
 
     @Transaction
+    @RewriteQueriesToDropUnusedColumns
     @Query("SELECT * FROM goal_description WHERE id=:goalDescriptionId")
     abstract suspend fun getWithLibraryItems(goalDescriptionId: UUID)
         : GoalDescriptionWithLibraryItems?
 
     @Transaction
+    @RewriteQueriesToDropUnusedColumns
     @Query("SELECT * FROM goal_description")
     abstract suspend fun getAllWithLibraryItems(): List<GoalDescriptionWithLibraryItems>
 
+    @RewriteQueriesToDropUnusedColumns
     @Query(
-        "SELECT * FROM goal_description " +
-        "WHERE (archived=0 OR archived=:checkArchived) " +
+        "SELECT * FROM goal_description WHERE " +
+        "(archived=0 OR archived=:checkArchived) " +
         "AND type=:type"
     )
     abstract suspend fun getGoalDescriptions(

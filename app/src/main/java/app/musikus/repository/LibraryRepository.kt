@@ -9,9 +9,11 @@
 package app.musikus.repository
 
 import app.musikus.database.PTDatabase
+import app.musikus.database.daos.LibraryFolder
 import app.musikus.database.daos.LibraryItem
-import app.musikus.database.entities.LibraryFolder
 import app.musikus.database.entities.LibraryFolderCreationAttributes
+import app.musikus.database.entities.LibraryFolderModel
+import app.musikus.database.entities.LibraryFolderUpdateAttributes
 import app.musikus.database.entities.LibraryItemCreationAttributes
 import app.musikus.database.entities.LibraryItemModel
 import app.musikus.database.entities.LibraryItemUpdateAttributes
@@ -32,10 +34,10 @@ class LibraryRepository(
 
     /** Mutators */
     /** Add */
-    suspend fun addFolder(creationAttributesImpl: LibraryFolderCreationAttributes) {
+    suspend fun addFolder(creationAttributes: LibraryFolderCreationAttributes) {
         folderDao.insert(
-            LibraryFolder(
-                name = creationAttributesImpl.name,
+            LibraryFolderModel(
+                name = creationAttributes.name,
             )
         )
     }
@@ -52,23 +54,17 @@ class LibraryRepository(
 
     /** Edit */
     suspend fun editFolder(
-        folder: LibraryFolder,
-        newName: String,
+        id: UUID,
+        updateAttributes: LibraryFolderUpdateAttributes
     ) {
-        folder.apply {
-            name = newName
-        }
-//        folderDao.update(folder)
+        folderDao.update(id, updateAttributes)
     }
 
     suspend fun editItem(
         id: UUID,
         updateAttributes: LibraryItemUpdateAttributes
     ) {
-        itemDao.update(
-            id = id,
-            updateAttributes = updateAttributes
-        )
+        itemDao.update(id, updateAttributes)
     }
 
     /** Delete / restore */

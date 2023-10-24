@@ -20,11 +20,11 @@ suspend fun updateGoals(context: Context) {
             outdatedInstancesWithDescriptions.forEach { (outdatedInstance, description) ->
                 if (description.repeat && !description.archived) {
 
-                    // create a new calendar instance, set the time to the instances start timestamp,...
+                    // create a new calendar instance, set the time to the instances start timestamp, ...
                     val startCalendar = Calendar.getInstance()
                     startCalendar.timeInMillis = outdatedInstance.startTimestamp * 1000L
 
-                    // ... add to the calendar the period in period units...
+                    // ... add to the calendar the period in period units, ...
                     when (description.periodUnit) {
                         GoalPeriodUnit.DAY ->
                             startCalendar.add(
@@ -41,18 +41,18 @@ suspend fun updateGoals(context: Context) {
                     }
 
                     // ... and create a new goal with the same groupId, period and target
-                    PTDatabase.getInstance(context).goalInstanceDao.insert(
-                        description.createInstance(
-                            timeFrame = startCalendar,
-                            target = outdatedInstance.target
-                        )
-                    )
+//                    PTDatabase.getInstance(context).goalInstanceDao.insert(
+//                        description.createInstance(
+//                            timeFrame = startCalendar,
+//                            target = outdatedInstance.target
+//                        )
+//                    )
                 } else if(!description.archived) {
 //                    PTDatabase.getInstance(context).goalDescriptionDao.archive(description) // TODO move to repository
                 }
 
                 // finally mark the outdated instance as renewed
-                outdatedInstance.renewed = true
+//                outdatedInstance.renewed = true
 //                PTDatabase.getInstance(context).goalInstanceDao.update(outdatedInstance)
             }
         }

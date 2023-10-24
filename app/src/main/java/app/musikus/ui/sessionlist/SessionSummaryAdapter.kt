@@ -200,7 +200,7 @@ package app.musikus.ui.sessionlist
 //                            break
 //                        } else {
 //                            pastSectionsWithLibraryItems.forEach { (section, _) ->
-//                                totalPracticeDuration += section.duration ?: 0
+//                                totalPracticeDuration += section.duration
 //                            }
 //                        }
 //                    }

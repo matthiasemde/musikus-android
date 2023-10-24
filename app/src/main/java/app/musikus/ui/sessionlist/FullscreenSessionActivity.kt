@@ -28,7 +28,7 @@ import androidx.recyclerview.widget.RecyclerView
 import app.musikus.R
 import app.musikus.database.SectionWithLibraryItem
 import app.musikus.database.SessionWithSectionsWithLibraryItems
-import app.musikus.database.entities.Section
+import app.musikus.database.daos.Section
 import app.musikus.shared.EditTimeDialog
 import app.musikus.ui.MainActivity
 import app.musikus.utils.TIME_FORMAT_HUMAN_PRETTY
@@ -182,7 +182,7 @@ class FullscreenSessionActivity : AppCompatActivity() {
     }
 
     private fun editSectionDurationHandler(section: Section?, newSectionDuration: Int) {
-        section?.duration = newSectionDuration
+//        section?.duration = newSectionDuration
         sectionAdapterData.indexOfFirst {
             it.section.id == section?.id
         }.also {
@@ -235,10 +235,10 @@ class FullscreenSessionActivity : AppCompatActivity() {
             // set the color to the libraryItem color
             val libraryItemColors =  context.resources.getIntArray(R.array.library_item_colors)
             viewHolder.sectionColor.backgroundTintList = ColorStateList.valueOf(
-                libraryItemColors[libraryItem.colorIndex ?: 69]
+                libraryItemColors[libraryItem.colorIndex]
             )
 
-            val sectionDuration = section.duration ?: 0
+            val sectionDuration = section.duration
 
             // contents of the view with that element
             viewHolder.sectionName.text = libraryItem.name

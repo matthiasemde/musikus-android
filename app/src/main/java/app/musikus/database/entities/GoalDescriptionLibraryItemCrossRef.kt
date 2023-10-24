@@ -18,7 +18,7 @@ import java.util.UUID
     primaryKeys = ["goal_description_id", "library_item_id"],
     foreignKeys = [
         ForeignKey(
-            entity = GoalDescription::class,
+            entity = GoalDescriptionModel::class,
             parentColumns = ["id"],
             childColumns = ["goal_description_id"],
             onDelete = ForeignKey.CASCADE,
@@ -32,7 +32,7 @@ import java.util.UUID
         )
     ]
 )
-data class GoalDescriptionLibraryItemCrossRef (
+data class GoalDescriptionLibraryItemCrossRefModel (
     @ColumnInfo(name = "goal_description_id", index = true) val goalDescriptionId: UUID,
     @ColumnInfo(name = "library_item_id", index = true) val libraryItemId: UUID,
 )

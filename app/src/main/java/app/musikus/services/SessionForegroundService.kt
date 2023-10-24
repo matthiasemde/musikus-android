@@ -27,7 +27,7 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import app.musikus.Musikus
 import app.musikus.R
-import app.musikus.database.entities.Section
+import app.musikus.database.entities.SectionCreationAttributes
 import app.musikus.ui.activesession.ActiveSessionActivity
 import app.musikus.utils.secondsDurationToHoursMinSec
 import java.util.Date
@@ -43,7 +43,7 @@ class SessionForegroundService : Service() {
 
     var sessionActive = false               // keep track of whether a session is active
     // the sectionBuffer will keep track of all the section in the current session
-    var sectionBuffer = ArrayList<Pair<Section, Int>>()
+    var sectionBuffer = ArrayList<Pair<SectionCreationAttributes, Int>>()
     var paused = false                      // flag if session is currently paused
     private var lastPausedState = false     // paused variable the last tick (to detect transition)
     private var pauseBeginTimestamp: Long = 0
@@ -107,7 +107,7 @@ class SessionForegroundService : Service() {
 
                         totalPracticeDuration = 0
                         sectionBuffer.forEach { section ->
-                            totalPracticeDuration += (section.first.duration ?: 0).minus(section.second)
+                            totalPracticeDuration += section.first.duration - section.second
                         }
 
                         updateNotification()
@@ -223,7 +223,7 @@ class SessionForegroundService : Service() {
     /**
      * calculates total Duration (INCLUDING PAUSES!!!) of a section
      */
-    private fun getDuration(section: Section): Int {
+    private fun getDuration(section: SectionCreationAttributes): Int {
         val now = Date().time / 1000L
         return (now - section.timestamp).toInt()
     }

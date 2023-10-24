@@ -27,9 +27,9 @@ import androidx.recyclerview.widget.RecyclerView
 import app.musikus.Musikus
 import app.musikus.R
 import app.musikus.database.PTDatabase
+import app.musikus.database.daos.GoalDescription
+import app.musikus.database.daos.GoalInstance
 import app.musikus.database.daos.LibraryItem
-import app.musikus.database.entities.GoalDescription
-import app.musikus.database.entities.GoalInstance
 import app.musikus.database.entities.GoalPeriodUnit
 import app.musikus.utils.DATE_FORMATTER_PATTERN_DAY_OF_MONTH
 import app.musikus.utils.DATE_FORMATTER_PATTERN_DAY_OF_MONTH_PADDED
@@ -494,7 +494,7 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
     private fun getChartColor(): Int {
         return if(goals[selectedGoal].libraryItem != null) {
                 val libraryItemColors = resources.getIntArray(R.array.library_item_colors).toCollection(mutableListOf())
-                libraryItemColors[goals[selectedGoal].libraryItem!!.colorIndex ?: 69]
+                libraryItemColors[goals[selectedGoal].libraryItem!!.colorIndex]
             } else {
                 Musikus.getThemeColor(R.attr.colorPrimary, this)
             }
@@ -794,7 +794,7 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
 
             /** goal entry (radiobutton + progressbar) and set name depending on libraryItem */
             if (elem.libraryItem != null) {
-                val catColor = ColorStateList.valueOf(libraryItemColors[elem.libraryItem.colorIndex ?: 69])
+                val catColor = ColorStateList.valueOf(libraryItemColors[elem.libraryItem.colorIndex])
                 holder.goalTitleTv.text = elem.libraryItem.name
                 holder.goalRadioButton.buttonTintList = catColor
                 holder.progressGoal.progressTintList = catColor
@@ -868,7 +868,7 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
                 var color = ColorStateList.valueOf(
                     Musikus.getThemeColor(R.attr.colorPrimary, this@GoalStatsActivity))
                 if (goals[position].libraryItem != null)
-                    color = ColorStateList.valueOf(catColors[goals[position].libraryItem!!.colorIndex ?: 69])
+                    color = ColorStateList.valueOf(catColors[goals[position].libraryItem!!.colorIndex])
 
                 backgroundTintList = color
                 isSelected = true

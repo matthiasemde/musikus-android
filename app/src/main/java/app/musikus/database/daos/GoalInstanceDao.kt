@@ -12,25 +12,39 @@
 
 package app.musikus.database.daos
 
-import android.util.Log
+import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Query
+import androidx.room.RewriteQueriesToDropUnusedColumns
 import androidx.room.Transaction
 import app.musikus.database.GoalInstanceWithDescription
 import app.musikus.database.GoalInstanceWithDescriptionWithLibraryItems
 import app.musikus.database.PTDatabase
 import app.musikus.database.TimestampDao
-import app.musikus.database.entities.GoalInstance
+import app.musikus.database.TimestampModelDisplayAttributes
+import app.musikus.database.entities.GoalInstanceModel
 import app.musikus.database.entities.GoalInstanceUpdateAttributes
 import app.musikus.utils.getCurrTimestamp
 import kotlinx.coroutines.flow.Flow
 import java.util.UUID
 
+data class GoalInstance(
+    @ColumnInfo(name="goal_description_id") val goalDescriptionId: UUID,
+    @ColumnInfo(name="start_timestamp") val startTimestamp: Long,
+    @ColumnInfo(name="period_in_seconds") val periodInSeconds: Int,
+    @ColumnInfo(name="target") val target: Int,
+    @ColumnInfo(name="progress") val progress: Int,
+    @ColumnInfo(name="renewed") val renewed: Boolean,
+) : TimestampModelDisplayAttributes() {
+    val isOutdated : Boolean
+        get() = getCurrTimestamp() > startTimestamp + periodInSeconds
+}
+
 @Dao
 abstract class GoalInstanceDao(
     database : PTDatabase
 ) : TimestampDao<
-    GoalInstance,
+    GoalInstanceModel,
     GoalInstanceUpdateAttributes,
     GoalInstance
 >(
@@ -51,20 +65,17 @@ abstract class GoalInstanceDao(
      */
 
     override fun applyUpdateAttributes(
-        old: GoalInstance,
+        old: GoalInstanceModel,
         updateAttributes: GoalInstanceUpdateAttributes
-    ): GoalInstance = super.applyUpdateAttributes(old, updateAttributes).apply {
+    ): GoalInstanceModel = super.applyUpdateAttributes(old, updateAttributes).apply {
         target = updateAttributes.target ?: old.target
         progress = updateAttributes.progress ?: old.progress
         renewed = updateAttributes.renewed ?: old.renewed
     }
 
     @Transaction
-    open suspend fun renewGoalInstance(id: UUID) { // TODO: make prettier
-        get(id)?.also { g ->
-            g.renewed = true
-//            update(g)
-        } ?: Log.e("GOAL_INSTANCE_DAO", "Trying to renew goal instance with id: $id failed")
+    open suspend fun renewGoalInstance(id: UUID) {
+        update(id, GoalInstanceUpdateAttributes(renewed = true))
     }
 
     /**
@@ -79,17 +90,19 @@ abstract class GoalInstanceDao(
      * @param inclusiveFrom decides whether the beginning of the selection is inclusive. **default**: true
      * @param inclusiveTo decides whether the end of the selection is inclusive. **default**: false
      */
+    @RewriteQueriesToDropUnusedColumns
     @Query(
         "SELECT * FROM goal_instance " +
-                "WHERE goal_description_id IN (:goalDescriptionIds)" +
-                "AND (" +
-                "start_timestamp>:from AND NOT :inclusiveFrom OR " +
-                "start_timestamp+period_in_seconds>:from AND :inclusiveFrom" +
-                ")" +
-                "AND (" +
-                "start_timestamp<:to AND :inclusiveTo OR " +
-                "start_timestamp+period_in_seconds<:to AND NOT :inclusiveTo" +
-                ")"
+//        "JOIN goal_description ON goal_description.id = goal_instance.goal_description_id " +
+        "WHERE goal_description_id IN (:goalDescriptionIds)" +
+        "AND (" +
+            "start_timestamp>:from AND NOT :inclusiveFrom OR " +
+            "start_timestamp+period_in_seconds>:from AND :inclusiveFrom" +
+        ")" +
+        "AND (" +
+            "start_timestamp<:to AND :inclusiveTo OR " +
+            "start_timestamp+period_in_seconds<:to AND NOT :inclusiveTo" +
+        ")"
     )
     abstract suspend fun get(
         goalDescriptionIds: List<UUID>,
@@ -123,15 +136,18 @@ abstract class GoalInstanceDao(
      * @param inclusiveTo decides whether the end of the selection is inclusive. **default**: false
      */
     @Transaction
+    @RewriteQueriesToDropUnusedColumns
     @Query(
-        "SELECT * FROM goal_instance WHERE (" +
-                "start_timestamp>:from AND NOT :inclusiveFrom OR " +
-                "start_timestamp+period_in_seconds>:from AND :inclusiveFrom" +
-                ")" +
-                "AND (" +
-                "start_timestamp<:to AND :inclusiveTo OR " +
-                "start_timestamp+period_in_seconds<:to AND NOT :inclusiveTo" +
-                ")"
+        "SELECT * FROM goal_instance " +
+//        "JOIN goal_description ON goal_description.id = goal_instance.goal_description_id " +
+        "WHERE (" +
+            "start_timestamp>:from AND NOT :inclusiveFrom OR " +
+            "start_timestamp+period_in_seconds>:from AND :inclusiveFrom" +
+        ")" +
+        "AND (" +
+            "start_timestamp<:to AND :inclusiveTo OR " +
+            "start_timestamp+period_in_seconds<:to AND NOT :inclusiveTo" +
+        ")"
     )
     abstract suspend fun getWithDescription(
         from: Long = getCurrTimestamp(),
@@ -149,17 +165,19 @@ abstract class GoalInstanceDao(
      * @param inclusiveTo decides whether the end of the selection is inclusive. **default**: false
      */
     @Transaction
+    @RewriteQueriesToDropUnusedColumns
     @Query(
-        "SELECT * FROM goal_instance WHERE " +
-                "goal_description_id=:goalDescriptionId " +
-                "AND (" +
-                "start_timestamp>:from AND NOT :inclusiveFrom OR " +
-                "start_timestamp+period_in_seconds>:from AND :inclusiveFrom" +
-                ")" +
-                "AND (" +
-                "start_timestamp<:to AND :inclusiveTo OR " +
-                "start_timestamp+period_in_seconds<:to AND NOT :inclusiveTo" +
-                ")"
+        "SELECT * FROM goal_instance " +
+//        "JOIN goal_description ON goal_description.id = goal_instance.goal_description_id " +
+        "WHERE goal_description_id=:goalDescriptionId " +
+        "AND (" +
+        "start_timestamp>:from AND NOT :inclusiveFrom OR " +
+        "start_timestamp+period_in_seconds>:from AND :inclusiveFrom" +
+        ")" +
+        "AND (" +
+        "start_timestamp<:to AND :inclusiveTo OR " +
+        "start_timestamp+period_in_seconds<:to AND NOT :inclusiveTo" +
+        ")"
     )
     abstract suspend fun getWithDescriptionWithLibraryItems(
         goalDescriptionId: UUID,
@@ -170,9 +188,11 @@ abstract class GoalInstanceDao(
     ): List<GoalInstanceWithDescriptionWithLibraryItems>
 
     @Transaction
+    @RewriteQueriesToDropUnusedColumns
     @Query(
-        "SELECT * FROM goal_instance WHERE " +
-                "renewed=0 " +
+        "SELECT * FROM goal_instance " +
+//        "JOIN goal_description ON goal_description.id = goal_instance.goal_description_id " +
+                "WHERE renewed=0 " +
                 "AND start_timestamp + period_in_seconds < :to"
     )
     abstract suspend fun getOutdatedWithDescriptions(
@@ -180,6 +200,7 @@ abstract class GoalInstanceDao(
     ) : List<GoalInstanceWithDescription>
 
     @Transaction
+    @RewriteQueriesToDropUnusedColumns
     @Query(
         "SELECT * FROM goal_instance WHERE " +
                 "start_timestamp < :now " +
@@ -195,6 +216,7 @@ abstract class GoalInstanceDao(
     ) : Flow<List<GoalInstanceWithDescriptionWithLibraryItems>>
 
     @Transaction
+    @RewriteQueriesToDropUnusedColumns
     @Query(
         "SELECT * FROM goal_instance WHERE " +
                 "goal_description_id IN (:goalDescriptionIds) " +
@@ -211,6 +233,7 @@ abstract class GoalInstanceDao(
         now : Long = getCurrTimestamp(),
     ) : List<GoalInstanceWithDescriptionWithLibraryItems>
 
+    @RewriteQueriesToDropUnusedColumns
     @Query(
         "Select * FROM goal_instance WHERE " +
                 "goal_description_id=:goalDescriptionId AND " +
@@ -222,4 +245,8 @@ abstract class GoalInstanceDao(
     abstract suspend fun getLatest(
         goalDescriptionId: UUID
     ): GoalInstance
+
+    companion object {
+        const val displayAttributes = "id, start_timestamp, period_in_seconds, target, progress, renewed"
+    }
 }

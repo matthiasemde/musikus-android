@@ -26,9 +26,10 @@ import java.util.*
 data class LibraryItem(
     @ColumnInfo(name = "name") val name: String,
     @ColumnInfo(name = "color_index") val colorIndex: Int,
-    @ColumnInfo(name = "custom_order") val order: Int,
+    @ColumnInfo(name = "custom_order") val order: Int?,
     @ColumnInfo(name = "library_folder_id") val libraryFolderId: UUID?
 ) : SoftDeleteModelDisplayAttributes()
+
 @Dao
 abstract class LibraryItemDao(
     database: PTDatabase

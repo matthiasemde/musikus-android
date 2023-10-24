@@ -67,10 +67,10 @@ import app.musikus.Musikus
 import app.musikus.R
 import app.musikus.components.NonDraggableRatingBar
 import app.musikus.database.PTDatabase
-import app.musikus.database.SessionWithSections
 import app.musikus.database.daos.LibraryItem
-import app.musikus.database.entities.Section
-import app.musikus.database.entities.Session
+import app.musikus.database.entities.SectionCreationAttributes
+import app.musikus.database.entities.SessionCreationAttributes
+import app.musikus.repository.SessionRepository
 import app.musikus.services.RecorderService
 import app.musikus.services.SessionForegroundService
 import app.musikus.ui.MainActivity
@@ -115,6 +115,9 @@ class ActiveSessionActivity : AppCompatActivity() {
 
     private lateinit var recordingBottomSheet: RecyclerView
     private lateinit var recordingBottomSheetBehaviour: BottomSheetBehavior<RecyclerView>
+
+    private val database: PTDatabase = PTDatabase.getInstance(application)
+    private val sessionRepository: SessionRepository = SessionRepository(database)
 
     /** Defines callbacks for service binding, passed to bindService()  */
     private val connection = object : ServiceConnection {
@@ -1183,7 +1186,7 @@ class ActiveSessionActivity : AppCompatActivity() {
             // when the session start, also update the goals
             lifecycleScope.launch { updateGoals(applicationContext) }
         } else if (mService.sectionBuffer.last().let {         // when session is running, don't allow starting if...
-                (libraryItemId == it.first.libraryItemId) ||   // ... in the same library item
+                (libraryItemId == it.first.libraryItemId.value) ||   // ... in the same library item
                         ((it.first.duration
                             ?: (0 - it.second)) < 1)           // ... section running for less than 1sec
         }) {
@@ -1191,7 +1194,7 @@ class ActiveSessionActivity : AppCompatActivity() {
         }
 
         // start a new section for the chosen library item
-        mService.startNewSection(libraryItemId, activeLibraryItems[index].name ?: "")
+        mService.startNewSection(libraryItemId, activeLibraryItems[index].name)
 
         updateActiveSectionView()
         adaptBottomTextView(true)
@@ -1209,13 +1212,13 @@ class ActiveSessionActivity : AppCompatActivity() {
 
         if (mService.sectionBuffer.isNotEmpty()) {
             val libraryItemName = activeLibraryItems.find { libraryItem ->
-                libraryItem.id == mService.sectionBuffer.last().first.libraryItemId
+                libraryItem.id == mService.sectionBuffer.last().first.libraryItemId.value
             }?.name
             sName.text = libraryItemName
 
             var sectionDur: Int
             mService.sectionBuffer.last().apply {
-                sectionDur = (first.duration ?: 0).minus(second)
+                sectionDur = first.duration.minus(second)
             }
             sDur.text = getDurationString(sectionDur, TIME_FORMAT_HMS_DIGITAL)
         }
@@ -1340,7 +1343,7 @@ class ActiveSessionActivity : AppCompatActivity() {
             totalBreakDuration += it.second
         }
 
-        val newSession = Session(
+        val newSession = SessionCreationAttributes(
             totalBreakDuration,
             rating,
             if(comment.isNullOrBlank()) "" else comment,
@@ -1354,18 +1357,17 @@ class ActiveSessionActivity : AppCompatActivity() {
             }
 
             // and insert it the resulting section list into the database together with the session
-            PTDatabase.getInstance(applicationContext).sessionDao.insert(
-                SessionWithSections(
-                    session = newSession,
-                    sections = mService.sectionBuffer.map { it.first }
-                )
+            val newSessionId = sessionRepository.add(
+                session = newSession,
+                sections = mService.sectionBuffer.map { it.first }
             )
 
             // reset section buffer and session status
             mService.sectionBuffer.clear()
             // refresh the adapter otherwise the app will crash because of "inconsistency detected"
             findViewById<RecyclerView>(R.id.currentSections).adapter = sectionsListAdapter
-            exitActivity(newSession.id)
+
+            exitActivity(newSessionId)
         }
     }
 
@@ -1530,7 +1532,7 @@ class ActiveSessionActivity : AppCompatActivity() {
      */
     private inner class SectionsListAdapter(
         // TODO this should be a list of SectionWithLibraryItems or a custom data class
-        private val sections: ArrayList<Pair<Section, Int>>,
+        private val sections: ArrayList<Pair<SectionCreationAttributes, Int>>,
     ) : RecyclerView.Adapter<SectionsListAdapter.ViewHolder>() {
 
         private val VIEW_TYPE_HEADER = 1
@@ -1570,13 +1572,13 @@ class ActiveSessionActivity : AppCompatActivity() {
 
             // Get element from your dataset at this position
             val libraryItemName = activeLibraryItems.find { libraryItem ->
-                libraryItem.id == sections[position].first.libraryItemId
+                libraryItem.id == sections[position].first.libraryItemId.value
             }?.name
 
             // calculate duration of each session (minus pauses)
             var sectionDuration: Int
             sections[position].apply {
-                sectionDuration = (first.duration ?: 0).minus(second)
+                sectionDuration = first.duration - second
             }
 
             // contents of the view with that element

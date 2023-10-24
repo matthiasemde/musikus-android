@@ -25,18 +25,22 @@ import app.musikus.BuildConfig
 import app.musikus.R
 import app.musikus.database.GoalDescriptionWithLibraryItems
 import app.musikus.database.GoalInstanceWithDescriptionWithLibraryItems
+import app.musikus.database.SectionWithLibraryItem
 import app.musikus.database.SessionWithSectionsWithLibraryItems
+import app.musikus.database.daos.GoalDescription
+import app.musikus.database.daos.GoalInstance
 import app.musikus.database.daos.LibraryItem
-import app.musikus.database.entities.GoalDescription
-import app.musikus.database.entities.GoalInstance
+import app.musikus.database.daos.Section
+import app.musikus.database.daos.Session
 import app.musikus.database.entities.GoalPeriodUnit
+import app.musikus.database.entities.GoalProgressType
 import app.musikus.database.entities.GoalType
-import app.musikus.database.entities.Session
 import app.musikus.ui.activesession.ActiveSessionActivity
 import app.musikus.ui.goals.GoalAdapter
 import app.musikus.ui.library.LibraryItemAdapter
 import app.musikus.utils.SECONDS_PER_DAY
 import app.musikus.utils.SECONDS_PER_HOUR
+import app.musikus.utils.getCurrTimestamp
 import app.musikus.utils.getStartOfDay
 import app.musikus.utils.getStartOfWeek
 import com.github.appintro.SlideBackgroundColorHolder
@@ -50,16 +54,14 @@ private const val DUMMY_MAIN_CATEGORY_INDEX = 5
 
 
 
-private val dummyLibraryItems = emptyList<LibraryItem>()
-
-//private val dummyLibraryItems = listOf(
-//    LibraryItem(name="B-Dur", colorIndex = 8),
-//    LibraryItem(name="Czerny Etude Nr.2", colorIndex = 1),
-//    LibraryItem(name="Trauermarsch c-Moll", colorIndex = 0),
-//    LibraryItem(name="Andantino", colorIndex = 6),
-//    LibraryItem(name="Klaviersonate", colorIndex = 7),
-//    LibraryItem(name="Mozart", colorIndex = 3)
-//)
+private val dummyLibraryItems = listOf(
+    LibraryItem(name="B-Dur", colorIndex = 8, libraryFolderId = null, order = null),
+    LibraryItem(name="Czerny Etude Nr.2", colorIndex = 1, libraryFolderId = null, order = null),
+    LibraryItem(name="Trauermarsch c-Moll", colorIndex = 0, libraryFolderId = null, order = null),
+    LibraryItem(name="Andantino", colorIndex = 6, libraryFolderId = null, order = null),
+    LibraryItem(name="Klaviersonate", colorIndex = 7, libraryFolderId = null, order = null),
+    LibraryItem(name="Mozart", colorIndex = 3, libraryFolderId = null, order = null)
+)
 
 class IntroFragment(
     @ColorRes override val defaultBackgroundColorRes: Int = R.color.md_red_300
@@ -239,11 +241,12 @@ class IntroGoalsFragment : Fragment(R.layout.fragment_intro_goals) {
     private fun getDummyGoals(): List<GoalInstanceWithDescriptionWithLibraryItems> {
         val goal1 = GoalInstanceWithDescriptionWithLibraryItems(
             GoalInstance(
-                goalDescriptionId = UUID.randomUUID(), // we don't care about id but it can't be null
+                goalDescriptionId = UUID.randomUUID(),
                 startTimestamp = getStartOfDay(0).toEpochSecond(),
                 periodInSeconds = SECONDS_PER_DAY,
                 target = SECONDS_PER_HOUR,
-                progress = (SECONDS_PER_HOUR * 0.7f).roundToInt()
+                progress = (SECONDS_PER_HOUR * 0.7f).roundToInt(),
+                renewed = false
             ),
             GoalDescriptionWithLibraryItems(
                 description = GoalDescription(
@@ -251,17 +254,22 @@ class IntroGoalsFragment : Fragment(R.layout.fragment_intro_goals) {
                     repeat = true,
                     periodInPeriodUnits = 1,
                     periodUnit = GoalPeriodUnit.DAY,
+                    progressType = GoalProgressType.TIME,
+                    paused = false,
+                    archived = false,
+                    order = null,
                 ),
                 listOf()
             ),
         )
         val goal2 = GoalInstanceWithDescriptionWithLibraryItems(
             GoalInstance(
-                goalDescriptionId = UUID.randomUUID(), // we don't care about id but it can't be null
+                goalDescriptionId = UUID.randomUUID(),
                 startTimestamp = getStartOfWeek(0).toEpochSecond(),
                 periodInSeconds = SECONDS_PER_DAY * 7,
                 target = (SECONDS_PER_HOUR * 5.5f).roundToInt(),
-                progress = (SECONDS_PER_HOUR * 2f).roundToInt()
+                progress = (SECONDS_PER_HOUR * 2f).roundToInt(),
+                renewed = false
             ),
             GoalDescriptionWithLibraryItems(
                 description = GoalDescription(
@@ -269,12 +277,14 @@ class IntroGoalsFragment : Fragment(R.layout.fragment_intro_goals) {
                     repeat = true,
                     periodInPeriodUnits = 1,
                     periodUnit = GoalPeriodUnit.WEEK,
+                    progressType = GoalProgressType.TIME,
+                    paused = false,
+                    archived = false,
+                    order = null,
                 ),
                 listOf(
+                    dummyLibraryItems[DUMMY_MAIN_CATEGORY_INDEX]
                 )
-//                listOf(
-//                    dummyLibraryItems[DUMMY_MAIN_CATEGORY_INDEX]
-//                )
             ),
         )
         return arrayListOf(goal1, goal2)
@@ -305,33 +315,33 @@ private fun getDummySessions() =
                 comment = "Great session! \uD83D\uDE80"
             ),
             sections = listOf(
-//                SectionWithLibraryItem(
-//                    Section(
-//                        sessionId = UUID.randomUUID(), // we don't care about id but it can't be null
-//                        libraryItemId = UUID.randomUUID(), // we don't care about id but it can't be null
-//                        duration = 60 * 10,
-//                        timestamp = getCurrTimestamp()
-//                    ),
-//                    dummyLibraryItems[0]
-//                ),
-//                SectionWithLibraryItem(
-//                    Section(
-//                        sessionId = UUID.randomUUID(), // we don't care about id but it can't be null
-//                        libraryItemId = UUID.randomUUID(), // we don't care about id but it can't be null
-//                        duration = 60 * 23,
-//                        timestamp = getCurrTimestamp()
-//                    ),
-//                    dummyLibraryItems[1]
-//                ),
-//                SectionWithLibraryItem(
-//                    Section(
-//                        sessionId = UUID.randomUUID(), // we don't care about id but it can't be null
-//                        libraryItemId = UUID.randomUUID(), // we don't care about id but it can't be null
-//                        duration = 60 * 37,
-//                        timestamp = getCurrTimestamp()
-//                    ),
-//                    dummyLibraryItems[DUMMY_MAIN_CATEGORY_INDEX]
-//                ),
+                SectionWithLibraryItem(
+                    Section(
+                        sessionId = UUID.randomUUID(), // we don't care about id but it can't be null
+                        libraryItemId = UUID.randomUUID(), // we don't care about id but it can't be null
+                        duration = 60 * 10,
+                        timestamp = getCurrTimestamp()
+                    ),
+                    dummyLibraryItems[0]
+                ),
+                SectionWithLibraryItem(
+                    Section(
+                        sessionId = UUID.randomUUID(), // we don't care about id but it can't be null
+                        libraryItemId = UUID.randomUUID(), // we don't care about id but it can't be null
+                        duration = 60 * 23,
+                        timestamp = getCurrTimestamp()
+                    ),
+                    dummyLibraryItems[1]
+                ),
+                SectionWithLibraryItem(
+                    Section(
+                        sessionId = UUID.randomUUID(), // we don't care about id but it can't be null
+                        libraryItemId = UUID.randomUUID(), // we don't care about id but it can't be null
+                        duration = 60 * 37,
+                        timestamp = getCurrTimestamp()
+                    ),
+                    dummyLibraryItems[DUMMY_MAIN_CATEGORY_INDEX]
+                ),
             )
         )
     )

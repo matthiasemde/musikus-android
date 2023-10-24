@@ -15,19 +15,23 @@ package app.musikus.database
 import androidx.room.Embedded
 import androidx.room.Junction
 import androidx.room.Relation
+import app.musikus.database.daos.GoalDescription
+import app.musikus.database.daos.GoalInstance
+import app.musikus.database.daos.LibraryFolder
 import app.musikus.database.daos.LibraryItem
-import app.musikus.database.entities.GoalDescription
-import app.musikus.database.entities.GoalDescriptionLibraryItemCrossRef
-import app.musikus.database.entities.GoalInstance
-import app.musikus.database.entities.LibraryFolder
+import app.musikus.database.daos.Section
+import app.musikus.database.daos.Session
+import app.musikus.database.entities.GoalDescriptionLibraryItemCrossRefModel
+import app.musikus.database.entities.GoalDescriptionModel
+import app.musikus.database.entities.GoalInstanceModel
 import app.musikus.database.entities.LibraryItemModel
-import app.musikus.database.entities.Section
-import app.musikus.database.entities.Session
+import app.musikus.database.entities.SectionModel
 
 
 data class SessionWithSections(
     @Embedded val session: Session,
     @Relation(
+        entity = SectionModel::class,
         parentColumn = "id",
         entityColumn = "session_id"
     )
@@ -37,16 +41,17 @@ data class SessionWithSections(
 data class SectionWithLibraryItem(
     @Embedded val section: Section,
     @Relation(
+        entity = LibraryItemModel::class,
         parentColumn = "library_item_id",
         entityColumn = "id"
     )
-    val libraryItem: LibraryItemModel
+    val libraryItem: LibraryItem
 )
 
 data class SessionWithSectionsWithLibraryItems(
     @Embedded val session: Session,
     @Relation(
-        entity = Section::class,
+        entity = SectionModel::class,
         parentColumn = "id",
         entityColumn = "session_id"
     )
@@ -56,20 +61,22 @@ data class SessionWithSectionsWithLibraryItems(
 data class GoalDescriptionWithLibraryItems(
     @Embedded val description: GoalDescription,
     @Relation(
+        entity = LibraryItemModel::class,
         parentColumn = "id",
         entityColumn = "id",
         associateBy = Junction(
-            GoalDescriptionLibraryItemCrossRef::class,
+            GoalDescriptionLibraryItemCrossRefModel::class,
             parentColumn = "goal_description_id",
             entityColumn = "library_item_id"
         )
     )
-    val libraryItems: List<LibraryItemModel>
+    val libraryItems: List<LibraryItem>
 )
 
 data class LibraryFolderWithItems(
     @Embedded val folder: LibraryFolder,
     @Relation(
+        entity = LibraryItemModel::class,
         parentColumn = "id",
         entityColumn = "library_folder_id"
     )
@@ -79,10 +86,11 @@ data class LibraryFolderWithItems(
 data class LibraryItemWithGoalDescriptions(
     @Embedded val libraryItem: LibraryItem,
     @Relation(
+        entity = GoalDescriptionModel::class,
         parentColumn = "id",
         entityColumn = "id",
         associateBy = Junction(
-            GoalDescriptionLibraryItemCrossRef::class,
+            GoalDescriptionLibraryItemCrossRefModel::class,
             parentColumn = "library_item_id",
             entityColumn = "goal_description_id"
         )
@@ -93,11 +101,11 @@ data class LibraryItemWithGoalDescriptions(
 data class LibraryItemWithGoalDescriptionsWithLibraryItems(
     @Embedded val libraryItem: LibraryItem,
     @Relation(
-        entity = GoalDescription::class,
+        entity = GoalDescriptionModel::class,
         parentColumn = "id",
         entityColumn = "id",
         associateBy = Junction(
-            GoalDescriptionLibraryItemCrossRef::class,
+            GoalDescriptionLibraryItemCrossRefModel::class,
             parentColumn = "library_item_id",
             entityColumn = "goal_description_id"
         )
@@ -108,7 +116,7 @@ data class LibraryItemWithGoalDescriptionsWithLibraryItems(
 data class SectionWithLibraryItemWithGoalDescriptions(
     @Embedded val section: Section,
     @Relation(
-        entity = LibraryItem::class,
+        entity = LibraryItemModel::class,
         parentColumn = "library_item_id",
         entityColumn = "id"
     )
@@ -118,7 +126,7 @@ data class SectionWithLibraryItemWithGoalDescriptions(
 data class SessionWithSectionsWithLibraryItemsWithGoalDescriptions(
     @Embedded val session: Session,
     @Relation(
-        entity = Section::class,
+        entity = SectionModel::class,
         parentColumn = "id",
         entityColumn = "session_id"
     )
@@ -128,6 +136,7 @@ data class SessionWithSectionsWithLibraryItemsWithGoalDescriptions(
 data class GoalInstanceWithDescription(
     @Embedded val instance: GoalInstance,
     @Relation(
+        entity = GoalDescriptionModel::class,
         parentColumn = "goal_description_id",
         entityColumn = "id"
     )
@@ -137,8 +146,9 @@ data class GoalInstanceWithDescription(
 data class GoalDescriptionWithInstances(
     @Embedded val description: GoalDescription,
     @Relation(
+        entity = GoalInstanceModel::class,
         parentColumn = "id",
-        entityColumn = "goalDescriptionId"
+        entityColumn = "goal_description_id"
     )
     val instances: List<GoalInstance>
 )
@@ -146,7 +156,7 @@ data class GoalDescriptionWithInstances(
 data class GoalInstanceWithDescriptionWithLibraryItems(
     @Embedded val instance: GoalInstance,
     @Relation(
-        entity = GoalDescription::class,
+        entity = GoalDescriptionModel::class,
         parentColumn = "goal_description_id",
         entityColumn = "id"
     )

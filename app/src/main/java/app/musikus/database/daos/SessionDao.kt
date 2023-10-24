@@ -18,11 +18,16 @@ import app.musikus.database.entities.*
 import kotlinx.coroutines.flow.Flow
 import java.util.*
 
+data class Session(
+    @ColumnInfo(name = "break_duration") val breakDuration: Int,
+    @ColumnInfo(name = "rating") val rating: Int,
+    @ColumnInfo(name = "comment") val comment: String?,
+) : SoftDeleteModelDisplayAttributes()
 @Dao
 abstract class SessionDao(
     private val database : PTDatabase
 ) : SoftDeleteDao<
-    Session,
+    SessionModel,
     SessionUpdateAttributes,
     Session
 >(
@@ -36,9 +41,9 @@ abstract class SessionDao(
      */
 
     override fun applyUpdateAttributes(
-        old: Session,
+        old: SessionModel,
         updateAttributes: SessionUpdateAttributes
-    ): Session = super.applyUpdateAttributes(old, updateAttributes).apply {
+    ): SessionModel = super.applyUpdateAttributes(old, updateAttributes).apply {
         rating = updateAttributes.rating ?: old.rating
         comment = updateAttributes.comment ?: old.comment
     }
@@ -47,14 +52,21 @@ abstract class SessionDao(
      * @Insert
       */
 
+
     @Transaction
     open suspend fun insert(
-        sessionWithSections: SessionWithSections,
+        session: SessionModel,
+        sectionCreationAttributes: List<SectionCreationAttributes>
     ) {
-        insert(sessionWithSections.session)
-        database.sectionDao.insert(sessionWithSections.sections.map {
-            it.copy(sessionId = sessionWithSections.session.id) }
-        )
+        insert(session)
+        database.sectionDao.insert(sectionCreationAttributes.map {
+            SectionModel(
+                sessionId = Nullable(session.id),
+                libraryItemId = it.libraryItemId,
+                duration = it.duration,
+                timestamp = it.timestamp
+            )
+        })
     }
 
     /**
@@ -62,12 +74,14 @@ abstract class SessionDao(
      */
 
     @Transaction
+    @RewriteQueriesToDropUnusedColumns
     @Query("SELECT * FROM session WHERE id=:sessionId AND deleted=0")
     abstract fun getWithSectionsWithLibraryItemsAsFlow(
         sessionId: UUID
     ): Flow<SessionWithSectionsWithLibraryItems>
 
     @Transaction
+    @RewriteQueriesToDropUnusedColumns
     @Query("SELECT * FROM session WHERE deleted=0")
     abstract fun getAllWithSectionsWithLibraryItemsAsFlow(
     ): Flow<List<SessionWithSectionsWithLibraryItems>>

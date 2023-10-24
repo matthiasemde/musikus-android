@@ -8,10 +8,10 @@ package app.musikus.database.entities
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
-import app.musikus.database.SoftDeleteModel
 import app.musikus.database.ISoftDeleteModelCreationAttributes
-import app.musikus.database.SoftDeleteModelCreationAttributes
 import app.musikus.database.ISoftDeleteModelUpdateAttributes
+import app.musikus.database.SoftDeleteModel
+import app.musikus.database.SoftDeleteModelCreationAttributes
 import app.musikus.database.SoftDeleteModelUpdateAttributes
 
 private interface ISessionCreationAttributes : ISoftDeleteModelCreationAttributes {
@@ -37,7 +37,7 @@ data class SessionUpdateAttributes(
 ) : SoftDeleteModelUpdateAttributes(), ISessionUpdateAttributes
 
 @Entity(tableName = "session")
-data class Session (
+data class SessionModel (
     @ColumnInfo(name="break_duration") override val breakDuration: Int,
     @ColumnInfo(name="rating") override var rating: Int,
     @ColumnInfo(name="comment") override var comment: String,

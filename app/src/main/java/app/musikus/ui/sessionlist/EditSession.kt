@@ -106,12 +106,12 @@ fun EditSession(
                                     .clip(RoundedCornerShape(4.dp))
                                     .background(
                                         Color(
-                                            Musikus.getLibraryItemColors(LocalContext.current)[sectionWithLibraryItem.libraryItem.colorIndex ?: 69]
+                                            Musikus.getLibraryItemColors(LocalContext.current)[sectionWithLibraryItem.libraryItem.colorIndex]
                                         )
                                     )
                             )
                             Text(
-                                text = sectionWithLibraryItem.libraryItem.name ?: "whhoopsi",
+                                text = sectionWithLibraryItem.libraryItem.name,
                                 style = MaterialTheme.typography.bodyMedium
                             )
                         }
@@ -120,7 +120,7 @@ fun EditSession(
                                 .width(0.dp)
                                 .weight(2f),
                             text = getDurationString(
-                                sectionWithLibraryItem.section.duration ?: 0,
+                                sectionWithLibraryItem.section.duration,
                                 TIME_FORMAT_HUMAN_PRETTY,
                                 SCALE_FACTOR_FOR_SMALL_TEXT
                             ).toString(),

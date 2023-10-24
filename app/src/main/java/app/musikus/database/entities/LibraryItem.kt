@@ -53,7 +53,7 @@ data class LibraryItemUpdateAttributes(
     tableName = "library_item",
     foreignKeys = [
         ForeignKey(
-            entity = LibraryFolder::class,
+            entity = LibraryFolderModel::class,
             parentColumns = ["id"],
             childColumns = ["library_folder_id"],
             onDelete = ForeignKey.SET_DEFAULT

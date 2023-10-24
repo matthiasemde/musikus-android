@@ -89,7 +89,7 @@ fun SessionCard(
     // compute the total practice time
     var practiceDuration = 0
     sectionsWithLibraryItems.forEach { (section, _) ->
-        practiceDuration += section.duration ?: 0
+        practiceDuration += section.duration
     }
 
     // define the time and date format
@@ -174,12 +174,12 @@ fun SessionCard(
                                 .clip(RoundedCornerShape(4.dp))
                                 .background(
                                     Color(
-                                        Musikus.getLibraryItemColors(LocalContext.current)[sectionWithLibraryItem.libraryItem.colorIndex ?: 69]
+                                        Musikus.getLibraryItemColors(LocalContext.current)[sectionWithLibraryItem.libraryItem.colorIndex]
                                     )
                                 )
                         )
                         Text(
-                            text = sectionWithLibraryItem.libraryItem.name ?: "whoopsie",
+                            text = sectionWithLibraryItem.libraryItem.name,
                             style = MaterialTheme.typography.bodyMedium
                         )
                     }
@@ -188,7 +188,7 @@ fun SessionCard(
                             .width(0.dp)
                             .weight(2f),
                         text = getDurationString(
-                            sectionWithLibraryItem.section.duration ?: 0,
+                            sectionWithLibraryItem.section.duration,
                             TIME_FORMAT_HUMAN_PRETTY,
                             SCALE_FACTOR_FOR_SMALL_TEXT
                         ).toString(),
@@ -254,7 +254,7 @@ class SessionCard(
         // compute the total practice time
         var practiceDuration = 0
         sectionsWithLibraryItems.forEach { (section, _) ->
-            practiceDuration += section.duration ?: 0
+            practiceDuration += section.duration
         }
 
         val breakDuration = session.breakDuration
@@ -323,11 +323,11 @@ class SessionCard(
             // set the color to the libraryItem color
             val libraryItemColors =  context.resources.getIntArray(R.array.library_item_colors)
             viewHolder.sectionColor.backgroundTintList = ColorStateList.valueOf(
-                libraryItemColors[libraryItem.colorIndex ?: 69]
+                libraryItemColors[libraryItem.colorIndex]
             )
 
 
-            val sectionDuration = section.duration ?: 0
+            val sectionDuration = section.duration
 
             // contents of the view with that element
             viewHolder.sectionName.text = libraryItem.name
