@@ -15,11 +15,6 @@ package app.musikus.database.entities
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
-import app.musikus.database.BaseModel
-import app.musikus.database.BaseModelCreationAttributes
-import app.musikus.database.BaseModelUpdateAttributes
-import app.musikus.database.IBaseModelCreationAttributes
-import app.musikus.database.IBaseModelUpdateAttributes
 import app.musikus.database.Nullable
 import java.util.UUID
 

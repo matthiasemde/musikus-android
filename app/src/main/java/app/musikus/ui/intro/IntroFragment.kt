@@ -21,7 +21,6 @@ import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import app.musikus.BuildConfig
 import app.musikus.R
 import app.musikus.database.GoalDescriptionWithLibraryItems
 import app.musikus.database.GoalInstanceWithDescriptionWithLibraryItems
@@ -43,6 +42,7 @@ import app.musikus.utils.SECONDS_PER_HOUR
 import app.musikus.utils.getCurrTimestamp
 import app.musikus.utils.getStartOfDay
 import app.musikus.utils.getStartOfWeek
+import com.github.appintro.BuildConfig
 import com.github.appintro.SlideBackgroundColorHolder
 import com.github.appintro.SlideSelectionListener
 import com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -55,12 +55,12 @@ private const val DUMMY_MAIN_CATEGORY_INDEX = 5
 
 
 private val dummyLibraryItems = listOf(
-    LibraryItem(name="B-Dur", colorIndex = 8, libraryFolderId = null, order = null),
-    LibraryItem(name="Czerny Etude Nr.2", colorIndex = 1, libraryFolderId = null, order = null),
-    LibraryItem(name="Trauermarsch c-Moll", colorIndex = 0, libraryFolderId = null, order = null),
-    LibraryItem(name="Andantino", colorIndex = 6, libraryFolderId = null, order = null),
-    LibraryItem(name="Klaviersonate", colorIndex = 7, libraryFolderId = null, order = null),
-    LibraryItem(name="Mozart", colorIndex = 3, libraryFolderId = null, order = null)
+    LibraryItem(name="B-Dur", colorIndex = 8, libraryFolderId = null, customOrder = null),
+    LibraryItem(name="Czerny Etude Nr.2", colorIndex = 1, libraryFolderId = null, customOrder = null),
+    LibraryItem(name="Trauermarsch c-Moll", colorIndex = 0, libraryFolderId = null, customOrder = null),
+    LibraryItem(name="Andantino", colorIndex = 6, libraryFolderId = null, customOrder = null),
+    LibraryItem(name="Klaviersonate", colorIndex = 7, libraryFolderId = null, customOrder = null),
+    LibraryItem(name="Mozart", colorIndex = 3, libraryFolderId = null, customOrder = null)
 )
 
 class IntroFragment(
@@ -257,7 +257,7 @@ class IntroGoalsFragment : Fragment(R.layout.fragment_intro_goals) {
                     progressType = GoalProgressType.TIME,
                     paused = false,
                     archived = false,
-                    order = null,
+                    customOrder = null,
                 ),
                 listOf()
             ),
@@ -280,7 +280,7 @@ class IntroGoalsFragment : Fragment(R.layout.fragment_intro_goals) {
                     progressType = GoalProgressType.TIME,
                     paused = false,
                     archived = false,
-                    order = null,
+                    customOrder = null,
                 ),
                 listOf(
                     dummyLibraryItems[DUMMY_MAIN_CATEGORY_INDEX]

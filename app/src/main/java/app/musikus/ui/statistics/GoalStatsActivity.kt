@@ -26,7 +26,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import app.musikus.Musikus
 import app.musikus.R
-import app.musikus.database.PTDatabase
+import app.musikus.database.MusikusDatabase
 import app.musikus.database.daos.GoalDescription
 import app.musikus.database.daos.GoalInstance
 import app.musikus.database.daos.LibraryItem
@@ -142,7 +142,7 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
 
     /** get the goals from the database */
     private suspend fun initGoalsList() {
-        PTDatabase.getInstance(applicationContext).goalDescriptionDao.getAllWithLibraryItems().forEach { (desc, cat) ->
+        MusikusDatabase.getInstance(applicationContext).goalDescriptionDao.getAllWithLibraryItems().forEach { (desc, cat) ->
 //            goals.add( TODO
 //                GoalListElement(
 //                    goalInstances = PTDatabase.getInstance(applicationContext).goalInstanceDao.get(desc.id, from = 0L),

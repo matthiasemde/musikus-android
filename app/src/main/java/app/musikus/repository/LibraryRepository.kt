@@ -8,7 +8,7 @@
 
 package app.musikus.repository
 
-import app.musikus.database.PTDatabase
+import app.musikus.database.MusikusDatabase
 import app.musikus.database.daos.LibraryFolder
 import app.musikus.database.daos.LibraryItem
 import app.musikus.database.entities.LibraryFolderCreationAttributes
@@ -23,7 +23,7 @@ import app.musikus.datastore.SortDirection
 import java.util.UUID
 
 class LibraryRepository(
-    database: PTDatabase
+    database: MusikusDatabase
 ) {
     private val itemDao = database.libraryItemDao
     private val folderDao = database.libraryFolderDao

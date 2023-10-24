@@ -15,12 +15,7 @@ package app.musikus.database.entities
 import android.util.Log
 import androidx.room.ColumnInfo
 import androidx.room.Entity
-import app.musikus.database.ISoftDeleteModelCreationAttributes
-import app.musikus.database.ISoftDeleteModelUpdateAttributes
 import app.musikus.database.Nullable
-import app.musikus.database.SoftDeleteModel
-import app.musikus.database.SoftDeleteModelCreationAttributes
-import app.musikus.database.SoftDeleteModelUpdateAttributes
 import java.util.Calendar
 
 // shows, whether a goal will count all sections
@@ -81,7 +76,7 @@ private interface IGoalDescriptionCreationAttributes : ISoftDeleteModelCreationA
 private interface IGoalDescriptionUpdateAttributes : ISoftDeleteModelUpdateAttributes {
     val paused: Boolean?
     val archived: Boolean?
-    val order: Nullable<Int>?
+    val customOrder: Nullable<Int>?
 }
 
 data class GoalDescriptionCreationAttributes(
@@ -95,7 +90,7 @@ data class GoalDescriptionCreationAttributes(
 data class GoalDescriptionUpdateAttributes(
     override val paused: Boolean? = null,
     override val archived: Boolean? = null,
-    override val order: Nullable<Int>? = null,
+    override val customOrder: Nullable<Int>? = null,
 ) : SoftDeleteModelUpdateAttributes(), IGoalDescriptionUpdateAttributes
 
 
@@ -111,7 +106,7 @@ data class GoalDescriptionModel (
     @ColumnInfo(name="paused") override var paused: Boolean = false,
     @ColumnInfo(name="archived") override var archived: Boolean = false,
 //    @ColumnInfo(name="profile_id", index = true) override val profileId: UUID? = null,
-    @ColumnInfo(name="order", defaultValue = "null") override var order: Nullable<Int>? = null,
+    @ColumnInfo(name="custom_order", defaultValue = "null") override var customOrder: Nullable<Int>? = null,
 ) : SoftDeleteModel(), IGoalDescriptionCreationAttributes, IGoalDescriptionUpdateAttributes {
 
     // create a new instance of this goal, storing the target and progress during a single period

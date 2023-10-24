@@ -3,12 +3,7 @@ package app.musikus.database.entities
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
-import app.musikus.database.ITimestampModelCreationAttributes
-import app.musikus.database.ITimestampModelUpdateAttributes
 import app.musikus.database.Nullable
-import app.musikus.database.TimestampModel
-import app.musikus.database.TimestampModelCreationAttributes
-import app.musikus.database.TimestampModelUpdateAttributes
 import java.util.UUID
 
 private interface IGoalInstanceCreationAttributes : ITimestampModelCreationAttributes {

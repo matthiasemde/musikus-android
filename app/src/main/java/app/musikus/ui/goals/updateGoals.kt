@@ -7,14 +7,14 @@
 package app.musikus.ui.goals
 
 import android.content.Context
-import app.musikus.database.PTDatabase
+import app.musikus.database.MusikusDatabase
 import app.musikus.database.entities.GoalPeriodUnit
 import java.util.Calendar
 
 suspend fun updateGoals(context: Context) {
     var notDone = true
     while(notDone) {
-        PTDatabase.getInstance(context).goalInstanceDao.getOutdatedWithDescriptions().also { outdatedInstancesWithDescriptions ->
+        MusikusDatabase.getInstance(context).goalInstanceDao.getOutdatedWithDescriptions().also { outdatedInstancesWithDescriptions ->
             // while there are still outdated goals, keep looping and adding new ones
             notDone = outdatedInstancesWithDescriptions.isNotEmpty()
             outdatedInstancesWithDescriptions.forEach { (outdatedInstance, description) ->

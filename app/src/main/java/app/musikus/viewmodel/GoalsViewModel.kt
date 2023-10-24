@@ -16,7 +16,7 @@ import androidx.lifecycle.viewModelScope
 import app.musikus.dataStore
 import app.musikus.database.GoalInstanceWithDescription
 import app.musikus.database.GoalInstanceWithDescriptionWithLibraryItems
-import app.musikus.database.PTDatabase
+import app.musikus.database.MusikusDatabase
 import app.musikus.database.daos.GoalDescription
 import app.musikus.database.daos.LibraryItem
 import app.musikus.database.entities.GoalDescriptionCreationAttributes
@@ -110,7 +110,7 @@ class GoalsViewModel(
     private var _goalsCache: List<GoalDescription> = emptyList()
 
     /** Database */
-    private val database = PTDatabase.getInstance(application)
+    private val database = MusikusDatabase.getInstance(application)
 
     /** Repositories */
     private val libraryRepository = LibraryRepository(database)

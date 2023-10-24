@@ -26,28 +26,20 @@ data class GoalDescription(
     @ColumnInfo(name="paused") val paused: Boolean,
     @ColumnInfo(name="archived") val archived: Boolean,
 //    @ColumnInfo(name="profile_id") val profileId: UUID?,
-    @ColumnInfo(name="order") val order: Int?,
+    @ColumnInfo(name="custom_order") val customOrder: Int?,
 ) : SoftDeleteModelDisplayAttributes()
 
 @Dao
 abstract class GoalDescriptionDao(
-    private val database : PTDatabase
+    private val database : MusikusDatabase
 ) : SoftDeleteDao<
-    GoalDescriptionModel,
-    GoalDescriptionUpdateAttributes,
-    GoalDescription
->(
+        GoalDescriptionModel,
+        GoalDescriptionUpdateAttributes,
+        GoalDescription
+        >(
     tableName = "goal_description",
     database = database,
-    displayAttributes = listOf(
-        "type",
-        "progress_type",
-        "period_in_period_units",
-        "period_unit",
-        "archived",
-        "paused",
-        "order"
-    )
+    displayAttributes = GoalDescription::class.java.fields.map { it.name }
 ) {
 
     /**
@@ -60,7 +52,7 @@ abstract class GoalDescriptionDao(
     ): GoalDescriptionModel = super.applyUpdateAttributes(old, updateAttributes).apply {
         paused = updateAttributes.paused ?: old.paused
         archived = updateAttributes.archived ?: old.archived
-        order = updateAttributes.order ?: old.order
+        customOrder = updateAttributes.customOrder ?: old.customOrder
     }
 
 
@@ -107,8 +99,8 @@ abstract class GoalDescriptionDao(
     @Transaction
     @RewriteQueriesToDropUnusedColumns
     @Query(
-        "SELECT * FROM goal_description_library_item_cross_ref WHERE " +
-        "goal_description_id=:goalDescriptionId"
+        "SELECT * FROM goal_description_library_item_cross_ref " +
+        "WHERE goal_description_id=:goalDescriptionId"
     )
     abstract suspend fun getGoalDescriptionLibraryItemCrossRefs(
         goalDescriptionId: UUID
@@ -117,20 +109,22 @@ abstract class GoalDescriptionDao(
 
     @Transaction
     @RewriteQueriesToDropUnusedColumns
-    @Query("SELECT * FROM goal_description WHERE id=:goalDescriptionId")
+    @Query("SELECT * FROM goal_description " +
+            "WHERE id=:goalDescriptionId AND deleted=0")
     abstract suspend fun getWithLibraryItems(goalDescriptionId: UUID)
         : GoalDescriptionWithLibraryItems?
 
     @Transaction
     @RewriteQueriesToDropUnusedColumns
-    @Query("SELECT * FROM goal_description")
+    @Query("SELECT * FROM goal_description WHERE deleted=0")
     abstract suspend fun getAllWithLibraryItems(): List<GoalDescriptionWithLibraryItems>
 
     @RewriteQueriesToDropUnusedColumns
     @Query(
         "SELECT * FROM goal_description WHERE " +
         "(archived=0 OR archived=:checkArchived) " +
-        "AND type=:type"
+        "AND type=:type " +
+        "AND deleted=0"
     )
     abstract suspend fun getGoalDescriptions(
         checkArchived : Boolean = false,

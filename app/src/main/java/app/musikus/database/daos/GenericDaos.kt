@@ -10,19 +10,28 @@
  * Copyright (c) 2022, Javier Carbone, author Matthias Emde
  */
 
-package app.musikus.database
+package app.musikus.database.daos
 
-import androidx.room.ColumnInfo
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.InvalidationTracker
 import androidx.room.OnConflictStrategy
-import androidx.room.PrimaryKey
 import androidx.room.RawQuery
 import androidx.room.Update
 import androidx.sqlite.db.SimpleSQLiteQuery
 import androidx.sqlite.db.SupportSQLiteQuery
 import app.musikus.Musikus
+import app.musikus.database.MusikusDatabase
+import app.musikus.database.UUIDConverter
+import app.musikus.database.entities.BaseModel
+import app.musikus.database.entities.BaseModelDisplayAttributes
+import app.musikus.database.entities.BaseModelUpdateAttributes
+import app.musikus.database.entities.SoftDeleteModel
+import app.musikus.database.entities.SoftDeleteModelDisplayAttributes
+import app.musikus.database.entities.SoftDeleteModelUpdateAttributes
+import app.musikus.database.entities.TimestampModel
+import app.musikus.database.entities.TimestampModelDisplayAttributes
+import app.musikus.database.entities.TimestampModelUpdateAttributes
 import app.musikus.utils.getCurrTimestamp
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -32,82 +41,6 @@ import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.runBlocking
 import java.util.UUID
 
-interface IBaseModelCreationAttributes
-interface IBaseModelUpdateAttributes
-
-abstract class BaseModelCreationAttributes : IBaseModelCreationAttributes
-
-abstract class BaseModelUpdateAttributes : IBaseModelUpdateAttributes
-
-abstract class BaseModelDisplayAttributes(
-    @ColumnInfo(name = "id") var id: UUID = UUID.randomUUID()
-)
-
-abstract class BaseModel(
-    @PrimaryKey var id: UUID = UUID.randomUUID()
-) : IBaseModelCreationAttributes, IBaseModelUpdateAttributes {
-
-    override fun toString(): String {
-        return "\nPretty print of ${this.javaClass.simpleName} entity:\n" +
-            "\tid: \t\t\t\t${this.id}\n"
-    }
-}
-
-/**
- * @Model Model with timestamps
- */
-
-interface ITimestampModelCreationAttributes : IBaseModelCreationAttributes
-interface ITimestampModelUpdateAttributes : IBaseModelUpdateAttributes
-
-abstract class TimestampModelCreationAttributes
-    : BaseModelCreationAttributes(), ITimestampModelCreationAttributes
-
-abstract class TimestampModelUpdateAttributes
-    : BaseModelUpdateAttributes(), ITimestampModelUpdateAttributes
-
-abstract class TimestampModelDisplayAttributes(
-    @ColumnInfo(name = "created_at") var createdAt: Long = 0,
-    @ColumnInfo(name = "modified_at") var modifiedAt: Long = 0
-) : BaseModelDisplayAttributes()
-
-abstract class TimestampModel(
-    @ColumnInfo(name="created_at", defaultValue = "0") var createdAt: Long? = null,
-    @ColumnInfo(name="modified_at", defaultValue = "0") var modifiedAt: Long? = null
-) : BaseModel(), ITimestampModelCreationAttributes, ITimestampModelUpdateAttributes {
-
-    override fun toString(): String {
-        return super.toString() +
-            "\tcreated at: \t\t${this.createdAt}\n" +
-            "\tmodified_at: \t\t${this.modifiedAt}\n"
-    }
-}
-
-/**
- * @Model Soft delete model
- */
-
-interface ISoftDeleteModelCreationAttributes : ITimestampModelCreationAttributes
-interface ISoftDeleteModelUpdateAttributes : ITimestampModelUpdateAttributes
-
-abstract class SoftDeleteModelCreationAttributes
-    : TimestampModelCreationAttributes(), ISoftDeleteModelCreationAttributes
-
-abstract class SoftDeleteModelUpdateAttributes
-    : TimestampModelUpdateAttributes(), ISoftDeleteModelUpdateAttributes
-
-abstract class SoftDeleteModelDisplayAttributes
-    : TimestampModelDisplayAttributes()
-
-abstract class SoftDeleteModel(
-    @ColumnInfo(name="deleted", defaultValue = "false") var deleted: Boolean = false
-) : TimestampModel(), ISoftDeleteModelCreationAttributes, ISoftDeleteModelUpdateAttributes {
-
-    override fun toString(): String {
-        return super.toString() +
-            "\tdeleted: ${deleted}\n"
-    }
-}
 
 /**
  * @Dao Base dao
@@ -116,15 +49,17 @@ abstract class SoftDeleteModel(
 abstract class BaseDao<
     T : BaseModel,
     U : BaseModelUpdateAttributes,
-    D
-//    D : BaseModelDisplayAttributes
+    D : BaseModelDisplayAttributes
 >(
     private val tableName: String,
-    private val database: PTDatabase,
+    private val database: MusikusDatabase,
     displayAttributes: List<String>
 ) {
 
-    protected val displayAttributesString = "id, " + displayAttributes.joinToString(separator = ", ")
+    protected val displayAttributesString = (
+        BaseModelDisplayAttributes::class.java.fields.map { it.name } +
+        displayAttributes
+    ).joinToString(separator = ", ")
 
 
     /**
@@ -261,16 +196,17 @@ abstract class BaseDao<
 abstract class TimestampDao<
     T : TimestampModel,
     U : TimestampModelUpdateAttributes,
-    D
-//    D : TimestampModelDisplayAttributes
+    D : TimestampModelDisplayAttributes
 >(
     tableName: String,
-    database: PTDatabase,
+    database: MusikusDatabase,
     displayAttributes: List<String>
 ) : BaseDao<T, U, D>(
     tableName = tableName,
     database = database,
-    displayAttributes = listOf("created_at", "modified_at") + displayAttributes
+    displayAttributes =
+        TimestampModelDisplayAttributes::class.java.fields.map{ it.name } +
+        displayAttributes
 ) {
     override suspend fun insert(row: T) {
         insert(listOf(row))
@@ -295,16 +231,17 @@ abstract class TimestampDao<
 abstract class SoftDeleteDao<
     T : SoftDeleteModel,
     U : SoftDeleteModelUpdateAttributes,
-    D
-//    D : SoftDeleteModelDisplayAttributes
+    D : SoftDeleteModelDisplayAttributes
 >(
     private val tableName: String,
-    database: PTDatabase,
+    database: MusikusDatabase,
     displayAttributes: List<String>
 ) : TimestampDao<T, U, D>(
     tableName = tableName,
     database = database,
-    displayAttributes = displayAttributes
+    displayAttributes =
+        SoftDeleteModelDisplayAttributes::class.java.fields.map { it.name } +
+        displayAttributes
 ) {
     @Update
     abstract override suspend fun directUpdate(rows: List<T>)
@@ -343,7 +280,7 @@ abstract class SoftDeleteDao<
             query = "DELETE FROM $tableName WHERE " +
                 "deleted=1 " +
                 "AND (modified_at+5<${getCurrTimestamp()});"
-//                    "AND (modified_at+2592000<${getCurrTimestamp()});"
+//                    "AND (modified_at+2592000<${getCurrTimestamp()});" TODO change for release
         )
     ) : Int
 }

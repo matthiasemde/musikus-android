@@ -18,7 +18,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import app.musikus.dataStore
 import app.musikus.database.Nullable
-import app.musikus.database.PTDatabase
+import app.musikus.database.MusikusDatabase
 import app.musikus.database.entities.LibraryFolderCreationAttributes
 import app.musikus.database.entities.LibraryItemCreationAttributes
 import app.musikus.datastore.ThemeSelections
@@ -37,7 +37,7 @@ class MainViewModel(
 ) : AndroidViewModel(application) {
 
     /** Database */
-    private val database = PTDatabase.getInstance(application, ::prepopulateDatabase)
+    private val database = MusikusDatabase.getInstance(application, ::prepopulateDatabase)
 
     /** Initialization */
     init {

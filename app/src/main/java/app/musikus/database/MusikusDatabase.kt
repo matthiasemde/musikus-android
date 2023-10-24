@@ -60,7 +60,7 @@ import java.util.UUID
     NullableUUIDConverter::class,
     NullableIntConverter::class
 )
-abstract class PTDatabase : RoomDatabase() {
+abstract class MusikusDatabase : RoomDatabase() {
     abstract val libraryItemDao : LibraryItemDao
     abstract val libraryFolderDao : LibraryFolderDao
     abstract val goalDescriptionDao : GoalDescriptionDao
@@ -69,9 +69,9 @@ abstract class PTDatabase : RoomDatabase() {
     abstract val sectionDao : SectionDao
 
     companion object {
-        private const val DATABASE_NAME = "pt-database"
+        private const val DATABASE_NAME = "musikus-database"
 
-        @Volatile private var INSTANCE: PTDatabase? = null
+        @Volatile private var INSTANCE: MusikusDatabase? = null
 
         fun getInstance(context: Context, prepopulateDatabase: () -> Unit = {}) =
             INSTANCE ?: synchronized(this) {
@@ -81,7 +81,7 @@ abstract class PTDatabase : RoomDatabase() {
         private fun buildDatabase(context: Context, prepopulateDatabase: () -> Unit) =
             Room.databaseBuilder(
                 context.applicationContext,
-                PTDatabase::class.java,
+                MusikusDatabase::class.java,
                 DATABASE_NAME
             ).addMigrations(
                 PTDatabaseMigrationOneToTwo

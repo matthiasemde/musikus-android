@@ -11,7 +11,7 @@ package app.musikus.repository
 import androidx.room.Transaction
 import app.musikus.database.GoalInstanceWithDescription
 import app.musikus.database.GoalInstanceWithDescriptionWithLibraryItems
-import app.musikus.database.PTDatabase
+import app.musikus.database.MusikusDatabase
 import app.musikus.database.daos.GoalDescription
 import app.musikus.database.daos.GoalInstance
 import app.musikus.database.daos.LibraryItem
@@ -23,7 +23,7 @@ import app.musikus.datastore.GoalsSortMode
 import app.musikus.datastore.SortDirection
 
 class GoalRepository(
-    database: PTDatabase
+    database: MusikusDatabase
 ) {
     private val goalInstanceDao = database.goalInstanceDao
     private val goalDescriptionDao = database.goalDescriptionDao

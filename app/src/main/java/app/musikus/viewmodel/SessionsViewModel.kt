@@ -12,7 +12,7 @@ import android.app.Application
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import app.musikus.database.PTDatabase
+import app.musikus.database.MusikusDatabase
 import app.musikus.database.SessionWithSectionsWithLibraryItems
 import app.musikus.database.daos.Session
 import app.musikus.repository.SessionRepository
@@ -72,7 +72,7 @@ class SessionsViewModel(
     private var _sessionsCache = emptyList<Session>()
 
     /** Database */
-    private val database = PTDatabase.getInstance(application)
+    private val database = MusikusDatabase.getInstance(application)
 
     /** Repositories */
     private val sessionRepository = SessionRepository(database)

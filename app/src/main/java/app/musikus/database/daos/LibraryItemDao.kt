@@ -15,32 +15,28 @@ package app.musikus.database.daos
 import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Query
-import app.musikus.database.PTDatabase
-import app.musikus.database.SoftDeleteDao
-import app.musikus.database.SoftDeleteModelDisplayAttributes
+import androidx.room.Transaction
+import app.musikus.database.MusikusDatabase
 import app.musikus.database.entities.LibraryItemModel
 import app.musikus.database.entities.LibraryItemUpdateAttributes
+import app.musikus.database.entities.SoftDeleteModelDisplayAttributes
 import kotlinx.coroutines.flow.Flow
 import java.util.*
 
 data class LibraryItem(
-    @ColumnInfo(name = "name") val name: String,
+    @ColumnInfo(name = "name") val name: String = "Test",
     @ColumnInfo(name = "color_index") val colorIndex: Int,
-    @ColumnInfo(name = "custom_order") val order: Int?,
-    @ColumnInfo(name = "library_folder_id") val libraryFolderId: UUID?
+    @ColumnInfo(name = "library_folder_id") val libraryFolderId: UUID?,
+    @ColumnInfo(name = "custom_order") val customOrder: Int?,
 ) : SoftDeleteModelDisplayAttributes()
 
 @Dao
 abstract class LibraryItemDao(
-    database: PTDatabase
-) : SoftDeleteDao<
-    LibraryItemModel,
-    LibraryItemUpdateAttributes,
-    LibraryItem
->(
+    database: MusikusDatabase
+) : SoftDeleteDao<LibraryItemModel, LibraryItemUpdateAttributes, LibraryItem>(
     tableName = "library_item",
     database = database,
-    displayAttributes = listOf("name", "color_index", "library_folder_id")
+    displayAttributes = LibraryItem::class.java.declaredFields.map { it.name }
 ) {
 
     /**
@@ -54,18 +50,14 @@ abstract class LibraryItemDao(
         name = updateAttributes.name ?: old.name
         colorIndex = updateAttributes.colorIndex ?: old.colorIndex
         libraryFolderId = updateAttributes.libraryFolderId ?: old.libraryFolderId
-        order = updateAttributes.order ?: old.order
+        customOrder = updateAttributes.customOrder ?: old.customOrder
     }
 
     /**
     *  @Queries
     */
 
-//    @Query(
-//        "SELECT * FROM library_item WHERE " +
-//            "(library_item.archived=0 OR NOT :activeOnly) " +
-//            "AND library_item.deleted=0"
-//    )
+    @Transaction
     @Query(
         "SELECT " +
                 "library_item.id, " +
@@ -80,6 +72,7 @@ abstract class LibraryItemDao(
     )
     abstract override fun getAllAsFlow(): Flow<List<LibraryItem>>
 
+    @Transaction
     @Query(
         "DELETE FROM library_item WHERE " +
             "deleted=1 " +

@@ -25,15 +25,15 @@ data class Session(
 ) : SoftDeleteModelDisplayAttributes()
 @Dao
 abstract class SessionDao(
-    private val database : PTDatabase
+    private val database : MusikusDatabase
 ) : SoftDeleteDao<
-    SessionModel,
-    SessionUpdateAttributes,
-    Session
->(
+        SessionModel,
+        SessionUpdateAttributes,
+        Session
+        >(
     tableName = "session",
     database = database,
-    displayAttributes = listOf("break_duration", "rating", "comment")
+    displayAttributes = Session::class.java.fields.map { it.name }
 ) {
 
     /**

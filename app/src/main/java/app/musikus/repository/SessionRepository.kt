@@ -1,7 +1,7 @@
 package app.musikus.repository
 
 import app.musikus.database.GoalInstanceWithDescriptionWithLibraryItems
-import app.musikus.database.PTDatabase
+import app.musikus.database.MusikusDatabase
 import app.musikus.database.daos.Session
 import app.musikus.database.entities.GoalType
 import app.musikus.database.entities.SectionCreationAttributes
@@ -10,7 +10,7 @@ import app.musikus.database.entities.SessionModel
 import java.util.UUID
 
 class SessionRepository(
-    database: PTDatabase
+    database: MusikusDatabase
 ) {
     private val sessionDao = database.sessionDao
     private val sectionDao = database.sectionDao

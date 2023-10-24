@@ -27,7 +27,7 @@ import androidx.annotation.ColorInt
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.datastore.preferences.preferencesDataStore
-import app.musikus.database.PTDatabase
+import app.musikus.database.MusikusDatabase
 import app.musikus.repository.UserPreferencesRepository
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.flow.map
@@ -54,7 +54,7 @@ class Musikus : Application() {
             IO_EXECUTOR.execute(f)
         }
 
-        private lateinit var db: PTDatabase
+        private lateinit var db: MusikusDatabase
         private lateinit var dbFile: File
 
         var exportLauncher: ActivityResultLauncher<String>? = null

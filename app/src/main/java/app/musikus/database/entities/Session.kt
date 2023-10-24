@@ -8,11 +8,6 @@ package app.musikus.database.entities
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
-import app.musikus.database.ISoftDeleteModelCreationAttributes
-import app.musikus.database.ISoftDeleteModelUpdateAttributes
-import app.musikus.database.SoftDeleteModel
-import app.musikus.database.SoftDeleteModelCreationAttributes
-import app.musikus.database.SoftDeleteModelUpdateAttributes
 
 private interface ISessionCreationAttributes : ISoftDeleteModelCreationAttributes {
     val breakDuration: Int

@@ -66,7 +66,7 @@ import androidx.transition.TransitionManager
 import app.musikus.Musikus
 import app.musikus.R
 import app.musikus.components.NonDraggableRatingBar
-import app.musikus.database.PTDatabase
+import app.musikus.database.MusikusDatabase
 import app.musikus.database.daos.LibraryItem
 import app.musikus.database.entities.SectionCreationAttributes
 import app.musikus.database.entities.SessionCreationAttributes
@@ -116,7 +116,7 @@ class ActiveSessionActivity : AppCompatActivity() {
     private lateinit var recordingBottomSheet: RecyclerView
     private lateinit var recordingBottomSheetBehaviour: BottomSheetBehavior<RecyclerView>
 
-    private val database: PTDatabase = PTDatabase.getInstance(application)
+    private val database: MusikusDatabase = MusikusDatabase.getInstance(application)
     private val sessionRepository: SessionRepository = SessionRepository(database)
 
     /** Defines callbacks for service binding, passed to bindService()  */
@@ -244,7 +244,7 @@ class ActiveSessionActivity : AppCompatActivity() {
 
         // load all active libraryItems from the database and notify the adapter
         lifecycleScope.launch {
-            PTDatabase.getInstance(applicationContext).libraryItemDao.getAllAsFlow().first().let { activeLibraryItems.addAll(it.reversed())
+            MusikusDatabase.getInstance(applicationContext).libraryItemDao.getAllAsFlow().first().let { activeLibraryItems.addAll(it.reversed())
                 libraryItemAdapter.notifyItemRangeInserted(0, it.size)
             }
             libraryItemList.apply {

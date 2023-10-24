@@ -8,6 +8,8 @@ package app.musikus.ui.statistics
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.viewinterop.AndroidViewBinding
+import androidx.fragment.app.Fragment
+import app.musikus.R
 import app.musikus.databinding.FragmentContainerStatisticsBinding
 
 @Composable
@@ -15,7 +17,7 @@ fun StatisticsFragmentHolder() {
     AndroidViewBinding(FragmentContainerStatisticsBinding::inflate)
 }
 
-//class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overview) {
+class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overview) {
 //
 //    private lateinit var allSessions: List<SessionWithSectionsWithLibraryItems>
 //    private var totalPracticeTime: Int = -1
@@ -397,4 +399,4 @@ fun StatisticsFragmentHolder() {
 //                .format(DateTimeFormatter.ofPattern(DATE_FORMATTER_PATTERN_WEEKDAY_SHORT))
 //        }
 //    }
-//}
+}

@@ -17,10 +17,9 @@ import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.RewriteQueriesToDropUnusedColumns
 import androidx.room.Transaction
-import app.musikus.database.BaseDao
-import app.musikus.database.BaseModelDisplayAttributes
-import app.musikus.database.PTDatabase
+import app.musikus.database.MusikusDatabase
 import app.musikus.database.SectionWithLibraryItem
+import app.musikus.database.entities.BaseModelDisplayAttributes
 import app.musikus.database.entities.SectionModel
 import app.musikus.database.entities.SectionUpdateAttributes
 import kotlinx.coroutines.flow.Flow
@@ -35,15 +34,11 @@ data class Section(
 
 @Dao
 abstract class SectionDao(
-    database: PTDatabase
-) : BaseDao<
-    SectionModel,
-    SectionUpdateAttributes,
-    Section
->(
+    database: MusikusDatabase
+) : BaseDao<SectionModel, SectionUpdateAttributes, Section>(
     tableName = "section",
     database = database,
-    displayAttributes = listOf("session_id", "library_item_id", "duration", "timestamp")
+    displayAttributes = Section::class.java.declaredFields.map { it.name }
 ) {
 
     /**

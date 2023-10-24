@@ -3,7 +3,7 @@ package app.musikus.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import app.musikus.database.PTDatabase
+import app.musikus.database.MusikusDatabase
 import app.musikus.database.SectionWithLibraryItem
 import app.musikus.repository.LibraryRepository
 import app.musikus.repository.SessionRepository
@@ -37,7 +37,7 @@ class EditSessionViewModel(
 ) : AndroidViewModel(application) {
 
     /** Database */
-    private val database = PTDatabase.getInstance(application)
+    private val database = MusikusDatabase.getInstance(application)
 
     /** Repositories */
     private val libraryRepository = LibraryRepository(database)

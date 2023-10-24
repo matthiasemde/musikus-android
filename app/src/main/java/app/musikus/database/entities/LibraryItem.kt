@@ -15,12 +15,7 @@ package app.musikus.database.entities
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
-import app.musikus.database.ISoftDeleteModelCreationAttributes
-import app.musikus.database.ISoftDeleteModelUpdateAttributes
 import app.musikus.database.Nullable
-import app.musikus.database.SoftDeleteModel
-import app.musikus.database.SoftDeleteModelCreationAttributes
-import app.musikus.database.SoftDeleteModelUpdateAttributes
 import java.util.UUID
 
 private interface ILibraryItemCreationAttributes : ISoftDeleteModelCreationAttributes {
@@ -33,7 +28,7 @@ private interface ILibraryItemUpdateAttributes : ISoftDeleteModelUpdateAttribute
     val name: String?
     val colorIndex: Int?
     val libraryFolderId: Nullable<UUID>?
-    val order: Nullable<Int>?
+    val customOrder: Nullable<Int>?
 }
 
 data class LibraryItemCreationAttributes(
@@ -46,7 +41,7 @@ data class LibraryItemUpdateAttributes(
     override val name: String? = null,
     override val colorIndex: Int? = null,
     override val libraryFolderId: Nullable<UUID>? = null,
-    override val order: Nullable<Int>? = null,
+    override val customOrder: Nullable<Int>? = null,
 ) : SoftDeleteModelUpdateAttributes(), ILibraryItemUpdateAttributes
 
 @Entity(
@@ -66,16 +61,16 @@ data class LibraryItemModel(
     @ColumnInfo(name="library_folder_id", index = true, defaultValue = "null")
     override var libraryFolderId: Nullable<UUID>?,
 //    @ColumnInfo(name="profile_id", index = true) override var profileId: UUID? = null,
-    @ColumnInfo(name="custom_order", defaultValue = "null") override var order: Nullable<Int>? = null,
+    @ColumnInfo(name="custom_order", defaultValue = "null") override var customOrder: Nullable<Int>? = null,
 ) : SoftDeleteModel(), ILibraryItemCreationAttributes, ILibraryItemUpdateAttributes {
 
     override fun toString(): String {
         return super.toString() +
             "\tname: \t\t\t\t${this.name}\n" +
-            "\tcolor_index: \t\t${this.colorIndex}\n" +
-            "\tlibrary_folder_id: \t${this.libraryFolderId}\n" +
+            "\tcolor index: \t\t${this.colorIndex}\n" +
+            "\tlibrary folder id: \t${this.libraryFolderId}\n" +
 //            "\tprofile_id: \t\t${this.profileId}\n" +
 //            "\tarchived: \t\t\t${this.archived}\n" +
-            "\torder: \t\t\t\t${this.order}\n"
+            "\tcustom order: \t\t\t\t${this.customOrder}\n"
     }
 }
