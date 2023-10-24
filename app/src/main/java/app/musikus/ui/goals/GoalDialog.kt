@@ -173,77 +173,72 @@ fun GoalDialog(
             TimeInput(dialogData.target, onTargetChanged)
             confirmButtonEnabled = confirmButtonEnabled && dialogData.target > 0
 
-            if(dialogData.periodUnit != null && dialogData.periodInPeriodUnits != null) {
-                Spacer(modifier = Modifier.height(12.dp))
-                PeriodInput(
-                    periodInPeriodUnits = dialogData.periodInPeriodUnits,
-                    periodUnit = dialogData.periodUnit,
-                    periodUnitSelectorExpanded = periodUnitSelectorExpanded,
-                    onPeriodChanged = onPeriodChanged,
-                    onPeriodUnitChanged = onPeriodUnitChanged,
-                    onPeriodUnitSelectorExpandedChanged = onPeriodUnitSelectorExpandedChanged
-                )
-                confirmButtonEnabled = confirmButtonEnabled && dialogData.periodInPeriodUnits > 0
-            }
+            Spacer(modifier = Modifier.height(12.dp))
+            PeriodInput(
+                periodInPeriodUnits = dialogData.periodInPeriodUnits,
+                periodUnit = dialogData.periodUnit,
+                periodUnitSelectorExpanded = periodUnitSelectorExpanded,
+                onPeriodChanged = onPeriodChanged,
+                onPeriodUnitChanged = onPeriodUnitChanged,
+                onPeriodUnitSelectorExpandedChanged = onPeriodUnitSelectorExpandedChanged
+            )
+            confirmButtonEnabled = confirmButtonEnabled && dialogData.periodInPeriodUnits > 0
 
-            if(dialogData.goalType != null && dialogData.selectedLibraryItems != null) {
-                Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-                Row(modifier = Modifier.padding(horizontal = 32.dp)){ Divider() }
+            Row(modifier = Modifier.padding(horizontal = 32.dp)){ Divider() }
 
-                Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-                MyToggleButton(
-                    modifier = Modifier.padding(horizontal = 32.dp),
-                    options = GoalType.values().map {
-                        ToggleButtonOption(it.ordinal, GoalType.toString(it))
-                    },
-                    selected = ToggleButtonOption(
-                        dialogData.goalType.ordinal,
-                        GoalType.toString(dialogData.goalType)
-                    ),
-                    onSelectedChanged = { option ->
-                        onGoalTypeChanged(GoalType.values()[option.id])
-                    }
-                )
-
-                if(dialogData.goalType == GoalType.ITEM_SPECIFIC) {
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    if(libraryItems.isNotEmpty()) {
-                        SelectionSpinner(
-                            expanded = libraryItemsSelectorExpanded,
-                            options = libraryItems.map {
-                                UUIDSelectionSpinnerOption(
-                                    it.id,
-                                    it.name
-                                )
-                            },
-                            selected = dialogData.selectedLibraryItems.firstOrNull()?.let {
-                                UUIDSelectionSpinnerOption(it.id, it.name)
-                            } ?: libraryItems.first().let {
-                                UUIDSelectionSpinnerOption(it.id, it.name)
-                            },
-                            onExpandedChange = onLibraryItemsSelectorExpandedChanged,
-                            onSelectedChange = { selection ->
-                                onSelectedLibraryItemsChanged(libraryItems.filter {
-                                    it.id == (selection as UUIDSelectionSpinnerOption).id
-                                })
-                                onLibraryItemsSelectorExpandedChanged(false)
-                            }
-                        )
-                    } else {
-                        Text(text = "No items in your library.")
-
-                    }
+            MyToggleButton(
+                modifier = Modifier.padding(horizontal = 32.dp),
+                options = GoalType.values().map {
+                    ToggleButtonOption(it.ordinal, GoalType.toString(it))
+                },
+                selected = ToggleButtonOption(
+                    dialogData.goalType.ordinal,
+                    GoalType.toString(dialogData.goalType)
+                ),
+                onSelectedChanged = { option ->
+                    onGoalTypeChanged(GoalType.values()[option.id])
                 }
+            )
 
-                confirmButtonEnabled = confirmButtonEnabled &&
-                    (
-                        dialogData.goalType == GoalType.NON_SPECIFIC ||
-                        dialogData.selectedLibraryItems.isNotEmpty()
+            if(dialogData.goalType == GoalType.ITEM_SPECIFIC) {
+                Spacer(modifier = Modifier.height(12.dp))
+
+                if(libraryItems.isNotEmpty()) {
+                    SelectionSpinner(
+                        expanded = libraryItemsSelectorExpanded,
+                        options = libraryItems.map {
+                            UUIDSelectionSpinnerOption(
+                                it.id,
+                                it.name
+                            )
+                        },
+                        selected = dialogData.selectedLibraryItems.firstOrNull()?.let {
+                            UUIDSelectionSpinnerOption(it.id, it.name)
+                        } ?: libraryItems.first().let {
+                            UUIDSelectionSpinnerOption(it.id, it.name)
+                        },
+                        onExpandedChange = onLibraryItemsSelectorExpandedChanged,
+                        onSelectedChange = { selection ->
+                            onSelectedLibraryItemsChanged(libraryItems.filter {
+                                it.id == (selection as UUIDSelectionSpinnerOption).id
+                            })
+                            onLibraryItemsSelectorExpandedChanged(false)
+                        }
                     )
+                } else {
+                    Text(text = "No items in your library.")
+
+                }
             }
+
+            confirmButtonEnabled = confirmButtonEnabled && (
+                dialogData.goalType == GoalType.NON_SPECIFIC ||
+                dialogData.selectedLibraryItems.isNotEmpty()
+            )
 
             DialogActions(
                 onConfirmHandler = onConfirmHandler,

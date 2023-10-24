@@ -19,6 +19,7 @@ import app.musikus.database.GoalInstanceWithDescriptionWithLibraryItems
 import app.musikus.database.PTDatabase
 import app.musikus.database.daos.GoalDescription
 import app.musikus.database.daos.LibraryItem
+import app.musikus.database.entities.GoalDescriptionCreationAttributes
 import app.musikus.database.entities.GoalPeriodUnit
 import app.musikus.database.entities.GoalType
 import app.musikus.datastore.GoalsSortMode
@@ -41,12 +42,12 @@ data class GoalWithProgress(
 )
 
 data class GoalDialogData(
-    val target: Int,
-    val periodInPeriodUnits: Int? = null,
-    val periodUnit: GoalPeriodUnit? = null,
-    val goalType: GoalType? = null,
-    val oneShot: Boolean? = null,
-    val selectedLibraryItems: List<LibraryItem>? = null,
+    val target: Int = 0,
+    val periodInPeriodUnits: Int = 0,
+    val periodUnit: GoalPeriodUnit = GoalPeriodUnit.DEFAULT,
+    val goalType: GoalType = GoalType.DEFAULT,
+    val oneShot: Boolean = false,
+    val selectedLibraryItems: List<LibraryItem> = emptyList(),
 )
 
 /**
@@ -582,18 +583,16 @@ class GoalsViewModel(
             val dialogData = uiState.dialogData
             viewModelScope.launch {
                 if (uiState.goalToEdit == null) {
-//                    goalRepository.add( TODO
-//                        newGoal = GoalDescriptionWithLibraryItems(
-//                            description = GoalDescription(
-//                                type = dialogData.goalType ?: throw IllegalStateException("Goal type can not be null"),
-//                                repeat = !(dialogData.oneShot ?: throw IllegalStateException("One shot can not be null")),
-//                                periodInPeriodUnits = dialogData.periodInPeriodUnits ?: throw IllegalStateException("Period can not be null"),
-//                                periodUnit = dialogData.periodUnit ?: throw IllegalStateException("Period unit can not be null"),
-//                            ),
-//                            libraryItems = dialogData.selectedLibraryItems ?: throw IllegalStateException("Library items can not be null"),
-//                        ),
-//                        target = dialogData.target,
-//                    )
+                    goalRepository.add(
+                        GoalDescriptionCreationAttributes(
+                            type = dialogData.goalType,
+                            repeat = !dialogData.oneShot,
+                            periodInPeriodUnits = dialogData.periodInPeriodUnits,
+                            periodUnit = dialogData.periodUnit,
+                        ),
+                        libraryItems = dialogData.selectedLibraryItems,
+                        target = dialogData.target,
+                    )
                 } else {
                     goalRepository.editGoalTarget(
                         goal = uiState.goalToEdit.instance,

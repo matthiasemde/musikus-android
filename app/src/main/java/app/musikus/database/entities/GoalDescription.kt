@@ -29,6 +29,7 @@ enum class GoalType {
     NON_SPECIFIC, ITEM_SPECIFIC;
 
     companion object {
+        val DEFAULT = NON_SPECIFIC
         fun toString(type: GoalType): String {
             return when (type) {
                 NON_SPECIFIC -> "All items"
@@ -41,13 +42,24 @@ enum class GoalType {
 // shows, whether a goal will track practice time
 // or number of sessions
 enum class GoalProgressType {
-    TIME, SESSION_COUNT
+    TIME, SESSION_COUNT;
+
+    companion object {
+        val DEFAULT = TIME
+        fun toString(progressType: GoalProgressType): String {
+            return when (progressType) {
+                TIME -> "Time"
+                SESSION_COUNT -> "Sessions"
+            }
+        }
+    }
 }
 
 enum class GoalPeriodUnit {
     DAY, WEEK, MONTH;
 
     companion object {
+        val DEFAULT = DAY
         fun toString(periodUnit: GoalPeriodUnit): String {
             return when (periodUnit) {
                 DAY -> "Day"
@@ -74,10 +86,10 @@ private interface IGoalDescriptionUpdateAttributes : ISoftDeleteModelUpdateAttri
 
 data class GoalDescriptionCreationAttributes(
     override val type: GoalType,
-    override val repeat: Boolean,
+    override val repeat: Boolean, // TODO maybe change name to "oneShot"
     override val periodInPeriodUnits: Int,
     override val periodUnit: GoalPeriodUnit,
-    override val progressType: GoalProgressType,
+    override val progressType: GoalProgressType = GoalProgressType.DEFAULT,
 ) : SoftDeleteModelCreationAttributes(), IGoalDescriptionCreationAttributes
 
 data class GoalDescriptionUpdateAttributes(
