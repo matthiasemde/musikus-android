@@ -27,6 +27,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -139,19 +143,27 @@ fun PeriodInput(
 @Composable
 fun GoalDialog(
     dialogData: GoalDialogData,
-    periodUnitSelectorExpanded: Boolean,
     libraryItems: List<LibraryItem>,
-    libraryItemsSelectorExpanded: Boolean,
     onTargetChanged: (Int) -> Unit,
     onPeriodChanged: (Int) -> Unit,
     onPeriodUnitChanged: (GoalPeriodUnit) -> Unit,
-    onPeriodUnitSelectorExpandedChanged: (Boolean) -> Unit,
     onGoalTypeChanged: (GoalType) -> Unit,
-    onLibraryItemsSelectorExpandedChanged: (Boolean) -> Unit,
     onSelectedLibraryItemsChanged: (List<LibraryItem>) -> Unit,
     onConfirmHandler: () -> Unit,
     onDismissHandler: () -> Unit,
 ) {
+    /**
+     * Local GoalDialog state
+     */
+
+    var libraryItemsSelectorExpanded by rememberSaveable { mutableStateOf(false) }
+    var periodUnitSelectorExpanded by rememberSaveable { mutableStateOf(false) }
+
+
+    /**
+     * Composing the Dialog
+     */
+
     Dialog(
         onDismissRequest = onDismissHandler,
         properties = DialogProperties(
@@ -179,8 +191,14 @@ fun GoalDialog(
                 periodUnit = dialogData.periodUnit,
                 periodUnitSelectorExpanded = periodUnitSelectorExpanded,
                 onPeriodChanged = onPeriodChanged,
-                onPeriodUnitChanged = onPeriodUnitChanged,
-                onPeriodUnitSelectorExpandedChanged = onPeriodUnitSelectorExpandedChanged
+                onPeriodUnitChanged = {
+                    onPeriodUnitChanged(it)
+                    periodUnitSelectorExpanded = false
+                },
+                onPeriodUnitSelectorExpandedChanged = {
+                    periodUnitSelectorExpanded = it
+                    libraryItemsSelectorExpanded = false
+                }
             )
             confirmButtonEnabled = confirmButtonEnabled && dialogData.periodInPeriodUnits > 0
 
@@ -221,12 +239,15 @@ fun GoalDialog(
                         } ?: libraryItems.first().let {
                             UUIDSelectionSpinnerOption(it.id, it.name)
                         },
-                        onExpandedChange = onLibraryItemsSelectorExpandedChanged,
+                        onExpandedChange = {
+                            libraryItemsSelectorExpanded = it
+                            periodUnitSelectorExpanded = false
+                        },
                         onSelectedChange = { selection ->
                             onSelectedLibraryItemsChanged(libraryItems.filter {
                                 it.id == (selection as UUIDSelectionSpinnerOption).id
                             })
-                            onLibraryItemsSelectorExpandedChanged(false)
+                            libraryItemsSelectorExpanded = false
                         }
                     )
                 } else {

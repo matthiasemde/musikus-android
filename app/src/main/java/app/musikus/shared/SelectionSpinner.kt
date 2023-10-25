@@ -3,20 +3,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2022 Matthias Emde
+ * Copyright (c) 2023 Matthias Emde
  */
 
 package app.musikus.shared
 
+import android.util.Log
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalTextInputService
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import java.util.*
@@ -39,70 +39,72 @@ fun SelectionSpinner(
     onExpandedChange: (Boolean) -> Unit,
     onSelectedChange: (SelectionSpinnerOption) -> Unit
 ) {
+    Log.d("SELECTION SPINNER", "SelectionSpinner: $expanded")
     ExposedDropdownMenuBox(
         modifier = modifier,
         expanded = expanded,
-        onExpandedChange = onExpandedChange,
+        onExpandedChange = onExpandedChange
     ) {
-        var size by remember { mutableStateOf(0) }
-        OutlinedTextField(
-            modifier = Modifier
-                .menuAnchor()
-                .onGloballyPositioned {
-                    size = it.size.width
-                },
-            value = selected.name,
-            label = label,
-            onValueChange = {},
-            readOnly = true,
-            leadingIcon = leadingIcon,
-            trailingIcon = {
-                ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
-            },
-            colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
-        )
-        ExposedDropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { onExpandedChange(false) },
-        ) {
-
-            val listState = rememberLazyListState()
-            LazyColumn(
-                state = listState,
-                contentPadding = PaddingValues(0.dp),
+        CompositionLocalProvider(LocalTextInputService provides null) {
+            OutlinedTextField(
+                readOnly = true,
                 modifier = Modifier
-                    .width(with(LocalDensity.current) { size.toDp() })
-                    .height((48 * (options.size + if(specialOption != null) 1 else 0)).coerceAtMost(240).dp)
-                    .simpleVerticalScrollbar(listState)
+                    .menuAnchor(),
+                value = selected.name,
+                onValueChange = {},
+                label = label,
+                leadingIcon = leadingIcon,
+                trailingIcon = {
+                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                },
+                colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
+            )
+            ExposedDropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { onExpandedChange(false) },
             ) {
-                specialOption?.let {
-                    item {
+
+                val scrollState = rememberScrollState()
+                val singleDropdownItemHeight = 48.dp
+                val totalDropDownMenuHeight = (
+                        singleDropdownItemHeight * (options.size + if(specialOption != null) 1 else 0)
+                ).coerceAtMost(220.dp)
+                val totalDropDownMenuHeightInPx = with(LocalDensity.current) { totalDropDownMenuHeight.toPx() }
+
+                Log.d("SCROLLBAR", "SelectionSpinner: $totalDropDownMenuHeightInPx, ${scrollState.maxValue}")
+                val scrollBarShowing = scrollState.maxValue > 0
+
+                Column(
+                    modifier = Modifier
+                        .height(totalDropDownMenuHeight)
+                        .verticalScroll(scrollState)
+                        .conditional(scrollBarShowing) {
+                            simpleVerticalScrollbar(scrollState, totalDropDownMenuHeightInPx)
+                        }
+                ) {
+                    specialOption?.let {
+                            DropdownMenuItem(
+                                modifier = Modifier
+                                    .conditional(scrollBarShowing) { padding(end = 12.dp) }
+                                    .height(singleDropdownItemHeight - 2.dp),
+                                text = { Text(text = it.name) },
+                                onClick = { onSelectedChange(it) }
+                            )
+                            Divider(
+                                Modifier
+                                    .conditional(scrollBarShowing) { padding(end = 12.dp) },
+                                thickness = Dp.Hairline
+                            )
+                    }
+                    options.forEach { option ->
                         DropdownMenuItem(
                             modifier = Modifier
-                                .padding(end= 12.dp)
-                                .height(46.dp),
-                            text = { Text(text = it.name) },
-                            onClick = { onSelectedChange(it) }
+                                .conditional(scrollBarShowing) { padding(end = 12.dp) }
+                                .height(singleDropdownItemHeight),
+                            onClick = { onSelectedChange(option) },
+                            text = { Text(text = option.name) }
                         )
-                        Divider(Modifier.padding(end = 12.dp), thickness = Dp.Hairline)
                     }
-                }
-                items(
-                    items = options,
-                    key = {
-                        when (it) {
-                            is UUIDSelectionSpinnerOption -> it.id!!
-                            is IntSelectionSpinnerOption -> it.id!!
-                        }
-                    },
-                ) { item ->
-                    DropdownMenuItem(
-                        modifier = Modifier
-                            .padding(end= 12.dp)
-                            .height(48.dp),
-                        onClick = { onSelectedChange(item) },
-                        text = { Text(text = item.name) }
-                    )
                 }
             }
         }

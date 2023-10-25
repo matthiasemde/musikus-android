@@ -266,15 +266,11 @@ fun Goals(
             if(dialogUiState != null) {
                 GoalDialog(
                     dialogData = dialogUiState.dialogData,
-                    periodUnitSelectorExpanded = dialogUiState.periodUnitSelectorExpanded,
                     libraryItems = dialogUiState.libraryItems,
-                    libraryItemsSelectorExpanded = dialogUiState.itemSelectorExpanded,
                     onTargetChanged = goalsViewModel::onTargetChanged,
                     onPeriodChanged = goalsViewModel::onPeriodChanged,
                     onPeriodUnitChanged = goalsViewModel::onPeriodUnitChanged,
-                    onPeriodUnitSelectorExpandedChanged = goalsViewModel::onPeriodUnitSelectorExpandedChanged,
                     onGoalTypeChanged = goalsViewModel::onGoalTypeChanged,
-                    onLibraryItemsSelectorExpandedChanged = goalsViewModel::onLibraryItemsSelectorExpandedChanged,
                     onSelectedLibraryItemsChanged = goalsViewModel::onLibraryItemsChanged,
                     onConfirmHandler = goalsViewModel::onDialogConfirm,
                     onDismissHandler = goalsViewModel::clearDialog,
