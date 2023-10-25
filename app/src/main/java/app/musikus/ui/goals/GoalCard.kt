@@ -18,17 +18,15 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.rounded.Repeat
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
@@ -86,42 +84,58 @@ fun GoalCard(
                     modifier = Modifier
                         .fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    horizontalArrangement = Arrangement.Start
                 ) {
-                    Row(
-                        modifier = Modifier
-                            .height(IntrinsicSize.Min)
-                    ) {
+//                    Row(
+//                        modifier = Modifier
+//                            .height(IntrinsicSize.Min)
+//                    ) {
+                        /** Goal Type */
+                        Icon(
+                            modifier = Modifier
+                                .padding(horizontal = 8.dp)
+                                .size(24.dp),
+                            imageVector = if(description.repeat)
+                                Icons.Rounded.Repeat else Icons.Filled.LocalFireDepartment,
+                            contentDescription = if(description.repeat)
+                                "Regular goal" else "One shot goal",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+
+
                         /** Color indicator */
-                        libraryItemColor?.let {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxHeight()
-                                    .padding(end = 8.dp)
-                                    .width(6.dp)
-                                    .clip(RoundedCornerShape(4.dp))
-                                    .background(it)
-                            )
-                        }
+//                        libraryItemColor?.let {
+//                            Box(
+//                                modifier = Modifier
+//                                    .fillMaxHeight()
+//                                    .padding(end = 8.dp)
+//                                    .width(6.dp)
+//                                    .clip(RoundedCornerShape(4.dp))
+//                                    .background(it)
+//                            )
+//                        }
 
                         /** Goal Title */
                         Text(
+                            modifier = Modifier.weight(1f),
                             text = if(description.type == GoalType.NON_SPECIFIC)
                                 stringResource(R.string.goal_name_non_specific) else
                                 libraryItems.firstOrNull()?.name ?: "Delete me!"
                         )
-                    }
+//                    }
 
                     /** remaining time */
                     val remainingTime = (instance.startTimestamp + instance.periodInSeconds) - getCurrTimestamp()
 
                     Surface(
+                        modifier = Modifier.padding(start = 8.dp),
                         shape = MaterialTheme.shapes.small,
                         color = MaterialTheme.colorScheme.surface,
                         tonalElevation = 5.dp
                     ) {
                         Text(
                             modifier = Modifier.padding(8.dp),
+                            maxLines = 1,
                             text= stringResource(
                                 R.string.time_left,
                                 getDurationString(remainingTime.toInt(), TIME_FORMAT_PRETTY_APPROX)

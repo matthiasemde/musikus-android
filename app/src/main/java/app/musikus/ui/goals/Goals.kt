@@ -264,17 +264,26 @@ fun Goals(
             val dialogUiState = goalsUiState.dialogUiState
 
             if(dialogUiState != null) {
-                GoalDialog(
-                    dialogData = dialogUiState.dialogData,
-                    libraryItems = dialogUiState.libraryItems,
-                    onTargetChanged = goalsViewModel::onTargetChanged,
-                    onPeriodChanged = goalsViewModel::onPeriodChanged,
-                    onPeriodUnitChanged = goalsViewModel::onPeriodUnitChanged,
-                    onGoalTypeChanged = goalsViewModel::onGoalTypeChanged,
-                    onSelectedLibraryItemsChanged = goalsViewModel::onLibraryItemsChanged,
-                    onConfirmHandler = goalsViewModel::onDialogConfirm,
-                    onDismissHandler = goalsViewModel::clearDialog,
-                )
+                if (dialogUiState.goalToEdit == null) {
+                    GoalDialog(
+                        dialogData = dialogUiState.dialogData,
+                        libraryItems = dialogUiState.libraryItems,
+                        onTargetChanged = goalsViewModel::onTargetChanged,
+                        onPeriodChanged = goalsViewModel::onPeriodChanged,
+                        onPeriodUnitChanged = goalsViewModel::onPeriodUnitChanged,
+                        onGoalTypeChanged = goalsViewModel::onGoalTypeChanged,
+                        onSelectedLibraryItemsChanged = goalsViewModel::onLibraryItemsChanged,
+                        onConfirmHandler = goalsViewModel::onDialogConfirm,
+                        onDismissHandler = goalsViewModel::clearDialog,
+                    )
+                } else {
+                    EditGoalDialog(
+                        value = dialogUiState.dialogData.target,
+                        onValueChanged = goalsViewModel::onTargetChanged,
+                        onConfirmHandler = goalsViewModel::onDialogConfirm,
+                        onDismissHandler = goalsViewModel::clearDialog
+                    )
+                }
             }
 
 
