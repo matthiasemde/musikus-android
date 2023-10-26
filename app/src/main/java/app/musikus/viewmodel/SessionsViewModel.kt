@@ -9,7 +9,6 @@
 package app.musikus.viewmodel
 
 import android.app.Application
-import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import app.musikus.database.MusikusDatabase
@@ -254,9 +253,8 @@ class SessionsViewModel(
     /** Mutators */
 
     fun onEditAction(editSession: (id: UUID) -> Unit) {
-        _selectedSessions.value.firstOrNull()?.let {
-            editSession(it.session.id)
-        } ?: Log.d("SessionsViewModel", "Tried to edit with no session selected")
+        assert(_selectedSessions.value.size == 1)
+        editSession(_selectedSessions.value.first().session.id)
         clearActionMode()
     }
 
