@@ -247,7 +247,7 @@ fun Goals(
             ) {
                 items(
                     items= contentUiState.goalsWithProgress,
-                    key = { it.goal.description.description.id },
+                    key = { it.goal.instance.id },
                 ) { (goal, progress) ->
                     Selectable(
                         modifier = Modifier.animateItemPlacement(),

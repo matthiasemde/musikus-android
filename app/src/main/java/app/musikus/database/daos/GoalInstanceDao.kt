@@ -12,6 +12,7 @@
 
 package app.musikus.database.daos
 
+import android.util.Log
 import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Query
@@ -20,11 +21,15 @@ import androidx.room.Transaction
 import app.musikus.database.GoalInstanceWithDescription
 import app.musikus.database.GoalInstanceWithDescriptionWithLibraryItems
 import app.musikus.database.MusikusDatabase
+import app.musikus.database.Nullable
+import app.musikus.database.entities.GoalDescriptionModel
 import app.musikus.database.entities.GoalInstanceModel
 import app.musikus.database.entities.GoalInstanceUpdateAttributes
+import app.musikus.database.entities.GoalPeriodUnit
 import app.musikus.database.entities.TimestampModelDisplayAttributes
 import app.musikus.utils.getCurrTimestamp
 import kotlinx.coroutines.flow.Flow
+import java.util.Calendar
 import java.util.UUID
 
 data class GoalInstance(
@@ -32,7 +37,6 @@ data class GoalInstance(
     @ColumnInfo(name="start_timestamp") val startTimestamp: Long,
     @ColumnInfo(name="period_in_seconds") val periodInSeconds: Int,
     @ColumnInfo(name="target") val target: Int,
-    @ColumnInfo(name="progress") val progress: Int,
     @ColumnInfo(name="renewed") val renewed: Boolean,
 ) : TimestampModelDisplayAttributes() {
     val isOutdated : Boolean
@@ -49,6 +53,98 @@ abstract class GoalInstanceDao(
 ) {
 
     /**
+     * @Insert
+     */
+
+    suspend fun insert(
+        goalDescription: GoalDescription,
+        timeFrame: Calendar,
+        target: Int,
+    ) {
+        insert(
+            goalDescriptionId = goalDescription.id,
+            periodUnit = goalDescription.periodUnit,
+            periodInPeriodUnits = goalDescription.periodInPeriodUnits,
+            timeFrame = timeFrame,
+            target = target
+        )
+    }
+
+    suspend fun insert(
+        goalDescription: GoalDescriptionModel,
+        timeFrame: Calendar,
+        target: Int,
+    ) {
+        insert(
+            goalDescriptionId = goalDescription.id,
+            periodUnit = goalDescription.periodUnit,
+            periodInPeriodUnits = goalDescription.periodInPeriodUnits,
+            timeFrame = timeFrame,
+            target = target
+        )
+    }
+
+    // create a new instance of this goal, storing the target and progress during a single period
+    private suspend fun insert(
+        goalDescriptionId: UUID,
+        periodUnit: GoalPeriodUnit,
+        periodInPeriodUnits: Int,
+        timeFrame: Calendar,
+        target: Int,
+    ) {
+        var startTimestamp = 0L
+
+        // to find the correct starting point and period for the goal, we execute these steps:
+        // 1. clear the minutes, seconds and millis from the time frame and set hour to 0
+        // 2. set the time frame to the beginning of the day, week or month
+        // 3. save the time in seconds as startTimeStamp
+        // 4. then set the day to the end of the period according to the periodInPeriodUnits
+        // 5. calculate the period in seconds from the difference of the two timestamps
+        timeFrame.clear(Calendar.MINUTE)
+        timeFrame.clear(Calendar.SECOND)
+        timeFrame.clear(Calendar.MILLISECOND)
+        timeFrame.set(Calendar.HOUR_OF_DAY, 0)
+
+        when(periodUnit) {
+            GoalPeriodUnit.DAY -> {
+                startTimestamp = timeFrame.timeInMillis / 1000L
+                timeFrame.add(Calendar.DAY_OF_YEAR, periodInPeriodUnits)
+            }
+            GoalPeriodUnit.WEEK -> {
+                if(timeFrame.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY) {
+                    timeFrame.add(Calendar.DAY_OF_WEEK, - 1)
+                }
+                timeFrame.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
+                startTimestamp = timeFrame.timeInMillis / 1000L
+
+                timeFrame.add(Calendar.WEEK_OF_YEAR, periodInPeriodUnits)
+            }
+            GoalPeriodUnit.MONTH -> {
+                timeFrame.set(Calendar.DAY_OF_MONTH, 1)
+                startTimestamp = timeFrame.timeInMillis / 1000L
+
+                timeFrame.add(Calendar.MONTH, periodInPeriodUnits)
+            }
+        }
+
+        // calculate the period in second from these two timestamps
+        val periodInSeconds = ((timeFrame.timeInMillis / 1000) - startTimestamp).toInt()
+
+        assert(startTimestamp > 0) {
+            Log.e("Assertion Failed", "startTimeStamp can not be 0")
+        }
+
+        super.insert(
+            GoalInstanceModel(
+                goalDescriptionId = Nullable(goalDescriptionId),
+                startTimestamp = startTimestamp,
+                periodInSeconds = periodInSeconds,
+                target = target
+            )
+        )
+    }
+
+    /**
      * @Update
      */
 
@@ -57,7 +153,6 @@ abstract class GoalInstanceDao(
         updateAttributes: GoalInstanceUpdateAttributes
     ): GoalInstanceModel = super.applyUpdateAttributes(old, updateAttributes).apply {
         target = updateAttributes.target ?: old.target
-        progress = updateAttributes.progress ?: old.progress
         renewed = updateAttributes.renewed ?: old.renewed
     }
 
@@ -187,8 +282,6 @@ abstract class GoalInstanceDao(
         "AND archived=0 " +
         "AND deleted=0" +
         ")"
-
-
     )
     abstract suspend fun getWithDescriptionWithLibraryItems(
         goalDescriptionId: UUID,
@@ -250,4 +343,18 @@ abstract class GoalInstanceDao(
     abstract suspend fun getLatest(
         goalDescriptionId: UUID
     ): GoalInstance?
+
+    @Transaction
+    @RewriteQueriesToDropUnusedColumns
+    @Query(
+        "SELECT * FROM goal_instance " +
+                "WHERE goal_description_id IN (" +
+                "SELECT id FROM goal_description " +
+                "WHERE paused=1 " +
+                "AND archived=0 " +
+                "AND deleted=0" +
+                ")" +
+                "AND renewed=0"
+    )
+    abstract fun getLatestPausedWithDescriptions(): Flow<List<GoalInstanceWithDescription>>
 }

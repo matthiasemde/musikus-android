@@ -245,7 +245,6 @@ class IntroGoalsFragment : Fragment(R.layout.fragment_intro_goals) {
                 startTimestamp = getStartOfDay(0).toEpochSecond(),
                 periodInSeconds = SECONDS_PER_DAY,
                 target = SECONDS_PER_HOUR,
-                progress = (SECONDS_PER_HOUR * 0.7f).roundToInt(),
                 renewed = false
             ),
             GoalDescriptionWithLibraryItems(
@@ -268,7 +267,6 @@ class IntroGoalsFragment : Fragment(R.layout.fragment_intro_goals) {
                 startTimestamp = getStartOfWeek(0).toEpochSecond(),
                 periodInSeconds = SECONDS_PER_DAY * 7,
                 target = (SECONDS_PER_HOUR * 5.5f).roundToInt(),
-                progress = (SECONDS_PER_HOUR * 2f).roundToInt(),
                 renewed = false
             ),
             GoalDescriptionWithLibraryItems(

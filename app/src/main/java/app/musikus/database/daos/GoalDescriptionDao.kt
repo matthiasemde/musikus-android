@@ -27,7 +27,10 @@ data class GoalDescription(
     @ColumnInfo(name="archived") val archived: Boolean,
 //    @ColumnInfo(name="profile_id") val profileId: UUID?,
     @ColumnInfo(name="custom_order") val customOrder: Int?,
-) : SoftDeleteModelDisplayAttributes()
+) : SoftDeleteModelDisplayAttributes() {
+
+
+}
 
 @Dao
 abstract class GoalDescriptionDao(
@@ -70,16 +73,17 @@ abstract class GoalDescriptionDao(
         goalDescription: GoalDescriptionModel,
         libraryItemIds: List<UUID>,
         target: Int,
-    ) : GoalInstanceModel {
+    ) {
+
+        insert(goalDescription)
 
         // Create the first instance of the newly created goal description
-        val firstGoalInstance = goalDescription.createInstance(
+        database.goalInstanceDao.insert(
+            goalDescription,
             Calendar.getInstance(),
             target
         )
 
-        insert(goalDescription)
-        database.goalInstanceDao.insert(firstGoalInstance)
         libraryItemIds.forEach { libraryItemId ->
             insertGoalDescriptionLibraryItemCrossRef(
                 GoalDescriptionLibraryItemCrossRefModel(
@@ -88,8 +92,6 @@ abstract class GoalDescriptionDao(
                 )
             )
         }
-
-        return firstGoalInstance
     }
 
     /**
@@ -130,52 +132,5 @@ abstract class GoalDescriptionDao(
         checkArchived : Boolean = false,
         type : GoalType
     ) : List<GoalDescription>
-
-
-//    /**
-//     * Goal Progress Update Utility
-//     */
-//
-//    @Transaction
-//    open suspend fun computeGoalProgressForSession(
-//        session: SessionWithSectionsWithLibraryItemsWithGoalDescriptions,
-//        checkArchived: Boolean = false,
-//    ) : Map<UUID, Int> {
-//        var totalSessionDuration = 0
-//
-//        // goalProgress maps the goalDescription-id to its progress
-//        val goalProgress = mutableMapOf<UUID, Int>()
-//
-//        // go through all the sections in the session...
-//        session.sections.forEach { (section, libraryItemWithGoalDescriptions) ->
-//            // ... using the respective libraryItems, find the goals,
-//            // to which the sections are contributing to...
-//            val (_, goalDescriptions) = libraryItemWithGoalDescriptions
-//
-//            // ... and loop through those goals, summing up the duration
-//            goalDescriptions.filter {d -> checkArchived || !d.archived}.forEach { description ->
-//                when (description.progressType) {
-//                    GoalProgressType.TIME -> goalProgress[description.id] =
-//                        goalProgress[description.id] ?: (0 + (section.duration ?: 0))
-//                    GoalProgressType.SESSION_COUNT -> goalProgress[description.id] = 1
-//                }
-//            }
-//
-//            // simultaneously sum up the total session duration
-//            totalSessionDuration += section.duration ?: 0
-//        }
-//
-//        // query all goal descriptions which have type NON-SPECIFIC
-//        getGoalDescriptions(
-//            checkArchived,
-//            GoalType.NON_SPECIFIC,
-//        ).forEach { totalTimeGoal ->
-//            goalProgress[totalTimeGoal.id] = when (totalTimeGoal.progressType) {
-//                GoalProgressType.TIME -> totalSessionDuration
-//                GoalProgressType.SESSION_COUNT -> 1
-//            }
-//        }
-//        return goalProgress
-//    }
 }
 

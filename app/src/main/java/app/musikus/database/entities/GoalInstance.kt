@@ -15,7 +15,6 @@ private interface IGoalInstanceCreationAttributes : ITimestampModelCreationAttri
 
 private interface IGoalInstanceUpdateAttributes : ITimestampModelUpdateAttributes {
     val target: Int?
-    val progress: Int?
     val renewed: Boolean?
 }
 
@@ -28,7 +27,6 @@ data class GoalInstanceCreationAttributes(
 
 data class GoalInstanceUpdateAttributes(
     override val target: Int? = null,
-    override val progress: Int? = null,
     override val renewed: Boolean? = null,
 
 ) : TimestampModelUpdateAttributes(), IGoalInstanceUpdateAttributes
@@ -49,7 +47,6 @@ data class GoalInstanceModel(
     @ColumnInfo(name="start_timestamp") override val startTimestamp: Long,
     @ColumnInfo(name="period_in_seconds") override val periodInSeconds: Int,
     @ColumnInfo(name="target") override var target: Int,
-    @ColumnInfo(name="progress") override var progress: Int = 0,
     @ColumnInfo(name="renewed") override var renewed: Boolean = false,
 ) : TimestampModel(), IGoalInstanceCreationAttributes, IGoalInstanceUpdateAttributes
 

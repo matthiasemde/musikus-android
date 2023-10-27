@@ -479,12 +479,12 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
         else {
             val succeeded = goals[selectedGoal].goalInstances
                 .subList(max(firstGoalInstShownIndex, 0), lastGoalInstShownIndex+1) // +1 because lastindex is exclusive
-                .filter { it.progress >= it.target }
+//                .filter { it.progress >= it.target } // Todo calculate progress
                 .size
 
             val failed = goals[selectedGoal].goalInstances
                 .subList(max(firstGoalInstShownIndex, 0), lastGoalInstShownIndex+1)
-                .filter { it.progress < it.target }
+//                .filter { it.progress < it.target }  // Todo calculate progress
                 .size
 
             tvSecondHeader.text = getString(R.string.succeeded_failed, succeeded, failed+succeeded)
@@ -571,9 +571,9 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
        var endDateOfLastInst = allInstances[max(0,firstGoalInstShownIndex)].startTimestamp
 
         for (i in firstGoalInstShownIndex..lastGoalInstShownIndex) {
-            val yVal =
-                if(i < 0) 0.001f    // all instances exhausted. Make 0.001f to recognize in the ValueFormatter that it is fake
-                else allInstances[i].progress.toFloat()
+            val yVal = 0.0f
+//                if(i < 0) 0.001f    // all instances exhausted. Make 0.001f to recognize in the ValueFormatter that it is fake
+//                else allInstances[i].progress.toFloat()  // Todo calculate progress
 
             // goal is achieved, set the checkmark icon
             if (i >= 0 && yVal >= allInstances[i].target) {
@@ -726,7 +726,6 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
                 startTimestamp = startTime,
                 periodInSeconds = periodInSeconds,
                 target = firstRealInstance.target,
-                progress = 0,
                 renewed = true
             )
         }
@@ -821,8 +820,10 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
                 " ",
                 periodFormatted
             )
-            val succeeded = elem.goalInstances.filter { it.progress >= it.target }.size
-            val failed = elem.goalInstances.filter { it.progress < it.target }.size
+//            val succeeded = elem.goalInstances.filter { it.progress >= it.target }.size Todo
+//            val failed = elem.goalInstances.filter { it.progress < it.target }.size Todo
+            val succeeded = 1
+            val failed = 2
 
             holder.tvNumSuccess.text = succeeded.toString()
             holder.tvNumFail.text = failed.toString()

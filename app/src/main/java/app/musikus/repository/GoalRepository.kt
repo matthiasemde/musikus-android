@@ -19,8 +19,10 @@ import app.musikus.database.entities.GoalDescriptionCreationAttributes
 import app.musikus.database.entities.GoalDescriptionModel
 import app.musikus.database.entities.GoalDescriptionUpdateAttributes
 import app.musikus.database.entities.GoalInstanceUpdateAttributes
+import app.musikus.database.entities.GoalPeriodUnit
 import app.musikus.datastore.GoalsSortMode
 import app.musikus.datastore.SortDirection
+import java.util.Calendar
 
 class GoalRepository(
     database: MusikusDatabase
@@ -45,6 +47,7 @@ class GoalRepository(
 
     val currentGoals = goalInstanceDao.getWithDescriptionsWithLibraryItems()
 
+
     /** Mutators */
 
     /** Add */
@@ -63,8 +66,20 @@ class GoalRepository(
         target,
     )
 
+    private suspend fun createInstance(
+        description: GoalDescription,
+        timeFrame: Calendar,
+        target: Int,
+    ) {
+        goalInstanceDao.insert(
+            description,
+            timeFrame,
+            target,
+        )
+    }
 
-    /** Edit Target */
+
+    /** Edit */
     suspend fun editGoalTarget(
         goal: GoalInstance,
         newTarget: Int,
@@ -72,6 +87,15 @@ class GoalRepository(
         goalInstanceDao.update(
             goal.id,
             GoalInstanceUpdateAttributes(target = newTarget)
+        )
+    }
+
+    suspend fun markInstanceAsRenewed(
+        goal: GoalInstance,
+    ) {
+        goalInstanceDao.update(
+            goal.id,
+            GoalInstanceUpdateAttributes(renewed = true)
         )
     }
 
@@ -180,6 +204,62 @@ class GoalRepository(
                 GoalsSortMode.TARGET -> goals.sortedByDescending { it.instance.target }
                 GoalsSortMode.PERIOD -> goals.sortedByDescending { it.instance.periodInSeconds }
                 GoalsSortMode.CUSTOM -> goals // TODO()
+            }
+        }
+    }
+
+    /** Update Goals */
+    suspend fun updateGoals() {
+        while(true) {
+            goalInstanceDao.getOutdatedWithDescriptions().let { outdatedInstancesWithDescriptions ->
+                if (outdatedInstancesWithDescriptions.isEmpty()) return@updateGoals
+
+                // while there are still outdated goals, keep looping and adding new ones
+                outdatedInstancesWithDescriptions.forEach { (outdatedInstance, description) ->
+                    if (description.repeat && !description.archived) {
+
+                        // create a new calendar instance, set the time to the instances start timestamp, ...
+                        val startCalendar = Calendar.getInstance()
+                        startCalendar.timeInMillis = outdatedInstance.startTimestamp * 1000L
+
+                        // ... add to the calendar the period in period units, ...
+                        when (description.periodUnit) {
+                            GoalPeriodUnit.DAY ->
+                                startCalendar.add(
+                                    Calendar.DAY_OF_YEAR,
+                                    description.periodInPeriodUnits
+                                )
+
+                            GoalPeriodUnit.WEEK ->
+                                startCalendar.add(
+                                    Calendar.WEEK_OF_YEAR,
+                                    description.periodInPeriodUnits
+                                )
+
+                            GoalPeriodUnit.MONTH ->
+                                startCalendar.add(Calendar.MONTH, description.periodInPeriodUnits)
+                        }
+
+                        // ... and create a new goal with the same groupId, period and target
+                        createInstance(
+                            description,
+                            startCalendar,
+                            outdatedInstance.target
+                        )
+
+                        // if the outdated instance belonged to a paused goal delete it...
+                        if (description.paused) {
+                            goalInstanceDao.delete(outdatedInstance.id)
+                        // otherwise mark it as renewed
+                        } else {
+                            markInstanceAsRenewed(outdatedInstance)
+                        }
+
+                    } else if (!description.archived) {
+                        // one shot goals are archived after they are outdated
+                        archive(description)
+                    }
+                }
             }
         }
     }

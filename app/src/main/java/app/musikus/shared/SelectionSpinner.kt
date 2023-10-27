@@ -8,7 +8,6 @@
 
 package app.musikus.shared
 
-import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -39,7 +38,6 @@ fun SelectionSpinner(
     onExpandedChange: (Boolean) -> Unit,
     onSelectedChange: (SelectionSpinnerOption) -> Unit
 ) {
-    Log.d("SELECTION SPINNER", "SelectionSpinner: $expanded")
     ExposedDropdownMenuBox(
         modifier = modifier,
         expanded = expanded,
@@ -71,7 +69,6 @@ fun SelectionSpinner(
                 ).coerceAtMost(220.dp)
                 val totalDropDownMenuHeightInPx = with(LocalDensity.current) { totalDropDownMenuHeight.toPx() }
 
-                Log.d("SCROLLBAR", "SelectionSpinner: $totalDropDownMenuHeightInPx, ${scrollState.maxValue}")
                 val scrollBarShowing = scrollState.maxValue > 0
 
                 Column(

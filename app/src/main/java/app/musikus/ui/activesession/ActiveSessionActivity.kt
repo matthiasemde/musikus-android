@@ -74,7 +74,6 @@ import app.musikus.repository.SessionRepository
 import app.musikus.services.RecorderService
 import app.musikus.services.SessionForegroundService
 import app.musikus.ui.MainActivity
-import app.musikus.ui.goals.updateGoals
 import app.musikus.ui.library.LibraryItemAdapter
 import app.musikus.utils.TIME_FORMAT_HMS_DIGITAL
 import app.musikus.utils.TIME_FORMAT_MS_DIGITAL
@@ -1184,7 +1183,7 @@ class ActiveSessionActivity : AppCompatActivity() {
             setPauseStopBtnVisibility(true)
 
             // when the session start, also update the goals
-            lifecycleScope.launch { updateGoals(applicationContext) }
+//            lifecycleScope.launch { updateGoals(applicationContext) } TODO move to viewmodel
         } else if (mService.sectionBuffer.last().let {         // when session is running, don't allow starting if...
                 (libraryItemId == it.first.libraryItemId.value) ||   // ... in the same library item
                         ((it.first.duration

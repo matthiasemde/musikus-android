@@ -31,7 +31,6 @@ import app.musikus.repository.SessionRepository
 import app.musikus.repository.UserPreferencesRepository
 import app.musikus.shared.MultiFABState
 import app.musikus.shared.TopBarUiState
-import app.musikus.ui.goals.updateGoals
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -120,7 +119,7 @@ class GoalsViewModel(
 
     init {
         viewModelScope.launch {
-            updateGoals(application)
+            goalRepository.updateGoals()
         }
     }
 
