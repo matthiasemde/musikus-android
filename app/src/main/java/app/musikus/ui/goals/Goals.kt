@@ -77,9 +77,10 @@ fun Goals(
     mainViewModel: MainViewModel,
     goalsViewModel: GoalsViewModel = viewModel(),
 ) {
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
-
+    val mainUiState by mainViewModel.uiState.collectAsState()
     val goalsUiState by goalsViewModel.goalsUiState.collectAsState()
+
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
     BackHandler(
         enabled = goalsUiState.actionModeUiState.isActionMode,
@@ -87,11 +88,8 @@ fun Goals(
     )
 
     BackHandler(
-        enabled = goalsUiState.multiFabState == MultiFabState.EXPANDED,
-        onBack = {
-            goalsViewModel.onMultiFabStateChanged(MultiFabState.COLLAPSED)
-            mainViewModel.showNavBarScrim.value = false
-        }
+        enabled = mainUiState.multiFabState == MultiFabState.EXPANDED,
+        onBack = mainViewModel::collapseMultiFab
     )
 
     Scaffold(
@@ -100,10 +98,9 @@ fun Goals(
             .nestedScroll(scrollBehavior.nestedScrollConnection),
         floatingActionButton = {
             MultiFAB(
-                state = goalsUiState.multiFabState,
+                state = mainUiState.multiFabState,
                 onStateChange = { state ->
-                    goalsViewModel.onMultiFabStateChanged(state)
-                    mainViewModel.showNavBarScrim.value = (state == MultiFabState.EXPANDED)
+                    mainViewModel.onMultiFabStateChanged(state)
                     if(state == MultiFabState.EXPANDED) {
                         goalsViewModel.clearActionMode()
                     }
@@ -112,8 +109,7 @@ fun Goals(
                     MiniFABData(
                         onClick = {
                             goalsViewModel.showDialog(oneShot = true)
-                            goalsViewModel.onMultiFabStateChanged(MultiFabState.COLLAPSED)
-                            mainViewModel.showNavBarScrim.value = false
+                            mainViewModel.collapseMultiFab()
                         },
                         label = "One shot goal",
                         icon = Icons.Filled.LocalFireDepartment,
@@ -121,8 +117,7 @@ fun Goals(
                     MiniFABData(
                         onClick = {
                             goalsViewModel.showDialog(oneShot = false)
-                            goalsViewModel.onMultiFabStateChanged(MultiFabState.COLLAPSED)
-                            mainViewModel.showNavBarScrim.value = false
+                            mainViewModel.collapseMultiFab()
                         },
                         label = "Regular goal",
                         icon = Icons.Rounded.Repeat,
@@ -130,7 +125,8 @@ fun Goals(
                 ))
         },
         topBar = {
-            val  topBarUiState = goalsUiState.topBarUiState
+            val mainMenuUiState = mainUiState.menuUiState
+            val topBarUiState = goalsUiState.topBarUiState
             LargeTopAppBar(
                 title = { Text( text = topBarUiState.title) },
                 scrollBehavior = scrollBehavior,
@@ -146,22 +142,22 @@ fun Goals(
                         onSelectionHandler = goalsViewModel::onSortModeSelected
                     )
                     IconButton(onClick = {
-                        mainViewModel.showMainMenu.value = true
+                        mainViewModel.showMainMenu()
                     }) {
                         Icon(Icons.Default.MoreVert, contentDescription = "more")
                         MainMenu (
-                            show = mainViewModel.showMainMenu.value,
-                            onDismissHandler = { mainViewModel.showMainMenu.value = false },
+                            show = mainMenuUiState.show,
+                            onDismissHandler = mainViewModel::hideMainMenu,
                             onSelectionHandler = { commonSelection ->
-                                mainViewModel.showMainMenu.value = false
+                                mainViewModel.hideMainMenu()
 
                                 when (commonSelection) {
                                     CommonMenuSelections.APP_INFO -> {}
                                     CommonMenuSelections.THEME -> {
-                                        mainViewModel.showThemeSubMenu.value = true
+                                        mainViewModel.showThemeSubMenu()
                                     }
                                     CommonMenuSelections.BACKUP -> {
-                                        mainViewModel.showExportImportDialog.value = true
+                                        mainViewModel.showExportImportDialog()
                                     }
                                 }
                             },
@@ -182,11 +178,11 @@ fun Goals(
                             }
                         )
                         ThemeMenu(
-                            expanded = mainViewModel.showThemeSubMenu.value,
+                            expanded = mainMenuUiState.showThemeSubMenu,
                             currentTheme = mainViewModel.activeTheme.collectAsState(initial = ThemeSelections.DAY).value,
-                            onDismissHandler = { mainViewModel.showThemeSubMenu.value = false },
+                            onDismissHandler = mainViewModel::hideThemeSubMenu,
                             onSelectionHandler = { theme ->
-                                mainViewModel.showThemeSubMenu.value = false
+                                mainViewModel.hideThemeSubMenu()
                                 mainViewModel.setTheme(theme)
                             }
                         )
@@ -306,7 +302,7 @@ fun Goals(
             AnimatedVisibility(
                 modifier = Modifier
                     .zIndex(1f),
-                visible = goalsUiState.multiFabState == MultiFabState.EXPANDED,
+                visible = mainUiState.multiFabState == MultiFabState.EXPANDED,
                 enter = fadeIn(),
                 exit = fadeOut()
             ) {
@@ -317,10 +313,8 @@ fun Goals(
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null,
-                        ) {
-                            goalsViewModel.onMultiFabStateChanged(MultiFabState.COLLAPSED)
-                            mainViewModel.showNavBarScrim.value = false
-                        }
+                            onClick = mainViewModel::collapseMultiFab
+                        )
                 )
             }
         }

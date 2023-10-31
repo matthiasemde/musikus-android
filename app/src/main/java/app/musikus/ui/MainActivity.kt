@@ -30,6 +30,8 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
@@ -41,7 +43,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -67,6 +68,7 @@ import app.musikus.BuildConfig
 import app.musikus.Musikus
 import app.musikus.R
 import app.musikus.getActivity
+import app.musikus.shared.MultiFabState
 import app.musikus.ui.goals.Goals
 import app.musikus.ui.goals.ProgressUpdate
 import app.musikus.ui.library.Library
@@ -168,6 +170,8 @@ class MainActivity : AppCompatActivity() {
         setContent {
 
             val mainViewModel: MainViewModel = viewModel()
+            val uiState by mainViewModel.uiState.collectAsState()
+
             val navController = rememberNavController()
 
             val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -191,7 +195,7 @@ class MainActivity : AppCompatActivity() {
                                         val selected =
                                             currentDestination?.hierarchy?.any { it.route == screen.route } == true
                                         val painterCount = 5
-                                        var activePainter by remember { mutableStateOf(0) }
+                                        var activePainter by remember { mutableIntStateOf(0) }
                                         val painter = rememberVectorPainter(
                                             image = ImageVector.vectorResource(screen.navigationBarData!!.staticIcon)
                                         )
@@ -244,13 +248,18 @@ class MainActivity : AppCompatActivity() {
                                     modifier = Modifier
                                         .matchParentSize()
                                         .zIndex(1f),
-                                    visible = mainViewModel.showNavBarScrim.value,
+                                    visible = uiState.multiFabState == MultiFabState.EXPANDED,
                                     enter = fadeIn(),
                                     exit = fadeOut()
                                 ) {
                                     Box(
                                         modifier = Modifier
                                             .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.9f))
+                                            .clickable(
+                                                interactionSource = remember { MutableInteractionSource() },
+                                                indication = null,
+                                                onClick = mainViewModel::collapseMultiFab
+                                            )
                                     )
                                 }
                             }
@@ -324,8 +333,8 @@ class MainActivity : AppCompatActivity() {
 
                     /** Export / Import Dialog */
                     ExportImportDialog(
-                        show = mainViewModel.showExportImportDialog.value,
-                        onDismissHandler = { mainViewModel.showExportImportDialog.value = false }
+                        show = uiState.showExportImportDialog,
+                        onDismissHandler = mainViewModel::hideExportImportDialog
                     )
 
                     // if there is a new session added to the intent, navigate to progress update

@@ -80,13 +80,14 @@ fun Sessions(
     sessionsViewModel: SessionsViewModel = viewModel(),
     editSession: (sessionId: UUID) -> Unit,
 ) {
+    val mainUiState by mainViewModel.uiState.collectAsState()
     val sessionsUiState by sessionsViewModel.sessionsUiState.collectAsState()
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
     val sessionsListState = rememberLazyListState()
     // The FAB is initially expanded. Once the first visible item is past the first item we
-    // collapse the FAB. We use a remembered derived state to minimize unnecessary compositions.
+    // collapse the FAB. We use a remembered derived state to minimize unnecessary recompositions.
     val fabExpanded by remember {
         derivedStateOf {
             sessionsListState.firstVisibleItemIndex == 0
@@ -117,39 +118,38 @@ fun Sessions(
             )
         },
         topBar = {
+            val mainMenuUiState = mainUiState.menuUiState
             val topBarUiState = sessionsUiState.topBarUiState
             LargeTopAppBar(
                 title = { Text(text = topBarUiState.title) },
                 scrollBehavior = scrollBehavior,
                 actions = {
-                    IconButton(onClick = {
-                        mainViewModel.showMainMenu.value = true
-                    }) {
+                    IconButton(onClick = mainViewModel::showMainMenu) {
                         Icon(Icons.Default.MoreVert, contentDescription = "more")
                         MainMenu (
-                            show = mainViewModel.showMainMenu.value,
-                            onDismissHandler = { mainViewModel.showMainMenu.value = false },
+                            show = mainMenuUiState.show,
+                            onDismissHandler = mainViewModel::hideMainMenu,
                             onSelectionHandler = { commonSelection ->
-                                mainViewModel.showMainMenu.value = false
+                                mainViewModel.hideMainMenu()
 
                                 when (commonSelection) {
                                     CommonMenuSelections.APP_INFO -> {}
                                     CommonMenuSelections.THEME -> {
-                                        mainViewModel.showThemeSubMenu.value = true
+                                        mainViewModel.showThemeSubMenu()
                                     }
                                     CommonMenuSelections.BACKUP -> {
-                                        mainViewModel.showExportImportDialog.value = true
+                                        mainViewModel.showExportImportDialog()
                                     }
                                 }
                             },
                             uniqueMenuItems = { /* TODO UNIQUE Session MENU */ }
                         )
                         ThemeMenu(
-                            expanded = mainViewModel.showThemeSubMenu.value,
+                            expanded = mainMenuUiState.showThemeSubMenu,
                             currentTheme = mainViewModel.activeTheme.collectAsState(initial = ThemeSelections.DAY).value,
-                            onDismissHandler = { mainViewModel.showThemeSubMenu.value = false },
+                            onDismissHandler = mainViewModel::hideThemeSubMenu,
                             onSelectionHandler = { theme ->
-                                mainViewModel.showThemeSubMenu.value = false
+                                mainViewModel.hideThemeSubMenu()
                                 mainViewModel.setTheme(theme)
                             }
                         )

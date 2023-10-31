@@ -55,24 +55,6 @@ import app.musikus.shared.*
 import app.musikus.viewmodel.*
 import java.util.*
 
-
-//
-//    // catch the back press for the case where the selection should be reverted
-//    override fun onCreate(savedInstanceState: Bundle?) {
-//        super.onCreate(savedInstanceState)
-//
-//        activity?.onBackPressedDispatcher?.addCallback(this, object : OnBackPressedCallback(true) {
-//            override fun handleOnBackPressed() {
-//                if(selectedItems.isNotEmpty()){
-//                    actionMode?.finish()
-//                }else{
-//                    isEnabled = false
-//                    activity?.onBackPressed()
-//                }
-//            }
-//        })
-//    }
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Library(
@@ -81,6 +63,7 @@ fun Library(
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
+    val mainUiState by mainViewModel.uiState.collectAsState()
     val libraryUiState by libraryViewModel.libraryUiState.collectAsState()
 
     BackHandler(
@@ -94,11 +77,8 @@ fun Library(
     )
 
     BackHandler(
-        enabled = libraryUiState.fabUiState.multiFabState == MultiFabState.EXPANDED,
-        onBack = {
-            libraryViewModel.onMultiFabStateChanged(MultiFabState.COLLAPSED)
-            mainViewModel.showNavBarScrim.value = false
-        }
+        enabled = mainUiState.multiFabState == MultiFabState.EXPANDED,
+        onBack = mainViewModel::collapseMultiFab
     )
 
     Scaffold(
@@ -111,17 +91,16 @@ fun Library(
                 FloatingActionButton(
                     onClick = {
                         libraryViewModel.showItemDialog(fabUiState.activeFolder.id)
-                        mainViewModel.showNavBarScrim.value = false
+                        mainViewModel.collapseMultiFab()
                     },
                 ) {
                     Icon(Icons.Default.Add, contentDescription = "New item")
                 }
             } else {
                 MultiFAB(
-                    state = fabUiState.multiFabState,
+                    state = mainUiState.multiFabState,
                     onStateChange = { state ->
-                        libraryViewModel.onMultiFabStateChanged(state)
-                        mainViewModel.showNavBarScrim.value = (state == MultiFabState.EXPANDED)
+                        mainViewModel.onMultiFabStateChanged(state)
                         if(state == MultiFabState.EXPANDED) {
                             libraryViewModel.clearActionMode()
                         }
@@ -130,8 +109,7 @@ fun Library(
                         MiniFABData(
                             onClick = {
                                 libraryViewModel.showItemDialog()
-                                libraryViewModel.onMultiFabStateChanged(MultiFabState.COLLAPSED)
-                                mainViewModel.showNavBarScrim.value = false
+                                mainViewModel.collapseMultiFab()
                             },
                             label = "Item",
                             icon = Icons.Rounded.MusicNote
@@ -139,8 +117,7 @@ fun Library(
                         MiniFABData(
                             onClick = {
                                 libraryViewModel.showFolderDialog()
-                                libraryViewModel.onMultiFabStateChanged(MultiFabState.COLLAPSED)
-                                mainViewModel.showNavBarScrim.value = false
+                                mainViewModel.collapseMultiFab()
                             },
                             label = "Folder",
                             icon = Icons.Rounded.Folder
@@ -150,6 +127,7 @@ fun Library(
             }
         },
         topBar = {
+            val mainMenuUiState = mainUiState.menuUiState
             val topBarUiState = libraryUiState.topBarUiState
             LargeTopAppBar(
                 scrollBehavior = scrollBehavior,
@@ -163,22 +141,22 @@ fun Library(
                 },
                 actions = {
                     IconButton(onClick = {
-                        mainViewModel.showMainMenu.value = true
+                        mainViewModel.showMainMenu()
                     }) {
                         Icon(Icons.Default.MoreVert, contentDescription = "more")
                         MainMenu (
-                            show = mainViewModel.showMainMenu.value,
-                            onDismissHandler = { mainViewModel.showMainMenu.value = false },
+                            show = mainMenuUiState.show,
+                            onDismissHandler = mainViewModel::hideMainMenu,
                             onSelectionHandler = { commonSelection ->
-                                mainViewModel.showMainMenu.value = false
+                                mainViewModel.hideMainMenu()
 
                                 when (commonSelection) {
                                     CommonMenuSelections.APP_INFO -> {}
                                     CommonMenuSelections.THEME -> {
-                                        mainViewModel.showThemeSubMenu.value = true
+                                        mainViewModel.showThemeSubMenu()
                                     }
                                     CommonMenuSelections.BACKUP -> {
-                                        mainViewModel.showExportImportDialog.value = true
+                                        mainViewModel.showExportImportDialog()
                                     }
                                 }
                             },
@@ -187,11 +165,11 @@ fun Library(
                             ) }
                         )
                         ThemeMenu(
-                            expanded = mainViewModel.showThemeSubMenu.value,
+                            expanded = mainMenuUiState.showThemeSubMenu,
                             currentTheme = mainViewModel.activeTheme.collectAsState(initial = ThemeSelections.DAY).value,
-                            onDismissHandler = { mainViewModel.showThemeSubMenu.value = false },
+                            onDismissHandler = mainViewModel::hideThemeSubMenu,
                             onSelectionHandler = { theme ->
-                                mainViewModel.showThemeSubMenu.value = false
+                                mainViewModel.hideThemeSubMenu()
                                 mainViewModel.setTheme(theme)
                             }
                         )
@@ -282,7 +260,7 @@ fun Library(
             AnimatedVisibility(
                 modifier = Modifier
                     .zIndex(1f),
-                visible = contentUiState.showScrim,
+                visible = mainUiState.multiFabState == MultiFabState.EXPANDED,
                 enter = fadeIn(),
                 exit = fadeOut()
             ) {
@@ -293,10 +271,8 @@ fun Library(
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null,
-                        ) {
-                            libraryViewModel.onMultiFabStateChanged(MultiFabState.COLLAPSED)
-                            mainViewModel.showNavBarScrim.value = false
-                        }
+                            onClick = mainViewModel::collapseMultiFab
+                        )
                 )
             }
         }

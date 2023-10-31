@@ -13,12 +13,11 @@ import android.util.Log
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import app.musikus.dataStore
-import app.musikus.database.Nullable
 import app.musikus.database.MusikusDatabase
+import app.musikus.database.Nullable
 import app.musikus.database.entities.LibraryFolderCreationAttributes
 import app.musikus.database.entities.LibraryItemCreationAttributes
 import app.musikus.datastore.ThemeSelections
@@ -26,11 +25,26 @@ import app.musikus.repository.GoalRepository
 import app.musikus.repository.LibraryRepository
 import app.musikus.repository.SessionRepository
 import app.musikus.repository.UserPreferencesRepository
+import app.musikus.shared.MultiFabState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+
+data class MainMenuUiState(
+    val show: Boolean,
+    val showThemeSubMenu: Boolean,
+)
+data class MainUiState(
+    val menuUiState: MainMenuUiState,
+    val showExportImportDialog: Boolean,
+    val multiFabState: MultiFabState,
+)
 
 class MainViewModel(
     application: Application
@@ -91,20 +105,16 @@ class MainViewModel(
     }
 
     /** Menu */
-
-    var showMainMenu = mutableStateOf(false)
-    var showThemeSubMenu = mutableStateOf(false)
+    private val _showMainMenu = MutableStateFlow(false)
+    private val _showThemeSubMenu = MutableStateFlow(false)
 
     /** Import/Export */
-    var showExportImportDialog = mutableStateOf(false)
+    private val _showExportImportDialog = MutableStateFlow(false)
 
     /** Content Scrim over NavBar for Multi FAB etc */
-
-    val showNavBarScrim = mutableStateOf(false)
-
+    private val _multiFabState = MutableStateFlow(MultiFabState.COLLAPSED)
 
     /** Snackbar */
-
     val snackbarHostState = MutableStateFlow(SnackbarHostState())
 
     fun showSnackbar(message: String, onUndo: (() -> Unit)? = null) {
@@ -133,5 +143,87 @@ class MainViewModel(
         viewModelScope.launch {
             userPreferencesRepository.updateTheme(theme)
         }
+    }
+
+    /** UI State */
+    private val menuUiState = combine(
+        _showMainMenu,
+        _showThemeSubMenu
+    ) { showMainMenu, showThemeSubMenu ->
+        MainMenuUiState(
+            show = showMainMenu,
+            showThemeSubMenu = showThemeSubMenu,
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = MainMenuUiState(
+            show = _showMainMenu.value,
+            showThemeSubMenu = _showThemeSubMenu.value,
+        )
+    )
+
+    val uiState = combine(
+        menuUiState,
+        _showExportImportDialog,
+        _multiFabState
+    ) { menuUiState, showExportImportDialog, multiFabState ->
+        MainUiState(
+            menuUiState = menuUiState,
+            showExportImportDialog = showExportImportDialog,
+            multiFabState = multiFabState,
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = MainUiState(
+            menuUiState = menuUiState.value,
+            showExportImportDialog = _showExportImportDialog.value,
+            multiFabState = _multiFabState.value,
+        )
+    )
+
+    /** State modifiers */
+    private fun onShowMainMenuChanged(show: Boolean) {
+        _showMainMenu.update { show }
+    }
+
+    fun showMainMenu() {
+        onShowMainMenuChanged(true)
+    }
+
+    fun hideMainMenu() {
+        onShowMainMenuChanged(false)
+    }
+
+    private fun onShowThemeSubMenuChanged(show: Boolean) {
+        _showThemeSubMenu.update { show }
+    }
+
+    fun showThemeSubMenu() {
+        onShowThemeSubMenuChanged(true)
+    }
+
+    fun hideThemeSubMenu() {
+        onShowThemeSubMenuChanged(false)
+    }
+
+    fun onMultiFabStateChanged(state: MultiFabState) {
+        _multiFabState.update { state }
+    }
+
+    fun collapseMultiFab() {
+        onMultiFabStateChanged(MultiFabState.COLLAPSED)
+    }
+    private fun onShowExportImportDialogChanged(show: Boolean) {
+        _showExportImportDialog.update { show }
+    }
+
+    fun showExportImportDialog() {
+        onShowExportImportDialogChanged(true)
+    }
+
+    fun hideExportImportDialog() {
+        onShowExportImportDialogChanged(false)
     }
 }

@@ -28,7 +28,6 @@ import app.musikus.repository.GoalRepository
 import app.musikus.repository.LibraryRepository
 import app.musikus.repository.SessionRepository
 import app.musikus.repository.UserPreferencesRepository
-import app.musikus.shared.MultiFabState
 import app.musikus.shared.TopBarUiState
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
@@ -96,7 +95,6 @@ data class GoalsUiState (
     val actionModeUiState: GoalsActionModeUiState,
     val contentUiState: GoalsContentUiState,
     val dialogUiState: GoalsDialogUiState?,
-    val multiFabState: MultiFabState,
 )
 
 class GoalsViewModel(
@@ -200,9 +198,6 @@ class GoalsViewModel(
     // Goal dialog
     private val _goalDialogData = MutableStateFlow<GoalDialogData?>(null)
     private val _goalToEdit = MutableStateFlow<GoalInstanceWithDescriptionWithLibraryItems?>(null)
-
-    // MultiFAB
-    private var _multiFabState = MutableStateFlow(MultiFabState.COLLAPSED)
 
     // Action mode
     private val _selectedGoals = MutableStateFlow<Set<GoalInstanceWithDescriptionWithLibraryItems>>(emptySet())
@@ -386,14 +381,12 @@ class GoalsViewModel(
         actionModeUiState,
         contentUiState,
         dialogUiState,
-        _multiFabState,
-    ) { topBarUiState, actionModeUiState, contentUiState, dialogUiState, multiFabState ->
+    ) { topBarUiState, actionModeUiState, contentUiState, dialogUiState ->
         GoalsUiState(
             topBarUiState = topBarUiState,
             actionModeUiState = actionModeUiState,
             contentUiState = contentUiState,
             dialogUiState = dialogUiState,
-            multiFabState = multiFabState,
         )
     }.stateIn(
         scope = viewModelScope,
@@ -403,7 +396,6 @@ class GoalsViewModel(
             actionModeUiState = actionModeUiState.value,
             contentUiState = contentUiState.value,
             dialogUiState = dialogUiState.value,
-            multiFabState = _multiFabState.value,
         )
     )
 
@@ -582,9 +574,5 @@ class GoalsViewModel(
                 clearDialog()
             }
         }
-    }
-
-    fun onMultiFabStateChanged(state: MultiFabState) {
-        _multiFabState.update { state }
     }
 }
