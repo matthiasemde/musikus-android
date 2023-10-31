@@ -71,7 +71,7 @@ abstract class GoalDescriptionDao(
     @Transaction
     open suspend fun insert(
         goalDescription: GoalDescriptionModel,
-        libraryItemIds: List<UUID>,
+        libraryItemIds: List<UUID>?,
         target: Int,
     ) {
 
@@ -88,7 +88,7 @@ abstract class GoalDescriptionDao(
             return  // don't add cross ref for non specific goals
         }
 
-        libraryItemIds.forEach { libraryItemId ->
+        libraryItemIds?.forEach { libraryItemId ->
             insertGoalDescriptionLibraryItemCrossRef(
                 GoalDescriptionLibraryItemCrossRefModel(
                     goalDescriptionId = goalDescription.id,

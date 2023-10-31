@@ -54,7 +54,7 @@ class GoalRepository(
     /** Add */
     suspend fun add(
         goalDescriptionCreationAttributes: GoalDescriptionCreationAttributes,
-        libraryItems: List<LibraryItem>,
+        libraryItems: List<LibraryItem>?,
         target: Int,
     ) = goalDescriptionDao.insert(
         GoalDescriptionModel(
@@ -63,7 +63,7 @@ class GoalRepository(
             periodInPeriodUnits = goalDescriptionCreationAttributes.periodInPeriodUnits,
             periodUnit = goalDescriptionCreationAttributes.periodUnit,
         ),
-        libraryItems.map { it.id },
+        libraryItems?.map { it.id },
         target,
     )
 

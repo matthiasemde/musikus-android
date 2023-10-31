@@ -18,6 +18,9 @@ import androidx.lifecycle.viewModelScope
 import app.musikus.dataStore
 import app.musikus.database.MusikusDatabase
 import app.musikus.database.Nullable
+import app.musikus.database.entities.GoalDescriptionCreationAttributes
+import app.musikus.database.entities.GoalPeriodUnit
+import app.musikus.database.entities.GoalType
 import app.musikus.database.entities.LibraryFolderCreationAttributes
 import app.musikus.database.entities.LibraryItemCreationAttributes
 import app.musikus.datastore.ThemeSelections
@@ -30,6 +33,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -67,6 +71,7 @@ class MainViewModel(
     /** Repositories */
     private val userPreferencesRepository = UserPreferencesRepository(application.dataStore)
     private val libraryRepository = LibraryRepository(database)
+    private val goalsRepository = GoalRepository(database)
 
     private fun prepopulateDatabase() {
         Log.d("MainViewModel", "prepopulateDatabase")
@@ -81,9 +86,9 @@ class MainViewModel(
                 delay(1500) //make sure folders have different createdAt values
             }
 
-            libraryRepository.folders.collect { folders ->
+            libraryRepository.folders.first().let { folders ->
                 // populate the libraryItem table on first run
-                val items = listOf(
+                listOf(
                     LibraryItemCreationAttributes(name = "Die Schöpfung", colorIndex = 0, libraryFolderId = Nullable(folders[0].id)),
                     LibraryItemCreationAttributes(name = "Beethoven Septett",colorIndex = 1,libraryFolderId = Nullable(folders[0].id)),
                     LibraryItemCreationAttributes(name = "Schostakowitsch 9.", colorIndex = 2, libraryFolderId = Nullable(folders[1].id)),
@@ -93,12 +98,42 @@ class MainViewModel(
                     LibraryItemCreationAttributes(name = "Andantino", colorIndex = 6),
                     LibraryItemCreationAttributes(name = "Klaviersonate", colorIndex = 7),
                     LibraryItemCreationAttributes(name = "Trauermarsch", colorIndex = 8),
-                )
-
-                items.forEach {
+                ).forEach {
                     libraryRepository.addItem(it)
                     Log.d("MainActivity", "LibraryItem ${it.name} created")
                     delay(1500) //make sure items have different createdAt values
+                }
+            }
+
+
+            libraryRepository.items.first().let { items ->
+                listOf(
+                    GoalDescriptionCreationAttributes(
+                        type = GoalType.NON_SPECIFIC,
+                        repeat = true,
+                        periodInPeriodUnits = (1..5).random(),
+                        periodUnit = GoalPeriodUnit.DAY,
+                    ),
+                    GoalDescriptionCreationAttributes(
+                        type = GoalType.ITEM_SPECIFIC,
+                        repeat = false,
+                        periodInPeriodUnits = (1..5).random(),
+                        periodUnit = GoalPeriodUnit.WEEK,
+                    ),
+                    GoalDescriptionCreationAttributes(
+                        type = GoalType.ITEM_SPECIFIC,
+                        repeat = true,
+                        periodInPeriodUnits = (1..5).random(),
+                        periodUnit = GoalPeriodUnit.DAY,
+                    ),
+                ).forEach {
+                    Log.d("MainActivity", "GoalDescription ${it.type} created")
+                    goalsRepository.add(
+                        it,
+                        if (it.type == GoalType.NON_SPECIFIC) null else listOf(items.random()),
+                        (1..10).random() * 60
+                    )
+                    delay(1500)
                 }
             }
         }
