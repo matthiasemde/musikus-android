@@ -125,12 +125,12 @@ fun Goals(
                 ))
         },
         topBar = {
-            val mainMenuUiState = mainUiState.menuUiState
             val topBarUiState = goalsUiState.topBarUiState
             LargeTopAppBar(
                 title = { Text( text = topBarUiState.title) },
                 scrollBehavior = scrollBehavior,
                 actions = {
+                    val mainMenuUiState = mainUiState.menuUiState
                     val sortMenuUiState = topBarUiState.sortMenuUiState
                     SortMenu(
                         show = sortMenuUiState.show,

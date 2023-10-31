@@ -46,6 +46,7 @@ class GoalRepository(
 
 
     val currentGoals = goalInstanceDao.getWithDescriptionsWithLibraryItems()
+    val lastFiveCompletedGoals = goalInstanceDao.getLastFiveCompletedWithDescriptionsWithLibraryItems()
 
 
     /** Mutators */

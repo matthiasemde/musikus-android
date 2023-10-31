@@ -357,4 +357,20 @@ abstract class GoalInstanceDao(
                 "AND renewed=0"
     )
     abstract fun getLatestPausedWithDescriptions(): Flow<List<GoalInstanceWithDescription>>
+
+    @Transaction
+    @RewriteQueriesToDropUnusedColumns
+    @Query(
+        "SELECT * FROM goal_instance " +
+                "WHERE goal_description_id IN (" +
+                "SELECT id FROM goal_description " +
+                "WHERE deleted=0" +
+                ")" +
+                "AND (start_timestamp + period_in_seconds) < :now " +
+                "ORDER BY (start_timestamp + period_in_seconds) DESC " +
+                "LIMIT 5"
+    )
+    abstract fun getLastFiveCompletedWithDescriptionsWithLibraryItems(
+       now: Long = getCurrTimestamp()
+    ): Flow<List<GoalInstanceWithDescriptionWithLibraryItems>>
 }

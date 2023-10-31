@@ -74,7 +74,7 @@ import app.musikus.ui.goals.ProgressUpdate
 import app.musikus.ui.library.Library
 import app.musikus.ui.sessionlist.EditSession
 import app.musikus.ui.sessionlist.Sessions
-import app.musikus.ui.statistics.StatisticsFragmentHolder
+import app.musikus.ui.statistics.Statistics
 import app.musikus.utils.ExportDatabaseContract
 import app.musikus.utils.ExportImportDialog
 import app.musikus.utils.ImportDatabaseContract
@@ -312,7 +312,7 @@ class MainActivity : AppCompatActivity() {
                         ) { Goals(mainViewModel) }
                         composable(
                             route = Screen.Statistics.route,
-                        ) { StatisticsFragmentHolder() }
+                        ) { Statistics(mainViewModel) }
                         composable(
                             route = Screen.Library.route,
                         ) { Library (mainViewModel) }
