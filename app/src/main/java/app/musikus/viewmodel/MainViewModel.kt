@@ -23,12 +23,15 @@ import app.musikus.database.entities.GoalPeriodUnit
 import app.musikus.database.entities.GoalType
 import app.musikus.database.entities.LibraryFolderCreationAttributes
 import app.musikus.database.entities.LibraryItemCreationAttributes
+import app.musikus.database.entities.SectionCreationAttributes
+import app.musikus.database.entities.SessionCreationAttributes
 import app.musikus.datastore.ThemeSelections
 import app.musikus.repository.GoalRepository
 import app.musikus.repository.LibraryRepository
 import app.musikus.repository.SessionRepository
 import app.musikus.repository.UserPreferencesRepository
 import app.musikus.shared.MultiFabState
+import app.musikus.utils.getCurrTimestamp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -71,7 +74,6 @@ class MainViewModel(
     /** Repositories */
     private val userPreferencesRepository = UserPreferencesRepository(application.dataStore)
     private val libraryRepository = LibraryRepository(database)
-    private val goalsRepository = GoalRepository(database)
 
     private fun prepopulateDatabase() {
         Log.d("MainViewModel", "prepopulateDatabase")
@@ -115,6 +117,12 @@ class MainViewModel(
                         periodUnit = GoalPeriodUnit.DAY,
                     ),
                     GoalDescriptionCreationAttributes(
+                        type = GoalType.NON_SPECIFIC,
+                        repeat = false,
+                        periodInPeriodUnits = (1..5).random(),
+                        periodUnit = GoalPeriodUnit.MONTH,
+                    ),
+                    GoalDescriptionCreationAttributes(
                         type = GoalType.ITEM_SPECIFIC,
                         repeat = false,
                         periodInPeriodUnits = (1..5).random(),
@@ -128,10 +136,28 @@ class MainViewModel(
                     ),
                 ).forEach {
                     Log.d("MainActivity", "GoalDescription ${it.type} created")
-                    goalsRepository.add(
+                    GoalRepository(database).add(
                         it,
                         if (it.type == GoalType.NON_SPECIFIC) null else listOf(items.random()),
                         (1..10).random() * 60
+                    )
+                    delay(1500)
+                }
+
+                (0..30).map { sessionNum ->
+                    sessionNum to SessionCreationAttributes(
+                        breakDuration = (5..20).random() * 60,
+                        rating = (1..5).random(),
+                        comment = "",
+                    )
+                }.forEach { (sessionNum, session) ->
+                    SessionRepository(database).add(
+                        session,
+                        (1..(1..5).random()).map { SectionCreationAttributes(
+                            libraryItemId = Nullable(items.random().id),
+                            timestamp = getCurrTimestamp() - sessionNum * 24 * 60 * 60 * 2,
+                            duration = (5..20).random() * 60,
+                        )}
                     )
                     delay(1500)
                 }

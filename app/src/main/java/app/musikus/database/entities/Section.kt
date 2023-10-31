@@ -19,7 +19,6 @@ import app.musikus.database.Nullable
 import java.util.UUID
 
 private interface ISectionCreationAttributes : IBaseModelCreationAttributes {
-    val sessionId: Nullable<UUID>
     val libraryItemId: Nullable<UUID>
     val duration: Int
     val timestamp: Long
@@ -30,7 +29,6 @@ private interface ISectionUpdateAttributes : IBaseModelUpdateAttributes {
 }
 
 data class SectionCreationAttributes(
-    override val sessionId: Nullable<UUID>,
     override val libraryItemId: Nullable<UUID>,
     override var duration: Int,
     override val timestamp: Long,
@@ -58,7 +56,7 @@ data class SectionUpdateAttributes(
     ]
 )
 data class SectionModel (
-    @ColumnInfo(name="session_id", index = true) override val sessionId: Nullable<UUID>,
+    @ColumnInfo(name="session_id", index = true) val sessionId: Nullable<UUID>,
     @ColumnInfo(name="library_item_id", index = true) override val libraryItemId: Nullable<UUID>,
     @ColumnInfo(name="duration") override var duration: Int,
     @ColumnInfo(name="timestamp") override val timestamp: Long,
