@@ -81,7 +81,7 @@ fun Sessions(
     editSession: (sessionId: UUID) -> Unit,
 ) {
     val mainUiState by mainViewModel.uiState.collectAsState()
-    val sessionsUiState by sessionsViewModel.sessionsUiState.collectAsState()
+    val sessionsUiState by sessionsViewModel.uiState.collectAsState()
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 

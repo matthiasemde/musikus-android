@@ -64,7 +64,7 @@ fun Library(
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
     val mainUiState by mainViewModel.uiState.collectAsState()
-    val libraryUiState by libraryViewModel.libraryUiState.collectAsState()
+    val libraryUiState by libraryViewModel.uiState.collectAsState()
 
     BackHandler(
         enabled = libraryUiState.actionModeUiState.isActionMode,

@@ -493,7 +493,7 @@ class LibraryViewModel(
         )
     )
 
-    val libraryUiState = combine(
+    val uiState = combine(
         topBarUiState,
         actionModeUiState,
         contentUiState,
@@ -539,7 +539,7 @@ class LibraryViewModel(
         }
 
         // Short Click
-        if(!libraryUiState.value.actionModeUiState.isActionMode) {
+        if(!uiState.value.actionModeUiState.isActionMode) {
             _activeFolder.update { folder }
         } else {
             if(_selectedFolders.value.contains(folder)) {
@@ -564,7 +564,7 @@ class LibraryViewModel(
         }
 
         // Short Click
-        if(!libraryUiState.value.actionModeUiState.isActionMode) {
+        if(!uiState.value.actionModeUiState.isActionMode) {
             _itemToEdit.update { item }
             _itemEditData.update {
                 LibraryItemEditData(

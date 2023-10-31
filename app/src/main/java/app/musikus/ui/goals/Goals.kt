@@ -78,7 +78,7 @@ fun Goals(
     goalsViewModel: GoalsViewModel = viewModel(),
 ) {
     val mainUiState by mainViewModel.uiState.collectAsState()
-    val goalsUiState by goalsViewModel.goalsUiState.collectAsState()
+    val goalsUiState by goalsViewModel.uiState.collectAsState()
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 

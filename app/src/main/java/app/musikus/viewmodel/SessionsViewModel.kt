@@ -230,7 +230,7 @@ class SessionsViewModel(
         )
     )
 
-    val sessionsUiState = combine(
+    val uiState = combine(
         topBarUiState,
         actionModeUiState,
         contentUiState,

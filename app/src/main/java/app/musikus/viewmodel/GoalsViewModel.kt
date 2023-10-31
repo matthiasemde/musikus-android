@@ -196,7 +196,7 @@ class GoalsViewModel(
     private val _showSortModeMenu = MutableStateFlow(false)
 
     // Goal dialog
-    private val _goalDialogData = MutableStateFlow<GoalDialogData?>(null)
+    private val _dialogData = MutableStateFlow<GoalDialogData?>(null)
     private val _goalToEdit = MutableStateFlow<GoalInstanceWithDescriptionWithLibraryItems?>(null)
 
     // Action mode
@@ -358,7 +358,7 @@ class GoalsViewModel(
     )
 
     private val dialogUiState = combine(
-        _goalDialogData,
+        _dialogData,
         _goalToEdit,
         sortedItems,
     ) { dialogData, goalToEdit, sortedItems ->
@@ -376,7 +376,7 @@ class GoalsViewModel(
         initialValue = null
     )
 
-    val goalsUiState = combine(
+    val uiState = combine(
         topBarUiState,
         actionModeUiState,
         contentUiState,
@@ -402,7 +402,7 @@ class GoalsViewModel(
     /** State modifiers */
 
     fun showDialog(oneShot: Boolean) {
-        _goalDialogData.update {
+        _dialogData.update {
             GoalDialogData(
                 target = 0,
                 periodInPeriodUnits = 1,
@@ -430,7 +430,7 @@ class GoalsViewModel(
     fun onEditAction() {
         _selectedGoals.value.first().let {goalToEdit ->
             _goalToEdit.update { goalToEdit }
-            _goalDialogData.update {
+            _dialogData.update {
                 GoalDialogData(
                     target = goalToEdit.instance.target,
                 )
@@ -510,7 +510,7 @@ class GoalsViewModel(
         if(!actionModeUiState.value.isActionMode) {
             if(!goal.description.description.paused) {
                 _goalToEdit.update { goal }
-                _goalDialogData.update {
+                _dialogData.update {
                     GoalDialogData(
                         target = goal.instance.target,
                     )
@@ -526,27 +526,27 @@ class GoalsViewModel(
     }
 
     fun onTargetChanged(target: Int) {
-        _goalDialogData.update { it?.copy(target = target) }
+        _dialogData.update { it?.copy(target = target) }
     }
 
     fun onPeriodChanged(period: Int) {
-        _goalDialogData.update { it?.copy(periodInPeriodUnits = period) }
+        _dialogData.update { it?.copy(periodInPeriodUnits = period) }
     }
 
     fun onPeriodUnitChanged(unit: GoalPeriodUnit) {
-        _goalDialogData.update { it?.copy(periodUnit = unit) }
+        _dialogData.update { it?.copy(periodUnit = unit) }
     }
 
     fun onGoalTypeChanged(type: GoalType) {
-        _goalDialogData.update { it?.copy(goalType = type) }
+        _dialogData.update { it?.copy(goalType = type) }
     }
 
     fun onLibraryItemsChanged(items: List<LibraryItem>) {
-        _goalDialogData.update { it?.copy(selectedLibraryItems = items) }
+        _dialogData.update { it?.copy(selectedLibraryItems = items) }
     }
 
     fun clearDialog() {
-        _goalDialogData.update { null }
+        _dialogData.update { null }
         _goalToEdit.update { null }
     }
 
