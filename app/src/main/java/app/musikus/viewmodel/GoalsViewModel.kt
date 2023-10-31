@@ -10,7 +10,6 @@ package app.musikus.viewmodel
 
 import android.app.Application
 import android.util.Log
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import app.musikus.dataStore
@@ -29,7 +28,7 @@ import app.musikus.repository.GoalRepository
 import app.musikus.repository.LibraryRepository
 import app.musikus.repository.SessionRepository
 import app.musikus.repository.UserPreferencesRepository
-import app.musikus.shared.MultiFABState
+import app.musikus.shared.MultiFabState
 import app.musikus.shared.TopBarUiState
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
@@ -89,9 +88,7 @@ data class GoalsDialogUiState(
     val mode: DialogMode,
     val goalToEdit: GoalInstanceWithDescriptionWithLibraryItems?,
     val dialogData: GoalDialogData,
-    val periodUnitSelectorExpanded: Boolean,
     val libraryItems: List<LibraryItem>,
-    val itemSelectorExpanded: Boolean,
 )
 
 data class GoalsUiState (
@@ -99,7 +96,7 @@ data class GoalsUiState (
     val actionModeUiState: GoalsActionModeUiState,
     val contentUiState: GoalsContentUiState,
     val dialogUiState: GoalsDialogUiState?,
-//    val fabUiState: GoalsFabUiState,
+    val multiFabState: MultiFabState,
 )
 
 class GoalsViewModel(
@@ -204,12 +201,8 @@ class GoalsViewModel(
     private val _goalDialogData = MutableStateFlow<GoalDialogData?>(null)
     private val _goalToEdit = MutableStateFlow<GoalInstanceWithDescriptionWithLibraryItems?>(null)
 
-    private val _periodUnitSelectorExpanded = MutableStateFlow(false)
-
-    private val _libraryItemsSelectorExpanded = MutableStateFlow(false)
-
-    // MultiFAB TODO
-    var multiFABState = mutableStateOf(MultiFABState.COLLAPSED)
+    // MultiFAB
+    private var _multiFabState = MutableStateFlow(MultiFabState.COLLAPSED)
 
     // Action mode
     private val _selectedGoals = MutableStateFlow<Set<GoalInstanceWithDescriptionWithLibraryItems>>(emptySet())
@@ -373,18 +366,14 @@ class GoalsViewModel(
         _goalDialogData,
         _goalToEdit,
         sortedItems,
-        _periodUnitSelectorExpanded,
-        _libraryItemsSelectorExpanded
-    ) { dialogData, goalToEdit, sortedItems, periodUnitSelectorExpanded, itemSelectorExpanded ->
+    ) { dialogData, goalToEdit, sortedItems ->
         if(dialogData == null) return@combine null // if data == null, the ui state should be null ergo we don't show the dialog
 
         GoalsDialogUiState(
             mode = if (goalToEdit == null) DialogMode.ADD else DialogMode.EDIT,
             dialogData = dialogData,
             goalToEdit = goalToEdit,
-            periodUnitSelectorExpanded = periodUnitSelectorExpanded,
             libraryItems = sortedItems,
-            itemSelectorExpanded = itemSelectorExpanded,
         )
     }.stateIn(
         scope = viewModelScope,
@@ -397,12 +386,14 @@ class GoalsViewModel(
         actionModeUiState,
         contentUiState,
         dialogUiState,
-    ) { topBarUiState, actionModeUiState, contentUiState, dialogUiState ->
+        _multiFabState,
+    ) { topBarUiState, actionModeUiState, contentUiState, dialogUiState, multiFabState ->
         GoalsUiState(
             topBarUiState = topBarUiState,
             actionModeUiState = actionModeUiState,
             contentUiState = contentUiState,
             dialogUiState = dialogUiState,
+            multiFabState = multiFabState,
         )
     }.stateIn(
         scope = viewModelScope,
@@ -412,6 +403,7 @@ class GoalsViewModel(
             actionModeUiState = actionModeUiState.value,
             contentUiState = contentUiState.value,
             dialogUiState = dialogUiState.value,
+            multiFabState = _multiFabState.value,
         )
     )
 
@@ -430,8 +422,6 @@ class GoalsViewModel(
                 } ?: emptyList(),
             )
         }
-        _periodUnitSelectorExpanded.update { false }
-        _libraryItemsSelectorExpanded.update { false }
     }
 
     fun onSortMenuShowChanged(show: Boolean) {
@@ -555,15 +545,8 @@ class GoalsViewModel(
         _goalDialogData.update { it?.copy(periodUnit = unit) }
     }
 
-    fun onPeriodUnitSelectorExpandedChanged(expanded: Boolean) {
-        _periodUnitSelectorExpanded.update { expanded }
-    }
     fun onGoalTypeChanged(type: GoalType) {
         _goalDialogData.update { it?.copy(goalType = type) }
-    }
-
-    fun onLibraryItemsSelectorExpandedChanged(expanded: Boolean) {
-        _libraryItemsSelectorExpanded.update { expanded }
     }
 
     fun onLibraryItemsChanged(items: List<LibraryItem>) {
@@ -573,8 +556,6 @@ class GoalsViewModel(
     fun clearDialog() {
         _goalDialogData.update { null }
         _goalToEdit.update { null }
-        _periodUnitSelectorExpanded.update { false }
-        _libraryItemsSelectorExpanded.update { false }
     }
 
     fun onDialogConfirm() {
@@ -601,5 +582,9 @@ class GoalsViewModel(
                 clearDialog()
             }
         }
+    }
+
+    fun onMultiFabStateChanged(state: MultiFabState) {
+        _multiFabState.update { state }
     }
 }

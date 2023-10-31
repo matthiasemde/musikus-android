@@ -13,6 +13,7 @@
 package app.musikus.ui.library
 
 import android.view.*
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -82,6 +83,24 @@ fun Library(
 
     val libraryUiState by libraryViewModel.libraryUiState.collectAsState()
 
+    BackHandler(
+        enabled = libraryUiState.actionModeUiState.isActionMode,
+        onBack = libraryViewModel::clearActionMode
+    )
+
+    BackHandler(
+        enabled = libraryUiState.topBarUiState.showBackButton,
+        onBack = libraryViewModel::onTopBarBackPressed
+    )
+
+    BackHandler(
+        enabled = libraryUiState.fabUiState.multiFabState == MultiFabState.EXPANDED,
+        onBack = {
+            libraryViewModel.onMultiFabStateChanged(MultiFabState.COLLAPSED)
+            mainViewModel.showNavBarScrim.value = false
+        }
+    )
+
     Scaffold(
         contentWindowInsets = WindowInsets(bottom = 0.dp), // makes sure FAB is not shifted up
         modifier = Modifier
@@ -99,11 +118,11 @@ fun Library(
                 }
             } else {
                 MultiFAB(
-                    state = libraryViewModel.multiFABState.value,
+                    state = fabUiState.multiFabState,
                     onStateChange = { state ->
-                        libraryViewModel.multiFABState.value = state
-                        mainViewModel.showNavBarScrim.value = (state == MultiFABState.EXPANDED)
-                        if(state == MultiFABState.EXPANDED) {
+                        libraryViewModel.onMultiFabStateChanged(state)
+                        mainViewModel.showNavBarScrim.value = (state == MultiFabState.EXPANDED)
+                        if(state == MultiFabState.EXPANDED) {
                             libraryViewModel.clearActionMode()
                         }
                     },
@@ -111,7 +130,7 @@ fun Library(
                         MiniFABData(
                             onClick = {
                                 libraryViewModel.showItemDialog()
-                                libraryViewModel.multiFABState.value = MultiFABState.COLLAPSED
+                                libraryViewModel.onMultiFabStateChanged(MultiFabState.COLLAPSED)
                                 mainViewModel.showNavBarScrim.value = false
                             },
                             label = "Item",
@@ -120,7 +139,7 @@ fun Library(
                         MiniFABData(
                             onClick = {
                                 libraryViewModel.showFolderDialog()
-                                libraryViewModel.multiFABState.value = MultiFABState.COLLAPSED
+                                libraryViewModel.onMultiFabStateChanged(MultiFabState.COLLAPSED)
                                 mainViewModel.showNavBarScrim.value = false
                             },
                             label = "Folder",
@@ -263,7 +282,7 @@ fun Library(
             AnimatedVisibility(
                 modifier = Modifier
                     .zIndex(1f),
-                visible = libraryViewModel.multiFABState.value == MultiFABState.EXPANDED,
+                visible = contentUiState.showScrim,
                 enter = fadeIn(),
                 exit = fadeOut()
             ) {
@@ -275,7 +294,7 @@ fun Library(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null,
                         ) {
-                            libraryViewModel.multiFABState.value = MultiFABState.COLLAPSED
+                            libraryViewModel.onMultiFabStateChanged(MultiFabState.COLLAPSED)
                             mainViewModel.showNavBarScrim.value = false
                         }
                 )

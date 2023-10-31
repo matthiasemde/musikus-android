@@ -24,7 +24,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 
-enum class MultiFABState {
+enum class MultiFabState {
     EXPANDED,
     COLLAPSED
 }
@@ -37,24 +37,24 @@ data class MiniFABData(
 
 @Composable
 fun MultiFAB(
-    state: MultiFABState,
-    onStateChange: (MultiFABState) -> Unit,
+    state: MultiFabState,
+    onStateChange: (MultiFabState) -> Unit,
     miniFABs: List<MiniFABData>
 ) {
     val transition = updateTransition(targetState = state, label = "transition")
     val rotate by transition.animateFloat(label = "rotate") {
-        if (it == MultiFABState.EXPANDED) 135f else 0f
+        if (it == MultiFabState.EXPANDED) 135f else 0f
     }
 
     val miniFabScale by transition.animateFloat(label = "miniFabScale") {
-        if (it == MultiFABState.EXPANDED) 1f else 0f
+        if (it == MultiFabState.EXPANDED) 1f else 0f
     }
 
     Column(modifier = Modifier
         .zIndex(1f),
         horizontalAlignment = Alignment.End
     ) {
-        if (transition.targetState == MultiFABState.EXPANDED || transition.currentState == MultiFABState.EXPANDED) {
+        if (transition.targetState == MultiFabState.EXPANDED || transition.currentState == MultiFabState.EXPANDED) {
             Column(
                 horizontalAlignment = Alignment.End,
                 modifier = Modifier
@@ -73,7 +73,7 @@ fun MultiFAB(
         }
         FloatingActionButton(
             onClick = { onStateChange(
-                if(state == MultiFABState.EXPANDED) MultiFABState.COLLAPSED else MultiFABState.EXPANDED
+                if(state == MultiFabState.EXPANDED) MultiFabState.COLLAPSED else MultiFabState.EXPANDED
             ) },
         ) {
             Icon(Icons.Default.Add, modifier = Modifier.rotate(rotate), contentDescription = "Expand")

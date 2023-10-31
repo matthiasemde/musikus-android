@@ -10,12 +10,11 @@ package app.musikus.viewmodel
 
 import android.app.Application
 import android.util.Log
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import app.musikus.dataStore
-import app.musikus.database.Nullable
 import app.musikus.database.MusikusDatabase
+import app.musikus.database.Nullable
 import app.musikus.database.daos.LibraryFolder
 import app.musikus.database.daos.LibraryItem
 import app.musikus.database.entities.LibraryFolderCreationAttributes
@@ -27,7 +26,7 @@ import app.musikus.datastore.LibraryItemSortMode
 import app.musikus.datastore.SortDirection
 import app.musikus.repository.LibraryRepository
 import app.musikus.repository.UserPreferencesRepository
-import app.musikus.shared.MultiFABState
+import app.musikus.shared.MultiFabState
 import app.musikus.shared.TopBarUiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted.Companion.WhileSubscribed
@@ -105,6 +104,7 @@ data class LibraryContentUiState(
     val foldersUiState: LibraryFoldersUiState?,
     val itemsUiState: LibraryItemsUiState?,
 
+    val showScrim: Boolean,
     val showHint: Boolean,
 )
 
@@ -130,6 +130,7 @@ data class LibraryDialogState(
 )
 
 data class LibraryFabUiState(
+    val multiFabState: MultiFabState,
     val activeFolder: LibraryFolder?,
 )
 
@@ -265,8 +266,8 @@ class LibraryViewModel(
 
     private val _folderSelectorExpanded = MutableStateFlow(false)
 
-    // Multi FAB TODO
-    var multiFABState = mutableStateOf(MultiFABState.COLLAPSED)
+    // Multi FAB
+    private var _multiFabState = MutableStateFlow(MultiFabState.COLLAPSED)
 
     // Action mode
     private val _selectedFolders = MutableStateFlow<Set<LibraryFolder>>(emptySet())
@@ -404,11 +405,13 @@ class LibraryViewModel(
         foldersUiState,
         _activeFolder,
         itemsUiState,
-    ) { foldersUiState, activeFolder, itemsUiState ->
+        _multiFabState,
+    ) { foldersUiState, activeFolder, itemsUiState, multiFabState ->
         LibraryContentUiState(
             foldersUiState = if (activeFolder == null) foldersUiState else null,
             itemsUiState = itemsUiState,
             showHint = foldersUiState == null && itemsUiState == null,
+            showScrim = multiFabState == MultiFabState.EXPANDED,
         ).also { Log.d("LibraryViewModel", "contentUiState updated") }
     }.stateIn(
         scope = viewModelScope,
@@ -417,6 +420,7 @@ class LibraryViewModel(
             foldersUiState = foldersUiState.value,
             itemsUiState = itemsUiState.value,
             showHint = true,
+            showScrim = false,
         )
     )
 
@@ -484,8 +488,12 @@ class LibraryViewModel(
         )
     )
 
-    private val fabUiState = _activeFolder.map { activeFolder ->
+    private val fabUiState = combine(
+        _multiFabState,
+        _activeFolder
+    ) { multiFABState, activeFolder ->
         LibraryFabUiState(
+            multiFabState = multiFABState,
             activeFolder = activeFolder,
         ).also {
             Log.d("LibraryViewModel", "fabUiState updated")
@@ -494,6 +502,7 @@ class LibraryViewModel(
         scope = viewModelScope,
         started = WhileSubscribed(5000),
         initialValue = LibraryFabUiState(
+            multiFabState = _multiFabState.value,
             activeFolder = null,
         )
     )
@@ -738,5 +747,9 @@ class LibraryViewModel(
         viewModelScope.launch {
             userPreferencesRepository.updateLibraryItemSortMode(selection)
         }
+    }
+
+    fun onMultiFabStateChanged(state: MultiFabState) {
+        _multiFabState.update { state }
     }
 }

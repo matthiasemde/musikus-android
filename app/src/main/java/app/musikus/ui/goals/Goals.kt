@@ -13,6 +13,7 @@
 
 package app.musikus.ui.goals
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -62,7 +63,7 @@ import app.musikus.shared.CommonMenuSelections
 import app.musikus.shared.MainMenu
 import app.musikus.shared.MiniFABData
 import app.musikus.shared.MultiFAB
-import app.musikus.shared.MultiFABState
+import app.musikus.shared.MultiFabState
 import app.musikus.shared.Selectable
 import app.musikus.shared.SortMenu
 import app.musikus.shared.ThemeMenu
@@ -80,17 +81,30 @@ fun Goals(
 
     val goalsUiState by goalsViewModel.goalsUiState.collectAsState()
 
+    BackHandler(
+        enabled = goalsUiState.actionModeUiState.isActionMode,
+        onBack = goalsViewModel::clearActionMode
+    )
+
+    BackHandler(
+        enabled = goalsUiState.multiFabState == MultiFabState.EXPANDED,
+        onBack = {
+            goalsViewModel.onMultiFabStateChanged(MultiFabState.COLLAPSED)
+            mainViewModel.showNavBarScrim.value = false
+        }
+    )
+
     Scaffold(
         contentWindowInsets = WindowInsets(bottom = 0.dp), // makes sure FAB is not shifted up
         modifier = Modifier
             .nestedScroll(scrollBehavior.nestedScrollConnection),
         floatingActionButton = {
             MultiFAB(
-                state = goalsViewModel.multiFABState.value,
+                state = goalsUiState.multiFabState,
                 onStateChange = { state ->
-                    goalsViewModel.multiFABState.value = state
-                    mainViewModel.showNavBarScrim.value = (state == MultiFABState.EXPANDED)
-                    if(state == MultiFABState.EXPANDED) {
+                    goalsViewModel.onMultiFabStateChanged(state)
+                    mainViewModel.showNavBarScrim.value = (state == MultiFabState.EXPANDED)
+                    if(state == MultiFabState.EXPANDED) {
                         goalsViewModel.clearActionMode()
                     }
                 },
@@ -98,7 +112,7 @@ fun Goals(
                     MiniFABData(
                         onClick = {
                             goalsViewModel.showDialog(oneShot = true)
-                            goalsViewModel.multiFABState.value = MultiFABState.COLLAPSED
+                            goalsViewModel.onMultiFabStateChanged(MultiFabState.COLLAPSED)
                             mainViewModel.showNavBarScrim.value = false
                         },
                         label = "One shot goal",
@@ -107,7 +121,7 @@ fun Goals(
                     MiniFABData(
                         onClick = {
                             goalsViewModel.showDialog(oneShot = false)
-                            goalsViewModel.multiFABState.value = MultiFABState.COLLAPSED
+                            goalsViewModel.onMultiFabStateChanged(MultiFabState.COLLAPSED)
                             mainViewModel.showNavBarScrim.value = false
                         },
                         label = "Regular goal",
@@ -292,7 +306,7 @@ fun Goals(
             AnimatedVisibility(
                 modifier = Modifier
                     .zIndex(1f),
-                visible = goalsViewModel.multiFABState.value == MultiFABState.EXPANDED,
+                visible = goalsUiState.multiFabState == MultiFabState.EXPANDED,
                 enter = fadeIn(),
                 exit = fadeOut()
             ) {
@@ -304,7 +318,7 @@ fun Goals(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null,
                         ) {
-                            goalsViewModel.multiFABState.value = MultiFABState.COLLAPSED
+                            goalsViewModel.onMultiFabStateChanged(MultiFabState.COLLAPSED)
                             mainViewModel.showNavBarScrim.value = false
                         }
                 )
