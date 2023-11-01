@@ -17,10 +17,12 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -54,6 +56,7 @@ import app.musikus.utils.TIME_FORMAT_HUMAN_PRETTY_SHORT
 import app.musikus.utils.getDurationString
 import app.musikus.viewmodel.MainViewModel
 import app.musikus.viewmodel.StatisticsCurrentMonthUiState
+import app.musikus.viewmodel.StatisticsGoalCardUiState
 import app.musikus.viewmodel.StatisticsPracticeDurationCardUiState
 import app.musikus.viewmodel.StatisticsViewModel
 
@@ -122,7 +125,7 @@ fun Statistics(
             ) {
                 StatisticsCurrentMonth(contentUiState.currentMonthUiState)
                 StatisticsPracticeDurationCard(contentUiState.practiceDurationCardUiState)
-    //            StatisticsGoalCard(contentUiState.goalCardUiState)
+                StatisticsGoalCard(contentUiState.goalCardUiState)
     //            StatisticsRatingsCard(contentUiState.ratingsCardUiState)
             }
         }
@@ -208,7 +211,9 @@ fun StatisticsPracticeDurationCard(
     uiState: StatisticsPracticeDurationCardUiState,
 ) {
     ElevatedCard(modifier = Modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.fillMaxWidth().padding(MaterialTheme.spacing.medium)) {
+        Column(modifier = Modifier
+            .fillMaxWidth()
+            .padding(MaterialTheme.spacing.medium)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -286,6 +291,70 @@ fun StatisticsPracticeDurationCard(
 
                             if (index < uiState.lastSevenDayPracticeDuration.size - 1) {
                                 Spacer(modifier = Modifier.weight(1f))
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun StatisticsGoalCard(
+    uiState: StatisticsGoalCardUiState
+) {
+    ElevatedCard(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier
+            .fillMaxWidth()
+            .padding(MaterialTheme.spacing.medium)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(text = "Your Goals")
+                Icon(
+                    //                modifier = Modifier.fillMaxHeight(),
+                    imageVector = Icons.Default.KeyboardArrowRight,
+                    contentDescription = "more",
+                )
+            }
+            Text(
+                text = "Last 5 expired goals"
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = CenterVertically,
+            ) {
+                Column {
+                    Text(
+                        text = "" +
+                                "${uiState.lastGoals.filter { it.progress > it.goal.instance.target }.size}" +
+                                "/" +
+                                "${uiState.lastGoals.size}",
+                    )
+                    Text(text = "Achieved")
+                }
+
+                Spacer(modifier = Modifier.weight(2f))
+
+                if (uiState.lastGoals.isEmpty()) {
+                    Text(text = "No data")
+                } else {
+                    Row(
+                        modifier = Modifier
+                            .height(80.dp)
+                            .weight(3f)
+                    ) {
+                        uiState.lastGoals.forEach { (goal, progress) ->
+                            Column {
+                                CircularProgressIndicator(
+                                    progress = progress.toFloat() / goal.instance.target.toFloat(),
+                                    modifier = Modifier
+                                        .height(40.dp)
+                                        .width(40.dp)
+                                )
                             }
                         }
                     }
