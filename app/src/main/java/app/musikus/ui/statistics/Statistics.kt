@@ -8,28 +8,44 @@
 
 package app.musikus.ui.statistics
 
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.RoundRect
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.drawText
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -38,10 +54,14 @@ import app.musikus.datastore.ThemeSelections
 import app.musikus.shared.CommonMenuSelections
 import app.musikus.shared.MainMenu
 import app.musikus.shared.ThemeMenu
+import app.musikus.spacing
+import app.musikus.utils.TIME_FORMAT_HUMAN_PRETTY
 import app.musikus.utils.TIME_FORMAT_HUMAN_PRETTY_SHORT
 import app.musikus.utils.getDurationString
+import app.musikus.utils.specificDayToName
 import app.musikus.viewmodel.MainViewModel
 import app.musikus.viewmodel.StatisticsCurrentMonthUiState
+import app.musikus.viewmodel.StatisticsPracticeDurationCardUiState
 import app.musikus.viewmodel.StatisticsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -101,9 +121,9 @@ fun Statistics(
         },
         content = { paddingValues ->
             val contentUiState = statisticsUiState.contentUiState
-            Box(modifier = Modifier.padding(paddingValues)) {
+            Column(modifier = Modifier.padding(paddingValues)) {
                 StatisticsCurrentMonth(contentUiState.currentMonthUiState)
-    //            StatisticsPracticeDurationCard(contentUiState.practiceDurationCardUiState)
+                StatisticsPracticeDurationCard(contentUiState.practiceDurationCardUiState)
     //            StatisticsGoalCard(contentUiState.goalCardUiState)
     //            StatisticsRatingsCard(contentUiState.ratingsCardUiState)
             }
@@ -111,7 +131,6 @@ fun Statistics(
     )
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun StatisticsCurrentMonth(
     uiState: StatisticsCurrentMonthUiState,
@@ -123,7 +142,9 @@ fun StatisticsCurrentMonth(
                 .fillMaxWidth()
         ) {
            Column(
-               modifier = Modifier.weight(1f).padding(horizontal = 4.dp),
+               modifier = Modifier
+                   .weight(1f)
+                   .padding(horizontal = 4.dp),
                horizontalAlignment = CenterHorizontally,
            ) {
                Text(
@@ -136,7 +157,9 @@ fun StatisticsCurrentMonth(
                Text(text = "Total duration", fontSize = 12.sp, maxLines = 1)
            }
             Column(
-                modifier = Modifier.weight(1f).padding(horizontal = 4.dp),
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 4.dp),
                 horizontalAlignment = CenterHorizontally,
             ) {
                 Text(
@@ -149,7 +172,9 @@ fun StatisticsCurrentMonth(
                 Text(text = "Per session", fontSize = 12.sp, maxLines = 1)
             }
             Column(
-                modifier = Modifier.weight(1f).padding(horizontal = 4.dp),
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 4.dp),
                 horizontalAlignment = CenterHorizontally
             ) {
                 Text(
@@ -162,16 +187,118 @@ fun StatisticsCurrentMonth(
                 Text(text = "Break per hour", fontSize = 12.sp, maxLines = 1)
             }
             Column(
-                modifier = Modifier.weight(1f).padding(horizontal = 4.dp),
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 4.dp),
                 horizontalAlignment = CenterHorizontally
             ) {
                 Text(
                     text =
-                        stringResource(R.string.average_sign) + " " +
-                        uiState.averageRatingPerSession.toString(),
+                        stringResource(R.string.average_sign) + " %.1f".format(
+                            uiState.averageRatingPerSession
+                        ),
                     fontSize = 20.sp
                 )
                 Text(text = "Rating", fontSize = 12.sp, maxLines = 1)
+            }
+        }
+    }
+}
+
+@Composable
+fun StatisticsPracticeDurationCard(
+    uiState: StatisticsPracticeDurationCardUiState,
+) {
+    ElevatedCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(MaterialTheme.spacing.large)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(text = "Practice Time")
+            Icon(
+//                modifier = Modifier.fillMaxHeight(),
+                imageVector = Icons.Default.KeyboardArrowRight,
+                contentDescription = "more",
+            )
+        }
+        Text (
+            text = "Last 7 days"
+        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = MaterialTheme.spacing.small),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column() {
+                Text(text = getDurationString(
+                    uiState.totalPracticeDuration,
+                    TIME_FORMAT_HUMAN_PRETTY
+                ).toString())
+                Text(text = "Total")
+            }
+
+            Spacer(modifier = Modifier
+                .requiredWidth(8.dp)
+                .weight(2f))
+
+            val primaryColor = MaterialTheme.colorScheme.primary
+            val onSurfaceColor = MaterialTheme.colorScheme.onSurface
+            val textMeasurer = rememberTextMeasurer()
+
+            Canvas(
+                modifier = Modifier
+                    .height(80.dp)
+                    .requiredWidth(200.dp)
+                    .weight(3f)
+            ) {
+                if (uiState.lastSevenDayPracticeDuration.isEmpty()) return@Canvas
+
+                val columnWidth = size.width / 13
+                val textOffset = 10.sp.toPx() + 4.dp.toPx() // leave room for text + small padding
+                val heightScaling =
+                    (size.height - textOffset) /
+                    uiState.lastSevenDayPracticeDuration.maxOf { it.duration }
+                val cornerRadius = CornerRadius(10f, 10f)
+
+                uiState.lastSevenDayPracticeDuration.forEachIndexed { index, (day, duration) ->
+                    val columnHeight = duration * heightScaling
+                    val xOffset = index * columnWidth * 2
+                    val path = Path().apply {
+                        addRoundRect(
+                            RoundRect(
+                                rect = Rect(
+                                    offset = Offset(
+                                        x = xOffset,
+                                        y = size.height - (columnHeight + textOffset),
+                                    ),
+                                    size = Size(columnWidth, columnHeight),
+                                ),
+                                topLeft = cornerRadius,
+                                topRight = cornerRadius,
+                            )
+                        )
+                    }
+                    drawPath(path, color = primaryColor)
+
+                    drawText(
+                        textMeasurer = textMeasurer,
+                        text = specificDayToName(day)[0].toString(),
+                        topLeft = Offset(
+                            x = xOffset,
+                            y = size.height - textOffset,
+                        ),
+                        style = TextStyle(
+                            fontSize = 10.sp,
+                            color = onSurfaceColor,
+                        )
+                    )
+                }
             }
         }
     }

@@ -43,7 +43,7 @@ data class StatisticsCurrentMonthUiState(
     val totalPracticeDuration: Int,
     val averageDurationPerSession: Int,
     val breakDurationPerHour: Int,
-    val averageRatingPerSession: Int,
+    val averageRatingPerSession: Float,
 )
 
 data class StatisticsPracticeDurationCardUiState(
@@ -109,10 +109,10 @@ class StatisticsViewModel(
             session.breakDuration
         }
         val averageRatingPerSession = currentMonthSessions.size.let {
-            if(it == 0) 0 else
+            if(it == 0) 0f else
             currentMonthSessions.sumOf { (session, _) ->
                 session.rating
-            } / it
+            }.toFloat() / it
         }
 
         StatisticsCurrentMonthUiState(
@@ -128,7 +128,7 @@ class StatisticsViewModel(
             totalPracticeDuration = 0,
             averageDurationPerSession = 0,
             breakDurationPerHour = 0,
-            averageRatingPerSession = 0,
+            averageRatingPerSession = 0f,
         )
     )
 

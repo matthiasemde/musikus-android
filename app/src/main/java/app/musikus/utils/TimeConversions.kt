@@ -326,3 +326,6 @@ fun getSpecificDay(epochSeconds: Long) =
     epochSecondsToDate(epochSeconds).let { date->
         date.dayOfYear + date.year * 366
     }
+
+fun specificDayToName(day: Int) =
+    epochSecondsToDate(day.toLong() * 24 * 60 * 60).dayOfWeek.name
