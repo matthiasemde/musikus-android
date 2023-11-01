@@ -8,15 +8,16 @@
 
 package app.musikus.ui.statistics
 
-import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.requiredWidth
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.MoreVert
@@ -35,17 +36,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.geometry.RoundRect
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.drawText
-import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -243,61 +237,50 @@ fun StatisticsPracticeDurationCard(
                 Text(text = "Total")
             }
 
-            Spacer(modifier = Modifier
-                .requiredWidth(8.dp)
-                .weight(2f))
+            Spacer(modifier = Modifier.weight(2f))
 
-            val primaryColor = MaterialTheme.colorScheme.primary
-            val onSurfaceColor = MaterialTheme.colorScheme.onSurface
-            val textMeasurer = rememberTextMeasurer()
+            if(uiState.lastSevenDayPracticeDuration.isEmpty()) {
+                Text(text = "No data")
+            } else {
+                Row(
+                    modifier = Modifier
+                        .height(80.dp)
+                        .weight(3f)
+                ) {
+                    val maxDuration = uiState.lastSevenDayPracticeDuration.maxOf { it.duration }
 
-            Canvas(
-                modifier = Modifier
-                    .height(80.dp)
-                    .requiredWidth(200.dp)
-                    .weight(3f)
-            ) {
-                if (uiState.lastSevenDayPracticeDuration.isEmpty()) return@Canvas
-
-                val columnWidth = size.width / 13
-                val textOffset = 10.sp.toPx() + 4.dp.toPx() // leave room for text + small padding
-                val heightScaling =
-                    (size.height - textOffset) /
-                    uiState.lastSevenDayPracticeDuration.maxOf { it.duration }
-                val cornerRadius = CornerRadius(10f, 10f)
-
-                uiState.lastSevenDayPracticeDuration.forEachIndexed { index, (day, duration) ->
-                    val columnHeight = duration * heightScaling
-                    val xOffset = index * columnWidth * 2
-                    val path = Path().apply {
-                        addRoundRect(
-                            RoundRect(
-                                rect = Rect(
-                                    offset = Offset(
-                                        x = xOffset,
-                                        y = size.height - (columnHeight + textOffset),
-                                    ),
-                                    size = Size(columnWidth, columnHeight),
-                                ),
-                                topLeft = cornerRadius,
-                                topRight = cornerRadius,
+                    uiState.lastSevenDayPracticeDuration.forEachIndexed { index, (day, duration) ->
+                        Column(
+                            modifier = Modifier
+                                .weight(1f),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                        ) {
+                            if(duration < maxDuration) {
+                                Box(modifier = Modifier.weight((maxDuration - duration).toFloat()))
+                            }
+                            if(duration > 0) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .weight(duration.toFloat())
+                                        .clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
+                                        .background(MaterialTheme.colorScheme.primary)
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = specificDayToName(day)[0].toString(),
+                                style = TextStyle(
+                                    fontSize = 10.sp,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                )
                             )
-                        )
-                    }
-                    drawPath(path, color = primaryColor)
+                        }
 
-                    drawText(
-                        textMeasurer = textMeasurer,
-                        text = specificDayToName(day)[0].toString(),
-                        topLeft = Offset(
-                            x = xOffset,
-                            y = size.height - textOffset,
-                        ),
-                        style = TextStyle(
-                            fontSize = 10.sp,
-                            color = onSurfaceColor,
-                        )
-                    )
+                        if (index < uiState.lastSevenDayPracticeDuration.size - 1) {
+                            Spacer(modifier = Modifier.weight(1f))
+                        }
+                    }
                 }
             }
         }
