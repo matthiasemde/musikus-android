@@ -67,13 +67,13 @@ fun Library(
     val libraryUiState by libraryViewModel.uiState.collectAsState()
 
     BackHandler(
-        enabled = libraryUiState.actionModeUiState.isActionMode,
-        onBack = libraryViewModel::clearActionMode
+        enabled = libraryUiState.topBarUiState.showBackButton,
+        onBack = libraryViewModel::onTopBarBackPressed
     )
 
     BackHandler(
-        enabled = libraryUiState.topBarUiState.showBackButton,
-        onBack = libraryViewModel::onTopBarBackPressed
+        enabled = libraryUiState.actionModeUiState.isActionMode,
+        onBack = libraryViewModel::clearActionMode
     )
 
     BackHandler(
@@ -127,7 +127,6 @@ fun Library(
             }
         },
         topBar = {
-            val mainMenuUiState = mainUiState.menuUiState
             val topBarUiState = libraryUiState.topBarUiState
             LargeTopAppBar(
                 scrollBehavior = scrollBehavior,
@@ -140,6 +139,7 @@ fun Library(
                     }
                 },
                 actions = {
+                    val mainMenuUiState = mainUiState.menuUiState
                     IconButton(onClick = {
                         mainViewModel.showMainMenu()
                     }) {

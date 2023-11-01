@@ -17,7 +17,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowRight
@@ -51,14 +51,17 @@ import app.musikus.shared.CommonMenuSelections
 import app.musikus.shared.MainMenu
 import app.musikus.shared.ThemeMenu
 import app.musikus.spacing
+import app.musikus.utils.DATE_FORMATTER_PATTERN_DAY_AND_MONTH
 import app.musikus.utils.TIME_FORMAT_HUMAN_PRETTY
 import app.musikus.utils.TIME_FORMAT_HUMAN_PRETTY_SHORT
+import app.musikus.utils.epochSecondsToDate
 import app.musikus.utils.getDurationString
 import app.musikus.viewmodel.MainViewModel
 import app.musikus.viewmodel.StatisticsCurrentMonthUiState
 import app.musikus.viewmodel.StatisticsGoalCardUiState
 import app.musikus.viewmodel.StatisticsPracticeDurationCardUiState
 import app.musikus.viewmodel.StatisticsViewModel
+import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -125,7 +128,9 @@ fun Statistics(
             ) {
                 StatisticsCurrentMonth(contentUiState.currentMonthUiState)
                 StatisticsPracticeDurationCard(contentUiState.practiceDurationCardUiState)
-                StatisticsGoalCard(contentUiState.goalCardUiState)
+                if(contentUiState.goalCardUiState.lastGoals.isNotEmpty()) {
+                    StatisticsGoalCard(contentUiState.goalCardUiState)
+                }
     //            StatisticsRatingsCard(contentUiState.ratingsCardUiState)
             }
         }
@@ -322,6 +327,7 @@ fun StatisticsGoalCard(
             Text(
                 text = "Last 5 expired goals"
             )
+            Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -337,25 +343,23 @@ fun StatisticsGoalCard(
                     Text(text = "Achieved")
                 }
 
-                Spacer(modifier = Modifier.weight(2f))
-
-                if (uiState.lastGoals.isEmpty()) {
-                    Text(text = "No data")
-                } else {
-                    Row(
-                        modifier = Modifier
-                            .height(80.dp)
-                            .weight(3f)
-                    ) {
-                        uiState.lastGoals.forEach { (goal, progress) ->
-                            Column {
-                                CircularProgressIndicator(
-                                    progress = progress.toFloat() / goal.instance.target.toFloat(),
-                                    modifier = Modifier
-                                        .height(40.dp)
-                                        .width(40.dp)
-                                )
-                            }
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small),
+                ) {
+                    uiState.lastGoals.forEach { (goal, progress) ->
+                        Column(horizontalAlignment = CenterHorizontally) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(35.dp),
+                                progress = progress.toFloat() / goal.instance.target.toFloat(),
+                                trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
+                            )
+                            Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
+                            Text(
+                                text = epochSecondsToDate(goal.instance.let {
+                                    it.startTimestamp + it.periodInSeconds
+                                }).format(DateTimeFormatter.ofPattern(DATE_FORMATTER_PATTERN_DAY_AND_MONTH)),
+                                style = MaterialTheme.typography.labelSmall
+                            )
                         }
                     }
                 }
