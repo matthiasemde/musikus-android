@@ -188,7 +188,7 @@ fun Sessions(
                     top = paddingValues.calculateTopPadding() + 16.dp,
                     bottom = paddingValues.calculateBottomPadding() + 56.dp,
                 ),
-                verticalArrangement = Arrangement.spacedBy(24.dp),
+//                verticalArrangement = Arrangement.spacedBy(24.dp),
                 state = sessionsListState,
             ) {
                 contentUiState.sessionsForDaysForMonths.forEach { sessionsForDaysForMonth ->
@@ -234,6 +234,7 @@ fun Sessions(
                                 exit = fadeOut()
                             ) {
                                 Selectable(
+                                    modifier = Modifier.padding(vertical = MaterialTheme.spacing.small),
                                     selected = session in contentUiState.selectedSessions,
                                     onShortClick = {
                                         sessionsViewModel.onSessionClicked(session)
@@ -261,7 +262,7 @@ fun MonthHeader(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = MaterialTheme.spacing.medium),
+            .padding(MaterialTheme.spacing.small),
         horizontalArrangement = Arrangement.Center
     ) {
         OutlinedButton(
@@ -282,6 +283,7 @@ fun DayHeader(
 ) {
     Row(
         modifier = Modifier
+            .padding(vertical = MaterialTheme.spacing.small)
             .fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {

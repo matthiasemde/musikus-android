@@ -103,7 +103,7 @@ class SessionsViewModel(
         // initialize variables to keep track of the current month, current day,
         // the index of its first session and the total duration of the current day
         var (currentDay, currentMonth) = sessions.first()
-            .sections.first()
+            .sections.first() // TODO this will crash if session has no sections
             .section.timestamp.let { timestamp ->
                 Pair(getSpecificDay(timestamp), getSpecificMonth(timestamp))
             }
@@ -121,25 +121,28 @@ class SessionsViewModel(
                 Pair(getSpecificDay(timestamp), getSpecificMonth(timestamp))
             }
 
-            totalPracticeDuration += session.sections.sumOf { it.section.duration }
+            val sessionPracticeDuration = session.sections.sumOf { it.section.duration }
 
             // ...and compare them to the current day first.
+            if(day == currentDay) {
+                totalPracticeDuration += sessionPracticeDuration
+                return@forEachIndexed
+            }
+
             // if it differs, create a new SessionsForDay object
             // with the respective subList of sessions
-            if(day == currentDay) return@forEachIndexed
-
             sessionsForDaysForMonth.add(
                 SessionsForDay(
-                specificDay = currentDay,
-                totalPracticeDuration = totalPracticeDuration,
-                sessions = sessions.slice(firstSessionOfDayIndex until index)
-            )
+                    specificDay = currentDay,
+                    totalPracticeDuration = totalPracticeDuration,
+                    sessions = sessions.slice(firstSessionOfDayIndex until index)
+                )
             )
 
             // reset / set tracking variables appropriately
             currentDay = day
             firstSessionOfDayIndex = index
-            totalPracticeDuration = 0
+            totalPracticeDuration = sessionPracticeDuration
 
             // then compare the month to the current month.
             // if it differs, create a new SessionsForDaysForMonth object
@@ -147,10 +150,10 @@ class SessionsViewModel(
             if(month == currentMonth) return@forEachIndexed
 
             sessionsForDaysForMonths.add(
-                SessionsForDaysForMonth(
-                specificMonth = currentMonth,
-                sessionsForDays = sessionsForDaysForMonth.toList()
-            )
+                    SessionsForDaysForMonth(
+                    specificMonth = currentMonth,
+                    sessionsForDays = sessionsForDaysForMonth.toList()
+                )
             )
 
             // set tracking variable and reset list
@@ -160,22 +163,22 @@ class SessionsViewModel(
 
         // importantly, add the last SessionsForDaysForMonth object
         sessionsForDaysForMonth.add(
-            SessionsForDay(
-            specificDay = currentDay,
-            totalPracticeDuration = totalPracticeDuration,
-            sessions = sessions.slice(firstSessionOfDayIndex until sessions.size)
-        )
+                SessionsForDay(
+                specificDay = currentDay,
+                totalPracticeDuration = totalPracticeDuration,
+                sessions = sessions.slice(firstSessionOfDayIndex until sessions.size)
+            )
         )
         sessionsForDaysForMonths.add(
-            SessionsForDaysForMonth(
-            specificMonth = currentMonth,
-            sessionsForDays = sessionsForDaysForMonth
-        )
+                SessionsForDaysForMonth(
+                specificMonth = currentMonth,
+                sessionsForDays = sessionsForDaysForMonth
+            )
         )
 
         // if there are no expanded months, expand the latest month
         if(_expandedMonths.value.isEmpty()) {
-            _expandedMonths.update { setOf(sessionsForDaysForMonths.last().specificMonth) }
+            _expandedMonths.update { setOf(sessionsForDaysForMonths.first().specificMonth) }
         }
 
         // finally return the list as immutable

@@ -41,6 +41,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.math.pow
 
 
 data class MainMenuUiState(
@@ -144,7 +145,7 @@ class MainViewModel(
                     delay(1500)
                 }
 
-                (0..30).map { sessionNum ->
+                (0..40).map { sessionNum ->
                     sessionNum to SessionCreationAttributes(
                         breakDuration = (5..20).random() * 60,
                         rating = (1..5).random(),
@@ -155,7 +156,13 @@ class MainViewModel(
                         session,
                         (1..(1..5).random()).map { SectionCreationAttributes(
                             libraryItemId = Nullable(items.random().id),
-                            timestamp = getCurrTimestamp() - sessionNum * 24 * 60 * 60 * 2,
+                            timestamp =
+                                getCurrTimestamp() -
+                                (
+                                    ((sessionNum / 2) * 2) * // two sessions per day initially
+                                    24 * 60 * 60 *
+                                    1.05.pow(sessionNum.toDouble()) // exponential growth
+                                ).toLong(),
                             duration = (5..20).random() * 60,
                         )}
                     )
