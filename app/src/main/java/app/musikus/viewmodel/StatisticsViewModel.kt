@@ -13,11 +13,12 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import app.musikus.database.MusikusDatabase
 import app.musikus.repository.GoalRepository
-import app.musikus.repository.LibraryRepository
 import app.musikus.repository.SessionRepository
 import app.musikus.utils.getCurrTimestamp
-import app.musikus.utils.getSpecificDay
+import app.musikus.utils.getCurrentDayIndexOfWeek
 import app.musikus.utils.getSpecificMonth
+import app.musikus.utils.getStartOfDayOfWeek
+import app.musikus.utils.weekIndexToName
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
@@ -52,7 +53,7 @@ data class StatisticsPracticeDurationCardUiState(
 )
 
 data class PracticeDurationPerDay(
-    val specificDay: Int,
+    val day: String,
     val duration: Int,
 )
 
@@ -72,7 +73,6 @@ class StatisticsViewModel(
     private val database = MusikusDatabase.getInstance(application)
 
     /** Repositories */
-    private val libraryRepository = LibraryRepository(database)
     private val goalRepository = GoalRepository(database)
     private val sessionRepository = SessionRepository(database)
 
@@ -133,19 +133,28 @@ class StatisticsViewModel(
     )
 
     private val practiceDurationCardUiState = sessions.map { sessions ->
-        val lastSevenSpecificDays = (0..6).map { getSpecificDay(getCurrTimestamp()) - it }
-        val lastSevenDayPracticeDuration = sessions.filter { (_, sections) ->
-            sections.first().section.timestamp.let {
-                getSpecificDay(it) in lastSevenSpecificDays
+        val lastSevenDays = (0..6).reversed().map { dayOffset ->
+            (getCurrentDayIndexOfWeek() - dayOffset).let {
+                getStartOfDayOfWeek(
+                    dayIndex = (it-1).mod(7).toLong() + 1,
+                    weekOffset = if (it > 0) 0 else -1
+                )
             }
+        }
+
+        val groupedSessions = sessions.filter { (_, sections) ->
+            sections.first().section.timestamp > lastSevenDays.first().toEpochSecond()
         }.groupBy { (_, sections) ->
-            getSpecificDay(sections.first().section.timestamp)
-        }.map { (specificDay, sessions) ->
+            getCurrentDayIndexOfWeek(sections.first().section.timestamp)
+        }
+
+        val lastSevenDayPracticeDuration = lastSevenDays.map { day ->
+            val dayIndex = getCurrentDayIndexOfWeek(day.toEpochSecond())
             PracticeDurationPerDay(
-                specificDay = specificDay,
-                duration = sessions.sumOf { (_, sections) ->
+                day = weekIndexToName(dayIndex)[0].toString(),
+                duration = groupedSessions[dayIndex]?.sumOf { (_, sections) ->
                     sections.sumOf { (section, _) -> section.duration }
-                }
+                } ?: 0
             )
         }
 

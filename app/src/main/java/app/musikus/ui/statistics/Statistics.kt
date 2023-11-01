@@ -33,8 +33,8 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
+import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -52,7 +52,6 @@ import app.musikus.spacing
 import app.musikus.utils.TIME_FORMAT_HUMAN_PRETTY
 import app.musikus.utils.TIME_FORMAT_HUMAN_PRETTY_SHORT
 import app.musikus.utils.getDurationString
-import app.musikus.utils.specificDayToName
 import app.musikus.viewmodel.MainViewModel
 import app.musikus.viewmodel.StatisticsCurrentMonthUiState
 import app.musikus.viewmodel.StatisticsPracticeDurationCardUiState
@@ -115,7 +114,12 @@ fun Statistics(
         },
         content = { paddingValues ->
             val contentUiState = statisticsUiState.contentUiState
-            Column(modifier = Modifier.padding(paddingValues)) {
+            Column(
+                modifier = Modifier
+                    .padding(paddingValues)
+                    .padding(horizontal = MaterialTheme.spacing.medium),
+                verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.medium),
+            ) {
                 StatisticsCurrentMonth(contentUiState.currentMonthUiState)
                 StatisticsPracticeDurationCard(contentUiState.practiceDurationCardUiState)
     //            StatisticsGoalCard(contentUiState.goalCardUiState)
@@ -129,7 +133,7 @@ fun Statistics(
 fun StatisticsCurrentMonth(
     uiState: StatisticsCurrentMonthUiState,
 ) {
-    Column(modifier = Modifier.padding(12.dp)) {
+    Column {
         Text(text = "Current month")
         Row(
             modifier = Modifier
@@ -203,82 +207,86 @@ fun StatisticsCurrentMonth(
 fun StatisticsPracticeDurationCard(
     uiState: StatisticsPracticeDurationCardUiState,
 ) {
-    ElevatedCard(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(MaterialTheme.spacing.large)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(text = "Practice Time")
-            Icon(
-//                modifier = Modifier.fillMaxHeight(),
-                imageVector = Icons.Default.KeyboardArrowRight,
-                contentDescription = "more",
-            )
-        }
-        Text (
-            text = "Last 7 days"
-        )
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = MaterialTheme.spacing.small),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Column() {
-                Text(text = getDurationString(
-                    uiState.totalPracticeDuration,
-                    TIME_FORMAT_HUMAN_PRETTY
-                ).toString())
-                Text(text = "Total")
+    ElevatedCard(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.fillMaxWidth().padding(MaterialTheme.spacing.medium)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(text = "Practice Time")
+                Icon(
+                    //                modifier = Modifier.fillMaxHeight(),
+                    imageVector = Icons.Default.KeyboardArrowRight,
+                    contentDescription = "more",
+                )
             }
+            Text(
+                text = "Last 7 days"
+            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = CenterVertically,
+            ) {
+                Column {
+                    Text(
+                        text = getDurationString(
+                            uiState.totalPracticeDuration,
+                            TIME_FORMAT_HUMAN_PRETTY
+                        ).toString()
+                    )
+                    Text(text = "Total")
+                }
 
-            Spacer(modifier = Modifier.weight(2f))
+                Spacer(modifier = Modifier.weight(2f))
 
-            if(uiState.lastSevenDayPracticeDuration.isEmpty()) {
-                Text(text = "No data")
-            } else {
-                Row(
-                    modifier = Modifier
-                        .height(80.dp)
-                        .weight(3f)
-                ) {
-                    val maxDuration = uiState.lastSevenDayPracticeDuration.maxOf { it.duration }
+                if (uiState.lastSevenDayPracticeDuration.isEmpty()) {
+                    Text(text = "No data")
+                } else {
+                    Row(
+                        modifier = Modifier
+                            .height(80.dp)
+                            .weight(3f)
+                    ) {
+                        val maxDuration = uiState.lastSevenDayPracticeDuration.maxOf { it.duration }
 
-                    uiState.lastSevenDayPracticeDuration.forEachIndexed { index, (day, duration) ->
-                        Column(
-                            modifier = Modifier
-                                .weight(1f),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                        ) {
-                            if(duration < maxDuration) {
-                                Box(modifier = Modifier.weight((maxDuration - duration).toFloat()))
-                            }
-                            if(duration > 0) {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .weight(duration.toFloat())
-                                        .clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
-                                        .background(MaterialTheme.colorScheme.primary)
+                        uiState.lastSevenDayPracticeDuration.forEachIndexed { index, (day, duration) ->
+                            Column(
+                                modifier = Modifier
+                                    .weight(1f),
+                                horizontalAlignment = CenterHorizontally,
+                            ) {
+                                if (duration < maxDuration) {
+                                    Box(modifier = Modifier.weight((maxDuration - duration).toFloat()))
+                                }
+                                if (duration > 0) {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .weight(duration.toFloat())
+                                            .clip(
+                                                RoundedCornerShape(
+                                                    topStart = 4.dp,
+                                                    topEnd = 4.dp
+                                                )
+                                            )
+                                            .background(MaterialTheme.colorScheme.primary)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = day,
+                                    style = TextStyle(
+                                        fontSize = 10.sp,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                    )
                                 )
                             }
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = specificDayToName(day)[0].toString(),
-                                style = TextStyle(
-                                    fontSize = 10.sp,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                )
-                            )
-                        }
 
-                        if (index < uiState.lastSevenDayPracticeDuration.size - 1) {
-                            Spacer(modifier = Modifier.weight(1f))
+                            if (index < uiState.lastSevenDayPracticeDuration.size - 1) {
+                                Spacer(modifier = Modifier.weight(1f))
+                            }
                         }
                     }
                 }

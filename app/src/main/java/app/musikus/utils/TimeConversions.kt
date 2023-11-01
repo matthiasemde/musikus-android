@@ -276,8 +276,10 @@ fun getEndOfWeek(weekOffset: Long): ZonedDateTime {
 /**
  * returns the weekDay of today from index 1=Mo until 7=Sun
   */
-fun getCurrentDayIndexOfWeek(): Int {
-    return ZonedDateTime.now()
+fun getCurrentDayIndexOfWeek(
+    epochSeconds: Long = getCurrTimestamp()
+): Int {
+    return epochSecondsToDate(epochSeconds)
         .toLocalDate().dayOfWeek.value
 }
 
@@ -324,8 +326,16 @@ fun getSpecificMonth(epochSeconds: Long) =
 
 fun getSpecificDay(epochSeconds: Long) =
     epochSecondsToDate(epochSeconds).let { date->
-        date.dayOfYear + date.year * 366
+        date.dayOfYear + date.year * 366 // not reversible due to leap years
     }
 
-fun specificDayToName(day: Int) =
-    epochSecondsToDate(day.toLong() * 24 * 60 * 60).dayOfWeek.name
+fun weekIndexToName(weekIndex: Int) = when (weekIndex) {
+    1 -> "Monday"
+    2 -> "Tuesday"
+    3 -> "Wednesday"
+    4 -> "Thursday"
+    5 -> "Friday"
+    6 -> "Saturday"
+    7 -> "Sunday"
+    else -> "ERROR"
+}

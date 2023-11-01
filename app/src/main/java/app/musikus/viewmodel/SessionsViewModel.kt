@@ -150,7 +150,7 @@ class SessionsViewModel(
             if(month == currentMonth) return@forEachIndexed
 
             sessionsForDaysForMonths.add(
-                    SessionsForDaysForMonth(
+                SessionsForDaysForMonth(
                     specificMonth = currentMonth,
                     sessionsForDays = sessionsForDaysForMonth.toList()
                 )
@@ -163,14 +163,14 @@ class SessionsViewModel(
 
         // importantly, add the last SessionsForDaysForMonth object
         sessionsForDaysForMonth.add(
-                SessionsForDay(
+            SessionsForDay(
                 specificDay = currentDay,
                 totalPracticeDuration = totalPracticeDuration,
                 sessions = sessions.slice(firstSessionOfDayIndex until sessions.size)
             )
         )
         sessionsForDaysForMonths.add(
-                SessionsForDaysForMonth(
+            SessionsForDaysForMonth(
                 specificMonth = currentMonth,
                 sessionsForDays = sessionsForDaysForMonth
             )
