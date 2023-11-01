@@ -77,9 +77,7 @@ fun GoalCard(
         .blur(if (description.paused) 1.5.dp else 0.dp)
     ) {
         Box {
-            Column(modifier = Modifier
-                .padding(16.dp)
-            ) {
+            Column(modifier = Modifier.padding(16.dp)) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth(),

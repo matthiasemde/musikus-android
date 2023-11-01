@@ -8,6 +8,7 @@
 
 package app.musikus.ui.statistics
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,6 +19,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowRight
@@ -39,12 +42,18 @@ import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import app.musikus.Musikus
 import app.musikus.R
 import app.musikus.datastore.ThemeSelections
 import app.musikus.shared.CommonMenuSelections
@@ -60,6 +69,7 @@ import app.musikus.viewmodel.MainViewModel
 import app.musikus.viewmodel.StatisticsCurrentMonthUiState
 import app.musikus.viewmodel.StatisticsGoalCardUiState
 import app.musikus.viewmodel.StatisticsPracticeDurationCardUiState
+import app.musikus.viewmodel.StatisticsRatingsCardUiState
 import app.musikus.viewmodel.StatisticsViewModel
 import java.time.format.DateTimeFormatter
 
@@ -120,18 +130,22 @@ fun Statistics(
         },
         content = { paddingValues ->
             val contentUiState = statisticsUiState.contentUiState
-            Column(
+            LazyColumn(
                 modifier = Modifier
-                    .padding(paddingValues)
+                    .padding(top = paddingValues.calculateTopPadding())
                     .padding(horizontal = MaterialTheme.spacing.medium),
                 verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.medium),
             ) {
-                StatisticsCurrentMonth(contentUiState.currentMonthUiState)
-                StatisticsPracticeDurationCard(contentUiState.practiceDurationCardUiState)
+                item { StatisticsCurrentMonth(contentUiState.currentMonthUiState) }
+                item { StatisticsPracticeDurationCard(contentUiState.practiceDurationCardUiState) }
                 if(contentUiState.goalCardUiState.lastGoals.isNotEmpty()) {
-                    StatisticsGoalCard(contentUiState.goalCardUiState)
+                    item { StatisticsGoalCard(contentUiState.goalCardUiState) }
                 }
-    //            StatisticsRatingsCard(contentUiState.ratingsCardUiState)
+                if((contentUiState.ratingsCardUiState.numOfRatingsFromLowestToHighest
+                        .takeIf { it.isNotEmpty() }?.sum() ?: 0) > 0
+                ) {
+                    item { StatisticsRatingsCard(contentUiState.ratingsCardUiState) }
+                }
             }
         }
     )
@@ -143,10 +157,7 @@ fun StatisticsCurrentMonth(
 ) {
     Column {
         Text(text = "Current month")
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-        ) {
+        Row(modifier = Modifier.fillMaxWidth()) {
            Column(
                modifier = Modifier
                    .weight(1f)
@@ -218,7 +229,8 @@ fun StatisticsPracticeDurationCard(
     ElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier
             .fillMaxWidth()
-            .padding(MaterialTheme.spacing.medium)) {
+            .padding(MaterialTheme.spacing.medium)
+        ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -309,10 +321,11 @@ fun StatisticsPracticeDurationCard(
 fun StatisticsGoalCard(
     uiState: StatisticsGoalCardUiState
 ) {
-    ElevatedCard(modifier = Modifier.fillMaxWidth()) {
+    ElevatedCard(modifier = Modifier.fillMaxWidth().wrapContentHeight()) {
         Column(modifier = Modifier
             .fillMaxWidth()
-            .padding(MaterialTheme.spacing.medium)) {
+            .padding(MaterialTheme.spacing.medium)
+        ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -362,6 +375,92 @@ fun StatisticsGoalCard(
                             )
                         }
                     }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun StatisticsRatingsCard(
+    uiState: StatisticsRatingsCardUiState
+) {
+    ElevatedCard(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier
+            .fillMaxWidth()
+            .height(200.dp)
+            .padding(MaterialTheme.spacing.medium)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(text = "Ratings")
+                Icon(
+                    //                modifier = Modifier.fillMaxHeight(),
+                    imageVector = Icons.Default.KeyboardArrowRight,
+                    contentDescription = "more",
+                )
+            }
+            Text(
+                text = "Your session ratings"
+            )
+            Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
+            val colors = Musikus.getLibraryItemColors(LocalContext.current)
+            Canvas(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(100.dp)
+            ) {
+                val pieChartSize = 0.8f * size.height
+                val pieChartCenter = Offset(
+                    x = size.width / 2,
+                    y = size.height / 2
+                )
+                val pieChartTopLeft = pieChartCenter - Offset(
+                    x = pieChartSize / 2,
+                    y = pieChartSize / 2
+                )
+                var startAngle = 270f
+                val numOfRatingsToAngleFactor = 360f / uiState.numOfRatingsFromLowestToHighest.sum()
+                uiState.numOfRatingsFromLowestToHighest.forEachIndexed { index, numOfRatings ->
+                    val angle = numOfRatings * numOfRatingsToAngleFactor
+                    val halfSweepEdgePoint = Math.toRadians((startAngle + angle / 2).toDouble()).let {
+                        Offset(
+                            x = (pieChartSize / 2) * kotlin.math.cos(it).toFloat(),
+                            y = (pieChartSize / 2) * kotlin.math.sin(it).toFloat()
+                        )
+                    }
+                    drawArc(
+                        color = Color(colors[index]),
+                        startAngle = startAngle,
+                        sweepAngle = angle,
+                        useCenter = true,
+                        topLeft = pieChartTopLeft + halfSweepEdgePoint * 0.025f,
+                        size = Size(pieChartSize, pieChartSize),
+                        style = Fill
+                    )
+
+                    drawLine(
+                        color = Color(colors[index]),
+                        start = pieChartCenter + halfSweepEdgePoint,
+                        end = pieChartCenter + halfSweepEdgePoint * 1.2f,
+                        strokeWidth = 1.dp.toPx()
+                    )
+
+                    val lineToRight = (startAngle + angle / 2) < 270f + 180f && (startAngle + angle / 2) > 270f
+
+                    drawLine(
+                        color = Color(colors[index]),
+                        start = pieChartCenter + halfSweepEdgePoint * 1.2f,
+                        end = pieChartCenter + halfSweepEdgePoint * 1.2f + Offset(
+                            x = 24.dp.toPx() * if (lineToRight) 1 else -1,
+                            y = 0f
+                        ),
+                        strokeWidth = 1.dp.toPx()
+                    )
+
+                    startAngle += angle
                 }
             }
         }
