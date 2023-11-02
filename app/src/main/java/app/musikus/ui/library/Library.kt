@@ -52,6 +52,7 @@ import app.musikus.datastore.LibraryFolderSortMode
 import app.musikus.datastore.LibraryItemSortMode
 import app.musikus.datastore.ThemeSelections
 import app.musikus.shared.*
+import app.musikus.spacing
 import app.musikus.viewmodel.*
 import java.util.*
 
@@ -194,13 +195,11 @@ fun Library(
                 )
             }
         },
-        content = { innerPadding ->
+        content = { paddingValues ->
             val contentUiState = libraryUiState.contentUiState
 
             LibraryContent(
-                contentPadding = PaddingValues(
-                    top = innerPadding.calculateTopPadding(),
-                ),
+                contentPadding = paddingValues,
                 contentUiState = contentUiState,
                 onShowFolderSortMenuChange = libraryViewModel::onFolderSortMenuChanged,
                 onFolderSortModeSelected = libraryViewModel::onFolderSortModeSelected,
@@ -313,13 +312,16 @@ fun LibraryContent(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(8.dp),
+                        .padding(
+                            vertical = MaterialTheme.spacing.small,
+                            horizontal = MaterialTheme.spacing.large
+                        ),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        modifier = Modifier.padding(8.dp),
-                        text = "Folders", style = MaterialTheme.typography.titleLarge
+                        text = "Folders",
+                        style = MaterialTheme.typography.titleLarge
                     )
                     val sortMenuUiState = foldersUiState.sortMenuUiState
                     SortMenu(
@@ -339,7 +341,9 @@ fun LibraryContent(
                 ) {
                     // header and footer items replace contentPadding
                     // but also serve to fixate the list when inserting items
-                    item { Spacer(modifier = Modifier.width(4.dp)) }
+                    item {
+                        Spacer(modifier = Modifier.width(MaterialTheme.spacing.small))
+                    }
                     items(
                         items = foldersUiState.foldersWithItemCount,
                         key = { it.folder.id }
@@ -357,7 +361,9 @@ fun LibraryContent(
                             )
                         }
                     }
-                    item { Spacer(modifier = Modifier.width(4.dp)) }
+                    item {
+                        Spacer(modifier = Modifier.width(MaterialTheme.spacing.small))
+                    }
                 }
             }
         }
@@ -368,13 +374,14 @@ fun LibraryContent(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(8.dp),
+                        .padding(
+                            vertical = MaterialTheme.spacing.small,
+                            horizontal = MaterialTheme.spacing.large
+                        ),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        modifier = Modifier
-                            .padding(8.dp),
                         text = "Items",
                         style = MaterialTheme.typography.titleLarge
                     )
@@ -398,8 +405,10 @@ fun LibraryContent(
                     modifier = Modifier.animateItemPlacement()
                 ) {
                     LibraryItem(
-                        modifier = Modifier
-                            .padding(vertical = 8.dp, horizontal = 16.dp),
+                        modifier = Modifier.padding(
+                            vertical = MaterialTheme.spacing.small,
+                            horizontal = MaterialTheme.spacing.large
+                        ),
                         libraryItem = item,
                         selected = item in itemsUiState.selectedItems,
                         onShortClick = { onItemClicked(item, false) },

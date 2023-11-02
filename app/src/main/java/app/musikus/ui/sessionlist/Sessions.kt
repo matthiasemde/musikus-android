@@ -181,10 +181,10 @@ fun Sessions(
 
             // Session list
             LazyColumn(
-                modifier = Modifier
-                    .padding(horizontal = 24.dp)
-                    .fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth(),
                 contentPadding = PaddingValues(
+                    start = MaterialTheme.spacing.large,
+                    end = MaterialTheme.spacing.large,
                     top = paddingValues.calculateTopPadding() + 16.dp,
                     bottom = paddingValues.calculateBottomPadding() + 56.dp,
                 ),

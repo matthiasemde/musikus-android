@@ -13,6 +13,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -131,9 +132,13 @@ fun Statistics(
         content = { paddingValues ->
             val contentUiState = statisticsUiState.contentUiState
             LazyColumn(
-                modifier = Modifier
-                    .padding(top = paddingValues.calculateTopPadding())
-                    .padding(horizontal = MaterialTheme.spacing.medium),
+                modifier = Modifier.fillMaxWidth(),
+                contentPadding = PaddingValues(
+                    start = MaterialTheme.spacing.large,
+                    end = MaterialTheme.spacing.large,
+                    top = paddingValues.calculateTopPadding() + 16.dp,
+                    bottom = paddingValues.calculateBottomPadding() + 56.dp,
+                ),
                 verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.medium),
             ) {
                 item { StatisticsCurrentMonth(contentUiState.currentMonthUiState) }

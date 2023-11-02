@@ -27,7 +27,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -67,6 +66,7 @@ import app.musikus.shared.MultiFabState
 import app.musikus.shared.Selectable
 import app.musikus.shared.SortMenu
 import app.musikus.shared.ThemeMenu
+import app.musikus.spacing
 import app.musikus.viewmodel.GoalsViewModel
 import app.musikus.viewmodel.MainViewModel
 
@@ -245,10 +245,10 @@ fun Goals(
 
             // Goal List
             LazyColumn(
-                modifier = Modifier
-                    .padding(horizontal = 16.dp)
-                    .fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth(),
                 contentPadding = PaddingValues(
+                    start = MaterialTheme.spacing.large,
+                    end = MaterialTheme.spacing.large,
                     top = paddingValues.calculateTopPadding() + 16.dp,
                     bottom = paddingValues.calculateBottomPadding() + 56.dp,
                 ),
