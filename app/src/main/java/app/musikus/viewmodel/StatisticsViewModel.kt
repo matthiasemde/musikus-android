@@ -208,12 +208,10 @@ class StatisticsViewModel(
     private val ratingsCardUiState = sessions.map { sessions ->
         val numOfRatingsFromLowestToHighest = sessions.groupBy { (session, _) ->
             session.rating
-        }.map { (rating, sessions) ->
-            rating to sessions.size
-        }.sortedBy { (rating, _) ->
-            rating
-        }.map { (_, numOfRatings) ->
-            numOfRatings
+        }.let { ratingToSessions ->
+            (1 .. 5).map { rating ->
+                ratingToSessions[rating]?.size ?: 0
+            }
         }
 
         StatisticsRatingsCardUiState(

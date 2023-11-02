@@ -8,6 +8,10 @@
 
 package app.musikus.ui.statistics
 
+import androidx.compose.animation.core.MutableTransitionState
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -37,8 +41,11 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
@@ -408,11 +415,43 @@ fun StatisticsRatingsCard(
             val starCharacter = stringResource(R.string.star_sign)
             val colors = Musikus.getLibraryItemColors(LocalContext.current)
             val textMeasurer = rememberTextMeasurer()
+            val numOfRatingsToAngleFactor = 360f / uiState.numOfRatingsFromLowestToHighest.sum()
+
+            val targetAngles = uiState.numOfRatingsFromLowestToHighest.map { numOfRatings ->
+                numOfRatings * numOfRatingsToAngleFactor
+            }
+
+            val mutableState = remember {
+                MutableTransitionState((0..4).map { 0f })
+            }
+            mutableState.targetState = targetAngles
+            val transition = updateTransition(mutableState, label = "main-animation")
+
+            val values = (targetAngles.indices).map { index ->
+                transition.animateFloat(
+                    transitionSpec = { tween(durationMillis = 1000) },
+                    label = "fraction-$index-animation"
+                ) { state ->
+                    state.getOrNull(index) ?: 0f
+                }
+            }
+
+            val animatedFractions = remember(transition) { SnapshotStateList<State<Float>>() }
+
+            remember(values) {
+                animatedFractions.clear()
+                animatedFractions.addAll(values)
+            }
+
+            val animatedAngles = remember(transition) { animatedFractions }
+
             Canvas(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(100.dp)
             ) {
+                var startAngle = 270f
+
                 val pieChartSize = 0.7f * size.height
                 val pieChartCenter = Offset(
                     x = size.width / 2,
@@ -422,12 +461,10 @@ fun StatisticsRatingsCard(
                     x = pieChartSize / 2,
                     y = pieChartSize / 2
                 )
-                var startAngle = 270f
-                val numOfRatingsToAngleFactor = 360f / uiState.numOfRatingsFromLowestToHighest.sum()
-                uiState.numOfRatingsFromLowestToHighest.forEachIndexed { index, numOfRatings ->
-                    if (numOfRatings == 0) return@forEachIndexed
+                animatedAngles.zip(uiState.numOfRatingsFromLowestToHighest).forEachIndexed { index, (angleState, numRatings) ->
+                    val angle = angleState.value
+                    if (angle == 0f) return@forEachIndexed
 
-                    val angle = numOfRatings * numOfRatingsToAngleFactor
                     val halfSweepEdgePoint = Math.toRadians((startAngle + angle / 2).toDouble()).let {
                         Offset(
                             x = (pieChartSize / 2) * kotlin.math.cos(it).toFloat(),
@@ -474,7 +511,7 @@ fun StatisticsRatingsCard(
                         textMeasurer,
                         text = (1..(index + 1))
                             .joinToString("") { starCharacter }
-                            .plus(" · $numOfRatings"),
+                            .plus(" · $numRatings"),
                         topLeft = lineEndPoint + Offset(
                             x = (8.dp.toPx() + (index * 2.dp.toPx())) * if (labelOnRightSide) 0.7f else -4.8f,
                             y = -8.dp.toPx()
