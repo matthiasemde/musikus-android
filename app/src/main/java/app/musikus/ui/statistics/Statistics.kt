@@ -51,6 +51,8 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.drawText
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -396,28 +398,22 @@ fun StatisticsRatingsCard(
             .height(200.dp)
             .padding(MaterialTheme.spacing.medium)
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(text = "Ratings")
-                Icon(
-                    //                modifier = Modifier.fillMaxHeight(),
-                    imageVector = Icons.Default.KeyboardArrowRight,
-                    contentDescription = "more",
-                )
-            }
-            Text(
-                text = "Your session ratings"
-            )
+            Text(text = "Ratings")
+            Text(text = "Your session ratings")
             Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
+
+            val labelTextStyle = MaterialTheme.typography.labelSmall.copy(
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+            )
+            val starCharacter = stringResource(R.string.star_sign)
             val colors = Musikus.getLibraryItemColors(LocalContext.current)
+            val textMeasurer = rememberTextMeasurer()
             Canvas(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(100.dp)
             ) {
-                val pieChartSize = 0.8f * size.height
+                val pieChartSize = 0.7f * size.height
                 val pieChartCenter = Offset(
                     x = size.width / 2,
                     y = size.height / 2
@@ -429,6 +425,8 @@ fun StatisticsRatingsCard(
                 var startAngle = 270f
                 val numOfRatingsToAngleFactor = 360f / uiState.numOfRatingsFromLowestToHighest.sum()
                 uiState.numOfRatingsFromLowestToHighest.forEachIndexed { index, numOfRatings ->
+                    if (numOfRatings == 0) return@forEachIndexed
+
                     val angle = numOfRatings * numOfRatingsToAngleFactor
                     val halfSweepEdgePoint = Math.toRadians((startAngle + angle / 2).toDouble()).let {
                         Offset(
@@ -436,6 +434,7 @@ fun StatisticsRatingsCard(
                             y = (pieChartSize / 2) * kotlin.math.sin(it).toFloat()
                         )
                     }
+                    /** pie piece */
                     drawArc(
                         color = Color(colors[index]),
                         startAngle = startAngle,
@@ -446,24 +445,44 @@ fun StatisticsRatingsCard(
                         style = Fill
                     )
 
+                    val lineCornerPoint =  pieChartCenter + halfSweepEdgePoint * 1.2f
+
+                    /** angled line */
                     drawLine(
                         color = Color(colors[index]),
                         start = pieChartCenter + halfSweepEdgePoint,
-                        end = pieChartCenter + halfSweepEdgePoint * 1.2f,
+                        end = lineCornerPoint,
                         strokeWidth = 1.dp.toPx()
                     )
 
-                    val lineToRight = (startAngle + angle / 2) < 270f + 180f && (startAngle + angle / 2) > 270f
+                    val labelOnRightSide = (startAngle + angle / 2) < 270f + 180f && (startAngle + angle / 2) > 270f
 
+                    val lineEndPoint = lineCornerPoint + Offset(
+                        x = 24.dp.toPx() * if (labelOnRightSide) 1 else -1,
+                        y = 0f
+                    )
+
+                    /** horizontal line */
                     drawLine(
                         color = Color(colors[index]),
                         start = pieChartCenter + halfSweepEdgePoint * 1.2f,
-                        end = pieChartCenter + halfSweepEdgePoint * 1.2f + Offset(
-                            x = 24.dp.toPx() * if (lineToRight) 1 else -1,
-                            y = 0f
-                        ),
+                        end = lineEndPoint,
                         strokeWidth = 1.dp.toPx()
                     )
+
+                    drawText(
+                        textMeasurer,
+                        text = (1..(index + 1))
+                            .joinToString("") { starCharacter }
+                            .plus(" · $numOfRatings"),
+                        topLeft = lineEndPoint + Offset(
+                            x = (8.dp.toPx() + (index * 2.dp.toPx())) * if (labelOnRightSide) 0.7f else -4.8f,
+                            y = -8.dp.toPx()
+                        ),
+                        style = labelTextStyle,
+                    )
+
+
 
                     startAngle += angle
                 }
