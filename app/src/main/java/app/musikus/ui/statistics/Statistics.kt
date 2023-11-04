@@ -8,8 +8,6 @@
 
 package app.musikus.ui.statistics
 
-import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.ExperimentalTransitionApi
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
@@ -20,6 +18,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -318,31 +317,35 @@ fun StatisticsPracticeDurationCard(
                         val maxDuration = uiState.lastSevenDayPracticeDuration.maxOf { it.duration }
 
                         uiState.lastSevenDayPracticeDuration.forEachIndexed { index, (day, duration) ->
+                            val animatedColumnHeight by animateFloatAsState(
+                                targetValue = if (maxDuration == 0) 0f else (duration.toFloat() / maxDuration),
+                                animationSpec = tween(durationMillis = 1500),
+                                label = "day-animation-$index"
+                            )
                             Column(
-                                modifier = Modifier.weight(1f),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxHeight(),
                                 horizontalAlignment = CenterHorizontally,
                             ) {
-                                if (duration < maxDuration) {
-                                    Box(
-                                        modifier = Modifier
-                                            .weight((maxDuration - duration).toFloat())
-                                            .animateContentSize()
-                                    )
-                                }
-                                if (duration > 0) {
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .weight(duration.toFloat())
-                                            .animateContentSize()
-                                            .clip(
-                                                RoundedCornerShape(
-                                                    topStart = 2.dp,
-                                                    topEnd = 2.dp
+                                Column(
+                                   modifier= Modifier.weight(1f),
+                                   verticalArrangement = Arrangement.Bottom
+                                ) {
+                                    if(animatedColumnHeight > 0) {
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .fillMaxHeight(animatedColumnHeight)
+                                                .clip(
+                                                    RoundedCornerShape(
+                                                        topStart = 2.dp,
+                                                        topEnd = 2.dp
+                                                    )
                                                 )
-                                            )
-                                            .background(MaterialTheme.colorScheme.primary)
-                                    )
+                                                .background(MaterialTheme.colorScheme.primary)
+                                        )
+                                    }
                                 }
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
@@ -433,7 +436,6 @@ fun StatisticsGoalCard(
     }
 }
 
-@OptIn(ExperimentalTransitionApi::class)
 @Composable
 fun StatisticsRatingsCard(
     uiState: StatisticsRatingsCardUiState
@@ -462,62 +464,13 @@ fun StatisticsRatingsCard(
                 numOfRatings * numOfRatingsToAngleFactor
             }
 
-            // source: https://stackoverflow.com/questions/69538128/how-to-animate-elements-of-a-dynamic-list-in-jetpack-compose
-//            val mutableState = remember { MutableTransitionState(targetAngles) }
-//            mutableState.targetState = targetAngles
-//            val transition = updateTransition(mutableState, label = "main-transition")
-//
-//            val angleValues = List(transition.currentState.size) { index ->
-//                transition.animateFloat(
-//                    transitionSpec = {
-//                        tween(durationMillis = 1500)
-//                    },
-//                    label = "fraction-$index-animation"
-//                ) { state ->
-//                    state.getOrNull(index) ?: 0f
-//                }
-//            }
-//
-//            val animatedFractions = remember(transition) { SnapshotStateList<State<Float>>() }
-//
-//            remember(angleValues) {
-//                animatedFractions.clear()
-//                animatedFractions.addAll(angleValues)
-//            }
-//
-//            val animatedAngles = remember(transition) { animatedFractions }
-
-            val oneStar = animateFloatAsState(
-                targetValue = targetAngles[0],
-                animationSpec = tween(durationMillis = 1500),
-                label = "one-star-animation"
-            )
-
-            val twoStar = animateFloatAsState(
-                targetValue = targetAngles[1],
-                animationSpec = tween(durationMillis = 1500),
-                label = "two-star-animation"
-            )
-
-            val threeStar = animateFloatAsState(
-                targetValue = targetAngles[2],
-                animationSpec = tween(durationMillis = 1500),
-                label = "three-star-animation"
-            )
-
-            val fourStar = animateFloatAsState(
-                targetValue = targetAngles[3],
-                animationSpec = tween(durationMillis = 1500),
-                label = "four-star-animation"
-            )
-
-            val fiveStar = animateFloatAsState(
-                targetValue = targetAngles[4],
-                animationSpec = tween(durationMillis = 1500),
-                label = "five-star-animation"
-            )
-
-            val animatedAngles = listOf(oneStar, twoStar, threeStar, fourStar, fiveStar)
+            val animatedAngles = targetAngles.mapIndexed { index, angle ->
+                animateFloatAsState(
+                    targetValue = angle,
+                    animationSpec = tween(durationMillis = 1500),
+                    label = "rating-animation-$index"
+                )
+            }
 
             val labelAlpha by animateFloatAsState(
                 targetValue = if (animatedAngles.sumOf { it.value.toDouble() } < 270f) 0f else 1f,

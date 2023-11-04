@@ -136,8 +136,14 @@ class StatisticsViewModel(
         )
     )
 
-    private val practiceDurationCardUiState = sessions.map { sessions ->
-        if (sessions.isEmpty()) return@map null
+    private var _noSessionsForDurationCard = true
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val practiceDurationCardUiState = sessions.flatMapLatest { sessions ->
+        if (sessions.isEmpty()) {
+            _noSessionsForRatingCard = true
+            return@flatMapLatest flow { emit(null) }
+        }
 
         val lastSevenDays = (0..6).reversed().map { dayOffset ->
             (getCurrentDayIndexOfWeek() - dayOffset).let {
@@ -166,17 +172,28 @@ class StatisticsViewModel(
 
         val totalPracticeDuration = lastSevenDayPracticeDuration.sumOf { it.duration }
 
-        StatisticsPracticeDurationCardUiState(
-            lastSevenDayPracticeDuration = lastSevenDayPracticeDuration,
-            totalPracticeDuration = totalPracticeDuration,
-        )
+        flow {
+            if (_noSessionsForDurationCard) {
+                emit(StatisticsPracticeDurationCardUiState(
+                    lastSevenDayPracticeDuration = lastSevenDayPracticeDuration.map { PracticeDurationPerDay(
+                        day = it.day,
+                        duration = 0
+                    ) },
+                    totalPracticeDuration = totalPracticeDuration,
+                ))
+                _noSessionsForDurationCard = false
+                delay(350)
+            }
+            emit(StatisticsPracticeDurationCardUiState(
+                lastSevenDayPracticeDuration = lastSevenDayPracticeDuration,
+                totalPracticeDuration = totalPracticeDuration,
+            ))
+        }
+
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = StatisticsPracticeDurationCardUiState(
-            lastSevenDayPracticeDuration = emptyList(),
-            totalPracticeDuration = 0,
-        )
+        initialValue = null
     )
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -213,12 +230,12 @@ class StatisticsViewModel(
         initialValue = StatisticsGoalCardUiState(lastGoals = emptyList())
     )
 
-    private var isFirst = true
+    private var _noSessionsForRatingCard = true
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private val ratingsCardUiState = sessions.flatMapLatest { sessions ->
         if (sessions.isEmpty()) {
-            isFirst = true
+            _noSessionsForRatingCard = true
             return@flatMapLatest flow { emit(null) }
         }
 
@@ -231,9 +248,9 @@ class StatisticsViewModel(
         }
 
         flow {
-            if (isFirst) {
+            if (_noSessionsForRatingCard) {
                 emit(StatisticsRatingsCardUiState((1..5).map { 0 }))
-                isFirst = false
+                _noSessionsForRatingCard = false
                 delay(350)
             }
             emit(StatisticsRatingsCardUiState(numOfRatingsFromOneToFive))
