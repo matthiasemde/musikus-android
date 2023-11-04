@@ -54,6 +54,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.musikus.datastore.GoalsSortMode
 import app.musikus.datastore.ThemeSelections
@@ -77,8 +78,8 @@ fun Goals(
     mainViewModel: MainViewModel,
     goalsViewModel: GoalsViewModel = viewModel(),
 ) {
-    val mainUiState by mainViewModel.uiState.collectAsState()
-    val goalsUiState by goalsViewModel.uiState.collectAsState()
+    val mainUiState by mainViewModel.uiState.collectAsStateWithLifecycle()
+    val goalsUiState by goalsViewModel.uiState.collectAsStateWithLifecycle()
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 

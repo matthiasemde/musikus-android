@@ -49,6 +49,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.musikus.R
 import app.musikus.datastore.ThemeSelections
@@ -80,8 +81,8 @@ fun Sessions(
     sessionsViewModel: SessionsViewModel = viewModel(),
     editSession: (sessionId: UUID) -> Unit,
 ) {
-    val mainUiState by mainViewModel.uiState.collectAsState()
-    val sessionsUiState by sessionsViewModel.uiState.collectAsState()
+    val mainUiState by mainViewModel.uiState.collectAsStateWithLifecycle()
+    val sessionsUiState by sessionsViewModel.uiState.collectAsStateWithLifecycle()
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 

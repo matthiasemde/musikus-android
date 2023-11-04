@@ -43,6 +43,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.musikus.Musikus
 import app.musikus.R
@@ -64,8 +65,8 @@ fun Library(
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
-    val mainUiState by mainViewModel.uiState.collectAsState()
-    val libraryUiState by libraryViewModel.uiState.collectAsState()
+    val mainUiState by mainViewModel.uiState.collectAsStateWithLifecycle()
+    val libraryUiState by libraryViewModel.uiState.collectAsStateWithLifecycle()
 
     BackHandler(
         enabled = libraryUiState.topBarUiState.showBackButton,

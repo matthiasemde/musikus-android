@@ -166,7 +166,7 @@ class MainViewModel(
                             duration = (5..20).random() * 60,
                         )}
                     )
-                    delay(1500)
+                    delay(1000)
                 }
             }
         }

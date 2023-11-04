@@ -40,7 +40,6 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.Text
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
@@ -54,6 +53,7 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.zIndex
 import androidx.core.view.WindowCompat
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -170,7 +170,7 @@ class MainActivity : AppCompatActivity() {
         setContent {
 
             val mainViewModel: MainViewModel = viewModel()
-            val uiState by mainViewModel.uiState.collectAsState()
+            val uiState by mainViewModel.uiState.collectAsStateWithLifecycle()
 
             val navController = rememberNavController()
 
@@ -184,7 +184,7 @@ class MainActivity : AppCompatActivity() {
                 Log.d("MainActivity", "${LocalViewModelStoreOwner.current}")
                 Scaffold(
                     snackbarHost = {
-                        val hostState by mainViewModel.snackbarHostState.collectAsState()
+                        val hostState by mainViewModel.snackbarHostState.collectAsStateWithLifecycle()
                         SnackbarHost(hostState = hostState)
                    },
                     bottomBar = {

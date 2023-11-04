@@ -8,10 +8,10 @@
 
 package app.musikus.ui.statistics
 
-import androidx.compose.animation.core.MutableTransitionState
-import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.ExperimentalTransitionApi
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -41,11 +42,9 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
@@ -60,8 +59,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.musikus.Musikus
 import app.musikus.R
@@ -89,8 +90,8 @@ fun Statistics(
     mainViewModel: MainViewModel,
     statisticsViewModel: StatisticsViewModel = viewModel(),
 ) {
-    val mainUiState by mainViewModel.uiState.collectAsState()
-    val statisticsUiState by statisticsViewModel.uiState.collectAsState()
+    val mainUiState by mainViewModel.uiState.collectAsStateWithLifecycle()
+    val statisticsUiState by statisticsViewModel.uiState.collectAsStateWithLifecycle()
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
@@ -150,15 +151,46 @@ fun Statistics(
                 ),
                 verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.medium),
             ) {
-                item { StatisticsCurrentMonth(contentUiState.currentMonthUiState) }
-                item { StatisticsPracticeDurationCard(contentUiState.practiceDurationCardUiState) }
-                if(contentUiState.goalCardUiState.lastGoals.isNotEmpty()) {
-                    item { StatisticsGoalCard(contentUiState.goalCardUiState) }
+                contentUiState.currentMonthUiState?.let {
+                    item {
+                        StatisticsCurrentMonth(it)
+                    }
                 }
-                if((contentUiState.ratingsCardUiState.numOfRatingsFromLowestToHighest
-                        .takeIf { it.isNotEmpty() }?.sum() ?: 0) > 0
+                contentUiState.practiceDurationCardUiState?.let {
+                    item {
+                        StatisticsPracticeDurationCard(it)
+                    }
+                }
+                contentUiState.goalCardUiState?.let {
+                    item {
+                        StatisticsGoalCard(it)
+                    }
+                }
+                contentUiState.ratingsCardUiState?.let {
+                    item {
+                        StatisticsRatingsCard(it)
+                    }
+                }
+            }
+
+            // If there is no data to show, show hint
+            if (
+                contentUiState.currentMonthUiState == null &&
+                contentUiState.practiceDurationCardUiState == null &&
+                contentUiState.goalCardUiState == null &&
+                contentUiState.ratingsCardUiState == null
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(MaterialTheme.spacing.large),
+                    contentAlignment = Alignment.Center
                 ) {
-                    item { StatisticsRatingsCard(contentUiState.ratingsCardUiState) }
+                    Text(
+                        text = stringResource(id = R.string.statisticsHint),
+                        style = MaterialTheme.typography.titleMedium,
+                        textAlign = TextAlign.Center
+                    )
                 }
             }
         }
@@ -256,9 +288,7 @@ fun StatisticsPracticeDurationCard(
                     contentDescription = "more",
                 )
             }
-            Text(
-                text = "Last 7 days"
-            )
+            Text(text = "Last 7 days")
             Row(
                 modifier = Modifier
                     .fillMaxWidth(),
@@ -283,28 +313,32 @@ fun StatisticsPracticeDurationCard(
                     Row(
                         modifier = Modifier
                             .height(80.dp)
-                            .weight(3f)
+                            .weight(4f)
                     ) {
                         val maxDuration = uiState.lastSevenDayPracticeDuration.maxOf { it.duration }
 
                         uiState.lastSevenDayPracticeDuration.forEachIndexed { index, (day, duration) ->
                             Column(
-                                modifier = Modifier
-                                    .weight(1f),
+                                modifier = Modifier.weight(1f),
                                 horizontalAlignment = CenterHorizontally,
                             ) {
                                 if (duration < maxDuration) {
-                                    Box(modifier = Modifier.weight((maxDuration - duration).toFloat()))
+                                    Box(
+                                        modifier = Modifier
+                                            .weight((maxDuration - duration).toFloat())
+                                            .animateContentSize()
+                                    )
                                 }
                                 if (duration > 0) {
                                     Box(
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .weight(duration.toFloat())
+                                            .animateContentSize()
                                             .clip(
                                                 RoundedCornerShape(
-                                                    topStart = 4.dp,
-                                                    topEnd = 4.dp
+                                                    topStart = 2.dp,
+                                                    topEnd = 2.dp
                                                 )
                                             )
                                             .background(MaterialTheme.colorScheme.primary)
@@ -326,6 +360,8 @@ fun StatisticsPracticeDurationCard(
                         }
                     }
                 }
+
+                Spacer(modifier = Modifier.weight(0.5f))
             }
         }
     }
@@ -335,7 +371,9 @@ fun StatisticsPracticeDurationCard(
 fun StatisticsGoalCard(
     uiState: StatisticsGoalCardUiState
 ) {
-    ElevatedCard(modifier = Modifier.fillMaxWidth().wrapContentHeight()) {
+    ElevatedCard(modifier = Modifier
+        .fillMaxWidth()
+        .wrapContentHeight()) {
         Column(modifier = Modifier
             .fillMaxWidth()
             .padding(MaterialTheme.spacing.medium)
@@ -395,6 +433,7 @@ fun StatisticsGoalCard(
     }
 }
 
+@OptIn(ExperimentalTransitionApi::class)
 @Composable
 fun StatisticsRatingsCard(
     uiState: StatisticsRatingsCardUiState
@@ -409,41 +448,82 @@ fun StatisticsRatingsCard(
             Text(text = "Your session ratings")
             Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
 
-            val labelTextStyle = MaterialTheme.typography.labelSmall.copy(
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-            )
+            val labelTextStyle = MaterialTheme.typography.labelSmall
             val starCharacter = stringResource(R.string.star_sign)
             val colors = Musikus.getLibraryItemColors(LocalContext.current)
             val textMeasurer = rememberTextMeasurer()
-            val numOfRatingsToAngleFactor = 360f / uiState.numOfRatingsFromLowestToHighest.sum()
+            val numOfRatingsToAngleFactor = uiState.numOfRatingsFromOneToFive
+                .sum()
+                .takeUnless { it == 0 }
+                ?.let { 360f / it }
+                ?: 0f
 
-            val targetAngles = uiState.numOfRatingsFromLowestToHighest.map { numOfRatings ->
+            val targetAngles = uiState.numOfRatingsFromOneToFive.map { numOfRatings ->
                 numOfRatings * numOfRatingsToAngleFactor
             }
 
-            val mutableState = remember {
-                MutableTransitionState((0..4).map { 0f })
-            }
-            mutableState.targetState = targetAngles
-            val transition = updateTransition(mutableState, label = "main-animation")
+            // source: https://stackoverflow.com/questions/69538128/how-to-animate-elements-of-a-dynamic-list-in-jetpack-compose
+//            val mutableState = remember { MutableTransitionState(targetAngles) }
+//            mutableState.targetState = targetAngles
+//            val transition = updateTransition(mutableState, label = "main-transition")
+//
+//            val angleValues = List(transition.currentState.size) { index ->
+//                transition.animateFloat(
+//                    transitionSpec = {
+//                        tween(durationMillis = 1500)
+//                    },
+//                    label = "fraction-$index-animation"
+//                ) { state ->
+//                    state.getOrNull(index) ?: 0f
+//                }
+//            }
+//
+//            val animatedFractions = remember(transition) { SnapshotStateList<State<Float>>() }
+//
+//            remember(angleValues) {
+//                animatedFractions.clear()
+//                animatedFractions.addAll(angleValues)
+//            }
+//
+//            val animatedAngles = remember(transition) { animatedFractions }
 
-            val values = (targetAngles.indices).map { index ->
-                transition.animateFloat(
-                    transitionSpec = { tween(durationMillis = 1000) },
-                    label = "fraction-$index-animation"
-                ) { state ->
-                    state.getOrNull(index) ?: 0f
-                }
-            }
+            val oneStar = animateFloatAsState(
+                targetValue = targetAngles[0],
+                animationSpec = tween(durationMillis = 1500),
+                label = "one-star-animation"
+            )
 
-            val animatedFractions = remember(transition) { SnapshotStateList<State<Float>>() }
+            val twoStar = animateFloatAsState(
+                targetValue = targetAngles[1],
+                animationSpec = tween(durationMillis = 1500),
+                label = "two-star-animation"
+            )
 
-            remember(values) {
-                animatedFractions.clear()
-                animatedFractions.addAll(values)
-            }
+            val threeStar = animateFloatAsState(
+                targetValue = targetAngles[2],
+                animationSpec = tween(durationMillis = 1500),
+                label = "three-star-animation"
+            )
 
-            val animatedAngles = remember(transition) { animatedFractions }
+            val fourStar = animateFloatAsState(
+                targetValue = targetAngles[3],
+                animationSpec = tween(durationMillis = 1500),
+                label = "four-star-animation"
+            )
+
+            val fiveStar = animateFloatAsState(
+                targetValue = targetAngles[4],
+                animationSpec = tween(durationMillis = 1500),
+                label = "five-star-animation"
+            )
+
+            val animatedAngles = listOf(oneStar, twoStar, threeStar, fourStar, fiveStar)
+
+            val labelAlpha by animateFloatAsState(
+                targetValue = if (animatedAngles.sumOf { it.value.toDouble() } < 270f) 0f else 1f,
+                animationSpec = tween(durationMillis = 600),
+                label = "label-fade-animation"
+            )
 
             Canvas(
                 modifier = Modifier
@@ -461,9 +541,9 @@ fun StatisticsRatingsCard(
                     x = pieChartSize / 2,
                     y = pieChartSize / 2
                 )
-                animatedAngles.zip(uiState.numOfRatingsFromLowestToHighest).forEachIndexed { index, (angleState, numRatings) ->
+                animatedAngles.zip(uiState.numOfRatingsFromOneToFive).forEachIndexed { index, (angleState, numRatings) ->
+                    if (numRatings == 0) return@forEachIndexed
                     val angle = angleState.value
-                    if (angle == 0f) return@forEachIndexed
 
                     val halfSweepEdgePoint = Math.toRadians((startAngle + angle / 2).toDouble()).let {
                         Offset(
@@ -471,6 +551,7 @@ fun StatisticsRatingsCard(
                             y = (pieChartSize / 2) * kotlin.math.sin(it).toFloat()
                         )
                     }
+
                     /** pie piece */
                     drawArc(
                         color = Color(colors[index]),
@@ -483,16 +564,20 @@ fun StatisticsRatingsCard(
                     )
 
                     val lineCornerPoint =  pieChartCenter + halfSweepEdgePoint * 1.2f
+                    val labelOnRightSide = (startAngle + angle / 2) < 270f + 180f && (startAngle + angle / 2) > 270f
+
+                    startAngle += angle
+
+                    if (labelAlpha == 0f) return@forEachIndexed
 
                     /** angled line */
                     drawLine(
-                        color = Color(colors[index]),
+                        color = Color(colors[index]).copy(alpha = labelAlpha),
                         start = pieChartCenter + halfSweepEdgePoint,
                         end = lineCornerPoint,
                         strokeWidth = 1.dp.toPx()
                     )
 
-                    val labelOnRightSide = (startAngle + angle / 2) < 270f + 180f && (startAngle + angle / 2) > 270f
 
                     val lineEndPoint = lineCornerPoint + Offset(
                         x = 24.dp.toPx() * if (labelOnRightSide) 1 else -1,
@@ -501,7 +586,7 @@ fun StatisticsRatingsCard(
 
                     /** horizontal line */
                     drawLine(
-                        color = Color(colors[index]),
+                        color = Color(colors[index]).copy(alpha = labelAlpha),
                         start = pieChartCenter + halfSweepEdgePoint * 1.2f,
                         end = lineEndPoint,
                         strokeWidth = 1.dp.toPx()
@@ -516,12 +601,10 @@ fun StatisticsRatingsCard(
                             x = (8.dp.toPx() + (index * 2.dp.toPx())) * if (labelOnRightSide) 0.7f else -4.8f,
                             y = -8.dp.toPx()
                         ),
-                        style = labelTextStyle,
+                        style = labelTextStyle.copy(
+                            color = labelTextStyle.color.copy(alpha = 0.7f * labelAlpha),
+                        ),
                     )
-
-
-
-                    startAngle += angle
                 }
             }
         }

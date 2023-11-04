@@ -36,6 +36,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.musikus.Musikus
 import app.musikus.utils.SCALE_FACTOR_FOR_SMALL_TEXT
@@ -50,7 +51,7 @@ fun EditSession(
     editSessionViewModel: EditSessionViewModel = viewModel(),
     sessionToEditId: UUID,
 ) {
-    val editSessionUiState by editSessionViewModel.editSessionUiState.collectAsState()
+    val editSessionUiState by editSessionViewModel.editSessionUiState.collectAsStateWithLifecycle()
 
     editSessionViewModel.setSessionToEditId(sessionToEditId)
 

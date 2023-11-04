@@ -20,9 +20,11 @@ import app.musikus.utils.getSpecificMonth
 import app.musikus.utils.getStartOfDayOfWeek
 import app.musikus.utils.weekIndexToName
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
@@ -34,10 +36,10 @@ data class StatisticsUiState(
     val contentUiState: StatisticsContentUiState,
 )
 data class StatisticsContentUiState(
-    val currentMonthUiState: StatisticsCurrentMonthUiState,
-    val practiceDurationCardUiState: StatisticsPracticeDurationCardUiState,
-    val goalCardUiState: StatisticsGoalCardUiState,
-    val ratingsCardUiState: StatisticsRatingsCardUiState,
+    val currentMonthUiState: StatisticsCurrentMonthUiState?,
+    val practiceDurationCardUiState: StatisticsPracticeDurationCardUiState?,
+    val goalCardUiState: StatisticsGoalCardUiState?,
+    val ratingsCardUiState: StatisticsRatingsCardUiState?,
 )
 
 data class StatisticsCurrentMonthUiState(
@@ -62,7 +64,7 @@ data class StatisticsGoalCardUiState(
 )
 
 data class StatisticsRatingsCardUiState(
-    val numOfRatingsFromLowestToHighest: List<Int>,
+    val numOfRatingsFromOneToFive: List<Int>,
 )
 
 class StatisticsViewModel(
@@ -93,6 +95,8 @@ class StatisticsViewModel(
      */
 
     private val currentMonthUiState = sessions.map { sessions ->
+        if (sessions.isEmpty()) return@map null
+
         val currentSpecificMonth = getSpecificMonth(getCurrTimestamp())
         val currentMonthSessions = sessions.filter { (_, sections) ->
             sections.first().section.timestamp.let{
@@ -133,6 +137,8 @@ class StatisticsViewModel(
     )
 
     private val practiceDurationCardUiState = sessions.map { sessions ->
+        if (sessions.isEmpty()) return@map null
+
         val lastSevenDays = (0..6).reversed().map { dayOffset ->
             (getCurrentDayIndexOfWeek() - dayOffset).let {
                 getStartOfDayOfWeek(
@@ -176,7 +182,7 @@ class StatisticsViewModel(
     @OptIn(ExperimentalCoroutinesApi::class)
     private val lastFiveCompletedGoalsWithProgress = lastFiveCompletedGoals.flatMapLatest { goals ->
         val sections = goals.map { goal ->
-            sessionRepository.sectionsForGoal(goal).map { sections->
+            sessionRepository.sectionsForGoal(goal).map { sections ->
                 goal to sections
             }
         }
@@ -198,6 +204,8 @@ class StatisticsViewModel(
     )
 
     private val goalCardUiState = lastFiveCompletedGoalsWithProgress.map {
+        if (it.isEmpty()) return@map null
+
         StatisticsGoalCardUiState(lastGoals = it)
     }.stateIn(
         scope = viewModelScope,
@@ -205,8 +213,16 @@ class StatisticsViewModel(
         initialValue = StatisticsGoalCardUiState(lastGoals = emptyList())
     )
 
-    private val ratingsCardUiState = sessions.map { sessions ->
-        val numOfRatingsFromLowestToHighest = sessions.groupBy { (session, _) ->
+    private var isFirst = true
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val ratingsCardUiState = sessions.flatMapLatest { sessions ->
+        if (sessions.isEmpty()) {
+            isFirst = true
+            return@flatMapLatest flow { emit(null) }
+        }
+
+        val numOfRatingsFromOneToFive = sessions.groupBy { (session, _) ->
             session.rating
         }.let { ratingToSessions ->
             (1 .. 5).map { rating ->
@@ -214,15 +230,18 @@ class StatisticsViewModel(
             }
         }
 
-        StatisticsRatingsCardUiState(
-            numOfRatingsFromLowestToHighest = numOfRatingsFromLowestToHighest,
-        )
+        flow {
+            if (isFirst) {
+                emit(StatisticsRatingsCardUiState((1..5).map { 0 }))
+                isFirst = false
+                delay(350)
+            }
+            emit(StatisticsRatingsCardUiState(numOfRatingsFromOneToFive))
+        }
     }.stateIn(
         scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = StatisticsRatingsCardUiState(
-            numOfRatingsFromLowestToHighest = emptyList(),
-        )
+        started = SharingStarted.WhileSubscribed(500),
+        initialValue = null
     )
 
     val uiState = combine(
@@ -237,18 +256,18 @@ class StatisticsViewModel(
                 practiceDurationCardUiState = practiceDurationCardUiState,
                 goalCardUiState = goalCardUiState,
                 ratingsCardUiState = ratingsCardUiState,
-            )
+            ),
         )
     }.stateIn(
         scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
+        started = SharingStarted.WhileSubscribed(500),
         initialValue = StatisticsUiState(
             contentUiState = StatisticsContentUiState(
                 currentMonthUiState = currentMonthUiState.value,
                 practiceDurationCardUiState = practiceDurationCardUiState.value,
                 goalCardUiState = goalCardUiState.value,
                 ratingsCardUiState = ratingsCardUiState.value,
-            )
+            ),
         )
     )
 }
