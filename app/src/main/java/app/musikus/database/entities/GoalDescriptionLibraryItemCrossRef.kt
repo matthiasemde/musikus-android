@@ -28,7 +28,7 @@ import java.util.UUID
             entity = LibraryItemModel::class,
             parentColumns = ["id"],
             childColumns = ["library_item_id"],
-            onDelete = ForeignKey.NO_ACTION
+            onDelete = ForeignKey.CASCADE
         )
     ]
 )

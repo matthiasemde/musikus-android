@@ -20,6 +20,7 @@ import app.musikus.database.entities.LibraryItemUpdateAttributes
 import app.musikus.datastore.LibraryFolderSortMode
 import app.musikus.datastore.LibraryItemSortMode
 import app.musikus.datastore.SortDirection
+import app.musikus.utils.getCurrTimestamp
 import java.util.UUID
 
 class LibraryRepository(
@@ -87,7 +88,7 @@ class LibraryRepository(
     /** Clean */
     suspend fun clean() {
         folderDao.clean()
-        itemDao.clean()
+        itemDao.clean(getCurrTimestamp())
     }
 
     /** Sort */
