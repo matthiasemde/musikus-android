@@ -13,8 +13,6 @@
 
 package app.musikus.ui.sessions
 
-import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -51,7 +49,6 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import app.musikus.R
 import app.musikus.datastore.ThemeSelections
 import app.musikus.shared.ActionBar
 import app.musikus.shared.CommonMenuSelections
@@ -60,7 +57,6 @@ import app.musikus.shared.Selectable
 import app.musikus.shared.ThemeMenu
 import app.musikus.spacing
 import app.musikus.ui.MainViewModel
-import app.musikus.ui.activesession.ActiveSessionActivity
 import app.musikus.utils.DateFormat
 import app.musikus.utils.TimeFormat
 import app.musikus.utils.getDurationString
@@ -75,9 +71,8 @@ import java.util.UUID
 @Composable
 fun Sessions(
     mainViewModel: MainViewModel,
-    activity: AppCompatActivity?,
     sessionsViewModel: SessionsViewModel = hiltViewModel(),
-    editSession: (sessionId: UUID) -> Unit,
+    onSessionEdit: (sessionId: UUID) -> Unit,
 ) {
     val mainUiState by mainViewModel.uiState.collectAsStateWithLifecycle()
     val sessionsUiState by sessionsViewModel.uiState.collectAsStateWithLifecycle()
@@ -107,11 +102,6 @@ fun Sessions(
                 },
                 text = { Text(text = "Start Session") },
                 onClick = {
-                    activity?.let {
-                        val i = Intent(it, ActiveSessionActivity::class.java)
-                        it.startActivity(i)
-                        it.overridePendingTransition(R.anim.slide_in_up, R.anim.fake_anim)
-                    }
                 },
                 expanded = fabExpanded,
             )
@@ -163,7 +153,7 @@ fun Sessions(
                     numSelectedItems = actionModeUiState.numberOfSelections,
                     onDismissHandler = sessionsViewModel::clearActionMode,
                     onEditHandler = {
-                        sessionsViewModel.onEditAction(editSession)
+                        sessionsViewModel.onEditAction(onSessionEdit)
                     },
                     onDeleteHandler = {
                         sessionsViewModel.onDeleteAction()
