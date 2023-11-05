@@ -450,7 +450,9 @@ fun StatisticsRatingsCard(
             Text(text = "Your session ratings")
             Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
 
-            val labelTextStyle = MaterialTheme.typography.labelSmall
+            val labelTextStyle = MaterialTheme.typography.labelSmall.copy(
+                color = MaterialTheme.colorScheme.onSurface,
+            )
             val starCharacter = stringResource(R.string.star_sign)
             val colors = Musikus.getLibraryItemColors(LocalContext.current)
             val textMeasurer = rememberTextMeasurer()
