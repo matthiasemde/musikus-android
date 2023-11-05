@@ -57,16 +57,16 @@ android {
 }
 
 dependencies {
-    ksp 'androidx.room:room-compiler:2.5.2'
-
-    implementation 'androidx.legacy:legacy-support-v4:1.0.0'
-    implementation 'androidx.navigation:navigation-runtime-ktx:2.7.5'
-
     def composeBom = platform 'androidx.compose:compose-bom:2023.10.01'
 
     def lifecycle_version = "2.6.2"
     def room_version = "2.5.2"
-    def nav_version = "2.7.2"
+    def nav_version = "2.7.5"
+
+    ksp "androidx.room:room-compiler:$room_version"
+
+    implementation "androidx.navigation:navigation-runtime-ktx:$nav_version"
+    implementation 'androidx.legacy:legacy-support-v4:1.0.0'
 
     // https://developer.android.com/jetpack/androidx/releases/compose-kotlin
     // https://developer.android.com/jetpack/compose/setup#bom-version-mapping
@@ -74,40 +74,40 @@ dependencies {
     implementation composeBom
     androidTestImplementation composeBom
     // Compose
-        // Animation
-        implementation "androidx.compose.animation:animation"
-        implementation "androidx.compose.animation:animation-core:1.6.0-alpha08" // TODO remove once bom has been updated
-        implementation "androidx.compose.animation:animation-graphics"
+    // Animation
+    implementation "androidx.compose.animation:animation"
+    implementation "androidx.compose.animation:animation-core"
+    implementation "androidx.compose.animation:animation-graphics"
 
-        //Foundation
-        implementation "androidx.compose.foundation:foundation"
-        implementation "androidx.compose.foundation:foundation-layout"
+    //Foundation
+    implementation "androidx.compose.foundation:foundation"
+    implementation "androidx.compose.foundation:foundation-layout"
 
-        // Material
-        implementation 'androidx.compose.material3:material3'
-        implementation 'androidx.compose.material3:material3-window-size-class'
-        implementation "androidx.compose.material:material-icons-core"
-        implementation "androidx.compose.material:material-icons-extended"
+    // Material
+    implementation 'androidx.compose.material3:material3'
+    implementation 'androidx.compose.material3:material3-window-size-class'
+    implementation "androidx.compose.material:material-icons-core"
+    implementation "androidx.compose.material:material-icons-extended"
 
-        // Runtime
-        implementation 'androidx.compose.runtime:runtime'
-        implementation 'androidx.compose.runtime:runtime-livedata'
+    // Runtime
+    implementation 'androidx.compose.runtime:runtime'
+    implementation 'androidx.compose.runtime:runtime-livedata'
 
-        // UI
-        implementation "androidx.compose.ui:ui"
-        implementation "androidx.compose.ui:ui-viewbinding"
-        implementation 'androidx.compose.ui:ui-tooling-preview'
-        debugImplementation 'androidx.compose.ui:ui-tooling'
+    // UI
+    implementation "androidx.compose.ui:ui"
+    implementation "androidx.compose.ui:ui-viewbinding"
+    implementation 'androidx.compose.ui:ui-tooling-preview'
+    debugImplementation 'androidx.compose.ui:ui-tooling'
 
-        // When using a MDC theme
-        implementation "androidx.activity:activity-compose:1.8.0"
-        implementation 'com.google.android.material:compose-theme-adapter-3:1.1.1'
-        implementation "com.google.accompanist:accompanist-systemuicontroller:0.17.0"
+    // When using a MDC theme
+    implementation "androidx.activity:activity-compose:1.8.0"
+    implementation 'com.google.android.material:compose-theme-adapter-3:1.1.1'
+    implementation "com.google.accompanist:accompanist-systemuicontroller:0.17.0"
 
-        // Lifecycle
-        implementation "androidx.lifecycle:lifecycle-runtime-compose:$lifecycle_version"
-        implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle_version"
-        implementation "androidx.lifecycle:lifecycle-viewmodel-compose:$lifecycle_version"
+    // Lifecycle
+    implementation "androidx.lifecycle:lifecycle-runtime-compose:$lifecycle_version"
+    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle_version"
+    implementation "androidx.lifecycle:lifecycle-viewmodel-compose:$lifecycle_version"
 
     // Room
     implementation "androidx.room:room-runtime:$room_version"
