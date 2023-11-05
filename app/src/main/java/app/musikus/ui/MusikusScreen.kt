@@ -145,7 +145,7 @@ fun MusikusBottomBar(
     } == true
 
     if (!showNavigationBar)
-    return
+        return
 
     Box {
         NavigationBar {
@@ -332,6 +332,7 @@ fun MusikusApp(
             onDismissHandler = mainViewModel::hideExportImportDialog
         )
 
+        // TODO remove
         // if there is a new session added to the intent, navigate to progress update
 //        intent.extras?.getLong("KEY_SESSION")?.let { _ ->
 //            intent.removeExtra("KEY_SESSION")
