@@ -54,17 +54,19 @@ class GoalRepository(
     /** Add */
     suspend fun add(
         goalDescriptionCreationAttributes: GoalDescriptionCreationAttributes,
+        startingTimeFrame : Calendar = Calendar.getInstance(),
         libraryItems: List<LibraryItem>?,
         target: Int,
     ) = goalDescriptionDao.insert(
-        GoalDescriptionModel(
+        goalDescription = GoalDescriptionModel(
             type = goalDescriptionCreationAttributes.type,
             repeat = goalDescriptionCreationAttributes.repeat,
             periodInPeriodUnits = goalDescriptionCreationAttributes.periodInPeriodUnits,
             periodUnit = goalDescriptionCreationAttributes.periodUnit,
         ),
-        libraryItems?.map { it.id },
-        target,
+        startingTimeFrame = startingTimeFrame,
+        libraryItemIds = libraryItems?.map { it.id },
+        target = target,
     )
 
     private suspend fun createInstance(

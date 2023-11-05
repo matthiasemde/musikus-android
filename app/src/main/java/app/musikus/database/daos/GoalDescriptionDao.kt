@@ -71,6 +71,7 @@ abstract class GoalDescriptionDao(
     @Transaction
     open suspend fun insert(
         goalDescription: GoalDescriptionModel,
+        startingTimeFrame: Calendar = Calendar.getInstance(),
         libraryItemIds: List<UUID>?,
         target: Int,
     ) {
@@ -80,7 +81,7 @@ abstract class GoalDescriptionDao(
         // Create the first instance of the newly created goal description
         database.goalInstanceDao.insert(
             goalDescription,
-            Calendar.getInstance(),
+            startingTimeFrame,
             target
         )
 

@@ -41,6 +41,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.Calendar
 import kotlin.math.pow
 
 
@@ -135,17 +136,28 @@ class MainViewModel(
                         periodInPeriodUnits = (1..5).random(),
                         periodUnit = GoalPeriodUnit.DAY,
                     ),
-                ).forEach {
-                    Log.d("MainActivity", "GoalDescription ${it.type} created")
+                ).forEach { goalDescriptionCreationAttributes ->
                     GoalRepository(database).add(
-                        it,
-                        if (it.type == GoalType.NON_SPECIFIC) null else listOf(items.random()),
-                        (1..10).random() * 60
+                        goalDescriptionCreationAttributes,
+                        Calendar.getInstance().let { it.add(
+                                when(goalDescriptionCreationAttributes.periodUnit) {
+                                    GoalPeriodUnit.DAY -> Calendar.DAY_OF_YEAR
+                                    GoalPeriodUnit.WEEK -> Calendar.WEEK_OF_YEAR
+                                    GoalPeriodUnit.MONTH -> Calendar.MONTH
+                                },
+                                -3 * goalDescriptionCreationAttributes.periodInPeriodUnits
+                            )
+                            it
+                       },
+                        if (goalDescriptionCreationAttributes.type == GoalType.NON_SPECIFIC) null else listOf(items.random()),
+                        (1..6).random() * 60 * 10 + 30
                     )
                     delay(1500)
                 }
 
-                (0..40).map { sessionNum ->
+                GoalRepository(database).updateGoals()
+
+                (0..80).map { sessionNum ->
                     sessionNum to SessionCreationAttributes(
                         breakDuration = (5..20).random() * 60,
                         rating = (1..5).random(),
@@ -159,14 +171,14 @@ class MainViewModel(
                             timestamp =
                                 getCurrTimestamp() -
                                 (
-                                    ((sessionNum / 2) * 2) * // two sessions per day initially
+                                    (sessionNum / 2) * // two sessions per day initially
                                     24 * 60 * 60 *
-                                    1.05.pow(sessionNum.toDouble()) // exponential growth
+                                    1.02.pow(sessionNum.toDouble()) // exponential growth
                                 ).toLong(),
-                            duration = (5..20).random() * 60,
+                            duration = (10..20).random() * 60,
                         )}
                     )
-                    delay(1000)
+                    delay(300)
                 }
             }
         }
