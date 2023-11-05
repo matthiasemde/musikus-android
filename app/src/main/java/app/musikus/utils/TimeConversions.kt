@@ -216,6 +216,10 @@ fun getCurrTimestamp(): Long {
     return Instant.now().epochSecond
 }
 
+fun getCurrentDateTime(): ZonedDateTime {
+    return ZonedDateTime.now()
+}
+
 /**
  * Get the Beginning of dayOffset Days from now. dayOffset>0 -> future, dayOffset<0 -> past
  */

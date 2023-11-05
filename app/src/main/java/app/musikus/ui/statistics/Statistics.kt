@@ -13,6 +13,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Arrangement.Absolute.SpaceBetween
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -71,9 +72,11 @@ import app.musikus.shared.MainMenu
 import app.musikus.shared.ThemeMenu
 import app.musikus.spacing
 import app.musikus.utils.DATE_FORMATTER_PATTERN_DAY_AND_MONTH
+import app.musikus.utils.DATE_FORMATTER_PATTERN_MONTH_TEXT_FULL
 import app.musikus.utils.TIME_FORMAT_HUMAN_PRETTY
 import app.musikus.utils.TIME_FORMAT_HUMAN_PRETTY_SHORT
 import app.musikus.utils.epochSecondsToDate
+import app.musikus.utils.getCurrentDateTime
 import app.musikus.utils.getDurationString
 import app.musikus.viewmodel.MainViewModel
 import app.musikus.viewmodel.StatisticsCurrentMonthUiState
@@ -200,68 +203,45 @@ fun Statistics(
 fun StatisticsCurrentMonth(
     uiState: StatisticsCurrentMonthUiState,
 ) {
+    val labelTextStyle = MaterialTheme.typography.labelSmall
+    val statsTextStyle = MaterialTheme.typography.titleMedium.copy(
+        color = MaterialTheme.colorScheme.primary,
+    )
+
+    val currentMonthStats = listOf(
+        "Total duration" to getDurationString(
+            uiState.totalPracticeDuration,
+            TIME_FORMAT_HUMAN_PRETTY_SHORT
+        ).toString(),
+        "Per session" to stringResource(R.string.average_sign) + " " + getDurationString(
+            uiState.averageDurationPerSession,
+            TIME_FORMAT_HUMAN_PRETTY_SHORT
+        ).toString(),
+        "Break per hour" to getDurationString(
+            uiState.breakDurationPerHour,
+            TIME_FORMAT_HUMAN_PRETTY_SHORT
+        ).toString(),
+        "Average rating" to stringResource(R.string.average_sign) + " %.1f".format(
+            uiState.averageRatingPerSession
+        ),
+    )
+
     Column {
-        Text(text = "Current month")
-        Row(modifier = Modifier.fillMaxWidth()) {
-           Column(
-               modifier = Modifier
-                   .weight(1f)
-                   .padding(horizontal = 4.dp),
-               horizontalAlignment = CenterHorizontally,
-           ) {
-               Text(
-                   text = getDurationString(
-                       uiState.totalPracticeDuration,
-                       TIME_FORMAT_HUMAN_PRETTY_SHORT
-                   ).toString(),
-                   fontSize = 20.sp
-               )
-               Text(text = "Total duration", fontSize = 12.sp, maxLines = 1)
-           }
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(horizontal = 4.dp),
-                horizontalAlignment = CenterHorizontally,
-            ) {
-                Text(
-                    text = stringResource(R.string.average_sign) + " " + getDurationString(
-                        uiState.averageDurationPerSession,
-                        TIME_FORMAT_HUMAN_PRETTY_SHORT
-                    ).toString(),
-                    fontSize = 20.sp
-                )
-                Text(text = "Per session", fontSize = 12.sp, maxLines = 1)
-            }
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(horizontal = 4.dp),
-                horizontalAlignment = CenterHorizontally
-            ) {
-                Text(
-                    text = getDurationString(
-                        uiState.breakDurationPerHour,
-                        TIME_FORMAT_HUMAN_PRETTY_SHORT
-                    ).toString(),
-                    fontSize = 20.sp
-                )
-                Text(text = "Break per hour", fontSize = 12.sp, maxLines = 1)
-            }
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(horizontal = 4.dp),
-                horizontalAlignment = CenterHorizontally
-            ) {
-                Text(
-                    text =
-                        stringResource(R.string.average_sign) + " %.1f".format(
-                            uiState.averageRatingPerSession
-                        ),
-                    fontSize = 20.sp
-                )
-                Text(text = "Rating", fontSize = 12.sp, maxLines = 1)
+        Text(text = "In " + getCurrentDateTime().format(DateTimeFormatter.ofPattern(DATE_FORMATTER_PATTERN_MONTH_TEXT_FULL)))
+        Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small),
+        ) {
+            currentMonthStats.forEach {(label, stat) ->
+               Column(
+                   modifier = Modifier
+                       .weight(1f),
+                   horizontalAlignment = CenterHorizontally,
+               ) {
+                   Text(text = stat, style = statsTextStyle)
+                   Text(text = label, style = labelTextStyle)
+               }
             }
         }
     }
@@ -278,20 +258,30 @@ fun StatisticsPracticeDurationCard(
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = SpaceBetween,
+                verticalAlignment = CenterVertically,
             ) {
-                Text(text = "Practice Time")
+                Text(
+                    text = "Practice Time",
+                    style = MaterialTheme.typography.titleLarge,
+                )
                 Icon(
-                    //                modifier = Modifier.fillMaxHeight(),
                     imageVector = Icons.Default.KeyboardArrowRight,
                     contentDescription = "more",
                 )
             }
-            Text(text = "Last 7 days")
+            Text(
+                text = "Last 7 days",
+                style = MaterialTheme.typography.labelLarge.copy(
+                    color = MaterialTheme.colorScheme.onSurface.copy(
+                        alpha = 0.7f
+                    ),
+                )
+            )
+            Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
             Row(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = SpaceBetween,
                 verticalAlignment = CenterVertically,
             ) {
                 Column {
@@ -299,67 +289,73 @@ fun StatisticsPracticeDurationCard(
                         text = getDurationString(
                             uiState.totalPracticeDuration,
                             TIME_FORMAT_HUMAN_PRETTY
-                        ).toString()
+                        ).toString(),
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            color = MaterialTheme.colorScheme.primary,
+                        ),
                     )
-                    Text(text = "Total")
+                    Text(
+                        text = "Total",
+                        style = MaterialTheme.typography.labelLarge.copy(
+                            color = MaterialTheme.colorScheme.onSurface.copy(
+                                alpha = 0.7f
+                            )
+                        ),
+                    )
                 }
 
                 Spacer(modifier = Modifier.weight(2f))
 
-                if (uiState.lastSevenDayPracticeDuration.isEmpty()) {
-                    Text(text = "No data")
-                } else {
-                    Row(
-                        modifier = Modifier
-                            .height(80.dp)
-                            .weight(4f)
-                    ) {
-                        val maxDuration = uiState.lastSevenDayPracticeDuration.maxOf { it.duration }
+                Row(
+                    modifier = Modifier
+                        .height(80.dp)
+                        .weight(4f)
+                ) {
+                    val maxDuration = uiState.lastSevenDayPracticeDuration.maxOf { it.duration }
 
-                        uiState.lastSevenDayPracticeDuration.forEachIndexed { index, (day, duration) ->
-                            val animatedColumnHeight by animateFloatAsState(
-                                targetValue = if (maxDuration == 0) 0f else (duration.toFloat() / maxDuration),
-                                animationSpec = tween(durationMillis = 1500),
-                                label = "day-animation-$index"
-                            )
+                    uiState.lastSevenDayPracticeDuration.forEachIndexed { index, (day, duration) ->
+                        val animatedColumnHeight by animateFloatAsState(
+                            targetValue = if (maxDuration == 0) 0f else (duration.toFloat() / maxDuration),
+                            animationSpec = tween(durationMillis = 1500),
+                            label = "day-animation-$index"
+                        )
+                        Column(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxHeight(),
+                            horizontalAlignment = CenterHorizontally,
+                        ) {
                             Column(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .fillMaxHeight(),
-                                horizontalAlignment = CenterHorizontally,
+                               modifier= Modifier.weight(1f),
+                               verticalArrangement = Arrangement.Bottom
                             ) {
-                                Column(
-                                   modifier= Modifier.weight(1f),
-                                   verticalArrangement = Arrangement.Bottom
-                                ) {
-                                    if(animatedColumnHeight > 0) {
-                                        Box(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .fillMaxHeight(animatedColumnHeight)
-                                                .clip(
-                                                    RoundedCornerShape(
-                                                        topStart = 2.dp,
-                                                        topEnd = 2.dp
-                                                    )
+                                if(animatedColumnHeight > 0) {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .fillMaxHeight(animatedColumnHeight)
+                                            .clip(
+                                                RoundedCornerShape(
+                                                    topStart = 2.dp,
+                                                    topEnd = 2.dp
                                                 )
-                                                .background(MaterialTheme.colorScheme.primary)
-                                        )
-                                    }
-                                }
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    text = day,
-                                    style = TextStyle(
-                                        fontSize = 10.sp,
-                                        color = MaterialTheme.colorScheme.onSurface,
+                                            )
+                                            .background(MaterialTheme.colorScheme.primary)
                                     )
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = day,
+                                style = TextStyle(
+                                    fontSize = 10.sp,
+                                    color = MaterialTheme.colorScheme.onSurface,
                                 )
-                            }
+                            )
+                        }
 
-                            if (index < uiState.lastSevenDayPracticeDuration.size - 1) {
-                                Spacer(modifier = Modifier.weight(1f))
-                            }
+                        if (index < uiState.lastSevenDayPracticeDuration.size - 1) {
+                            Spacer(modifier = Modifier.weight(1f))
                         }
                     }
                 }
@@ -385,7 +381,10 @@ fun StatisticsGoalCard(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(text = "Your Goals")
+                Text(
+                    text = "Your Goals",
+                    style = MaterialTheme.typography.titleLarge,
+                )
                 Icon(
                     //                modifier = Modifier.fillMaxHeight(),
                     imageVector = Icons.Default.KeyboardArrowRight,
@@ -393,7 +392,12 @@ fun StatisticsGoalCard(
                 )
             }
             Text(
-                text = "Last 5 expired goals"
+                text = "Last 5 expired goals",
+                style = MaterialTheme.typography.labelLarge.copy(
+                    color = MaterialTheme.colorScheme.onSurface.copy(
+                        alpha = 0.7f
+                    ),
+                )
             )
             Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
             Row(
@@ -407,8 +411,18 @@ fun StatisticsGoalCard(
                                 "${uiState.lastGoals.filter { it.progress > it.goal.instance.target }.size}" +
                                 "/" +
                                 "${uiState.lastGoals.size}",
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            color = MaterialTheme.colorScheme.primary,
+                        ),
                     )
-                    Text(text = "Achieved")
+                    Text(
+                        text = "Achieved",
+                        style = MaterialTheme.typography.labelLarge.copy(
+                            color = MaterialTheme.colorScheme.onSurface.copy(
+                                alpha = 0.7f
+                            )
+                        ),
+                    )
                 }
 
                 Row(
@@ -443,12 +457,21 @@ fun StatisticsRatingsCard(
     ElevatedCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier
             .fillMaxWidth()
-            .height(200.dp)
             .padding(MaterialTheme.spacing.medium)
         ) {
-            Text(text = "Ratings")
-            Text(text = "Your session ratings")
-            Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
+            Text(
+                text = "Ratings",
+                style = MaterialTheme.typography.titleLarge,
+            )
+            Text(
+                text = "Your session ratings",
+                style = MaterialTheme.typography.labelLarge.copy(
+                    color = MaterialTheme.colorScheme.onSurface.copy(
+                        alpha = 0.7f
+                    ),
+                )
+            )
+            Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
 
             val labelTextStyle = MaterialTheme.typography.labelSmall.copy(
                 color = MaterialTheme.colorScheme.onSurface,
