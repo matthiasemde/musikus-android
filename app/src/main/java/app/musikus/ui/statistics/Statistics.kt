@@ -67,6 +67,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.musikus.Musikus
 import app.musikus.R
+import app.musikus.database.entities.GoalType
 import app.musikus.datastore.ThemeSelections
 import app.musikus.shared.CommonMenuSelections
 import app.musikus.shared.MainMenu
@@ -443,11 +444,19 @@ fun StatisticsGoalCard(
                                 ),
                                 label = "goal-animation-$index"
                             )
+                            val color =
+                                if (goal.description.description.type == GoalType.ITEM_SPECIFIC)
+                                    Color(Musikus.getLibraryItemColors(
+                                        LocalContext.current
+                                    )[goal.description.libraryItems.first().colorIndex])
+                                else
+                                    MaterialTheme.colorScheme.primary
                             Box{
                                 CircularProgressIndicator(
                                     modifier = Modifier.size(35.dp),
                                     progress = animatedProgress,
                                     trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
+                                    color = color,
                                 )
                                 val animatedAlpha by animateFloatAsState(
                                     targetValue = if (animatedProgress == 1f) 1f else 0f,
@@ -460,7 +469,7 @@ fun StatisticsGoalCard(
                                         .padding(6.dp),
                                     imageVector = Icons.Filled.Check,
                                     contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary.copy(
+                                    tint = color.copy(
                                         alpha = animatedAlpha
                                     )
                                 )
