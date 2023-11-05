@@ -128,12 +128,7 @@ class StatisticsViewModel(
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = StatisticsCurrentMonthUiState(
-            totalPracticeDuration = 0,
-            averageDurationPerSession = 0,
-            breakDurationPerHour = 0,
-            averageRatingPerSession = 0f,
-        )
+        initialValue = null
     )
 
     private var _noSessionsForDurationCard = true
@@ -220,14 +215,30 @@ class StatisticsViewModel(
         initialValue = emptyList()
     )
 
-    private val goalCardUiState = lastFiveCompletedGoalsWithProgress.map {
-        if (it.isEmpty()) return@map null
+    private var _noSessionsForGoalCard = true
 
-        StatisticsGoalCardUiState(lastGoals = it)
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val goalCardUiState = lastFiveCompletedGoalsWithProgress.flatMapLatest { goals ->
+        if (goals.isEmpty()) {
+            _noSessionsForGoalCard = true
+            return@flatMapLatest flow { emit(null) }
+        }
+
+        flow {
+            if (_noSessionsForGoalCard) {
+                emit(StatisticsGoalCardUiState(lastGoals = goals.map { GoalWithProgress(
+                    goal = it.goal,
+                    progress = 0
+                )}))
+                _noSessionsForGoalCard = false
+                delay(350)
+            }
+            emit(StatisticsGoalCardUiState(lastGoals = goals.reversed()))
+        }
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = StatisticsGoalCardUiState(lastGoals = emptyList())
+        initialValue = null
     )
 
     private var _noSessionsForRatingCard = true

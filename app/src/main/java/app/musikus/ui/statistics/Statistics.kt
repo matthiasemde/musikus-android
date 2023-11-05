@@ -29,6 +29,7 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.CircularProgressIndicator
@@ -316,7 +317,10 @@ fun StatisticsPracticeDurationCard(
                     uiState.lastSevenDayPracticeDuration.forEachIndexed { index, (day, duration) ->
                         val animatedColumnHeight by animateFloatAsState(
                             targetValue = if (maxDuration == 0) 0f else (duration.toFloat() / maxDuration),
-                            animationSpec = tween(durationMillis = 1500),
+                            animationSpec = tween(
+                                durationMillis = 1500,
+                                delayMillis = 100 * index
+                        ),
                             label = "day-animation-$index"
                         )
                         Column(
@@ -379,7 +383,8 @@ fun StatisticsGoalCard(
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = SpaceBetween,
+                verticalAlignment = CenterVertically,
             ) {
                 Text(
                     text = "Your Goals",
@@ -402,7 +407,7 @@ fun StatisticsGoalCard(
             Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                horizontalArrangement = SpaceBetween,
                 verticalAlignment = CenterVertically,
             ) {
                 Column {
@@ -428,13 +433,38 @@ fun StatisticsGoalCard(
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small),
                 ) {
-                    uiState.lastGoals.forEach { (goal, progress) ->
+                    uiState.lastGoals.forEachIndexed { index, (goal, progress) ->
                         Column(horizontalAlignment = CenterHorizontally) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(35.dp),
-                                progress = progress.toFloat() / goal.instance.target.toFloat(),
-                                trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
+                            val animatedProgress by animateFloatAsState(
+                                targetValue = (progress.toFloat() / goal.instance.target).coerceAtMost(1f),
+                                animationSpec = tween(
+                                    durationMillis = 1500,
+                                    delayMillis = 100 * index
+                                ),
+                                label = "goal-animation-$index"
                             )
+                            Box{
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(35.dp),
+                                    progress = animatedProgress,
+                                    trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
+                                )
+                                val animatedAlpha by animateFloatAsState(
+                                    targetValue = if (animatedProgress == 1f) 1f else 0f,
+                                    animationSpec = tween(durationMillis = 500),
+                                    label = "goal-icon-animation-$index"
+                                )
+                                Icon(
+                                    modifier = Modifier
+                                        .matchParentSize()
+                                        .padding(6.dp),
+                                    imageVector = Icons.Filled.Check,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary.copy(
+                                        alpha = animatedAlpha
+                                    )
+                                )
+                            }
                             Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
                             Text(
                                 text = epochSecondsToDate(goal.instance.let {
