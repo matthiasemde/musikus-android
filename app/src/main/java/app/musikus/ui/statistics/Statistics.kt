@@ -29,7 +29,6 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.CircularProgressIndicator
@@ -56,6 +55,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
@@ -466,8 +466,8 @@ fun StatisticsGoalCard(
                                 Icon(
                                     modifier = Modifier
                                         .matchParentSize()
-                                        .padding(6.dp),
-                                    imageVector = Icons.Filled.Check,
+                                        .padding(4.dp),
+                                    painter = painterResource(id = R.drawable.ic_check_small_round),
                                     contentDescription = null,
                                     tint = color.copy(
                                         alpha = animatedAlpha
