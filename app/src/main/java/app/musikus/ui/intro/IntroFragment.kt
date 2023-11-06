@@ -39,7 +39,7 @@ import app.musikus.ui.goals.GoalAdapter
 import app.musikus.ui.library.LibraryItemAdapter
 import app.musikus.utils.SECONDS_PER_DAY
 import app.musikus.utils.SECONDS_PER_HOUR
-import app.musikus.utils.getCurrTimestamp
+import app.musikus.utils.getTimestamp
 import app.musikus.utils.getStartOfDay
 import app.musikus.utils.getStartOfWeek
 import com.github.appintro.BuildConfig
@@ -318,7 +318,7 @@ private fun getDummySessions() =
                         sessionId = UUID.randomUUID(), // we don't care about id but it can't be null
                         libraryItemId = UUID.randomUUID(), // we don't care about id but it can't be null
                         duration = 60 * 10,
-                        timestamp = getCurrTimestamp()
+                        timestamp = getTimestamp()
                     ),
                     dummyLibraryItems[0]
                 ),
@@ -327,7 +327,7 @@ private fun getDummySessions() =
                         sessionId = UUID.randomUUID(), // we don't care about id but it can't be null
                         libraryItemId = UUID.randomUUID(), // we don't care about id but it can't be null
                         duration = 60 * 23,
-                        timestamp = getCurrTimestamp()
+                        timestamp = getTimestamp()
                     ),
                     dummyLibraryItems[1]
                 ),
@@ -336,7 +336,7 @@ private fun getDummySessions() =
                         sessionId = UUID.randomUUID(), // we don't care about id but it can't be null
                         libraryItemId = UUID.randomUUID(), // we don't care about id but it can't be null
                         duration = 60 * 37,
-                        timestamp = getCurrTimestamp()
+                        timestamp = getTimestamp()
                     ),
                     dummyLibraryItems[DUMMY_MAIN_CATEGORY_INDEX]
                 ),

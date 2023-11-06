@@ -77,7 +77,7 @@ import app.musikus.ui.MainActivity
 import app.musikus.ui.library.LibraryItemAdapter
 import app.musikus.utils.TIME_FORMAT_HMS_DIGITAL
 import app.musikus.utils.TIME_FORMAT_MS_DIGITAL
-import app.musikus.utils.getCurrTimestamp
+import app.musikus.utils.getTimestamp
 import app.musikus.utils.getDurationString
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.button.MaterialButton
@@ -688,7 +688,7 @@ class ActiveSessionActivity : AppCompatActivity() {
                 put(MediaStore.Audio.Media.TITLE, displayName)
                 put(MediaStore.Audio.Media.MIME_TYPE, "audio/mp4")
                 put(MediaStore.Audio.Media.ALBUM, "Practice Time")
-                put(MediaStore.Audio.Media.DATE_ADDED, getCurrTimestamp())
+                put(MediaStore.Audio.Media.DATE_ADDED, getTimestamp())
                 put(MediaStore.Audio.Media.IS_MUSIC, 1)
             }
 

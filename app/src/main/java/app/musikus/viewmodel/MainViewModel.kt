@@ -31,7 +31,7 @@ import app.musikus.repository.LibraryRepository
 import app.musikus.repository.SessionRepository
 import app.musikus.repository.UserPreferencesRepository
 import app.musikus.shared.MultiFabState
-import app.musikus.utils.getCurrTimestamp
+import app.musikus.utils.getTimestamp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -169,7 +169,7 @@ class MainViewModel(
                         (1..(1..5).random()).map { SectionCreationAttributes(
                             libraryItemId = Nullable(items.random().id),
                             timestamp =
-                                getCurrTimestamp() -
+                                getTimestamp() -
                                 (
                                     (sessionNum / 2) * // two sessions per day initially
                                     24 * 60 * 60 *

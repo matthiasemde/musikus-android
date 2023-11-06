@@ -14,10 +14,10 @@ import androidx.lifecycle.viewModelScope
 import app.musikus.database.MusikusDatabase
 import app.musikus.repository.GoalRepository
 import app.musikus.repository.SessionRepository
-import app.musikus.utils.getCurrTimestamp
 import app.musikus.utils.getCurrentDayIndexOfWeek
 import app.musikus.utils.getSpecificMonth
 import app.musikus.utils.getStartOfDayOfWeek
+import app.musikus.utils.getTimestamp
 import app.musikus.utils.weekIndexToName
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
@@ -97,7 +97,7 @@ class StatisticsViewModel(
     private val currentMonthUiState = sessions.map { sessions ->
         if (sessions.isEmpty()) return@map null
 
-        val currentSpecificMonth = getSpecificMonth(getCurrTimestamp())
+        val currentSpecificMonth = getSpecificMonth(getTimestamp())
         val currentMonthSessions = sessions.filter { (_, sections) ->
             sections.first().section.timestamp.let{
                 getSpecificMonth(it) == currentSpecificMonth

@@ -27,7 +27,7 @@ import app.musikus.database.entities.GoalInstanceModel
 import app.musikus.database.entities.GoalInstanceUpdateAttributes
 import app.musikus.database.entities.GoalPeriodUnit
 import app.musikus.database.entities.TimestampModelDisplayAttributes
-import app.musikus.utils.getCurrTimestamp
+import app.musikus.utils.getTimestamp
 import kotlinx.coroutines.flow.Flow
 import java.util.Calendar
 import java.util.UUID
@@ -40,7 +40,7 @@ data class GoalInstance(
     @ColumnInfo(name="renewed") val renewed: Boolean,
 ) : TimestampModelDisplayAttributes() {
     val isOutdated : Boolean
-        get() = getCurrTimestamp() > startTimestamp + periodInSeconds
+        get() = getTimestamp() > startTimestamp + periodInSeconds
 }
 
 @Dao
@@ -97,7 +97,7 @@ abstract class GoalInstanceDao(
         // to find the correct starting point and period for the goal, we execute these steps:
         // 1. clear the minutes, seconds and millis from the time frame and set hour to 0
         // 2. set the time frame to the beginning of the day, week or month
-        // 3. save the time in seconds as startTimeStamp
+        // 3. save the time in seconds as startTimestamp
         // 4. then set the day to the end of the period according to the periodInPeriodUnits
         // 5. calculate the period in seconds from the difference of the two timestamps
         timeFrame.clear(Calendar.MINUTE)
@@ -131,7 +131,7 @@ abstract class GoalInstanceDao(
         val periodInSeconds = ((timeFrame.timeInMillis / 1000) - startTimestamp).toInt()
 
         assert(startTimestamp > 0) {
-            Log.e("Assertion Failed", "startTimeStamp can not be 0")
+            Log.e("Assertion Failed", "startTimestamp can not be 0")
         }
 
         super.insert(
@@ -168,14 +168,14 @@ abstract class GoalInstanceDao(
     /**
      * Get all [GoalInstance] entities matching a specific pattern
      * @param goalDescriptionId
-     * @param from optional timestamp in seconds marking beginning of selection. **default**: [getCurrTimestamp] / 1000L
+     * @param from optional timestamp in seconds marking beginning of selection. **default**: [getTimestamp] / 1000L
      * @param to optional timestamp in seconds marking end of selection. **default** [Long.MAX_VALUE]
      * @param inclusiveFrom decides whether the beginning of the selection is inclusive. **default**: true
      * @param inclusiveTo decides whether the end of the selection is inclusive. **default**: false
      */
     suspend fun get(
         goalDescriptionId: UUID,
-        from: Long = getCurrTimestamp(),
+        from: Long = getTimestamp(),
         to: Long = Long.MAX_VALUE,
         inclusiveFrom: Boolean = true,
         inclusiveTo: Boolean = false,
@@ -192,7 +192,7 @@ abstract class GoalInstanceDao(
     /**
      * Get all [GoalInstance] entities matching a specific pattern
      * @param goalDescriptionIds
-     * @param from optional timestamp in seconds marking beginning of selection. **default**: [getCurrTimestamp] / 1000L
+     * @param from optional timestamp in seconds marking beginning of selection. **default**: [getTimestamp] / 1000L
      * @param to optional timestamp in seconds marking end of selection. **default** [Long.MAX_VALUE]
      * @param inclusiveFrom decides whether the beginning of the selection is inclusive. **default**: true
      * @param inclusiveTo decides whether the end of the selection is inclusive. **default**: false
@@ -217,7 +217,7 @@ abstract class GoalInstanceDao(
     )
     abstract suspend fun get(
         goalDescriptionIds: List<UUID>,
-        from: Long = getCurrTimestamp(),
+        from: Long = getTimestamp(),
         to: Long = Long.MAX_VALUE,
         inclusiveFrom: Boolean = true,
         inclusiveTo: Boolean = false,
@@ -226,7 +226,7 @@ abstract class GoalInstanceDao(
 
     /**
      * Get all [GoalInstanceWithDescription] entities matching a specific pattern
-     * @param from optional timestamp in seconds marking beginning of selection. **default**: [getCurrTimestamp]
+     * @param from optional timestamp in seconds marking beginning of selection. **default**: [getTimestamp]
      * @param to optional timestamp in seconds marking end of selection. **default** [Long.MAX_VALUE]
      * @param inclusiveFrom decides whether the beginning of the selection is inclusive. **default**: true
      * @param inclusiveTo decides whether the end of the selection is inclusive. **default**: false
@@ -250,7 +250,7 @@ abstract class GoalInstanceDao(
         ")"
     )
     abstract suspend fun getWithDescription(
-        from: Long = getCurrTimestamp(),
+        from: Long = getTimestamp(),
         to: Long = Long.MAX_VALUE,
         inclusiveFrom: Boolean = true,
         inclusiveTo: Boolean = false,
@@ -259,7 +259,7 @@ abstract class GoalInstanceDao(
     /**
      * Get all [GoalInstanceWithDescriptionWithLibraryItems] entities matching a specific pattern
      * @param goalDescriptionId
-     * @param from optional timestamp in seconds marking beginning of selection. **default**: [getCurrTimestamp]
+     * @param from optional timestamp in seconds marking beginning of selection. **default**: [getTimestamp]
      * @param to optional timestamp in seconds marking end of selection. **default** [Long.MAX_VALUE]
      * @param inclusiveFrom decides whether the beginning of the selection is inclusive. **default**: true
      * @param inclusiveTo decides whether the end of the selection is inclusive. **default**: false
@@ -285,7 +285,7 @@ abstract class GoalInstanceDao(
     )
     abstract suspend fun getWithDescriptionWithLibraryItems(
         goalDescriptionId: UUID,
-        from: Long = getCurrTimestamp(),
+        from: Long = getTimestamp(),
         to: Long = Long.MAX_VALUE,
         inclusiveFrom: Boolean = true,
         inclusiveTo: Boolean = false,
@@ -304,7 +304,7 @@ abstract class GoalInstanceDao(
             ")"
     )
     abstract suspend fun getOutdatedWithDescriptions(
-        now : Long = getCurrTimestamp()
+        now : Long = getTimestamp()
     ) : List<GoalInstanceWithDescription>
 
     @Transaction
@@ -321,7 +321,7 @@ abstract class GoalInstanceDao(
     )
     abstract fun getWithDescriptionsWithLibraryItems(
         checkArchived : Boolean = false,
-        now : Long = getCurrTimestamp(),
+        now : Long = getTimestamp(),
     ) : Flow<List<GoalInstanceWithDescriptionWithLibraryItems>>
 
 
@@ -371,6 +371,6 @@ abstract class GoalInstanceDao(
                 "LIMIT 5"
     )
     abstract fun getLastFiveCompletedWithDescriptionsWithLibraryItems(
-       now: Long = getCurrTimestamp()
+       now: Long = getTimestamp()
     ): Flow<List<GoalInstanceWithDescriptionWithLibraryItems>>
 }

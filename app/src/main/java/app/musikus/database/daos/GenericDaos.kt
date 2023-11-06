@@ -32,7 +32,7 @@ import app.musikus.database.entities.SoftDeleteModelUpdateAttributes
 import app.musikus.database.entities.TimestampModel
 import app.musikus.database.entities.TimestampModelDisplayAttributes
 import app.musikus.database.entities.TimestampModelUpdateAttributes
-import app.musikus.utils.getCurrTimestamp
+import app.musikus.utils.getTimestamp
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.flow
@@ -213,7 +213,7 @@ abstract class TimestampDao<
     }
 
     override suspend fun insert(rows: List<T>) {
-        val now = getCurrTimestamp()
+        val now = getTimestamp()
         super.insert(rows.onEach {
             it.createdAt = now
             it.modifiedAt = now
@@ -224,7 +224,7 @@ abstract class TimestampDao<
         old: T,
         updateAttributes: U
     ): T = super.applyUpdateAttributes(old, updateAttributes).apply{
-        modifiedAt = getCurrTimestamp()
+        modifiedAt = getTimestamp()
     }
 }
 
@@ -279,7 +279,7 @@ abstract class SoftDeleteDao<
         query: SimpleSQLiteQuery = SimpleSQLiteQuery(
             query = "DELETE FROM $tableName WHERE " +
                 "deleted=1 " +
-                "AND (modified_at+5<${getCurrTimestamp()});"
+                "AND (modified_at+5<${getTimestamp()});"
 //                    "AND (modified_at+2592000<${getCurrTimestamp()});" TODO change for release
         )
     ) : Int

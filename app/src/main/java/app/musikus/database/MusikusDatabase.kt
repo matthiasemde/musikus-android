@@ -38,7 +38,7 @@ import app.musikus.database.entities.LibraryFolderModel
 import app.musikus.database.entities.LibraryItemModel
 import app.musikus.database.entities.SectionModel
 import app.musikus.database.entities.SessionModel
-import app.musikus.utils.getCurrTimestamp
+import app.musikus.utils.getTimestamp
 import java.nio.ByteBuffer
 import java.util.UUID
 
@@ -191,8 +191,8 @@ object PTDatabaseMigrationOneToTwo : Migration(1,2) {
             while (cursor.moveToNext()) {
                 val id = cursor.getLong(cursor.getColumnIndexOrThrow("id"))
                 db.update(tableName, SQLiteDatabase.CONFLICT_IGNORE, ContentValues().let {
-                    it.put("created_at", getCurrTimestamp() + id)
-                    it.put("modified_at", getCurrTimestamp() + id)
+                    it.put("created_at", getTimestamp() + id)
+                    it.put("modified_at", getTimestamp() + id)
                     it
                 }, "id=?", arrayOf(id))
             }

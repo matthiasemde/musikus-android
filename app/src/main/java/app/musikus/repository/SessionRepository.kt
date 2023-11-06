@@ -2,11 +2,14 @@ package app.musikus.repository
 
 import app.musikus.database.GoalInstanceWithDescriptionWithLibraryItems
 import app.musikus.database.MusikusDatabase
+import app.musikus.database.SessionWithSectionsWithLibraryItems
 import app.musikus.database.daos.Session
 import app.musikus.database.entities.GoalType
 import app.musikus.database.entities.SectionCreationAttributes
 import app.musikus.database.entities.SessionCreationAttributes
 import app.musikus.database.entities.SessionModel
+import kotlinx.coroutines.flow.Flow
+import java.time.ZonedDateTime
 import java.util.UUID
 
 class SessionRepository(
@@ -23,16 +26,24 @@ class SessionRepository(
     val sessionsWithSectionsWithLibraryItems = sessionDao.getAllWithSectionsWithLibraryItemsAsFlow()
     fun sessionWithSectionsWithLibraryItems(id: UUID) = sessionDao.getWithSectionsWithLibraryItemsAsFlow(id)
 
+    fun sessionsInTimeFrame (timeFrame: Pair<ZonedDateTime, ZonedDateTime>) : Flow<List<SessionWithSectionsWithLibraryItems>> {
+        assert (timeFrame.first < timeFrame.second)
+        return sessionDao.get(
+            startTimestamp = timeFrame.first.toEpochSecond(),
+            endTimestamp = timeFrame.second.toEpochSecond()
+        )
+    }
+
     fun sectionsForGoal (goal: GoalInstanceWithDescriptionWithLibraryItems) =
         when(goal.description.description.type) {
             GoalType.ITEM_SPECIFIC -> sectionDao.get(
-                startTimeStamp = goal.instance.startTimestamp,
-                endTimeStamp = goal.instance.startTimestamp + goal.instance.periodInSeconds,
+                startTimestamp = goal.instance.startTimestamp,
+                endTimestamp = goal.instance.startTimestamp + goal.instance.periodInSeconds,
                 itemIds = goal.description.libraryItems.map { it.id }
             )
             GoalType.NON_SPECIFIC -> sectionDao.get(
-                startTimeStamp = goal.instance.startTimestamp,
-                endTimeStamp = goal.instance.startTimestamp + goal.instance.periodInSeconds,
+                startTimestamp = goal.instance.startTimestamp,
+                endTimestamp = goal.instance.startTimestamp + goal.instance.periodInSeconds,
             )
         }
 

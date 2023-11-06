@@ -58,36 +58,36 @@ abstract class SectionDao(
     @Transaction
     @RewriteQueriesToDropUnusedColumns
     @Query("SELECT * FROM section " +
-            "WHERE timestamp>=:startTimeStamp " +
-            "AND timestamp<=:endTimeStamp " +
+            "WHERE timestamp>=:startTimestamp " +
+            "AND timestamp<=:endTimestamp " +
             "AND session_id IN (" +
             "SELECT id FROM session " +
             "WHERE deleted=0 " +
             ")"
     )
     abstract suspend fun getWithLibraryItems(
-        startTimeStamp: Long,
-        endTimeStamp: Long
+        startTimestamp: Long,
+        endTimestamp: Long
     ): List<SectionWithLibraryItem>
 
     @RewriteQueriesToDropUnusedColumns
     @Query("SELECT * FROM section " +
-            "WHERE timestamp>=:startTimeStamp " +
-            "AND timestamp<=:endTimeStamp " +
+            "WHERE timestamp>=:startTimestamp " +
+            "AND timestamp<=:endTimestamp " +
             "AND session_id IN (" +
             "SELECT id FROM session " +
             "WHERE deleted=0 " +
             ")"
     )
     abstract fun get(
-        startTimeStamp: Long,
-        endTimeStamp: Long,
+        startTimestamp: Long,
+        endTimestamp: Long,
     ): Flow<List<Section>>
 
     @RewriteQueriesToDropUnusedColumns
     @Query("SELECT * FROM section " +
-            "WHERE timestamp>=:startTimeStamp " +
-            "AND timestamp<=:endTimeStamp " +
+            "WHERE timestamp>=:startTimestamp " +
+            "AND timestamp<=:endTimestamp " +
             "AND library_item_id IN (:itemIds) " +
             "AND session_id IN (" +
             "SELECT id FROM session " +
@@ -95,8 +95,8 @@ abstract class SectionDao(
             ")"
     )
     abstract fun get(
-        startTimeStamp: Long,
-        endTimeStamp: Long,
+        startTimestamp: Long,
+        endTimestamp: Long,
         itemIds: List<UUID>
     ): Flow<List<Section>>
 }

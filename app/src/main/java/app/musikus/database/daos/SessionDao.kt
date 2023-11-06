@@ -85,4 +85,16 @@ abstract class SessionDao(
     @Query("SELECT * FROM session WHERE deleted=0")
     abstract fun getAllWithSectionsWithLibraryItemsAsFlow(
     ): Flow<List<SessionWithSectionsWithLibraryItems>>
+
+    @Transaction
+    @RewriteQueriesToDropUnusedColumns
+    @Query("SELECT * FROM session " +
+            "WHERE :startTimestamp < (SELECT min(timestamp) FROM section WHERE section.session_id = session.id) " +
+            "AND :endTimestamp > (SELECT min(timestamp) FROM section WHERE section.session_id = session.id) " +
+            "AND deleted=0"
+    )
+    abstract fun get(
+        startTimestamp: Long,
+        endTimestamp: Long
+    ): Flow<List<SessionWithSectionsWithLibraryItems>>
 }

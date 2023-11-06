@@ -56,7 +56,7 @@ import app.musikus.database.entities.GoalType
 import app.musikus.utils.SCALE_FACTOR_FOR_SMALL_TEXT
 import app.musikus.utils.TIME_FORMAT_HUMAN_PRETTY
 import app.musikus.utils.TIME_FORMAT_PRETTY_APPROX
-import app.musikus.utils.getCurrTimestamp
+import app.musikus.utils.getTimestamp
 import app.musikus.utils.getDurationString
 
 @Composable
@@ -123,7 +123,7 @@ fun GoalCard(
 //                    }
 
                     /** remaining time */
-                    val remainingTime = (instance.startTimestamp + instance.periodInSeconds) - getCurrTimestamp()
+                    val remainingTime = (instance.startTimestamp + instance.periodInSeconds) - getTimestamp()
 
                     Surface(
                         modifier = Modifier.padding(start = 8.dp),

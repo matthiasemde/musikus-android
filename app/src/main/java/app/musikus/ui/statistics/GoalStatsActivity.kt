@@ -621,7 +621,7 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
             // value is index of goalInstance, as set in BarEntry
             val inst = getGoalInstance(value.toInt())
 //            return inst.id.toString()
-            val timeStampStart = inst.startTimestamp
+            val timestampStart = inst.startTimestamp
             val periodInSecs = inst.periodInSeconds
             // true if goal interval covers more than one [timeUnit]
             val multiIntervalGoal = goals[selectedGoal].goalDesc.periodInPeriodUnits > 1
@@ -634,25 +634,25 @@ class GoalStatsActivity : AppCompatActivity(), OnChartValueSelectedListener {
                     if (multiIntervalGoal) {
                         // show day of month or range of days in month as xTick
                         // always subtract 1 second to get the right day because of half-open approach
-                        labelString ="${unixTimeToDayOfMonth(timeStampStart)} -" +
-                                " ${unixTimeToDayOfMonth(timeStampStart + periodInSecs - 1)}"
+                        labelString ="${unixTimeToDayOfMonth(timestampStart)} -" +
+                                " ${unixTimeToDayOfMonth(timestampStart + periodInSecs - 1)}"
                     } else {
-                        labelString = unixTimeToWeekDay(timeStampStart)
+                        labelString = unixTimeToWeekDay(timestampStart)
                         if (value.toInt() == firstGoalInstShownIndex)
-                            labelString += " (${unixTimeToDayOfMonth(timeStampStart)})"
+                            labelString += " (${unixTimeToDayOfMonth(timestampStart)})"
                     }
                 }
 
                 GoalPeriodUnit.WEEK -> {
                     // always subtract 1 second to get the right day because of half-open approach
-                    labelString = "${unixTimeToDayOfMonth(timeStampStart)} -" +
-                            " ${unixTimeToDayOfMonth(timeStampStart + periodInSecs - 1)}"
+                    labelString = "${unixTimeToDayOfMonth(timestampStart)} -" +
+                            " ${unixTimeToDayOfMonth(timestampStart + periodInSecs - 1)}"
                 }
 
                 GoalPeriodUnit.MONTH -> {
-                    labelString = unixTimeToMonth(timeStampStart)
+                    labelString = unixTimeToMonth(timestampStart)
                     if (multiIntervalGoal)
-                        labelString += " - ${unixTimeToMonth(timeStampStart + periodInSecs - 1)}"
+                        labelString += " - ${unixTimeToMonth(timestampStart + periodInSecs - 1)}"
                 }
             }
             return labelString

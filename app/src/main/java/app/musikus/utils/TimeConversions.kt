@@ -212,36 +212,59 @@ private fun getSpannableHourMinShrunk(str: String, scaleFactor: Float = 0.6f): C
     return spannable
 }
 
-fun getCurrTimestamp(): Long {
-    return Instant.now().epochSecond
+fun getTimestamp(
+    dateTime: ZonedDateTime = ZonedDateTime.now()
+): Long {
+//    return Instant.now().epochSecond
+    return dateTime.toEpochSecond()
 }
 
 fun getCurrentDateTime(): ZonedDateTime {
     return ZonedDateTime.now()
 }
 
+fun getDateTimeFromTimestamp(timestamp: Long): ZonedDateTime {
+    return ZonedDateTime.ofInstant(Instant.ofEpochSecond(timestamp), ZoneId.systemDefault())
+}
+
 /**
  * Get the Beginning of dayOffset Days from now. dayOffset>0 -> future, dayOffset<0 -> past
  */
-fun getStartOfDay(dayOffset: Long): ZonedDateTime {
-    return ZonedDateTime.now()
+fun getStartOfDay(
+    dayOffset: Long = 0,
+    weekOffset: Long = 0,
+    monthOffset: Long = 0,
+    dateTime: ZonedDateTime = ZonedDateTime.now()
+): ZonedDateTime {
+    return dateTime
         .toLocalDate()
         .atStartOfDay(ZoneId.systemDefault())  // make sure time is 00:00
+        .plusMonths(monthOffset)
+        .plusWeeks(weekOffset)
         .plusDays(dayOffset)
 }
 
 /**
  * Get the End of dayOffset Days from now. Half-open: Actually get the Start of the Next day
  */
-fun getEndOfDay(dayOffset: Long): ZonedDateTime {
-    return getStartOfDay(dayOffset + 1)
+fun getEndOfDay(
+    dayOffset: Long = 0,
+    weekOffset: Long = 0,
+    monthOffset: Long = 0,
+    dateTime: ZonedDateTime = ZonedDateTime.now()
+): ZonedDateTime {
+    return getStartOfDay(dayOffset + 1, weekOffset, monthOffset, dateTime)
 }
 
 /**
  * get the Beginning of a Day (1=Mo, 7=Sun) of the current week (weekOffset=0) / the weeks before (weekOffset<0)
   */
-fun getStartOfDayOfWeek(dayIndex: Long, weekOffset: Long): ZonedDateTime {
-    return ZonedDateTime.now()
+fun getStartOfDayOfWeek(
+    dayIndex: Long = 0,
+    weekOffset: Long,
+    dateTime: ZonedDateTime = ZonedDateTime.now()
+): ZonedDateTime {
+    return dateTime
         .with(ChronoField.DAY_OF_WEEK , dayIndex )         // ISO 8601, Monday is first day of week.
         .toLocalDate()
         .atStartOfDay(ZoneId.systemDefault())  // make sure time is 00:00
@@ -251,7 +274,11 @@ fun getStartOfDayOfWeek(dayIndex: Long, weekOffset: Long): ZonedDateTime {
 /**
  * get the End of a Day (1=Mo, 7=Sun) of the current week (weekOffset=0) / the weeks before (weekOffset<0)
  */
-fun getEndOfDayOfWeek(dayIndex: Long, weekOffset: Long): ZonedDateTime {
+fun getEndOfDayOfWeek(
+    dayIndex: Long,
+    weekOffset: Long,
+    dateTime: ZonedDateTime = ZonedDateTime.now()
+): ZonedDateTime {
     // because of half-open approach we have to get the "start of the _next_ day" instead of the end of the current day
     // e.g. end of Tuesday = Start of Wednesday, so make dayIndex 2 -> 3
     var nextDay = dayIndex + 1
@@ -260,28 +287,36 @@ fun getEndOfDayOfWeek(dayIndex: Long, weekOffset: Long): ZonedDateTime {
         nextDay = (dayIndex + 1) % 7
         weekOffsetAdapted += 1  // increase weekOffset so that we take the start of the first day of NEXT week as end of day
     }
-    return getStartOfDayOfWeek(nextDay, weekOffsetAdapted)
+    return getStartOfDayOfWeek(nextDay, weekOffsetAdapted, dateTime)
 }
 
 /**
  * gets start date of a Week
  */
-fun getStartOfWeek(weekOffset: Long): ZonedDateTime {
-    return getStartOfDayOfWeek(1, weekOffset)
+fun getStartOfWeek(
+    weekOffset: Long = 0,
+    dateTime: ZonedDateTime = ZonedDateTime.now()
+): ZonedDateTime {
+    return getStartOfDayOfWeek(1, weekOffset, dateTime)
 }
+
+
 
 /**
  * gets end date of a Week
   */
-fun getEndOfWeek(weekOffset: Long): ZonedDateTime {
-    return getEndOfDayOfWeek(7, weekOffset)
+fun getEndOfWeek(
+    weekOffset: Long = 0,
+    dateTime: ZonedDateTime = ZonedDateTime.now()
+): ZonedDateTime {
+    return getEndOfDayOfWeek(7, weekOffset, dateTime)
 }
 
 /**
  * returns the weekDay of today from index 1=Mo until 7=Sun
   */
 fun getCurrentDayIndexOfWeek(
-    epochSeconds: Long = getCurrTimestamp()
+    epochSeconds: Long = getTimestamp()
 ): Int {
     return epochSecondsToDate(epochSeconds)
         .toLocalDate().dayOfWeek.value
@@ -291,8 +326,11 @@ fun getCurrentDayIndexOfWeek(
  * Get the start of a month.
  * monthOffset=0 ->, monthOffset=1 -> next month, monthOffset = -1 -> last month, etc.
  */
-fun getStartOfMonth(monthOffset: Long): ZonedDateTime {
-    return ZonedDateTime.now()
+fun getStartOfMonth(
+    monthOffset: Long = 0,
+    dateTime: ZonedDateTime = ZonedDateTime.now()
+): ZonedDateTime {
+    return dateTime
         .with(ChronoField.DAY_OF_MONTH , 1 )    // jump to first day of this month
         .toLocalDate()
         .atStartOfDay(ZoneId.systemDefault())  // make sure time is 00:00
@@ -302,8 +340,11 @@ fun getStartOfMonth(monthOffset: Long): ZonedDateTime {
 /**
  * Get the end of a month. Half-open: Actually get the Start of the next month.
  */
-fun getEndOfMonth(monthOffset: Long): ZonedDateTime {
-    return getStartOfMonth(monthOffset + 1)
+fun getEndOfMonth(
+    monthOffset: Long = 0,
+    dateTime: ZonedDateTime = ZonedDateTime.now()
+): ZonedDateTime {
+    return getStartOfMonth(monthOffset + 1, dateTime)
 }
 
 /**
@@ -325,12 +366,23 @@ fun getSpecificMonth(epochSeconds: Long) =
     }
 
 /**
- * Get specificDay index
+ * Get specific week index (Non reversible hash bucket)
+ */
+
+fun getSpecificWeek(epochSeconds: Long) =
+    epochSecondsToDate(epochSeconds)
+        .with(ChronoField.DAY_OF_WEEK , 0)         // ISO 8601, Monday is first day of week.
+        .let { date->
+            date.dayOfYear + date.year * 366
+        }
+
+/**
+ * Get specificDay index (Non reversible hash bucket)
  */
 
 fun getSpecificDay(epochSeconds: Long) =
     epochSecondsToDate(epochSeconds).let { date->
-        date.dayOfYear + date.year * 366 // not reversible due to leap years
+        date.dayOfYear + date.year * 366
     }
 
 fun weekIndexToName(weekIndex: Int) = when (weekIndex) {

@@ -29,7 +29,7 @@ import app.musikus.database.entities.GoalPeriodUnit
 import app.musikus.database.entities.GoalType
 import app.musikus.utils.TIME_FORMAT_HUMAN_PRETTY
 import app.musikus.utils.TIME_FORMAT_PRETTY_APPROX
-import app.musikus.utils.getCurrTimestamp
+import app.musikus.utils.getTimestamp
 import app.musikus.utils.getDurationString
 
 class GoalAdapter(
@@ -164,7 +164,7 @@ class GoalAdapter(
 //        }
 
         // remaining time
-        val remainingTime = (instance.startTimestamp + instance.periodInSeconds) - getCurrTimestamp()
+        val remainingTime = (instance.startTimestamp + instance.periodInSeconds) - getTimestamp()
 
         viewHolder.remainingTimeView.text = context.getString(
             R.string.time_left,
