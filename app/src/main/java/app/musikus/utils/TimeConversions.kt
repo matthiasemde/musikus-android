@@ -371,7 +371,7 @@ fun getSpecificMonth(epochSeconds: Long) =
 
 fun getSpecificWeek(epochSeconds: Long) =
     epochSecondsToDate(epochSeconds)
-        .with(ChronoField.DAY_OF_WEEK , 0)         // ISO 8601, Monday is first day of week.
+        .with(ChronoField.DAY_OF_WEEK , 1)         // ISO 8601, Monday is first day of week.
         .let { date->
             date.dayOfYear + date.year * 366
         }

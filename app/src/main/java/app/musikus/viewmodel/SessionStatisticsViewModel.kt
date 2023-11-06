@@ -33,6 +33,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
@@ -61,7 +62,6 @@ enum class SessionStatisticsChartType {
 
 data class SessionStatisticsUiState(
     val topBarUiState: SessionsStatisticsTopBarUiState,
-    val selectedTab: SessionStatisticsTab,
     val contentUiState: SessionStatisticsContentUiState
 )
 
@@ -70,13 +70,17 @@ data class SessionsStatisticsTopBarUiState(
 )
 
 data class SessionStatisticsContentUiState(
-    val timeFrame: Pair<ZonedDateTime, ZonedDateTime>,
-    val totalPracticeDuration: Int,
+    val selectedTab: SessionStatisticsTab,
+    val headerUiState: SessionStatisticsHeaderUiState,
     val barChartUiState: SessionStatisticsBarChartUiState?,
     val pieChartUiState: SessionStatisticsPieChartUiState?,
     val libraryItemsWithSelection: List<Pair<LibraryItem, Boolean>>
 )
 
+data class SessionStatisticsHeaderUiState(
+    val timeFrame: Pair<ZonedDateTime, ZonedDateTime>,
+    val totalPracticeDuration: Int,
+)
 data class SessionStatisticsBarChartUiState(
     val barData: List<BarChartData>,
     val totalDuration: Int,
@@ -228,37 +232,90 @@ class SessionStatisticsViewModel(
         initialValue = null,
     )
 
-    private val contentUiState = combine(
+    private val headerUiState = combine(
         _timeFrame,
         totalDuration,
+    ) { timeFrame, totalDuration ->
+        SessionStatisticsHeaderUiState(
+            timeFrame = timeFrame,
+            totalPracticeDuration = totalDuration,
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = SessionStatisticsHeaderUiState(
+            timeFrame = _timeFrame.value,
+            totalPracticeDuration = totalDuration.value,
+        ),
+    )
+
+    private val contentUiState = combine(
+        _selectedTab,
+        headerUiState,
         barChartUiState,
         pieChartUiState,
         libraryItemsWithSelection
-    ) { timeFrame, totalDuration, barChartUiState, pieChartUiState, libraryItemsWithSelection ->
+    ) { selectedTab, headerUiState, barChartUiState, pieChartUiState, libraryItemsWithSelection ->
         SessionStatisticsContentUiState(
-            timeFrame = timeFrame,
-            totalPracticeDuration = totalDuration,
+            selectedTab = selectedTab,
+            headerUiState = headerUiState,
             barChartUiState = barChartUiState,
             pieChartUiState = pieChartUiState,
             libraryItemsWithSelection = libraryItemsWithSelection,
         )
-    }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = SessionStatisticsContentUiState(
+            selectedTab = _selectedTab.value,
+            headerUiState = headerUiState.value,
+            barChartUiState = barChartUiState.value,
+            pieChartUiState = pieChartUiState.value,
+            libraryItemsWithSelection = libraryItemsWithSelection.value,
+        ),
+    )
 
     private val topBarUiState = _chartType.map { chartType ->
         SessionsStatisticsTopBarUiState(
             chartType = chartType,
         )
-    }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = SessionsStatisticsTopBarUiState(
+            chartType = _chartType.value,
+        ),
+    )
 
     val uiState = combine(
         topBarUiState,
-        _selectedTab,
         contentUiState
-    ) { topBarUiState, selectedTab, contentUiState ->
+    ) { topBarUiState, contentUiState ->
         SessionStatisticsUiState(
             topBarUiState = topBarUiState,
-            selectedTab = selectedTab,
             contentUiState = contentUiState,
         )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = SessionStatisticsUiState(
+            topBarUiState = topBarUiState.value,
+            contentUiState = contentUiState.value,
+        ),
+    )
+
+    /** Mutators */
+
+    fun onChartTypeButtonClicked() {
+        _chartType.update {
+            when(_chartType.value) {
+                SessionStatisticsChartType.BAR -> SessionStatisticsChartType.PIE
+                SessionStatisticsChartType.PIE -> SessionStatisticsChartType.BAR
+            }
+        }
+    }
+
+    fun onTabSelected(tab: SessionStatisticsTab) {
+        _selectedTab.update { tab }
     }
 }

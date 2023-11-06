@@ -12,6 +12,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Arrangement.Absolute.SpaceBetween
 import androidx.compose.foundation.layout.Box
@@ -29,7 +30,7 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
@@ -93,6 +94,7 @@ import java.time.format.DateTimeFormatter
 fun Statistics(
     mainViewModel: MainViewModel,
     statisticsViewModel: StatisticsViewModel = viewModel(),
+    navigateToSessionStatistics: () -> Unit,
 ) {
     val mainUiState by mainViewModel.uiState.collectAsStateWithLifecycle()
     val statisticsUiState by statisticsViewModel.uiState.collectAsStateWithLifecycle()
@@ -162,7 +164,10 @@ fun Statistics(
                 }
                 contentUiState.practiceDurationCardUiState?.let {
                     item {
-                        StatisticsPracticeDurationCard(it)
+                        StatisticsPracticeDurationCard(
+                            it,
+                            navigateToSessionStatistics
+                        )
                     }
                 }
                 contentUiState.goalCardUiState?.let {
@@ -252,10 +257,15 @@ fun StatisticsCurrentMonth(
 @Composable
 fun StatisticsPracticeDurationCard(
     uiState: StatisticsPracticeDurationCardUiState,
+    navigateToSessionStatistics: () -> Unit,
 ) {
-    ElevatedCard(modifier = Modifier.fillMaxWidth()) {
+    ElevatedCard(
+        modifier = Modifier
+            .fillMaxWidth()
+    ) {
         Column(modifier = Modifier
             .fillMaxWidth()
+            .clickable(onClick = navigateToSessionStatistics)
             .padding(MaterialTheme.spacing.medium)
         ) {
             Row(
@@ -268,7 +278,7 @@ fun StatisticsPracticeDurationCard(
                     style = MaterialTheme.typography.titleLarge,
                 )
                 Icon(
-                    imageVector = Icons.Default.KeyboardArrowRight,
+                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                     contentDescription = "more",
                 )
             }
@@ -393,7 +403,7 @@ fun StatisticsGoalCard(
                 )
                 Icon(
                     //                modifier = Modifier.fillMaxHeight(),
-                    imageVector = Icons.Default.KeyboardArrowRight,
+                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                     contentDescription = "more",
                 )
             }
