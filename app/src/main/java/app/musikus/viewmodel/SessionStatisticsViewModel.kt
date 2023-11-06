@@ -27,9 +27,11 @@ import app.musikus.utils.getStartOfMonth
 import app.musikus.utils.getStartOfWeek
 import app.musikus.utils.getTimestamp
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.combineTransform
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -157,21 +159,38 @@ class SessionStatisticsViewModel(
     /**
      *  Composing the Ui state
      */
-    private val pieChartUiState = combine(
+    private var _showPieChart = false
+
+    private val pieChartUiState = combineTransform(
         _chartType,
         totalDuration,
         sessionsInTimeFrame
     ) { chartType, totalDuration, sessions ->
-        if (chartType == SessionStatisticsChartType.BAR) return@combine null
+        if (chartType == SessionStatisticsChartType.BAR) {
+            _showPieChart = false
+            return@combineTransform emit(null)
+        }
 
-        SessionStatisticsPieChartUiState(
+        if (!_showPieChart) {
+            emit(SessionStatisticsPieChartUiState(
+                libraryItemsWithPercentage = sessions
+                    .flatMap { it.sections }
+                    .groupBy { it.libraryItem }
+                    .map { (libraryItem, _) ->
+                        libraryItem to 0f
+                    }
+            ))
+            delay(350)
+            _showPieChart = true
+        }
+        emit(SessionStatisticsPieChartUiState(
             libraryItemsWithPercentage = sessions
                 .flatMap { it.sections }
                 .groupBy { it.libraryItem }
                 .map { (libraryItem, sections) ->
                     libraryItem to sections.sumOf { (section, _) -> section.duration }.toFloat() / totalDuration
                 }
-        )
+        ))
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),

@@ -176,8 +176,8 @@ class StatisticsViewModel(
                     ) },
                     totalPracticeDuration = totalPracticeDuration,
                 ))
-                _noSessionsForDurationCard = false
                 delay(350)
+                _noSessionsForDurationCard = false
             }
             emit(StatisticsPracticeDurationCardUiState(
                 lastSevenDayPracticeDuration = lastSevenDayPracticeDuration,
@@ -230,8 +230,8 @@ class StatisticsViewModel(
                     goal = it.goal,
                     progress = 0
                 )}))
-                _noSessionsForGoalCard = false
                 delay(350)
+                _noSessionsForGoalCard = false
             }
             emit(StatisticsGoalCardUiState(lastGoals = goals.reversed()))
         }
@@ -261,8 +261,8 @@ class StatisticsViewModel(
         flow {
             if (_noSessionsForRatingCard) {
                 emit(StatisticsRatingsCardUiState((1..5).map { 0 }))
-                _noSessionsForRatingCard = false
                 delay(350)
+                _noSessionsForRatingCard = false
             }
             emit(StatisticsRatingsCardUiState(numOfRatingsFromOneToFive))
         }
