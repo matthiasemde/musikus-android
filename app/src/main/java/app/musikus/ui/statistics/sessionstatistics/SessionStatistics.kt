@@ -5,6 +5,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement.Center
 import androidx.compose.foundation.layout.Arrangement.SpaceBetween
 import androidx.compose.foundation.layout.Column
@@ -363,7 +364,9 @@ fun SessionStatisticsLibraryItemSelector(
             key = { (item, ) -> item.id }
         ) {(item, checked) ->
             Row(
-                modifier =  Modifier.fillMaxWidth(),
+                modifier =  Modifier
+                    .fillMaxWidth()
+                    .clickable(onClick = { onLibraryItemCheckboxClicked(item) }),
                 verticalAlignment = CenterVertically
             ) {
                 val libraryColor = Color(Musikus.getLibraryItemColors(LocalContext.current)[item.colorIndex])
