@@ -5,12 +5,17 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement.Bottom
 import androidx.compose.foundation.layout.Arrangement.Center
 import androidx.compose.foundation.layout.Arrangement.SpaceBetween
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -19,6 +24,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
@@ -43,28 +49,34 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.musikus.Musikus
 import app.musikus.R
 import app.musikus.database.daos.LibraryItem
+import app.musikus.shared.conditional
 import app.musikus.shared.simpleVerticalScrollbar
 import app.musikus.spacing
 import app.musikus.utils.DATE_FORMATTER_PATTERN_DAY_OF_MONTH
 import app.musikus.utils.TIME_FORMAT_HUMAN_PRETTY
 import app.musikus.utils.getDurationString
+import app.musikus.viewmodel.SessionStatisticsBarChartUiState
 import app.musikus.viewmodel.SessionStatisticsChartType
 import app.musikus.viewmodel.SessionStatisticsHeaderUiState
 import app.musikus.viewmodel.SessionStatisticsPieChartUiState
 import app.musikus.viewmodel.SessionStatisticsTab
 import app.musikus.viewmodel.SessionStatisticsViewModel
+import java.lang.Float.min
 import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -131,14 +143,30 @@ fun SessionStatistics(
                     }
                 )
                 SessionStatisticsHeader(contentUiState.headerUiState)
-                Spacer(modifier = Modifier.height(MaterialTheme.spacing.large))
-                contentUiState.pieChartUiState?.let {
-                    SessionStatisticsPieChart(it)
+                Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
+                Crossfade(
+                    modifier = Modifier
+                        .height(170.dp)
+                        .fillMaxWidth(),
+                    targetState =
+                        if (contentUiState.pieChartUiState != null) SessionStatisticsChartType.PIE
+                        else if (contentUiState.barChartUiState != null) SessionStatisticsChartType.BAR
+                        else null,
+                    label = "statistics-chart-crossfade-animation"
+                ) { targetChart ->
+                    when (targetChart) {
+                        SessionStatisticsChartType.PIE ->
+                            contentUiState.pieChartUiState?.let {
+                                SessionStatisticsPieChart(it)
+                            }
+                        SessionStatisticsChartType.BAR ->
+                            contentUiState.barChartUiState?.let {
+                                SessionStatisticsBarChart(it)
+                            }
+                        null -> Text(text = "No data")
+                    }
                 }
-//                contentUiState.barChartUiState?.let {
-//                    SessionStatisticsBarChart(it)
-//                }
-                Spacer(modifier = Modifier.height(MaterialTheme.spacing.large))
+                Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
                 HorizontalDivider()
                 SessionStatisticsLibraryItemSelector(
                     contentUiState.libraryItemsWithSelection,
@@ -264,10 +292,9 @@ fun SessionStatisticsPieChart(
 
     Canvas(
         modifier = Modifier
-            .fillMaxWidth()
-            .height(150.dp)
+            .fillMaxSize()
     ) {
-        val pieChartRadius = 1f * size.height
+        val pieChartRadius = 0.9f * min(size.height, size.width / 2)
         val pieChartCenter = Offset(
             x = size.width / 2,
             y = size.height - (size.height - pieChartRadius) / 2
@@ -346,6 +373,75 @@ fun SessionStatisticsPieChart(
 }
 
 @Composable
+fun SessionStatisticsBarChart(
+    uiState: SessionStatisticsBarChartUiState
+) {
+    val (barData, maxDuration) = uiState
+//    val animatedMaxDuration by animateIntAsState(
+//        targetValue = maxDuration,
+//        animationSpec = tween(durationMillis = 1000),
+//        label = "bar-chart-max-duration-animation",
+//    )
+    val libraryItemColors = Musikus.getLibraryItemColors(LocalContext.current).map {
+        Color(it)
+    }
+
+    Row(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(MaterialTheme.spacing.medium),
+    ) {
+        barData.forEachIndexed { barIndex, barDatum ->
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight(),
+                horizontalAlignment = CenterHorizontally
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Bottom,
+                ) {
+                    barDatum.libraryItemsWithDuration.forEachIndexed { index, (item, duration) ->
+                        val animatedColumnHeight by animateFloatAsState(
+                            targetValue = if (maxDuration == 0) 0f else (duration.toFloat() / maxDuration),
+                            animationSpec = tween(durationMillis = 1000),
+                            label = "bar-chart-column-height-animation-${item.id}",
+                        )
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .fillMaxHeight(animatedColumnHeight)
+                                .conditional(index == 0) {
+                                    clip(
+                                        RoundedCornerShape(
+                                            topStart = 4.dp,
+                                            topEnd = 4.dp
+                                        )
+                                    )
+                                }
+                                .background(libraryItemColors[item.colorIndex])
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
+                Text(
+                    text = barDatum.label,
+                    style = TextStyle(
+                        fontSize = 10.sp,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                )
+            }
+
+            if (barIndex < uiState.barData.size - 1) {
+                Spacer(modifier = Modifier.weight(1f))
+            }
+        }
+    }
+}
+
+@Composable
 fun SessionStatisticsLibraryItemSelector(
     libraryItemsWithSelections: List<Pair<LibraryItem, Boolean>>,
     onLibraryItemCheckboxClicked: (LibraryItem) -> Unit = {}
@@ -364,7 +460,7 @@ fun SessionStatisticsLibraryItemSelector(
             key = { (item, ) -> item.id }
         ) {(item, checked) ->
             Row(
-                modifier =  Modifier
+                modifier = Modifier
                     .fillMaxWidth()
                     .clickable(onClick = { onLibraryItemCheckboxClicked(item) }),
                 verticalAlignment = CenterVertically

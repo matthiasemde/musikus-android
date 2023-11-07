@@ -15,6 +15,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Arrangement.Absolute.SpaceBetween
+import androidx.compose.foundation.layout.Arrangement.Bottom
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -342,7 +343,7 @@ fun StatisticsPracticeDurationCard(
                         ) {
                             Column(
                                modifier= Modifier.weight(1f),
-                               verticalArrangement = Arrangement.Bottom
+                               verticalArrangement = Bottom
                             ) {
                                 if(animatedColumnHeight > 0) {
                                     Box(
@@ -359,7 +360,7 @@ fun StatisticsPracticeDurationCard(
                                     )
                                 }
                             }
-                            Spacer(modifier = Modifier.height(4.dp))
+                            Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
                             Text(
                                 text = day,
                                 style = TextStyle(

@@ -87,7 +87,7 @@ fun SelectionSpinner(
                                 text = { Text(text = it.name) },
                                 onClick = { onSelectedChange(it) }
                             )
-                            Divider(
+                            HorizontalDivider(
                                 Modifier
                                     .conditional(scrollBarShowing) { padding(end = 12.dp) },
                                 thickness = Dp.Hairline
