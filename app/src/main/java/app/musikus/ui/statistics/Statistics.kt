@@ -75,6 +75,7 @@ import app.musikus.shared.CommonMenuSelections
 import app.musikus.shared.MainMenu
 import app.musikus.shared.ThemeMenu
 import app.musikus.spacing
+import app.musikus.ui.MainUIEvent
 import app.musikus.ui.MainViewModel
 import app.musikus.utils.DateFormat
 import app.musikus.utils.TimeFormat
@@ -85,8 +86,9 @@ import app.musikus.utils.musikusFormat
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Statistics(
-    mainViewModel: MainViewModel,
     statisticsViewModel: StatisticsViewModel = hiltViewModel(),
+    mainEventHandler: (event: MainUIEvent) -> Unit,
+    mainViewModel: MainViewModel,   // TODO remove
     navigateToSessionStatistics: () -> Unit,
     navigateToGoalStatistics: () -> Unit,
     timeProvider: TimeProvider,
@@ -106,22 +108,22 @@ fun Statistics(
                     val mainMenuUiState = mainUiState.menuUiState
 
                     IconButton(onClick = {
-                        mainViewModel.showMainMenu()
+                        mainEventHandler(MainUIEvent.ShowMainMenu)
                     }) {
                         Icon(Icons.Default.MoreVert, contentDescription = "more")
                         MainMenu (
                             show = mainMenuUiState.show,
-                            onDismissHandler = mainViewModel::hideMainMenu,
+                            onDismissHandler = { mainEventHandler(MainUIEvent.HideMainMenu) },
                             onSelectionHandler = { commonSelection ->
-                                mainViewModel.hideMainMenu()
+                                mainEventHandler(MainUIEvent.HideMainMenu)
 
                                 when (commonSelection) {
                                     CommonMenuSelections.APP_INFO -> {}
                                     CommonMenuSelections.THEME -> {
-                                        mainViewModel.showThemeSubMenu()
+                                        mainEventHandler(MainUIEvent.ShowThemeSubMenu)
                                     }
                                     CommonMenuSelections.BACKUP -> {
-                                        mainViewModel.showExportImportDialog()
+                                        mainEventHandler(MainUIEvent.ShowExportImportDialog)
                                     }
                                 }
                             },
@@ -130,10 +132,10 @@ fun Statistics(
                         ThemeMenu(
                             expanded = mainMenuUiState.showThemeSubMenu,
                             currentTheme = mainViewModel.activeTheme.collectAsState(initial = ThemeSelections.DAY).value,
-                            onDismissHandler = mainViewModel::hideThemeSubMenu,
+                            onDismissHandler = { mainEventHandler(MainUIEvent.HideThemeSubMenu) },
                             onSelectionHandler = { theme ->
-                                mainViewModel.hideThemeSubMenu()
-                                mainViewModel.setTheme(theme)
+                                mainEventHandler(MainUIEvent.HideThemeSubMenu)
+                                mainEventHandler(MainUIEvent.SetTheme(theme))
                             }
                         )
                     }

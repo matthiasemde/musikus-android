@@ -1,6 +1,5 @@
 package app.musikus.ui
 
-import android.app.PendingIntent.getActivity
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedVisibility
@@ -53,7 +52,7 @@ import app.musikus.R
 import app.musikus.shared.MultiFabState
 import app.musikus.ui.goals.Goals
 import app.musikus.ui.goals.ProgressUpdate
-import app.musikus.ui.library.LibraryScreen
+import app.musikus.ui.library.Library
 import app.musikus.ui.sessions.Sessions
 import app.musikus.ui.sessions.editsession.EditSession
 import app.musikus.ui.statistics.Statistics
@@ -216,7 +215,7 @@ fun MusikusBottomBar(
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null,
-                        onClick = mainViewModel::collapseMultiFab
+                        onClick = { mainViewModel.onEvent(MainUIEvent.CollapseMultiFab) }
                     )
             )
         }
@@ -270,26 +269,32 @@ fun MusikusApp(
                     } else null
                 }
             ) {
-                Sessions(mainViewModel) { sessionId: UUID ->
-                    navController.navigate(
-                        Screen.EditSession.route.replace(
-                            "{sessionId}",
-                            sessionId.toString()
+                Sessions(
+                    mainUiState = uiState,
+                    mainEventHandler = mainViewModel::onEvent,
+                    mainViewModel = mainViewModel,  // TODO remove this
+                    onSessionEdit = { sessionId: UUID ->
+                        navController.navigate(
+                            Screen.EditSession.route.replace(
+                                "{sessionId}",
+                                sessionId.toString()
+                            )
                         )
-                    )
-                }
-            }
-            composable(
-                route = Screen.Goals.route,
-            ) {
-                Goals(
-                    mainViewModel = mainViewModel,
-                    timeProvider = timeProvider
+                    }
                 )
             }
             composable(
+                route = Screen.Goals.route,
+            ) { Goals(
+                mainViewModel = mainViewModel,
+                mainUiState = uiState,
+                mainEventHandler = mainViewModel::onEvent,
+                timeProvider = timeProvider
+            ) }
+            composable(
                 route = Screen.Statistics.route,
             ) { Statistics(
+                mainEventHandler = mainViewModel::onEvent,
                 mainViewModel = mainViewModel,
                 navigateToSessionStatistics = {
                     navController.navigate(Screen.SessionStatistics.route)
@@ -307,7 +312,10 @@ fun MusikusApp(
             ) { GoalStatistics(navigateUp = navController::navigateUp) }
             composable(
                 route = Screen.Library.route,
-            ) { LibraryScreen (mainViewModel) }
+            ) { Library (
+                mainViewModel = mainViewModel,
+                mainEventHandler = mainViewModel::onEvent
+            ) }
             composable(
                 route = Screen.ProgressUpdate.route,
                 enterTransition = { fadeIn(tween(0)) }
@@ -329,7 +337,7 @@ fun MusikusApp(
         /** Export / Import Dialog */
         ExportImportDialog(
             show = uiState.showExportImportDialog,
-            onDismissHandler = mainViewModel::hideExportImportDialog
+            onDismissHandler = { mainViewModel.onEvent(MainUIEvent.HideExportImportDialog) }
         )
 
         // TODO remove

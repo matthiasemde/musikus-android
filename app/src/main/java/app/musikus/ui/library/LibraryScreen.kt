@@ -40,9 +40,9 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Folder
 import androidx.compose.material.icons.rounded.MusicNote
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -67,8 +67,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
@@ -89,6 +87,7 @@ import app.musikus.shared.Selectable
 import app.musikus.shared.SortMenu
 import app.musikus.shared.ThemeMenu
 import app.musikus.spacing
+import app.musikus.ui.MainUIEvent
 import app.musikus.ui.MainViewModel
 import app.musikus.utils.LibraryFolderSortMode
 import app.musikus.utils.LibraryItemSortMode
@@ -96,8 +95,9 @@ import app.musikus.utils.SortMode
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LibraryScreen(
-    mainViewModel: MainViewModel,
+fun Library(
+    mainEventHandler: (event: MainUIEvent) -> Unit,
+    mainViewModel: MainViewModel,   // TODO remove
     libraryViewModel: LibraryViewModel = hiltViewModel()
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
@@ -117,7 +117,7 @@ fun LibraryScreen(
 
     BackHandler(
         enabled = mainUiState.multiFabState == MultiFabState.EXPANDED,
-        onBack = mainViewModel::collapseMultiFab
+        onBack = { mainEventHandler(MainUIEvent.CollapseMultiFab) }
     )
 
     Scaffold(
@@ -130,7 +130,7 @@ fun LibraryScreen(
                 FloatingActionButton(
                     onClick = {
                         libraryViewModel.showItemDialog(fabUiState.activeFolder.id)
-                        mainViewModel.collapseMultiFab()
+                        mainEventHandler(MainUIEvent.CollapseMultiFab)
                     },
                 ) {
                     Icon(Icons.Default.Add, contentDescription = "Add item")
@@ -139,7 +139,7 @@ fun LibraryScreen(
                 MultiFAB(
                     state = mainUiState.multiFabState,
                     onStateChange = { state ->
-                        mainViewModel.onMultiFabStateChanged(state)
+                        { mainEventHandler(MainUIEvent.ChangeMultiFabState(state)) }
                         if(state == MultiFabState.EXPANDED) {
                             libraryViewModel.clearActionMode()
                         }
@@ -149,7 +149,7 @@ fun LibraryScreen(
                         MiniFABData(
                             onClick = {
                                 libraryViewModel.showItemDialog()
-                                mainViewModel.collapseMultiFab()
+                                mainEventHandler(MainUIEvent.CollapseMultiFab)
                             },
                             label = "Item",
                             icon = Icons.Rounded.MusicNote
@@ -157,7 +157,7 @@ fun LibraryScreen(
                         MiniFABData(
                             onClick = {
                                 libraryViewModel.showFolderDialog()
-                                mainViewModel.collapseMultiFab()
+                                mainEventHandler(MainUIEvent.CollapseMultiFab)
                             },
                             label = "Folder",
                             icon = Icons.Rounded.Folder
@@ -167,6 +167,7 @@ fun LibraryScreen(
             }
         },
         topBar = {
+            val mainMenuUiState = mainUiState.menuUiState
             val topBarUiState = libraryUiState.topBarUiState
             LargeTopAppBar(
                 scrollBehavior = scrollBehavior,
@@ -174,29 +175,28 @@ fun LibraryScreen(
                 navigationIcon = {
                     if(topBarUiState.showBackButton) {
                         IconButton(onClick = libraryViewModel::onTopBarBackPressed) {
-                            Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
+                            Icon(Icons.Rounded.ArrowBack, contentDescription = "Back")
                         }
                     }
                 },
                 actions = {
-                    val mainMenuUiState = mainUiState.menuUiState
                     IconButton(onClick = {
-                        mainViewModel.showMainMenu()
+                        mainEventHandler(MainUIEvent.ShowMainMenu)
                     }) {
                         Icon(Icons.Default.MoreVert, contentDescription = "more")
                         MainMenu (
                             show = mainMenuUiState.show,
-                            onDismissHandler = mainViewModel::hideMainMenu,
+                            onDismissHandler = { mainEventHandler(MainUIEvent.HideMainMenu) },
                             onSelectionHandler = { commonSelection ->
-                                mainViewModel.hideMainMenu()
+                                mainEventHandler(MainUIEvent.HideMainMenu)
 
                                 when (commonSelection) {
                                     CommonMenuSelections.APP_INFO -> {}
                                     CommonMenuSelections.THEME -> {
-                                        mainViewModel.showThemeSubMenu()
+                                        mainEventHandler(MainUIEvent.ShowThemeSubMenu)
                                     }
                                     CommonMenuSelections.BACKUP -> {
-                                        mainViewModel.showExportImportDialog()
+                                        mainEventHandler(MainUIEvent.ShowExportImportDialog)
                                     }
                                 }
                             }
@@ -204,10 +204,10 @@ fun LibraryScreen(
                         ThemeMenu(
                             expanded = mainMenuUiState.showThemeSubMenu,
                             currentTheme = mainViewModel.activeTheme.collectAsState(initial = ThemeSelections.DAY).value,
-                            onDismissHandler = mainViewModel::hideThemeSubMenu,
+                            onDismissHandler = { mainEventHandler(MainUIEvent.HideThemeSubMenu) },
                             onSelectionHandler = { theme ->
-                                mainViewModel.hideThemeSubMenu()
-                                mainViewModel.setTheme(theme)
+                                mainEventHandler(MainUIEvent.HideThemeSubMenu)
+                                mainEventHandler(MainUIEvent.SetTheme(theme))
                             }
                         )
                     }
@@ -306,7 +306,7 @@ fun LibraryScreen(
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null,
-                            onClick = mainViewModel::collapseMultiFab
+                            onClick = { mainEventHandler(MainUIEvent.CollapseMultiFab) }
                         )
                 )
             }

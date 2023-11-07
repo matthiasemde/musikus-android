@@ -67,6 +67,8 @@ import app.musikus.shared.Selectable
 import app.musikus.shared.SortMenu
 import app.musikus.shared.ThemeMenu
 import app.musikus.spacing
+import app.musikus.ui.MainUIEvent
+import app.musikus.ui.MainUiState
 import app.musikus.ui.MainViewModel
 import app.musikus.utils.GoalsSortMode
 import app.musikus.utils.TimeProvider
@@ -75,11 +77,12 @@ import app.musikus.utils.TimeProvider
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun Goals(
-    mainViewModel: MainViewModel,
+    mainUiState: MainUiState,
+    mainEventHandler: (event: MainUIEvent) -> Unit,
     goalsViewModel: GoalsViewModel = hiltViewModel(),
-    timeProvider: TimeProvider
+    timeProvider: TimeProvider,
+    mainViewModel: MainViewModel // TODO remove
 ) {
-    val mainUiState by mainViewModel.uiState.collectAsStateWithLifecycle()
     val goalsUiState by goalsViewModel.uiState.collectAsStateWithLifecycle()
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
@@ -91,7 +94,7 @@ fun Goals(
 
     BackHandler(
         enabled = mainUiState.multiFabState == MultiFabState.EXPANDED,
-        onBack = mainViewModel::collapseMultiFab
+        onBack = { mainEventHandler(MainUIEvent.CollapseMultiFab) }
     )
 
     Scaffold(
@@ -101,8 +104,8 @@ fun Goals(
             MultiFAB(
                 state = mainUiState.multiFabState,
                 onStateChange = { state ->
-                    mainViewModel.onMultiFabStateChanged(state)
-                    if(state == MultiFabState.EXPANDED) {
+                    mainEventHandler(MainUIEvent.ChangeMultiFabState(state))
+                    if (state == MultiFabState.EXPANDED) {
                         goalsViewModel.clearActionMode()
                     }
                 },
@@ -111,7 +114,7 @@ fun Goals(
                     MiniFABData(
                         onClick = {
                             goalsViewModel.showDialog(oneShot = true)
-                            mainViewModel.collapseMultiFab()
+                            mainEventHandler(MainUIEvent.CollapseMultiFab)
                         },
                         label = "One shot goal",
                         icon = Icons.Filled.LocalFireDepartment,
@@ -119,20 +122,22 @@ fun Goals(
                     MiniFABData(
                         onClick = {
                             goalsViewModel.showDialog(oneShot = false)
-                            mainViewModel.collapseMultiFab()
+                            mainEventHandler(MainUIEvent.CollapseMultiFab)
                         },
                         label = "Regular goal",
                         icon = Icons.Rounded.Repeat,
                     )
-                ))
+                )
+            )
         },
         topBar = {
+            // TODO find a way to re-use Composable in every screen
+            val mainMenuUiState = mainUiState.menuUiState
             val topBarUiState = goalsUiState.topBarUiState
             LargeTopAppBar(
-                title = { Text( text = topBarUiState.title) },
+                title = { Text(text = topBarUiState.title) },
                 scrollBehavior = scrollBehavior,
                 actions = {
-                    val mainMenuUiState = mainUiState.menuUiState
                     val sortMenuUiState = topBarUiState.sortMenuUiState
                     SortMenu(
                         show = sortMenuUiState.show,
@@ -144,22 +149,23 @@ fun Goals(
                         onSelectionHandler = goalsViewModel::onSortModeSelected
                     )
                     IconButton(onClick = {
-                        mainViewModel.showMainMenu()
+                        mainEventHandler(MainUIEvent.ShowMainMenu)
                     }) {
                         Icon(Icons.Default.MoreVert, contentDescription = "more")
-                        MainMenu (
+                        MainMenu(
                             show = mainMenuUiState.show,
-                            onDismissHandler = mainViewModel::hideMainMenu,
+                            onDismissHandler = { mainEventHandler(MainUIEvent.HideMainMenu) },
                             onSelectionHandler = { commonSelection ->
-                                mainViewModel.hideMainMenu()
+                                mainEventHandler(MainUIEvent.HideMainMenu)
 
                                 when (commonSelection) {
                                     CommonMenuSelections.APP_INFO -> {}
                                     CommonMenuSelections.THEME -> {
-                                        mainViewModel.showThemeSubMenu()
+                                        mainEventHandler(MainUIEvent.ShowThemeSubMenu)
                                     }
+
                                     CommonMenuSelections.BACKUP -> {
-                                        mainViewModel.showExportImportDialog()
+                                        mainEventHandler(MainUIEvent.ShowExportImportDialog)
                                     }
                                 }
                             },
@@ -182,10 +188,10 @@ fun Goals(
                         ThemeMenu(
                             expanded = mainMenuUiState.showThemeSubMenu,
                             currentTheme = mainViewModel.activeTheme.collectAsState(initial = ThemeSelections.DAY).value,
-                            onDismissHandler = mainViewModel::hideThemeSubMenu,
+                            onDismissHandler = { mainEventHandler(MainUIEvent.HideThemeSubMenu) },
                             onSelectionHandler = { theme ->
-                                mainViewModel.hideThemeSubMenu()
-                                mainViewModel.setTheme(theme)
+                                mainEventHandler(MainUIEvent.HideThemeSubMenu)
+                                mainEventHandler(MainUIEvent.SetTheme(theme))
                             }
                         )
                     }
@@ -196,11 +202,11 @@ fun Goals(
             // Action bar
             val actionModeUiState = goalsUiState.actionModeUiState
 
-            if(actionModeUiState.isActionMode) {
+            if (actionModeUiState.isActionMode) {
                 ActionBar(
                     numSelectedItems = actionModeUiState.numberOfSelections,
                     uniqueActions = {
-                        if(actionModeUiState.showPauseAction) {
+                        if (actionModeUiState.showPauseAction) {
                             IconButton(onClick = goalsViewModel::onPauseAction) {
                                 Icon(
                                     imageVector = Icons.Rounded.Pause,
@@ -208,7 +214,7 @@ fun Goals(
                                 )
                             }
                         }
-                        if(actionModeUiState.showUnpauseAction) {
+                        if (actionModeUiState.showUnpauseAction) {
                             IconButton(onClick = goalsViewModel::onUnpauseAction) {
                                 Icon(
                                     imageVector = Icons.Rounded.PlayArrow,
@@ -258,7 +264,7 @@ fun Goals(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 items(
-                    items= contentUiState.goalsWithProgress,
+                    items = contentUiState.goalsWithProgress,
                     key = { it.goal.instance.id },
                 ) { (goal, progress) ->
                     Selectable(
@@ -279,7 +285,7 @@ fun Goals(
             /** Goal Dialog */
             val dialogUiState = goalsUiState.dialogUiState
 
-            if(dialogUiState != null) {
+            if (dialogUiState != null) {
                 if (dialogUiState.goalToEdit == null) {
                     GoalDialog(
                         dialogData = dialogUiState.dialogData,
@@ -319,7 +325,7 @@ fun Goals(
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null,
-                            onClick = mainViewModel::collapseMultiFab
+                            onClick = { mainEventHandler(MainUIEvent.CollapseMultiFab) }
                         )
                 )
             }

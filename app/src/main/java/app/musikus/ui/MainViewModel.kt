@@ -14,7 +14,6 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import app.musikus.database.MusikusDatabase
 import app.musikus.datastore.ThemeSelections
 import app.musikus.repository.GoalRepository
 import app.musikus.repository.LibraryRepository
@@ -31,6 +30,20 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+
+sealed class MainUIEvent {
+    data object ShowMainMenu: MainUIEvent()
+    data object HideMainMenu: MainUIEvent()
+    data object ShowThemeSubMenu: MainUIEvent()
+    data object HideThemeSubMenu: MainUIEvent()
+    data object ShowExportImportDialog: MainUIEvent()
+    data object HideExportImportDialog: MainUIEvent()
+    data class SetTheme(val theme: ThemeSelections): MainUIEvent()
+    data object CollapseMultiFab: MainUIEvent()
+    data class ChangeMultiFabState(val state: MultiFabState): MainUIEvent()
+
+
+}
 
 data class MainMenuUiState(
     val show: Boolean,
@@ -74,6 +87,41 @@ class MainViewModel @Inject constructor(
     /** Snackbar */
     val snackbarHostState = MutableStateFlow(SnackbarHostState())
 
+    /** Theme */
+    val activeTheme = userPreferencesRepository.userPreferences.map { it.theme }
+
+    fun onEvent(event: MainUIEvent) {
+        when(event) {
+            is MainUIEvent.ShowMainMenu -> {
+                onShowMainMenuChanged(true)
+            }
+            is MainUIEvent.HideMainMenu -> {
+                onShowMainMenuChanged(false)
+            }
+            is MainUIEvent.ShowThemeSubMenu -> {
+                onShowThemeSubMenuChanged(true)
+            }
+            is MainUIEvent.HideThemeSubMenu -> {
+                onShowThemeSubMenuChanged(false)
+            }
+            is MainUIEvent.ShowExportImportDialog -> {
+                onShowExportImportDialogChanged(true)
+            }
+            is MainUIEvent.HideExportImportDialog -> {
+                onShowExportImportDialogChanged(false)
+            }
+            is MainUIEvent.SetTheme -> {
+                setTheme(event.theme)
+            }
+            is MainUIEvent.ChangeMultiFabState -> {
+                onMultiFabStateChanged(event.state)
+            }
+            is MainUIEvent.CollapseMultiFab -> {
+                onMultiFabStateChanged(MultiFabState.COLLAPSED)
+            }
+        }
+    }
+
     fun showSnackbar(message: String, onUndo: (() -> Unit)? = null) {
         viewModelScope.launch {
             val result = snackbarHostState.value.showSnackbar(
@@ -92,11 +140,7 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    /** Theme */
-
-    val activeTheme = userPreferencesRepository.userPreferences.map { it.theme }
-
-    fun setTheme(theme: ThemeSelections) {
+    private fun setTheme(theme: ThemeSelections) {
         viewModelScope.launch {
             userPreferencesRepository.updateTheme(theme)
         }
@@ -145,42 +189,15 @@ class MainViewModel @Inject constructor(
         _showMainMenu.update { show }
     }
 
-    fun showMainMenu() {
-        onShowMainMenuChanged(true)
-    }
-
-    fun hideMainMenu() {
-        onShowMainMenuChanged(false)
-    }
-
     private fun onShowThemeSubMenuChanged(show: Boolean) {
         _showThemeSubMenu.update { show }
     }
 
-    fun showThemeSubMenu() {
-        onShowThemeSubMenuChanged(true)
-    }
-
-    fun hideThemeSubMenu() {
-        onShowThemeSubMenuChanged(false)
-    }
-
-    fun onMultiFabStateChanged(state: MultiFabState) {
+    private fun onMultiFabStateChanged(state: MultiFabState) {
         _multiFabState.update { state }
     }
 
-    fun collapseMultiFab() {
-        onMultiFabStateChanged(MultiFabState.COLLAPSED)
-    }
     private fun onShowExportImportDialogChanged(show: Boolean) {
         _showExportImportDialog.update { show }
-    }
-
-    fun showExportImportDialog() {
-        onShowExportImportDialogChanged(true)
-    }
-
-    fun hideExportImportDialog() {
-        onShowExportImportDialogChanged(false)
     }
 }

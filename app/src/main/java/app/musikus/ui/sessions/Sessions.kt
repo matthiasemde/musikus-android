@@ -56,6 +56,8 @@ import app.musikus.shared.MainMenu
 import app.musikus.shared.Selectable
 import app.musikus.shared.ThemeMenu
 import app.musikus.spacing
+import app.musikus.ui.MainUIEvent
+import app.musikus.ui.MainUiState
 import app.musikus.ui.MainViewModel
 import app.musikus.utils.DateFormat
 import app.musikus.utils.TimeFormat
@@ -70,11 +72,13 @@ import java.util.UUID
 )
 @Composable
 fun Sessions(
-    mainViewModel: MainViewModel,
     sessionsViewModel: SessionsViewModel = hiltViewModel(),
+    mainUiState: MainUiState,
+    mainEventHandler: (event: MainUIEvent) -> Unit,
     onSessionEdit: (sessionId: UUID) -> Unit,
+    mainViewModel: MainViewModel    // TODO this should be removed when code is refactored!
+
 ) {
-    val mainUiState by mainViewModel.uiState.collectAsStateWithLifecycle()
     val sessionsUiState by sessionsViewModel.uiState.collectAsStateWithLifecycle()
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
@@ -113,21 +117,21 @@ fun Sessions(
                 title = { Text(text = topBarUiState.title) },
                 scrollBehavior = scrollBehavior,
                 actions = {
-                    IconButton(onClick = mainViewModel::showMainMenu) {
+                    IconButton(onClick = { mainEventHandler(MainUIEvent.ShowMainMenu) } ) {
                         Icon(Icons.Default.MoreVert, contentDescription = "more")
                         MainMenu (
                             show = mainMenuUiState.show,
-                            onDismissHandler = mainViewModel::hideMainMenu,
+                            onDismissHandler = { mainEventHandler(MainUIEvent.HideMainMenu) },
                             onSelectionHandler = { commonSelection ->
-                                mainViewModel.hideMainMenu()
+                                mainEventHandler(MainUIEvent.ShowMainMenu)
 
                                 when (commonSelection) {
                                     CommonMenuSelections.APP_INFO -> {}
                                     CommonMenuSelections.THEME -> {
-                                        mainViewModel.showThemeSubMenu()
+                                        mainEventHandler(MainUIEvent.ShowThemeSubMenu)
                                     }
                                     CommonMenuSelections.BACKUP -> {
-                                        mainViewModel.showExportImportDialog()
+                                        mainEventHandler(MainUIEvent.ShowExportImportDialog)
                                     }
                                 }
                             },
@@ -136,10 +140,10 @@ fun Sessions(
                         ThemeMenu(
                             expanded = mainMenuUiState.showThemeSubMenu,
                             currentTheme = mainViewModel.activeTheme.collectAsState(initial = ThemeSelections.DAY).value,
-                            onDismissHandler = mainViewModel::hideThemeSubMenu,
+                            onDismissHandler = { mainEventHandler(MainUIEvent.HideThemeSubMenu) },
                             onSelectionHandler = { theme ->
-                                mainViewModel.hideThemeSubMenu()
-                                mainViewModel.setTheme(theme)
+                                mainEventHandler(MainUIEvent.HideThemeSubMenu)
+                                mainEventHandler(MainUIEvent.SetTheme(theme))
                             }
                         )
                     }
@@ -157,6 +161,7 @@ fun Sessions(
                     },
                     onDeleteHandler = {
                         sessionsViewModel.onDeleteAction()
+                        // TODO refactor so that message variable is not passed from UI to VM
                         mainViewModel.showSnackbar(
                             message = "Deleted ${actionModeUiState.numberOfSelections} sessions",
                             onUndo = sessionsViewModel::onRestoreAction
