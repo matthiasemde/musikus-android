@@ -14,8 +14,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
@@ -52,6 +54,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import app.musikus.Musikus
 import app.musikus.R
 import app.musikus.database.daos.LibraryItem
+import app.musikus.shared.simpleVerticalScrollbar
 import app.musikus.spacing
 import app.musikus.utils.DATE_FORMATTER_PATTERN_DAY_OF_MONTH
 import app.musikus.utils.TIME_FORMAT_HUMAN_PRETTY
@@ -196,7 +199,7 @@ fun SessionStatisticsPieChart(
 ) {
     val absoluteStartAngle = 180f // left side of the circle
     val strokeThickness = 150f
-    val spacerThickness = 10f
+    val spacerThickness = 8f
 
     val surfaceColor = MaterialTheme.colorScheme.surface
     val libraryColors = Musikus.getLibraryItemColors(LocalContext.current).map {
@@ -346,8 +349,14 @@ fun SessionStatisticsLibraryItemSelector(
     libraryItemsWithSelections: List<Pair<LibraryItem, Boolean>>,
     onLibraryItemCheckboxClicked: (LibraryItem) -> Unit = {}
 ) {
+    val scrollState = rememberLazyListState()
     LazyColumn(
-
+        modifier = Modifier.simpleVerticalScrollbar(
+            scrollState,
+            width = 5.dp,
+            verticalPadding = MaterialTheme.spacing.extraSmall
+        ),
+        state = scrollState,
     ) {
         items(
             items = libraryItemsWithSelections,
@@ -366,7 +375,11 @@ fun SessionStatisticsLibraryItemSelector(
                     ),
                     onCheckedChange = { onLibraryItemCheckboxClicked(item) }
                 )
-                Text(text = item.name)
+                Text(
+                    modifier = Modifier.weight(1f),
+                    text = item.name
+                )
+                Spacer(modifier = Modifier.width(MaterialTheme.spacing.medium))
             }
         }
     }

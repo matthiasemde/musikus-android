@@ -9,6 +9,7 @@
 package app.musikus.shared
 
 import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -51,5 +52,52 @@ fun Modifier.simpleVerticalScrollbar(
             topLeft = Offset(this.size.width - (width + 5.dp).toPx(), state.value.toFloat()),
             size = Size(width.toPx(), viewportHeight),
         )
+    }
+}
+
+@Composable
+fun Modifier.simpleVerticalScrollbar(
+    state: LazyListState,
+    width: Dp = 3.dp,
+    verticalPadding: Dp = 0.dp,
+    color: Color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+): Modifier {
+    return drawWithContent {
+        drawContent()
+        val totalItemCount = state.layoutInfo.totalItemsCount.toFloat()
+        val trackHeight = state.layoutInfo.viewportSize.height.toFloat() - 2 * verticalPadding.toPx()
+
+        val averageVisibleItemHeight = state.layoutInfo.visibleItemsInfo.map { it.size }.average().toFloat()
+
+        val approximatedTotalItemHeight = totalItemCount * averageVisibleItemHeight
+
+
+        val percentageShowing = state.layoutInfo.viewportSize.height / approximatedTotalItemHeight
+
+        val firstVisibleItemHeight =
+            state.layoutInfo.visibleItemsInfo.firstOrNull()?.size?.toFloat() ?: 0f
+        val firstVisibleItemOffsetPercentage = state.firstVisibleItemScrollOffset.toFloat() / firstVisibleItemHeight
+
+
+        val scrollbarHeight = trackHeight * percentageShowing // in pixels
+        val scrollPerItem = (trackHeight - scrollbarHeight) / (totalItemCount * (1 - percentageShowing)) // in pixels
+
+        if(trackHeight - scrollbarHeight > 2) {
+            val firstIndex = state.firstVisibleItemIndex.toFloat()
+            val scrollbarOffsetY = (firstIndex + firstVisibleItemOffsetPercentage) * scrollPerItem
+
+            drawRoundRect(
+                cornerRadius = CornerRadius(width.toPx() / 2),
+                color = color,
+                topLeft = Offset(this.size.width - (width + 5.dp).toPx(), scrollbarOffsetY + verticalPadding.toPx()),
+                size = Size(width.toPx(), scrollbarHeight),
+            )
+            drawRoundRect(
+                cornerRadius = CornerRadius(width.toPx() / 2),
+                color = color.copy(alpha = 0.2f),
+                topLeft = Offset(this.size.width - (width + 5.dp).toPx(), verticalPadding.toPx()),
+                size = Size(width.toPx(), trackHeight),
+            )
+        }
     }
 }
