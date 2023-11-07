@@ -94,7 +94,7 @@ data class BarChartData(
     val totalDuration: Int,
 )
 data class SessionStatisticsPieChartUiState(
-    val libraryItemsWithPercentage: List<Pair<LibraryItem, Float>>
+    val libraryItemsToPercentage: Map<LibraryItem, Float>
 )
 
 class SessionStatisticsViewModel(
@@ -149,7 +149,7 @@ class SessionStatisticsViewModel(
         itemsInSessionsInTimeFrame,
         _deselectedLibraryItems
     ) { itemsInFrame, deselectedItems ->
-        itemsInFrame.map { it to (it in deselectedItems) }
+        itemsInFrame.map { it to (it !in deselectedItems) }
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
@@ -164,32 +164,36 @@ class SessionStatisticsViewModel(
     private val pieChartUiState = combineTransform(
         _chartType,
         totalDuration,
+        _deselectedLibraryItems,
         sessionsInTimeFrame
-    ) { chartType, totalDuration, sessions ->
+    ) { chartType, totalDuration, deselectedLibraryItems, sessions ->
         if (chartType == SessionStatisticsChartType.BAR) {
             _showPieChart = false
             return@combineTransform emit(null)
         }
 
+        val filteredSections = sessions
+            .flatMap { it.sections }
+            .groupBy { it.libraryItem }
+            .filterKeys { it !in deselectedLibraryItems }
+
+        val filteredDuration = filteredSections.values.sumOf { sections ->
+            sections.sumOf { (section, _) -> section.duration }
+        }
+
         if (!_showPieChart) {
             emit(SessionStatisticsPieChartUiState(
-                libraryItemsWithPercentage = sessions
-                    .flatMap { it.sections }
-                    .groupBy { it.libraryItem }
-                    .map { (libraryItem, _) ->
-                        libraryItem to 0f
-                    }
+                libraryItemsToPercentage = filteredSections.mapValues { (_, _) ->
+                    0f
+                }
             ))
             delay(350)
             _showPieChart = true
         }
         emit(SessionStatisticsPieChartUiState(
-            libraryItemsWithPercentage = sessions
-                .flatMap { it.sections }
-                .groupBy { it.libraryItem }
-                .map { (libraryItem, sections) ->
-                    libraryItem to sections.sumOf { (section, _) -> section.duration }.toFloat() / totalDuration
-                }
+            libraryItemsToPercentage = filteredSections.mapValues { (_, sections) ->
+                sections.sumOf { (section, _) -> section.duration }.toFloat() / filteredDuration
+            }
         ))
     }.stateIn(
         scope = viewModelScope,
@@ -336,5 +340,19 @@ class SessionStatisticsViewModel(
 
     fun onTabSelected(tab: SessionStatisticsTab) {
         _selectedTab.update { tab }
+        _timeFrame.update {
+            when(tab) {
+                SessionStatisticsTab.DAYS -> getStartOfDay(dayOffset = -6) to getEndOfDay()
+                SessionStatisticsTab.WEEKS -> getStartOfWeek(weekOffset = -6) to getEndOfWeek()
+                SessionStatisticsTab.MONTHS -> getStartOfMonth(monthOffset = -6) to getEndOfMonth()
+            }
+        }
+    }
+
+    fun onLibraryItemCheckboxClicked(libraryItem: LibraryItem) {
+        _deselectedLibraryItems.update {
+            if (libraryItem in it) it - libraryItem
+            else it + libraryItem
+        }
     }
 }

@@ -14,13 +14,18 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.PieChart
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -29,9 +34,9 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
@@ -46,6 +51,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.musikus.Musikus
 import app.musikus.R
+import app.musikus.database.daos.LibraryItem
 import app.musikus.spacing
 import app.musikus.utils.DATE_FORMATTER_PATTERN_DAY_OF_MONTH
 import app.musikus.utils.TIME_FORMAT_HUMAN_PRETTY
@@ -65,8 +71,6 @@ fun SessionStatistics(
 ) {
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
     Scaffold(
         topBar = {
@@ -123,12 +127,19 @@ fun SessionStatistics(
                     }
                 )
                 SessionStatisticsHeader(contentUiState.headerUiState)
+                Spacer(modifier = Modifier.height(MaterialTheme.spacing.large))
                 contentUiState.pieChartUiState?.let {
                     SessionStatisticsPieChart(it)
                 }
 //                contentUiState.barChartUiState?.let {
 //                    SessionStatisticsBarChart(it)
 //                }
+                Spacer(modifier = Modifier.height(MaterialTheme.spacing.large))
+                HorizontalDivider()
+                SessionStatisticsLibraryItemSelector(
+                    contentUiState.libraryItemsWithSelection,
+                    viewModel::onLibraryItemCheckboxClicked
+                )
             }
         }
     )
@@ -190,20 +201,38 @@ fun SessionStatisticsPieChart(
     val surfaceColor = MaterialTheme.colorScheme.surface
 
     Box {
+        val libraryItemsToPercentage = uiState.libraryItemsToPercentage
 
-        val libraryItemsWithAnimatedSweepAngles = uiState.libraryItemsWithPercentage.mapIndexed {  index, (libraryItem, percentage) ->
-            libraryItem to animateFloatAsState(
-                targetValue = percentage * 180f, // half pie chart
-                animationSpec = tween(durationMillis = 1500),
-                label = "pie-chart-sweep-angle-animation-$index"
+        val shownLibraryItems = remember {
+            libraryItemsToPercentage.map { (item, _) -> item }.toMutableList()
+        }
+
+        val libraryItemsWithAnimatedSweepAngles = (
+                shownLibraryItems + libraryItemsToPercentage.keys
+        ).distinct().map { item ->
+            if (item !in shownLibraryItems) {
+                shownLibraryItems.add(item)
+            }
+            item to animateFloatAsState(
+                targetValue = (libraryItemsToPercentage[item] ?: 0f) * 180f, // half pie chart
+                animationSpec = tween(durationMillis = 1000),
+                label = "pie-chart-sweep-angle-animation-${item.id}",
+                finishedListener = {
+                    if (libraryItemsToPercentage[item] == 0f) {
+                        shownLibraryItems.remove(item)
+                    }
+                }
             )
         }
+
         libraryItemsWithAnimatedSweepAngles.forEachIndexed { index, (libraryItem, animatedSweepAngle) ->
             val sweepAngle = animatedSweepAngle.value
 
             val color = Color(Musikus.getLibraryItemColors(LocalContext.current)[libraryItem.colorIndex])
             Canvas(
-                modifier = Modifier.fillMaxWidth().height(150.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(150.dp)
             ) {
                 val pieChartRadius = 1f * size.height
                 val pieChartCenter = Offset(
@@ -255,7 +284,7 @@ fun SessionStatisticsPieChart(
                     )
                 }
 
-                if (index == uiState.libraryItemsWithPercentage.size - 1) {
+                if (index == (libraryItemsWithAnimatedSweepAngles.size - 1)) {
                     drawCircle(
                         color = surfaceColor,
                         radius = (pieChartRadius - strokeThickness),
@@ -264,6 +293,37 @@ fun SessionStatisticsPieChart(
                 }
 
                 startAngle += sweepAngle
+            }
+        }
+    }
+}
+
+@Composable
+fun SessionStatisticsLibraryItemSelector(
+    libraryItemsWithSelections: List<Pair<LibraryItem, Boolean>>,
+    onLibraryItemCheckboxClicked: (LibraryItem) -> Unit = {}
+) {
+    LazyColumn(
+
+    ) {
+        items(
+            items = libraryItemsWithSelections,
+            key = { (item, ) -> item.id }
+        ) {(item, checked) ->
+            Row(
+                modifier =  Modifier.fillMaxWidth(),
+                verticalAlignment = CenterVertically
+            ) {
+                val libraryColor = Color(Musikus.getLibraryItemColors(LocalContext.current)[item.colorIndex])
+                Checkbox(
+                    checked = checked,
+                    colors = CheckboxDefaults.colors(
+                        checkedColor = libraryColor,
+                        uncheckedColor = libraryColor,
+                    ),
+                    onCheckedChange = { onLibraryItemCheckboxClicked(item) }
+                )
+                Text(text = item.name)
             }
         }
     }
