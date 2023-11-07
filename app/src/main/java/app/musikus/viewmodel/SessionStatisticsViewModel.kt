@@ -94,7 +94,8 @@ data class BarChartData(
     val totalDuration: Int,
 )
 data class SessionStatisticsPieChartUiState(
-    val libraryItemsToPercentage: Map<LibraryItem, Float>
+    val libraryItemsToDuration: Map<LibraryItem, Int>,
+    val totalDuration: Int
 )
 
 class SessionStatisticsViewModel(
@@ -163,10 +164,9 @@ class SessionStatisticsViewModel(
 
     private val pieChartUiState = combineTransform(
         _chartType,
-        totalDuration,
         _deselectedLibraryItems,
         sessionsInTimeFrame
-    ) { chartType, totalDuration, deselectedLibraryItems, sessions ->
+    ) { chartType, deselectedLibraryItems, sessions ->
         if (chartType == SessionStatisticsChartType.BAR) {
             _showPieChart = false
             return@combineTransform emit(null)
@@ -177,23 +177,23 @@ class SessionStatisticsViewModel(
             .groupBy { it.libraryItem }
             .filterKeys { it !in deselectedLibraryItems }
 
-        val filteredDuration = filteredSections.values.sumOf { sections ->
-            sections.sumOf { (section, _) -> section.duration }
-        }
+        val totalDuration = filteredSections
+            .flatMap { it.value }
+            .sumOf { (section, _) -> section.duration }
 
         if (!_showPieChart) {
             emit(SessionStatisticsPieChartUiState(
-                libraryItemsToPercentage = filteredSections.mapValues { (_, _) ->
-                    0f
-                }
+                libraryItemsToDuration = filteredSections.mapValues { 0 },
+                totalDuration = totalDuration
             ))
             delay(350)
             _showPieChart = true
         }
         emit(SessionStatisticsPieChartUiState(
-            libraryItemsToPercentage = filteredSections.mapValues { (_, sections) ->
-                sections.sumOf { (section, _) -> section.duration }.toFloat() / filteredDuration
-            }
+            libraryItemsToDuration = filteredSections.mapValues { (_, sections) ->
+                sections.sumOf { (section, _) -> section.duration }
+            },
+            totalDuration = totalDuration
         ))
     }.stateIn(
         scope = viewModelScope,

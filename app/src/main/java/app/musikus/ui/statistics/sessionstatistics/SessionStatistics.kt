@@ -2,11 +2,11 @@ package app.musikus.ui.statistics.sessionstatistics
 
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement.Center
 import androidx.compose.foundation.layout.Arrangement.SpaceBetween
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -194,107 +194,136 @@ fun SessionStatisticsHeader(
 fun SessionStatisticsPieChart(
     uiState: SessionStatisticsPieChartUiState
 ) {
-    var startAngle = 180f // left side of the circle
+    val absoluteStartAngle = 180f // left side of the circle
     val strokeThickness = 150f
     val spacerThickness = 10f
 
     val surfaceColor = MaterialTheme.colorScheme.surface
+    val libraryColors = Musikus.getLibraryItemColors(LocalContext.current).map {
+        Color(it)
+    }
 
-    Box {
-        val libraryItemsToPercentage = uiState.libraryItemsToPercentage
+    val libraryItemsToDuration = uiState.libraryItemsToDuration
 
-        val shownLibraryItems = remember {
-            libraryItemsToPercentage.map { (item, _) -> item }.toMutableList()
+    val noData =
+        libraryItemsToDuration.isEmpty() ||
+        libraryItemsToDuration.values.all { it == 0 }
+
+    val animatedOpenCloseScaler by animateFloatAsState(
+        targetValue = if (noData) 0f else 1f,
+        animationSpec = tween(durationMillis = 1000),
+        label = "pie-chart-open-close-scaler-animation",
+    )
+
+    val shownLibraryItems = remember {
+        libraryItemsToDuration.map { (item, _) -> item }.toMutableSet()
+    }
+
+    val libraryItemsWithAnimatedDuration = (
+        shownLibraryItems + libraryItemsToDuration.keys
+    ).distinct().map { item ->
+        val duration = libraryItemsToDuration[item] ?: 0
+
+        if (item !in shownLibraryItems) {
+            shownLibraryItems.add(item)
         }
 
-        val libraryItemsWithAnimatedSweepAngles = (
-                shownLibraryItems + libraryItemsToPercentage.keys
-        ).distinct().map { item ->
-            if (item !in shownLibraryItems) {
-                shownLibraryItems.add(item)
-            }
-            item to animateFloatAsState(
-                targetValue = (libraryItemsToPercentage[item] ?: 0f) * 180f, // half pie chart
-                animationSpec = tween(durationMillis = 1000),
-                label = "pie-chart-sweep-angle-animation-${item.id}",
-                finishedListener = {
-                    if (libraryItemsToPercentage[item] == 0f) {
-                        shownLibraryItems.remove(item)
-                    }
-                }
+        item to animateIntAsState(
+            targetValue = duration,
+            animationSpec = tween(durationMillis = 1000),
+            label = "pie-chart-sweep-angle-animation-${item.id}",
+        )
+    }
+
+    val animatedAccumulatedDurations = libraryItemsWithAnimatedDuration.runningFold(
+        initial = 0,
+        operation = { start, (_, duration) ->
+            start + duration.value
+        }
+    )
+
+    val animatedMaxDuration = animatedAccumulatedDurations.last()
+
+    val libraryItemsWithAnimatedStartAndSweepAngle = libraryItemsWithAnimatedDuration
+        // running fold is always one larger than original list
+        .zip(animatedAccumulatedDurations.dropLast(1))
+        .map { (pair, accumulatedDuration) ->
+            val (item, duration) = pair
+            item to if (animatedMaxDuration == 0) Pair(absoluteStartAngle, 0f) else Pair(
+                (
+                    (accumulatedDuration.toFloat() / animatedMaxDuration) *
+                    180f * animatedOpenCloseScaler
+                ) + absoluteStartAngle,
+                (duration.value.toFloat() / animatedMaxDuration) * 180f * animatedOpenCloseScaler
             )
         }
 
-        libraryItemsWithAnimatedSweepAngles.forEachIndexed { index, (libraryItem, animatedSweepAngle) ->
-            val sweepAngle = animatedSweepAngle.value
+    Canvas(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(150.dp)
+    ) {
+        val pieChartRadius = 1f * size.height
+        val pieChartCenter = Offset(
+            x = size.width / 2,
+            y = size.height - (size.height - pieChartRadius) / 2
+        )
+        val pieChartTopLeft = pieChartCenter - Offset(
+            x = pieChartRadius,
+            y = pieChartRadius
+        )
 
-            val color = Color(Musikus.getLibraryItemColors(LocalContext.current)[libraryItem.colorIndex])
-            Canvas(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(150.dp)
-            ) {
-                val pieChartRadius = 1f * size.height
-                val pieChartCenter = Offset(
-                    x = size.width / 2,
-                    y = size.height - (size.height - pieChartRadius) / 2
+        libraryItemsWithAnimatedStartAndSweepAngle.forEachIndexed { index, (item, pair) ->
+            val (startAngle, sweepAngle) = pair
+            if (sweepAngle == 0f) return@forEachIndexed
+
+            val halfSweepCenterPoint = Math.toRadians((startAngle + sweepAngle / 2).toDouble()).let {
+                Offset(
+                    x = ((pieChartRadius) / 2) * kotlin.math.cos(it).toFloat(),
+                    y = ((pieChartRadius) / 2) * kotlin.math.sin(it).toFloat()
                 )
-                val pieChartTopLeft = pieChartCenter - Offset(
-                    x = pieChartRadius,
-                    y = pieChartRadius
+            }
+
+            val startAngleOuterEdgePoint = Math.toRadians(startAngle.toDouble()).let {
+                Offset(
+                    x = pieChartRadius * kotlin.math.cos(it).toFloat(),
+                    y = pieChartRadius * kotlin.math.sin(it).toFloat()
                 )
+            }
 
-                val halfSweepCenterPoint = Math.toRadians((startAngle + sweepAngle / 2).toDouble()).let {
-                    Offset(
-                        x = ((pieChartRadius) / 2) * kotlin.math.cos(it).toFloat(),
-                        y = ((pieChartRadius) / 2) * kotlin.math.sin(it).toFloat()
-                    )
-                }
-
-                val startAngleOuterEdgePoint = Math.toRadians(startAngle.toDouble()).let {
-                    Offset(
-                        x = pieChartRadius * kotlin.math.cos(it).toFloat(),
-                        y = pieChartRadius * kotlin.math.sin(it).toFloat()
-                    )
-                }
-
-                val startAngleInnerEdgePoint = Math.toRadians(startAngle.toDouble()).let {
-                    Offset(
-                        x = (pieChartRadius - strokeThickness) * kotlin.math.cos(it).toFloat(),
-                        y = (pieChartRadius - strokeThickness) * kotlin.math.sin(it).toFloat()
-                    )
-                }
-
-                drawArc(
-                    color = color,
-                    startAngle = startAngle,
-                    sweepAngle = sweepAngle,
-                    topLeft = pieChartTopLeft,
-                    size = Size(pieChartRadius * 2, pieChartRadius * 2),
-                    useCenter = true,
-                    style = Fill
+            val startAngleInnerEdgePoint = Math.toRadians(startAngle.toDouble()).let {
+                Offset(
+                    x = (pieChartRadius - strokeThickness) * kotlin.math.cos(it).toFloat(),
+                    y = (pieChartRadius - strokeThickness) * kotlin.math.sin(it).toFloat()
                 )
+            }
 
-                if (index > 0) {
-                    drawLine(
-                        color = surfaceColor,
-                        start = pieChartCenter + startAngleOuterEdgePoint,
-                        end = pieChartCenter + startAngleInnerEdgePoint,
-                        strokeWidth = spacerThickness
-                    )
-                }
+            drawArc(
+                color = libraryColors[item.colorIndex],
+                startAngle = startAngle,
+                sweepAngle = sweepAngle,
+                topLeft = pieChartTopLeft,
+                size = Size(pieChartRadius * 2, pieChartRadius * 2),
+                useCenter = true,
+                style = Fill
+            )
 
-                if (index == (libraryItemsWithAnimatedSweepAngles.size - 1)) {
-                    drawCircle(
-                        color = surfaceColor,
-                        radius = (pieChartRadius - strokeThickness),
-                        center = pieChartCenter,
-                    )
-                }
-
-                startAngle += sweepAngle
+            // draw spacer for every item except the first one
+            if (index > 0) {
+                drawLine(
+                    color = surfaceColor,
+                    start = pieChartCenter + startAngleOuterEdgePoint,
+                    end = pieChartCenter + startAngleInnerEdgePoint,
+                    strokeWidth = spacerThickness
+                )
             }
         }
+
+        drawCircle(
+            color = surfaceColor,
+            radius = (pieChartRadius - strokeThickness),
+            center = pieChartCenter,
+        )
     }
 }
 
