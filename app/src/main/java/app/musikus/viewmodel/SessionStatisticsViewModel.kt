@@ -161,6 +161,7 @@ class SessionStatisticsViewModel(
      *  Composing the Ui state
      */
     private var _showPieChart = false
+    private val _showingLibraryItems = mutableSetOf<LibraryItem>()
 
     private val pieChartUiState = combineTransform(
         _chartType,
@@ -169,6 +170,7 @@ class SessionStatisticsViewModel(
     ) { chartType, deselectedLibraryItems, sessions ->
         if (chartType == SessionStatisticsChartType.BAR) {
             _showPieChart = false
+            _showingLibraryItems.clear()
             return@combineTransform emit(null)
         }
 
@@ -181,14 +183,18 @@ class SessionStatisticsViewModel(
             .flatMap { it.value }
             .sumOf { (section, _) -> section.duration }
 
-        if (!_showPieChart) {
-            emit(SessionStatisticsPieChartUiState(
-                libraryItemsToDuration = filteredSections.mapValues { 0 },
-                totalDuration = totalDuration
-            ))
-            delay(350)
-            _showPieChart = true
-        }
+
+        emit(SessionStatisticsPieChartUiState(
+            libraryItemsToDuration = filteredSections.mapValues { (item, sections) ->
+                if (item in _showingLibraryItems)
+                    sections.sumOf { (section, _) -> section.duration }
+                else
+                    0
+            },
+            totalDuration = totalDuration
+        ))
+        _showingLibraryItems.addAll(filteredSections.keys)
+        delay(50)
         emit(SessionStatisticsPieChartUiState(
             libraryItemsToDuration = filteredSections.mapValues { (_, sections) ->
                 sections.sumOf { (section, _) -> section.duration }
