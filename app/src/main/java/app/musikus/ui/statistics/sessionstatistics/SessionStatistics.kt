@@ -279,23 +279,27 @@ fun SessionStatisticsPieChart(
 
             val halfSweepCenterPoint = Math.toRadians((startAngle + sweepAngle / 2).toDouble()).let {
                 Offset(
-                    x = ((pieChartRadius) / 2) * kotlin.math.cos(it).toFloat(),
-                    y = ((pieChartRadius) / 2) * kotlin.math.sin(it).toFloat()
-                )
+                    x = kotlin.math.cos(it).toFloat(),
+                    y = kotlin.math.sin(it).toFloat()
+                ) * (pieChartRadius - strokeThickness / 2)
             }
 
-            val startAngleOuterEdgePoint = Math.toRadians(startAngle.toDouble()).let {
+            val startSpacerLine = Math.toRadians(startAngle.toDouble()).let {
                 Offset(
-                    x = pieChartRadius * kotlin.math.cos(it).toFloat(),
-                    y = pieChartRadius * kotlin.math.sin(it).toFloat()
+                    x = kotlin.math.cos(it).toFloat(),
+                    y = kotlin.math.sin(it).toFloat()
                 )
+            }.let {
+                Pair(it * pieChartRadius, it * (pieChartRadius - strokeThickness))
             }
 
-            val startAngleInnerEdgePoint = Math.toRadians(startAngle.toDouble()).let {
+            val endSpacerLine = Math.toRadians((startAngle + sweepAngle).toDouble()).let {
                 Offset(
-                    x = (pieChartRadius - strokeThickness) * kotlin.math.cos(it).toFloat(),
-                    y = (pieChartRadius - strokeThickness) * kotlin.math.sin(it).toFloat()
+                    x = kotlin.math.cos(it).toFloat(),
+                    y = kotlin.math.sin(it).toFloat()
                 )
+            }.let {
+                Pair(it * pieChartRadius, it * (pieChartRadius - strokeThickness))
             }
 
             drawArc(
@@ -308,12 +312,22 @@ fun SessionStatisticsPieChart(
                 style = Fill
             )
 
-            // draw spacer for every item except the first one
+            // draw start spacer for every item except the first one
             if (index > 0) {
                 drawLine(
                     color = surfaceColor,
-                    start = pieChartCenter + startAngleOuterEdgePoint,
-                    end = pieChartCenter + startAngleInnerEdgePoint,
+                    start = pieChartCenter + startSpacerLine.first,
+                    end = pieChartCenter + startSpacerLine.second,
+                    strokeWidth = spacerThickness
+                )
+            }
+
+            // draw end spacer for every item except the first one
+            if (index < libraryItemsWithAnimatedStartAndSweepAngle.size - 1) {
+                drawLine(
+                    color = surfaceColor,
+                    start = pieChartCenter + endSpacerLine.first,
+                    end = pieChartCenter + endSpacerLine.second,
                     strokeWidth = spacerThickness
                 )
             }

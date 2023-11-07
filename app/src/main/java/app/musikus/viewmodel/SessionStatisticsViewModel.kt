@@ -193,8 +193,9 @@ class SessionStatisticsViewModel(
             },
             totalDuration = totalDuration
         ))
+        val longDelay = _showingLibraryItems.isEmpty()
         _showingLibraryItems.addAll(filteredSections.keys)
-        delay(50)
+        delay(if (longDelay) 350 else 50) // small delay is necessary to allow first composition
         emit(SessionStatisticsPieChartUiState(
             libraryItemsToDuration = filteredSections.mapValues { (_, sections) ->
                 sections.sumOf { (section, _) -> section.duration }
