@@ -10,7 +10,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement.Bottom
 import androidx.compose.foundation.layout.Arrangement.Center
 import androidx.compose.foundation.layout.Arrangement.SpaceBetween
-import androidx.compose.foundation.layout.Arrangement.Top
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -469,7 +468,38 @@ fun SessionStatisticsBarChart(
                     verticalArrangement = Bottom,
                 ) {
 
-                    Box(
+//                    Box(
+//                        modifier = Modifier
+//                            .fillMaxHeight(animatedColumnHeight)
+//                            .clip(
+//                                RoundedCornerShape(
+//                                    topStart = 2.dp,
+//                                    topEnd = 2.dp
+//                                )
+//                            ),
+//
+//                    ) {
+//                        libraryItemsWithAnimatedStartAndSegmentHeight.forEach items@{ (item, pair) ->
+//                            val (startHeight, segmentHeight) = pair
+//
+//                            if (segmentHeight == 0f) return@items
+//                            Column(
+//                                modifier = Modifier
+//                                    .fillMaxWidth()
+//                                    .align(BottomCenter)
+//                                    .fillMaxHeight(startHeight + segmentHeight),
+//                                verticalArrangement = Top
+//                            ) {
+//                                Box(
+//                                    modifier = Modifier
+//                                        .fillMaxWidth()
+//                                        .fillMaxHeight(segmentHeight / (startHeight + segmentHeight))
+//                                        .background(libraryColors[item.colorIndex])
+//                                )
+//                            }
+//                        }
+//                    }
+                    Column(
                         modifier = Modifier
                             .fillMaxHeight(animatedColumnHeight)
                             .clip(
@@ -478,24 +508,21 @@ fun SessionStatisticsBarChart(
                                     topEnd = 2.dp
                                 )
                             ),
-
                     ) {
-                        libraryItemsWithAnimatedStartAndSegmentHeight.forEach items@{ (item, pair) ->
-                            val (startHeight, segmentHeight) = pair
-
-                            if (segmentHeight == 0f) return@items
-                            Column(
+                        libraryItemsWithAnimatedDuration.forEach items@{(item, duration) ->
+                            if (duration.value == 0) return@items
+                            Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .align(BottomCenter)
-                                    .fillMaxHeight(startHeight + segmentHeight),
-                                verticalArrangement = Top
+                                    .weight(duration.value.toFloat())
+                                    .background(libraryColors[item.colorIndex])
                             ) {
-                                Box(
+                                Spacer(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .fillMaxHeight(segmentHeight / (startHeight + segmentHeight))
-                                        .background(libraryColors[item.colorIndex])
+                                        .height(1.dp)
+                                        .align(BottomCenter)
+                                        .background(MaterialTheme.colorScheme.surface)
                                 )
                             }
                         }
