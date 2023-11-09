@@ -10,6 +10,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement.Bottom
 import androidx.compose.foundation.layout.Arrangement.Center
 import androidx.compose.foundation.layout.Arrangement.SpaceBetween
+import androidx.compose.foundation.layout.Arrangement.Top
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -46,6 +47,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment.Companion.BottomCenter
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
@@ -56,15 +58,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.musikus.Musikus
 import app.musikus.R
 import app.musikus.database.daos.LibraryItem
-import app.musikus.shared.conditional
 import app.musikus.shared.simpleVerticalScrollbar
 import app.musikus.spacing
 import app.musikus.utils.DATE_FORMATTER_PATTERN_DAY_OF_MONTH
@@ -108,8 +107,8 @@ fun SessionStatistics(
                         ) { chartType ->
                             Icon(
                                 imageVector = when (chartType) {
-                                    SessionStatisticsChartType.PIE -> Icons.Default.PieChart
-                                    SessionStatisticsChartType.BAR -> Icons.Default.BarChart
+                                    SessionStatisticsChartType.PIE -> Icons.Default.BarChart
+                                    SessionStatisticsChartType.BAR -> Icons.Default.PieChart
                                 },
                                 contentDescription = null
                             )
@@ -142,7 +141,11 @@ fun SessionStatistics(
                         }
                     }
                 )
-                SessionStatisticsHeader(contentUiState.headerUiState)
+                SessionStatisticsHeader(
+                    uiState = contentUiState.headerUiState,
+                    seekForward = viewModel::onSeekForwardClicked,
+                    seekBackward = viewModel::onSeekBackwardClicked
+                )
                 Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
                 Crossfade(
                     modifier = Modifier
@@ -152,6 +155,7 @@ fun SessionStatistics(
                         if (contentUiState.pieChartUiState != null) SessionStatisticsChartType.PIE
                         else if (contentUiState.barChartUiState != null) SessionStatisticsChartType.BAR
                         else null,
+                    animationSpec = tween(durationMillis = 300),
                     label = "statistics-chart-crossfade-animation"
                 ) { targetChart ->
                     when (targetChart) {
@@ -179,7 +183,9 @@ fun SessionStatistics(
 
 @Composable
 fun SessionStatisticsHeader(
-    uiState: SessionStatisticsHeaderUiState
+    uiState: SessionStatisticsHeaderUiState,
+    seekForward: () -> Unit = {},
+    seekBackward: () -> Unit = {}
 ) {
     Row(
         modifier = Modifier
@@ -188,9 +194,7 @@ fun SessionStatisticsHeader(
         horizontalArrangement = SpaceBetween,
         verticalAlignment = CenterVertically,
     ) {
-        IconButton(
-            onClick = {}
-        ) {
+        IconButton(onClick = seekBackward) {
             Icon(
                 modifier = Modifier.size(32.dp),
                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
@@ -212,7 +216,7 @@ fun SessionStatisticsHeader(
                 style = MaterialTheme.typography.titleSmall
             )
         }
-        IconButton(onClick = {}) {
+        IconButton(onClick = seekForward) {
             Icon(
                 modifier = Modifier.size(32.dp),
                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
@@ -377,65 +381,133 @@ fun SessionStatisticsBarChart(
     uiState: SessionStatisticsBarChartUiState
 ) {
     val (barData, maxDuration) = uiState
-//    val animatedMaxDuration by animateIntAsState(
-//        targetValue = maxDuration,
-//        animationSpec = tween(durationMillis = 1000),
-//        label = "bar-chart-max-duration-animation",
-//    )
-    val libraryItemColors = Musikus.getLibraryItemColors(LocalContext.current).map {
+    val libraryColors = Musikus.getLibraryItemColors(LocalContext.current).map {
         Color(it)
     }
 
+//    val shownLibraryItemsInChart = remember {
+//        barData.map {barDatum -> barDatum.libraryItemsToDuration.map { (item, _) -> item }.toMutableSet() }
+//    }
     Row(
         modifier = Modifier
             .fillMaxSize()
-            .padding(MaterialTheme.spacing.medium),
+            .padding(
+                horizontal = MaterialTheme.spacing.extraLarge,
+                vertical = MaterialTheme.spacing.medium
+            ),
     ) {
         barData.forEachIndexed { barIndex, barDatum ->
+            val shownLibraryItemsInBar = remember { mutableListOf<LibraryItem>() }
+//                barData.map {barDatum -> barDatum.libraryItemsToDuration.map { (item, _) -> item }.toMutableSet() }
+//            }
+
+//            val shownLibraryItemsInBar = shownLibraryItemsInChart[barIndex]
+
+            val libraryItemsWithAnimatedDuration = (
+                shownLibraryItemsInBar + barDatum.libraryItemsToDuration.keys
+            ).distinct()
+//            .also { items ->
+//                if(barIndex ==5) Log.d("session-statistics", "shownLibraryItemsInBar: ${items.map {it.name}}")
+//            }
+            .map { item ->
+                val duration = barDatum.libraryItemsToDuration[item] ?: 0
+
+                if (item !in shownLibraryItemsInBar) {
+                    shownLibraryItemsInBar.add(item)
+                }
+
+                item to animateIntAsState(
+                    targetValue = duration,
+                    animationSpec = tween(durationMillis = 1000),
+                    label = "bar-chart-column-${barIndex}-animation-${item.id}",
+                )
+            }
+//            .filter { (_, animatedDuration) ->
+//                animatedDuration.value != 0
+//            }
+
+            val animatedAccumulatedDurations = libraryItemsWithAnimatedDuration.runningFold(
+                initial = 0,
+                operation = { start, (_, duration) ->
+                    start + duration.value
+                }
+            )
+
+            val animatedTotalDuration = animatedAccumulatedDurations.last()
+
+            val libraryItemsWithAnimatedStartAndSegmentHeight = libraryItemsWithAnimatedDuration
+                // running fold is always one larger than original list
+                .zip(animatedAccumulatedDurations.dropLast(1))
+                .map { (pair, accumulatedDuration) ->
+                    val (item, duration) = pair
+                    item to if (animatedTotalDuration == 0) Pair(0f, 0f) else Pair(
+                        (accumulatedDuration.toFloat() / animatedTotalDuration),
+                        (duration.value.toFloat() / animatedTotalDuration)
+                    )
+                }
+
+            val animatedColumnHeight
+//            = barDatum.totalDuration.toFloat() / maxDuration
+            by animateFloatAsState(
+                targetValue =
+                    if (maxDuration == 0) 0f
+                    else barDatum.totalDuration.toFloat() / maxDuration,
+                animationSpec = tween(durationMillis = 1000),
+                label = "bar-chart-column-${barIndex}-height-animation",
+            )
+
             Column(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight(),
-                horizontalAlignment = CenterHorizontally
+                horizontalAlignment = CenterHorizontally,
             ) {
-                Column(
-                    modifier = Modifier.weight(1f),
+                Column (
+                    modifier = Modifier
+                        .weight(1f)
+                        .width(12.dp),
                     verticalArrangement = Bottom,
                 ) {
-                    barDatum.libraryItemsWithDuration.forEachIndexed { index, (item, duration) ->
-                        val animatedColumnHeight by animateFloatAsState(
-                            targetValue = if (maxDuration == 0) 0f else (duration.toFloat() / maxDuration),
-                            animationSpec = tween(durationMillis = 1000),
-                            label = "bar-chart-column-height-animation-${item.id}",
-                        )
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .fillMaxHeight(animatedColumnHeight)
-                                .conditional(index == 0) {
-                                    clip(
-                                        RoundedCornerShape(
-                                            topStart = 4.dp,
-                                            topEnd = 4.dp
-                                        )
-                                    )
-                                }
-                                .background(libraryItemColors[item.colorIndex])
-                        )
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxHeight(animatedColumnHeight)
+                            .clip(
+                                RoundedCornerShape(
+                                    topStart = 2.dp,
+                                    topEnd = 2.dp
+                                )
+                            ),
+
+                    ) {
+                        libraryItemsWithAnimatedStartAndSegmentHeight.forEach items@{ (item, pair) ->
+                            val (startHeight, segmentHeight) = pair
+
+                            if (segmentHeight == 0f) return@items
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .align(BottomCenter)
+                                    .fillMaxHeight(startHeight + segmentHeight),
+                                verticalArrangement = Top
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .fillMaxHeight(segmentHeight / (startHeight + segmentHeight))
+                                        .background(libraryColors[item.colorIndex])
+                                )
+                            }
+                        }
                     }
                 }
                 Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
                 Text(
                     text = barDatum.label,
-                    style = TextStyle(
-                        fontSize = 10.sp,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
+                    style = MaterialTheme.typography.labelMedium
+//                        color = MaterialTheme.colorScheme.onSurface,
+//                    )
                 )
-            }
-
-            if (barIndex < uiState.barData.size - 1) {
-                Spacer(modifier = Modifier.weight(1f))
             }
         }
     }
