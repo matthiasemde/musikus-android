@@ -5,16 +5,12 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement.Bottom
 import androidx.compose.foundation.layout.Arrangement.Center
 import androidx.compose.foundation.layout.Arrangement.SpaceBetween
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -24,7 +20,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
@@ -46,11 +41,9 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment.Companion.BottomCenter
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
@@ -148,7 +141,7 @@ fun SessionStatistics(
                 Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
                 Crossfade(
                     modifier = Modifier
-                        .height(170.dp)
+                        .height(200.dp)
                         .fillMaxWidth(),
                     targetState =
                         if (contentUiState.pieChartUiState != null) SessionStatisticsChartType.PIE
@@ -380,163 +373,129 @@ fun SessionStatisticsBarChart(
     uiState: SessionStatisticsBarChartUiState
 ) {
     val (barData, maxDuration) = uiState
+
+    val surfaceColor = MaterialTheme.colorScheme.surface
     val libraryColors = Musikus.getLibraryItemColors(LocalContext.current).map {
         Color(it)
     }
 
-//    val shownLibraryItemsInChart = remember {
-//        barData.map {barDatum -> barDatum.libraryItemsToDuration.map { (item, _) -> item }.toMutableSet() }
-//    }
-    Row(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(
-                horizontal = MaterialTheme.spacing.extraLarge,
-                vertical = MaterialTheme.spacing.medium
-            ),
-    ) {
-        barData.forEachIndexed { barIndex, barDatum ->
-            val shownLibraryItemsInBar = remember { mutableListOf<LibraryItem>() }
-//                barData.map {barDatum -> barDatum.libraryItemsToDuration.map { (item, _) -> item }.toMutableSet() }
-//            }
+    val libraryItemsToAnimatedDurationForBars = barData.mapIndexed { barIndex, barDatum ->
+        val shownLibraryItemsInBar = remember {
+            mutableListOf<LibraryItem>()
+        }
 
-//            val shownLibraryItemsInBar = shownLibraryItemsInChart[barIndex]
-
-            val libraryItemsWithAnimatedDuration = (
-                shownLibraryItemsInBar + barDatum.libraryItemsToDuration.keys
-            ).distinct()
+        (shownLibraryItemsInBar + barDatum.libraryItemsToDuration.keys)
+            .distinct()
 //            .also { items ->
 //                if(barIndex ==5) Log.d("session-statistics", "shownLibraryItemsInBar: ${items.map {it.name}}")
 //            }
-            .map { item ->
+            .associateWith { item ->
                 val duration = barDatum.libraryItemsToDuration[item] ?: 0
 
                 if (item !in shownLibraryItemsInBar) {
                     shownLibraryItemsInBar.add(item)
                 }
 
-                item to animateIntAsState(
-                    targetValue = duration,
+                animateFloatAsState(
+                    targetValue = duration.toFloat(),
                     animationSpec = tween(durationMillis = 1000),
                     label = "bar-chart-column-${barIndex}-animation-${item.id}",
                 )
             }
+    }
+
+    val (
+        animatedAccumulatedDurationsForBars,
+        animatedTotalDurationForBars
+    ) = libraryItemsToAnimatedDurationForBars.map {
+        it.values.runningFold(
+            initial = 0f,
+            operation = { start, duration ->
+                start + duration.value
+            }
+        )
+    }.map{ Pair(it.dropLast(1), it.last()) }.unzip()
+
+
+    val animatedMaxDuration = animatedTotalDurationForBars.max()
+
+//                barData.map {barDatum -> barDatum.libraryItemsToDuration.map { (item, _) -> item }.toMutableSet() }
+//            }
+
+//            val shownLibraryItemsInBar = shownLibraryItemsInChart[barIndex]
+
 //            .filter { (_, animatedDuration) ->
 //                animatedDuration.value != 0
 //            }
 
-            val animatedAccumulatedDurations = libraryItemsWithAnimatedDuration.runningFold(
-                initial = 0,
-                operation = { start, (_, duration) ->
-                    start + duration.value
-                }
-            )
+    Canvas(modifier = Modifier.fillMaxSize()) {
 
-            val animatedTotalDuration = animatedAccumulatedDurations.last()
+        libraryItemsToAnimatedDurationForBars
+            .zip(animatedAccumulatedDurationsForBars)
+            .forEachIndexed { barIndex, (
+                libraryItemsToAnimatedDurations,
+                animatedAccumulatedDurations
+            ) ->
+                val libraryItemsWithAnimatedStartAndSegmentHeight =
+                    libraryItemsToAnimatedDurations.entries
+                        .zip(animatedAccumulatedDurations)
+                        .map { (pair, accumulatedDuration) ->
+                            val (item, duration) = pair
+                            item to if (animatedMaxDuration == 0f) Pair(0f, 0f) else Pair(
+                                (accumulatedDuration.toFloat() / animatedMaxDuration) * size.height,
+                                (duration.value.toFloat() / animatedMaxDuration) * size.height
+                            )
+                        }
 
-            val libraryItemsWithAnimatedStartAndSegmentHeight = libraryItemsWithAnimatedDuration
-                // running fold is always one larger than original list
-                .zip(animatedAccumulatedDurations.dropLast(1))
-                .map { (pair, accumulatedDuration) ->
-                    val (item, duration) = pair
-                    item to if (animatedTotalDuration == 0) Pair(0f, 0f) else Pair(
-                        (accumulatedDuration.toFloat() / animatedTotalDuration),
-                        (duration.value.toFloat() / animatedTotalDuration)
+                libraryItemsWithAnimatedStartAndSegmentHeight.forEach {(item, pair) ->
+                    val (startHeight, segmentHeight) = pair
+
+                    if (segmentHeight == 0f) return@forEach
+                    drawRect(
+                        color = libraryColors[item.colorIndex],
+                        topLeft = Offset(
+                            x = barIndex * (size.width / 7),
+                            y = size.height - startHeight - segmentHeight
+                        ),
+                        size = Size(
+                            width = size.width / 7,
+                            height = segmentHeight
+                        )
+                    )
+
+                    drawLine(
+                        color = surfaceColor,
+                        start = Offset(
+                            x = barIndex * (size.width / 7),
+                            y = size.height - startHeight
+                        ),
+                        end = Offset(
+                            x = (barIndex + 1) * (size.width / 7),
+                            y = size.height - startHeight
+                        ),
+                        strokeWidth = 4f
                     )
                 }
-
-            val animatedColumnHeight
-//            = barDatum.totalDuration.toFloat() / maxDuration
-            by animateFloatAsState(
-                targetValue =
-                    if (maxDuration == 0) 0f
-                    else barDatum.totalDuration.toFloat() / maxDuration,
-                animationSpec = tween(durationMillis = 1000),
-                label = "bar-chart-column-${barIndex}-height-animation",
-            )
-
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight(),
-                horizontalAlignment = CenterHorizontally,
-            ) {
-                Column (
-                    modifier = Modifier
-                        .weight(1f)
-                        .width(12.dp),
-                    verticalArrangement = Bottom,
-                ) {
-
-//                    Box(
-//                        modifier = Modifier
-//                            .fillMaxHeight(animatedColumnHeight)
-//                            .clip(
-//                                RoundedCornerShape(
-//                                    topStart = 2.dp,
-//                                    topEnd = 2.dp
-//                                )
-//                            ),
-//
-//                    ) {
-//                        libraryItemsWithAnimatedStartAndSegmentHeight.forEach items@{ (item, pair) ->
-//                            val (startHeight, segmentHeight) = pair
-//
-//                            if (segmentHeight == 0f) return@items
-//                            Column(
-//                                modifier = Modifier
-//                                    .fillMaxWidth()
-//                                    .align(BottomCenter)
-//                                    .fillMaxHeight(startHeight + segmentHeight),
-//                                verticalArrangement = Top
-//                            ) {
-//                                Box(
-//                                    modifier = Modifier
-//                                        .fillMaxWidth()
-//                                        .fillMaxHeight(segmentHeight / (startHeight + segmentHeight))
-//                                        .background(libraryColors[item.colorIndex])
-//                                )
-//                            }
-//                        }
-//                    }
-                    Column(
-                        modifier = Modifier
-                            .fillMaxHeight(animatedColumnHeight)
-                            .clip(
-                                RoundedCornerShape(
-                                    topStart = 2.dp,
-                                    topEnd = 2.dp
-                                )
-                            ),
-                    ) {
-                        libraryItemsWithAnimatedDuration.forEach items@{(item, duration) ->
-                            if (duration.value == 0) return@items
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .weight(duration.value.toFloat())
-                                    .background(libraryColors[item.colorIndex])
-                            ) {
-                                Spacer(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(1.dp)
-                                        .align(BottomCenter)
-                                        .background(MaterialTheme.colorScheme.surface)
-                                )
-                            }
-                        }
-                    }
-                }
-                Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
-                Text(
-                    text = barDatum.label,
-                    style = MaterialTheme.typography.labelMedium
-//                        color = MaterialTheme.colorScheme.onSurface,
-//                    )
-                )
             }
-        }
+//                val libraryItemsToAnimatedStartAndSegmentHeight =
+//                .map {  ->
+//                // running fold is always one larger than original list
+//                .zip(animatedAccumulatedDurations.dropLast(1))
+//                .map { (pair, accumulatedDuration) ->
+//                    val (item, duration) = pair
+//                    item to if (animatedTotalDuration == 0) Pair(0f, 0f) else Pair(
+//                        (accumulatedDuration.toFloat() / animatedTotalDuration) * animatedColumnHeight,
+//                        (duration.value.toFloat() / animatedTotalDuration) * animatedColumnHeight
+//                    )
+//                }
+//            }
+//            }
+//                libraryItemsWithAnimatedStartAndSegmentHeight.forEachIndexed bars@{ index, (item, pair) ->
+//                    val (startHeight, segmentHeight) = pair
+//
+//                    if (segmentHeight == 0f) return@forEachIndexed
+//
+//                }
     }
 }
 

@@ -292,28 +292,28 @@ class SessionStatisticsViewModel(
         }
 
         flow {
-//            emit(
-//                barChartData.zip(_showingLibraryItemsInBarChart).map { (barData, itemsShowingInBar) ->
-//                    barData.libraryItemsToDuration.mapValues { (item, duration) ->
-//                        if (item in itemsShowingInBar) duration else 0
-//                    }.let { libraryItemsToFilteredDuration ->
-//                        barData.copy(
-//                            libraryItemsToDuration = libraryItemsToFilteredDuration,
-//                            totalDuration = libraryItemsToFilteredDuration.values.sumOf { it }
-//                        )
-//                    }
-//                }.let {barChartDataWithFilteredDurations ->
-//                    SessionStatisticsBarChartUiState(
-//                        barData = barChartDataWithFilteredDurations,
-//                        maxDuration = barChartDataWithFilteredDurations.maxOf { it.totalDuration }
-//                    )
-//                }
-//            )
-//            val longDelay = _showingLibraryItemsInBarChart.all { it.isEmpty() }
-//            _showingLibraryItemsInBarChart.zip(barChartData).forEach { (showingItems, barData) ->
-//                showingItems.addAll(barData.libraryItemsToDuration.keys)
-//            }
-//            delay(if (longDelay) 1000 else 1000)
+            emit(
+                barChartData.zip(_showingLibraryItemsInBarChart).map { (barData, itemsShowingInBar) ->
+                    barData.libraryItemsToDuration.mapValues { (item, duration) ->
+                        if (item in itemsShowingInBar) duration else 0
+                    }.let { libraryItemsToFilteredDuration ->
+                        barData.copy(
+                            libraryItemsToDuration = libraryItemsToFilteredDuration,
+                            totalDuration = libraryItemsToFilteredDuration.values.sumOf { it }
+                        )
+                    }
+                }.let {barChartDataWithFilteredDurations ->
+                    SessionStatisticsBarChartUiState(
+                        barData = barChartDataWithFilteredDurations,
+                        maxDuration = barChartDataWithFilteredDurations.maxOf { it.totalDuration }
+                    )
+                }
+            )
+            val longDelay = _showingLibraryItemsInBarChart.all { it.isEmpty() }
+            _showingLibraryItemsInBarChart.zip(barChartData).forEach { (showingItems, barData) ->
+                showingItems.addAll(barData.libraryItemsToDuration.keys)
+            }
+            delay(if (longDelay) 1000 else 10)
             emit(SessionStatisticsBarChartUiState(
                 barData = barChartData,
                 maxDuration = barChartData.maxOf { it.totalDuration }
