@@ -374,6 +374,8 @@ fun SessionStatisticsBarChart(
 ) {
     val (barData, maxDuration) = uiState
 
+    val columnThickness = 16.dp
+
     val surfaceColor = MaterialTheme.colorScheme.surface
     val libraryColors = Musikus.getLibraryItemColors(LocalContext.current).map {
         Color(it)
@@ -429,6 +431,8 @@ fun SessionStatisticsBarChart(
 //            }
 
     Canvas(modifier = Modifier.fillMaxSize()) {
+        val columnThicknessInPx = columnThickness.toPx()
+        val spacingInPx = (size.width - (columnThicknessInPx * 7)) / 8
 
         libraryItemsToAnimatedDurationForBars
             .zip(animatedAccumulatedDurationsForBars)
@@ -436,14 +440,17 @@ fun SessionStatisticsBarChart(
                 libraryItemsToAnimatedDurations,
                 animatedAccumulatedDurations
             ) ->
+                val leftEdge = barIndex * (columnThicknessInPx + spacingInPx) + spacingInPx
+                val rightEdge = leftEdge + columnThicknessInPx
+
                 val libraryItemsWithAnimatedStartAndSegmentHeight =
                     libraryItemsToAnimatedDurations.entries
                         .zip(animatedAccumulatedDurations)
                         .map { (pair, accumulatedDuration) ->
                             val (item, duration) = pair
                             item to if (animatedMaxDuration == 0f) Pair(0f, 0f) else Pair(
-                                (accumulatedDuration.toFloat() / animatedMaxDuration) * size.height,
-                                (duration.value.toFloat() / animatedMaxDuration) * size.height
+                                (accumulatedDuration / animatedMaxDuration) * size.height,
+                                (duration.value / animatedMaxDuration) * size.height
                             )
                         }
 
@@ -454,11 +461,11 @@ fun SessionStatisticsBarChart(
                     drawRect(
                         color = libraryColors[item.colorIndex],
                         topLeft = Offset(
-                            x = barIndex * (size.width / 7),
+                            x = leftEdge,
                             y = size.height - startHeight - segmentHeight
                         ),
                         size = Size(
-                            width = size.width / 7,
+                            width = columnThickness.toPx(),
                             height = segmentHeight
                         )
                     )
@@ -466,14 +473,27 @@ fun SessionStatisticsBarChart(
                     drawLine(
                         color = surfaceColor,
                         start = Offset(
-                            x = barIndex * (size.width / 7),
+                            x = leftEdge,
                             y = size.height - startHeight
                         ),
                         end = Offset(
-                            x = (barIndex + 1) * (size.width / 7),
+                            x = rightEdge,
                             y = size.height - startHeight
                         ),
-                        strokeWidth = 4f
+                        strokeWidth = 2f
+                    )
+
+                    drawLine(
+                        color = surfaceColor,
+                        start = Offset(
+                            x = leftEdge,
+                            y = size.height - startHeight - segmentHeight
+                        ),
+                        end = Offset(
+                            x = rightEdge,
+                            y = size.height - startHeight - segmentHeight
+                        ),
+                        strokeWidth = 2f
                     )
                 }
             }
