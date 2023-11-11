@@ -12,9 +12,14 @@ import android.app.Application
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import app.musikus.dataStore
 import app.musikus.database.MusikusDatabase
 import app.musikus.database.daos.LibraryItem
+import app.musikus.datastore.LibraryItemSortMode
+import app.musikus.datastore.SortDirection
+import app.musikus.datastore.sort
 import app.musikus.repository.SessionRepository
+import app.musikus.repository.UserPreferencesRepository
 import app.musikus.utils.DATE_FORMATTER_PATTERN_MONTH_TEXT_ABBREV
 import app.musikus.utils.DATE_FORMATTER_PATTERN_WEEKDAY_SHORT
 import app.musikus.utils.getEndOfDay
@@ -85,16 +90,24 @@ data class SessionStatisticsHeaderUiState(
     val timeFrame: Pair<ZonedDateTime, ZonedDateTime>,
     val totalPracticeDuration: Int,
 )
+
 data class SessionStatisticsBarChartUiState(
-    val barData: List<BarChartData>,
+    val barData: BarChartData,
     val maxDuration: Int,
 )
 
 data class BarChartData(
+    val barData: List<BarChartDatum>,
+    val itemSortMode: LibraryItemSortMode,
+    val itemSortDirection: SortDirection
+)
+
+data class BarChartDatum(
     val label: String,
-    val libraryItemsToDuration: Map<LibraryItem, Int>,
+    val libraryItemsWithDuration: List<Pair<LibraryItem, Int>>,
     val totalDuration: Int,
 )
+
 data class SessionStatisticsPieChartUiState(
     val libraryItemsToDuration: Map<LibraryItem, Int>,
     val totalDuration: Int
@@ -109,6 +122,16 @@ class SessionStatisticsViewModel(
 
     /** Repositories */
     private val sessionRepository = SessionRepository(database)
+    private val userPreferencesRepository = UserPreferencesRepository(application.dataStore)
+
+    /** Imported Flows */
+    private val itemsSortInfo = userPreferencesRepository.userPreferences.map {
+        it.libraryItemSortMode to it.libraryItemSortDirection
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = LibraryItemSortMode.DEFAULT to SortDirection.DEFAULT
+    )
 
     /** Own state flows */
     private val _chartType = MutableStateFlow(SessionStatisticsChartType.DEFAULT)
@@ -172,11 +195,15 @@ class SessionStatisticsViewModel(
         initialValue = emptyList(),
     )
 
-    private val libraryItemsWithSelection = combine(
+    private val sortedLibraryItemsWithSelection = combine(
         itemsInSessionsInTimeFrame,
-        _deselectedLibraryItems
-    ) { itemsInFrame, deselectedItems ->
-        itemsInFrame.map { it to (it !in deselectedItems) }
+        _deselectedLibraryItems,
+        itemsSortInfo
+    ) { itemsInFrame, deselectedItems, (itemSortMode, itemSortDirection) ->
+        itemsInFrame.sort(
+            itemSortMode,
+            itemSortDirection
+        ).map { it to (it !in deselectedItems) }
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
@@ -187,7 +214,8 @@ class SessionStatisticsViewModel(
         _chartType,
         _selectedTab,
         timestampAndFilteredSections,
-    ) { chartType, selectedTab, timestampAndFilteredSections ->
+        itemsSortInfo,
+    ) { chartType, selectedTab, timestampAndFilteredSections, (itemSortMode, itemSortDirection) ->
         if (chartType != SessionStatisticsChartType.BAR) return@combine null
 
         val timeFrames = (0L..6L).reversed().map {
@@ -208,31 +236,35 @@ class SessionStatisticsViewModel(
             .flatMap {(_, sections) -> sections }
         }
 
-        timeFrames.map { (start, end) ->
-            val sectionsInTimeFrame = specificDateToSections[
-                when(selectedTab) {
-                    SessionStatisticsTab.DAYS -> getSpecificDay(getTimestamp(start))
-                    SessionStatisticsTab.WEEKS -> getSpecificWeek(getTimestamp(start))
-                    SessionStatisticsTab.MONTHS -> getSpecificMonth(getTimestamp(start))
-                }
-            ] ?: emptyList()
+        BarChartData(
+            barData = timeFrames.map { (start, end) ->
+                val sectionsInTimeFrame = specificDateToSections[
+                    when(selectedTab) {
+                        SessionStatisticsTab.DAYS -> getSpecificDay(getTimestamp(start))
+                        SessionStatisticsTab.WEEKS -> getSpecificWeek(getTimestamp(start))
+                        SessionStatisticsTab.MONTHS -> getSpecificMonth(getTimestamp(start))
+                    }
+                ] ?: emptyList()
 
-            val groupedSections = sectionsInTimeFrame
-                .groupBy { it.libraryItem }
-                .mapValues { (_, sections) ->
-                    sections.sumOf { (section, _) -> section.duration }
-                }
+                val groupedSections = sectionsInTimeFrame
+                    .groupBy { it.libraryItem }
+                    .mapValues { (_, sections) ->
+                        sections.sumOf { (section, _) -> section.duration }
+                    }.toList()
 
-            BarChartData(
-                label = when(selectedTab) {
-                    SessionStatisticsTab.DAYS -> start.format(DateTimeFormatter.ofPattern(DATE_FORMATTER_PATTERN_WEEKDAY_SHORT))
-                    SessionStatisticsTab.WEEKS -> "${start.dayOfMonth}-${end.dayOfMonth}"
-                    SessionStatisticsTab.MONTHS -> start.format(DateTimeFormatter.ofPattern(DATE_FORMATTER_PATTERN_MONTH_TEXT_ABBREV))
-                },
-                libraryItemsToDuration = groupedSections,
-                totalDuration = groupedSections.values.sumOf { it }
-            )
-        }
+                BarChartDatum(
+                    label = when(selectedTab) {
+                        SessionStatisticsTab.DAYS -> start.format(DateTimeFormatter.ofPattern(DATE_FORMATTER_PATTERN_WEEKDAY_SHORT))
+                        SessionStatisticsTab.WEEKS -> "${start.dayOfMonth}-${end.dayOfMonth}"
+                        SessionStatisticsTab.MONTHS -> start.format(DateTimeFormatter.ofPattern(DATE_FORMATTER_PATTERN_MONTH_TEXT_ABBREV))
+                    },
+                    libraryItemsWithDuration = groupedSections,
+                    totalDuration = groupedSections.sumOf { (_, duration) -> duration }
+                )
+            },
+            itemSortMode = itemSortMode,
+            itemSortDirection = itemSortDirection,
+        )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
@@ -282,7 +314,7 @@ class SessionStatisticsViewModel(
         initialValue = null,
     )
 
-    private val _showingLibraryItemsInBarChart = (0..6).map {mutableSetOf<LibraryItem>() }
+    private val _showingLibraryItemsInBarChart = (0..6).map { mutableListOf<LibraryItem>() }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private val barChartUiState = barChartData.flatMapLatest { barChartData ->
@@ -293,30 +325,39 @@ class SessionStatisticsViewModel(
 
         flow {
             emit(
-                barChartData.zip(_showingLibraryItemsInBarChart).map { (barData, itemsShowingInBar) ->
-                    barData.libraryItemsToDuration.mapValues { (item, duration) ->
-                        if (item in itemsShowingInBar) duration else 0
-                    }.let { libraryItemsToFilteredDuration ->
-                        barData.copy(
-                            libraryItemsToDuration = libraryItemsToFilteredDuration,
-                            totalDuration = libraryItemsToFilteredDuration.values.sumOf { it }
-                        )
-                    }
-                }.let {barChartDataWithFilteredDurations ->
+                barChartData.copy(
+                    barData = barChartData.barData
+                        .zip(_showingLibraryItemsInBarChart)
+                        .map { (barData, itemsShowingInBar) ->
+                            barData.libraryItemsWithDuration.map { (item, duration) ->
+                                item to if (item in itemsShowingInBar) duration else 0
+                            }
+                                .let { libraryItemsToFilteredDuration ->
+                                barData.copy(
+                                    libraryItemsWithDuration = libraryItemsToFilteredDuration,
+                                    totalDuration = libraryItemsToFilteredDuration.sumOf { (_, duration) -> duration }
+                                )
+                            }
+                        }
+                ).let { barChartDataWithFilteredDurations ->
                     SessionStatisticsBarChartUiState(
                         barData = barChartDataWithFilteredDurations,
-                        maxDuration = barChartDataWithFilteredDurations.maxOf { it.totalDuration }
+                        maxDuration = barChartDataWithFilteredDurations.barData.maxOf { it.totalDuration }
                     )
                 }
             )
+
             val longDelay = _showingLibraryItemsInBarChart.all { it.isEmpty() }
-            _showingLibraryItemsInBarChart.zip(barChartData).forEach { (showingItems, barData) ->
-                showingItems.addAll(barData.libraryItemsToDuration.keys)
+            _showingLibraryItemsInBarChart.zip(barChartData.barData).forEach { (showingItems, barData) ->
+                showingItems.addAll(barData.libraryItemsWithDuration
+                    .map { (item, _) -> item }
+                    .filter { it !in showingItems }
+                )
             }
-            delay(if (longDelay) 1000 else 10)
+            delay(if (longDelay) 350 else 50)
             emit(SessionStatisticsBarChartUiState(
                 barData = barChartData,
-                maxDuration = barChartData.maxOf { it.totalDuration }
+                maxDuration = barChartData.barData.maxOf { it.totalDuration }
             ))
         }
     }.stateIn(
@@ -347,7 +388,7 @@ class SessionStatisticsViewModel(
         headerUiState,
         barChartUiState,
         pieChartUiState,
-        libraryItemsWithSelection
+        sortedLibraryItemsWithSelection
     ) { selectedTab, headerUiState, barChartUiState, pieChartUiState, libraryItemsWithSelection ->
         SessionStatisticsContentUiState(
             selectedTab = selectedTab,
@@ -364,7 +405,7 @@ class SessionStatisticsViewModel(
             headerUiState = headerUiState.value,
             barChartUiState = barChartUiState.value,
             pieChartUiState = pieChartUiState.value,
-            libraryItemsWithSelection = libraryItemsWithSelection.value,
+            libraryItemsWithSelection = sortedLibraryItemsWithSelection.value,
         ),
     )
 

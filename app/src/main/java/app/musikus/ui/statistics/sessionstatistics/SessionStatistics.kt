@@ -56,6 +56,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import app.musikus.Musikus
 import app.musikus.R
 import app.musikus.database.daos.LibraryItem
+import app.musikus.datastore.sort
 import app.musikus.shared.simpleVerticalScrollbar
 import app.musikus.spacing
 import app.musikus.utils.DATE_FORMATTER_PATTERN_DAY_OF_MONTH
@@ -372,7 +373,8 @@ fun SessionStatisticsPieChart(
 fun SessionStatisticsBarChart(
     uiState: SessionStatisticsBarChartUiState
 ) {
-    val (barData, maxDuration) = uiState
+    val (chartData, maxDuration) = uiState
+    val (barData, itemSortMode, itemSortDirection) = chartData
 
     val columnThickness = 16.dp
 
@@ -381,141 +383,120 @@ fun SessionStatisticsBarChart(
         Color(it)
     }
 
-    val libraryItemsToAnimatedDurationForBars = barData.mapIndexed { barIndex, barDatum ->
-        val shownLibraryItemsInBar = remember {
-            mutableListOf<LibraryItem>()
-        }
-
-        (shownLibraryItemsInBar + barDatum.libraryItemsToDuration.keys)
-            .distinct()
-//            .also { items ->
-//                if(barIndex ==5) Log.d("session-statistics", "shownLibraryItemsInBar: ${items.map {it.name}}")
-//            }
-            .associateWith { item ->
-                val duration = barDatum.libraryItemsToDuration[item] ?: 0
-
-                if (item !in shownLibraryItemsInBar) {
-                    shownLibraryItemsInBar.add(item)
-                }
-
-                animateFloatAsState(
-                    targetValue = duration.toFloat(),
-                    animationSpec = tween(durationMillis = 1000),
-                    label = "bar-chart-column-${barIndex}-animation-${item.id}",
-                )
-            }
+    val noData = chartData.barData.all { barDatum ->
+        barDatum.libraryItemsWithDuration.isEmpty() ||
+        barDatum.libraryItemsWithDuration.all { (_, duration) -> duration == 0 }
     }
 
-    val (
-        animatedAccumulatedDurationsForBars,
-        animatedTotalDurationForBars
-    ) = libraryItemsToAnimatedDurationForBars.map {
-        it.values.runningFold(
-            initial = 0f,
-            operation = { start, duration ->
-                start + duration.value
+    val animatedOpenCloseScaler by animateFloatAsState(
+        targetValue = if (noData) 0f else 1f,
+        animationSpec = tween(durationMillis = 1000),
+        label = "bar-chart-open-close-scaler-animation",
+    )
+
+    val segments = remember { mutableListOf<Pair<Int, LibraryItem>>() }
+
+    val sortedNonZeroSegmentsForBars = remember { (1..7).map { emptyList<LibraryItem>() }.toMutableList() }
+
+    val barIndexAndLibraryItemToAnimatedDuration = barData.flatMapIndexed { barIndex, barDatum ->
+        barDatum.libraryItemsWithDuration.map { (item, duration) -> (barIndex to item) to duration }
+    }.associate {
+        it.first to it.second
+    }.let { barIndexAndLibraryItemToDuration ->
+        (segments + barIndexAndLibraryItemToDuration.keys)
+            .distinct()
+            .associateWith { barIndexWithItem ->
+            val duration = barIndexAndLibraryItemToDuration[barIndexWithItem] ?: 0
+
+            if (barIndexWithItem !in segments) {
+                segments.add(barIndexWithItem)
+                sortedNonZeroSegmentsForBars[barIndexWithItem.first] =
+                    (
+                        sortedNonZeroSegmentsForBars[barIndexWithItem.first] +
+                        barIndexWithItem.second
+                    ).sort(itemSortMode, itemSortDirection)
             }
-        )
-    }.map{ Pair(it.dropLast(1), it.last()) }.unzip()
 
+            animateFloatAsState(
+                targetValue = duration.toFloat(),
+                animationSpec = tween(durationMillis = 1000),
+                label = "bar-chart-column-${barIndexWithItem.first}-animation-${barIndexWithItem.second.id}",
+            ).value * animatedOpenCloseScaler
+        }
+    }
 
-    val animatedMaxDuration = animatedTotalDurationForBars.max()
-
-//                barData.map {barDatum -> barDatum.libraryItemsToDuration.map { (item, _) -> item }.toMutableSet() }
-//            }
-
-//            val shownLibraryItemsInBar = shownLibraryItemsInChart[barIndex]
-
-//            .filter { (_, animatedDuration) ->
-//                animatedDuration.value != 0
-//            }
+    val animatedMaxDuration by animateFloatAsState(
+        targetValue = maxDuration.toFloat() * 1.1f,
+        animationSpec = tween(durationMillis = 1000),
+        label = "bar-chart-max-duration-animation",
+    )
 
     Canvas(modifier = Modifier.fillMaxSize()) {
         val columnThicknessInPx = columnThickness.toPx()
         val spacingInPx = (size.width - (columnThicknessInPx * 7)) / 8
 
-        libraryItemsToAnimatedDurationForBars
-            .zip(animatedAccumulatedDurationsForBars)
-            .forEachIndexed { barIndex, (
-                libraryItemsToAnimatedDurations,
-                animatedAccumulatedDurations
-            ) ->
-                val leftEdge = barIndex * (columnThicknessInPx + spacingInPx) + spacingInPx
-                val rightEdge = leftEdge + columnThicknessInPx
+        sortedNonZeroSegmentsForBars.forEachIndexed { barIndex, segments ->
+            val leftEdge = barIndex * (columnThicknessInPx + spacingInPx) + spacingInPx
+            val rightEdge = leftEdge + columnThicknessInPx
 
-                val libraryItemsWithAnimatedStartAndSegmentHeight =
-                    libraryItemsToAnimatedDurations.entries
-                        .zip(animatedAccumulatedDurations)
-                        .map { (pair, accumulatedDuration) ->
-                            val (item, duration) = pair
-                            item to if (animatedMaxDuration == 0f) Pair(0f, 0f) else Pair(
-                                (accumulatedDuration / animatedMaxDuration) * size.height,
-                                (duration.value / animatedMaxDuration) * size.height
-                            )
-                        }
-
-                libraryItemsWithAnimatedStartAndSegmentHeight.forEach {(item, pair) ->
-                    val (startHeight, segmentHeight) = pair
-
-                    if (segmentHeight == 0f) return@forEach
-                    drawRect(
-                        color = libraryColors[item.colorIndex],
-                        topLeft = Offset(
-                            x = leftEdge,
-                            y = size.height - startHeight - segmentHeight
-                        ),
-                        size = Size(
-                            width = columnThickness.toPx(),
-                            height = segmentHeight
-                        )
-                    )
-
-                    drawLine(
-                        color = surfaceColor,
-                        start = Offset(
-                            x = leftEdge,
-                            y = size.height - startHeight
-                        ),
-                        end = Offset(
-                            x = rightEdge,
-                            y = size.height - startHeight
-                        ),
-                        strokeWidth = 2f
-                    )
-
-                    drawLine(
-                        color = surfaceColor,
-                        start = Offset(
-                            x = leftEdge,
-                            y = size.height - startHeight - segmentHeight
-                        ),
-                        end = Offset(
-                            x = rightEdge,
-                            y = size.height - startHeight - segmentHeight
-                        ),
-                        strokeWidth = 2f
-                    )
+            val libraryItemWithAnimatedSegmentHeight = segments.mapNotNull { item ->
+                barIndexAndLibraryItemToAnimatedDuration[Pair(barIndex, item)]?.let {
+                    item to (it / animatedMaxDuration * size.height)
                 }
             }
-//                val libraryItemsToAnimatedStartAndSegmentHeight =
-//                .map {  ->
-//                // running fold is always one larger than original list
-//                .zip(animatedAccumulatedDurations.dropLast(1))
-//                .map { (pair, accumulatedDuration) ->
-//                    val (item, duration) = pair
-//                    item to if (animatedTotalDuration == 0) Pair(0f, 0f) else Pair(
-//                        (accumulatedDuration.toFloat() / animatedTotalDuration) * animatedColumnHeight,
-//                        (duration.value.toFloat() / animatedTotalDuration) * animatedColumnHeight
-//                    )
-//                }
-//            }
-//            }
-//                libraryItemsWithAnimatedStartAndSegmentHeight.forEachIndexed bars@{ index, (item, pair) ->
-//                    val (startHeight, segmentHeight) = pair
-//
-//                    if (segmentHeight == 0f) return@forEachIndexed
-//
-//                }
+
+            val animatedStartHeights = libraryItemWithAnimatedSegmentHeight.runningFold (
+                initial = 0f,
+                operation = { start, (_, duration) ->
+                    start + duration
+                }
+            ).dropLast(1)
+
+            libraryItemWithAnimatedSegmentHeight
+                .zip(animatedStartHeights)
+                .forEach { (pair, animatedStartHeight) ->
+                val (item, animatedSegmentHeight) = pair
+
+                if (animatedSegmentHeight == 0f) return@forEach
+                drawRect(
+                    color = libraryColors[item.colorIndex],
+                    topLeft = Offset(
+                        x = leftEdge,
+                        y = size.height - animatedStartHeight - animatedSegmentHeight
+                    ),
+                    size = Size(
+                        width = columnThickness.toPx(),
+                        height = animatedSegmentHeight
+                    )
+                )
+
+                drawLine(
+                    color = surfaceColor,
+                    start = Offset(
+                        x = leftEdge,
+                        y = size.height - animatedStartHeight
+                    ),
+                    end = Offset(
+                        x = rightEdge,
+                        y = size.height - animatedStartHeight
+                    ),
+                    strokeWidth = 2f
+                )
+
+                drawLine(
+                    color = surfaceColor,
+                    start = Offset(
+                        x = leftEdge,
+                        y = size.height - animatedStartHeight - animatedSegmentHeight
+                    ),
+                    end = Offset(
+                        x = rightEdge,
+                        y = size.height - animatedStartHeight - animatedSegmentHeight
+                    ),
+                    strokeWidth = 2f
+                )
+            }
+        }
     }
 }
 

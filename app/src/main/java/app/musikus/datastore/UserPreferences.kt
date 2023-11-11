@@ -8,6 +8,8 @@
 
 package app.musikus.datastore
 
+import app.musikus.database.daos.LibraryItem
+
 enum class SortDirection {
     ASCENDING,
     DESCENDING;
@@ -94,6 +96,31 @@ enum class LibraryItemSortMode {
             valueOf(string ?: "")
         } catch (e: Exception) {
             DEFAULT
+        }
+    }
+}
+
+@JvmName("sortLibraryItem")
+fun List<LibraryItem>.sort(
+    mode: LibraryItemSortMode,
+    direction: SortDirection
+) = when(direction) {
+    SortDirection.ASCENDING -> {
+        when (mode) {
+            LibraryItemSortMode.DATE_ADDED -> this.sortedBy { it.createdAt }
+            LibraryItemSortMode.LAST_MODIFIED -> this.sortedBy { it.modifiedAt }
+            LibraryItemSortMode.NAME -> this.sortedBy { it.name }
+            LibraryItemSortMode.COLOR -> this.sortedBy { it.colorIndex }
+            LibraryItemSortMode.CUSTOM -> this // TODO
+        }
+    }
+    SortDirection.DESCENDING -> {
+        when (mode) {
+            LibraryItemSortMode.DATE_ADDED -> this.sortedByDescending { it.createdAt }
+            LibraryItemSortMode.LAST_MODIFIED -> this.sortedByDescending { it.modifiedAt }
+            LibraryItemSortMode.NAME -> this.sortedByDescending { it.name }
+            LibraryItemSortMode.COLOR -> this.sortedByDescending { it.colorIndex }
+            LibraryItemSortMode.CUSTOM -> this // TODO
         }
     }
 }
