@@ -44,9 +44,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -56,7 +59,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import app.musikus.Musikus
 import app.musikus.R
 import app.musikus.database.daos.LibraryItem
-import app.musikus.datastore.sort
+import app.musikus.datastore.sorted
 import app.musikus.shared.simpleVerticalScrollbar
 import app.musikus.spacing
 import app.musikus.utils.DATE_FORMATTER_PATTERN_DAY_OF_MONTH
@@ -277,19 +280,20 @@ fun SessionStatisticsPieChart(
         // running fold is always one larger than original list
         .zip(animatedAccumulatedDurations.dropLast(1))
         .map { (pair, accumulatedDuration) ->
-            val (item, duration) = pair
-            item to if (animatedMaxDuration == 0) Pair(absoluteStartAngle, 0f) else Pair(
-                (
-                    (accumulatedDuration.toFloat() / animatedMaxDuration) *
-                    180f * animatedOpenCloseScaler
-                ) + absoluteStartAngle,
-                (duration.value.toFloat() / animatedMaxDuration) * 180f * animatedOpenCloseScaler
-            )
-        }
+        val (item, duration) = pair
+        item to if (animatedMaxDuration == 0) Pair(absoluteStartAngle, 0f) else Pair(
+            (
+                (accumulatedDuration.toFloat() / animatedMaxDuration) *
+                180f * animatedOpenCloseScaler
+            ) + absoluteStartAngle,
+            (duration.value.toFloat() / animatedMaxDuration) * 180f * animatedOpenCloseScaler
+        )
+    }
 
     Canvas(
         modifier = Modifier
             .fillMaxSize()
+            .clipToBounds()
     ) {
         val pieChartRadius = 0.9f * min(size.height, size.width / 2)
         val pieChartCenter = Offset(
@@ -373,7 +377,7 @@ fun SessionStatisticsPieChart(
 fun SessionStatisticsBarChart(
     uiState: SessionStatisticsBarChartUiState
 ) {
-    val (chartData, maxDuration) = uiState
+    val (chartData, chartMaxDuration) = uiState
     val (barData, itemSortMode, itemSortDirection) = chartData
 
     val columnThickness = 16.dp
@@ -396,7 +400,7 @@ fun SessionStatisticsBarChart(
 
     val segments = remember { mutableListOf<Pair<Int, LibraryItem>>() }
 
-    val sortedNonZeroSegmentsForBars = remember { (1..7).map { emptyList<LibraryItem>() }.toMutableList() }
+    val sortedNonZeroSegmentsForBars = remember { barData.map { emptyList<LibraryItem>() }.toMutableList() }
 
     val barIndexAndLibraryItemToAnimatedDuration = barData.flatMapIndexed { barIndex, barDatum ->
         barDatum.libraryItemsWithDuration.map { (item, duration) -> (barIndex to item) to duration }
@@ -414,55 +418,92 @@ fun SessionStatisticsBarChart(
                     (
                         sortedNonZeroSegmentsForBars[barIndexWithItem.first] +
                         barIndexWithItem.second
-                    ).sort(itemSortMode, itemSortDirection)
+                    ).sorted(itemSortMode, itemSortDirection)
             }
 
             animateFloatAsState(
                 targetValue = duration.toFloat(),
                 animationSpec = tween(durationMillis = 1000),
                 label = "bar-chart-column-${barIndexWithItem.first}-animation-${barIndexWithItem.second.id}",
-            ).value * animatedOpenCloseScaler
+            ).value
         }
     }
 
-    val animatedMaxDuration by animateFloatAsState(
-        targetValue = maxDuration.toFloat() * 1.1f,
+    val animatedChartMaxDuration by animateFloatAsState(
+        targetValue = chartMaxDuration.toFloat(),
         animationSpec = tween(durationMillis = 1000),
         label = "bar-chart-max-duration-animation",
     )
 
-    Canvas(modifier = Modifier.fillMaxSize()) {
+    val animatedBarMaxDurations = barData.mapIndexed { barIndex, barDatum ->
+        animateFloatAsState(
+            targetValue =
+                if (animatedChartMaxDuration == 0f) 0f
+                else barDatum.totalDuration.toFloat(),
+            animationSpec = tween(durationMillis = 1000),
+            label = "bar-chart-max-duration-animation-${barIndex}",
+        ).value
+    }
+
+    Canvas(
+        modifier = Modifier
+            .fillMaxSize()
+            .clipToBounds()
+    ) {
         val columnThicknessInPx = columnThickness.toPx()
         val spacingInPx = (size.width - (columnThicknessInPx * 7)) / 8
 
-        sortedNonZeroSegmentsForBars.forEachIndexed { barIndex, segments ->
+        sortedNonZeroSegmentsForBars
+            .zip(animatedBarMaxDurations)
+            .forEachIndexed { barIndex, (segments, animatedBarMaxDuration) ->
             val leftEdge = barIndex * (columnThicknessInPx + spacingInPx) + spacingInPx
             val rightEdge = leftEdge + columnThicknessInPx
 
-            val libraryItemWithAnimatedSegmentHeight = segments.mapNotNull { item ->
+            val libraryItemWithAnimatedDuration = segments.mapNotNull { item ->
                 barIndexAndLibraryItemToAnimatedDuration[Pair(barIndex, item)]?.let {
-                    item to (it / animatedMaxDuration * size.height)
+                    item to it
                 }
             }
 
-            val animatedStartHeights = libraryItemWithAnimatedSegmentHeight.runningFold (
+            val animatedAccumulatedDurations = libraryItemWithAnimatedDuration.runningFold (
                 initial = 0f,
                 operation = { start, (_, duration) ->
                     start + duration
                 }
-            ).dropLast(1)
+            )
 
-            libraryItemWithAnimatedSegmentHeight
-                .zip(animatedStartHeights)
-                .forEach { (pair, animatedStartHeight) ->
-                val (item, animatedSegmentHeight) = pair
+            val animatedTotalAccumulatedDuration = animatedAccumulatedDurations.last()
+
+            val animatedBarHeight =
+                if (animatedChartMaxDuration == 0f) 0f
+                else
+                    (animatedBarMaxDuration / animatedChartMaxDuration) *
+                    (size.height) *
+                    animatedOpenCloseScaler
+
+            val animatedStartAndSegmentHeights = libraryItemWithAnimatedDuration
+                .zip(animatedAccumulatedDurations.dropLast(1))
+                .map { (pair, accumulatedDuration) ->
+                val (item, duration) = pair
+                item to if (animatedTotalAccumulatedDuration == 0f) Pair(0f, 0f) else Pair(
+                    accumulatedDuration / animatedTotalAccumulatedDuration * animatedBarHeight,
+                    duration / animatedTotalAccumulatedDuration * animatedBarHeight
+                )
+            }
+
+
+            animatedStartAndSegmentHeights.forEach { (item, pair) ->
+                val (animatedStartHeight, animatedSegmentHeight) = pair
+
+                val bottomEdge = size.height - animatedStartHeight
+                val topEdge = bottomEdge - animatedSegmentHeight
 
                 if (animatedSegmentHeight == 0f) return@forEach
                 drawRect(
                     color = libraryColors[item.colorIndex],
                     topLeft = Offset(
                         x = leftEdge,
-                        y = size.height - animatedStartHeight - animatedSegmentHeight
+                        y = topEdge
                     ),
                     size = Size(
                         width = columnThickness.toPx(),
@@ -474,11 +515,11 @@ fun SessionStatisticsBarChart(
                     color = surfaceColor,
                     start = Offset(
                         x = leftEdge,
-                        y = size.height - animatedStartHeight
+                        y = bottomEdge
                     ),
                     end = Offset(
                         x = rightEdge,
-                        y = size.height - animatedStartHeight
+                        y = bottomEdge
                     ),
                     strokeWidth = 2f
                 )
@@ -487,15 +528,47 @@ fun SessionStatisticsBarChart(
                     color = surfaceColor,
                     start = Offset(
                         x = leftEdge,
-                        y = size.height - animatedStartHeight - animatedSegmentHeight
+                        y = topEdge
                     ),
                     end = Offset(
                         x = rightEdge,
-                        y = size.height - animatedStartHeight - animatedSegmentHeight
+                        y = topEdge
                     ),
                     strokeWidth = 2f
                 )
             }
+
+            drawPath(
+                color = surfaceColor,
+                path = Path().apply {
+                    moveTo(leftEdge, 0f)
+                    arcTo(
+                        rect = Rect(
+                            left = leftEdge,
+                            top = size.height - animatedBarHeight,
+                            right = leftEdge + 24f,
+                            bottom = size.height - animatedBarHeight + 24f,
+                        ),
+                        startAngleDegrees = 180f,
+                        sweepAngleDegrees = 90f,
+                        forceMoveTo = false
+                    )
+                    arcTo(
+                        rect = Rect(
+                            left = rightEdge - 24f,
+                            top = size.height - animatedBarHeight,
+                            right = rightEdge,
+                            bottom = size.height - animatedBarHeight + 24f,
+                        ),
+                        startAngleDegrees = 270f,
+                        sweepAngleDegrees = 90f,
+                        forceMoveTo = false
+                    )
+                    lineTo(rightEdge, 0f)
+                    close()
+                },
+                style = Fill
+            )
         }
     }
 }

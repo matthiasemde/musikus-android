@@ -101,7 +101,7 @@ enum class LibraryItemSortMode {
 }
 
 @JvmName("sortLibraryItem")
-fun List<LibraryItem>.sort(
+fun List<LibraryItem>.sorted(
     mode: LibraryItemSortMode,
     direction: SortDirection
 ) = when(direction) {

@@ -17,7 +17,7 @@ import app.musikus.database.MusikusDatabase
 import app.musikus.database.daos.LibraryItem
 import app.musikus.datastore.LibraryItemSortMode
 import app.musikus.datastore.SortDirection
-import app.musikus.datastore.sort
+import app.musikus.datastore.sorted
 import app.musikus.repository.SessionRepository
 import app.musikus.repository.UserPreferencesRepository
 import app.musikus.utils.DATE_FORMATTER_PATTERN_MONTH_TEXT_ABBREV
@@ -200,7 +200,7 @@ class SessionStatisticsViewModel(
         _deselectedLibraryItems,
         itemsSortInfo
     ) { itemsInFrame, deselectedItems, (itemSortMode, itemSortDirection) ->
-        itemsInFrame.sort(
+        itemsInFrame.sorted(
             itemSortMode,
             itemSortDirection
         ).map { it to (it !in deselectedItems) }
