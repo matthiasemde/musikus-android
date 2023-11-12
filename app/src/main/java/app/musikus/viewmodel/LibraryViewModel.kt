@@ -197,10 +197,7 @@ class LibraryViewModel(
         initialValue = emptyList()
     )
 
-    private val items = libraryRepository.items.map{
-        Log.d("LibraryViewModel", "items updated")
-        it
-    }.stateIn(
+    private val items = libraryRepository.items.stateIn(
         scope = viewModelScope,
         started = WhileSubscribed(5000),
         initialValue = emptyList()
@@ -233,7 +230,6 @@ class LibraryViewModel(
         itemsSortMode,
         itemsSortDirection
     ) { items, sortMode, sortDirection ->
-        Log.d("LibraryViewModel", "sortedItems updated")
         libraryRepository.sortItems(
             items = items,
             mode = sortMode,

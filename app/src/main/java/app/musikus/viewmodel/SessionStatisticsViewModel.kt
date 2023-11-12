@@ -9,7 +9,6 @@
 package app.musikus.viewmodel
 
 import android.app.Application
-import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import app.musikus.dataStore
@@ -160,7 +159,8 @@ class SessionStatisticsViewModel(
     @OptIn(ExperimentalCoroutinesApi::class)
     private val sessionsInTimeFrame = _timeFrame.flatMapLatest { timeFrame ->
         sessionRepository.sessionsInTimeFrame(timeFrame)
-    }.stateIn(
+    }
+    .stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = emptyList(),
@@ -222,16 +222,29 @@ class SessionStatisticsViewModel(
     private val barChartData = combine(
         _chartType,
         _selectedTab,
+        _timeFrame,
         timestampsInFrameWithFilteredSections,
         itemsSortInfo,
-    ) { chartType, selectedTab, timestampAndFilteredSections, (itemSortMode, itemSortDirection) ->
+    ) {
+        chartType,
+        selectedTab,
+        (_, timeFrameEnd),
+        timestampAndFilteredSections,
+        (itemSortMode, itemSortDirection) ->
+
         if (chartType != SessionStatisticsChartType.BAR) return@combine null
 
         val timeFrames = (0L..6L).reversed().map {
             when(selectedTab) {
-                SessionStatisticsTab.DAYS -> getStartOfDay(dayOffset = -it) to getEndOfDay(dayOffset = -it)
-                SessionStatisticsTab.WEEKS -> getStartOfWeek(weekOffset = -it) to getEndOfWeek(weekOffset = -it)
-                SessionStatisticsTab.MONTHS -> getStartOfMonth(monthOffset = -it) to getEndOfMonth(monthOffset = -it)
+                SessionStatisticsTab.DAYS ->
+                    getStartOfDay(dayOffset = -it, dateTime = timeFrameEnd) to
+                    getEndOfDay(dayOffset = -it, dateTime = timeFrameEnd)
+                SessionStatisticsTab.WEEKS ->
+                    getStartOfWeek(weekOffset = -it, dateTime = timeFrameEnd) to
+                    getEndOfWeek(weekOffset = -it, dateTime = timeFrameEnd)
+                SessionStatisticsTab.MONTHS ->
+                    getStartOfMonth(monthOffset = -it, dateTime = timeFrameEnd) to
+                    getEndOfMonth(monthOffset = -it, dateTime = timeFrameEnd)
             }
         }
 
@@ -305,7 +318,7 @@ class SessionStatisticsViewModel(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = null,
-    ).also { Log.d("pie-chart-vm", it.value.toString()) }
+    )
 
     /**
      *  Composing the Ui state
