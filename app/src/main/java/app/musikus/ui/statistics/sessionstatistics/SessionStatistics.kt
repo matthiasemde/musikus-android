@@ -323,9 +323,9 @@ fun SessionStatisticsPieChart(
             y = pieChartRadius
         )
 
-        sortedItemsWithAnimatedStartAndSweepAngle.forEachIndexed { index, (item, pair) ->
+        sortedItemsWithAnimatedStartAndSweepAngle.forEach { (item, pair) ->
             val (startAngle, sweepAngle) = pair
-            if (sweepAngle == 0f) return@forEachIndexed
+            if (sweepAngle == 0f) return@forEach
 
             val halfSweepCenterPoint = Math.toRadians((startAngle + sweepAngle / 2).toDouble()).let {
                 Offset(
@@ -362,25 +362,19 @@ fun SessionStatisticsPieChart(
                 style = Fill
             )
 
-            // draw start spacer for every item except the first one
-            if (index > 0) {
-                drawLine(
-                    color = surfaceColor,
-                    start = pieChartCenter + startSpacerLine.first,
-                    end = pieChartCenter + startSpacerLine.second,
-                    strokeWidth = spacerThickness
-                )
-            }
+            drawLine(
+                color = surfaceColor,
+                start = pieChartCenter + startSpacerLine.first,
+                end = pieChartCenter + startSpacerLine.second,
+                strokeWidth = spacerThickness
+            )
 
-            // draw end spacer for every item except the first one
-            if (index < sortedItemsWithAnimatedStartAndSweepAngle.size - 1) {
-                drawLine(
-                    color = surfaceColor,
-                    start = pieChartCenter + endSpacerLine.first,
-                    end = pieChartCenter + endSpacerLine.second,
-                    strokeWidth = spacerThickness
-                )
-            }
+            drawLine(
+                color = surfaceColor,
+                start = pieChartCenter + endSpacerLine.first,
+                end = pieChartCenter + endSpacerLine.second,
+                strokeWidth = spacerThickness
+            )
         }
 
         drawCircle(
@@ -610,7 +604,7 @@ fun SessionStatisticsLibraryItemSelector(
     ) {
         items(
             items = libraryItemsWithSelections,
-            key = { (item, ) -> item.id }
+            key = { (item) -> item.id }
         ) {(item, checked) ->
             Row(
                 modifier = Modifier
