@@ -2,7 +2,6 @@ package app.musikus.ui.statistics.sessionstatistics
 
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
@@ -59,7 +58,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import app.musikus.Musikus
 import app.musikus.R
 import app.musikus.database.daos.LibraryItem
-import app.musikus.datastore.sorted
+import app.musikus.datastore.sort
 import app.musikus.shared.simpleVerticalScrollbar
 import app.musikus.spacing
 import app.musikus.utils.DATE_FORMATTER_PATTERN_DAY_OF_MONTH
@@ -226,6 +225,13 @@ fun SessionStatisticsHeader(
 fun SessionStatisticsPieChart(
     uiState: SessionStatisticsPieChartUiState
 ) {
+
+    val (
+        libraryItemToDuration,
+        itemSortMode,
+        itemSortDirection
+    ) = uiState.chartData
+
     val absoluteStartAngle = 180f // left side of the circle
     val strokeThickness = 150f
     val spacerThickness = 8f
@@ -235,11 +241,9 @@ fun SessionStatisticsPieChart(
         Color(it)
     }
 
-    val libraryItemsToDuration = uiState.libraryItemsToDuration
-
     val noData =
-        libraryItemsToDuration.isEmpty() ||
-        libraryItemsToDuration.values.all { it == 0 }
+        libraryItemToDuration.isEmpty() ||
+        libraryItemToDuration.values.all { it == 0 }
 
     val animatedOpenCloseScaler by animateFloatAsState(
         targetValue = if (noData) 0f else 1f,
@@ -247,46 +251,60 @@ fun SessionStatisticsPieChart(
         label = "pie-chart-open-close-scaler-animation",
     )
 
-    val shownLibraryItems = remember {
-        libraryItemsToDuration.map { (item, _) -> item }.toMutableSet()
-    }
+    val segments = remember { mutableListOf<LibraryItem>() }
 
-    val libraryItemsWithAnimatedDuration = (
-        shownLibraryItems + libraryItemsToDuration.keys
-    ).distinct().map { item ->
-        val duration = libraryItemsToDuration[item] ?: 0
+    val sortedNonZeroSegments = remember { mutableListOf<LibraryItem>() }
 
-        if (item !in shownLibraryItems) {
-            shownLibraryItems.add(item)
+    val libraryItemsToAnimatedDuration = (segments + libraryItemToDuration.keys)
+        .distinct()
+        .associateWith { item ->
+        val duration = libraryItemToDuration[item] ?: 0
+
+        if (item !in segments) {
+            segments.add(item)
         }
 
-        item to animateIntAsState(
-            targetValue = duration,
+        if (item !in sortedNonZeroSegments && duration > 0) {
+            sortedNonZeroSegments.add(item)
+            sortedNonZeroSegments.sort(itemSortMode, itemSortDirection)
+        }
+
+        animateFloatAsState(
+            targetValue = duration.toFloat(),
             animationSpec = tween(durationMillis = 1000),
             label = "pie-chart-sweep-angle-animation-${item.id}",
-        )
+            finishedListener = {
+                if (duration == 0) sortedNonZeroSegments.remove(item)
+            }
+        ).value
     }
 
-    val animatedAccumulatedDurations = libraryItemsWithAnimatedDuration.runningFold(
-        initial = 0,
+    val sortedItemsWithAnimatedDuration = sortedNonZeroSegments.mapNotNull { item ->
+        libraryItemsToAnimatedDuration[item]?.let {
+            item to it
+        }
+    }
+
+    val animatedAccumulatedDurations = sortedItemsWithAnimatedDuration.runningFold(
+        initial = 0f,
         operation = { start, (_, duration) ->
-            start + duration.value
+            start + duration
         }
     )
 
-    val animatedMaxDuration = animatedAccumulatedDurations.last()
+    val animatedTotalAccumulatedDuration = animatedAccumulatedDurations.last()
 
-    val libraryItemsWithAnimatedStartAndSweepAngle = libraryItemsWithAnimatedDuration
+    val sortedItemsWithAnimatedStartAndSweepAngle = sortedItemsWithAnimatedDuration
         // running fold is always one larger than original list
         .zip(animatedAccumulatedDurations.dropLast(1))
         .map { (pair, accumulatedDuration) ->
         val (item, duration) = pair
-        item to if (animatedMaxDuration == 0) Pair(absoluteStartAngle, 0f) else Pair(
+        item to if (animatedTotalAccumulatedDuration == 0f) Pair(absoluteStartAngle, 0f) else Pair(
             (
-                (accumulatedDuration.toFloat() / animatedMaxDuration) *
+                (accumulatedDuration / animatedTotalAccumulatedDuration) *
                 180f * animatedOpenCloseScaler
             ) + absoluteStartAngle,
-            (duration.value.toFloat() / animatedMaxDuration) * 180f * animatedOpenCloseScaler
+            (duration / animatedTotalAccumulatedDuration) * 180f * animatedOpenCloseScaler
         )
     }
 
@@ -305,7 +323,7 @@ fun SessionStatisticsPieChart(
             y = pieChartRadius
         )
 
-        libraryItemsWithAnimatedStartAndSweepAngle.forEachIndexed { index, (item, pair) ->
+        sortedItemsWithAnimatedStartAndSweepAngle.forEachIndexed { index, (item, pair) ->
             val (startAngle, sweepAngle) = pair
             if (sweepAngle == 0f) return@forEachIndexed
 
@@ -355,7 +373,7 @@ fun SessionStatisticsPieChart(
             }
 
             // draw end spacer for every item except the first one
-            if (index < libraryItemsWithAnimatedStartAndSweepAngle.size - 1) {
+            if (index < sortedItemsWithAnimatedStartAndSweepAngle.size - 1) {
                 drawLine(
                     color = surfaceColor,
                     start = pieChartCenter + endSpacerLine.first,
@@ -377,8 +395,7 @@ fun SessionStatisticsPieChart(
 fun SessionStatisticsBarChart(
     uiState: SessionStatisticsBarChartUiState
 ) {
-    val (chartData, chartMaxDuration) = uiState
-    val (barData, itemSortMode, itemSortDirection) = chartData
+    val (barData, chartMaxDuration, itemSortMode, itemSortDirection) = uiState.chartData
 
     val columnThickness = 16.dp
 
@@ -387,7 +404,7 @@ fun SessionStatisticsBarChart(
         Color(it)
     }
 
-    val noData = chartData.barData.all { barDatum ->
+    val noData = barData.all { barDatum ->
         barDatum.libraryItemsWithDuration.isEmpty() ||
         barDatum.libraryItemsWithDuration.all { (_, duration) -> duration == 0 }
     }
@@ -400,7 +417,7 @@ fun SessionStatisticsBarChart(
 
     val segments = remember { mutableListOf<Pair<Int, LibraryItem>>() }
 
-    val sortedNonZeroSegmentsForBars = remember { barData.map { emptyList<LibraryItem>() }.toMutableList() }
+    val sortedNonZeroSegmentsForBars = remember { barData.map { mutableListOf<LibraryItem>() } }
 
     val barIndexAndLibraryItemToAnimatedDuration = barData.flatMapIndexed { barIndex, barDatum ->
         barDatum.libraryItemsWithDuration.map { (item, duration) -> (barIndex to item) to duration }
@@ -409,22 +426,26 @@ fun SessionStatisticsBarChart(
     }.let { barIndexAndLibraryItemToDuration ->
         (segments + barIndexAndLibraryItemToDuration.keys)
             .distinct()
-            .associateWith { barIndexWithItem ->
-            val duration = barIndexAndLibraryItemToDuration[barIndexWithItem] ?: 0
+            .associateWith { (barIndex, item) ->
+            val duration = barIndexAndLibraryItemToDuration[Pair(barIndex, item)] ?: 0
+            val sortedNonZeroSegments = sortedNonZeroSegmentsForBars[barIndex]
 
-            if (barIndexWithItem !in segments) {
-                segments.add(barIndexWithItem)
-                sortedNonZeroSegmentsForBars[barIndexWithItem.first] =
-                    (
-                        sortedNonZeroSegmentsForBars[barIndexWithItem.first] +
-                        barIndexWithItem.second
-                    ).sorted(itemSortMode, itemSortDirection)
+            if (Pair(barIndex, item) !in segments) {
+                segments.add(Pair(barIndex, item))
+            }
+
+            if (item !in sortedNonZeroSegments && duration > 0) {
+                sortedNonZeroSegments.add(item)
+                sortedNonZeroSegments.sort(itemSortMode, itemSortDirection)
             }
 
             animateFloatAsState(
                 targetValue = duration.toFloat(),
                 animationSpec = tween(durationMillis = 1000),
-                label = "bar-chart-column-${barIndexWithItem.first}-animation-${barIndexWithItem.second.id}",
+                label = "bar-chart-column-${barIndex}-animation-${item.id}",
+                finishedListener = {
+                    if (duration == 0) sortedNonZeroSegments.remove(item)
+                }
             ).value
         }
     }
@@ -455,17 +476,17 @@ fun SessionStatisticsBarChart(
 
         sortedNonZeroSegmentsForBars
             .zip(animatedBarMaxDurations)
-            .forEachIndexed { barIndex, (segments, animatedBarMaxDuration) ->
+            .forEachIndexed { barIndex, (sortedSegments, animatedBarMaxDuration) ->
             val leftEdge = barIndex * (columnThicknessInPx + spacingInPx) + spacingInPx
             val rightEdge = leftEdge + columnThicknessInPx
 
-            val libraryItemWithAnimatedDuration = segments.mapNotNull { item ->
+            val sortedItemWithAnimatedDuration = sortedSegments.mapNotNull { item ->
                 barIndexAndLibraryItemToAnimatedDuration[Pair(barIndex, item)]?.let {
                     item to it
                 }
             }
 
-            val animatedAccumulatedDurations = libraryItemWithAnimatedDuration.runningFold (
+            val animatedAccumulatedDurations = sortedItemWithAnimatedDuration.runningFold (
                 initial = 0f,
                 operation = { start, (_, duration) ->
                     start + duration
@@ -481,7 +502,7 @@ fun SessionStatisticsBarChart(
                     (size.height) *
                     animatedOpenCloseScaler
 
-            val animatedStartAndSegmentHeights = libraryItemWithAnimatedDuration
+            val animatedStartAndSegmentHeights = sortedItemWithAnimatedDuration
                 .zip(animatedAccumulatedDurations.dropLast(1))
                 .map { (pair, accumulatedDuration) ->
                 val (item, duration) = pair

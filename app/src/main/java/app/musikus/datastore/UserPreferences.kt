@@ -125,6 +125,33 @@ fun List<LibraryItem>.sorted(
     }
 }
 
+@JvmName("sortLibraryItemInPlace")
+fun MutableList<LibraryItem>.sort(
+    mode: LibraryItemSortMode,
+    direction: SortDirection
+) {
+    when(direction) {
+        SortDirection.ASCENDING -> {
+            when (mode) {
+                LibraryItemSortMode.DATE_ADDED -> this.sortBy { it.createdAt }
+                LibraryItemSortMode.LAST_MODIFIED -> this.sortBy { it.modifiedAt }
+                LibraryItemSortMode.NAME -> this.sortBy { it.name }
+                LibraryItemSortMode.COLOR -> this.sortBy { it.colorIndex }
+                LibraryItemSortMode.CUSTOM -> {} // TODO
+            }
+        }
+        SortDirection.DESCENDING -> {
+            when (mode) {
+                LibraryItemSortMode.DATE_ADDED -> this.sortByDescending { it.createdAt }
+                LibraryItemSortMode.LAST_MODIFIED -> this.sortByDescending { it.modifiedAt }
+                LibraryItemSortMode.NAME -> this.sortByDescending { it.name }
+                LibraryItemSortMode.COLOR -> this.sortByDescending { it.colorIndex }
+                LibraryItemSortMode.CUSTOM -> {} // TODO
+            }
+        }
+    }
+}
+
 enum class LibraryFolderSortMode {
     DATE_ADDED,
     LAST_MODIFIED,
