@@ -102,7 +102,7 @@ data class BarChartData(
 
 data class BarChartDatum(
     val label: String,
-    val libraryItemsWithDuration: List<Pair<LibraryItem, Int>>,
+    val libraryItemsToDuration: Map<LibraryItem, Int>,
     val totalDuration: Int,
 )
 
@@ -121,8 +121,8 @@ class SessionStatisticsViewModel(
 ) : AndroidViewModel(application) {
 
     /** Private variables */
-    private val _showingLibraryItemsInPieChart = mutableSetOf<LibraryItem>()
-    private val _showingLibraryItemsInBarChart = (1..7).map { mutableSetOf<LibraryItem>() }
+    private var _pieChartShowing = false
+    private var _barChartShowing = false
 
 
     /** Database */
@@ -265,11 +265,11 @@ class SessionStatisticsViewModel(
                 }
             ] ?: emptyList()
 
-            val libraryItemsWithDurationInBar = sectionsInBar
+            val libraryItemsToDurationInBar = sectionsInBar
                 .groupBy { it.libraryItem }
                 .mapValues { (_, sections) ->
                     sections.sumOf { (section, _) -> section.duration }
-                }.toList()
+                }
 
             BarChartDatum(
                 label = when(selectedTab) {
@@ -277,8 +277,8 @@ class SessionStatisticsViewModel(
                     SessionStatisticsTab.WEEKS -> "${start.dayOfMonth}-${end.dayOfMonth}"
                     SessionStatisticsTab.MONTHS -> start.format(DateTimeFormatter.ofPattern(DATE_FORMATTER_PATTERN_MONTH_TEXT_ABBREV))
                 },
-                libraryItemsWithDuration = libraryItemsWithDurationInBar,
-                totalDuration = libraryItemsWithDurationInBar.sumOf { (_, duration) -> duration }
+                libraryItemsToDuration = libraryItemsToDurationInBar,
+                totalDuration = libraryItemsToDurationInBar.values.sumOf { it }
             )
         }
 
@@ -327,29 +327,34 @@ class SessionStatisticsViewModel(
     @OptIn(ExperimentalCoroutinesApi::class)
     private val pieChartUiState = pieChartData.flatMapLatest { chartData ->
         if (chartData == null) {
-            _showingLibraryItemsInPieChart.clear()
-            return@flatMapLatest flow { emit(null) }
+            return@flatMapLatest flow {
+                if(_pieChartShowing) {
+                    emit(SessionStatisticsPieChartUiState(
+                        chartData = PieChartData(
+                            libraryItemToDuration = emptyMap(),
+                            itemSortMode = LibraryItemSortMode.DEFAULT,
+                            itemSortDirection = SortDirection.DEFAULT
+                        )
+                    ))
+                    _pieChartShowing = false
+                    delay(1000)
+                }
+                emit(null)
+            }
         }
 
         flow {
-            val filteredChartData = chartData.libraryItemToDuration.mapValues { (item, duration) ->
-                if (item in _showingLibraryItemsInPieChart) duration else 0
-            }.let { libraryItemsToFilteredDuration ->
-                PieChartData(
-                    libraryItemToDuration = libraryItemsToFilteredDuration,
-                    itemSortMode = chartData.itemSortMode,
-                    itemSortDirection = chartData.itemSortDirection
-                )
+            if (!_pieChartShowing) {
+                emit(SessionStatisticsPieChartUiState(
+                    chartData = PieChartData(
+                        libraryItemToDuration = emptyMap(),
+                        itemSortMode = LibraryItemSortMode.DEFAULT,
+                        itemSortDirection = SortDirection.DEFAULT
+                    )
+                ))
+                _pieChartShowing = true
+                delay(1000)
             }
-
-            emit(SessionStatisticsPieChartUiState(filteredChartData))
-
-            val longDelay = _showingLibraryItemsInPieChart.isEmpty()
-            _showingLibraryItemsInPieChart.addAll(
-                chartData.libraryItemToDuration.map { (item, _) -> item }
-            )
-            delay(if (longDelay) 350 else 50) // small delay is necessary to allow first composition
-
             emit(SessionStatisticsPieChartUiState(chartData))
         }
     }.stateIn(
@@ -361,41 +366,44 @@ class SessionStatisticsViewModel(
     @OptIn(ExperimentalCoroutinesApi::class)
     private val barChartUiState = barChartData.flatMapLatest { chartData ->
         if (chartData == null) {
-            _showingLibraryItemsInBarChart.forEach { it.clear() }
-            return@flatMapLatest flow { emit(null) }
+            return@flatMapLatest flow {
+                if (_barChartShowing) {
+                    emit(SessionStatisticsBarChartUiState(
+                        chartData = BarChartData(
+                            barData = (1..7).map { BarChartDatum(
+                                label = "",
+                                libraryItemsToDuration = emptyMap(),
+                                totalDuration = 0,
+                            )},
+                            maxDuration = 0,
+                            itemSortMode = LibraryItemSortMode.DEFAULT,
+                            itemSortDirection = SortDirection.DEFAULT,
+                        )
+                    ))
+                    _barChartShowing = false
+                    delay(1000)
+                }
+                emit(null)
+            }
         }
 
         flow {
-            val filteredChartData = chartData.barData
-                .zip(_showingLibraryItemsInBarChart)
-                .map { (barData, itemsShowingInBar) ->
-                barData.libraryItemsWithDuration.map { (item, duration) ->
-                    item to if (item in itemsShowingInBar) duration else 0
-                }.let { libraryItemsToFilteredDuration ->
-                    barData.copy(
-                        libraryItemsWithDuration = libraryItemsToFilteredDuration,
-                        totalDuration = libraryItemsToFilteredDuration.sumOf { (_, duration) -> duration }
+            if (!_barChartShowing) {
+                emit(SessionStatisticsBarChartUiState(
+                    chartData = BarChartData(
+                        barData = (1..7).map { BarChartDatum(
+                            label = "",
+                            libraryItemsToDuration = emptyMap(),
+                            totalDuration = 0,
+                        )},
+                        maxDuration = 0,
+                        itemSortMode = LibraryItemSortMode.DEFAULT,
+                        itemSortDirection = SortDirection.DEFAULT,
                     )
-                }
-            }.let { barChartDataWithFilteredDurations ->
-                BarChartData(
-                    barData = barChartDataWithFilteredDurations,
-                    maxDuration = barChartDataWithFilteredDurations.maxOf { it.totalDuration },
-                    itemSortMode = chartData.itemSortMode,
-                    itemSortDirection = chartData.itemSortDirection,
-                )
+                ))
+                _barChartShowing = true
+                delay(1000)
             }
-
-            emit(SessionStatisticsBarChartUiState(filteredChartData))
-
-            val longDelay = _showingLibraryItemsInBarChart.all { it.isEmpty() }
-            _showingLibraryItemsInBarChart.zip(chartData.barData).forEach { (showingItems, barData) ->
-                showingItems.addAll(
-                    barData.libraryItemsWithDuration.map { (item, _) -> item }
-                )
-            }
-            delay(if (longDelay) 350 else 50)
-
             emit(SessionStatisticsBarChartUiState(chartData))
         }
     }.stateIn(
@@ -488,6 +496,7 @@ class SessionStatisticsViewModel(
     }
 
     fun onTabSelected(tab: SessionStatisticsTab) {
+        if (tab == _selectedTab.value) return
         _selectedTab.update { tab }
         _timeFrame.update {
             when(tab) {
