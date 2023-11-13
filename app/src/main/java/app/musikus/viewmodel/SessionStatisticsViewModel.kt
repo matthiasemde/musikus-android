@@ -126,9 +126,11 @@ class SessionStatisticsViewModel(
     // convenient date because first of month is a monday
     private val release = getStartOfDay(dateTime = ZonedDateTime.parse("2022-08-01T00:00:00+02:00"))
 
-    private var _pieChartShowing = false
     private var _barChartShowing = false
+    private var _pieChartShowing = false
 
+    private var _barChartStateBuffer: SessionStatisticsBarChartUiState? = null
+    private var _pieChartStateBuffer: SessionStatisticsPieChartUiState? = null
 
     /** Database */
     private val database = MusikusDatabase.getInstance(application)
@@ -334,13 +336,11 @@ class SessionStatisticsViewModel(
         if (chartData == null) {
             return@flatMapLatest flow {
                 if(_pieChartShowing) {
-                    emit(SessionStatisticsPieChartUiState(
-                        chartData = PieChartData(
+                    emit(_pieChartStateBuffer?.let { it.copy(
+                        chartData = it.chartData.copy(
                             libraryItemToDuration = emptyMap(),
-                            itemSortMode = LibraryItemSortMode.DEFAULT,
-                            itemSortDirection = SortDirection.DEFAULT
                         )
-                    ))
+                    )})
                     _pieChartShowing = false
                     delay(700)
                 }
@@ -358,6 +358,7 @@ class SessionStatisticsViewModel(
                     )
                 ))
                 _pieChartShowing = true
+                _pieChartStateBuffer = SessionStatisticsPieChartUiState(chartData)
                 delay(700)
             }
             emit(SessionStatisticsPieChartUiState(chartData))
@@ -373,18 +374,16 @@ class SessionStatisticsViewModel(
         if (chartData == null) {
             return@flatMapLatest flow {
                 if (_barChartShowing) {
-                    emit(SessionStatisticsBarChartUiState(
-                        chartData = BarChartData(
+                    emit(_barChartStateBuffer?.let {it.copy(
+                        chartData = it.chartData.copy(
                             barData = (1..7).map { BarChartDatum(
                                 label = "",
                                 libraryItemsToDuration = emptyMap(),
                                 totalDuration = 0,
                             )},
                             maxDuration = 0,
-                            itemSortMode = LibraryItemSortMode.DEFAULT,
-                            itemSortDirection = SortDirection.DEFAULT,
                         )
-                    ))
+                    )})
                     _barChartShowing = false
                     delay(700)
                 }
@@ -406,6 +405,7 @@ class SessionStatisticsViewModel(
                         itemSortDirection = SortDirection.DEFAULT,
                     )
                 ))
+                _barChartStateBuffer = SessionStatisticsBarChartUiState(chartData)
                 _barChartShowing = true
                 delay(700)
             }
