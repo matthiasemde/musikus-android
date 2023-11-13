@@ -29,6 +29,7 @@ fun Modifier.simpleVerticalScrollbar(
     viewportHeight: Float,
     width: Dp = 3.dp,
     color: Color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+    maxSize: Dp = 150.dp,
 ): Modifier {
     return drawWithContent {
         drawContent()
@@ -36,7 +37,7 @@ fun Modifier.simpleVerticalScrollbar(
         val scrollableContentHeight = state.maxValue + viewportHeight
 
         val percentageOfColumnShownInViewPort = viewportHeight / (scrollableContentHeight)
-        val scrollbarHeight = percentageOfColumnShownInViewPort * viewportHeight
+        val scrollbarHeight = (percentageOfColumnShownInViewPort * viewportHeight).coerceAtMost(maxSize.toPx()) // in pixels
 
         val scrollbarOffsetY = state.value * (percentageOfColumnShownInViewPort + 1)
 
@@ -61,6 +62,7 @@ fun Modifier.simpleVerticalScrollbar(
     width: Dp = 3.dp,
     verticalPadding: Dp = 0.dp,
     color: Color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+    maxSize: Dp = 150.dp,
 ): Modifier {
     return drawWithContent {
         drawContent()
@@ -79,7 +81,7 @@ fun Modifier.simpleVerticalScrollbar(
         val firstVisibleItemOffsetPercentage = state.firstVisibleItemScrollOffset.toFloat() / firstVisibleItemHeight
 
 
-        val scrollbarHeight = trackHeight * percentageShowing // in pixels
+        val scrollbarHeight = (trackHeight * percentageShowing).coerceAtMost(maxSize.toPx()) // in pixels
         val scrollPerItem = (trackHeight - scrollbarHeight) / (totalItemCount * (1 - percentageShowing)) // in pixels
 
         if(trackHeight - scrollbarHeight > 2) {
