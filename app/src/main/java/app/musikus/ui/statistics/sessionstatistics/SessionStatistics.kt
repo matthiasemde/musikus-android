@@ -57,6 +57,8 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.drawText
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -399,6 +401,8 @@ fun SessionStatisticsBarChart(
     val columnThickness = 16.dp
 
     val surfaceColor = MaterialTheme.colorScheme.surface
+    val onSurfaceColor = MaterialTheme.colorScheme.onSurface
+//    val primaryColor = MaterialTheme.colorScheme.primary
     val libraryColors = Musikus.getLibraryItemColors(LocalContext.current).map {
         Color(it)
     }
@@ -476,6 +480,19 @@ fun SessionStatisticsBarChart(
         ).value
     }
 
+    val textMeasurer = rememberTextMeasurer()
+    val labelTextStyle = MaterialTheme.typography.labelMedium.copy(
+        color = MaterialTheme.colorScheme.onSurface
+    )
+
+    val labelsForBars = remember(barData.map { it.label }) {
+        barData.map { it.label }
+    }
+
+    val measuredLabelsForBars = remember(labelsForBars) {
+        labelsForBars.map { textMeasurer.measure(it, labelTextStyle) }
+    }
+
     Canvas(
         modifier = Modifier
             .fillMaxSize()
@@ -484,9 +501,15 @@ fun SessionStatisticsBarChart(
         val columnThicknessInPx = columnThickness.toPx()
         val spacingInPx = (size.width - (columnThicknessInPx * 7)) / 8
 
+        val yZero = 32.dp.toPx()
+        val columnYOffset = 0.dp.toPx()
+        val columnHeight = size.height - yZero - columnYOffset
+
         sortedItemsWithAnimatedDurationForBars
             .zip(animatedBarMaxDurationForBars)
-            .forEachIndexed { barIndex, (sortedItemsWithAnimatedDuration, animatedBarMaxDuration) ->
+            .zip(measuredLabelsForBars)
+            .forEachIndexed { barIndex, (pair, measuredLabel) ->
+            val (sortedItemsWithAnimatedDuration, animatedBarMaxDuration) = pair
             val leftEdge = barIndex * (columnThicknessInPx + spacingInPx) + spacingInPx
             val rightEdge = leftEdge + columnThicknessInPx
 
@@ -502,21 +525,21 @@ fun SessionStatisticsBarChart(
             val animatedBarHeight =
                 if (animatedChartMaxDuration == 0f) 0f
                 else
-                    (animatedBarMaxDuration / animatedChartMaxDuration) *
-                    (size.height) *
-                    animatedOpenCloseScaler
+                    (
+                        (animatedBarMaxDuration / animatedChartMaxDuration) *
+                        (columnHeight) *
+                        animatedOpenCloseScaler
+                    )
 
             val animatedStartAndSegmentHeights = sortedItemsWithAnimatedDuration
                 .zip(animatedAccumulatedDurations.dropLast(1))
                 .map { (pair, accumulatedDuration) ->
                 val (item, duration) = pair
                 item to if (animatedTotalAccumulatedDuration == 0f) Pair(0f, 0f) else Pair(
-                    accumulatedDuration / animatedTotalAccumulatedDuration * animatedBarHeight,
+                    accumulatedDuration / animatedTotalAccumulatedDuration * animatedBarHeight + (yZero + columnYOffset),
                     duration / animatedTotalAccumulatedDuration * animatedBarHeight
                 )
             }
-
-            if (animatedBarHeight == 0f) return@forEachIndexed
 
             animatedStartAndSegmentHeights.forEach { (item, pair) ->
                 val (animatedStartHeight, animatedSegmentHeight) = pair
@@ -564,6 +587,8 @@ fun SessionStatisticsBarChart(
                 )
             }
 
+            if (animatedOpenCloseScaler == 0f) return@Canvas
+
             drawPath(
                 color = surfaceColor,
                 path = Path().apply {
@@ -571,9 +596,9 @@ fun SessionStatisticsBarChart(
                     arcTo(
                         rect = Rect(
                             left = leftEdge,
-                            top = size.height - animatedBarHeight,
-                            right = leftEdge + 24f,
-                            bottom = size.height - animatedBarHeight + 24f,
+                            top = size.height - animatedBarHeight - (yZero + columnYOffset),
+                            right = leftEdge + 8.dp.toPx(),
+                            bottom = size.height - animatedBarHeight + 8.dp.toPx() - (yZero + columnYOffset),
                         ),
                         startAngleDegrees = 180f,
                         sweepAngleDegrees = 90f,
@@ -581,10 +606,10 @@ fun SessionStatisticsBarChart(
                     )
                     arcTo(
                         rect = Rect(
-                            left = rightEdge - 24f,
-                            top = size.height - animatedBarHeight,
+                            left = rightEdge - 8.dp.toPx(),
+                            top = size.height - animatedBarHeight - (yZero + columnYOffset),
                             right = rightEdge,
-                            bottom = size.height - animatedBarHeight + 24f,
+                            bottom = size.height - animatedBarHeight + 8.dp.toPx() - (yZero + columnYOffset),
                         ),
                         startAngleDegrees = 270f,
                         sweepAngleDegrees = 90f,
@@ -595,7 +620,41 @@ fun SessionStatisticsBarChart(
                 },
                 style = Fill
             )
+
+            drawText(
+                textLayoutResult = measuredLabel,
+                topLeft = Offset(
+                    x = leftEdge + columnThicknessInPx / 2 - measuredLabel.size.width / 2,
+                    y = size.height - yZero + 12.dp.toPx()
+                )
+            )
+
+            drawLine(
+                color = onSurfaceColor,
+                start = Offset(
+                    x = leftEdge + columnThicknessInPx / 2,
+                    y = size.height - yZero
+                ),
+                end = Offset(
+                    x = leftEdge + columnThicknessInPx / 2,
+                    y = size.height - yZero + 6.dp.toPx()
+                ),
+                strokeWidth = 2.dp.toPx()
+            )
         }
+
+        drawLine(
+            color = onSurfaceColor,
+            start = Offset(
+                x = 24.dp.toPx(),
+                y = size.height - yZero
+            ),
+            end = Offset(
+                x = size.width - 24.dp.toPx(),
+                y = size.height - yZero
+            ),
+            strokeWidth = 2.dp.toPx()
+        )
     }
 }
 

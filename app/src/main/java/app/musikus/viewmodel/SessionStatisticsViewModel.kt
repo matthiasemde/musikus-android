@@ -184,7 +184,7 @@ class SessionStatisticsViewModel(
                     item !in deselectedLibraryItems
                 }
             )
-        }.also { println("timestampsInFrameWithFilteredSections: $it") }
+        }
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
@@ -244,14 +244,14 @@ class SessionStatisticsViewModel(
         val timeFrames = (0L..6L).reversed().map {
             when(selectedTab) {
                 SessionStatisticsTab.DAYS ->
-                    getStartOfDay(dayOffset = -it, dateTime = timeFrameEnd) to
-                    getEndOfDay(dayOffset = -it, dateTime = timeFrameEnd)
+                    getStartOfDay(dayOffset = -it, dateTime = timeFrameEnd.minusSeconds(1)) to
+                    getEndOfDay(dayOffset = -it, dateTime = timeFrameEnd.minusSeconds(1))
                 SessionStatisticsTab.WEEKS ->
-                    getStartOfWeek(weekOffset = -it, dateTime = timeFrameEnd) to
-                    getEndOfWeek(weekOffset = -it, dateTime = timeFrameEnd)
+                    getStartOfWeek(weekOffset = -it, dateTime = timeFrameEnd.minusSeconds(1)) to
+                    getEndOfWeek(weekOffset = -it, dateTime = timeFrameEnd.minusSeconds(1))
                 SessionStatisticsTab.MONTHS ->
-                    getStartOfMonth(monthOffset = -it, dateTime = timeFrameEnd) to
-                    getEndOfMonth(monthOffset = -it, dateTime = timeFrameEnd)
+                    getStartOfMonth(monthOffset = -it, dateTime = timeFrameEnd.minusSeconds(1)) to
+                    getEndOfMonth(monthOffset = -it, dateTime = timeFrameEnd.minusSeconds(1))
             }
         }
 
@@ -281,7 +281,7 @@ class SessionStatisticsViewModel(
             BarChartDatum(
                 label = when(selectedTab) {
                     SessionStatisticsTab.DAYS -> start.format(DateTimeFormatter.ofPattern(DATE_FORMATTER_PATTERN_WEEKDAY_SHORT))
-                    SessionStatisticsTab.WEEKS -> "${start.dayOfMonth}-${end.dayOfMonth}"
+                    SessionStatisticsTab.WEEKS -> "${start.dayOfMonth}-${end.minusSeconds(1).dayOfMonth}"
                     SessionStatisticsTab.MONTHS -> start.format(DateTimeFormatter.ofPattern(DATE_FORMATTER_PATTERN_MONTH_TEXT_ABBREV))
                 },
                 libraryItemsToDuration = libraryItemsToDurationInBar,
@@ -374,10 +374,9 @@ class SessionStatisticsViewModel(
         if (chartData == null) {
             return@flatMapLatest flow {
                 if (_barChartShowing) {
-                    emit(_barChartStateBuffer?.let {it.copy(
+                    emit(_barChartStateBuffer?.let { it.copy(
                         chartData = it.chartData.copy(
-                            barData = (1..7).map { BarChartDatum(
-                                label = "",
+                            barData = it.chartData.barData.map { bar -> bar.copy(
                                 libraryItemsToDuration = emptyMap(),
                                 totalDuration = 0,
                             )},
@@ -517,7 +516,7 @@ class SessionStatisticsViewModel(
                     if (newEnd > endOfToday) {
                         newEnd = endOfToday
                     }
-                    getStartOfDay(dayOffset = -6, dateTime = newEnd) to newEnd
+                    getStartOfDay(dayOffset = -6, dateTime = newEnd.minusSeconds(1)) to newEnd
                 }
                 SessionStatisticsTab.WEEKS -> {
                     val endOfThisWeek = getEndOfWeek()
@@ -525,7 +524,7 @@ class SessionStatisticsViewModel(
                     if (newEnd > endOfThisWeek) {
                         newEnd = endOfThisWeek
                     }
-                    getStartOfWeek(weekOffset = -6, dateTime = newEnd) to newEnd
+                    getStartOfWeek(weekOffset = -6, dateTime = newEnd.minusSeconds(1)) to newEnd
                 }
                 SessionStatisticsTab.MONTHS -> {
                     val endOfThisMonth = getEndOfMonth()
@@ -533,7 +532,7 @@ class SessionStatisticsViewModel(
                     if (newEnd > endOfThisMonth) {
                         newEnd = endOfThisMonth
                     }
-                    getStartOfMonth(monthOffset = -6, dateTime = newEnd) to newEnd
+                    getStartOfMonth(monthOffset = -6, dateTime = newEnd.minusSeconds(1)) to newEnd
                 }
             }
         }
@@ -548,7 +547,7 @@ class SessionStatisticsViewModel(
                     if(newEnd > endOfToday) {
                        newEnd = endOfToday
                     }
-                    getStartOfDay(dayOffset = -6, dateTime = newEnd) to newEnd
+                    getStartOfDay(dayOffset = -6, dateTime = newEnd.minusSeconds(1)) to newEnd
                 }
                 SessionStatisticsTab.WEEKS -> {
                     val endOfThisWeek = getEndOfWeek()
@@ -556,7 +555,7 @@ class SessionStatisticsViewModel(
                     if(newEnd > endOfThisWeek) {
                        newEnd = endOfThisWeek
                     }
-                    getStartOfWeek(weekOffset = -6, dateTime = newEnd) to newEnd
+                    getStartOfWeek(weekOffset = -6, dateTime = newEnd.minusSeconds(1)) to newEnd
                 }
                 SessionStatisticsTab.MONTHS -> {
                     val endOfThisMonth = getEndOfMonth()
@@ -564,7 +563,7 @@ class SessionStatisticsViewModel(
                     if(newEnd > endOfThisMonth) {
                        newEnd = endOfThisMonth
                     }
-                    getStartOfMonth(monthOffset = -6, dateTime = newEnd) to newEnd
+                    getStartOfMonth(monthOffset = -6, dateTime = newEnd.minusSeconds(1)) to newEnd
                 }
             }
         }
