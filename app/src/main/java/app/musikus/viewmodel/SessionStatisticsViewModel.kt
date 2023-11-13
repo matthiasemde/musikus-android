@@ -85,6 +85,8 @@ data class SessionStatisticsContentUiState(
 )
 
 data class SessionStatisticsHeaderUiState(
+    val seekBackwardEnabled: Boolean,
+    val seekForwardEnabled: Boolean,
     val timeFrame: Pair<ZonedDateTime, ZonedDateTime>,
     val totalPracticeDuration: Int,
 )
@@ -121,6 +123,9 @@ class SessionStatisticsViewModel(
 ) : AndroidViewModel(application) {
 
     /** Private variables */
+    // convenient date because first of month is a monday
+    private val release = getStartOfDay(dateTime = ZonedDateTime.parse("2022-08-01T00:00:00+02:00"))
+
     private var _pieChartShowing = false
     private var _barChartShowing = false
 
@@ -177,7 +182,7 @@ class SessionStatisticsViewModel(
                     item !in deselectedLibraryItems
                 }
             )
-        }
+        }.also { println("timestampsInFrameWithFilteredSections: $it") }
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
@@ -337,7 +342,7 @@ class SessionStatisticsViewModel(
                         )
                     ))
                     _pieChartShowing = false
-                    delay(1000)
+                    delay(700)
                 }
                 emit(null)
             }
@@ -353,7 +358,7 @@ class SessionStatisticsViewModel(
                     )
                 ))
                 _pieChartShowing = true
-                delay(1000)
+                delay(700)
             }
             emit(SessionStatisticsPieChartUiState(chartData))
         }
@@ -381,7 +386,7 @@ class SessionStatisticsViewModel(
                         )
                     ))
                     _barChartShowing = false
-                    delay(1000)
+                    delay(700)
                 }
                 emit(null)
             }
@@ -402,7 +407,7 @@ class SessionStatisticsViewModel(
                     )
                 ))
                 _barChartShowing = true
-                delay(1000)
+                delay(700)
             }
             emit(SessionStatisticsBarChartUiState(chartData))
         }
@@ -416,7 +421,11 @@ class SessionStatisticsViewModel(
         _timeFrame,
         totalDuration,
     ) { timeFrame, totalDuration ->
+        val (start, end) = timeFrame
+
         SessionStatisticsHeaderUiState(
+            seekBackwardEnabled = start > release,
+            seekForwardEnabled = end < getEndOfDay(),
             timeFrame = timeFrame,
             totalPracticeDuration = totalDuration,
         )
@@ -426,6 +435,8 @@ class SessionStatisticsViewModel(
         initialValue = SessionStatisticsHeaderUiState(
             timeFrame = _timeFrame.value,
             totalPracticeDuration = totalDuration.value,
+            seekBackwardEnabled = false,
+            seekForwardEnabled = false,
         ),
     )
 
@@ -498,31 +509,91 @@ class SessionStatisticsViewModel(
     fun onTabSelected(tab: SessionStatisticsTab) {
         if (tab == _selectedTab.value) return
         _selectedTab.update { tab }
-        _timeFrame.update {
+        _timeFrame.update { (_, end) ->
             when(tab) {
-                SessionStatisticsTab.DAYS -> getStartOfDay(dayOffset = -6) to getEndOfDay()
-                SessionStatisticsTab.WEEKS -> getStartOfWeek(weekOffset = -6) to getEndOfWeek()
-                SessionStatisticsTab.MONTHS -> getStartOfMonth(monthOffset = -6) to getEndOfMonth()
+                SessionStatisticsTab.DAYS -> {
+                    val endOfToday = getEndOfDay()
+                    var newEnd = end
+                    if (newEnd > endOfToday) {
+                        newEnd = endOfToday
+                    }
+                    getStartOfDay(dayOffset = -6, dateTime = newEnd) to newEnd
+                }
+                SessionStatisticsTab.WEEKS -> {
+                    val endOfThisWeek = getEndOfWeek()
+                    var newEnd = getEndOfWeek(dateTime = end.minusSeconds(1))
+                    if (newEnd > endOfThisWeek) {
+                        newEnd = endOfThisWeek
+                    }
+                    getStartOfWeek(weekOffset = -6, dateTime = newEnd) to newEnd
+                }
+                SessionStatisticsTab.MONTHS -> {
+                    val endOfThisMonth = getEndOfMonth()
+                    var newEnd = getEndOfMonth(dateTime = end.minusSeconds(1))
+                    if (newEnd > endOfThisMonth) {
+                        newEnd = endOfThisMonth
+                    }
+                    getStartOfMonth(monthOffset = -6, dateTime = newEnd) to newEnd
+                }
             }
         }
     }
 
     fun onSeekForwardClicked() {
-        _timeFrame.update {
+        _timeFrame.update { (_ , end) ->
             when(_selectedTab.value) {
-                SessionStatisticsTab.DAYS -> it.first.plusDays(7) to it.second.plusDays(7)
-                SessionStatisticsTab.WEEKS -> it.first.plusWeeks(7) to it.second.plusWeeks(7)
-                SessionStatisticsTab.MONTHS -> it.first.plusMonths(7) to it.second.plusMonths(7)
+                SessionStatisticsTab.DAYS -> {
+                    val endOfToday = getEndOfDay()
+                    var newEnd = end.plusDays(7)
+                    if(newEnd > endOfToday) {
+                       newEnd = endOfToday
+                    }
+                    getStartOfDay(dayOffset = -6, dateTime = newEnd) to newEnd
+                }
+                SessionStatisticsTab.WEEKS -> {
+                    val endOfThisWeek = getEndOfWeek()
+                    var newEnd = end.plusWeeks(7)
+                    if(newEnd > endOfThisWeek) {
+                       newEnd = endOfThisWeek
+                    }
+                    getStartOfWeek(weekOffset = -6, dateTime = newEnd) to newEnd
+                }
+                SessionStatisticsTab.MONTHS -> {
+                    val endOfThisMonth = getEndOfMonth()
+                    var newEnd = end.plusMonths(7)
+                    if(newEnd > endOfThisMonth) {
+                       newEnd = endOfThisMonth
+                    }
+                    getStartOfMonth(monthOffset = -6, dateTime = newEnd) to newEnd
+                }
             }
         }
     }
 
     fun onSeekBackwardClicked() {
-        _timeFrame.update {
+        _timeFrame.update { (start , _) ->
             when(_selectedTab.value) {
-                SessionStatisticsTab.DAYS -> it.first.minusDays(7) to it.second.minusDays(7)
-                SessionStatisticsTab.WEEKS -> it.first.minusWeeks(7) to it.second.minusWeeks(7)
-                SessionStatisticsTab.MONTHS -> it.first.minusMonths(7) to it.second.minusMonths(7)
+                SessionStatisticsTab.DAYS -> {
+                    var newStart = start.minusDays(7)
+                    if(newStart < release) {
+                        newStart = release
+                    }
+                    newStart to getEndOfDay(dayOffset = 6, dateTime = newStart)
+                }
+                SessionStatisticsTab.WEEKS -> {
+                    var newStart = start.minusWeeks(7)
+                    if(newStart < release) {
+                        newStart = release
+                    }
+                    newStart to getEndOfWeek(weekOffset = 6, dateTime = newStart)
+                }
+                SessionStatisticsTab.MONTHS -> {
+                    var newStart = start.minusMonths(7)
+                    if(newStart < release) {
+                        newStart = release
+                    }
+                    newStart to getEndOfMonth(monthOffset = 6, dateTime = newStart)
+                }
             }
         }
     }

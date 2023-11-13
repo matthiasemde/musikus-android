@@ -10,6 +10,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement.Center
 import androidx.compose.foundation.layout.Arrangement.SpaceBetween
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -65,7 +66,7 @@ import app.musikus.database.daos.LibraryItem
 import app.musikus.datastore.sort
 import app.musikus.shared.simpleVerticalScrollbar
 import app.musikus.spacing
-import app.musikus.utils.DATE_FORMATTER_PATTERN_DAY_OF_MONTH
+import app.musikus.utils.DATE_FORMATTER_PATTERN_DAY_AND_MONTH
 import app.musikus.utils.TIME_FORMAT_HUMAN_PRETTY
 import app.musikus.utils.getDurationString
 import app.musikus.viewmodel.SessionStatisticsBarChartUiState
@@ -147,28 +148,13 @@ fun SessionStatistics(
                     seekBackward = viewModel::onSeekBackwardClicked
                 )
                 Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
-                Crossfade(
+                Box(
                     modifier = Modifier
                         .height(200.dp)
                         .fillMaxWidth(),
-                    targetState =
-                        if (contentUiState.pieChartUiState != null) SessionStatisticsChartType.PIE
-                        else if (contentUiState.barChartUiState != null) SessionStatisticsChartType.BAR
-                        else null,
-                    animationSpec = tween(durationMillis = 2000),
-                    label = "statistics-chart-crossfade-animation"
-                ) { targetChart ->
-                    when (targetChart) {
-                        SessionStatisticsChartType.PIE ->
-                            contentUiState.pieChartUiState?.let {
-                                SessionStatisticsPieChart(it)
-                            }
-                        SessionStatisticsChartType.BAR ->
-                            contentUiState.barChartUiState?.let {
-                                SessionStatisticsBarChart(it)
-                            }
-                        null -> Text(text = "No data")
-                    }
+                ) {
+                    contentUiState.pieChartUiState?.let { SessionStatisticsPieChart(it) }
+                    contentUiState.barChartUiState?.let { SessionStatisticsBarChart(it) }
                 }
                 Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
                 HorizontalDivider()
@@ -194,7 +180,10 @@ fun SessionStatisticsHeader(
         horizontalArrangement = SpaceBetween,
         verticalAlignment = CenterVertically,
     ) {
-        IconButton(onClick = seekBackward) {
+        IconButton(
+            onClick = seekBackward,
+            enabled = uiState.seekBackwardEnabled
+        ) {
             Icon(
                 modifier = Modifier.size(32.dp),
                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
@@ -206,8 +195,10 @@ fun SessionStatisticsHeader(
             horizontalAlignment = CenterHorizontally
         ) {
             Text(
-                text = uiState.timeFrame.toList().joinToString(" - ") {
-                    it.format(DateTimeFormatter.ofPattern(DATE_FORMATTER_PATTERN_DAY_OF_MONTH))
+                text = uiState.timeFrame.let { (start, end) ->
+                    listOf(start, end.minusSeconds(1))
+                }.joinToString(" - ") {
+                    it.format(DateTimeFormatter.ofPattern(DATE_FORMATTER_PATTERN_DAY_AND_MONTH))
                 }, // TODO calculate nice strings
                 style = MaterialTheme.typography.titleLarge
             )
@@ -216,7 +207,10 @@ fun SessionStatisticsHeader(
                 style = MaterialTheme.typography.titleSmall
             )
         }
-        IconButton(onClick = seekForward) {
+        IconButton(
+            onClick = seekForward,
+            enabled = uiState.seekForwardEnabled
+        ) {
             Icon(
                 modifier = Modifier.size(32.dp),
                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
@@ -252,7 +246,7 @@ fun SessionStatisticsPieChart(
 
     val animatedOpenCloseScaler by animateFloatAsState(
         targetValue = if (noData) 0f else 1f,
-        animationSpec = tween(durationMillis = 1000),
+        animationSpec = tween(durationMillis = 700),
         label = "pie-chart-open-close-scaler-animation",
     )
 
@@ -416,7 +410,7 @@ fun SessionStatisticsBarChart(
 
     val animatedOpenCloseScaler by animateFloatAsState(
         targetValue = if (noData) 0f else 1f,
-        animationSpec = tween(durationMillis = 1000),
+        animationSpec = tween(durationMillis = 700),
         label = "bar-chart-open-close-scaler-animation",
     )
 
@@ -522,6 +516,7 @@ fun SessionStatisticsBarChart(
                 )
             }
 
+            if (animatedBarHeight == 0f) return@forEachIndexed
 
             animatedStartAndSegmentHeights.forEach { (item, pair) ->
                 val (animatedStartHeight, animatedSegmentHeight) = pair

@@ -237,6 +237,7 @@ fun getStartOfDay(
     dateTime: ZonedDateTime = ZonedDateTime.now()
 ): ZonedDateTime {
     return dateTime
+        .with(ChronoField.SECOND_OF_DAY, 0)
         .toLocalDate()
         .atStartOfDay(ZoneId.systemDefault())  // make sure time is 00:00
         .plusMonths(monthOffset)
@@ -265,6 +266,7 @@ fun getStartOfDayOfWeek(
     dateTime: ZonedDateTime = ZonedDateTime.now()
 ): ZonedDateTime {
     return dateTime
+        .with(ChronoField.SECOND_OF_DAY, 0)
         .with(ChronoField.DAY_OF_WEEK , dayIndex )         // ISO 8601, Monday is first day of week.
         .toLocalDate()
         .atStartOfDay(ZoneId.systemDefault())  // make sure time is 00:00
@@ -331,6 +333,7 @@ fun getStartOfMonth(
     dateTime: ZonedDateTime = ZonedDateTime.now()
 ): ZonedDateTime {
     return dateTime
+        .with(ChronoField.SECOND_OF_DAY, 0)
         .with(ChronoField.DAY_OF_MONTH , 1 )    // jump to first day of this month
         .toLocalDate()
         .atStartOfDay(ZoneId.systemDefault())  // make sure time is 00:00
@@ -360,30 +363,34 @@ fun epochSecondsToDate(epochSecs: Long): ZonedDateTime {
  * January 2011 is different from January 2020
  */
 
+fun getSpecificMonth(dateTime: ZonedDateTime) =
+    dateTime.monthValue + dateTime.year * 12
+
 fun getSpecificMonth(epochSeconds: Long) =
-    epochSecondsToDate(epochSeconds).let { date->
-        date.monthValue + date.year * 12
-    }
+    getSpecificMonth(epochSecondsToDate(epochSeconds))
 
 /**
  * Get specific week index (Non reversible hash bucket)
  */
 
+fun getSpecificWeek(dateTime: ZonedDateTime) = dateTime
+    .with(ChronoField.DAY_OF_WEEK , 1)         // ISO 8601, Monday is first day of week.
+    .let { date->
+        date.dayOfYear + date.year * 366
+    }
+
 fun getSpecificWeek(epochSeconds: Long) =
-    epochSecondsToDate(epochSeconds)
-        .with(ChronoField.DAY_OF_WEEK , 1)         // ISO 8601, Monday is first day of week.
-        .let { date->
-            date.dayOfYear + date.year * 366
-        }
+    getSpecificWeek(epochSecondsToDate(epochSeconds))
+
 
 /**
  * Get specificDay index (Non reversible hash bucket)
  */
 
+fun getSpecificDay(dateTime: ZonedDateTime) =
+    dateTime.dayOfYear + dateTime.year * 366
 fun getSpecificDay(epochSeconds: Long) =
-    epochSecondsToDate(epochSeconds).let { date->
-        date.dayOfYear + date.year * 366
-    }
+    getSpecificDay(epochSecondsToDate(epochSeconds))
 
 fun weekIndexToName(weekIndex: Int) = when (weekIndex) {
     1 -> "Monday"
