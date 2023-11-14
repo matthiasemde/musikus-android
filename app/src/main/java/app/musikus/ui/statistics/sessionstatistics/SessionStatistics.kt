@@ -1,5 +1,6 @@
 package app.musikus.ui.statistics.sessionstatistics
 
+import android.util.Log
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationEndReason
@@ -42,7 +43,6 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -66,7 +66,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import app.musikus.Musikus
 import app.musikus.R
 import app.musikus.database.daos.LibraryItem
-import app.musikus.datastore.sort
 import app.musikus.datastore.sorted
 import app.musikus.shared.simpleVerticalScrollbar
 import app.musikus.spacing
@@ -434,14 +433,22 @@ fun SessionStatisticsBarChart(
 ) {
     val (barData, chartMaxDuration, itemSortMode, itemSortDirection) = uiState.chartData
 
+    val scope = rememberCoroutineScope()
+    val textMeasurer = rememberTextMeasurer()
+
     val columnThickness = 16.dp
 
     val surfaceColor = MaterialTheme.colorScheme.surface
     val onSurfaceColor = MaterialTheme.colorScheme.onSurface
+    val onSurfaceColorLowerContrast = Color.LightGray
 //    val primaryColor = MaterialTheme.colorScheme.primary
     val libraryColors = Musikus.getLibraryItemColors(LocalContext.current).map {
         Color(it)
     }
+
+    val labelTextStyle = MaterialTheme.typography.labelMedium.copy(
+        color = MaterialTheme.colorScheme.onSurface
+    )
 
     val noData = barData.all { barDatum ->
         barDatum.libraryItemsToDuration.isEmpty() ||
@@ -454,48 +461,49 @@ fun SessionStatisticsBarChart(
         label = "bar-chart-open-close-scaler-animation",
     )
 
-    val segmentsForBars = remember { barData.map {
-        mutableMapOf<LibraryItem, Animatable<Float, AnimationVector1D>>()
-    }}
+    val labelsForBars = barData.map { it.label }
+    val measuredLabelsForBars = remember(labelsForBars) {
+        Log.d("SessionStatistics", "measuring labels $labelsForBars")
+        labelsForBars.map { label ->
+            textMeasurer.measure(label, labelTextStyle)
+        }
+    }
 
-    val sortedItemsForBars = remember { barData.map {
-        mutableListOf<LibraryItem>()
-    }}
+    val sortedItemsWithAnimatedDurationForBars = barData.map { barDatum ->
+        val libraryItemsToDuration = barDatum.libraryItemsToDuration
 
-    barData.zip(segmentsForBars).zip(sortedItemsForBars)
-        .forEach { (pair, sortedItems) ->
-        val (barDatum, segments) = pair
+        val segments = remember {
+            mutableMapOf<LibraryItem, Animatable<Float, AnimationVector1D>>()
+        }
 
-        LaunchedEffect(barDatum) {
-            (segments.keys + barDatum.libraryItemsToDuration.keys)
+        remember(libraryItemsToDuration) {
+            (segments.keys + libraryItemsToDuration.keys)
             .distinct()
-            .forEach { item ->
-                val duration = barDatum.libraryItemsToDuration[item] ?: 0
+            .sorted(
+                itemSortMode,
+                itemSortDirection
+            )
+            .onEach { item ->
+                val duration = libraryItemsToDuration[item] ?: 0
 
                 val segment = segments[item] ?: Animatable(0f).also {
                     segments[item] = it
-                    sortedItems.add(item)
-                    sortedItems.sort(itemSortMode, itemSortDirection)
                 }
-                launch {
+
+                scope.launch {
                     val animationResult = segment.animateTo(
                         duration.toFloat(),
                         animationSpec = tween(durationMillis = 1000),
                     )
+
                     if (animationResult.endReason == AnimationEndReason.Finished && duration == 0) {
                         segments.remove(item)
-                        sortedItems.remove(item)
                     }
                 }
             }
-        }
-    }
-
-    val sortedItemsWithAnimatedDurationForBars = sortedItemsForBars.zip(segmentsForBars)
-        .map { (items, segments) ->
-        items.mapNotNull { item ->
+        }.mapNotNull { item ->
             segments[item]?.let {
-                item to it.asState().value
+                item to it.asState()
             }
         }
     }
@@ -514,19 +522,6 @@ fun SessionStatisticsBarChart(
             animationSpec = tween(durationMillis = 1000),
             label = "bar-chart-max-duration-animation-${barIndex}",
         ).value
-    }
-
-    val textMeasurer = rememberTextMeasurer()
-    val labelTextStyle = MaterialTheme.typography.labelMedium.copy(
-        color = MaterialTheme.colorScheme.onSurface
-    )
-
-    val labelsForBars = remember(barData.map { it.label }) {
-        barData.map { it.label }
-    }
-
-    val measuredLabelsForBars = remember(labelsForBars) {
-        labelsForBars.map { textMeasurer.measure(it, labelTextStyle) }
     }
 
     Canvas(
@@ -552,7 +547,7 @@ fun SessionStatisticsBarChart(
             val animatedAccumulatedDurations = sortedItemsWithAnimatedDuration.runningFold (
                 initial = 0f,
                 operation = { start, (_, duration) ->
-                    start + duration
+                    start + duration.value
                 }
             )
 
@@ -573,7 +568,7 @@ fun SessionStatisticsBarChart(
                 val (item, duration) = pair
                 item to if (animatedTotalAccumulatedDuration == 0f) Pair(0f, 0f) else Pair(
                     accumulatedDuration / animatedTotalAccumulatedDuration * animatedBarHeight + (yZero + columnYOffset),
-                    duration / animatedTotalAccumulatedDuration * animatedBarHeight
+                    duration.value / animatedTotalAccumulatedDuration * animatedBarHeight
                 )
             }
 
@@ -666,21 +661,21 @@ fun SessionStatisticsBarChart(
             )
 
             drawLine(
-                color = onSurfaceColor,
+                color = onSurfaceColorLowerContrast,
                 start = Offset(
                     x = leftEdge + columnThicknessInPx / 2,
                     y = size.height - yZero
                 ),
                 end = Offset(
                     x = leftEdge + columnThicknessInPx / 2,
-                    y = size.height - yZero + 6.dp.toPx()
+                    y = size.height - yZero + 5.dp.toPx()
                 ),
-                strokeWidth = 2.dp.toPx()
+                strokeWidth = 2.dp.toPx(),
             )
         }
 
         drawLine(
-            color = onSurfaceColor,
+            color = onSurfaceColorLowerContrast,
             start = Offset(
                 x = 24.dp.toPx(),
                 y = size.height - yZero
@@ -689,7 +684,7 @@ fun SessionStatisticsBarChart(
                 x = size.width - 24.dp.toPx(),
                 y = size.height - yZero
             ),
-            strokeWidth = 2.dp.toPx()
+            strokeWidth = 2.dp.toPx(),
         )
     }
 }

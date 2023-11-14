@@ -20,7 +20,7 @@ import app.musikus.datastore.sorted
 import app.musikus.repository.SessionRepository
 import app.musikus.repository.UserPreferencesRepository
 import app.musikus.utils.DATE_FORMATTER_PATTERN_MONTH_TEXT_ABBREV
-import app.musikus.utils.DATE_FORMATTER_PATTERN_WEEKDAY_SHORT
+import app.musikus.utils.DATE_FORMATTER_PATTERN_WEEKDAY_ABBREV
 import app.musikus.utils.getEndOfDay
 import app.musikus.utils.getEndOfMonth
 import app.musikus.utils.getEndOfWeek
@@ -280,7 +280,7 @@ class SessionStatisticsViewModel(
 
             BarChartDatum(
                 label = when(selectedTab) {
-                    SessionStatisticsTab.DAYS -> start.format(DateTimeFormatter.ofPattern(DATE_FORMATTER_PATTERN_WEEKDAY_SHORT))
+                    SessionStatisticsTab.DAYS -> start.format(DateTimeFormatter.ofPattern(DATE_FORMATTER_PATTERN_WEEKDAY_ABBREV))
                     SessionStatisticsTab.WEEKS -> "${start.dayOfMonth}-${end.minusSeconds(1).dayOfMonth}"
                     SessionStatisticsTab.MONTHS -> start.format(DateTimeFormatter.ofPattern(DATE_FORMATTER_PATTERN_MONTH_TEXT_ABBREV))
                 },
