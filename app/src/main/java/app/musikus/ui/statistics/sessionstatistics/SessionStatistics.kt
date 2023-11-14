@@ -45,6 +45,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
@@ -66,6 +67,7 @@ import app.musikus.Musikus
 import app.musikus.R
 import app.musikus.database.daos.LibraryItem
 import app.musikus.datastore.sort
+import app.musikus.datastore.sorted
 import app.musikus.shared.simpleVerticalScrollbar
 import app.musikus.spacing
 import app.musikus.utils.DATE_FORMATTER_PATTERN_DAY_AND_MONTH
@@ -80,6 +82,9 @@ import app.musikus.viewmodel.SessionStatisticsViewModel
 import kotlinx.coroutines.launch
 import java.lang.Float.min
 import java.time.format.DateTimeFormatter
+import kotlin.collections.component1
+import kotlin.collections.component2
+import kotlin.collections.set
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -233,13 +238,21 @@ fun SessionStatisticsPieChart(
         itemSortDirection
     ) = uiState.chartData
 
+    val scope = rememberCoroutineScope()
+
+    val textMeasurer = rememberTextMeasurer()
+
+    val labelTextStyle = MaterialTheme.typography.labelMedium.copy(
+        color = MaterialTheme.colorScheme.onSurface
+    )
+
     val absoluteStartAngle = 180f // left side of the circle
     val strokeThickness = 150f
     val spacerThickness = 8f
 
     val surfaceColor = MaterialTheme.colorScheme.surface
     val libraryColors = Musikus.getLibraryItemColors(LocalContext.current).map {
-        Color(it)
+        Color(it).copy(alpha = 0.8f)
     }
 
     val noData =
@@ -252,50 +265,57 @@ fun SessionStatisticsPieChart(
         label = "pie-chart-open-close-scaler-animation",
     )
 
+    val itemsToMeasuredLabels = remember(libraryItemToDuration) {
+        val totalDuration = libraryItemToDuration.values.sum().toFloat()
+        libraryItemToDuration.mapValues { (_, duration) ->
+            (duration / totalDuration * 100f).let {
+                if ( it.isNaN() || it < 5f) ""
+                else it.toInt().toString() + "%"
+            }.let {
+                textMeasurer.measure(it, labelTextStyle)
+            }
+        }
+    }
+
     val segments = remember {
         mutableMapOf<LibraryItem, Animatable<Float, AnimationVector1D>>()
     }
 
-    val sortedItems = remember { mutableListOf<LibraryItem>() }
-
-    val libraryItemToAnimatedDuration =
+    val sortedItemsWithAnimatedDuration = remember(libraryItemToDuration) {
         (segments.keys + libraryItemToDuration.keys)
         .distinct()
-        .associateWith { item ->
-        val duration = libraryItemToDuration[item] ?: 0
+        .sorted(
+            itemSortMode,
+            itemSortDirection
+        )
+        .onEach { item ->
+            val duration = libraryItemToDuration[item] ?: 0
 
-        val segment = segments[item] ?: Animatable(0f).also {
-            segments[item] = it
-            sortedItems.add(item)
-            sortedItems.sort(itemSortMode, itemSortDirection)
-        }
-
-        LaunchedEffect(duration.toFloat() != segment.targetValue) {
-            val animationResult = segment.animateTo(
-                duration.toFloat(),
-                animationSpec = tween(durationMillis = 1000),
-            )
-
-            if (animationResult.endReason == AnimationEndReason.Finished && duration == 0) {
-                segments.remove(item)
-                sortedItems.remove(item)
+            val segment = segments[item] ?: Animatable(0f).also {
+                segments[item] = it
             }
-        }
 
-        segment.asState().value
-    }
+            scope.launch {
+                val animationResult = segment.animateTo(
+                    duration.toFloat(),
+                    animationSpec = tween(durationMillis = 1000),
+                )
 
-
-    val sortedItemsWithAnimatedDuration = sortedItems.mapNotNull { item ->
-        libraryItemToAnimatedDuration[item]?.let {
-            item to it
+                if (animationResult.endReason == AnimationEndReason.Finished && duration == 0) {
+                    segments.remove(item)
+                }
+            }
+        }.mapNotNull { item ->
+            segments[item]?.let {
+                item to it.asState()
+            }
         }
     }
 
     val animatedAccumulatedDurations = sortedItemsWithAnimatedDuration.runningFold(
         initial = 0f,
         operation = { start, (_, duration) ->
-            start + duration
+            start + duration.value
         }
     )
 
@@ -311,7 +331,7 @@ fun SessionStatisticsPieChart(
                 (accumulatedDuration / animatedTotalAccumulatedDuration) *
                 180f * animatedOpenCloseScaler
             ) + absoluteStartAngle,
-            (duration / animatedTotalAccumulatedDuration) * 180f * animatedOpenCloseScaler
+            (duration.value / animatedTotalAccumulatedDuration) * 180f * animatedOpenCloseScaler
         )
     }
 
@@ -330,7 +350,8 @@ fun SessionStatisticsPieChart(
             y = pieChartRadius
         )
 
-        sortedItemsWithAnimatedStartAndSweepAngle.forEach { (item, pair) ->
+        sortedItemsWithAnimatedStartAndSweepAngle
+            .forEach { (item, pair) ->
             val (startAngle, sweepAngle) = pair
             if (sweepAngle == 0f) return@forEach
 
@@ -382,6 +403,18 @@ fun SessionStatisticsPieChart(
                 end = pieChartCenter + endSpacerLine.second,
                 strokeWidth = spacerThickness
             )
+
+            if (sweepAngle > 10f) {
+                itemsToMeasuredLabels[item]?.let {  measuredLabel ->
+                    drawText(
+                        textLayoutResult = measuredLabel,
+                        topLeft = pieChartCenter + halfSweepCenterPoint - Offset(
+                            x = measuredLabel.size.width.toFloat() / 2,
+                            y = measuredLabel.size.height.toFloat() / 2
+                        ),
+                    )
+                }
+            }
         }
 
         drawCircle(
