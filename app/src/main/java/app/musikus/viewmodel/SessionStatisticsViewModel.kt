@@ -9,10 +9,13 @@
 package app.musikus.viewmodel
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import app.musikus.dataStore
 import app.musikus.database.MusikusDatabase
+import app.musikus.database.SectionWithLibraryItem
+import app.musikus.database.SessionWithSectionsWithLibraryItems
 import app.musikus.database.daos.LibraryItem
 import app.musikus.datastore.LibraryItemSortMode
 import app.musikus.datastore.SortDirection
@@ -66,6 +69,22 @@ enum class SessionStatisticsChartType {
         val DEFAULT = BAR
     }
 }
+
+data class TabWithTimeFrame(
+    val tab: SessionStatisticsTab,
+    val timeFrame: Pair<ZonedDateTime, ZonedDateTime>
+)
+
+data class TabWithTimeFrameWithSessions(
+    val tabWithTimeFrame: TabWithTimeFrame,
+    val sessions: List<SessionWithSectionsWithLibraryItems>
+)
+
+data class TabWithTimeFrameWithSections(
+    val tabWithTimeFrame: TabWithTimeFrame,
+    val sections: List<Pair<Long, List<SectionWithLibraryItem>>>
+)
+
 
 data class SessionStatisticsUiState(
     val topBarUiState: SessionsStatisticsTopBarUiState,
@@ -150,13 +169,16 @@ class SessionStatisticsViewModel(
 
     /** Own state flows */
     private val _chartType = MutableStateFlow(SessionStatisticsChartType.DEFAULT)
-    private val _selectedTab = MutableStateFlow(SessionStatisticsTab.DEFAULT)
-    private val _timeFrame = MutableStateFlow(
-        when(_selectedTab.value) {
-            SessionStatisticsTab.DAYS -> getStartOfDay(dayOffset = -6) to getEndOfDay()
-            SessionStatisticsTab.WEEKS -> getStartOfWeek(weekOffset = -6) to getEndOfWeek()
-            SessionStatisticsTab.MONTHS -> getStartOfMonth(monthOffset = -6) to getEndOfMonth()
-        },
+//    private val _selectedTab = MutableStateFlow(SessionStatisticsTab.DEFAULT)
+    private val _selectedTabWithTimeFrame = MutableStateFlow(
+        TabWithTimeFrame(
+            SessionStatisticsTab.DEFAULT,
+            when(SessionStatisticsTab.DEFAULT) {
+                SessionStatisticsTab.DAYS -> getStartOfDay(dayOffset = -6) to getEndOfDay()
+                SessionStatisticsTab.WEEKS -> getStartOfWeek(weekOffset = -6) to getEndOfWeek()
+                SessionStatisticsTab.MONTHS -> getStartOfMonth(monthOffset = -6) to getEndOfMonth()
+            }
+        ),
     )
 
     private val _deselectedLibraryItems = MutableStateFlow(emptySet<LibraryItem>())
@@ -164,35 +186,42 @@ class SessionStatisticsViewModel(
     /** Combining imported and own state flows */
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    private val sessionsInTimeFrame = _timeFrame.flatMapLatest { timeFrame ->
-        sessionRepository.sessionsInTimeFrame(timeFrame)
-    }
-    .stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = emptyList(),
-    )
-
-    private val timestampsInFrameWithFilteredSections = combine(
-        sessionsInTimeFrame,
-        _deselectedLibraryItems,
-    ) { sessions, deselectedLibraryItems ->
-        sessions.map { (_, sections) ->
-            Pair(
-                sections.first().section.timestamp,
-                sections.filter { (_, item) ->
-                    item !in deselectedLibraryItems
-                }
+    private val tabWithTimeFrameWithSessions =
+        _selectedTabWithTimeFrame.flatMapLatest { tabWithTimeFrame ->
+        sessionRepository.sessionsInTimeFrame(tabWithTimeFrame.timeFrame).map {
+            TabWithTimeFrameWithSessions(
+                tabWithTimeFrame = tabWithTimeFrame,
+                sessions = it
             )
         }
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = emptyList(),
+        initialValue = TabWithTimeFrameWithSessions(
+            tabWithTimeFrame = _selectedTabWithTimeFrame.value,
+            sessions = emptyList()
+        ),
     )
 
-    private val totalDuration = timestampsInFrameWithFilteredSections.map { list ->
-        list.sumOf { (_, sections) ->
+    private val tabWithTimeFrameWithFilteredSections = combine (
+        tabWithTimeFrameWithSessions,
+        _deselectedLibraryItems
+    ) { (tabWithFrame, sessions), deselectedLibraryItems ->
+        TabWithTimeFrameWithSections(
+            tabWithTimeFrame = tabWithFrame,
+            sections = sessions.map { (_, sections) ->
+                Pair(
+                    sections.first().section.timestamp,
+                    sections.filter { (_, item) ->
+                        item !in deselectedLibraryItems
+                    }
+                )
+            }
+        )
+    }
+
+    private val totalDuration = tabWithTimeFrameWithFilteredSections.map { (_, sections) ->
+        sections.sumOf { (_, sections) ->
             sections.sumOf { (section, _) -> section.duration }
         }
     }.stateIn(
@@ -201,7 +230,8 @@ class SessionStatisticsViewModel(
         initialValue = 0,
     )
 
-    private val itemsInSessionsInTimeFrame = sessionsInTimeFrame.map { sessions ->
+    private val itemsInSessionsInTimeFrame = tabWithTimeFrameWithSessions
+        .map { (_, sessions) ->
         sessions.flatMap { (_, sections) ->
             sections.map { it.libraryItem }
         }.distinct()
@@ -228,18 +258,17 @@ class SessionStatisticsViewModel(
 
     private val barChartData = combine(
         _chartType,
-        _selectedTab,
-        _timeFrame,
-        timestampsInFrameWithFilteredSections,
+        tabWithTimeFrameWithFilteredSections,
         itemsSortInfo,
     ) {
         chartType,
-        selectedTab,
-        (_, timeFrameEnd),
-        timestampAndFilteredSections,
+        (tabWithTimeFrame ,timestampAndFilteredSections),
         (itemSortMode, itemSortDirection) ->
 
         if (chartType != SessionStatisticsChartType.BAR) return@combine null
+
+        val (selectedTab, timeFrame) = tabWithTimeFrame
+        val (timeFrameStart, timeFrameEnd) = timeFrame
 
         val timeFrames = (0L..6L).reversed().map {
             when(selectedTab) {
@@ -303,9 +332,9 @@ class SessionStatisticsViewModel(
 
     private val pieChartData = combine(
         _chartType,
-        timestampsInFrameWithFilteredSections,
+        tabWithTimeFrameWithFilteredSections,
         itemsSortInfo,
-    ) { chartType, timestampsInFrameWithFilteredSections, (itemSortMode, itemSortDirection) ->
+    ) { chartType, (_, timestampsInFrameWithFilteredSections), (itemSortMode, itemSortDirection) ->
         if (chartType != SessionStatisticsChartType.PIE) return@combine null
 
         val libraryItemToDuration = timestampsInFrameWithFilteredSections
@@ -417,9 +446,9 @@ class SessionStatisticsViewModel(
     )
 
     private val headerUiState = combine(
-        _timeFrame,
+        _selectedTabWithTimeFrame,
         totalDuration,
-    ) { timeFrame, totalDuration ->
+    ) { (_, timeFrame), totalDuration ->
         val (start, end) = timeFrame
 
         SessionStatisticsHeaderUiState(
@@ -432,7 +461,7 @@ class SessionStatisticsViewModel(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = SessionStatisticsHeaderUiState(
-            timeFrame = _timeFrame.value,
+            timeFrame = _selectedTabWithTimeFrame.value.timeFrame,
             totalPracticeDuration = totalDuration.value,
             seekBackwardEnabled = false,
             seekForwardEnabled = false,
@@ -440,24 +469,24 @@ class SessionStatisticsViewModel(
     )
 
     private val contentUiState = combine(
-        _selectedTab,
+        _selectedTabWithTimeFrame,
         headerUiState,
         barChartUiState,
         pieChartUiState,
         sortedLibraryItemsWithSelection
-    ) { selectedTab, headerUiState, barChartUiState, pieChartUiState, libraryItemsWithSelection ->
+    ) { (selectedTab, _), headerUiState, barChartUiState, pieChartUiState, libraryItemsWithSelection ->
         SessionStatisticsContentUiState(
             selectedTab = selectedTab,
             headerUiState = headerUiState,
             barChartUiState = barChartUiState,
             pieChartUiState = pieChartUiState,
             libraryItemsWithSelection = libraryItemsWithSelection,
-        )
+        ).also { Log.d("stats viewmodel", "contentUiState: $it")}
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = SessionStatisticsContentUiState(
-            selectedTab = _selectedTab.value,
+            selectedTab = _selectedTabWithTimeFrame.value.tab,
             headerUiState = headerUiState.value,
             barChartUiState = barChartUiState.value,
             pieChartUiState = pieChartUiState.value,
@@ -505,95 +534,109 @@ class SessionStatisticsViewModel(
         }
     }
 
-    fun onTabSelected(tab: SessionStatisticsTab) {
-        if (tab == _selectedTab.value) return
-        _selectedTab.update { tab }
-        _timeFrame.update { (_, end) ->
-            when(tab) {
-                SessionStatisticsTab.DAYS -> {
-                    val endOfToday = getEndOfDay()
-                    var newEnd = end
-                    if (newEnd > endOfToday) {
-                        newEnd = endOfToday
+    fun onTabSelected(selectedTab: SessionStatisticsTab) {
+        if (selectedTab == _selectedTabWithTimeFrame.value.tab) return
+        _selectedTabWithTimeFrame.update { (_, timeframe) ->
+            val (_, end) = timeframe
+
+            TabWithTimeFrame(
+                tab = selectedTab,
+                timeFrame = when(selectedTab) {
+                    SessionStatisticsTab.DAYS -> {
+                        val endOfToday = getEndOfDay()
+                        var newEnd = end
+                        if (newEnd > endOfToday) {
+                            newEnd = endOfToday
+                        }
+                        getStartOfDay(dayOffset = -6, dateTime = newEnd.minusSeconds(1)) to newEnd
                     }
-                    getStartOfDay(dayOffset = -6, dateTime = newEnd.minusSeconds(1)) to newEnd
-                }
-                SessionStatisticsTab.WEEKS -> {
-                    val endOfThisWeek = getEndOfWeek()
-                    var newEnd = getEndOfWeek(dateTime = end.minusSeconds(1))
-                    if (newEnd > endOfThisWeek) {
-                        newEnd = endOfThisWeek
+                    SessionStatisticsTab.WEEKS -> {
+                        val endOfThisWeek = getEndOfWeek()
+                        var newEnd = getEndOfWeek(dateTime = end.minusSeconds(1))
+                        if (newEnd > endOfThisWeek) {
+                            newEnd = endOfThisWeek
+                        }
+                        getStartOfWeek(weekOffset = -6, dateTime = newEnd.minusSeconds(1)) to newEnd
                     }
-                    getStartOfWeek(weekOffset = -6, dateTime = newEnd.minusSeconds(1)) to newEnd
-                }
-                SessionStatisticsTab.MONTHS -> {
-                    val endOfThisMonth = getEndOfMonth()
-                    var newEnd = getEndOfMonth(dateTime = end.minusSeconds(1))
-                    if (newEnd > endOfThisMonth) {
-                        newEnd = endOfThisMonth
+                    SessionStatisticsTab.MONTHS -> {
+                        val endOfThisMonth = getEndOfMonth()
+                        var newEnd = getEndOfMonth(dateTime = end.minusSeconds(1))
+                        if (newEnd > endOfThisMonth) {
+                            newEnd = endOfThisMonth
+                        }
+                        getStartOfMonth(monthOffset = -6, dateTime = newEnd.minusSeconds(1)) to newEnd
                     }
-                    getStartOfMonth(monthOffset = -6, dateTime = newEnd.minusSeconds(1)) to newEnd
                 }
-            }
+            )
         }
     }
 
     fun onSeekForwardClicked() {
-        _timeFrame.update { (_ , end) ->
-            when(_selectedTab.value) {
-                SessionStatisticsTab.DAYS -> {
-                    val endOfToday = getEndOfDay()
-                    var newEnd = end.plusDays(7)
-                    if(newEnd > endOfToday) {
-                       newEnd = endOfToday
+        _selectedTabWithTimeFrame.update { (tab , timeFrame) ->
+            val (_, end) = timeFrame
+
+            TabWithTimeFrame(
+                tab = tab,
+                timeFrame = when(tab) {
+                    SessionStatisticsTab.DAYS -> {
+                        val endOfToday = getEndOfDay()
+                        var newEnd = end.plusDays(7)
+                        if(newEnd > endOfToday) {
+                           newEnd = endOfToday
+                        }
+                        getStartOfDay(dayOffset = -6, dateTime = newEnd.minusSeconds(1)) to newEnd
                     }
-                    getStartOfDay(dayOffset = -6, dateTime = newEnd.minusSeconds(1)) to newEnd
-                }
-                SessionStatisticsTab.WEEKS -> {
-                    val endOfThisWeek = getEndOfWeek()
-                    var newEnd = end.plusWeeks(7)
-                    if(newEnd > endOfThisWeek) {
-                       newEnd = endOfThisWeek
+                    SessionStatisticsTab.WEEKS -> {
+                        val endOfThisWeek = getEndOfWeek()
+                        var newEnd = end.plusWeeks(7)
+                        if(newEnd > endOfThisWeek) {
+                           newEnd = endOfThisWeek
+                        }
+                        getStartOfWeek(weekOffset = -6, dateTime = newEnd.minusSeconds(1)) to newEnd
                     }
-                    getStartOfWeek(weekOffset = -6, dateTime = newEnd.minusSeconds(1)) to newEnd
-                }
-                SessionStatisticsTab.MONTHS -> {
-                    val endOfThisMonth = getEndOfMonth()
-                    var newEnd = end.plusMonths(7)
-                    if(newEnd > endOfThisMonth) {
-                       newEnd = endOfThisMonth
+                    SessionStatisticsTab.MONTHS -> {
+                        val endOfThisMonth = getEndOfMonth()
+                        var newEnd = end.plusMonths(7)
+                        if(newEnd > endOfThisMonth) {
+                           newEnd = endOfThisMonth
+                        }
+                        getStartOfMonth(monthOffset = -6, dateTime = newEnd.minusSeconds(1)) to newEnd
                     }
-                    getStartOfMonth(monthOffset = -6, dateTime = newEnd.minusSeconds(1)) to newEnd
                 }
-            }
+            )
         }
     }
 
     fun onSeekBackwardClicked() {
-        _timeFrame.update { (start , _) ->
-            when(_selectedTab.value) {
-                SessionStatisticsTab.DAYS -> {
-                    var newStart = start.minusDays(7)
-                    if(newStart < release) {
-                        newStart = release
+        _selectedTabWithTimeFrame.update { (tab, timeFrame) ->
+            val (start, _) = timeFrame
+
+            TabWithTimeFrame(
+                tab = tab,
+                timeFrame = when(tab) {
+                    SessionStatisticsTab.DAYS -> {
+                        var newStart = start.minusDays(7)
+                        if(newStart < release) {
+                            newStart = release
+                        }
+                        newStart to getEndOfDay(dayOffset = 6, dateTime = newStart)
                     }
-                    newStart to getEndOfDay(dayOffset = 6, dateTime = newStart)
-                }
-                SessionStatisticsTab.WEEKS -> {
-                    var newStart = start.minusWeeks(7)
-                    if(newStart < release) {
-                        newStart = release
+                    SessionStatisticsTab.WEEKS -> {
+                        var newStart = start.minusWeeks(7)
+                        if(newStart < release) {
+                            newStart = release
+                        }
+                        newStart to getEndOfWeek(weekOffset = 6, dateTime = newStart)
                     }
-                    newStart to getEndOfWeek(weekOffset = 6, dateTime = newStart)
-                }
-                SessionStatisticsTab.MONTHS -> {
-                    var newStart = start.minusMonths(7)
-                    if(newStart < release) {
-                        newStart = release
+                    SessionStatisticsTab.MONTHS -> {
+                        var newStart = start.minusMonths(7)
+                        if(newStart < release) {
+                            newStart = release
+                        }
+                        newStart to getEndOfMonth(monthOffset = 6, dateTime = newStart)
                     }
-                    newStart to getEndOfMonth(monthOffset = 6, dateTime = newStart)
                 }
-            }
+            )
         }
     }
 

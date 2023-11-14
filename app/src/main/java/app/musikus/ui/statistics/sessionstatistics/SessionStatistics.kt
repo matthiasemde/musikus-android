@@ -1,6 +1,5 @@
 package app.musikus.ui.statistics.sessionstatistics
 
-import android.util.Log
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationEndReason
@@ -439,7 +438,7 @@ fun SessionStatisticsBarChart(
     val columnThickness = 16.dp
 
     val surfaceColor = MaterialTheme.colorScheme.surface
-    val onSurfaceColor = MaterialTheme.colorScheme.onSurface
+//    val onSurfaceColor = MaterialTheme.colorScheme.onSurface
     val onSurfaceColorLowerContrast = Color.LightGray
 //    val primaryColor = MaterialTheme.colorScheme.primary
     val libraryColors = Musikus.getLibraryItemColors(LocalContext.current).map {
@@ -463,7 +462,6 @@ fun SessionStatisticsBarChart(
 
     val labelsForBars = barData.map { it.label }
     val measuredLabelsForBars = remember(labelsForBars) {
-        Log.d("SessionStatistics", "measuring labels $labelsForBars")
         labelsForBars.map { label ->
             textMeasurer.measure(label, labelTextStyle)
         }
