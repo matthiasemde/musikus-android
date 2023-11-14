@@ -247,8 +247,8 @@ fun SessionStatisticsPieChart(
     )
 
     val absoluteStartAngle = 180f // left side of the circle
-    val strokeThickness = 150f
-    val spacerThickness = 8f
+    val strokeThickness = 64.dp
+    val spacerThickness = 4.dp
 
     val surfaceColor = MaterialTheme.colorScheme.surface
     val libraryColors = Musikus.getLibraryItemColors(LocalContext.current).map {
@@ -340,6 +340,9 @@ fun SessionStatisticsPieChart(
             .fillMaxSize()
             .clipToBounds()
     ) {
+        val strokeThicknessInPx = strokeThickness.toPx()
+        val spacerThicknessInPx = spacerThickness.toPx()
+
         val pieChartRadius = 0.9f * min(size.height, size.width / 2)
         val pieChartCenter = Offset(
             x = size.width / 2,
@@ -359,7 +362,7 @@ fun SessionStatisticsPieChart(
                 Offset(
                     x = kotlin.math.cos(it).toFloat(),
                     y = kotlin.math.sin(it).toFloat()
-                ) * (pieChartRadius - strokeThickness / 2)
+                ) * (pieChartRadius - strokeThicknessInPx / 2)
             }
 
             val startSpacerLine = Math.toRadians(startAngle.toDouble()).let {
@@ -368,7 +371,7 @@ fun SessionStatisticsPieChart(
                     y = kotlin.math.sin(it).toFloat()
                 )
             }.let {
-                Pair(it * pieChartRadius, it * (pieChartRadius - strokeThickness))
+                Pair(it * pieChartRadius, it * (pieChartRadius - strokeThicknessInPx))
             }
 
             val endSpacerLine = Math.toRadians((startAngle + sweepAngle).toDouble()).let {
@@ -377,7 +380,7 @@ fun SessionStatisticsPieChart(
                     y = kotlin.math.sin(it).toFloat()
                 )
             }.let {
-                Pair(it * pieChartRadius, it * (pieChartRadius - strokeThickness))
+                Pair(it * pieChartRadius, it * (pieChartRadius - strokeThicknessInPx))
             }
 
             drawArc(
@@ -394,14 +397,14 @@ fun SessionStatisticsPieChart(
                 color = surfaceColor,
                 start = pieChartCenter + startSpacerLine.first,
                 end = pieChartCenter + startSpacerLine.second,
-                strokeWidth = spacerThickness
+                strokeWidth = spacerThicknessInPx
             )
 
             drawLine(
                 color = surfaceColor,
                 start = pieChartCenter + endSpacerLine.first,
                 end = pieChartCenter + endSpacerLine.second,
-                strokeWidth = spacerThickness
+                strokeWidth = spacerThicknessInPx
             )
 
             if (sweepAngle > 10f) {
@@ -419,7 +422,7 @@ fun SessionStatisticsPieChart(
 
         drawCircle(
             color = surfaceColor,
-            radius = (pieChartRadius - strokeThickness),
+            radius = (pieChartRadius - strokeThicknessInPx),
             center = pieChartCenter,
         )
     }
