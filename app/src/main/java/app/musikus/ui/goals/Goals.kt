@@ -76,16 +76,16 @@ import app.musikus.utils.TimeProvider
 fun Goals(
     mainUiState: MainUiState,
     mainEventHandler: (event: MainUIEvent) -> Unit,
-    goalsViewModel: GoalsViewModel = hiltViewModel(),
+    viewModel: GoalsViewModel = hiltViewModel(),
     timeProvider: TimeProvider,
 ) {
-    val goalsUiState by goalsViewModel.uiState.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
     BackHandler(
-        enabled = goalsUiState.actionModeUiState.isActionMode,
-        onBack = goalsViewModel::clearActionMode
+        enabled = uiState.actionModeUiState.isActionMode,
+        onBack = viewModel::clearActionMode
     )
 
     BackHandler(
@@ -102,14 +102,14 @@ fun Goals(
                 onStateChange = { state ->
                     mainEventHandler(MainUIEvent.ChangeMultiFabState(state))
                     if (state == MultiFabState.EXPANDED) {
-                        goalsViewModel.clearActionMode()
+                        viewModel.clearActionMode()
                     }
                 },
                 contentDescription = "Add",
                 miniFABs = listOf(
                     MiniFABData(
                         onClick = {
-                            goalsViewModel.showDialog(oneShot = true)
+                            viewModel.showDialog(oneShot = true)
                             mainEventHandler(MainUIEvent.CollapseMultiFab)
                         },
                         label = "One shot goal",
@@ -117,7 +117,7 @@ fun Goals(
                     ),
                     MiniFABData(
                         onClick = {
-                            goalsViewModel.showDialog(oneShot = false)
+                            viewModel.showDialog(oneShot = false)
                             mainEventHandler(MainUIEvent.CollapseMultiFab)
                         },
                         label = "Regular goal",
@@ -129,7 +129,7 @@ fun Goals(
         topBar = {
             // TODO find a way to re-use Composable in every screen
             val mainMenuUiState = mainUiState.menuUiState
-            val topBarUiState = goalsUiState.topBarUiState
+            val topBarUiState = uiState.topBarUiState
             LargeTopAppBar(
                 title = { Text(text = topBarUiState.title) },
                 scrollBehavior = scrollBehavior,
@@ -141,8 +141,8 @@ fun Goals(
                         currentSortMode = sortMenuUiState.mode,
                         currentSortDirection = sortMenuUiState.direction,
                         sortItemDescription = "goals",
-                        onShowMenuChanged = goalsViewModel::onSortMenuShowChanged,
-                        onSelectionHandler = goalsViewModel::onSortModeSelected
+                        onShowMenuChanged = viewModel::onSortMenuShowChanged,
+                        onSelectionHandler = viewModel::onSortModeSelected
                     )
                     IconButton(onClick = {
                         mainEventHandler(MainUIEvent.ShowMainMenu)
@@ -172,11 +172,11 @@ fun Goals(
                                     trailingIcon = {
                                         Switch(
                                             checked = overflowMenuUiState.showPausedGoals,
-                                            onCheckedChange = goalsViewModel::onPausedGoalsChanged,
+                                            onCheckedChange = viewModel::onPausedGoalsChanged,
                                         )
                                     },
                                     onClick = {
-                                        goalsViewModel.onPausedGoalsChanged(!overflowMenuUiState.showPausedGoals)
+                                        viewModel.onPausedGoalsChanged(!overflowMenuUiState.showPausedGoals)
                                     },
                                 )
                             }
@@ -196,14 +196,14 @@ fun Goals(
             )
 
             // Action bar
-            val actionModeUiState = goalsUiState.actionModeUiState
+            val actionModeUiState = uiState.actionModeUiState
 
             if (actionModeUiState.isActionMode) {
                 ActionBar(
                     numSelectedItems = actionModeUiState.numberOfSelections,
                     uniqueActions = {
                         if (actionModeUiState.showPauseAction) {
-                            IconButton(onClick = goalsViewModel::onPauseAction) {
+                            IconButton(onClick = viewModel::onPauseAction) {
                                 Icon(
                                     imageVector = Icons.Rounded.Pause,
                                     contentDescription = "Pause",
@@ -211,7 +211,7 @@ fun Goals(
                             }
                         }
                         if (actionModeUiState.showUnpauseAction) {
-                            IconButton(onClick = goalsViewModel::onUnpauseAction) {
+                            IconButton(onClick = viewModel::onUnpauseAction) {
                                 Icon(
                                     imageVector = Icons.Rounded.PlayArrow,
                                     contentDescription = "Unpause",
@@ -219,10 +219,10 @@ fun Goals(
                             }
                         }
                         IconButton(onClick = {
-                            goalsViewModel.onArchiveAction()
+                            viewModel.onArchiveAction()
                             mainEventHandler(MainUIEvent.ShowSnackbar(
                                 message = "Archived",
-                                onUndo = goalsViewModel::onUndoArchiveAction
+                                onUndo = viewModel::onUndoArchiveAction
                             ))
                         }) {
                             Icon(
@@ -233,20 +233,20 @@ fun Goals(
 
                     },
                     editActionEnabled = { actionModeUiState.showEditAction },
-                    onDismissHandler = goalsViewModel::clearActionMode,
-                    onEditHandler = goalsViewModel::onEditAction,
+                    onDismissHandler = viewModel::clearActionMode,
+                    onEditHandler = viewModel::onEditAction,
                     onDeleteHandler = {
-                        goalsViewModel.onDeleteAction()
+                        viewModel.onDeleteAction()
                         mainEventHandler(MainUIEvent.ShowSnackbar(
                             message = "Deleted",
-                            onUndo = goalsViewModel::onRestoreAction
+                            onUndo = viewModel::onRestoreAction
                         ))
                     }
                 )
             }
         },
         content = { paddingValues ->
-            val contentUiState = goalsUiState.contentUiState
+            val contentUiState = uiState.contentUiState
 
             // Goal List
             LazyColumn(
@@ -266,8 +266,8 @@ fun Goals(
                     Selectable(
                         modifier = Modifier.animateItemPlacement(),
                         selected = goal in contentUiState.selectedGoals,
-                        onShortClick = { goalsViewModel.onGoalClicked(goal, false) },
-                        onLongClick = { goalsViewModel.onGoalClicked(goal, true) }
+                        onShortClick = { viewModel.onGoalClicked(goal, false) },
+                        onLongClick = { viewModel.onGoalClicked(goal, true) }
                     ) {
                         GoalCard(
                             goal = goal,
@@ -279,27 +279,27 @@ fun Goals(
             }
 
             /** Goal Dialog */
-            val dialogUiState = goalsUiState.dialogUiState
+            val dialogUiState = uiState.dialogUiState
 
             if (dialogUiState != null) {
                 if (dialogUiState.goalToEdit == null) {
                     GoalDialog(
                         dialogData = dialogUiState.dialogData,
                         libraryItems = dialogUiState.libraryItems,
-                        onTargetChanged = goalsViewModel::onTargetChanged,
-                        onPeriodChanged = goalsViewModel::onPeriodChanged,
-                        onPeriodUnitChanged = goalsViewModel::onPeriodUnitChanged,
-                        onGoalTypeChanged = goalsViewModel::onGoalTypeChanged,
-                        onSelectedLibraryItemsChanged = goalsViewModel::onLibraryItemsChanged,
-                        onConfirmHandler = goalsViewModel::onDialogConfirm,
-                        onDismissHandler = goalsViewModel::clearDialog,
+                        onTargetChanged = viewModel::onTargetChanged,
+                        onPeriodChanged = viewModel::onPeriodChanged,
+                        onPeriodUnitChanged = viewModel::onPeriodUnitChanged,
+                        onGoalTypeChanged = viewModel::onGoalTypeChanged,
+                        onSelectedLibraryItemsChanged = viewModel::onLibraryItemsChanged,
+                        onConfirmHandler = viewModel::onDialogConfirm,
+                        onDismissHandler = viewModel::clearDialog,
                     )
                 } else {
                     EditGoalDialog(
                         value = dialogUiState.dialogData.target,
-                        onValueChanged = goalsViewModel::onTargetChanged,
-                        onConfirmHandler = goalsViewModel::onDialogConfirm,
-                        onDismissHandler = goalsViewModel::clearDialog
+                        onValueChanged = viewModel::onTargetChanged,
+                        onConfirmHandler = viewModel::onDialogConfirm,
+                        onDismissHandler = viewModel::clearDialog
                     )
                 }
             }

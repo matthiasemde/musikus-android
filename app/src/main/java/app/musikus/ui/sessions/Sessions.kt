@@ -69,12 +69,12 @@ import java.util.UUID
 )
 @Composable
 fun Sessions(
-    sessionsViewModel: SessionsViewModel = hiltViewModel(),
+    viewModel: SessionsViewModel = hiltViewModel(),
     mainUiState: MainUiState,
     mainEventHandler: (event: MainUIEvent) -> Unit,
     onSessionEdit: (sessionId: UUID) -> Unit,
 ) {
-    val sessionsUiState by sessionsViewModel.uiState.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
@@ -85,6 +85,13 @@ fun Sessions(
         derivedStateOf {
             sessionsListState.firstVisibleItemIndex == 0
         }
+    }
+
+    @Composable
+    fun MusikusScaffold(content: @Composable (PaddingValues) -> Unit) {
+        Scaffold (
+            content = content,
+        )
     }
 
     Scaffold(
@@ -107,7 +114,7 @@ fun Sessions(
         },
         topBar = {
             val mainMenuUiState = mainUiState.menuUiState
-            val topBarUiState = sessionsUiState.topBarUiState
+            val topBarUiState = uiState.topBarUiState
             LargeTopAppBar(
                 title = { Text(text = topBarUiState.title) },
                 scrollBehavior = scrollBehavior,
@@ -146,26 +153,26 @@ fun Sessions(
             )
 
             // Action bar
-            val actionModeUiState = sessionsUiState.actionModeUiState
+            val actionModeUiState = uiState.actionModeUiState
             if(actionModeUiState.isActionMode) {
                 ActionBar(
                     numSelectedItems = actionModeUiState.numberOfSelections,
-                    onDismissHandler = sessionsViewModel::clearActionMode,
+                    onDismissHandler = viewModel::clearActionMode,
                     onEditHandler = {
-                        sessionsViewModel.onEditAction(onSessionEdit)
+                        viewModel.onEditAction(onSessionEdit)
                     },
                     onDeleteHandler = {
-                        sessionsViewModel.onDeleteAction()
+                        viewModel.onDeleteAction()
                         mainEventHandler(MainUIEvent.ShowSnackbar(
                             message = "Deleted ${actionModeUiState.numberOfSelections} sessions",
-                            onUndo = sessionsViewModel::onRestoreAction
+                            onUndo = viewModel::onRestoreAction
                         ))
                     }
                 )
             }
         },
         content = { paddingValues ->
-            val contentUiState = sessionsUiState.contentUiState
+            val contentUiState = uiState.contentUiState
 
             // Session list
             LazyColumn(
@@ -192,7 +199,7 @@ fun Sessions(
                                     .sessions.first()
                                     .startTimestamp.month.name,
                                 onClickHandler = {
-                                    sessionsViewModel.onMonthHeaderClicked(sessionsForDaysForMonth.specificMonth)
+                                    viewModel.onMonthHeaderClicked(sessionsForDaysForMonth.specificMonth)
                                 }
                             )
                         }
@@ -226,10 +233,10 @@ fun Sessions(
                                     modifier = Modifier.padding(vertical = MaterialTheme.spacing.small),
                                     selected = session in contentUiState.selectedSessions,
                                     onShortClick = {
-                                        sessionsViewModel.onSessionClicked(session)
+                                        viewModel.onSessionClicked(session)
                                     },
                                     onLongClick = {
-                                        sessionsViewModel.onSessionClicked(session, longClick = true)
+                                        viewModel.onSessionClicked(session, longClick = true)
                                     },
                                 ) {
                                     SessionCard(sessionWithSectionsWithLibraryItems = session)

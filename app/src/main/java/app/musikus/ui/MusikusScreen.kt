@@ -1,5 +1,6 @@
 package app.musikus.ui
 
+import android.util.Log
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedVisibility
@@ -241,6 +242,9 @@ fun MusikusApp(
         )
     }
     ) { innerPadding ->
+
+        Log.d("MainScreen", "paddingVals: $innerPadding")
+
         val animationDuration = 400
         NavHost(
             navController,

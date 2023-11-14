@@ -75,34 +75,41 @@ import app.musikus.Musikus
 import app.musikus.R
 import app.musikus.database.daos.LibraryFolder
 import app.musikus.database.daos.LibraryItem
-import app.musikus.shared.*
+import app.musikus.shared.ActionBar
+import app.musikus.shared.CommonMenuSelections
+import app.musikus.shared.MainMenu
+import app.musikus.shared.MiniFABData
+import app.musikus.shared.MultiFAB
+import app.musikus.shared.MultiFabState
+import app.musikus.shared.Selectable
+import app.musikus.shared.SortMenu
+import app.musikus.shared.ThemeMenu
 import app.musikus.spacing
 import app.musikus.ui.MainUIEvent
 import app.musikus.ui.MainUiState
 import app.musikus.utils.LibraryFolderSortMode
 import app.musikus.utils.LibraryItemSortMode
 import app.musikus.utils.SortMode
-import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Library(
     mainEventHandler: (event: MainUIEvent) -> Unit,
     mainUiState: MainUiState,
-    libraryViewModel: LibraryViewModel = hiltViewModel(),
+    viewModel: LibraryViewModel = hiltViewModel(),
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
-    val libraryUiState by libraryViewModel.uiState.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     BackHandler(
-        enabled = libraryUiState.topBarUiState.showBackButton,
-        onBack = libraryViewModel::onTopBarBackPressed
+        enabled = uiState.topBarUiState.showBackButton,
+        onBack = viewModel::onTopBarBackPressed
     )
 
     BackHandler(
-        enabled = libraryUiState.actionModeUiState.isActionMode,
-        onBack = libraryViewModel::clearActionMode
+        enabled = uiState.actionModeUiState.isActionMode,
+        onBack = viewModel::clearActionMode
     )
 
     BackHandler(
@@ -115,11 +122,11 @@ fun Library(
         modifier = Modifier
             .nestedScroll(scrollBehavior.nestedScrollConnection),
         floatingActionButton = {
-            val fabUiState = libraryUiState.fabUiState
+            val fabUiState = uiState.fabUiState
             if(fabUiState.activeFolder != null) {
                 FloatingActionButton(
                     onClick = {
-                        libraryViewModel.showItemDialog(fabUiState.activeFolder.id)
+                        viewModel.showItemDialog(fabUiState.activeFolder.id)
                         mainEventHandler(MainUIEvent.CollapseMultiFab)
                     },
                 ) {
@@ -129,16 +136,16 @@ fun Library(
                 MultiFAB(
                     state = mainUiState.multiFabState,
                     onStateChange = { state ->
-                        { mainEventHandler(MainUIEvent.ChangeMultiFabState(state)) }
+                        mainEventHandler(MainUIEvent.ChangeMultiFabState(state))
                         if(state == MultiFabState.EXPANDED) {
-                            libraryViewModel.clearActionMode()
+                            viewModel.clearActionMode()
                         }
                     },
                     contentDescription = "Add",
                     miniFABs = listOf(
                         MiniFABData(
                             onClick = {
-                                libraryViewModel.showItemDialog()
+                                viewModel.showItemDialog()
                                 mainEventHandler(MainUIEvent.CollapseMultiFab)
                             },
                             label = "Item",
@@ -146,7 +153,7 @@ fun Library(
                         ),
                         MiniFABData(
                             onClick = {
-                                libraryViewModel.showFolderDialog()
+                                viewModel.showFolderDialog()
                                 mainEventHandler(MainUIEvent.CollapseMultiFab)
                             },
                             label = "Folder",
@@ -158,13 +165,13 @@ fun Library(
         },
         topBar = {
             val mainMenuUiState = mainUiState.menuUiState
-            val topBarUiState = libraryUiState.topBarUiState
+            val topBarUiState = uiState.topBarUiState
             LargeTopAppBar(
                 scrollBehavior = scrollBehavior,
                 title = { Text(text = topBarUiState.title) },
                 navigationIcon = {
                     if(topBarUiState.showBackButton) {
-                        IconButton(onClick = libraryViewModel::onTopBarBackPressed) {
+                        IconButton(onClick = viewModel::onTopBarBackPressed) {
                             Icon(Icons.Rounded.ArrowBack, contentDescription = "Back")
                         }
                     }
@@ -205,34 +212,34 @@ fun Library(
             )
 
             // Action bar
-            val actionModeUiState = libraryUiState.actionModeUiState
+            val actionModeUiState = uiState.actionModeUiState
             if(actionModeUiState.isActionMode) {
                 ActionBar(
                     numSelectedItems = actionModeUiState.numberOfSelections,
-                    onDismissHandler = libraryViewModel::clearActionMode,
-                    onEditHandler = libraryViewModel::onEditAction,
+                    onDismissHandler = viewModel::clearActionMode,
+                    onEditHandler = viewModel::onEditAction,
                     onDeleteHandler = {
-                        libraryViewModel.onDeleteAction()
+                        viewModel.onDeleteAction()
                         mainEventHandler(MainUIEvent.ShowSnackbar(
                             message = "Deleted ${actionModeUiState.numberOfSelections} items",
-                            onUndo = libraryViewModel::onRestoreAction
+                            onUndo = viewModel::onRestoreAction
                         ))
                     }
                 )
             }
         },
         content = { paddingValues ->
-            val contentUiState = libraryUiState.contentUiState
+            val contentUiState = uiState.contentUiState
 
             LibraryContent(
                 contentPadding = paddingValues,
                 contentUiState = contentUiState,
-                onShowFolderSortMenuChange = libraryViewModel::onFolderSortMenuChanged,
-                onFolderSortModeSelected = libraryViewModel::onFolderSortModeSelected,
-                onShowItemSortMenuChange = libraryViewModel::onItemSortMenuChanged,
-                onItemSortModeSelected = libraryViewModel::onItemSortModeSelected,
-                onFolderClicked = libraryViewModel::onFolderClicked,
-                onItemClicked = libraryViewModel::onItemClicked,
+                onShowFolderSortMenuChange = viewModel::onFolderSortMenuChanged,
+                onFolderSortModeSelected = viewModel::onFolderSortModeSelected,
+                onShowItemSortMenuChange = viewModel::onItemSortMenuChanged,
+                onItemSortModeSelected = viewModel::onItemSortModeSelected,
+                onFolderClicked = viewModel::onFolderClicked,
+                onItemClicked = viewModel::onItemClicked,
             )
 
             // Show hint if no items or folders are in the library
@@ -251,7 +258,7 @@ fun Library(
                 }
             }
 
-            val dialogUiState = libraryUiState.dialogUiState
+            val dialogUiState = uiState.dialogUiState
 
             val folderDialogUiState = dialogUiState.folderDialogUiState
             val itemDialogUiState = dialogUiState.itemDialogUiState
@@ -260,9 +267,9 @@ fun Library(
                 LibraryFolderDialog(
                     mode = folderDialogUiState.mode,
                     folderData = folderDialogUiState.folderData,
-                    onFolderNameChange = libraryViewModel::onFolderDialogNameChanged,
-                    onConfirmHandler = libraryViewModel::onFolderDialogConfirmed,
-                    onDismissHandler = libraryViewModel::clearFolderDialog,
+                    onFolderNameChange = viewModel::onFolderDialogNameChanged,
+                    onConfirmHandler = viewModel::onFolderDialogConfirmed,
+                    onDismissHandler = viewModel::clearFolderDialog,
                 )
             }
 
@@ -272,12 +279,12 @@ fun Library(
                     folders = itemDialogUiState.folders,
                     itemData = itemDialogUiState.itemData,
                     folderSelectorExpanded = itemDialogUiState.isFolderSelectorExpanded,
-                    onNameChange = libraryViewModel::onItemDialogNameChanged,
-                    onColorIndexChange = libraryViewModel::onItemDialogColorIndexChanged,
-                    onSelectedFolderIdChange = libraryViewModel::onItemDialogFolderIdChanged,
-                    onFolderSelectorExpandedChange = libraryViewModel::onFolderSelectorExpandedChanged,
-                    onConfirmHandler = libraryViewModel::onItemDialogConfirmed,
-                    onDismissHandler = libraryViewModel::clearItemDialog,
+                    onNameChange = viewModel::onItemDialogNameChanged,
+                    onColorIndexChange = viewModel::onItemDialogColorIndexChanged,
+                    onSelectedFolderIdChange = viewModel::onItemDialogFolderIdChanged,
+                    onFolderSelectorExpandedChange = viewModel::onFolderSelectorExpandedChanged,
+                    onConfirmHandler = viewModel::onItemDialogConfirmed,
+                    onDismissHandler = viewModel::clearItemDialog,
                 )
             }
 
