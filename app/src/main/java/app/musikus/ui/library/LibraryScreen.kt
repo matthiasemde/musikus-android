@@ -57,7 +57,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -76,33 +75,24 @@ import app.musikus.Musikus
 import app.musikus.R
 import app.musikus.database.daos.LibraryFolder
 import app.musikus.database.daos.LibraryItem
-import app.musikus.datastore.ThemeSelections
-import app.musikus.shared.ActionBar
-import app.musikus.shared.CommonMenuSelections
-import app.musikus.shared.MainMenu
-import app.musikus.shared.MiniFABData
-import app.musikus.shared.MultiFAB
-import app.musikus.shared.MultiFabState
-import app.musikus.shared.Selectable
-import app.musikus.shared.SortMenu
-import app.musikus.shared.ThemeMenu
+import app.musikus.shared.*
 import app.musikus.spacing
 import app.musikus.ui.MainUIEvent
-import app.musikus.ui.MainViewModel
+import app.musikus.ui.MainUiState
 import app.musikus.utils.LibraryFolderSortMode
 import app.musikus.utils.LibraryItemSortMode
 import app.musikus.utils.SortMode
+import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Library(
     mainEventHandler: (event: MainUIEvent) -> Unit,
-    mainViewModel: MainViewModel,   // TODO remove
-    libraryViewModel: LibraryViewModel = hiltViewModel()
+    mainUiState: MainUiState,
+    libraryViewModel: LibraryViewModel = hiltViewModel(),
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
-    val mainUiState by mainViewModel.uiState.collectAsStateWithLifecycle()
     val libraryUiState by libraryViewModel.uiState.collectAsStateWithLifecycle()
 
     BackHandler(
@@ -203,7 +193,7 @@ fun Library(
                         )
                         ThemeMenu(
                             expanded = mainMenuUiState.showThemeSubMenu,
-                            currentTheme = mainViewModel.activeTheme.collectAsState(initial = ThemeSelections.DAY).value,
+                            currentTheme = mainUiState.activeTheme,
                             onDismissHandler = { mainEventHandler(MainUIEvent.HideThemeSubMenu) },
                             onSelectionHandler = { theme ->
                                 mainEventHandler(MainUIEvent.HideThemeSubMenu)
@@ -223,10 +213,10 @@ fun Library(
                     onEditHandler = libraryViewModel::onEditAction,
                     onDeleteHandler = {
                         libraryViewModel.onDeleteAction()
-                        mainViewModel.showSnackbar(
+                        mainEventHandler(MainUIEvent.ShowSnackbar(
                             message = "Deleted ${actionModeUiState.numberOfSelections} items",
                             onUndo = libraryViewModel::onRestoreAction
-                        )
+                        ))
                     }
                 )
             }

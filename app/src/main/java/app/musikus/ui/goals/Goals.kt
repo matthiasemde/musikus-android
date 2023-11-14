@@ -47,7 +47,6 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -56,7 +55,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import app.musikus.datastore.ThemeSelections
 import app.musikus.shared.ActionBar
 import app.musikus.shared.CommonMenuSelections
 import app.musikus.shared.MainMenu
@@ -69,7 +67,6 @@ import app.musikus.shared.ThemeMenu
 import app.musikus.spacing
 import app.musikus.ui.MainUIEvent
 import app.musikus.ui.MainUiState
-import app.musikus.ui.MainViewModel
 import app.musikus.utils.GoalsSortMode
 import app.musikus.utils.TimeProvider
 
@@ -81,7 +78,6 @@ fun Goals(
     mainEventHandler: (event: MainUIEvent) -> Unit,
     goalsViewModel: GoalsViewModel = hiltViewModel(),
     timeProvider: TimeProvider,
-    mainViewModel: MainViewModel // TODO remove
 ) {
     val goalsUiState by goalsViewModel.uiState.collectAsStateWithLifecycle()
 
@@ -187,7 +183,7 @@ fun Goals(
                         )
                         ThemeMenu(
                             expanded = mainMenuUiState.showThemeSubMenu,
-                            currentTheme = mainViewModel.activeTheme.collectAsState(initial = ThemeSelections.DAY).value,
+                            currentTheme = mainUiState.activeTheme,
                             onDismissHandler = { mainEventHandler(MainUIEvent.HideThemeSubMenu) },
                             onSelectionHandler = { theme ->
                                 mainEventHandler(MainUIEvent.HideThemeSubMenu)
@@ -224,10 +220,10 @@ fun Goals(
                         }
                         IconButton(onClick = {
                             goalsViewModel.onArchiveAction()
-                            mainViewModel.showSnackbar(
+                            mainEventHandler(MainUIEvent.ShowSnackbar(
                                 message = "Archived",
                                 onUndo = goalsViewModel::onUndoArchiveAction
-                            )
+                            ))
                         }) {
                             Icon(
                                 imageVector = Icons.Rounded.Archive,
@@ -241,10 +237,10 @@ fun Goals(
                     onEditHandler = goalsViewModel::onEditAction,
                     onDeleteHandler = {
                         goalsViewModel.onDeleteAction()
-                        mainViewModel.showSnackbar(
+                        mainEventHandler(MainUIEvent.ShowSnackbar(
                             message = "Deleted",
                             onUndo = goalsViewModel::onRestoreAction
-                        )
+                        ))
                     }
                 )
             }

@@ -40,7 +40,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -49,7 +48,6 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import app.musikus.datastore.ThemeSelections
 import app.musikus.shared.ActionBar
 import app.musikus.shared.CommonMenuSelections
 import app.musikus.shared.MainMenu
@@ -58,7 +56,6 @@ import app.musikus.shared.ThemeMenu
 import app.musikus.spacing
 import app.musikus.ui.MainUIEvent
 import app.musikus.ui.MainUiState
-import app.musikus.ui.MainViewModel
 import app.musikus.utils.DateFormat
 import app.musikus.utils.TimeFormat
 import app.musikus.utils.getDurationString
@@ -76,8 +73,6 @@ fun Sessions(
     mainUiState: MainUiState,
     mainEventHandler: (event: MainUIEvent) -> Unit,
     onSessionEdit: (sessionId: UUID) -> Unit,
-    mainViewModel: MainViewModel    // TODO this should be removed when code is refactored!
-
 ) {
     val sessionsUiState by sessionsViewModel.uiState.collectAsStateWithLifecycle()
 
@@ -139,7 +134,7 @@ fun Sessions(
                         )
                         ThemeMenu(
                             expanded = mainMenuUiState.showThemeSubMenu,
-                            currentTheme = mainViewModel.activeTheme.collectAsState(initial = ThemeSelections.DAY).value,
+                            currentTheme = mainUiState.activeTheme,
                             onDismissHandler = { mainEventHandler(MainUIEvent.HideThemeSubMenu) },
                             onSelectionHandler = { theme ->
                                 mainEventHandler(MainUIEvent.HideThemeSubMenu)
@@ -161,11 +156,10 @@ fun Sessions(
                     },
                     onDeleteHandler = {
                         sessionsViewModel.onDeleteAction()
-                        // TODO refactor so that message variable is not passed from UI to VM
-                        mainViewModel.showSnackbar(
+                        mainEventHandler(MainUIEvent.ShowSnackbar(
                             message = "Deleted ${actionModeUiState.numberOfSelections} sessions",
                             onUndo = sessionsViewModel::onRestoreAction
-                        )
+                        ))
                     }
                 )
             }

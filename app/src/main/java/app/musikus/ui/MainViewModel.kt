@@ -41,6 +41,7 @@ sealed class MainUIEvent {
     data class SetTheme(val theme: ThemeSelections): MainUIEvent()
     data object CollapseMultiFab: MainUIEvent()
     data class ChangeMultiFabState(val state: MultiFabState): MainUIEvent()
+    data class ShowSnackbar(val message: String, val onUndo: (() -> Unit)? = null): MainUIEvent()
 
 
 }
@@ -53,6 +54,8 @@ data class MainUiState(
     val menuUiState: MainMenuUiState,
     val showExportImportDialog: Boolean,
     val multiFabState: MultiFabState,
+    val activeTheme: ThemeSelections,
+    var snackbarHost: SnackbarHostState,
 )
 
 @HiltViewModel
@@ -85,10 +88,15 @@ class MainViewModel @Inject constructor(
     private val _multiFabState = MutableStateFlow(MultiFabState.COLLAPSED)
 
     /** Snackbar */
-    val snackbarHostState = MutableStateFlow(SnackbarHostState())
+    private val _snackbarHost = MutableStateFlow(SnackbarHostState())
 
     /** Theme */
-    val activeTheme = userPreferencesRepository.userPreferences.map { it.theme }
+    private val _activeTheme = userPreferencesRepository.userPreferences.map { it.theme }
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5000),
+            ThemeSelections.DEFAULT
+        )
 
     fun onEvent(event: MainUIEvent) {
         when(event) {
@@ -119,12 +127,15 @@ class MainViewModel @Inject constructor(
             is MainUIEvent.CollapseMultiFab -> {
                 onMultiFabStateChanged(MultiFabState.COLLAPSED)
             }
+            is MainUIEvent.ShowSnackbar -> {
+                showSnackbar(event.message, event.onUndo)
+            }
         }
     }
 
-    fun showSnackbar(message: String, onUndo: (() -> Unit)? = null) {
+    private fun showSnackbar(message: String, onUndo: (() -> Unit)? = null) {
         viewModelScope.launch {
-            val result = snackbarHostState.value.showSnackbar(
+            val result = _snackbarHost.value.showSnackbar(
                 message,
                 actionLabel = if(onUndo != null) "Undo" else null,
                 duration = SnackbarDuration.Long
@@ -167,12 +178,16 @@ class MainViewModel @Inject constructor(
     val uiState = combine(
         menuUiState,
         _showExportImportDialog,
-        _multiFabState
-    ) { menuUiState, showExportImportDialog, multiFabState ->
+        _multiFabState,
+        _activeTheme,
+        _snackbarHost,
+    ) { menuUiState, showExportImportDialog, multiFabState, activeTheme, snackbarHost ->
         MainUiState(
             menuUiState = menuUiState,
             showExportImportDialog = showExportImportDialog,
             multiFabState = multiFabState,
+            activeTheme = activeTheme,
+            snackbarHost = snackbarHost
         )
     }.stateIn(
         scope = viewModelScope,
@@ -181,6 +196,8 @@ class MainViewModel @Inject constructor(
             menuUiState = menuUiState.value,
             showExportImportDialog = _showExportImportDialog.value,
             multiFabState = _multiFabState.value,
+            activeTheme = _activeTheme.value,
+            snackbarHost = _snackbarHost.value
         )
     )
 

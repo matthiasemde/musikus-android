@@ -132,9 +132,9 @@ private val navItems = listOf(
 @OptIn(ExperimentalAnimationGraphicsApi::class)
 @Composable
 fun MusikusBottomBar(
-    mainViewModel: MainViewModel,
+    mainEventHandler: (event: MainUIEvent) -> Unit,
     navController: NavHostController,
-    uiState: MainUiState
+    mainUiState: MainUiState
 ) {
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -205,7 +205,7 @@ fun MusikusBottomBar(
             modifier = Modifier
                 .matchParentSize()
                 .zIndex(1f),
-            visible = uiState.multiFabState == MultiFabState.EXPANDED,
+            visible = mainUiState.multiFabState == MultiFabState.EXPANDED,
             enter = fadeIn(),
             exit = fadeOut()
         ) {
@@ -215,7 +215,7 @@ fun MusikusBottomBar(
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null,
-                        onClick = { mainViewModel.onEvent(MainUIEvent.CollapseMultiFab) }
+                        onClick = { mainEventHandler(MainUIEvent.CollapseMultiFab) }
                     )
             )
         }
@@ -231,11 +231,14 @@ fun MusikusApp(
     val uiState by mainViewModel.uiState.collectAsStateWithLifecycle()
     Scaffold(
     snackbarHost = {
-        val hostState by mainViewModel.snackbarHostState.collectAsStateWithLifecycle()
-        SnackbarHost(hostState = hostState)
+        SnackbarHost(hostState = uiState.snackbarHost)
     },
     bottomBar = {
-        MusikusBottomBar(mainViewModel, navController, uiState)
+        MusikusBottomBar(
+            mainEventHandler = mainViewModel::onEvent,
+            navController = navController,
+            mainUiState = uiState
+        )
     }
     ) { innerPadding ->
         val animationDuration = 400
@@ -272,7 +275,6 @@ fun MusikusApp(
                 Sessions(
                     mainUiState = uiState,
                     mainEventHandler = mainViewModel::onEvent,
-                    mainViewModel = mainViewModel,  // TODO remove this
                     onSessionEdit = { sessionId: UUID ->
                         navController.navigate(
                             Screen.EditSession.route.replace(
@@ -286,7 +288,6 @@ fun MusikusApp(
             composable(
                 route = Screen.Goals.route,
             ) { Goals(
-                mainViewModel = mainViewModel,
                 mainUiState = uiState,
                 mainEventHandler = mainViewModel::onEvent,
                 timeProvider = timeProvider
@@ -313,7 +314,7 @@ fun MusikusApp(
             composable(
                 route = Screen.Library.route,
             ) { Library (
-                mainViewModel = mainViewModel,
+                mainUiState = uiState,
                 mainEventHandler = mainViewModel::onEvent
             ) }
             composable(

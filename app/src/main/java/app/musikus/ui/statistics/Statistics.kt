@@ -44,7 +44,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
@@ -70,7 +69,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.musikus.Musikus
 import app.musikus.R
 import app.musikus.database.entities.GoalType
-import app.musikus.datastore.ThemeSelections
 import app.musikus.shared.CommonMenuSelections
 import app.musikus.shared.MainMenu
 import app.musikus.shared.ThemeMenu
@@ -131,7 +129,7 @@ fun Statistics(
                         )
                         ThemeMenu(
                             expanded = mainMenuUiState.showThemeSubMenu,
-                            currentTheme = mainViewModel.activeTheme.collectAsState(initial = ThemeSelections.DAY).value,
+                            currentTheme = mainUiState.activeTheme,
                             onDismissHandler = { mainEventHandler(MainUIEvent.HideThemeSubMenu) },
                             onSelectionHandler = { theme ->
                                 mainEventHandler(MainUIEvent.HideThemeSubMenu)
