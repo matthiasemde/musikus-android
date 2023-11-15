@@ -325,8 +325,8 @@ class MainActivity : AppCompatActivity() {
                         composable(
                             route = Screen.SessionStatistics.route,
                         ) { SessionStatistics(
-                            navigateToStatistics = {
-                                navController.navigate(Screen.Statistics.route)
+                            navigateUp = {
+                                navController.navigateUp()
                             }
                         ) }
                         composable(

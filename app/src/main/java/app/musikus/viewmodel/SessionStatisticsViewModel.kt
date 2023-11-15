@@ -9,7 +9,6 @@
 package app.musikus.viewmodel
 
 import android.app.Application
-import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import app.musikus.dataStore
@@ -266,9 +265,10 @@ class SessionStatisticsViewModel(
         (itemSortMode, itemSortDirection) ->
 
         if (chartType != SessionStatisticsChartType.BAR) return@combine null
+        if (timestampAndFilteredSections.isEmpty()) return@combine null
 
         val (selectedTab, timeFrame) = tabWithTimeFrame
-        val (timeFrameStart, timeFrameEnd) = timeFrame
+        val (_, timeFrameEnd) = timeFrame
 
         val timeFrames = (0L..6L).reversed().map {
             when(selectedTab) {
@@ -409,7 +409,6 @@ class SessionStatisticsViewModel(
                                 libraryItemsToDuration = emptyMap(),
                                 totalDuration = 0,
                             )},
-                            maxDuration = 0,
                         )
                     )})
                     _barChartShowing = false
@@ -422,16 +421,13 @@ class SessionStatisticsViewModel(
         flow {
             if (!_barChartShowing) {
                 emit(SessionStatisticsBarChartUiState(
-                    chartData = BarChartData(
-                        barData = (1..7).map { BarChartDatum(
-                            label = "",
+                    chartData = chartData.copy(
+                        barData = chartData.barData.map { bar -> bar.copy(
                             libraryItemsToDuration = emptyMap(),
                             totalDuration = 0,
                         )},
-                        maxDuration = 0,
-                        itemSortMode = LibraryItemSortMode.DEFAULT,
-                        itemSortDirection = SortDirection.DEFAULT,
-                    )
+                        maxDuration = chartData.maxDuration
+                    ),
                 ))
                 _barChartStateBuffer = SessionStatisticsBarChartUiState(chartData)
                 _barChartShowing = true
@@ -481,7 +477,7 @@ class SessionStatisticsViewModel(
             barChartUiState = barChartUiState,
             pieChartUiState = pieChartUiState,
             libraryItemsWithSelection = libraryItemsWithSelection,
-        ).also { Log.d("stats viewmodel", "contentUiState: $it")}
+        )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
