@@ -169,7 +169,9 @@ fun GoalStatisticsBarChart(
                 label = textMeasurer.measure(
                     text = getDurationString(scaleLine.duration.toInt(), TIME_FORMAT_HUMAN_PRETTY).toString(),
                     style = labelTextStyle.copy(
-                        color = scaleLine.color.copy(alpha = animatedAlpha.value)
+                        color = (if(scaleLine.target) primaryColor else onSurfaceColor).copy(
+                            alpha = animatedAlpha.value
+                        )
                     )
                 )
             )

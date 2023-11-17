@@ -107,6 +107,7 @@ enum class LibraryItemSortMode {
     companion object {
         val DEFAULT = DATE_ADDED
 
+        // TODO move to override (check other enums as well)
         fun toString(sortMode: LibraryItemSortMode) = when (sortMode) {
             DATE_ADDED -> "Date added"
             LAST_MODIFIED -> "Last modified"

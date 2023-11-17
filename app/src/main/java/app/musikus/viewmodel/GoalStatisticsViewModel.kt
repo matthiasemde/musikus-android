@@ -23,7 +23,7 @@ import app.musikus.repository.GoalRepository
 import app.musikus.repository.SessionRepository
 import app.musikus.repository.UserPreferencesRepository
 import app.musikus.utils.DATE_FORMATTER_PATTERN_DAY_AND_MONTH
-import app.musikus.utils.getEndOfDay
+import app.musikus.utils.getDateTimeFromTimestamp
 import app.musikus.utils.getTimestamp
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
@@ -133,12 +133,14 @@ class GoalStatisticsViewModel(
         // if there is no time frame, initialize it according to the selected goal
         if (timeFrame == null) {
             _timeFrame.update { _ ->
-                val end = getEndOfDay() // CAREFUL: half open approach
+                val end = getDateTimeFromTimestamp(
+                    timestamp = selectedGoal.instance.let { it.startTimestamp + it.periodInSeconds }
+                )
                 val startOffset = selectedGoal.description.description.periodInPeriodUnits.toLong() * 7
                 when(selectedGoal.description.description.periodUnit) {
-                    GoalPeriodUnit.DAY -> end.minusSeconds(1).minusDays(startOffset) to end
-                    GoalPeriodUnit.WEEK -> end.minusSeconds(1).minusWeeks(startOffset) to end
-                    GoalPeriodUnit.MONTH -> end.minusSeconds(1).minusMonths(startOffset) to end
+                    GoalPeriodUnit.DAY -> end.minusDays(startOffset) to end
+                    GoalPeriodUnit.WEEK -> end.minusWeeks(startOffset) to end
+                    GoalPeriodUnit.MONTH -> end.minusMonths(startOffset) to end
                 }
             }
             return@combine null
@@ -152,6 +154,8 @@ class GoalStatisticsViewModel(
                 goal.description.description.id == selectedGoal.description.description.id &&
                 goal.instance.startTimestamp in startTimestamp until endTimestamp
             )
+        }.also {
+            Log.d("goal-stats-viewmodel", "selectedGoalsInTime: $it")
         }
     }.flatMapLatest { goalsInTimeFrame ->
         if (goalsInTimeFrame == null) return@flatMapLatest flowOf(null)
@@ -246,11 +250,11 @@ class GoalStatisticsViewModel(
                 }
                 GoalPeriodUnit.WEEK -> {
                     end.minusWeeks((it + 1) * description.periodInPeriodUnits) to
-                    end.minusDays(it * description.periodInPeriodUnits)
+                    end.minusWeeks(it * description.periodInPeriodUnits)
                 }
                 GoalPeriodUnit.MONTH -> {
                     end.minusMonths((it + 1) * description.periodInPeriodUnits) to
-                    end.minusDays(it * description.periodInPeriodUnits)
+                    end.minusMonths(it * description.periodInPeriodUnits)
                 }
             }
         }
@@ -337,7 +341,9 @@ class GoalStatisticsViewModel(
     }
 
     fun onGoalSelected(goal: GoalInstanceWithDescriptionWithLibraryItems) {
+        if (_selectedGoal.value == goal) return
         _selectedGoal.update { goal }
+        _timeFrame.update { null } // reset timeFrame
     }
 
 

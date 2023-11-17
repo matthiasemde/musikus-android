@@ -95,7 +95,7 @@ class GoalRepository(
         )
     }
 
-    suspend fun markInstanceAsRenewed(
+    private suspend fun markInstanceAsRenewed(
         goal: GoalInstance,
     ) {
         goalInstanceDao.update(
@@ -189,7 +189,7 @@ class GoalRepository(
 
     /** Utility functions */
 
-    // Sort
+    // Sort TODO move all sort functions to list extension functions
     fun sort(
         goals: List<GoalInstanceWithDescriptionWithLibraryItems>,
         mode: GoalsSortMode,
