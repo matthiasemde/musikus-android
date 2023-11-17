@@ -8,7 +8,6 @@
 
 package app.musikus.ui.goals
 
-import android.text.TextUtils
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateIntAsState
@@ -27,8 +26,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.rounded.Repeat
-import androidx.compose.material3.Divider
 import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -42,7 +41,6 @@ import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -51,13 +49,13 @@ import androidx.compose.ui.unit.sp
 import app.musikus.Musikus
 import app.musikus.R
 import app.musikus.database.GoalInstanceWithDescriptionWithLibraryItems
-import app.musikus.database.entities.GoalPeriodUnit
 import app.musikus.database.entities.GoalType
 import app.musikus.utils.SCALE_FACTOR_FOR_SMALL_TEXT
 import app.musikus.utils.TIME_FORMAT_HUMAN_PRETTY
 import app.musikus.utils.TIME_FORMAT_PRETTY_APPROX
-import app.musikus.utils.getTimestamp
+import app.musikus.utils.asString
 import app.musikus.utils.getDurationString
+import app.musikus.utils.getTimestamp
 
 @Composable
 fun GoalCard(
@@ -97,7 +95,7 @@ fun GoalCard(
                                 Icons.Rounded.Repeat else Icons.Filled.LocalFireDepartment,
                             contentDescription = if(description.repeat)
                                 "Regular goal" else "One shot goal",
-                            tint = MaterialTheme.colorScheme.primary
+                            tint = libraryItemColor ?: MaterialTheme.colorScheme.primary
                         )
 
 
@@ -116,9 +114,7 @@ fun GoalCard(
                         /** Goal Title */
                         Text(
                             modifier = Modifier.weight(1f),
-                            text = if(description.type == GoalType.NON_SPECIFIC)
-                                stringResource(R.string.goal_name_non_specific) else
-                                libraryItems.firstOrNull()?.name ?: "Delete me!"
+                            text = goal.title.asString()
                         )
 //                    }
 
@@ -142,22 +138,11 @@ fun GoalCard(
                     }
                 }
 
-                Divider(modifier = Modifier.padding(vertical = 8.dp))
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
                 /** Goal Description */
-                val count = description.periodInPeriodUnits
-                val periodFormatted =
-                    when (description.periodUnit) {
-                        GoalPeriodUnit.DAY -> pluralStringResource(R.plurals.time_period_day, count, count)
-                        GoalPeriodUnit.WEEK -> pluralStringResource(R.plurals.time_period_week, count, count)
-                        GoalPeriodUnit.MONTH -> pluralStringResource(R.plurals.time_period_month, count, count)
-                    }
-
                 Text(
-                    text = TextUtils.concat(
-                        getDurationString(instance.target, TIME_FORMAT_HUMAN_PRETTY),
-                        " ",
-                        periodFormatted).toString(),
+                    text = goal.subtitle.asString(),
                     style = MaterialTheme.typography.bodyLarge.copy(fontSize = 20.sp)
                 )
 
@@ -188,7 +173,7 @@ fun GoalCard(
                         progress = animatedProgressPercent,
                         trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f),
                         color =
-                        libraryItemColor ?: MaterialTheme.colorScheme.inversePrimary,
+                        libraryItemColor ?: MaterialTheme.colorScheme.primary,
                     )
                     Row(
                         modifier = Modifier

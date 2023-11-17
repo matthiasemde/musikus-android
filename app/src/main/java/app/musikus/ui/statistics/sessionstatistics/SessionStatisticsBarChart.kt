@@ -353,18 +353,19 @@ fun SessionStatisticsBarChart(
                     )
                 }
 
+                // clip shape for rounded corners
                 if (animatedBarHeight > 0f) {
                     val topEdge = size.height - animatedBarHeight - (yZero + columnYOffset) + spacerThickness.toPx() / 2
                     drawPath(
                         color = surfaceColor,
                         path = Path().apply {
-                            moveTo(leftEdge, topEdge)
+                            moveTo(leftEdge - 1, topEdge - 1)
                             arcTo(
                                 rect = Rect(
-                                    left = leftEdge,
-                                    top = topEdge,
-                                    right = leftEdge + 8.dp.toPx(),
-                                    bottom = topEdge + 8.dp.toPx(),
+                                    left = leftEdge - 1,
+                                    top = topEdge - 1,
+                                    right = leftEdge + 8.dp.toPx() + 1,
+                                    bottom = topEdge + 8.dp.toPx() + 1,
                                 ),
                                 startAngleDegrees = 180f,
                                 sweepAngleDegrees = 90f,
@@ -372,16 +373,16 @@ fun SessionStatisticsBarChart(
                             )
                             arcTo(
                                 rect = Rect(
-                                    left = rightEdge - 8.dp.toPx(),
-                                    top = topEdge,
-                                    right = rightEdge,
-                                    bottom = topEdge + 8.dp.toPx(),
+                                    left = rightEdge - 8.dp.toPx() - 1,
+                                    top = topEdge - 1,
+                                    right = rightEdge + 1,
+                                    bottom = topEdge + 8.dp.toPx() + 1,
                                 ),
                                 startAngleDegrees = 270f,
                                 sweepAngleDegrees = 90f,
                                 forceMoveTo = false
                             )
-                            lineTo(rightEdge, topEdge)
+                            lineTo(rightEdge + 1, topEdge - 1)
                             close()
                         },
                         style = Fill

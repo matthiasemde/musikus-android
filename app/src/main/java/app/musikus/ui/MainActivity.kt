@@ -75,6 +75,7 @@ import app.musikus.ui.library.Library
 import app.musikus.ui.sessionlist.EditSession
 import app.musikus.ui.sessionlist.Sessions
 import app.musikus.ui.statistics.Statistics
+import app.musikus.ui.statistics.goalstatistics.GoalStatistics
 import app.musikus.ui.statistics.sessionstatistics.SessionStatistics
 import app.musikus.utils.ExportDatabaseContract
 import app.musikus.utils.ExportImportDialog
@@ -118,6 +119,9 @@ sealed class Screen(
     )
     data object SessionStatistics : Screen(
         route = "sessionStatistics",
+    )
+    data object GoalStatistics : Screen(
+        route = "goalStatistics",
     )
     data object Library : Screen(
         route = "library",
@@ -320,15 +324,17 @@ class MainActivity : AppCompatActivity() {
                             mainViewModel = mainViewModel,
                             navigateToSessionStatistics = {
                                 navController.navigate(Screen.SessionStatistics.route)
+                            },
+                            navigateToGoalStatistics = {
+                                navController.navigate(Screen.GoalStatistics.route)
                             }
                         ) }
                         composable(
                             route = Screen.SessionStatistics.route,
-                        ) { SessionStatistics(
-                            navigateUp = {
-                                navController.navigateUp()
-                            }
-                        ) }
+                        ) { SessionStatistics(navigateUp = navController::navigateUp) }
+                        composable(
+                            route = Screen.GoalStatistics.route,
+                        ) { GoalStatistics(navigateUp = navController::navigateUp) }
                         composable(
                             route = Screen.Library.route,
                         ) { Library (mainViewModel) }

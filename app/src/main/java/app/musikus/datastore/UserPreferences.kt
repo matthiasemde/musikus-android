@@ -8,6 +8,7 @@
 
 package app.musikus.datastore
 
+import app.musikus.database.GoalInstanceWithDescriptionWithLibraryItems
 import app.musikus.database.daos.LibraryItem
 
 enum class SortDirection {
@@ -70,6 +71,28 @@ enum class GoalsSortMode {
             valueOf(string ?: "")
         } catch (e: Exception) {
             DEFAULT
+        }
+    }
+}
+
+fun List<GoalInstanceWithDescriptionWithLibraryItems>.sorted(
+    mode: GoalsSortMode,
+    direction: SortDirection
+) = when (direction) {
+    SortDirection.ASCENDING -> {
+        when (mode) {
+            GoalsSortMode.DATE_ADDED -> this.sortedBy { it.description.description.createdAt }
+            GoalsSortMode.TARGET -> this.sortedBy { it.instance.target }
+            GoalsSortMode.PERIOD -> this.sortedBy { it.instance.periodInSeconds }
+            GoalsSortMode.CUSTOM -> this // TODO
+        }
+    }
+    SortDirection.DESCENDING -> {
+        when (mode) {
+            GoalsSortMode.DATE_ADDED -> this.sortedByDescending { it.description.description.createdAt }
+            GoalsSortMode.TARGET -> this.sortedByDescending { it.instance.target }
+            GoalsSortMode.PERIOD -> this.sortedByDescending { it.instance.periodInSeconds }
+            GoalsSortMode.CUSTOM -> this // TODO()
         }
     }
 }

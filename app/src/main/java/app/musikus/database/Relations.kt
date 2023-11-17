@@ -15,6 +15,7 @@ package app.musikus.database
 import androidx.room.Embedded
 import androidx.room.Junction
 import androidx.room.Relation
+import app.musikus.R
 import app.musikus.database.daos.GoalDescription
 import app.musikus.database.daos.GoalInstance
 import app.musikus.database.daos.LibraryFolder
@@ -24,8 +25,13 @@ import app.musikus.database.daos.Session
 import app.musikus.database.entities.GoalDescriptionLibraryItemCrossRefModel
 import app.musikus.database.entities.GoalDescriptionModel
 import app.musikus.database.entities.GoalInstanceModel
+import app.musikus.database.entities.GoalPeriodUnit
+import app.musikus.database.entities.GoalType
 import app.musikus.database.entities.LibraryItemModel
 import app.musikus.database.entities.SectionModel
+import app.musikus.utils.TIME_FORMAT_HUMAN_PRETTY
+import app.musikus.utils.UiText
+import app.musikus.utils.getDurationString
 
 
 data class SessionWithSections(
@@ -71,7 +77,13 @@ data class GoalDescriptionWithLibraryItems(
         )
     )
     val libraryItems: List<LibraryItem>
-)
+) {
+    val title
+        get() = when (description.type) {
+            GoalType.NON_SPECIFIC -> description.title
+            GoalType.ITEM_SPECIFIC -> description.title(libraryItems.first())
+        }
+}
 
 data class LibraryFolderWithItems(
     @Embedded val folder: LibraryFolder,
@@ -161,4 +173,26 @@ data class GoalInstanceWithDescriptionWithLibraryItems(
         entityColumn = "id"
     )
     val description: GoalDescriptionWithLibraryItems
-)
+) {
+    val title
+        get() = when (description.description.type) {
+            GoalType.NON_SPECIFIC -> description.description.title
+            GoalType.ITEM_SPECIFIC -> description.description.title(description.libraryItems.first())
+        }
+
+    val subtitle
+        get() = listOf(
+            UiText.DynamicString(
+                getDurationString(instance.target, TIME_FORMAT_HUMAN_PRETTY).toString()
+            ),
+            UiText.PluralResource(
+                resId = when(description.description.periodUnit) {
+                    GoalPeriodUnit.DAY ->R.plurals.time_period_day
+                    GoalPeriodUnit.WEEK -> R.plurals.time_period_week
+                    GoalPeriodUnit.MONTH -> R.plurals.time_period_month
+                },
+                quantity = description.description.periodInPeriodUnits,
+                description.description.periodInPeriodUnits // argument used in the format string
+            )
+        )
+}

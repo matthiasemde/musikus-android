@@ -13,8 +13,10 @@
 package app.musikus.database.daos
 
 import androidx.room.*
+import app.musikus.R
 import app.musikus.database.*
 import app.musikus.database.entities.*
+import app.musikus.utils.UiText
 import java.util.*
 
 data class GoalDescription(
@@ -29,7 +31,16 @@ data class GoalDescription(
     @ColumnInfo(name="custom_order") val customOrder: Int?,
 ) : SoftDeleteModelDisplayAttributes() {
 
+    val title: UiText
+        get() = run {
+            assert(type == GoalType.NON_SPECIFIC)
+            UiText.StringResource(R.string.goal_name_non_specific)
+        }
 
+    fun title(item: LibraryItem): UiText {
+        assert(type == GoalType.ITEM_SPECIFIC)
+        return UiText.DynamicString(item.name)
+    }
 }
 
 @Dao

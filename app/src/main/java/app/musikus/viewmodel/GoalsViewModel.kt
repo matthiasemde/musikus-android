@@ -9,7 +9,6 @@
 package app.musikus.viewmodel
 
 import android.app.Application
-import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import app.musikus.dataStore
@@ -24,6 +23,7 @@ import app.musikus.database.entities.GoalType
 import app.musikus.datastore.GoalsSortMode
 import app.musikus.datastore.LibraryItemSortMode
 import app.musikus.datastore.SortDirection
+import app.musikus.datastore.sorted
 import app.musikus.repository.GoalRepository
 import app.musikus.repository.LibraryRepository
 import app.musikus.repository.SessionRepository
@@ -130,36 +130,20 @@ class GoalsViewModel(
         initialValue = true
     )
 
-    private val itemsSortMode = userPreferences.map {
-        it.libraryItemSortMode
+    private val itemsSortInfo = userPreferences.map {
+        it.libraryItemSortMode to it.libraryItemSortDirection
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = LibraryItemSortMode.DEFAULT
+        initialValue = LibraryItemSortMode.DEFAULT to SortDirection.DEFAULT
     )
 
-    private val itemsSortDirection = userPreferences.map {
-        it.libraryItemSortDirection
+    private val goalsSortInfo = userPreferences.map {
+        it.goalsSortMode to it.goalsSortDirection
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = SortDirection.DEFAULT
-    )
-
-    private val goalsSortMode = userPreferences.map {
-        it.goalsSortMode
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = GoalsSortMode.DEFAULT
-    )
-
-    private val goalsSortDirection = userPreferences.map {
-        it.goalsSortDirection
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = SortDirection.DEFAULT
+        initialValue = GoalsSortMode.DEFAULT to SortDirection.DEFAULT
     )
 
     private val currentGoals = goalRepository.currentGoals.stateIn(
@@ -176,9 +160,8 @@ class GoalsViewModel(
 
     private val sortedItems = combine(
         items,
-        itemsSortMode,
-        itemsSortDirection
-    ) { items, sortMode, sortDirection ->
+        itemsSortInfo
+    ) { items, (sortMode, sortDirection) ->
         libraryRepository.sortItems(
             items = items,
             mode = sortMode,
@@ -218,12 +201,11 @@ class GoalsViewModel(
 
     private val sortedGoals = combine(
         filteredGoals,
-        userPreferences
-    ) { goals, preferences ->
-        goalRepository.sort(
-            goals,
-            preferences.goalsSortMode,
-            preferences.goalsSortDirection
+        goalsSortInfo
+    ) { goals, (sortMode, sortDirection) ->
+        goals.sorted(
+            sortMode,
+            sortDirection
         )
     }.stateIn(
         scope = viewModelScope,
@@ -233,9 +215,8 @@ class GoalsViewModel(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private val goalProgress = filteredGoals.flatMapLatest { goals ->
-        Log.d("GoalsViewModel", "goalProgress: $goals")
         val sections = goals.map { goal ->
-            sessionRepository.sectionsForGoal(goal).map { sections->
+            sessionRepository.sectionsForGoal(goal).map { sections ->
                 goal to sections
             }
         }
@@ -258,10 +239,9 @@ class GoalsViewModel(
      *  Composing the Ui state
      */
     private val sortMenuUiState = combine(
-        goalsSortMode,
-        goalsSortDirection,
+        goalsSortInfo,
         _showSortModeMenu
-    ) { mode, direction, show ->
+    ) { (mode, direction), show ->
         GoalsSortMenuUiState(
             show = show,
             mode = mode,

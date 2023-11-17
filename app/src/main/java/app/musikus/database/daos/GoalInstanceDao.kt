@@ -350,13 +350,16 @@ abstract class GoalInstanceDao(
         "SELECT * FROM goal_instance " +
                 "WHERE goal_description_id IN (" +
                 "SELECT id FROM goal_description " +
-                "WHERE paused=1 " +
-                "AND archived=0 " +
-                "AND deleted=0" +
+                "WHERE deleted=0" +
                 ")" +
-                "AND renewed=0"
+                "AND (start_timestamp + period_in_seconds) < :now " +
+                "ORDER BY (start_timestamp + period_in_seconds) DESC " +
+                "LIMIT :n"
     )
-    abstract fun getLatestPausedWithDescriptions(): Flow<List<GoalInstanceWithDescription>>
+    abstract fun getLastNCompletedWithDescriptionsWithLibraryItems(
+        n: Int,
+        now: Long = getTimestamp()
+    ): Flow<List<GoalInstanceWithDescriptionWithLibraryItems>>
 
     @Transaction
     @RewriteQueriesToDropUnusedColumns
@@ -364,13 +367,12 @@ abstract class GoalInstanceDao(
         "SELECT * FROM goal_instance " +
                 "WHERE goal_description_id IN (" +
                 "SELECT id FROM goal_description " +
-                "WHERE deleted=0" +
+                    "WHERE deleted=0" +
                 ")" +
-                "AND (start_timestamp + period_in_seconds) < :now " +
-                "ORDER BY (start_timestamp + period_in_seconds) DESC " +
-                "LIMIT 5"
+                "ORDER BY start_timestamp DESC"
     )
-    abstract fun getLastFiveCompletedWithDescriptionsWithLibraryItems(
-       now: Long = getTimestamp()
-    ): Flow<List<GoalInstanceWithDescriptionWithLibraryItems>>
+    abstract fun getAllWithDescriptionWithLibraryItems()
+        : Flow<List<GoalInstanceWithDescriptionWithLibraryItems>>
+
+
 }

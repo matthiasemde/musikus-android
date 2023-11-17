@@ -96,6 +96,7 @@ fun Statistics(
     mainViewModel: MainViewModel,
     statisticsViewModel: StatisticsViewModel = viewModel(),
     navigateToSessionStatistics: () -> Unit,
+    navigateToGoalStatistics: () -> Unit,
 ) {
     val mainUiState by mainViewModel.uiState.collectAsStateWithLifecycle()
     val statisticsUiState by statisticsViewModel.uiState.collectAsStateWithLifecycle()
@@ -165,15 +166,12 @@ fun Statistics(
                 }
                 contentUiState.practiceDurationCardUiState?.let {
                     item {
-                        StatisticsPracticeDurationCard(
-                            it,
-                            navigateToSessionStatistics
-                        )
+                        StatisticsPracticeDurationCard(it, navigateToSessionStatistics)
                     }
                 }
                 contentUiState.goalCardUiState?.let {
                     item {
-                        StatisticsGoalCard(it)
+                        StatisticsGoalCard(it, navigateToGoalStatistics)
                     }
                 }
                 contentUiState.ratingsCardUiState?.let {
@@ -384,13 +382,16 @@ fun StatisticsPracticeDurationCard(
 
 @Composable
 fun StatisticsGoalCard(
-    uiState: StatisticsGoalCardUiState
+    uiState: StatisticsGoalCardUiState,
+    navigateToGoalStatistics: () -> Unit,
 ) {
     ElevatedCard(modifier = Modifier
         .fillMaxWidth()
-        .wrapContentHeight()) {
+        .wrapContentHeight()
+    ) {
         Column(modifier = Modifier
             .fillMaxWidth()
+            .clickable(onClick = navigateToGoalStatistics)
             .padding(MaterialTheme.spacing.medium)
         ) {
             Row(

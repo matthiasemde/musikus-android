@@ -65,6 +65,7 @@ import app.musikus.viewmodel.SessionStatisticsChartType
 import app.musikus.viewmodel.SessionStatisticsHeaderUiState
 import app.musikus.viewmodel.SessionStatisticsTab
 import app.musikus.viewmodel.SessionStatisticsViewModel
+import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -132,8 +133,8 @@ fun SessionStatistics(
                 )
                 SessionStatisticsHeader(
                     uiState = contentUiState.headerUiState,
-                    seekForward = viewModel::onSeekForwardClicked,
-                    seekBackward = viewModel::onSeekBackwardClicked
+                    seekForwards = viewModel::onSeekForwardClicked,
+                    seekBackwards = viewModel::onSeekBackwardClicked
                 )
                 Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
                 Box(
@@ -158,55 +159,16 @@ fun SessionStatistics(
 @Composable
 fun SessionStatisticsHeader(
     uiState: SessionStatisticsHeaderUiState,
-    seekForward: () -> Unit = {},
-    seekBackward: () -> Unit = {}
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = MaterialTheme.spacing.small),
-        horizontalArrangement = SpaceBetween,
-        verticalAlignment = CenterVertically,
-    ) {
-        IconButton(
-            onClick = seekBackward,
-            enabled = uiState.seekBackwardEnabled
-        ) {
-            Icon(
-                modifier = Modifier.size(32.dp),
-                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                contentDescription = "Back"
-            )
-        }
-        Column(
-            verticalArrangement = Center,
-            horizontalAlignment = CenterHorizontally
-        ) {
-            Text(
-                text = uiState.timeFrame.let { (start, end) ->
-                    listOf(start, end.minusSeconds(1))
-                }.joinToString(" - ") {
-                    it.format(DateTimeFormatter.ofPattern(DATE_FORMATTER_PATTERN_DAY_AND_MONTH))
-                }, // TODO calculate nice strings
-                style = MaterialTheme.typography.titleLarge
-            )
-            Text(
-                text = "Total " + getDurationString(uiState.totalPracticeDuration, TIME_FORMAT_HUMAN_PRETTY),
-                style = MaterialTheme.typography.titleSmall
-            )
-        }
-        IconButton(
-            onClick = seekForward,
-            enabled = uiState.seekForwardEnabled
-        ) {
-            Icon(
-                modifier = Modifier.size(32.dp),
-                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                contentDescription = "Forward"
-            )
-        }
-    }
-}
+    seekForwards: () -> Unit = {},
+    seekBackwards: () -> Unit = {}
+) = TimeFrameSelectionHeader(
+    timeFrame = uiState.timeFrame,
+    subtitle = "Total " + getDurationString(uiState.totalPracticeDuration, TIME_FORMAT_HUMAN_PRETTY),
+    seekBackwardEnabled = uiState.seekBackwardEnabled,
+    seekForwardEnabled = uiState.seekForwardEnabled,
+    seekForwards = seekForwards,
+    seekBackwards = seekBackwards
+)
 
 
 
@@ -250,6 +212,62 @@ fun SessionStatisticsLibraryItemSelector(
                 )
                 Spacer(modifier = Modifier.width(MaterialTheme.spacing.medium))
             }
+        }
+    }
+}
+
+@Composable
+fun TimeFrameSelectionHeader(
+    timeFrame: Pair<ZonedDateTime, ZonedDateTime>,
+    subtitle: String,
+    seekBackwardEnabled: Boolean,
+    seekForwardEnabled: Boolean,
+    seekForwards: () -> Unit,
+    seekBackwards: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = MaterialTheme.spacing.small),
+        horizontalArrangement = SpaceBetween,
+        verticalAlignment = CenterVertically,
+    ) {
+        IconButton(
+            onClick = seekBackwards,
+            enabled = seekBackwardEnabled
+        ) {
+            Icon(
+                modifier = Modifier.size(32.dp),
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                contentDescription = "Back"
+            )
+        }
+        Column(
+            verticalArrangement = Center,
+            horizontalAlignment = CenterHorizontally
+        ) {
+            Text(
+                text = timeFrame.let { (start, end) ->
+                    listOf(start, end.minusSeconds(1))
+                }.joinToString(" - ") {
+                    it.format(DateTimeFormatter.ofPattern(DATE_FORMATTER_PATTERN_DAY_AND_MONTH))
+                }, // TODO calculate nice strings
+                style = MaterialTheme.typography.titleLarge
+            )
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.titleSmall
+            )
+        }
+        IconButton(
+            onClick = seekForwards,
+            enabled = seekForwardEnabled
+        ) {
+            Icon(
+                modifier = Modifier.size(32.dp),
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = "Forward"
+            )
         }
     }
 }
