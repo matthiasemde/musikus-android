@@ -162,8 +162,7 @@ class GoalsViewModel(
         items,
         itemsSortInfo
     ) { items, (sortMode, sortDirection) ->
-        libraryRepository.sortItems(
-            items = items,
+        items.sorted(
             mode = sortMode,
             direction = sortDirection
         )

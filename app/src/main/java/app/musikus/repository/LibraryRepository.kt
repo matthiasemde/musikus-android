@@ -17,10 +17,6 @@ import app.musikus.database.entities.LibraryFolderUpdateAttributes
 import app.musikus.database.entities.LibraryItemCreationAttributes
 import app.musikus.database.entities.LibraryItemModel
 import app.musikus.database.entities.LibraryItemUpdateAttributes
-import app.musikus.datastore.LibraryFolderSortMode
-import app.musikus.datastore.LibraryItemSortMode
-import app.musikus.datastore.SortDirection
-import app.musikus.utils.getCurrTimestamp
 import java.util.UUID
 
 class LibraryRepository(
@@ -88,55 +84,6 @@ class LibraryRepository(
     /** Clean */
     suspend fun clean() {
         folderDao.clean()
-        itemDao.clean(getCurrTimestamp())
-    }
-
-    /** Sort */
-    fun sortFolders(
-        folders: List<LibraryFolder>,
-        mode: LibraryFolderSortMode,
-        direction: SortDirection,
-    ) = when (direction) {
-        SortDirection.ASCENDING -> {
-            when (mode) {
-                LibraryFolderSortMode.DATE_ADDED -> folders.sortedBy { it.createdAt }
-                LibraryFolderSortMode.LAST_MODIFIED -> folders.sortedBy { it.modifiedAt }
-                LibraryFolderSortMode.NAME -> folders.sortedBy { it.name }
-                LibraryFolderSortMode.CUSTOM -> folders // TODO
-            }
-        }
-        SortDirection.DESCENDING -> {
-            when (mode) {
-                LibraryFolderSortMode.DATE_ADDED -> folders.sortedByDescending { it.createdAt }
-                LibraryFolderSortMode.LAST_MODIFIED -> folders.sortedByDescending { it.modifiedAt }
-                LibraryFolderSortMode.NAME -> folders.sortedByDescending { it.name }
-                LibraryFolderSortMode.CUSTOM -> folders // TODO
-            }
-        }
-    }
-
-    fun sortItems(
-        items: List<LibraryItem>,
-        mode: LibraryItemSortMode,
-        direction: SortDirection,
-    ) = when (direction) {
-        SortDirection.ASCENDING -> {
-            when (mode) {
-                LibraryItemSortMode.DATE_ADDED -> items.sortedBy { it.createdAt }
-                LibraryItemSortMode.LAST_MODIFIED -> items.sortedBy { it.modifiedAt }
-                LibraryItemSortMode.NAME -> items.sortedBy { it.name }
-                LibraryItemSortMode.COLOR -> items.sortedBy { it.colorIndex }
-                LibraryItemSortMode.CUSTOM -> items // TODO
-            }
-        }
-        SortDirection.DESCENDING -> {
-            when (mode) {
-                LibraryItemSortMode.DATE_ADDED -> items.sortedByDescending { it.createdAt }
-                LibraryItemSortMode.LAST_MODIFIED -> items.sortedByDescending { it.modifiedAt }
-                LibraryItemSortMode.NAME -> items.sortedByDescending { it.name }
-                LibraryItemSortMode.COLOR -> items.sortedByDescending { it.colorIndex }
-                LibraryItemSortMode.CUSTOM -> items // TODO
-            }
-        }
+        itemDao.clean()
     }
 }

@@ -24,6 +24,7 @@ import app.musikus.database.entities.LibraryItemUpdateAttributes
 import app.musikus.datastore.LibraryFolderSortMode
 import app.musikus.datastore.LibraryItemSortMode
 import app.musikus.datastore.SortDirection
+import app.musikus.datastore.sorted
 import app.musikus.repository.LibraryRepository
 import app.musikus.repository.UserPreferencesRepository
 import app.musikus.shared.TopBarUiState
@@ -209,8 +210,7 @@ class LibraryViewModel(
         foldersSortDirection,
         items
     ) { folders, sortMode, sortDirection, items ->
-        val sortedFolders = libraryRepository.sortFolders(
-            folders = folders,
+        val sortedFolders = folders.sorted(
             mode = sortMode,
             direction = sortDirection
         )
@@ -230,8 +230,7 @@ class LibraryViewModel(
         itemsSortMode,
         itemsSortDirection
     ) { items, sortMode, sortDirection ->
-        libraryRepository.sortItems(
-            items = items,
+        items.sorted(
             mode = sortMode,
             direction = sortDirection
         )

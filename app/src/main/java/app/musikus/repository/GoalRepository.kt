@@ -10,7 +10,6 @@ package app.musikus.repository
 
 import androidx.room.Transaction
 import app.musikus.database.GoalInstanceWithDescription
-import app.musikus.database.GoalInstanceWithDescriptionWithLibraryItems
 import app.musikus.database.MusikusDatabase
 import app.musikus.database.daos.GoalDescription
 import app.musikus.database.daos.GoalInstance
@@ -20,8 +19,6 @@ import app.musikus.database.entities.GoalDescriptionModel
 import app.musikus.database.entities.GoalDescriptionUpdateAttributes
 import app.musikus.database.entities.GoalInstanceUpdateAttributes
 import app.musikus.database.entities.GoalPeriodUnit
-import app.musikus.datastore.GoalsSortMode
-import app.musikus.datastore.SortDirection
 import java.util.Calendar
 
 class GoalRepository(
@@ -45,7 +42,6 @@ class GoalRepository(
     }
 
 
-    val goalDescriptions = goalDescriptionDao.getAllAsFlow()
     val currentGoals = goalInstanceDao.getWithDescriptionsWithLibraryItems()
     val allGoals = goalInstanceDao.getAllWithDescriptionWithLibraryItems()
     val lastFiveCompletedGoals = goalInstanceDao.getLastNCompletedWithDescriptionsWithLibraryItems(5)
@@ -187,31 +183,10 @@ class GoalRepository(
     }
 
 
-    /** Utility functions */
+    /**
+     * Utility functions
+     * */
 
-    // Sort TODO move all sort functions to list extension functions
-    fun sort(
-        goals: List<GoalInstanceWithDescriptionWithLibraryItems>,
-        mode: GoalsSortMode,
-        direction: SortDirection,
-    ) = when (direction) {
-        SortDirection.ASCENDING -> {
-            when (mode) {
-                GoalsSortMode.DATE_ADDED -> goals.sortedBy { it.description.description.createdAt }
-                GoalsSortMode.TARGET -> goals.sortedBy { it.instance.target }
-                GoalsSortMode.PERIOD -> goals.sortedBy { it.instance.periodInSeconds }
-                GoalsSortMode.CUSTOM -> goals // TODO
-            }
-        }
-        SortDirection.DESCENDING -> {
-            when (mode) {
-                GoalsSortMode.DATE_ADDED -> goals.sortedByDescending { it.description.description.createdAt }
-                GoalsSortMode.TARGET -> goals.sortedByDescending { it.instance.target }
-                GoalsSortMode.PERIOD -> goals.sortedByDescending { it.instance.periodInSeconds }
-                GoalsSortMode.CUSTOM -> goals // TODO()
-            }
-        }
-    }
 
     /** Update Goals */
     suspend fun updateGoals() {

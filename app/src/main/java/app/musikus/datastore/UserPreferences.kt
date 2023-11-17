@@ -9,6 +9,7 @@
 package app.musikus.datastore
 
 import app.musikus.database.GoalInstanceWithDescriptionWithLibraryItems
+import app.musikus.database.daos.LibraryFolder
 import app.musikus.database.daos.LibraryItem
 
 enum class SortDirection {
@@ -124,7 +125,6 @@ enum class LibraryItemSortMode {
     }
 }
 
-@JvmName("sortLibraryItem")
 fun List<LibraryItem>.sorted(
     mode: LibraryItemSortMode,
     direction: SortDirection
@@ -149,7 +149,6 @@ fun List<LibraryItem>.sorted(
     }
 }
 
-@JvmName("sortLibraryItemInPlace")
 fun MutableList<LibraryItem>.sort(
     mode: LibraryItemSortMode,
     direction: SortDirection
@@ -196,6 +195,28 @@ enum class LibraryFolderSortMode {
             valueOf(string ?: "")
         } catch (e: Exception) {
             DEFAULT
+        }
+    }
+}
+
+fun List<LibraryFolder>.sorted(
+    mode: LibraryFolderSortMode,
+    direction: SortDirection,
+) = when (direction) {
+    SortDirection.ASCENDING -> {
+        when (mode) {
+            LibraryFolderSortMode.DATE_ADDED -> this.sortedBy { it.createdAt }
+            LibraryFolderSortMode.LAST_MODIFIED -> this.sortedBy { it.modifiedAt }
+            LibraryFolderSortMode.NAME -> this.sortedBy { it.name }
+            LibraryFolderSortMode.CUSTOM -> this // TODO
+        }
+    }
+    SortDirection.DESCENDING -> {
+        when (mode) {
+            LibraryFolderSortMode.DATE_ADDED -> this.sortedByDescending { it.createdAt }
+            LibraryFolderSortMode.LAST_MODIFIED -> this.sortedByDescending { it.modifiedAt }
+            LibraryFolderSortMode.NAME -> this.sortedByDescending { it.name }
+            LibraryFolderSortMode.CUSTOM -> this // TODO
         }
     }
 }
