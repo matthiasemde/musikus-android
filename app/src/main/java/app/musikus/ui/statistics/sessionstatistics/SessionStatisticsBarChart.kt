@@ -45,7 +45,7 @@ import kotlinx.coroutines.launch
 data class ScaleLineData (
     val label: TextLayoutResult,
     val duration: Float,
-    val alpha: Float,
+    val color: Color
 )
 @Composable
 fun SessionStatisticsBarChart(
@@ -152,18 +152,20 @@ fun SessionStatisticsBarChart(
                 }
             }
     }.mapNotNull { scaleLine ->
-        scaleLines[scaleLine]?.let {
+        scaleLines[scaleLine]?.let { animatedAlpha ->
             ScaleLineData(
                 label = textMeasurer.measure(
                     getDurationString(scaleLine, TIME_FORMAT_HUMAN_PRETTY).toString(),
                     labelTextStyle.copy(
                         color = onSurfaceColor.copy(
-                            alpha = it.value
+                            alpha = animatedAlpha.asState().value
                         )
                     )
                 ),
                 duration = scaleLine.toFloat(),
-                alpha = it.value,
+                color = onSurfaceColorLowerContrast.copy(
+                    alpha = animatedAlpha.asState().value
+                ),
             )
         }
     }
@@ -241,12 +243,10 @@ fun SessionStatisticsBarChart(
         val yMax = (size.height - yZero - columnYOffset) - paddingTop.toPx()
 
         /** Print Scale Lines */
-        scaleLinesWithAnimatedOpacity.forEach { (label, duration, alpha) ->
+        scaleLinesWithAnimatedOpacity.forEach { (label, duration, color) ->
             val lineHeight = (size.height - yZero) - (yMax * (duration / animatedChartMaxDuration))
             drawLine(
-                color = onSurfaceColorLowerContrast.copy(
-                    alpha = alpha
-                ),
+                color = color,
                 start = Offset(
                     x = paddingLeft.toPx(),
                     y = lineHeight
@@ -260,7 +260,6 @@ fun SessionStatisticsBarChart(
             )
             drawText(
                 textLayoutResult = label,
-                alpha = alpha,
                 topLeft = Offset(
                     x = paddingLeft.toPx() + chartWidth + 3.dp.toPx(),
                     y = lineHeight - label.size.height / 2

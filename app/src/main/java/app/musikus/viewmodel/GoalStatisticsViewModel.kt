@@ -23,6 +23,7 @@ import app.musikus.datastore.sorted
 import app.musikus.repository.GoalRepository
 import app.musikus.repository.SessionRepository
 import app.musikus.repository.UserPreferencesRepository
+import app.musikus.utils.DATE_FORMATTER_PATTERN_DAY_AND_MONTH
 import app.musikus.utils.getEndOfDay
 import app.musikus.utils.getTimestamp
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -37,6 +38,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 
 data class GoalStatisticsUiState(
     val contentUiState: GoalStatisticsContentUiState
@@ -62,7 +64,8 @@ data class GoalStatisticsHeaderUiState(
 )
 data class GoalStatisticsBarChartUiState(
     val target: Int,
-    val data: List<Pair<ZonedDateTime, Int>>,
+    val data: List<Pair<String, Int>>,
+    val redraw: Boolean
 )
 
 data class GoalStatisticsGoalSelectorUiState(
@@ -74,7 +77,6 @@ class GoalStatisticsViewModel(
 ) : AndroidViewModel(application) {
 
     /** Private variables */
-
     private val _selectedGoal = MutableStateFlow<GoalDescriptionWithLibraryItems?>(null)
 
     /** Database */
@@ -109,6 +111,7 @@ class GoalStatisticsViewModel(
 
     /** Own state flows */
     private val _timeFrame = MutableStateFlow<Pair<ZonedDateTime, ZonedDateTime>?>(null)
+    private val _redraw = MutableStateFlow(true)
 
     /** Combining imported and own state flows */
 
@@ -216,8 +219,9 @@ class GoalStatisticsViewModel(
 
     private val barChartUiState = combine(
         _timeFrame,
-        selectedGoalsInTimeFrameWithProgress
-    ) { timeFrame, goalsWithProgress ->
+        selectedGoalsInTimeFrameWithProgress,
+        _redraw
+    ) { timeFrame, goalsWithProgress, redraw ->
         if (timeFrame == null || goalsWithProgress == null) return@combine null
 
         val (_, end) = timeFrame
@@ -239,10 +243,14 @@ class GoalStatisticsViewModel(
                 goal.instance.target
             },
             data = timeFrames.map { (start, end) ->
-                start to (goalsWithProgress.firstOrNull { (goal, _) ->
-                    goal.instance.startTimestamp in getTimestamp(start) until getTimestamp(end)
-                }?.let { (_, progress) -> progress } ?: 0)
-            }
+                Pair(
+                    start.format(DateTimeFormatter.ofPattern(DATE_FORMATTER_PATTERN_DAY_AND_MONTH)),
+                    goalsWithProgress.firstOrNull { (goal, _) ->
+                        goal.instance.startTimestamp in getTimestamp(start) until getTimestamp(end)
+                    }?.let { (_, progress) -> progress } ?: 0
+                )
+            },
+            redraw = redraw.also { _redraw.update { false } }
         )
     }.stateIn(
         scope = viewModelScope,
