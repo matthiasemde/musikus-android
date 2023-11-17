@@ -61,6 +61,12 @@ enum class GoalPeriodUnit {
             }
         }
     }
+
+    override fun toString() = when (this) {
+        DAY -> "Day"
+        WEEK -> "Week"
+        MONTH -> "Month"
+    }
 }
 
 private interface IGoalDescriptionCreationAttributes : ISoftDeleteModelCreationAttributes {

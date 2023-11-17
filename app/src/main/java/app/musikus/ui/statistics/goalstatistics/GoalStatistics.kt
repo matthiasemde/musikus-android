@@ -42,7 +42,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.musikus.Musikus
 import app.musikus.R
-import app.musikus.database.GoalDescriptionWithLibraryItems
+import app.musikus.database.GoalInstanceWithDescriptionWithLibraryItems
 import app.musikus.database.entities.GoalType
 import app.musikus.shared.simpleVerticalScrollbar
 import app.musikus.spacing
@@ -104,7 +104,7 @@ fun GoalStatistics(
 @Composable
 fun GoalStatisticsGoalSelector(
     uiState: GoalStatisticsGoalSelectorUiState,
-    onGoalSelected: (GoalDescriptionWithLibraryItems) -> Unit = {}
+    onGoalSelected: (GoalInstanceWithDescriptionWithLibraryItems) -> Unit = {}
 ) {
     val scrollState = rememberLazyListState()
     LazyColumn(
@@ -122,7 +122,7 @@ fun GoalStatisticsGoalSelector(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable(onClick = { onGoalSelected(goalInfo.goal.description) }),
+                    .clickable(onClick = { onGoalSelected(goalInfo.goal) }),
                 verticalAlignment = CenterVertically
             ) {
                 val color = if(goalInfo.goal.description.description.type == GoalType.ITEM_SPECIFIC) {
@@ -130,7 +130,7 @@ fun GoalStatisticsGoalSelector(
                 } else MaterialTheme.colorScheme.primary
                 RadioButton(
                     selected = goalInfo.selected,
-                    onClick = { onGoalSelected(goalInfo.goal.description) },
+                    onClick = { onGoalSelected(goalInfo.goal) },
                     colors = RadioButtonDefaults.colors(
                         selectedColor = color,
                         unselectedColor = color,

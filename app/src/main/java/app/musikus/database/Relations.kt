@@ -195,4 +195,10 @@ data class GoalInstanceWithDescriptionWithLibraryItems(
                 description.description.periodInPeriodUnits // argument used in the format string
             )
         )
+
+    override fun toString() = when (description.description.type) {
+        GoalType.NON_SPECIFIC -> "All items"
+        GoalType.ITEM_SPECIFIC -> description.libraryItems.first().name
+    } + " " + getDurationString(instance.target, TIME_FORMAT_HUMAN_PRETTY).toString() +
+     " in ${description.description.periodInPeriodUnits} ${description.description.periodUnit}"
 }

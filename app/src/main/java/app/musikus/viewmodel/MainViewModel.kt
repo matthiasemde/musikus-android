@@ -120,21 +120,33 @@ class MainViewModel(
                     ),
                     GoalDescriptionCreationAttributes(
                         type = GoalType.NON_SPECIFIC,
+                        repeat = true,
+                        periodInPeriodUnits = (1..5).random(),
+                        periodUnit = GoalPeriodUnit.WEEK,
+                    ),
+                    GoalDescriptionCreationAttributes(
+                        type = GoalType.NON_SPECIFIC,
                         repeat = false,
                         periodInPeriodUnits = (1..5).random(),
                         periodUnit = GoalPeriodUnit.MONTH,
                     ),
                     GoalDescriptionCreationAttributes(
                         type = GoalType.ITEM_SPECIFIC,
-                        repeat = false,
+                        repeat = true,
                         periodInPeriodUnits = (1..5).random(),
-                        periodUnit = GoalPeriodUnit.WEEK,
+                        periodUnit = GoalPeriodUnit.DAY,
                     ),
                     GoalDescriptionCreationAttributes(
                         type = GoalType.ITEM_SPECIFIC,
                         repeat = true,
                         periodInPeriodUnits = (1..5).random(),
                         periodUnit = GoalPeriodUnit.DAY,
+                    ),
+                    GoalDescriptionCreationAttributes(
+                        type = GoalType.ITEM_SPECIFIC,
+                        repeat = false,
+                        periodInPeriodUnits = (1..5).random(),
+                        periodUnit = GoalPeriodUnit.WEEK,
                     ),
                 ).forEach { goalDescriptionCreationAttributes ->
                     GoalRepository(database).add(
@@ -150,7 +162,7 @@ class MainViewModel(
                             it
                        },
                         if (goalDescriptionCreationAttributes.type == GoalType.NON_SPECIFIC) null else listOf(items.random()),
-                        (1..6).random() * 60 * 10 + 30
+                        ((1..6).random() * 10 + 30) * 60
                     )
                     delay(1500)
                 }

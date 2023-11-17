@@ -13,7 +13,6 @@ import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import app.musikus.dataStore
-import app.musikus.database.GoalDescriptionWithLibraryItems
 import app.musikus.database.GoalInstanceWithDescriptionWithLibraryItems
 import app.musikus.database.MusikusDatabase
 import app.musikus.database.entities.GoalPeriodUnit
@@ -77,7 +76,8 @@ class GoalStatisticsViewModel(
 ) : AndroidViewModel(application) {
 
     /** Private variables */
-    private val _selectedGoal = MutableStateFlow<GoalDescriptionWithLibraryItems?>(null)
+    private val _selectedGoal =
+        MutableStateFlow<GoalInstanceWithDescriptionWithLibraryItems?>(null)
 
     /** Database */
     private val database = MusikusDatabase.getInstance(application)
@@ -126,7 +126,7 @@ class GoalStatisticsViewModel(
 
         // if there is no selected goal, select the first one
         if (selectedGoal == null) {
-            _selectedGoal.update { goals.first().description }
+            _selectedGoal.update { goals.first() }
             return@combine null
         }
 
@@ -134,8 +134,8 @@ class GoalStatisticsViewModel(
         if (timeFrame == null) {
             _timeFrame.update { _ ->
                 val end = getEndOfDay() // CAREFUL: half open approach
-                val startOffset = selectedGoal.description.periodInPeriodUnits.toLong() * 7
-                when(selectedGoal.description.periodUnit) {
+                val startOffset = selectedGoal.description.description.periodInPeriodUnits.toLong() * 7
+                when(selectedGoal.description.description.periodUnit) {
                     GoalPeriodUnit.DAY -> end.minusSeconds(1).minusDays(startOffset) to end
                     GoalPeriodUnit.WEEK -> end.minusSeconds(1).minusWeeks(startOffset) to end
                     GoalPeriodUnit.MONTH -> end.minusSeconds(1).minusMonths(startOffset) to end
@@ -147,14 +147,16 @@ class GoalStatisticsViewModel(
         // if all the necessary data is available, return the filtered goals
         val (startTimestamp, endTimestamp) = timeFrame.toList().map { getTimestamp(it) }
 
-        goals.filter { (instance, descriptionWithLibraryItems) ->
+        goals.filter { goal ->
             (
-                descriptionWithLibraryItems == selectedGoal &&
-                instance.startTimestamp in startTimestamp until endTimestamp
+                goal.description.description.id == selectedGoal.description.description.id &&
+                goal.instance.startTimestamp in startTimestamp until endTimestamp
             )
         }
     }.flatMapLatest { goalsInTimeFrame ->
-        if (goalsInTimeFrame.isNullOrEmpty()) return@flatMapLatest flowOf(null)
+        if (goalsInTimeFrame == null) return@flatMapLatest flowOf(null)
+
+        if (goalsInTimeFrame.isEmpty()) return@flatMapLatest flowOf(emptyList())
 
         // get a flow of sections for each goal
         combine(goalsInTimeFrame.map {goal ->
@@ -206,7 +208,7 @@ class GoalStatisticsViewModel(
             GoalInfo(
                 goal = goal,
                 successRate = goalToSuccessRate?.get(description.id),
-                selected = descriptionWithLibraryItems == selectedGoal
+                selected = goal == selectedGoal
             )
         }
     }.stateIn(
@@ -219,29 +221,41 @@ class GoalStatisticsViewModel(
 
     private val barChartUiState = combine(
         _timeFrame,
+        _selectedGoal,
         selectedGoalsInTimeFrameWithProgress,
         _redraw
-    ) { timeFrame, goalsWithProgress, redraw ->
-        if (timeFrame == null || goalsWithProgress == null) return@combine null
+    ) { timeFrame, selectedGoal, goalsWithProgress, redraw ->
+        if (
+            timeFrame == null ||
+            selectedGoal == null ||
+            goalsWithProgress == null
+        ) return@combine null
 
         val (_, end) = timeFrame
 
-        // All goals have the same description, so we can just take the first one
-        val goalDescription = goalsWithProgress.first().let {  (goal, _) ->
-            goal.description.description
-        }
+        val instance = selectedGoal.instance
+
+        val goalDescriptionWithLibraryItems = selectedGoal.description
+        val description = goalDescriptionWithLibraryItems.description
 
         val timeFrames = (0L..6L).reversed().map {
-            when(goalDescription.periodUnit) {
-                GoalPeriodUnit.DAY -> end.minusDays(it + 1) to end.minusDays(it)
-                GoalPeriodUnit.WEEK -> end.minusWeeks(it + 1) to end.minusDays(it)
-                GoalPeriodUnit.MONTH -> end.minusMonths(it + 1) to end.minusDays(it)
+            when(description.periodUnit) {
+                GoalPeriodUnit.DAY -> {
+                    end.minusDays((it + 1) * description.periodInPeriodUnits) to
+                    end.minusDays(it * description.periodInPeriodUnits)
+                }
+                GoalPeriodUnit.WEEK -> {
+                    end.minusWeeks((it + 1) * description.periodInPeriodUnits) to
+                    end.minusDays(it * description.periodInPeriodUnits)
+                }
+                GoalPeriodUnit.MONTH -> {
+                    end.minusMonths((it + 1) * description.periodInPeriodUnits) to
+                    end.minusDays(it * description.periodInPeriodUnits)
+                }
             }
         }
         GoalStatisticsBarChartUiState(
-            target = goalsWithProgress.last().let { (goal, _) ->
-                goal.instance.target
-            },
+            target = instance.target,
             data = timeFrames.map { (start, end) ->
                 Pair(
                     start.format(DateTimeFormatter.ofPattern(DATE_FORMATTER_PATTERN_DAY_AND_MONTH)),
@@ -322,7 +336,7 @@ class GoalStatisticsViewModel(
         TODO()
     }
 
-    fun onGoalSelected(goal: GoalDescriptionWithLibraryItems) {
+    fun onGoalSelected(goal: GoalInstanceWithDescriptionWithLibraryItems) {
         _selectedGoal.update { goal }
     }
 

@@ -8,7 +8,6 @@
 
 package app.musikus.ui.statistics.goalstatistics
 
-import android.util.Log
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationEndReason
 import androidx.compose.animation.core.AnimationVector1D
@@ -75,13 +74,13 @@ fun GoalStatisticsBarChart(
     )
     val dashedLineEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f)
 
-    val scaleLines = remember { mutableMapOf<Int, Animatable<Float, AnimationVector1D>>() }
+    val scaleLines = remember { mutableMapOf<ScaleLineData, Animatable<Float, AnimationVector1D>>() }
 
     val chartMaxDuration = remember(uiState.data) {
         uiState.data.maxByOrNull { (_, duration) -> duration }?.second ?: 0
     }
 
-    val newScaleLines = remember(chartMaxDuration) {
+    val newScaleLines = remember(chartMaxDuration + uiState.target) {
         when {
             chartMaxDuration > 2 * 60 * 60 -> {
                 val hours = chartMaxDuration / 3600
@@ -113,17 +112,36 @@ fun GoalStatisticsBarChart(
                     5 * 60,
                 )
             }
-        }
+        }.map {
+            ScaleLineData(
+                label = textMeasurer.measure(
+                    getDurationString(it, TIME_FORMAT_HUMAN_PRETTY).toString(),
+                    labelTextStyle
+                ),
+                duration = it.toFloat(),
+                color = onSurfaceColorLowerContrast,
+            )
+        }.plus(
+            ScaleLineData(
+                label = textMeasurer.measure(
+                    getDurationString(uiState.target, TIME_FORMAT_HUMAN_PRETTY).toString(),
+                    labelTextStyle.copy(color = primaryColor)
+                ),
+                duration = uiState.target.toFloat(),
+                color = primaryColor,
+                target = true
+            )
+        )
     }
 
-    val scaleLinesWithAnimatedOpacity = remember(newScaleLines + uiState.target) {
+    val scaleLinesWithAnimatedOpacity = remember(newScaleLines) {
 
         (newScaleLines + scaleLines.keys)
             .distinct()
             .filter {
-                it.toFloat() !in ((uiState.target * 0.8)..(uiState.target * 1.2))
+                it.target ||
+                it.duration !in ((uiState.target * 0.8)..(uiState.target * 1.2))
             }
-            .plus(uiState.target)
             .onEach { scaleLine ->
                 val targetOpacity = if (scaleLine in (newScaleLines + uiState.target)) 1f else 0f
 
@@ -146,23 +164,14 @@ fun GoalStatisticsBarChart(
             }
     }.mapNotNull { scaleLine ->
         scaleLines[scaleLine]?.let { animatedAlpha ->
-            ScaleLineData(
+            scaleLine.copy(
+                color = scaleLine.color.copy(alpha = animatedAlpha.value),
                 label = textMeasurer.measure(
-                    getDurationString(scaleLine, TIME_FORMAT_HUMAN_PRETTY).toString(),
-                    labelTextStyle.copy(
-                        color =
-                            (if (scaleLine == uiState.target) primaryColor
-                            else onSurfaceColor).copy(
-                                alpha = animatedAlpha.asState().value
-                            )
+                    text = getDurationString(scaleLine.duration.toInt(), TIME_FORMAT_HUMAN_PRETTY).toString(),
+                    style = labelTextStyle.copy(
+                        color = scaleLine.color.copy(alpha = animatedAlpha.value)
                     )
-                ),
-                duration = scaleLine.toFloat(),
-                color =
-                    (if (scaleLine == uiState.target) primaryColor
-                    else onSurfaceColorLowerContrast).copy(
-                        alpha = animatedAlpha.asState().value
-                    ),
+                )
             )
         }
     }
@@ -197,7 +206,7 @@ fun GoalStatisticsBarChart(
     }
 
     val animatedMaxDuration by animateFloatAsState(
-        targetValue = newScaleLines.max().toFloat(),
+        targetValue = newScaleLines.maxOf { it.duration },
         animationSpec = tween(durationMillis = 1000),
         label = "bar-chart-max-duration-animation",
     )
@@ -225,7 +234,6 @@ fun GoalStatisticsBarChart(
 
         /** Print Scale Lines */
         scaleLinesWithAnimatedOpacity.forEach { scaleLineData ->
-            Log.d("bar chart", "scale line: $scaleLineData")
             val lineHeight = (size.height - yZero) - (yMax * (scaleLineData.duration / animatedMaxDuration))
             drawLine(
                 color = scaleLineData.color,

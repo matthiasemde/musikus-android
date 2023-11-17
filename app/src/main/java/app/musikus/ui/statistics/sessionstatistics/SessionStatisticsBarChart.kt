@@ -45,7 +45,8 @@ import kotlinx.coroutines.launch
 data class ScaleLineData (
     val label: TextLayoutResult,
     val duration: Float,
-    val color: Color
+    val color: Color,
+    val target: Boolean = false,
 )
 @Composable
 fun SessionStatisticsBarChart(
