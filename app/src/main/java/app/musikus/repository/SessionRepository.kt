@@ -8,8 +8,8 @@ import app.musikus.database.entities.GoalType
 import app.musikus.database.entities.SectionCreationAttributes
 import app.musikus.database.entities.SessionCreationAttributes
 import app.musikus.database.entities.SessionModel
+import app.musikus.utils.TimeFrame
 import kotlinx.coroutines.flow.Flow
-import java.time.ZonedDateTime
 import java.util.UUID
 
 class SessionRepository(
@@ -26,7 +26,7 @@ class SessionRepository(
     val sessionsWithSectionsWithLibraryItems = sessionDao.getAllWithSectionsWithLibraryItemsAsFlow()
     fun sessionWithSectionsWithLibraryItems(id: UUID) = sessionDao.getWithSectionsWithLibraryItemsAsFlow(id)
 
-    fun sessionsInTimeFrame (timeFrame: Pair<ZonedDateTime, ZonedDateTime>) : Flow<List<SessionWithSectionsWithLibraryItems>> {
+    fun sessionsInTimeFrame (timeFrame: TimeFrame) : Flow<List<SessionWithSectionsWithLibraryItems>> {
         assert (timeFrame.first < timeFrame.second)
         return sessionDao.get(
             startTimestamp = timeFrame.first.toEpochSecond(),

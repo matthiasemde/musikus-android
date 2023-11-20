@@ -60,12 +60,12 @@ import app.musikus.shared.simpleVerticalScrollbar
 import app.musikus.spacing
 import app.musikus.utils.DATE_FORMATTER_PATTERN_DAY_AND_MONTH
 import app.musikus.utils.TIME_FORMAT_HUMAN_PRETTY
+import app.musikus.utils.TimeFrame
 import app.musikus.utils.getDurationString
 import app.musikus.viewmodel.SessionStatisticsChartType
 import app.musikus.viewmodel.SessionStatisticsHeaderUiState
 import app.musikus.viewmodel.SessionStatisticsTab
 import app.musikus.viewmodel.SessionStatisticsViewModel
-import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -218,7 +218,7 @@ fun SessionStatisticsLibraryItemSelector(
 
 @Composable
 fun TimeFrameSelectionHeader(
-    timeFrame: Pair<ZonedDateTime, ZonedDateTime>,
+    timeFrame: TimeFrame,
     subtitle: String,
     seekBackwardEnabled: Boolean,
     seekForwardEnabled: Boolean,

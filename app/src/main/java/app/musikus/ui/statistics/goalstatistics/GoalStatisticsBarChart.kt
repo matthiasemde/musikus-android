@@ -54,7 +54,7 @@ fun GoalStatisticsBarChart(
     val textMeasurer = rememberTextMeasurer()
     val checkMark = ImageVector.vectorResource(id = R.drawable.ic_check_small_round)
     val checkMarkPainter = rememberVectorPainter(image = checkMark)
-    val checkMarkSize = 20.dp
+    val checkMarkSize = 18.dp
 
     val columnThickness = 16.dp
 
@@ -77,7 +77,7 @@ fun GoalStatisticsBarChart(
     val scaleLines = remember { mutableMapOf<ScaleLineData, Animatable<Float, AnimationVector1D>>() }
 
     val chartMaxDuration = remember(uiState.data) {
-        uiState.data.maxByOrNull { (_, duration) -> duration }?.second ?: 0
+        uiState.data.maxOfOrNull { (_, duration) -> duration } ?: 0
     }
 
     val newScaleLines = remember(chartMaxDuration + uiState.target) {
@@ -185,9 +185,15 @@ fun GoalStatisticsBarChart(
             val (_, duration) = pair
 
             scope.launch {
+                if (uiState.redraw) {
+                    bar.animateTo(
+                        targetValue = 0f,
+                        animationSpec = tween(durationMillis = 750)
+                    )
+                }
                 bar.animateTo(
                     duration.toFloat(),
-                    animationSpec = tween(durationMillis = 1000)
+                    animationSpec = tween(durationMillis = 750)
                 )
             }
         }.map { (pair, bar) ->
@@ -220,7 +226,7 @@ fun GoalStatisticsBarChart(
     ) {
         val paddingLeft = 20.dp
         val paddingRight = 48.dp
-        val paddingTop = 12.dp
+        val paddingTop = 16.dp
         val columnThicknessInPx = columnThickness.toPx()
 
         val checkMarkSizeInPx = Size(checkMarkSize.toPx(), checkMarkSize.toPx())
@@ -232,9 +238,7 @@ fun GoalStatisticsBarChart(
         val columnYOffset = 0.dp.toPx()
         val yMax = (size.height - yZero - columnYOffset) - paddingTop.toPx()
 
-        /** Print Scale Lines */
-
-        /** Print Scale Lines */
+        /** Plot Scale Lines */
         scaleLinesWithAnimatedOpacity.forEach { scaleLineData ->
             val lineHeight = (size.height - yZero) - (yMax * (scaleLineData.duration / animatedMaxDuration))
             drawLine(
@@ -317,7 +321,7 @@ fun GoalStatisticsBarChart(
             if (animatedCheckmarkAlpha.value > 0f) {
                 translate(
                     left = leftEdge + columnThicknessInPx / 2 - checkMarkSizeInPx.width / 2,
-                    top = topEdge + checkMarkSizeInPx.height / 2 - 12.dp.toPx()
+                    top = topEdge + checkMarkSizeInPx.height / 2 - 10.dp.toPx()
                 ) {
                     with(checkMarkPainter) {
                         draw(

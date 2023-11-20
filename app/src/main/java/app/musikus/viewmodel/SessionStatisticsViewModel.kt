@@ -23,6 +23,7 @@ import app.musikus.repository.SessionRepository
 import app.musikus.repository.UserPreferencesRepository
 import app.musikus.utils.DATE_FORMATTER_PATTERN_MONTH_TEXT_ABBREV
 import app.musikus.utils.DATE_FORMATTER_PATTERN_WEEKDAY_ABBREV
+import app.musikus.utils.TimeFrame
 import app.musikus.utils.getEndOfDay
 import app.musikus.utils.getEndOfMonth
 import app.musikus.utils.getEndOfWeek
@@ -71,7 +72,7 @@ enum class SessionStatisticsChartType {
 
 data class TabWithTimeFrame(
     val tab: SessionStatisticsTab,
-    val timeFrame: Pair<ZonedDateTime, ZonedDateTime>
+    val timeFrame: TimeFrame
 )
 
 data class TabWithTimeFrameWithSessions(
@@ -105,7 +106,7 @@ data class SessionStatisticsContentUiState(
 data class SessionStatisticsHeaderUiState(
     val seekBackwardEnabled: Boolean,
     val seekForwardEnabled: Boolean,
-    val timeFrame: Pair<ZonedDateTime, ZonedDateTime>,
+    val timeFrame: TimeFrame,
     val totalPracticeDuration: Int,
 )
 
