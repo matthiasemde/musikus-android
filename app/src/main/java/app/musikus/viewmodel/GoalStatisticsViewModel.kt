@@ -106,6 +106,29 @@ class GoalStatisticsViewModel(
         }
     }
 
+    private fun seek(forward: Boolean) {
+        _timeFrameAndSelectedGoal.update { pair ->
+            val (timeframe, goal) = pair ?: return@update null
+            val (start, end) = timeframe
+            val offset =
+                (if (forward) 7 else -7) *
+                goal.description.description.periodInPeriodUnits.toLong()
+            val newTimeFrame = when(goal.description.description.periodUnit) {
+                GoalPeriodUnit.DAY ->
+                    start.plusDays(offset) to
+                    end.plusDays(offset)
+                GoalPeriodUnit.WEEK ->
+                    start.plusWeeks(offset) to
+                    end.plusWeeks(offset)
+                GoalPeriodUnit.MONTH ->
+                    start.plusMonths(offset) to
+                    end.plusMonths(offset)
+            }
+            newTimeFrame to goal
+        }
+    }
+
+
     /** Database */
     private val database = MusikusDatabase.getInstance(application)
 
@@ -316,8 +339,8 @@ class GoalStatisticsViewModel(
         val goalsWithProgress = timeFrameWithGoalsWithProgress.goalsWithProgress
 
         GoalStatisticsHeaderUiState(
-            seekBackwardEnabled = false, // TODO
-            seekForwardEnabled = false, // TODO
+            seekBackwardEnabled = true, // TODO
+            seekForwardEnabled = true, // TODO
             timeFrame = timeFrameWithGoalsWithProgress.timeFrame,
             successRate = goalsWithProgress.filter { (goal, progress) ->
                 progress >= goal.instance.target
@@ -366,11 +389,11 @@ class GoalStatisticsViewModel(
     /** State mutators */
 
     fun seekForwards() {
-        TODO()
+        seek(forward = true)
     }
 
     fun seekBackwards() {
-        TODO()
+        seek(forward = false)
     }
 
     fun onGoalSelected(goal: GoalInstanceWithDescriptionWithLibraryItems) {
