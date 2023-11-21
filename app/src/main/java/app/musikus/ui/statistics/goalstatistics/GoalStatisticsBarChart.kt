@@ -8,6 +8,7 @@
 
 package app.musikus.ui.statistics.goalstatistics
 
+import android.util.Log
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationEndReason
 import androidx.compose.animation.core.AnimationVector1D
@@ -18,6 +19,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
@@ -44,6 +46,7 @@ import app.musikus.ui.statistics.sessionstatistics.ScaleLineData
 import app.musikus.utils.TIME_FORMAT_HUMAN_PRETTY
 import app.musikus.utils.getDurationString
 import app.musikus.viewmodel.GoalStatisticsBarChartUiState
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @Composable
@@ -68,6 +71,8 @@ fun GoalStatisticsBarChart(
     val libraryColors = Musikus.getLibraryItemColors(LocalContext.current).map {
         Color(it)
     }
+
+    val barColor = remember { mutableStateOf(primaryColor) }
 
     val labelTextStyle = MaterialTheme.typography.labelSmall.copy(
         color = MaterialTheme.colorScheme.onSurface,
@@ -181,6 +186,11 @@ fun GoalStatisticsBarChart(
     val bars = remember { (1..7).map { Animatable(0f) } }
 
     val labelsWithAnimatedDurations = remember(uiState.data) {
+        scope.launch {
+            if(uiState.redraw) delay(400)
+            barColor.value = uiState.uniqueColor ?: primaryColor
+            Log.d("GoalStatisticsBarChart", "animating bar to $barColor")
+        }
         uiState.data.zip(bars).onEach {(pair, bar) ->
             val (_, duration) = pair
 
@@ -188,12 +198,12 @@ fun GoalStatisticsBarChart(
                 if (uiState.redraw) {
                     bar.animateTo(
                         targetValue = 0f,
-                        animationSpec = tween(durationMillis = 750)
+                        animationSpec = tween(durationMillis = 400)
                     )
                 }
                 bar.animateTo(
                     duration.toFloat(),
-                    animationSpec = tween(durationMillis = 750)
+                    animationSpec = tween(durationMillis = if(uiState.redraw) 400 else 750)
                 )
             }
         }.map { (pair, bar) ->
@@ -305,8 +315,9 @@ fun GoalStatisticsBarChart(
             )
 
             // draw the bar
+            Log.d("GoalStatisticsBarChart", "drawing bar with color $barColor")
             drawRect(
-                color = primaryColor,
+                color = barColor.value,
                 topLeft = Offset(
                     x = leftEdge,
                     y = topEdge

@@ -8,7 +8,6 @@
 
 package app.musikus.ui.statistics.goalstatistics
 
-import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -33,7 +32,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -88,9 +86,6 @@ fun GoalStatistics(
                         seekBackwards = viewModel::seekBackwards,
                     ) }
                     Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
-                    remember(contentUiState.barChartUiState) {
-                        Log.d("GoalStatistics", "remembering bar chart ui state ${contentUiState.barChartUiState}")
-                    }
                     contentUiState.barChartUiState?.let {
                         GoalStatisticsBarChart(it)
                     }

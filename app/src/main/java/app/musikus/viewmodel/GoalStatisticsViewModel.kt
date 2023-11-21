@@ -9,13 +9,17 @@
 package app.musikus.viewmodel
 
 import android.app.Application
+import android.content.Context
 import android.util.Log
+import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import app.musikus.Musikus
 import app.musikus.dataStore
 import app.musikus.database.GoalInstanceWithDescriptionWithLibraryItems
 import app.musikus.database.MusikusDatabase
 import app.musikus.database.entities.GoalPeriodUnit
+import app.musikus.database.entities.GoalType
 import app.musikus.datastore.GoalsSortMode
 import app.musikus.datastore.SortDirection
 import app.musikus.datastore.sorted
@@ -64,6 +68,7 @@ data class GoalStatisticsHeaderUiState(
 data class GoalStatisticsBarChartUiState(
     val target: Int,
     val data: List<Pair<String, Int>>,
+    val uniqueColor: Color?,
     val redraw: Boolean
 )
 
@@ -83,6 +88,7 @@ class GoalStatisticsViewModel(
 
     /** Private variables */
     private var _redraw = true
+    private val libraryColors = Musikus.getLibraryItemColors(application as Context)
 
     /** Private methods */
 
@@ -291,6 +297,11 @@ class GoalStatisticsViewModel(
                     }?.progress ?: 0
                 )
             },
+            uniqueColor = if(description.type == GoalType.ITEM_SPECIFIC) {
+                Color(
+                    libraryColors[goalDescriptionWithLibraryItems.libraryItems.first().colorIndex]
+                )
+            } else null,
             redraw = _redraw.also { _redraw = false }
         )
     }.stateIn(
