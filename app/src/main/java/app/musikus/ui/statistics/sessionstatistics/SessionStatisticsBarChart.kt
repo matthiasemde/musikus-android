@@ -45,7 +45,8 @@ import kotlinx.coroutines.launch
 data class ScaleLineData (
     val label: TextLayoutResult,
     val duration: Float,
-    val color: Color,
+    val lineColor: Color,
+    val labelColor: Color,
     val target: Boolean = false,
 )
 @Composable
@@ -128,7 +129,7 @@ fun SessionStatisticsBarChart(
         }
     }
 
-    val scaleLinesWithAnimatedOpacity = remember(newScaleLines) {
+    val scaleLinesWithAnimatedColor = remember(newScaleLines) {
 
         (newScaleLines + scaleLines.keys)
             .distinct()
@@ -154,19 +155,21 @@ fun SessionStatisticsBarChart(
             }
     }.mapNotNull { scaleLine ->
         scaleLines[scaleLine]?.let { animatedAlpha ->
+            val lineColor = onSurfaceColorLowerContrast.copy(
+                alpha = animatedAlpha.asState().value
+            )
+            val labelColor = onSurfaceColor.copy(
+                alpha = animatedAlpha.asState().value
+            )
+
             ScaleLineData(
                 label = textMeasurer.measure(
                     getDurationString(scaleLine, TIME_FORMAT_HUMAN_PRETTY).toString(),
-                    labelTextStyle.copy(
-                        color = onSurfaceColor.copy(
-                            alpha = animatedAlpha.asState().value
-                        )
-                    )
+                    labelTextStyle.copy(color = labelColor),
                 ),
                 duration = scaleLine.toFloat(),
-                color = onSurfaceColorLowerContrast.copy(
-                    alpha = animatedAlpha.asState().value
-                ),
+                lineColor = lineColor,
+                labelColor = labelColor,
             )
         }
     }
@@ -244,10 +247,12 @@ fun SessionStatisticsBarChart(
         val yMax = (size.height - yZero - columnYOffset) - paddingTop.toPx()
 
         /** Print Scale Lines */
-        scaleLinesWithAnimatedOpacity.forEach { (label, duration, color) ->
-            val lineHeight = (size.height - yZero) - (yMax * (duration / animatedChartMaxDuration))
+        scaleLinesWithAnimatedColor.forEach { scaleLineData ->
+            val lineHeight =
+                (size.height - yZero) -
+                (yMax * (scaleLineData.duration / animatedChartMaxDuration))
             drawLine(
-                color = color,
+                color = scaleLineData.lineColor,
                 start = Offset(
                     x = paddingLeft.toPx(),
                     y = lineHeight
@@ -260,10 +265,10 @@ fun SessionStatisticsBarChart(
                 pathEffect = dashedLineEffect
             )
             drawText(
-                textLayoutResult = label,
+                textLayoutResult = scaleLineData.label,
                 topLeft = Offset(
                     x = paddingLeft.toPx() + chartWidth + 3.dp.toPx(),
-                    y = lineHeight - label.size.height / 2
+                    y = lineHeight - scaleLineData.label.size.height / 2
                 )
             )
         }

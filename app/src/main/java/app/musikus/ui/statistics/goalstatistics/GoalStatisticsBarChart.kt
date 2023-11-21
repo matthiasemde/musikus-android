@@ -9,9 +9,9 @@
 package app.musikus.ui.statistics.goalstatistics
 
 import android.util.Log
+import androidx.compose.animation.Animatable
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.AnimationEndReason
-import androidx.compose.animation.core.AnimationVector1D
+import androidx.compose.animation.core.AnimationVector4D
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
@@ -79,7 +79,11 @@ fun GoalStatisticsBarChart(
     )
     val dashedLineEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f)
 
-    val scaleLines = remember { mutableMapOf<ScaleLineData, Animatable<Float, AnimationVector1D>>() }
+    val scaleLines = remember {
+        mutableMapOf<
+            ScaleLineData,
+            Pair<Animatable<Color, AnimationVector4D>, Animatable<Color, AnimationVector4D>>>()
+    }
 
     val chartMaxDuration = remember(uiState.data) {
         uiState.data.maxOfOrNull { (_, duration) -> duration } ?: 0
@@ -124,22 +128,24 @@ fun GoalStatisticsBarChart(
                     labelTextStyle
                 ),
                 duration = it.toFloat(),
-                color = onSurfaceColorLowerContrast,
+                lineColor = onSurfaceColorLowerContrast,
+                labelColor = onSurfaceColor,
             )
         }.plus(
             ScaleLineData(
                 label = textMeasurer.measure(
                     getDurationString(uiState.target, TIME_FORMAT_HUMAN_PRETTY).toString(),
-                    labelTextStyle.copy(color = primaryColor)
+                    labelTextStyle
                 ),
                 duration = uiState.target.toFloat(),
-                color = primaryColor,
+                lineColor = uiState.uniqueColor ?: primaryColor,
+                labelColor = uiState.uniqueColor ?: primaryColor,
                 target = true
             )
         )
     }
 
-    val scaleLinesWithAnimatedOpacity = remember(newScaleLines) {
+    val scaleLinesWithAnimatedColor = remember(newScaleLines) {
 
         (newScaleLines + scaleLines.keys)
             .distinct()
@@ -148,37 +154,52 @@ fun GoalStatisticsBarChart(
                 it.duration !in ((uiState.target * 0.8)..(uiState.target * 1.2))
             }
             .onEach { scaleLine ->
-                val targetOpacity = if (scaleLine in (newScaleLines + uiState.target)) 1f else 0f
+                val targetOpacity = if (scaleLine in newScaleLines) 1f else 0f
 
-                val animatedOpacity = scaleLines[scaleLine] ?: Animatable(0f).also {
-                    scaleLines[scaleLine] = it
-                }
+                val (animatedLineColor, animatedLabelColor) = scaleLines[scaleLine] ?:
+                    Pair(
+                        Animatable(initialValue = scaleLine.lineColor.copy(alpha = 0f)),
+                        Animatable(initialValue = scaleLine.labelColor.copy(alpha = 0f)),
+                    ).also {
+                        scaleLines[scaleLine] = it
+                    }
 
-                scope.launch {
-                    val animationResult = animatedOpacity.animateTo(
-                        targetValue = targetOpacity,
+                val animateLineColor = scope.launch {
+                    animatedLineColor.animateTo(
+                        targetValue = scaleLine.lineColor.copy(alpha = targetOpacity),
                         animationSpec = tween(
                             delayMillis = 250,
                             durationMillis = 250),
                     )
+                }
 
-                    if (animationResult.endReason == AnimationEndReason.Finished && targetOpacity == 0f) {
+                val animateLabelColor = scope.launch {
+                    animatedLabelColor.animateTo(
+                        targetValue = scaleLine.labelColor.copy(alpha = targetOpacity),
+                        animationSpec = tween(
+                            delayMillis = 250,
+                            durationMillis = 250),
+                    )
+                }
+
+                scope.launch {
+                    animateLineColor.join()
+                    animateLabelColor.join()
+
+                    if (targetOpacity == 0f) {
                         scaleLines.remove(scaleLine)
                     }
                 }
             }
     }.mapNotNull { scaleLine ->
-        scaleLines[scaleLine]?.let { animatedAlpha ->
+        scaleLines[scaleLine]?.let { (animatedLineColor, animatedLabelColor) ->
             scaleLine.copy(
-                color = scaleLine.color.copy(alpha = animatedAlpha.value),
                 label = textMeasurer.measure(
                     text = getDurationString(scaleLine.duration.toInt(), TIME_FORMAT_HUMAN_PRETTY).toString(),
-                    style = labelTextStyle.copy(
-                        color = (if(scaleLine.target) primaryColor else onSurfaceColor).copy(
-                            alpha = animatedAlpha.value
-                        )
-                    )
-                )
+                    style = labelTextStyle.copy(color = animatedLabelColor.value)
+                ),
+                lineColor = animatedLineColor.value,
+                labelColor = animatedLabelColor.value,
             )
         }
     }
@@ -249,10 +270,10 @@ fun GoalStatisticsBarChart(
         val yMax = (size.height - yZero - columnYOffset) - paddingTop.toPx()
 
         /** Plot Scale Lines */
-        scaleLinesWithAnimatedOpacity.forEach { scaleLineData ->
+        scaleLinesWithAnimatedColor.forEach { scaleLineData ->
             val lineHeight = (size.height - yZero) - (yMax * (scaleLineData.duration / animatedMaxDuration))
             drawLine(
-                color = scaleLineData.color,
+                color = scaleLineData.lineColor,
                 start = Offset(
                     x = paddingLeft.toPx(),
                     y = lineHeight
