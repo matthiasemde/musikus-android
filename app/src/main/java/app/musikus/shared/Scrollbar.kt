@@ -58,7 +58,7 @@ fun Modifier.simpleVerticalScrollbar(
 
 @Composable
 fun Modifier.simpleVerticalScrollbar(
-    state: LazyListState,
+    listState: LazyListState,
     width: Dp = 3.dp,
     verticalPadding: Dp = 0.dp,
     color: Color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
@@ -66,26 +66,27 @@ fun Modifier.simpleVerticalScrollbar(
 ): Modifier {
     return drawWithContent {
         drawContent()
-        val totalItemCount = state.layoutInfo.totalItemsCount.toFloat()
-        val trackHeight = state.layoutInfo.viewportSize.height.toFloat() - 2 * verticalPadding.toPx()
+        val totalItemCount = listState.layoutInfo.totalItemsCount.toFloat()
+        val trackHeight = listState.layoutInfo.viewportSize.height.toFloat() - 2 * verticalPadding.toPx()
 
-        val averageVisibleItemHeight = state.layoutInfo.visibleItemsInfo.map { it.size }.average().toFloat()
+        val averageVisibleItemHeight = listState.layoutInfo.visibleItemsInfo.map {
+            it.size
+        }.average().toFloat()
 
         val approximatedTotalItemHeight = totalItemCount * averageVisibleItemHeight
 
-
-        val percentageShowing = state.layoutInfo.viewportSize.height / approximatedTotalItemHeight
+        val percentageShowing = listState.layoutInfo.viewportSize.height / approximatedTotalItemHeight
 
         val firstVisibleItemHeight =
-            state.layoutInfo.visibleItemsInfo.firstOrNull()?.size?.toFloat() ?: 0f
-        val firstVisibleItemOffsetPercentage = state.firstVisibleItemScrollOffset.toFloat() / firstVisibleItemHeight
+            listState.layoutInfo.visibleItemsInfo.firstOrNull()?.size?.toFloat() ?: 0f
+        val firstVisibleItemOffsetPercentage = listState.firstVisibleItemScrollOffset.toFloat() / firstVisibleItemHeight
 
 
         val scrollbarHeight = (trackHeight * percentageShowing).coerceAtMost(maxSize.toPx()) // in pixels
         val scrollPerItem = (trackHeight - scrollbarHeight) / (totalItemCount * (1 - percentageShowing)) // in pixels
 
-        if(trackHeight - scrollbarHeight > 2) {
-            val firstIndex = state.firstVisibleItemIndex.toFloat()
+        if(listState.canScrollBackward || listState.canScrollForward) {
+            val firstIndex = listState.firstVisibleItemIndex.toFloat()
             val scrollbarOffsetY = (firstIndex + firstVisibleItemOffsetPercentage) * scrollPerItem
 
             drawRoundRect(

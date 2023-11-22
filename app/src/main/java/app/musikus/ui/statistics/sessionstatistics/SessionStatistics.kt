@@ -9,6 +9,7 @@
 package app.musikus.ui.statistics.sessionstatistics
 
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement.Center
 import androidx.compose.foundation.layout.Arrangement.SpaceBetween
@@ -56,6 +57,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import app.musikus.Musikus
 import app.musikus.R
 import app.musikus.database.daos.LibraryItem
+import app.musikus.shared.conditional
 import app.musikus.shared.simpleVerticalScrollbar
 import app.musikus.spacing
 import app.musikus.utils.DATE_FORMATTER_PATTERN_DAY_AND_MONTH
@@ -179,12 +181,13 @@ fun SessionStatisticsLibraryItemSelector(
     onLibraryItemCheckboxClicked: (LibraryItem) -> Unit = {}
 ) {
     val scrollState = rememberLazyListState()
+    val showScrollbar = scrollState.canScrollBackward || scrollState.canScrollForward
     LazyColumn(
-        modifier = Modifier.simpleVerticalScrollbar(
+        modifier = Modifier.conditional(showScrollbar) { simpleVerticalScrollbar(
             scrollState,
             width = 5.dp,
             verticalPadding = MaterialTheme.spacing.extraSmall
-        ),
+        ) },
         state = scrollState,
     ) {
         items(
@@ -210,7 +213,14 @@ fun SessionStatisticsLibraryItemSelector(
                     modifier = Modifier.weight(1f),
                     text = item.name
                 )
-                Spacer(modifier = Modifier.width(MaterialTheme.spacing.medium))
+                Spacer(
+                    modifier = Modifier
+                        .width(
+                            if(showScrollbar) MaterialTheme.spacing.large
+                            else MaterialTheme.spacing.medium
+                        )
+                        .animateContentSize()
+                )
             }
         }
     }

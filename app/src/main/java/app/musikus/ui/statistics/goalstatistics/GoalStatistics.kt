@@ -9,6 +9,7 @@
 package app.musikus.ui.statistics.goalstatistics
 
 import android.util.Log
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -54,6 +55,7 @@ import app.musikus.Musikus
 import app.musikus.R
 import app.musikus.database.GoalDescriptionWithInstancesAndLibraryItems
 import app.musikus.database.entities.GoalType
+import app.musikus.shared.conditional
 import app.musikus.shared.simpleVerticalScrollbar
 import app.musikus.spacing
 import app.musikus.ui.statistics.sessionstatistics.TimeframeSelectionHeader
@@ -117,12 +119,13 @@ fun GoalStatisticsGoalSelector(
     onGoalSelected: (GoalDescriptionWithInstancesAndLibraryItems) -> Unit = {}
 ) {
     val scrollState = rememberLazyListState()
+    val showScrollbar = scrollState.canScrollBackward || scrollState.canScrollForward
     LazyColumn(
-        modifier = Modifier.simpleVerticalScrollbar(
+        modifier = Modifier.conditional(showScrollbar) { simpleVerticalScrollbar(
             scrollState,
             width = 5.dp,
             verticalPadding = MaterialTheme.spacing.extraSmall
-        ),
+        ) },
         state = scrollState,
     ) {
         items(
@@ -219,7 +222,14 @@ fun GoalStatisticsGoalSelector(
                         }
                     }
                 }
-                Spacer(Modifier.width(MaterialTheme.spacing.medium))
+                Spacer(
+                    modifier = Modifier
+                        .width(
+                            if(showScrollbar) MaterialTheme.spacing.large
+                            else MaterialTheme.spacing.medium
+                        )
+                        .animateContentSize()
+                )
             }
         }
     }
