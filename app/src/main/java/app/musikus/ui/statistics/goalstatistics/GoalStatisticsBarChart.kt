@@ -8,7 +8,6 @@
 
 package app.musikus.ui.statistics.goalstatistics
 
-import android.util.Log
 import androidx.compose.animation.Animatable
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationVector4D
@@ -210,7 +209,6 @@ fun GoalStatisticsBarChart(
         scope.launch {
             if(uiState.redraw) delay(400)
             barColor.value = uiState.uniqueColor ?: primaryColor
-            Log.d("GoalStatisticsBarChart", "animating bar to $barColor")
         }
         uiState.data.zip(bars).onEach {(pair, bar) ->
             val (_, duration) = pair
@@ -336,7 +334,6 @@ fun GoalStatisticsBarChart(
             )
 
             // draw the bar
-            Log.d("GoalStatisticsBarChart", "drawing bar with color $barColor")
             drawRect(
                 color = barColor.value,
                 topLeft = Offset(

@@ -8,6 +8,7 @@
 
 package app.musikus.ui.statistics.goalstatistics
 
+import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -42,11 +43,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.musikus.Musikus
 import app.musikus.R
-import app.musikus.database.GoalInstanceWithDescriptionWithLibraryItems
+import app.musikus.database.GoalDescriptionWithInstancesAndLibraryItems
 import app.musikus.database.entities.GoalType
 import app.musikus.shared.simpleVerticalScrollbar
 import app.musikus.spacing
-import app.musikus.ui.statistics.sessionstatistics.TimeFrameSelectionHeader
+import app.musikus.ui.statistics.sessionstatistics.TimeframeSelectionHeader
 import app.musikus.utils.asString
 import app.musikus.viewmodel.GoalStatisticsGoalSelectorUiState
 import app.musikus.viewmodel.GoalStatisticsViewModel
@@ -75,8 +76,8 @@ fun GoalStatistics(
             val contentUiState = uiState.contentUiState
             Column(modifier = Modifier.padding(top = contentPadding.calculateTopPadding())) {
                 Column(modifier = Modifier.height(256.dp)) {
-                    contentUiState.headerUiState?.let { TimeFrameSelectionHeader(
-                        timeFrame = it.timeFrame,
+                    contentUiState.headerUiState?.let { TimeframeSelectionHeader(
+                        timeframe = it.timeframe,
                         subtitle = it.successRate?.let { (succeeded, total) ->
                             "$succeeded out of $total"
                         } ?: "",
@@ -104,7 +105,7 @@ fun GoalStatistics(
 @Composable
 fun GoalStatisticsGoalSelector(
     uiState: GoalStatisticsGoalSelectorUiState,
-    onGoalSelected: (GoalInstanceWithDescriptionWithLibraryItems) -> Unit = {}
+    onGoalSelected: (GoalDescriptionWithInstancesAndLibraryItems) -> Unit = {}
 ) {
     val scrollState = rememberLazyListState()
     LazyColumn(
@@ -117,7 +118,7 @@ fun GoalStatisticsGoalSelector(
     ) {
         items(
             items = uiState.goalsInfo,
-            key = { goalInfo -> goalInfo.goal.description.description.id }
+            key = { goalInfo -> goalInfo.goal.description.id }
         ) {goalInfo ->
             Row(
                 modifier = Modifier
@@ -125,8 +126,9 @@ fun GoalStatisticsGoalSelector(
                     .clickable(onClick = { onGoalSelected(goalInfo.goal) }),
                 verticalAlignment = CenterVertically
             ) {
-                val color = if(goalInfo.goal.description.description.type == GoalType.ITEM_SPECIFIC) {
-                    Color(Musikus.getLibraryItemColors(LocalContext.current)[goalInfo.goal.description.libraryItems.first().colorIndex])
+                Log.d("GoalStatistics", "GoalStatisticsGoalSelector: ${goalInfo}")
+                val color = if(goalInfo.goal.description.type == GoalType.ITEM_SPECIFIC) {
+                    Color(Musikus.getLibraryItemColors(LocalContext.current)[goalInfo.goal.libraryItems.first().colorIndex])
                 } else MaterialTheme.colorScheme.primary
                 RadioButton(
                     selected = goalInfo.selected,
@@ -145,7 +147,7 @@ fun GoalStatisticsGoalSelector(
 
                     // Subtitle
                     Text(
-                        text = goalInfo.goal.subtitle.asString(),
+                        text = goalInfo.goal.subtitle?.asString() ?: "No data available", // TODO find a better solution for no instances
                         style = MaterialTheme.typography.labelSmall,
                     )
                 }

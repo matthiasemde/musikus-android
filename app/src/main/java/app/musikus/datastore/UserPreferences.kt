@@ -8,6 +8,7 @@
 
 package app.musikus.datastore
 
+import app.musikus.database.GoalDescriptionWithInstancesAndLibraryItems
 import app.musikus.database.GoalInstanceWithDescriptionWithLibraryItems
 import app.musikus.database.daos.LibraryFolder
 import app.musikus.database.daos.LibraryItem
@@ -76,6 +77,7 @@ enum class GoalsSortMode {
     }
 }
 
+@JvmName("sortedGoalInstanceWithDescriptionWithLibraryItems")
 fun List<GoalInstanceWithDescriptionWithLibraryItems>.sorted(
     mode: GoalsSortMode,
     direction: SortDirection
@@ -93,6 +95,29 @@ fun List<GoalInstanceWithDescriptionWithLibraryItems>.sorted(
             GoalsSortMode.DATE_ADDED -> this.sortedByDescending { it.description.description.createdAt }
             GoalsSortMode.TARGET -> this.sortedByDescending { it.instance.target }
             GoalsSortMode.PERIOD -> this.sortedByDescending { it.instance.periodInSeconds }
+            GoalsSortMode.CUSTOM -> this // TODO()
+        }
+    }
+}
+
+@JvmName("sortedGoalDescriptionWithInstancesAndLibraryItems")
+fun List<GoalDescriptionWithInstancesAndLibraryItems>.sorted(
+    mode: GoalsSortMode,
+    direction: SortDirection
+) = when (direction) {
+    SortDirection.ASCENDING -> {
+        when (mode) {
+            GoalsSortMode.DATE_ADDED -> this.sortedBy { it.description.createdAt }
+            GoalsSortMode.TARGET -> this.sortedBy { it.instances.last().target }
+            GoalsSortMode.PERIOD -> this.sortedBy { it.instances.last().periodInSeconds }
+            GoalsSortMode.CUSTOM -> this // TODO
+        }
+    }
+    SortDirection.DESCENDING -> {
+        when (mode) {
+            GoalsSortMode.DATE_ADDED -> this.sortedByDescending { it.description.createdAt }
+            GoalsSortMode.TARGET -> this.sortedByDescending { it.instances.last().target }
+            GoalsSortMode.PERIOD -> this.sortedByDescending { it.instances.last().periodInSeconds }
             GoalsSortMode.CUSTOM -> this // TODO()
         }
     }

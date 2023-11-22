@@ -43,7 +43,7 @@ class GoalRepository(
 
 
     val currentGoals = goalInstanceDao.getWithDescriptionsWithLibraryItems()
-    val allGoals = goalInstanceDao.getAllWithDescriptionWithLibraryItems()
+    val allGoals = goalDescriptionDao.getAllWithInstancesAndLibraryItems()
     val lastFiveCompletedGoals = goalInstanceDao.getLastNCompletedWithDescriptionsWithLibraryItems(5)
 
 
@@ -52,7 +52,7 @@ class GoalRepository(
     /** Add */
     suspend fun add(
         goalDescriptionCreationAttributes: GoalDescriptionCreationAttributes,
-        startingTimeFrame : Calendar = Calendar.getInstance(),
+        startingTimeframe : Calendar = Calendar.getInstance(),
         libraryItems: List<LibraryItem>?,
         target: Int,
     ) = goalDescriptionDao.insert(
@@ -62,19 +62,19 @@ class GoalRepository(
             periodInPeriodUnits = goalDescriptionCreationAttributes.periodInPeriodUnits,
             periodUnit = goalDescriptionCreationAttributes.periodUnit,
         ),
-        startingTimeFrame = startingTimeFrame,
+        startingTimeframe = startingTimeframe,
         libraryItemIds = libraryItems?.map { it.id },
         target = target,
     )
 
     private suspend fun createInstance(
         description: GoalDescription,
-        timeFrame: Calendar,
+        timeframe: Calendar,
         target: Int,
     ) {
         goalInstanceDao.insert(
             description,
-            timeFrame,
+            timeframe,
             target,
         )
     }

@@ -15,7 +15,6 @@ package app.musikus.database
 import androidx.room.Embedded
 import androidx.room.Junction
 import androidx.room.Relation
-import app.musikus.R
 import app.musikus.database.daos.GoalDescription
 import app.musikus.database.daos.GoalInstance
 import app.musikus.database.daos.LibraryFolder
@@ -25,12 +24,11 @@ import app.musikus.database.daos.Session
 import app.musikus.database.entities.GoalDescriptionLibraryItemCrossRefModel
 import app.musikus.database.entities.GoalDescriptionModel
 import app.musikus.database.entities.GoalInstanceModel
-import app.musikus.database.entities.GoalPeriodUnit
 import app.musikus.database.entities.GoalType
 import app.musikus.database.entities.LibraryItemModel
 import app.musikus.database.entities.SectionModel
 import app.musikus.utils.TIME_FORMAT_HUMAN_PRETTY
-import app.musikus.utils.UiText
+import app.musikus.utils.getDateTimeFromTimestamp
 import app.musikus.utils.getDurationString
 
 
@@ -155,15 +153,45 @@ data class GoalInstanceWithDescription(
     val description: GoalDescription
 )
 
-data class GoalDescriptionWithInstances(
+data class GoalDescriptionWithInstancesAndLibraryItems(
     @Embedded val description: GoalDescription,
     @Relation(
         entity = GoalInstanceModel::class,
         parentColumn = "id",
         entityColumn = "goal_description_id"
     )
-    val instances: List<GoalInstance>
-)
+    val instances: List<GoalInstance>,
+    @Relation(
+        entity = LibraryItemModel::class,
+        parentColumn = "id",
+        entityColumn = "id",
+        associateBy = Junction(
+            GoalDescriptionLibraryItemCrossRefModel::class,
+            parentColumn = "goal_description_id",
+            entityColumn = "library_item_id"
+        )
+    )
+    val libraryItems: List<LibraryItem>
+) {
+    val title
+        get() = when (description.type) {
+            GoalType.NON_SPECIFIC -> description.title
+            GoalType.ITEM_SPECIFIC -> description.title(libraryItems.first())
+        }
+
+    val subtitle
+        get() = instances.lastOrNull()?.let { description.subtitle(it) }
+
+    val startTime
+        get() = instances.minOfOrNull { it.startTimestamp }?.let {
+            getDateTimeFromTimestamp(it)
+        }
+
+    val endTime
+        get() = instances.maxOfOrNull { it.startTimestamp + it.periodInSeconds }?.let {
+            getDateTimeFromTimestamp(it)
+        }
+}
 
 data class GoalInstanceWithDescriptionWithLibraryItems(
     @Embedded val instance: GoalInstance,
@@ -181,20 +209,7 @@ data class GoalInstanceWithDescriptionWithLibraryItems(
         }
 
     val subtitle
-        get() = listOf(
-            UiText.DynamicString(
-                getDurationString(instance.target, TIME_FORMAT_HUMAN_PRETTY).toString()
-            ),
-            UiText.PluralResource(
-                resId = when(description.description.periodUnit) {
-                    GoalPeriodUnit.DAY ->R.plurals.time_period_day
-                    GoalPeriodUnit.WEEK -> R.plurals.time_period_week
-                    GoalPeriodUnit.MONTH -> R.plurals.time_period_month
-                },
-                quantity = description.description.periodInPeriodUnits,
-                description.description.periodInPeriodUnits // argument used in the format string
-            )
-        )
+        get() = description.description.subtitle(instance)
 
     override fun toString() = when (description.description.type) {
         GoalType.NON_SPECIFIC -> "All items"

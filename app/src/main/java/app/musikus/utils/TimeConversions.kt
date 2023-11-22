@@ -19,7 +19,7 @@ import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.temporal.ChronoField
 
-typealias TimeFrame = Pair<ZonedDateTime, ZonedDateTime>
+typealias Timeframe = Pair<ZonedDateTime, ZonedDateTime>
 
 const val SECONDS_PER_HOUR = 60 * 60
 const val SECONDS_PER_DAY = 60 * 60 * 24

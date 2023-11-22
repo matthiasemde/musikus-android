@@ -16,7 +16,10 @@ import androidx.room.*
 import app.musikus.R
 import app.musikus.database.*
 import app.musikus.database.entities.*
+import app.musikus.utils.TIME_FORMAT_HUMAN_PRETTY
 import app.musikus.utils.UiText
+import app.musikus.utils.getDurationString
+import kotlinx.coroutines.flow.Flow
 import java.util.*
 
 data class GoalDescription(
@@ -41,6 +44,21 @@ data class GoalDescription(
         assert(type == GoalType.ITEM_SPECIFIC)
         return UiText.DynamicString(item.name)
     }
+
+    fun subtitle(instance: GoalInstance) = listOf(
+        UiText.DynamicString(
+            getDurationString(instance.target, TIME_FORMAT_HUMAN_PRETTY).toString()
+        ),
+        UiText.PluralResource(
+            resId = when(periodUnit) {
+                GoalPeriodUnit.DAY ->R.plurals.time_period_day
+                GoalPeriodUnit.WEEK -> R.plurals.time_period_week
+                GoalPeriodUnit.MONTH -> R.plurals.time_period_month
+            },
+            quantity = periodInPeriodUnits,
+            periodInPeriodUnits // argument used in the format string
+        )
+    )
 }
 
 @Dao
@@ -82,7 +100,7 @@ abstract class GoalDescriptionDao(
     @Transaction
     open suspend fun insert(
         goalDescription: GoalDescriptionModel,
-        startingTimeFrame: Calendar = Calendar.getInstance(),
+        startingTimeframe: Calendar = Calendar.getInstance(),
         libraryItemIds: List<UUID>?,
         target: Int,
     ) {
@@ -92,7 +110,7 @@ abstract class GoalDescriptionDao(
         // Create the first instance of the newly created goal description
         database.goalInstanceDao.insert(
             goalDescription,
-            startingTimeFrame,
+            startingTimeframe,
             target
         )
 
@@ -148,5 +166,14 @@ abstract class GoalDescriptionDao(
         checkArchived : Boolean = false,
         type : GoalType
     ) : List<GoalDescription>
+
+    @Transaction
+    @RewriteQueriesToDropUnusedColumns
+    @Query(
+        "SELECT * FROM goal_description " +
+        "WHERE goal_description.deleted=0 " + ""
+    )
+    abstract fun getAllWithInstancesAndLibraryItems()
+    : Flow<List<GoalDescriptionWithInstancesAndLibraryItems>>
 }
 

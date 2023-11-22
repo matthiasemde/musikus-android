@@ -60,7 +60,7 @@ import app.musikus.shared.simpleVerticalScrollbar
 import app.musikus.spacing
 import app.musikus.utils.DATE_FORMATTER_PATTERN_DAY_AND_MONTH
 import app.musikus.utils.TIME_FORMAT_HUMAN_PRETTY
-import app.musikus.utils.TimeFrame
+import app.musikus.utils.Timeframe
 import app.musikus.utils.getDurationString
 import app.musikus.viewmodel.SessionStatisticsChartType
 import app.musikus.viewmodel.SessionStatisticsHeaderUiState
@@ -161,8 +161,8 @@ fun SessionStatisticsHeader(
     uiState: SessionStatisticsHeaderUiState,
     seekForwards: () -> Unit = {},
     seekBackwards: () -> Unit = {}
-) = TimeFrameSelectionHeader(
-    timeFrame = uiState.timeFrame,
+) = TimeframeSelectionHeader(
+    timeframe = uiState.timeframe,
     subtitle = "Total " + getDurationString(uiState.totalPracticeDuration, TIME_FORMAT_HUMAN_PRETTY),
     seekBackwardEnabled = uiState.seekBackwardEnabled,
     seekForwardEnabled = uiState.seekForwardEnabled,
@@ -217,8 +217,8 @@ fun SessionStatisticsLibraryItemSelector(
 }
 
 @Composable
-fun TimeFrameSelectionHeader(
-    timeFrame: TimeFrame,
+fun TimeframeSelectionHeader(
+    timeframe: Timeframe,
     subtitle: String,
     seekBackwardEnabled: Boolean,
     seekForwardEnabled: Boolean,
@@ -247,7 +247,7 @@ fun TimeFrameSelectionHeader(
             horizontalAlignment = CenterHorizontally
         ) {
             Text(
-                text = timeFrame.let { (start, end) ->
+                text = timeframe.let { (start, end) ->
                     listOf(start, end.minusSeconds(1))
                 }.joinToString(" - ") {
                     it.format(DateTimeFormatter.ofPattern(DATE_FORMATTER_PATTERN_DAY_AND_MONTH))

@@ -3,12 +3,13 @@ package app.musikus.repository
 import app.musikus.database.GoalInstanceWithDescriptionWithLibraryItems
 import app.musikus.database.MusikusDatabase
 import app.musikus.database.SessionWithSectionsWithLibraryItems
+import app.musikus.database.daos.GoalInstance
+import app.musikus.database.daos.LibraryItem
 import app.musikus.database.daos.Session
-import app.musikus.database.entities.GoalType
 import app.musikus.database.entities.SectionCreationAttributes
 import app.musikus.database.entities.SessionCreationAttributes
 import app.musikus.database.entities.SessionModel
-import app.musikus.utils.TimeFrame
+import app.musikus.utils.Timeframe
 import kotlinx.coroutines.flow.Flow
 import java.util.UUID
 
@@ -26,26 +27,38 @@ class SessionRepository(
     val sessionsWithSectionsWithLibraryItems = sessionDao.getAllWithSectionsWithLibraryItemsAsFlow()
     fun sessionWithSectionsWithLibraryItems(id: UUID) = sessionDao.getWithSectionsWithLibraryItemsAsFlow(id)
 
-    fun sessionsInTimeFrame (timeFrame: TimeFrame) : Flow<List<SessionWithSectionsWithLibraryItems>> {
-        assert (timeFrame.first < timeFrame.second)
+    fun sessionsInTimeframe (timeframe: Timeframe) : Flow<List<SessionWithSectionsWithLibraryItems>> {
+        assert (timeframe.first < timeframe.second)
         return sessionDao.get(
-            startTimestamp = timeFrame.first.toEpochSecond(),
-            endTimestamp = timeFrame.second.toEpochSecond()
+            startTimestamp = timeframe.first.toEpochSecond(),
+            endTimestamp = timeframe.second.toEpochSecond()
         )
     }
 
-    fun sectionsForGoal (goal: GoalInstanceWithDescriptionWithLibraryItems) =
-        when(goal.description.description.type) {
-            GoalType.ITEM_SPECIFIC -> sectionDao.get(
-                startTimestamp = goal.instance.startTimestamp,
-                endTimestamp = goal.instance.startTimestamp + goal.instance.periodInSeconds,
-                itemIds = goal.description.libraryItems.map { it.id }
-            )
-            GoalType.NON_SPECIFIC -> sectionDao.get(
-                startTimestamp = goal.instance.startTimestamp,
-                endTimestamp = goal.instance.startTimestamp + goal.instance.periodInSeconds,
-            )
-        }
+    fun sectionsForGoal (
+        startTimestamp: Long,
+        endTimestamp: Long,
+        itemIds: List<UUID>? = null
+    ) = if (itemIds == null) sectionDao.get(
+        startTimestamp = startTimestamp,
+        endTimestamp = endTimestamp,
+    ) else sectionDao.get(
+        startTimestamp = startTimestamp,
+        endTimestamp = endTimestamp,
+        itemIds = itemIds
+    )
+
+    fun sectionsForGoal (goal: GoalInstanceWithDescriptionWithLibraryItems) = sectionsForGoal(
+        startTimestamp = goal.instance.startTimestamp,
+        endTimestamp = goal.instance.startTimestamp + goal.instance.periodInSeconds,
+        itemIds = goal.description.libraryItems.map { it.id }.takeIf { it.isNotEmpty() }
+    )
+
+    fun sectionsForGoal(instance: GoalInstance, libraryItems: List<LibraryItem>) = sectionsForGoal(
+        startTimestamp = instance.startTimestamp,
+        endTimestamp = instance.startTimestamp + instance.periodInSeconds,
+        itemIds = libraryItems.map { it.id }.takeIf { it.isNotEmpty() }
+    )
 
     /** Mutators */
     /** Add */
