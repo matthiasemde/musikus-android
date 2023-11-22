@@ -32,12 +32,10 @@ import app.musikus.utils.DATE_FORMATTER_PATTERN_DAY_AND_MONTH
 import app.musikus.utils.Timeframe
 import app.musikus.utils.getTimestamp
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -232,24 +230,22 @@ class GoalStatisticsViewModel(
 
         val (timeframe, goal) = timeframeWithFilteredGoal
 
-        // get a flow of sections for each goal
+        // get a flow of sections for each goal instance
         combine(goal.instances.map { instance ->
             sessionRepository.sectionsForGoal(
                 instance = instance,
                 libraryItems = goal.libraryItems
             ).map { sections ->
-                instance to sections
+                instance to sections.sumOf { it.duration }
             }
         // and combine them into a single flow with a list of pairs of goals and progress
-        }) { goalsWithSections ->
+        }) { goalInstancesWithSections ->
             val goalWithInstancesWithProgress = GoalWithInstancesWithProgress(
                 goal = GoalDescriptionWithLibraryItems(
                     description = goal.description,
                     libraryItems = goal.libraryItems
                 ),
-                instancesWithProgress = goalsWithSections.map { (instance, sections) ->
-                    instance to sections.sumOf { it.duration }
-                }
+                instancesWithProgress = goalInstancesWithSections.toList()
             )
 
             TimeframeWithGoalsWithProgress(
@@ -265,11 +261,24 @@ class GoalStatisticsViewModel(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private val goalToSuccessRate = goals.flatMapLatest { goals ->
-        flow {
-            delay(200)
-            emit(goals.groupBy { it.description.id }.mapValues {
-                5 to 13
-            })
+        combine(
+            goals.map { goalDescriptionWithInstancesAndLibraryItems ->
+                combine(
+                    goalDescriptionWithInstancesAndLibraryItems.instances.map { instance ->
+                        sessionRepository.sectionsForGoal(
+                            instance = instance,
+                            libraryItems = goalDescriptionWithInstancesAndLibraryItems.libraryItems
+                        ).map { sections ->
+                            sections.sumOf { it.duration } > instance.target
+                        }
+                    }
+                ) { successes ->
+                    goalDescriptionWithInstancesAndLibraryItems.description to
+                    (successes.count { it } to successes.size)
+                }
+            }
+        ) {
+            it.toMap()
         }
     }.stateIn(
         scope = viewModelScope,
@@ -289,7 +298,7 @@ class GoalStatisticsViewModel(
             val description = goalDescriptionWithInstancesAndLibraryItems.description
             GoalInfo(
                 goal = goalDescriptionWithInstancesAndLibraryItems,
-                successRate = goalToSuccessRate?.get(description.id),
+                successRate = goalToSuccessRate?.get(description),
                 selected = description == selectedGoalWithTimeframe?.let { (goal, _) -> goal.description }
             )
         }
