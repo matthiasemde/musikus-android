@@ -91,8 +91,9 @@ fun GoalCard(
                             modifier = Modifier
                                 .padding(horizontal = 8.dp)
                                 .size(24.dp),
-                            imageVector = if(description.repeat)
-                                Icons.Rounded.Repeat else Icons.Filled.LocalFireDepartment,
+                            imageVector =
+                                if(description.repeat) Icons.Rounded.Repeat
+                                else Icons.Filled.LocalFireDepartment,
                             contentDescription = if(description.repeat)
                                 "Regular goal" else "One shot goal",
                             tint = libraryItemColor ?: MaterialTheme.colorScheme.primary

@@ -194,7 +194,7 @@ class GoalStatisticsViewModel(
     @OptIn(ExperimentalCoroutinesApi::class)
     private val timeframeWithGoalsWithProgress = combine(
         _selectedGoalWithTimeframe,
-        goals,
+        sortedGoals,
     ) { selectedGoalWithTimeframe, goals ->
 
         // if there are no goals, return null
