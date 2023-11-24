@@ -110,7 +110,6 @@ class GoalStatisticsViewModel(
 
     private fun seek(forward: Boolean) {
         _selectedGoalWithTimeframe.update { pair ->
-            Log.d("goal-stats-viewmodel", "seeking")
             val (goal, timeframe) = pair ?: return@update null
             val (start, end) = timeframe ?: return@update null
 
@@ -120,27 +119,47 @@ class GoalStatisticsViewModel(
             var newStart = start
             var newEnd = end
 
-            val seekDirection = if(forward) 1L else -1L
+            val periodInPeriodUnits = goal.description.periodInPeriodUnits.toLong()
 
-            for (i in 0L..6L) {
-                val (tmpStart, tmpEnd) = when (goal.description.periodUnit) {
-                    GoalPeriodUnit.DAY ->
-                        newStart.plusDays(seekDirection) to
-                        newEnd.plusDays(seekDirection)
+            if (forward) {
+                for (i in 0L..6L) {
+                    val (tmpStart, tmpEnd) = when (goal.description.periodUnit) {
+                        GoalPeriodUnit.DAY ->
+                            newStart.plusDays(periodInPeriodUnits) to
+                            newEnd.plusDays(periodInPeriodUnits)
 
-                    GoalPeriodUnit.WEEK ->
-                        newStart.plusWeeks(seekDirection) to
-                        newEnd.plusWeeks(seekDirection)
+                        GoalPeriodUnit.WEEK ->
+                            newStart.plusWeeks(periodInPeriodUnits) to
+                            newEnd.plusWeeks(periodInPeriodUnits)
 
-                    GoalPeriodUnit.MONTH ->
-                        newStart.plusMonths(seekDirection) to
-                        newEnd.plusMonths(seekDirection)
+                        GoalPeriodUnit.MONTH ->
+                            newStart.plusMonths(periodInPeriodUnits) to
+                            newEnd.plusMonths(periodInPeriodUnits)
+                    }
+
+                    if (tmpEnd > goalEnd) break
+
+                    newStart = tmpStart
+                    newEnd = tmpEnd
                 }
+            } else {
+                if (start > goalStart) {
+                    when (goal.description.periodUnit) {
+                        GoalPeriodUnit.DAY -> {
+                            newStart = newStart.minusDays(7 * periodInPeriodUnits)
+                            newEnd = newEnd.minusDays(7 * periodInPeriodUnits)
+                        }
+                        GoalPeriodUnit.WEEK -> {
+                            newStart = newStart.minusWeeks(7 * periodInPeriodUnits)
+                            newEnd = newEnd.minusWeeks(7 * periodInPeriodUnits)
+                        }
 
-                if(tmpStart < goalStart || tmpEnd > goalEnd) break
-
-                newStart = tmpStart
-                newEnd = tmpEnd
+                        GoalPeriodUnit.MONTH -> {
+                            newStart = newStart.minusMonths(7 * periodInPeriodUnits)
+                            newEnd = newEnd.minusMonths(7 * periodInPeriodUnits)
+                        }
+                    }
+                }
             }
 
             goal to (newStart to newEnd)
@@ -188,8 +207,6 @@ class GoalStatisticsViewModel(
 
 
     /** Combining imported and own state flows */
-
-
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private val timeframeWithGoalsWithProgress = combine(
