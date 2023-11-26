@@ -10,6 +10,9 @@ package app.musikus.database.entities
 
 import androidx.room.ColumnInfo
 import androidx.room.PrimaryKey
+import java.time.Instant
+import java.time.ZoneId
+import java.time.ZonedDateTime
 import java.util.UUID
 
 interface IBaseModelCreationAttributes
@@ -47,13 +50,15 @@ abstract class TimestampModelUpdateAttributes
     : BaseModelUpdateAttributes(), ITimestampModelUpdateAttributes
 
 abstract class TimestampModelDisplayAttributes(
-    @ColumnInfo(name = "created_at") var createdAt: Long = 0,
-    @ColumnInfo(name = "modified_at") var modifiedAt: Long = 0
+    @ColumnInfo(name = "created_at")
+    var createdAt: ZonedDateTime = ZonedDateTime.ofInstant(Instant.ofEpochSecond(0), ZoneId.systemDefault()),
+    @ColumnInfo(name = "modified_at")
+    var modifiedAt: ZonedDateTime = ZonedDateTime.ofInstant(Instant.ofEpochSecond(0), ZoneId.systemDefault())
 ) : BaseModelDisplayAttributes()
 
 abstract class TimestampModel(
-    @ColumnInfo(name="created_at", defaultValue = "0") var createdAt: Long? = null,
-    @ColumnInfo(name="modified_at", defaultValue = "0") var modifiedAt: Long? = null
+    @ColumnInfo(name="created_at") var createdAt: ZonedDateTime? = null,
+    @ColumnInfo(name="modified_at") var modifiedAt: ZonedDateTime? = null
 ) : BaseModel(), ITimestampModelCreationAttributes, ITimestampModelUpdateAttributes {
 
     override fun toString(): String {

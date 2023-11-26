@@ -40,6 +40,7 @@ import app.musikus.database.entities.SectionModel
 import app.musikus.database.entities.SessionModel
 import app.musikus.utils.getTimestamp
 import java.nio.ByteBuffer
+import java.time.ZonedDateTime
 import java.util.UUID
 
 @Database(
@@ -58,7 +59,8 @@ import java.util.UUID
 @TypeConverters(
     UUIDConverter::class,
     NullableUUIDConverter::class,
-    NullableIntConverter::class
+    NullableIntConverter::class,
+    ZonedDateTimeConverter::class
 )
 abstract class MusikusDatabase : RoomDatabase() {
     abstract val libraryItemDao : LibraryItemDao
@@ -143,6 +145,18 @@ abstract class NullableConverter<T> {
 class NullableUUIDConverter : NullableConverter<UUID>()
 class NullableIntConverter : NullableConverter<Int>()
 
+
+class ZonedDateTimeConverter {
+    @TypeConverter
+    fun fromZonedDateTime(zonedDateTime: ZonedDateTime?): String? {
+        return zonedDateTime?.toString()
+    }
+
+    @TypeConverter
+    fun toZonedDateTime(zonedDateTimeString: String?): ZonedDateTime? {
+        return zonedDateTimeString?.let { ZonedDateTime.parse(it) }
+    }
+}
 
 object PTDatabaseMigrationOneToTwo : Migration(1,2) {
     /**

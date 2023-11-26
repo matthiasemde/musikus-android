@@ -32,6 +32,7 @@ import app.musikus.database.entities.SoftDeleteModelUpdateAttributes
 import app.musikus.database.entities.TimestampModel
 import app.musikus.database.entities.TimestampModelDisplayAttributes
 import app.musikus.database.entities.TimestampModelUpdateAttributes
+import app.musikus.utils.getCurrentDateTime
 import app.musikus.utils.getTimestamp
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -213,7 +214,7 @@ abstract class TimestampDao<
     }
 
     override suspend fun insert(rows: List<T>) {
-        val now = getTimestamp()
+        val now = getCurrentDateTime()
         super.insert(rows.onEach {
             it.createdAt = now
             it.modifiedAt = now
@@ -224,7 +225,7 @@ abstract class TimestampDao<
         old: T,
         updateAttributes: U
     ): T = super.applyUpdateAttributes(old, updateAttributes).apply{
-        modifiedAt = getTimestamp()
+        modifiedAt = getCurrentDateTime()
     }
 }
 
