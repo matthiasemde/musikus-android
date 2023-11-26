@@ -23,7 +23,9 @@ import app.musikus.repository.SessionRepository
 import app.musikus.repository.UserPreferencesRepository
 import app.musikus.utils.DATE_FORMATTER_PATTERN_MONTH_TEXT_ABBREV
 import app.musikus.utils.DATE_FORMATTER_PATTERN_WEEKDAY_ABBREV
+import app.musikus.utils.TIME_FORMAT_HUMAN_PRETTY
 import app.musikus.utils.Timeframe
+import app.musikus.utils.getDurationString
 import app.musikus.utils.getEndOfDay
 import app.musikus.utils.getEndOfMonth
 import app.musikus.utils.getEndOfWeek
@@ -100,7 +102,7 @@ data class SessionStatisticsContentUiState(
     val headerUiState: SessionStatisticsHeaderUiState,
     val barChartUiState: SessionStatisticsBarChartUiState?,
     val pieChartUiState: SessionStatisticsPieChartUiState?,
-    val libraryItemsWithSelection: List<Pair<LibraryItem, Boolean>>
+    val libraryItemsWithSelectionAndDuration: List<Triple<LibraryItem, Boolean, String>>
 )
 
 data class SessionStatisticsHeaderUiState(
@@ -230,26 +232,32 @@ class SessionStatisticsViewModel(
         initialValue = 0,
     )
 
-    private val itemsInSessionsInTimeframe = tabWithTimeframeWithSessions
-        .map { (_, sessions) ->
-        sessions.flatMap { (_, sections) ->
-            sections.map { it.libraryItem }
-        }.distinct()
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = emptyList(),
-    )
-
-    private val sortedLibraryItemsWithSelection = combine(
-        itemsInSessionsInTimeframe,
+    private val sortedLibraryItemsWithSelectionAndDuration = combine(
+        tabWithTimeframeWithSessions,
         _deselectedLibraryItems,
         itemsSortInfo
-    ) { itemsInFrame, deselectedItems, (itemSortMode, itemSortDirection) ->
-        itemsInFrame.sorted(
+    ) { (_, sessions), deselectedItems, (itemSortMode, itemSortDirection) ->
+        val itemsToDurationTimeFrame = sessions.flatMap { (_, sections) ->
+            sections
+        }.groupBy {
+            it.libraryItem
+        }.mapValues { (_, sections) ->
+            sections.sumOf { (section, _) -> section.duration }
+        }
+
+        itemsToDurationTimeFrame.keys.toList().sorted(
             itemSortMode,
             itemSortDirection
-        ).map { it to (it !in deselectedItems) }
+        ).map { item ->
+            Triple (
+                item,
+                item !in deselectedItems,
+                getDurationString(
+                    durationSeconds = itemsToDurationTimeFrame[item] ?: 0,
+                    format = TIME_FORMAT_HUMAN_PRETTY
+                ).toString()
+            )
+        }
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
@@ -470,14 +478,20 @@ class SessionStatisticsViewModel(
         headerUiState,
         barChartUiState,
         pieChartUiState,
-        sortedLibraryItemsWithSelection
-    ) { (selectedTab, _), headerUiState, barChartUiState, pieChartUiState, libraryItemsWithSelection ->
+        sortedLibraryItemsWithSelectionAndDuration
+    ) {
+        (selectedTab, _),
+        headerUiState,
+        barChartUiState,
+        pieChartUiState,
+        libraryItemsWithSelectionAndDuration ->
+
         SessionStatisticsContentUiState(
             selectedTab = selectedTab,
             headerUiState = headerUiState,
             barChartUiState = barChartUiState,
             pieChartUiState = pieChartUiState,
-            libraryItemsWithSelection = libraryItemsWithSelection,
+            libraryItemsWithSelectionAndDuration = libraryItemsWithSelectionAndDuration,
         )
     }.stateIn(
         scope = viewModelScope,
@@ -487,7 +501,7 @@ class SessionStatisticsViewModel(
             headerUiState = headerUiState.value,
             barChartUiState = barChartUiState.value,
             pieChartUiState = pieChartUiState.value,
-            libraryItemsWithSelection = sortedLibraryItemsWithSelection.value,
+            libraryItemsWithSelectionAndDuration = sortedLibraryItemsWithSelectionAndDuration.value,
         ),
     )
 

@@ -9,7 +9,8 @@
 package app.musikus.ui.statistics.sessionstatistics
 
 import androidx.compose.animation.Crossfade
-import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement.Center
 import androidx.compose.foundation.layout.Arrangement.SpaceBetween
@@ -51,6 +52,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -150,7 +152,7 @@ fun SessionStatistics(
                 Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
                 HorizontalDivider()
                 SessionStatisticsLibraryItemSelector(
-                    contentUiState.libraryItemsWithSelection,
+                    contentUiState.libraryItemsWithSelectionAndDuration,
                     viewModel::onLibraryItemCheckboxClicked
                 )
             }
@@ -175,9 +177,10 @@ fun SessionStatisticsHeader(
 
 
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun SessionStatisticsLibraryItemSelector(
-    libraryItemsWithSelections: List<Pair<LibraryItem, Boolean>>,
+    libraryItemsWithSelectionAndDuration: List<Triple<LibraryItem, Boolean, String>>,
     onLibraryItemCheckboxClicked: (LibraryItem) -> Unit = {}
 ) {
     val scrollState = rememberLazyListState()
@@ -191,11 +194,12 @@ fun SessionStatisticsLibraryItemSelector(
         state = scrollState,
     ) {
         items(
-            items = libraryItemsWithSelections,
+            items = libraryItemsWithSelectionAndDuration,
             key = { (item) -> item.id }
-        ) {(item, checked) ->
+        ) {(item, checked, duration) ->
             Row(
                 modifier = Modifier
+                    .animateItemPlacement()
                     .fillMaxWidth()
                     .clickable(onClick = { onLibraryItemCheckboxClicked(item) }),
                 verticalAlignment = CenterVertically
@@ -211,15 +215,23 @@ fun SessionStatisticsLibraryItemSelector(
                 )
                 Text(
                     modifier = Modifier.weight(1f),
-                    text = item.name
+                    text = item.name,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
                 )
+                Spacer(Modifier.width(MaterialTheme.spacing.large))
+                Text(
+                    text = duration,
+                    style = MaterialTheme.typography.titleSmall
+                )
+                val spacerWidth = animateDpAsState(
+                    targetValue =
+                        if(showScrollbar) MaterialTheme.spacing.large
+                        else MaterialTheme.spacing.medium,
+                    label = "animatedSpacerWidth"
+                ).value
                 Spacer(
-                    modifier = Modifier
-                        .width(
-                            if(showScrollbar) MaterialTheme.spacing.large
-                            else MaterialTheme.spacing.medium
-                        )
-                        .animateContentSize()
+                    modifier = Modifier.width(spacerWidth)
                 )
             }
         }
