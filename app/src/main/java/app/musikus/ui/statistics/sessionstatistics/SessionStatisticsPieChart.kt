@@ -41,7 +41,7 @@ import kotlin.math.sin
 
 @Composable
 fun SessionStatisticsPieChart(
-    uiState: SessionStatisticsPieChartUiState
+    uiState: SessionStatisticsPieChartUiState,
 ) {
 
     val (

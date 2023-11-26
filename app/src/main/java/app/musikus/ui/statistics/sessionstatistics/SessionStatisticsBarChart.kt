@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
@@ -74,16 +75,21 @@ fun SessionStatisticsBarChart(
     )
     val dashedLineEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f)
 
+
     val noData = barData.all { barDatum ->
         barDatum.libraryItemsToDuration.isEmpty() ||
                 barDatum.libraryItemsToDuration.values.all { it == 0 }
     }
 
+    val firstComposition = remember { mutableStateOf(true) }
+
     val animatedOpenCloseScaler by animateFloatAsState(
-        targetValue = if (noData) 0f else 1f,
+        targetValue = if (noData || firstComposition.value) 0f else 1f,
         animationSpec = tween(durationMillis = 700),
         label = "bar-chart-open-close-scaler-animation",
     )
+
+    firstComposition.value = false
 
     val labelsForBars = barData.map { it.label }
     val measuredLabelsForBars = remember(labelsForBars) {

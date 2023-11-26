@@ -274,7 +274,6 @@ class SessionStatisticsViewModel(
         (itemSortMode, itemSortDirection) ->
 
         if (chartType != SessionStatisticsChartType.BAR) return@combine null
-        if (timestampAndFilteredSections.isEmpty()) return@combine null
 
         val (selectedTab, timeframe) = tabWithTimeframe
         val (_, timeframeEnd) = timeframe
@@ -429,15 +428,6 @@ class SessionStatisticsViewModel(
 
         flow {
             if (!_barChartShowing) {
-                emit(SessionStatisticsBarChartUiState(
-                    chartData = chartData.copy(
-                        barData = chartData.barData.map { bar -> bar.copy(
-                            libraryItemsToDuration = emptyMap(),
-                            totalDuration = 0,
-                        )},
-                        maxDuration = chartData.maxDuration
-                    ),
-                ))
                 _barChartStateBuffer = SessionStatisticsBarChartUiState(chartData)
                 _barChartShowing = true
                 delay(700)
