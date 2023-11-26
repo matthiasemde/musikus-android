@@ -34,16 +34,10 @@ data class GoalDescription(
     @ColumnInfo(name="custom_order") val customOrder: Int?,
 ) : SoftDeleteModelDisplayAttributes() {
 
-    val title: UiText
-        get() = run {
-            assert(type == GoalType.NON_SPECIFIC)
-            UiText.StringResource(R.string.goal_name_non_specific)
-        }
-
-    fun title(item: LibraryItem): UiText {
-        assert(type == GoalType.ITEM_SPECIFIC)
-        return UiText.DynamicString(item.name)
-    }
+    fun title(item: LibraryItem? = null) =
+        item?.let {
+            UiText.DynamicString(item.name)
+        } ?: UiText.StringResource(R.string.goal_name_non_specific)
 
     fun subtitle(instance: GoalInstance) = listOf(
         UiText.DynamicString(

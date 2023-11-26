@@ -44,7 +44,7 @@ import kotlinx.coroutines.launch
 
 data class ScaleLineData (
     val label: TextLayoutResult,
-    val duration: Float,
+    val duration: Int,
     val lineColor: Color,
     val labelColor: Color,
     val target: Boolean = false,
@@ -167,7 +167,7 @@ fun SessionStatisticsBarChart(
                     getDurationString(scaleLine, TIME_FORMAT_HUMAN_PRETTY).toString(),
                     labelTextStyle.copy(color = labelColor),
                 ),
-                duration = scaleLine.toFloat(),
+                duration = scaleLine,
                 lineColor = lineColor,
                 labelColor = labelColor,
             )
@@ -250,7 +250,7 @@ fun SessionStatisticsBarChart(
         scaleLinesWithAnimatedColor.forEach { scaleLineData ->
             val lineHeight =
                 (size.height - yZero) -
-                (yMax * (scaleLineData.duration / animatedChartMaxDuration))
+                (yMax * (scaleLineData.duration.toFloat() / animatedChartMaxDuration))
             drawLine(
                 color = scaleLineData.lineColor,
                 start = Offset(

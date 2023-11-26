@@ -18,7 +18,6 @@ import android.content.Context
 import android.content.ContextWrapper
 import android.content.SharedPreferences
 import android.net.Uri
-import android.util.Log
 import android.util.TypedValue
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
@@ -162,7 +161,6 @@ class Musikus : Application() {
             userPreferencesRepository.userPreferences.map { preferences ->
                 preferences.theme
             }.collect {
-                Log.d("Theme", "Theme changed to ${it.name}")
                 AppCompatDelegate.setDefaultNightMode(it.ordinal)
             }
         }

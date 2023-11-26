@@ -77,10 +77,7 @@ data class GoalDescriptionWithLibraryItems(
     val libraryItems: List<LibraryItem>
 ) {
     val title
-        get() = when (description.type) {
-            GoalType.NON_SPECIFIC -> description.title
-            GoalType.ITEM_SPECIFIC -> description.title(libraryItems.first())
-        }
+        get() = description.title(libraryItems.firstOrNull())
 }
 
 data class LibraryFolderWithItems(
@@ -174,10 +171,7 @@ data class GoalDescriptionWithInstancesAndLibraryItems(
     val libraryItems: List<LibraryItem>
 ) {
     val title
-        get() = when (description.type) {
-            GoalType.NON_SPECIFIC -> description.title
-            GoalType.ITEM_SPECIFIC -> description.title(libraryItems.first())
-        }
+        get () = description.title(libraryItems.firstOrNull())
 
     val subtitle
         get() = instances.lastOrNull()?.let { description.subtitle(it) }
@@ -203,10 +197,7 @@ data class GoalInstanceWithDescriptionWithLibraryItems(
     val description: GoalDescriptionWithLibraryItems
 ) {
     val title
-        get() = when (description.description.type) {
-            GoalType.NON_SPECIFIC -> description.description.title
-            GoalType.ITEM_SPECIFIC -> description.description.title(description.libraryItems.first())
-        }
+        get() = description.description.title(description.libraryItems.firstOrNull())
 
     val subtitle
         get() = description.description.subtitle(instance)

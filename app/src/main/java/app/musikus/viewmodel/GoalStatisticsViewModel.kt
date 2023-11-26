@@ -30,6 +30,7 @@ import app.musikus.repository.SessionRepository
 import app.musikus.repository.UserPreferencesRepository
 import app.musikus.utils.DATE_FORMATTER_PATTERN_DAY_AND_MONTH
 import app.musikus.utils.Timeframe
+import app.musikus.utils.UiText
 import app.musikus.utils.getTimestamp
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -41,6 +42,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import java.time.format.DateTimeFormatter
+import java.util.UUID
 
 data class GoalStatisticsUiState(
     val contentUiState: GoalStatisticsContentUiState
@@ -53,10 +55,17 @@ data class GoalStatisticsContentUiState(
 )
 
 data class GoalInfo(
-    val goal: GoalDescriptionWithInstancesAndLibraryItems,
+    val goalId: UUID,
+    val title: UiText,
+    val subtitle: List<UiText>?,
+    val uniqueColor: Color?,
     val successRate: Pair<Int, Int>?,
     val selected: Boolean,
-)
+) {
+    override fun toString(): String {
+        return "$goalId : $selected"
+    }
+}
 
 data class GoalStatisticsHeaderUiState(
     val seekBackwardEnabled: Boolean,
@@ -268,7 +277,7 @@ class GoalStatisticsViewModel(
             TimeframeWithGoalsWithProgress(
                 timeframe = timeframe,
                 goalWithInstancesWithProgress = goalWithInstancesWithProgress
-            )
+            ).also { Log.d( "goal-stats-viewmodel", "$it")}
         }
     }.stateIn(
         scope = viewModelScope,
@@ -313,8 +322,20 @@ class GoalStatisticsViewModel(
 
         sortedGoals.map { goalDescriptionWithInstancesAndLibraryItems ->
             val description = goalDescriptionWithInstancesAndLibraryItems.description
+
+            val title = description.title(
+                item = goalDescriptionWithInstancesAndLibraryItems.libraryItems.firstOrNull()
+            )
+
+            val subtitle = goalDescriptionWithInstancesAndLibraryItems.subtitle
+
             GoalInfo(
-                goal = goalDescriptionWithInstancesAndLibraryItems,
+                goalId = description.id,
+                title = title,
+                subtitle = subtitle,
+                uniqueColor = goalDescriptionWithInstancesAndLibraryItems.libraryItems
+                    .firstOrNull()
+                    ?.let { Color(libraryColors[it.colorIndex]) },
                 successRate = goalToSuccessRate?.get(description),
                 selected = description == selectedGoalWithTimeframe?.let { (goal, _) -> goal.description }
             )
@@ -447,10 +468,12 @@ class GoalStatisticsViewModel(
         seek(forward = false)
     }
 
-    fun onGoalSelected(goal: GoalDescriptionWithInstancesAndLibraryItems) {
+    fun onGoalSelected(goalId: UUID) {
         if (_selectedGoalWithTimeframe.value?.let {
-                (selectedGoal, _) -> selectedGoal
-        } == goal) return
+                (selectedGoal, _) -> selectedGoal.description.id
+        } == goalId) return
+
+        val goal = goals.value.firstOrNull { it.description.id == goalId } ?: return
 
         _redraw = true
         _selectedGoalWithTimeframe.update {

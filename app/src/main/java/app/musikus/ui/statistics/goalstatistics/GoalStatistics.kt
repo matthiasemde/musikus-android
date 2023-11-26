@@ -40,19 +40,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign.Companion.End
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import app.musikus.Musikus
 import app.musikus.R
-import app.musikus.database.GoalDescriptionWithInstancesAndLibraryItems
-import app.musikus.database.entities.GoalType
 import app.musikus.shared.conditional
 import app.musikus.shared.simpleVerticalScrollbar
 import app.musikus.spacing
@@ -60,6 +55,7 @@ import app.musikus.ui.statistics.sessionstatistics.TimeframeSelectionHeader
 import app.musikus.utils.asString
 import app.musikus.viewmodel.GoalStatisticsGoalSelectorUiState
 import app.musikus.viewmodel.GoalStatisticsViewModel
+import java.util.UUID
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -114,7 +110,7 @@ fun GoalStatistics(
 @Composable
 fun GoalStatisticsGoalSelector(
     uiState: GoalStatisticsGoalSelectorUiState,
-    onGoalSelected: (GoalDescriptionWithInstancesAndLibraryItems) -> Unit = {}
+    onGoalSelected: (UUID) -> Unit = {}
 ) {
     val scrollState = rememberLazyListState()
     val showScrollbar = scrollState.canScrollBackward || scrollState.canScrollForward
@@ -128,21 +124,19 @@ fun GoalStatisticsGoalSelector(
     ) {
         items(
             items = uiState.goalsInfo,
-            key = { goalInfo -> goalInfo.goal.description.id }
+            key = { goalInfo -> goalInfo.goalId }
         ) {goalInfo ->
             Row(
                 modifier = Modifier
                     .height(IntrinsicSize.Max)
                     .fillMaxWidth()
-                    .clickable(onClick = { onGoalSelected(goalInfo.goal) }),
+                    .clickable(onClick = { onGoalSelected(goalInfo.goalId) }),
                 verticalAlignment = CenterVertically
             ) {
-                val color = if(goalInfo.goal.description.type == GoalType.ITEM_SPECIFIC) {
-                    Color(Musikus.getLibraryItemColors(LocalContext.current)[goalInfo.goal.libraryItems.first().colorIndex])
-                } else MaterialTheme.colorScheme.primary
+                val color = goalInfo.uniqueColor ?: MaterialTheme.colorScheme.primary
                 RadioButton(
                     selected = goalInfo.selected,
-                    onClick = { onGoalSelected(goalInfo.goal) },
+                    onClick = { onGoalSelected(goalInfo.goalId) },
                     colors = RadioButtonDefaults.colors(
                         selectedColor = color,
                         unselectedColor = color,
@@ -175,7 +169,7 @@ fun GoalStatisticsGoalSelector(
                 ) {
                     // Title
                     Text(
-                        text = goalInfo.goal.title.asString(),
+                        text = goalInfo.title.asString(),
                         style = MaterialTheme.typography.bodyMedium,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
@@ -185,7 +179,7 @@ fun GoalStatisticsGoalSelector(
 
                     // Subtitle
                     Text(
-                        text = goalInfo.goal.subtitle?.asString() ?: "No data available", // TODO find a better solution for no instances
+                        text = goalInfo.subtitle?.asString() ?: "No data available", // TODO find a better solution for no instances
                         style = MaterialTheme.typography.labelSmall,
                     )
                 }

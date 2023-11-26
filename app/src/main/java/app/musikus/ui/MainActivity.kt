@@ -274,7 +274,6 @@ class MainActivity : AppCompatActivity() {
                         }
                     }
                 ) { innerPadding ->
-                    Log.d("MainActivity", "innerPadding($currentDestination): $innerPadding")
                     val animationDuration = 400
                     NavHost(
                         navController,
