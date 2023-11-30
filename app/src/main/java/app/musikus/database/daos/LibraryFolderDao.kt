@@ -18,7 +18,12 @@ import app.musikus.database.entities.SoftDeleteModelDisplayAttributes
 data class LibraryFolder(
     @ColumnInfo(name = "name") val name: String,
     @ColumnInfo(name = "custom_order") val customOrder: Int?,
-) : SoftDeleteModelDisplayAttributes()
+) : SoftDeleteModelDisplayAttributes() {
+
+    // necessary custom equals operator since default does not check super class properties
+    override fun equals(other: Any?) = (other is LibraryFolder) && (other.id == this.id)
+
+}
 
 @Dao
 abstract class LibraryFolderDao(

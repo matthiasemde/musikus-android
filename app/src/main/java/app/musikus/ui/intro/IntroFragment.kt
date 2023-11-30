@@ -19,35 +19,21 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentContainerView
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import androidx.recyclerview.widget.GridLayoutManager
-import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import app.musikus.R
-import app.musikus.database.GoalDescriptionWithLibraryItems
-import app.musikus.database.GoalInstanceWithDescriptionWithLibraryItems
 import app.musikus.database.SectionWithLibraryItem
 import app.musikus.database.SessionWithSectionsWithLibraryItems
-import app.musikus.database.daos.GoalDescription
-import app.musikus.database.daos.GoalInstance
 import app.musikus.database.daos.LibraryItem
 import app.musikus.database.daos.Section
 import app.musikus.database.daos.Session
-import app.musikus.database.entities.GoalPeriodUnit
-import app.musikus.database.entities.GoalProgressType
-import app.musikus.database.entities.GoalType
 import app.musikus.ui.activesession.ActiveSessionActivity
-import app.musikus.ui.goals.GoalAdapter
 import app.musikus.ui.library.LibraryItemAdapter
-import app.musikus.utils.SECONDS_PER_DAY
-import app.musikus.utils.SECONDS_PER_HOUR
 import app.musikus.utils.getTimestamp
-import app.musikus.utils.getStartOfDay
-import app.musikus.utils.getStartOfWeek
 import com.github.appintro.BuildConfig
 import com.github.appintro.SlideBackgroundColorHolder
 import com.github.appintro.SlideSelectionListener
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import java.util.UUID
-import kotlin.math.roundToInt
 
 
 private const val DUMMY_MAIN_CATEGORY_INDEX = 5
@@ -226,67 +212,67 @@ class IntroGoalsFragment : Fragment(R.layout.fragment_intro_goals) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
 
-        val recView = view.findViewById<RecyclerView>(R.id.introGoalList)
-        val goalsDummyAdapter = GoalAdapter(
-            getDummyGoals(),
-            context = requireActivity(),
-        )
-
-        recView.apply {
-            layoutManager = LinearLayoutManager(context)
-            adapter = goalsDummyAdapter
-        }
+//        val recView = view.findViewById<RecyclerView>(R.id.introGoalList)
+//        val goalsDummyAdapter = GoalAdapter(
+//            getDummyGoals(),
+//            context = requireActivity(),
+//        )
+//
+//        recView.apply {
+//            layoutManager = LinearLayoutManager(context)
+//            adapter = goalsDummyAdapter
+//        }
     }
 
-    private fun getDummyGoals(): List<GoalInstanceWithDescriptionWithLibraryItems> {
-        val goal1 = GoalInstanceWithDescriptionWithLibraryItems(
-            GoalInstance(
-                goalDescriptionId = UUID.randomUUID(),
-                startTimestamp = getStartOfDay(0).toEpochSecond(),
-                periodInSeconds = SECONDS_PER_DAY,
-                target = SECONDS_PER_HOUR,
-                renewed = false
-            ),
-            GoalDescriptionWithLibraryItems(
-                description = GoalDescription(
-                    type = GoalType.NON_SPECIFIC,
-                    repeat = true,
-                    periodInPeriodUnits = 1,
-                    periodUnit = GoalPeriodUnit.DAY,
-                    progressType = GoalProgressType.TIME,
-                    paused = false,
-                    archived = false,
-                    customOrder = null,
-                ),
-                listOf()
-            ),
-        )
-        val goal2 = GoalInstanceWithDescriptionWithLibraryItems(
-            GoalInstance(
-                goalDescriptionId = UUID.randomUUID(),
-                startTimestamp = getStartOfWeek(0).toEpochSecond(),
-                periodInSeconds = SECONDS_PER_DAY * 7,
-                target = (SECONDS_PER_HOUR * 5.5f).roundToInt(),
-                renewed = false
-            ),
-            GoalDescriptionWithLibraryItems(
-                description = GoalDescription(
-                    type = GoalType.ITEM_SPECIFIC,
-                    repeat = true,
-                    periodInPeriodUnits = 1,
-                    periodUnit = GoalPeriodUnit.WEEK,
-                    progressType = GoalProgressType.TIME,
-                    paused = false,
-                    archived = false,
-                    customOrder = null,
-                ),
-                listOf(
-                    dummyLibraryItems[DUMMY_MAIN_CATEGORY_INDEX]
-                )
-            ),
-        )
-        return arrayListOf(goal1, goal2)
-    }
+//    private fun getDummyGoals(): List<GoalInstanceWithDescriptionWithLibraryItems> {
+//        val goal1 = GoalInstanceWithDescriptionWithLibraryItems(
+//            GoalInstance(
+//                goalDescriptionId = UUID.randomUUID(),
+//                startTimestamp = getStartOfDay(0).toEpochSecond(),
+//                periodInSeconds = SECONDS_PER_DAY,
+//                target = SECONDS_PER_HOUR,
+//                renewed = false
+//            ),
+//            GoalDescriptionWithLibraryItems(
+//                description = GoalDescription(
+//                    type = GoalType.NON_SPECIFIC,
+//                    repeat = true,
+//                    periodInPeriodUnits = 1,
+//                    periodUnit = GoalPeriodUnit.DAY,
+//                    progressType = GoalProgressType.TIME,
+//                    paused = false,
+//                    archived = false,
+//                    customOrder = null,
+//                ),
+//                listOf()
+//            ),
+//        )
+//        val goal2 = GoalInstanceWithDescriptionWithLibraryItems(
+//            GoalInstance(
+//                goalDescriptionId = UUID.randomUUID(),
+//                startTimestamp = getStartOfWeek(0).toEpochSecond(),
+//                periodInSeconds = SECONDS_PER_DAY * 7,
+//                target = (SECONDS_PER_HOUR * 5.5f).roundToInt(),
+//                renewed = false
+//            ),
+//            GoalDescriptionWithLibraryItems(
+//                description = GoalDescription(
+//                    type = GoalType.ITEM_SPECIFIC,
+//                    repeat = true,
+//                    periodInPeriodUnits = 1,
+//                    periodUnit = GoalPeriodUnit.WEEK,
+//                    progressType = GoalProgressType.TIME,
+//                    paused = false,
+//                    archived = false,
+//                    customOrder = null,
+//                ),
+//                listOf(
+//                    dummyLibraryItems[DUMMY_MAIN_CATEGORY_INDEX]
+//                )
+//            ),
+//        )
+//        return arrayListOf(goal1, goal2)
+//    }
 }
 
 class IntroSessionsFragment : Fragment(R.layout.fragment_intro_sessions) {

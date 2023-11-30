@@ -159,7 +159,6 @@ fun GoalStatisticsBarChart(
     }
 
     val scaleLinesWithAnimatedColor = remember(newScaleLines) {
-        Log.d("barChart", "$newScaleLines")
         (newScaleLines.keys + scaleLines.keys)
             .distinct()
             // filter out scale lines that are too close to the target

@@ -31,7 +31,7 @@ import app.musikus.repository.UserPreferencesRepository
 import app.musikus.utils.DATE_FORMATTER_PATTERN_DAY_AND_MONTH
 import app.musikus.utils.Timeframe
 import app.musikus.utils.UiText
-import app.musikus.utils.getTimestamp
+import app.musikus.utils.inLocalTimezone
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -239,15 +239,16 @@ class GoalStatisticsViewModel(
         val (selectedGoal, timeframe) = selectedGoalWithTimeframe
 
         // if all the necessary data is available, return the filtered goals
-        val (startTimestamp, endTimestamp) = timeframe?.toList()?.map {
-            getTimestamp(it)
-        } ?: return@combine null
+        val (start, end) = timeframe ?: return@combine null
 
         Pair(
             timeframe,
             selectedGoal.copy(
-                instances = selectedGoal.instances.filter { instance ->
-                    instance.startTimestamp in startTimestamp until endTimestamp
+                instances = selectedGoal.instances.filter { goalInstance ->
+                    goalInstance.startTimestamp.inLocalTimezone().let {
+                        Log.d("goal", "$it")
+                        start <= it && it < end
+                    }
                 }
             ),
         )
@@ -260,7 +261,8 @@ class GoalStatisticsViewModel(
         combine(goal.instances.map { instance ->
             sessionRepository.sectionsForGoal(
                 instance = instance,
-                libraryItems = goal.libraryItems
+                description = goal.description,
+                libraryItems = goal.libraryItems,
             ).map { sections ->
                 instance to sections.sumOf { it.duration }
             }
@@ -277,7 +279,7 @@ class GoalStatisticsViewModel(
             TimeframeWithGoalsWithProgress(
                 timeframe = timeframe,
                 goalWithInstancesWithProgress = goalWithInstancesWithProgress
-            ).also { Log.d( "goal-stats-viewmodel", "$it")}
+            )
         }
     }.stateIn(
         scope = viewModelScope,
@@ -293,9 +295,10 @@ class GoalStatisticsViewModel(
                     goalDescriptionWithInstancesAndLibraryItems.instances.map { instance ->
                         sessionRepository.sectionsForGoal(
                             instance = instance,
+                            description = goalDescriptionWithInstancesAndLibraryItems.description,
                             libraryItems = goalDescriptionWithInstancesAndLibraryItems.libraryItems
                         ).map { sections ->
-                            sections.sumOf { it.duration } > instance.target
+                            sections.sumOf { it.duration } >= instance.target
                         }
                     }
                 ) { successes ->
@@ -381,9 +384,10 @@ class GoalStatisticsViewModel(
             data = barTimeframes.map { (start, end) ->
                 Pair(
                     start.format(DateTimeFormatter.ofPattern(DATE_FORMATTER_PATTERN_DAY_AND_MONTH)),
-                    goalsWithProgress.firstOrNull { (goal, _) ->
-                        goal.startTimestamp in
-                        getTimestamp(start) until getTimestamp(end)
+                    goalsWithProgress.firstOrNull { (goalInstance, _) ->
+                        goalInstance.startTimestamp.inLocalTimezone().let {
+                            start <= it && it < end
+                        }
                     }?.let { (_, progress) -> progress } ?: 0
                 )
             },
@@ -449,7 +453,7 @@ class GoalStatisticsViewModel(
     val uiState = contentUiState.map { contentUiState ->
         GoalStatisticsUiState(
             contentUiState = contentUiState
-        ).also { Log.d("goal-stats-viewmodel", "$it") }
+        )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),

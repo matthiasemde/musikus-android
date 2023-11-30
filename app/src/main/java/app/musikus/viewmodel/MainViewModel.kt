@@ -41,7 +41,8 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.util.Calendar
+import java.time.ZonedDateTime
+import java.time.temporal.ChronoUnit
 import kotlin.math.pow
 
 
@@ -87,7 +88,7 @@ class MainViewModel(
             ).forEach {
                 libraryRepository.addFolder(it)
                 Log.d("MainActivity", "Folder ${it.name} created")
-                delay(1500) //make sure folders have different createdAt values
+                delay(10) //make sure folders have different createdAt values
             }
 
             libraryRepository.folders.first().let { folders ->
@@ -105,7 +106,7 @@ class MainViewModel(
                 ).forEach {
                     libraryRepository.addItem(it)
                     Log.d("MainActivity", "LibraryItem ${it.name} created")
-                    delay(1500) //make sure items have different createdAt values
+                    delay(10) //make sure items have different createdAt values
                 }
             }
 
@@ -151,20 +152,18 @@ class MainViewModel(
                 ).forEach { goalDescriptionCreationAttributes ->
                     GoalRepository(database).add(
                         goalDescriptionCreationAttributes,
-                        Calendar.getInstance().let { it.add(
-                                when(goalDescriptionCreationAttributes.periodUnit) {
-                                    GoalPeriodUnit.DAY -> Calendar.DAY_OF_YEAR
-                                    GoalPeriodUnit.WEEK -> Calendar.WEEK_OF_YEAR
-                                    GoalPeriodUnit.MONTH -> Calendar.MONTH
-                                },
-                                -3 * goalDescriptionCreationAttributes.periodInPeriodUnits
-                            )
-                            it
-                       },
+                        ZonedDateTime.now().minus(
+                            (10L * goalDescriptionCreationAttributes.periodInPeriodUnits),
+                            when(goalDescriptionCreationAttributes.periodUnit) {
+                                GoalPeriodUnit.DAY -> ChronoUnit.DAYS
+                                GoalPeriodUnit.WEEK -> ChronoUnit.WEEKS
+                                GoalPeriodUnit.MONTH -> ChronoUnit.MONTHS
+                            },
+                        ),
                         if (goalDescriptionCreationAttributes.type == GoalType.NON_SPECIFIC) null else listOf(items.random()),
                         ((1..6).random() * 10 + 30) * 60
                     )
-                    delay(1500)
+                    delay(10)
                 }
 
                 GoalRepository(database).updateGoals()
@@ -190,7 +189,7 @@ class MainViewModel(
                             duration = (10..20).random() * 60,
                         )}
                     )
-                    delay(300)
+                    delay(10)
                 }
             }
         }

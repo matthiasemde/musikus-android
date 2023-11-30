@@ -28,7 +28,6 @@ import app.musikus.database.entities.GoalType
 import app.musikus.database.entities.LibraryItemModel
 import app.musikus.database.entities.SectionModel
 import app.musikus.utils.TIME_FORMAT_HUMAN_PRETTY
-import app.musikus.utils.getDateTimeFromTimestamp
 import app.musikus.utils.getDurationString
 
 
@@ -78,6 +77,9 @@ data class GoalDescriptionWithLibraryItems(
 ) {
     val title
         get() = description.title(libraryItems.firstOrNull())
+
+    fun endOfInstanceInLocalTimezone(instance: GoalInstance) =
+        description.endOfInstanceInLocalTimezone(instance)
 }
 
 data class LibraryFolderWithItems(
@@ -177,14 +179,10 @@ data class GoalDescriptionWithInstancesAndLibraryItems(
         get() = instances.lastOrNull()?.let { description.subtitle(it) }
 
     val startTime
-        get() = instances.minOfOrNull { it.startTimestamp }?.let {
-            getDateTimeFromTimestamp(it)
-        }
+        get() = instances.minOfOrNull { it.startTimestamp }
 
     val endTime
-        get() = instances.maxOfOrNull { it.startTimestamp + it.periodInSeconds }?.let {
-            getDateTimeFromTimestamp(it)
-        }
+        get() = instances.maxOfOrNull { description.endOfInstanceInLocalTimezone(it) }
 }
 
 data class GoalInstanceWithDescriptionWithLibraryItems(
@@ -196,15 +194,19 @@ data class GoalInstanceWithDescriptionWithLibraryItems(
     )
     val description: GoalDescriptionWithLibraryItems
 ) {
-    val title
-        get() = description.description.title(description.libraryItems.firstOrNull())
-
-    val subtitle
-        get() = description.description.subtitle(instance)
 
     override fun toString() = when (description.description.type) {
         GoalType.NON_SPECIFIC -> "All items"
         GoalType.ITEM_SPECIFIC -> description.libraryItems.first().name
     } + " " + getDurationString(instance.target, TIME_FORMAT_HUMAN_PRETTY).toString() +
      " in ${description.description.periodInPeriodUnits} ${description.description.periodUnit}"
+
+    val title
+        get() = description.description.title(description.libraryItems.firstOrNull())
+
+    val subtitle
+        get() = description.description.subtitle(instance)
+
+    val endTimestampInLocalTimezone
+        get() = description.endOfInstanceInLocalTimezone(instance)
 }

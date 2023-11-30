@@ -3,6 +3,7 @@ package app.musikus.repository
 import app.musikus.database.GoalInstanceWithDescriptionWithLibraryItems
 import app.musikus.database.MusikusDatabase
 import app.musikus.database.SessionWithSectionsWithLibraryItems
+import app.musikus.database.daos.GoalDescription
 import app.musikus.database.daos.GoalInstance
 import app.musikus.database.daos.LibraryItem
 import app.musikus.database.daos.Session
@@ -49,14 +50,18 @@ class SessionRepository(
     )
 
     fun sectionsForGoal (goal: GoalInstanceWithDescriptionWithLibraryItems) = sectionsForGoal(
-        startTimestamp = goal.instance.startTimestamp,
-        endTimestamp = goal.instance.startTimestamp + goal.instance.periodInSeconds,
+        startTimestamp = goal.instance.startTimestamp.toEpochSecond(),
+        endTimestamp = goal.endTimestampInLocalTimezone.toEpochSecond(),
         itemIds = goal.description.libraryItems.map { it.id }.takeIf { it.isNotEmpty() }
     )
 
-    fun sectionsForGoal(instance: GoalInstance, libraryItems: List<LibraryItem>) = sectionsForGoal(
-        startTimestamp = instance.startTimestamp,
-        endTimestamp = instance.startTimestamp + instance.periodInSeconds,
+    fun sectionsForGoal(
+        instance: GoalInstance,
+        description: GoalDescription,
+        libraryItems: List<LibraryItem>
+    ) = sectionsForGoal(
+        startTimestamp = instance.startTimestamp.toEpochSecond(),
+        endTimestamp = description.endOfInstanceInLocalTimezone(instance).toEpochSecond(),
         itemIds = libraryItems.map { it.id }.takeIf { it.isNotEmpty() }
     )
 

@@ -79,7 +79,6 @@ import app.musikus.utils.DATE_FORMATTER_PATTERN_DAY_AND_MONTH
 import app.musikus.utils.DATE_FORMATTER_PATTERN_MONTH_TEXT_FULL
 import app.musikus.utils.TIME_FORMAT_HUMAN_PRETTY
 import app.musikus.utils.TIME_FORMAT_HUMAN_PRETTY_SHORT
-import app.musikus.utils.epochSecondsToDate
 import app.musikus.utils.getCurrentDateTime
 import app.musikus.utils.getDurationString
 import app.musikus.viewmodel.MainViewModel
@@ -488,9 +487,9 @@ fun StatisticsGoalCard(
                             }
                             Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
                             Text(
-                                text = epochSecondsToDate(goal.instance.let {
-                                    it.startTimestamp + it.periodInSeconds
-                                }).format(DateTimeFormatter.ofPattern(DATE_FORMATTER_PATTERN_DAY_AND_MONTH)),
+                                text = goal.endTimestampInLocalTimezone.format(
+                                    DateTimeFormatter.ofPattern(DATE_FORMATTER_PATTERN_DAY_AND_MONTH)
+                                ),
                                 style = MaterialTheme.typography.labelSmall
                             )
                         }

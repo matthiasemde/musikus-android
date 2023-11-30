@@ -41,6 +41,7 @@ import app.musikus.database.entities.SessionModel
 import app.musikus.utils.getTimestamp
 import java.nio.ByteBuffer
 import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 import java.util.UUID
 
 @Database(
@@ -145,11 +146,13 @@ abstract class NullableConverter<T> {
 class NullableUUIDConverter : NullableConverter<UUID>()
 class NullableIntConverter : NullableConverter<Int>()
 
+fun ZonedDateTime.toDatabaseString(): String =
+    this.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
 
 class ZonedDateTimeConverter {
     @TypeConverter
     fun fromZonedDateTime(zonedDateTime: ZonedDateTime?): String? {
-        return zonedDateTime?.toString()
+        return zonedDateTime?.toDatabaseString()
     }
 
     @TypeConverter

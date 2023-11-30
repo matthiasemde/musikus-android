@@ -229,6 +229,10 @@ fun getDateTimeFromTimestamp(timestamp: Long): ZonedDateTime {
     return ZonedDateTime.ofInstant(Instant.ofEpochSecond(timestamp), ZoneId.systemDefault())
 }
 
+// copies the time from the original timezone to the local timezone without adjusting it
+fun ZonedDateTime.inLocalTimezone(): ZonedDateTime =
+    this.toLocalDateTime().atZone(ZonedDateTime.now().zone)
+
 /**
  * Get the Beginning of dayOffset Days from now. dayOffset>0 -> future, dayOffset<0 -> past
  */
@@ -239,7 +243,7 @@ fun getStartOfDay(
     dateTime: ZonedDateTime = ZonedDateTime.now()
 ): ZonedDateTime {
     return dateTime
-        .with(ChronoField.SECOND_OF_DAY, 0)
+        .with(ChronoField.MILLI_OF_DAY, 0)
         .toLocalDate()
         .atStartOfDay(ZoneId.systemDefault())  // make sure time is 00:00
         .plusMonths(monthOffset)

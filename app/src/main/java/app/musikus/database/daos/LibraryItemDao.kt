@@ -29,8 +29,11 @@ data class LibraryItem(
     @ColumnInfo(name = "color_index") val colorIndex: Int,
     @ColumnInfo(name = "library_folder_id") val libraryFolderId: UUID?,
     @ColumnInfo(name = "custom_order") val customOrder: Int?,
-) : SoftDeleteModelDisplayAttributes() {
-    override fun toString(): String = name // TODO remove or make pretty
+) : SoftDeleteModelDisplayAttributes()  {
+
+    // necessary custom equals operator since default does not check super class properties
+    override fun equals(other: Any?) = (other is LibraryItem) && (other.id == this.id)
+
 }
 
 @Dao

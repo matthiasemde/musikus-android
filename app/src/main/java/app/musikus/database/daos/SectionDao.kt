@@ -30,7 +30,12 @@ data class Section(
     @ColumnInfo(name = "library_item_id") val libraryItemId: UUID,
     @ColumnInfo(name = "duration") val duration: Int,
     @ColumnInfo(name = "timestamp") val timestamp: Long,
-) : BaseModelDisplayAttributes()
+) : BaseModelDisplayAttributes() {
+
+    // necessary custom equals operator since default does not check super class properties
+    override fun equals(other: Any?) = (other is Section) && (other.id == this.id)
+
+}
 
 @Dao
 abstract class SectionDao(

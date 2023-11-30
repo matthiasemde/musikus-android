@@ -19,7 +19,9 @@ import app.musikus.database.entities.*
 import app.musikus.utils.TIME_FORMAT_HUMAN_PRETTY
 import app.musikus.utils.UiText
 import app.musikus.utils.getDurationString
+import app.musikus.utils.inLocalTimezone
 import kotlinx.coroutines.flow.Flow
+import java.time.ZonedDateTime
 import java.util.*
 
 data class GoalDescription(
@@ -33,6 +35,9 @@ data class GoalDescription(
 //    @ColumnInfo(name="profile_id") val profileId: UUID?,
     @ColumnInfo(name="custom_order") val customOrder: Int?,
 ) : SoftDeleteModelDisplayAttributes() {
+
+    // necessary custom equals operator since default does not check super class properties
+    override fun equals(other: Any?) = (other is GoalDescription) && (other.id == this.id)
 
     fun title(item: LibraryItem? = null) =
         item?.let {
@@ -53,6 +58,15 @@ data class GoalDescription(
             periodInPeriodUnits // argument used in the format string
         )
     )
+
+    fun endOfInstanceInLocalTimezone(instance: GoalInstance): ZonedDateTime =
+        when(periodUnit) {
+            GoalPeriodUnit.DAY -> instance.startTimestamp.plusDays(periodInPeriodUnits.toLong())
+            GoalPeriodUnit.WEEK -> instance.startTimestamp.plusWeeks(periodInPeriodUnits.toLong())
+            GoalPeriodUnit.MONTH -> instance.startTimestamp.plusMonths(periodInPeriodUnits.toLong())
+        }
+        // removes timezone information since the end timestamp is always in the local timezone
+        .inLocalTimezone()
 }
 
 @Dao
@@ -94,7 +108,7 @@ abstract class GoalDescriptionDao(
     @Transaction
     open suspend fun insert(
         goalDescription: GoalDescriptionModel,
-        startingTimeframe: Calendar = Calendar.getInstance(),
+        startingTimeframe: ZonedDateTime = ZonedDateTime.now(),
         libraryItemIds: List<UUID>?,
         target: Int,
     ) {
@@ -125,41 +139,6 @@ abstract class GoalDescriptionDao(
     /**
      * @Queries
      */
-
-    @Transaction
-    @RewriteQueriesToDropUnusedColumns
-    @Query(
-        "SELECT * FROM goal_description_library_item_cross_ref " +
-        "WHERE goal_description_id=:goalDescriptionId"
-    )
-    abstract suspend fun getGoalDescriptionLibraryItemCrossRefs(
-        goalDescriptionId: UUID
-    ) : List<GoalDescriptionLibraryItemCrossRefModel>
-
-
-    @Transaction
-    @RewriteQueriesToDropUnusedColumns
-    @Query("SELECT * FROM goal_description " +
-            "WHERE id=:goalDescriptionId AND deleted=0")
-    abstract suspend fun getWithLibraryItems(goalDescriptionId: UUID)
-        : GoalDescriptionWithLibraryItems?
-
-    @Transaction
-    @RewriteQueriesToDropUnusedColumns
-    @Query("SELECT * FROM goal_description WHERE deleted=0")
-    abstract suspend fun getAllWithLibraryItems(): List<GoalDescriptionWithLibraryItems>
-
-    @RewriteQueriesToDropUnusedColumns
-    @Query(
-        "SELECT * FROM goal_description WHERE " +
-        "(archived=0 OR archived=:checkArchived) " +
-        "AND type=:type " +
-        "AND deleted=0"
-    )
-    abstract suspend fun getGoalDescriptions(
-        checkArchived : Boolean = false,
-        type : GoalType
-    ) : List<GoalDescription>
 
     @Transaction
     @RewriteQueriesToDropUnusedColumns

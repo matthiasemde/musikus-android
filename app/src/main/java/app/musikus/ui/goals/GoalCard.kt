@@ -54,8 +54,9 @@ import app.musikus.utils.SCALE_FACTOR_FOR_SMALL_TEXT
 import app.musikus.utils.TIME_FORMAT_HUMAN_PRETTY
 import app.musikus.utils.TIME_FORMAT_PRETTY_APPROX
 import app.musikus.utils.asString
+import app.musikus.utils.getCurrentDateTime
 import app.musikus.utils.getDurationString
-import app.musikus.utils.getTimestamp
+import java.time.temporal.ChronoUnit
 
 @Composable
 fun GoalCard(
@@ -120,7 +121,10 @@ fun GoalCard(
 //                    }
 
                     /** remaining time */
-                    val remainingTime = (instance.startTimestamp + instance.periodInSeconds) - getTimestamp()
+                    val remainingTime = ChronoUnit.SECONDS.between(
+                        getCurrentDateTime(),
+                        goal.endTimestampInLocalTimezone,
+                    )
 
                     Surface(
                         modifier = Modifier.padding(start = 8.dp),

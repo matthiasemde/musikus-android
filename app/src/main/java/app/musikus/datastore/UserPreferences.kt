@@ -81,46 +81,46 @@ enum class GoalsSortMode {
 fun List<GoalInstanceWithDescriptionWithLibraryItems>.sorted(
     mode: GoalsSortMode,
     direction: SortDirection
-) = when (direction) {
-    SortDirection.ASCENDING -> {
-        when (mode) {
-            GoalsSortMode.DATE_ADDED -> this.sortedBy { it.description.description.createdAt }
-            GoalsSortMode.TARGET -> this.sortedBy { it.instance.target }
-            GoalsSortMode.PERIOD -> this.sortedBy { it.instance.periodInSeconds }
-            GoalsSortMode.CUSTOM -> this // TODO
+) : List<GoalInstanceWithDescriptionWithLibraryItems> {
+    val comparator : Comparator<GoalInstanceWithDescriptionWithLibraryItems> = when (mode) {
+        GoalsSortMode.DATE_ADDED -> compareBy { it.description.description.createdAt }
+        GoalsSortMode.TARGET -> compareBy { it.instance.target }
+        GoalsSortMode.PERIOD -> compareBy(
+            { it.description.description.periodUnit },
+            { it.description.description.periodInPeriodUnits }
+        )
+        GoalsSortMode.CUSTOM -> null // TODO
+    } ?: return this
+
+    return this.sortedWith(
+        when(direction) {
+            SortDirection.ASCENDING -> comparator
+            SortDirection.DESCENDING -> compareByDescending(comparator) { it }
         }
-    }
-    SortDirection.DESCENDING -> {
-        when (mode) {
-            GoalsSortMode.DATE_ADDED -> this.sortedByDescending { it.description.description.createdAt }
-            GoalsSortMode.TARGET -> this.sortedByDescending { it.instance.target }
-            GoalsSortMode.PERIOD -> this.sortedByDescending { it.instance.periodInSeconds }
-            GoalsSortMode.CUSTOM -> this // TODO()
-        }
-    }
+    )
 }
 
 @JvmName("sortedGoalDescriptionWithInstancesAndLibraryItems")
 fun List<GoalDescriptionWithInstancesAndLibraryItems>.sorted(
     mode: GoalsSortMode,
     direction: SortDirection
-) = when (direction) {
-    SortDirection.ASCENDING -> {
-        when (mode) {
-            GoalsSortMode.DATE_ADDED -> this.sortedBy { it.description.createdAt }
-            GoalsSortMode.TARGET -> this.sortedBy { it.instances.last().target }
-            GoalsSortMode.PERIOD -> this.sortedBy { it.instances.last().periodInSeconds }
-            GoalsSortMode.CUSTOM -> this // TODO
+) : List<GoalDescriptionWithInstancesAndLibraryItems> {
+    val comparator : Comparator<GoalDescriptionWithInstancesAndLibraryItems> = when (mode) {
+        GoalsSortMode.DATE_ADDED -> compareBy { it.description.createdAt }
+        GoalsSortMode.TARGET -> compareBy { it.instances.last().target }
+        GoalsSortMode.PERIOD -> compareBy(
+            { it.description.periodUnit },
+            { it.description.periodInPeriodUnits }
+        )
+        GoalsSortMode.CUSTOM -> null // TODO
+    } ?: return this
+
+    return this.sortedWith(
+        when(direction) {
+            SortDirection.ASCENDING -> comparator
+            SortDirection.DESCENDING -> compareByDescending(comparator) { it }
         }
-    }
-    SortDirection.DESCENDING -> {
-        when (mode) {
-            GoalsSortMode.DATE_ADDED -> this.sortedByDescending { it.description.createdAt }
-            GoalsSortMode.TARGET -> this.sortedByDescending { it.instances.last().target }
-            GoalsSortMode.PERIOD -> this.sortedByDescending { it.instances.last().periodInSeconds }
-            GoalsSortMode.CUSTOM -> this // TODO()
-        }
-    }
+    )
 }
 
 enum class LibraryItemSortMode {

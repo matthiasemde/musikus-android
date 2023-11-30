@@ -22,7 +22,12 @@ data class Session(
     @ColumnInfo(name = "break_duration") val breakDuration: Int,
     @ColumnInfo(name = "rating") val rating: Int,
     @ColumnInfo(name = "comment") val comment: String?,
-) : SoftDeleteModelDisplayAttributes()
+) : SoftDeleteModelDisplayAttributes() {
+
+    // necessary custom equals operator since default does not check super class properties
+    override fun equals(other: Any?) = (other is Session) && (other.id == this.id)
+
+}
 @Dao
 abstract class SessionDao(
     private val database : MusikusDatabase

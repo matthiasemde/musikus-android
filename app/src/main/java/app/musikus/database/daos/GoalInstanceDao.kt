@@ -12,7 +12,6 @@
 
 package app.musikus.database.daos
 
-import android.util.Log
 import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Query
@@ -27,20 +26,24 @@ import app.musikus.database.entities.GoalInstanceModel
 import app.musikus.database.entities.GoalInstanceUpdateAttributes
 import app.musikus.database.entities.GoalPeriodUnit
 import app.musikus.database.entities.TimestampModelDisplayAttributes
-import app.musikus.utils.getTimestamp
+import app.musikus.utils.getStartOfDay
+import app.musikus.utils.getStartOfMonth
+import app.musikus.utils.getStartOfWeek
 import kotlinx.coroutines.flow.Flow
-import java.util.Calendar
+import java.time.ZonedDateTime
 import java.util.UUID
 
 data class GoalInstance(
     @ColumnInfo(name="goal_description_id") val goalDescriptionId: UUID,
-    @ColumnInfo(name="start_timestamp") val startTimestamp: Long,
-    @ColumnInfo(name="period_in_seconds") val periodInSeconds: Int,
+    @ColumnInfo(name="start_timestamp") val startTimestamp: ZonedDateTime,
+    @ColumnInfo(name="end_timestamp") val endTimestamp: ZonedDateTime?,
     @ColumnInfo(name="target") val target: Int,
     @ColumnInfo(name="renewed") val renewed: Boolean,
 ) : TimestampModelDisplayAttributes() {
-    val isOutdated : Boolean
-        get() = getTimestamp() > startTimestamp + periodInSeconds
+
+    // necessary custom equals operator since default does not check super class properties
+    override fun equals(other: Any?) = (other is GoalInstance) && (other.id == this.id)
+
 }
 
 @Dao
@@ -58,13 +61,12 @@ abstract class GoalInstanceDao(
 
     suspend fun insert(
         goalDescription: GoalDescription,
-        timeframe: Calendar,
+        timeframe: ZonedDateTime,
         target: Int,
     ) {
         insert(
             goalDescriptionId = goalDescription.id,
             periodUnit = goalDescription.periodUnit,
-            periodInPeriodUnits = goalDescription.periodInPeriodUnits,
             timeframe = timeframe,
             target = target
         )
@@ -72,13 +74,12 @@ abstract class GoalInstanceDao(
 
     suspend fun insert(
         goalDescription: GoalDescriptionModel,
-        timeframe: Calendar,
+        timeframe: ZonedDateTime,
         target: Int,
     ) {
         insert(
             goalDescriptionId = goalDescription.id,
             periodUnit = goalDescription.periodUnit,
-            periodInPeriodUnits = goalDescription.periodInPeriodUnits,
             timeframe = timeframe,
             target = target
         )
@@ -88,57 +89,26 @@ abstract class GoalInstanceDao(
     private suspend fun insert(
         goalDescriptionId: UUID,
         periodUnit: GoalPeriodUnit,
-        periodInPeriodUnits: Int,
-        timeframe: Calendar,
+        timeframe: ZonedDateTime,
         target: Int,
     ) {
-        var startTimestamp = 0L
 
         // to find the correct starting point and period for the goal, we execute these steps:
-        // 1. clear the minutes, seconds and millis from the time frame and set hour to 0
+        // 1. reset the time to the beginning of the current day
         // 2. set the time frame to the beginning of the day, week or month
         // 3. save the time in seconds as startTimestamp
         // 4. then set the day to the end of the period according to the periodInPeriodUnits
         // 5. calculate the period in seconds from the difference of the two timestamps
-        timeframe.clear(Calendar.MINUTE)
-        timeframe.clear(Calendar.SECOND)
-        timeframe.clear(Calendar.MILLISECOND)
-        timeframe.set(Calendar.HOUR_OF_DAY, 0)
-
-        when(periodUnit) {
-            GoalPeriodUnit.DAY -> {
-                startTimestamp = timeframe.timeInMillis / 1000L
-                timeframe.add(Calendar.DAY_OF_YEAR, periodInPeriodUnits)
-            }
-            GoalPeriodUnit.WEEK -> {
-                if(timeframe.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY) {
-                    timeframe.add(Calendar.DAY_OF_WEEK, - 1)
-                }
-                timeframe.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
-                startTimestamp = timeframe.timeInMillis / 1000L
-
-                timeframe.add(Calendar.WEEK_OF_YEAR, periodInPeriodUnits)
-            }
-            GoalPeriodUnit.MONTH -> {
-                timeframe.set(Calendar.DAY_OF_MONTH, 1)
-                startTimestamp = timeframe.timeInMillis / 1000L
-
-                timeframe.add(Calendar.MONTH, periodInPeriodUnits)
-            }
-        }
-
-        // calculate the period in second from these two timestamps
-        val periodInSeconds = ((timeframe.timeInMillis / 1000) - startTimestamp).toInt()
-
-        assert(startTimestamp > 0) {
-            Log.e("Assertion Failed", "startTimestamp can not be 0")
+        val start = when(periodUnit) {
+            GoalPeriodUnit.DAY -> getStartOfDay(dateTime = timeframe)
+            GoalPeriodUnit.WEEK -> getStartOfWeek(dateTime = timeframe)
+            GoalPeriodUnit.MONTH -> getStartOfMonth(dateTime = timeframe)
         }
 
         super.insert(
             GoalInstanceModel(
                 goalDescriptionId = Nullable(goalDescriptionId),
-                startTimestamp = startTimestamp,
-                periodInSeconds = periodInSeconds,
+                startTimestamp = start,
                 target = target
             )
         )
@@ -152,6 +122,7 @@ abstract class GoalInstanceDao(
         old: GoalInstanceModel,
         updateAttributes: GoalInstanceUpdateAttributes
     ): GoalInstanceModel = super.applyUpdateAttributes(old, updateAttributes).apply {
+        endTimestamp = updateAttributes.endTimestamp ?: old.endTimestamp
         target = updateAttributes.target ?: old.target
         renewed = updateAttributes.renewed ?: old.renewed
     }
@@ -165,164 +136,179 @@ abstract class GoalInstanceDao(
      * @Queries
      */
 
-    /**
-     * Get all [GoalInstance] entities matching a specific pattern
-     * @param goalDescriptionId
-     * @param from optional timestamp in seconds marking beginning of selection. **default**: [getTimestamp] / 1000L
-     * @param to optional timestamp in seconds marking end of selection. **default** [Long.MAX_VALUE]
-     * @param inclusiveFrom decides whether the beginning of the selection is inclusive. **default**: true
-     * @param inclusiveTo decides whether the end of the selection is inclusive. **default**: false
-     */
-    suspend fun get(
-        goalDescriptionId: UUID,
-        from: Long = getTimestamp(),
-        to: Long = Long.MAX_VALUE,
-        inclusiveFrom: Boolean = true,
-        inclusiveTo: Boolean = false,
-    ): List<GoalInstance> {
-        return get(
-            goalDescriptionIds = listOf(goalDescriptionId),
-            from = from,
-            to = to,
-            inclusiveFrom = inclusiveFrom,
-            inclusiveTo = inclusiveTo
-        )
-    }
-
-    /**
-     * Get all [GoalInstance] entities matching a specific pattern
-     * @param goalDescriptionIds
-     * @param from optional timestamp in seconds marking beginning of selection. **default**: [getTimestamp] / 1000L
-     * @param to optional timestamp in seconds marking end of selection. **default** [Long.MAX_VALUE]
-     * @param inclusiveFrom decides whether the beginning of the selection is inclusive. **default**: true
-     * @param inclusiveTo decides whether the end of the selection is inclusive. **default**: false
-     */
-    @RewriteQueriesToDropUnusedColumns
-    @Query(
-        "SELECT * FROM goal_instance " +
-        "WHERE (" +
-            "start_timestamp>:from AND NOT :inclusiveFrom OR " +
-            "start_timestamp+period_in_seconds>:from AND :inclusiveFrom" +
-        ")" +
-        "AND (" +
-            "start_timestamp<:to AND :inclusiveTo OR " +
-            "start_timestamp+period_in_seconds<:to AND NOT :inclusiveTo" +
-        ") " +
-        "AND goal_description_id IN (" +
-        "SELECT id FROM goal_description " +
-        "WHERE id in (:goalDescriptionIds) " +
-        "AND archived=0 " +
-        "AND deleted=0" +
-        ")"
-    )
-    abstract suspend fun get(
-        goalDescriptionIds: List<UUID>,
-        from: Long = getTimestamp(),
-        to: Long = Long.MAX_VALUE,
-        inclusiveFrom: Boolean = true,
-        inclusiveTo: Boolean = false,
-    ): List<GoalInstance>
-
-
-    /**
-     * Get all [GoalInstanceWithDescription] entities matching a specific pattern
-     * @param from optional timestamp in seconds marking beginning of selection. **default**: [getTimestamp]
-     * @param to optional timestamp in seconds marking end of selection. **default** [Long.MAX_VALUE]
-     * @param inclusiveFrom decides whether the beginning of the selection is inclusive. **default**: true
-     * @param inclusiveTo decides whether the end of the selection is inclusive. **default**: false
-     */
+//    /**
+//     * Get all [GoalInstance] entities matching a specific pattern
+//     * @param goalDescriptionId
+//     * @param from optional timestamp in seconds marking beginning of selection. **default**: [getTimestamp] / 1000L
+//     * @param to optional timestamp in seconds marking end of selection. **default** [Long.MAX_VALUE]
+//     * @param inclusiveFrom decides whether the beginning of the selection is inclusive. **default**: true
+//     * @param inclusiveTo decides whether the end of the selection is inclusive. **default**: false
+//     */
+//    suspend fun get(
+//        goalDescriptionId: UUID,
+//        from: Long = getTimestamp(),
+//        to: Long = Long.MAX_VALUE,
+//        inclusiveFrom: Boolean = true,
+//        inclusiveTo: Boolean = false,
+//    ): List<GoalInstance> {
+//        return get(
+//            goalDescriptionIds = listOf(goalDescriptionId),
+//            from = from,
+//            to = to,
+//            inclusiveFrom = inclusiveFrom,
+//            inclusiveTo = inclusiveTo
+//        )
+//    }
+//
+//    /**
+//     * Get all [GoalInstance] entities matching a specific pattern
+//     * @param goalDescriptionIds
+//     * @param from optional timestamp in seconds marking beginning of selection. **default**: [getTimestamp] / 1000L
+//     * @param to optional timestamp in seconds marking end of selection. **default** [Long.MAX_VALUE]
+//     * @param inclusiveFrom decides whether the beginning of the selection is inclusive. **default**: true
+//     * @param inclusiveTo decides whether the end of the selection is inclusive. **default**: false
+//     */
+//    @RewriteQueriesToDropUnusedColumns
+//    @Query(
+//        "SELECT * FROM goal_instance " +
+//        "WHERE (" +
+//            "start_timestamp>:from AND NOT :inclusiveFrom OR " +
+//            "start_timestamp+period_in_seconds>:from AND :inclusiveFrom" +
+//        ")" +
+//        "AND (" +
+//            "start_timestamp<:to AND :inclusiveTo OR " +
+//            "start_timestamp+period_in_seconds<:to AND NOT :inclusiveTo" +
+//        ") " +
+//        "AND goal_description_id IN (" +
+//        "SELECT id FROM goal_description " +
+//        "WHERE id in (:goalDescriptionIds) " +
+//        "AND archived=0 " +
+//        "AND deleted=0" +
+//        ")"
+//    )
+//    abstract suspend fun get(
+//        goalDescriptionIds: List<UUID>,
+//        from: Long = getTimestamp(),
+//        to: Long = Long.MAX_VALUE,
+//        inclusiveFrom: Boolean = true,
+//        inclusiveTo: Boolean = false,
+//    ): List<GoalInstance>
+//
+//
+//    /**
+//     * Get all [GoalInstanceWithDescription] entities matching a specific pattern
+//     * @param from optional timestamp in seconds marking beginning of selection. **default**: [getTimestamp]
+//     * @param to optional timestamp in seconds marking end of selection. **default** [Long.MAX_VALUE]
+//     * @param inclusiveFrom decides whether the beginning of the selection is inclusive. **default**: true
+//     * @param inclusiveTo decides whether the end of the selection is inclusive. **default**: false
+//     */
+//    @Transaction
+//    @RewriteQueriesToDropUnusedColumns
+//    @Query(
+//        "SELECT * FROM goal_instance " +
+//        "WHERE (" +
+//            "start_timestamp>:from AND NOT :inclusiveFrom OR " +
+//            "start_timestamp+period_in_seconds>:from AND :inclusiveFrom" +
+//        ")" +
+//        "AND (" +
+//            "start_timestamp<:to AND :inclusiveTo OR " +
+//            "start_timestamp+period_in_seconds<:to AND NOT :inclusiveTo" +
+//        ") " +
+//        "AND goal_description_id IN (" +
+//        "SELECT id FROM goal_description " +
+//        "WHERE archived=0 " +
+//        "AND deleted=0" +
+//        ")"
+//    )
+//    abstract suspend fun getWithDescription(
+//        from: Long = getTimestamp(),
+//        to: Long = Long.MAX_VALUE,
+//        inclusiveFrom: Boolean = true,
+//        inclusiveTo: Boolean = false,
+//    ) : List<GoalInstanceWithDescription>
+//
+//    /**
+//     * Get all [GoalInstanceWithDescriptionWithLibraryItems] entities matching a specific pattern
+//     * @param goalDescriptionId
+//     * @param from optional timestamp in seconds marking beginning of selection. **default**: [getTimestamp]
+//     * @param to optional timestamp in seconds marking end of selection. **default** [Long.MAX_VALUE]
+//     * @param inclusiveFrom decides whether the beginning of the selection is inclusive. **default**: true
+//     * @param inclusiveTo decides whether the end of the selection is inclusive. **default**: false
+//     */
+//    @Transaction
+//    @RewriteQueriesToDropUnusedColumns
+//    @Query(
+//        "SELECT * FROM goal_instance " +
+//        "WHERE (" +
+//        "start_timestamp>:from AND NOT :inclusiveFrom OR " +
+//        "start_timestamp+period_in_seconds>:from AND :inclusiveFrom" +
+//        ")" +
+//        "AND (" +
+//        "start_timestamp<:to AND :inclusiveTo OR " +
+//        "start_timestamp+period_in_seconds<:to AND NOT :inclusiveTo" +
+//        ") " +
+//        "AND EXISTS (" +
+//        "SELECT id FROM goal_description " +
+//        "WHERE id = :goalDescriptionId " +
+//        "AND archived=0 " +
+//        "AND deleted=0" +
+//        ")"
+//    )
+//    abstract suspend fun getWithDescriptionWithLibraryItems(
+//        goalDescriptionId: UUID,
+//        from: Long = getTimestamp(),
+//        to: Long = Long.MAX_VALUE,
+//        inclusiveFrom: Boolean = true,
+//        inclusiveTo: Boolean = false,
+//    ): List<GoalInstanceWithDescriptionWithLibraryItems>
+//
     @Transaction
     @RewriteQueriesToDropUnusedColumns
     @Query(
         "SELECT * FROM goal_instance " +
-        "WHERE (" +
-            "start_timestamp>:from AND NOT :inclusiveFrom OR " +
-            "start_timestamp+period_in_seconds>:from AND :inclusiveFrom" +
-        ")" +
-        "AND (" +
-            "start_timestamp<:to AND :inclusiveTo OR " +
-            "start_timestamp+period_in_seconds<:to AND NOT :inclusiveTo" +
-        ") " +
-        "AND goal_description_id IN (" +
-        "SELECT id FROM goal_description " +
-        "WHERE archived=0 " +
-        "AND deleted=0" +
-        ")"
-    )
-    abstract suspend fun getWithDescription(
-        from: Long = getTimestamp(),
-        to: Long = Long.MAX_VALUE,
-        inclusiveFrom: Boolean = true,
-        inclusiveTo: Boolean = false,
-    ) : List<GoalInstanceWithDescription>
-
-    /**
-     * Get all [GoalInstanceWithDescriptionWithLibraryItems] entities matching a specific pattern
-     * @param goalDescriptionId
-     * @param from optional timestamp in seconds marking beginning of selection. **default**: [getTimestamp]
-     * @param to optional timestamp in seconds marking end of selection. **default** [Long.MAX_VALUE]
-     * @param inclusiveFrom decides whether the beginning of the selection is inclusive. **default**: true
-     * @param inclusiveTo decides whether the end of the selection is inclusive. **default**: false
-     */
-    @Transaction
-    @RewriteQueriesToDropUnusedColumns
-    @Query(
-        "SELECT * FROM goal_instance " +
-        "WHERE (" +
-        "start_timestamp>:from AND NOT :inclusiveFrom OR " +
-        "start_timestamp+period_in_seconds>:from AND :inclusiveFrom" +
-        ")" +
-        "AND (" +
-        "start_timestamp<:to AND :inclusiveTo OR " +
-        "start_timestamp+period_in_seconds<:to AND NOT :inclusiveTo" +
-        ") " +
-        "AND EXISTS (" +
-        "SELECT id FROM goal_description " +
-        "WHERE id = :goalDescriptionId " +
-        "AND archived=0 " +
-        "AND deleted=0" +
-        ")"
-    )
-    abstract suspend fun getWithDescriptionWithLibraryItems(
-        goalDescriptionId: UUID,
-        from: Long = getTimestamp(),
-        to: Long = Long.MAX_VALUE,
-        inclusiveFrom: Boolean = true,
-        inclusiveTo: Boolean = false,
-    ): List<GoalInstanceWithDescriptionWithLibraryItems>
-
-    @Transaction
-    @RewriteQueriesToDropUnusedColumns
-    @Query(
-        "SELECT * FROM goal_instance " +
-            "WHERE renewed=0 " +
-            "AND start_timestamp + period_in_seconds < :now " +
+            "WHERE end_timestamp IS NULL " +
+            "AND datetime(start_timestamp) < datetime('now') " +
             "AND goal_description_id IN (" +
                 "SELECT id FROM goal_description " +
                 "WHERE archived=0 " +
                 "AND deleted=0" +
             ")"
     )
-    abstract suspend fun getOutdatedWithDescriptions(
-        now : Long = getTimestamp()
+    abstract suspend fun getActiveInstancesWithDescription(
     ) : List<GoalInstanceWithDescription>
 
     @Transaction
     @RewriteQueriesToDropUnusedColumns
     @Query(
         "SELECT * FROM goal_instance " +
-                "WHERE start_timestamp < :now " +
-                "AND start_timestamp+period_in_seconds > :now " +
-                "AND goal_description_id IN (" +
-                    "SELECT id FROM goal_description " +
-                    "WHERE (archived=0 OR :checkArchived) " +
-                    "AND deleted=0" +
-                ")"
+            "WHERE end_timestamp IS NULL " +
+            "AND datetime(start_timestamp) < datetime('now') " +
+            "AND goal_description_id IN (" +
+                "SELECT id FROM goal_description " +
+                "WHERE archived=0 " +
+                "AND deleted=0" +
+            ")"
     )
-    abstract fun getWithDescriptionsWithLibraryItems(
-        checkArchived : Boolean = false,
-        now : Long = getTimestamp(),
+    abstract fun getActiveInstancesWithDescriptionWithLibraryItems(
     ) : Flow<List<GoalInstanceWithDescriptionWithLibraryItems>>
+
+//
+//    @Transaction
+//    @RewriteQueriesToDropUnusedColumns
+//    @Query(
+//        "SELECT * FROM goal_instance " +
+//                "WHERE start_timestamp < :now " +
+//                "AND start_timestamp+period_in_seconds > :now " +
+//                "AND goal_description_id IN (" +
+//                    "SELECT id FROM goal_description " +
+//                    "WHERE (archived=0 OR :checkArchived) " +
+//                    "AND deleted=0" +
+//                ")"
+//    )
+//    abstract fun getWithDescriptionsWithLibraryItems(
+//        checkArchived : Boolean = false,
+//        now : Long = getTimestamp(),
+//    ) : Flow<List<GoalInstanceWithDescriptionWithLibraryItems>>
 
 
     @Transaction
@@ -330,7 +316,7 @@ abstract class GoalInstanceDao(
     @Query(
         "Select * FROM goal_instance " +
                 "WHERE goal_instance.start_timestamp=(" +
-                "SELECT MAX(start_timestamp) FROM goal_instance WHERE " +
+                "SELECT MAX(datetime(start_timestamp)) FROM goal_instance WHERE " +
                 "goal_description_id = :goalDescriptionId" +
                 ") " +
                 "AND EXISTS (" +
@@ -352,13 +338,12 @@ abstract class GoalInstanceDao(
                 "SELECT id FROM goal_description " +
                 "WHERE deleted=0" +
                 ")" +
-                "AND (start_timestamp + period_in_seconds) < :now " +
-                "ORDER BY (start_timestamp + period_in_seconds) DESC " +
+                "AND end_timestamp IS NOT NULL " +
+                "ORDER BY datetime(end_timestamp) DESC " +
                 "LIMIT :n"
     )
     abstract fun getLastNCompletedWithDescriptionsWithLibraryItems(
         n: Int,
-        now: Long = getTimestamp()
     ): Flow<List<GoalInstanceWithDescriptionWithLibraryItems>>
 
     @Transaction
@@ -369,7 +354,7 @@ abstract class GoalInstanceDao(
                 "SELECT id FROM goal_description " +
                     "WHERE deleted=0" +
                 ")" +
-                "ORDER BY start_timestamp DESC"
+                "ORDER BY datetime(start_timestamp) DESC"
     )
     abstract fun getAllWithDescriptionWithLibraryItems()
         : Flow<List<GoalInstanceWithDescriptionWithLibraryItems>>

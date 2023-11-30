@@ -12,7 +12,6 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import app.musikus.dataStore
-import app.musikus.database.GoalInstanceWithDescription
 import app.musikus.database.GoalInstanceWithDescriptionWithLibraryItems
 import app.musikus.database.MusikusDatabase
 import app.musikus.database.daos.GoalDescription
@@ -421,7 +420,7 @@ class GoalsViewModel(
     fun onPauseAction() {
         viewModelScope.launch {
             goalRepository.pause(_selectedGoals.value.toList().map {
-                it.description.description // TODO save UUID instead of description
+                it.description.description
             })
             clearActionMode()
         }
@@ -430,10 +429,7 @@ class GoalsViewModel(
     fun onUnpauseAction() {
         viewModelScope.launch {
             goalRepository.unpause(_selectedGoals.value.toList().map {
-                GoalInstanceWithDescription(
-                    instance = it.instance,
-                    description = it.description.description,
-                ) // TODO save UUID instead of description
+                it.description.description
             })
             clearActionMode()
         }
