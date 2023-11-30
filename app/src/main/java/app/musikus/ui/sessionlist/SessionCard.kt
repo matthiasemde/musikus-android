@@ -46,9 +46,11 @@ import app.musikus.Musikus
 import app.musikus.R
 import app.musikus.database.SectionWithLibraryItem
 import app.musikus.database.SessionWithSectionsWithLibraryItems
+import app.musikus.utils.DateFormat
 import app.musikus.utils.SCALE_FACTOR_FOR_SMALL_TEXT
 import app.musikus.utils.TIME_FORMAT_HUMAN_PRETTY
 import app.musikus.utils.getDurationString
+import app.musikus.utils.musikusFormat
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -106,10 +108,10 @@ fun SessionCard(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            // read the start duration from the first section and bring it to milliseconds
-            val startTimestamp = sectionsWithLibraryItems.first().section.timestamp * 1000L
             Text(
-                text = timeFormat.format(Date(startTimestamp))
+                text = sessionWithSectionsWithLibraryItems.startTimestamp.musikusFormat(
+                    DateFormat.TIME_OF_DAY
+                )
             )
             RatingBar(
                 rating = session.rating,
@@ -117,7 +119,7 @@ fun SessionCard(
                 image = Icons.Default.Star
             )
         }
-        Divider()
+        HorizontalDivider()
 
         /** Main Card content */
         Column(
@@ -202,7 +204,7 @@ fun SessionCard(
         /** Optional Comment Field */
         session.comment?.let { comment ->
             if (comment.isBlank()) return@let
-            Divider()
+            HorizontalDivider()
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
                     text = stringResource(id = R.string.sessionSummaryComment),
@@ -258,12 +260,12 @@ class SessionCard(
         }
 
         val breakDuration = session.breakDuration
-
-        // read the start duration from the first section and bring it to milliseconds
-        val startTimestamp = sectionsWithLibraryItems.first().section.timestamp * 1000L
-
-        // set the time field accordingly
-        summaryTimeView.text = timeFormat.format(Date(startTimestamp))
+//
+//        // read the start duration from the first section and bring it to milliseconds
+//        val startTimestamp = sectionsWithLibraryItems.first().section.timestamp * 1000L
+//
+//        // set the time field accordingly
+//        summaryTimeView.text = timeFormat.format(Date(startTimestamp))
 
         // show the practice duration in the practice duration field
         practiceDurationView.text = getDurationString(practiceDuration, TIME_FORMAT_HUMAN_PRETTY)

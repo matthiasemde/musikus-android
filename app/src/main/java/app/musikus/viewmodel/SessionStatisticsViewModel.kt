@@ -84,7 +84,7 @@ data class TabWithTimeframeWithSessions(
 
 data class TabWithTimeframeWithSections(
     val tabWithTimeframe: TabWithTimeframe,
-    val sections: List<Pair<Long, List<SectionWithLibraryItem>>>
+    val sections: List<Pair<ZonedDateTime, List<SectionWithLibraryItem>>>
 )
 
 
@@ -211,10 +211,10 @@ class SessionStatisticsViewModel(
     ) { (tabWithFrame, sessions), deselectedLibraryItems ->
         TabWithTimeframeWithSections(
             tabWithTimeframe = tabWithFrame,
-            sections = sessions.map { (_, sections) ->
+            sections = sessions.map { session ->
                 Pair(
-                    sections.first().section.timestamp,
-                    sections.filter { (_, item) ->
+                    session.startTimestamp,
+                    session.sections.filter { (_, item) ->
                         item !in deselectedLibraryItems
                     }
                 )

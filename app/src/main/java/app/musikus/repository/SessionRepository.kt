@@ -12,6 +12,7 @@ import app.musikus.database.entities.SessionCreationAttributes
 import app.musikus.database.entities.SessionModel
 import app.musikus.utils.Timeframe
 import kotlinx.coroutines.flow.Flow
+import java.time.ZonedDateTime
 import java.util.UUID
 
 class SessionRepository(
@@ -31,14 +32,14 @@ class SessionRepository(
     fun sessionsInTimeframe (timeframe: Timeframe) : Flow<List<SessionWithSectionsWithLibraryItems>> {
         assert (timeframe.first < timeframe.second)
         return sessionDao.get(
-            startTimestamp = timeframe.first.toEpochSecond(),
-            endTimestamp = timeframe.second.toEpochSecond()
+            startTimestamp = timeframe.first,
+            endTimestamp = timeframe.second
         )
     }
 
     fun sectionsForGoal (
-        startTimestamp: Long,
-        endTimestamp: Long,
+        startTimestamp: ZonedDateTime,
+        endTimestamp: ZonedDateTime,
         itemIds: List<UUID>? = null
     ) = if (itemIds == null) sectionDao.get(
         startTimestamp = startTimestamp,
@@ -50,8 +51,8 @@ class SessionRepository(
     )
 
     fun sectionsForGoal (goal: GoalInstanceWithDescriptionWithLibraryItems) = sectionsForGoal(
-        startTimestamp = goal.instance.startTimestamp.toEpochSecond(),
-        endTimestamp = goal.endTimestampInLocalTimezone.toEpochSecond(),
+        startTimestamp = goal.instance.startTimestamp,
+        endTimestamp = goal.endTimestampInLocalTimezone,
         itemIds = goal.description.libraryItems.map { it.id }.takeIf { it.isNotEmpty() }
     )
 
@@ -60,8 +61,8 @@ class SessionRepository(
         description: GoalDescription,
         libraryItems: List<LibraryItem>
     ) = sectionsForGoal(
-        startTimestamp = instance.startTimestamp.toEpochSecond(),
-        endTimestamp = description.endOfInstanceInLocalTimezone(instance).toEpochSecond(),
+        startTimestamp = instance.startTimestamp,
+        endTimestamp = description.endOfInstanceInLocalTimezone(instance),
         itemIds = libraryItems.map { it.id }.takeIf { it.isNotEmpty() }
     )
 

@@ -31,7 +31,7 @@ import app.musikus.repository.LibraryRepository
 import app.musikus.repository.SessionRepository
 import app.musikus.repository.UserPreferencesRepository
 import app.musikus.shared.MultiFabState
-import app.musikus.utils.getTimestamp
+import app.musikus.utils.getCurrentDateTime
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -41,7 +41,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
 import kotlin.math.pow
 
@@ -152,8 +151,11 @@ class MainViewModel(
                 ).forEach { goalDescriptionCreationAttributes ->
                     GoalRepository(database).add(
                         goalDescriptionCreationAttributes,
-                        ZonedDateTime.now().minus(
-                            (10L * goalDescriptionCreationAttributes.periodInPeriodUnits),
+                        getCurrentDateTime().minus(
+                            (
+                                if (goalDescriptionCreationAttributes.repeat) 10L else 1L *
+                                goalDescriptionCreationAttributes.periodInPeriodUnits
+                            ),
                             when(goalDescriptionCreationAttributes.periodUnit) {
                                 GoalPeriodUnit.DAY -> ChronoUnit.DAYS
                                 GoalPeriodUnit.WEEK -> ChronoUnit.WEEKS
@@ -179,13 +181,14 @@ class MainViewModel(
                         session,
                         (1..(1..5).random()).map { SectionCreationAttributes(
                             libraryItemId = Nullable(items.random().id),
-                            timestamp =
-                                getTimestamp() -
+                            startTimestamp = getCurrentDateTime().minus(
                                 (
                                     (sessionNum / 2) * // two sessions per day initially
                                     24 * 60 * 60 *
                                     1.02.pow(sessionNum.toDouble()) // exponential growth
                                 ).toLong(),
+                                ChronoUnit.SECONDS
+                            ),
                             duration = (10..20).random() * 60,
                         )}
                     )

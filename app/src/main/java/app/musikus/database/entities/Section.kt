@@ -16,12 +16,13 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import app.musikus.database.Nullable
+import java.time.ZonedDateTime
 import java.util.UUID
 
 private interface ISectionCreationAttributes : IBaseModelCreationAttributes {
     val libraryItemId: Nullable<UUID>
     val duration: Int
-    val timestamp: Long
+    val startTimestamp: ZonedDateTime
 }
 
 private interface ISectionUpdateAttributes : IBaseModelUpdateAttributes {
@@ -31,7 +32,7 @@ private interface ISectionUpdateAttributes : IBaseModelUpdateAttributes {
 data class SectionCreationAttributes(
     override val libraryItemId: Nullable<UUID>,
     override var duration: Int,
-    override val timestamp: Long,
+    override val startTimestamp: ZonedDateTime,
 ) : BaseModelCreationAttributes(), ISectionCreationAttributes
 
 data class SectionUpdateAttributes(
@@ -59,5 +60,5 @@ data class SectionModel (
     @ColumnInfo(name="session_id", index = true) val sessionId: Nullable<UUID>,
     @ColumnInfo(name="library_item_id", index = true) override val libraryItemId: Nullable<UUID>,
     @ColumnInfo(name="duration") override var duration: Int,
-    @ColumnInfo(name="timestamp") override val timestamp: Long,
+    @ColumnInfo(name="start_timestamp") override val startTimestamp: ZonedDateTime,
 ) : BaseModel(), ISectionCreationAttributes, ISectionUpdateAttributes

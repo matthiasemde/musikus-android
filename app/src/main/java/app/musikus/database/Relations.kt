@@ -59,7 +59,10 @@ data class SessionWithSectionsWithLibraryItems(
         entityColumn = "session_id"
     )
     val sections: List<SectionWithLibraryItem>
-)
+) {
+    val startTimestamp
+        get() = sections.minOf { it.section.startTimestamp }
+}
 
 data class GoalDescriptionWithLibraryItems(
     @Embedded val description: GoalDescription,

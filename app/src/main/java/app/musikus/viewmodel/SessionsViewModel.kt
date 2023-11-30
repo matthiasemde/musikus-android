@@ -102,11 +102,9 @@ class SessionsViewModel(
 
         // initialize variables to keep track of the current month, current day,
         // the index of its first session and the total duration of the current day
-        var (currentDay, currentMonth) = sessions.first()
-            .sections.first() // TODO this will crash if session has no sections
-            .section.timestamp.let { timestamp ->
-                Pair(getSpecificDay(timestamp), getSpecificMonth(timestamp))
-            }
+        var (currentDay, currentMonth) = sessions.first().startTimestamp.let { timestamp ->
+            Pair(getSpecificDay(timestamp), getSpecificMonth(timestamp))
+        }
 
         var firstSessionOfDayIndex = 0
         var totalPracticeDuration = 0
@@ -116,7 +114,7 @@ class SessionsViewModel(
         // then loop trough all of the sessions...
         sessions.forEachIndexed { index, session ->
             // ...get the month and day...
-            val sessionTimestamp = session.sections.first().section.timestamp
+            val sessionTimestamp = session.startTimestamp
             val (day, month) = sessionTimestamp.let { timestamp ->
                 Pair(getSpecificDay(timestamp), getSpecificMonth(timestamp))
             }

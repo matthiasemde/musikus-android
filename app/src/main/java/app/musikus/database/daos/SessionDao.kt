@@ -16,6 +16,7 @@ import androidx.room.*
 import app.musikus.database.*
 import app.musikus.database.entities.*
 import kotlinx.coroutines.flow.Flow
+import java.time.ZonedDateTime
 import java.util.*
 
 data class Session(
@@ -69,7 +70,7 @@ abstract class SessionDao(
                 sessionId = Nullable(session.id),
                 libraryItemId = it.libraryItemId,
                 duration = it.duration,
-                timestamp = it.timestamp
+                startTimestamp = it.startTimestamp
             )
         })
     }
@@ -94,12 +95,12 @@ abstract class SessionDao(
     @Transaction
     @RewriteQueriesToDropUnusedColumns
     @Query("SELECT * FROM session " +
-            "WHERE :startTimestamp < (SELECT min(timestamp) FROM section WHERE section.session_id = session.id) " +
-            "AND :endTimestamp > (SELECT min(timestamp) FROM section WHERE section.session_id = session.id) " +
+            "WHERE datetime(:startTimestamp) < (SELECT min(datetime(start_timestamp)) FROM section WHERE section.session_id = session.id) " +
+            "AND datetime(:endTimestamp) > (SELECT min(datetime(start_timestamp)) FROM section WHERE section.session_id = session.id) " +
             "AND deleted=0"
     )
     abstract fun get(
-        startTimestamp: Long,
-        endTimestamp: Long
+        startTimestamp: ZonedDateTime,
+        endTimestamp: ZonedDateTime
     ): Flow<List<SessionWithSectionsWithLibraryItems>>
 }

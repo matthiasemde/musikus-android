@@ -14,7 +14,7 @@ import androidx.lifecycle.viewModelScope
 import app.musikus.database.MusikusDatabase
 import app.musikus.repository.GoalRepository
 import app.musikus.repository.SessionRepository
-import app.musikus.utils.getCurrentDayIndexOfWeek
+import app.musikus.utils.getDayIndexOfWeek
 import app.musikus.utils.getSpecificMonth
 import app.musikus.utils.getStartOfDayOfWeek
 import app.musikus.utils.getTimestamp
@@ -98,8 +98,8 @@ class StatisticsViewModel(
         if (sessions.isEmpty()) return@map null
 
         val currentSpecificMonth = getSpecificMonth(getTimestamp())
-        val currentMonthSessions = sessions.filter { (_, sections) ->
-            sections.first().section.timestamp.let{
+        val currentMonthSessions = sessions.filter { session ->
+            session.startTimestamp.let{
                 getSpecificMonth(it) == currentSpecificMonth
             }
         }
@@ -141,7 +141,7 @@ class StatisticsViewModel(
         }
 
         val lastSevenDays = (0..6).reversed().map { dayOffset ->
-            (getCurrentDayIndexOfWeek() - dayOffset).let {
+            (getDayIndexOfWeek() - dayOffset).let {
                 getStartOfDayOfWeek(
                     dayIndex = (it-1).mod(7).toLong() + 1,
                     weekOffset = if (it > 0) 0 else -1
@@ -149,14 +149,14 @@ class StatisticsViewModel(
             }
         }
 
-        val groupedSessions = sessions.filter { (_, sections) ->
-            sections.first().section.timestamp > lastSevenDays.first().toEpochSecond()
-        }.groupBy { (_, sections) ->
-            getCurrentDayIndexOfWeek(sections.first().section.timestamp)
+        val groupedSessions = sessions.filter { session ->
+            session.startTimestamp > lastSevenDays.first()
+        }.groupBy { session ->
+            getDayIndexOfWeek(session.startTimestamp)
         }
 
         val lastSevenDayPracticeDuration = lastSevenDays.map { day ->
-            val dayIndex = getCurrentDayIndexOfWeek(day.toEpochSecond())
+            val dayIndex = getDayIndexOfWeek(day)
             PracticeDurationPerDay(
                 day = weekIndexToName(dayIndex)[0].toString(),
                 duration = groupedSessions[dayIndex]?.sumOf { (_, sections) ->

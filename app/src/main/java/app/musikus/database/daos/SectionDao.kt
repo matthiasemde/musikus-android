@@ -16,20 +16,19 @@ import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.RewriteQueriesToDropUnusedColumns
-import androidx.room.Transaction
 import app.musikus.database.MusikusDatabase
-import app.musikus.database.SectionWithLibraryItem
 import app.musikus.database.entities.BaseModelDisplayAttributes
 import app.musikus.database.entities.SectionModel
 import app.musikus.database.entities.SectionUpdateAttributes
 import kotlinx.coroutines.flow.Flow
+import java.time.ZonedDateTime
 import java.util.*
 
 data class Section(
     @ColumnInfo(name = "session_id") val sessionId: UUID,
     @ColumnInfo(name = "library_item_id") val libraryItemId: UUID,
     @ColumnInfo(name = "duration") val duration: Int,
-    @ColumnInfo(name = "timestamp") val timestamp: Long,
+    @ColumnInfo(name = "start_timestamp") val startTimestamp: ZonedDateTime,
 ) : BaseModelDisplayAttributes() {
 
     // necessary custom equals operator since default does not check super class properties
@@ -60,39 +59,25 @@ abstract class SectionDao(
     /**
      * @Queries
      */
-    @Transaction
-    @RewriteQueriesToDropUnusedColumns
-    @Query("SELECT * FROM section " +
-            "WHERE timestamp>=:startTimestamp " +
-            "AND timestamp<=:endTimestamp " +
-            "AND session_id IN (" +
-            "SELECT id FROM session " +
-            "WHERE deleted=0 " +
-            ")"
-    )
-    abstract suspend fun getWithLibraryItems(
-        startTimestamp: Long,
-        endTimestamp: Long
-    ): List<SectionWithLibraryItem>
 
     @RewriteQueriesToDropUnusedColumns
     @Query("SELECT * FROM section " +
-            "WHERE timestamp>=:startTimestamp " +
-            "AND timestamp<=:endTimestamp " +
+            "WHERE start_timestamp>=:startTimestamp " +
+            "AND start_timestamp<=:endTimestamp " +
             "AND session_id IN (" +
             "SELECT id FROM session " +
             "WHERE deleted=0 " +
             ")"
     )
     abstract fun get(
-        startTimestamp: Long,
-        endTimestamp: Long,
+        startTimestamp: ZonedDateTime,
+        endTimestamp: ZonedDateTime,
     ): Flow<List<Section>>
 
     @RewriteQueriesToDropUnusedColumns
     @Query("SELECT * FROM section " +
-            "WHERE timestamp>=:startTimestamp " +
-            "AND timestamp<=:endTimestamp " +
+            "WHERE start_timestamp>=:startTimestamp " +
+            "AND start_timestamp<=:endTimestamp " +
             "AND library_item_id IN (:itemIds) " +
             "AND session_id IN (" +
             "SELECT id FROM session " +
@@ -100,8 +85,8 @@ abstract class SectionDao(
             ")"
     )
     abstract fun get(
-        startTimestamp: Long,
-        endTimestamp: Long,
+        startTimestamp: ZonedDateTime,
+        endTimestamp: ZonedDateTime,
         itemIds: List<UUID>
     ): Flow<List<Section>>
 }

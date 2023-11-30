@@ -225,7 +225,7 @@ class SessionForegroundService : Service() {
      */
     private fun getDuration(section: SectionCreationAttributes): Int {
         val now = Date().time / 1000L
-        return (now - section.timestamp).toInt()
+        return (now - section.startTimestamp.toEpochSecond()).toInt()
     }
 
     override fun onUnbind(intent: Intent): Boolean {

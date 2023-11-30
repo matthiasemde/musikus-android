@@ -60,14 +60,13 @@ import app.musikus.shared.Selectable
 import app.musikus.shared.ThemeMenu
 import app.musikus.spacing
 import app.musikus.ui.activesession.ActiveSessionActivity
+import app.musikus.utils.DateFormat
 import app.musikus.utils.TIME_FORMAT_HUMAN_PRETTY
-import app.musikus.utils.epochSecondsToDate
 import app.musikus.utils.getDurationString
+import app.musikus.utils.musikusFormat
 import app.musikus.viewmodel.MainViewModel
 import app.musikus.viewmodel.SessionsViewModel
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import java.time.ZonedDateTime
 import java.util.UUID
 
 @OptIn(
@@ -200,9 +199,10 @@ fun Sessions(
                                 .animateItemPlacement(),
                         ) {
                             MonthHeader(
-                                month = epochSecondsToDate(
-                                    sessionsForDaysForMonth.sessionsForDays.first().sessions.first().sections.first().section.timestamp
-                                ).month.name,
+                                month = sessionsForDaysForMonth
+                                    .sessionsForDays.first()
+                                    .sessions.first()
+                                    .startTimestamp.month.name,
                                 onClickHandler = {
                                     sessionsViewModel.onMonthHeaderClicked(sessionsForDaysForMonth.specificMonth)
                                 }
@@ -219,7 +219,7 @@ fun Sessions(
                                 exit = fadeOut()
                             ) {
                                 DayHeader(
-                                    timestamp = sessionsForDay.sessions.first().sections.first().section.timestamp,
+                                    timestamp = sessionsForDay.sessions.first().startTimestamp,
                                     totalPracticeDuration = sessionsForDay.totalPracticeDuration
                                 )
                             }
@@ -279,7 +279,7 @@ fun MonthHeader(
 
 @Composable
 fun DayHeader(
-    timestamp: Long,
+    timestamp: ZonedDateTime,
     totalPracticeDuration: Int,
 ) {
     Row(
@@ -288,10 +288,8 @@ fun DayHeader(
             .fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        val dateFormat = SimpleDateFormat("E dd.MM.yyyy", Locale.getDefault())
-
         Text(
-            text = dateFormat.format(Date(timestamp * 1000)),
+            text = timestamp.musikusFormat(DateFormat.DAY_AND_MONTH),
             style = MaterialTheme.typography.bodyLarge
         )
         Text(

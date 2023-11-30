@@ -14,9 +14,11 @@ package app.musikus.utils
 
 import android.text.SpannableString
 import android.text.style.RelativeSizeSpan
+import android.util.Log
 import java.time.Instant
 import java.time.ZoneId
 import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoField
 
 typealias Timeframe = Pair<ZonedDateTime, ZonedDateTime>
@@ -52,6 +54,42 @@ const val SCALE_FACTOR_FOR_SMALL_TEXT = 0.8f
  * DateFormatter Patterns for DateTimeFormatter(). Reference: https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatter.html
  */
 
+enum class DateFormat {
+    TIME_OF_DAY,
+    DAY_OF_MONTH,
+    DAY_OF_MONTH_PADDED,
+    DAY_AND_MONTH,
+    WEEKDAY_SINGLE_LETTER,
+    WEEKDAY_ABBREVIATED,
+    MONTH_FULL,
+    MONTH_ABBREVIATED,
+    YEAR;
+
+    companion object {
+        fun formatString(format: DateFormat) = when(format) {
+            TIME_OF_DAY -> "k:mm"
+            DAY_OF_MONTH_PADDED -> DATE_FORMATTER_PATTERN_DAY_OF_MONTH_PADDED
+            DAY_OF_MONTH -> DATE_FORMATTER_PATTERN_DAY_OF_MONTH
+            DAY_AND_MONTH -> DATE_FORMATTER_PATTERN_DAY_AND_MONTH
+            WEEKDAY_SINGLE_LETTER -> DATE_FORMATTER_PATTERN_WEEKDAY_SHORT
+            WEEKDAY_ABBREVIATED -> DATE_FORMATTER_PATTERN_WEEKDAY_ABBREV
+            MONTH_FULL -> DATE_FORMATTER_PATTERN_MONTH_TEXT_FULL
+            MONTH_ABBREVIATED -> DATE_FORMATTER_PATTERN_MONTH_TEXT_ABBREV
+            YEAR -> DATE_FORMATTER_PATTERN_YEAR
+        }
+    }
+}
+
+fun ZonedDateTime.musikusFormat(format: DateFormat) : String =
+    this.format(
+        DateTimeFormatter.ofPattern(
+            (DateFormat.formatString(format) + if (
+                format == DateFormat.TIME_OF_DAY &&
+                this.offset != ZonedDateTime.now().offset
+            ) "z" else "")
+        )
+    ).also { Log.d("zone", "${this.offset}, ${ZonedDateTime.now().offset}")}
+
 /** format string for DateTimeFormatter() resulting in DD.MM format, e.g. "31.01." (for 31st January) */
 const val DATE_FORMATTER_PATTERN_DAY_AND_MONTH = "dd.MM."
 
@@ -75,6 +113,8 @@ const val DATE_FORMATTER_PATTERN_DAY_OF_MONTH_PADDED = "dd"
 
 /** format string for DateTimeFormatter() for year, e.g. "2022" */
 const val DATE_FORMATTER_PATTERN_YEAR = "y"
+
+const val DATE_FORMATTER_TIMEZONE = "z"
 
 fun secondsDurationToHoursMinSec(totalSeconds: Int): Triple<Int, Int, Int> {
     val hours =  totalSeconds / 3600
@@ -323,12 +363,16 @@ fun getEndOfWeek(
 /**
  * returns the weekDay of today from index 1=Mo until 7=Sun
   */
-fun getCurrentDayIndexOfWeek(
-    epochSeconds: Long = getTimestamp()
-): Int {
-    return epochSecondsToDate(epochSeconds)
-        .toLocalDate().dayOfWeek.value
-}
+
+fun getDayIndexOfWeek(
+    dateTime: ZonedDateTime = ZonedDateTime.now()
+) = dateTime.toLocalDate().dayOfWeek.value
+//fun getDayIndexOfWeek(
+//    epochSeconds: Long = getTimestamp()
+//): Int {
+//    return epochSecondsToDate(epochSeconds)
+//        .toLocalDate().dayOfWeek.value
+//}
 
 /**
  * Get the start of a month.

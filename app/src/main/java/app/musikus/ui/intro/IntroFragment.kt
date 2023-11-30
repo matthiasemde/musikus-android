@@ -28,7 +28,7 @@ import app.musikus.database.daos.Section
 import app.musikus.database.daos.Session
 import app.musikus.ui.activesession.ActiveSessionActivity
 import app.musikus.ui.library.LibraryItemAdapter
-import app.musikus.utils.getTimestamp
+import app.musikus.utils.getCurrentDateTime
 import com.github.appintro.BuildConfig
 import com.github.appintro.SlideBackgroundColorHolder
 import com.github.appintro.SlideSelectionListener
@@ -304,7 +304,7 @@ private fun getDummySessions() =
                         sessionId = UUID.randomUUID(), // we don't care about id but it can't be null
                         libraryItemId = UUID.randomUUID(), // we don't care about id but it can't be null
                         duration = 60 * 10,
-                        timestamp = getTimestamp()
+                        startTimestamp = getCurrentDateTime()
                     ),
                     dummyLibraryItems[0]
                 ),
@@ -313,7 +313,7 @@ private fun getDummySessions() =
                         sessionId = UUID.randomUUID(), // we don't care about id but it can't be null
                         libraryItemId = UUID.randomUUID(), // we don't care about id but it can't be null
                         duration = 60 * 23,
-                        timestamp = getTimestamp()
+                        startTimestamp = getCurrentDateTime()
                     ),
                     dummyLibraryItems[1]
                 ),
@@ -322,7 +322,7 @@ private fun getDummySessions() =
                         sessionId = UUID.randomUUID(), // we don't care about id but it can't be null
                         libraryItemId = UUID.randomUUID(), // we don't care about id but it can't be null
                         duration = 60 * 37,
-                        timestamp = getTimestamp()
+                        startTimestamp = getCurrentDateTime()
                     ),
                     dummyLibraryItems[DUMMY_MAIN_CATEGORY_INDEX]
                 ),
