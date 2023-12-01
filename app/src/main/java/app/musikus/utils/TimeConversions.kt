@@ -15,7 +15,6 @@ package app.musikus.utils
 import android.text.SpannableString
 import android.text.style.RelativeSizeSpan
 import android.util.Log
-import java.time.Instant
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
@@ -267,10 +266,6 @@ fun getCurrentDateTime(): ZonedDateTime {
     return ZonedDateTime.now()
 }
 
-fun getDateTimeFromTimestamp(timestamp: Long): ZonedDateTime {
-    return ZonedDateTime.ofInstant(Instant.ofEpochSecond(timestamp), ZoneId.systemDefault())
-}
-
 // copies the time from the original timezone to the local timezone without adjusting it
 fun ZonedDateTime.inLocalTimezone(): ZonedDateTime =
     this.toLocalDateTime().atZone(ZonedDateTime.now().zone)
@@ -400,14 +395,6 @@ fun getEndOfMonth(
     dateTime: ZonedDateTime = ZonedDateTime.now()
 ): ZonedDateTime {
     return getStartOfMonth(monthOffset + 1, dateTime)
-}
-
-/**
- * Convert epoch seconds to ZonedDateTime with correct TimeZone
- */
-fun epochSecondsToDate(epochSecs: Long): ZonedDateTime {
-    return ZonedDateTime
-        .ofInstant(Instant.ofEpochSecond(epochSecs), ZoneId.systemDefault())
 }
 
 /**
