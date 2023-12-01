@@ -29,13 +29,12 @@ import app.musikus.utils.getDurationString
 import app.musikus.utils.getEndOfDay
 import app.musikus.utils.getEndOfMonth
 import app.musikus.utils.getEndOfWeek
-import app.musikus.utils.getSpecificDay
-import app.musikus.utils.getSpecificMonth
-import app.musikus.utils.getSpecificWeek
 import app.musikus.utils.getStartOfDay
 import app.musikus.utils.getStartOfMonth
 import app.musikus.utils.getStartOfWeek
-import app.musikus.utils.getTimestamp
+import app.musikus.utils.specificDay
+import app.musikus.utils.specificMonth
+import app.musikus.utils.specificWeek
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -294,18 +293,18 @@ class SessionStatisticsViewModel(
 
         val specificDateToSections = timestampAndFilteredSections.groupBy { (timestamp, _) ->
             when(selectedTab) {
-                SessionStatisticsTab.DAYS -> getSpecificDay(timestamp)
-                SessionStatisticsTab.WEEKS -> getSpecificWeek(timestamp)
-                SessionStatisticsTab.MONTHS -> getSpecificMonth(timestamp)
+                SessionStatisticsTab.DAYS -> timestamp.specificDay
+                SessionStatisticsTab.WEEKS -> timestamp.specificWeek
+                SessionStatisticsTab.MONTHS -> timestamp.specificMonth
             }
         }.mapValues { (_, list) -> list.flatMap {(_, sections) -> sections } }
 
         val barData = timeframes.map { (start, end) ->
             val sectionsInBar = specificDateToSections[
                 when(selectedTab) {
-                    SessionStatisticsTab.DAYS -> getSpecificDay(getTimestamp(start))
-                    SessionStatisticsTab.WEEKS -> getSpecificWeek(getTimestamp(start))
-                    SessionStatisticsTab.MONTHS -> getSpecificMonth(getTimestamp(start))
+                    SessionStatisticsTab.DAYS -> start.specificDay
+                    SessionStatisticsTab.WEEKS -> start.specificWeek
+                    SessionStatisticsTab.MONTHS -> start.specificMonth
                 }
             ] ?: emptyList()
 

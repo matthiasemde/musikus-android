@@ -153,7 +153,7 @@ class MainViewModel(
                         goalDescriptionCreationAttributes,
                         getCurrentDateTime().minus(
                             (
-                                if (goalDescriptionCreationAttributes.repeat) 10L else 1L *
+                                (if (goalDescriptionCreationAttributes.repeat) 10L else 1L) *
                                 goalDescriptionCreationAttributes.periodInPeriodUnits
                             ),
                             when(goalDescriptionCreationAttributes.periodUnit) {

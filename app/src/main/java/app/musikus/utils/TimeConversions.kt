@@ -56,6 +56,7 @@ const val SCALE_FACTOR_FOR_SMALL_TEXT = 0.8f
 
 enum class DateFormat {
     TIME_OF_DAY,
+    FULL,
     DAY_OF_MONTH,
     DAY_OF_MONTH_PADDED,
     DAY_AND_MONTH,
@@ -68,6 +69,7 @@ enum class DateFormat {
     companion object {
         fun formatString(format: DateFormat) = when(format) {
             TIME_OF_DAY -> "k:mm"
+            FULL -> "E dd.MM.yyy"
             DAY_OF_MONTH_PADDED -> DATE_FORMATTER_PATTERN_DAY_OF_MONTH_PADDED
             DAY_OF_MONTH -> DATE_FORMATTER_PATTERN_DAY_OF_MONTH
             DAY_AND_MONTH -> DATE_FORMATTER_PATTERN_DAY_AND_MONTH
@@ -413,34 +415,27 @@ fun epochSecondsToDate(epochSecs: Long): ZonedDateTime {
  * January 2011 is different from January 2020
  */
 
-fun getSpecificMonth(dateTime: ZonedDateTime) =
-    dateTime.monthValue + dateTime.year * 12
-
-fun getSpecificMonth(epochSeconds: Long) =
-    getSpecificMonth(epochSecondsToDate(epochSeconds))
+val ZonedDateTime.specificMonth
+    get() = this.monthValue + this.year * 12
 
 /**
  * Get specific week index (Non reversible hash bucket)
  */
 
-fun getSpecificWeek(dateTime: ZonedDateTime) = dateTime
-    .with(ChronoField.DAY_OF_WEEK , 1)         // ISO 8601, Monday is first day of week.
-    .let { date->
-        date.dayOfYear + date.year * 366
-    }
-
-fun getSpecificWeek(epochSeconds: Long) =
-    getSpecificWeek(epochSecondsToDate(epochSeconds))
+val ZonedDateTime.specificWeek
+    get() = this
+        .with(ChronoField.DAY_OF_WEEK , 1)         // ISO 8601, Monday is first day of week.
+        .let { date->
+            date.dayOfYear + date.year * 366
+        }
 
 
 /**
  * Get specificDay index (Non reversible hash bucket)
  */
 
-fun getSpecificDay(dateTime: ZonedDateTime) =
-    dateTime.dayOfYear + dateTime.year * 366
-fun getSpecificDay(epochSeconds: Long) =
-    getSpecificDay(epochSecondsToDate(epochSeconds))
+val ZonedDateTime.specificDay
+    get() = this.dayOfYear + this.year * 366
 
 fun weekIndexToName(weekIndex: Int) = when (weekIndex) {
     1 -> "Monday"

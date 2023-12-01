@@ -16,8 +16,8 @@ import app.musikus.database.SessionWithSectionsWithLibraryItems
 import app.musikus.database.daos.Session
 import app.musikus.repository.SessionRepository
 import app.musikus.shared.TopBarUiState
-import app.musikus.utils.getSpecificDay
-import app.musikus.utils.getSpecificMonth
+import app.musikus.utils.specificDay
+import app.musikus.utils.specificMonth
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
@@ -103,7 +103,7 @@ class SessionsViewModel(
         // initialize variables to keep track of the current month, current day,
         // the index of its first session and the total duration of the current day
         var (currentDay, currentMonth) = sessions.first().startTimestamp.let { timestamp ->
-            Pair(getSpecificDay(timestamp), getSpecificMonth(timestamp))
+            Pair(timestamp.specificDay, timestamp.specificMonth)
         }
 
         var firstSessionOfDayIndex = 0
@@ -116,7 +116,7 @@ class SessionsViewModel(
             // ...get the month and day...
             val sessionTimestamp = session.startTimestamp
             val (day, month) = sessionTimestamp.let { timestamp ->
-                Pair(getSpecificDay(timestamp), getSpecificMonth(timestamp))
+                Pair(timestamp.specificDay, timestamp.specificMonth)
             }
 
             val sessionPracticeDuration = session.sections.sumOf { it.section.duration }
