@@ -13,11 +13,27 @@
 package app.musikus.ui.goals
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarScrollBehavior
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
@@ -25,9 +41,8 @@ import androidx.compose.ui.unit.dp
 import app.musikus.R
 import app.musikus.database.GoalInstanceWithDescriptionWithLibraryItems
 import app.musikus.spacing
-import app.musikus.viewmodel.MainViewModel
 import kotlinx.coroutines.CoroutineScope
-import java.util.*
+import java.util.UUID
 
 const val PROGRESS_UPDATED = 1337
 
@@ -57,25 +72,8 @@ fun rememberProgressUpdateState(
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
-fun ProgressUpdate(
-    mainViewModel: MainViewModel,
-) {
+fun ProgressUpdate() {
     val progressUpdateState = rememberProgressUpdateState()
-
-//    LaunchedEffect(key1 = true) {
-//        val latestSessionId = 20L
-//        Log.d("PROGRESS", latestSessionId.toString())
-//        val latestSession = Musikus.sessionDao.getWithSectionsWithLibraryItemsWithGoals(latestSessionId)
-//        val goalProgress = Musikus.goalDescriptionDao.computeGoalProgressForSession(latestSession)
-//
-//        Log.d("PROGRESS", "Start animation")
-//        goalProgress.entries.forEach { (goalId, progress) ->
-//            delay(1000)
-//            progressUpdateState.updatedGoalIds.add(goalId)
-//            delay(1000)
-//            progressUpdateState.updatedGoalOffsets.add(progress)
-//        }
-//    }
 
     Scaffold(
         modifier = Modifier.nestedScroll(progressUpdateState.scrollBehavior.nestedScrollConnection),

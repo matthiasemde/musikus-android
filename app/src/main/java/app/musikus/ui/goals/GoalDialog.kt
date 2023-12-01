@@ -22,7 +22,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -52,6 +52,7 @@ import app.musikus.shared.MyToggleButton
 import app.musikus.shared.SelectionSpinner
 import app.musikus.shared.ToggleButtonOption
 import app.musikus.shared.UUIDSelectionSpinnerOption
+import app.musikus.spacing
 import app.musikus.viewmodel.GoalDialogData
 
 @Composable
@@ -202,14 +203,14 @@ fun GoalDialog(
             )
             confirmButtonEnabled = confirmButtonEnabled && dialogData.periodInPeriodUnits > 0
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
 
-            Row(modifier = Modifier.padding(horizontal = 32.dp)){ Divider() }
+            HorizontalDivider(Modifier.padding(horizontal = MaterialTheme.spacing.large))
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
 
             MyToggleButton(
-                modifier = Modifier.padding(horizontal = 32.dp),
+                modifier = Modifier.padding(MaterialTheme.spacing.large),
                 options = GoalType.values().map {
                     ToggleButtonOption(it.ordinal, GoalType.toString(it))
                 },
@@ -223,7 +224,7 @@ fun GoalDialog(
             )
 
             if(dialogData.goalType == GoalType.ITEM_SPECIFIC) {
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
 
                 if(libraryItems.isNotEmpty()) {
                     SelectionSpinner(

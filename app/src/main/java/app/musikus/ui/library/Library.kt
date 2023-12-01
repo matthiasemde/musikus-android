@@ -12,7 +12,6 @@
 
 package app.musikus.ui.library
 
-import android.view.*
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -21,17 +20,46 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.rounded.*
-import androidx.compose.material3.*
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.rounded.Folder
+import androidx.compose.material.icons.rounded.MusicNote
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LargeTopAppBar
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
-import androidx.compose.runtime.*
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,7 +68,6 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -52,10 +79,19 @@ import app.musikus.database.daos.LibraryItem
 import app.musikus.datastore.LibraryFolderSortMode
 import app.musikus.datastore.LibraryItemSortMode
 import app.musikus.datastore.ThemeSelections
-import app.musikus.shared.*
+import app.musikus.shared.ActionBar
+import app.musikus.shared.CommonMenuSelections
+import app.musikus.shared.MainMenu
+import app.musikus.shared.MiniFABData
+import app.musikus.shared.MultiFAB
+import app.musikus.shared.MultiFabState
+import app.musikus.shared.Selectable
+import app.musikus.shared.SortMenu
+import app.musikus.shared.ThemeMenu
 import app.musikus.spacing
-import app.musikus.viewmodel.*
-import java.util.*
+import app.musikus.viewmodel.LibraryContentUiState
+import app.musikus.viewmodel.LibraryViewModel
+import app.musikus.viewmodel.MainViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -136,7 +172,7 @@ fun Library(
                 navigationIcon = {
                     if(topBarUiState.showBackButton) {
                         IconButton(onClick = libraryViewModel::onTopBarBackPressed) {
-                            Icon(Icons.Rounded.ArrowBack, contentDescription = "Back")
+                            Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
                         }
                     }
                 },
@@ -161,10 +197,7 @@ fun Library(
                                         mainViewModel.showExportImportDialog()
                                     }
                                 }
-                            },
-                            uniqueMenuItems = { LibraryMenuItems(
-                                onSelectionHandler = { }
-                            ) }
+                            }
                         )
                         ThemeMenu(
                             expanded = mainMenuUiState.showThemeSubMenu,
@@ -278,12 +311,6 @@ fun Library(
         }
     )
 }
-
-@Preview
-@Composable
-fun LibraryMenuItems(
-    onSelectionHandler: (LibraryMenuSelections) -> Unit = {}
-) { }
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable

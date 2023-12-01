@@ -64,7 +64,7 @@ fun GoalCard(
     progress: Int = 0,
     progressOffset: Int = 0
 ) {
-    val (instance, descriptionWithLibraryItems) = goal
+    val (_, descriptionWithLibraryItems) = goal
     val (description, libraryItems) = descriptionWithLibraryItems
 
     val libraryItemColor = if(description.type == GoalType.ITEM_SPECIFIC) {

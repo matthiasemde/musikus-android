@@ -10,9 +10,13 @@ package app.musikus.shared
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.KeyboardArrowRight
-import androidx.compose.material3.*
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -31,7 +35,7 @@ fun CommonMenuItems(
 ) {
     DropdownMenuItem(
         text = { Text(text = "Theme") },
-        trailingIcon = { Icon(Icons.Default.KeyboardArrowRight, contentDescription = null) },
+        trailingIcon = { Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null) },
         onClick = { onSelectionHandler(CommonMenuSelections.THEME) }
     )
     DropdownMenuItem(
@@ -51,7 +55,7 @@ fun MainMenu(
     onSelectionHandler: (
         commonSelection: CommonMenuSelections
     ) -> Unit,
-    uniqueMenuItems: @Composable () -> Unit,
+    uniqueMenuItems: @Composable () -> Unit = {},
 ) {
     DropdownMenu(
         expanded = show,

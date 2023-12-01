@@ -340,7 +340,7 @@ class MainActivity : AppCompatActivity() {
                         composable(
                             route = Screen.ProgressUpdate.route,
                             enterTransition = { fadeIn(tween(0)) }
-                        ) { ProgressUpdate(mainViewModel) }
+                        ) { ProgressUpdate() }
                         composable(
                             route = Screen.EditSession.route,
                             arguments = listOf(navArgument("sessionId") { type = NavType.StringType})
@@ -359,7 +359,7 @@ class MainActivity : AppCompatActivity() {
                     )
 
                     // if there is a new session added to the intent, navigate to progress update
-                    intent.extras?.getLong("KEY_SESSION")?.let { newSessionId ->
+                    intent.extras?.getLong("KEY_SESSION")?.let { _ ->
                         intent.removeExtra("KEY_SESSION")
 //                        mainViewModel.navigateTo(Screen.ProgressUpdate.route)
                     }

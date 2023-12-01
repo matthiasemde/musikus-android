@@ -94,9 +94,6 @@ fun SessionCard(
         practiceDuration += section.duration
     }
 
-    // define the time and date format
-    val timeFormat = SimpleDateFormat("H:mm", Locale.getDefault())
-
     ElevatedCard(
 //        modifier = Modifier.height(300.dp)
     ) {

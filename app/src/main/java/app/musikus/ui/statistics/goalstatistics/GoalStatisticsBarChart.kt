@@ -34,12 +34,10 @@ import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
-import app.musikus.Musikus
 import app.musikus.R
 import app.musikus.ui.statistics.sessionstatistics.ScaleLineData
 import app.musikus.utils.TimeFormat
@@ -65,11 +63,11 @@ fun GoalStatisticsBarChart(
     val onSurfaceColorLowerContrast = Color.LightGray
     val primaryColor = MaterialTheme.colorScheme.primary
     val onPrimaryColor = MaterialTheme.colorScheme.onPrimary
-    val primaryContainerColor = MaterialTheme.colorScheme.primaryContainer
-    val onPrimaryContainerColor = MaterialTheme.colorScheme.onPrimaryContainer
-    val libraryColors = Musikus.getLibraryItemColors(LocalContext.current).map {
-        Color(it)
-    }
+//    val primaryContainerColor = MaterialTheme.colorScheme.primaryContainer
+//    val onPrimaryContainerColor = MaterialTheme.colorScheme.onPrimaryContainer
+//    val libraryColors = Musikus.getLibraryItemColors(LocalContext.current).map {
+//        Color(it)
+//    }
 
     val barColor = remember { mutableStateOf(primaryColor) }
 

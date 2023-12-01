@@ -11,7 +11,8 @@
     Copyright (c) 2022, Javier Carbone, author Michael Prommersberger
     Additions and modifications, author Matthias Emde
 -->
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:tools="http://schemas.android.com/tools"
+    xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
@@ -41,38 +42,19 @@
             android:name=".services.RecorderService"
             android:enabled="true"
             android:exported="false"
-            android:foregroundServiceType="microphone" />
+            android:foregroundServiceType="microphone"
+            tools:ignore="ForegroundServicePermission" />
 
         <activity
             android:name=".ui.intro.AppIntroActivity"
             android:exported="false"
-            android:screenOrientation="portrait" />
-        <activity
-            android:name=".ui.statistics.GoalStatsActivity"
-            android:exported="false" />
-<!--        <activity-->
-<!--            android:name=".ui.statistics.SessionStatsActivity"-->
-<!--            android:exported="false" />-->
-<!--        <activity-->
-<!--            android:name=".ui.goals.ArchivedGoalsActivity"-->
-<!--            android:exported="false"-->
-<!--            android:parentActivityName=".ui.MainActivity" />-->
-<!--        <activity-->
-<!--            android:name=".ui.goals.ProgressUpdateActivity"-->
-<!--            android:exported="false"-->
-<!--            android:parentActivityName=".ui.MainActivity"-->
-<!--            android:windowSoftInputMode="adjustNothing" />-->
-        <activity
-            android:name=".ui.sessionlist.FullscreenSessionActivity"
-            android:exported="false"
-            android:parentActivityName=".ui.MainActivity"
-            android:windowSoftInputMode="adjustNothing" />
+            android:screenOrientation="fullSensor" />
         <activity
             android:name=".ui.activesession.ActiveSessionActivity"
             android:configChanges="orientation|keyboardHidden"
             android:exported="false"
             android:parentActivityName=".ui.MainActivity"
-            android:screenOrientation="portrait"
+            android:screenOrientation="fullSensor"
             android:windowSoftInputMode="adjustNothing" />
         <activity
             android:name=".ui.MainActivity"
