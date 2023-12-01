@@ -16,7 +16,7 @@ import androidx.room.*
 import app.musikus.R
 import app.musikus.database.*
 import app.musikus.database.entities.*
-import app.musikus.utils.TIME_FORMAT_HUMAN_PRETTY
+import app.musikus.utils.TimeFormat
 import app.musikus.utils.UiText
 import app.musikus.utils.getDurationString
 import app.musikus.utils.inLocalTimezone
@@ -46,7 +46,7 @@ data class GoalDescription(
 
     fun subtitle(instance: GoalInstance) = listOf(
         UiText.DynamicString(
-            getDurationString(instance.target, TIME_FORMAT_HUMAN_PRETTY).toString()
+            getDurationString(instance.target, TimeFormat.HUMAN_PRETTY).toString()
         ),
         UiText.PluralResource(
             resId = when(periodUnit) {

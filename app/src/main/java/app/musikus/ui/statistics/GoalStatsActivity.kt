@@ -38,8 +38,8 @@
 //import app.musikus.utils.DATE_FORMATTER_PATTERN_WEEKDAY_ABBREV
 //import app.musikus.utils.DATE_FORMATTER_PATTERN_YEAR
 //import app.musikus.utils.SCALE_FACTOR_FOR_SMALL_TEXT
-//import app.musikus.utils.TIME_FORMAT_HUMAN_PRETTY
-//import app.musikus.utils.TIME_FORMAT_PRETTY_APPROX_SHORT
+//import app.musikus.utils.TimeFormat.HUMAN_PRETTY
+//import app.musikus.utils.TimeFormat.PRETTY_APPROX_SHORT
 //import app.musikus.utils.epochSecondsToDate
 //import app.musikus.utils.getDurationString
 //import com.github.mikephil.charting.animation.Easing
@@ -366,7 +366,7 @@
 //        }
 //
 //        val label =
-//            if (drawLabel) getDurationString(limit.toInt(), TIME_FORMAT_HUMAN_PRETTY).toString()
+//            if (drawLabel) getDurationString(limit.toInt(), TimeFormat.HUMAN_PRETTY).toString()
 //            else ""
 //
 //        return LimitLine(limit, label).apply {
@@ -589,7 +589,7 @@
 //                if (allInstances[i].startTimestamp != endDateOfLastInst) {
 //                    val pauseBetween = getDurationString(
 //                        (allInstances[i].startTimestamp - endDateOfLastInst).toInt(),
-//                        TIME_FORMAT_PRETTY_APPROX_SHORT
+//                        TimeFormat.PRETTY_APPROX_SHORT
 //                    )
 //                    // draw vertical line between this and last bar to indicate break
 //                    verticalLimitLines.add(getVerticalLimitLine(
@@ -738,7 +738,7 @@
 //    private inner class YAxisValueFormatter: ValueFormatter() {
 //
 //        override fun getFormattedValue(seconds: Float): String {
-//            return getDurationString(seconds.toInt(), TIME_FORMAT_HUMAN_PRETTY).toString()
+//            return getDurationString(seconds.toInt(), TimeFormat.HUMAN_PRETTY).toString()
 //        }
 //    }
 //
@@ -753,7 +753,7 @@
 //                    barChart.highlighted != null &&                                 // there are highlighted values
 //                    barChart.highlighted.find { it.x == barEntry.x } != null) {     // barEntry is among the highlighted Values
 //                    // draw the time
-//                    getDurationString(yVal.toInt(), TIME_FORMAT_HUMAN_PRETTY).toString()
+//                    getDurationString(yVal.toInt(), TimeFormat.HUMAN_PRETTY).toString()
 //                } else {
 //                    // hide total time
 //                    ""
@@ -816,7 +816,7 @@
 //            /** ProgressBar + success/failure count */
 //            // TODO take target data from most recent Instance enough?
 //            holder.goalDescTv.text = TextUtils.concat(
-//                getDurationString(elem.goalInstances.last().target, TIME_FORMAT_HUMAN_PRETTY, SCALE_FACTOR_FOR_SMALL_TEXT),
+//                getDurationString(elem.goalInstances.last().target, TimeFormat.HUMAN_PRETTY, SCALE_FACTOR_FOR_SMALL_TEXT),
 //                " ",
 //                periodFormatted
 //            )

@@ -6,7 +6,12 @@
 
 package app.musikus.services
 
-import android.app.*
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.app.Service
+import android.app.TaskStackBuilder
 import android.content.Context
 import android.content.Intent
 import android.media.MediaRecorder
@@ -21,10 +26,10 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import app.musikus.Musikus
 import app.musikus.R
 import app.musikus.ui.activesession.ActiveSessionActivity
-import app.musikus.utils.TIME_FORMAT_HMS_DIGITAL
+import app.musikus.utils.TimeFormat
 import app.musikus.utils.getDurationString
 import java.io.FileDescriptor
-import java.util.*
+import java.util.Date
 
 class RecorderService : Service() {
 
@@ -154,7 +159,7 @@ class RecorderService : Service() {
         return  NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_record)
             .setContentTitle(getString(R.string.recording_notification_settings_description))
-            .setContentText(getDurationString(durationSecs, TIME_FORMAT_HMS_DIGITAL))
+            .setContentText(getDurationString(durationSecs, TimeFormat.HMS_DIGITAL))
             .setContentIntent(resultPendingIntent)
             .setOnlyAlertOnce(true)
             .build()

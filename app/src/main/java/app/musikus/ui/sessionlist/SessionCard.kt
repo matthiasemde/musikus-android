@@ -48,7 +48,7 @@ import app.musikus.database.SectionWithLibraryItem
 import app.musikus.database.SessionWithSectionsWithLibraryItems
 import app.musikus.utils.DateFormat
 import app.musikus.utils.SCALE_FACTOR_FOR_SMALL_TEXT
-import app.musikus.utils.TIME_FORMAT_HUMAN_PRETTY
+import app.musikus.utils.TimeFormat
 import app.musikus.utils.getDurationString
 import app.musikus.utils.musikusFormat
 import java.text.SimpleDateFormat
@@ -132,14 +132,14 @@ fun SessionCard(
                     modifier = Modifier
                         .width(0.dp)
                         .weight(4f),
-                    text = getDurationString(practiceDuration, TIME_FORMAT_HUMAN_PRETTY).toString(),
+                    text = getDurationString(practiceDuration, TimeFormat.HUMAN_PRETTY).toString(),
                     style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold)
                 )
                 Text(
                     modifier = Modifier
                         .width(0.dp)
                         .weight(2f),
-                    text = getDurationString(session.breakDuration, TIME_FORMAT_HUMAN_PRETTY, SCALE_FACTOR_FOR_SMALL_TEXT).toString(),
+                    text = getDurationString(session.breakDuration, TimeFormat.HUMAN_PRETTY, SCALE_FACTOR_FOR_SMALL_TEXT).toString(),
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                 )
             }
@@ -191,7 +191,7 @@ fun SessionCard(
                             .weight(2f),
                         text = getDurationString(
                             sectionWithLibraryItem.section.duration,
-                            TIME_FORMAT_HUMAN_PRETTY,
+                            TimeFormat.HUMAN_PRETTY,
                             SCALE_FACTOR_FOR_SMALL_TEXT
                         ).toString(),
                         style = MaterialTheme.typography.bodySmall,
@@ -268,10 +268,10 @@ class SessionCard(
 //        summaryTimeView.text = timeFormat.format(Date(startTimestamp))
 
         // show the practice duration in the practice duration field
-        practiceDurationView.text = getDurationString(practiceDuration, TIME_FORMAT_HUMAN_PRETTY)
+        practiceDurationView.text = getDurationString(practiceDuration, TimeFormat.HUMAN_PRETTY)
 
         // set the break time text equal to the sessions break duration
-        breakDurationView.text = getDurationString(breakDuration, TIME_FORMAT_HUMAN_PRETTY, SCALE_FACTOR_FOR_SMALL_TEXT)
+        breakDurationView.text = getDurationString(breakDuration, TimeFormat.HUMAN_PRETTY, SCALE_FACTOR_FOR_SMALL_TEXT)
 
         // set the sections and update the section adapter about the change
         sectionsWithLibraryItemsList.clear()
@@ -333,7 +333,7 @@ class SessionCard(
 
             // contents of the view with that element
             viewHolder.sectionName.text = libraryItem.name
-            viewHolder.sectionDuration.text = getDurationString(sectionDuration, TIME_FORMAT_HUMAN_PRETTY, SCALE_FACTOR_FOR_SMALL_TEXT)
+            viewHolder.sectionDuration.text = getDurationString(sectionDuration, TimeFormat.HUMAN_PRETTY, SCALE_FACTOR_FOR_SMALL_TEXT)
         }
 
         // Return the size of your dataset (invoked by the layout manager)

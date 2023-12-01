@@ -31,7 +31,7 @@ import app.musikus.database.SessionWithSectionsWithLibraryItems
 import app.musikus.database.daos.Section
 import app.musikus.shared.EditTimeDialog
 import app.musikus.ui.MainActivity
-import app.musikus.utils.TIME_FORMAT_HUMAN_PRETTY
+import app.musikus.utils.TimeFormat
 import app.musikus.utils.getDurationString
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.android.material.button.MaterialButton
@@ -242,7 +242,7 @@ class FullscreenSessionActivity : AppCompatActivity() {
 
             // contents of the view with that element
             viewHolder.sectionName.text = libraryItem.name
-            viewHolder.sectionDuration.text = getDurationString(sectionDuration, TIME_FORMAT_HUMAN_PRETTY)
+            viewHolder.sectionDuration.text = getDurationString(sectionDuration, TimeFormat.HUMAN_PRETTY)
 
             viewHolder.itemView.setOnClickListener {
                 selectedSection = section

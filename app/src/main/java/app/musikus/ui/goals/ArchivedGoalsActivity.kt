@@ -26,7 +26,7 @@ package app.musikus.ui.goals
 //import app.musikus.database.PTDatabase
 //import app.musikus.database.entities.GoalPeriodUnit
 //import app.musikus.database.entities.GoalType
-//import app.musikus.utils.TIME_FORMAT_HUMAN_PRETTY
+//import app.musikus.utils.TimeFormat.HUMAN_PRETTY
 //import app.musikus.utils.getDurationString
 //import com.google.android.material.button.MaterialButton
 //import kotlinx.coroutines.launch
@@ -184,7 +184,7 @@ package app.musikus.ui.goals
 //                    }
 //
 //                goalDescriptionView.text = TextUtils.concat(
-//                    getDurationString(archivedGoal.instance.target, TIME_FORMAT_HUMAN_PRETTY),
+//                    getDurationString(archivedGoal.instance.target, TimeFormat.HUMAN_PRETTY),
 //                    " ",
 //                    periodFormatted
 //                )

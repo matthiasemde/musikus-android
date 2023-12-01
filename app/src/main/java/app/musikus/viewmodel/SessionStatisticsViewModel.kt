@@ -22,7 +22,7 @@ import app.musikus.datastore.sorted
 import app.musikus.repository.SessionRepository
 import app.musikus.repository.UserPreferencesRepository
 import app.musikus.utils.DateFormat
-import app.musikus.utils.TIME_FORMAT_HUMAN_PRETTY
+import app.musikus.utils.TimeFormat
 import app.musikus.utils.Timeframe
 import app.musikus.utils.getDurationString
 import app.musikus.utils.getEndOfDay
@@ -252,7 +252,7 @@ class SessionStatisticsViewModel(
                 item !in deselectedItems,
                 getDurationString(
                     durationSeconds = itemsToDurationTimeFrame[item] ?: 0,
-                    format = TIME_FORMAT_HUMAN_PRETTY
+                    format = TimeFormat.HUMAN_PRETTY
                 ).toString()
             )
         }

@@ -76,8 +76,7 @@ import app.musikus.shared.MainMenu
 import app.musikus.shared.ThemeMenu
 import app.musikus.spacing
 import app.musikus.utils.DateFormat
-import app.musikus.utils.TIME_FORMAT_HUMAN_PRETTY
-import app.musikus.utils.TIME_FORMAT_HUMAN_PRETTY_SHORT
+import app.musikus.utils.TimeFormat
 import app.musikus.utils.getCurrentDateTime
 import app.musikus.utils.getDurationString
 import app.musikus.utils.musikusFormat
@@ -215,15 +214,15 @@ fun StatisticsCurrentMonth(
     val currentMonthStats = listOf(
         "Total duration" to getDurationString(
             uiState.totalPracticeDuration,
-            TIME_FORMAT_HUMAN_PRETTY_SHORT
+            TimeFormat.HUMAN_PRETTY_SHORT
         ).toString(),
         "Per session" to stringResource(R.string.average_sign) + " " + getDurationString(
             uiState.averageDurationPerSession,
-            TIME_FORMAT_HUMAN_PRETTY_SHORT
+            TimeFormat.HUMAN_PRETTY_SHORT
         ).toString(),
         "Break per hour" to getDurationString(
             uiState.breakDurationPerHour,
-            TIME_FORMAT_HUMAN_PRETTY_SHORT
+            TimeFormat.HUMAN_PRETTY_SHORT
         ).toString(),
         "Average rating" to stringResource(R.string.average_sign) + " %.1f".format(
             uiState.averageRatingPerSession
@@ -297,7 +296,7 @@ fun StatisticsPracticeDurationCard(
                     Text(
                         text = getDurationString(
                             uiState.totalPracticeDuration,
-                            TIME_FORMAT_HUMAN_PRETTY
+                            TimeFormat.HUMAN_PRETTY
                         ).toString(),
                         style = MaterialTheme.typography.titleMedium.copy(
                             color = MaterialTheme.colorScheme.primary,

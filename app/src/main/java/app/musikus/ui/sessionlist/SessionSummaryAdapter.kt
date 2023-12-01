@@ -217,7 +217,7 @@ package app.musikus.ui.sessionlist
 ////                        yesterday -> context.getString(R.string.yesterday)
 ////                        else -> dateFormat.format(currentSessionDate.timeInMillis)
 ////                    }
-////                    summaryDayDuration.text = getDurationString(totalPracticeDuration, TIME_FORMAT_HUMAN_PRETTY)
+////                    summaryDayDuration.text = getDurationString(totalPracticeDuration, TimeFormat.HUMAN_PRETTY)
 //
 //                } else {
 ////                    summaryDayLayout.visibility = View.GONE
@@ -238,10 +238,10 @@ package app.musikus.ui.sessionlist
 //                summaryTimeView.text = timeFormat.format(Date(startTimestamp))
 //
 //                // show the practice duration in the practice duration field
-//                practiceDurationView.text = getDurationString(practiceDuration, TIME_FORMAT_HUMAN_PRETTY)
+//                practiceDurationView.text = getDurationString(practiceDuration, TimeFormat.HUMAN_PRETTY)
 //
 //                // set the break time text equal to the sessions break duration
-//                breakDurationView.text = getDurationString(breakDuration, TIME_FORMAT_HUMAN_PRETTY, SCALE_FACTOR_FOR_SMALL_TEXT)
+//                breakDurationView.text = getDurationString(breakDuration, TimeFormat.HUMAN_PRETTY, SCALE_FACTOR_FOR_SMALL_TEXT)
 //
 //                // set the sections and update the section adapter about the change
 //                sectionsWithLibraryItemsList.clear()
@@ -296,7 +296,7 @@ package app.musikus.ui.sessionlist
 //
 //                    // contents of the view with that element
 //                    viewHolder.sectionName.text = libraryItem.name
-//                    viewHolder.sectionDuration.text = getDurationString(sectionDuration, TIME_FORMAT_HUMAN_PRETTY, SCALE_FACTOR_FOR_SMALL_TEXT)
+//                    viewHolder.sectionDuration.text = getDurationString(sectionDuration, TimeFormat.HUMAN_PRETTY, SCALE_FACTOR_FOR_SMALL_TEXT)
 //                }
 //
 //                // Return the size of your dataset (invoked by the layout manager)

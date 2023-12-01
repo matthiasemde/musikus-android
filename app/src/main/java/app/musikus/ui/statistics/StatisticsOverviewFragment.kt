@@ -179,7 +179,7 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
 //                .findViewById<TextView>(R.id.stats_ov_card_last7days_tv_total_time)
 //                .text = getDurationString(
 //                        barChartArray.sumOf { it.y.toInt() },
-//                        TIME_FORMAT_HUMAN_PRETTY
+//                        TimeFormat.HUMAN_PRETTY
 //                    )
 //        }
 //    }
@@ -310,14 +310,14 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
 //        val totalTime = PTDatabase.getInstance(requireContext()).sectionDao.getWithLibraryItems(beginLastMonth, endLastMonth)
 //            .sumOf { it.section.duration ?: 0}
 //
-//        return getDurationString(totalTime, TIME_FORMAT_HUMAN_PRETTY_SHORT)
+//        return getDurationString(totalTime, TimeFormat.HUMAN_PRETTY_SHORT)
 //    }
 //
 //    private suspend fun getAvgTimePerSession(): CharSequence {
 //        return TextUtils.concat(getString(R.string.average_sign) + " ",
 //                getDurationString(
 //                    (getTotalPracticeTime().toFloat() / getAllSessions().size.toFloat()).toInt(),
-//                    TIME_FORMAT_HUMAN_PRETTY_SHORT
+//                    TimeFormat.HUMAN_PRETTY_SHORT
 //                ))
 //    }
 //
@@ -328,7 +328,7 @@ class StatisticsOverviewFragment : Fragment(R.layout.fragment_statistics_overvie
 //
 //        return getDurationString(
 //            (totalBreakTime.toFloat() / totalPracticeHours).toInt(),
-//            TIME_FORMAT_HUMAN_PRETTY_SHORT
+//            TimeFormat.HUMAN_PRETTY_SHORT
 //        )
 //    }
 //

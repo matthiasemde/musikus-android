@@ -310,7 +310,7 @@ package app.musikus.ui.statistics
 //            chartArray.values.sumOf {
 //                it.yVals.sum().toInt()
 //            },
-//            TIME_FORMAT_HUMAN_PRETTY
+//            TimeFormat.HUMAN_PRETTY
 //        )
 //        tvTotalTimeInRange.text = TextUtils.concat(
 //            getString(R.string.total_time),
@@ -756,7 +756,7 @@ package app.musikus.ui.statistics
 //    private inner class YAxisValueFormatter: ValueFormatter() {
 //
 //        override fun getFormattedValue(seconds: Float): String {
-//            return getDurationString(seconds.toInt(), TIME_FORMAT_HUMAN_PRETTY).toString()
+//            return getDurationString(seconds.toInt(), TimeFormat.HUMAN_PRETTY).toString()
 //        }
 //    }
 //
@@ -803,7 +803,7 @@ package app.musikus.ui.statistics
 //                    if (stackEntriesNotZero == 1) {
 //                        // reset (set to value which will never occur on x axis) lastEntry so that un- and then re-selecting same bar works
 //                        lastEntryX = 100f
-//                        return prefix + getDurationString(stackedEntry.yVals?.sum()?.toInt() ?: 0, TIME_FORMAT_HUMAN_PRETTY)
+//                        return prefix + getDurationString(stackedEntry.yVals?.sum()?.toInt() ?: 0, TimeFormat.HUMAN_PRETTY)
 //                    }
 //                } else {
 //                    lastEntryX = stackedEntry.x
@@ -812,7 +812,7 @@ package app.musikus.ui.statistics
 //                        // reset (set to value which will never occur on x axis) lastEntry so that un- and then re-selecting same bar works
 //                        lastEntryX = 100f
 //                        // we reached the last non-zero stack of the bar, so we're at the top
-//                        return prefix + getDurationString(stackedEntry.yVals?.sum()?.toInt() ?: 0, TIME_FORMAT_HUMAN_PRETTY)
+//                        return prefix + getDurationString(stackedEntry.yVals?.sum()?.toInt() ?: 0, TimeFormat.HUMAN_PRETTY)
 //                    }
 //                }
 //            }
@@ -863,7 +863,7 @@ package app.musikus.ui.statistics
 //                updateChartData(recalculateDurs = false)  // notify fragment to change chart
 //            }
 //
-//            holder.catTimeView.text = getDurationString(elem.totalDuration, TIME_FORMAT_HUMAN_PRETTY)
+//            holder.catTimeView.text = getDurationString(elem.totalDuration, TimeFormat.HUMAN_PRETTY)
 //        }
 //
 //        override fun getItemCount(): Int = libraryItems.filter { it.visible }.size

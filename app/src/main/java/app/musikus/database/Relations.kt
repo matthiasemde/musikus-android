@@ -27,7 +27,7 @@ import app.musikus.database.entities.GoalInstanceModel
 import app.musikus.database.entities.GoalType
 import app.musikus.database.entities.LibraryItemModel
 import app.musikus.database.entities.SectionModel
-import app.musikus.utils.TIME_FORMAT_HUMAN_PRETTY
+import app.musikus.utils.TimeFormat
 import app.musikus.utils.getDurationString
 
 
@@ -201,7 +201,7 @@ data class GoalInstanceWithDescriptionWithLibraryItems(
     override fun toString() = when (description.description.type) {
         GoalType.NON_SPECIFIC -> "All items"
         GoalType.ITEM_SPECIFIC -> description.libraryItems.first().name
-    } + " " + getDurationString(instance.target, TIME_FORMAT_HUMAN_PRETTY).toString() +
+    } + " " + getDurationString(instance.target, TimeFormat.HUMAN_PRETTY).toString() +
      " in ${description.description.periodInPeriodUnits} ${description.description.periodUnit}"
 
     val title

@@ -27,7 +27,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,7 +39,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.musikus.Musikus
 import app.musikus.utils.SCALE_FACTOR_FOR_SMALL_TEXT
-import app.musikus.utils.TIME_FORMAT_HUMAN_PRETTY
+import app.musikus.utils.TimeFormat
 import app.musikus.utils.getDurationString
 import app.musikus.viewmodel.EditSessionViewModel
 import java.util.UUID
@@ -122,7 +121,7 @@ fun EditSession(
                                 .weight(2f),
                             text = getDurationString(
                                 sectionWithLibraryItem.section.duration,
-                                TIME_FORMAT_HUMAN_PRETTY,
+                                TimeFormat.HUMAN_PRETTY,
                                 SCALE_FACTOR_FOR_SMALL_TEXT
                             ).toString(),
                             style = MaterialTheme.typography.bodySmall,

@@ -75,10 +75,9 @@ import app.musikus.services.RecorderService
 import app.musikus.services.SessionForegroundService
 import app.musikus.ui.MainActivity
 import app.musikus.ui.library.LibraryItemAdapter
-import app.musikus.utils.TIME_FORMAT_HMS_DIGITAL
-import app.musikus.utils.TIME_FORMAT_MS_DIGITAL
-import app.musikus.utils.getTimestamp
+import app.musikus.utils.TimeFormat
 import app.musikus.utils.getDurationString
+import app.musikus.utils.getTimestamp
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.snackbar.Snackbar
@@ -500,7 +499,7 @@ class ActiveSessionActivity : AppCompatActivity() {
     private val updateRecordTimeReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
 //            intent?.extras?.getString("DURATION")?.toInt()?.also {
-//                recordingTimeView.text = getDurationString(it / 1000, TIME_FORMAT_HMS_DIGITAL)
+//                recordingTimeView.text = getDurationString(it / 1000, TimeFormat.HMS_DIGITAL)
 //                recordingTimeCsView.text = "%02d".format(it % 1000 / 10)
 //            }
         }
@@ -809,7 +808,7 @@ class ActiveSessionActivity : AppCompatActivity() {
                 findViewById<TextView>(R.id.recording_file_date).text = timeAgo
                 findViewById<TextView>(R.id.recording_file_length).text = getDurationString(
                     recording.duration / 1000,
-                    format = TIME_FORMAT_MS_DIGITAL
+                    format = TimeFormat.MS_DIGITAL
                 )
             }
         }
@@ -826,12 +825,12 @@ class ActiveSessionActivity : AppCompatActivity() {
         private fun syncUIToPlayTime() {
             timePlayedView.text = getDurationString(
                 mediaPlayer.currentPosition / 1000,
-                format = TIME_FORMAT_MS_DIGITAL
+                format = TimeFormat.MS_DIGITAL
             )
 
             timeLeftView.text = getDurationString(
                 (mediaPlayer.duration / 1000 -  mediaPlayer.currentPosition / 1000 ),
-                format = TIME_FORMAT_MS_DIGITAL
+                format = TimeFormat.MS_DIGITAL
             )
             playBarView.progress = mediaPlayer.currentPosition / 10
         }
@@ -1027,7 +1026,7 @@ class ActiveSessionActivity : AppCompatActivity() {
                 private val updateRecordTimeReceiver = object : BroadcastReceiver() {
                     override fun onReceive(context: Context?, intent: Intent?) {
                         intent?.extras?.getString("DURATION")?.toInt()?.also {
-                            recordingTimeView.text = getDurationString(it / 1000, format = TIME_FORMAT_HMS_DIGITAL)
+                            recordingTimeView.text = getDurationString(it / 1000, format = TimeFormat.HMS_DIGITAL)
                             recordingTimeCsView.text = "%02d".format(it % 1000 / 10)
                         }
                     }
@@ -1219,7 +1218,7 @@ class ActiveSessionActivity : AppCompatActivity() {
             mService.sectionBuffer.last().apply {
                 sectionDur = first.duration.minus(second)
             }
-            sDur.text = getDurationString(sectionDur, TIME_FORMAT_HMS_DIGITAL)
+            sDur.text = getDurationString(sectionDur, TimeFormat.HMS_DIGITAL)
         }
     }
 
@@ -1515,10 +1514,10 @@ class ActiveSessionActivity : AppCompatActivity() {
                 // display pause duration on the fab, but only time after pause was activated
                 fabInfoPause.text = getString(
                     R.string.pause_durationstring,
-                    getDurationString(mService.pauseDuration, TIME_FORMAT_HMS_DIGITAL)
+                    getDurationString(mService.pauseDuration, TimeFormat.HMS_DIGITAL)
                 )
             }
-            practiceTimeView.text = getDurationString(mService.totalPracticeDuration, TIME_FORMAT_HMS_DIGITAL)
+            practiceTimeView.text = getDurationString(mService.totalPracticeDuration, TimeFormat.HMS_DIGITAL)
             updateActiveSectionView()
         } else {
             practiceTimeView.text = "00:00:00"
@@ -1582,7 +1581,7 @@ class ActiveSessionActivity : AppCompatActivity() {
 
             // contents of the view with that element
             viewHolder.sectionName.text = libraryItemName
-            viewHolder.sectionDuration.text = getDurationString(sectionDuration, TIME_FORMAT_HMS_DIGITAL)
+            viewHolder.sectionDuration.text = getDurationString(sectionDuration, TimeFormat.HMS_DIGITAL)
 
         }
 
