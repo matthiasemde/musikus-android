@@ -28,10 +28,11 @@ import app.musikus.datastore.sorted
 import app.musikus.repository.GoalRepository
 import app.musikus.repository.SessionRepository
 import app.musikus.repository.UserPreferencesRepository
-import app.musikus.utils.DATE_FORMATTER_PATTERN_DAY_AND_MONTH
+import app.musikus.utils.DateFormat
 import app.musikus.utils.Timeframe
 import app.musikus.utils.UiText
 import app.musikus.utils.inLocalTimezone
+import app.musikus.utils.musikusFormat
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -41,7 +42,6 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
-import java.time.format.DateTimeFormatter
 import java.util.UUID
 
 data class GoalStatisticsUiState(
@@ -383,7 +383,7 @@ class GoalStatisticsViewModel(
             target = lastInstance?.target ?: 0,
             data = barTimeframes.map { (start, end) ->
                 Pair(
-                    start.format(DateTimeFormatter.ofPattern(DATE_FORMATTER_PATTERN_DAY_AND_MONTH)),
+                    start.musikusFormat(DateFormat.DAY_AND_MONTH),
                     goalsWithProgress.firstOrNull { (goalInstance, _) ->
                         goalInstance.startTimestamp.inLocalTimezone().let {
                             start <= it && it < end

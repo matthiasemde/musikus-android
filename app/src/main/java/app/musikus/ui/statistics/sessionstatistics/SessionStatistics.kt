@@ -46,8 +46,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
@@ -64,15 +62,14 @@ import app.musikus.database.daos.LibraryItem
 import app.musikus.shared.conditional
 import app.musikus.shared.simpleVerticalScrollbar
 import app.musikus.spacing
-import app.musikus.utils.DATE_FORMATTER_PATTERN_DAY_AND_MONTH
 import app.musikus.utils.TIME_FORMAT_HUMAN_PRETTY
 import app.musikus.utils.Timeframe
 import app.musikus.utils.getDurationString
+import app.musikus.utils.musikusFormat
 import app.musikus.viewmodel.SessionStatisticsChartType
 import app.musikus.viewmodel.SessionStatisticsHeaderUiState
 import app.musikus.viewmodel.SessionStatisticsTab
 import app.musikus.viewmodel.SessionStatisticsViewModel
-import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -272,10 +269,8 @@ fun TimeframeSelectionHeader(
         ) {
             Text(
                 text = timeframe.let { (start, end) ->
-                    listOf(start, end.minusSeconds(1))
-                }.joinToString(" - ") {
-                    it.format(DateTimeFormatter.ofPattern(DATE_FORMATTER_PATTERN_DAY_AND_MONTH))
-                }, // TODO calculate nice strings
+                    start to end.minusSeconds(1)
+                }.musikusFormat(),
                 style = MaterialTheme.typography.titleLarge
             )
             Text(

@@ -30,6 +30,8 @@ import app.musikus.R
 import app.musikus.database.entities.SectionCreationAttributes
 import app.musikus.ui.activesession.ActiveSessionActivity
 import app.musikus.utils.secondsDurationToHoursMinSec
+import java.time.ZonedDateTime
+import java.time.temporal.ChronoUnit
 import java.util.Date
 import java.util.UUID
 import kotlin.math.roundToInt
@@ -223,10 +225,11 @@ class SessionForegroundService : Service() {
     /**
      * calculates total Duration (INCLUDING PAUSES!!!) of a section
      */
-    private fun getDuration(section: SectionCreationAttributes): Int {
-        val now = Date().time / 1000L
-        return (now - section.startTimestamp.toEpochSecond()).toInt()
-    }
+    private fun getDuration(section: SectionCreationAttributes) = ChronoUnit.SECONDS.between(
+        section.startTimestamp,
+        ZonedDateTime.now()
+    ).toInt()
+
 
     override fun onUnbind(intent: Intent): Boolean {
         // All clients have unbound with unbindService()

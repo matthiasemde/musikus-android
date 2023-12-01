@@ -55,28 +55,30 @@ const val SCALE_FACTOR_FOR_SMALL_TEXT = 0.8f
 
 enum class DateFormat {
     TIME_OF_DAY,
-    FULL,
+    DAY_MONTH_YEAR,
     DAY_OF_MONTH,
     DAY_OF_MONTH_PADDED,
     DAY_AND_MONTH,
-    WEEKDAY_SINGLE_LETTER,
     WEEKDAY_ABBREVIATED,
-    MONTH_FULL,
+    WEEKDAY_SINGLE_LETTER,
+    MONTH,
     MONTH_ABBREVIATED,
-    YEAR;
+    YEAR,
+    YEAR_SHORT;
 
     companion object {
         fun formatString(format: DateFormat) = when(format) {
             TIME_OF_DAY -> "k:mm"
-            FULL -> "E dd.MM.yyy"
+            DAY_MONTH_YEAR -> "dd.MM.yyyy"
             DAY_OF_MONTH_PADDED -> DATE_FORMATTER_PATTERN_DAY_OF_MONTH_PADDED
             DAY_OF_MONTH -> DATE_FORMATTER_PATTERN_DAY_OF_MONTH
             DAY_AND_MONTH -> DATE_FORMATTER_PATTERN_DAY_AND_MONTH
-            WEEKDAY_SINGLE_LETTER -> DATE_FORMATTER_PATTERN_WEEKDAY_SHORT
             WEEKDAY_ABBREVIATED -> DATE_FORMATTER_PATTERN_WEEKDAY_ABBREV
-            MONTH_FULL -> DATE_FORMATTER_PATTERN_MONTH_TEXT_FULL
+            WEEKDAY_SINGLE_LETTER -> DATE_FORMATTER_PATTERN_WEEKDAY_SHORT
+            MONTH -> DATE_FORMATTER_PATTERN_MONTH_TEXT_FULL
             MONTH_ABBREVIATED -> DATE_FORMATTER_PATTERN_MONTH_TEXT_ABBREV
             YEAR -> DATE_FORMATTER_PATTERN_YEAR
+            YEAR_SHORT -> "yy"
         }
     }
 }
@@ -90,6 +92,26 @@ fun ZonedDateTime.musikusFormat(format: DateFormat) : String =
             ) "z" else "")
         )
     ).also { Log.d("zone", "${this.offset}, ${ZonedDateTime.now().offset}")}
+
+fun ZonedDateTime.musikusFormat(formatList: List<DateFormat>) : String =
+    formatList.joinToString(" ") { this.musikusFormat(it) }
+
+fun Timeframe.musikusFormat() : String {
+    val (start, end) = this
+
+    val yearDifference = end.year - start.year
+    val monthDifference = end.specificMonth - start.specificMonth
+
+    val dateFormat =
+        if (monthDifference > 3)
+            if(yearDifference > 0) listOf(DateFormat.MONTH, DateFormat.YEAR_SHORT)
+            else listOf(DateFormat.MONTH)
+        else
+            if(yearDifference > 0) listOf(DateFormat.DAY_MONTH_YEAR)
+            else listOf(DateFormat.DAY_AND_MONTH)
+
+    return start.musikusFormat(dateFormat) + " - " + end.musikusFormat(dateFormat)
+}
 
 /** format string for DateTimeFormatter() resulting in DD.MM format, e.g. "31.01." (for 31st January) */
 const val DATE_FORMATTER_PATTERN_DAY_AND_MONTH = "dd.MM."
@@ -364,12 +386,6 @@ fun getEndOfWeek(
 fun getDayIndexOfWeek(
     dateTime: ZonedDateTime = ZonedDateTime.now()
 ) = dateTime.toLocalDate().dayOfWeek.value
-//fun getDayIndexOfWeek(
-//    epochSeconds: Long = getTimestamp()
-//): Int {
-//    return epochSecondsToDate(epochSeconds)
-//        .toLocalDate().dayOfWeek.value
-//}
 
 /**
  * Get the start of a month.

@@ -75,19 +75,18 @@ import app.musikus.shared.CommonMenuSelections
 import app.musikus.shared.MainMenu
 import app.musikus.shared.ThemeMenu
 import app.musikus.spacing
-import app.musikus.utils.DATE_FORMATTER_PATTERN_DAY_AND_MONTH
-import app.musikus.utils.DATE_FORMATTER_PATTERN_MONTH_TEXT_FULL
+import app.musikus.utils.DateFormat
 import app.musikus.utils.TIME_FORMAT_HUMAN_PRETTY
 import app.musikus.utils.TIME_FORMAT_HUMAN_PRETTY_SHORT
 import app.musikus.utils.getCurrentDateTime
 import app.musikus.utils.getDurationString
+import app.musikus.utils.musikusFormat
 import app.musikus.viewmodel.MainViewModel
 import app.musikus.viewmodel.StatisticsCurrentMonthUiState
 import app.musikus.viewmodel.StatisticsGoalCardUiState
 import app.musikus.viewmodel.StatisticsPracticeDurationCardUiState
 import app.musikus.viewmodel.StatisticsRatingsCardUiState
 import app.musikus.viewmodel.StatisticsViewModel
-import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -232,7 +231,7 @@ fun StatisticsCurrentMonth(
     )
 
     Column {
-        Text(text = "In " + getCurrentDateTime().format(DateTimeFormatter.ofPattern(DATE_FORMATTER_PATTERN_MONTH_TEXT_FULL)))
+        Text(text = "In " + getCurrentDateTime().musikusFormat(DateFormat.MONTH))
         Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -487,9 +486,7 @@ fun StatisticsGoalCard(
                             }
                             Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
                             Text(
-                                text = goal.endTimestampInLocalTimezone.format(
-                                    DateTimeFormatter.ofPattern(DATE_FORMATTER_PATTERN_DAY_AND_MONTH)
-                                ),
+                                text = goal.endTimestampInLocalTimezone.musikusFormat(DateFormat.DAY_AND_MONTH),
                                 style = MaterialTheme.typography.labelSmall
                             )
                         }

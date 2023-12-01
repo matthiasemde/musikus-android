@@ -289,7 +289,9 @@ fun DayHeader(
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(
-            text = timestamp.musikusFormat(DateFormat.FULL),
+            text = timestamp.musikusFormat(
+                listOf(DateFormat.WEEKDAY_ABBREVIATED, DateFormat.DAY_MONTH_YEAR)
+            ),
             style = MaterialTheme.typography.bodyLarge
         )
         Text(

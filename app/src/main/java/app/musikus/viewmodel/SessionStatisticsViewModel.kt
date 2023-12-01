@@ -21,8 +21,7 @@ import app.musikus.datastore.SortDirection
 import app.musikus.datastore.sorted
 import app.musikus.repository.SessionRepository
 import app.musikus.repository.UserPreferencesRepository
-import app.musikus.utils.DATE_FORMATTER_PATTERN_MONTH_TEXT_ABBREV
-import app.musikus.utils.DATE_FORMATTER_PATTERN_WEEKDAY_ABBREV
+import app.musikus.utils.DateFormat
 import app.musikus.utils.TIME_FORMAT_HUMAN_PRETTY
 import app.musikus.utils.Timeframe
 import app.musikus.utils.getDurationString
@@ -32,6 +31,7 @@ import app.musikus.utils.getEndOfWeek
 import app.musikus.utils.getStartOfDay
 import app.musikus.utils.getStartOfMonth
 import app.musikus.utils.getStartOfWeek
+import app.musikus.utils.musikusFormat
 import app.musikus.utils.specificDay
 import app.musikus.utils.specificMonth
 import app.musikus.utils.specificWeek
@@ -46,7 +46,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
 
 /**
  * Ui state data classes
@@ -316,9 +315,9 @@ class SessionStatisticsViewModel(
 
             BarChartDatum(
                 label = when(selectedTab) {
-                    SessionStatisticsTab.DAYS -> start.format(DateTimeFormatter.ofPattern(DATE_FORMATTER_PATTERN_WEEKDAY_ABBREV))
+                    SessionStatisticsTab.DAYS -> start.musikusFormat(DateFormat.WEEKDAY_ABBREVIATED)
                     SessionStatisticsTab.WEEKS -> "${start.dayOfMonth}-${end.minusSeconds(1).dayOfMonth}"
-                    SessionStatisticsTab.MONTHS -> start.format(DateTimeFormatter.ofPattern(DATE_FORMATTER_PATTERN_MONTH_TEXT_ABBREV))
+                    SessionStatisticsTab.MONTHS -> start.musikusFormat(DateFormat.MONTH_ABBREVIATED)
                 },
                 libraryItemsToDuration = libraryItemsToDurationInBar,
                 totalDuration = libraryItemsToDurationInBar.values.sumOf { it }

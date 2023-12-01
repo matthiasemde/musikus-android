@@ -33,7 +33,6 @@ import app.musikus.database.entities.TimestampModel
 import app.musikus.database.entities.TimestampModelDisplayAttributes
 import app.musikus.database.entities.TimestampModelUpdateAttributes
 import app.musikus.utils.getCurrentDateTime
-import app.musikus.utils.getTimestamp
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.flow
@@ -280,8 +279,7 @@ abstract class SoftDeleteDao<
         query: SimpleSQLiteQuery = SimpleSQLiteQuery(
             query = "DELETE FROM $tableName WHERE " +
                 "deleted=1 " +
-                "AND (modified_at+5<${getTimestamp()});"
-//                    "AND (modified_at+2592000<${getCurrTimestamp()});" TODO change for release
+                "AND (datetime(modified_at) < datetime('now', '-1 month'));"
         )
     ) : Int
 }
