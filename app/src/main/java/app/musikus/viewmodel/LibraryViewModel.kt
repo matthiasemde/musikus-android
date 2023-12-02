@@ -21,13 +21,13 @@ import app.musikus.database.entities.LibraryFolderCreationAttributes
 import app.musikus.database.entities.LibraryFolderUpdateAttributes
 import app.musikus.database.entities.LibraryItemCreationAttributes
 import app.musikus.database.entities.LibraryItemUpdateAttributes
-import app.musikus.datastore.LibraryFolderSortMode
-import app.musikus.datastore.LibraryItemSortMode
-import app.musikus.datastore.SortDirection
-import app.musikus.datastore.sorted
 import app.musikus.repository.LibraryRepository
 import app.musikus.repository.UserPreferencesRepository
 import app.musikus.shared.TopBarUiState
+import app.musikus.utils.LibraryFolderSortMode
+import app.musikus.utils.LibraryItemSortMode
+import app.musikus.utils.SortDirection
+import app.musikus.utils.sorted
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted.Companion.WhileSubscribed
 import kotlinx.coroutines.flow.combine
@@ -36,9 +36,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.UUID
-
-enum class LibraryMenuSelections {
-}
 
 enum class DialogMode {
     ADD,

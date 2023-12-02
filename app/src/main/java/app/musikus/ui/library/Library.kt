@@ -76,8 +76,6 @@ import app.musikus.Musikus
 import app.musikus.R
 import app.musikus.database.daos.LibraryFolder
 import app.musikus.database.daos.LibraryItem
-import app.musikus.datastore.LibraryFolderSortMode
-import app.musikus.datastore.LibraryItemSortMode
 import app.musikus.datastore.ThemeSelections
 import app.musikus.shared.ActionBar
 import app.musikus.shared.CommonMenuSelections
@@ -89,6 +87,8 @@ import app.musikus.shared.Selectable
 import app.musikus.shared.SortMenu
 import app.musikus.shared.ThemeMenu
 import app.musikus.spacing
+import app.musikus.utils.LibraryFolderSortMode
+import app.musikus.utils.LibraryItemSortMode
 import app.musikus.viewmodel.LibraryContentUiState
 import app.musikus.viewmodel.LibraryViewModel
 import app.musikus.viewmodel.MainViewModel
@@ -354,10 +354,9 @@ fun LibraryContent(
                     val sortMenuUiState = foldersUiState.sortMenuUiState
                     SortMenu(
                         show = sortMenuUiState.show,
-                        sortModes = LibraryFolderSortMode.values().toList(),
+                        sortModes = LibraryFolderSortMode.entries,
                         currentSortMode = sortMenuUiState.mode,
                         currentSortDirection = sortMenuUiState.direction,
-                        label = { LibraryFolderSortMode.toString(it) },
                         onShowMenuChanged = onShowFolderSortMenuChange,
                         onSelectionHandler = onFolderSortModeSelected
                     )
@@ -416,10 +415,9 @@ fun LibraryContent(
                     val sortMenuUiState = itemsUiState.sortMenuUiState
                     SortMenu(
                         show = sortMenuUiState.show,
-                        sortModes = LibraryItemSortMode.values().toList(),
+                        sortModes = LibraryItemSortMode.entries,
                         currentSortMode = sortMenuUiState.mode,
                         currentSortDirection = sortMenuUiState.direction,
-                        label = { LibraryItemSortMode.toString(it) },
                         onShowMenuChanged = onShowItemSortMenuChange,
                         onSelectionHandler = onItemSortModeSelected
                     )

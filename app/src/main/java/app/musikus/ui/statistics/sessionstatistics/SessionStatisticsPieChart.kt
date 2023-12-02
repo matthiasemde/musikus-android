@@ -32,7 +32,7 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import app.musikus.Musikus
 import app.musikus.database.daos.LibraryItem
-import app.musikus.datastore.sorted
+import app.musikus.utils.sorted
 import app.musikus.viewmodel.SessionStatisticsPieChartUiState
 import kotlinx.coroutines.launch
 import kotlin.math.cos

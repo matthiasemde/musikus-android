@@ -9,6 +9,7 @@
 package app.musikus.viewmodel
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import app.musikus.dataStore
@@ -19,17 +20,23 @@ import app.musikus.database.daos.LibraryItem
 import app.musikus.database.entities.GoalDescriptionCreationAttributes
 import app.musikus.database.entities.GoalPeriodUnit
 import app.musikus.database.entities.GoalType
-import app.musikus.datastore.GoalsSortMode
-import app.musikus.datastore.LibraryItemSortMode
-import app.musikus.datastore.SortDirection
-import app.musikus.datastore.sorted
 import app.musikus.repository.GoalRepository
 import app.musikus.repository.LibraryRepository
 import app.musikus.repository.SessionRepository
 import app.musikus.repository.UserPreferencesRepository
 import app.musikus.shared.TopBarUiState
+import app.musikus.utils.GoalsSortMode
+import app.musikus.utils.LibraryItemSortMode
+import app.musikus.utils.SortDirection
+import app.musikus.utils.sorted
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 data class GoalWithProgress(
@@ -365,7 +372,7 @@ class GoalsViewModel(
             actionModeUiState = actionModeUiState,
             contentUiState = contentUiState,
             dialogUiState = dialogUiState,
-        )
+        ).also { Log.d("goals", "$it") }
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),

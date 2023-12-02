@@ -13,21 +13,26 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
-import androidx.compose.material3.*
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
-import app.musikus.datastore.SortDirection
+import app.musikus.utils.SortDirection
+import app.musikus.utils.SortMode
 
 @Composable
-fun <T> SortMenu(
+fun <T : SortMode<*>> SortMenu(
     show: Boolean,
     sortModes: List<T>,
     currentSortMode: T,
     currentSortDirection: SortDirection,
-    label: (T) -> String,
     onShowMenuChanged: (Boolean) -> Unit,
     onSelectionHandler: (T) -> Unit
 ) {
@@ -37,7 +42,7 @@ fun <T> SortMenu(
         Text(
             modifier = Modifier.padding(end = 8.dp),
             color = MaterialTheme.colorScheme.onSurface,
-            text = label(currentSortMode)
+            text = currentSortMode.label
         )
         Icon(
             modifier = Modifier.size(20.dp),
@@ -78,7 +83,7 @@ fun <T> SortMenu(
                 DropdownMenuItem(
                     text = {
                         Text(
-                            text = label(sortMode),
+                            text = sortMode.label,
                             color = if (selected) MaterialTheme.colorScheme.primary
                             else Color.Unspecified
                         )

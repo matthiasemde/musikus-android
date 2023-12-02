@@ -56,7 +56,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import app.musikus.datastore.GoalsSortMode
 import app.musikus.datastore.ThemeSelections
 import app.musikus.shared.ActionBar
 import app.musikus.shared.CommonMenuSelections
@@ -68,6 +67,7 @@ import app.musikus.shared.Selectable
 import app.musikus.shared.SortMenu
 import app.musikus.shared.ThemeMenu
 import app.musikus.spacing
+import app.musikus.utils.GoalsSortMode
 import app.musikus.viewmodel.GoalsViewModel
 import app.musikus.viewmodel.MainViewModel
 
@@ -134,10 +134,9 @@ fun Goals(
                     val sortMenuUiState = topBarUiState.sortMenuUiState
                     SortMenu(
                         show = sortMenuUiState.show,
-                        sortModes = GoalsSortMode.values().toList(),
+                        sortModes = GoalsSortMode.entries,
                         currentSortMode = sortMenuUiState.mode,
                         currentSortDirection = sortMenuUiState.direction,
-                        label = { GoalsSortMode.toString(it) },
                         onShowMenuChanged = goalsViewModel::onSortMenuShowChanged,
                         onSelectionHandler = goalsViewModel::onSortModeSelected
                     )

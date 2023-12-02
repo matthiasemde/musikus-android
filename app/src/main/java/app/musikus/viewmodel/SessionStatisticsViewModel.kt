@@ -16,12 +16,11 @@ import app.musikus.database.MusikusDatabase
 import app.musikus.database.SectionWithLibraryItem
 import app.musikus.database.SessionWithSectionsWithLibraryItems
 import app.musikus.database.daos.LibraryItem
-import app.musikus.datastore.LibraryItemSortMode
-import app.musikus.datastore.SortDirection
-import app.musikus.datastore.sorted
 import app.musikus.repository.SessionRepository
 import app.musikus.repository.UserPreferencesRepository
 import app.musikus.utils.DateFormat
+import app.musikus.utils.LibraryItemSortMode
+import app.musikus.utils.SortDirection
 import app.musikus.utils.TimeFormat
 import app.musikus.utils.Timeframe
 import app.musikus.utils.getDurationString
@@ -32,6 +31,7 @@ import app.musikus.utils.getStartOfDay
 import app.musikus.utils.getStartOfMonth
 import app.musikus.utils.getStartOfWeek
 import app.musikus.utils.musikusFormat
+import app.musikus.utils.sorted
 import app.musikus.utils.specificDay
 import app.musikus.utils.specificMonth
 import app.musikus.utils.specificWeek

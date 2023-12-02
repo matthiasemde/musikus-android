@@ -13,12 +13,12 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
-import app.musikus.datastore.GoalsSortMode
-import app.musikus.datastore.LibraryFolderSortMode
-import app.musikus.datastore.LibraryItemSortMode
-import app.musikus.datastore.SortDirection
 import app.musikus.datastore.ThemeSelections
 import app.musikus.datastore.UserPreferences
+import app.musikus.utils.GoalsSortMode
+import app.musikus.utils.LibraryFolderSortMode
+import app.musikus.utils.LibraryItemSortMode
+import app.musikus.utils.SortDirection
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 

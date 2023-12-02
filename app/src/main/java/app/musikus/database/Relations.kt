@@ -31,16 +31,6 @@ import app.musikus.utils.TimeFormat
 import app.musikus.utils.getDurationString
 
 
-data class SessionWithSections(
-    @Embedded val session: Session,
-    @Relation(
-        entity = SectionModel::class,
-        parentColumn = "id",
-        entityColumn = "session_id"
-    )
-    val sections: List<Section>
-)
-
 data class SectionWithLibraryItem(
     @Embedded val section: Section,
     @Relation(
@@ -186,6 +176,9 @@ data class GoalDescriptionWithInstancesAndLibraryItems(
 
     val endTime
         get() = instances.maxOfOrNull { description.endOfInstanceInLocalTimezone(it) }
+
+    val latestTarget
+        get() = instances.maxByOrNull { it.startTimestamp }?.target
 }
 
 data class GoalInstanceWithDescriptionWithLibraryItems(
