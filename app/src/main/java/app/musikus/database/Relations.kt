@@ -24,11 +24,8 @@ import app.musikus.database.daos.Session
 import app.musikus.database.entities.GoalDescriptionLibraryItemCrossRefModel
 import app.musikus.database.entities.GoalDescriptionModel
 import app.musikus.database.entities.GoalInstanceModel
-import app.musikus.database.entities.GoalType
 import app.musikus.database.entities.LibraryItemModel
 import app.musikus.database.entities.SectionModel
-import app.musikus.utils.TimeFormat
-import app.musikus.utils.getDurationString
 
 
 data class SectionWithLibraryItem(
@@ -176,9 +173,6 @@ data class GoalDescriptionWithInstancesAndLibraryItems(
 
     val endTime
         get() = instances.maxOfOrNull { description.endOfInstanceInLocalTimezone(it) }
-
-    val latestTarget
-        get() = instances.maxByOrNull { it.startTimestamp }?.target
 }
 
 data class GoalInstanceWithDescriptionWithLibraryItems(
@@ -190,12 +184,6 @@ data class GoalInstanceWithDescriptionWithLibraryItems(
     )
     val description: GoalDescriptionWithLibraryItems
 ) {
-
-    override fun toString() = when (description.description.type) {
-        GoalType.NON_SPECIFIC -> "All items"
-        GoalType.ITEM_SPECIFIC -> description.libraryItems.first().name
-    } + " " + getDurationString(instance.target, TimeFormat.HUMAN_PRETTY).toString() +
-     " in ${description.description.periodInPeriodUnits} ${description.description.periodUnit}"
 
     val title
         get() = description.description.title(description.libraryItems.firstOrNull())

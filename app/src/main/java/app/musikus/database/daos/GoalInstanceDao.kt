@@ -42,7 +42,18 @@ data class GoalInstance(
 ) : TimestampModelDisplayAttributes() {
 
     // necessary custom equals operator since default does not check super class properties
-    override fun equals(other: Any?) = (other is GoalInstance) && (other.id == this.id)
+    override fun equals(other: Any?) =
+        super.equals(other) &&
+                (other is GoalInstance) &&
+                (other.endTimestamp == endTimestamp) &&
+                (other.target == target) &&
+                (other.renewed == renewed)
+
+    override fun hashCode() =
+        ((super.hashCode() *
+                HASH_FACTOR + endTimestamp.hashCode()) *
+                HASH_FACTOR + target.hashCode()) *
+                HASH_FACTOR + renewed.hashCode()
 
 }
 

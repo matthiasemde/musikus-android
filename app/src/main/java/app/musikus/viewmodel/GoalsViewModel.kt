@@ -9,7 +9,6 @@
 package app.musikus.viewmodel
 
 import android.app.Application
-import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import app.musikus.dataStore
@@ -372,7 +371,7 @@ class GoalsViewModel(
             actionModeUiState = actionModeUiState,
             contentUiState = contentUiState,
             dialogUiState = dialogUiState,
-        ).also { Log.d("goals", "$it") }
+        )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),

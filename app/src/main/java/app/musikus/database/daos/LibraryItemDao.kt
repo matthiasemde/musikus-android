@@ -22,7 +22,7 @@ import app.musikus.database.entities.LibraryItemUpdateAttributes
 import app.musikus.database.entities.SoftDeleteModelDisplayAttributes
 import app.musikus.utils.getCurrTimestamp
 import kotlinx.coroutines.flow.Flow
-import java.util.*
+import java.util.UUID
 
 data class LibraryItem(
     @ColumnInfo(name = "name") val name: String = "Test",
@@ -32,8 +32,20 @@ data class LibraryItem(
 ) : SoftDeleteModelDisplayAttributes()  {
 
     // necessary custom equals operator since default does not check super class properties
-    override fun equals(other: Any?) = (other is LibraryItem) && (other.id == this.id)
+    override fun equals(other: Any?) =
+        super.equals(other) &&
+                (other is LibraryItem) &&
+                (other.name == name) &&
+                (other.colorIndex == colorIndex) &&
+                (other.libraryFolderId == libraryFolderId) &&
+                (other.customOrder == customOrder)
 
+    override fun hashCode() =
+        (((super.hashCode() *
+                HASH_FACTOR + name.hashCode()) *
+                HASH_FACTOR + colorIndex.hashCode()) *
+                HASH_FACTOR + libraryFolderId.hashCode()) *
+                HASH_FACTOR + customOrder.hashCode()
 }
 
 @Dao

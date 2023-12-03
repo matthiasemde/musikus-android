@@ -12,12 +12,22 @@
 
 package app.musikus.database.daos
 
-import androidx.room.*
-import app.musikus.database.*
-import app.musikus.database.entities.*
+import androidx.room.ColumnInfo
+import androidx.room.Dao
+import androidx.room.Query
+import androidx.room.RewriteQueriesToDropUnusedColumns
+import androidx.room.Transaction
+import app.musikus.database.MusikusDatabase
+import app.musikus.database.Nullable
+import app.musikus.database.SessionWithSectionsWithLibraryItems
+import app.musikus.database.entities.SectionCreationAttributes
+import app.musikus.database.entities.SectionModel
+import app.musikus.database.entities.SessionModel
+import app.musikus.database.entities.SessionUpdateAttributes
+import app.musikus.database.entities.SoftDeleteModelDisplayAttributes
 import kotlinx.coroutines.flow.Flow
 import java.time.ZonedDateTime
-import java.util.*
+import java.util.UUID
 
 data class Session(
     @ColumnInfo(name = "break_duration") val breakDuration: Int,
@@ -26,8 +36,16 @@ data class Session(
 ) : SoftDeleteModelDisplayAttributes() {
 
     // necessary custom equals operator since default does not check super class properties
-    override fun equals(other: Any?) = (other is Session) && (other.id == this.id)
+    override fun equals(other: Any?) =
+        super.equals(other) &&
+                (other is Session) &&
+                (other.rating == rating) &&
+                (other.comment == comment)
 
+    override fun hashCode() =
+        (super.hashCode() *
+                HASH_FACTOR + rating.hashCode()) *
+                HASH_FACTOR + comment.hashCode()
 }
 @Dao
 abstract class SessionDao(

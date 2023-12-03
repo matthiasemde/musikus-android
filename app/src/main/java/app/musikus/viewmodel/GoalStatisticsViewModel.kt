@@ -10,7 +10,6 @@ package app.musikus.viewmodel
 
 import android.app.Application
 import android.content.Context
-import android.util.Log
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -246,7 +245,6 @@ class GoalStatisticsViewModel(
             selectedGoal.copy(
                 instances = selectedGoal.instances.filter { goalInstance ->
                     goalInstance.startTimestamp.inLocalTimezone().let {
-                        Log.d("goal", "$it")
                         start <= it && it < end
                     }
                 }

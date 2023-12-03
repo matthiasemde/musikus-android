@@ -22,7 +22,7 @@ import app.musikus.database.entities.SectionModel
 import app.musikus.database.entities.SectionUpdateAttributes
 import kotlinx.coroutines.flow.Flow
 import java.time.ZonedDateTime
-import java.util.*
+import java.util.UUID
 
 data class Section(
     @ColumnInfo(name = "session_id") val sessionId: UUID,
@@ -32,8 +32,13 @@ data class Section(
 ) : BaseModelDisplayAttributes() {
 
     // necessary custom equals operator since default does not check super class properties
-    override fun equals(other: Any?) = (other is Section) && (other.id == this.id)
+    override fun equals(other: Any?) =
+        super.equals(other) &&
+                (other is Section) &&
+                (other.duration == duration)
 
+    override fun hashCode() =
+        super.hashCode() * HASH_FACTOR + duration.hashCode()
 }
 
 @Dao

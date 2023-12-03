@@ -12,17 +12,30 @@
 
 package app.musikus.database.daos
 
-import androidx.room.*
+import androidx.room.ColumnInfo
+import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Query
+import androidx.room.RewriteQueriesToDropUnusedColumns
+import androidx.room.Transaction
 import app.musikus.R
-import app.musikus.database.*
-import app.musikus.database.entities.*
+import app.musikus.database.GoalDescriptionWithInstancesAndLibraryItems
+import app.musikus.database.MusikusDatabase
+import app.musikus.database.entities.GoalDescriptionLibraryItemCrossRefModel
+import app.musikus.database.entities.GoalDescriptionModel
+import app.musikus.database.entities.GoalDescriptionUpdateAttributes
+import app.musikus.database.entities.GoalPeriodUnit
+import app.musikus.database.entities.GoalProgressType
+import app.musikus.database.entities.GoalType
+import app.musikus.database.entities.SoftDeleteModelDisplayAttributes
 import app.musikus.utils.TimeFormat
 import app.musikus.utils.UiText
 import app.musikus.utils.getDurationString
 import app.musikus.utils.inLocalTimezone
 import kotlinx.coroutines.flow.Flow
 import java.time.ZonedDateTime
-import java.util.*
+import java.util.UUID
 
 data class GoalDescription(
     @ColumnInfo(name="type") val type: GoalType,
@@ -37,7 +50,18 @@ data class GoalDescription(
 ) : SoftDeleteModelDisplayAttributes() {
 
     // necessary custom equals operator since default does not check super class properties
-    override fun equals(other: Any?) = (other is GoalDescription) && (other.id == this.id)
+    override fun equals(other: Any?) =
+        super.equals(other) &&
+        (other is GoalDescription) &&
+        (other.paused == paused) &&
+        (other.archived == archived) &&
+        (other.customOrder == customOrder)
+
+    override fun hashCode() =
+        ((super.hashCode() *
+        HASH_FACTOR + paused.hashCode()) *
+        HASH_FACTOR + archived.hashCode()) *
+        HASH_FACTOR + customOrder.hashCode()
 
     fun title(item: LibraryItem? = null) =
         item?.let {
