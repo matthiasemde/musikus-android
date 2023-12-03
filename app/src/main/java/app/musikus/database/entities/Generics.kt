@@ -26,6 +26,7 @@ abstract class BaseModelDisplayAttributes {
     private lateinit var _id: UUID
 
     fun setId(id: UUID) {
+        assert(!this::_id.isInitialized)
         _id = id
     }
 
@@ -63,17 +64,18 @@ abstract class TimestampModelUpdateAttributes
     : BaseModelUpdateAttributes(), ITimestampModelUpdateAttributes
 
 abstract class TimestampModelDisplayAttributes : BaseModelDisplayAttributes() {
-
     @ColumnInfo(name = "created_at")
     private lateinit var _createdAt: ZonedDateTime
     @ColumnInfo(name = "modified_at")
     private lateinit var _modifiedAt: ZonedDateTime
 
     fun setCreatedAt(createdAt: ZonedDateTime) {
+        assert(!this::_createdAt.isInitialized)
         _createdAt = createdAt
     }
 
     fun setModifiedAt(modifiedAt: ZonedDateTime) {
+        assert(!this::_modifiedAt.isInitialized)
         _modifiedAt = modifiedAt
     }
 
