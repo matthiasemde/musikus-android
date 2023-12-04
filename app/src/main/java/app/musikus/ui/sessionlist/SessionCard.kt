@@ -8,24 +8,29 @@
 
 package app.musikus.ui.sessionlist
 
-import android.annotation.SuppressLint
-import android.content.Context
-import android.content.res.ColorStateList
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import android.widget.ImageView
-import android.widget.LinearLayout
-import android.widget.RatingBar
-import android.widget.TextView
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material3.*
+import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -40,19 +45,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import app.musikus.Musikus
 import app.musikus.R
-import app.musikus.database.SectionWithLibraryItem
 import app.musikus.database.SessionWithSectionsWithLibraryItems
 import app.musikus.utils.DateFormat
 import app.musikus.utils.SCALE_FACTOR_FOR_SMALL_TEXT
 import app.musikus.utils.TimeFormat
 import app.musikus.utils.getDurationString
 import app.musikus.utils.musikusFormat
-import java.text.SimpleDateFormat
-import java.util.*
 
 @Composable
 fun RatingBar(
@@ -94,9 +94,7 @@ fun SessionCard(
         practiceDuration += section.duration
     }
 
-    ElevatedCard(
-//        modifier = Modifier.height(300.dp)
-    ) {
+    ElevatedCard {
         /** Card Header */
         Row(
             modifier = Modifier
@@ -217,123 +215,5 @@ fun SessionCard(
                 )
             }
         }
-    }
-}
-
-
-@SuppressLint("ViewConstructor")
-class SessionCard(
-    context: Context,
-    sessionWithSectionsWithLibraryItems: SessionWithSectionsWithLibraryItems
-) : LinearLayout(context) {
-    private val view = LayoutInflater.from(context).inflate(R.layout.listitem_session_list_summary, null)
-
-    private val summaryTimeView: TextView = view.findViewById(R.id.summaryTime)
-    private val breakDurationView: TextView = view.findViewById(R.id.breakDuration)
-    private val practiceDurationView: TextView = view.findViewById(R.id.practiceDuration)
-    private val sectionList: RecyclerView = view.findViewById(R.id.sectionList)
-    private val ratingBar: RatingBar = view.findViewById(R.id.ratingBar)
-    private val commentField: TextView = view.findViewById(R.id.commentField)
-    private val commentSection: View = view.findViewById(R.id.commentSection)
-
-    private val sectionsWithLibraryItemsList = ArrayList<SectionWithLibraryItem>()
-
-    // define the time and date format
-    private val timeFormat: SimpleDateFormat = SimpleDateFormat("H:mm", Locale.getDefault())
-
-    init {
-        val (session, sectionsWithLibraryItems) = sessionWithSectionsWithLibraryItems
-
-        // define the layout and adapter for the section list
-        val sectionAdapter = SectionAdapter(sectionsWithLibraryItemsList, context)
-        val layoutManager = LinearLayoutManager(context)
-        sectionList.layoutManager = layoutManager
-        sectionList.adapter = sectionAdapter
-
-        // compute the total practice time
-        var practiceDuration = 0
-        sectionsWithLibraryItems.forEach { (section, _) ->
-            practiceDuration += section.duration
-        }
-
-        val breakDuration = session.breakDuration
-//
-//        // read the start duration from the first section and bring it to milliseconds
-//        val startTimestamp = sectionsWithLibraryItems.first().section.timestamp * 1000L
-//
-//        // set the time field accordingly
-//        summaryTimeView.text = timeFormat.format(Date(startTimestamp))
-
-        // show the practice duration in the practice duration field
-        practiceDurationView.text = getDurationString(practiceDuration, TimeFormat.HUMAN_PRETTY)
-
-        // set the break time text equal to the sessions break duration
-        breakDurationView.text = getDurationString(breakDuration, TimeFormat.HUMAN_PRETTY, SCALE_FACTOR_FOR_SMALL_TEXT)
-
-        // set the sections and update the section adapter about the change
-        sectionsWithLibraryItemsList.clear()
-        sectionsWithLibraryItemsList.addAll(sectionsWithLibraryItems)
-        sectionList.adapter?.notifyItemRangeInserted(0,sectionsWithLibraryItems.size)
-
-        //set the rating bar to the correct star rating
-        ratingBar.rating = session.rating.toFloat()
-
-        if (session.comment.isNullOrEmpty()) {
-            commentSection.visibility = View.GONE
-        } else {
-            //set content of the comment field
-            commentSection.visibility = View.VISIBLE
-            commentField.text = session.comment
-        }
-
-        super.addView(view)
-
-    }
-
-
-    fun update() {
-
-    }
-
-    private inner class SectionAdapter(
-        private val sectionsWithLibraryItems: ArrayList<SectionWithLibraryItem>,
-        private val context: Context
-    ) : RecyclerView.Adapter<SectionAdapter.ViewHolder>() {
-
-        inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-            val sectionColor: ImageView = view.findViewById(R.id.sectionColor)
-            val sectionName: TextView = view.findViewById(R.id.sectionName)
-            val sectionDuration: TextView = view.findViewById(R.id.sectionDuration)
-        }
-
-        // Create new views (invoked by the layout manager)
-        override fun onCreateViewHolder(viewGroup: ViewGroup, viewType: Int): ViewHolder {
-            // Create a new view, which defines the UI of the list item
-            val view = LayoutInflater.from(viewGroup.context)
-                .inflate(R.layout.listitem_session_list_summary_section, viewGroup, false)
-            return ViewHolder(view)
-        }
-
-        // Replace the contents of a view (invoked by the layout manager)
-        override fun onBindViewHolder(viewHolder: ViewHolder, position: Int) {
-            // Get element from your dataset at this position
-            val (section, libraryItem) = sectionsWithLibraryItems[position]
-
-            // set the color to the libraryItem color
-            val libraryItemColors =  context.resources.getIntArray(R.array.library_item_colors)
-            viewHolder.sectionColor.backgroundTintList = ColorStateList.valueOf(
-                libraryItemColors[libraryItem.colorIndex]
-            )
-
-
-            val sectionDuration = section.duration
-
-            // contents of the view with that element
-            viewHolder.sectionName.text = libraryItem.name
-            viewHolder.sectionDuration.text = getDurationString(sectionDuration, TimeFormat.HUMAN_PRETTY, SCALE_FACTOR_FOR_SMALL_TEXT)
-        }
-
-        // Return the size of your dataset (invoked by the layout manager)
-        override fun getItemCount() = sectionsWithLibraryItems.size
     }
 }

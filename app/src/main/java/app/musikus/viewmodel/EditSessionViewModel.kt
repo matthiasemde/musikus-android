@@ -111,8 +111,6 @@ class EditSessionViewModel(
         _showConfirmationDialog.update { true }
     }
 
-    fun onTopBarBackPressed() {}
-
     fun onRatingChanged(newValue: Int) {
         _sessionEditData.update { sessionEditData ->
             sessionEditData.copy(

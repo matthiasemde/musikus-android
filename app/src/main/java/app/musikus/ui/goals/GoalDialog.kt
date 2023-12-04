@@ -39,7 +39,6 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import app.musikus.R
 import app.musikus.components.NumberInput
 import app.musikus.database.daos.LibraryItem
@@ -130,11 +129,11 @@ fun PeriodInput(
         SelectionSpinner(
             modifier = Modifier.width(130.dp),
             expanded = periodUnitSelectorExpanded,
-            options = GoalPeriodUnit.values().map { IntSelectionSpinnerOption(it.ordinal, GoalPeriodUnit.toString(it)) },
+            options = GoalPeriodUnit.entries.map { IntSelectionSpinnerOption(it.ordinal, GoalPeriodUnit.toString(it)) },
             selected = IntSelectionSpinnerOption(periodUnit.ordinal, GoalPeriodUnit.toString(periodUnit)),
             onExpandedChange = onPeriodUnitSelectorExpandedChanged,
             onSelectedChange = {selection ->
-                onPeriodUnitChanged(GoalPeriodUnit.values()[(selection as IntSelectionSpinnerOption?)?.id ?: 0])
+                onPeriodUnitChanged(GoalPeriodUnit.entries[(selection as IntSelectionSpinnerOption?)?.id ?: 0])
                 onPeriodUnitSelectorExpandedChanged(false)
             }
         )
@@ -167,15 +166,9 @@ fun GoalDialog(
 
     Dialog(
         onDismissRequest = onDismissHandler,
-        properties = DialogProperties(
-            dismissOnBackPress = true,
-            dismissOnClickOutside = true,
-            usePlatformDefaultWidth = false,
-        )
     ) {
         Column(
             modifier = Modifier
-                .padding(24.dp) // TODO: figure out a better way to do this
                 .clip(MaterialTheme.shapes.extraLarge)
                 .background(MaterialTheme.colorScheme.surface),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -211,7 +204,7 @@ fun GoalDialog(
 
             MyToggleButton(
                 modifier = Modifier.padding(MaterialTheme.spacing.large),
-                options = GoalType.values().map {
+                options = GoalType.entries.map {
                     ToggleButtonOption(it.ordinal, GoalType.toString(it))
                 },
                 selected = ToggleButtonOption(
@@ -219,7 +212,7 @@ fun GoalDialog(
                     GoalType.toString(dialogData.goalType)
                 ),
                 onSelectedChanged = { option ->
-                    onGoalTypeChanged(GoalType.values()[option.id])
+                    onGoalTypeChanged(GoalType.entries[option.id])
                 }
             )
 

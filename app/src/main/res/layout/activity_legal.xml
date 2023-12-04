@@ -24,7 +24,6 @@
         app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
 
     <ScrollView
-        android:id="@+id/scrollview"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:clipToPadding="false"
@@ -44,13 +43,11 @@
             <!--   Publisher    -->
 
             <TextView
-                android:id="@+id/legal_title"
                 android:text="@string/publisher"
                 android:layout_marginTop="0dp"
                 style="@style/heading_about_pages"/>
 
             <TextView
-                android:id="@+id/legal_text"
                 android:text="@string/legal_text"
                 android:autoLink="email"
                 style="@style/text_about_pages"/>
@@ -58,12 +55,10 @@
             <!--   Privacy Policy    -->
 
             <TextView
-                android:id="@+id/privacy_policy_title"
                 android:text="@string/privacy_policy_title"
                 style="@style/heading_about_pages"/>
 
             <TextView
-                android:id="@+id/privacy_policy"
                 android:text="@string/privacy_policy"
                 style="@style/text_about_pages_small" />
 

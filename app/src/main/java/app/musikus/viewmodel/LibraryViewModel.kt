@@ -597,7 +597,6 @@ class LibraryViewModel(
         }
     }
     fun onEditAction() {
-//        assert(_selectedFolders.value.size + _selectedItems.value.size == 1) // TODO: DO we need this?
         _selectedFolders.value.firstOrNull()?.let { folderToEdit ->
             _folderToEdit.update { folderToEdit }
             _folderEditData.update {

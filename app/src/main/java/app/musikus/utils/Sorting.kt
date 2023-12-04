@@ -55,9 +55,7 @@ enum class GoalsSortMode : SortMode<Pair<GoalDescription, GoalInstance>> {
     },
 //    CUSTOM {
 //        override val label = "Custom"
-//        override val comparator = compareBy<Pair<GoalDescription, GoalInstance>> { (description, _) ->
-//            TODO
-//        }
+//        override val comparator = compareBy<Pair<GoalDescription, GoalInstance>> { TODO }
 //    }
     ;
 

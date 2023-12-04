@@ -13,51 +13,6 @@
 -->
 <resources xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <style name="ToolbarColoredIcons" parent="Theme.PracticeTime">
-        <item name="android:textColorSecondary">?attr/colorOnBackground</item>
-    </style>
-    <style name="AppBar" parent="">
-        <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">wrap_content</item>
-        <item name="android:background">?android:attr/colorBackground</item>
-        <item name="android:fitsSystemWindows">true</item>
-    </style>
-
-    <style name="CollapsingToolbar" parent="">
-        <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">wrap_content</item>
-<!--        <item name="android:clipToPadding">false</item>-->
-        <item name="android:paddingBottom">?attr/actionBarSize</item>
-        <item name="android:fitsSystemWindows">true</item>
-        <item name="collapsedTitleTextAppearance">@style/ToolbarTitleCollapsed</item>
-        <item name="expandedTitleTextAppearance">@style/ToolbarTitleExpanded</item>
-        <item name="expandedTitleMarginBottom">20dp</item>
-        <item name="expandedTitleMarginStart">16dp</item>
-        <item name="layout_scrollFlags">scroll|exitUntilCollapsed</item>
-        <item name="titleCollapseMode">fade</item>
-        <item name="contentScrim">?attr/backgroundToolbarCollapsed</item>
-        <item name="statusBarScrim">@android:color/transparent</item>
-<!--        <item name="scrimAnimationDuration">200</item>-->
-<!--        <item name="scrimVisibleHeightTrigger">128dp</item>-->
-        <item name="collapsedTitleGravity">start</item>
-<!--        <item name="expandedTitleGravity">start|bottom</item>-->
-        <item name="overlapAnchor">false</item>
-        <item name="android:dropDownVerticalOffset">?attr/actionBarSize</item>
-    </style>
-
-    <style name="ToolbarTitleCollapsed" parent="">
-        <item name="android:textColor">?attr/colorOnSurfaceLowerContrast</item>
-    </style>
-    <style name="ToolbarTitleExpanded" parent="">
-        <item name="android:textColor">?attr/colorOnSurfaceLowerContrast</item>
-    </style>
-
-    <style name="Toolbar" parent="">
-        <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">?attr/actionBarSize</item>
-        <item name="layout_collapseMode">pin</item>
-    </style>
-
     <style name="ActionMode" parent="">
         <item name="actionModeCloseButtonStyle">@style/ActionModeCloseButton</item>
         <item name="titleTextStyle">@style/ActionModeTitle</item>
@@ -74,23 +29,6 @@
         <item name="android:textSize">20sp</item>
     </style>
 
-    <style name="ToggleButtonBase" parent="">
-        <item name="android:backgroundTint">@color/bg_color_toggle_button</item>
-        <item name="android:textColor">@color/text_color_toggle_button</item>
-    </style>
-    <style name="ToggleButton" parent="ToggleButtonBase">
-        <item name="android:layout_height">44dp</item>
-        <item name="android:textSize">14sp</item>
-    </style>
-    <style name="ToggleButtonSmall" parent="ToggleButtonBase">
-        <item name="android:layout_height">30dp</item>
-        <item name="android:textSize">12sp</item>
-    </style>
-    <style name="CommentDialog" parent="Theme.MaterialComponents.DayNight.BottomSheetDialog">
-        <item name="colorSecondary">@color/md_yellow_600</item> <!-- // TODO figure out, why the secondary color is not inherited from the theme -->
-        <item name="android:windowSoftInputMode">adjustResize</item>
-        <item name="behavior_draggable">false</item>
-    </style>
     <style name="IconOnlyButton" parent="Widget.MaterialComponents.Button">
         <item name="iconPadding">0dp</item>
         <item name="android:insetLeft">0dp</item>
@@ -108,47 +46,6 @@
         <item name="android:padding">0dp</item>
         <item name="android:textColor">?attr/colorOnSurfaceLowerContrast</item>
         <item name="backgroundTint">@null</item>
-    </style>
-
-    <style name="ProgressBarGoalsOverview" parent="">
-        <item name="android:layout_width">34dp</item>
-        <item name="android:layout_height">34dp</item>
-        <item name="android:layout_marginRight">4dp</item>
-        <item name="android:layout_marginLeft">4dp</item>
-        <item name="android:indeterminateOnly">false</item>
-        <item name="android:progressDrawable">@drawable/circular_progress_bar</item>
-        <item name="android:background">@drawable/circular_progress_bar_bg</item>
-        <item name="android:max">100</item>
-        <item name="android:progress">65</item>
-    </style>
-
-    <style name="ImageViewCheckIconGoalsOverview" parent="">
-        <item name="android:layout_width">10dp</item>
-        <item name="android:layout_height">10dp</item>
-        <item name="android:src">@drawable/ic_check_small</item>
-        <item name="android:layout_gravity">center</item>
-        <item name="tint">?attr/colorPrimary</item>
-        <item name="android:visibility">gone</item>
-    </style>
-
-    <style name="tv_hint_empty_fragment" parent="">
-        <item name="android:layout_width">wrap_content</item>
-        <item name="android:layout_height">wrap_content</item>
-        <item name="android:layout_gravity">center</item>
-        <item name="android:layout_margin">32dp</item>
-        <item name="android:textAlignment">center</item>
-        <item name="android:textSize">18sp</item>
-        <item name="android:visibility">gone</item>
-    </style>
-
-    <style name="cardview_statistics_overview" parent="">
-        <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">wrap_content</item>
-        <item name="android:layout_margin">2dp</item>
-        <item name="cardBackgroundColor">?attr/colorSurface</item>
-        <item name="cardCornerRadius">16dp</item>
-        <item name="cardElevation">4dp</item>
-        <item name="android:foreground">?android:attr/selectableItemBackground</item>
     </style>
 
     <style name="heading_about_pages">

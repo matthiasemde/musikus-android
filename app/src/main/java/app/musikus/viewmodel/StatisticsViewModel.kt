@@ -99,9 +99,7 @@ class StatisticsViewModel(
 
         val currentSpecificMonth = getCurrentDateTime().specificMonth
         val currentMonthSessions = sessions.filter { session ->
-            session.startTimestamp.let{
-                it.specificMonth == currentSpecificMonth
-            }
+            session.startTimestamp.specificMonth == currentSpecificMonth
         }
         val totalPracticeDuration = currentMonthSessions.sumOf { (_, sections) ->
             sections.sumOf { (section, _) -> section.duration }

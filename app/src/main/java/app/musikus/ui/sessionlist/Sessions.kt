@@ -142,7 +142,7 @@ fun Sessions(
                                     }
                                 }
                             },
-                            uniqueMenuItems = { /* TODO UNIQUE Session MENU */ }
+                            uniqueMenuItems = { }
                         )
                         ThemeMenu(
                             expanded = mainMenuUiState.showThemeSubMenu,

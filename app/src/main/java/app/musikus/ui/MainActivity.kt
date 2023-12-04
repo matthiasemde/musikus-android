@@ -348,7 +348,10 @@ class MainActivity : AppCompatActivity() {
                             val sessionId = backStackEntry.arguments?.getString("sessionId")
                                 ?: return@composable navController.navigate(Screen.Sessions.route)
 
-                            EditSession(sessionToEditId = UUID.fromString(sessionId))
+                            EditSession(
+                                sessionToEditId = UUID.fromString(sessionId),
+                                navigateUp = navController::navigateUp
+                            )
                         }
                     }
 

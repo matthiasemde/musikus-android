@@ -85,11 +85,6 @@
     <string name="bar_chart_r_stretched">
         M16.2,9, L19,9, v10, h-2.8, z
     </string>
-    <string name="bar_chart">
-        M5,9.2, h3, L8,19, L5,19, z
-        M10.6,5, h2.8, v14, h-2.8, z
-        M16.2,13, L19,13, v6, h-2.8, z
-    </string>
 
     <string name="ic_sessions_stretched">
         M4,8.5 h12 v2 L4,10.5 z
@@ -102,11 +97,6 @@
         M4,6 h12 v2 L4,8 z
         M4,14h8v2L4,16z
 <!--        M14,14v6l5,-3z-->
-    </string>
-
-    <string name="ic_goals">
-        M14,6 l-1,-2 L5,4 v17 h2 v-7 h5 l1,2 h7 L20,6 h-6 z
-        M18,14 h-4 l-1,-2 L7,12 L7,6 h5 l1,2 h5 v6 z
     </string>
 
     <string name="ic_goals_kf_1">

@@ -4,6 +4,4 @@
 
     Copyright (c) 2022, Javier Carbone, author Michael Prommersberger
 -->
-<resources>
-    <dimen name="padding_bottom_buttons">6dp</dimen>
-</resources>
+<resources></resources>

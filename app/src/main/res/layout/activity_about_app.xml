@@ -24,7 +24,6 @@
         app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
 
     <ScrollView
-        android:id="@+id/scrollview"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:clipToPadding="false"
@@ -41,7 +40,6 @@
 
 
             <ImageView
-                android:id="@+id/appbanner"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:adjustViewBounds="true"
@@ -93,7 +91,6 @@
                 <!--   Financing     -->
 
                 <TextView
-                    android:id="@+id/legal_project_hint"
                     android:text="@string/legal_project_hint"
                     style="@style/text_about_pages_small"/>
 

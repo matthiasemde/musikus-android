@@ -298,7 +298,7 @@ class SessionsViewModel(
 
         // Short click
         if(!actionModeUiState.value.isActionMode) {
-            // TODO go to session detail screen
+            // go to session detail screen
         } else {
             if(_selectedSessions.value.contains(session)) {
                 _selectedSessions.update { it - session }

@@ -83,7 +83,6 @@
 <!--            android:background="@drawable/clip"/>-->
 
     <ImageView
-        android:id="@+id/library_item_color_overlay"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="?attr/colorPrimary"

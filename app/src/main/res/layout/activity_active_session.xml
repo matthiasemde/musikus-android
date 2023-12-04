@@ -21,7 +21,6 @@
     android:transitionName="transition_fab">
 
     <LinearLayout
-        android:id="@+id/ll_active_session"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_marginBottom="56dp"
@@ -44,7 +43,6 @@
             tools:text="00:00:00" />
 
         <TextView
-            android:id="@+id/practice_time_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
@@ -52,7 +50,6 @@
             android:textSize="15sp" />
 
         <TextView
-            android:id="@+id/library_items_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"

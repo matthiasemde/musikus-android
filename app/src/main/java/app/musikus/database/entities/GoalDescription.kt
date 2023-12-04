@@ -85,7 +85,7 @@ private interface IGoalDescriptionUpdateAttributes : ISoftDeleteModelUpdateAttri
 
 data class GoalDescriptionCreationAttributes(
     override val type: GoalType,
-    override val repeat: Boolean, // TODO maybe change name to "oneShot"
+    override val repeat: Boolean,
     override val periodInPeriodUnits: Int,
     override val periodUnit: GoalPeriodUnit,
     override val progressType: GoalProgressType = GoalProgressType.DEFAULT,

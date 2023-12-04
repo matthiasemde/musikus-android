@@ -49,6 +49,7 @@ import java.util.UUID
 fun EditSession(
     editSessionViewModel: EditSessionViewModel = viewModel(),
     sessionToEditId: UUID,
+    navigateUp: () -> Unit
 ) {
     val editSessionUiState by editSessionViewModel.editSessionUiState.collectAsStateWithLifecycle()
 
@@ -58,14 +59,13 @@ fun EditSession(
 
 
     Scaffold(
-//        contentWindowInsets = WindowInsets(bottom = 0.dp),
         modifier = Modifier
             .nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             LargeTopAppBar(
                 title = { Text(text = "Edit Session") },
                 navigationIcon = {
-                    IconButton(onClick = editSessionViewModel::onTopBarBackPressed) {
+                    IconButton(onClick = navigateUp) {
                         Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
                     }
                 }

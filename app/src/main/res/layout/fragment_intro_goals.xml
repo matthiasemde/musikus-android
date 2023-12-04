@@ -12,7 +12,6 @@
     android:background="@android:color/transparent">
 
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/introGoalList"
         android:overScrollMode="never"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

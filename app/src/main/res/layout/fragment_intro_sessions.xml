@@ -11,7 +11,6 @@
     android:background="@android:color/transparent">
 
     <include
-        android:id="@+id/fragment_intro_sessions_dummyitem"
         android:layout_gravity="center"
         layout="@layout/listitem_session_list_summary"
         android:layout_height="wrap_content"

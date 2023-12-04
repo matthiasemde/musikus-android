@@ -24,7 +24,6 @@
         android:padding="12dp">
 
         <TextView
-            android:id="@+id/summaryTime"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textSize="14sp"
@@ -36,7 +35,6 @@
             android:layout_weight="1" />
 
         <RatingBar
-            android:id="@+id/ratingBar"
             style="?android:attr/ratingBarStyleSmall"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
@@ -70,7 +68,6 @@
             android:orientation="horizontal">
 
             <TextView
-                android:id="@+id/practiceDuration"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="4"
@@ -82,7 +79,6 @@
                 tools:text="2h 30min" />
 
             <TextView
-                android:id="@+id/breakDuration"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_gravity="bottom"
@@ -102,7 +98,6 @@
             android:orientation="horizontal">
 
             <TextView
-                android:id="@+id/practiceTimeLabel"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="4"
@@ -111,7 +106,6 @@
                 android:textSize="16sp" />
 
             <TextView
-                android:id="@+id/breakTimeLabel"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="2"
@@ -123,7 +117,6 @@
 
 
         <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/sectionList"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
@@ -138,7 +131,6 @@
     </LinearLayout>
 
     <LinearLayout
-        android:id="@+id/commentSection"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
@@ -150,7 +142,6 @@
             android:background="?android:attr/listDivider" />
 
         <TextView
-            android:id="@+id/commentLabel"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="24dp"
@@ -162,7 +153,6 @@
             android:textStyle="bold" />
 
         <TextView
-            android:id="@+id/commentField"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="24dp"
