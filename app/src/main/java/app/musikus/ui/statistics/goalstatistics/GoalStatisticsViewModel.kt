@@ -6,7 +6,7 @@
  * Copyright (c) 2023 Matthias Emde
  */
 
-package app.musikus.viewmodel
+package app.musikus.ui.statistics.goalstatistics
 
 import android.app.Application
 import android.content.Context

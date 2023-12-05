@@ -1,4 +1,4 @@
-package app.musikus.ui.sessionlist
+package app.musikus.ui.sessions.editsession
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -38,10 +38,10 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.musikus.Musikus
+import app.musikus.ui.sessions.RatingBar
 import app.musikus.utils.SCALE_FACTOR_FOR_SMALL_TEXT
 import app.musikus.utils.TimeFormat
 import app.musikus.utils.getDurationString
-import app.musikus.viewmodel.EditSessionViewModel
 import java.util.UUID
 
 @OptIn(ExperimentalMaterial3Api::class)

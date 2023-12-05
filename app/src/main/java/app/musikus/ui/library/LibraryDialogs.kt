@@ -42,9 +42,6 @@ import app.musikus.database.daos.LibraryFolder
 import app.musikus.shared.DialogHeader
 import app.musikus.shared.SelectionSpinner
 import app.musikus.shared.UUIDSelectionSpinnerOption
-import app.musikus.viewmodel.DialogMode
-import app.musikus.viewmodel.LibraryFolderEditData
-import app.musikus.viewmodel.LibraryItemEditData
 import java.util.UUID
 
 

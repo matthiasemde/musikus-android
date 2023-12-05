@@ -68,8 +68,7 @@ import app.musikus.shared.SortMenu
 import app.musikus.shared.ThemeMenu
 import app.musikus.spacing
 import app.musikus.utils.GoalsSortMode
-import app.musikus.viewmodel.GoalsViewModel
-import app.musikus.viewmodel.MainViewModel
+import app.musikus.ui.MainViewModel
 
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)

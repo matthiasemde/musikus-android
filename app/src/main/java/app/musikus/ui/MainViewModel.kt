@@ -6,7 +6,7 @@
  * Copyright (c) 2022 Matthias Emde
  */
 
-package app.musikus.viewmodel
+package app.musikus.ui
 
 import android.app.Application
 import android.util.Log

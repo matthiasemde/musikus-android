@@ -80,12 +80,7 @@ import app.musikus.utils.TimeFormat
 import app.musikus.utils.getCurrentDateTime
 import app.musikus.utils.getDurationString
 import app.musikus.utils.musikusFormat
-import app.musikus.viewmodel.MainViewModel
-import app.musikus.viewmodel.StatisticsCurrentMonthUiState
-import app.musikus.viewmodel.StatisticsGoalCardUiState
-import app.musikus.viewmodel.StatisticsPracticeDurationCardUiState
-import app.musikus.viewmodel.StatisticsRatingsCardUiState
-import app.musikus.viewmodel.StatisticsViewModel
+import app.musikus.ui.MainViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

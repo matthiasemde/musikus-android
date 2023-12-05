@@ -72,15 +72,14 @@ import app.musikus.shared.MultiFabState
 import app.musikus.ui.goals.Goals
 import app.musikus.ui.goals.ProgressUpdate
 import app.musikus.ui.library.Library
-import app.musikus.ui.sessionlist.EditSession
-import app.musikus.ui.sessionlist.Sessions
+import app.musikus.ui.sessions.Sessions
+import app.musikus.ui.sessions.editsession.EditSession
 import app.musikus.ui.statistics.Statistics
 import app.musikus.ui.statistics.goalstatistics.GoalStatistics
 import app.musikus.ui.statistics.sessionstatistics.SessionStatistics
 import app.musikus.utils.ExportDatabaseContract
 import app.musikus.utils.ExportImportDialog
 import app.musikus.utils.ImportDatabaseContract
-import app.musikus.viewmodel.MainViewModel
 import com.google.android.material.composethemeadapter3.Mdc3Theme
 import java.util.UUID
 

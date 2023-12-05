@@ -6,7 +6,7 @@
  * Copyright (c) 2022 Matthias Emde
  */
 
-package app.musikus.viewmodel
+package app.musikus.ui.sessions
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel

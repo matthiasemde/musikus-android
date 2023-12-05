@@ -53,8 +53,6 @@ import app.musikus.shared.simpleVerticalScrollbar
 import app.musikus.spacing
 import app.musikus.ui.statistics.sessionstatistics.TimeframeSelectionHeader
 import app.musikus.utils.asString
-import app.musikus.viewmodel.GoalStatisticsGoalSelectorUiState
-import app.musikus.viewmodel.GoalStatisticsViewModel
 import java.util.UUID
 
 

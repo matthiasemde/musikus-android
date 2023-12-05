@@ -6,7 +6,7 @@
  * Copyright (c) 2023 Matthias Emde
  */
 
-package app.musikus.viewmodel
+package app.musikus.ui.statistics.sessionstatistics
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
@@ -385,13 +385,15 @@ class SessionStatisticsViewModel(
 
         flow {
             if (!_pieChartShowing) {
-                emit(SessionStatisticsPieChartUiState(
+                emit(
+                    SessionStatisticsPieChartUiState(
                     chartData = PieChartData(
                         libraryItemToDuration = emptyMap(),
                         itemSortMode = LibraryItemSortMode.DEFAULT,
                         itemSortDirection = SortDirection.DEFAULT
                     )
-                ))
+                )
+                )
                 _pieChartShowing = true
                 _pieChartStateBuffer = SessionStatisticsPieChartUiState(chartData)
                 delay(700)

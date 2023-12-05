@@ -42,7 +42,6 @@ import app.musikus.R
 import app.musikus.ui.statistics.sessionstatistics.ScaleLineData
 import app.musikus.utils.TimeFormat
 import app.musikus.utils.getDurationString
-import app.musikus.viewmodel.GoalStatisticsBarChartUiState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 

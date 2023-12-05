@@ -52,7 +52,6 @@ import app.musikus.shared.SelectionSpinner
 import app.musikus.shared.ToggleButtonOption
 import app.musikus.shared.UUIDSelectionSpinnerOption
 import app.musikus.spacing
-import app.musikus.viewmodel.GoalDialogData
 
 @Composable
 fun TimeInput(

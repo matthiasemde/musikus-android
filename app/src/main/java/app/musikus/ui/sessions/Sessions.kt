@@ -11,7 +11,7 @@
  * Additions and modifications, author Matthias Emde
  */
 
-package app.musikus.ui.sessionlist
+package app.musikus.ui.sessions
 
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
@@ -64,8 +64,7 @@ import app.musikus.utils.DateFormat
 import app.musikus.utils.TimeFormat
 import app.musikus.utils.getDurationString
 import app.musikus.utils.musikusFormat
-import app.musikus.viewmodel.MainViewModel
-import app.musikus.viewmodel.SessionsViewModel
+import app.musikus.ui.MainViewModel
 import java.time.ZonedDateTime
 import java.util.UUID
 

@@ -6,7 +6,7 @@
  * Copyright (c) 2022 Matthias Emde
  */
 
-package app.musikus.viewmodel
+package app.musikus.ui.goals
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
@@ -24,6 +24,7 @@ import app.musikus.repository.LibraryRepository
 import app.musikus.repository.SessionRepository
 import app.musikus.repository.UserPreferencesRepository
 import app.musikus.shared.TopBarUiState
+import app.musikus.ui.library.DialogMode
 import app.musikus.utils.GoalsSortMode
 import app.musikus.utils.LibraryItemSortMode
 import app.musikus.utils.SortDirection

@@ -6,7 +6,7 @@
  * Copyright (c) 2022 Matthias Emde
  */
 
-package app.musikus.ui.sessionlist
+package app.musikus.ui.sessions
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable

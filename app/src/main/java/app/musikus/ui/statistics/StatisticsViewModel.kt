@@ -6,7 +6,7 @@
  * Copyright (c) 2023 Matthias Emde
  */
 
-package app.musikus.viewmodel
+package app.musikus.ui.statistics
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
@@ -14,6 +14,7 @@ import androidx.lifecycle.viewModelScope
 import app.musikus.database.MusikusDatabase
 import app.musikus.repository.GoalRepository
 import app.musikus.repository.SessionRepository
+import app.musikus.ui.goals.GoalWithProgress
 import app.musikus.utils.getCurrentDateTime
 import app.musikus.utils.getDayIndexOfWeek
 import app.musikus.utils.getStartOfDayOfWeek
@@ -167,20 +168,24 @@ class StatisticsViewModel(
 
         flow {
             if (_noSessionsForDurationCard) {
-                emit(StatisticsPracticeDurationCardUiState(
+                emit(
+                    StatisticsPracticeDurationCardUiState(
                     lastSevenDayPracticeDuration = lastSevenDayPracticeDuration.map { PracticeDurationPerDay(
                         day = it.day,
                         duration = 0
                     ) },
                     totalPracticeDuration = totalPracticeDuration,
-                ))
+                )
+                )
                 delay(350)
                 _noSessionsForDurationCard = false
             }
-            emit(StatisticsPracticeDurationCardUiState(
+            emit(
+                StatisticsPracticeDurationCardUiState(
                 lastSevenDayPracticeDuration = lastSevenDayPracticeDuration,
                 totalPracticeDuration = totalPracticeDuration,
-            ))
+            )
+            )
         }
 
     }.stateIn(
@@ -227,7 +232,8 @@ class StatisticsViewModel(
                 emit(StatisticsGoalCardUiState(lastGoals = goals.map { GoalWithProgress(
                     goal = it.goal,
                     progress = 0
-                )}))
+                )
+                }))
                 delay(350)
                 _noSessionsForGoalCard = false
             }

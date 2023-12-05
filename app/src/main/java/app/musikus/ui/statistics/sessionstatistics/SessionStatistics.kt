@@ -66,10 +66,6 @@ import app.musikus.utils.TimeFormat
 import app.musikus.utils.Timeframe
 import app.musikus.utils.getDurationString
 import app.musikus.utils.musikusFormat
-import app.musikus.viewmodel.SessionStatisticsChartType
-import app.musikus.viewmodel.SessionStatisticsHeaderUiState
-import app.musikus.viewmodel.SessionStatisticsTab
-import app.musikus.viewmodel.SessionStatisticsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

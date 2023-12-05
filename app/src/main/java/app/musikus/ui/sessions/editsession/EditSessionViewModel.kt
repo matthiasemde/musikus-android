@@ -1,4 +1,4 @@
-package app.musikus.viewmodel
+package app.musikus.ui.sessions.editsession
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel

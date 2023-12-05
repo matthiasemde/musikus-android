@@ -40,7 +40,6 @@ import app.musikus.database.daos.LibraryItem
 import app.musikus.utils.TimeFormat
 import app.musikus.utils.getDurationString
 import app.musikus.utils.sorted
-import app.musikus.viewmodel.SessionStatisticsBarChartUiState
 import kotlinx.coroutines.launch
 
 data class ScaleLineData (
