@@ -108,11 +108,11 @@ class GoalsViewModel @Inject constructor(
     private val userPreferencesRepository : UserPreferencesRepository,
     database : MusikusDatabase,
     libraryRepository: LibraryRepository,
+    private val goalRepository : GoalRepository,
 ) : ViewModel() {
 
     private var _goalsCache: List<GoalDescription> = emptyList()
 
-    private val goalRepository = GoalRepository(database)
     private val sessionRepository = SessionRepository(database)
 
     init {

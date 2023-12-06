@@ -46,7 +46,8 @@ data class MainUiState(
 class MainViewModel @Inject constructor(
     private val userPreferencesRepository : UserPreferencesRepository,
     database : MusikusDatabase,
-    private val libraryRepository : LibraryRepository
+    libraryRepository : LibraryRepository,
+    goalRepository: GoalRepository
 ) : ViewModel() {
 
     /** Initialization */
@@ -55,12 +56,10 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             Log.d("Musikus", "Clean up soft-deleted items")
             SessionRepository(database).clean()
-            GoalRepository(database).clean()
+            goalRepository.clean()
             libraryRepository.clean()
         }
     }
-
-
 
     /** Menu */
     private val _showMainMenu = MutableStateFlow(false)

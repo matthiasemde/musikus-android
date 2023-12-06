@@ -9,22 +9,74 @@
 package app.musikus.repository
 
 import androidx.room.Transaction
-import app.musikus.database.MusikusDatabase
+import app.musikus.database.GoalDescriptionWithInstancesAndLibraryItems
+import app.musikus.database.GoalInstanceWithDescriptionWithLibraryItems
 import app.musikus.database.daos.GoalDescription
+import app.musikus.database.daos.GoalDescriptionDao
 import app.musikus.database.daos.GoalInstance
+import app.musikus.database.daos.GoalInstanceDao
 import app.musikus.database.daos.LibraryItem
 import app.musikus.database.entities.GoalDescriptionCreationAttributes
 import app.musikus.database.entities.GoalDescriptionModel
 import app.musikus.database.entities.GoalDescriptionUpdateAttributes
 import app.musikus.database.entities.GoalInstanceUpdateAttributes
 import app.musikus.utils.getCurrentDateTime
+import kotlinx.coroutines.flow.Flow
 import java.time.ZonedDateTime
 
-class GoalRepository(
-    database: MusikusDatabase
-) {
-    private val goalInstanceDao = database.goalInstanceDao
-    private val goalDescriptionDao = database.goalDescriptionDao
+interface GoalRepository {
+    val currentGoals: Flow<List<GoalInstanceWithDescriptionWithLibraryItems>>
+    val allGoals: Flow<List<GoalDescriptionWithInstancesAndLibraryItems>>
+    val lastFiveCompletedGoals: Flow<List<GoalInstanceWithDescriptionWithLibraryItems>>
+
+    /** Mutators */
+    /** Add */
+    suspend fun add(
+        goalDescriptionCreationAttributes: GoalDescriptionCreationAttributes,
+        startingTimeframe : ZonedDateTime = ZonedDateTime.now(),
+        libraryItems: List<LibraryItem>?,
+        target: Int,
+    )
+
+    /** Edit */
+    suspend fun editGoalTarget(
+        goal: GoalInstance,
+        newTarget: Int,
+    )
+
+
+    /** Pause / Unpause */
+    suspend fun pause(goal: GoalDescription)
+    suspend fun pause(goals: List<GoalDescription>)
+
+    suspend fun unpause(goal: GoalDescription)
+    suspend fun unpause(goals: List<GoalDescription>)
+
+    /** Archive / Unarchive */
+    suspend fun archive(goal: GoalDescription)
+    suspend fun archive(goals: List<GoalDescription>)
+
+    suspend fun unarchive(goal: GoalDescription)
+    suspend fun unarchive(goals: List<GoalDescription>)
+
+    /** Delete / Restore */
+    suspend fun delete(goal: GoalDescription)
+    suspend fun delete(goals: List<GoalDescription>)
+
+    suspend fun restore(goal: GoalDescription)
+    suspend fun restore(goals: List<GoalDescription>)
+
+    /** Clean */
+    suspend fun clean()
+
+    /** Update Goals */
+    suspend fun updateGoals()
+}
+
+class GoalRepositoryImpl(
+    private val goalInstanceDao : GoalInstanceDao,
+    private val goalDescriptionDao : GoalDescriptionDao
+) : GoalRepository {
 
     private suspend fun update(
         goalsWithUpdateAttributes: List<Pair<GoalDescription, GoalDescriptionUpdateAttributes>>,
@@ -37,17 +89,17 @@ class GoalRepository(
     }
 
 
-    val currentGoals = goalInstanceDao.getActiveInstancesWithDescriptionWithLibraryItems()
-    val allGoals = goalDescriptionDao.getAllWithInstancesAndLibraryItems()
-    val lastFiveCompletedGoals = goalInstanceDao.getLastNCompletedWithDescriptionsWithLibraryItems(5)
+    override val currentGoals = goalInstanceDao.getActiveInstancesWithDescriptionWithLibraryItems()
+    override val allGoals = goalDescriptionDao.getAllWithInstancesAndLibraryItems()
+    override val lastFiveCompletedGoals = goalInstanceDao.getLastNCompletedWithDescriptionsWithLibraryItems(5)
 
 
     /** Mutators */
 
     /** Add */
-    suspend fun add(
+    override suspend fun add(
         goalDescriptionCreationAttributes: GoalDescriptionCreationAttributes,
-        startingTimeframe : ZonedDateTime = ZonedDateTime.now(),
+        startingTimeframe : ZonedDateTime,
         libraryItems: List<LibraryItem>?,
         target: Int,
     ) = goalDescriptionDao.insert(
@@ -76,7 +128,7 @@ class GoalRepository(
 
 
     /** Edit */
-    suspend fun editGoalTarget(
+    override suspend fun editGoalTarget(
         goal: GoalInstance,
         newTarget: Int,
     ) {
@@ -102,12 +154,12 @@ class GoalRepository(
 
     /** Pause / Unpause */
     @Transaction
-    suspend fun pause(goal: GoalDescription) {
+    override suspend fun pause(goal: GoalDescription) {
         pause(listOf(goal))
     }
 
     @Transaction
-    suspend fun pause(goals: List<GoalDescription>) {
+    override suspend fun pause(goals: List<GoalDescription>) {
         update(
             goals.map {
                 it to GoalDescriptionUpdateAttributes(paused = true)
@@ -116,12 +168,12 @@ class GoalRepository(
     }
 
     @Transaction
-    suspend fun unpause(goal: GoalDescription) {
+    override suspend fun unpause(goal: GoalDescription) {
         unpause(listOf(goal))
     }
 
     @Transaction
-    suspend fun unpause(goals: List<GoalDescription>) {
+    override suspend fun unpause(goals: List<GoalDescription>) {
         update(
             goals.map {
                 it to GoalDescriptionUpdateAttributes(paused = false)
@@ -131,11 +183,11 @@ class GoalRepository(
 
     /** Archive / Unarchive */
 
-    suspend fun archive(goal: GoalDescription) {
+    override suspend fun archive(goal: GoalDescription) {
         archive(listOf(goal))
     }
 
-    suspend fun archive(goals: List<GoalDescription>) {
+    override suspend fun archive(goals: List<GoalDescription>) {
         update(
             goals.map {
                 it to GoalDescriptionUpdateAttributes(archived = true)
@@ -153,11 +205,11 @@ class GoalRepository(
         }
     }
 
-    suspend fun unarchive(goal: GoalDescription) {
+    override suspend fun unarchive(goal: GoalDescription) {
         unarchive(listOf(goal))
     }
 
-    suspend fun unarchive(goals: List<GoalDescription>) {
+    override suspend fun unarchive(goals: List<GoalDescription>) {
         update(
             goals.map {
                 it to GoalDescriptionUpdateAttributes(archived = false)
@@ -177,25 +229,25 @@ class GoalRepository(
 
     /** Delete / Restore */
 
-    suspend fun delete(goal: GoalDescription) {
+    override suspend fun delete(goal: GoalDescription) {
         delete(listOf(goal))
     }
 
-    suspend fun delete(goals: List<GoalDescription>) {
+    override suspend fun delete(goals: List<GoalDescription>) {
         goalDescriptionDao.delete(goals.map { it.id })
     }
 
-    suspend fun restore(goal: GoalDescription) {
+    override suspend fun restore(goal: GoalDescription) {
         restore(listOf(goal))
     }
 
-    suspend fun restore(goals: List<GoalDescription>) {
+    override suspend fun restore(goals: List<GoalDescription>) {
         goalDescriptionDao.restore(goals.map { it.id })
     }
 
     /** Clean */
 
-    suspend fun clean() {
+    override suspend fun clean() {
         goalDescriptionDao.clean()
     }
 
@@ -206,7 +258,7 @@ class GoalRepository(
 
 
     /** Update Goals */
-    suspend fun updateGoals() {
+    override suspend fun updateGoals() {
         while(true) {
             val outdatedGoalsWithEndTimestamps = goalInstanceDao
                 .getActiveInstancesWithDescription()

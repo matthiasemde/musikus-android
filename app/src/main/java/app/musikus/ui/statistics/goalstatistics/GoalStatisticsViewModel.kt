@@ -8,9 +8,9 @@
 
 package app.musikus.ui.statistics.goalstatistics
 
-import android.content.Context
+import android.app.Application
 import androidx.compose.ui.graphics.Color
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import app.musikus.Musikus
 import app.musikus.database.GoalDescriptionWithInstancesAndLibraryItems
@@ -95,13 +95,15 @@ data class GoalWithInstancesWithProgress(
 
 @HiltViewModel
 class GoalStatisticsViewModel @Inject constructor(
-    database : MusikusDatabase,
     userPreferencesRepository : UserPreferencesRepository,
-) : ViewModel() {
+    database : MusikusDatabase,
+    goalRepository : GoalRepository,
+    application: Application
+) : AndroidViewModel(application) {
 
     /** Private variables */
     private var _redraw = true
-    private val libraryColors = Musikus.getLibraryItemColors(viewModelScope as Context)
+    private val libraryColors = Musikus.getLibraryItemColors(application)
 
     /** Private methods */
 
@@ -178,7 +180,6 @@ class GoalStatisticsViewModel @Inject constructor(
 
     /** Repositories */
     private val sessionRepository = SessionRepository(database)
-    private val goalRepository = GoalRepository(database)
 
     /** Imported Flows */
     private val goalSortInfo = userPreferencesRepository.userPreferences.map {

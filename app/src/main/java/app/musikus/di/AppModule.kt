@@ -9,11 +9,12 @@
 package app.musikus.di
 
 import android.app.Application
-import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import app.musikus.dataStore
 import app.musikus.database.MusikusDatabase
+import app.musikus.repository.GoalRepository
+import app.musikus.repository.GoalRepositoryImpl
 import app.musikus.repository.LibraryRepository
 import app.musikus.repository.LibraryRepositoryImpl
 import app.musikus.repository.UserPreferencesRepository
@@ -39,20 +40,13 @@ object AppModule {
     fun provideUserPreferencesRepository(
         dataStore: DataStore<Preferences>
     ): UserPreferencesRepository {
-        Log.d("Musikus", "provideUserPreferencesRepository")
         return UserPreferencesRepositoryImpl(dataStore)
     }
 
     @Provides
     @Singleton
     fun provideMusikusDatabase(app: Application): MusikusDatabase {
-        Log.d("Musikus", "provideMusikusDatabase")
         return MusikusDatabase.buildDatabase(app)
-//        return Room.databaseBuilder(
-//            app,
-//            MusikusDatabase::class.java,
-//            MusikusDatabase.DATABASE_NAME
-//        ).build()
     }
 
     @Provides
@@ -60,10 +54,20 @@ object AppModule {
     fun provideLibraryRepository(
         database: MusikusDatabase
     ): LibraryRepository {
-        Log.d("Musikus", "provideLibraryRepository")
         return LibraryRepositoryImpl(
             itemDao = database.libraryItemDao,
             folderDao = database.libraryFolderDao,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideGoalRepository(
+        database: MusikusDatabase
+    ): GoalRepository {
+        return GoalRepositoryImpl(
+            goalInstanceDao = database.goalInstanceDao,
+            goalDescriptionDao = database.goalDescriptionDao,
         )
     }
 }

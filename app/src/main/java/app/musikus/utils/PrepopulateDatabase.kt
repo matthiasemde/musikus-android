@@ -11,7 +11,7 @@ import app.musikus.database.entities.LibraryFolderCreationAttributes
 import app.musikus.database.entities.LibraryItemCreationAttributes
 import app.musikus.database.entities.SectionCreationAttributes
 import app.musikus.database.entities.SessionCreationAttributes
-import app.musikus.repository.GoalRepository
+import app.musikus.repository.GoalRepositoryImpl
 import app.musikus.repository.LibraryRepositoryImpl
 import app.musikus.repository.SessionRepository
 import kotlinx.coroutines.delay
@@ -29,7 +29,11 @@ suspend fun prepopulateDatabase(
         folderDao = musikusDb.libraryFolderDao,
     )
 
-    val goalRepository = GoalRepository(musikusDb)
+    val goalRepository = GoalRepositoryImpl(
+        goalInstanceDao = musikusDb.goalInstanceDao,
+        goalDescriptionDao = musikusDb.goalDescriptionDao,
+    )
+
     val sessionRepository = SessionRepository(musikusDb)
 
     listOf(

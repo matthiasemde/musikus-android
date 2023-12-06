@@ -72,10 +72,10 @@ data class StatisticsRatingsCardUiState(
 @HiltViewModel
 class StatisticsViewModel @Inject constructor(
     database : MusikusDatabase,
+    goalRepository : GoalRepository
 ) : ViewModel() {
 
     /** Repositories */
-    private val goalRepository = GoalRepository(database)
     private val sessionRepository = SessionRepository(database)
 
     private val sessions = sessionRepository.sessionsWithSectionsWithLibraryItems.stateIn(
