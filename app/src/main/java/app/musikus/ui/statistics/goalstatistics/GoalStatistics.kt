@@ -45,8 +45,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign.Companion.End
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import app.musikus.R
 import app.musikus.shared.conditional
 import app.musikus.shared.simpleVerticalScrollbar
@@ -59,7 +59,7 @@ import java.util.UUID
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GoalStatistics(
-    viewModel: GoalStatisticsViewModel = viewModel(),
+    viewModel: GoalStatisticsViewModel = hiltViewModel(),
     navigateUp: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()

@@ -88,7 +88,8 @@
             <TextView
                 style="@style/text_about_pages_small"
                 android:layout_marginStart="69dp"
-                android:text="@string/versionName"/>
+                android:text="TODO versionName"/>
+<!--                android:text="@string/versionName"/>-->
 
         </LinearLayout>
 

@@ -13,8 +13,8 @@
 
 package app.musikus.database
 
+import android.app.Application
 import android.content.ContentValues
-import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.util.Log
 import androidx.room.Database
@@ -38,6 +38,8 @@ import app.musikus.database.entities.LibraryFolderModel
 import app.musikus.database.entities.LibraryItemModel
 import app.musikus.database.entities.SectionModel
 import app.musikus.database.entities.SessionModel
+import app.musikus.utils.prepopulateDatabase
+import kotlinx.coroutines.runBlocking
 import java.nio.ByteBuffer
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
@@ -73,16 +75,9 @@ abstract class MusikusDatabase : RoomDatabase() {
     companion object {
         private const val DATABASE_NAME = "musikus-database"
 
-        @Volatile private var INSTANCE: MusikusDatabase? = null
-
-        fun getInstance(context: Context, prepopulateDatabase: () -> Unit = {}) =
-            INSTANCE ?: synchronized(this) {
-                INSTANCE ?: buildDatabase(context, prepopulateDatabase).also { INSTANCE = it }
-            }
-
-        private fun buildDatabase(context: Context, prepopulateDatabase: () -> Unit) =
+        fun buildDatabase(app: Application) =
             Room.databaseBuilder(
-                context.applicationContext,
+                app,
                 MusikusDatabase::class.java,
                 DATABASE_NAME
             ).addMigrations(
@@ -92,7 +87,9 @@ abstract class MusikusDatabase : RoomDatabase() {
                 override fun onCreate(db: SupportSQLiteDatabase) {
                     super.onCreate(db)
                     // prepopulate the database
-                    prepopulateDatabase()
+                    runBlocking {
+                        prepopulateDatabase(db)
+                    }
                 }
             }).build()
     }

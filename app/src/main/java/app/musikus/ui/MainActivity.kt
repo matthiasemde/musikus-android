@@ -53,9 +53,9 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.zIndex
 import androidx.core.view.WindowCompat
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavType
@@ -81,6 +81,7 @@ import app.musikus.utils.ExportDatabaseContract
 import app.musikus.utils.ExportImportDialog
 import app.musikus.utils.ImportDatabaseContract
 import com.google.android.material.composethemeadapter3.Mdc3Theme
+import dagger.hilt.android.AndroidEntryPoint
 import java.util.UUID
 
 
@@ -141,6 +142,7 @@ sealed class Screen(
     )
 }
 
+@AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
 
     private val navItems = listOf(
@@ -176,7 +178,7 @@ class MainActivity : AppCompatActivity() {
 
         setContent {
 
-            val mainViewModel: MainViewModel = viewModel()
+            val mainViewModel: MainViewModel = hiltViewModel()
             val uiState by mainViewModel.uiState.collectAsStateWithLifecycle()
 
             val navController = rememberNavController()

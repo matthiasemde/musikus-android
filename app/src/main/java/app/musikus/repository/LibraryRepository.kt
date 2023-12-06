@@ -8,30 +8,55 @@
 
 package app.musikus.repository
 
-import app.musikus.database.MusikusDatabase
 import app.musikus.database.daos.LibraryFolder
+import app.musikus.database.daos.LibraryFolderDao
 import app.musikus.database.daos.LibraryItem
+import app.musikus.database.daos.LibraryItemDao
 import app.musikus.database.entities.LibraryFolderCreationAttributes
 import app.musikus.database.entities.LibraryFolderModel
 import app.musikus.database.entities.LibraryFolderUpdateAttributes
 import app.musikus.database.entities.LibraryItemCreationAttributes
 import app.musikus.database.entities.LibraryItemModel
 import app.musikus.database.entities.LibraryItemUpdateAttributes
+import kotlinx.coroutines.flow.Flow
 import java.util.UUID
 
-class LibraryRepository(
-    database: MusikusDatabase
-) {
-    private val itemDao = database.libraryItemDao
-    private val folderDao = database.libraryFolderDao
+interface LibraryRepository {
+    val items: Flow<List<LibraryItem>>
+    val folders: Flow<List<LibraryFolder>>
 
-    val items = itemDao.getAllAsFlow()
-    val folders = folderDao.getAllAsFlow()
+    /** Mutators */
+    /** Add */
+    suspend fun addFolder(creationAttributes: LibraryFolderCreationAttributes)
+    suspend fun addItem(creationAttributes: LibraryItemCreationAttributes)
+
+    /** Edit */
+    suspend fun editFolder(id: UUID, updateAttributes: LibraryFolderUpdateAttributes)
+    suspend fun editItem(id: UUID, updateAttributes: LibraryItemUpdateAttributes)
+
+    /** Delete / restore */
+    suspend fun deleteItems(items: List<LibraryItem>)
+    suspend fun deleteFolders(folders: List<LibraryFolder>)
+
+    suspend fun restoreItems(items: List<LibraryItem>)
+    suspend fun restoreFolders(folders: List<LibraryFolder>)
+
+    /** Clean */
+    suspend fun clean()
+}
+
+class LibraryRepositoryImpl(
+    private val itemDao: LibraryItemDao,
+    private val folderDao: LibraryFolderDao,
+) : LibraryRepository {
+
+    override val items = itemDao.getAllAsFlow()
+    override val folders = folderDao.getAllAsFlow()
 
 
     /** Mutators */
     /** Add */
-    suspend fun addFolder(creationAttributes: LibraryFolderCreationAttributes) {
+    override suspend fun addFolder(creationAttributes: LibraryFolderCreationAttributes) {
         folderDao.insert(
             LibraryFolderModel(
                 name = creationAttributes.name,
@@ -39,7 +64,7 @@ class LibraryRepository(
         )
     }
 
-    suspend fun addItem(creationAttributes: LibraryItemCreationAttributes) {
+    override suspend fun addItem(creationAttributes: LibraryItemCreationAttributes) {
         itemDao.insert(
             LibraryItemModel(
                 name = creationAttributes.name,
@@ -50,14 +75,14 @@ class LibraryRepository(
     }
 
     /** Edit */
-    suspend fun editFolder(
+    override suspend fun editFolder(
         id: UUID,
         updateAttributes: LibraryFolderUpdateAttributes
     ) {
         folderDao.update(id, updateAttributes)
     }
 
-    suspend fun editItem(
+    override suspend fun editItem(
         id: UUID,
         updateAttributes: LibraryItemUpdateAttributes
     ) {
@@ -65,24 +90,24 @@ class LibraryRepository(
     }
 
     /** Delete / restore */
-    suspend fun deleteItems(items: List<LibraryItem>) {
+    override suspend fun deleteItems(items: List<LibraryItem>) {
         itemDao.delete(items.map { it.id })
     }
 
-    suspend fun restoreItems(items: List<LibraryItem>) {
+    override suspend fun restoreItems(items: List<LibraryItem>) {
         itemDao.restore(items.map{ it.id })
     }
 
-    suspend fun deleteFolders(folders: List<LibraryFolder>) {
+    override suspend fun deleteFolders(folders: List<LibraryFolder>) {
         folderDao.delete(folders.map { it.id })
     }
 
-    suspend fun restoreFolders(folders: List<LibraryFolder>) {
+    override suspend fun restoreFolders(folders: List<LibraryFolder>) {
         folderDao.restore(folders.map { it.id })
     }
 
     /** Clean */
-    suspend fun clean() {
+    override suspend fun clean() {
         folderDao.clean()
         itemDao.clean()
     }

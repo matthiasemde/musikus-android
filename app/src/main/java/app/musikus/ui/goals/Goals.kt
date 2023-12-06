@@ -54,8 +54,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import app.musikus.datastore.ThemeSelections
 import app.musikus.shared.ActionBar
 import app.musikus.shared.CommonMenuSelections
@@ -67,15 +67,15 @@ import app.musikus.shared.Selectable
 import app.musikus.shared.SortMenu
 import app.musikus.shared.ThemeMenu
 import app.musikus.spacing
-import app.musikus.utils.GoalsSortMode
 import app.musikus.ui.MainViewModel
+import app.musikus.utils.GoalsSortMode
 
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun Goals(
     mainViewModel: MainViewModel,
-    goalsViewModel: GoalsViewModel = viewModel(),
+    goalsViewModel: GoalsViewModel = hiltViewModel(),
 ) {
     val mainUiState by mainViewModel.uiState.collectAsStateWithLifecycle()
     val goalsUiState by goalsViewModel.uiState.collectAsStateWithLifecycle()

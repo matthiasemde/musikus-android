@@ -54,6 +54,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.musikus.Musikus
@@ -70,7 +71,7 @@ import app.musikus.utils.musikusFormat
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SessionStatistics(
-    viewModel: SessionStatisticsViewModel = viewModel(),
+    viewModel: SessionStatisticsViewModel = hiltViewModel(),
     navigateUp: () -> Unit
 ) {
 

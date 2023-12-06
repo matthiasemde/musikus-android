@@ -35,6 +35,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.musikus.Musikus
@@ -47,7 +48,7 @@ import java.util.UUID
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditSession(
-    editSessionViewModel: EditSessionViewModel = viewModel(),
+    editSessionViewModel: EditSessionViewModel = hiltViewModel(),
     sessionToEditId: UUID,
     navigateUp: () -> Unit
 ) {

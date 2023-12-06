@@ -8,8 +8,7 @@
 
 package app.musikus.ui.statistics
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.musikus.database.MusikusDatabase
 import app.musikus.repository.GoalRepository
@@ -20,6 +19,7 @@ import app.musikus.utils.getDayIndexOfWeek
 import app.musikus.utils.getStartOfDayOfWeek
 import app.musikus.utils.specificMonth
 import app.musikus.utils.weekIndexToName
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharingStarted
@@ -28,6 +28,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import javax.inject.Inject
 
 
 /**
@@ -68,12 +69,10 @@ data class StatisticsRatingsCardUiState(
     val numOfRatingsFromOneToFive: List<Int>,
 )
 
-class StatisticsViewModel(
-    application: Application
-) : AndroidViewModel(application) {
-
-    /** Database */
-    private val database = MusikusDatabase.getInstance(application)
+@HiltViewModel
+class StatisticsViewModel @Inject constructor(
+    database : MusikusDatabase,
+) : ViewModel() {
 
     /** Repositories */
     private val goalRepository = GoalRepository(database)

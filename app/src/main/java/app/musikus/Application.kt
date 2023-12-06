@@ -27,13 +27,15 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.datastore.preferences.preferencesDataStore
 import app.musikus.database.MusikusDatabase
-import app.musikus.repository.UserPreferencesRepository
+import app.musikus.repository.UserPreferencesRepositoryImpl
+import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import java.io.File
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import kotlin.text.Typography.dagger
 
 fun Context.getActivity(): AppCompatActivity? = when (this) {
     is AppCompatActivity -> this
@@ -43,6 +45,7 @@ fun Context.getActivity(): AppCompatActivity? = when (this) {
 
 val Context.dataStore by preferencesDataStore(name = Musikus.USER_PREFERENCES_NAME)
 
+@HiltAndroidApp
 class Musikus : Application() {
 
     companion object {
@@ -153,7 +156,7 @@ class Musikus : Application() {
 
         prefs = getSharedPreferences(getString(R.string.filename_shared_preferences), Context.MODE_PRIVATE)
 
-        val userPreferencesRepository = UserPreferencesRepository(dataStore)
+        val userPreferencesRepository = UserPreferencesRepositoryImpl(dataStore)
 
         dbFile = getDatabasePath("practice_time.db")
 

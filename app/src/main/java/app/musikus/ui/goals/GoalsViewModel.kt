@@ -8,10 +8,8 @@
 
 package app.musikus.ui.goals
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import app.musikus.dataStore
 import app.musikus.database.GoalInstanceWithDescriptionWithLibraryItems
 import app.musikus.database.MusikusDatabase
 import app.musikus.database.daos.GoalDescription
@@ -29,6 +27,7 @@ import app.musikus.utils.GoalsSortMode
 import app.musikus.utils.LibraryItemSortMode
 import app.musikus.utils.SortDirection
 import app.musikus.utils.sorted
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -38,6 +37,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 data class GoalWithProgress(
     val goal: GoalInstanceWithDescriptionWithLibraryItems,
@@ -103,20 +103,17 @@ data class GoalsUiState (
     val dialogUiState: GoalsDialogUiState?,
 )
 
-class GoalsViewModel(
-    application: Application,
-) : AndroidViewModel(application) {
+@HiltViewModel
+class GoalsViewModel @Inject constructor(
+    private val userPreferencesRepository : UserPreferencesRepository,
+    database : MusikusDatabase,
+    libraryRepository: LibraryRepository,
+) : ViewModel() {
 
     private var _goalsCache: List<GoalDescription> = emptyList()
 
-    /** Database */
-    private val database = MusikusDatabase.getInstance(application)
-
-    /** Repositories */
-    private val libraryRepository = LibraryRepository(database)
     private val goalRepository = GoalRepository(database)
     private val sessionRepository = SessionRepository(database)
-    private val userPreferencesRepository = UserPreferencesRepository(application.dataStore)
 
     init {
         viewModelScope.launch {

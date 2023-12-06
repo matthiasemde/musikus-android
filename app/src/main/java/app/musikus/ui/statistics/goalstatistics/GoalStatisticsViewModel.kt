@@ -8,13 +8,11 @@
 
 package app.musikus.ui.statistics.goalstatistics
 
-import android.app.Application
 import android.content.Context
 import androidx.compose.ui.graphics.Color
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.musikus.Musikus
-import app.musikus.dataStore
 import app.musikus.database.GoalDescriptionWithInstancesAndLibraryItems
 import app.musikus.database.GoalDescriptionWithLibraryItems
 import app.musikus.database.MusikusDatabase
@@ -32,6 +30,7 @@ import app.musikus.utils.UiText
 import app.musikus.utils.inLocalTimezone
 import app.musikus.utils.musikusFormat
 import app.musikus.utils.sorted
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -42,6 +41,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import java.util.UUID
+import javax.inject.Inject
 
 data class GoalStatisticsUiState(
     val contentUiState: GoalStatisticsContentUiState
@@ -93,13 +93,15 @@ data class GoalWithInstancesWithProgress(
     val instancesWithProgress: List<Pair<GoalInstance, Int>>,
 )
 
-class GoalStatisticsViewModel(
-    application: Application
-) : AndroidViewModel(application) {
+@HiltViewModel
+class GoalStatisticsViewModel @Inject constructor(
+    database : MusikusDatabase,
+    userPreferencesRepository : UserPreferencesRepository,
+) : ViewModel() {
 
     /** Private variables */
     private var _redraw = true
-    private val libraryColors = Musikus.getLibraryItemColors(application as Context)
+    private val libraryColors = Musikus.getLibraryItemColors(viewModelScope as Context)
 
     /** Private methods */
 
@@ -174,14 +176,9 @@ class GoalStatisticsViewModel(
         }
     }
 
-
-    /** Database */
-    private val database = MusikusDatabase.getInstance(application)
-
     /** Repositories */
     private val sessionRepository = SessionRepository(database)
     private val goalRepository = GoalRepository(database)
-    private val userPreferencesRepository = UserPreferencesRepository(application.dataStore)
 
     /** Imported Flows */
     private val goalSortInfo = userPreferencesRepository.userPreferences.map {

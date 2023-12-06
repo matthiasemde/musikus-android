@@ -65,8 +65,8 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import app.musikus.Musikus
 import app.musikus.R
 import app.musikus.database.entities.GoalType
@@ -75,18 +75,18 @@ import app.musikus.shared.CommonMenuSelections
 import app.musikus.shared.MainMenu
 import app.musikus.shared.ThemeMenu
 import app.musikus.spacing
+import app.musikus.ui.MainViewModel
 import app.musikus.utils.DateFormat
 import app.musikus.utils.TimeFormat
 import app.musikus.utils.getCurrentDateTime
 import app.musikus.utils.getDurationString
 import app.musikus.utils.musikusFormat
-import app.musikus.ui.MainViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Statistics(
     mainViewModel: MainViewModel,
-    statisticsViewModel: StatisticsViewModel = viewModel(),
+    statisticsViewModel: StatisticsViewModel = hiltViewModel(),
     navigateToSessionStatistics: () -> Unit,
     navigateToGoalStatistics: () -> Unit,
 ) {

@@ -19,6 +19,7 @@ import app.musikus.utils.GoalsSortMode
 import app.musikus.utils.LibraryFolderSortMode
 import app.musikus.utils.LibraryItemSortMode
 import app.musikus.utils.SortDirection
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
@@ -34,10 +35,25 @@ object PreferenceKeys {
     val SHOW_PAUSED_GOALS = booleanPreferencesKey("show_paused_goals")
 }
 
-class UserPreferencesRepository(
+interface UserPreferencesRepository {
+    val userPreferences: Flow<UserPreferences>
+
+    /** Mutators */
+    suspend fun updateTheme(theme: ThemeSelections)
+
+    suspend fun updateLibraryItemSortMode(mode: LibraryItemSortMode)
+    suspend fun updateLibraryFolderSortMode(mode: LibraryFolderSortMode)
+
+    suspend fun updateGoalsSortMode(mode: GoalsSortMode)
+    suspend fun updateShowPausedGoals(value: Boolean)
+
+    suspend fun updateAppIntroDone(value: Boolean)
+}
+
+class UserPreferencesRepositoryImpl(
     private val dataStore: DataStore<Preferences>,
-) {
-    val userPreferences = dataStore.data.map { preferences ->
+) : UserPreferencesRepository {
+    override val userPreferences = dataStore.data.map { preferences ->
         UserPreferences(
             theme = ThemeSelections.valueOrDefault(preferences[PreferenceKeys.THEME]),
 
@@ -56,13 +72,13 @@ class UserPreferencesRepository(
         )
     }
 
-    suspend fun updateTheme(theme: ThemeSelections) {
+    override suspend fun updateTheme(theme: ThemeSelections) {
         dataStore.edit { preferences ->
             preferences[PreferenceKeys.THEME] = theme.name
         }
     }
 
-    suspend fun updateLibraryFolderSortMode(mode: LibraryFolderSortMode) {
+    override suspend fun updateLibraryFolderSortMode(mode: LibraryFolderSortMode) {
         userPreferences.map { preferences ->
             Pair(preferences.libraryFolderSortMode, preferences.libraryFolderSortDirection)
         }.first().let { (currentMode, currentDirection) ->
@@ -81,7 +97,7 @@ class UserPreferencesRepository(
         }
     }
 
-    suspend fun updateLibraryItemSortMode(mode: LibraryItemSortMode) {
+    override suspend fun updateLibraryItemSortMode(mode: LibraryItemSortMode) {
         userPreferences.map { preferences ->
             Pair(preferences.libraryItemSortMode, preferences.libraryItemSortDirection)
         }.first().let { (currentMode, currentDirection) ->
@@ -100,7 +116,7 @@ class UserPreferencesRepository(
         }
     }
 
-    suspend fun updateGoalsSortMode(mode: GoalsSortMode) {
+    override suspend fun updateGoalsSortMode(mode: GoalsSortMode) {
         userPreferences.map { preferences ->
             Pair(preferences.goalsSortMode, preferences.goalsSortDirection)
         }.first().let { (currentMode, currentDirection) ->
@@ -119,9 +135,13 @@ class UserPreferencesRepository(
         }
     }
 
-    suspend fun updateShowPausedGoals(value: Boolean) {
+    override suspend fun updateShowPausedGoals(value: Boolean) {
         dataStore.edit { preferences ->
             preferences[PreferenceKeys.SHOW_PAUSED_GOALS] = value
         }
+    }
+
+    override suspend fun updateAppIntroDone(value: Boolean) {
+        TODO("Not yet implemented")
     }
 }

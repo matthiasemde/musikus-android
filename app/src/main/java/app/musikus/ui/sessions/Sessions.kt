@@ -49,8 +49,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import app.musikus.R
 import app.musikus.datastore.ThemeSelections
 import app.musikus.shared.ActionBar
@@ -59,12 +59,12 @@ import app.musikus.shared.MainMenu
 import app.musikus.shared.Selectable
 import app.musikus.shared.ThemeMenu
 import app.musikus.spacing
+import app.musikus.ui.MainViewModel
 import app.musikus.ui.activesession.ActiveSessionActivity
 import app.musikus.utils.DateFormat
 import app.musikus.utils.TimeFormat
 import app.musikus.utils.getDurationString
 import app.musikus.utils.musikusFormat
-import app.musikus.ui.MainViewModel
 import java.time.ZonedDateTime
 import java.util.UUID
 
@@ -76,7 +76,7 @@ import java.util.UUID
 fun Sessions(
     mainViewModel: MainViewModel,
     activity: AppCompatActivity?,
-    sessionsViewModel: SessionsViewModel = viewModel(),
+    sessionsViewModel: SessionsViewModel = hiltViewModel(),
     editSession: (sessionId: UUID) -> Unit,
 ) {
     val mainUiState by mainViewModel.uiState.collectAsStateWithLifecycle()

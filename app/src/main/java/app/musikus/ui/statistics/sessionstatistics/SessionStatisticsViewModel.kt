@@ -8,10 +8,8 @@
 
 package app.musikus.ui.statistics.sessionstatistics
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import app.musikus.dataStore
 import app.musikus.database.MusikusDatabase
 import app.musikus.database.SectionWithLibraryItem
 import app.musikus.database.SessionWithSectionsWithLibraryItems
@@ -35,6 +33,7 @@ import app.musikus.utils.sorted
 import app.musikus.utils.specificDay
 import app.musikus.utils.specificMonth
 import app.musikus.utils.specificWeek
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -46,6 +45,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import java.time.ZonedDateTime
+import javax.inject.Inject
 
 /**
  * Ui state data classes
@@ -137,9 +137,11 @@ data class PieChartData(
     val itemSortDirection: SortDirection
 )
 
-class SessionStatisticsViewModel(
-    application: Application
-) : AndroidViewModel(application) {
+@HiltViewModel
+class SessionStatisticsViewModel @Inject constructor(
+    database : MusikusDatabase,
+    userPreferencesRepository : UserPreferencesRepository,
+) : ViewModel() {
 
     /** Private variables */
     // convenient date because first of month is a monday
@@ -151,12 +153,8 @@ class SessionStatisticsViewModel(
     private var _barChartStateBuffer: SessionStatisticsBarChartUiState? = null
     private var _pieChartStateBuffer: SessionStatisticsPieChartUiState? = null
 
-    /** Database */
-    private val database = MusikusDatabase.getInstance(application)
-
     /** Repositories */
     private val sessionRepository = SessionRepository(database)
-    private val userPreferencesRepository = UserPreferencesRepository(application.dataStore)
 
     /** Imported Flows */
     private val itemsSortInfo = userPreferencesRepository.userPreferences.map {

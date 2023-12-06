@@ -1,12 +1,12 @@
 package app.musikus.ui.sessions.editsession
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.musikus.database.MusikusDatabase
 import app.musikus.database.SectionWithLibraryItem
 import app.musikus.repository.LibraryRepository
 import app.musikus.repository.SessionRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted.Companion.WhileSubscribed
 import kotlinx.coroutines.flow.combine
@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import java.util.UUID
+import javax.inject.Inject
 
 data class SessionEditData(
     val rating: Int,
@@ -32,15 +33,13 @@ data class EditSessionUiState(
     val showConfirmationDialog: Boolean,
 )
 
-class EditSessionViewModel(
-    application: Application,
-) : AndroidViewModel(application) {
-
-    /** Database */
-    private val database = MusikusDatabase.getInstance(application)
+@HiltViewModel
+class EditSessionViewModel @Inject constructor(
+    database : MusikusDatabase,
+    private val libraryRepository : LibraryRepository,
+) : ViewModel() {
 
     /** Repositories */
-    private val libraryRepository = LibraryRepository(database)
     private val sessionRepository = SessionRepository(database)
 
     /** Own state flows */

@@ -8,12 +8,9 @@
 
 package app.musikus.ui.library
 
-import android.app.Application
 import android.util.Log
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import app.musikus.dataStore
-import app.musikus.database.MusikusDatabase
 import app.musikus.database.Nullable
 import app.musikus.database.daos.LibraryFolder
 import app.musikus.database.daos.LibraryItem
@@ -23,11 +20,11 @@ import app.musikus.database.entities.LibraryItemCreationAttributes
 import app.musikus.database.entities.LibraryItemUpdateAttributes
 import app.musikus.repository.LibraryRepository
 import app.musikus.repository.UserPreferencesRepository
-import app.musikus.shared.TopBarUiState
 import app.musikus.utils.LibraryFolderSortMode
 import app.musikus.utils.LibraryItemSortMode
 import app.musikus.utils.SortDirection
 import app.musikus.utils.sorted
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted.Companion.WhileSubscribed
 import kotlinx.coroutines.flow.combine
@@ -36,6 +33,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.UUID
+import javax.inject.Inject
 
 enum class DialogMode {
     ADD,
@@ -57,102 +55,24 @@ data class LibraryItemEditData(
     val folderId: UUID?,
 )
 
-/** Ui state data classes */
-
-data class LibraryTopBarUiState(
-    override val title: String,
-    override val showBackButton: Boolean,
-) : TopBarUiState
-
-data class LibraryActionModeUiState(
-    val isActionMode: Boolean,
-    val numberOfSelections: Int,
-)
-
-data class LibraryFoldersSortMenuUiState(
-    val show: Boolean,
-
-    val mode: LibraryFolderSortMode,
-    val direction: SortDirection,
-)
-
-data class LibraryFoldersUiState(
-    val foldersWithItemCount: List<LibraryFolderWithItemCount>,
-    val selectedFolders: Set<LibraryFolder>,
-
-    val sortMenuUiState: LibraryFoldersSortMenuUiState
-)
-
-data class LibraryItemsSortMenuUiState(
-    val show: Boolean,
-
-    val mode: LibraryItemSortMode,
-    val direction: SortDirection,
-)
-
-data class LibraryItemsUiState(
-    val items: List<LibraryItem>,
-    val selectedItems: Set<LibraryItem>,
-
-    val sortMenuUiState: LibraryItemsSortMenuUiState
-)
-
-data class LibraryContentUiState(
-    val foldersUiState: LibraryFoldersUiState?,
-    val itemsUiState: LibraryItemsUiState?,
-
-    val showHint: Boolean,
-)
-
-data class LibraryFolderDialogUiState(
-    val mode: DialogMode,
-    val folderData: LibraryFolderEditData,
-    val confirmButtonEnabled: Boolean,
-    val folderToEdit: LibraryFolder?,
-)
-
-data class LibraryItemDialogUiState(
-    val mode: DialogMode,
-    val itemData: LibraryItemEditData,
-    val folders : List<LibraryFolder>,
-    val isFolderSelectorExpanded: Boolean,
-    val confirmButtonEnabled: Boolean,
-    val itemToEdit: LibraryItem?,
-)
-
 data class LibraryDialogState(
     val folderDialogUiState: LibraryFolderDialogUiState?,
     val itemDialogUiState: LibraryItemDialogUiState?,
 )
 
-data class LibraryFabUiState(
-    val activeFolder: LibraryFolder?,
-)
+@HiltViewModel
+class LibraryViewModel @Inject constructor(
+    private val userPreferencesRepository : UserPreferencesRepository,
+    private val libraryRepository : LibraryRepository,
+) : ViewModel() {
 
-data class LibraryUiState (
-    val topBarUiState: LibraryTopBarUiState,
-    val actionModeUiState: LibraryActionModeUiState,
-    val contentUiState: LibraryContentUiState,
-    val dialogUiState: LibraryDialogState,
-    val fabUiState: LibraryFabUiState,
-)
-
-class LibraryViewModel(
-    application: Application
-) : AndroidViewModel(application) {
+    init {
+        Log.d("LibraryViewModel", "init")
+    }
 
     /** Private variables */
     private var _foldersCache = emptyList<LibraryFolder>()
     private var _itemsCache = emptyList<LibraryItem>()
-
-
-    /** Database */
-    private val database = MusikusDatabase.getInstance(application)
-
-
-    /** Repositories */
-    private val libraryRepository = LibraryRepository(database)
-    private val userPreferencesRepository = UserPreferencesRepository(application.dataStore)
 
 
     /** Imported flows */

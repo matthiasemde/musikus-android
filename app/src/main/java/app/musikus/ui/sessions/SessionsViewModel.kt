@@ -8,8 +8,7 @@
 
 package app.musikus.ui.sessions
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.musikus.database.MusikusDatabase
 import app.musikus.database.SessionWithSectionsWithLibraryItems
@@ -18,6 +17,7 @@ import app.musikus.repository.SessionRepository
 import app.musikus.shared.TopBarUiState
 import app.musikus.utils.specificDay
 import app.musikus.utils.specificMonth
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
@@ -26,6 +26,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.UUID
+import javax.inject.Inject
 
 data class SessionsForDaysForMonth (
     val specificMonth: Int,
@@ -64,14 +65,12 @@ data class SessionsUiState(
     val contentUiState: SessionsContentUiState,
 )
 
-class SessionsViewModel(
-    application: Application
-) : AndroidViewModel(application) {
+@HiltViewModel
+class SessionsViewModel @Inject constructor(
+    database : MusikusDatabase
+) : ViewModel() {
 
     private var _sessionsCache = emptyList<Session>()
-
-    /** Database */
-    private val database = MusikusDatabase.getInstance(application)
 
     /** Repositories */
     private val sessionRepository = SessionRepository(database)

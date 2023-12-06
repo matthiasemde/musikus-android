@@ -70,8 +70,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import app.musikus.Musikus
 import app.musikus.R
 import app.musikus.database.daos.LibraryFolder
@@ -95,7 +95,7 @@ import app.musikus.utils.LibraryItemSortMode
 @Composable
 fun Library(
     mainViewModel: MainViewModel,
-    libraryViewModel: LibraryViewModel = viewModel()
+    libraryViewModel: LibraryViewModel = hiltViewModel()
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
