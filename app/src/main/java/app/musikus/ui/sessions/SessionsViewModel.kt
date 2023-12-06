@@ -10,7 +10,6 @@ package app.musikus.ui.sessions
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import app.musikus.database.MusikusDatabase
 import app.musikus.database.SessionWithSectionsWithLibraryItems
 import app.musikus.database.daos.Session
 import app.musikus.repository.SessionRepository
@@ -67,13 +66,11 @@ data class SessionsUiState(
 
 @HiltViewModel
 class SessionsViewModel @Inject constructor(
-    database : MusikusDatabase
+    private val sessionRepository : SessionRepository,
 ) : ViewModel() {
 
     private var _sessionsCache = emptyList<Session>()
 
-    /** Repositories */
-    private val sessionRepository = SessionRepository(database)
 
     /** Imported Flows */
     private val sessions = sessionRepository.sessionsWithSectionsWithLibraryItems.stateIn(

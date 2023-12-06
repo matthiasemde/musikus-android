@@ -17,6 +17,8 @@ import app.musikus.repository.GoalRepository
 import app.musikus.repository.GoalRepositoryImpl
 import app.musikus.repository.LibraryRepository
 import app.musikus.repository.LibraryRepositoryImpl
+import app.musikus.repository.SessionRepository
+import app.musikus.repository.SessionRepositoryImpl
 import app.musikus.repository.UserPreferencesRepository
 import app.musikus.repository.UserPreferencesRepositoryImpl
 import dagger.Module
@@ -68,6 +70,17 @@ object AppModule {
         return GoalRepositoryImpl(
             goalInstanceDao = database.goalInstanceDao,
             goalDescriptionDao = database.goalDescriptionDao,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideSessionRepository(
+        database: MusikusDatabase
+    ): SessionRepository {
+        return SessionRepositoryImpl(
+            sessionDao = database.sessionDao,
+            sectionDao = database.sectionDao,
         )
     }
 }

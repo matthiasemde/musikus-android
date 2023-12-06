@@ -1,12 +1,14 @@
 package app.musikus.repository
 
 import app.musikus.database.GoalInstanceWithDescriptionWithLibraryItems
-import app.musikus.database.MusikusDatabase
 import app.musikus.database.SessionWithSectionsWithLibraryItems
 import app.musikus.database.daos.GoalDescription
 import app.musikus.database.daos.GoalInstance
 import app.musikus.database.daos.LibraryItem
+import app.musikus.database.daos.Section
+import app.musikus.database.daos.SectionDao
 import app.musikus.database.daos.Session
+import app.musikus.database.daos.SessionDao
 import app.musikus.database.entities.SectionCreationAttributes
 import app.musikus.database.entities.SessionCreationAttributes
 import app.musikus.database.entities.SessionModel
@@ -15,21 +17,51 @@ import kotlinx.coroutines.flow.Flow
 import java.time.ZonedDateTime
 import java.util.UUID
 
-class SessionRepository(
-    database: MusikusDatabase
-) {
-    private val sessionDao = database.sessionDao
-    private val sectionDao = database.sectionDao
+interface SessionRepository {
+    val sessions : Flow<List<Session>>
+    val sections : Flow<List<Section>>
+
+    val sessionsWithSectionsWithLibraryItems : Flow<List<SessionWithSectionsWithLibraryItems>>
+    fun sessionWithSectionsWithLibraryItems(id: UUID) : Flow<SessionWithSectionsWithLibraryItems>
+
+    fun sessionsInTimeframe (timeframe: Timeframe) : Flow<List<SessionWithSectionsWithLibraryItems>>
+
+    fun sectionsForGoal (goal: GoalInstanceWithDescriptionWithLibraryItems) : Flow<List<Section>>
+    fun sectionsForGoal (
+        instance: GoalInstance,
+        description: GoalDescription,
+        libraryItems: List<LibraryItem>
+    ) : Flow<List<Section>>
+
+    /** Mutators */
+    /** Add */
+    suspend fun add(
+        session: SessionCreationAttributes,
+        sections: List<SectionCreationAttributes>
+    ) : UUID
+
+    /** Delete / Restore */
+    suspend fun delete(sessions: List<Session>)
+    suspend fun restore(sessions: List<Session>)
+
+    /** Clean */
+    suspend fun clean()
+}
+
+class SessionRepositoryImpl(
+    private val sessionDao : SessionDao,
+    private val sectionDao : SectionDao,
+) : SessionRepository {
 
 
     /** Accessors */
-    val sessions = sessionDao.getAllAsFlow()
-    val sections = sectionDao.getAllAsFlow()
+    override val sessions = sessionDao.getAllAsFlow()
+    override val sections = sectionDao.getAllAsFlow()
 
-    val sessionsWithSectionsWithLibraryItems = sessionDao.getAllWithSectionsWithLibraryItemsAsFlow()
-    fun sessionWithSectionsWithLibraryItems(id: UUID) = sessionDao.getWithSectionsWithLibraryItemsAsFlow(id)
+    override val sessionsWithSectionsWithLibraryItems = sessionDao.getAllWithSectionsWithLibraryItemsAsFlow()
+    override fun sessionWithSectionsWithLibraryItems(id: UUID) = sessionDao.getWithSectionsWithLibraryItemsAsFlow(id)
 
-    fun sessionsInTimeframe (timeframe: Timeframe) : Flow<List<SessionWithSectionsWithLibraryItems>> {
+    override fun sessionsInTimeframe (timeframe: Timeframe) : Flow<List<SessionWithSectionsWithLibraryItems>> {
         assert (timeframe.first < timeframe.second)
         return sessionDao.get(
             startTimestamp = timeframe.first,
@@ -37,7 +69,7 @@ class SessionRepository(
         )
     }
 
-    fun sectionsForGoal (
+    private fun sectionsForGoal (
         startTimestamp: ZonedDateTime,
         endTimestamp: ZonedDateTime,
         itemIds: List<UUID>? = null
@@ -50,13 +82,13 @@ class SessionRepository(
         itemIds = itemIds
     )
 
-    fun sectionsForGoal (goal: GoalInstanceWithDescriptionWithLibraryItems) = sectionsForGoal(
+    override fun sectionsForGoal (goal: GoalInstanceWithDescriptionWithLibraryItems) = sectionsForGoal(
         startTimestamp = goal.instance.startTimestamp,
         endTimestamp = goal.endTimestampInLocalTimezone,
         itemIds = goal.description.libraryItems.map { it.id }.takeIf { it.isNotEmpty() }
     )
 
-    fun sectionsForGoal(
+    override fun sectionsForGoal(
         instance: GoalInstance,
         description: GoalDescription,
         libraryItems: List<LibraryItem>
@@ -68,7 +100,7 @@ class SessionRepository(
 
     /** Mutators */
     /** Add */
-    suspend fun add(
+    override suspend fun add(
         session: SessionCreationAttributes,
         sections: List<SectionCreationAttributes>
     ) : UUID {
@@ -82,16 +114,16 @@ class SessionRepository(
     }
 
     /** Delete / Restore */
-    suspend fun delete(sessions: List<Session>) {
+    override suspend fun delete(sessions: List<Session>) {
         sessionDao.delete(sessions.map { it.id })
     }
 
-    suspend fun restore(sessions: List<Session>) {
+    override suspend fun restore(sessions: List<Session>) {
         sessionDao.restore(sessions.map { it.id })
     }
 
     /** Clean */
-    suspend fun clean() {
+    override suspend fun clean() {
         sessionDao.clean()
     }
 }

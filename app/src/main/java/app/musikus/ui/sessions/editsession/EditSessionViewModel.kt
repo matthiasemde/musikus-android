@@ -2,7 +2,6 @@ package app.musikus.ui.sessions.editsession
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import app.musikus.database.MusikusDatabase
 import app.musikus.database.SectionWithLibraryItem
 import app.musikus.repository.LibraryRepository
 import app.musikus.repository.SessionRepository
@@ -35,12 +34,11 @@ data class EditSessionUiState(
 
 @HiltViewModel
 class EditSessionViewModel @Inject constructor(
-    database : MusikusDatabase,
     private val libraryRepository : LibraryRepository,
+    sessionRepository : SessionRepository,
 ) : ViewModel() {
 
     /** Repositories */
-    private val sessionRepository = SessionRepository(database)
 
     /** Own state flows */
     private val _sessionToEditId: MutableStateFlow<UUID?> = MutableStateFlow(null)

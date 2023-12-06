@@ -45,9 +45,9 @@ data class MainUiState(
 @HiltViewModel
 class MainViewModel @Inject constructor(
     private val userPreferencesRepository : UserPreferencesRepository,
-    database : MusikusDatabase,
     libraryRepository : LibraryRepository,
-    goalRepository: GoalRepository
+    goalRepository: GoalRepository,
+    sessionRepository: SessionRepository,
 ) : ViewModel() {
 
     /** Initialization */
@@ -55,7 +55,7 @@ class MainViewModel @Inject constructor(
         // Clean up soft-deleted items
         viewModelScope.launch {
             Log.d("Musikus", "Clean up soft-deleted items")
-            SessionRepository(database).clean()
+            sessionRepository.clean()
             goalRepository.clean()
             libraryRepository.clean()
         }

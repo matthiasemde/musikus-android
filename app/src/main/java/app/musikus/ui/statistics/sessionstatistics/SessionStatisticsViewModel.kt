@@ -139,8 +139,8 @@ data class PieChartData(
 
 @HiltViewModel
 class SessionStatisticsViewModel @Inject constructor(
-    database : MusikusDatabase,
     userPreferencesRepository : UserPreferencesRepository,
+    sessionRepository : SessionRepository,
 ) : ViewModel() {
 
     /** Private variables */
@@ -152,9 +152,6 @@ class SessionStatisticsViewModel @Inject constructor(
 
     private var _barChartStateBuffer: SessionStatisticsBarChartUiState? = null
     private var _pieChartStateBuffer: SessionStatisticsPieChartUiState? = null
-
-    /** Repositories */
-    private val sessionRepository = SessionRepository(database)
 
     /** Imported Flows */
     private val itemsSortInfo = userPreferencesRepository.userPreferences.map {

@@ -96,8 +96,8 @@ data class GoalWithInstancesWithProgress(
 @HiltViewModel
 class GoalStatisticsViewModel @Inject constructor(
     userPreferencesRepository : UserPreferencesRepository,
-    database : MusikusDatabase,
     goalRepository : GoalRepository,
+    sessionRepository : SessionRepository,
     application: Application
 ) : AndroidViewModel(application) {
 
@@ -177,9 +177,6 @@ class GoalStatisticsViewModel @Inject constructor(
             goal to (newStart to newEnd)
         }
     }
-
-    /** Repositories */
-    private val sessionRepository = SessionRepository(database)
 
     /** Imported Flows */
     private val goalSortInfo = userPreferencesRepository.userPreferences.map {

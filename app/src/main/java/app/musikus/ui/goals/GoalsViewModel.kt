@@ -11,7 +11,6 @@ package app.musikus.ui.goals
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.musikus.database.GoalInstanceWithDescriptionWithLibraryItems
-import app.musikus.database.MusikusDatabase
 import app.musikus.database.daos.GoalDescription
 import app.musikus.database.daos.LibraryItem
 import app.musikus.database.entities.GoalDescriptionCreationAttributes
@@ -106,14 +105,13 @@ data class GoalsUiState (
 @HiltViewModel
 class GoalsViewModel @Inject constructor(
     private val userPreferencesRepository : UserPreferencesRepository,
-    database : MusikusDatabase,
     libraryRepository: LibraryRepository,
     private val goalRepository : GoalRepository,
+    sessionRepository : SessionRepository,
 ) : ViewModel() {
 
     private var _goalsCache: List<GoalDescription> = emptyList()
 
-    private val sessionRepository = SessionRepository(database)
 
     init {
         viewModelScope.launch {

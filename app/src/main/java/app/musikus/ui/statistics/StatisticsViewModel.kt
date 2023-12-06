@@ -10,7 +10,6 @@ package app.musikus.ui.statistics
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import app.musikus.database.MusikusDatabase
 import app.musikus.repository.GoalRepository
 import app.musikus.repository.SessionRepository
 import app.musikus.ui.goals.GoalWithProgress
@@ -71,12 +70,9 @@ data class StatisticsRatingsCardUiState(
 
 @HiltViewModel
 class StatisticsViewModel @Inject constructor(
-    database : MusikusDatabase,
-    goalRepository : GoalRepository
+    goalRepository : GoalRepository,
+    sessionRepository : SessionRepository,
 ) : ViewModel() {
-
-    /** Repositories */
-    private val sessionRepository = SessionRepository(database)
 
     private val sessions = sessionRepository.sessionsWithSectionsWithLibraryItems.stateIn(
         scope = viewModelScope,

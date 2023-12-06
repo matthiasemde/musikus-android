@@ -13,7 +13,7 @@ import app.musikus.database.entities.SectionCreationAttributes
 import app.musikus.database.entities.SessionCreationAttributes
 import app.musikus.repository.GoalRepositoryImpl
 import app.musikus.repository.LibraryRepositoryImpl
-import app.musikus.repository.SessionRepository
+import app.musikus.repository.SessionRepositoryImpl
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import java.time.temporal.ChronoUnit
@@ -34,7 +34,10 @@ suspend fun prepopulateDatabase(
         goalDescriptionDao = musikusDb.goalDescriptionDao,
     )
 
-    val sessionRepository = SessionRepository(musikusDb)
+    val sessionRepository = SessionRepositoryImpl(
+        sessionDao = musikusDb.sessionDao,
+        sectionDao = musikusDb.sectionDao,
+    )
 
     listOf(
         LibraryFolderCreationAttributes(name = "Schupra"),
