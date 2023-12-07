@@ -151,16 +151,16 @@ dependencies {
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
     implementation("androidx.recyclerview:recyclerview:1.3.2")
 
-//    // Local unit tests
-//    testImplementation "androidx.test:core:1.5.0"
-//    testImplementation "junit:junit:4.13.2"
-//    testImplementation "androidx.arch.core:core-testing:2.2.0"
-//    testImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3"
-//    testImplementation "com.google.truth:truth:1.1.3"
-//    testImplementation "com.squareup.okhttp3:mockwebserver:4.9.1"
-//    testImplementation "io.mockk:mockk:1.10.5"
-//    debugImplementation "androidx.compose.ui:ui-test-manifest:1.5.4"
-//
+    // Local unit tests
+    testImplementation("androidx.test:core:1.5.0")
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("androidx.arch.core:core-testing:2.2.0")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
+    testImplementation("com.google.truth:truth:1.1.3")
+//    testImplementation("com.squareup.okhttp3:mockwebserver:4.9.1")
+//    testImplementation("io.mockk:mockk:1.10.5")
+    debugImplementation("androidx.compose.ui:ui-test-manifest:1.5.4")
+
 //    // Instrumentation tests
 //    androidTestImplementation "com.google.dagger:hilt-android-testing:2.37"
 //    kaptAndroidTest "com.google.dagger:hilt-android-compiler:2.37"
