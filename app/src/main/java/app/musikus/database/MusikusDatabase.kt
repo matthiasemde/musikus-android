@@ -25,6 +25,7 @@ import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import androidx.sqlite.db.SupportSQLiteQueryBuilder
+import app.musikus.Musikus.Companion.ioThread
 import app.musikus.database.daos.GoalDescriptionDao
 import app.musikus.database.daos.GoalInstanceDao
 import app.musikus.database.daos.LibraryFolderDao
@@ -44,6 +45,7 @@ import java.nio.ByteBuffer
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
+import javax.inject.Provider
 
 @Database(
     version = 3,
@@ -75,7 +77,10 @@ abstract class MusikusDatabase : RoomDatabase() {
     companion object {
         private const val DATABASE_NAME = "musikus-database"
 
-        fun buildDatabase(app: Application) =
+        fun buildDatabase(
+            app: Application,
+            dbProvider : Provider<MusikusDatabase>
+        ) =
             Room.databaseBuilder(
                 app,
                 MusikusDatabase::class.java,
@@ -87,9 +92,9 @@ abstract class MusikusDatabase : RoomDatabase() {
                 override fun onCreate(db: SupportSQLiteDatabase) {
                     super.onCreate(db)
                     // prepopulate the database
-                    runBlocking {
-                        prepopulateDatabase(db)
-                    }
+                    ioThread { runBlocking {
+                        prepopulateDatabase(dbProvider.get())
+                    } }
                 }
             }).build()
     }

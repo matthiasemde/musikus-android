@@ -20,7 +20,6 @@ import app.musikus.database.MusikusDatabase
 import app.musikus.database.entities.LibraryItemModel
 import app.musikus.database.entities.LibraryItemUpdateAttributes
 import app.musikus.database.entities.SoftDeleteModelDisplayAttributes
-import app.musikus.utils.getCurrTimestamp
 import kotlinx.coroutines.flow.Flow
 import java.util.UUID
 
@@ -96,10 +95,9 @@ abstract class LibraryItemDao(
             "deleted=1 " +
             "AND (NOT EXISTS (SELECT id FROM section WHERE library_item_id = library_item.id)) " +
             "AND (NOT EXISTS (SELECT id FROM goal_description_library_item_cross_ref WHERE library_item_id = library_item.id)) " +
-            "AND (modified_at+5<:now);"
-//                    "AND (modified_at+2592000<:now);" TODO change for release
+            "AND (datetime(modified_at) < datetime('now', '-1 month'));"
     )
-    abstract suspend fun clean(now: Long  = getCurrTimestamp()) : Int
+    abstract suspend fun clean() : Int
 
 //    @Transaction
 //    @Query("SELECT * FROM library_item WHERE id=:id")

@@ -1,7 +1,6 @@
 package app.musikus.utils
 
 import android.util.Log
-import androidx.sqlite.db.SupportSQLiteDatabase
 import app.musikus.database.MusikusDatabase
 import app.musikus.database.Nullable
 import app.musikus.database.entities.GoalDescriptionCreationAttributes
@@ -20,23 +19,21 @@ import java.time.temporal.ChronoUnit
 import kotlin.math.pow
 
 suspend fun prepopulateDatabase(
-    db: SupportSQLiteDatabase,
+    db: MusikusDatabase,
 ) {
-    val musikusDb = db as MusikusDatabase
-
     val libraryRepository = LibraryRepositoryImpl(
-        itemDao = musikusDb.libraryItemDao,
-        folderDao = musikusDb.libraryFolderDao,
+        itemDao = db.libraryItemDao,
+        folderDao = db.libraryFolderDao,
     )
 
     val goalRepository = GoalRepositoryImpl(
-        goalInstanceDao = musikusDb.goalInstanceDao,
-        goalDescriptionDao = musikusDb.goalDescriptionDao,
+        goalInstanceDao = db.goalInstanceDao,
+        goalDescriptionDao = db.goalDescriptionDao,
     )
 
     val sessionRepository = SessionRepositoryImpl(
-        sessionDao = musikusDb.sessionDao,
-        sectionDao = musikusDb.sectionDao,
+        sessionDao = db.sessionDao,
+        sectionDao = db.sectionDao,
     )
 
     listOf(

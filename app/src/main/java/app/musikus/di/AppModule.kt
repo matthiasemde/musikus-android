@@ -25,6 +25,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import javax.inject.Provider
 import javax.inject.Singleton
 
 @Module
@@ -45,10 +46,16 @@ object AppModule {
         return UserPreferencesRepositoryImpl(dataStore)
     }
 
+
+    /**
+     * Dependency injection for the database
+     * @param app Application
+     * @param dbProvider Provider<MusikusDatabase>: Needed for prepopulating the database
+     * */
     @Provides
     @Singleton
-    fun provideMusikusDatabase(app: Application): MusikusDatabase {
-        return MusikusDatabase.buildDatabase(app)
+    fun provideMusikusDatabase(app: Application, dbProvider: Provider<MusikusDatabase>): MusikusDatabase {
+        return MusikusDatabase.buildDatabase(app, dbProvider)
     }
 
     @Provides
