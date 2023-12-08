@@ -8,7 +8,7 @@
 
 package app.musikus.repository
 
-import app.musikus.database.daos.LibraryFolder
+import app.musikus.database.LibraryFolderWithItems
 import app.musikus.database.daos.LibraryFolderDao
 import app.musikus.database.daos.LibraryItem
 import app.musikus.database.daos.LibraryItemDao
@@ -23,7 +23,7 @@ import java.util.UUID
 
 interface LibraryRepository {
     val items: Flow<List<LibraryItem>>
-    val folders: Flow<List<LibraryFolder>>
+    val folders: Flow<List<LibraryFolderWithItems>>
 
     /** Mutators */
     /** Add */
@@ -35,11 +35,14 @@ interface LibraryRepository {
     suspend fun editItem(id: UUID, updateAttributes: LibraryItemUpdateAttributes)
 
     /** Delete / restore */
-    suspend fun deleteItems(items: List<LibraryItem>)
-    suspend fun deleteFolders(folders: List<LibraryFolder>)
+    suspend fun deleteItems(items: List<UUID>)
+    suspend fun deleteFolders(folders: List<UUID>)
 
-    suspend fun restoreItems(items: List<LibraryItem>)
-    suspend fun restoreFolders(folders: List<LibraryFolder>)
+    suspend fun restoreItems(items: List<UUID>)
+    suspend fun restoreFolders(folders: List<UUID>)
+
+    /** Exists */
+    suspend fun existsFolder(id: UUID): Boolean
 
     /** Clean */
     suspend fun clean()
@@ -51,7 +54,7 @@ class LibraryRepositoryImpl(
 ) : LibraryRepository {
 
     override val items = itemDao.getAllAsFlow()
-    override val folders = folderDao.getAllAsFlow()
+    override val folders = folderDao.getAllWithItems()
 
 
     /** Mutators */
@@ -90,20 +93,25 @@ class LibraryRepositoryImpl(
     }
 
     /** Delete / restore */
-    override suspend fun deleteItems(items: List<LibraryItem>) {
-        itemDao.delete(items.map { it.id })
+    override suspend fun deleteItems(itemIds: List<UUID>) {
+        itemDao.delete(itemIds)
     }
 
-    override suspend fun restoreItems(items: List<LibraryItem>) {
-        itemDao.restore(items.map{ it.id })
+    override suspend fun restoreItems(itemIds: List<UUID>) {
+        itemDao.restore(itemIds)
     }
 
-    override suspend fun deleteFolders(folders: List<LibraryFolder>) {
-        folderDao.delete(folders.map { it.id })
+    override suspend fun deleteFolders(folderIds: List<UUID>) {
+        folderDao.delete(folderIds)
     }
 
-    override suspend fun restoreFolders(folders: List<LibraryFolder>) {
-        folderDao.restore(folders.map { it.id })
+    override suspend fun restoreFolders(folderIds: List<UUID>) {
+        folderDao.restore(folderIds)
+    }
+
+    /** Exists */
+    override suspend fun existsFolder(id: UUID): Boolean {
+        return folderDao.exists(id)
     }
 
     /** Clean */

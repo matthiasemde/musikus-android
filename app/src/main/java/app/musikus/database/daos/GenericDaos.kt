@@ -59,7 +59,7 @@ abstract class BaseDao<
 ) {
 
     protected val displayAttributesString = (
-        BaseModelDisplayAttributes::class.java.fields.map { it.name } +
+        listOf("id") +
         displayAttributes
     ).joinToString(separator = ", ")
 
@@ -193,6 +193,12 @@ abstract class BaseDao<
             }
         }
     }
+
+    /**
+     * Exists Check
+     */
+    suspend fun exists(id: UUID) = get(id) != null
+
 }
 
 abstract class TimestampDao<
@@ -207,7 +213,7 @@ abstract class TimestampDao<
     tableName = tableName,
     database = database,
     displayAttributes =
-        TimestampModelDisplayAttributes::class.java.fields.map{ it.name } +
+        listOf("created_at", "modified_at") +
         displayAttributes
 ) {
     override suspend fun insert(row: T) {
@@ -241,9 +247,7 @@ abstract class SoftDeleteDao<
 ) : TimestampDao<T, U, D>(
     tableName = tableName,
     database = database,
-    displayAttributes =
-        SoftDeleteModelDisplayAttributes::class.java.fields.map { it.name } +
-        displayAttributes
+    displayAttributes = displayAttributes
 ) {
     @Update
     abstract override suspend fun directUpdate(rows: List<T>)

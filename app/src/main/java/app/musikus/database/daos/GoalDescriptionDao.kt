@@ -103,7 +103,16 @@ abstract class GoalDescriptionDao(
         >(
     tableName = "goal_description",
     database = database,
-    displayAttributes = GoalDescription::class.java.fields.map { it.name }
+    displayAttributes = listOf(
+        "type",
+        "repeat",
+        "period_in_period_units",
+        "period_unit",
+        "progress_type",
+        "paused",
+        "archived",
+        "custom_order"
+    )
 ) {
 
     /**

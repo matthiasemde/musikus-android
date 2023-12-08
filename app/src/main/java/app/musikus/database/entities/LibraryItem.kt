@@ -74,3 +74,5 @@ data class LibraryItemModel(
             "\tcustom order: \t\t\t\t${this.customOrder}\n"
     }
 }
+
+class InvalidLibraryItemException(message: String): Exception(message)

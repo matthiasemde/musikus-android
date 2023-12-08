@@ -57,7 +57,7 @@ abstract class SessionDao(
         >(
     tableName = "session",
     database = database,
-    displayAttributes = Session::class.java.fields.map { it.name }
+    displayAttributes = listOf("break_duration", "rating", "comment")
 ) {
 
     /**

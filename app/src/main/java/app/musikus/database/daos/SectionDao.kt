@@ -47,7 +47,7 @@ abstract class SectionDao(
 ) : BaseDao<SectionModel, SectionUpdateAttributes, Section>(
     tableName = "section",
     database = database,
-    displayAttributes = Section::class.java.declaredFields.map { it.name }
+    displayAttributes = listOf("session_id", "library_item_id", "duration", "start_timestamp")
 ) {
 
     /**

@@ -63,7 +63,13 @@ abstract class GoalInstanceDao(
 ) : TimestampDao<GoalInstanceModel, GoalInstanceUpdateAttributes, GoalInstance>(
     tableName = "goal_instance",
     database = database,
-    displayAttributes = GoalInstanceModel::class.java.declaredFields.map { it.name }
+    displayAttributes = listOf(
+        "goal_description_id",
+        "start_timestamp",
+        "end_timestamp",
+        "target",
+        "renewed",
+    )
 ) {
 
     /**

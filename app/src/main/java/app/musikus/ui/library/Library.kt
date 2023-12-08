@@ -90,6 +90,7 @@ import app.musikus.spacing
 import app.musikus.ui.MainViewModel
 import app.musikus.utils.LibraryFolderSortMode
 import app.musikus.utils.LibraryItemSortMode
+import app.musikus.utils.SortMode
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -316,9 +317,9 @@ fun LibraryContent(
     contentPadding: PaddingValues,
     contentUiState: LibraryContentUiState,
     onShowFolderSortMenuChange: (Boolean) -> Unit,
-    onFolderSortModeSelected: (LibraryFolderSortMode) -> Unit,
+    onFolderSortModeSelected: (SortMode<LibraryFolder>) -> Unit,
     onShowItemSortMenuChange: (Boolean) -> Unit,
-    onItemSortModeSelected: (LibraryItemSortMode) -> Unit,
+    onItemSortModeSelected: (SortMode<LibraryItem>) -> Unit,
     onFolderClicked: (LibraryFolder, Boolean) -> Unit,
     onItemClicked: (LibraryItem, Boolean) -> Unit,
 ) {
@@ -370,16 +371,17 @@ fun LibraryContent(
                         Spacer(modifier = Modifier.width(MaterialTheme.spacing.small))
                     }
                     items(
-                        items = foldersUiState.foldersWithItemCount,
+                        items = foldersUiState.foldersWithItems,
                         key = { it.folder.id }
-                    ) { (folder, itemCount) ->
+                    ) { folderWithItems ->
+                        val folder = folderWithItems.folder
                         Row(
                             modifier = Modifier
                                 .animateItemPlacement()
                         ) {
                             LibraryFolder(
                                 folder = folder,
-                                numItems = itemCount,
+                                numItems = folderWithItems.items.size,
                                 selected = folder in foldersUiState.selectedFolders,
                                 onShortClick = { onFolderClicked(folder, false) },
                                 onLongClick = { onFolderClicked(folder, true) }

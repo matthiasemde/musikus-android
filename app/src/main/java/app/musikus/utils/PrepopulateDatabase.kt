@@ -1,3 +1,11 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ *
+ * Copyright (c) 2023 Matthias Emde
+ */
+
 package app.musikus.utils
 
 import android.util.Log
@@ -46,7 +54,8 @@ suspend fun prepopulateDatabase(
         delay(10) //make sure folders have different createdAt values
     }
 
-    libraryRepository.folders.first().let { folders ->
+    libraryRepository.folders.first().let { foldersWithItems ->
+        val folders = foldersWithItems.map { it.folder }
         // populate the libraryItem table on first run
         listOf(
             LibraryItemCreationAttributes(name = "Die Schöpfung", colorIndex = 0, libraryFolderId = Nullable(folders[0].id)),

@@ -8,12 +8,12 @@
 
 package app.musikus.ui.library
 
+import app.musikus.database.LibraryFolderWithItems
 import app.musikus.database.daos.LibraryFolder
 import app.musikus.database.daos.LibraryItem
 import app.musikus.shared.TopBarUiState
-import app.musikus.utils.LibraryFolderSortMode
-import app.musikus.utils.LibraryItemSortMode
 import app.musikus.utils.SortDirection
+import app.musikus.utils.SortMode
 
 data class LibraryTopBarUiState(
     override val title: String,
@@ -28,12 +28,12 @@ data class LibraryActionModeUiState(
 data class LibraryFoldersSortMenuUiState(
     val show: Boolean,
 
-    val mode: LibraryFolderSortMode,
+    val mode: SortMode<LibraryFolder>,
     val direction: SortDirection,
 )
 
 data class LibraryFoldersUiState(
-    val foldersWithItemCount: List<LibraryFolderWithItemCount>,
+    val foldersWithItems: List<LibraryFolderWithItems>,
     val selectedFolders: Set<LibraryFolder>,
 
     val sortMenuUiState: LibraryFoldersSortMenuUiState
@@ -42,7 +42,7 @@ data class LibraryFoldersUiState(
 data class LibraryItemsSortMenuUiState(
     val show: Boolean,
 
-    val mode: LibraryItemSortMode,
+    val mode: SortMode<LibraryItem>,
     val direction: SortDirection,
 )
 

@@ -10,10 +10,14 @@ package app.musikus.database.daos
 
 import androidx.room.ColumnInfo
 import androidx.room.Dao
+import androidx.room.Query
+import androidx.room.Transaction
+import app.musikus.database.LibraryFolderWithItems
 import app.musikus.database.MusikusDatabase
 import app.musikus.database.entities.LibraryFolderModel
 import app.musikus.database.entities.LibraryFolderUpdateAttributes
 import app.musikus.database.entities.SoftDeleteModelDisplayAttributes
+import kotlinx.coroutines.flow.Flow
 
 data class LibraryFolder(
     @ColumnInfo(name = "name") val name: String,
@@ -43,7 +47,7 @@ abstract class LibraryFolderDao(
         >(
     tableName = "library_folder",
     database = database,
-    displayAttributes = LibraryFolder::class.java.fields.map { it.name }
+    displayAttributes = listOf("name", "custom_order")
 ) {
 
     /**
@@ -57,4 +61,13 @@ abstract class LibraryFolderDao(
         name = updateAttributes.name ?: old.name
         customOrder = updateAttributes.customOrder ?: old.customOrder
     }
+
+    /**
+     * @Query
+     */
+    @Transaction
+    @Query("SELECT * FROM library_folder")
+    abstract fun getAllWithItems(): Flow<List<LibraryFolderWithItems>>
 }
+
+class InvalidLibraryFolderException(message: String): Exception(message)

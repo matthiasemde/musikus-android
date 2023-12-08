@@ -13,12 +13,15 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
+import app.musikus.database.daos.LibraryFolder
+import app.musikus.database.daos.LibraryItem
 import app.musikus.datastore.ThemeSelections
 import app.musikus.datastore.UserPreferences
 import app.musikus.utils.GoalsSortMode
 import app.musikus.utils.LibraryFolderSortMode
 import app.musikus.utils.LibraryItemSortMode
 import app.musikus.utils.SortDirection
+import app.musikus.utils.SortInfo
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -38,11 +41,14 @@ object PreferenceKeys {
 interface UserPreferencesRepository {
     val userPreferences: Flow<UserPreferences>
 
+    val itemSortInfo: Flow<SortInfo<LibraryItem>>
+    val folderSortInfo: Flow<SortInfo<LibraryFolder>>
+
     /** Mutators */
     suspend fun updateTheme(theme: ThemeSelections)
 
-    suspend fun updateLibraryItemSortMode(mode: LibraryItemSortMode)
-    suspend fun updateLibraryFolderSortMode(mode: LibraryFolderSortMode)
+    suspend fun updateLibraryItemSortInfo(sortInfo: SortInfo<LibraryItem>)
+    suspend fun updateLibraryFolderSortInfo(sortInfo: SortInfo<LibraryFolder>)
 
     suspend fun updateGoalsSortMode(mode: GoalsSortMode)
     suspend fun updateShowPausedGoals(value: Boolean)
@@ -72,49 +78,44 @@ class UserPreferencesRepositoryImpl(
         )
     }
 
+    override val itemSortInfo : Flow<SortInfo<LibraryItem>> =
+        userPreferences.map { preferences ->
+            SortInfo(
+                mode = preferences.libraryItemSortMode,
+                direction = preferences.libraryItemSortDirection
+            )
+        }
+
+    override val folderSortInfo : Flow<SortInfo<LibraryFolder>> =
+        userPreferences.map { preferences ->
+            SortInfo(
+                mode = preferences.libraryFolderSortMode,
+                direction = preferences.libraryFolderSortDirection
+            )
+        }
+
+
+    /** Mutators */
     override suspend fun updateTheme(theme: ThemeSelections) {
         dataStore.edit { preferences ->
             preferences[PreferenceKeys.THEME] = theme.name
         }
     }
 
-    override suspend fun updateLibraryFolderSortMode(mode: LibraryFolderSortMode) {
-        userPreferences.map { preferences ->
-            Pair(preferences.libraryFolderSortMode, preferences.libraryFolderSortDirection)
-        }.first().let { (currentMode, currentDirection) ->
-            if (currentMode != mode) {
-                dataStore.edit { preferences ->
-                    preferences[PreferenceKeys.LIBRARY_FOLDER_SORT_MODE] = mode.name
-                    preferences[PreferenceKeys.LIBRARY_FOLDER_SORT_DIRECTION] =
-                        SortDirection.ASCENDING.name
-                }
-            } else {
-                dataStore.edit { preferences ->
-                    preferences[PreferenceKeys.LIBRARY_FOLDER_SORT_DIRECTION] =
-                        currentDirection.toggle().name
-                }
-            }
+    override suspend fun updateLibraryItemSortInfo(sortInfo: SortInfo<LibraryItem>) {
+        dataStore.edit { preferences ->
+            preferences[PreferenceKeys.LIBRARY_ITEM_SORT_MODE] = sortInfo.mode.name
+            preferences[PreferenceKeys.LIBRARY_ITEM_SORT_DIRECTION] = sortInfo.direction.name
         }
     }
 
-    override suspend fun updateLibraryItemSortMode(mode: LibraryItemSortMode) {
-        userPreferences.map { preferences ->
-            Pair(preferences.libraryItemSortMode, preferences.libraryItemSortDirection)
-        }.first().let { (currentMode, currentDirection) ->
-            if (currentMode != mode) {
-                dataStore.edit { preferences ->
-                    preferences[PreferenceKeys.LIBRARY_ITEM_SORT_MODE] = mode.name
-                    preferences[PreferenceKeys.LIBRARY_ITEM_SORT_DIRECTION] =
-                        SortDirection.ASCENDING.name
-                }
-            } else {
-                dataStore.edit { preferences ->
-                    preferences[PreferenceKeys.LIBRARY_ITEM_SORT_DIRECTION] =
-                        currentDirection.toggle().name
-                }
-            }
+    override suspend fun updateLibraryFolderSortInfo(sortInfo: SortInfo<LibraryFolder>) {
+        dataStore.edit { preferences ->
+            preferences[PreferenceKeys.LIBRARY_FOLDER_SORT_MODE] = sortInfo.mode.name
+            preferences[PreferenceKeys.LIBRARY_FOLDER_SORT_DIRECTION] = sortInfo.direction.name
         }
     }
+
 
     override suspend fun updateGoalsSortMode(mode: GoalsSortMode) {
         userPreferences.map { preferences ->
@@ -129,7 +130,7 @@ class UserPreferencesRepositoryImpl(
             } else {
                 dataStore.edit { preferences ->
                     preferences[PreferenceKeys.GOALS_SORT_DIRECTION] =
-                        currentDirection.toggle().name
+                        currentDirection.invert().name
                 }
             }
         }

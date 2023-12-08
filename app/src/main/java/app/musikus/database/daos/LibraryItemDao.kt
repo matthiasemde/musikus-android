@@ -53,7 +53,7 @@ abstract class LibraryItemDao(
 ) : SoftDeleteDao<LibraryItemModel, LibraryItemUpdateAttributes, LibraryItem>(
     tableName = "library_item",
     database = database,
-    displayAttributes = LibraryItem::class.java.declaredFields.map { it.name }
+    displayAttributes = listOf("name", "color_index", "library_folder_id", "custom_order")
 ) {
 
     /**

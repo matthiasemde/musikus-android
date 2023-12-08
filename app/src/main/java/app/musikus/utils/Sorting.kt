@@ -1,17 +1,31 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ *
+ * Copyright (c) 2023 Matthias Emde
+ */
+
 package app.musikus.utils
 
 import app.musikus.database.GoalDescriptionWithInstancesAndLibraryItems
 import app.musikus.database.GoalInstanceWithDescriptionWithLibraryItems
+import app.musikus.database.LibraryFolderWithItems
 import app.musikus.database.daos.GoalDescription
 import app.musikus.database.daos.GoalInstance
 import app.musikus.database.daos.LibraryFolder
 import app.musikus.database.daos.LibraryItem
 
+data class SortInfo<T>(
+    val mode: SortMode<T>,
+    val direction: SortDirection
+)
+
 enum class SortDirection {
     ASCENDING,
     DESCENDING;
 
-    fun toggle() = when (this) {
+    fun invert() = when (this) {
         ASCENDING -> DESCENDING
         DESCENDING -> ASCENDING
     }
@@ -30,6 +44,7 @@ enum class SortDirection {
 interface SortMode<T> {
     val label: String
     val comparator: Comparator<T>
+    val name: String
 }
 
 enum class GoalsSortMode : SortMode<Pair<GoalDescription, GoalInstance>> {
@@ -172,14 +187,14 @@ enum class LibraryFolderSortMode : SortMode<LibraryFolder> {
     }
 }
 
-fun List<LibraryFolder>.sorted(
+fun List<LibraryFolderWithItems>.sorted(
     mode: LibraryFolderSortMode,
     direction: SortDirection,
 ) = this.sortedWith(
     when (direction) {
         SortDirection.ASCENDING ->
-            compareBy(mode.comparator) { it }
+            compareBy(mode.comparator) { it.folder }
         SortDirection.DESCENDING ->
-            compareByDescending(mode.comparator) { it }
+            compareByDescending(mode.comparator) { it.folder }
     }
 )

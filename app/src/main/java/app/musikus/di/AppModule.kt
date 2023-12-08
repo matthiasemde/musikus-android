@@ -21,6 +21,21 @@ import app.musikus.repository.SessionRepository
 import app.musikus.repository.SessionRepositoryImpl
 import app.musikus.repository.UserPreferencesRepository
 import app.musikus.repository.UserPreferencesRepositoryImpl
+import app.musikus.usecase.library.AddFolderUseCase
+import app.musikus.usecase.library.AddItemUseCase
+import app.musikus.usecase.library.DeleteFoldersUseCase
+import app.musikus.usecase.library.DeleteItemsUseCase
+import app.musikus.usecase.library.EditFolderUseCase
+import app.musikus.usecase.library.EditItemUseCase
+import app.musikus.usecase.library.GetFolderSortInfoUseCase
+import app.musikus.usecase.library.GetFoldersUseCase
+import app.musikus.usecase.library.GetItemSortInfoUseCase
+import app.musikus.usecase.library.GetItemsUseCase
+import app.musikus.usecase.library.LibraryUseCases
+import app.musikus.usecase.library.RestoreFoldersUseCase
+import app.musikus.usecase.library.RestoreItemsUseCase
+import app.musikus.usecase.library.SelectFolderSortModeUseCase
+import app.musikus.usecase.library.SelectItemSortModeUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -39,7 +54,6 @@ object AppModule {
     }
 
     @Provides
-    @Singleton
     fun provideUserPreferencesRepository(
         dataStore: DataStore<Preferences>
     ): UserPreferencesRepository {
@@ -59,7 +73,6 @@ object AppModule {
     }
 
     @Provides
-    @Singleton
     fun provideLibraryRepository(
         database: MusikusDatabase
     ): LibraryRepository {
@@ -70,7 +83,6 @@ object AppModule {
     }
 
     @Provides
-    @Singleton
     fun provideGoalRepository(
         database: MusikusDatabase
     ): GoalRepository {
@@ -81,13 +93,36 @@ object AppModule {
     }
 
     @Provides
-    @Singleton
     fun provideSessionRepository(
         database: MusikusDatabase
     ): SessionRepository {
         return SessionRepositoryImpl(
             sessionDao = database.sessionDao,
             sectionDao = database.sectionDao,
+        )
+    }
+
+    @Provides
+    fun libraryUseCases(
+        libraryRepository: LibraryRepository,
+        userPreferencesRepository: UserPreferencesRepository
+    ): LibraryUseCases {
+        return LibraryUseCases(
+            getItems = GetItemsUseCase(libraryRepository, userPreferencesRepository),
+            getFolders = GetFoldersUseCase(libraryRepository, userPreferencesRepository),
+            addItem = AddItemUseCase(libraryRepository),
+            addFolder = AddFolderUseCase(libraryRepository),
+            editItem = EditItemUseCase(libraryRepository),
+            editFolder = EditFolderUseCase(libraryRepository),
+            deleteItems = DeleteItemsUseCase(libraryRepository),
+            deleteFolders = DeleteFoldersUseCase(libraryRepository),
+            restoreItems = RestoreItemsUseCase(libraryRepository),
+            restoreFolders = RestoreFoldersUseCase(libraryRepository),
+
+            getItemSortInfo = GetItemSortInfoUseCase(userPreferencesRepository),
+            selectItemSortMode = SelectItemSortModeUseCase(userPreferencesRepository),
+            getFolderSortInfo = GetFolderSortInfoUseCase(userPreferencesRepository),
+            selectFolderSortMode = SelectFolderSortModeUseCase(userPreferencesRepository),
         )
     }
 }
