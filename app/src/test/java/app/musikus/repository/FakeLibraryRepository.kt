@@ -31,7 +31,9 @@ class FakeLibraryRepository() : LibraryRepository {
         get() = flowOf(_items)
 
     override val folders
-        get() = flowOf(_folders)
+        get() = flowOf(_folders.map {
+            it.copy(items = _items.filter { item -> item.libraryFolderId == it.folder.id })
+        })
 
     override suspend fun addFolder(creationAttributes: LibraryFolderCreationAttributes) {
         _folders.add(LibraryFolderWithItems(
@@ -70,7 +72,11 @@ class FakeLibraryRepository() : LibraryRepository {
                         else folderWithItems.folder.customOrder
                     }
                 )
-            )
+            ).apply {
+                folder.setId(folderWithItems.folder.id)
+                folder.setCreatedAt(folderWithItems.folder.createdAt)
+                folder.setModifiedAt(ZonedDateTime.now())
+            }
             else folderWithItems
         }
     }
@@ -88,27 +94,31 @@ class FakeLibraryRepository() : LibraryRepository {
                     if (it != null) it.value
                     else item.customOrder
                 }
-            )
+            ).apply {
+                setId(item.id)
+                setCreatedAt(item.createdAt)
+                setModifiedAt(ZonedDateTime.now())
+            }
             else item
         }
     }
 
-    override suspend fun deleteItems(items: List<UUID>) {
-        _itemsBuffer = _items.filter { item -> item.id in items }
-        _items.removeIf { item -> item.id in items }
+    override suspend fun deleteItems(itemIds: List<UUID>) {
+        _itemsBuffer = _items.filter { item -> item.id in itemIds }
+        _items.removeIf { item -> item.id in itemIds }
     }
 
-    override suspend fun deleteFolders(folders: List<UUID>) {
-        _foldersBuffer = _folders.filter { folderWithItems -> folderWithItems.folder.id in folders }
-        _folders.removeIf { folderWithItems -> folderWithItems.folder.id in folders }
+    override suspend fun deleteFolders(folderIds: List<UUID>) {
+        _foldersBuffer = _folders.filter { folderWithItems -> folderWithItems.folder.id in folderIds }
+        _folders.removeIf { folderWithItems -> folderWithItems.folder.id in folderIds }
     }
 
-    override suspend fun restoreItems(items: List<UUID>) {
+    override suspend fun restoreItems(itemIds: List<UUID>) {
         _items.addAll(_itemsBuffer)
         _itemsBuffer = emptyList()
     }
 
-    override suspend fun restoreFolders(folders: List<UUID>) {
+    override suspend fun restoreFolders(folderIds: List<UUID>) {
         _folders.addAll(_foldersBuffer)
         _foldersBuffer = emptyList()
     }
