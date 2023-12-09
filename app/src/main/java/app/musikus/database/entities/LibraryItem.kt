@@ -34,7 +34,7 @@ private interface ILibraryItemUpdateAttributes : ISoftDeleteModelUpdateAttribute
 data class LibraryItemCreationAttributes(
     override val name: String,
     override val colorIndex: Int,
-    override val libraryFolderId: Nullable<UUID>? = Nullable(null), // default value because attr is optional
+    override val libraryFolderId: Nullable<UUID> = Nullable(null), // default value because attr is optional
 ) : SoftDeleteModelCreationAttributes(), ILibraryItemCreationAttributes
 
 data class LibraryItemUpdateAttributes(

@@ -21,14 +21,14 @@ class AddItemUseCase(
         creationAttributes: LibraryItemCreationAttributes
     ) {
         if(creationAttributes.name.isBlank()) {
-            throw InvalidLibraryItemException("Item name can not be empty")
+            throw InvalidLibraryItemException("Item name cannot be empty")
         }
         if(creationAttributes.colorIndex !in 0..9) {
             throw InvalidLibraryItemException("Color index must be between 0 and 9")
         }
 
         if(
-            creationAttributes.libraryFolderId?.value != null &&
+            creationAttributes.libraryFolderId.value != null &&
             !libraryRepository.existsFolder(creationAttributes.libraryFolderId.value)
         ) {
             throw InvalidLibraryItemException("Folder does not exist")

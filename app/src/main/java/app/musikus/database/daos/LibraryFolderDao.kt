@@ -11,6 +11,7 @@ package app.musikus.database.daos
 import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Query
+import androidx.room.RewriteQueriesToDropUnusedColumns
 import androidx.room.Transaction
 import app.musikus.database.LibraryFolderWithItems
 import app.musikus.database.MusikusDatabase
@@ -66,6 +67,7 @@ abstract class LibraryFolderDao(
      * @Query
      */
     @Transaction
+    @RewriteQueriesToDropUnusedColumns
     @Query("SELECT * FROM library_folder")
     abstract fun getAllWithItems(): Flow<List<LibraryFolderWithItems>>
 }

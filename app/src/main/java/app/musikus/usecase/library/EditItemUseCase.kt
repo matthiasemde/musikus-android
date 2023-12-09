@@ -23,7 +23,7 @@ class EditItemUseCase(
         updateAttributes: LibraryItemUpdateAttributes
     ) {
         if(updateAttributes.name != null && updateAttributes.name.isBlank()) {
-            throw InvalidLibraryItemException("Item name can not be empty")
+            throw InvalidLibraryItemException("Item name cannot be empty")
         }
 
         if(updateAttributes.colorIndex != null && updateAttributes.colorIndex !in 0..9) {

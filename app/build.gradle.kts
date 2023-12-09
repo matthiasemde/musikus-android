@@ -3,6 +3,7 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("dagger.hilt.android.plugin")
     id("com.google.devtools.ksp")
+    id("de.mannodermaus.android-junit5")
 }
 
 kotlin {
@@ -20,7 +21,8 @@ android {
         versionCode = 8
         versionName = "1.0.1"
 
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+//        testInstrumentationRunner = "org.junit.runners.JUnit4" // Use JUnit 4 for instrumentation tests
+//        testInstrumentationRunnerArguments["runnerBuilder"] = "de.mannodermaus.junit5.AndroidJUnit5Builder" // Use JUnit 5 for instrumentation tests
 
         ksp {
             arg("room.schemaLocation", "$projectDir/schemas")
@@ -46,12 +48,12 @@ android {
     compileOptions {
         // Flag to enable support for the new language APIs
         isCoreLibraryDesugaringEnabled = true
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
     }
 
     kotlinOptions {
-        jvmTarget = "17"
+        jvmTarget = JavaVersion.VERSION_1_8.toString()
     }
 
     buildFeatures {
@@ -63,6 +65,10 @@ android {
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.5"
     }
+}
+
+tasks.withType<Test> {
+    useJUnitPlatform()
 }
 
 dependencies {
@@ -80,7 +86,6 @@ dependencies {
     // https://developer.android.com/jetpack/compose/setup#bom-version-mapping
 
     implementation(platform("androidx.compose:compose-bom:$bomVersion"))
-    androidTestImplementation(platform("androidx.compose:compose-bom:$bomVersion"))
 
     // Compose
     // Animation
@@ -151,11 +156,17 @@ dependencies {
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
     implementation("androidx.recyclerview:recyclerview:1.3.2")
 
+    // Testing
+    androidTestImplementation(platform("androidx.compose:compose-bom:$bomVersion"))
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3") // For testing coroutines (optional)
+
     // Local unit tests
     testImplementation("androidx.test:core:1.5.0")
-    testImplementation("junit:junit:4.13.2")
+
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.7.2")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.7.2")
+
     testImplementation("androidx.arch.core:core-testing:2.2.0")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
     testImplementation("com.google.truth:truth:1.1.3")
 //    testImplementation("com.squareup.okhttp3:mockwebserver:4.9.1")
 //    testImplementation("io.mockk:mockk:1.10.5")
@@ -165,7 +176,6 @@ dependencies {
 //    androidTestImplementation "com.google.dagger:hilt-android-testing:2.37"
 //    kaptAndroidTest "com.google.dagger:hilt-android-compiler:2.37"
 //    androidTestImplementation "junit:junit:4.13.2"
-//    androidTestImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3"
 //    androidTestImplementation "androidx.arch.core:core-testing:2.2.0"
 //    androidTestImplementation "com.google.truth:truth:1.1.3"
 //    androidTestImplementation "androidx.test.ext:junit:1.1.5"

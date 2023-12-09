@@ -35,11 +35,11 @@ interface LibraryRepository {
     suspend fun editItem(id: UUID, updateAttributes: LibraryItemUpdateAttributes)
 
     /** Delete / restore */
-    suspend fun deleteItems(items: List<UUID>)
-    suspend fun deleteFolders(folders: List<UUID>)
+    suspend fun deleteItems(itemIds: List<UUID>)
+    suspend fun deleteFolders(folderIds: List<UUID>)
 
-    suspend fun restoreItems(items: List<UUID>)
-    suspend fun restoreFolders(folders: List<UUID>)
+    suspend fun restoreItems(itemIds: List<UUID>)
+    suspend fun restoreFolders(folderIds: List<UUID>)
 
     /** Exists */
     suspend fun existsFolder(id: UUID): Boolean

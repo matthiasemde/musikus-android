@@ -8,5 +8,6 @@ plugins {
 buildscript {
     dependencies {
         classpath("com.google.dagger:hilt-android-gradle-plugin:2.49")
+        classpath("de.mannodermaus.gradle.plugins:android-junit5:1.10.0.0")
     }
 }
