@@ -19,7 +19,7 @@ import kotlinx.coroutines.flow.flowOf
 import java.time.ZonedDateTime
 import java.util.UUID
 
-class FakeLibraryRepository() : LibraryRepository {
+class FakeLibraryRepository : LibraryRepository {
 
     private val _items = mutableListOf<LibraryItem>()
     private val _folders = mutableListOf<LibraryFolderWithItems>()

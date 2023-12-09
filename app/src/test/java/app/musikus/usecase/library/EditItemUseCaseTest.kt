@@ -132,11 +132,11 @@ class EditItemUseCaseTest {
                 )
             )
             val updatedItem = fakeRepository.items.first().first { it.id == item.id }
-            val updatedFolder = fakeRepository.folders.first().first { it.folder.id == folder.id }
 
             assertThat(updatedItem.name).isEqualTo("test")
             assertThat(updatedItem.colorIndex).isEqualTo((item.colorIndex + 5) % 10)
-            assertThat(updatedItem.libraryFolderId).isEqualTo(folder.id)
+
+            val updatedFolder = fakeRepository.folders.first().first { it.folder.id == folder.id }
 
             assertThat(updatedFolder.items).contains(updatedItem)
         }
