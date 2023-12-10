@@ -94,7 +94,7 @@ import app.musikus.utils.SortMode
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Library(
+fun LibraryScreen(
     mainViewModel: MainViewModel,
     libraryViewModel: LibraryViewModel = hiltViewModel()
 ) {
@@ -142,6 +142,7 @@ fun Library(
                             libraryViewModel.clearActionMode()
                         }
                     },
+                    contentDescription = "Add",
                     miniFABs = listOf(
                         MiniFABData(
                             onClick = {

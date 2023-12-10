@@ -37,8 +37,10 @@ data class MiniFABData(
 
 @Composable
 fun MultiFAB(
+    modifier: Modifier = Modifier,
     state: MultiFabState,
     onStateChange: (MultiFabState) -> Unit,
+    contentDescription: String,
     miniFABs: List<MiniFABData>
 ) {
     val transition = updateTransition(targetState = state, label = "transition")
@@ -50,8 +52,8 @@ fun MultiFAB(
         if (it == MultiFabState.EXPANDED) 1f else 0f
     }
 
-    Column(modifier = Modifier
-        .zIndex(1f),
+    Column(
+        modifier = modifier.zIndex(1f),
         horizontalAlignment = Alignment.End
     ) {
         if (transition.targetState == MultiFabState.EXPANDED || transition.currentState == MultiFabState.EXPANDED) {
@@ -72,11 +74,18 @@ fun MultiFAB(
             }
         }
         FloatingActionButton(
-            onClick = { onStateChange(
-                if(state == MultiFabState.EXPANDED) MultiFabState.COLLAPSED else MultiFabState.EXPANDED
-            ) },
+            onClick = {
+                onStateChange(
+                    if(state == MultiFabState.EXPANDED) MultiFabState.COLLAPSED
+                    else MultiFabState.EXPANDED
+                )
+            },
         ) {
-            Icon(Icons.Default.Add, modifier = Modifier.rotate(rotate), contentDescription = "Expand")
+            Icon(
+                Icons.Default.Add,
+                modifier = Modifier.rotate(rotate),
+                contentDescription = contentDescription
+            )
         }
     }
 }

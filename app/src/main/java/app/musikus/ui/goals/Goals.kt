@@ -104,6 +104,7 @@ fun Goals(
                         goalsViewModel.clearActionMode()
                     }
                 },
+                contentDescription = "Add",
                 miniFABs = listOf(
                     MiniFABData(
                         onClick = {

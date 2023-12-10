@@ -21,8 +21,7 @@ android {
         versionCode = 8
         versionName = "1.0.1"
 
-//        testInstrumentationRunner = "org.junit.runners.JUnit4" // Use JUnit 4 for instrumentation tests
-//        testInstrumentationRunnerArguments["runnerBuilder"] = "de.mannodermaus.junit5.AndroidJUnit5Builder" // Use JUnit 5 for instrumentation tests
+        testInstrumentationRunner = "app.musikus.HiltTestRunner"
 
         ksp {
             arg("room.schemaLocation", "$projectDir/schemas")
@@ -78,6 +77,7 @@ dependencies {
     val roomVersion = "2.6.1"
     val navVersion = "2.7.5"
     val daggerHiltVersion = "2.49"
+    val kotlinCoroutineVersion = "1.7.3"
 
     implementation("androidx.navigation:navigation-runtime-ktx:$navVersion")
     implementation("androidx.legacy:legacy-support-v4:1.0.0")
@@ -129,7 +129,7 @@ dependencies {
     ksp("androidx.room:room-compiler:$roomVersion")
 
     // Coroutines
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:$kotlinCoroutineVersion")
 
     //Dagger - Hilt
     implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
@@ -158,29 +158,29 @@ dependencies {
 
     // Testing
     androidTestImplementation(platform("androidx.compose:compose-bom:$bomVersion"))
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3") // For testing coroutines (optional)
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:$kotlinCoroutineVersion")
 
     // Local unit tests
     testImplementation("androidx.test:core:1.5.0")
 
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.7.2")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.7.2")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.0")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.0")
 
     testImplementation("androidx.arch.core:core-testing:2.2.0")
     testImplementation("com.google.truth:truth:1.1.3")
-//    testImplementation("com.squareup.okhttp3:mockwebserver:4.9.1")
-//    testImplementation("io.mockk:mockk:1.10.5")
     debugImplementation("androidx.compose.ui:ui-test-manifest:1.5.4")
 
-//    // Instrumentation tests
-//    androidTestImplementation "com.google.dagger:hilt-android-testing:2.37"
-//    kaptAndroidTest "com.google.dagger:hilt-android-compiler:2.37"
-//    androidTestImplementation "junit:junit:4.13.2"
-//    androidTestImplementation "androidx.arch.core:core-testing:2.2.0"
-//    androidTestImplementation "com.google.truth:truth:1.1.3"
-//    androidTestImplementation "androidx.test.ext:junit:1.1.5"
-//    androidTestImplementation "androidx.test:core-ktx:1.5.0"
-//    androidTestImplementation "com.squareup.okhttp3:mockwebserver:4.9.1"
-//    androidTestImplementation "io.mockk:mockk-android:1.10.5"
-//    androidTestImplementation "androidx.test:runner:1.5.2"
+    // Instrumentation tests
+    androidTestImplementation("com.google.dagger:hilt-android-testing:$daggerHiltVersion")
+    kspAndroidTest("com.google.dagger:hilt-android-compiler:$daggerHiltVersion")
+    androidTestImplementation("junit:junit:4.13.2")
+    androidTestImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:$kotlinCoroutineVersion")
+    androidTestImplementation("androidx.arch.core:core-testing:2.2.0")
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.5.4")
+    androidTestImplementation("androidx.test:core-ktx:1.5.0")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+    androidTestImplementation("androidx.test.ext:junit:1.1.5")
+    androidTestImplementation("androidx.test:runner:1.5.2")
+    androidTestImplementation("com.google.truth:truth:1.1.3")
+
 }

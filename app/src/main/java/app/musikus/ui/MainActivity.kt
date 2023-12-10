@@ -71,7 +71,7 @@ import app.musikus.getActivity
 import app.musikus.shared.MultiFabState
 import app.musikus.ui.goals.Goals
 import app.musikus.ui.goals.ProgressUpdate
-import app.musikus.ui.library.Library
+import app.musikus.ui.library.LibraryScreen
 import app.musikus.ui.sessions.Sessions
 import app.musikus.ui.sessions.editsession.EditSession
 import app.musikus.ui.statistics.Statistics
@@ -337,7 +337,7 @@ class MainActivity : AppCompatActivity() {
                         ) { GoalStatistics(navigateUp = navController::navigateUp) }
                         composable(
                             route = Screen.Library.route,
-                        ) { Library (mainViewModel) }
+                        ) { LibraryScreen (mainViewModel) }
                         composable(
                             route = Screen.ProgressUpdate.route,
                             enterTransition = { fadeIn(tween(0)) }
