@@ -33,7 +33,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import app.musikus.Musikus
@@ -42,6 +45,7 @@ import app.musikus.database.daos.LibraryFolder
 import app.musikus.shared.DialogHeader
 import app.musikus.shared.SelectionSpinner
 import app.musikus.shared.UUIDSelectionSpinnerOption
+import app.musikus.utils.TestTags
 import java.util.UUID
 
 
@@ -66,7 +70,9 @@ fun LibraryFolderDialog(
             )
             Column {
                 OutlinedTextField(
-                    modifier = Modifier.padding(horizontal = 24.dp),
+                    modifier = Modifier
+                        .padding(horizontal = 24.dp)
+                        .testTag(TestTags.FOLDER_DIALOG_NAME_INPUT),
                     value = folderData.name,
                     onValueChange = onFolderNameChange,
                     label = { Text(text = "Folder name") },
@@ -86,17 +92,21 @@ fun LibraryFolderDialog(
                     ) {
                         Text(text = "Cancel")
                     }
+                    val confirmText = when(mode) {
+                        DialogMode.ADD -> "Create"
+                        DialogMode.EDIT -> "Edit"
+                    }
                     TextButton(
                         onClick = onConfirmHandler,
                         enabled = folderData.name.isNotEmpty(),
                         colors = ButtonDefaults.textButtonColors(
                             contentColor = MaterialTheme.colorScheme.primary
-                        )
+                        ),
+                        modifier = Modifier.semantics {
+                            contentDescription = confirmText
+                        }
                     ) {
-                        Text(text = when(mode) {
-                            DialogMode.ADD -> "Create"
-                            DialogMode.EDIT -> "Edit"
-                        })
+                        Text(text = confirmText)
                     }
                 }
             }
@@ -129,7 +139,9 @@ fun LibraryItemDialog(
             })
             Column {
                 OutlinedTextField(
-                    modifier = Modifier.padding(horizontal = 24.dp),
+                    modifier = Modifier
+                        .padding(horizontal = 24.dp)
+                        .testTag(TestTags.ITEM_DIALOG_NAME_INPUT),
                     value = itemData.name,
                     onValueChange = onNameChange,
                     leadingIcon = {
@@ -204,17 +216,21 @@ fun LibraryItemDialog(
                     ) {
                         Text(text = "Cancel")
                     }
+                    val confirmText = when(mode) {
+                        DialogMode.ADD -> "Create"
+                        DialogMode.EDIT -> "Edit"
+                    }
                     TextButton(
                         onClick = onConfirmHandler,
                         enabled = itemData.name.isNotEmpty(),
                         colors = ButtonDefaults.textButtonColors(
                             contentColor = MaterialTheme.colorScheme.primary
-                        )
+                        ),
+                        modifier = Modifier.semantics {
+                            contentDescription = confirmText
+                        }
                     ) {
-                        Text(text = when(mode) {
-                            DialogMode.ADD -> "Create"
-                            DialogMode.EDIT -> "Edit"
-                        })
+                        Text(text = confirmText)
                     }
                 }
             }

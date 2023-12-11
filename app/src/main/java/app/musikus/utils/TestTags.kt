@@ -12,6 +12,8 @@
 
 package app.musikus.utils
 
-class TestTags {
-
+object TestTags {
+    const val FOLDER_DIALOG_NAME_INPUT = "FOLDER_DIALOG_NAME_INPUT"
+    const val ITEM_DIALOG_NAME_INPUT = "ITEM_DIALOG_NAME_INPUT"
+    const val FOLDER_LIST = "FOLDER_LIST"
 }

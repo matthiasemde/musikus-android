@@ -68,7 +68,8 @@ abstract class LibraryFolderDao(
      */
     @Transaction
     @RewriteQueriesToDropUnusedColumns
-    @Query("SELECT * FROM library_folder")
+    @Query("SELECT * FROM library_folder " +
+            "WHERE deleted = 0")
     abstract fun getAllWithItems(): Flow<List<LibraryFolderWithItems>>
 }
 
