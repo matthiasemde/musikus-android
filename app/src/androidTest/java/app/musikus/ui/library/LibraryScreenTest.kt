@@ -11,14 +11,22 @@ package app.musikus.ui.library
 import android.content.Context
 import androidx.activity.compose.setContent
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasParent
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.isDialog
+import androidx.compose.ui.test.isRoot
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.printToLog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -111,5 +119,53 @@ class LibraryScreenTest {
 
         // Check if hint is not displayed anymore
         composeRule.onNodeWithText(context.getString(R.string.libraryHint)).assertDoesNotExist()
+
+        // Remove the item
+        composeRule.onNodeWithText("Test").performTouchInput { longClick() }
+        composeRule.onNodeWithContentDescription("Delete").performClick()
+
+        // Check if hint is displayed again
+        composeRule.onNodeWithText(context.getString(R.string.libraryHint)).assertIsDisplayed()
+    }
+
+    @Test
+    fun addItemToFolderFromInsideAndOutside_itemsDisplayed() {
+
+        // Add a folder
+        composeRule.onNodeWithContentDescription("Add").performClick()
+        composeRule.onNodeWithContentDescription("Folder").performClick()
+        composeRule.onNodeWithTag(TestTags.FOLDER_DIALOG_NAME_INPUT).performTextInput("TestFolder")
+        composeRule.onNodeWithContentDescription("Create").performClick()
+
+        // Add an item from outside the folder
+        composeRule.onNodeWithContentDescription("Add").performClick()
+        composeRule.onNodeWithContentDescription("Item").performClick()
+        composeRule.onNodeWithTag(TestTags.ITEM_DIALOG_NAME_INPUT).performTextInput("TestItem1")
+        composeRule.onNodeWithContentDescription("Select folder").performClick()
+        composeRule.onAllNodes(isRoot())[0].printToLog("TAG")
+        composeRule.onAllNodes(isRoot())[1].printToLog("TAG")
+        composeRule.onAllNodes(isRoot())[2].printToLog("TAG")
+
+        composeRule.onNode(
+            matcher = hasAnyAncestor(hasContentDescription("TestFolder"))
+            and
+            hasText("TestFolder")
+        ).performClick()
+        composeRule.onNodeWithContentDescription("Create").performClick()
+
+        // Open folder
+        composeRule.onNodeWithText("TestFolder").performClick()
+
+        // Check if item is displayed
+        composeRule.onNodeWithText("TestItem1").assertIsDisplayed()
+
+        // Add an item from inside the folder (folder should be pre-selected)
+        composeRule.onNodeWithContentDescription("Add").performClick()
+        composeRule.onNodeWithContentDescription("Item").performClick()
+        composeRule.onNodeWithTag(TestTags.ITEM_DIALOG_NAME_INPUT).performTextInput("TestItem2")
+        composeRule.onNodeWithContentDescription("Create").performClick()
+
+        // Check if item is displayed
+        composeRule.onNodeWithText("TestItem2").assertIsDisplayed()
     }
 }
