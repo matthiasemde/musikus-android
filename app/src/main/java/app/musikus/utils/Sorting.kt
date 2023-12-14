@@ -31,7 +31,7 @@ enum class SortDirection {
     }
 
     companion object {
-        val DEFAULT = ASCENDING
+        val DEFAULT = DESCENDING
 
         fun valueOrDefault(string: String?) = try {
             valueOf(string ?: "")

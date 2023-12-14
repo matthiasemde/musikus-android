@@ -8,7 +8,6 @@
 
 package app.musikus.ui.library
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.musikus.database.MusikusDatabase
@@ -60,7 +59,6 @@ data class LibraryDialogState(
 
 @HiltViewModel
 class LibraryViewModel @Inject constructor(
-    private val database: MusikusDatabase,
     private val libraryUseCases: LibraryUseCases,
 ) : ViewModel() {
 
@@ -141,7 +139,7 @@ class LibraryViewModel @Inject constructor(
         LibraryTopBarUiState(
             title = title,
             showBackButton = showBackButton,
-        ).also { Log.d("LibraryViewModel", "topBarUiState updated") }
+        )
     }.stateIn(
         scope = viewModelScope,
         started = WhileSubscribed(5000),
@@ -158,7 +156,7 @@ class LibraryViewModel @Inject constructor(
         LibraryActionModeUiState(
             isActionMode = selectedFolders.isNotEmpty() || selectedItems.isNotEmpty(),
             numberOfSelections = selectedFolders.size + selectedItems.size,
-        ).also { Log.d("LibraryViewModel", "actionModeUiState updated") }
+        )
     }.stateIn(
         scope = viewModelScope,
         started = WhileSubscribed(5000),
@@ -176,7 +174,7 @@ class LibraryViewModel @Inject constructor(
             show = showMenu,
             mode = sortInfo.mode,
             direction = sortInfo.direction,
-        ).also { Log.d("LibraryViewModel", "foldersSortMenuUiState updated") }
+        )
     }.stateIn(
         scope = viewModelScope,
         started = WhileSubscribed(5000),
@@ -198,7 +196,7 @@ class LibraryViewModel @Inject constructor(
             foldersWithItems = foldersWithItems,
             selectedFolders = selectedFolders,
             sortMenuUiState = sortMenuUiState,
-        ).also { Log.d("LibraryViewModel", "foldersUiState updated") }
+        )
     }.stateIn(
         scope = viewModelScope,
         started = WhileSubscribed(5000),
@@ -213,7 +211,7 @@ class LibraryViewModel @Inject constructor(
             show = showMenu,
             mode = sortInfo.mode,
             direction = sortInfo.direction,
-        ).also { Log.d("LibraryViewModel", "itemsSortMenuUiState updated") }
+        )
     }.stateIn(
         scope = viewModelScope,
         started = WhileSubscribed(5000),
@@ -235,7 +233,7 @@ class LibraryViewModel @Inject constructor(
             items = items,
             selectedItems = selectedItems,
             sortMenuUiState = sortMenuUiState,
-        ).also { Log.d("LibraryViewModel", "itemsUiState updated") }
+        )
     }.stateIn(
         scope = viewModelScope,
         started = WhileSubscribed(5000),
@@ -251,7 +249,7 @@ class LibraryViewModel @Inject constructor(
             foldersUiState = if (activeFolder == null) foldersUiState else null,
             itemsUiState = itemsUiState,
             showHint = foldersUiState == null && itemsUiState == null,
-        ).also { Log.d("LibraryViewModel", "contentUiState updated") }
+        )
     }.stateIn(
         scope = viewModelScope,
         started = WhileSubscribed(5000),
@@ -274,7 +272,7 @@ class LibraryViewModel @Inject constructor(
             folderData = editData,
             confirmButtonEnabled = confirmButtonEnabled,
             folderToEdit = folderToEdit,
-        ).also { Log.d("LibraryViewModel", "folderDialogUiState updated") }
+        )
     }.stateIn(
         scope = viewModelScope,
         started = WhileSubscribed(5000),
@@ -297,9 +295,7 @@ class LibraryViewModel @Inject constructor(
             isFolderSelectorExpanded = isFolderSelectorExpanded,
             confirmButtonEnabled = confirmButtonEnabled,
             itemToEdit = itemToEdit,
-        ).also {
-            Log.d("LibraryViewModel", "itemDialogUiState updated")
-        }
+        )
     }.stateIn(
         scope = viewModelScope,
         started = WhileSubscribed(5000),
@@ -314,9 +310,7 @@ class LibraryViewModel @Inject constructor(
         LibraryDialogState(
             folderDialogUiState = folderDialogUiState,
             itemDialogUiState = itemDialogUiState,
-        ).also {
-            Log.d("LibraryViewModel", "dialogUiState updated")
-        }
+        )
     }.stateIn(
         scope = viewModelScope,
         started = WhileSubscribed(5000),
@@ -329,9 +323,7 @@ class LibraryViewModel @Inject constructor(
     private val fabUiState = _activeFolder.map { activeFolder ->
         LibraryFabUiState(
             activeFolder = activeFolder,
-        ).also {
-            Log.d("LibraryViewModel", "fabUiState updated")
-        }
+        )
     }.stateIn(
         scope = viewModelScope,
         started = WhileSubscribed(5000),
@@ -353,9 +345,7 @@ class LibraryViewModel @Inject constructor(
             contentUiState = contentUiState,
             dialogUiState = dialogUiState,
             fabUiState = fabUiState,
-        ).also {
-            Log.d("LibraryViewModel", "UiState updated")
-        }
+        )
     }.stateIn(
         scope = viewModelScope,
         started = WhileSubscribed(5000),

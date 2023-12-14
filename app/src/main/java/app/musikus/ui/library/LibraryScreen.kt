@@ -67,6 +67,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
@@ -131,7 +133,7 @@ fun LibraryScreen(
                         mainViewModel.collapseMultiFab()
                     },
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = "New item")
+                    Icon(Icons.Default.Add, contentDescription = "Add item")
                 }
             } else {
                 MultiFAB(
@@ -357,6 +359,7 @@ fun LibraryContent(
                         sortModes = LibraryFolderSortMode.entries,
                         currentSortMode = sortMenuUiState.mode,
                         currentSortDirection = sortMenuUiState.direction,
+                        sortItemDescription = "folders",
                         onShowMenuChanged = onShowFolderSortMenuChange,
                         onSelectionHandler = onFolderSortModeSelected
                     )
@@ -419,6 +422,7 @@ fun LibraryContent(
                         sortModes = LibraryItemSortMode.entries,
                         currentSortMode = sortMenuUiState.mode,
                         currentSortDirection = sortMenuUiState.direction,
+                        sortItemDescription = "items",
                         onShowMenuChanged = onShowItemSortMenuChange,
                         onSelectionHandler = onItemSortModeSelected
                     )
@@ -436,7 +440,7 @@ fun LibraryContent(
                             vertical = MaterialTheme.spacing.small,
                             horizontal = MaterialTheme.spacing.large
                         ),
-                        libraryItem = item,
+                        item = item,
                         selected = item in itemsUiState.selectedItems,
                         onShortClick = { onItemClicked(item, false) },
                         onLongClick = { onItemClicked(item, true) }
@@ -494,8 +498,8 @@ fun LibraryFolder(
 
 @Composable
 fun LibraryItem(
-    modifier: Modifier,
-    libraryItem: LibraryItem,
+    modifier: Modifier = Modifier,
+    item: LibraryItem,
     selected: Boolean,
     onShortClick: () -> Unit,
     onLongClick: () -> Unit,
@@ -518,15 +522,18 @@ fun LibraryItem(
                     .clip(RoundedCornerShape(5.dp))
                     .align(Alignment.CenterVertically)
                     .background(
-                        Color(Musikus.getLibraryItemColors(LocalContext.current)[libraryItem.colorIndex])
-                    ),
+                        Color(Musikus.getLibraryItemColors(LocalContext.current)[item.colorIndex])
+                    )
+                    .semantics {
+                        contentDescription = "Color ${item.colorIndex + 1}"
+                    },
             )
             Column(
                 modifier = Modifier
                     .padding(start = 12.dp),
             ) {
                 Text(
-                    text = libraryItem.name,
+                    text = item.name,
                     style = MaterialTheme.typography.titleMedium,
                 )
                 Text(

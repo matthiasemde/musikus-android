@@ -20,7 +20,7 @@ enum class ThemeSelections {
     NIGHT;
 
     companion object {
-        private val DEFAULT = SYSTEM
+        val DEFAULT = SYSTEM
 
         fun valueOrDefault(string: String?) = try {
             valueOf(string ?: "")

@@ -98,7 +98,7 @@ dependencies {
     implementation("androidx.compose.foundation:foundation-layout")
 
     // Material
-    implementation("androidx.compose.material3:material3:1.2.0-alpha09") // TODO remove explicit version once bom is updated
+    implementation("androidx.compose.material3:material3:1.2.0-alpha12") // TODO remove explicit version once bom is updated
     implementation("androidx.compose.material3:material3-window-size-class")
     implementation("androidx.compose.material:material-icons-core")
     implementation("androidx.compose.material:material-icons-extended")
@@ -142,7 +142,6 @@ dependencies {
     // Navigation
     implementation("androidx.navigation:navigation-fragment-ktx:$navVersion")
     implementation("androidx.navigation:navigation-ui-ktx:$navVersion")
-    implementation("com.google.accompanist:accompanist-navigation-animation:0.33.1-alpha")
 
     // Backport java.Time to SDK < 23
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")

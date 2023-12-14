@@ -16,6 +16,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalTextInputService
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
@@ -37,13 +38,14 @@ fun SelectionSpinner(
     options: List<SelectionSpinnerOption>,
     selected: SelectionSpinnerOption,
     specialOption: SelectionSpinnerOption? = null,
-    selectorContentDescription: String,
+    semanticDescription: String,
+    dropdownTestTag: String,
     onExpandedChange: (Boolean) -> Unit,
     onSelectedChange: (SelectionSpinnerOption) -> Unit
 ) {
     ExposedDropdownMenuBox(
         modifier = modifier.semantics {
-            contentDescription = selectorContentDescription
+            contentDescription = semanticDescription
         },
         expanded = expanded,
         onExpandedChange = onExpandedChange
@@ -52,8 +54,7 @@ fun SelectionSpinner(
             OutlinedTextField(
                 readOnly = true,
                 modifier = Modifier
-                    .menuAnchor()
-                    ,
+                    .menuAnchor(),
                 value = selected.name,
                 onValueChange = {},
                 label = label,
@@ -64,6 +65,7 @@ fun SelectionSpinner(
                 colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
             )
             ExposedDropdownMenu(
+                modifier = Modifier.testTag(dropdownTestTag),
                 expanded = expanded,
                 onDismissRequest = { onExpandedChange(false) },
             ) {

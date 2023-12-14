@@ -9,11 +9,9 @@
 package app.musikus.di
 
 import android.app.Application
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
 import androidx.room.Room
-import app.musikus.dataStore
 import app.musikus.database.MusikusDatabase
+import app.musikus.repository.FakeUserPreferencesRepository
 import app.musikus.repository.GoalRepository
 import app.musikus.repository.GoalRepositoryImpl
 import app.musikus.repository.LibraryRepository
@@ -21,7 +19,6 @@ import app.musikus.repository.LibraryRepositoryImpl
 import app.musikus.repository.SessionRepository
 import app.musikus.repository.SessionRepositoryImpl
 import app.musikus.repository.UserPreferencesRepository
-import app.musikus.repository.UserPreferencesRepositoryImpl
 import app.musikus.usecase.library.AddFolderUseCase
 import app.musikus.usecase.library.AddItemUseCase
 import app.musikus.usecase.library.DeleteFoldersUseCase
@@ -41,7 +38,6 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import javax.inject.Provider
 import javax.inject.Singleton
 
 @Module
@@ -50,15 +46,8 @@ object TestAppModule {
 
     @Provides
     @Singleton
-    fun provideDataStore(app: Application): DataStore<Preferences> {
-        return app.dataStore
-    }
-
-    @Provides
-    fun provideUserPreferencesRepository(
-        dataStore: DataStore<Preferences>
-    ): UserPreferencesRepository {
-        return UserPreferencesRepositoryImpl(dataStore)
+    fun provideUserPreferencesRepository(): UserPreferencesRepository {
+        return FakeUserPreferencesRepository()
     }
 
 

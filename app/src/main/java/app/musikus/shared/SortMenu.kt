@@ -22,6 +22,8 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import app.musikus.utils.SortDirection
@@ -29,7 +31,9 @@ import app.musikus.utils.SortMode
 
 @Composable
 fun <T : SortMode<*>> SortMenu(
+    modifier: Modifier = Modifier,
     show: Boolean,
+    sortItemDescription: String,
     sortModes: List<T>,
     currentSortMode: T,
     currentSortDirection: SortDirection,
@@ -37,6 +41,9 @@ fun <T : SortMode<*>> SortMenu(
     onSelectionHandler: (T) -> Unit
 ) {
     TextButton(
+        modifier = modifier.semantics {
+            contentDescription = "Select sort mode and direction for $sortItemDescription"
+        },
         onClick = { onShowMenuChanged(!show) })
     {
         Text(
@@ -54,6 +61,9 @@ fun <T : SortMode<*>> SortMenu(
             contentDescription = null
         )
         DropdownMenu(
+            modifier = Modifier.semantics {
+                contentDescription = "List of sort modes for $sortItemDescription"
+            },
             offset = DpOffset((-10).dp, 10.dp),
             expanded = show,
             onDismissRequest = { onShowMenuChanged(false) },

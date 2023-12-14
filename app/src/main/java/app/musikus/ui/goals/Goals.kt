@@ -137,6 +137,7 @@ fun Goals(
                         sortModes = GoalsSortMode.entries,
                         currentSortMode = sortMenuUiState.mode,
                         currentSortDirection = sortMenuUiState.direction,
+                        sortItemDescription = "goals",
                         onShowMenuChanged = goalsViewModel::onSortMenuShowChanged,
                         onSelectionHandler = goalsViewModel::onSortModeSelected
                     )

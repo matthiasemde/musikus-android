@@ -175,7 +175,8 @@ fun LibraryItemDialog(
                                 it.id == itemData.folderId
                             }?.name ?: "No folder" ),
                         specialOption = UUIDSelectionSpinnerOption(null, "No folder"),
-                        selectorContentDescription = "Select folder",
+                        semanticDescription = "Select folder",
+                        dropdownTestTag = TestTags.ITEM_DIALOG_FOLDER_SELECTOR_DROPDOWN,
                         onExpandedChange = onFolderSelectorExpandedChange,
                         onSelectedChange = {
                             onSelectedFolderIdChange((it as UUIDSelectionSpinnerOption).id)
@@ -194,10 +195,12 @@ fun LibraryItemDialog(
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             for (j in 0..1) {
+                                val index = 2*i+j
                                 ColorSelectRadioButton(
-                                    color = Color(Musikus.getLibraryItemColors(LocalContext.current)[2*i+j]),
-                                    selected = itemData.colorIndex == 2*i+j,
-                                    onClick = { onColorIndexChange(2*i+j) }
+                                    color = Color(Musikus.getLibraryItemColors(LocalContext.current)[index]),
+                                    selected = itemData.colorIndex == index,
+                                    colorDescription = "Color ${index+1}",
+                                    onClick = { onColorIndexChange(index) }
                                 )
                             }
                         }
@@ -241,15 +244,20 @@ fun LibraryItemDialog(
 
 @Composable
 fun ColorSelectRadioButton(
+    modifier: Modifier = Modifier,
     color: Color,
+    colorDescription: String,
     selected: Boolean,
     onClick: () -> Unit
 ) {
     Box(
-        modifier = Modifier
+        modifier = modifier
             .size(35.dp)
             .clip(RoundedCornerShape(100))
             .background(color)
+            .semantics {
+                contentDescription = colorDescription
+            }
     ) {
         RadioButton(
             colors = RadioButtonDefaults.colors(

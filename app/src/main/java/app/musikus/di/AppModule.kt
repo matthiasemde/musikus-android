@@ -10,8 +10,12 @@ package app.musikus.di
 
 import android.app.Application
 import androidx.datastore.core.DataStore
+import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
+import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
-import app.musikus.dataStore
+import androidx.datastore.preferences.core.emptyPreferences
+import androidx.datastore.preferences.preferencesDataStoreFile
+import app.musikus.Musikus
 import app.musikus.database.MusikusDatabase
 import app.musikus.repository.GoalRepository
 import app.musikus.repository.GoalRepositoryImpl
@@ -40,8 +44,12 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.SupervisorJob
 import javax.inject.Provider
 import javax.inject.Singleton
+
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -50,7 +58,15 @@ object AppModule {
     @Provides
     @Singleton
     fun provideDataStore(app: Application): DataStore<Preferences> {
-        return app.dataStore
+
+        // source: https://medium.com/androiddevelopers/datastore-and-dependency-injection-ea32b95704e3
+        return PreferenceDataStoreFactory.create(
+            corruptionHandler = ReplaceFileCorruptionHandler {
+                emptyPreferences()
+            },
+            scope = CoroutineScope(IO + SupervisorJob()),
+            produceFile = { app.preferencesDataStoreFile(Musikus.USER_PREFERENCES_NAME) }
+        )
     }
 
     @Provides

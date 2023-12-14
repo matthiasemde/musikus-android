@@ -52,6 +52,7 @@ import app.musikus.shared.SelectionSpinner
 import app.musikus.shared.ToggleButtonOption
 import app.musikus.shared.UUIDSelectionSpinnerOption
 import app.musikus.spacing
+import app.musikus.utils.TestTags
 
 @Composable
 fun TimeInput(
@@ -130,7 +131,8 @@ fun PeriodInput(
             expanded = periodUnitSelectorExpanded,
             options = GoalPeriodUnit.entries.map { IntSelectionSpinnerOption(it.ordinal, GoalPeriodUnit.toString(it)) },
             selected = IntSelectionSpinnerOption(periodUnit.ordinal, GoalPeriodUnit.toString(periodUnit)),
-            selectorContentDescription = "Select period unit",
+            semanticDescription = "Select period unit",
+            dropdownTestTag = TestTags.GOAL_DIALOG_PERIOD_UNIT_SELECTOR_DROPDOWN,
             onExpandedChange = onPeriodUnitSelectorExpandedChanged,
             onSelectedChange = {selection ->
                 onPeriodUnitChanged(GoalPeriodUnit.entries[(selection as IntSelectionSpinnerOption?)?.id ?: 0])
@@ -233,7 +235,8 @@ fun GoalDialog(
                         } ?: libraryItems.first().let {
                             UUIDSelectionSpinnerOption(it.id, it.name)
                         },
-                        selectorContentDescription = "Select library item",
+                        semanticDescription = "Select library item",
+                        dropdownTestTag = TestTags.GOAL_DIALOG_ITEM_SELECTOR_DROPDOWN,
                         onExpandedChange = {
                             libraryItemsSelectorExpanded = it
                             periodUnitSelectorExpanded = false
