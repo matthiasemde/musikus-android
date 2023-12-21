@@ -25,11 +25,11 @@ import java.util.UUID
 
 class EditItemUseCaseTest {
     private lateinit var  editItem: EditItemUseCase
-    private lateinit var fakeRepository: FakeLibraryRepository
+    private lateinit var fakeLibraryRepository: FakeLibraryRepository
     @BeforeEach
     fun setUp() {
-        fakeRepository = FakeLibraryRepository()
-        editItem = EditItemUseCase(fakeRepository)
+        fakeLibraryRepository = FakeLibraryRepository()
+        editItem = EditItemUseCase(fakeLibraryRepository)
 
         val itemCreationAttributes = ('a'..'z').mapIndexed { index, name ->
             LibraryItemCreationAttributes(
@@ -39,18 +39,12 @@ class EditItemUseCaseTest {
             )
         }
 
-        val folderCreationAttributes = ('a'..'z').map { name ->
-            LibraryFolderCreationAttributes(
-                name = name.toString(),
-            )
-        }
+        val folderCreationAttributes = LibraryFolderCreationAttributes("Test")
 
         runBlocking {
-            folderCreationAttributes.shuffled().forEach {
-                fakeRepository.addFolder(it)
-            }
+            fakeLibraryRepository.addFolder(folderCreationAttributes)
             itemCreationAttributes.shuffled().forEach {
-                fakeRepository.addItem(it)
+                fakeLibraryRepository.addItem(it)
             }
         }
     }
@@ -60,7 +54,7 @@ class EditItemUseCaseTest {
     fun `Edit item with empty name, InvalidLibraryItemException('Item name cannot be empty')`() {
         val exception = assertThrows<InvalidLibraryItemException> {
             runBlocking {
-                val item = fakeRepository.items.first().first()
+                val item = fakeLibraryRepository.items.first().first()
                 editItem(
                     id = item.id,
                     updateAttributes = LibraryItemUpdateAttributes(
@@ -76,7 +70,7 @@ class EditItemUseCaseTest {
     fun `Edit item with invalid colorIndex, InvalidLibraryItemException('Color index must be between 0 and 9')`() {
         var exception = assertThrows<InvalidLibraryItemException> {
             runBlocking {
-                val item = fakeRepository.items.first().random()
+                val item = fakeLibraryRepository.items.first().random()
                 editItem(
                     id = item.id,
                     updateAttributes = LibraryItemUpdateAttributes(
@@ -89,7 +83,7 @@ class EditItemUseCaseTest {
 
         exception = assertThrows<InvalidLibraryItemException> {
             runBlocking {
-                val item = fakeRepository.items.first().random()
+                val item = fakeLibraryRepository.items.first().random()
                 editItem(
                     id = item.id,
                     updateAttributes = LibraryItemUpdateAttributes(
@@ -106,7 +100,7 @@ class EditItemUseCaseTest {
         val randomId = UUID.randomUUID()
         val exception = assertThrows<InvalidLibraryItemException> {
             runBlocking {
-                val item = fakeRepository.items.first().random()
+                val item = fakeLibraryRepository.items.first().random()
                 editItem(
                     id = item.id,
                     updateAttributes = LibraryItemUpdateAttributes(
@@ -121,8 +115,8 @@ class EditItemUseCaseTest {
     @Test
     fun `Edit item name, color and folderId, true`() {
         runBlocking {
-            val folder = fakeRepository.folders.first().random().folder
-            val item = fakeRepository.items.first().random()
+            val folder = fakeLibraryRepository.folders.first().first().folder
+            val item = fakeLibraryRepository.items.first().random()
             editItem(
                 id = item.id,
                 updateAttributes = LibraryItemUpdateAttributes(
@@ -131,14 +125,14 @@ class EditItemUseCaseTest {
                     libraryFolderId = Nullable(folder.id),
                 )
             )
-            val updatedItem = fakeRepository.items.first().first { it.id == item.id }
+            val updatedItem = fakeLibraryRepository.items.first().first { it.id == item.id }
 
             assertThat(updatedItem.name).isEqualTo("test")
             assertThat(updatedItem.colorIndex).isEqualTo((item.colorIndex + 5) % 10)
 
-            val updatedFolder = fakeRepository.folders.first().first { it.folder.id == folder.id }
+            val updatedFolderWithItems = fakeLibraryRepository.folders.first().first()
 
-            assertThat(updatedFolder.items).contains(updatedItem)
+            assertThat(updatedFolderWithItems.items).contains(updatedItem)
         }
     }
 }

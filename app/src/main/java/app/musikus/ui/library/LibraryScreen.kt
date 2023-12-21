@@ -524,9 +524,6 @@ fun LibraryItem(
                     .background(
                         Color(Musikus.getLibraryItemColors(LocalContext.current)[item.colorIndex])
                     )
-                    .semantics {
-                        contentDescription = "Color ${item.colorIndex + 1}"
-                    },
             )
             Column(
                 modifier = Modifier
