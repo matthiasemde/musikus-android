@@ -45,7 +45,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import app.musikus.R
-import app.musikus.database.daos.LibraryItem
+import app.musikus.utils.LibraryFolderSortMode
 import app.musikus.utils.LibraryItemSortMode
 import app.musikus.utils.SortDirection
 import app.musikus.utils.SortInfo
@@ -171,13 +171,24 @@ class LibraryScreenTest {
         composeRule.onNodeWithText("TestItem2").assertIsDisplayed()
     }
 
+    private fun addFolders(numberOfFolders: Int = 3): List<Int> {
+        val order = (1..numberOfFolders).shuffled()
+        order.forEach { i ->
+            composeRule.onNodeWithContentDescription("Add").performClick()
+            composeRule.onNodeWithContentDescription("Folder").performClick()
+            composeRule.onNodeWithTag(TestTags.FOLDER_DIALOG_NAME_INPUT).performTextInput("Test$i")
+            composeRule.onNodeWithContentDescription("Create").performClick()
+        }
+        return order
+    }
+
     private fun addItems(numberOfItems: Int = 3): List<Pair<Int,Int>> {
         val order = (1..numberOfItems).shuffled()
         val orderWithColors = (order).map { it to (1 .. 10).random() }
         orderWithColors.forEach { (i, color) ->
             composeRule.onNodeWithContentDescription("Add").performClick()
             composeRule.onNodeWithContentDescription("Item").performClick()
-            composeRule.onNodeWithTag(TestTags.ITEM_DIALOG_NAME_INPUT).performTextInput("TestItem$i")
+            composeRule.onNodeWithTag(TestTags.ITEM_DIALOG_NAME_INPUT).performTextInput("Test$i")
             composeRule.onNode(
                 matcher = hasAnyAncestor(isDialog())
                         and
@@ -188,86 +199,132 @@ class LibraryScreenTest {
         return orderWithColors
     }
 
-    private fun clickSortMode(sortMode: SortMode<LibraryItem>) {
-        composeRule.onNodeWithContentDescription("Select sort mode and direction for items").performClick()
+    private fun clickSortMode(sortMode: SortMode<*>) {
+        val sortModeType = when(sortMode) {
+            is LibraryItemSortMode -> "items"
+            is LibraryFolderSortMode -> "folders"
+            else -> throw Exception("Unknown sort mode type")
+        }
+        composeRule.onNodeWithContentDescription("Select sort mode and direction for $sortModeType").performClick()
         // Select name as sorting mode
         composeRule.onNode(
-            matcher = hasAnyAncestor(hasContentDescription("List of sort modes for items"))
+            matcher = hasAnyAncestor(hasContentDescription("List of sort modes for $sortModeType"))
                     and
                     hasText(sortMode.label)
         ).performClick()
     }
 
-    private fun testItemSortMode(sortInfo: SortInfo<LibraryItem>) {
+    private fun testSortMode(sortInfo: SortInfo<*>) {
         val testItems = 3
-        val (order, colors) = addItems(testItems).unzip()
+
+        val (order, colors) = when(sortInfo.mode) {
+            is LibraryItemSortMode -> addItems(testItems).unzip()
+            is LibraryFolderSortMode -> addFolders(testItems) to listOf()
+            else -> throw Exception("Unknown sort mode type")
+        }
 
         // Change sorting mode
-        if (sortInfo.mode != LibraryItemSortMode.DEFAULT)
-        clickSortMode(sortInfo.mode)
-
+        if (!sortInfo.mode.isDefault) clickSortMode(sortInfo.mode)
         if (sortInfo.direction != SortDirection.DEFAULT) clickSortMode(sortInfo.mode)
 
         // Check if items are displayed in correct order
-        val itemNodes = composeRule.onAllNodes(hasText("TestItem", substring = true), useUnmergedTree = true)
+        val itemNodes = composeRule.onAllNodes(hasText("Test", substring = true))
 
         itemNodes.assertCountEquals(testItems)
         for (i in 0 until testItems - 1) {
             val itemNumber = if (sortInfo.direction == SortDirection.DESCENDING) testItems - i else i + 1
-            when(sortInfo.mode) {
-                LibraryItemSortMode.DATE_ADDED ->
-                    itemNodes[i].assertTextContains("TestItem${order[itemNumber - 1]}")
-                LibraryItemSortMode.NAME ->
-                    itemNodes[i].assertTextContains("TestItem${itemNumber}")
-                LibraryItemSortMode.COLOR ->
+            when {
+                (
+                    sortInfo.mode == LibraryItemSortMode.DATE_ADDED ||
+                    sortInfo.mode == LibraryFolderSortMode.DATE_ADDED
+                ) -> itemNodes[i].assertTextContains("Test${order[itemNumber - 1]}")
+                (
+                    sortInfo.mode == LibraryItemSortMode.NAME ||
+                    sortInfo.mode == LibraryFolderSortMode.NAME
+                ) -> itemNodes[i].assertTextContains("Test${itemNumber}")
+                sortInfo.mode == LibraryItemSortMode.COLOR ->
                     itemNodes[i].assert(
                         hasAnySibling(
                             hasContentDescription("Color ${colors.sorted()[itemNumber - 1]}")
                         )
                     )
-                LibraryItemSortMode.LAST_MODIFIED ->
-                    itemNodes[i].assertTextContains("TestItem${order[itemNumber - 1]}")
+                (
+                    sortInfo.mode == LibraryItemSortMode.LAST_MODIFIED ||
+                    sortInfo.mode == LibraryFolderSortMode.LAST_MODIFIED
+                ) ->
+                    itemNodes[i].assertTextContains("Test${order[itemNumber - 1]}")
+                else -> throw Exception("Unknown sort mode type")
             }
         }
     }
 
     @Test
     fun saveNewItems_orderByDateAddedDescending() {
-        testItemSortMode(SortInfo(LibraryItemSortMode.DATE_ADDED, SortDirection.DESCENDING))
+        testSortMode(SortInfo(LibraryItemSortMode.DATE_ADDED, SortDirection.DESCENDING))
     }
 
     @Test
     fun saveNewItems_orderByDateAddedAscending() {
-        testItemSortMode(SortInfo(LibraryItemSortMode.DATE_ADDED, SortDirection.ASCENDING))
+        testSortMode(SortInfo(LibraryItemSortMode.DATE_ADDED, SortDirection.ASCENDING))
     }
 
     @Test
     fun saveNewItems_orderByNameDescending() {
-        testItemSortMode(SortInfo(LibraryItemSortMode.NAME, SortDirection.DESCENDING))
+        testSortMode(SortInfo(LibraryItemSortMode.NAME, SortDirection.DESCENDING))
     }
 
     @Test
     fun saveNewItems_orderByNameAscending() {
-        testItemSortMode(SortInfo(LibraryItemSortMode.NAME, SortDirection.ASCENDING))
+        testSortMode(SortInfo(LibraryItemSortMode.NAME, SortDirection.ASCENDING))
     }
 
     @Test
     fun saveNewItems_orderByColorDescending() {
-        testItemSortMode(SortInfo(LibraryItemSortMode.COLOR, SortDirection.DESCENDING))
+        testSortMode(SortInfo(LibraryItemSortMode.COLOR, SortDirection.DESCENDING))
     }
 
     @Test
     fun saveNewItems_orderByColorAscending() {
-        testItemSortMode(SortInfo(LibraryItemSortMode.COLOR, SortDirection.ASCENDING))
+        testSortMode(SortInfo(LibraryItemSortMode.COLOR, SortDirection.ASCENDING))
     }
 
     @Test
     fun saveNewItems_orderByLastModifiedDescending() {
-        testItemSortMode(SortInfo(LibraryItemSortMode.LAST_MODIFIED, SortDirection.DESCENDING))
+        testSortMode(SortInfo(LibraryItemSortMode.LAST_MODIFIED, SortDirection.DESCENDING))
     }
 
     @Test
     fun saveNewItems_orderByLastModifiedAscending() {
-        testItemSortMode(SortInfo(LibraryItemSortMode.LAST_MODIFIED, SortDirection.ASCENDING))
+        testSortMode(SortInfo(LibraryItemSortMode.LAST_MODIFIED, SortDirection.ASCENDING))
+    }
+
+    @Test
+    fun saveNewFolders_orderByDateAddedDescending() {
+        testSortMode(SortInfo(LibraryFolderSortMode.DATE_ADDED, SortDirection.DESCENDING))
+    }
+
+    @Test
+    fun saveNewFolders_orderByDateAddedAscending() {
+        testSortMode(SortInfo(LibraryFolderSortMode.DATE_ADDED, SortDirection.ASCENDING))
+    }
+
+    @Test
+    fun saveNewFolders_orderByNameDescending() {
+        testSortMode(SortInfo(LibraryFolderSortMode.NAME, SortDirection.DESCENDING))
+    }
+
+    @Test
+    fun saveNewFolders_orderByNameAscending() {
+        testSortMode(SortInfo(LibraryFolderSortMode.NAME, SortDirection.ASCENDING))
+    }
+
+    @Test
+    fun saveNewFolders_orderByLastModifiedDescending() {
+        testSortMode(SortInfo(LibraryFolderSortMode.LAST_MODIFIED, SortDirection.DESCENDING))
+    }
+
+    @Test
+    fun saveNewFolders_orderByLastModifiedAscending() {
+        testSortMode(SortInfo(LibraryFolderSortMode.LAST_MODIFIED, SortDirection.ASCENDING))
     }
 }

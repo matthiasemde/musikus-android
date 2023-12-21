@@ -45,6 +45,8 @@ interface SortMode<T> {
     val label: String
     val comparator: Comparator<T>
     val name: String
+
+    val isDefault: Boolean
 }
 
 enum class GoalsSortMode : SortMode<Pair<GoalDescription, GoalInstance>> {
@@ -73,6 +75,9 @@ enum class GoalsSortMode : SortMode<Pair<GoalDescription, GoalInstance>> {
 //        override val comparator = compareBy<Pair<GoalDescription, GoalInstance>> { TODO }
 //    }
     ;
+
+    override val isDefault: Boolean
+        get() = this == DEFAULT
 
     companion object {
         val DEFAULT = DATE_ADDED
@@ -134,6 +139,9 @@ enum class LibraryItemSortMode : SortMode<LibraryItem> {
 //    }
     ;
 
+    override val isDefault: Boolean
+        get() = this == DEFAULT
+
     companion object {
         val DEFAULT = DATE_ADDED
 
@@ -175,6 +183,9 @@ enum class LibraryFolderSortMode : SortMode<LibraryFolder> {
 //        override val comparator = compareBy<LibraryFolder> { TODO }
 //    }
     ;
+
+    override val isDefault: Boolean
+        get() = this == DEFAULT
 
     companion object {
         val DEFAULT = DATE_ADDED
