@@ -1,3 +1,11 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ *
+ * Copyright (c) 2023 Matthias Emde
+ */
+
 package app.musikus.usecase.library
 
 import app.musikus.database.Nullable
@@ -13,12 +21,15 @@ import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import com.google.common.truth.Truth.assertThat
+import java.util.UUID
 
 
 class GetItemsUseCaseTest {
     private lateinit var getItems: GetItemsUseCase
     private lateinit var fakeLibraryRepository: FakeLibraryRepository
     private lateinit var fakeUserPreferencesRepository: FakeUserPreferencesRepository
+
+    private lateinit var folderId: UUID
 
     @BeforeEach
     fun setUp() {
@@ -29,20 +40,26 @@ class GetItemsUseCaseTest {
             userPreferencesRepository = fakeUserPreferencesRepository,
         )
 
-        val itemCreationAttributes = ('a'..'z').mapIndexed { index, name ->
+        val itemCreationAttributes = listOf(
+            "TestItem3" to 0,
+            "TestItem5" to 8,
+            "TestItem2" to 3,
+            "TestItem1" to 9,
+            "TestItem4" to 2,
+        ).map { (name, colorIndex) ->
             LibraryItemCreationAttributes(
-                name = name.toString(),
+                name = name,
                 libraryFolderId = Nullable(null),
-                colorIndex = index % 10
+                colorIndex = colorIndex
             )
         }
 
-        val folderCreationAttributes = LibraryFolderCreationAttributes("Test")
+        val folderCreationAttributes = LibraryFolderCreationAttributes("TestFolder")
 
         runBlocking {
             fakeLibraryRepository.addFolder(folderCreationAttributes)
-            val folderId = fakeLibraryRepository.folders.first().first().folder.id
-            itemCreationAttributes.shuffled().forEach {
+            folderId = fakeLibraryRepository.folders.first().first().folder.id
+            itemCreationAttributes.forEach {
                 fakeLibraryRepository.addItem(it)
                 fakeLibraryRepository.addItem(it.copy(
                     libraryFolderId = Nullable(folderId)
@@ -62,18 +79,25 @@ class GetItemsUseCaseTest {
                     direction = sortDirection
                 )
             )
+
             val items = getItems(folderId = Nullable(null)).first()
+            val itemsInFolder = getItems(folderId = Nullable(folderId)).first()
+
             when (sortDirection) {
-                SortDirection.ASCENDING ->
+                SortDirection.ASCENDING -> {
                     assertThat(items).isInOrder(sortMode.comparator)
-                SortDirection.DESCENDING ->
+                    assertThat(itemsInFolder).isInOrder(sortMode.comparator)
+                }
+                SortDirection.DESCENDING -> {
                     assertThat(items).isInOrder(sortMode.comparator.reversed())
+                    assertThat(itemsInFolder).isInOrder(sortMode.comparator.reversed())
+                }
             }
         }
     }
 
     @Test
-    fun `Get items, items are sorted by date added descending`() {
+    fun `Get items, items are sorted by 'date added' descending`() {
         testItemSorting(
             sortMode = LibraryItemSortMode.DATE_ADDED,
             sortDirection = SortDirection.DESCENDING
@@ -81,7 +105,7 @@ class GetItemsUseCaseTest {
     }
 
     @Test
-    fun `Set item sort mode to date added ascending then get items, items are sorted by date ascending`() {
+    fun `Set item sort mode to 'date added' ascending then get items, items are sorted correctly`() {
         testItemSorting(
             sortMode = LibraryItemSortMode.DATE_ADDED,
             sortDirection = SortDirection.ASCENDING
@@ -89,7 +113,7 @@ class GetItemsUseCaseTest {
     }
 
     @Test
-    fun `Set item sort mode to name descending then get items, items are sorted by name descending`() {
+    fun `Set item sort mode to 'name' descending then get items, items are sorted correctly`() {
         testItemSorting(
             sortMode = LibraryItemSortMode.NAME,
             sortDirection = SortDirection.DESCENDING
@@ -97,7 +121,7 @@ class GetItemsUseCaseTest {
     }
 
     @Test
-    fun `Set item sort mode to name ascending then get items, items are sorted by name ascending`() {
+    fun `Set item sort mode to 'name' ascending then get items, items are sorted correctly`() {
         testItemSorting(
             sortMode = LibraryItemSortMode.NAME,
             sortDirection = SortDirection.ASCENDING
@@ -105,7 +129,7 @@ class GetItemsUseCaseTest {
     }
 
     @Test
-    fun `Set item sort mode to last modified descending then get items, items are sorted by last modified descending`() {
+    fun `Set item sort mode to 'last modified' descending then get items, items are sorted correctly`() {
         testItemSorting(
             sortMode = LibraryItemSortMode.LAST_MODIFIED,
             sortDirection = SortDirection.DESCENDING
@@ -113,7 +137,7 @@ class GetItemsUseCaseTest {
     }
 
     @Test
-    fun `Set item sort mode to last modified ascending then get items, items are sorted by last modified ascending`() {
+    fun `Set item sort mode to 'last modified' ascending then get items, items are sorted correctly`() {
         testItemSorting(
             sortMode = LibraryItemSortMode.LAST_MODIFIED,
             sortDirection = SortDirection.ASCENDING
@@ -121,7 +145,7 @@ class GetItemsUseCaseTest {
     }
 
     @Test
-    fun `Set item sort mode to color descending then get items, items are sorted by color descending`() {
+    fun `Set item sort mode to 'color' descending then get items, items are sorted correctly`() {
         testItemSorting(
             sortMode = LibraryItemSortMode.COLOR,
             sortDirection = SortDirection.DESCENDING
@@ -129,7 +153,7 @@ class GetItemsUseCaseTest {
     }
 
     @Test
-    fun `Set item sort mode to color ascending then get items, items are sorted by color ascending`() {
+    fun `Set item sort mode to 'color' ascending then get items, items are sorted correctly`() {
         testItemSorting(
             sortMode = LibraryItemSortMode.COLOR,
             sortDirection = SortDirection.ASCENDING
@@ -137,7 +161,7 @@ class GetItemsUseCaseTest {
     }
 
     @Test
-    fun `Set item sort mode to custom then get items, items are sorted by custom order`() {
+    fun `Set item sort mode to 'custom' then get items, items are sorted correctly`() {
         // TODO
     }
 }

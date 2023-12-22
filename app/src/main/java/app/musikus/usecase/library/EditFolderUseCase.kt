@@ -22,6 +22,10 @@ class EditFolderUseCase(
         id: UUID,
         updateAttributes: LibraryFolderUpdateAttributes
     ) {
+        if (!libraryRepository.existsFolder(id)) {
+            throw InvalidLibraryFolderException("Folder not found")
+        }
+
         if(updateAttributes.name != null && updateAttributes.name.isBlank()) {
             throw InvalidLibraryFolderException("Folder name can not be empty")
         }

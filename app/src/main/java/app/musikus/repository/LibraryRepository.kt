@@ -42,6 +42,7 @@ interface LibraryRepository {
     suspend fun restoreFolders(folderIds: List<UUID>)
 
     /** Exists */
+    suspend fun existsItem(id: UUID): Boolean
     suspend fun existsFolder(id: UUID): Boolean
 
     /** Clean */
@@ -110,6 +111,10 @@ class LibraryRepositoryImpl(
     }
 
     /** Exists */
+    override suspend fun existsItem(id: UUID): Boolean {
+        return itemDao.exists(id)
+    }
+
     override suspend fun existsFolder(id: UUID): Boolean {
         return folderDao.exists(id)
     }

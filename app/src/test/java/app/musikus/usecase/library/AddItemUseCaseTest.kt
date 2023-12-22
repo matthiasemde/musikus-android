@@ -23,7 +23,7 @@ import java.util.UUID
 
 class AddItemUseCaseTest {
     private lateinit var addItem: AddItemUseCase
-    private lateinit var fakeRepository: FakeLibraryRepository
+    private lateinit var fakeLibraryRepository: FakeLibraryRepository
 
     private val validItemCreationAttributes = LibraryItemCreationAttributes(
         name = "test",
@@ -33,15 +33,15 @@ class AddItemUseCaseTest {
 
     @BeforeEach
     fun setUp() {
-        fakeRepository = FakeLibraryRepository()
-        addItem = AddItemUseCase(fakeRepository)
+        fakeLibraryRepository = FakeLibraryRepository()
+        addItem = AddItemUseCase(fakeLibraryRepository)
 
         val folderCreationAttributes = LibraryFolderCreationAttributes(
             name = "test",
         )
 
         runBlocking {
-            fakeRepository.addFolder(folderCreationAttributes)
+            fakeLibraryRepository.addFolder(folderCreationAttributes)
         }
     }
 
@@ -87,11 +87,11 @@ class AddItemUseCaseTest {
 
 
     @Test
-    fun `Add valid item to root, true`() {
+    fun `Add valid item to root, item in items list`() {
         runBlocking {
             addItem(validItemCreationAttributes.copy(libraryFolderId = Nullable(null)))
 
-            val addedItem = fakeRepository.items.first().first()
+            val addedItem = fakeLibraryRepository.items.first().first()
 
             assertThat(addedItem.name).isEqualTo(validItemCreationAttributes.name)
             assertThat(addedItem.colorIndex).isEqualTo(validItemCreationAttributes.colorIndex)
@@ -100,18 +100,18 @@ class AddItemUseCaseTest {
     }
 
     @Test
-    fun `Add valid item to folder, true`() {
+    fun `Add valid item to folder, item in folder items list`() {
         runBlocking {
-            val folder = fakeRepository.folders.first().first().folder
+            val folder = fakeLibraryRepository.folders.first().first().folder
 
             addItem(validItemCreationAttributes.copy(libraryFolderId = Nullable(folder.id)))
 
-            val addedItem = fakeRepository.items.first().first()
+            val addedItem = fakeLibraryRepository.items.first().first()
 
             assertThat(addedItem.name).isEqualTo(validItemCreationAttributes.name)
             assertThat(addedItem.colorIndex).isEqualTo(validItemCreationAttributes.colorIndex)
 
-            val folderItems = fakeRepository.folders.first().first().items
+            val folderItems = fakeLibraryRepository.folders.first().first().items
 
             assertThat(folderItems).contains(addedItem)
         }

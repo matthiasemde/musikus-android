@@ -22,6 +22,10 @@ class EditItemUseCase(
         id : UUID,
         updateAttributes: LibraryItemUpdateAttributes
     ) {
+        if(!libraryRepository.existsItem(id)) {
+            throw InvalidLibraryItemException("Item not found")
+        }
+
         if(updateAttributes.name != null && updateAttributes.name.isBlank()) {
             throw InvalidLibraryItemException("Item name cannot be empty")
         }

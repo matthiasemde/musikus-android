@@ -123,6 +123,10 @@ class FakeLibraryRepository : LibraryRepository {
         _foldersBuffer = emptyList()
     }
 
+    override suspend fun existsItem(id: UUID): Boolean {
+        return _items.any { it.id == id }
+    }
+
     override suspend fun existsFolder(id: UUID): Boolean {
         return _folders.any { folderWithItems -> folderWithItems.folder.id == id }
     }
