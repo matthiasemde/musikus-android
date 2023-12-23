@@ -23,6 +23,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.test.runTest
 import java.util.UUID
 
 
@@ -67,7 +68,7 @@ class GetItemsUseCaseTest {
                 fakeLibraryRepository.addItem(it.copy(
                     libraryFolderId = Nullable(folderId)
                 ))
-                delay(1)
+                delay(1) // necessary to ensure that the timestamps are different
             }
 
             val items = fakeLibraryRepository.items.first().filter {
@@ -93,7 +94,7 @@ class GetItemsUseCaseTest {
                 )
             )
 
-            delay(1)
+            delay(1) // necessary to ensure that the timestamps are different
 
             fakeLibraryRepository.editItem(
                 id = items[2].id,
@@ -112,203 +113,211 @@ class GetItemsUseCaseTest {
     }
 
     @Test
-    fun `Get items, items are sorted by 'date added' descending`() {
-        runBlocking {
-            // Get items
-            val items = getItems(folderId = Nullable(null)).first()
+    fun `Get items, items are sorted by 'date added' descending`() = runTest {
+        // Get items
+        val items = getItems(folderId = Nullable(null)).first()
+        val itemsInFolder = getItems(folderId = Nullable(folderId)).first()
 
-            // Check if items are sorted by 'date added' descending by default
-            assertThat(items.map { it.name })
-                .isEqualTo(listOf(
-                    "RenamedItem1",
-                    "TestItem1",
-                    "RenamedItem2",
-                    "TestItem5",
-                    "TestItem3",
-                ))
-        }
+        // Check if items are sorted by 'date added' descending by default
+        val expectedOutcome = listOf(
+            "RenamedItem1",
+            "TestItem1",
+            "RenamedItem2",
+            "TestItem5",
+            "TestItem3",
+        )
+
+        assertThat(items.map { it.name }).isEqualTo(expectedOutcome)
+        assertThat(itemsInFolder.map { it.name }).isEqualTo(expectedOutcome)
     }
 
     @Test
-    fun `Set item sort mode to 'date added' ascending then get items, items are sorted correctly`() {
-        runBlocking {
-            // Set sort mode to 'date added' ascending
-            fakeUserPreferencesRepository.updateLibraryItemSortInfo(
-                sortInfo = SortInfo(
-                    mode = LibraryItemSortMode.DATE_ADDED,
-                    direction = SortDirection.ASCENDING
-                )
+    fun `Set item sort mode to 'date added' ascending then get items, items are sorted correctly`() = runTest {
+        // Set sort mode to 'date added' ascending
+        fakeUserPreferencesRepository.updateLibraryItemSortInfo(
+            sortInfo = SortInfo(
+                mode = LibraryItemSortMode.DATE_ADDED,
+                direction = SortDirection.ASCENDING
             )
+        )
 
-            // Get items
-            val items = getItems(folderId = Nullable(null)).first()
+        // Get items
+        val items = getItems(folderId = Nullable(null)).first()
+        val itemsInFolder = getItems(folderId = Nullable(folderId)).first()
 
-            // Check if items are sorted correctly
-            assertThat(items.map { it.name })
-                .isEqualTo(listOf(
-                    "TestItem3",
-                    "TestItem5",
-                    "RenamedItem2",
-                    "TestItem1",
-                    "RenamedItem1",
-                ))
-        }
+        // Check if items are sorted correctly
+        val expectedOutcome = listOf(
+            "TestItem3",
+            "TestItem5",
+            "RenamedItem2",
+            "TestItem1",
+            "RenamedItem1",
+        )
+
+        assertThat(items.map { it.name }).isEqualTo(expectedOutcome)
+        assertThat(itemsInFolder.map { it.name }).isEqualTo(expectedOutcome)
     }
 
     @Test
-    fun `Set item sort mode to 'last modified' descending then get items, items are sorted correctly`() {
-        runBlocking {
-            // Set sort mode to 'last modified' descending
-            fakeUserPreferencesRepository.updateLibraryItemSortInfo(
-                sortInfo = SortInfo(
-                    mode = LibraryItemSortMode.LAST_MODIFIED,
-                    direction = SortDirection.DESCENDING
-                )
+    fun `Set item sort mode to 'last modified' descending then get items, items are sorted correctly`() = runTest {
+        // Set sort mode to 'last modified' descending
+        fakeUserPreferencesRepository.updateLibraryItemSortInfo(
+            sortInfo = SortInfo(
+                mode = LibraryItemSortMode.LAST_MODIFIED,
+                direction = SortDirection.DESCENDING
             )
+        )
 
-            // Get items
-            val items = getItems(folderId = Nullable(null)).first()
+        // Get items
+        val items = getItems(folderId = Nullable(null)).first()
+        val itemsInFolder = getItems(folderId = Nullable(folderId)).first()
 
-            // Check if items are sorted correctly
-            assertThat(items.map { it.name })
-                .isEqualTo(listOf(
-                    "RenamedItem2",
-                    "RenamedItem1",
-                    "TestItem1",
-                    "TestItem5",
-                    "TestItem3",
-                ))
-        }
+        // Check if items are sorted correctly
+        val expectedOutcome = listOf(
+            "RenamedItem2",
+            "RenamedItem1",
+            "TestItem1",
+            "TestItem5",
+            "TestItem3",
+        )
+
+        assertThat(items.map { it.name }).isEqualTo(expectedOutcome)
+        assertThat(itemsInFolder.map { it.name }).isEqualTo(expectedOutcome)
     }
 
     @Test
-    fun `Set item sort mode to 'last modified' ascending then get items, items are sorted correctly`() {
-        runBlocking {
-            // Set sort mode to 'last modified' ascending
-            fakeUserPreferencesRepository.updateLibraryItemSortInfo(
-                sortInfo = SortInfo(
-                    mode = LibraryItemSortMode.LAST_MODIFIED,
-                    direction = SortDirection.ASCENDING
-                )
+    fun `Set item sort mode to 'last modified' ascending then get items, items are sorted correctly`() = runTest {
+        // Set sort mode to 'last modified' ascending
+        fakeUserPreferencesRepository.updateLibraryItemSortInfo(
+            sortInfo = SortInfo(
+                mode = LibraryItemSortMode.LAST_MODIFIED,
+                direction = SortDirection.ASCENDING
             )
+        )
 
-            // Get items
-            val items = getItems(folderId = Nullable(null)).first()
+        // Get items
+        val items = getItems(folderId = Nullable(null)).first()
+        val itemsInFolder = getItems(folderId = Nullable(folderId)).first()
 
-            // Check if items are sorted correctly
-            assertThat(items.map { it.name })
-                .isEqualTo(listOf(
-                    "TestItem3",
-                    "TestItem5",
-                    "TestItem1",
-                    "RenamedItem1",
-                    "RenamedItem2",
-                ))
-        }
+        // Check if items are sorted correctly
+        val expectedOutcome = listOf(
+            "TestItem3",
+            "TestItem5",
+            "TestItem1",
+            "RenamedItem1",
+            "RenamedItem2",
+        )
+
+        assertThat(items.map { it.name }).isEqualTo(expectedOutcome)
+        assertThat(itemsInFolder.map { it.name }).isEqualTo(expectedOutcome)
     }
 
     @Test
-    fun `Set item sort mode to 'name' descending then get items, items are sorted correctly`() {
-        runBlocking {
-            // Set sort mode to 'name' descending
-            fakeUserPreferencesRepository.updateLibraryItemSortInfo(
-                sortInfo = SortInfo(
-                    mode = LibraryItemSortMode.NAME,
-                    direction = SortDirection.DESCENDING
-                )
+    fun `Set item sort mode to 'name' descending then get items, items are sorted correctly`() = runTest {
+        // Set sort mode to 'name' descending
+        fakeUserPreferencesRepository.updateLibraryItemSortInfo(
+            sortInfo = SortInfo(
+                mode = LibraryItemSortMode.NAME,
+                direction = SortDirection.DESCENDING
             )
+        )
 
-            // Get items
-            val items = getItems(folderId = Nullable(null)).first()
+        // Get items
+        val items = getItems(folderId = Nullable(null)).first()
+        val itemsInFolder = getItems(folderId = Nullable(folderId)).first()
 
-            // Check if items are sorted correctly
-            assertThat(items.map { it.name })
-                .isEqualTo(listOf(
-                    "TestItem5",
-                    "TestItem3",
-                    "TestItem1",
-                    "RenamedItem2",
-                    "RenamedItem1",
-                ))
-        }
+        // Check if items are sorted correctly
+        val expectedOutcome = listOf(
+            "TestItem5",
+            "TestItem3",
+            "TestItem1",
+            "RenamedItem2",
+            "RenamedItem1",
+        )
+
+        assertThat(items.map { it.name }).isEqualTo(expectedOutcome)
+        assertThat(itemsInFolder.map { it.name }).isEqualTo(expectedOutcome)
     }
 
     @Test
-    fun `Set item sort mode to 'name' ascending then get items, items are sorted correctly`() {
-        runBlocking {
-            // Set sort mode to 'name' ascending
-            fakeUserPreferencesRepository.updateLibraryItemSortInfo(
-                sortInfo = SortInfo(
-                    mode = LibraryItemSortMode.NAME,
-                    direction = SortDirection.ASCENDING
-                )
+    fun `Set item sort mode to 'name' ascending then get items, items are sorted correctly`() = runTest {
+        // Set sort mode to 'name' ascending
+        fakeUserPreferencesRepository.updateLibraryItemSortInfo(
+            sortInfo = SortInfo(
+                mode = LibraryItemSortMode.NAME,
+                direction = SortDirection.ASCENDING
             )
+        )
 
-            // Get items
-            val items = getItems(folderId = Nullable(null)).first()
+        // Get items
+        val items = getItems(folderId = Nullable(null)).first()
+        val itemsInFolder = getItems(folderId = Nullable(folderId)).first()
 
-            // Check if items are sorted correctly
-            assertThat(items.map { it.name })
-                .isEqualTo(listOf(
-                    "RenamedItem1",
-                    "RenamedItem2",
-                    "TestItem1",
-                    "TestItem3",
-                    "TestItem5",
-                ))
-        }
+        // Check if items are sorted correctly
+        val expectedOutcome = listOf(
+            "RenamedItem1",
+            "RenamedItem2",
+            "TestItem1",
+            "TestItem3",
+            "TestItem5",
+        )
+
+        assertThat(items.map { it.name }).isEqualTo(expectedOutcome)
+        assertThat(itemsInFolder.map { it.name }).isEqualTo(expectedOutcome)
     }
 
     @Test
-    fun `Set item sort mode to 'color' descending then get items, items are sorted correctly`() {
-        runBlocking {
-            // Set sort mode to 'color' descending
-            fakeUserPreferencesRepository.updateLibraryItemSortInfo(
-                sortInfo = SortInfo(
-                    mode = LibraryItemSortMode.COLOR,
-                    direction = SortDirection.DESCENDING
-                )
+    fun `Set item sort mode to 'color' descending then get items, items are sorted correctly`() = runTest {
+        // Set sort mode to 'color' descending
+        fakeUserPreferencesRepository.updateLibraryItemSortInfo(
+            sortInfo = SortInfo(
+                mode = LibraryItemSortMode.COLOR,
+                direction = SortDirection.DESCENDING
             )
+        )
 
-            // Get items
-            val items = getItems(folderId = Nullable(null)).first()
+        // Get items
+        val items = getItems(folderId = Nullable(null)).first()
+        val itemsInFolder = getItems(folderId = Nullable(folderId)).first()
 
-            // Check if items are sorted correctly
-            assertThat(items.map { it.name })
-                .isEqualTo(listOf(
-                    "TestItem1",
-                    "TestItem5",
-                    "RenamedItem2",
-                    "RenamedItem1",
-                    "TestItem3",
-                ))
-        }
+        // Check if items are sorted correctly
+        val expectedOutcome = listOf(
+            "TestItem1",
+            "TestItem5",
+            "RenamedItem2",
+            "RenamedItem1",
+            "TestItem3",
+        )
+
+        assertThat(items.map { it.name }).isEqualTo(expectedOutcome)
+        assertThat(itemsInFolder.map { it.name }).isEqualTo(expectedOutcome)
     }
 
     @Test
-    fun `Set item sort mode to 'color' ascending then get items, items are sorted correctly`() {
-        runBlocking {
-            // Set sort mode to 'color' ascending
-            fakeUserPreferencesRepository.updateLibraryItemSortInfo(
-                sortInfo = SortInfo(
-                    mode = LibraryItemSortMode.COLOR,
-                    direction = SortDirection.ASCENDING
-                )
+    fun `Set item sort mode to 'color' ascending then get items, items are sorted correctly`() = runTest {
+        // Set sort mode to 'color' ascending
+        fakeUserPreferencesRepository.updateLibraryItemSortInfo(
+            sortInfo = SortInfo(
+                mode = LibraryItemSortMode.COLOR,
+                direction = SortDirection.ASCENDING
             )
+        )
 
-            // Get items
-            val items = getItems(folderId = Nullable(null)).first()
+        // Get items
+        val items = getItems(folderId = Nullable(null)).first()
+        val itemsInFolder = getItems(folderId = Nullable(folderId)).first()
 
-            // Check if items are sorted correctly
-            assertThat(items.map { it.name })
-                .isEqualTo(listOf(
-                    "TestItem3",
-                    "RenamedItem1",
-                    "RenamedItem2",
-                    "TestItem5",
-                    "TestItem1",
-                ))
-        }
+        // Check if items are sorted correctly
+        val expectedOutcome = listOf(
+            "TestItem3",
+            "RenamedItem1",
+            "RenamedItem2",
+            "TestItem5",
+            "TestItem1",
+        )
+
+        assertThat(items.map { it.name }).isEqualTo(expectedOutcome)
+        assertThat(itemsInFolder.map { it.name }).isEqualTo(expectedOutcome)
     }
 
     @Test

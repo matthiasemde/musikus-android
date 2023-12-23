@@ -15,6 +15,7 @@ import app.musikus.repository.FakeLibraryRepository
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -41,48 +42,42 @@ class EditFolderUseCaseTest {
     }
 
     @Test
-    fun `Edit folder with invalid id, InvalidLibraryFolderException('Folder not found')`() {
+    fun `Edit folder with invalid id, InvalidLibraryFolderException('Folder not found')`() = runTest {
         val exception = assertThrows<InvalidLibraryFolderException> {
-            runBlocking {
-                editFolder(
-                    id = UUID.randomUUID(),
-                    updateAttributes = LibraryFolderUpdateAttributes()
-                )
-            }
+            editFolder(
+                id = UUID.randomUUID(),
+                updateAttributes = LibraryFolderUpdateAttributes()
+            )
         }
 
         assertThat(exception.message).isEqualTo("Folder not found")
     }
 
     @Test
-    fun `Edit folder with empty name, InvalidLibraryFolderException('Folder name can not be empty')`() {
+    fun `Edit folder with empty name, InvalidLibraryFolderException('Folder name can not be empty')`() = runTest {
         val exception = assertThrows<InvalidLibraryFolderException> {
-            runBlocking {
-                editFolder(
-                    id = folderId,
-                    updateAttributes = LibraryFolderUpdateAttributes(
-                        name = "",
-                    )
+            editFolder(
+                id = folderId,
+                updateAttributes = LibraryFolderUpdateAttributes(
+                    name = "",
                 )
-            }
+            )
         }
 
         assertThat(exception.message).isEqualTo("Folder name can not be empty")
     }
 
     @Test
-    fun `Edit folder with valid name, folder name is updated`() {
-        runBlocking {
-            editFolder(
-                id = folderId,
-                updateAttributes = LibraryFolderUpdateAttributes(
-                    name = "NewName",
-                )
+    fun `Edit folder with valid name, folder name is updated`() = runTest {
+        editFolder(
+            id = folderId,
+            updateAttributes = LibraryFolderUpdateAttributes(
+                name = "NewName",
             )
+        )
 
-            val updatedFolder = fakeLibraryRepository.folders.first().first().folder
+        val updatedFolder = fakeLibraryRepository.folders.first().first().folder
 
-            assertThat(updatedFolder.name).isEqualTo("NewName")
-        }
+        assertThat(updatedFolder.name).isEqualTo("NewName")
     }
 }

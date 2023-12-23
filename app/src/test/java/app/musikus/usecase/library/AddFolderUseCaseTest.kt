@@ -14,6 +14,7 @@ import app.musikus.repository.FakeLibraryRepository
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -34,22 +35,18 @@ class AddFolderUseCaseTest {
     }
 
     @Test
-    fun `Add folder with empty name, InvalidLibraryFolderException('Folder name can not be empty')`() {
+    fun `Add folder with empty name, InvalidLibraryFolderException('Folder name can not be empty')`() = runTest {
         val exception = assertThrows<InvalidLibraryFolderException> {
-            runBlocking {
-                addFolder(validFolderCreationAttributes.copy(name = ""))
-            }
+            addFolder(validFolderCreationAttributes.copy(name = ""))
         }
         assertThat(exception.message).isEqualTo("Folder name can not be empty")
     }
 
     @Test
-    fun `Add folder with valid name, folder is added`() {
-        runBlocking {
-            addFolder(validFolderCreationAttributes)
+    fun `Add folder with valid name, folder is added`() = runTest {
+        addFolder(validFolderCreationAttributes)
 
-            val folder = fakeLibraryRepository.folders.first().first().folder
-            assertThat(folder.name).isEqualTo(validFolderCreationAttributes.name)
-        }
+        val folder = fakeLibraryRepository.folders.first().first().folder
+        assertThat(folder.name).isEqualTo(validFolderCreationAttributes.name)
     }
 }

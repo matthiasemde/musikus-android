@@ -7,6 +7,7 @@ import app.musikus.utils.SortInfo
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -24,54 +25,50 @@ class SelectFolderSortModeUseCaseTest {
     }
 
     @Test
-    fun `Select new sort mode, sort mode is updated`() {
-        runBlocking {
-            // Set initial sort mode
-            fakeUserPreferencesRepository.updateLibraryFolderSortInfo(
-                sortInfo = SortInfo(
-                    mode = LibraryFolderSortMode.DATE_ADDED,
-                    direction = SortDirection.DEFAULT
-                ),
-            )
+    fun `Select new sort mode, sort mode is updated`() = runTest {
+        // Set initial sort mode
+        fakeUserPreferencesRepository.updateLibraryFolderSortInfo(
+            sortInfo = SortInfo(
+                mode = LibraryFolderSortMode.DATE_ADDED,
+                direction = SortDirection.DEFAULT
+            ),
+        )
 
-            // Select a new sort mode
-            selectFolderSortMode(
-                sortMode = LibraryFolderSortMode.NAME,
-            )
+        // Select a new sort mode
+        selectFolderSortMode(
+            sortMode = LibraryFolderSortMode.NAME,
+        )
 
-            // Assert that the sort mode was updated with Default sort direction
-            val sortInfo = fakeUserPreferencesRepository.folderSortInfo.first()
-            assertThat(sortInfo)
-                .isEqualTo(SortInfo(
-                    mode = LibraryFolderSortMode.NAME,
-                    direction = SortDirection.DEFAULT,
-                ))
-        }
+        // Assert that the sort mode was updated with Default sort direction
+        val sortInfo = fakeUserPreferencesRepository.folderSortInfo.first()
+        assertThat(sortInfo)
+            .isEqualTo(SortInfo(
+                mode = LibraryFolderSortMode.NAME,
+                direction = SortDirection.DEFAULT,
+            ))
     }
 
     @Test
-    fun `Select current sort mode, sort direction is inverted`() {
-        runBlocking {
-            // Set initial sort mode
-            fakeUserPreferencesRepository.updateLibraryFolderSortInfo(
-                sortInfo = SortInfo(
-                    mode = LibraryFolderSortMode.DATE_ADDED,
-                    direction = SortDirection.DESCENDING
-                ),
-            )
+    fun `Select current sort mode, sort direction is inverted`() = runTest {
+        // Set initial sort mode
+        fakeUserPreferencesRepository.updateLibraryFolderSortInfo(
+            sortInfo = SortInfo(
+                mode = LibraryFolderSortMode.DATE_ADDED,
+                direction = SortDirection.DESCENDING
+            ),
+        )
 
-            // Select the current sort mode
-            selectFolderSortMode(
-                sortMode = LibraryFolderSortMode.DATE_ADDED,
-            )
+        // Select the current sort mode
+        selectFolderSortMode(
+            sortMode = LibraryFolderSortMode.DATE_ADDED,
+        )
 
-            // Assert that the sort mode was updated with inverted sort direction
-            val sortInfo = fakeUserPreferencesRepository.folderSortInfo.first()
-            assertThat(sortInfo)
-                .isEqualTo(SortInfo(
-                    mode = LibraryFolderSortMode.DATE_ADDED,
-                    direction = SortDirection.ASCENDING,
-                ))
-        }
+        // Assert that the sort mode was updated with inverted sort direction
+        val sortInfo = fakeUserPreferencesRepository.folderSortInfo.first()
+        assertThat(sortInfo)
+            .isEqualTo(SortInfo(
+                mode = LibraryFolderSortMode.DATE_ADDED,
+                direction = SortDirection.ASCENDING,
+            ))
     }
 }

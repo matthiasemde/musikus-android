@@ -15,9 +15,12 @@ import app.musikus.repository.FakeUserPreferencesRepository
 import app.musikus.utils.LibraryFolderSortMode
 import app.musikus.utils.SortDirection
 import app.musikus.utils.SortInfo
+import app.musikus.utils.getCurrentDateTime
 import com.google.common.truth.Truth.assertThat
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -49,6 +52,9 @@ class GetFoldersUseCaseTest {
         runBlocking {
             folderCreationAttributes.forEach {
                 fakeLibraryRepository.addFolder(it)
+                println("${getCurrentDateTime()}")
+                delay(1) // necessary to ensure that the timestamps are different
+                println("${getCurrentDateTime()}")
             }
 
             val folders = fakeLibraryRepository.folders.first()
@@ -61,6 +67,8 @@ class GetFoldersUseCaseTest {
                 )
             )
 
+            delay(1) // necessary to ensure that the timestamps are different
+
             fakeLibraryRepository.editFolder(
                 id = folders[2].folder.id,
                 updateAttributes = LibraryFolderUpdateAttributes(
@@ -71,124 +79,136 @@ class GetFoldersUseCaseTest {
     }
 
     @Test
-    fun `Get folders, folders are sorted by 'date added' descending`() {
-        runBlocking {
-            val folders = getFolders().first()
+    fun `Get folders, folders are sorted by 'date added' descending`() = runTest {
+        val folders = getFolders().first()
 
-            for (i in 0..(folders.size - 2)) {
-                assertThat(folders[i].folder.createdAt)
-                    .isAtLeast(folders[i+1].folder.createdAt)
-            }
-        }
+        assertThat(folders.map { it.folder.name })
+            .isEqualTo(listOf(
+                "RenamedFolder1",
+                "TestFolder1",
+                "RenamedFolder2",
+                "TestFolder5",
+                "TestFolder3",
+            ))
     }
 
     @Test
-    fun `Set folder sort mode to 'date added' ascending then get folders, folders are sorted correctly`() {
-        runBlocking {
-            // Set sort mode to 'date added' ascending
-            fakeUserPreferencesRepository.updateLibraryFolderSortInfo(
-                SortInfo(
-                    mode = LibraryFolderSortMode.DATE_ADDED,
-                    direction = SortDirection.ASCENDING
-                )
+    fun `Set folder sort mode to 'date added' ascending then get folders, folders are sorted correctly`() = runTest {
+        // Set sort mode to 'date added' ascending
+        fakeUserPreferencesRepository.updateLibraryFolderSortInfo(
+            SortInfo(
+                mode = LibraryFolderSortMode.DATE_ADDED,
+                direction = SortDirection.ASCENDING
             )
+        )
 
-            // Get folders
-            val folders = getFolders().first()
+        // Get folders
+        val folders = getFolders().first()
 
-            // Check if folders are sorted correctly
-            for (i in 0..(folders.size - 2)) {
-                assertThat(folders[i].folder.createdAt)
-                    .isAtMost(folders[i+1].folder.createdAt)
-            }
-        }
+        // Check if folders are sorted correctly
+        assertThat(folders.map { it.folder.name })
+            .isEqualTo(listOf(
+                "TestFolder3",
+                "TestFolder5",
+                "RenamedFolder2",
+                "TestFolder1",
+                "RenamedFolder1",
+            ))
     }
 
     @Test
-    fun `Set folder sort mode to 'last modified' descending then get folders, folders are sorted correctly`() {
-        runBlocking {
-            // Set sort mode to 'last modified' descending
-            fakeUserPreferencesRepository.updateLibraryFolderSortInfo(
-                SortInfo(
-                    mode = LibraryFolderSortMode.LAST_MODIFIED,
-                    direction = SortDirection.DESCENDING
-                )
+    fun `Set folder sort mode to 'last modified' descending then get folders, folders are sorted correctly`() = runTest {
+        // Set sort mode to 'last modified' descending
+        fakeUserPreferencesRepository.updateLibraryFolderSortInfo(
+            SortInfo(
+                mode = LibraryFolderSortMode.LAST_MODIFIED,
+                direction = SortDirection.DESCENDING
             )
+        )
 
-            // Get folders
-            val folders = getFolders().first()
+        // Get folders
+        val folders = getFolders().first()
 
-            // Check if folders are sorted correctly
-            for (i in 0..(folders.size - 2)) {
-                assertThat(folders[i].folder.modifiedAt)
-                    .isAtLeast(folders[i+1].folder.modifiedAt)
-            }
-        }
+        // Check if folders are sorted correctly
+        assertThat(folders.map { it.folder.name })
+            .isEqualTo(listOf(
+                "RenamedFolder2",
+                "RenamedFolder1",
+                "TestFolder1",
+                "TestFolder5",
+                "TestFolder3",
+            ))
     }
 
     @Test
-    fun `Set folder sort mode to 'last modified' ascending then get folders, folders are sorted correctly`() {
-        runBlocking {
-            // Set sort mode to 'last modified' ascending
-            fakeUserPreferencesRepository.updateLibraryFolderSortInfo(
-                SortInfo(
-                    mode = LibraryFolderSortMode.LAST_MODIFIED,
-                    direction = SortDirection.ASCENDING
-                )
+    fun `Set folder sort mode to 'last modified' ascending then get folders, folders are sorted correctly`() = runTest {
+        // Set sort mode to 'last modified' ascending
+        fakeUserPreferencesRepository.updateLibraryFolderSortInfo(
+            SortInfo(
+                mode = LibraryFolderSortMode.LAST_MODIFIED,
+                direction = SortDirection.ASCENDING
             )
+        )
 
-            // Get folders
-            val folders = getFolders().first()
+        // Get folders
+        val folders = getFolders().first()
 
-            // Check if folders are sorted correctly
-            for (i in 0..(folders.size - 2)) {
-                assertThat(folders[i].folder.modifiedAt)
-                    .isAtMost(folders[i+1].folder.modifiedAt)
-            }
-        }
+        // Check if folders are sorted correctly
+        assertThat(folders.map { it.folder.name })
+            .isEqualTo(listOf(
+                "TestFolder3",
+                "TestFolder5",
+                "TestFolder1",
+                "RenamedFolder1",
+                "RenamedFolder2",
+            ))
     }
 
     @Test
-    fun `Set folder sort mode to 'name' descending then get folders, folders are sorted correctly`() {
-        runBlocking {
-            // Set sort mode to 'name' descending
-            fakeUserPreferencesRepository.updateLibraryFolderSortInfo(
-                SortInfo(
-                    mode = LibraryFolderSortMode.NAME,
-                    direction = SortDirection.DESCENDING
-                )
+    fun `Set folder sort mode to 'name' descending then get folders, folders are sorted correctly`() = runTest {
+        // Set sort mode to 'name' descending
+        fakeUserPreferencesRepository.updateLibraryFolderSortInfo(
+            SortInfo(
+                mode = LibraryFolderSortMode.NAME,
+                direction = SortDirection.DESCENDING
             )
+        )
 
-            // Get folders
-            val folders = getFolders().first()
+        // Get folders
+        val folders = getFolders().first()
 
-            // Check if folders are sorted correctly
-            for (i in 0..(folders.size - 2)) {
-                assertThat(folders[i].folder.name)
-                    .isAtLeast(folders[i+1].folder.name)
-            }
-        }
+        // Check if folders are sorted correctly
+        assertThat(folders.map { it.folder.name })
+            .isEqualTo(listOf(
+                "TestFolder5",
+                "TestFolder3",
+                "TestFolder1",
+                "RenamedFolder2",
+                "RenamedFolder1",
+            ))
     }
 
     @Test
-    fun `Set folder sort mode to 'name' ascending then get folders, folders are sorted correctly`() {
-        runBlocking {
-            // Set sort mode to 'name' ascending
-            fakeUserPreferencesRepository.updateLibraryFolderSortInfo(
-                SortInfo(
-                    mode = LibraryFolderSortMode.NAME,
-                    direction = SortDirection.ASCENDING
-                )
+    fun `Set folder sort mode to 'name' ascending then get folders, folders are sorted correctly`() = runTest {
+        // Set sort mode to 'name' ascending
+        fakeUserPreferencesRepository.updateLibraryFolderSortInfo(
+            SortInfo(
+                mode = LibraryFolderSortMode.NAME,
+                direction = SortDirection.ASCENDING
             )
+        )
 
-            // Get folders
-            val folders = getFolders().first()
+        // Get folders
+        val folders = getFolders().first()
 
-            // Check if folders are sorted correctly
-            for (i in 0..(folders.size - 2)) {
-                assertThat(folders[i].folder.name)
-                    .isAtMost(folders[i+1].folder.name)
-            }
-        }
+        // Check if folders are sorted correctly
+        assertThat(folders.map { it.folder.name })
+            .isEqualTo(listOf(
+                "RenamedFolder1",
+                "RenamedFolder2",
+                "TestFolder1",
+                "TestFolder3",
+                "TestFolder5",
+            ))
     }
 }

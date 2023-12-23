@@ -17,6 +17,7 @@ import app.musikus.repository.FakeLibraryRepository
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 
 import org.junit.jupiter.api.Test
@@ -53,95 +54,83 @@ class EditItemUseCaseTest {
 
 
     @Test
-    fun `Edit item with invalid id, InvalidLibraryItemException('Item not found')`() {
+    fun `Edit item with invalid id, InvalidLibraryItemException('Item not found')`() = runTest {
         val exception = assertThrows<InvalidLibraryItemException> {
-            runBlocking {
-                editItem(
-                    id = UUID.randomUUID(),
-                    updateAttributes = LibraryItemUpdateAttributes()
-                )
-            }
+            editItem(
+                id = UUID.randomUUID(),
+                updateAttributes = LibraryItemUpdateAttributes()
+            )
         }
         assertThat(exception.message).isEqualTo("Item not found")
     }
 
     @Test
-    fun `Edit item with empty name, InvalidLibraryItemException('Item name cannot be empty')`() {
+    fun `Edit item with empty name, InvalidLibraryItemException('Item name cannot be empty')`() = runTest {
         val exception = assertThrows<InvalidLibraryItemException> {
-            runBlocking {
-                editItem(
-                    id = itemId,
-                    updateAttributes = LibraryItemUpdateAttributes(
-                        name = "",
-                    )
+            editItem(
+                id = itemId,
+                updateAttributes = LibraryItemUpdateAttributes(
+                    name = "",
                 )
-            }
+            )
         }
         assertThat(exception.message).isEqualTo("Item name cannot be empty")
     }
 
     @Test
-    fun `Edit item with invalid colorIndex, InvalidLibraryItemException('Color index must be between 0 and 9')`() {
+    fun `Edit item with invalid colorIndex, InvalidLibraryItemException('Color index must be between 0 and 9')`() = runTest {
         var exception = assertThrows<InvalidLibraryItemException> {
-            runBlocking {
-                editItem(
-                    id = itemId,
-                    updateAttributes = LibraryItemUpdateAttributes(
-                        colorIndex = -1,
-                    )
+            editItem(
+                id = itemId,
+                updateAttributes = LibraryItemUpdateAttributes(
+                    colorIndex = -1,
                 )
-            }
+            )
         }
         assertThat(exception.message).isEqualTo("Color index must be between 0 and 9")
 
         exception = assertThrows<InvalidLibraryItemException> {
-            runBlocking {
-                editItem(
-                    id = itemId,
-                    updateAttributes = LibraryItemUpdateAttributes(
-                        colorIndex = 10,
-                    )
+            editItem(
+                id = itemId,
+                updateAttributes = LibraryItemUpdateAttributes(
+                    colorIndex = 10,
                 )
-            }
+            )
         }
         assertThat(exception.message).isEqualTo("Color index must be between 0 and 9")
     }
 
     @Test
-    fun `Edit item with non existent folderId, InvalidLibraryItemException('Folder (FOLDER_ID) does not exist')`() {
+    fun `Edit item with non existent folderId, InvalidLibraryItemException('Folder (FOLDER_ID) does not exist')`() = runTest {
         val randomId = UUID.randomUUID()
         val exception = assertThrows<InvalidLibraryItemException> {
-            runBlocking {
-                editItem(
-                    id = itemId,
-                    updateAttributes = LibraryItemUpdateAttributes(
-                        libraryFolderId = Nullable(randomId),
-                    )
+            editItem(
+                id = itemId,
+                updateAttributes = LibraryItemUpdateAttributes(
+                    libraryFolderId = Nullable(randomId),
                 )
-            }
+            )
         }
         assertThat(exception.message).isEqualTo("Folder (${randomId}) does not exist")
     }
 
     @Test
-    fun `Edit item name, color and folderId, true`() {
-        runBlocking {
-            editItem(
-                id = itemId,
-                updateAttributes = LibraryItemUpdateAttributes(
-                    name = "NewName",
-                    colorIndex = 8,
-                    libraryFolderId = Nullable(folderId),
-                )
+    fun `Edit item name, color and folderId, true`() = runTest {
+        editItem(
+            id = itemId,
+            updateAttributes = LibraryItemUpdateAttributes(
+                name = "NewName",
+                colorIndex = 8,
+                libraryFolderId = Nullable(folderId),
             )
-            val updatedItem = fakeLibraryRepository.items.first().first()
+        )
+        val updatedItem = fakeLibraryRepository.items.first().first()
 
-            assertThat(updatedItem.name).isEqualTo("NewName")
-            assertThat(updatedItem.colorIndex).isEqualTo(8)
+        assertThat(updatedItem.name).isEqualTo("NewName")
+        assertThat(updatedItem.colorIndex).isEqualTo(8)
 
-            val updatedFolderWithItems = fakeLibraryRepository.folders.first().first()
+        val updatedFolderWithItems = fakeLibraryRepository.folders.first().first()
 
-            assertThat(updatedFolderWithItems.items).contains(updatedItem)
-        }
+        assertThat(updatedFolderWithItems.items).contains(updatedItem)
     }
 }

@@ -16,6 +16,7 @@ import app.musikus.repository.FakeLibraryRepository
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -46,74 +47,62 @@ class AddItemUseCaseTest {
     }
 
     @Test
-    fun `Add item with empty name, InvalidLibraryItemException('Item name cannot be empty')`() {
+    fun `Add item with empty name, InvalidLibraryItemException('Item name cannot be empty')`() = runTest {
         val exception = assertThrows<InvalidLibraryItemException> {
-            runBlocking {
-                addItem(validItemCreationAttributes.copy(name = ""))
-            }
+            addItem(validItemCreationAttributes.copy(name = ""))
         }
         assertThat(exception.message).isEqualTo("Item name cannot be empty")
     }
 
 
     @Test
-    fun `Add item with invalid colorIndex, InvalidLibraryItemException('Color index must be between 0 and 9')`() {
+    fun `Add item with invalid colorIndex, InvalidLibraryItemException('Color index must be between 0 and 9')`() = runTest {
         var exception = assertThrows<InvalidLibraryItemException> {
-            runBlocking {
-                addItem(validItemCreationAttributes.copy(colorIndex = -1))
-            }
+            addItem(validItemCreationAttributes.copy(colorIndex = -1))
         }
         assertThat(exception.message).isEqualTo("Color index must be between 0 and 9")
 
         exception = assertThrows<InvalidLibraryItemException> {
-            runBlocking {
-                addItem(validItemCreationAttributes.copy(colorIndex = 10))
-            }
+            addItem(validItemCreationAttributes.copy(colorIndex = 10))
         }
         assertThat(exception.message).isEqualTo("Color index must be between 0 and 9")
     }
 
 
     @Test
-    fun `Add item with non existent folderId, InvalidLibraryItemException('Folder (FOLDER_ID) does not exist')`() {
+    fun `Add item with non existent folderId, InvalidLibraryItemException('Folder (FOLDER_ID) does not exist')`() = runTest {
         val randomId = UUID.randomUUID()
         val exception = assertThrows<InvalidLibraryItemException> {
-            runBlocking {
-                addItem(validItemCreationAttributes.copy(libraryFolderId = Nullable(randomId)))
-            }
+            addItem(validItemCreationAttributes.copy(libraryFolderId = Nullable(randomId)))
         }
         assertThat(exception.message).isEqualTo("Folder (${randomId}) does not exist")
     }
 
 
     @Test
-    fun `Add valid item to root, item in items list`() {
-        runBlocking {
-            addItem(validItemCreationAttributes.copy(libraryFolderId = Nullable(null)))
+    fun `Add valid item to root, item in items list`() = runTest {
+        addItem(validItemCreationAttributes.copy(libraryFolderId = Nullable(null)))
 
-            val addedItem = fakeLibraryRepository.items.first().first()
+        val addedItem = fakeLibraryRepository.items.first().first()
 
-            assertThat(addedItem.name).isEqualTo(validItemCreationAttributes.name)
-            assertThat(addedItem.colorIndex).isEqualTo(validItemCreationAttributes.colorIndex)
-            assertThat(addedItem.libraryFolderId).isEqualTo(null)
-        }
+        assertThat(addedItem.name).isEqualTo(validItemCreationAttributes.name)
+        assertThat(addedItem.colorIndex).isEqualTo(validItemCreationAttributes.colorIndex)
+        assertThat(addedItem.libraryFolderId).isEqualTo(null)
     }
 
     @Test
-    fun `Add valid item to folder, item in folder items list`() {
-        runBlocking {
-            val folder = fakeLibraryRepository.folders.first().first().folder
+    fun `Add valid item to folder, item in folder items list`() = runTest {
+        val folder = fakeLibraryRepository.folders.first().first().folder
 
-            addItem(validItemCreationAttributes.copy(libraryFolderId = Nullable(folder.id)))
+        addItem(validItemCreationAttributes.copy(libraryFolderId = Nullable(folder.id)))
 
-            val addedItem = fakeLibraryRepository.items.first().first()
+        val addedItem = fakeLibraryRepository.items.first().first()
 
-            assertThat(addedItem.name).isEqualTo(validItemCreationAttributes.name)
-            assertThat(addedItem.colorIndex).isEqualTo(validItemCreationAttributes.colorIndex)
+        assertThat(addedItem.name).isEqualTo(validItemCreationAttributes.name)
+        assertThat(addedItem.colorIndex).isEqualTo(validItemCreationAttributes.colorIndex)
 
-            val folderItems = fakeLibraryRepository.folders.first().first().items
+        val folderItems = fakeLibraryRepository.folders.first().first().items
 
-            assertThat(folderItems).contains(addedItem)
-        }
+        assertThat(folderItems).contains(addedItem)
     }
 }
