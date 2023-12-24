@@ -52,18 +52,21 @@ import app.musikus.database.GoalInstanceWithDescriptionWithLibraryItems
 import app.musikus.database.entities.GoalType
 import app.musikus.utils.SCALE_FACTOR_FOR_SMALL_TEXT
 import app.musikus.utils.TimeFormat
+import app.musikus.utils.TimeProvider
 import app.musikus.utils.asString
-import app.musikus.utils.getCurrentDateTime
 import app.musikus.utils.getDurationString
 import java.time.temporal.ChronoUnit
+import javax.inject.Inject
 
 @Composable
 fun GoalCard(
     modifier: Modifier = Modifier,
     goal: GoalInstanceWithDescriptionWithLibraryItems,
     progress: Int = 0,
-    progressOffset: Int = 0
+    progressOffset: Int = 0,
+    timeProvider: TimeProvider
 ) {
+
     val (_, descriptionWithLibraryItems) = goal
     val (description, libraryItems) = descriptionWithLibraryItems
 
@@ -121,7 +124,7 @@ fun GoalCard(
 
                     /** remaining time */
                     val remainingTime = ChronoUnit.SECONDS.between(
-                        getCurrentDateTime(),
+                        timeProvider.getCurrentDateTime(),
                         goal.endTimestampInLocalTimezone,
                     )
 

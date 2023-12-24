@@ -129,12 +129,12 @@ fun ProgressUpdate() {
                 key = { it.description.description.id }
             ) { goal ->
                 val index = progressUpdateState.updatedGoalIds.indexOf(goal.description.description.id)
-                GoalCard(
-                    modifier = Modifier.animateItemPlacement(),
-                    goal = goal,
-                    progressOffset = if (progressUpdateState.updatedGoalOffsets.size > index)
-                        progressUpdateState.updatedGoalOffsets[index] else 0,
-                )
+//                GoalCard(
+//                    modifier = Modifier.animateItemPlacement(),
+//                    goal = goal,
+//                    progressOffset = if (progressUpdateState.updatedGoalOffsets.size > index)
+//                        progressUpdateState.updatedGoalOffsets[index] else 0,
+//                )
             }
         }
     }

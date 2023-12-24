@@ -32,7 +32,7 @@ import app.musikus.database.entities.SoftDeleteModelUpdateAttributes
 import app.musikus.database.entities.TimestampModel
 import app.musikus.database.entities.TimestampModelDisplayAttributes
 import app.musikus.database.entities.TimestampModelUpdateAttributes
-import app.musikus.utils.getCurrentDateTime
+import app.musikus.utils.TimeProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.flow
@@ -40,6 +40,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.runBlocking
 import java.util.UUID
+import javax.inject.Inject
 
 const val HASH_FACTOR = 524287
 
@@ -207,7 +208,7 @@ abstract class TimestampDao<
     D : TimestampModelDisplayAttributes
 >(
     tableName: String,
-    database: MusikusDatabase,
+    private val database: MusikusDatabase,
     displayAttributes: List<String>
 ) : BaseDao<T, U, D>(
     tableName = tableName,
@@ -216,12 +217,13 @@ abstract class TimestampDao<
         listOf("created_at", "modified_at") +
         displayAttributes
 ) {
+
     override suspend fun insert(row: T) {
         insert(listOf(row))
     }
 
     override suspend fun insert(rows: List<T>) {
-        val now = getCurrentDateTime()
+        val now = database.timeProvider.getCurrentDateTime()
         super.insert(rows.onEach {
             it.createdAt = now
             it.modifiedAt = now
@@ -232,7 +234,7 @@ abstract class TimestampDao<
         old: T,
         updateAttributes: U
     ): T = super.applyUpdateAttributes(old, updateAttributes).apply{
-        modifiedAt = getCurrentDateTime()
+        modifiedAt = database.timeProvider.getCurrentDateTime()
     }
 }
 

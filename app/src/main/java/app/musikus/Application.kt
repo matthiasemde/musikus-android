@@ -27,6 +27,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import app.musikus.database.MusikusDatabase
 import app.musikus.repository.UserPreferencesRepository
+import app.musikus.utils.TimeProvider
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.flow.map

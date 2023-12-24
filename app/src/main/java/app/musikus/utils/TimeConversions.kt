@@ -14,6 +14,7 @@ package app.musikus.utils
 
 import android.text.SpannableString
 import android.text.style.RelativeSizeSpan
+import java.time.Clock
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
@@ -276,7 +277,7 @@ fun getTimestamp(
     dateTime: ZonedDateTime = ZonedDateTime.now()
 ) = dateTime.toEpochSecond()
 
-fun getCurrentDateTime(): ZonedDateTime = ZonedDateTime.now()
+//fun getCurrentDateTime(): ZonedDateTime = ZonedDateTime.now()
 
 // copies the time from the original timezone to the local timezone without adjusting it
 fun ZonedDateTime.inLocalTimezone(): ZonedDateTime =

@@ -80,9 +80,11 @@ import app.musikus.ui.statistics.sessionstatistics.SessionStatistics
 import app.musikus.utils.ExportDatabaseContract
 import app.musikus.utils.ExportImportDialog
 import app.musikus.utils.ImportDatabaseContract
+import app.musikus.utils.TimeProvider
 import com.google.android.material.composethemeadapter3.Mdc3Theme
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.UUID
+import javax.inject.Inject
 
 
 sealed class Screen(
@@ -144,6 +146,9 @@ sealed class Screen(
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
+
+    @Inject
+    lateinit var timeProvider: TimeProvider
 
     private val navItems = listOf(
         Screen.Sessions,
@@ -317,7 +322,12 @@ class MainActivity : AppCompatActivity() {
                         }
                         composable(
                             route = Screen.Goals.route,
-                        ) { Goals(mainViewModel) }
+                        ) {
+                            Goals(
+                                mainViewModel = mainViewModel,
+                                timeProvider = timeProvider
+                            )
+                        }
                         composable(
                             route = Screen.Statistics.route,
                         ) { Statistics(
@@ -327,7 +337,8 @@ class MainActivity : AppCompatActivity() {
                             },
                             navigateToGoalStatistics = {
                                 navController.navigate(Screen.GoalStatistics.route)
-                            }
+                            },
+                            timeProvider = timeProvider
                         ) }
                         composable(
                             route = Screen.SessionStatistics.route,

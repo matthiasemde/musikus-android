@@ -39,6 +39,7 @@ import app.musikus.database.entities.LibraryFolderModel
 import app.musikus.database.entities.LibraryItemModel
 import app.musikus.database.entities.SectionModel
 import app.musikus.database.entities.SessionModel
+import app.musikus.utils.TimeProvider
 import app.musikus.utils.prepopulateDatabase
 import kotlinx.coroutines.runBlocking
 import java.nio.ByteBuffer
@@ -74,12 +75,15 @@ abstract class MusikusDatabase : RoomDatabase() {
     abstract val sessionDao : SessionDao
     abstract val sectionDao : SectionDao
 
+    lateinit var timeProvider: TimeProvider
+
     companion object {
         private const val DATABASE_NAME = "musikus-database"
 
         fun buildDatabase(
             app: Application,
-            dbProvider : Provider<MusikusDatabase>
+            databaseProvider: Provider<MusikusDatabase>,
+            timeProvider: TimeProvider
         ) =
             Room.databaseBuilder(
                 app,
@@ -93,10 +97,12 @@ abstract class MusikusDatabase : RoomDatabase() {
                     super.onCreate(db)
                     // prepopulate the database
                     ioThread { runBlocking {
-                        prepopulateDatabase(dbProvider.get())
+                        prepopulateDatabase(databaseProvider.get())
                     } }
                 }
-            }).build()
+            }).build().apply {
+                this.timeProvider = timeProvider
+            }
     }
 }
 

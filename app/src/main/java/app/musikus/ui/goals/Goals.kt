@@ -69,6 +69,7 @@ import app.musikus.shared.ThemeMenu
 import app.musikus.spacing
 import app.musikus.ui.MainViewModel
 import app.musikus.utils.GoalsSortMode
+import app.musikus.utils.TimeProvider
 
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
@@ -76,6 +77,7 @@ import app.musikus.utils.GoalsSortMode
 fun Goals(
     mainViewModel: MainViewModel,
     goalsViewModel: GoalsViewModel = hiltViewModel(),
+    timeProvider: TimeProvider
 ) {
     val mainUiState by mainViewModel.uiState.collectAsStateWithLifecycle()
     val goalsUiState by goalsViewModel.uiState.collectAsStateWithLifecycle()
@@ -265,7 +267,11 @@ fun Goals(
                         onShortClick = { goalsViewModel.onGoalClicked(goal, false) },
                         onLongClick = { goalsViewModel.onGoalClicked(goal, true) }
                     ) {
-                        GoalCard(goal = goal, progress = progress)
+                        GoalCard(
+                            goal = goal,
+                            progress = progress,
+                            timeProvider = timeProvider
+                        )
                     }
                 }
             }

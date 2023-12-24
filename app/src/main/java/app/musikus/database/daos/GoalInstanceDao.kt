@@ -59,7 +59,7 @@ data class GoalInstance(
 
 @Dao
 abstract class GoalInstanceDao(
-    database : MusikusDatabase
+    database : MusikusDatabase,
 ) : TimestampDao<GoalInstanceModel, GoalInstanceUpdateAttributes, GoalInstance>(
     tableName = "goal_instance",
     database = database,

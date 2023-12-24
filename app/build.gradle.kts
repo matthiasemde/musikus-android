@@ -158,6 +158,8 @@ dependencies {
     // Testing
     androidTestImplementation(platform("androidx.compose:compose-bom:$bomVersion"))
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:$kotlinCoroutineVersion")
+//    testImplementation("org.mockito:mockito-core:5.8.0")
+//    androidTestImplementation("org.mockito:mockito-android:5.8.0")
 
     // Local unit tests
     testImplementation("androidx.test:core:1.5.0")

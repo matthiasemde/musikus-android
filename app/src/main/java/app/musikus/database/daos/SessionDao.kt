@@ -49,7 +49,7 @@ data class Session(
 }
 @Dao
 abstract class SessionDao(
-    private val database : MusikusDatabase
+    private val database : MusikusDatabase,
 ) : SoftDeleteDao<
         SessionModel,
         SessionUpdateAttributes,

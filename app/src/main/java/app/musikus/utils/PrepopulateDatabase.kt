@@ -27,21 +27,22 @@ import java.time.temporal.ChronoUnit
 import kotlin.math.pow
 
 suspend fun prepopulateDatabase(
-    db: MusikusDatabase,
+    database: MusikusDatabase,
 ) {
     val libraryRepository = LibraryRepositoryImpl(
-        itemDao = db.libraryItemDao,
-        folderDao = db.libraryFolderDao,
+        itemDao = database.libraryItemDao,
+        folderDao = database.libraryFolderDao,
     )
 
     val goalRepository = GoalRepositoryImpl(
-        goalInstanceDao = db.goalInstanceDao,
-        goalDescriptionDao = db.goalDescriptionDao,
+        goalInstanceDao = database.goalInstanceDao,
+        goalDescriptionDao = database.goalDescriptionDao,
+        timeProvider = database.timeProvider,
     )
 
     val sessionRepository = SessionRepositoryImpl(
-        sessionDao = db.sessionDao,
-        sectionDao = db.sectionDao,
+        sessionDao = database.sessionDao,
+        sectionDao = database.sectionDao,
     )
 
     listOf(
@@ -116,7 +117,7 @@ suspend fun prepopulateDatabase(
         ).forEach { goalDescriptionCreationAttributes ->
             goalRepository.add(
                 goalDescriptionCreationAttributes,
-                getCurrentDateTime().minus(
+                database.timeProvider.getCurrentDateTime().minus(
                     (
                             (if (goalDescriptionCreationAttributes.repeat) 10L else 1L) *
                                     goalDescriptionCreationAttributes.periodInPeriodUnits
@@ -146,7 +147,7 @@ suspend fun prepopulateDatabase(
                 session,
                 (1..(1..5).random()).map { SectionCreationAttributes(
                     libraryItemId = Nullable(items.random().id),
-                    startTimestamp = getCurrentDateTime().minus(
+                    startTimestamp = database.timeProvider.getCurrentDateTime().minus(
                         (
                                 (sessionNum / 2) * // two sessions per day initially
                                         24 * 60 * 60 *

@@ -13,7 +13,7 @@ import androidx.lifecycle.viewModelScope
 import app.musikus.repository.GoalRepository
 import app.musikus.repository.SessionRepository
 import app.musikus.ui.goals.GoalWithProgress
-import app.musikus.utils.getCurrentDateTime
+import app.musikus.utils.TimeProvider
 import app.musikus.utils.getDayIndexOfWeek
 import app.musikus.utils.getStartOfDayOfWeek
 import app.musikus.utils.specificMonth
@@ -70,6 +70,7 @@ data class StatisticsRatingsCardUiState(
 
 @HiltViewModel
 class StatisticsViewModel @Inject constructor(
+    timeProvider: TimeProvider,
     goalRepository : GoalRepository,
     sessionRepository : SessionRepository,
 ) : ViewModel() {
@@ -93,7 +94,7 @@ class StatisticsViewModel @Inject constructor(
     private val currentMonthUiState = sessions.map { sessions ->
         if (sessions.isEmpty()) return@map null
 
-        val currentSpecificMonth = getCurrentDateTime().specificMonth
+        val currentSpecificMonth = timeProvider.getCurrentDateTime().specificMonth
         val currentMonthSessions = sessions.filter { session ->
             session.startTimestamp.specificMonth == currentSpecificMonth
         }

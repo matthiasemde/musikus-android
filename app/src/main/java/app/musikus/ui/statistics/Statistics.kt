@@ -78,9 +78,10 @@ import app.musikus.spacing
 import app.musikus.ui.MainViewModel
 import app.musikus.utils.DateFormat
 import app.musikus.utils.TimeFormat
-import app.musikus.utils.getCurrentDateTime
+import app.musikus.utils.TimeProvider
 import app.musikus.utils.getDurationString
 import app.musikus.utils.musikusFormat
+import javax.inject.Inject
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -89,6 +90,7 @@ fun Statistics(
     statisticsViewModel: StatisticsViewModel = hiltViewModel(),
     navigateToSessionStatistics: () -> Unit,
     navigateToGoalStatistics: () -> Unit,
+    timeProvider: TimeProvider,
 ) {
     val mainUiState by mainViewModel.uiState.collectAsStateWithLifecycle()
     val statisticsUiState by statisticsViewModel.uiState.collectAsStateWithLifecycle()
@@ -153,7 +155,10 @@ fun Statistics(
             ) {
                 contentUiState.currentMonthUiState?.let {
                     item {
-                        StatisticsCurrentMonth(it)
+                        StatisticsCurrentMonth(
+                            it,
+                            timeProvider = timeProvider
+                        )
                     }
                 }
                 contentUiState.practiceDurationCardUiState?.let {
@@ -200,7 +205,9 @@ fun Statistics(
 @Composable
 fun StatisticsCurrentMonth(
     uiState: StatisticsCurrentMonthUiState,
+    timeProvider: TimeProvider
 ) {
+
     val labelTextStyle = MaterialTheme.typography.labelSmall
     val statsTextStyle = MaterialTheme.typography.titleMedium.copy(
         color = MaterialTheme.colorScheme.primary,
@@ -225,7 +232,7 @@ fun StatisticsCurrentMonth(
     )
 
     Column {
-        Text(text = "In " + getCurrentDateTime().musikusFormat(DateFormat.MONTH))
+        Text(text = "In " + timeProvider.getCurrentDateTime().musikusFormat(DateFormat.MONTH))
         Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
         Row(
             modifier = Modifier.fillMaxWidth(),

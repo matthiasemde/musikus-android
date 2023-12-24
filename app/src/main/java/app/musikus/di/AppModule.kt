@@ -40,6 +40,8 @@ import app.musikus.usecase.library.RestoreFoldersUseCase
 import app.musikus.usecase.library.RestoreItemsUseCase
 import app.musikus.usecase.library.SelectFolderSortModeUseCase
 import app.musikus.usecase.library.SelectItemSortModeUseCase
+import app.musikus.utils.TimeProvider
+import app.musikus.utils.TimeProviderImpl
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -80,12 +82,20 @@ object AppModule {
     /**
      * Dependency injection for the database
      * @param app Application
-     * @param dbProvider Provider<MusikusDatabase>: Needed for prepopulating the database
+     * @param databaseProvider Provider<MusikusDatabase>: Needed for prepopulating the database
      * */
     @Provides
     @Singleton
-    fun provideMusikusDatabase(app: Application, dbProvider: Provider<MusikusDatabase>): MusikusDatabase {
-        return MusikusDatabase.buildDatabase(app, dbProvider)
+    fun provideMusikusDatabase(
+        app: Application,
+        databaseProvider: Provider<MusikusDatabase>,
+        timeProvider: TimeProvider
+    ): MusikusDatabase {
+        return MusikusDatabase.buildDatabase(
+            app,
+            databaseProvider,
+            timeProvider = timeProvider
+        )
     }
 
     @Provides
@@ -105,6 +115,7 @@ object AppModule {
         return GoalRepositoryImpl(
             goalInstanceDao = database.goalInstanceDao,
             goalDescriptionDao = database.goalDescriptionDao,
+            timeProvider = database.timeProvider
         )
     }
 
@@ -119,7 +130,7 @@ object AppModule {
     }
 
     @Provides
-    fun libraryUseCases(
+    fun provideLibraryUseCases(
         libraryRepository: LibraryRepository,
         userPreferencesRepository: UserPreferencesRepository
     ): LibraryUseCases {
@@ -140,5 +151,11 @@ object AppModule {
             getFolderSortInfo = GetFolderSortInfoUseCase(userPreferencesRepository),
             selectFolderSortMode = SelectFolderSortModeUseCase(userPreferencesRepository),
         )
+    }
+
+    @Provides
+    @Singleton
+    fun provideTimeProvider(): TimeProvider {
+        return TimeProviderImpl()
     }
 }

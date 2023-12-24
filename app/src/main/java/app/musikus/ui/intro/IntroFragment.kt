@@ -20,6 +20,7 @@ import androidx.fragment.app.FragmentContainerView
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import app.musikus.Musikus
 import app.musikus.R
 import app.musikus.database.SectionWithLibraryItem
 import app.musikus.database.SessionWithSectionsWithLibraryItems
@@ -28,12 +29,13 @@ import app.musikus.database.daos.Section
 import app.musikus.database.daos.Session
 import app.musikus.ui.activesession.ActiveSessionActivity
 import app.musikus.ui.library.LibraryItemAdapter
-import app.musikus.utils.getCurrentDateTime
+import app.musikus.utils.TimeProvider
 import com.github.appintro.BuildConfig
 import com.github.appintro.SlideBackgroundColorHolder
 import com.github.appintro.SlideSelectionListener
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import java.util.UUID
+import javax.inject.Inject
 
 
 private const val DUMMY_MAIN_CATEGORY_INDEX = 5
@@ -276,6 +278,8 @@ class IntroGoalsFragment : Fragment(R.layout.fragment_intro_goals) {
 }
 
 class IntroSessionsFragment : Fragment(R.layout.fragment_intro_sessions) {
+    @Inject
+    lateinit var timeProvider: TimeProvider
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
 
@@ -304,7 +308,7 @@ private fun getDummySessions() =
                         sessionId = UUID.randomUUID(), // we don't care about id but it can't be null
                         libraryItemId = UUID.randomUUID(), // we don't care about id but it can't be null
                         duration = 60 * 10,
-                        startTimestamp = getCurrentDateTime()
+                        startTimestamp = timeProvider.getCurrentDateTime()
                     ),
                     dummyLibraryItems[0]
                 ),
@@ -313,7 +317,7 @@ private fun getDummySessions() =
                         sessionId = UUID.randomUUID(), // we don't care about id but it can't be null
                         libraryItemId = UUID.randomUUID(), // we don't care about id but it can't be null
                         duration = 60 * 23,
-                        startTimestamp = getCurrentDateTime()
+                        startTimestamp = timeProvider.getCurrentDateTime()
                     ),
                     dummyLibraryItems[1]
                 ),
@@ -322,7 +326,7 @@ private fun getDummySessions() =
                         sessionId = UUID.randomUUID(), // we don't care about id but it can't be null
                         libraryItemId = UUID.randomUUID(), // we don't care about id but it can't be null
                         duration = 60 * 37,
-                        startTimestamp = getCurrentDateTime()
+                        startTimestamp = timeProvider.getCurrentDateTime()
                     ),
                     dummyLibraryItems[DUMMY_MAIN_CATEGORY_INDEX]
                 ),

@@ -8,6 +8,7 @@
 
 package app.musikus.usecase.library
 
+import app.musikus.Musikus
 import app.musikus.database.entities.LibraryFolderCreationAttributes
 import app.musikus.database.entities.LibraryFolderUpdateAttributes
 import app.musikus.repository.FakeLibraryRepository
@@ -15,7 +16,7 @@ import app.musikus.repository.FakeUserPreferencesRepository
 import app.musikus.utils.LibraryFolderSortMode
 import app.musikus.utils.SortDirection
 import app.musikus.utils.SortInfo
-import app.musikus.utils.getCurrentDateTime
+import app.musikus.utils.TimeProvider
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
@@ -23,9 +24,12 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import javax.inject.Inject
 
 
 class GetFoldersUseCaseTest {
+    private lateinit var timeProvider: TimeProvider
+
     private lateinit var getFolders: GetFoldersUseCase
     private lateinit var fakeLibraryRepository: FakeLibraryRepository
     private lateinit var fakeUserPreferencesRepository: FakeUserPreferencesRepository
@@ -52,9 +56,9 @@ class GetFoldersUseCaseTest {
         runBlocking {
             folderCreationAttributes.forEach {
                 fakeLibraryRepository.addFolder(it)
-                println("${getCurrentDateTime()}")
+                println("${timeProvider.getCurrentDateTime()}")
                 delay(1) // necessary to ensure that the timestamps are different
-                println("${getCurrentDateTime()}")
+                println("${timeProvider.getCurrentDateTime()}")
             }
 
             val folders = fakeLibraryRepository.folders.first()

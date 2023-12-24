@@ -40,7 +40,7 @@ data class LibraryFolder(
 
 @Dao
 abstract class LibraryFolderDao(
-    database: MusikusDatabase
+    database: MusikusDatabase,
 ) : SoftDeleteDao<
         LibraryFolderModel,
         LibraryFolderUpdateAttributes,

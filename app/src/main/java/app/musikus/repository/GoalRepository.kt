@@ -9,6 +9,7 @@
 package app.musikus.repository
 
 import androidx.room.Transaction
+import app.musikus.Musikus
 import app.musikus.database.GoalDescriptionWithInstancesAndLibraryItems
 import app.musikus.database.GoalInstanceWithDescriptionWithLibraryItems
 import app.musikus.database.daos.GoalDescription
@@ -20,9 +21,10 @@ import app.musikus.database.entities.GoalDescriptionCreationAttributes
 import app.musikus.database.entities.GoalDescriptionModel
 import app.musikus.database.entities.GoalDescriptionUpdateAttributes
 import app.musikus.database.entities.GoalInstanceUpdateAttributes
-import app.musikus.utils.getCurrentDateTime
+import app.musikus.utils.TimeProvider
 import kotlinx.coroutines.flow.Flow
 import java.time.ZonedDateTime
+import javax.inject.Inject
 
 interface GoalRepository {
     val currentGoals: Flow<List<GoalInstanceWithDescriptionWithLibraryItems>>
@@ -75,7 +77,8 @@ interface GoalRepository {
 
 class GoalRepositoryImpl(
     private val goalInstanceDao : GoalInstanceDao,
-    private val goalDescriptionDao : GoalDescriptionDao
+    private val goalDescriptionDao : GoalDescriptionDao,
+    private val timeProvider: TimeProvider
 ) : GoalRepository {
 
     private suspend fun update(
@@ -265,7 +268,7 @@ class GoalRepositoryImpl(
                 .map {
                     it to it.description.endOfInstanceInLocalTimezone(it.instance)
                 }.filter { (_, endTimestamp) ->
-                    getCurrentDateTime() > endTimestamp
+                    timeProvider.getCurrentDateTime() > endTimestamp
                 }
 
             if (outdatedGoalsWithEndTimestamps.isEmpty()) return

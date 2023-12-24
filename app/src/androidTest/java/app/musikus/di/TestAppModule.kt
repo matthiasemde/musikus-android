@@ -34,15 +34,24 @@ import app.musikus.usecase.library.RestoreFoldersUseCase
 import app.musikus.usecase.library.RestoreItemsUseCase
 import app.musikus.usecase.library.SelectFolderSortModeUseCase
 import app.musikus.usecase.library.SelectItemSortModeUseCase
+import app.musikus.utils.TimeProvider
+import app.musikus.utils.TimeProviderImpl
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import javax.inject.Named
 import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
 object TestAppModule {
+
+    @Provides
+    @Singleton
+    fun provideTimeProvider(): TimeProvider {
+        return TimeProviderImpl()
+    }
 
     @Provides
     @Singleton
@@ -53,6 +62,7 @@ object TestAppModule {
 
     @Provides
     @Singleton
+    @Named("test_db")
     fun provideMusikusDatabase(app: Application): MusikusDatabase {
         return Room.inMemoryDatabaseBuilder(
             app,
@@ -62,7 +72,7 @@ object TestAppModule {
 
     @Provides
     fun provideLibraryRepository(
-        database: MusikusDatabase
+        @Named("test_db") database: MusikusDatabase
     ): LibraryRepository {
         return LibraryRepositoryImpl(
             itemDao = database.libraryItemDao,
@@ -72,17 +82,18 @@ object TestAppModule {
 
     @Provides
     fun provideGoalRepository(
-        database: MusikusDatabase
+        @Named("test_db") database: MusikusDatabase
     ): GoalRepository {
         return GoalRepositoryImpl(
             goalInstanceDao = database.goalInstanceDao,
             goalDescriptionDao = database.goalDescriptionDao,
+            timeProvider = database.timeProvider,
         )
     }
 
     @Provides
     fun provideSessionRepository(
-        database: MusikusDatabase
+        @Named("test_db") database: MusikusDatabase
     ): SessionRepository {
         return SessionRepositoryImpl(
             sessionDao = database.sessionDao,
