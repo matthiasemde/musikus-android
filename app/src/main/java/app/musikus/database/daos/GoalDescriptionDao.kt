@@ -141,7 +141,7 @@ abstract class GoalDescriptionDao(
     @Transaction
     open suspend fun insert(
         goalDescription: GoalDescriptionModel,
-        startingTimeframe: ZonedDateTime = ZonedDateTime.now(),
+        startingTimeframe: ZonedDateTime = database.timeProvider.now(),
         libraryItemIds: List<UUID>?,
         target: Int,
     ) {

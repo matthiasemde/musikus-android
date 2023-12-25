@@ -36,6 +36,12 @@ data class LibraryFolder(
         (super.hashCode() *
                 HASH_FACTOR + name.hashCode()) *
                 HASH_FACTOR + customOrder.hashCode()
+
+    override fun toString(): String {
+        return super.toString() +
+                "\tname:\t\t\t$name\n" +
+                "\tcustomOrder:\t$customOrder\n"
+    }
 }
 
 @Dao

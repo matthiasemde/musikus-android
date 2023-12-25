@@ -20,7 +20,6 @@ import androidx.fragment.app.FragmentContainerView
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import app.musikus.Musikus
 import app.musikus.R
 import app.musikus.database.SectionWithLibraryItem
 import app.musikus.database.SessionWithSectionsWithLibraryItems
@@ -229,7 +228,7 @@ class IntroGoalsFragment : Fragment(R.layout.fragment_intro_goals) {
 //    private fun getDummyGoals(): List<GoalInstanceWithDescriptionWithLibraryItems> {
 //        val goal1 = GoalInstanceWithDescriptionWithLibraryItems(
 //            GoalInstance(
-//                goalDescriptionId = UUID.randomUUID(),
+//                goalDescriptionId = UUID.fromString("DEADBEEF-DEAD-BEEF-DEAD-BEEFDEADBEEF"),
 //                startTimestamp = getStartOfDay(0).toEpochSecond(),
 //                periodInSeconds = SECONDS_PER_DAY,
 //                target = SECONDS_PER_HOUR,
@@ -251,7 +250,7 @@ class IntroGoalsFragment : Fragment(R.layout.fragment_intro_goals) {
 //        )
 //        val goal2 = GoalInstanceWithDescriptionWithLibraryItems(
 //            GoalInstance(
-//                goalDescriptionId = UUID.randomUUID(),
+//                goalDescriptionId = UUID.fromString("DEADBEEF-DEAD-BEEF-DEAD-BEEFDEADBEEF"),
 //                startTimestamp = getStartOfWeek(0).toEpochSecond(),
 //                periodInSeconds = SECONDS_PER_DAY * 7,
 //                target = (SECONDS_PER_HOUR * 5.5f).roundToInt(),
@@ -305,28 +304,28 @@ private fun getDummySessions() =
             sections = listOf(
                 SectionWithLibraryItem(
                     Section(
-                        sessionId = UUID.randomUUID(), // we don't care about id but it can't be null
-                        libraryItemId = UUID.randomUUID(), // we don't care about id but it can't be null
+                        sessionId = UUID.fromString("DEADBEEF-DEAD-BEEF-DEAD-BEEFDEADBEEF"), // we don't care about id but it can't be null
+                        libraryItemId = UUID.fromString("DEADBEEF-DEAD-BEEF-DEAD-BEEFDEADBEEF"), // we don't care about id but it can't be null
                         duration = 60 * 10,
-                        startTimestamp = timeProvider.getCurrentDateTime()
+                        startTimestamp = timeProvider.now()
                     ),
                     dummyLibraryItems[0]
                 ),
                 SectionWithLibraryItem(
                     Section(
-                        sessionId = UUID.randomUUID(), // we don't care about id but it can't be null
-                        libraryItemId = UUID.randomUUID(), // we don't care about id but it can't be null
+                        sessionId = UUID.fromString("DEADBEEF-DEAD-BEEF-DEAD-BEEFDEADBEEF"), // we don't care about id but it can't be null
+                        libraryItemId = UUID.fromString("DEADBEEF-DEAD-BEEF-DEAD-BEEFDEADBEEF"), // we don't care about id but it can't be null
                         duration = 60 * 23,
-                        startTimestamp = timeProvider.getCurrentDateTime()
+                        startTimestamp = timeProvider.now()
                     ),
                     dummyLibraryItems[1]
                 ),
                 SectionWithLibraryItem(
                     Section(
-                        sessionId = UUID.randomUUID(), // we don't care about id but it can't be null
-                        libraryItemId = UUID.randomUUID(), // we don't care about id but it can't be null
+                        sessionId = UUID.fromString("DEADBEEF-DEAD-BEEF-DEAD-BEEFDEADBEEF"), // we don't care about id but it can't be null
+                        libraryItemId = UUID.fromString("DEADBEEF-DEAD-BEEF-DEAD-BEEFDEADBEEF"), // we don't care about id but it can't be null
                         duration = 60 * 37,
-                        startTimestamp = timeProvider.getCurrentDateTime()
+                        startTimestamp = timeProvider.now()
                     ),
                     dummyLibraryItems[DUMMY_MAIN_CATEGORY_INDEX]
                 ),

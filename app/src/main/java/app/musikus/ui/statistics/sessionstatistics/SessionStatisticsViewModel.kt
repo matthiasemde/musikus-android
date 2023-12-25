@@ -20,6 +20,7 @@ import app.musikus.utils.DateFormat
 import app.musikus.utils.LibraryItemSortMode
 import app.musikus.utils.SortDirection
 import app.musikus.utils.TimeFormat
+import app.musikus.utils.TimeProvider
 import app.musikus.utils.Timeframe
 import app.musikus.utils.getDurationString
 import app.musikus.utils.getEndOfDay
@@ -139,6 +140,7 @@ data class PieChartData(
 
 @HiltViewModel
 class SessionStatisticsViewModel @Inject constructor(
+    private val timeProvider: TimeProvider,
     userPreferencesRepository : UserPreferencesRepository,
     sessionRepository : SessionRepository,
 ) : ViewModel() {
@@ -169,9 +171,21 @@ class SessionStatisticsViewModel @Inject constructor(
         TabWithTimeframe(
             SessionStatisticsTab.DEFAULT,
             when(SessionStatisticsTab.DEFAULT) {
-                SessionStatisticsTab.DAYS -> getStartOfDay(dayOffset = -6) to getEndOfDay()
-                SessionStatisticsTab.WEEKS -> getStartOfWeek(weekOffset = -6) to getEndOfWeek()
-                SessionStatisticsTab.MONTHS -> getStartOfMonth(monthOffset = -6) to getEndOfMonth()
+                SessionStatisticsTab.DAYS ->
+                    getStartOfDay(
+                        dayOffset = -6,
+                        dateTime = timeProvider.now()
+                    ) to getEndOfDay(dateTime = timeProvider.now())
+                SessionStatisticsTab.WEEKS ->
+                    getStartOfWeek(
+                        weekOffset = -6,
+                        dateTime = timeProvider.now()
+                    ) to getEndOfWeek(dateTime = timeProvider.now())
+                SessionStatisticsTab.MONTHS ->
+                    getStartOfMonth(
+                        monthOffset = -6,
+                        dateTime = timeProvider.now()
+                    ) to getEndOfMonth(dateTime = timeProvider.now())
             }
         ),
     )
@@ -443,7 +457,7 @@ class SessionStatisticsViewModel @Inject constructor(
 
         SessionStatisticsHeaderUiState(
             seekBackwardEnabled = start > release,
-            seekForwardEnabled = end < getEndOfDay(),
+            seekForwardEnabled = end < getEndOfDay(dateTime = timeProvider.now()),
             timeframe = timeframe,
             totalPracticeDuration = totalDuration,
         )
@@ -539,7 +553,7 @@ class SessionStatisticsViewModel @Inject constructor(
                 tab = selectedTab,
                 timeframe = when(selectedTab) {
                     SessionStatisticsTab.DAYS -> {
-                        val endOfToday = getEndOfDay()
+                        val endOfToday = getEndOfDay(dateTime = timeProvider.now())
                         var newEnd = end
                         if (newEnd > endOfToday) {
                             newEnd = endOfToday
@@ -547,7 +561,7 @@ class SessionStatisticsViewModel @Inject constructor(
                         getStartOfDay(dayOffset = -6, dateTime = newEnd.minusSeconds(1)) to newEnd
                     }
                     SessionStatisticsTab.WEEKS -> {
-                        val endOfThisWeek = getEndOfWeek()
+                        val endOfThisWeek = getEndOfWeek(dateTime = timeProvider.now())
                         var newEnd = getEndOfWeek(dateTime = end.minusSeconds(1))
                         if (newEnd > endOfThisWeek) {
                             newEnd = endOfThisWeek
@@ -555,7 +569,7 @@ class SessionStatisticsViewModel @Inject constructor(
                         getStartOfWeek(weekOffset = -6, dateTime = newEnd.minusSeconds(1)) to newEnd
                     }
                     SessionStatisticsTab.MONTHS -> {
-                        val endOfThisMonth = getEndOfMonth()
+                        val endOfThisMonth = getEndOfMonth(dateTime = timeProvider.now())
                         var newEnd = getEndOfMonth(dateTime = end.minusSeconds(1))
                         if (newEnd > endOfThisMonth) {
                             newEnd = endOfThisMonth
@@ -575,7 +589,7 @@ class SessionStatisticsViewModel @Inject constructor(
                 tab = tab,
                 timeframe = when(tab) {
                     SessionStatisticsTab.DAYS -> {
-                        val endOfToday = getEndOfDay()
+                        val endOfToday = getEndOfDay(dateTime = timeProvider.now())
                         var newEnd = end.plusDays(7)
                         if(newEnd > endOfToday) {
                            newEnd = endOfToday
@@ -583,7 +597,7 @@ class SessionStatisticsViewModel @Inject constructor(
                         getStartOfDay(dayOffset = -6, dateTime = newEnd.minusSeconds(1)) to newEnd
                     }
                     SessionStatisticsTab.WEEKS -> {
-                        val endOfThisWeek = getEndOfWeek()
+                        val endOfThisWeek = getEndOfWeek(dateTime = timeProvider.now())
                         var newEnd = end.plusWeeks(7)
                         if(newEnd > endOfThisWeek) {
                            newEnd = endOfThisWeek
@@ -591,7 +605,7 @@ class SessionStatisticsViewModel @Inject constructor(
                         getStartOfWeek(weekOffset = -6, dateTime = newEnd.minusSeconds(1)) to newEnd
                     }
                     SessionStatisticsTab.MONTHS -> {
-                        val endOfThisMonth = getEndOfMonth()
+                        val endOfThisMonth = getEndOfMonth(dateTime = timeProvider.now())
                         var newEnd = end.plusMonths(7)
                         if(newEnd > endOfThisMonth) {
                            newEnd = endOfThisMonth

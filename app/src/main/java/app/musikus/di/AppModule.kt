@@ -40,6 +40,8 @@ import app.musikus.usecase.library.RestoreFoldersUseCase
 import app.musikus.usecase.library.RestoreItemsUseCase
 import app.musikus.usecase.library.SelectFolderSortModeUseCase
 import app.musikus.usecase.library.SelectItemSortModeUseCase
+import app.musikus.utils.IdProvider
+import app.musikus.utils.IdProviderImpl
 import app.musikus.utils.TimeProvider
 import app.musikus.utils.TimeProviderImpl
 import dagger.Module
@@ -89,13 +91,16 @@ object AppModule {
     fun provideMusikusDatabase(
         app: Application,
         databaseProvider: Provider<MusikusDatabase>,
-        timeProvider: TimeProvider
+        timeProvider: TimeProvider,
+        idProvider: IdProvider
     ): MusikusDatabase {
         return MusikusDatabase.buildDatabase(
             app,
             databaseProvider,
-            timeProvider = timeProvider
-        )
+        ).apply {
+            this.timeProvider = timeProvider
+            this.idProvider = idProvider
+        }
     }
 
     @Provides
@@ -157,5 +162,11 @@ object AppModule {
     @Singleton
     fun provideTimeProvider(): TimeProvider {
         return TimeProviderImpl()
+    }
+
+    @Provides
+    @Singleton
+    fun provideIdProvider(): IdProvider {
+        return IdProviderImpl()
     }
 }

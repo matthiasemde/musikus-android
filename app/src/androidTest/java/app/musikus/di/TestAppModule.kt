@@ -34,6 +34,9 @@ import app.musikus.usecase.library.RestoreFoldersUseCase
 import app.musikus.usecase.library.RestoreItemsUseCase
 import app.musikus.usecase.library.SelectFolderSortModeUseCase
 import app.musikus.usecase.library.SelectItemSortModeUseCase
+import app.musikus.utils.FakeIdProvider
+import app.musikus.utils.FakeTimeProvider
+import app.musikus.utils.IdProvider
 import app.musikus.utils.TimeProvider
 import app.musikus.utils.TimeProviderImpl
 import dagger.Module
@@ -50,7 +53,13 @@ object TestAppModule {
     @Provides
     @Singleton
     fun provideTimeProvider(): TimeProvider {
-        return TimeProviderImpl()
+        return FakeTimeProvider()
+    }
+
+    @Provides
+    @Singleton
+    fun provideIdProvider(): IdProvider {
+        return FakeIdProvider()
     }
 
     @Provides
@@ -63,11 +72,18 @@ object TestAppModule {
     @Provides
     @Singleton
     @Named("test_db")
-    fun provideMusikusDatabase(app: Application): MusikusDatabase {
+    fun provideMusikusDatabase(
+        app: Application,
+        timeProvider: TimeProvider,
+        idProvider: IdProvider
+    ): MusikusDatabase {
         return Room.inMemoryDatabaseBuilder(
             app,
             MusikusDatabase::class.java
-        ).build()
+        ).build().apply {
+            this.timeProvider = timeProvider
+            this.idProvider = idProvider
+        }
     }
 
     @Provides

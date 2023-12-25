@@ -10,16 +10,13 @@ package app.musikus.ui.library
 
 import android.content.Context
 import androidx.activity.compose.setContent
-import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.hasAnyAncestor
-import androidx.compose.ui.test.hasAnySibling
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
-import androidx.compose.ui.test.isDialog
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -33,10 +30,15 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.test.core.app.ApplicationProvider
+import app.musikus.R
 import app.musikus.di.AppModule
 import app.musikus.ui.MainActivity
 import app.musikus.ui.MainViewModel
 import app.musikus.ui.Screen
+import app.musikus.utils.LibraryFolderSortMode
+import app.musikus.utils.LibraryItemSortMode
+import app.musikus.utils.SortMode
+import app.musikus.utils.TestTags
 import com.google.android.material.composethemeadapter3.Mdc3Theme
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -44,13 +46,6 @@ import dagger.hilt.android.testing.UninstallModules
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import app.musikus.R
-import app.musikus.utils.LibraryFolderSortMode
-import app.musikus.utils.LibraryItemSortMode
-import app.musikus.utils.SortDirection
-import app.musikus.utils.SortInfo
-import app.musikus.utils.SortMode
-import app.musikus.utils.TestTags
 
 
 @HiltAndroidTest

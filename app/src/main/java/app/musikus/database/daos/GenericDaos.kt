@@ -32,7 +32,6 @@ import app.musikus.database.entities.SoftDeleteModelUpdateAttributes
 import app.musikus.database.entities.TimestampModel
 import app.musikus.database.entities.TimestampModelDisplayAttributes
 import app.musikus.database.entities.TimestampModelUpdateAttributes
-import app.musikus.utils.TimeProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.flow
@@ -40,7 +39,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.runBlocking
 import java.util.UUID
-import javax.inject.Inject
 
 const val HASH_FACTOR = 524287
 
@@ -76,6 +74,9 @@ abstract class BaseDao<
     }
 
     open suspend fun insert(rows: List<T>) {
+        rows.onEach {
+            it.id = database.idProvider.generateId()
+        }
         directInsert(rows)
     }
 
@@ -223,7 +224,7 @@ abstract class TimestampDao<
     }
 
     override suspend fun insert(rows: List<T>) {
-        val now = database.timeProvider.getCurrentDateTime()
+        val now = database.timeProvider.now()
         super.insert(rows.onEach {
             it.createdAt = now
             it.modifiedAt = now
@@ -234,7 +235,7 @@ abstract class TimestampDao<
         old: T,
         updateAttributes: U
     ): T = super.applyUpdateAttributes(old, updateAttributes).apply{
-        modifiedAt = database.timeProvider.getCurrentDateTime()
+        modifiedAt = database.timeProvider.now()
     }
 }
 

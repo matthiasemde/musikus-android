@@ -14,7 +14,6 @@ package app.musikus.utils
 
 import android.text.SpannableString
 import android.text.style.RelativeSizeSpan
-import java.time.Clock
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
@@ -22,7 +21,6 @@ import java.time.temporal.ChronoField
 
 typealias Timeframe = Pair<ZonedDateTime, ZonedDateTime>
 
-const val SECONDS_PER_HOUR = 60 * 60
 const val SECONDS_PER_DAY = 60 * 60 * 24
 
 enum class TimeFormat {
@@ -178,7 +176,7 @@ fun getDurationString(durationSeconds: Int, format: TimeFormat, scale: Float = 0
         TimeFormat.HUMAN_PRETTY, TimeFormat.HUMAN_PRETTY_SHORT -> {
             val str =
                 if (hours > 0 && minutes > 0) {
-                    ("%dh" + spaceOrNot + "%02dm").format(hours, minutes)
+                    ("%dh$spaceOrNot%02dm").format(hours, minutes)
                 } else if (hours > 0 && minutes == 0) {
                     "%dh".format(hours)
                 } else if (minutes == 0 && durationSeconds > 0) {
@@ -273,13 +271,9 @@ private fun getSpannableHourMinShrunk(str: String, scaleFactor: Float = 0.6f): C
     return spannable
 }
 
-fun getTimestamp(
-    dateTime: ZonedDateTime = ZonedDateTime.now()
-) = dateTime.toEpochSecond()
-
-//fun getCurrentDateTime(): ZonedDateTime = ZonedDateTime.now()
-
-// copies the time from the original timezone to the local timezone without adjusting it
+/**
+ * Copies the time from the original timezone to the local timezone without adjusting it
+  */
 fun ZonedDateTime.inLocalTimezone(): ZonedDateTime =
     this.toLocalDateTime().atZone(ZonedDateTime.now().zone)
 
@@ -290,7 +284,7 @@ fun getStartOfDay(
     dayOffset: Long = 0,
     weekOffset: Long = 0,
     monthOffset: Long = 0,
-    dateTime: ZonedDateTime = ZonedDateTime.now()
+    dateTime: ZonedDateTime
 ): ZonedDateTime = dateTime
     .with(ChronoField.MILLI_OF_DAY, 0)
     .toLocalDate()
@@ -306,7 +300,7 @@ fun getEndOfDay(
     dayOffset: Long = 0,
     weekOffset: Long = 0,
     monthOffset: Long = 0,
-    dateTime: ZonedDateTime = ZonedDateTime.now()
+    dateTime: ZonedDateTime
 ) = getStartOfDay(dayOffset + 1, weekOffset, monthOffset, dateTime)
 
 /**
@@ -315,7 +309,7 @@ fun getEndOfDay(
 fun getStartOfDayOfWeek(
     dayIndex: Long = 0,
     weekOffset: Long,
-    dateTime: ZonedDateTime = ZonedDateTime.now()
+    dateTime: ZonedDateTime
 ): ZonedDateTime = dateTime
     .with(ChronoField.SECOND_OF_DAY, 0)
     .with(ChronoField.DAY_OF_WEEK , dayIndex )         // ISO 8601, Monday is first day of week.
@@ -329,7 +323,7 @@ fun getStartOfDayOfWeek(
 fun getEndOfDayOfWeek(
     dayIndex: Long,
     weekOffset: Long,
-    dateTime: ZonedDateTime = ZonedDateTime.now()
+    dateTime: ZonedDateTime
 ): ZonedDateTime {
     // because of half-open approach we have to get the "start of the _next_ day" instead of the end of the current day
     // e.g. end of Tuesday = Start of Wednesday, so make dayIndex 2 -> 3
@@ -347,7 +341,7 @@ fun getEndOfDayOfWeek(
  */
 fun getStartOfWeek(
     weekOffset: Long = 0,
-    dateTime: ZonedDateTime = ZonedDateTime.now()
+    dateTime: ZonedDateTime
 ) = getStartOfDayOfWeek(1, weekOffset, dateTime)
 
 
@@ -357,7 +351,7 @@ fun getStartOfWeek(
   */
 fun getEndOfWeek(
     weekOffset: Long = 0,
-    dateTime: ZonedDateTime = ZonedDateTime.now()
+    dateTime: ZonedDateTime
 ) = getEndOfDayOfWeek(7, weekOffset, dateTime)
 
 /**
@@ -365,7 +359,7 @@ fun getEndOfWeek(
   */
 
 fun getDayIndexOfWeek(
-    dateTime: ZonedDateTime = ZonedDateTime.now()
+    dateTime: ZonedDateTime
 ) = dateTime.toLocalDate().dayOfWeek.value
 
 /**
@@ -374,7 +368,7 @@ fun getDayIndexOfWeek(
  */
 fun getStartOfMonth(
     monthOffset: Long = 0,
-    dateTime: ZonedDateTime = ZonedDateTime.now()
+    dateTime: ZonedDateTime
 ): ZonedDateTime = dateTime
     .with(ChronoField.SECOND_OF_DAY, 0)
     .with(ChronoField.DAY_OF_MONTH , 1 )    // jump to first day of this month
@@ -387,7 +381,7 @@ fun getStartOfMonth(
  */
 fun getEndOfMonth(
     monthOffset: Long = 0,
-    dateTime: ZonedDateTime = ZonedDateTime.now()
+    dateTime: ZonedDateTime
 ) = getStartOfMonth(monthOffset + 1, dateTime)
 
 /**

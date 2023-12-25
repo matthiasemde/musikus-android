@@ -13,11 +13,11 @@ import java.time.ZonedDateTime
 // Good comment from Jon Skeet on this topic: https://stackoverflow.com/a/5622222/20420131
 
 interface TimeProvider {
-    fun getCurrentDateTime(): ZonedDateTime
+    fun now(): ZonedDateTime
 }
 
 class TimeProviderImpl : TimeProvider {
-    override fun getCurrentDateTime(): ZonedDateTime {
+    override fun now(): ZonedDateTime {
         return ZonedDateTime.now()
     }
 }

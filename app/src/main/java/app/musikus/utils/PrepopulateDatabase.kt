@@ -117,7 +117,7 @@ suspend fun prepopulateDatabase(
         ).forEach { goalDescriptionCreationAttributes ->
             goalRepository.add(
                 goalDescriptionCreationAttributes,
-                database.timeProvider.getCurrentDateTime().minus(
+                database.timeProvider.now().minus(
                     (
                             (if (goalDescriptionCreationAttributes.repeat) 10L else 1L) *
                                     goalDescriptionCreationAttributes.periodInPeriodUnits
@@ -147,7 +147,7 @@ suspend fun prepopulateDatabase(
                 session,
                 (1..(1..5).random()).map { SectionCreationAttributes(
                     libraryItemId = Nullable(items.random().id),
-                    startTimestamp = database.timeProvider.getCurrentDateTime().minus(
+                    startTimestamp = database.timeProvider.now().minus(
                         (
                                 (sessionNum / 2) * // two sessions per day initially
                                         24 * 60 * 60 *

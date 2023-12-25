@@ -14,6 +14,8 @@ import app.musikus.database.entities.LibraryItemCreationAttributes
 import app.musikus.database.entities.LibraryItemUpdateAttributes
 import app.musikus.repository.FakeLibraryRepository
 import app.musikus.repository.FakeUserPreferencesRepository
+import app.musikus.utils.FakeIdProvider
+import app.musikus.utils.FakeTimeProvider
 import app.musikus.utils.LibraryItemSortMode
 import app.musikus.utils.SortDirection
 import app.musikus.utils.SortInfo
@@ -25,9 +27,13 @@ import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.runTest
 import java.util.UUID
+import kotlin.time.Duration.Companion.seconds
 
 
 class GetItemsUseCaseTest {
+    private lateinit var fakeTimeProvider: FakeTimeProvider
+    private lateinit var fakeIdProvider: FakeIdProvider
+
     private lateinit var getItems: GetItemsUseCase
     private lateinit var fakeLibraryRepository: FakeLibraryRepository
     private lateinit var fakeUserPreferencesRepository: FakeUserPreferencesRepository
@@ -36,7 +42,9 @@ class GetItemsUseCaseTest {
 
     @BeforeEach
     fun setUp() {
-        fakeLibraryRepository = FakeLibraryRepository()
+        fakeTimeProvider = FakeTimeProvider()
+        fakeIdProvider = FakeIdProvider()
+        fakeLibraryRepository = FakeLibraryRepository(fakeTimeProvider, fakeIdProvider)
         fakeUserPreferencesRepository = FakeUserPreferencesRepository()
         getItems = GetItemsUseCase(
             libraryRepository = fakeLibraryRepository,
@@ -68,7 +76,7 @@ class GetItemsUseCaseTest {
                 fakeLibraryRepository.addItem(it.copy(
                     libraryFolderId = Nullable(folderId)
                 ))
-                delay(1) // necessary to ensure that the timestamps are different
+                fakeTimeProvider.advanceTimeBy(1.seconds) // necessary to ensure that the timestamps are different
             }
 
             val items = fakeLibraryRepository.items.first().filter {
@@ -94,7 +102,7 @@ class GetItemsUseCaseTest {
                 )
             )
 
-            delay(1) // necessary to ensure that the timestamps are different
+            fakeTimeProvider.advanceTimeBy(1.seconds) // necessary to ensure that the timestamps are different
 
             fakeLibraryRepository.editItem(
                 id = items[2].id,

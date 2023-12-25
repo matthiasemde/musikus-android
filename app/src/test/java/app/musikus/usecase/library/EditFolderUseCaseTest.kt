@@ -12,6 +12,8 @@ import app.musikus.database.daos.InvalidLibraryFolderException
 import app.musikus.database.entities.LibraryFolderCreationAttributes
 import app.musikus.database.entities.LibraryFolderUpdateAttributes
 import app.musikus.repository.FakeLibraryRepository
+import app.musikus.utils.FakeIdProvider
+import app.musikus.utils.FakeTimeProvider
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -23,6 +25,9 @@ import java.util.UUID
 
 
 class EditFolderUseCaseTest {
+    private lateinit var fakeTimeProvider: FakeTimeProvider
+    private lateinit var fakeIdProvider: FakeIdProvider
+
     private lateinit var editFolder: EditFolderUseCase
     private lateinit var fakeLibraryRepository: FakeLibraryRepository
 
@@ -30,7 +35,9 @@ class EditFolderUseCaseTest {
 
     @BeforeEach
     fun setUp() {
-        fakeLibraryRepository = FakeLibraryRepository()
+        fakeTimeProvider = FakeTimeProvider()
+        fakeIdProvider = FakeIdProvider()
+        fakeLibraryRepository = FakeLibraryRepository(fakeTimeProvider, fakeIdProvider)
         editFolder = EditFolderUseCase(fakeLibraryRepository)
 
         val folderCreationAttributes = LibraryFolderCreationAttributes("TestFolder")

@@ -8,6 +8,7 @@
 
 package app.musikus.database.entities
 
+import androidx.annotation.NonNull
 import androidx.room.ColumnInfo
 import androidx.room.PrimaryKey
 import app.musikus.database.daos.HASH_FACTOR
@@ -38,15 +39,22 @@ abstract class BaseModelDisplayAttributes {
         (other is BaseModelDisplayAttributes) && (other._id == _id)
 
     override fun hashCode() = _id.hashCode()
+
+    override fun toString(): String {
+        return "\nPretty print of ${this.javaClass.simpleName} entity:\n" +
+                "\tid:\t\t\t\t$id\n"
+    }
 }
 
 abstract class BaseModel(
-    @PrimaryKey var id: UUID = UUID.randomUUID()
+    // Can't be use null, but this id will be overwritten when inserted
+    @PrimaryKey
+    var id: UUID = UUID.fromString("DEADBEEF-DEAD-BEEF-DEAD-BEEFDEADBEEF")
 ) : IBaseModelCreationAttributes, IBaseModelUpdateAttributes {
 
     override fun toString(): String {
         return "\nPretty print of ${this.javaClass.simpleName} entity:\n" +
-                "\tid: \t\t\t\t${this.id}\n"
+                "\tid:\t\t\t\t$id\n"
     }
 }
 
@@ -92,6 +100,12 @@ abstract class TimestampModelDisplayAttributes : BaseModelDisplayAttributes() {
     override fun hashCode() =
         super.hashCode() *
         HASH_FACTOR + modifiedAt.hashCode()
+
+    override fun toString(): String {
+        return super.toString() +
+                "\tcreated at:\t\t${createdAt}\n" +
+                "\tmodified_at:\t${modifiedAt}\n"
+    }
 }
 abstract class TimestampModel(
     @ColumnInfo(name="created_at") var createdAt: ZonedDateTime? = null,
@@ -100,8 +114,8 @@ abstract class TimestampModel(
 
     override fun toString(): String {
         return super.toString() +
-                "\tcreated at: \t\t${this.createdAt}\n" +
-                "\tmodified_at: \t\t${this.modifiedAt}\n"
+                "\tcreated at:\t\t$createdAt\n" +
+                "\tmodified_at:\t$modifiedAt\n"
     }
 }
 
@@ -119,7 +133,8 @@ abstract class SoftDeleteModelUpdateAttributes
     : TimestampModelUpdateAttributes(), ISoftDeleteModelUpdateAttributes
 
 abstract class SoftDeleteModelDisplayAttributes
-    : TimestampModelDisplayAttributes()
+    : TimestampModelDisplayAttributes() {
+}
 
 abstract class SoftDeleteModel(
     @ColumnInfo(name="deleted", defaultValue = "false") var deleted: Boolean = false

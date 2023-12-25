@@ -15,11 +15,16 @@ import app.musikus.database.entities.LibraryFolderCreationAttributes
 import app.musikus.database.entities.LibraryFolderUpdateAttributes
 import app.musikus.database.entities.LibraryItemCreationAttributes
 import app.musikus.database.entities.LibraryItemUpdateAttributes
+import app.musikus.utils.IdProvider
+import app.musikus.utils.TimeProvider
 import kotlinx.coroutines.flow.flowOf
 import java.time.ZonedDateTime
 import java.util.UUID
 
-class FakeLibraryRepository : LibraryRepository {
+class FakeLibraryRepository(
+    private val timeProvider: TimeProvider,
+    private val idProvider: IdProvider
+) : LibraryRepository {
 
     private val _items = mutableListOf<LibraryItem>()
     private val _folders = mutableListOf<LibraryFolderWithItems>()
@@ -41,9 +46,9 @@ class FakeLibraryRepository : LibraryRepository {
                 name = creationAttributes.name,
                 customOrder = null
             ).apply {
-                setId(UUID.randomUUID())
-                setCreatedAt(ZonedDateTime.now())
-                setModifiedAt(ZonedDateTime.now())
+                setId(idProvider.generateId())
+                setCreatedAt(timeProvider.now())
+                setModifiedAt(timeProvider.now())
             },
             items = emptyList()
         ))
@@ -56,9 +61,9 @@ class FakeLibraryRepository : LibraryRepository {
             colorIndex = creationAttributes.colorIndex,
             customOrder = null
         ).apply {
-            setId(UUID.randomUUID())
-            setCreatedAt(ZonedDateTime.now())
-            setModifiedAt(ZonedDateTime.now())
+            setId(idProvider.generateId())
+            setCreatedAt(timeProvider.now())
+            setModifiedAt(timeProvider.now())
         })
     }
 
@@ -75,7 +80,7 @@ class FakeLibraryRepository : LibraryRepository {
             ).apply {
                 folder.setId(folderWithItems.folder.id)
                 folder.setCreatedAt(folderWithItems.folder.createdAt)
-                folder.setModifiedAt(ZonedDateTime.now())
+                folder.setModifiedAt(timeProvider.now())
             }
             else folderWithItems
         }
@@ -97,7 +102,7 @@ class FakeLibraryRepository : LibraryRepository {
             ).apply {
                 setId(item.id)
                 setCreatedAt(item.createdAt)
-                setModifiedAt(ZonedDateTime.now())
+                setModifiedAt(timeProvider.now())
             }
             else item
         }

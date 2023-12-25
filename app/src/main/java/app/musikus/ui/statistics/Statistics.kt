@@ -81,7 +81,6 @@ import app.musikus.utils.TimeFormat
 import app.musikus.utils.TimeProvider
 import app.musikus.utils.getDurationString
 import app.musikus.utils.musikusFormat
-import javax.inject.Inject
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -232,7 +231,7 @@ fun StatisticsCurrentMonth(
     )
 
     Column {
-        Text(text = "In " + timeProvider.getCurrentDateTime().musikusFormat(DateFormat.MONTH))
+        Text(text = "In " + timeProvider.now().musikusFormat(DateFormat.MONTH))
         Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
         Row(
             modifier = Modifier.fillMaxWidth(),

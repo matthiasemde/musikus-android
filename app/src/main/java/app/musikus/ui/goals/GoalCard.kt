@@ -56,7 +56,6 @@ import app.musikus.utils.TimeProvider
 import app.musikus.utils.asString
 import app.musikus.utils.getDurationString
 import java.time.temporal.ChronoUnit
-import javax.inject.Inject
 
 @Composable
 fun GoalCard(
@@ -124,7 +123,7 @@ fun GoalCard(
 
                     /** remaining time */
                     val remainingTime = ChronoUnit.SECONDS.between(
-                        timeProvider.getCurrentDateTime(),
+                        timeProvider.now(),
                         goal.endTimestampInLocalTimezone,
                     )
 

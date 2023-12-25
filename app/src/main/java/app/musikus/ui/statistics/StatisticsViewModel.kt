@@ -94,7 +94,7 @@ class StatisticsViewModel @Inject constructor(
     private val currentMonthUiState = sessions.map { sessions ->
         if (sessions.isEmpty()) return@map null
 
-        val currentSpecificMonth = timeProvider.getCurrentDateTime().specificMonth
+        val currentSpecificMonth = timeProvider.now().specificMonth
         val currentMonthSessions = sessions.filter { session ->
             session.startTimestamp.specificMonth == currentSpecificMonth
         }
@@ -136,10 +136,11 @@ class StatisticsViewModel @Inject constructor(
         }
 
         val lastSevenDays = (0..6).reversed().map { dayOffset ->
-            (getDayIndexOfWeek() - dayOffset).let {
+            (getDayIndexOfWeek(dateTime = timeProvider.now()) - dayOffset).let {
                 getStartOfDayOfWeek(
                     dayIndex = (it-1).mod(7).toLong() + 1,
-                    weekOffset = if (it > 0) 0 else -1
+                    weekOffset = if (it > 0) 0 else -1,
+                    dateTime = timeProvider.now()
                 )
             }
         }

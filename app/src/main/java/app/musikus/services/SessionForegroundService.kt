@@ -29,15 +29,19 @@ import app.musikus.Musikus
 import app.musikus.R
 import app.musikus.database.entities.SectionCreationAttributes
 import app.musikus.ui.activesession.ActiveSessionActivity
+import app.musikus.utils.TimeProvider
 import app.musikus.utils.secondsDurationToHoursMinSec
 import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
 import java.util.Date
 import java.util.UUID
+import javax.inject.Inject
 import kotlin.math.roundToInt
 
 
-class SessionForegroundService : Service() {
+class SessionForegroundService @Inject constructor(
+    private val timeProvider: TimeProvider
+) : Service() {
     private val CHANNEL_ID = "PT_Channel_ID"
     private val NOTIFICATION_ID = 42
     private val binder = LocalBinder()         // interface for clients that bind
@@ -190,7 +194,7 @@ class SessionForegroundService : Service() {
 
     fun startNewSection(libraryItemId: UUID, libraryItemName: String) {
         currLibraryItemName = libraryItemName
-        val now = Date().time / 1000L
+//        val now = Date().time / 1000L
 //        sectionBuffer.add(
 //            Pair(
 //                Section(
@@ -227,7 +231,7 @@ class SessionForegroundService : Service() {
      */
     private fun getDuration(section: SectionCreationAttributes) = ChronoUnit.SECONDS.between(
         section.startTimestamp,
-        ZonedDateTime.now()
+        timeProvider.now()
     ).toInt()
 
 

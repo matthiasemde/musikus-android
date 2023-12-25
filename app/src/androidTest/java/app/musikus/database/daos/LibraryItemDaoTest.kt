@@ -11,6 +11,7 @@ package app.musikus.database.daos
 import androidx.test.filters.SmallTest
 import app.musikus.database.MusikusDatabase
 import app.musikus.database.Nullable
+import app.musikus.database.entities.LibraryFolderModel
 import app.musikus.database.entities.LibraryItemModel
 import app.musikus.database.entities.LibraryItemUpdateAttributes
 import app.musikus.di.AppModule
@@ -19,6 +20,7 @@ import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.UninstallModules
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
@@ -46,6 +48,13 @@ class LibraryItemDaoTest {
         hiltRule.inject()
 
         libraryItemDao = database.libraryItemDao
+
+        // Insert a folder so we can test moving items into it
+        runBlocking {
+            database.libraryFolderDao.insert(
+                LibraryFolderModel("TestFolder")
+            )
+        }
     }
 
     @Test
@@ -128,6 +137,4 @@ class LibraryItemDaoTest {
         assertThat(updatedItems.first().colorIndex).isEqualTo(1)
         assertThat(updatedItems.first().libraryFolderId).isEqualTo(folderId)
     }
-
-
 }

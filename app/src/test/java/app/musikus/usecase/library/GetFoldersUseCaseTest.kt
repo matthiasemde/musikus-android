@@ -8,27 +8,30 @@
 
 package app.musikus.usecase.library
 
-import app.musikus.Musikus
+import app.musikus.database.LibraryFolderWithItems
 import app.musikus.database.entities.LibraryFolderCreationAttributes
 import app.musikus.database.entities.LibraryFolderUpdateAttributes
 import app.musikus.repository.FakeLibraryRepository
 import app.musikus.repository.FakeUserPreferencesRepository
+import app.musikus.database.daos.LibraryFolder
+import app.musikus.utils.FakeIdProvider
+import app.musikus.utils.FakeTimeProvider
 import app.musikus.utils.LibraryFolderSortMode
 import app.musikus.utils.SortDirection
 import app.musikus.utils.SortInfo
-import app.musikus.utils.TimeProvider
 import com.google.common.truth.Truth.assertThat
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import javax.inject.Inject
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.toJavaDuration
 
 
 class GetFoldersUseCaseTest {
-    private lateinit var timeProvider: TimeProvider
+    private lateinit var fakeTimeProvider: FakeTimeProvider
+    private lateinit var fakeIdProvider: FakeIdProvider
 
     private lateinit var getFolders: GetFoldersUseCase
     private lateinit var fakeLibraryRepository: FakeLibraryRepository
@@ -36,7 +39,9 @@ class GetFoldersUseCaseTest {
 
     @BeforeEach
     fun setUp() {
-        fakeLibraryRepository = FakeLibraryRepository()
+        fakeTimeProvider = FakeTimeProvider()
+        fakeIdProvider = FakeIdProvider()
+        fakeLibraryRepository = FakeLibraryRepository(fakeTimeProvider, fakeIdProvider)
         fakeUserPreferencesRepository = FakeUserPreferencesRepository()
         getFolders = GetFoldersUseCase(
             libraryRepository = fakeLibraryRepository,
@@ -56,25 +61,23 @@ class GetFoldersUseCaseTest {
         runBlocking {
             folderCreationAttributes.forEach {
                 fakeLibraryRepository.addFolder(it)
-                println("${timeProvider.getCurrentDateTime()}")
-                delay(1) // necessary to ensure that the timestamps are different
-                println("${timeProvider.getCurrentDateTime()}")
+                fakeTimeProvider.advanceTimeBy(1.seconds)
             }
 
             val folders = fakeLibraryRepository.folders.first()
 
             // rename folders to mix up the 'last modified' order
             fakeLibraryRepository.editFolder(
-                id = folders[4].folder.id,
+                id = folders.first {it.folder.name == "TestFolder4" }.folder.id,
                 updateAttributes = LibraryFolderUpdateAttributes(
                     name = "RenamedFolder1"
                 )
             )
 
-            delay(1) // necessary to ensure that the timestamps are different
+            fakeTimeProvider.advanceTimeBy(1.seconds)
 
             fakeLibraryRepository.editFolder(
-                id = folders[2].folder.id,
+                id = folders.first {it.folder.name == "TestFolder2" }.folder.id,
                 updateAttributes = LibraryFolderUpdateAttributes(
                     name = "RenamedFolder2"
                 )
@@ -86,14 +89,28 @@ class GetFoldersUseCaseTest {
     fun `Get folders, folders are sorted by 'date added' descending`() = runTest {
         val folders = getFolders().first()
 
-        assertThat(folders.map { it.folder.name })
-            .isEqualTo(listOf(
-                "RenamedFolder1",
-                "TestFolder1",
-                "RenamedFolder2",
-                "TestFolder5",
-                "TestFolder3",
-            ))
+        val expectedOutcome = listOf(
+            Triple("RenamedFolder1", 4, 1),
+            Triple("TestFolder1", 3, 0),
+            Triple("RenamedFolder2", 2, 4),
+            Triple("TestFolder5", 1, 0),
+            Triple("TestFolder3", 0, 0),
+        ).mapIndexed { index, (name, createdAtOffset, modifiedAtOffset) ->
+            val time = fakeTimeProvider.startTime.plus(createdAtOffset.seconds.toJavaDuration())
+            LibraryFolderWithItems(
+                folder = LibraryFolder(
+                    name = name,
+                    customOrder = null
+                ).apply {
+                    setId(fakeIdProvider.intToUUID(5 - index))
+                    setCreatedAt(time)
+                    setModifiedAt(time.plus(modifiedAtOffset.seconds.toJavaDuration()))
+                },
+                items = emptyList()
+            )
+        }
+
+        assertThat(folders).isEqualTo(expectedOutcome)
     }
 
     @Test

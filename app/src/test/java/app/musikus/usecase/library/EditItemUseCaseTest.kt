@@ -14,6 +14,8 @@ import app.musikus.database.entities.LibraryFolderCreationAttributes
 import app.musikus.database.entities.LibraryItemCreationAttributes
 import app.musikus.database.entities.LibraryItemUpdateAttributes
 import app.musikus.repository.FakeLibraryRepository
+import app.musikus.utils.FakeIdProvider
+import app.musikus.utils.FakeTimeProvider
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -25,6 +27,9 @@ import org.junit.jupiter.api.assertThrows
 import java.util.UUID
 
 class EditItemUseCaseTest {
+    private lateinit var fakeTimeProvider: FakeTimeProvider
+    private lateinit var fakeIdProvider: FakeIdProvider
+
     private lateinit var editItem: EditItemUseCase
     private lateinit var fakeLibraryRepository: FakeLibraryRepository
 
@@ -33,7 +38,9 @@ class EditItemUseCaseTest {
 
     @BeforeEach
     fun setUp() {
-        fakeLibraryRepository = FakeLibraryRepository()
+        fakeTimeProvider = FakeTimeProvider()
+        fakeIdProvider = FakeIdProvider()
+        fakeLibraryRepository = FakeLibraryRepository(fakeTimeProvider, fakeIdProvider)
         editItem = EditItemUseCase(fakeLibraryRepository)
 
         val itemCreationAttributes = LibraryItemCreationAttributes(
