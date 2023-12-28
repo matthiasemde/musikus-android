@@ -51,10 +51,10 @@ class GetFoldersUseCaseTest {
 
         val folderCreationAttributes = listOf(
             "TestFolder3",
-            "TestFolder5",
-            "TestFolder2",
+            "TestFolder3",
+            "TestFolder2", // -> RenamedFolder2
             "TestFolder1",
-            "TestFolder4",
+            "TestFolder4", // -> RenamedFolder1
         ).map { name ->
             LibraryFolderCreationAttributes(name = name)
         }
@@ -65,11 +65,9 @@ class GetFoldersUseCaseTest {
                 fakeTimeProvider.advanceTimeBy(1.seconds)
             }
 
-            val folders = fakeLibraryRepository.folders.first()
-
             // rename folders to mix up the 'last modified' order
             fakeLibraryRepository.editFolder(
-                id = folders.first {it.folder.name == "TestFolder4" }.folder.id,
+                id = UUIDConverter.fromInt(5),
                 updateAttributes = LibraryFolderUpdateAttributes(
                     name = "RenamedFolder1"
                 )
@@ -78,7 +76,7 @@ class GetFoldersUseCaseTest {
             fakeTimeProvider.advanceTimeBy(1.seconds)
 
             fakeLibraryRepository.editFolder(
-                id = folders.first {it.folder.name == "TestFolder2" }.folder.id,
+                id = UUIDConverter.fromInt(3),
                 updateAttributes = LibraryFolderUpdateAttributes(
                     name = "RenamedFolder2"
                 )
@@ -87,26 +85,26 @@ class GetFoldersUseCaseTest {
     }
 
     @Test
-    fun `Get folders, folders are sorted by 'date added' descending`() = runTest {
+    fun `Get folders, list contains all folders`() = runTest {
         val folders = getFolders().first()
 
-        assertThat(folders).isEqualTo(listOf(
+        assertThat(folders).containsExactly(
             LibraryFolderWithItems(
                 folder = LibraryFolder(
-                    id = UUIDConverter.fromInt(5),
-                    createdAt = fakeTimeProvider.startTime.plus(4.seconds.toJavaDuration()),
-                    modifiedAt = fakeTimeProvider.startTime.plus(5.seconds.toJavaDuration()),
-                    name = "RenamedFolder1",
+                    id = UUIDConverter.fromInt(1),
+                    createdAt = fakeTimeProvider.startTime.plus(0.seconds.toJavaDuration()),
+                    modifiedAt = fakeTimeProvider.startTime.plus(0.seconds.toJavaDuration()),
+                    name = "TestFolder3",
                     customOrder = null
                 ),
                 items = emptyList()
             ),
             LibraryFolderWithItems(
                 folder = LibraryFolder(
-                    id = UUIDConverter.fromInt(4),
-                    createdAt = fakeTimeProvider.startTime.plus(3.seconds.toJavaDuration()),
-                    modifiedAt = fakeTimeProvider.startTime.plus(3.seconds.toJavaDuration()),
-                    name = "TestFolder1",
+                    id = UUIDConverter.fromInt(2),
+                    createdAt = fakeTimeProvider.startTime.plus(1.seconds.toJavaDuration()),
+                    modifiedAt = fakeTimeProvider.startTime.plus(1.seconds.toJavaDuration()),
+                    name = "TestFolder3",
                     customOrder = null
                 ),
                 items = emptyList()
@@ -123,25 +121,34 @@ class GetFoldersUseCaseTest {
             ),
             LibraryFolderWithItems(
                 folder = LibraryFolder(
-                    id = UUIDConverter.fromInt(2),
-                    createdAt = fakeTimeProvider.startTime.plus(1.seconds.toJavaDuration()),
-                    modifiedAt = fakeTimeProvider.startTime.plus(1.seconds.toJavaDuration()),
-                    name = "TestFolder5",
+                    id = UUIDConverter.fromInt(4),
+                    createdAt = fakeTimeProvider.startTime.plus(3.seconds.toJavaDuration()),
+                    modifiedAt = fakeTimeProvider.startTime.plus(3.seconds.toJavaDuration()),
+                    name = "TestFolder1",
                     customOrder = null
                 ),
                 items = emptyList()
             ),
             LibraryFolderWithItems(
                 folder = LibraryFolder(
-                    id = UUIDConverter.fromInt(1),
-                    createdAt = fakeTimeProvider.startTime.plus(0.seconds.toJavaDuration()),
-                    modifiedAt = fakeTimeProvider.startTime.plus(0.seconds.toJavaDuration()),
-                    name = "TestFolder3",
+                    id = UUIDConverter.fromInt(5),
+                    createdAt = fakeTimeProvider.startTime.plus(4.seconds.toJavaDuration()),
+                    modifiedAt = fakeTimeProvider.startTime.plus(5.seconds.toJavaDuration()),
+                    name = "RenamedFolder1",
                     customOrder = null
                 ),
                 items = emptyList()
             )
-        ))
+        )
+    }
+
+    @Test
+    fun `Get folders, folders are sorted by 'date added' descending`() = runTest {
+        val folderIds = getFolders().first().map { it.folder.id }
+
+        val expectedFolderIds = listOf(5, 4, 3, 2, 1).map { UUIDConverter.fromInt(it) }
+
+        assertThat(folderIds).isEqualTo(expectedFolderIds)
     }
 
     @Test
@@ -154,18 +161,13 @@ class GetFoldersUseCaseTest {
             )
         )
 
-        // Get folders
-        val folders = getFolders().first()
+        val expectedFolderIds = listOf(1, 2, 3, 4, 5).map { UUIDConverter.fromInt(it) }
+
+        // Get folders and map them to their id and map them to their id
+        val folderIs = getFolders().first().map { it.folder.id }
 
         // Check if folders are sorted correctly
-        assertThat(folders.map { it.folder.name })
-            .isEqualTo(listOf(
-                "TestFolder3",
-                "TestFolder5",
-                "RenamedFolder2",
-                "TestFolder1",
-                "RenamedFolder1",
-            ))
+        assertThat(folderIs).isEqualTo(expectedFolderIds)
     }
 
     @Test
@@ -178,18 +180,13 @@ class GetFoldersUseCaseTest {
             )
         )
 
-        // Get folders
-        val folders = getFolders().first()
+        val expectedFolderIds = listOf(3, 5, 4, 2, 1).map { UUIDConverter.fromInt(it) }
+
+        // Get folders and map them to their id
+        val folderIds = getFolders().first().map { it.folder.id }
 
         // Check if folders are sorted correctly
-        assertThat(folders.map { it.folder.name })
-            .isEqualTo(listOf(
-                "RenamedFolder2",
-                "RenamedFolder1",
-                "TestFolder1",
-                "TestFolder5",
-                "TestFolder3",
-            ))
+        assertThat(folderIds).isEqualTo(expectedFolderIds)
     }
 
     @Test
@@ -202,18 +199,13 @@ class GetFoldersUseCaseTest {
             )
         )
 
-        // Get folders
-        val folders = getFolders().first()
+        val expectedFolderIds = listOf(1, 2, 4, 5, 3).map { UUIDConverter.fromInt(it) }
+
+        // Get folders and map them to their id
+        val folderIds = getFolders().first().map { it.folder.id }
 
         // Check if folders are sorted correctly
-        assertThat(folders.map { it.folder.name })
-            .isEqualTo(listOf(
-                "TestFolder3",
-                "TestFolder5",
-                "TestFolder1",
-                "RenamedFolder1",
-                "RenamedFolder2",
-            ))
+        assertThat(folderIds).isEqualTo(expectedFolderIds)
     }
 
     @Test
@@ -226,18 +218,19 @@ class GetFoldersUseCaseTest {
             )
         )
 
-        // Get folders
-        val folders = getFolders().first()
+        val expectedFolderIds = listOf(
+            1, // TestFolder3
+            2, // TestFolder3
+            4, // TestFolder1
+            3, // RenamedFolder2
+            5, // RenamedFolder1
+        ).map { UUIDConverter.fromInt(it) }
+
+        // Get folders and map them to their id
+        val folderIds = getFolders().first().map { it.folder.id }
 
         // Check if folders are sorted correctly
-        assertThat(folders.map { it.folder.name })
-            .isEqualTo(listOf(
-                "TestFolder5",
-                "TestFolder3",
-                "TestFolder1",
-                "RenamedFolder2",
-                "RenamedFolder1",
-            ))
+        assertThat(folderIds).isEqualTo(expectedFolderIds)
     }
 
     @Test
@@ -250,17 +243,18 @@ class GetFoldersUseCaseTest {
             )
         )
 
-        // Get folders
-        val folders = getFolders().first()
+        val expectedOutcome = listOf(
+            5, // RenamedFolder1
+            3, // RenamedFolder2
+            4, // TestFolder1
+            1, // TestFolder3
+            2, // TestFolder3
+        ).map { UUIDConverter.fromInt(it) }
+
+        // Get folders and map them to their id
+        val folderIds = getFolders().first().map { it.folder.id }
 
         // Check if folders are sorted correctly
-        assertThat(folders.map { it.folder.name })
-            .isEqualTo(listOf(
-                "RenamedFolder1",
-                "RenamedFolder2",
-                "TestFolder1",
-                "TestFolder3",
-                "TestFolder5",
-            ))
+        assertThat(folderIds).isEqualTo(expectedOutcome)
     }
 }

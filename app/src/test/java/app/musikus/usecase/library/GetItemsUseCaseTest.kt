@@ -9,6 +9,8 @@
 package app.musikus.usecase.library
 
 import app.musikus.database.Nullable
+import app.musikus.database.UUIDConverter
+import app.musikus.database.daos.LibraryItem
 import app.musikus.database.entities.LibraryFolderCreationAttributes
 import app.musikus.database.entities.LibraryItemCreationAttributes
 import app.musikus.database.entities.LibraryItemUpdateAttributes
@@ -24,10 +26,9 @@ import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import com.google.common.truth.Truth.assertThat
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.runTest
-import java.util.UUID
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.toJavaDuration
 
 
 class GetItemsUseCaseTest {
@@ -37,8 +38,6 @@ class GetItemsUseCaseTest {
     private lateinit var getItems: GetItemsUseCase
     private lateinit var fakeLibraryRepository: FakeLibraryRepository
     private lateinit var fakeUserPreferencesRepository: FakeUserPreferencesRepository
-
-    private lateinit var folderId: UUID
 
     @BeforeEach
     fun setUp() {
@@ -53,10 +52,10 @@ class GetItemsUseCaseTest {
 
         val itemCreationAttributes = listOf(
             "TestItem3" to 0,
-            "TestItem5" to 8,
-            "TestItem2" to 3,
+            "TestItem3" to 8,
+            "TestItem2" to 3, // -> RenamedItem2
             "TestItem1" to 9,
-            "TestItem4" to 2,
+            "TestItem4" to 2, // -> RenamedItem1
         ).map { (name, colorIndex) ->
             LibraryItemCreationAttributes(
                 name = name,
@@ -69,34 +68,25 @@ class GetItemsUseCaseTest {
 
         runBlocking {
             fakeLibraryRepository.addFolder(folderCreationAttributes)
-            folderId = fakeLibraryRepository.folders.first().first().folder.id
 
             itemCreationAttributes.forEach {
                 fakeLibraryRepository.addItem(it)
                 fakeLibraryRepository.addItem(it.copy(
-                    libraryFolderId = Nullable(folderId)
+                    libraryFolderId = Nullable(UUIDConverter.fromInt(1))
                 ))
                 fakeTimeProvider.advanceTimeBy(1.seconds) // necessary to ensure that the timestamps are different
             }
 
-            val items = fakeLibraryRepository.items.first().filter {
-                it.libraryFolderId == null
-            }
-
-            val itemsInFolder = fakeLibraryRepository.items.first().filter {
-                it.libraryFolderId == folderId
-            }
-
             // rename items to mix up the 'last modified' order
             fakeLibraryRepository.editItem(
-                id = items[4].id,
+                id = UUIDConverter.fromInt(10),
                 updateAttributes = LibraryItemUpdateAttributes(
                     name = "RenamedItem1",
                 )
             )
 
             fakeLibraryRepository.editItem(
-                id = itemsInFolder[4].id,
+                id = UUIDConverter.fromInt(11),
                 updateAttributes = LibraryItemUpdateAttributes(
                     name = "RenamedItem1",
                 )
@@ -105,14 +95,14 @@ class GetItemsUseCaseTest {
             fakeTimeProvider.advanceTimeBy(1.seconds) // necessary to ensure that the timestamps are different
 
             fakeLibraryRepository.editItem(
-                id = items[2].id,
+                id = UUIDConverter.fromInt(6),
                 updateAttributes = LibraryItemUpdateAttributes(
                     name = "RenamedItem2",
                 )
             )
 
             fakeLibraryRepository.editItem(
-                id = itemsInFolder[2].id,
+                id = UUIDConverter.fromInt(7),
                 updateAttributes = LibraryItemUpdateAttributes(
                     name = "RenamedItem2",
                 )
@@ -121,22 +111,120 @@ class GetItemsUseCaseTest {
     }
 
     @Test
-    fun `Get items, items are sorted by 'date added' descending`() = runTest {
-        // Get items
+    fun `Get items from root folder, list contains all items`() = runTest {
         val items = getItems(folderId = Nullable(null)).first()
-        val itemsInFolder = getItems(folderId = Nullable(folderId)).first()
+
+        assertThat(items).containsExactly(
+            LibraryItem(
+                id = UUIDConverter.fromInt(2),
+                createdAt = fakeTimeProvider.startTime.plus(0.seconds.toJavaDuration()),
+                modifiedAt = fakeTimeProvider.startTime.plus(0.seconds.toJavaDuration()),
+                name = "TestItem3",
+                colorIndex = 0,
+                libraryFolderId = null,
+                customOrder = null
+            ),
+            LibraryItem(
+                id = UUIDConverter.fromInt(4),
+                createdAt = fakeTimeProvider.startTime.plus(1.seconds.toJavaDuration()),
+                modifiedAt = fakeTimeProvider.startTime.plus(1.seconds.toJavaDuration()),
+                name = "TestItem3",
+                colorIndex = 8,
+                libraryFolderId = null,
+                customOrder = null
+            ),
+            LibraryItem(
+                id = UUIDConverter.fromInt(6),
+                createdAt = fakeTimeProvider.startTime.plus(2.seconds.toJavaDuration()),
+                modifiedAt = fakeTimeProvider.startTime.plus(6.seconds.toJavaDuration()),
+                name = "RenamedItem2",
+                colorIndex = 3,
+                libraryFolderId = null,
+                customOrder = null
+            ),
+            LibraryItem(
+                id = UUIDConverter.fromInt(8),
+                createdAt = fakeTimeProvider.startTime.plus(3.seconds.toJavaDuration()),
+                modifiedAt = fakeTimeProvider.startTime.plus(3.seconds.toJavaDuration()),
+                name = "TestItem1",
+                colorIndex = 9,
+                libraryFolderId = null,
+                customOrder = null
+            ),
+            LibraryItem(
+                id = UUIDConverter.fromInt(10),
+                createdAt = fakeTimeProvider.startTime.plus(4.seconds.toJavaDuration()),
+                modifiedAt = fakeTimeProvider.startTime.plus(5.seconds.toJavaDuration()),
+                name = "RenamedItem1",
+                colorIndex = 2,
+                libraryFolderId = null,
+                customOrder = null
+            ),
+        )
+    }
+
+    @Test
+    fun `Get items from 'TestFolder', list contains all items`() = runTest {
+        val items = getItems(folderId = Nullable(UUIDConverter.fromInt(1))).first()
+
+        assertThat(items).containsExactly(
+            LibraryItem(
+                id = UUIDConverter.fromInt(3),
+                createdAt = fakeTimeProvider.startTime.plus(0.seconds.toJavaDuration()),
+                modifiedAt = fakeTimeProvider.startTime.plus(0.seconds.toJavaDuration()),
+                name = "TestItem3",
+                colorIndex = 0,
+                libraryFolderId = UUIDConverter.fromInt(1),
+                customOrder = null
+            ),
+            LibraryItem(
+                id = UUIDConverter.fromInt(5),
+                createdAt = fakeTimeProvider.startTime.plus(1.seconds.toJavaDuration()),
+                modifiedAt = fakeTimeProvider.startTime.plus(1.seconds.toJavaDuration()),
+                name = "TestItem3",
+                colorIndex = 8,
+                libraryFolderId = UUIDConverter.fromInt(1),
+                customOrder = null
+            ),
+            LibraryItem(
+                id = UUIDConverter.fromInt(7),
+                createdAt = fakeTimeProvider.startTime.plus(2.seconds.toJavaDuration()),
+                modifiedAt = fakeTimeProvider.startTime.plus(6.seconds.toJavaDuration()),
+                name = "RenamedItem2",
+                colorIndex = 3,
+                libraryFolderId = UUIDConverter.fromInt(1),
+                customOrder = null
+            ),
+            LibraryItem(
+                id = UUIDConverter.fromInt(9),
+                createdAt = fakeTimeProvider.startTime.plus(3.seconds.toJavaDuration()),
+                modifiedAt = fakeTimeProvider.startTime.plus(3.seconds.toJavaDuration()),
+                name = "TestItem1",
+                colorIndex = 9,
+                libraryFolderId = UUIDConverter.fromInt(1),
+                customOrder = null
+            ),
+            LibraryItem(
+                id = UUIDConverter.fromInt(11),
+                createdAt = fakeTimeProvider.startTime.plus(4.seconds.toJavaDuration()),
+                modifiedAt = fakeTimeProvider.startTime.plus(5.seconds.toJavaDuration()),
+                name = "RenamedItem1",
+                colorIndex = 2,
+                libraryFolderId = UUIDConverter.fromInt(1),
+                customOrder = null
+            )
+        )
+    }
+
+    @Test
+    fun `Get items, items are sorted by 'date added' descending`() = runTest {
+        // Get items and map them to their ids
+        val itemIds = getItems(folderId = Nullable(null)).first().map { it.id }
 
         // Check if items are sorted by 'date added' descending by default
-        val expectedOutcome = listOf(
-            "RenamedItem1",
-            "TestItem1",
-            "RenamedItem2",
-            "TestItem5",
-            "TestItem3",
-        )
+        val expectedItemIds = listOf(10, 8, 6, 4, 2).map { UUIDConverter.fromInt(it) }
 
-        assertThat(items.map { it.name }).isEqualTo(expectedOutcome)
-        assertThat(itemsInFolder.map { it.name }).isEqualTo(expectedOutcome)
+        assertThat(itemIds).isEqualTo(expectedItemIds)
     }
 
     @Test
@@ -149,21 +237,13 @@ class GetItemsUseCaseTest {
             )
         )
 
-        // Get items
-        val items = getItems(folderId = Nullable(null)).first()
-        val itemsInFolder = getItems(folderId = Nullable(folderId)).first()
+        // Get items and map them to their ids
+        val itemIds = getItems(folderId = Nullable(null)).first().map { it.id }
 
         // Check if items are sorted correctly
-        val expectedOutcome = listOf(
-            "TestItem3",
-            "TestItem5",
-            "RenamedItem2",
-            "TestItem1",
-            "RenamedItem1",
-        )
+        val expectedItemIds = listOf(2, 4, 6, 8, 10).map { UUIDConverter.fromInt(it) }
 
-        assertThat(items.map { it.name }).isEqualTo(expectedOutcome)
-        assertThat(itemsInFolder.map { it.name }).isEqualTo(expectedOutcome)
+        assertThat(itemIds).isEqualTo(expectedItemIds)
     }
 
     @Test
@@ -176,21 +256,13 @@ class GetItemsUseCaseTest {
             )
         )
 
-        // Get items
-        val items = getItems(folderId = Nullable(null)).first()
-        val itemsInFolder = getItems(folderId = Nullable(folderId)).first()
+        // Get items and map them to their ids
+        val itemIds = getItems(folderId = Nullable(null)).first().map { it.id }
 
         // Check if items are sorted correctly
-        val expectedOutcome = listOf(
-            "RenamedItem2",
-            "RenamedItem1",
-            "TestItem1",
-            "TestItem5",
-            "TestItem3",
-        )
+        val expectedItemIds = listOf(6, 10, 8, 4, 2).map { UUIDConverter.fromInt(it) }
 
-        assertThat(items.map { it.name }).isEqualTo(expectedOutcome)
-        assertThat(itemsInFolder.map { it.name }).isEqualTo(expectedOutcome)
+        assertThat(itemIds).isEqualTo(expectedItemIds)
     }
 
     @Test
@@ -203,21 +275,13 @@ class GetItemsUseCaseTest {
             )
         )
 
-        // Get items
-        val items = getItems(folderId = Nullable(null)).first()
-        val itemsInFolder = getItems(folderId = Nullable(folderId)).first()
+        // Get items and map them to their ids
+        val itemIds = getItems(folderId = Nullable(null)).first().map { it.id }
 
         // Check if items are sorted correctly
-        val expectedOutcome = listOf(
-            "TestItem3",
-            "TestItem5",
-            "TestItem1",
-            "RenamedItem1",
-            "RenamedItem2",
-        )
+        val expectedItemIds = listOf(2, 4, 8, 10, 6).map { UUIDConverter.fromInt(it) }
 
-        assertThat(items.map { it.name }).isEqualTo(expectedOutcome)
-        assertThat(itemsInFolder.map { it.name }).isEqualTo(expectedOutcome)
+        assertThat(itemIds).isEqualTo(expectedItemIds)
     }
 
     @Test
@@ -230,21 +294,19 @@ class GetItemsUseCaseTest {
             )
         )
 
-        // Get items
-        val items = getItems(folderId = Nullable(null)).first()
-        val itemsInFolder = getItems(folderId = Nullable(folderId)).first()
+        // Get items and map them to their ids
+        val itemIds = getItems(folderId = Nullable(null)).first().map { it.id }
 
         // Check if items are sorted correctly
-        val expectedOutcome = listOf(
-            "TestItem5",
-            "TestItem3",
-            "TestItem1",
-            "RenamedItem2",
-            "RenamedItem1",
-        )
+        val expectedItemIds = listOf(
+            2, // TestItem3
+            4, // TestItem3
+            8, // TestItem1
+            6, // RenamedItem2
+            10, // RenamedItem1
+        ).map { UUIDConverter.fromInt(it) }
 
-        assertThat(items.map { it.name }).isEqualTo(expectedOutcome)
-        assertThat(itemsInFolder.map { it.name }).isEqualTo(expectedOutcome)
+        assertThat(itemIds).isEqualTo(expectedItemIds)
     }
 
     @Test
@@ -257,21 +319,19 @@ class GetItemsUseCaseTest {
             )
         )
 
-        // Get items
-        val items = getItems(folderId = Nullable(null)).first()
-        val itemsInFolder = getItems(folderId = Nullable(folderId)).first()
+        // Get items and map them to their ids
+        val itemIds = getItems(folderId = Nullable(null)).first().map { it.id }
 
         // Check if items are sorted correctly
-        val expectedOutcome = listOf(
-            "RenamedItem1",
-            "RenamedItem2",
-            "TestItem1",
-            "TestItem3",
-            "TestItem5",
-        )
+        val expectedItemIds = listOf(
+            10, // RenamedItem1
+            6, // RenamedItem2
+            8, // TestItem1
+            2, // TestItem3
+            4, // TestItem3
+        ).map { UUIDConverter.fromInt(it) }
 
-        assertThat(items.map { it.name }).isEqualTo(expectedOutcome)
-        assertThat(itemsInFolder.map { it.name }).isEqualTo(expectedOutcome)
+        assertThat(itemIds).isEqualTo(expectedItemIds)
     }
 
     @Test
@@ -284,21 +344,19 @@ class GetItemsUseCaseTest {
             )
         )
 
-        // Get items
-        val items = getItems(folderId = Nullable(null)).first()
-        val itemsInFolder = getItems(folderId = Nullable(folderId)).first()
+        // Get items and map them to their ids
+        val itemIds = getItems(folderId = Nullable(null)).first().map { it.id }
 
         // Check if items are sorted correctly
-        val expectedOutcome = listOf(
-            "TestItem1",
-            "TestItem5",
-            "RenamedItem2",
-            "RenamedItem1",
-            "TestItem3",
-        )
+        val expectedItemIds = listOf(
+            8, // TestItem1 -> colorIndex: 9
+            4, // TestItem3 -> colorIndex: 8
+            6, // RenamedItem2 -> colorIndex: 3
+            10, // RenamedItem1 -> colorIndex: 2
+            2, // TestItem3 -> colorIndex: 0
+        ).map { UUIDConverter.fromInt(it) }
 
-        assertThat(items.map { it.name }).isEqualTo(expectedOutcome)
-        assertThat(itemsInFolder.map { it.name }).isEqualTo(expectedOutcome)
+        assertThat(itemIds).isEqualTo(expectedItemIds)
     }
 
     @Test
@@ -311,21 +369,19 @@ class GetItemsUseCaseTest {
             )
         )
 
-        // Get items
-        val items = getItems(folderId = Nullable(null)).first()
-        val itemsInFolder = getItems(folderId = Nullable(folderId)).first()
+        // Get items and map them to their ids
+        val itemIds = getItems(folderId = Nullable(null)).first().map { it.id }
 
         // Check if items are sorted correctly
-        val expectedOutcome = listOf(
-            "TestItem3",
-            "RenamedItem1",
-            "RenamedItem2",
-            "TestItem5",
-            "TestItem1",
-        )
+        val expectedItemIds = listOf(
+            2, // TestItem3 -> colorIndex: 0
+            10, // RenamedItem1 -> colorIndex: 2
+            6, // RenamedItem2 -> colorIndex: 3
+            4, // TestItem3 -> colorIndex: 8
+            8, // TestItem1 -> colorIndex: 9
+        ).map { UUIDConverter.fromInt(it) }
 
-        assertThat(items.map { it.name }).isEqualTo(expectedOutcome)
-        assertThat(itemsInFolder.map { it.name }).isEqualTo(expectedOutcome)
+        assertThat(itemIds).isEqualTo(expectedItemIds)
     }
 
     @Test

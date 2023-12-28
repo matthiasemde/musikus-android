@@ -44,8 +44,8 @@ data class LibraryFolder(
 
     override fun toString(): String {
         return super.toString() +
-                "\tname:\t\t\t$name\n" +
-                "\tcustomOrder:\t$customOrder\n"
+                "\tname:\t\t\t\t$name\n" +
+                "\tcustomOrder:\t\t$customOrder\n"
     }
 }
 

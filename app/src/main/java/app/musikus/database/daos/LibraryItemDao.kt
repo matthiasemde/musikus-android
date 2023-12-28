@@ -54,8 +54,8 @@ data class LibraryItem(
         return super.toString() +
                 "\tname:\t\t\t\t$name\n" +
                 "\tcolorIndex:\t\t\t$colorIndex\n" +
-                "\tlibraryFolderId:\t\t$libraryFolderId\n" +
-                "\tcustomOrder:\t\t\t$customOrder\n"
+                "\tlibraryFolderId:\t$libraryFolderId\n" +
+                "\tcustomOrder:\t\t$customOrder\n"
     }
 }
 

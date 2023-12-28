@@ -69,7 +69,9 @@ class LibraryItemDaoTest {
 
         val items = libraryItemDao.getAllAsFlow().first()
 
-        assertThat(items.first().name).isEqualTo("TestItem")
+        assertThat(items).containsExactly(
+
+        )
     }
 
     @Test
