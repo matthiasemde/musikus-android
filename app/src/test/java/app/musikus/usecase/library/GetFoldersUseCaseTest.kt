@@ -19,7 +19,7 @@ import app.musikus.utils.FakeTimeProvider
 import app.musikus.utils.LibraryFolderSortMode
 import app.musikus.utils.SortDirection
 import app.musikus.utils.SortInfo
-import app.musikus.utils.intToUUID
+import app.musikus.database.UUIDConverter
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -93,7 +93,7 @@ class GetFoldersUseCaseTest {
         assertThat(folders).isEqualTo(listOf(
             LibraryFolderWithItems(
                 folder = LibraryFolder(
-                    id = intToUUID(5),
+                    id = UUIDConverter.fromInt(5),
                     createdAt = fakeTimeProvider.startTime.plus(4.seconds.toJavaDuration()),
                     modifiedAt = fakeTimeProvider.startTime.plus(5.seconds.toJavaDuration()),
                     name = "RenamedFolder1",
@@ -103,7 +103,7 @@ class GetFoldersUseCaseTest {
             ),
             LibraryFolderWithItems(
                 folder = LibraryFolder(
-                    id = intToUUID(4),
+                    id = UUIDConverter.fromInt(4),
                     createdAt = fakeTimeProvider.startTime.plus(3.seconds.toJavaDuration()),
                     modifiedAt = fakeTimeProvider.startTime.plus(3.seconds.toJavaDuration()),
                     name = "TestFolder1",
@@ -113,7 +113,7 @@ class GetFoldersUseCaseTest {
             ),
             LibraryFolderWithItems(
                 folder = LibraryFolder(
-                    id = intToUUID(3),
+                    id = UUIDConverter.fromInt(3),
                     createdAt = fakeTimeProvider.startTime.plus(2.seconds.toJavaDuration()),
                     modifiedAt = fakeTimeProvider.startTime.plus(6.seconds.toJavaDuration()),
                     name = "RenamedFolder2",
@@ -123,7 +123,7 @@ class GetFoldersUseCaseTest {
             ),
             LibraryFolderWithItems(
                 folder = LibraryFolder(
-                    id = intToUUID(2),
+                    id = UUIDConverter.fromInt(2),
                     createdAt = fakeTimeProvider.startTime.plus(1.seconds.toJavaDuration()),
                     modifiedAt = fakeTimeProvider.startTime.plus(1.seconds.toJavaDuration()),
                     name = "TestFolder5",
@@ -133,7 +133,7 @@ class GetFoldersUseCaseTest {
             ),
             LibraryFolderWithItems(
                 folder = LibraryFolder(
-                    id = intToUUID(1),
+                    id = UUIDConverter.fromInt(1),
                     createdAt = fakeTimeProvider.startTime.plus(0.seconds.toJavaDuration()),
                     modifiedAt = fakeTimeProvider.startTime.plus(0.seconds.toJavaDuration()),
                     name = "TestFolder3",

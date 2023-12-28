@@ -17,7 +17,7 @@ import app.musikus.database.entities.LibraryItemUpdateAttributes
 import app.musikus.repository.FakeLibraryRepository
 import app.musikus.utils.FakeIdProvider
 import app.musikus.utils.FakeTimeProvider
-import app.musikus.utils.intToUUID
+import app.musikus.database.UUIDConverter
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -58,7 +58,7 @@ class EditItemUseCaseTest {
     fun `Edit item with invalid id, InvalidLibraryItemException('Item not found')`() = runTest {
         val exception = assertThrows<InvalidLibraryItemException> {
             editItem(
-                id = intToUUID(0),
+                id = UUIDConverter.fromInt(0),
                 updateAttributes = LibraryItemUpdateAttributes()
             )
         }
@@ -69,7 +69,7 @@ class EditItemUseCaseTest {
     fun `Edit item with empty name, InvalidLibraryItemException('Item name cannot be empty')`() = runTest {
         val exception = assertThrows<InvalidLibraryItemException> {
             editItem(
-                id = intToUUID(2),
+                id = UUIDConverter.fromInt(2),
                 updateAttributes = LibraryItemUpdateAttributes(
                     name = "",
                 )
@@ -82,7 +82,7 @@ class EditItemUseCaseTest {
     fun `Edit item with invalid colorIndex, InvalidLibraryItemException('Color index must be between 0 and 9')`() = runTest {
         var exception = assertThrows<InvalidLibraryItemException> {
             editItem(
-                id = intToUUID(2),
+                id = UUIDConverter.fromInt(2),
                 updateAttributes = LibraryItemUpdateAttributes(
                     colorIndex = -1,
                 )
@@ -92,7 +92,7 @@ class EditItemUseCaseTest {
 
         exception = assertThrows<InvalidLibraryItemException> {
             editItem(
-                id = intToUUID(2),
+                id = UUIDConverter.fromInt(2),
                 updateAttributes = LibraryItemUpdateAttributes(
                     colorIndex = 10,
                 )
@@ -103,10 +103,10 @@ class EditItemUseCaseTest {
 
     @Test
     fun `Edit item with non existent folderId, InvalidLibraryItemException('Folder (FOLDER_ID) does not exist')`() = runTest {
-        val nonExistentFolderId = intToUUID(0)
+        val nonExistentFolderId = UUIDConverter.fromInt(0)
         val exception = assertThrows<InvalidLibraryItemException> {
             editItem(
-                id = intToUUID(2),
+                id = UUIDConverter.fromInt(2),
                 updateAttributes = LibraryItemUpdateAttributes(
                     libraryFolderId = Nullable(nonExistentFolderId),
                 )
@@ -118,24 +118,24 @@ class EditItemUseCaseTest {
     @Test
     fun `Edit item name, color and folderId, item is updated`() = runTest {
         editItem(
-            id = intToUUID(2),
+            id = UUIDConverter.fromInt(2),
             updateAttributes = LibraryItemUpdateAttributes(
                 name = "NewName",
                 colorIndex = 8,
-                libraryFolderId = Nullable(intToUUID(1)),
+                libraryFolderId = Nullable(UUIDConverter.fromInt(1)),
             )
         )
 
         val updatedItem = fakeLibraryRepository.items.first().first()
 
         val expectedItem = LibraryItem(
-            id = intToUUID(2),
+            id = UUIDConverter.fromInt(2),
             createdAt = fakeTimeProvider.startTime,
             modifiedAt = fakeTimeProvider.startTime,
             name = "NewName",
             colorIndex = 8,
             customOrder = null,
-            libraryFolderId = intToUUID(1),
+            libraryFolderId = UUIDConverter.fromInt(1),
         )
 
         assertThat(updatedItem).isEqualTo(expectedItem)

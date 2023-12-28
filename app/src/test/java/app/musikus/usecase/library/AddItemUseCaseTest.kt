@@ -16,7 +16,7 @@ import app.musikus.database.entities.LibraryItemCreationAttributes
 import app.musikus.repository.FakeLibraryRepository
 import app.musikus.utils.FakeIdProvider
 import app.musikus.utils.FakeTimeProvider
-import app.musikus.utils.intToUUID
+import app.musikus.database.UUIDConverter
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -95,7 +95,7 @@ class AddItemUseCaseTest {
         val addedItem = fakeLibraryRepository.items.first().first()
 
         assertThat(addedItem).isEqualTo(LibraryItem(
-            id = intToUUID(2), // id 1 is already used by the folder
+            id = UUIDConverter.fromInt(2), // id 1 is already used by the folder
             createdAt = fakeTimeProvider.startTime,
             modifiedAt = fakeTimeProvider.startTime,
             name = validItemCreationAttributes.name,
@@ -107,18 +107,18 @@ class AddItemUseCaseTest {
 
     @Test
     fun `Add valid item to folder, item is added to folder`() = runTest {
-        addItem(validItemCreationAttributes.copy(libraryFolderId = Nullable(intToUUID(1))))
+        addItem(validItemCreationAttributes.copy(libraryFolderId = Nullable(UUIDConverter.fromInt(1))))
 
         val addedItem = fakeLibraryRepository.items.first().first()
 
         val expectedItem = LibraryItem(
-            id = intToUUID(2), // id 1 is already used by the folder
+            id = UUIDConverter.fromInt(2), // id 1 is already used by the folder
             createdAt = fakeTimeProvider.startTime,
             modifiedAt = fakeTimeProvider.startTime,
             name = validItemCreationAttributes.name,
             colorIndex = validItemCreationAttributes.colorIndex,
             customOrder = null,
-            libraryFolderId = intToUUID(1),
+            libraryFolderId = UUIDConverter.fromInt(1),
         )
 
         assertThat(addedItem).isEqualTo(expectedItem)

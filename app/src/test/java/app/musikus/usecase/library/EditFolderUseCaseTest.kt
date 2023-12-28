@@ -15,7 +15,7 @@ import app.musikus.database.entities.LibraryFolderUpdateAttributes
 import app.musikus.repository.FakeLibraryRepository
 import app.musikus.utils.FakeIdProvider
 import app.musikus.utils.FakeTimeProvider
-import app.musikus.utils.intToUUID
+import app.musikus.database.UUIDConverter
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -63,7 +63,7 @@ class EditFolderUseCaseTest {
     fun `Edit folder with empty name, InvalidLibraryFolderException('Folder name can not be empty')`() = runTest {
         val exception = assertThrows<InvalidLibraryFolderException> {
             editFolder(
-                id = intToUUID(1),
+                id = UUIDConverter.fromInt(1),
                 updateAttributes = LibraryFolderUpdateAttributes(
                     name = "",
                 )
@@ -76,7 +76,7 @@ class EditFolderUseCaseTest {
     @Test
     fun `Edit folder with valid name, folder name is updated`() = runTest {
         editFolder(
-            id = intToUUID(1),
+            id = UUIDConverter.fromInt(1),
             updateAttributes = LibraryFolderUpdateAttributes(
                 name = "NewName",
             )
@@ -85,7 +85,7 @@ class EditFolderUseCaseTest {
         val updatedFolder = fakeLibraryRepository.folders.first().first().folder
 
         assertThat(updatedFolder).isEqualTo(LibraryFolder(
-            id = intToUUID(1),
+            id = UUIDConverter.fromInt(1),
             createdAt = fakeTimeProvider.startTime,
             modifiedAt = fakeTimeProvider.startTime,
             name = "NewName",

@@ -130,6 +130,12 @@ class UUIDConverter {
                 buffer.putLong(uuid.leastSignificantBits)
                 buffer.array().joinToString(separator = "") { "%02x".format(it) }
             }
+
+        fun fromInt(value: Int): UUID {
+            return UUID.fromString(
+                "00000000-0000-0000-0000-${value.toString().padStart(12, '0')}"
+            )
+        }
     }
 }
 
