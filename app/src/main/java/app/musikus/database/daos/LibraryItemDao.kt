@@ -45,6 +45,14 @@ data class LibraryItem(
                 HASH_FACTOR + colorIndex.hashCode()) *
                 HASH_FACTOR + libraryFolderId.hashCode()) *
                 HASH_FACTOR + customOrder.hashCode()
+
+    override fun toString(): String {
+        return super.toString() +
+                "\tname:\t\t\t\t$name\n" +
+                "\tcolorIndex:\t\t\t$colorIndex\n" +
+                "\tlibraryFolderId:\t\t$libraryFolderId\n" +
+                "\tcustomOrder:\t\t\t$customOrder\n"
+    }
 }
 
 @Dao

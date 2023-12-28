@@ -9,11 +9,13 @@
 package app.musikus.usecase.library
 
 import app.musikus.database.daos.InvalidLibraryFolderException
+import app.musikus.database.daos.LibraryFolder
 import app.musikus.database.entities.LibraryFolderCreationAttributes
 import app.musikus.database.entities.LibraryFolderUpdateAttributes
 import app.musikus.repository.FakeLibraryRepository
 import app.musikus.utils.FakeIdProvider
 import app.musikus.utils.FakeTimeProvider
+import app.musikus.utils.intToUUID
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -31,8 +33,6 @@ class EditFolderUseCaseTest {
     private lateinit var editFolder: EditFolderUseCase
     private lateinit var fakeLibraryRepository: FakeLibraryRepository
 
-    private lateinit var folderId: UUID
-
     @BeforeEach
     fun setUp() {
         fakeTimeProvider = FakeTimeProvider()
@@ -44,7 +44,6 @@ class EditFolderUseCaseTest {
 
         runBlocking {
             fakeLibraryRepository.addFolder(folderCreationAttributes)
-            folderId = fakeLibraryRepository.folders.first().first().folder.id
         }
     }
 
@@ -64,7 +63,7 @@ class EditFolderUseCaseTest {
     fun `Edit folder with empty name, InvalidLibraryFolderException('Folder name can not be empty')`() = runTest {
         val exception = assertThrows<InvalidLibraryFolderException> {
             editFolder(
-                id = folderId,
+                id = intToUUID(1),
                 updateAttributes = LibraryFolderUpdateAttributes(
                     name = "",
                 )
@@ -77,7 +76,7 @@ class EditFolderUseCaseTest {
     @Test
     fun `Edit folder with valid name, folder name is updated`() = runTest {
         editFolder(
-            id = folderId,
+            id = intToUUID(1),
             updateAttributes = LibraryFolderUpdateAttributes(
                 name = "NewName",
             )
@@ -85,6 +84,13 @@ class EditFolderUseCaseTest {
 
         val updatedFolder = fakeLibraryRepository.folders.first().first().folder
 
-        assertThat(updatedFolder.name).isEqualTo("NewName")
+        assertThat(updatedFolder).isEqualTo(LibraryFolder(
+            name = "NewName",
+            customOrder = null
+        ).apply {
+            setId(intToUUID(1))
+            setCreatedAt(fakeTimeProvider.startTime)
+            setModifiedAt(fakeTimeProvider.startTime)
+        })
     }
 }

@@ -9,13 +9,14 @@
 package app.musikus.usecase.library
 
 import app.musikus.database.daos.InvalidLibraryFolderException
+import app.musikus.database.daos.LibraryFolder
 import app.musikus.database.entities.LibraryFolderCreationAttributes
 import app.musikus.repository.FakeLibraryRepository
 import app.musikus.utils.FakeIdProvider
 import app.musikus.utils.FakeTimeProvider
+import app.musikus.utils.intToUUID
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -54,6 +55,13 @@ class AddFolderUseCaseTest {
         addFolder(validFolderCreationAttributes)
 
         val folder = fakeLibraryRepository.folders.first().first().folder
-        assertThat(folder.name).isEqualTo(validFolderCreationAttributes.name)
+        assertThat(folder).isEqualTo(LibraryFolder(
+            name = validFolderCreationAttributes.name,
+            customOrder = null
+        ).apply {
+            setId(intToUUID(1))
+            setCreatedAt(fakeTimeProvider.startTime)
+            setModifiedAt(fakeTimeProvider.startTime)
+        })
     }
 }

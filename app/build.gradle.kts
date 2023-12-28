@@ -98,7 +98,7 @@ dependencies {
     implementation("androidx.compose.foundation:foundation-layout")
 
     // Material
-    implementation("androidx.compose.material3:material3:1.2.0-alpha12") // TODO remove explicit version once bom is updated
+    implementation("androidx.compose.material3:material3:1.2.0-beta01") // TODO remove explicit version once bom is updated
     implementation("androidx.compose.material3:material3-window-size-class")
     implementation("androidx.compose.material:material-icons-core")
     implementation("androidx.compose.material:material-icons-extended")

@@ -9,16 +9,17 @@
 package app.musikus.usecase.library
 
 import app.musikus.database.LibraryFolderWithItems
+import app.musikus.database.daos.LibraryFolder
 import app.musikus.database.entities.LibraryFolderCreationAttributes
 import app.musikus.database.entities.LibraryFolderUpdateAttributes
 import app.musikus.repository.FakeLibraryRepository
 import app.musikus.repository.FakeUserPreferencesRepository
-import app.musikus.database.daos.LibraryFolder
 import app.musikus.utils.FakeIdProvider
 import app.musikus.utils.FakeTimeProvider
 import app.musikus.utils.LibraryFolderSortMode
 import app.musikus.utils.SortDirection
 import app.musikus.utils.SortInfo
+import app.musikus.utils.intToUUID
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -89,28 +90,63 @@ class GetFoldersUseCaseTest {
     fun `Get folders, folders are sorted by 'date added' descending`() = runTest {
         val folders = getFolders().first()
 
-        val expectedOutcome = listOf(
-            Triple("RenamedFolder1", 4, 1),
-            Triple("TestFolder1", 3, 0),
-            Triple("RenamedFolder2", 2, 4),
-            Triple("TestFolder5", 1, 0),
-            Triple("TestFolder3", 0, 0),
-        ).mapIndexed { index, (name, createdAtOffset, modifiedAtOffset) ->
-            val time = fakeTimeProvider.startTime.plus(createdAtOffset.seconds.toJavaDuration())
+        assertThat(folders).isEqualTo(listOf(
             LibraryFolderWithItems(
                 folder = LibraryFolder(
-                    name = name,
+                    name = "RenamedFolder1",
                     customOrder = null
                 ).apply {
-                    setId(fakeIdProvider.intToUUID(5 - index))
-                    setCreatedAt(time)
-                    setModifiedAt(time.plus(modifiedAtOffset.seconds.toJavaDuration()))
+                    setId(intToUUID(5))
+                    setCreatedAt(fakeTimeProvider.startTime.plus(4.seconds.toJavaDuration()))
+                    setModifiedAt(fakeTimeProvider.startTime.plus(5.seconds.toJavaDuration()))
+                },
+                items = emptyList()
+            ),
+            LibraryFolderWithItems(
+                folder = LibraryFolder(
+                    name = "TestFolder1",
+                    customOrder = null
+                ).apply {
+                    setId(intToUUID(4))
+                    setCreatedAt(fakeTimeProvider.startTime.plus(3.seconds.toJavaDuration()))
+                    setModifiedAt(fakeTimeProvider.startTime.plus(3.seconds.toJavaDuration()))
+                },
+                items = emptyList()
+            ),
+            LibraryFolderWithItems(
+                folder = LibraryFolder(
+                    name = "RenamedFolder2",
+                    customOrder = null
+                ).apply {
+                    setId(intToUUID(3))
+                    setCreatedAt(fakeTimeProvider.startTime.plus(2.seconds.toJavaDuration()))
+                    setModifiedAt(fakeTimeProvider.startTime.plus(6.seconds.toJavaDuration()))
+                },
+                items = emptyList()
+            ),
+            LibraryFolderWithItems(
+                folder = LibraryFolder(
+                    name = "TestFolder5",
+                    customOrder = null
+                ).apply {
+                    setId(intToUUID(2))
+                    setCreatedAt(fakeTimeProvider.startTime.plus(1.seconds.toJavaDuration()))
+                    setModifiedAt(fakeTimeProvider.startTime.plus(1.seconds.toJavaDuration()))
+                },
+                items = emptyList()
+            ),
+            LibraryFolderWithItems(
+                folder = LibraryFolder(
+                    name = "TestFolder3",
+                    customOrder = null
+                ).apply {
+                    setId(intToUUID(1))
+                    setCreatedAt(fakeTimeProvider.startTime.plus(0.seconds.toJavaDuration()))
+                    setModifiedAt(fakeTimeProvider.startTime.plus(0.seconds.toJavaDuration()))
                 },
                 items = emptyList()
             )
-        }
-
-        assertThat(folders).isEqualTo(expectedOutcome)
+        ))
     }
 
     @Test

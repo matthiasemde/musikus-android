@@ -9,6 +9,7 @@
 package app.musikus.usecase.library
 
 import app.musikus.database.Nullable
+import app.musikus.database.daos.LibraryItem
 import app.musikus.database.entities.InvalidLibraryItemException
 import app.musikus.database.entities.LibraryFolderCreationAttributes
 import app.musikus.database.entities.LibraryItemCreationAttributes
@@ -16,6 +17,7 @@ import app.musikus.database.entities.LibraryItemUpdateAttributes
 import app.musikus.repository.FakeLibraryRepository
 import app.musikus.utils.FakeIdProvider
 import app.musikus.utils.FakeTimeProvider
+import app.musikus.utils.intToUUID
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -32,9 +34,6 @@ class EditItemUseCaseTest {
 
     private lateinit var editItem: EditItemUseCase
     private lateinit var fakeLibraryRepository: FakeLibraryRepository
-
-    private lateinit var itemId: UUID
-    private lateinit var folderId: UUID
 
     @BeforeEach
     fun setUp() {
@@ -53,9 +52,6 @@ class EditItemUseCaseTest {
         runBlocking {
             fakeLibraryRepository.addFolder(folderCreationAttributes)
             fakeLibraryRepository.addItem(itemCreationAttributes)
-
-            itemId = fakeLibraryRepository.items.first().first().id
-            folderId = fakeLibraryRepository.folders.first().first().folder.id
         }
     }
 
@@ -64,7 +60,7 @@ class EditItemUseCaseTest {
     fun `Edit item with invalid id, InvalidLibraryItemException('Item not found')`() = runTest {
         val exception = assertThrows<InvalidLibraryItemException> {
             editItem(
-                id = UUID.randomUUID(),
+                id = intToUUID(0),
                 updateAttributes = LibraryItemUpdateAttributes()
             )
         }
@@ -75,7 +71,7 @@ class EditItemUseCaseTest {
     fun `Edit item with empty name, InvalidLibraryItemException('Item name cannot be empty')`() = runTest {
         val exception = assertThrows<InvalidLibraryItemException> {
             editItem(
-                id = itemId,
+                id = intToUUID(2),
                 updateAttributes = LibraryItemUpdateAttributes(
                     name = "",
                 )
@@ -88,7 +84,7 @@ class EditItemUseCaseTest {
     fun `Edit item with invalid colorIndex, InvalidLibraryItemException('Color index must be between 0 and 9')`() = runTest {
         var exception = assertThrows<InvalidLibraryItemException> {
             editItem(
-                id = itemId,
+                id = intToUUID(2),
                 updateAttributes = LibraryItemUpdateAttributes(
                     colorIndex = -1,
                 )
@@ -98,7 +94,7 @@ class EditItemUseCaseTest {
 
         exception = assertThrows<InvalidLibraryItemException> {
             editItem(
-                id = itemId,
+                id = intToUUID(2),
                 updateAttributes = LibraryItemUpdateAttributes(
                     colorIndex = 10,
                 )
@@ -109,35 +105,46 @@ class EditItemUseCaseTest {
 
     @Test
     fun `Edit item with non existent folderId, InvalidLibraryItemException('Folder (FOLDER_ID) does not exist')`() = runTest {
-        val randomId = UUID.randomUUID()
+        val nonExistentFolderId = intToUUID(0)
         val exception = assertThrows<InvalidLibraryItemException> {
             editItem(
-                id = itemId,
+                id = intToUUID(2),
                 updateAttributes = LibraryItemUpdateAttributes(
-                    libraryFolderId = Nullable(randomId),
+                    libraryFolderId = Nullable(nonExistentFolderId),
                 )
             )
         }
-        assertThat(exception.message).isEqualTo("Folder (${randomId}) does not exist")
+        assertThat(exception.message).isEqualTo("Folder (${nonExistentFolderId}) does not exist")
     }
 
     @Test
-    fun `Edit item name, color and folderId, true`() = runTest {
+    fun `Edit item name, color and folderId, item is updated`() = runTest {
         editItem(
-            id = itemId,
+            id = intToUUID(2),
             updateAttributes = LibraryItemUpdateAttributes(
                 name = "NewName",
                 colorIndex = 8,
-                libraryFolderId = Nullable(folderId),
+                libraryFolderId = Nullable(intToUUID(1)),
             )
         )
+
         val updatedItem = fakeLibraryRepository.items.first().first()
 
-        assertThat(updatedItem.name).isEqualTo("NewName")
-        assertThat(updatedItem.colorIndex).isEqualTo(8)
+        val expectedItem = LibraryItem(
+            name = "NewName",
+            colorIndex = 8,
+            customOrder = null,
+            libraryFolderId = intToUUID(1),
+        ).apply {
+            setId(intToUUID(2))
+            setCreatedAt(fakeTimeProvider.startTime)
+            setModifiedAt(fakeTimeProvider.startTime)
+        }
 
-        val updatedFolderWithItems = fakeLibraryRepository.folders.first().first()
+        assertThat(updatedItem).isEqualTo(expectedItem)
 
-        assertThat(updatedFolderWithItems.items).contains(updatedItem)
+        val updatedFolderItems = fakeLibraryRepository.folders.first().first().items
+
+        assertThat(updatedFolderItems).containsExactly(expectedItem)
     }
 }

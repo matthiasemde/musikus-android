@@ -9,12 +9,14 @@
 package app.musikus.usecase.library
 
 import app.musikus.database.Nullable
+import app.musikus.database.daos.LibraryItem
 import app.musikus.database.entities.InvalidLibraryItemException
 import app.musikus.database.entities.LibraryFolderCreationAttributes
 import app.musikus.database.entities.LibraryItemCreationAttributes
 import app.musikus.repository.FakeLibraryRepository
 import app.musikus.utils.FakeIdProvider
 import app.musikus.utils.FakeTimeProvider
+import app.musikus.utils.intToUUID
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -87,29 +89,44 @@ class AddItemUseCaseTest {
 
 
     @Test
-    fun `Add valid item to root, item in items list`() = runTest {
+    fun `Add valid item to root, item is added to root`() = runTest {
         addItem(validItemCreationAttributes.copy(libraryFolderId = Nullable(null)))
 
         val addedItem = fakeLibraryRepository.items.first().first()
 
-        assertThat(addedItem.name).isEqualTo(validItemCreationAttributes.name)
-        assertThat(addedItem.colorIndex).isEqualTo(validItemCreationAttributes.colorIndex)
-        assertThat(addedItem.libraryFolderId).isEqualTo(null)
+        assertThat(addedItem).isEqualTo(LibraryItem(
+            name = validItemCreationAttributes.name,
+            colorIndex = validItemCreationAttributes.colorIndex,
+            customOrder = null,
+            libraryFolderId = null,
+        ).apply {
+            setId(intToUUID(2)) // id 1 is already used by the folder
+            setCreatedAt(fakeTimeProvider.startTime)
+            setModifiedAt(fakeTimeProvider.startTime)
+        })
     }
 
     @Test
-    fun `Add valid item to folder, item in folder items list`() = runTest {
-        val folder = fakeLibraryRepository.folders.first().first().folder
-
-        addItem(validItemCreationAttributes.copy(libraryFolderId = Nullable(folder.id)))
+    fun `Add valid item to folder, item is added to folder`() = runTest {
+        addItem(validItemCreationAttributes.copy(libraryFolderId = Nullable(intToUUID(1))))
 
         val addedItem = fakeLibraryRepository.items.first().first()
 
-        assertThat(addedItem.name).isEqualTo(validItemCreationAttributes.name)
-        assertThat(addedItem.colorIndex).isEqualTo(validItemCreationAttributes.colorIndex)
+        val expectedItem = LibraryItem(
+            name = validItemCreationAttributes.name,
+            colorIndex = validItemCreationAttributes.colorIndex,
+            customOrder = null,
+            libraryFolderId = intToUUID(1),
+        ).apply {
+            setId(intToUUID(2)) // id 1 is already used by the folder
+            setCreatedAt(fakeTimeProvider.startTime)
+            setModifiedAt(fakeTimeProvider.startTime)
+        }
+
+        assertThat(addedItem).isEqualTo(expectedItem)
 
         val folderItems = fakeLibraryRepository.folders.first().first().items
 
-        assertThat(folderItems).contains(addedItem)
+        assertThat(folderItems).containsExactly(expectedItem)
     }
 }
