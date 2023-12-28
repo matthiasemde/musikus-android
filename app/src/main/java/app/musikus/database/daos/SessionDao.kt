@@ -30,6 +30,9 @@ import java.time.ZonedDateTime
 import java.util.UUID
 
 data class Session(
+    @ColumnInfo(name = "id") override val id: UUID,
+    @ColumnInfo(name = "created_at") override val createdAt: ZonedDateTime,
+    @ColumnInfo(name = "modified_at") override val modifiedAt: ZonedDateTime,
     @ColumnInfo(name = "break_duration") val breakDuration: Int,
     @ColumnInfo(name = "rating") val rating: Int,
     @ColumnInfo(name = "comment") val comment: String?,

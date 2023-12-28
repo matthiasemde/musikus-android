@@ -21,11 +21,7 @@ import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import app.musikus.R
-import app.musikus.database.SectionWithLibraryItem
-import app.musikus.database.SessionWithSectionsWithLibraryItems
 import app.musikus.database.daos.LibraryItem
-import app.musikus.database.daos.Section
-import app.musikus.database.daos.Session
 import app.musikus.ui.activesession.ActiveSessionActivity
 import app.musikus.ui.library.LibraryItemAdapter
 import app.musikus.utils.TimeProvider
@@ -33,21 +29,70 @@ import com.github.appintro.BuildConfig
 import com.github.appintro.SlideBackgroundColorHolder
 import com.github.appintro.SlideSelectionListener
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import java.time.ZonedDateTime
 import java.util.UUID
 import javax.inject.Inject
 
 
-private const val DUMMY_MAIN_CATEGORY_INDEX = 5
+//private const val DUMMY_MAIN_CATEGORY_INDEX = 5
 
 
 
 private val dummyLibraryItems = listOf(
-    LibraryItem(name="B-Dur", colorIndex = 8, libraryFolderId = null, customOrder = null),
-    LibraryItem(name="Czerny Etude Nr.2", colorIndex = 1, libraryFolderId = null, customOrder = null),
-    LibraryItem(name="Trauermarsch c-Moll", colorIndex = 0, libraryFolderId = null, customOrder = null),
-    LibraryItem(name="Andantino", colorIndex = 6, libraryFolderId = null, customOrder = null),
-    LibraryItem(name="Klaviersonate", colorIndex = 7, libraryFolderId = null, customOrder = null),
-    LibraryItem(name="Mozart", colorIndex = 3, libraryFolderId = null, customOrder = null)
+    LibraryItem(
+        id = UUID.fromString("DEADBEEF-DEAD-BEEF-DEAD-BEEFDEADBEEF"),
+        createdAt = ZonedDateTime.parse("1997-05-07"),
+        modifiedAt = ZonedDateTime.parse("1997-05-07"),
+        name = "B-Dur",
+        colorIndex = 8,
+        libraryFolderId = null,
+        customOrder = null
+    ),
+    LibraryItem(
+        id = UUID.fromString("DEADBEEF-DEAD-BEEF-DEAD-BEEFDEADBEEF"),
+        createdAt = ZonedDateTime.parse("1997-05-07"),
+        modifiedAt = ZonedDateTime.parse("1997-05-07"),
+        name = "Czerny Etude Nr.2",
+        colorIndex = 1,
+        libraryFolderId = null,
+        customOrder = null
+    ),
+    LibraryItem(
+        id = UUID.fromString("DEADBEEF-DEAD-BEEF-DEAD-BEEFDEADBEEF"),
+        createdAt = ZonedDateTime.parse("1997-05-07"),
+        modifiedAt = ZonedDateTime.parse("1997-05-07"),
+        name = "Trauermarsch c-Moll",
+        colorIndex = 0,
+        libraryFolderId = null,
+        customOrder = null
+    ),
+    LibraryItem(
+        id = UUID.fromString("DEADBEEF-DEAD-BEEF-DEAD-BEEFDEADBEEF"),
+        createdAt = ZonedDateTime.parse("1997-05-07"),
+        modifiedAt = ZonedDateTime.parse("1997-05-07"),
+        name = "Andantino",
+        colorIndex = 6,
+        libraryFolderId = null,
+        customOrder = null
+    ),
+    LibraryItem(
+        id = UUID.fromString("DEADBEEF-DEAD-BEEF-DEAD-BEEFDEADBEEF"),
+        createdAt = ZonedDateTime.parse("1997-05-07"),
+        modifiedAt = ZonedDateTime.parse("1997-05-07"),
+        name = "Klaviersonate",
+        colorIndex = 7,
+        libraryFolderId = null,
+        customOrder = null
+    ),
+    LibraryItem(
+        id = UUID.fromString("DEADBEEF-DEAD-BEEF-DEAD-BEEFDEADBEEF"),
+        createdAt = ZonedDateTime.parse("1997-05-07"),
+        modifiedAt = ZonedDateTime.parse("1997-05-07"),
+        name = "Mozart",
+        colorIndex = 3,
+        libraryFolderId = null,
+        customOrder = null
+    )
 )
 
 class IntroFragment(
@@ -293,43 +338,44 @@ class IntroSessionsFragment : Fragment(R.layout.fragment_intro_sessions) {
 //        ).bind(0)
 }
 
-private fun getDummySessions() =
-    listOf(
-        SessionWithSectionsWithLibraryItems(
-            session = Session(
-                breakDuration = 60 * 10,
-                rating = 4,
-                comment = "Great session! \uD83D\uDE80"
-            ),
-            sections = listOf(
-                SectionWithLibraryItem(
-                    Section(
-                        sessionId = UUID.fromString("DEADBEEF-DEAD-BEEF-DEAD-BEEFDEADBEEF"), // we don't care about id but it can't be null
-                        libraryItemId = UUID.fromString("DEADBEEF-DEAD-BEEF-DEAD-BEEFDEADBEEF"), // we don't care about id but it can't be null
-                        duration = 60 * 10,
-                        startTimestamp = timeProvider.now()
-                    ),
-                    dummyLibraryItems[0]
-                ),
-                SectionWithLibraryItem(
-                    Section(
-                        sessionId = UUID.fromString("DEADBEEF-DEAD-BEEF-DEAD-BEEFDEADBEEF"), // we don't care about id but it can't be null
-                        libraryItemId = UUID.fromString("DEADBEEF-DEAD-BEEF-DEAD-BEEFDEADBEEF"), // we don't care about id but it can't be null
-                        duration = 60 * 23,
-                        startTimestamp = timeProvider.now()
-                    ),
-                    dummyLibraryItems[1]
-                ),
-                SectionWithLibraryItem(
-                    Section(
-                        sessionId = UUID.fromString("DEADBEEF-DEAD-BEEF-DEAD-BEEFDEADBEEF"), // we don't care about id but it can't be null
-                        libraryItemId = UUID.fromString("DEADBEEF-DEAD-BEEF-DEAD-BEEFDEADBEEF"), // we don't care about id but it can't be null
-                        duration = 60 * 37,
-                        startTimestamp = timeProvider.now()
-                    ),
-                    dummyLibraryItems[DUMMY_MAIN_CATEGORY_INDEX]
-                ),
-            )
-        )
-    )
+//private fun getDummySessions() =
+//    listOf(
+//        SessionWithSectionsWithLibraryItems(
+//            session = Session(
+//
+//                breakDuration = 60 * 10,
+//                rating = 4,
+//                comment = "Great session! \uD83D\uDE80"
+//            ),
+//            sections = listOf(
+//                SectionWithLibraryItem(
+//                    Section(
+//                        sessionId = UUID.fromString("DEADBEEF-DEAD-BEEF-DEAD-BEEFDEADBEEF"), // we don't care about id but it can't be null
+//                        libraryItemId = UUID.fromString("DEADBEEF-DEAD-BEEF-DEAD-BEEFDEADBEEF"), // we don't care about id but it can't be null
+//                        duration = 60 * 10,
+//                        startTimestamp = timeProvider.now()
+//                    ),
+//                    dummyLibraryItems[0]
+//                ),
+//                SectionWithLibraryItem(
+//                    Section(
+//                        sessionId = UUID.fromString("DEADBEEF-DEAD-BEEF-DEAD-BEEFDEADBEEF"), // we don't care about id but it can't be null
+//                        libraryItemId = UUID.fromString("DEADBEEF-DEAD-BEEF-DEAD-BEEFDEADBEEF"), // we don't care about id but it can't be null
+//                        duration = 60 * 23,
+//                        startTimestamp = timeProvider.now()
+//                    ),
+//                    dummyLibraryItems[1]
+//                ),
+//                SectionWithLibraryItem(
+//                    Section(
+//                        sessionId = UUID.fromString("DEADBEEF-DEAD-BEEF-DEAD-BEEFDEADBEEF"), // we don't care about id but it can't be null
+//                        libraryItemId = UUID.fromString("DEADBEEF-DEAD-BEEF-DEAD-BEEFDEADBEEF"), // we don't care about id but it can't be null
+//                        duration = 60 * 37,
+//                        startTimestamp = timeProvider.now()
+//                    ),
+//                    dummyLibraryItems[DUMMY_MAIN_CATEGORY_INDEX]
+//                ),
+//            )
+//        )
+//    )
 }

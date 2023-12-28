@@ -38,6 +38,9 @@ import java.time.ZonedDateTime
 import java.util.UUID
 
 data class GoalDescription(
+    @ColumnInfo(name = "id") override val id: UUID,
+    @ColumnInfo(name = "created_at") override val createdAt: ZonedDateTime,
+    @ColumnInfo(name = "modified_at") override val modifiedAt: ZonedDateTime,
     @ColumnInfo(name="type") val type: GoalType,
     @ColumnInfo(name="repeat") val repeat: Boolean,
     @ColumnInfo(name="period_in_period_units") val periodInPeriodUnits: Int,

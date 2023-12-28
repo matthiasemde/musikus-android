@@ -56,12 +56,11 @@ class AddFolderUseCaseTest {
 
         val folder = fakeLibraryRepository.folders.first().first().folder
         assertThat(folder).isEqualTo(LibraryFolder(
+            id = intToUUID(1),
+            createdAt = fakeTimeProvider.startTime,
+            modifiedAt = fakeTimeProvider.startTime,
             name = validFolderCreationAttributes.name,
             customOrder = null
-        ).apply {
-            setId(intToUUID(1))
-            setCreatedAt(fakeTimeProvider.startTime)
-            setModifiedAt(fakeTimeProvider.startTime)
-        })
+        ))
     }
 }

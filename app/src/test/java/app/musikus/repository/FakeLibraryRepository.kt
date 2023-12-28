@@ -18,7 +18,6 @@ import app.musikus.database.entities.LibraryItemUpdateAttributes
 import app.musikus.utils.IdProvider
 import app.musikus.utils.TimeProvider
 import kotlinx.coroutines.flow.flowOf
-import java.time.ZonedDateTime
 import java.util.UUID
 
 class FakeLibraryRepository(
@@ -43,45 +42,40 @@ class FakeLibraryRepository(
     override suspend fun addFolder(creationAttributes: LibraryFolderCreationAttributes) {
         _folders.add(LibraryFolderWithItems(
             folder = LibraryFolder(
+                id = idProvider.generateId(),
+                createdAt = timeProvider.now(),
+                modifiedAt = timeProvider.now(),
                 name = creationAttributes.name,
                 customOrder = null
-            ).apply {
-                setId(idProvider.generateId())
-                setCreatedAt(timeProvider.now())
-                setModifiedAt(timeProvider.now())
-            },
+            ),
             items = emptyList()
         ))
     }
 
     override suspend fun addItem(creationAttributes: LibraryItemCreationAttributes) {
         _items.add(LibraryItem(
+            id = idProvider.generateId(),
+            createdAt = timeProvider.now(),
+            modifiedAt = timeProvider.now(),
             name = creationAttributes.name,
             libraryFolderId = creationAttributes.libraryFolderId.value,
             colorIndex = creationAttributes.colorIndex,
             customOrder = null
-        ).apply {
-            setId(idProvider.generateId())
-            setCreatedAt(timeProvider.now())
-            setModifiedAt(timeProvider.now())
-        })
+        ))
     }
 
     override suspend fun editFolder(id: UUID, updateAttributes: LibraryFolderUpdateAttributes) {
         _folders.replaceAll { folderWithItems ->
             if (folderWithItems.folder.id == id) folderWithItems.copy(
                 folder = folderWithItems.folder.copy(
+                    modifiedAt = timeProvider.now(),
                     name = updateAttributes.name ?: folderWithItems.folder.name,
                     customOrder = updateAttributes.customOrder.let {
                         if (it != null) it.value
                         else folderWithItems.folder.customOrder
                     }
                 )
-            ).apply {
-                folder.setId(folderWithItems.folder.id)
-                folder.setCreatedAt(folderWithItems.folder.createdAt)
-                folder.setModifiedAt(timeProvider.now())
-            }
+            )
             else folderWithItems
         }
     }
@@ -89,6 +83,7 @@ class FakeLibraryRepository(
     override suspend fun editItem(id: UUID, updateAttributes: LibraryItemUpdateAttributes) {
         _items.replaceAll { item ->
             if (item.id == id) item.copy(
+                modifiedAt = timeProvider.now(),
                 name = updateAttributes.name ?: item.name,
                 libraryFolderId = updateAttributes.libraryFolderId.let {
                     if (it != null) it.value
@@ -99,11 +94,7 @@ class FakeLibraryRepository(
                     if (it != null) it.value
                     else item.customOrder
                 }
-            ).apply {
-                setId(item.id)
-                setCreatedAt(item.createdAt)
-                setModifiedAt(timeProvider.now())
-            }
+            )
             else item
         }
     }

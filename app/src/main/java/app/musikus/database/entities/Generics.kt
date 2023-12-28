@@ -8,7 +8,6 @@
 
 package app.musikus.database.entities
 
-import androidx.annotation.NonNull
 import androidx.room.ColumnInfo
 import androidx.room.PrimaryKey
 import app.musikus.database.daos.HASH_FACTOR
@@ -23,22 +22,13 @@ abstract class BaseModelCreationAttributes : IBaseModelCreationAttributes
 abstract class BaseModelUpdateAttributes : IBaseModelUpdateAttributes
 
 abstract class BaseModelDisplayAttributes {
-    @ColumnInfo(name = "id")
-    private lateinit var _id: UUID
-
-    fun setId(id: UUID) {
-        assert(!this::_id.isInitialized)
-        _id = id
-    }
-
-    val id: UUID
-        get() = _id
+    abstract val id: UUID
 
     // necessary custom equals operator since default does not check super class properties
     override fun equals(other: Any?) =
-        (other is BaseModelDisplayAttributes) && (other._id == _id)
+        (other is BaseModelDisplayAttributes) && (other.id == id)
 
-    override fun hashCode() = _id.hashCode()
+    override fun hashCode() = id.hashCode()
 
     override fun toString(): String {
         return "\nPretty print of ${this.javaClass.simpleName} entity:\n" +
@@ -72,26 +62,9 @@ abstract class TimestampModelUpdateAttributes
     : BaseModelUpdateAttributes(), ITimestampModelUpdateAttributes
 
 abstract class TimestampModelDisplayAttributes : BaseModelDisplayAttributes() {
-    @ColumnInfo(name = "created_at")
-    private lateinit var _createdAt: ZonedDateTime
-    @ColumnInfo(name = "modified_at")
-    private lateinit var _modifiedAt: ZonedDateTime
+    abstract val createdAt: ZonedDateTime
+    abstract val modifiedAt: ZonedDateTime
 
-    fun setCreatedAt(createdAt: ZonedDateTime) {
-        assert(!this::_createdAt.isInitialized)
-        _createdAt = createdAt
-    }
-
-    fun setModifiedAt(modifiedAt: ZonedDateTime) {
-        assert(!this::_modifiedAt.isInitialized)
-        _modifiedAt = modifiedAt
-    }
-
-    val createdAt: ZonedDateTime
-        get() = _createdAt
-
-    val modifiedAt: ZonedDateTime
-        get() = _modifiedAt
     override fun equals(other: Any?) =
         super.equals(other) &&
         (other is TimestampModelDisplayAttributes) &&
@@ -108,8 +81,8 @@ abstract class TimestampModelDisplayAttributes : BaseModelDisplayAttributes() {
     }
 }
 abstract class TimestampModel(
-    @ColumnInfo(name="created_at") var createdAt: ZonedDateTime? = null,
-    @ColumnInfo(name="modified_at") var modifiedAt: ZonedDateTime? = null
+    @ColumnInfo(name="created_at") var createdAt: ZonedDateTime = ZonedDateTime.parse("1970-01-01T00:00:00.000Z"),
+    @ColumnInfo(name="modified_at") var modifiedAt: ZonedDateTime = ZonedDateTime.parse("1970-01-01T00:00:00.000Z")
 ) : BaseModel(), ITimestampModelCreationAttributes, ITimestampModelUpdateAttributes {
 
     override fun toString(): String {

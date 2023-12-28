@@ -85,12 +85,11 @@ class EditFolderUseCaseTest {
         val updatedFolder = fakeLibraryRepository.folders.first().first().folder
 
         assertThat(updatedFolder).isEqualTo(LibraryFolder(
+            id = intToUUID(1),
+            createdAt = fakeTimeProvider.startTime,
+            modifiedAt = fakeTimeProvider.startTime,
             name = "NewName",
             customOrder = null
-        ).apply {
-            setId(intToUUID(1))
-            setCreatedAt(fakeTimeProvider.startTime)
-            setModifiedAt(fakeTimeProvider.startTime)
-        })
+        ))
     }
 }

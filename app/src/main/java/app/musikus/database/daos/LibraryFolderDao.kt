@@ -19,8 +19,13 @@ import app.musikus.database.entities.LibraryFolderModel
 import app.musikus.database.entities.LibraryFolderUpdateAttributes
 import app.musikus.database.entities.SoftDeleteModelDisplayAttributes
 import kotlinx.coroutines.flow.Flow
+import java.time.ZonedDateTime
+import java.util.UUID
 
 data class LibraryFolder(
+    @ColumnInfo(name = "id") override val id: UUID,
+    @ColumnInfo(name = "created_at") override val createdAt: ZonedDateTime,
+    @ColumnInfo(name = "modified_at") override val modifiedAt: ZonedDateTime,
     @ColumnInfo(name = "name") val name: String,
     @ColumnInfo(name = "custom_order") val customOrder: Int?,
 ) : SoftDeleteModelDisplayAttributes() {

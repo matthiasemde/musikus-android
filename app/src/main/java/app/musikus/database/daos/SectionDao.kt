@@ -25,6 +25,7 @@ import java.time.ZonedDateTime
 import java.util.UUID
 
 data class Section(
+    @ColumnInfo(name = "id") override val id: UUID,
     @ColumnInfo(name = "session_id") val sessionId: UUID,
     @ColumnInfo(name = "library_item_id") val libraryItemId: UUID,
     @ColumnInfo(name = "duration") val duration: Int,

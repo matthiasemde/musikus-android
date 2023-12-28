@@ -93,57 +93,52 @@ class GetFoldersUseCaseTest {
         assertThat(folders).isEqualTo(listOf(
             LibraryFolderWithItems(
                 folder = LibraryFolder(
+                    id = intToUUID(5),
+                    createdAt = fakeTimeProvider.startTime.plus(4.seconds.toJavaDuration()),
+                    modifiedAt = fakeTimeProvider.startTime.plus(5.seconds.toJavaDuration()),
                     name = "RenamedFolder1",
                     customOrder = null
-                ).apply {
-                    setId(intToUUID(5))
-                    setCreatedAt(fakeTimeProvider.startTime.plus(4.seconds.toJavaDuration()))
-                    setModifiedAt(fakeTimeProvider.startTime.plus(5.seconds.toJavaDuration()))
-                },
+                ),
                 items = emptyList()
             ),
             LibraryFolderWithItems(
                 folder = LibraryFolder(
+                    id = intToUUID(4),
+                    createdAt = fakeTimeProvider.startTime.plus(3.seconds.toJavaDuration()),
+                    modifiedAt = fakeTimeProvider.startTime.plus(3.seconds.toJavaDuration()),
                     name = "TestFolder1",
                     customOrder = null
-                ).apply {
-                    setId(intToUUID(4))
-                    setCreatedAt(fakeTimeProvider.startTime.plus(3.seconds.toJavaDuration()))
-                    setModifiedAt(fakeTimeProvider.startTime.plus(3.seconds.toJavaDuration()))
-                },
+                ),
                 items = emptyList()
             ),
             LibraryFolderWithItems(
                 folder = LibraryFolder(
+                    id = intToUUID(3),
+                    createdAt = fakeTimeProvider.startTime.plus(2.seconds.toJavaDuration()),
+                    modifiedAt = fakeTimeProvider.startTime.plus(6.seconds.toJavaDuration()),
                     name = "RenamedFolder2",
                     customOrder = null
-                ).apply {
-                    setId(intToUUID(3))
-                    setCreatedAt(fakeTimeProvider.startTime.plus(2.seconds.toJavaDuration()))
-                    setModifiedAt(fakeTimeProvider.startTime.plus(6.seconds.toJavaDuration()))
-                },
+                ),
                 items = emptyList()
             ),
             LibraryFolderWithItems(
                 folder = LibraryFolder(
+                    id = intToUUID(2),
+                    createdAt = fakeTimeProvider.startTime.plus(1.seconds.toJavaDuration()),
+                    modifiedAt = fakeTimeProvider.startTime.plus(1.seconds.toJavaDuration()),
                     name = "TestFolder5",
                     customOrder = null
-                ).apply {
-                    setId(intToUUID(2))
-                    setCreatedAt(fakeTimeProvider.startTime.plus(1.seconds.toJavaDuration()))
-                    setModifiedAt(fakeTimeProvider.startTime.plus(1.seconds.toJavaDuration()))
-                },
+                ),
                 items = emptyList()
             ),
             LibraryFolderWithItems(
                 folder = LibraryFolder(
+                    id = intToUUID(1),
+                    createdAt = fakeTimeProvider.startTime.plus(0.seconds.toJavaDuration()),
+                    modifiedAt = fakeTimeProvider.startTime.plus(0.seconds.toJavaDuration()),
                     name = "TestFolder3",
                     customOrder = null
-                ).apply {
-                    setId(intToUUID(1))
-                    setCreatedAt(fakeTimeProvider.startTime.plus(0.seconds.toJavaDuration()))
-                    setModifiedAt(fakeTimeProvider.startTime.plus(0.seconds.toJavaDuration()))
-                },
+                ),
                 items = emptyList()
             )
         ))

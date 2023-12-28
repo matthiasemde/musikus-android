@@ -23,10 +23,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
-
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import java.util.UUID
 
 class EditItemUseCaseTest {
     private lateinit var fakeTimeProvider: FakeTimeProvider
@@ -131,15 +129,14 @@ class EditItemUseCaseTest {
         val updatedItem = fakeLibraryRepository.items.first().first()
 
         val expectedItem = LibraryItem(
+            id = intToUUID(2),
+            createdAt = fakeTimeProvider.startTime,
+            modifiedAt = fakeTimeProvider.startTime,
             name = "NewName",
             colorIndex = 8,
             customOrder = null,
             libraryFolderId = intToUUID(1),
-        ).apply {
-            setId(intToUUID(2))
-            setCreatedAt(fakeTimeProvider.startTime)
-            setModifiedAt(fakeTimeProvider.startTime)
-        }
+        )
 
         assertThat(updatedItem).isEqualTo(expectedItem)
 

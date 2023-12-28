@@ -95,15 +95,14 @@ class AddItemUseCaseTest {
         val addedItem = fakeLibraryRepository.items.first().first()
 
         assertThat(addedItem).isEqualTo(LibraryItem(
+            id = intToUUID(2), // id 1 is already used by the folder
+            createdAt = fakeTimeProvider.startTime,
+            modifiedAt = fakeTimeProvider.startTime,
             name = validItemCreationAttributes.name,
             colorIndex = validItemCreationAttributes.colorIndex,
             customOrder = null,
             libraryFolderId = null,
-        ).apply {
-            setId(intToUUID(2)) // id 1 is already used by the folder
-            setCreatedAt(fakeTimeProvider.startTime)
-            setModifiedAt(fakeTimeProvider.startTime)
-        })
+        ))
     }
 
     @Test
@@ -113,15 +112,14 @@ class AddItemUseCaseTest {
         val addedItem = fakeLibraryRepository.items.first().first()
 
         val expectedItem = LibraryItem(
+            id = intToUUID(2), // id 1 is already used by the folder
+            createdAt = fakeTimeProvider.startTime,
+            modifiedAt = fakeTimeProvider.startTime,
             name = validItemCreationAttributes.name,
             colorIndex = validItemCreationAttributes.colorIndex,
             customOrder = null,
             libraryFolderId = intToUUID(1),
-        ).apply {
-            setId(intToUUID(2)) // id 1 is already used by the folder
-            setCreatedAt(fakeTimeProvider.startTime)
-            setModifiedAt(fakeTimeProvider.startTime)
-        }
+        )
 
         assertThat(addedItem).isEqualTo(expectedItem)
 

@@ -34,6 +34,9 @@ import java.time.ZonedDateTime
 import java.util.UUID
 
 data class GoalInstance(
+    @ColumnInfo(name = "id") override val id: UUID,
+    @ColumnInfo(name = "created_at") override val createdAt: ZonedDateTime,
+    @ColumnInfo(name = "modified_at") override val modifiedAt: ZonedDateTime,
     @ColumnInfo(name="goal_description_id") val goalDescriptionId: UUID,
     @ColumnInfo(name="start_timestamp") val startTimestamp: ZonedDateTime,
     @ColumnInfo(name="end_timestamp") val endTimestamp: ZonedDateTime?,

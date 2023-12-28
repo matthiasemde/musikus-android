@@ -21,9 +21,13 @@ import app.musikus.database.entities.LibraryItemModel
 import app.musikus.database.entities.LibraryItemUpdateAttributes
 import app.musikus.database.entities.SoftDeleteModelDisplayAttributes
 import kotlinx.coroutines.flow.Flow
+import java.time.ZonedDateTime
 import java.util.UUID
 
 data class LibraryItem(
+    @ColumnInfo(name = "id") override val id: UUID,
+    @ColumnInfo(name = "created_at") override val createdAt: ZonedDateTime,
+    @ColumnInfo(name = "modified_at") override val modifiedAt: ZonedDateTime,
     @ColumnInfo(name = "name") val name: String = "Test",
     @ColumnInfo(name = "color_index") val colorIndex: Int,
     @ColumnInfo(name = "library_folder_id") val libraryFolderId: UUID?,
