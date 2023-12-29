@@ -57,6 +57,13 @@ object TestAppModule {
     }
 
     @Provides
+    fun provideFakeTimeProvider(
+        timeProvider: TimeProvider
+    ) : FakeTimeProvider {
+        return timeProvider as FakeTimeProvider
+    }
+
+    @Provides
     @Singleton
     fun provideIdProvider(): IdProvider {
         return FakeIdProvider()

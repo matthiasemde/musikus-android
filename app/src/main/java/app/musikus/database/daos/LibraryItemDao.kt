@@ -16,6 +16,7 @@ import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.Transaction
+import androidx.sqlite.db.SimpleSQLiteQuery
 import app.musikus.database.MusikusDatabase
 import app.musikus.database.entities.LibraryItemModel
 import app.musikus.database.entities.LibraryItemUpdateAttributes
@@ -61,7 +62,7 @@ data class LibraryItem(
 
 @Dao
 abstract class LibraryItemDao(
-    database: MusikusDatabase
+    private val database: MusikusDatabase
 ) : SoftDeleteDao<LibraryItemModel, LibraryItemUpdateAttributes, LibraryItem>(
     tableName = "library_item",
     database = database,
@@ -101,15 +102,20 @@ abstract class LibraryItemDao(
     )
     abstract override fun getAllAsFlow(): Flow<List<LibraryItem>>
 
+    override suspend fun clean(query: SimpleSQLiteQuery): Int {
+        return cleanItems()
+    }
     @Transaction
     @Query(
         "DELETE FROM library_item WHERE " +
             "deleted=1 " +
             "AND (NOT EXISTS (SELECT id FROM section WHERE library_item_id = library_item.id)) " +
             "AND (NOT EXISTS (SELECT id FROM goal_description_library_item_cross_ref WHERE library_item_id = library_item.id)) " +
-            "AND (datetime(modified_at) < datetime('now', '-1 month'));"
+            "AND (datetime(modified_at) < datetime(:now, '-1 month'));"
     )
-    abstract suspend fun clean() : Int
+    protected abstract suspend fun cleanItems(
+        now : ZonedDateTime = database.timeProvider.now()
+    ) : Int
 
 //    @Transaction
 //    @Query("SELECT * FROM library_item WHERE id=:id")

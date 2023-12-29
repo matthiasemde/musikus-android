@@ -47,12 +47,14 @@ android {
     compileOptions {
         // Flag to enable support for the new language APIs
         isCoreLibraryDesugaringEnabled = true
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
     }
 
+    testOptions { packagingOptions { jniLibs { useLegacyPackaging = true } } }
+
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8.toString()
+        jvmTarget = JavaVersion.VERSION_11.toString()
     }
 
     buildFeatures {
@@ -78,6 +80,7 @@ dependencies {
     val navVersion = "2.7.5"
     val daggerHiltVersion = "2.49"
     val kotlinCoroutineVersion = "1.7.3"
+    val mockkVersion = "1.13.8"
 
     implementation("androidx.navigation:navigation-runtime-ktx:$navVersion")
     implementation("androidx.legacy:legacy-support-v4:1.0.0")
@@ -158,8 +161,10 @@ dependencies {
     // Testing
     androidTestImplementation(platform("androidx.compose:compose-bom:$bomVersion"))
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:$kotlinCoroutineVersion")
-//    testImplementation("org.mockito:mockito-core:5.8.0")
-//    androidTestImplementation("org.mockito:mockito-android:5.8.0")
+    testImplementation("io.mockk:mockk:$mockkVersion")
+    testImplementation("io.mockk:mockk-agent:$mockkVersion")
+    androidTestImplementation("io.mockk:mockk-android:$mockkVersion")
+    androidTestImplementation("io.mockk:mockk-agent:$mockkVersion")
 
     // Local unit tests
     testImplementation("androidx.test:core:1.5.0")

@@ -19,5 +19,4 @@ class FakeTimeProvider : TimeProvider {
     fun advanceTimeBy(duration: Duration) {
         _currentDateTime = _currentDateTime.plus(duration.toJavaDuration())
     }
-
 }

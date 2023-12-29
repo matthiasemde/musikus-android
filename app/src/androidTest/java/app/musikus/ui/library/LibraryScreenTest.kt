@@ -35,10 +35,12 @@ import app.musikus.di.AppModule
 import app.musikus.ui.MainActivity
 import app.musikus.ui.MainViewModel
 import app.musikus.ui.Screen
+import app.musikus.utils.FakeTimeProvider
 import app.musikus.utils.LibraryFolderSortMode
 import app.musikus.utils.LibraryItemSortMode
 import app.musikus.utils.SortMode
 import app.musikus.utils.TestTags
+import app.musikus.utils.TimeProvider
 import com.google.android.material.composethemeadapter3.Mdc3Theme
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -46,17 +48,22 @@ import dagger.hilt.android.testing.UninstallModules
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import javax.inject.Inject
+import kotlin.time.Duration.Companion.seconds
 
 
 @HiltAndroidTest
 @UninstallModules(AppModule::class)
 class LibraryScreenTest {
 
+    @Inject lateinit var fakeTimeProvider: FakeTimeProvider
+
     @get:Rule(order = 0)
     val hiltRule = HiltAndroidRule(this)
 
     @get:Rule(order = 1)
     val composeRule = createAndroidComposeRule<MainActivity>()
+
 
     @Before
     fun setUp() {
@@ -196,6 +203,8 @@ class LibraryScreenTest {
             composeRule.onNodeWithTag(TestTags.ITEM_DIALOG_NAME_INPUT).performTextInput(name)
             composeRule.onNodeWithContentDescription("Color $color").performClick()
             composeRule.onNodeWithContentDescription("Create").performClick()
+
+            fakeTimeProvider.advanceTimeBy(1.seconds)
         }
 
         // Check if items are displayed in correct order
@@ -245,6 +254,8 @@ class LibraryScreenTest {
             composeRule.onNodeWithContentDescription("Folder").performClick()
             composeRule.onNodeWithTag(TestTags.FOLDER_DIALOG_NAME_INPUT).performTextInput(name)
             composeRule.onNodeWithContentDescription("Create").performClick()
+
+            fakeTimeProvider.advanceTimeBy(1.seconds)
         }
 
         // Check if items are displayed in correct order
