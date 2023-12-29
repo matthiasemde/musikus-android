@@ -10,6 +10,7 @@ package app.musikus.ui.library
 
 import android.content.Context
 import androidx.activity.compose.setContent
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextContains
@@ -26,6 +27,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTouchInput
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -69,7 +71,9 @@ class LibraryScreenTest {
     fun setUp() {
         hiltRule.inject()
         composeRule.activity.setContent {
-            val mainViewModel: MainViewModel = hiltViewModel()
+            val viewModel: MainViewModel = hiltViewModel()
+
+            val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
             val navController = rememberNavController()
             Mdc3Theme {
@@ -78,7 +82,10 @@ class LibraryScreenTest {
                     startDestination = Screen.Library.route
                 ) {
                     composable(Screen.Library.route) {
-                        LibraryScreen(mainViewModel = mainViewModel)
+                        Library(
+                            viewModel::onEvent,
+                            uiState
+                        )
                     }
                 }
             }
