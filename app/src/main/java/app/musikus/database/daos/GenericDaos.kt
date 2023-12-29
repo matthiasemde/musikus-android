@@ -335,7 +335,7 @@ abstract class SoftDeleteDao<
             query = "DELETE FROM $tableName WHERE " +
                 "deleted=1 " +
                 "AND (datetime(modified_at) < " +
-                    "datetime(${database.timeProvider.now().toDatabaseString()}, '-1 month')" +
+                    "datetime('${database.timeProvider.now().toDatabaseString()}', '-1 month')" +
                     ");"
         )
     ) : Int
