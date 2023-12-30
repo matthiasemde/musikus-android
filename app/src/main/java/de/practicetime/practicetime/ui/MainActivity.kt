@@ -23,6 +23,8 @@ import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
 import de.practicetime.practicetime.database.entities.Category
 import de.practicetime.practicetime.ui.intro.AppIntroActivity
+import de.practicetime.practicetime.utils.ExportDatabaseContract
+import de.practicetime.practicetime.utils.ImportDatabaseContract
 import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
@@ -50,6 +52,17 @@ class MainActivity : AppCompatActivity() {
 //            launchAppIntroFirstRun()
         }
         setTheme()
+
+        PracticeTime.exportLauncher = registerForActivityResult(
+            ExportDatabaseContract()
+        ) { PracticeTime.exportDatabaseCallback(applicationContext, it) }
+
+        PracticeTime.importLauncher = registerForActivityResult(
+            ImportDatabaseContract()
+        ) {
+            PracticeTime.importDatabaseCallback(applicationContext, it)
+        }
+
     }
 
     private fun launchAppIntroFirstRun() {

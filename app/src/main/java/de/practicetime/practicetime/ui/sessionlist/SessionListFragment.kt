@@ -27,6 +27,7 @@ import de.practicetime.practicetime.R
 import de.practicetime.practicetime.database.entities.SessionWithSectionsWithCategories
 import de.practicetime.practicetime.shared.setCommonToolbar
 import de.practicetime.practicetime.ui.activesession.ActiveSessionActivity
+import de.practicetime.practicetime.utils.ExportImportDialog
 import kotlinx.coroutines.Runnable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -46,6 +47,7 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
     private lateinit var sessionListCollapsingToolbarLayout: CollapsingToolbarLayout
 
     private lateinit var deleteSessionDialog: AlertDialog
+    private lateinit var exportImportDialog: ExportImportDialog
 
     private val selectedSessions = ArrayList<Pair<Int, SessionSummaryAdapter>>()
 
@@ -71,6 +73,9 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
 
         // create the dialog for deleting sessions
         initDeleteSessionDialog()
+
+        // initExportImport Dialog
+        exportImportDialog = ExportImportDialog(requireActivity())
 
         // initialize the sessions list
         initSessionList()
@@ -308,12 +313,14 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
     private fun resetToolbar() {
         sessionListToolbar.apply {
             menu?.clear()
-            setCommonToolbar(requireActivity(), this) {
-//                Place menu item click handler here
-//                when(it) {
-//                }
-            }
             inflateMenu(R.menu.sessions_list_menu_base)
+            setCommonToolbar(requireActivity(), this) {
+                when(it) {
+                    R.id.sessionsListToolbarImportExport -> {
+                        exportImportDialog.show()
+                    }
+                }
+            }
             navigationIcon = null
         }
         sessionListCollapsingToolbarLayout.background = null
