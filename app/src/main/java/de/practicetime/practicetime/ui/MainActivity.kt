@@ -23,7 +23,7 @@ import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
 import de.practicetime.practicetime.database.entities.Category
 import de.practicetime.practicetime.ui.intro.AppIntroActivity
-import de.practicetime.practicetime.utils.ExportDatabaseContract
+import de.practicetime.practicetime.utils.ExportContract
 import de.practicetime.practicetime.utils.ImportDatabaseContract
 import kotlinx.coroutines.launch
 
@@ -54,7 +54,7 @@ class MainActivity : AppCompatActivity() {
         setTheme()
 
         PracticeTime.exportLauncher = registerForActivityResult(
-            ExportDatabaseContract()
+            ExportContract()
         ) { PracticeTime.exportDatabaseCallback(applicationContext, it) }
 
         PracticeTime.importLauncher = registerForActivityResult(
@@ -62,6 +62,12 @@ class MainActivity : AppCompatActivity() {
         ) {
             PracticeTime.importDatabaseCallback(applicationContext, it)
         }
+
+        PracticeTime.csvExportLauncher = registerForActivityResult(
+            ExportContract()
+        ) { lifecycleScope.launch {
+            PracticeTime.exportSessionsAsCsvCallback(applicationContext, it)
+        } }
 
     }
 

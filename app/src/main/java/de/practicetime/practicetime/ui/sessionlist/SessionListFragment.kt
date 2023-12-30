@@ -319,6 +319,9 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
                     R.id.sessionsListToolbarImportExport -> {
                         exportImportDialog.show()
                     }
+                    R.id.sessionsListToolbarExportAsCsv -> {
+                        PracticeTime.exportSessionsAsCsv()
+                    }
                 }
             }
             navigationIcon = null

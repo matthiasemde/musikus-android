@@ -21,7 +21,7 @@ import com.google.android.material.button.MaterialButton
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
 
-class ExportDatabaseContract : ActivityResultContracts.CreateDocument() {
+class ExportContract : ActivityResultContracts.CreateDocument() {
     override fun createIntent(context: Context, input: String) =
         super.createIntent(context, input).apply {
             addCategory(Intent.CATEGORY_OPENABLE)
@@ -37,6 +37,7 @@ class ImportDatabaseContract : ActivityResultContracts.OpenDocument() {
 
         }
 }
+
 
 class ExportImportDialog(
     context: Activity,

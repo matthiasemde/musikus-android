@@ -11,4 +11,9 @@
         android:enabled="true"
         android:title="Backup"
         app:showAsAction="never" />
+    <item
+        android:id="@+id/sessionsListToolbarExportAsCsv"
+        android:enabled="true"
+        android:title="Export sessions"
+        app:showAsAction="never" />
 </menu>

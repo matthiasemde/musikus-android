@@ -19,7 +19,11 @@ import androidx.room.Room
 import de.practicetime.practicetime.database.PTDatabase
 import de.practicetime.practicetime.database.PTDatabaseMigrationOneToTwo
 import de.practicetime.practicetime.database.daos.*
+import kotlinx.coroutines.runBlocking
 import java.io.File
+import java.time.Instant
+import java.time.ZoneId
+import java.time.ZonedDateTime
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
@@ -32,6 +36,8 @@ class PracticeTime : Application() {
 
         var exportLauncher: ActivityResultLauncher<String>? = null
         var importLauncher: ActivityResultLauncher<Array<String>>? = null
+
+        var csvExportLauncher: ActivityResultLauncher<String>? = null
 
         // the database accessing objects of the application
         lateinit var categoryDao: CategoryDao
@@ -143,6 +149,34 @@ class PracticeTime : Application() {
 
                 // open database again
                 openDatabase(context)
+            }
+        }
+
+        fun exportSessionsAsCsv() {
+            csvExportLauncher?.launch("practice_sessions.csv")
+        }
+
+        suspend fun exportSessionsAsCsvCallback(context: Context, uri: Uri?) {
+            uri?.let { nonNullUri ->
+                // copy database
+                context.contentResolver.openOutputStream(nonNullUri)?.let { outputStream ->
+                    outputStream.write(
+                        "time/date;practice_duration;break_duration;rating;comment\n".toByteArray()
+                    )
+
+                    db.sessionDao.getAllWithSectionsWithCategories().forEach { sessionWithSectionsWithCategories ->
+                        val session = sessionWithSectionsWithCategories.session
+                        val duration = sessionWithSectionsWithCategories.sections.sumOf { it.section.duration ?: 0 }
+                        val dateTime = ZonedDateTime.ofInstant(Instant.ofEpochSecond(session.createdAt), ZoneId.systemDefault())
+                        outputStream.write(
+                            "$dateTime;$duration;${session.breakDuration};${session.rating};${session.comment}\n".toByteArray()
+                        )
+                    }
+
+                    outputStream.close()
+
+                    Toast.makeText(context, "Export successful", Toast.LENGTH_LONG).show()
+                }
             }
         }
     }
