@@ -442,37 +442,22 @@ class SessionDaoTest {
             ),
         ))
 
-        sessionDao.delete(listOf(
-            UUIDConverter.fromInt(2),
-            UUIDConverter.fromInt(3),
-        ))
+        sessionDao.delete(UUIDConverter.fromInt(2))
 
-        // advance time by close to a month
+        // advance time by a few days
+        fakeTimeProvider.advanceTimeBy((24 * 4).hours)
+
+        sessionDao.delete(UUIDConverter.fromInt(3))
+
+        // advance time by just under a month and clean items
         fakeTimeProvider.advanceTimeBy((24 * 28).hours)
 
-        // make sure cleaning does not delete items that are not yet old enough
-        sessionDao.clean()
-
-        // if restore works, the items weren't deleted
-        sessionDao.restore(listOf(
-            UUIDConverter.fromInt(2),
-            UUIDConverter.fromInt(3),
-        ))
-
-        sessionDao.delete(listOf(
-            UUIDConverter.fromInt(2),
-            UUIDConverter.fromInt(3),
-        ))
-
-        // advance time by more than a month
-        fakeTimeProvider.advanceTimeBy((24 * 32).hours)
-
-        // make sure cleaning does delete items that are old enough
         sessionDao.clean()
 
         val exception = assertThrows(IllegalArgumentException::class.java) {
             runBlocking {
-                // Restoring cleaned items should be impossible
+                // Restoring session with id 2 should be impossible
+                // session with id 3 should be restored
                 sessionDao.restore(
                     listOf(
                         UUIDConverter.fromInt(2),
@@ -483,10 +468,7 @@ class SessionDaoTest {
         }
 
         assertThat(exception.message).isEqualTo(
-            "Could not find the following id(s): [" +
-                    "00000000-0000-0000-0000-000000000002, " +
-                    "00000000-0000-0000-0000-000000000003" +
-                    "]"
+            "Could not find the following id(s): [00000000-0000-0000-0000-000000000002]"
         )
     }
 

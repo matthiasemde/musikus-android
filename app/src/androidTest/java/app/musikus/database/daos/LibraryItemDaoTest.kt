@@ -16,6 +16,8 @@ import app.musikus.database.UUIDConverter
 import app.musikus.database.entities.LibraryFolderModel
 import app.musikus.database.entities.LibraryItemModel
 import app.musikus.database.entities.LibraryItemUpdateAttributes
+import app.musikus.database.entities.SectionCreationAttributes
+import app.musikus.database.entities.SessionModel
 import app.musikus.di.AppModule
 import app.musikus.utils.FakeTimeProvider
 import com.google.common.truth.Truth.assertThat
@@ -514,34 +516,58 @@ class LibraryItemDaoTest {
                 name = "TestItem2",
                 colorIndex = 5,
                 libraryFolderId = Nullable(UUIDConverter.fromInt(1)),
+            ),
+            LibraryItemModel(
+                name = "TestItem3",
+                colorIndex = 8,
+                libraryFolderId = Nullable(UUIDConverter.fromInt(1)),
             )
         ))
 
+        database.sessionDao.insert(
+            SessionModel(
+                breakDuration = 0,
+                rating = 0,
+                comment = "",
+            ),
+            listOf(SectionCreationAttributes(
+                libraryItemId = Nullable(UUIDConverter.fromInt(2)),
+                startTimestamp = fakeTimeProvider.startTime,
+                duration = 1,
+            ))
+        )
+
         libraryItemDao.delete(listOf(
             UUIDConverter.fromInt(2),
-            UUIDConverter.fromInt(3)
+            UUIDConverter.fromInt(3),
         ))
 
-        // move to the next month
-        fakeTimeProvider.advanceTimeBy((24 * 32).hours)
+        // advance time by a few days
+        fakeTimeProvider.advanceTimeBy((24 * 4).hours)
+
+        libraryItemDao.delete(UUIDConverter.fromInt(4))
+
+        // advance time by just under a month and clean items
+        fakeTimeProvider.advanceTimeBy((24 * 28).hours)
 
         libraryItemDao.clean()
 
+        // Check if the items were cleaned correctly
         val exception = assertThrows(IllegalArgumentException::class.java) {
             runBlocking {
-                // Restoring cleaned items should be impossible
+                // Item with Id 2 should be still there because of the session
+                // Item with Id 3 should be impossible to restore because it is permanently deleted
+                // Item with Id 4 should should be still there because it was deleted less than a month ago
                 libraryItemDao.restore(listOf(
                     UUIDConverter.fromInt(2),
-                    UUIDConverter.fromInt(3)
+                    UUIDConverter.fromInt(3),
+                    UUIDConverter.fromInt(4),
                 ))
             }
         }
 
         assertThat(exception.message).isEqualTo(
-            "Could not find the following id(s): [" +
-                    "00000000-0000-0000-0000-000000000002, " +
-                    "00000000-0000-0000-0000-000000000003" +
-                    "]"
+            "Could not find the following id(s): [00000000-0000-0000-0000-000000000003]"
         )
     }
 }
