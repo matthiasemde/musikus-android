@@ -51,6 +51,7 @@ android {
         targetCompatibility = JavaVersion.VERSION_11
     }
 
+    // needed for mockk
     testOptions { packagingOptions { jniLibs { useLegacyPackaging = true } } }
 
     kotlinOptions {

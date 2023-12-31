@@ -103,9 +103,18 @@ abstract class SessionDao(
     @Transaction
     @RewriteQueriesToDropUnusedColumns
     @Query("SELECT * FROM session WHERE id=:sessionId AND deleted=0")
-    abstract fun getWithSectionsWithLibraryItemsAsFlow(
+    protected abstract suspend fun directGetWithSectionsWithLibraryItems(
         sessionId: UUID
-    ): Flow<SessionWithSectionsWithLibraryItems>
+    ): SessionWithSectionsWithLibraryItems?
+
+    suspend fun getWithSectionsWithLibraryItems(
+        sessionId: UUID
+    ): SessionWithSectionsWithLibraryItems {
+        return directGetWithSectionsWithLibraryItems(sessionId)
+            ?: throw IllegalArgumentException("Session with id $sessionId not found")
+    }
+
+
 
     @Transaction
     @RewriteQueriesToDropUnusedColumns
@@ -116,11 +125,11 @@ abstract class SessionDao(
     @Transaction
     @RewriteQueriesToDropUnusedColumns
     @Query("SELECT * FROM session " +
-            "WHERE datetime(:startTimestamp) < (SELECT min(datetime(start_timestamp)) FROM section WHERE section.session_id = session.id) " +
+            "WHERE datetime(:startTimestamp) <= (SELECT min(datetime(start_timestamp)) FROM section WHERE section.session_id = session.id) " +
             "AND datetime(:endTimestamp) > (SELECT min(datetime(start_timestamp)) FROM section WHERE section.session_id = session.id) " +
             "AND deleted=0"
     )
-    abstract fun get(
+    abstract fun getFromTimeframe(
         startTimestamp: ZonedDateTime,
         endTimestamp: ZonedDateTime
     ): Flow<List<SessionWithSectionsWithLibraryItems>>
