@@ -28,6 +28,8 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 
 /**
@@ -44,20 +46,20 @@ data class StatisticsContentUiState(
 )
 
 data class StatisticsCurrentMonthUiState(
-    val totalPracticeDuration: Int,
-    val averageDurationPerSession: Int,
-    val breakDurationPerHour: Int,
+    val totalPracticeDuration: Duration,
+    val averageDurationPerSession: Duration,
+    val breakDurationPerHour: Duration,
     val averageRatingPerSession: Float,
 )
 
 data class StatisticsPracticeDurationCardUiState(
     val lastSevenDayPracticeDuration: List<PracticeDurationPerDay>,
-    val totalPracticeDuration: Int,
+    val totalPracticeDuration: Duration,
 )
 
 data class PracticeDurationPerDay(
     val day: String,
-    val duration: Int,
+    val duration: Duration,
 )
 
 data class StatisticsGoalCardUiState(
@@ -99,14 +101,14 @@ class StatisticsViewModel @Inject constructor(
             session.startTimestamp.specificMonth == currentSpecificMonth
         }
         val totalPracticeDuration = currentMonthSessions.sumOf { (_, sections) ->
-            sections.sumOf { (section, _) -> section.duration }
-        }
+            sections.sumOf { (section, _) -> section.duration.inWholeSeconds }
+        }.seconds
         val averageDurationPerSession = currentMonthSessions.size.let {
-            if(it == 0) 0 else totalPracticeDuration / it
+            if(it == 0) 0.seconds else totalPracticeDuration / it
         }
         val breakDurationPerHour = currentMonthSessions.sumOf { (session, _) ->
-            session.breakDuration
-        }
+            session.breakDuration.inWholeSeconds
+        }.seconds
         val averageRatingPerSession = currentMonthSessions.size.let {
             if(it == 0) 0f else
             currentMonthSessions.sumOf { (session, _) ->
@@ -155,13 +157,15 @@ class StatisticsViewModel @Inject constructor(
             val dayIndex = getDayIndexOfWeek(day)
             PracticeDurationPerDay(
                 day = weekIndexToName(dayIndex)[0].toString(),
-                duration = groupedSessions[dayIndex]?.sumOf { (_, sections) ->
-                    sections.sumOf { (section, _) -> section.duration }
-                } ?: 0
+                duration = (groupedSessions[dayIndex]?.sumOf { (_, sections) ->
+                    sections.sumOf { (section, _) -> section.duration.inWholeSeconds }
+                } ?: 0).seconds
             )
         }
 
-        val totalPracticeDuration = lastSevenDayPracticeDuration.sumOf { it.duration }
+        val totalPracticeDuration = lastSevenDayPracticeDuration.sumOf {
+            it.duration.inWholeSeconds
+        }.seconds
 
         flow {
             if (_noSessionsForDurationCard) {
@@ -169,7 +173,7 @@ class StatisticsViewModel @Inject constructor(
                     StatisticsPracticeDurationCardUiState(
                     lastSevenDayPracticeDuration = lastSevenDayPracticeDuration.map { PracticeDurationPerDay(
                         day = it.day,
-                        duration = 0
+                        duration = 0.seconds
                     ) },
                     totalPracticeDuration = totalPracticeDuration,
                 )
@@ -204,8 +208,8 @@ class StatisticsViewModel @Inject constructor(
                 GoalWithProgress(
                     goal = goal,
                     progress = sections.sumOf { section ->
-                        section.duration
-                    }
+                        section.duration.inWholeSeconds
+                    }.seconds
                 )
             }
         }
@@ -228,7 +232,7 @@ class StatisticsViewModel @Inject constructor(
             if (_noSessionsForGoalCard) {
                 emit(StatisticsGoalCardUiState(lastGoals = goals.map { GoalWithProgress(
                     goal = it.goal,
-                    progress = 0
+                    progress = 0.seconds
                 )
                 }))
                 delay(350)

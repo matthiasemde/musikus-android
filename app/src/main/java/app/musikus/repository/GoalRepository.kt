@@ -23,6 +23,7 @@ import app.musikus.database.entities.GoalInstanceUpdateAttributes
 import app.musikus.utils.TimeProvider
 import kotlinx.coroutines.flow.Flow
 import java.time.ZonedDateTime
+import kotlin.time.Duration
 
 interface GoalRepository {
     val timeProvider: TimeProvider
@@ -36,13 +37,13 @@ interface GoalRepository {
         goalDescriptionCreationAttributes: GoalDescriptionCreationAttributes,
         startingTimeframe : ZonedDateTime = timeProvider.now(),
         libraryItems: List<LibraryItem>?,
-        target: Int,
+        target: Duration,
     )
 
     /** Edit */
     suspend fun editGoalTarget(
         goal: GoalInstance,
-        newTarget: Int,
+        newTarget: Duration,
     )
 
 
@@ -103,7 +104,7 @@ class GoalRepositoryImpl(
         goalDescriptionCreationAttributes: GoalDescriptionCreationAttributes,
         startingTimeframe : ZonedDateTime,
         libraryItems: List<LibraryItem>?,
-        target: Int,
+        target: Duration,
     ) = goalDescriptionDao.insert(
         goalDescription = GoalDescriptionModel(
             type = goalDescriptionCreationAttributes.type,
@@ -119,7 +120,7 @@ class GoalRepositoryImpl(
     private suspend fun createInstance(
         description: GoalDescription,
         timeframe: ZonedDateTime,
-        target: Int,
+        target: Duration,
     ) {
         goalInstanceDao.insert(
             description,
@@ -132,7 +133,7 @@ class GoalRepositoryImpl(
     /** Edit */
     override suspend fun editGoalTarget(
         goal: GoalInstance,
-        newTarget: Int,
+        newTarget: Duration,
     ) {
         goalInstanceDao.update(
             goal.id,

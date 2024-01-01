@@ -26,6 +26,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 data class SessionsForDaysForMonth (
     val specificMonth: Int,
@@ -34,7 +36,7 @@ data class SessionsForDaysForMonth (
 
 data class SessionsForDay (
     val specificDay: Int,
-    val totalPracticeDuration: Int,
+    val totalPracticeDuration: Duration,
     val sessions: List<SessionWithSectionsWithLibraryItems>
 )
 
@@ -103,7 +105,7 @@ class SessionsViewModel @Inject constructor(
         }
 
         var firstSessionOfDayIndex = 0
-        var totalPracticeDuration = 0
+        var totalPracticeDuration = 0.seconds
 
         val sessionsForDaysForMonth = mutableListOf<SessionsForDay>()
 
@@ -115,7 +117,9 @@ class SessionsViewModel @Inject constructor(
                 Pair(timestamp.specificDay, timestamp.specificMonth)
             }
 
-            val sessionPracticeDuration = session.sections.sumOf { it.section.duration }
+            val sessionPracticeDuration = session.sections.sumOf {
+                it.section.duration.inWholeSeconds
+            }.seconds
 
             // ...and compare them to the current day first.
             if(day == currentDay) {

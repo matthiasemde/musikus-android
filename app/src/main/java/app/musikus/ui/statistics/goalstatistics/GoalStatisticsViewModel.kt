@@ -15,7 +15,6 @@ import androidx.lifecycle.viewModelScope
 import app.musikus.Musikus
 import app.musikus.database.GoalDescriptionWithInstancesAndLibraryItems
 import app.musikus.database.GoalDescriptionWithLibraryItems
-import app.musikus.database.MusikusDatabase
 import app.musikus.database.daos.GoalInstance
 import app.musikus.database.entities.GoalPeriodUnit
 import app.musikus.database.entities.GoalType
@@ -42,6 +41,8 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import java.util.UUID
 import javax.inject.Inject
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 data class GoalStatisticsUiState(
     val contentUiState: GoalStatisticsContentUiState
@@ -73,8 +74,8 @@ data class GoalStatisticsHeaderUiState(
     val successRate: Pair<Int, Int>?,
 )
 data class GoalStatisticsBarChartUiState(
-    val target: Int,
-    val data: List<Pair<String, Int>>,
+    val target: Duration,
+    val data: List<Pair<String, Duration>>,
     val uniqueColor: Color?,
     val redraw: Boolean
 )
@@ -90,7 +91,7 @@ data class TimeframeWithGoalsWithProgress(
 
 data class GoalWithInstancesWithProgress(
     val goal: GoalDescriptionWithLibraryItems,
-    val instancesWithProgress: List<Pair<GoalInstance, Int>>,
+    val instancesWithProgress: List<Pair<GoalInstance, Duration>>,
 )
 
 @HiltViewModel
@@ -257,7 +258,7 @@ class GoalStatisticsViewModel @Inject constructor(
                 description = goal.description,
                 libraryItems = goal.libraryItems,
             ).map { sections ->
-                instance to sections.sumOf { it.duration }
+                instance to sections.sumOf { it.duration.inWholeSeconds }.seconds
             }
         // and combine them into a single flow with a list of pairs of goals and progress
         }) { goalInstancesWithSections ->
@@ -291,7 +292,7 @@ class GoalStatisticsViewModel @Inject constructor(
                             description = goalDescriptionWithInstancesAndLibraryItems.description,
                             libraryItems = goalDescriptionWithInstancesAndLibraryItems.libraryItems
                         ).map { sections ->
-                            sections.sumOf { it.duration } >= instance.target
+                            sections.sumOf { it.duration.inWholeSeconds }.seconds >= instance.target
                         }
                     }
                 ) { successes ->
@@ -373,7 +374,7 @@ class GoalStatisticsViewModel @Inject constructor(
         val goalsWithProgress = selectedGoal.instancesWithProgress
 
         GoalStatisticsBarChartUiState(
-            target = lastInstance?.target ?: 0,
+            target = lastInstance?.target ?: 0.seconds,
             data = barTimeframes.map { (start, end) ->
                 Pair(
                     start.musikusFormat(DateFormat.DAY_AND_MONTH),
@@ -381,7 +382,7 @@ class GoalStatisticsViewModel @Inject constructor(
                         goalInstance.startTimestamp.inLocalTimezone().let {
                             start <= it && it < end
                         }
-                    }?.let { (_, progress) -> progress } ?: 0
+                    }?.let { (_, progress) -> progress } ?: 0.seconds
                 )
             },
             uniqueColor = if(description.type == GoalType.ITEM_SPECIFIC) {

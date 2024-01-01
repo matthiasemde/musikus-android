@@ -320,11 +320,13 @@ fun StatisticsPracticeDurationCard(
                         .height(80.dp)
                         .weight(4f)
                 ) {
-                    val maxDuration = uiState.lastSevenDayPracticeDuration.maxOf { it.duration }
+                    val maxDurationSeconds = uiState.lastSevenDayPracticeDuration.maxOf { it.duration }.inWholeSeconds
 
                     uiState.lastSevenDayPracticeDuration.forEachIndexed { index, (day, duration) ->
                         val animatedColumnHeight by animateFloatAsState(
-                            targetValue = if (maxDuration == 0) 0f else (duration.toFloat() / maxDuration),
+                            targetValue =
+                                if (maxDurationSeconds == 0L) 0f
+                                else (duration.inWholeSeconds.toFloat() / maxDurationSeconds),
                             animationSpec = tween(
                                 durationMillis = 1500,
                                 delayMillis = 100 * index
@@ -447,7 +449,7 @@ fun StatisticsGoalCard(
                     uiState.lastGoals.forEachIndexed { index, (goal, progress) ->
                         Column(horizontalAlignment = CenterHorizontally) {
                             val animatedProgress by animateFloatAsState(
-                                targetValue = (progress.toFloat() / goal.instance.target).coerceAtMost(1f),
+                                targetValue = (progress.inWholeSeconds.toFloat() / goal.instance.target.inWholeSeconds).coerceAtMost(1f),
                                 animationSpec = tween(
                                     durationMillis = 1500,
                                     delayMillis = 100 * index

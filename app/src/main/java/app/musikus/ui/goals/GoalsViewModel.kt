@@ -37,14 +37,16 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 data class GoalWithProgress(
     val goal: GoalInstanceWithDescriptionWithLibraryItems,
-    val progress: Int,
+    val progress: Duration,
 )
 
 data class GoalDialogData(
-    val target: Int = 0,
+    val target: Duration = 0.seconds,
     val periodInPeriodUnits: Int = 0,
     val periodUnit: GoalPeriodUnit = GoalPeriodUnit.DEFAULT,
     val goalType: GoalType = GoalType.DEFAULT,
@@ -224,8 +226,8 @@ class GoalsViewModel @Inject constructor(
         combine(sections) { combinedGoalsWithSections ->
             combinedGoalsWithSections.associate { (goal, sections) ->
                 goal.instance.id to sections.sumOf { section ->
-                    section.duration
-                }
+                    section.duration.inWholeSeconds
+                }.seconds
             }
         }
     }.stateIn(
@@ -318,8 +320,8 @@ class GoalsViewModel @Inject constructor(
         val goalsWithProgress = sortedGoals.map { goal ->
             GoalWithProgress(
                 goal = goal,
-                progress = if (goal.description.description.paused) 0 else
-                    goalProgress[goal.instance.id] ?: 0,
+                progress = if (goal.description.description.paused) 0.seconds else
+                    goalProgress[goal.instance.id] ?: 0.seconds,
             )
         }
         GoalsContentUiState(
@@ -384,7 +386,7 @@ class GoalsViewModel @Inject constructor(
     fun showDialog(oneShot: Boolean) {
         _dialogData.update {
             GoalDialogData(
-                target = 0,
+                target = 0.seconds,
                 periodInPeriodUnits = 1,
                 periodUnit = GoalPeriodUnit.DAY,
                 goalType = GoalType.NON_SPECIFIC,
@@ -502,7 +504,7 @@ class GoalsViewModel @Inject constructor(
         }
     }
 
-    fun onTargetChanged(target: Int) {
+    fun onTargetChanged(target: Duration) {
         _dialogData.update { it?.copy(target = target) }
     }
 

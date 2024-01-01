@@ -30,6 +30,9 @@ import app.musikus.utils.TimeFormat
 import app.musikus.utils.getDurationString
 import java.io.FileDescriptor
 import java.util.Date
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 class RecorderService : Service() {
 
@@ -63,7 +66,7 @@ class RecorderService : Service() {
         if(fileDescriptor != null) {
             startRecording(fileDescriptor)
             createNotificationChannel()
-            startForeground(NOTIFICATION_ID, getNotification(durationSecs = 0))
+            startForeground(NOTIFICATION_ID, getNotification(duration = 0.seconds))
         }
         else
             Log.d("REC_SERVICE", "onStart: No valid file descriptor passed")
@@ -132,7 +135,7 @@ class RecorderService : Service() {
                     LocalBroadcastManager
                         .getInstance(this@RecorderService)
                         .sendBroadcast(intent)
-                    if(notificationCounter == 0) updateNotification(diff / 1000)
+                    if(notificationCounter == 0) updateNotification(diff.milliseconds)
                 }
                 notificationCounter = (notificationCounter + 1) % 5
                 recordingTimeHandler.postDelayed(this, 20L)
@@ -140,13 +143,13 @@ class RecorderService : Service() {
         }
     }
 
-    private fun updateNotification(durationSecs: Int) {
-        val notification: Notification = getNotification(durationSecs)
+    private fun updateNotification(duration: Duration) {
+        val notification: Notification = getNotification(duration)
         val mNotificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         mNotificationManager.notify(NOTIFICATION_ID, notification)
     }
 
-    private fun getNotification(durationSecs: Int) : Notification {
+    private fun getNotification(duration: Duration) : Notification {
         val resultIntent = Intent(this, ActiveSessionActivity::class.java)
         // Create the TaskStackBuilder for artificially creating
         // a back stack based on android:parentActivityName in AndroidManifest.xml
@@ -159,7 +162,7 @@ class RecorderService : Service() {
         return  NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_record)
             .setContentTitle(getString(R.string.recording_notification_settings_description))
-            .setContentText(getDurationString(durationSecs, TimeFormat.HMS_DIGITAL))
+            .setContentText(getDurationString(duration, TimeFormat.HMS_DIGITAL))
             .setContentIntent(resultPendingIntent)
             .setOnlyAlertOnce(true)
             .build()

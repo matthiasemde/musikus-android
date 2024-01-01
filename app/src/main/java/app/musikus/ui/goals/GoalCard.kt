@@ -10,7 +10,7 @@ package app.musikus.ui.goals
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateIntAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.scaleIn
 import androidx.compose.foundation.background
@@ -56,13 +56,15 @@ import app.musikus.utils.TimeProvider
 import app.musikus.utils.asString
 import app.musikus.utils.getDurationString
 import java.time.temporal.ChronoUnit
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 @Composable
 fun GoalCard(
     modifier: Modifier = Modifier,
     goal: GoalInstanceWithDescriptionWithLibraryItems,
-    progress: Int = 0,
-    progressOffset: Int = 0,
+    progress: Duration = 0.seconds,
+    progressOffset: Duration = 0.seconds,
     timeProvider: TimeProvider
 ) {
 
@@ -125,7 +127,7 @@ fun GoalCard(
                     val remainingTime = ChronoUnit.SECONDS.between(
                         timeProvider.now(),
                         goal.endTimestampInLocalTimezone,
-                    )
+                    ).seconds
 
                     Surface(
                         modifier = Modifier.padding(start = 8.dp),
@@ -138,7 +140,7 @@ fun GoalCard(
                             maxLines = 1,
                             text= stringResource(
                                 R.string.time_left,
-                                getDurationString(remainingTime.toInt(), TimeFormat.PRETTY_APPROX)
+                                getDurationString(remainingTime, TimeFormat.PRETTY_APPROX)
                             )
                         )
                     }
@@ -153,18 +155,21 @@ fun GoalCard(
                 )
 
                 /** ProgressBar */
-                val target = goal.instance.target
-                val animatedProgress by animateIntAsState(
-                    targetValue = progress + progressOffset,
+                val targetSeconds = goal.instance.target.inWholeSeconds
+                val animatedProgress by animateFloatAsState(
+                    targetValue = (progress + progressOffset)
+                        .inWholeSeconds
+                        .coerceAtMost(targetSeconds)
+                        .toFloat(),
                     animationSpec = spring(
                         dampingRatio = Spring.DampingRatioNoBouncy,
-                        stiffness = Spring.StiffnessHigh / goal.instance.target
+                        stiffness = Spring.StiffnessHigh / goal.instance.targetSeconds
                     ),
                     label = "animated goal progress"
                 )
 
-                val animatedProgressLeft = target - animatedProgress
-                val animatedProgressPercent = (animatedProgress.toFloat() / target.toFloat()).coerceIn(0f, 1f)
+                val animatedProgressLeft = targetSeconds - animatedProgress
+                val animatedProgressPercent = (animatedProgress / targetSeconds).coerceIn(0f, 1f)
 
                 Box(
                     modifier = Modifier
@@ -192,7 +197,7 @@ fun GoalCard(
                             Text(
                                 modifier = Modifier.padding(horizontal = 16.dp),
                                 text = getDurationString(
-                                    animatedProgress,
+                                    animatedProgress.toInt().seconds,
                                     TimeFormat.HUMAN_PRETTY,
                                     SCALE_FACTOR_FOR_SMALL_TEXT
                                 ).toString(),
@@ -203,7 +208,7 @@ fun GoalCard(
                             Text(
                                 modifier = Modifier.padding(horizontal = 16.dp),
                                 text = getDurationString(
-                                    animatedProgressLeft,
+                                    animatedProgressLeft.toInt().seconds,
                                     TimeFormat.HUMAN_PRETTY,
                                     SCALE_FACTOR_FOR_SMALL_TEXT
                                 ).toString(),

@@ -15,28 +15,30 @@ package app.musikus.database.entities
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
-import app.musikus.database.Nullable
+import androidx.room.Ignore
 import java.time.ZonedDateTime
 import java.util.UUID
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 private interface ISectionCreationAttributes : IBaseModelCreationAttributes {
-    val libraryItemId: Nullable<UUID>
-    val duration: Int
+    val libraryItemId: UUID
+    val duration: Duration
     val startTimestamp: ZonedDateTime
 }
 
 private interface ISectionUpdateAttributes : IBaseModelUpdateAttributes {
-    val duration: Int?
+    val duration: Duration?
 }
 
 data class SectionCreationAttributes(
-    override val libraryItemId: Nullable<UUID>,
-    override var duration: Int,
+    override val libraryItemId: UUID,
+    override var duration: Duration,
     override val startTimestamp: ZonedDateTime,
 ) : BaseModelCreationAttributes(), ISectionCreationAttributes
 
 data class SectionUpdateAttributes(
-    override val duration: Int? = null,
+    override val duration: Duration? = null,
 ) : BaseModelUpdateAttributes(), ISectionUpdateAttributes
 
 @Entity(
@@ -52,13 +54,32 @@ data class SectionUpdateAttributes(
             entity = LibraryItemModel::class,
             parentColumns = ["id"],
             childColumns = ["library_item_id"],
-            onDelete = ForeignKey.NO_ACTION
+            onDelete = ForeignKey.RESTRICT
         )
     ]
 )
 data class SectionModel (
-    @ColumnInfo(name="session_id", index = true) val sessionId: Nullable<UUID>,
-    @ColumnInfo(name="library_item_id", index = true) override val libraryItemId: Nullable<UUID>,
-    @ColumnInfo(name="duration") override var duration: Int,
+    @ColumnInfo(name="session_id", index = true) val sessionId: UUID,
+    @ColumnInfo(name="library_item_id", index = true) override val libraryItemId: UUID,
+    @ColumnInfo(name="duration_seconds") var durationSeconds: Int,
     @ColumnInfo(name="start_timestamp") override val startTimestamp: ZonedDateTime,
-) : BaseModel(), ISectionCreationAttributes, ISectionUpdateAttributes
+) : BaseModel(), ISectionCreationAttributes, ISectionUpdateAttributes {
+
+    @get:Ignore
+    override var duration: Duration
+        get() = durationSeconds.seconds
+        set(value) { durationSeconds = value.inWholeSeconds.toInt() }
+
+    @Ignore
+    constructor(
+        sessionId: UUID,
+        libraryItemId: UUID,
+        duration: Duration,
+        startTimestamp: ZonedDateTime,
+    ) : this(
+        sessionId = sessionId,
+        libraryItemId = libraryItemId,
+        durationSeconds = duration.inWholeSeconds.toInt(),
+        startTimestamp = startTimestamp
+    )
+}

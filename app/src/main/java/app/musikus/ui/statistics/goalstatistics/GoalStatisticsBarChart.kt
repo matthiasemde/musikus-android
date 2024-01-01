@@ -44,6 +44,11 @@ import app.musikus.utils.TimeFormat
 import app.musikus.utils.getDurationString
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.times
 
 @Composable
 fun GoalStatisticsBarChart(
@@ -77,7 +82,7 @@ fun GoalStatisticsBarChart(
 
     val scaleLines = remember {
         mutableMapOf<
-            Int,
+            Duration,
             Pair<
                 ScaleLineData,
                 Pair<
@@ -89,7 +94,7 @@ fun GoalStatisticsBarChart(
     }
 
     val chartMaxDuration = remember(uiState.data) {
-        uiState.data.maxOfOrNull { (_, duration) -> duration } ?: 0
+        uiState.data.maxOfOrNull { (_, duration) -> duration } ?: 0.seconds
     }
 
     val newScaleLines = remember(
@@ -98,34 +103,34 @@ fun GoalStatisticsBarChart(
         uiState.uniqueColor
     ) {
         when {
-            chartMaxDuration > 2 * 60 * 60 -> {
-                val hours = chartMaxDuration / 3600
+            chartMaxDuration > 2.hours -> {
+                val hours = chartMaxDuration.inWholeHours.toInt()
                 listOf(
-                    (hours + 1) * 3600,
-                    (hours + 1) * 1800 // * 3600 / 2
+                    (hours + 1).hours,
+                    (hours + 1) * 30.minutes
                 )
             }
 
-            chartMaxDuration > 1800 -> {
-                val halfHours = chartMaxDuration / 1800
+            chartMaxDuration > 30.minutes -> {
+                val halfHours = (chartMaxDuration.inWholeMinutes / 30).toInt()
                 listOf(
-                    (halfHours + 1) * 1800,
-                    (halfHours + 1) * 900 // * 1800 / 2
+                    (halfHours + 1) * 30.minutes,
+                    (halfHours + 1) * 15.minutes
                 )
             }
 
-            chartMaxDuration > 600 -> {
-                val tensOfMinutes = chartMaxDuration / 600
+            chartMaxDuration > 10.minutes -> {
+                val tensOfMinutes = (chartMaxDuration.inWholeMinutes / 10).toInt()
                 listOf(
-                    (tensOfMinutes + 1) * 600,
-                    (tensOfMinutes + 1) * 300 // * 600 / 2
+                    (tensOfMinutes + 1) * 10.minutes,
+                    (tensOfMinutes + 1) * 5.minutes
                 )
             }
 
             else -> {
                 listOf(
-                    10 * 60,
-                    5 * 60,
+                    10.minutes,
+                    5.minutes,
                 )
             }
         }.map {
@@ -139,7 +144,7 @@ fun GoalStatisticsBarChart(
                 labelColor = onSurfaceColor,
             )
         }.filter {
-            it.duration.toFloat() !in ((uiState.target * 0.8)..(uiState.target * 1.2))
+            it.duration !in ((uiState.target * 0.8)..(uiState.target * 1.2))
         }.plus(
             ScaleLineData(
                 label = textMeasurer.measure(
@@ -159,7 +164,7 @@ fun GoalStatisticsBarChart(
             .distinct()
             // filter out scale lines that are too close to the target
             .filter {
-                it.toFloat() !in ((uiState.target * 0.8)..(uiState.target * 1.2))
+                it !in ((uiState.target * 0.8)..(uiState.target * 1.2))
             }
             // and add the target back again since it was also filtered out
             .plus(uiState.target)
@@ -246,7 +251,7 @@ fun GoalStatisticsBarChart(
                     )
                 }
                 bar.animateTo(
-                    duration.toFloat(),
+                    duration.inWholeSeconds.toFloat(),
                     animationSpec = tween(durationMillis = if(uiState.redraw) 400 else 750)
                 )
             }
@@ -260,7 +265,7 @@ fun GoalStatisticsBarChart(
         animateFloatAsState(
             targetValue = if(
                 uiState.data[barIndex].second >= uiState.target &&
-                animatedDuration.value >= uiState.data[barIndex].second.toFloat() * 0.8
+                animatedDuration.value >= uiState.data[barIndex].second.inWholeSeconds.toFloat() * 0.8
             ) 1f else 0f,
             animationSpec = tween(durationMillis = 200),
             label = "bar-chart-check-mark-animation-$barIndex"
@@ -268,7 +273,7 @@ fun GoalStatisticsBarChart(
     }
 
     val animatedMaxDuration by animateFloatAsState(
-        targetValue = newScaleLines.keys.maxOf { it }.toFloat(),
+        targetValue = newScaleLines.keys.maxOf { it }.inWholeSeconds.toFloat(),
         animationSpec = tween(durationMillis = 1000),
         label = "bar-chart-max-duration-animation",
     )
@@ -296,7 +301,7 @@ fun GoalStatisticsBarChart(
         scaleLinesWithAnimatedColor.forEach { scaleLineData ->
             val lineHeight =
                 (size.height - yZero) -
-                (yMax * (scaleLineData.duration.toFloat() / animatedMaxDuration))
+                (yMax * (scaleLineData.duration.inWholeSeconds.toFloat() / animatedMaxDuration))
             drawLine(
                 color = scaleLineData.lineColor,
                 start = Offset(

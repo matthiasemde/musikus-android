@@ -36,6 +36,7 @@ import app.musikus.utils.inLocalTimezone
 import kotlinx.coroutines.flow.Flow
 import java.time.ZonedDateTime
 import java.util.UUID
+import kotlin.time.Duration
 
 data class GoalDescription(
     @ColumnInfo(name = "id") override val id: UUID,
@@ -146,7 +147,7 @@ abstract class GoalDescriptionDao(
         goalDescription: GoalDescriptionModel,
         startingTimeframe: ZonedDateTime = database.timeProvider.now(),
         libraryItemIds: List<UUID>?,
-        target: Int,
+        target: Duration,
     ) {
 
         insert(goalDescription)

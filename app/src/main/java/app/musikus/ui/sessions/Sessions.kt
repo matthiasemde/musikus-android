@@ -62,6 +62,7 @@ import app.musikus.utils.getDurationString
 import app.musikus.utils.musikusFormat
 import java.time.ZonedDateTime
 import java.util.UUID
+import kotlin.time.Duration
 
 @OptIn(
     ExperimentalMaterial3Api::class,
@@ -275,7 +276,7 @@ fun MonthHeader(
 @Composable
 fun DayHeader(
     timestamp: ZonedDateTime,
-    totalPracticeDuration: Int,
+    totalPracticeDuration: Duration,
 ) {
     Row(
         modifier = Modifier

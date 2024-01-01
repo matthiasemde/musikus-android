@@ -23,23 +23,28 @@ import app.musikus.database.entities.SectionUpdateAttributes
 import kotlinx.coroutines.flow.Flow
 import java.time.ZonedDateTime
 import java.util.UUID
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 data class Section(
     @ColumnInfo(name = "id") override val id: UUID,
     @ColumnInfo(name = "session_id") val sessionId: UUID,
     @ColumnInfo(name = "library_item_id") val libraryItemId: UUID,
-    @ColumnInfo(name = "duration") val duration: Int,
+    @ColumnInfo(name = "duration_seconds") val durationSeconds: Long,
     @ColumnInfo(name = "start_timestamp") val startTimestamp: ZonedDateTime,
 ) : BaseModelDisplayAttributes() {
+
+    val duration: Duration
+        get() = durationSeconds.seconds
 
     // necessary custom equals operator since default does not check super class properties
     override fun equals(other: Any?) =
         super.equals(other) &&
                 (other is Section) &&
-                (other.duration == duration)
+                (other.durationSeconds == durationSeconds)
 
     override fun hashCode() =
-        super.hashCode() * HASH_FACTOR + duration.hashCode()
+        super.hashCode() * HASH_FACTOR + durationSeconds.hashCode()
 }
 
 @Dao
@@ -48,7 +53,12 @@ abstract class SectionDao(
 ) : BaseDao<SectionModel, SectionUpdateAttributes, Section>(
     tableName = "section",
     database = database,
-    displayAttributes = listOf("session_id", "library_item_id", "duration", "start_timestamp")
+    displayAttributes = listOf(
+        "session_id",
+        "library_item_id",
+        "duration_seconds",
+        "start_timestamp"
+    )
 ) {
 
     /**

@@ -10,7 +10,6 @@ package app.musikus.ui.statistics.sessionstatistics
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import app.musikus.database.MusikusDatabase
 import app.musikus.database.SectionWithLibraryItem
 import app.musikus.database.SessionWithSectionsWithLibraryItems
 import app.musikus.database.daos.LibraryItem
@@ -47,6 +46,8 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import java.time.ZonedDateTime
 import javax.inject.Inject
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Ui state data classes
@@ -108,7 +109,7 @@ data class SessionStatisticsHeaderUiState(
     val seekBackwardEnabled: Boolean,
     val seekForwardEnabled: Boolean,
     val timeframe: Timeframe,
-    val totalPracticeDuration: Int,
+    val totalPracticeDuration: Duration,
 )
 
 data class SessionStatisticsBarChartUiState(
@@ -117,15 +118,15 @@ data class SessionStatisticsBarChartUiState(
 
 data class BarChartData(
     val barData: List<BarChartDatum>,
-    val maxDuration: Int,
+    val maxDuration: Duration,
     val itemSortMode: LibraryItemSortMode,
     val itemSortDirection: SortDirection,
 )
 
 data class BarChartDatum(
     val label: String,
-    val libraryItemsToDuration: Map<LibraryItem, Int>,
-    val totalDuration: Int,
+    val libraryItemsToDuration: Map<LibraryItem, Duration>,
+    val totalDuration: Duration,
 )
 
 data class SessionStatisticsPieChartUiState(
@@ -133,7 +134,7 @@ data class SessionStatisticsPieChartUiState(
 )
 
 data class PieChartData(
-    val libraryItemToDuration: Map<LibraryItem, Int>,
+    val libraryItemToDuration: Map<LibraryItem, Duration>,
     val itemSortMode: LibraryItemSortMode,
     val itemSortDirection: SortDirection
 )
@@ -231,12 +232,12 @@ class SessionStatisticsViewModel @Inject constructor(
 
     private val totalDuration = tabWithTimeframeWithFilteredSections.map { (_, sections) ->
         sections.sumOf { (_, sections) ->
-            sections.sumOf { (section, _) -> section.duration }
-        }
+            sections.sumOf { (section, _) -> section.duration.inWholeSeconds }
+        }.seconds
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = 0,
+        initialValue = 0.seconds,
     )
 
     private val sortedLibraryItemsWithSelectionAndDuration = combine(
@@ -249,7 +250,7 @@ class SessionStatisticsViewModel @Inject constructor(
         }.groupBy {
             it.libraryItem
         }.mapValues { (_, sections) ->
-            sections.sumOf { (section, _) -> section.duration }
+            sections.sumOf { (section, _) -> section.duration.inWholeSeconds }.seconds
         }
 
         itemsToDurationTimeFrame.keys.toList().sorted(
@@ -260,7 +261,7 @@ class SessionStatisticsViewModel @Inject constructor(
                 item,
                 item !in deselectedItems,
                 getDurationString(
-                    durationSeconds = itemsToDurationTimeFrame[item] ?: 0,
+                    duration = itemsToDurationTimeFrame[item] ?: 0.seconds,
                     format = TimeFormat.HUMAN_PRETTY
                 ).toString()
             )
@@ -319,7 +320,7 @@ class SessionStatisticsViewModel @Inject constructor(
             val libraryItemsToDurationInBar = sectionsInBar
                 .groupBy { it.libraryItem }
                 .mapValues { (_, sections) ->
-                    sections.sumOf { (section, _) -> section.duration }
+                    sections.sumOf { (section, _) -> section.duration.inWholeSeconds }.seconds
                 }
 
             BarChartDatum(
@@ -329,7 +330,7 @@ class SessionStatisticsViewModel @Inject constructor(
                     SessionStatisticsTab.MONTHS -> start.musikusFormat(DateFormat.MONTH_ABBREVIATED)
                 },
                 libraryItemsToDuration = libraryItemsToDurationInBar,
-                totalDuration = libraryItemsToDurationInBar.values.sumOf { it }
+                totalDuration = libraryItemsToDurationInBar.values.sumOf { it.inWholeSeconds }.seconds
             )
         }
 
@@ -357,7 +358,7 @@ class SessionStatisticsViewModel @Inject constructor(
             .flatten()
             .groupBy { it.libraryItem }
             .mapValues { (_, sections) ->
-                sections.sumOf { (section, _) -> section.duration }
+                sections.sumOf { (section, _) -> section.duration.inWholeSeconds }.seconds
             }
 
         PieChartData(
@@ -424,7 +425,7 @@ class SessionStatisticsViewModel @Inject constructor(
                         chartData = it.chartData.copy(
                             barData = it.chartData.barData.map { bar -> bar.copy(
                                 libraryItemsToDuration = emptyMap(),
-                                totalDuration = 0,
+                                totalDuration = 0.seconds,
                             )},
                         )
                     )})

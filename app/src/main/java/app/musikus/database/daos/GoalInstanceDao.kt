@@ -20,7 +20,6 @@ import androidx.room.Transaction
 import app.musikus.database.GoalInstanceWithDescription
 import app.musikus.database.GoalInstanceWithDescriptionWithLibraryItems
 import app.musikus.database.MusikusDatabase
-import app.musikus.database.Nullable
 import app.musikus.database.entities.GoalDescriptionModel
 import app.musikus.database.entities.GoalInstanceModel
 import app.musikus.database.entities.GoalInstanceUpdateAttributes
@@ -32,6 +31,8 @@ import app.musikus.utils.getStartOfWeek
 import kotlinx.coroutines.flow.Flow
 import java.time.ZonedDateTime
 import java.util.UUID
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 data class GoalInstance(
     @ColumnInfo(name = "id") override val id: UUID,
@@ -40,22 +41,25 @@ data class GoalInstance(
     @ColumnInfo(name="goal_description_id") val goalDescriptionId: UUID,
     @ColumnInfo(name="start_timestamp") val startTimestamp: ZonedDateTime,
     @ColumnInfo(name="end_timestamp") val endTimestamp: ZonedDateTime?,
-    @ColumnInfo(name="target") val target: Int,
+    @ColumnInfo(name="target_seconds") val targetSeconds: Long,
     @ColumnInfo(name="renewed") val renewed: Boolean,
 ) : TimestampModelDisplayAttributes() {
+
+    val target : Duration
+        get() = targetSeconds.seconds
 
     // necessary custom equals operator since default does not check super class properties
     override fun equals(other: Any?) =
         super.equals(other) &&
                 (other is GoalInstance) &&
                 (other.endTimestamp == endTimestamp) &&
-                (other.target == target) &&
+                (other.targetSeconds == targetSeconds) &&
                 (other.renewed == renewed)
 
     override fun hashCode() =
         ((super.hashCode() *
                 HASH_FACTOR + endTimestamp.hashCode()) *
-                HASH_FACTOR + target.hashCode()) *
+                HASH_FACTOR + targetSeconds.hashCode()) *
                 HASH_FACTOR + renewed.hashCode()
 
 }
@@ -82,7 +86,7 @@ abstract class GoalInstanceDao(
     suspend fun insert(
         goalDescription: GoalDescription,
         timeframe: ZonedDateTime,
-        target: Int,
+        target: Duration,
     ) {
         insert(
             goalDescriptionId = goalDescription.id,
@@ -95,7 +99,7 @@ abstract class GoalInstanceDao(
     suspend fun insert(
         goalDescription: GoalDescriptionModel,
         timeframe: ZonedDateTime,
-        target: Int,
+        target: Duration,
     ) {
         insert(
             goalDescriptionId = goalDescription.id,
@@ -110,7 +114,7 @@ abstract class GoalInstanceDao(
         goalDescriptionId: UUID,
         periodUnit: GoalPeriodUnit,
         timeframe: ZonedDateTime,
-        target: Int,
+        target: Duration,
     ) {
 
         // to find the correct starting point and period for the goal, we execute these steps:
@@ -127,7 +131,7 @@ abstract class GoalInstanceDao(
 
         super.insert(
             GoalInstanceModel(
-                goalDescriptionId = Nullable(goalDescriptionId),
+                goalDescriptionId = goalDescriptionId,
                 startTimestamp = start,
                 target = target
             )

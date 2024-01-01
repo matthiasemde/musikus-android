@@ -18,7 +18,6 @@ import androidx.room.Query
 import androidx.room.RewriteQueriesToDropUnusedColumns
 import androidx.room.Transaction
 import app.musikus.database.MusikusDatabase
-import app.musikus.database.Nullable
 import app.musikus.database.SessionWithSectionsWithLibraryItems
 import app.musikus.database.entities.SectionCreationAttributes
 import app.musikus.database.entities.SectionModel
@@ -28,15 +27,20 @@ import app.musikus.database.entities.SoftDeleteModelDisplayAttributes
 import kotlinx.coroutines.flow.Flow
 import java.time.ZonedDateTime
 import java.util.UUID
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 data class Session(
     @ColumnInfo(name = "id") override val id: UUID,
     @ColumnInfo(name = "created_at") override val createdAt: ZonedDateTime,
     @ColumnInfo(name = "modified_at") override val modifiedAt: ZonedDateTime,
-    @ColumnInfo(name = "break_duration") val breakDuration: Int,
+    @ColumnInfo(name = "break_duration_seconds") val breakDurationSeconds: Long,
     @ColumnInfo(name = "rating") val rating: Int,
     @ColumnInfo(name = "comment") val comment: String?,
 ) : SoftDeleteModelDisplayAttributes() {
+
+    val breakDuration: Duration
+        get() = breakDurationSeconds.seconds
 
     // necessary custom equals operator since default does not check super class properties
     override fun equals(other: Any?) =
@@ -88,7 +92,7 @@ abstract class SessionDao(
         insert(session)
         database.sectionDao.insert(sectionCreationAttributes.map {
             SectionModel(
-                sessionId = Nullable(session.id),
+                sessionId = session.id,
                 libraryItemId = it.libraryItemId,
                 duration = it.duration,
                 startTimestamp = it.startTimestamp

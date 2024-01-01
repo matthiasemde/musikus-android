@@ -30,13 +30,15 @@ import app.musikus.R
 import app.musikus.database.entities.SectionCreationAttributes
 import app.musikus.ui.activesession.ActiveSessionActivity
 import app.musikus.utils.TimeProvider
-import app.musikus.utils.secondsDurationToHoursMinSec
-import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
 import java.util.Date
 import java.util.UUID
 import javax.inject.Inject
 import kotlin.math.roundToInt
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 
 
 class SessionForegroundService @Inject constructor(
@@ -49,17 +51,17 @@ class SessionForegroundService @Inject constructor(
 
     var sessionActive = false               // keep track of whether a session is active
     // the sectionBuffer will keep track of all the section in the current session
-    var sectionBuffer = ArrayList<Pair<SectionCreationAttributes, Int>>()
+    var sectionBuffer = ArrayList<Pair<SectionCreationAttributes, Duration>>()
     var paused = false                      // flag if session is currently paused
     private var lastPausedState = false     // paused variable the last tick (to detect transition)
     private var pauseBeginTimestamp: Long = 0
-    private var pauseDurationBuffer = 0     // just a buffer to
-    var pauseDuration = 0                   // pause duration, ONLY for displaying on the fab, section pause duration is saved in sectionBuffer!
+    private var pauseDurationBuffer = 0.seconds     // just a buffer to
+    var pauseDuration = 0.seconds                   // pause duration, ONLY for displaying on the fab, section pause duration is saved in sectionBuffer!
     var currLibraryItemName = ""                   // the name of the active libraryItem
 
     var stopDialogTimestamp: Long = 0
 
-    var totalPracticeDuration = 0
+    var totalPracticeDuration = 0.seconds
 
     override fun onCreate() {
         // The service is being created
@@ -97,7 +99,7 @@ class SessionForegroundService @Inject constructor(
                         }
 
                         if (paused) {
-                            val timePassed = (now - pauseBeginTimestamp).toInt()
+                            val timePassed = (now - pauseBeginTimestamp).seconds
                             // Since Pairs<> are not mutable (but ArrayList is)
                             // we have to copy the element and replace the whole element in the ArrayList
                             sectionBuffer[sectionBuffer.lastIndex] =
@@ -111,7 +113,7 @@ class SessionForegroundService @Inject constructor(
                             first.duration = getDuration(first)
                         }
 
-                        totalPracticeDuration = 0
+                        totalPracticeDuration = 0.seconds
                         sectionBuffer.forEach { section ->
                             totalPracticeDuration += section.first.duration - section.second
                         }
@@ -131,7 +133,9 @@ class SessionForegroundService @Inject constructor(
      * updates the notification text continuously to show elapsed time
      */
     private fun updateNotification() {
-        val (h, m, s) = secondsDurationToHoursMinSec(totalPracticeDuration)
+        val h = totalPracticeDuration.inWholeHours
+        val m = (totalPracticeDuration - h.hours).inWholeMinutes
+        val s = (totalPracticeDuration - m.minutes).inWholeSeconds
         val title = getString(R.string.notification_title, h, m, s)
         val desc = if (paused) {
             getString(R.string.paused_practicing)
@@ -212,11 +216,11 @@ class SessionForegroundService @Inject constructor(
      * subtracts the time passed since stopDialogTimestamp from the last section
      */
     fun subtractStopDialogTime() {
-        val timePassed = (Date().time / 1000L) - stopDialogTimestamp
+        val timePassed = ((Date().time / 1000L) - stopDialogTimestamp).seconds
         if(paused) {
             // subtract from paused time
             sectionBuffer[sectionBuffer.lastIndex] =
-                sectionBuffer.last().copy(second = sectionBuffer.last().second - timePassed.toInt())
+                sectionBuffer.last().copy(second = sectionBuffer.last().second - timePassed)
         } else {
             // subtract from regular duration
 //            sectionBuffer.last().first.duration =
@@ -232,7 +236,7 @@ class SessionForegroundService @Inject constructor(
     private fun getDuration(section: SectionCreationAttributes) = ChronoUnit.SECONDS.between(
         section.startTimestamp,
         timeProvider.now()
-    ).toInt()
+    ).seconds
 
 
     override fun onUnbind(intent: Intent): Boolean {

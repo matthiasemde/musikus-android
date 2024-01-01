@@ -66,7 +66,8 @@ import javax.inject.Provider
     UUIDConverter::class,
     NullableUUIDConverter::class,
     NullableIntConverter::class,
-    ZonedDateTimeConverter::class
+    ZonedDateTimeConverter::class,
+//    DurationConverter::class
 )
 abstract class MusikusDatabase : RoomDatabase() {
     abstract val libraryItemDao : LibraryItemDao
@@ -172,6 +173,18 @@ class ZonedDateTimeConverter {
         return zonedDateTimeString?.let { ZonedDateTime.parse(it) }
     }
 }
+//
+//class DurationConverter {
+//    @TypeConverter
+//    fun fromDuration(duration: Duration?): Long? {
+//        return duration?.inWholeSeconds
+//    }
+//
+//    @TypeConverter
+//    fun toDuration(duration: Long?): Duration? {
+//        return duration?.seconds
+//    }
+//}
 
 object PTDatabaseMigrationOneToTwo : Migration(1,2) {
     /**

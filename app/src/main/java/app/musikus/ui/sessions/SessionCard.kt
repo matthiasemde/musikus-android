@@ -53,6 +53,7 @@ import app.musikus.utils.SCALE_FACTOR_FOR_SMALL_TEXT
 import app.musikus.utils.TimeFormat
 import app.musikus.utils.getDurationString
 import app.musikus.utils.musikusFormat
+import kotlin.time.Duration.Companion.seconds
 
 @Composable
 fun RatingBar(
@@ -89,7 +90,7 @@ fun SessionCard(
     val (session, sectionsWithLibraryItems) = sessionWithSectionsWithLibraryItems
 
     // compute the total practice time
-    var practiceDuration = 0
+    var practiceDuration = 0.seconds
     sectionsWithLibraryItems.forEach { (section, _) ->
         practiceDuration += section.duration
     }

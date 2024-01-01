@@ -53,25 +53,30 @@ import app.musikus.shared.ToggleButtonOption
 import app.musikus.shared.UUIDSelectionSpinnerOption
 import app.musikus.spacing
 import app.musikus.utils.TestTags
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 
 @Composable
 fun TimeInput(
-    value: Int,
-    onValueChanged: (Int) -> Unit,
+    value: Duration,
+    onValueChanged: (Duration) -> Unit,
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.Center
     ) {
-        var hours = (value / 3600).toString().padStart(2, '0')
-        var minutes = ((value % 3600) / 60).toString().padStart(2, '0')
+        var hours = value.inWholeHours.toString().padStart(2, '0')
+        var minutes = (value - value.inWholeHours.hours).inWholeMinutes.toString().padStart(2, '0')
 
         NumberInput(
             value = hours,
             onValueChange = {
                 hours = it
-                onValueChanged((hours.toIntOrNull() ?: 0) * 3600 +
-                        (minutes.toIntOrNull() ?: 0) * 60
+                onValueChanged(
+                    (hours.toIntOrNull() ?: 0).hours +
+                    (minutes.toIntOrNull() ?: 0).minutes
                 )
             },
             showLeadingZero = true,
@@ -87,8 +92,9 @@ fun TimeInput(
             value = minutes,
             onValueChange = {
                 minutes = it
-                onValueChanged((hours.toIntOrNull() ?: 0) * 3600 +
-                        (minutes.toIntOrNull() ?: 0) * 60
+                onValueChanged(
+                    (hours.toIntOrNull() ?: 0).hours +
+                    (minutes.toIntOrNull() ?: 0).minutes
                 )
             },
             showLeadingZero = true,
@@ -146,7 +152,7 @@ fun PeriodInput(
 fun GoalDialog(
     dialogData: GoalDialogData,
     libraryItems: List<LibraryItem>,
-    onTargetChanged: (Int) -> Unit,
+    onTargetChanged: (Duration) -> Unit,
     onPeriodChanged: (Int) -> Unit,
     onPeriodUnitChanged: (GoalPeriodUnit) -> Unit,
     onGoalTypeChanged: (GoalType) -> Unit,
@@ -179,7 +185,7 @@ fun GoalDialog(
 
             var confirmButtonEnabled = true
             TimeInput(dialogData.target, onTargetChanged)
-            confirmButtonEnabled = confirmButtonEnabled && dialogData.target > 0
+            confirmButtonEnabled = confirmButtonEnabled && dialogData.target > 0.seconds
 
             Spacer(modifier = Modifier.height(12.dp))
             PeriodInput(
@@ -271,8 +277,8 @@ fun GoalDialog(
 
 @Composable
 fun EditGoalDialog(
-    value: Int,
-    onValueChanged: (Int) -> Unit,
+    value: Duration,
+    onValueChanged: (Duration) -> Unit,
     onConfirmHandler: () -> Unit,
     onDismissHandler: () -> Unit,
 ) {

@@ -25,6 +25,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import java.time.temporal.ChronoUnit
 import kotlin.math.pow
+import kotlin.time.Duration.Companion.minutes
 
 suspend fun prepopulateDatabase(
     database: MusikusDatabase,
@@ -129,7 +130,7 @@ suspend fun prepopulateDatabase(
                     },
                 ),
                 if (goalDescriptionCreationAttributes.type == GoalType.NON_SPECIFIC) null else listOf(items.random()),
-                ((1..6).random() * 10 + 30) * 60
+                ((1..6).random() * 10 + 30).minutes
             )
             delay(10)
         }
@@ -138,7 +139,7 @@ suspend fun prepopulateDatabase(
 
         (0..80).map { sessionNum ->
             sessionNum to SessionCreationAttributes(
-                breakDuration = (5..20).random() * 60,
+                breakDuration = (5..20).random().minutes,
                 rating = (1..5).random(),
                 comment = "",
             )
@@ -146,7 +147,7 @@ suspend fun prepopulateDatabase(
             sessionRepository.add(
                 session,
                 (1..(1..5).random()).map { SectionCreationAttributes(
-                    libraryItemId = Nullable(items.random().id),
+                    libraryItemId = items.random().id,
                     startTimestamp = database.timeProvider.now().minus(
                         (
                                 (sessionNum / 2) * // two sessions per day initially
@@ -155,7 +156,7 @@ suspend fun prepopulateDatabase(
                                 ).toLong(),
                         ChronoUnit.SECONDS
                     ),
-                    duration = (10..20).random() * 60,
+                    duration = (10..20).random().minutes,
                 )
                 }
             )

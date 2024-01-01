@@ -36,6 +36,7 @@ import app.musikus.utils.sorted
 import kotlinx.coroutines.launch
 import kotlin.math.cos
 import kotlin.math.sin
+import kotlin.time.Duration.Companion.seconds
 
 
 @Composable
@@ -68,7 +69,7 @@ fun SessionStatisticsPieChart(
 
     val noData =
         libraryItemToDuration.isEmpty() ||
-                libraryItemToDuration.values.all { it == 0 }
+                libraryItemToDuration.values.all { it == 0.seconds }
 
     val animatedOpenCloseScaler by animateFloatAsState(
         targetValue = if (noData) 0f else 1f,
@@ -77,9 +78,9 @@ fun SessionStatisticsPieChart(
     )
 
     val itemsToMeasuredLabels = remember(libraryItemToDuration) {
-        val totalDuration = libraryItemToDuration.values.sum().toFloat()
+        val totalDuration = libraryItemToDuration.values.sumOf { it.inWholeSeconds }.toFloat()
         libraryItemToDuration.mapValues { (_, duration) ->
-            (duration / totalDuration * 100f).let {
+            (duration.inWholeSeconds / totalDuration * 100f).let {
                 if ( it.isNaN() || it < 5f) ""
                 else it.toInt().toString() + "%"
             }.let {
@@ -100,7 +101,7 @@ fun SessionStatisticsPieChart(
                 itemSortDirection
             )
             .onEach { item ->
-                val duration = libraryItemToDuration[item] ?: 0
+                val duration = libraryItemToDuration[item] ?: 0.seconds
 
                 val segment = segments[item] ?: Animatable(0f).also {
                     segments[item] = it
@@ -108,11 +109,11 @@ fun SessionStatisticsPieChart(
 
                 scope.launch {
                     val animationResult = segment.animateTo(
-                        duration.toFloat(),
+                        duration.inWholeSeconds.toFloat(),
                         animationSpec = tween(durationMillis = 1000),
                     )
 
-                    if (animationResult.endReason == AnimationEndReason.Finished && duration == 0) {
+                    if (animationResult.endReason == AnimationEndReason.Finished && duration == 0.seconds) {
                         segments.remove(item)
                     }
                 }

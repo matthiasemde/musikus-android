@@ -18,10 +18,12 @@ import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoField
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.days
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.minutes
 
 typealias Timeframe = Pair<ZonedDateTime, ZonedDateTime>
-
-const val SECONDS_PER_DAY = 60 * 60 * 24
 
 enum class TimeFormat {
 
@@ -136,19 +138,6 @@ fun Timeframe.musikusFormat() : String {
 }
 
 
-
-fun secondsDurationToHoursMinSec(totalSeconds: Int): Triple<Int, Int, Int> {
-    val hours =  totalSeconds / 3600
-    val minutes = (totalSeconds % 3600) / 60
-    val seconds = totalSeconds % 60
-
-    return Triple(hours, minutes, seconds)
-}
-
-fun secondsDurationToFullDays(seconds: Int): Int {
-    return seconds / SECONDS_PER_DAY
-}
-
 /**
  * Get the formatted string for a duration of seconds, e.g. "1h 32m"
  *
@@ -158,13 +147,15 @@ fun secondsDurationToFullDays(seconds: Int): Int {
  * TextUtils.concat() to preserve styling!
  * If you NEED a String, simply call .toString().
  *
- * @param durationSeconds the duration in seconds to be converted
+ * @param duration the duration in seconds to be converted
  * @param format one of TimeFormat.XXX variables, indicating the output format
  * @return A CharSequence (either a String or a SpannableString) with the final String.
  */
-fun getDurationString(durationSeconds: Int, format: TimeFormat, scale: Float = 0.6f): CharSequence {
-    val (hours, minutes, seconds) = secondsDurationToHoursMinSec(durationSeconds)
-    val days = secondsDurationToFullDays(durationSeconds)
+fun getDurationString(duration: Duration, format: TimeFormat, scale: Float = 0.6f): CharSequence {
+    val days = duration.inWholeDays
+    val hours = (duration - days.days).inWholeHours
+    val minutes = (duration - hours.hours).inWholeMinutes
+    val seconds = (duration - minutes.minutes).inWholeSeconds
 
     val spaceOrNot = when(format) {
         TimeFormat.HUMAN_PRETTY -> " "
@@ -177,9 +168,9 @@ fun getDurationString(durationSeconds: Int, format: TimeFormat, scale: Float = 0
             val str =
                 if (hours > 0 && minutes > 0) {
                     ("%dh$spaceOrNot%02dm").format(hours, minutes)
-                } else if (hours > 0 && minutes == 0) {
+                } else if (hours > 0L && minutes == 0L) {
                     "%dh".format(hours)
-                } else if (minutes == 0 && durationSeconds > 0) {
+                } else if (minutes == 0L && duration.inWholeSeconds > 0L) {
                     "<" + spaceOrNot + "1m"
                 } else {
                     ("%dm").format(minutes)

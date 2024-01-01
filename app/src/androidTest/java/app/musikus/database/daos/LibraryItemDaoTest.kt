@@ -526,14 +526,14 @@ class LibraryItemDaoTest {
 
         database.sessionDao.insert(
             SessionModel(
-                breakDuration = 0,
+                breakDuration = 0.seconds,
                 rating = 0,
                 comment = "",
             ),
             listOf(SectionCreationAttributes(
-                libraryItemId = Nullable(UUIDConverter.fromInt(2)),
+                libraryItemId = UUIDConverter.fromInt(2),
                 startTimestamp = fakeTimeProvider.startTime,
-                duration = 1,
+                duration = 1.seconds,
             ))
         )
 

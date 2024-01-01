@@ -41,10 +41,15 @@ import app.musikus.utils.TimeFormat
 import app.musikus.utils.getDurationString
 import app.musikus.utils.sorted
 import kotlinx.coroutines.launch
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.times
 
 data class ScaleLineData (
     val label: TextLayoutResult,
-    val duration: Int,
+    val duration: Duration,
     val lineColor: Color,
     val labelColor: Color,
     val target: Boolean = false,
@@ -77,7 +82,7 @@ fun SessionStatisticsBarChart(
 
     val noData = barData.all { barDatum ->
         barDatum.libraryItemsToDuration.isEmpty() ||
-                barDatum.libraryItemsToDuration.values.all { it == 0 }
+                barDatum.libraryItemsToDuration.values.all { it == 0.seconds }
     }
 
     val firstComposition = remember { mutableStateOf(true) }
@@ -97,38 +102,38 @@ fun SessionStatisticsBarChart(
         }
     }
 
-    val scaleLines = remember { mutableMapOf<Int, Animatable<Float, AnimationVector1D>>() }
+    val scaleLines = remember { mutableMapOf<Duration, Animatable<Float, AnimationVector1D>>() }
 
     val newScaleLines = remember(chartMaxDuration) {
         when {
-            chartMaxDuration > 2 * 60 * 60 -> {
-                val hours = chartMaxDuration / 3600
+            chartMaxDuration > 2.hours -> {
+                val hours = chartMaxDuration.inWholeHours.toInt()
                 listOf(
-                    (hours + 1) * 3600,
-                    (hours + 1) * 1800 // * 3600 / 2
+                    (hours + 1) * 1.hours,
+                    (hours + 1) * 30.minutes
                 )
             }
 
-            chartMaxDuration > 1800 -> {
-                val halfHours = chartMaxDuration / 1800
+            chartMaxDuration > 30.minutes -> {
+                val halfHours = (chartMaxDuration.inWholeMinutes / 30).toInt()
                 listOf(
-                    (halfHours + 1) * 1800,
-                    (halfHours + 1) * 900 // * 1800 / 2
+                    (halfHours + 1) * 30.minutes,
+                    (halfHours + 1) * 15.minutes
                 )
             }
 
-            chartMaxDuration > 600 -> {
-                val tensOfMinutes = chartMaxDuration / 600
+            chartMaxDuration > 10.minutes -> {
+                val tensOfMinutes = (chartMaxDuration.inWholeMinutes / 10).toInt()
                 listOf(
-                    (tensOfMinutes + 1) * 600,
-                    (tensOfMinutes + 1) * 300 // * 600 / 2
+                    (tensOfMinutes + 1) * 10.minutes,
+                    (tensOfMinutes + 1) * 5.minutes
                 )
             }
 
             else -> {
                 listOf(
-                    10 * 60,
-                    5 * 60,
+                    10.minutes,
+                    5.minutes,
                 )
             }
         }
@@ -194,7 +199,7 @@ fun SessionStatisticsBarChart(
                     itemSortDirection
                 )
                 .onEach { item ->
-                    val duration = libraryItemsToDuration[item] ?: 0
+                    val duration = libraryItemsToDuration[item] ?: 0.seconds
 
                     val segment = segments[item] ?: Animatable(0f).also {
                         segments[item] = it
@@ -202,11 +207,11 @@ fun SessionStatisticsBarChart(
 
                     scope.launch {
                         val animationResult = segment.animateTo(
-                            duration.toFloat(),
+                            duration.inWholeSeconds.toFloat(),
                             animationSpec = tween(durationMillis = 1000),
                         )
 
-                        if (animationResult.endReason == AnimationEndReason.Finished && duration == 0) {
+                        if (animationResult.endReason == AnimationEndReason.Finished && duration == 0.seconds) {
                             segments.remove(item)
                         }
                     }
@@ -219,7 +224,7 @@ fun SessionStatisticsBarChart(
     }
 
     val animatedChartMaxDuration by animateFloatAsState(
-        targetValue = newScaleLines.max().toFloat(),
+        targetValue = newScaleLines.max().inWholeSeconds.toFloat(),
         animationSpec = tween(durationMillis = 1000),
         label = "bar-chart-max-duration-animation",
     )
@@ -228,7 +233,7 @@ fun SessionStatisticsBarChart(
         animateFloatAsState(
             targetValue =
             if (animatedChartMaxDuration == 0f) 0f
-            else barDatum.totalDuration.toFloat(),
+            else barDatum.totalDuration.inWholeSeconds.toFloat(),
             animationSpec = tween(durationMillis = 1000),
             label = "bar-chart-max-duration-animation-${barIndex}",
         ).value
@@ -255,7 +260,7 @@ fun SessionStatisticsBarChart(
         scaleLinesWithAnimatedColor.forEach { scaleLineData ->
             val lineHeight =
                 (size.height - yZero) -
-                (yMax * (scaleLineData.duration.toFloat() / animatedChartMaxDuration))
+                (yMax * (scaleLineData.duration.inWholeSeconds.toFloat() / animatedChartMaxDuration))
             drawLine(
                 color = scaleLineData.lineColor,
                 start = Offset(
