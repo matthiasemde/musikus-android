@@ -83,13 +83,24 @@ abstract class SessionDao(
      * @Insert
       */
 
+    override suspend fun insert(row: SessionModel) {
+        throw NotImplementedError("Use insert(session: SessionModel, sectionCreationAttributes: List<SectionCreationAttributes>) instead")
+    }
+
+    override suspend fun insert(rows: List<SessionModel>) {
+        throw NotImplementedError("Use insert(session: SessionModel, sectionCreationAttributes: List<SectionCreationAttributes>) instead")
+    }
 
     @Transaction
     open suspend fun insert(
         session: SessionModel,
         sectionCreationAttributes: List<SectionCreationAttributes>
     ) {
-        insert(session)
+        if(sectionCreationAttributes.isEmpty()) {
+            throw IllegalArgumentException("Each session must include at least one section")
+        }
+
+        super.insert(listOf(session)) // insert of single session would call the overridden insert method
         database.sectionDao.insert(sectionCreationAttributes.map {
             SectionModel(
                 sessionId = session.id,

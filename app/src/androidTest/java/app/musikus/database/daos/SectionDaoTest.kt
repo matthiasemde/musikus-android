@@ -14,6 +14,7 @@ import app.musikus.database.MusikusDatabase
 import app.musikus.database.Nullable
 import app.musikus.database.UUIDConverter
 import app.musikus.database.entities.LibraryItemModel
+import app.musikus.database.entities.SectionCreationAttributes
 import app.musikus.database.entities.SectionModel
 import app.musikus.database.entities.SectionUpdateAttributes
 import app.musikus.database.entities.SessionModel
@@ -34,6 +35,7 @@ import org.junit.Rule
 import org.junit.Test
 import javax.inject.Inject
 import javax.inject.Named
+import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
@@ -69,11 +71,20 @@ class SectionDaoTest {
                     libraryFolderId = Nullable(null),
                 ),
             )
-            database.sessionDao.insert(SessionModel(
-                breakDuration = 5.minutes,
-                rating = 5,
-                comment = "TestComment",
-            ))
+            database.sessionDao.insert(
+                session = SessionModel(
+                    breakDuration = 5.minutes,
+                    rating = 5,
+                    comment = "Test comment",
+                ),
+                sectionCreationAttributes = listOf(
+                    SectionCreationAttributes(
+                        libraryItemId = UUIDConverter.fromInt(1),
+                        duration = 999.minutes, // make this section "impossible" to accidentally match
+                        startTimestamp = fakeTimeProvider.startTime.plus(999.days.toJavaDuration())
+                    )
+                )
+            )
         }
     }
 
@@ -90,7 +101,7 @@ class SectionDaoTest {
             SectionModel(
                 sessionId = UUIDConverter.fromInt(2),
                 libraryItemId = UUIDConverter.fromInt(1),
-                duration = 10.minutes,
+                duration = 15.minutes,
                 startTimestamp = fakeTimeProvider.startTime
             )
         ))
@@ -98,18 +109,25 @@ class SectionDaoTest {
         val sections = sectionDao.getAllAsFlow().first()
 
         assertThat(sections).containsExactly(
-            Section(
+            Section( // this is the section we had to create with the session
                 id = UUIDConverter.fromInt(3),
                 sessionId = UUIDConverter.fromInt(2),
                 libraryItemId = UUIDConverter.fromInt(1),
-                durationSeconds = 600,
-                startTimestamp = fakeTimeProvider.startTime,
+                durationSeconds = 999 * 60,
+                startTimestamp = fakeTimeProvider.startTime.plus(999.days.toJavaDuration()),
             ),
             Section(
                 id = UUIDConverter.fromInt(4),
                 sessionId = UUIDConverter.fromInt(2),
                 libraryItemId = UUIDConverter.fromInt(1),
                 durationSeconds = 600,
+                startTimestamp = fakeTimeProvider.startTime,
+            ),
+            Section(
+                id = UUIDConverter.fromInt(5),
+                sessionId = UUIDConverter.fromInt(2),
+                libraryItemId = UUIDConverter.fromInt(1),
+                durationSeconds = 900,
                 startTimestamp = fakeTimeProvider.startTime,
             )
         )
@@ -184,7 +202,7 @@ class SectionDaoTest {
             SectionModel(
                 sessionId = UUIDConverter.fromInt(2),
                 libraryItemId = UUIDConverter.fromInt(1),
-                duration = 10.minutes,
+                duration = 15.minutes,
                 startTimestamp = fakeTimeProvider.startTime
             )
         ))
@@ -194,10 +212,10 @@ class SectionDaoTest {
         // Update the sections
         sectionDao.update(
             listOf(
-                UUIDConverter.fromInt(3) to SectionUpdateAttributes(
+                UUIDConverter.fromInt(4) to SectionUpdateAttributes(
                     duration = 5.minutes,
                 ),
-                UUIDConverter.fromInt(4) to SectionUpdateAttributes(
+                UUIDConverter.fromInt(5) to SectionUpdateAttributes(
                     duration = 1.hours,
                 )
             )
@@ -207,15 +225,22 @@ class SectionDaoTest {
         val updatedSections = sectionDao.getAllAsFlow().first()
 
         assertThat(updatedSections).containsExactly(
-            Section(
+            Section( // this is the section we had to create with the session
                 id = UUIDConverter.fromInt(3),
+                sessionId = UUIDConverter.fromInt(2),
+                libraryItemId = UUIDConverter.fromInt(1),
+                durationSeconds = 999 * 60,
+                startTimestamp = fakeTimeProvider.startTime.plus(999.days.toJavaDuration()),
+            ),
+            Section(
+                id = UUIDConverter.fromInt(4),
                 sessionId = UUIDConverter.fromInt(2),
                 libraryItemId = UUIDConverter.fromInt(1),
                 durationSeconds = 300,
                 startTimestamp = fakeTimeProvider.startTime,
             ),
             Section(
-                id = UUIDConverter.fromInt(4),
+                id = UUIDConverter.fromInt(5),
                 sessionId = UUIDConverter.fromInt(2),
                 libraryItemId = UUIDConverter.fromInt(1),
                 durationSeconds = 3600,
@@ -263,58 +288,31 @@ class SectionDaoTest {
     }
 
     @Test
-    fun deleteSections() = runTest {
-        // Insert sections
-        sectionDao.insert(listOf(
-            SectionModel(
-                sessionId = UUIDConverter.fromInt(2),
-                libraryItemId = UUIDConverter.fromInt(1),
-                duration = 10.minutes,
-                startTimestamp = fakeTimeProvider.startTime
-            ),
-            SectionModel(
-                sessionId = UUIDConverter.fromInt(2),
-                libraryItemId = UUIDConverter.fromInt(1),
-                duration = 10.minutes,
-                startTimestamp = fakeTimeProvider.startTime
-            )
-        ))
-
-        // Delete the sections
-        sectionDao.delete(listOf(
-            UUIDConverter.fromInt(3),
-            UUIDConverter.fromInt(4)
-        ))
-
-        // Check if the sections were deleted correctly
-        val sections = sectionDao.getAllAsFlow().first()
-
-        assertThat(sections).isEmpty()
-    }
-
-    @Test
-    fun deleteSection() = runTest {
-        val sectionDaoSpy = spyk(sectionDao)
-
-        try {
-            sectionDaoSpy.delete(UUIDConverter.fromInt(2))
-        } catch (e: Exception) {
-            // Ignore
-        }
-
-        coVerify (exactly = 1) { sectionDaoSpy.delete(listOf(UUIDConverter.fromInt(2))) }
-    }
-
-    @Test
-    fun deleteNonExistentSection_throwsException() = runTest {
-        val exception = assertThrows(IllegalArgumentException::class.java) {
+    fun deleteSections_throwsNotImplementedError() = runTest {
+        val exception = assertThrows(NotImplementedError::class.java) {
             runBlocking {
-                sectionDao.delete(UUIDConverter.fromInt(0))
+                sectionDao.delete(listOf(
+                    UUIDConverter.fromInt(1),
+                    UUIDConverter.fromInt(2)
+                ))
             }
         }
 
         assertThat(exception.message).isEqualTo(
-            "Could not find section(s) with the following id(s): [00000000-0000-0000-0000-000000000000]"
+            "Sections are automatically deleted when their session is deleted"
+        )
+    }
+
+    @Test
+    fun deleteSection() = runTest {
+        val exception = assertThrows(NotImplementedError::class.java) {
+            runBlocking {
+                sectionDao.delete(UUIDConverter.fromInt(1))
+            }
+        }
+
+        assertThat(exception.message).isEqualTo(
+            "Sections are automatically deleted when their session is deleted"
         )
     }
 
@@ -331,37 +329,37 @@ class SectionDaoTest {
             SectionModel(
                 sessionId = UUIDConverter.fromInt(2),
                 libraryItemId = UUIDConverter.fromInt(1),
-                duration = 10.minutes,
+                duration = 15.minutes,
                 startTimestamp = fakeTimeProvider.startTime
             ),
             SectionModel(
                 sessionId = UUIDConverter.fromInt(2),
                 libraryItemId = UUIDConverter.fromInt(1),
-                duration = 10.minutes,
+                duration = 20.minutes,
                 startTimestamp = fakeTimeProvider.startTime
             ),
         ))
 
         // Get the sections
         val sections = sectionDao.getAsFlow(listOf(
-            UUIDConverter.fromInt(3),
-            UUIDConverter.fromInt(5)
+            UUIDConverter.fromInt(4),
+            UUIDConverter.fromInt(6)
         )).first()
 
         // Check if the sections were retrieved correctly
         assertThat(sections).containsExactly(
             Section(
-                id = UUIDConverter.fromInt(3),
+                id = UUIDConverter.fromInt(4),
                 sessionId = UUIDConverter.fromInt(2),
                 libraryItemId = UUIDConverter.fromInt(1),
                 durationSeconds = 600,
                 startTimestamp = fakeTimeProvider.startTime,
             ),
             Section(
-                id = UUIDConverter.fromInt(5),
+                id = UUIDConverter.fromInt(6),
                 sessionId = UUIDConverter.fromInt(2),
                 libraryItemId = UUIDConverter.fromInt(1),
-                durationSeconds = 600,
+                durationSeconds = 1200,
                 startTimestamp = fakeTimeProvider.startTime,
             )
         )
@@ -406,7 +404,7 @@ class SectionDaoTest {
         ))
 
         // Check if the section exists
-        assertThat(sectionDao.exists(UUIDConverter.fromInt(3))).isTrue()
+        assertThat(sectionDao.exists(UUIDConverter.fromInt(4))).isTrue()
     }
 
     @Test
@@ -453,14 +451,14 @@ class SectionDaoTest {
         // Check if the sections were retrieved correctly
         assertThat(sections).containsExactly(
             Section(
-                id = UUIDConverter.fromInt(4),
+                id = UUIDConverter.fromInt(5),
                 sessionId = UUIDConverter.fromInt(2),
                 libraryItemId = UUIDConverter.fromInt(1),
                 durationSeconds = 300,
                 startTimestamp = fakeTimeProvider.startTime.plus(5.minutes.toJavaDuration()),
             ),
             Section(
-                id = UUIDConverter.fromInt(5),
+                id = UUIDConverter.fromInt(6),
                 sessionId = UUIDConverter.fromInt(2),
                 libraryItemId = UUIDConverter.fromInt(1),
                 durationSeconds = 300,
@@ -490,30 +488,30 @@ class SectionDaoTest {
             SectionModel(
                 sessionId = UUIDConverter.fromInt(2),
                 libraryItemId = UUIDConverter.fromInt(1),
-                duration = 5.minutes,
+                duration = 1.minutes,
                 startTimestamp = fakeTimeProvider.startTime
             ),
             SectionModel(
                 sessionId = UUIDConverter.fromInt(2),
                 libraryItemId = UUIDConverter.fromInt(1),
-                duration = 5.minutes,
+                duration = 2.minutes,
                 startTimestamp = fakeTimeProvider.startTime.plus(5.minutes.toJavaDuration())
             ),
             SectionModel(
                 sessionId = UUIDConverter.fromInt(2),
-                libraryItemId = UUIDConverter.fromInt(4),
-                duration = 5.minutes,
+                libraryItemId = UUIDConverter.fromInt(5),
+                duration = 3.minutes,
                 startTimestamp = fakeTimeProvider.startTime.plus(7.minutes.toJavaDuration())
             ),
             SectionModel(
                 sessionId = UUIDConverter.fromInt(2),
-                libraryItemId = UUIDConverter.fromInt(3),
-                duration = 5.minutes,
+                libraryItemId = UUIDConverter.fromInt(4),
+                duration = 4.minutes,
                 startTimestamp = fakeTimeProvider.startTime.plus(10.minutes.toJavaDuration())
             ),
             SectionModel(
                 sessionId = UUIDConverter.fromInt(2),
-                libraryItemId = UUIDConverter.fromInt(3),
+                libraryItemId = UUIDConverter.fromInt(4),
                 duration = 5.minutes,
                 startTimestamp = fakeTimeProvider.startTime.plus(15.minutes.toJavaDuration())
             )
@@ -525,24 +523,24 @@ class SectionDaoTest {
             endTimestamp = fakeTimeProvider.startTime.plus(15.minutes.toJavaDuration()),
             itemIds = listOf(
                 UUIDConverter.fromInt(1),
-                UUIDConverter.fromInt(3),
+                UUIDConverter.fromInt(4),
             )
         ).first()
 
         // Check if the sections were retrieved correctly
         assertThat(sections).containsExactly(
             Section(
-                id = UUIDConverter.fromInt(6),
+                id = UUIDConverter.fromInt(7),
                 sessionId = UUIDConverter.fromInt(2),
                 libraryItemId = UUIDConverter.fromInt(1),
-                durationSeconds = 300,
+                durationSeconds = 120,
                 startTimestamp = fakeTimeProvider.startTime.plus(5.minutes.toJavaDuration()),
             ),
             Section(
-                id = UUIDConverter.fromInt(8),
+                id = UUIDConverter.fromInt(9),
                 sessionId = UUIDConverter.fromInt(2),
                 libraryItemId = UUIDConverter.fromInt(3),
-                durationSeconds = 300,
+                durationSeconds = 240,
                 startTimestamp = fakeTimeProvider.startTime.plus(10.minutes.toJavaDuration()),
             )
         )

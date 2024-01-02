@@ -74,6 +74,18 @@ abstract class SectionDao(
     }
 
     /**
+     * @Delete
+     */
+
+    override suspend fun delete(id: UUID) {
+        throw NotImplementedError("Sections are automatically deleted when their session is deleted")
+    }
+
+    override suspend fun delete(ids: List<UUID>) {
+        throw NotImplementedError("Sections are automatically deleted when their session is deleted")
+    }
+
+    /**
      * @Queries
      */
 

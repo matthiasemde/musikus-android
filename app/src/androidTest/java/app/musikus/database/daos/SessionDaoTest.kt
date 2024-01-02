@@ -73,72 +73,64 @@ class SessionDaoTest {
         }
     }
 
-    @Test
-    fun insertSessions() = runTest {
-        sessionDao.insert(listOf(
-            SessionModel(
-                breakDuration = 10.seconds,
-                rating = 3,
-                comment = "Test comment",
-            ),
-            SessionModel(
-                breakDuration = 20.seconds,
-                rating = 2,
-                comment = "",
-            ),
-        ))
-
-        val sessions = sessionDao.getAllAsFlow().first()
-
-        assertThat(sessions).containsExactly(
-            Session(
-                id = UUIDConverter.fromInt(2),
-                breakDurationSeconds = 10,
-                rating = 3,
-                comment = "Test comment",
-                createdAt = fakeTimeProvider.startTime,
-                modifiedAt = fakeTimeProvider.startTime
-            ),
-            Session(
-                id = UUIDConverter.fromInt(3),
-                breakDurationSeconds = 20,
-                rating = 2,
-                comment = "",
-                createdAt = fakeTimeProvider.startTime,
-                modifiedAt = fakeTimeProvider.startTime
-            )
-        )
-    }
-
-    @Test
-    fun insertSession() = runTest {
+    private suspend fun insertSessionWithSection() {
         val session = SessionModel(
-            breakDuration = 10.seconds,
+            breakDuration = 10.minutes,
             rating = 3,
             comment = "Test comment",
         )
 
-        val sessionDaoSpy = spyk(sessionDao)
+        val sectionCreationAttributes = listOf(
+            SectionCreationAttributes(
+                libraryItemId = UUIDConverter.fromInt(1),
+                duration = 15.minutes,
+                startTimestamp = fakeTimeProvider.now(),
+            )
+        )
 
-        sessionDaoSpy.insert(session)
+        sessionDao.insert(
+            session,
+            sectionCreationAttributes
+        )
+    }
 
-        coVerify (exactly = 1) { sessionDaoSpy.insert(listOf(session)) }
+    @Test
+    fun insertSessions_throwsNotImplementedError() = runTest {
+        val exception = assertThrows(NotImplementedError::class.java) {
+            runBlocking {
+                sessionDao.insert(listOf(SessionModel(
+                    breakDuration = 10.seconds,
+                    rating = 3,
+                    comment = "Test comment"
+                )))
+            }
+        }
+
+        assertThat(exception.message).isEqualTo(
+            "Use insert(session: SessionModel, sectionCreationAttributes: List<SectionCreationAttributes>) instead"
+        )
+    }
+
+    @Test
+    fun insertSession_throwsNotImplementedError() = runTest {
+        val exception = assertThrows(NotImplementedError::class.java) {
+            runBlocking {
+                sessionDao.insert(SessionModel(
+                    breakDuration = 10.seconds,
+                    rating = 3,
+                    comment = "Test comment"
+                ))
+            }
+        }
+
+        assertThat(exception.message).isEqualTo(
+            "Use insert(session: SessionModel, sectionCreationAttributes: List<SectionCreationAttributes>) instead"
+        )
     }
 
     @Test
     fun updateSessions() = runTest {
-        sessionDao.insert(listOf(
-            SessionModel(
-                breakDuration = 10.seconds,
-                rating = 3,
-                comment = "Test comment"
-            ),
-            SessionModel(
-                breakDuration = 20.seconds,
-                rating = 2,
-                comment = "",
-            ),
-        ))
+        repeat(2) { insertSessionWithSection() }
 
         fakeTimeProvider.advanceTimeBy(1.seconds)
 
@@ -148,7 +140,7 @@ class SessionDaoTest {
                     rating = 5,
                     comment = "",
                 ),
-                UUIDConverter.fromInt(3) to SessionUpdateAttributes(
+                UUIDConverter.fromInt(4) to SessionUpdateAttributes(
                     rating = 1,
                     comment = "Edited comment",
                 ),
@@ -160,15 +152,15 @@ class SessionDaoTest {
         assertThat(sessions).containsExactly(
             Session(
                 id = UUIDConverter.fromInt(2),
-                breakDurationSeconds = 10,
+                breakDurationSeconds = 600,
                 rating = 5,
                 comment = "",
                 createdAt = fakeTimeProvider.startTime,
                 modifiedAt = fakeTimeProvider.startTime.plus(1.seconds.toJavaDuration())
             ),
             Session(
-                id = UUIDConverter.fromInt(3),
-                breakDurationSeconds = 20,
+                id = UUIDConverter.fromInt(4),
+                breakDurationSeconds = 600,
                 rating = 1,
                 comment = "Edited comment",
                 createdAt = fakeTimeProvider.startTime,
@@ -210,22 +202,11 @@ class SessionDaoTest {
 
     @Test
     fun deleteSessions() = runTest {
-        sessionDao.insert(listOf(
-            SessionModel(
-                breakDuration = 10.seconds,
-                rating = 3,
-                comment = "",
-            ),
-            SessionModel(
-                breakDuration = 20.seconds,
-                rating = 2,
-                comment = "",
-            ),
-        ))
+        repeat(2) { insertSessionWithSection() }
 
         sessionDao.delete(listOf(
             UUIDConverter.fromInt(2),
-            UUIDConverter.fromInt(3),
+            UUIDConverter.fromInt(4),
         ))
 
         val sessions = sessionDao.getAllAsFlow().first()
@@ -261,29 +242,18 @@ class SessionDaoTest {
 
     @Test
     fun restoreItems() = runTest {
-        sessionDao.insert(listOf(
-            SessionModel(
-                breakDuration = 10.seconds,
-                rating = 3,
-                comment = "",
-            ),
-            SessionModel(
-                breakDuration = 20.seconds,
-                rating = 2,
-                comment = "",
-            ),
-        ))
+        repeat(2) { insertSessionWithSection() }
 
         sessionDao.delete(listOf(
             UUIDConverter.fromInt(2),
-            UUIDConverter.fromInt(3),
+            UUIDConverter.fromInt(4),
         ))
 
         fakeTimeProvider.advanceTimeBy(1.seconds)
 
         sessionDao.restore(listOf(
                 UUIDConverter.fromInt(2),
-                UUIDConverter.fromInt(3),
+                UUIDConverter.fromInt(4),
         ))
 
         val sessions = sessionDao.getAllAsFlow().first()
@@ -291,17 +261,17 @@ class SessionDaoTest {
         assertThat(sessions).containsExactly(
             Session(
                 id = UUIDConverter.fromInt(2),
-                breakDurationSeconds = 10,
+                breakDurationSeconds = 600,
                 rating = 3,
-                comment = "",
+                comment = "Test comment",
                 createdAt = fakeTimeProvider.startTime,
                 modifiedAt = fakeTimeProvider.startTime.plus(1.seconds.toJavaDuration())
             ),
             Session(
-                id = UUIDConverter.fromInt(3),
-                breakDurationSeconds = 20,
-                rating = 2,
-                comment = "",
+                id = UUIDConverter.fromInt(4),
+                breakDurationSeconds = 600,
+                rating = 3,
+                comment = "Test comment",
                 createdAt = fakeTimeProvider.startTime,
                 modifiedAt = fakeTimeProvider.startTime.plus(1.seconds.toJavaDuration())
             )
@@ -338,43 +308,27 @@ class SessionDaoTest {
 
     @Test
     fun getSpecificSessions() = runTest {
-        sessionDao.insert(listOf(
-            SessionModel(
-                breakDuration = 10.seconds,
-                rating = 3,
-                comment = "",
-            ),
-            SessionModel(
-                breakDuration = 20.seconds,
-                rating = 4,
-                comment = "",
-            ),
-            SessionModel(
-                breakDuration = 30.seconds,
-                rating = 1,
-                comment = "",
-            ),
-        ))
+        repeat(3) { insertSessionWithSection() }
 
         val sessions = sessionDao.getAsFlow(listOf(
-                UUIDConverter.fromInt(4),
                 UUIDConverter.fromInt(2),
+                UUIDConverter.fromInt(6),
         )).first()
 
         assertThat(sessions).containsExactly(
             Session(
                 id = UUIDConverter.fromInt(2),
-                breakDurationSeconds = 10,
+                breakDurationSeconds = 600,
                 rating = 3,
-                comment = "",
+                comment = "Test comment",
                 createdAt = fakeTimeProvider.startTime,
                 modifiedAt = fakeTimeProvider.startTime
             ),
             Session(
-                id = UUIDConverter.fromInt(4),
-                breakDurationSeconds = 30,
-                rating = 1,
-                comment = "",
+                id = UUIDConverter.fromInt(6),
+                breakDurationSeconds = 600,
+                rating = 3,
+                comment = "Test comment",
                 createdAt = fakeTimeProvider.startTime,
                 modifiedAt = fakeTimeProvider.startTime
             )
@@ -411,13 +365,7 @@ class SessionDaoTest {
 
     @Test
     fun sessionExists() = runTest {
-        sessionDao.insert(
-            SessionModel(
-                breakDuration = 10.seconds,
-                rating = 3,
-                comment = "",
-            ),
-        )
+        insertSessionWithSection()
 
         assertThat(sessionDao.exists(UUIDConverter.fromInt(2))).isTrue()
     }
@@ -429,25 +377,14 @@ class SessionDaoTest {
 
     @Test
     fun cleanSessions() = runTest {
-        sessionDao.insert(listOf(
-            SessionModel(
-                breakDuration = 10.seconds,
-                rating = 3,
-                comment = "",
-            ),
-            SessionModel(
-                breakDuration = 20.seconds,
-                rating = 2,
-                comment = "",
-            ),
-        ))
+        repeat(2) { insertSessionWithSection() }
 
         sessionDao.delete(UUIDConverter.fromInt(2))
 
         // advance time by a few days
         fakeTimeProvider.advanceTimeBy(4.days)
 
-        sessionDao.delete(UUIDConverter.fromInt(3))
+        sessionDao.delete(UUIDConverter.fromInt(4))
 
         // advance time by just under a month and clean items
         fakeTimeProvider.advanceTimeBy(28.days)
@@ -461,7 +398,7 @@ class SessionDaoTest {
                 sessionDao.restore(
                     listOf(
                         UUIDConverter.fromInt(2),
-                        UUIDConverter.fromInt(3)
+                        UUIDConverter.fromInt(4)
                     )
                 )
             }
@@ -470,11 +407,14 @@ class SessionDaoTest {
         assertThat(exception.message).isEqualTo(
             "Could not find session(s) with the following id(s): [00000000-0000-0000-0000-000000000002]"
         )
+
+        // finally, check whether session 2's section was removed as per foreign key constraint
+        assertThat(database.sectionDao.exists(UUIDConverter.fromInt(3))).isFalse()
     }
 
     @Test fun insertSessionWithSections() = runTest {
         val session = SessionModel(
-            breakDuration = 10.seconds,
+            breakDuration = 10.minutes,
             rating = 3,
             comment = "Test comment",
         )
@@ -487,7 +427,7 @@ class SessionDaoTest {
             ),
             SectionCreationAttributes(
                 libraryItemId = UUIDConverter.fromInt(1),
-                duration = 10.minutes,
+                duration = 15.minutes,
                 startTimestamp = fakeTimeProvider.now(),
             )
         )
@@ -499,7 +439,7 @@ class SessionDaoTest {
         assertThat(sessions).containsExactly(
             Session(
                 id = UUIDConverter.fromInt(2),
-                breakDurationSeconds = 10,
+                breakDurationSeconds = 600,
                 rating = 3,
                 comment = "Test comment",
                 createdAt = fakeTimeProvider.startTime,
@@ -521,30 +461,9 @@ class SessionDaoTest {
                 id = UUIDConverter.fromInt(4),
                 sessionId = UUIDConverter.fromInt(2),
                 libraryItemId = UUIDConverter.fromInt(1),
-                durationSeconds = 600,
+                durationSeconds = 900,
                 startTimestamp = fakeTimeProvider.startTime,
             )
-        )
-    }
-
-    private suspend fun insertSessionWithSection() {
-        val session = SessionModel(
-            breakDuration = 10.seconds,
-            rating = 3,
-            comment = "",
-        )
-
-        val sectionCreationAttributes = listOf(
-            SectionCreationAttributes(
-                libraryItemId = UUIDConverter.fromInt(1),
-                duration = 60.seconds,
-                startTimestamp = fakeTimeProvider.now(),
-            )
-        )
-
-        sessionDao.insert(
-            session,
-            sectionCreationAttributes
         )
     }
 
@@ -558,9 +477,9 @@ class SessionDaoTest {
             SessionWithSectionsWithLibraryItems(
                 session = Session(
                     id = UUIDConverter.fromInt(2),
-                    breakDurationSeconds = 10,
+                    breakDurationSeconds = 600,
                     rating = 3,
-                    comment = "",
+                    comment = "Test comment",
                     createdAt = fakeTimeProvider.startTime,
                     modifiedAt = fakeTimeProvider.startTime
                 ),
@@ -570,7 +489,7 @@ class SessionDaoTest {
                             id = UUIDConverter.fromInt(3),
                             sessionId = UUIDConverter.fromInt(2),
                             libraryItemId = UUIDConverter.fromInt(1),
-                            durationSeconds = 60,
+                            durationSeconds = 900,
                             startTimestamp = fakeTimeProvider.startTime,
                         ),
                         libraryItem = LibraryItem(
@@ -590,7 +509,7 @@ class SessionDaoTest {
 
     @Test
     fun getWithSectionsWithLibraryItemsAsFlow() = runTest {
-        insertSessionWithSection()
+        repeat(2) { insertSessionWithSection() }
 
         val sessionWithSectionsWithLibraryItems = sessionDao.getWithSectionsWithLibraryItems(
             UUIDConverter.fromInt(2)
@@ -600,9 +519,9 @@ class SessionDaoTest {
             SessionWithSectionsWithLibraryItems(
                 session = Session(
                     id = UUIDConverter.fromInt(2),
-                    breakDurationSeconds = 10,
+                    breakDurationSeconds = 600,
                     rating = 3,
-                    comment = "",
+                    comment = "Test comment",
                     createdAt = fakeTimeProvider.startTime,
                     modifiedAt = fakeTimeProvider.startTime
                 ),
@@ -612,7 +531,7 @@ class SessionDaoTest {
                             id = UUIDConverter.fromInt(3),
                             sessionId = UUIDConverter.fromInt(2),
                             libraryItemId = UUIDConverter.fromInt(1),
-                            durationSeconds = 60,
+                            durationSeconds = 900,
                             startTimestamp = fakeTimeProvider.startTime,
                         ),
                         libraryItem = LibraryItem(
@@ -666,9 +585,9 @@ class SessionDaoTest {
             SessionWithSectionsWithLibraryItems(
                 session = Session(
                     id = UUIDConverter.fromInt(4),
-                    breakDurationSeconds = 10,
+                    breakDurationSeconds = 600,
                     rating = 3,
-                    comment = "",
+                    comment = "Test comment",
                     createdAt = fakeTimeProvider.startTime.plus(1.seconds.toJavaDuration()),
                     modifiedAt = fakeTimeProvider.startTime.plus(1.seconds.toJavaDuration())
                 ),
@@ -678,7 +597,7 @@ class SessionDaoTest {
                             id = UUIDConverter.fromInt(5),
                             sessionId = UUIDConverter.fromInt(4),
                             libraryItemId = UUIDConverter.fromInt(1),
-                            durationSeconds = 60,
+                            durationSeconds = 900,
                             startTimestamp = fakeTimeProvider.startTime.plus(1.seconds.toJavaDuration()),
                         ),
                         libraryItem = LibraryItem(
