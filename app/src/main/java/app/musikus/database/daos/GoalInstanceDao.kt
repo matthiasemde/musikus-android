@@ -20,14 +20,10 @@ import androidx.room.Transaction
 import app.musikus.database.GoalInstanceWithDescription
 import app.musikus.database.GoalInstanceWithDescriptionWithLibraryItems
 import app.musikus.database.MusikusDatabase
-import app.musikus.database.entities.GoalDescriptionModel
+import app.musikus.database.entities.GoalInstanceCreationAttributes
 import app.musikus.database.entities.GoalInstanceModel
 import app.musikus.database.entities.GoalInstanceUpdateAttributes
-import app.musikus.database.entities.GoalPeriodUnit
 import app.musikus.database.entities.TimestampModelDisplayAttributes
-import app.musikus.utils.getStartOfDay
-import app.musikus.utils.getStartOfMonth
-import app.musikus.utils.getStartOfWeek
 import kotlinx.coroutines.flow.Flow
 import java.time.ZonedDateTime
 import java.util.UUID
@@ -83,59 +79,24 @@ abstract class GoalInstanceDao(
      * @Insert
      */
 
-    suspend fun insert(
-        goalDescription: GoalDescription,
-        timeframe: ZonedDateTime,
-        target: Duration,
-    ) {
-        insert(
-            goalDescriptionId = goalDescription.id,
-            periodUnit = goalDescription.periodUnit,
-            timeframe = timeframe,
-            target = target
-        )
+    override suspend fun insert(row: GoalInstanceModel) {
+        throw NotImplementedError("Use insert(goalDescriptionId, periodUnit, timeframe, target) instead")
     }
 
-    suspend fun insert(
-        goalDescription: GoalDescriptionModel,
-        timeframe: ZonedDateTime,
-        target: Duration,
-    ) {
-        insert(
-            goalDescriptionId = goalDescription.id,
-            periodUnit = goalDescription.periodUnit,
-            timeframe = timeframe,
-            target = target
-        )
+    override suspend fun insert(rows: List<GoalInstanceModel>) {
+        throw NotImplementedError("Use insert(goalDescriptionId, periodUnit, timeframe, target) instead")
     }
 
-    // create a new instance of this goal, storing the target and progress during a single period
-    private suspend fun insert(
-        goalDescriptionId: UUID,
-        periodUnit: GoalPeriodUnit,
-        timeframe: ZonedDateTime,
-        target: Duration,
+    // create a new instance of this goal, storing the target for a single period
+    suspend fun insert(
+        descriptionId: UUID,
+        creationAttributes: GoalInstanceCreationAttributes,
     ) {
-
-        // to find the correct starting point and period for the goal, we execute these steps:
-        // 1. reset the time to the beginning of the current day
-        // 2. set the time frame to the beginning of the day, week or month
-        // 3. save the time in seconds as startTimestamp
-        // 4. then set the day to the end of the period according to the periodInPeriodUnits
-        // 5. calculate the period in seconds from the difference of the two timestamps
-        val start = when(periodUnit) {
-            GoalPeriodUnit.DAY -> getStartOfDay(dateTime = timeframe)
-            GoalPeriodUnit.WEEK -> getStartOfWeek(dateTime = timeframe)
-            GoalPeriodUnit.MONTH -> getStartOfMonth(dateTime = timeframe)
-        }
-
-        super.insert(
-            GoalInstanceModel(
-                goalDescriptionId = goalDescriptionId,
-                startTimestamp = start,
-                target = target
-            )
-        )
+        super.insert(listOf(GoalInstanceModel(
+                goalDescriptionId = descriptionId,
+                startTimestamp = creationAttributes.startTimestamp,
+                target = creationAttributes.target,
+        )))
     }
 
     /**

@@ -10,7 +10,6 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 private interface IGoalInstanceCreationAttributes : ITimestampModelCreationAttributes {
-    val goalDescriptionId: UUID
     val startTimestamp: ZonedDateTime
     val target: Duration
 }
@@ -22,7 +21,6 @@ private interface IGoalInstanceUpdateAttributes : ITimestampModelUpdateAttribute
 }
 
 data class GoalInstanceCreationAttributes(
-    override val goalDescriptionId: UUID,
     override val startTimestamp: ZonedDateTime,
     override val target: Duration,
 ) : TimestampModelCreationAttributes(), IGoalInstanceCreationAttributes
@@ -45,7 +43,7 @@ data class GoalInstanceUpdateAttributes(
     ]
 )
 data class GoalInstanceModel(
-    @ColumnInfo(name="goal_description_id", index = true) override val goalDescriptionId: UUID,
+    @ColumnInfo(name="goal_description_id", index = true) val goalDescriptionId: UUID,
     @ColumnInfo(name="start_timestamp") override val startTimestamp: ZonedDateTime,
     @ColumnInfo(name="end_timestamp") override var endTimestamp: ZonedDateTime? = null,
     @ColumnInfo(name="target_seconds") var targetSeconds: Long,

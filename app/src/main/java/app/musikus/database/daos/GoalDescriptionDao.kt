@@ -25,6 +25,7 @@ import app.musikus.database.MusikusDatabase
 import app.musikus.database.entities.GoalDescriptionLibraryItemCrossRefModel
 import app.musikus.database.entities.GoalDescriptionModel
 import app.musikus.database.entities.GoalDescriptionUpdateAttributes
+import app.musikus.database.entities.GoalInstanceCreationAttributes
 import app.musikus.database.entities.GoalPeriodUnit
 import app.musikus.database.entities.GoalProgressType
 import app.musikus.database.entities.GoalType
@@ -36,7 +37,6 @@ import app.musikus.utils.inLocalTimezone
 import kotlinx.coroutines.flow.Flow
 import java.time.ZonedDateTime
 import java.util.UUID
-import kotlin.time.Duration
 
 data class GoalDescription(
     @ColumnInfo(name="id") override val id: UUID,
@@ -137,6 +137,28 @@ abstract class GoalDescriptionDao(
      * @Insert
      */
 
+    override suspend fun insert(row: GoalDescriptionModel) {
+        throw NotImplementedError(
+            "Use overload insert(" +
+                    "goalDescription: GoalDescriptionModel, " +
+                    "startingTimeframe: ZonedDateTime, " +
+                    "libraryItemIds: List<UUID>?, " +
+                    "target: Duration" +
+                    ") instead"
+        )
+    }
+
+    override suspend fun insert(rows: List<GoalDescriptionModel>) {
+        throw NotImplementedError(
+            "Use overload insert(" +
+                    "goalDescription: GoalDescriptionModel, " +
+                    "startingTimeframe: ZonedDateTime, " +
+                    "libraryItemIds: List<UUID>?, " +
+                    "target: Duration" +
+                    ") instead"
+        )
+    }
+
     @Insert(onConflict = OnConflictStrategy.ABORT)
     abstract suspend fun insertGoalDescriptionLibraryItemCrossRef(
         crossRef: GoalDescriptionLibraryItemCrossRefModel
@@ -144,29 +166,27 @@ abstract class GoalDescriptionDao(
 
     @Transaction
     open suspend fun insert(
-        goalDescription: GoalDescriptionModel,
-        startingTimeframe: ZonedDateTime = database.timeProvider.now(),
+        description: GoalDescriptionModel,
+        instanceCreationAttributes: GoalInstanceCreationAttributes,
         libraryItemIds: List<UUID>?,
-        target: Duration,
     ) {
 
-        insert(goalDescription)
+        super.insert(listOf(description)) // insert of single description would call the overridden insert method
 
         // Create the first instance of the newly created goal description
         database.goalInstanceDao.insert(
-            goalDescription,
-            startingTimeframe,
-            target
+            description.id,
+            instanceCreationAttributes
         )
 
-        if(goalDescription.type == GoalType.NON_SPECIFIC) {
-            return  // don't add cross ref for non specific goals
+        if(description.type == GoalType.NON_SPECIFIC && !libraryItemIds.isNullOrEmpty()) {
+            throw IllegalArgumentException("Non-specific goals cannot have library items")
         }
 
         libraryItemIds?.forEach { libraryItemId ->
             insertGoalDescriptionLibraryItemCrossRef(
                 GoalDescriptionLibraryItemCrossRefModel(
-                    goalDescriptionId = goalDescription.id,
+                    goalDescriptionId = description.id,
                     libraryItemId = libraryItemId
                 )
             )

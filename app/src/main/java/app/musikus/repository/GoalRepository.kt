@@ -19,8 +19,13 @@ import app.musikus.database.daos.LibraryItem
 import app.musikus.database.entities.GoalDescriptionCreationAttributes
 import app.musikus.database.entities.GoalDescriptionModel
 import app.musikus.database.entities.GoalDescriptionUpdateAttributes
+import app.musikus.database.entities.GoalInstanceCreationAttributes
 import app.musikus.database.entities.GoalInstanceUpdateAttributes
+import app.musikus.database.entities.GoalPeriodUnit
 import app.musikus.utils.TimeProvider
+import app.musikus.utils.getStartOfDay
+import app.musikus.utils.getStartOfMonth
+import app.musikus.utils.getStartOfWeek
 import kotlinx.coroutines.flow.Flow
 import java.time.ZonedDateTime
 import kotlin.time.Duration
@@ -105,27 +110,45 @@ class GoalRepositoryImpl(
         startingTimeframe : ZonedDateTime,
         libraryItems: List<LibraryItem>?,
         target: Duration,
-    ) = goalDescriptionDao.insert(
-        goalDescription = GoalDescriptionModel(
-            type = goalDescriptionCreationAttributes.type,
-            repeat = goalDescriptionCreationAttributes.repeat,
-            periodInPeriodUnits = goalDescriptionCreationAttributes.periodInPeriodUnits,
-            periodUnit = goalDescriptionCreationAttributes.periodUnit,
-        ),
-        startingTimeframe = startingTimeframe,
-        libraryItemIds = libraryItems?.map { it.id },
-        target = target,
-    )
+    ) {
+        val start = when(goalDescriptionCreationAttributes.periodUnit) {
+            GoalPeriodUnit.DAY -> getStartOfDay(dateTime = startingTimeframe)
+            GoalPeriodUnit.WEEK -> getStartOfWeek(dateTime = startingTimeframe)
+            GoalPeriodUnit.MONTH -> getStartOfMonth(dateTime = startingTimeframe)
+        }
+
+        goalDescriptionDao.insert(
+            description = GoalDescriptionModel(
+                type = goalDescriptionCreationAttributes.type,
+                repeat = goalDescriptionCreationAttributes.repeat,
+                periodInPeriodUnits = goalDescriptionCreationAttributes.periodInPeriodUnits,
+                periodUnit = goalDescriptionCreationAttributes.periodUnit,
+            ),
+            instanceCreationAttributes = GoalInstanceCreationAttributes(
+                startTimestamp = start,
+                target = target
+            ),
+            libraryItemIds = libraryItems?.map { it.id },
+        )
+    }
 
     private suspend fun createInstance(
         description: GoalDescription,
         timeframe: ZonedDateTime,
         target: Duration,
     ) {
+        val start = when(description.periodUnit) {
+            GoalPeriodUnit.DAY -> getStartOfDay(dateTime = timeframe)
+            GoalPeriodUnit.WEEK -> getStartOfWeek(dateTime = timeframe)
+            GoalPeriodUnit.MONTH -> getStartOfMonth(dateTime = timeframe)
+        }
+
         goalInstanceDao.insert(
-            description,
-            timeframe,
-            target,
+            description.id,
+            GoalInstanceCreationAttributes(
+                startTimestamp = start,
+                target = target
+            )
         )
     }
 
