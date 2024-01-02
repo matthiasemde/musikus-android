@@ -62,7 +62,7 @@ import app.musikus.database.daos.LibraryItem
 import app.musikus.shared.conditional
 import app.musikus.shared.simpleVerticalScrollbar
 import app.musikus.spacing
-import app.musikus.utils.TimeFormat
+import app.musikus.utils.DurationFormat
 import app.musikus.utils.Timeframe
 import app.musikus.utils.getDurationString
 import app.musikus.utils.musikusFormat
@@ -162,7 +162,7 @@ fun SessionStatisticsHeader(
     seekBackwards: () -> Unit = {}
 ) = TimeframeSelectionHeader(
     timeframe = uiState.timeframe,
-    subtitle = "Total " + getDurationString(uiState.totalPracticeDuration, TimeFormat.HUMAN_PRETTY),
+    subtitle = "Total " + getDurationString(uiState.totalPracticeDuration, DurationFormat.HUMAN_PRETTY),
     seekBackwardEnabled = uiState.seekBackwardEnabled,
     seekForwardEnabled = uiState.seekForwardEnabled,
     seekForwards = seekForwards,

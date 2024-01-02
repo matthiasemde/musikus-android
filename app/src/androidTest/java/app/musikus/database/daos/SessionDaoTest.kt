@@ -34,7 +34,7 @@ import org.junit.Rule
 import org.junit.Test
 import javax.inject.Inject
 import javax.inject.Named
-import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
 
@@ -444,12 +444,12 @@ class SessionDaoTest {
         sessionDao.delete(UUIDConverter.fromInt(2))
 
         // advance time by a few days
-        fakeTimeProvider.advanceTimeBy((24 * 4).hours)
+        fakeTimeProvider.advanceTimeBy(4.days)
 
         sessionDao.delete(UUIDConverter.fromInt(3))
 
         // advance time by just under a month and clean items
-        fakeTimeProvider.advanceTimeBy((24 * 28).hours)
+        fakeTimeProvider.advanceTimeBy(28.days)
 
         sessionDao.clean()
 

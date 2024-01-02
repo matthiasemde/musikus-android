@@ -25,7 +25,7 @@ import kotlin.time.Duration.Companion.minutes
 
 typealias Timeframe = Pair<ZonedDateTime, ZonedDateTime>
 
-enum class TimeFormat {
+enum class DurationFormat {
 
     /** Format Time intelligently, e.g. "1h 30m" or "< 1m" */
     HUMAN_PRETTY,
@@ -151,25 +151,32 @@ fun Timeframe.musikusFormat() : String {
  * @param format one of TimeFormat.XXX variables, indicating the output format
  * @return A CharSequence (either a String or a SpannableString) with the final String.
  */
-fun getDurationString(duration: Duration, format: TimeFormat, scale: Float = 0.6f): CharSequence {
+fun getDurationString(duration: Duration, format: DurationFormat, scale: Float = 0.6f): CharSequence {
     val days = duration.inWholeDays
-    val hours = (duration - days.days).inWholeHours
-    val minutes = (duration - hours.hours).inWholeMinutes
-    val seconds = (duration - minutes.minutes).inWholeSeconds
+    var remainingDuration = duration - days.days
+
+    val hours = (remainingDuration).inWholeHours
+    val totalHours = days * 24 + hours // total hours, including days
+    remainingDuration -= hours.hours
+
+    val minutes = (remainingDuration).inWholeMinutes
+    remainingDuration -= minutes.minutes
+
+    val seconds = (remainingDuration).inWholeSeconds
 
     val spaceOrNot = when(format) {
-        TimeFormat.HUMAN_PRETTY -> " "
-        TimeFormat.HUMAN_PRETTY_SHORT -> ""
+        DurationFormat.HUMAN_PRETTY -> " "
+        DurationFormat.HUMAN_PRETTY_SHORT -> ""
         else -> ""
     }
 
     when (format) {
-        TimeFormat.HUMAN_PRETTY, TimeFormat.HUMAN_PRETTY_SHORT -> {
+        DurationFormat.HUMAN_PRETTY, DurationFormat.HUMAN_PRETTY_SHORT -> {
             val str =
-                if (hours > 0 && minutes > 0) {
-                    ("%dh$spaceOrNot%02dm").format(hours, minutes)
-                } else if (hours > 0L && minutes == 0L) {
-                    "%dh".format(hours)
+                if (totalHours > 0 && minutes > 0) {
+                    ("%dh$spaceOrNot%02dm").format(totalHours, minutes)
+                } else if (totalHours > 0L && minutes == 0L) {
+                    "%dh".format(totalHours)
                 } else if (minutes == 0L && duration.inWholeSeconds > 0L) {
                     "<" + spaceOrNot + "1m"
                 } else {
@@ -178,25 +185,25 @@ fun getDurationString(duration: Duration, format: TimeFormat, scale: Float = 0.6
             return getSpannableHourMinShrunk(str, scale)
         }
 
-        TimeFormat.HMS_DIGITAL -> {
+        DurationFormat.HMS_DIGITAL -> {
             return "%02d:%02d:%02d".format(
-                hours,
+                totalHours,
                 minutes,
                 seconds
             )
         }
 
-        TimeFormat.MS_DIGITAL -> {
+        DurationFormat.MS_DIGITAL -> {
             return "%02d:%02d".format(
-                hours * 60 + minutes,
+                totalHours * 60 + minutes,
                 seconds
             )
         }
 
-        TimeFormat.HM_DIGITAL_OR_MIN_HUMAN -> {
+        DurationFormat.HM_DIGITAL_OR_MIN_HUMAN -> {
             return when {
-                hours > 0 -> {
-                    "%02d:%02d".format(hours, minutes)
+                totalHours > 0 -> {
+                    "%02d:%02d".format(totalHours, minutes)
                 }
                 minutes > 0 -> {
                     "%d min".format(minutes)
@@ -206,7 +213,7 @@ fun getDurationString(duration: Duration, format: TimeFormat, scale: Float = 0.6
                 }
             }
         }
-        TimeFormat.PRETTY_APPROX -> {
+        DurationFormat.PRETTY_APPROX -> {
             return when {
                 days > 1 -> {
                     // if time left is larger than a day, show the number of begun days
@@ -223,7 +230,7 @@ fun getDurationString(duration: Duration, format: TimeFormat, scale: Float = 0.6
             }
         }
 
-        TimeFormat.PRETTY_APPROX_SHORT -> {
+        DurationFormat.PRETTY_APPROX_SHORT -> {
             return when {
                 days > 1 -> {
                     // if time left is larger than a day, show the number of begun days

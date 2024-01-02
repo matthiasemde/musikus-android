@@ -51,7 +51,7 @@ import app.musikus.R
 import app.musikus.database.GoalInstanceWithDescriptionWithLibraryItems
 import app.musikus.database.entities.GoalType
 import app.musikus.utils.SCALE_FACTOR_FOR_SMALL_TEXT
-import app.musikus.utils.TimeFormat
+import app.musikus.utils.DurationFormat
 import app.musikus.utils.TimeProvider
 import app.musikus.utils.asString
 import app.musikus.utils.getDurationString
@@ -140,7 +140,7 @@ fun GoalCard(
                             maxLines = 1,
                             text= stringResource(
                                 R.string.time_left,
-                                getDurationString(remainingTime, TimeFormat.PRETTY_APPROX)
+                                getDurationString(remainingTime, DurationFormat.PRETTY_APPROX)
                             )
                         )
                     }
@@ -198,7 +198,7 @@ fun GoalCard(
                                 modifier = Modifier.padding(horizontal = 16.dp),
                                 text = getDurationString(
                                     animatedProgress.toInt().seconds,
-                                    TimeFormat.HUMAN_PRETTY,
+                                    DurationFormat.HUMAN_PRETTY,
                                     SCALE_FACTOR_FOR_SMALL_TEXT
                                 ).toString(),
                                 style = MaterialTheme.typography.titleMedium.copy(
@@ -209,7 +209,7 @@ fun GoalCard(
                                 modifier = Modifier.padding(horizontal = 16.dp),
                                 text = getDurationString(
                                     animatedProgressLeft.toInt().seconds,
-                                    TimeFormat.HUMAN_PRETTY,
+                                    DurationFormat.HUMAN_PRETTY,
                                     SCALE_FACTOR_FOR_SMALL_TEXT
                                 ).toString(),
                                 style = MaterialTheme.typography.titleMedium.copy(

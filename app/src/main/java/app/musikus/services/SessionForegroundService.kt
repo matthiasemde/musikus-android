@@ -134,8 +134,13 @@ class SessionForegroundService @Inject constructor(
      */
     private fun updateNotification() {
         val h = totalPracticeDuration.inWholeHours
-        val m = (totalPracticeDuration - h.hours).inWholeMinutes
-        val s = (totalPracticeDuration - m.minutes).inWholeSeconds
+        var remainingDuration = totalPracticeDuration - h.hours
+
+        val m = (remainingDuration).inWholeMinutes
+        remainingDuration -= m.minutes
+
+        val s = (remainingDuration).inWholeSeconds
+
         val title = getString(R.string.notification_title, h, m, s)
         val desc = if (paused) {
             getString(R.string.paused_practicing)

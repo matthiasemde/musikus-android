@@ -57,7 +57,7 @@ import app.musikus.spacing
 import app.musikus.ui.MainUIEvent
 import app.musikus.ui.MainUiState
 import app.musikus.utils.DateFormat
-import app.musikus.utils.TimeFormat
+import app.musikus.utils.DurationFormat
 import app.musikus.utils.getDurationString
 import app.musikus.utils.musikusFormat
 import java.time.ZonedDateTime
@@ -291,7 +291,7 @@ fun DayHeader(
             style = MaterialTheme.typography.bodyLarge
         )
         Text(
-            text = getDurationString(totalPracticeDuration, TimeFormat.HUMAN_PRETTY).toString(),
+            text = getDurationString(totalPracticeDuration, DurationFormat.HUMAN_PRETTY).toString(),
             style = MaterialTheme.typography.bodyLarge
         )
     }

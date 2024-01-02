@@ -18,7 +18,7 @@ import app.musikus.repository.UserPreferencesRepository
 import app.musikus.utils.DateFormat
 import app.musikus.utils.LibraryItemSortMode
 import app.musikus.utils.SortDirection
-import app.musikus.utils.TimeFormat
+import app.musikus.utils.DurationFormat
 import app.musikus.utils.TimeProvider
 import app.musikus.utils.Timeframe
 import app.musikus.utils.getDurationString
@@ -262,7 +262,7 @@ class SessionStatisticsViewModel @Inject constructor(
                 item !in deselectedItems,
                 getDurationString(
                     duration = itemsToDurationTimeFrame[item] ?: 0.seconds,
-                    format = TimeFormat.HUMAN_PRETTY
+                    format = DurationFormat.HUMAN_PRETTY
                 ).toString()
             )
         }

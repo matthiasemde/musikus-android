@@ -37,7 +37,7 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import app.musikus.Musikus
 import app.musikus.database.daos.LibraryItem
-import app.musikus.utils.TimeFormat
+import app.musikus.utils.DurationFormat
 import app.musikus.utils.getDurationString
 import app.musikus.utils.sorted
 import kotlinx.coroutines.launch
@@ -174,7 +174,7 @@ fun SessionStatisticsBarChart(
 
             ScaleLineData(
                 label = textMeasurer.measure(
-                    getDurationString(scaleLine, TimeFormat.HUMAN_PRETTY).toString(),
+                    getDurationString(scaleLine, DurationFormat.HUMAN_PRETTY).toString(),
                     labelTextStyle.copy(color = labelColor),
                 ),
                 duration = scaleLine,

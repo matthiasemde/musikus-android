@@ -29,7 +29,7 @@ import app.musikus.database.entities.GoalPeriodUnit
 import app.musikus.database.entities.GoalProgressType
 import app.musikus.database.entities.GoalType
 import app.musikus.database.entities.SoftDeleteModelDisplayAttributes
-import app.musikus.utils.TimeFormat
+import app.musikus.utils.DurationFormat
 import app.musikus.utils.UiText
 import app.musikus.utils.getDurationString
 import app.musikus.utils.inLocalTimezone
@@ -74,7 +74,7 @@ data class GoalDescription(
 
     fun subtitle(instance: GoalInstance) = listOf(
         UiText.DynamicString(
-            getDurationString(instance.target, TimeFormat.HUMAN_PRETTY).toString()
+            getDurationString(instance.target, DurationFormat.HUMAN_PRETTY).toString()
         ),
         UiText.PluralResource(
             resId = when(periodUnit) {
