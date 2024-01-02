@@ -126,15 +126,13 @@ class LibraryItemDaoTest {
 
     @Test
     fun insertItemWithInvalidFolderId_throwsException() = runTest {
-        val item = LibraryItemModel(
-            name = "TestItem",
-            colorIndex = 0,
-            libraryFolderId = Nullable(UUIDConverter.fromInt(0)),
-        )
-
         val exception = assertThrows(SQLiteConstraintException::class.java) {
             runBlocking {
-                libraryItemDao.insert(item)
+                libraryItemDao.insert(LibraryItemModel(
+                    name = "TestItem",
+                    colorIndex = 0,
+                    libraryFolderId = Nullable(UUIDConverter.fromInt(0)),
+                ))
             }
         }
 
@@ -240,7 +238,7 @@ class LibraryItemDaoTest {
         }
 
         assertThat(exception.message).isEqualTo(
-            "Could not find the following id(s): [00000000-0000-0000-0000-000000000000]"
+            "Could not find library_item(s) with the following id(s): [00000000-0000-0000-0000-000000000000]"
         )
     }
 
@@ -319,7 +317,7 @@ class LibraryItemDaoTest {
         }
 
         assertThat(exception.message).isEqualTo(
-            "Could not find the following id(s): [00000000-0000-0000-0000-000000000000]"
+            "Could not find library_item(s) with the following id(s): [00000000-0000-0000-0000-000000000000]"
         )
     }
 
@@ -402,7 +400,7 @@ class LibraryItemDaoTest {
         }
 
         assertThat(exception.message).isEqualTo(
-            "Could not find the following id(s): [00000000-0000-0000-0000-000000000000]"
+            "Could not find library_item(s) with the following id(s): [00000000-0000-0000-0000-000000000000]"
         )
     }
 
@@ -480,7 +478,7 @@ class LibraryItemDaoTest {
         }
 
         assertThat(exception.message).isEqualTo(
-            "Could not find the following id(s): [00000000-0000-0000-0000-000000000001]"
+            "Could not find library_item(s) with the following id(s): [00000000-0000-0000-0000-000000000001]"
         )
     }
 
@@ -567,7 +565,7 @@ class LibraryItemDaoTest {
         }
 
         assertThat(exception.message).isEqualTo(
-            "Could not find the following id(s): [00000000-0000-0000-0000-000000000003]"
+            "Could not find library_item(s) with the following id(s): [00000000-0000-0000-0000-000000000003]"
         )
     }
 }

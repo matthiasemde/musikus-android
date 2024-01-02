@@ -245,7 +245,7 @@ class SessionStatisticsViewModel @Inject constructor(
         _deselectedLibraryItems,
         itemsSortInfo
     ) { (_, sessions), deselectedItems, (itemSortMode, itemSortDirection) ->
-        val itemsToDurationTimeFrame = sessions.flatMap { (_, sections) ->
+        val itemsToDurationTimeframe = sessions.flatMap { (_, sections) ->
             sections
         }.groupBy {
             it.libraryItem
@@ -253,7 +253,7 @@ class SessionStatisticsViewModel @Inject constructor(
             sections.sumOf { (section, _) -> section.duration.inWholeSeconds }.seconds
         }
 
-        itemsToDurationTimeFrame.keys.toList().sorted(
+        itemsToDurationTimeframe.keys.toList().sorted(
             itemSortMode,
             itemSortDirection
         ).map { item ->
@@ -261,7 +261,7 @@ class SessionStatisticsViewModel @Inject constructor(
                 item,
                 item !in deselectedItems,
                 getDurationString(
-                    duration = itemsToDurationTimeFrame[item] ?: 0.seconds,
+                    duration = itemsToDurationTimeframe[item] ?: 0.seconds,
                     format = DurationFormat.HUMAN_PRETTY
                 ).toString()
             )

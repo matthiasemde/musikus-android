@@ -26,8 +26,8 @@ interface SessionRepository {
 
     fun sessionsInTimeframe (timeframe: Timeframe) : Flow<List<SessionWithSectionsWithLibraryItems>>
 
-    fun sectionsForGoal (goal: GoalInstanceWithDescriptionWithLibraryItems) : Flow<List<Section>>
-    fun sectionsForGoal (
+    suspend fun sectionsForGoal (goal: GoalInstanceWithDescriptionWithLibraryItems) : Flow<List<Section>>
+    suspend fun sectionsForGoal (
         instance: GoalInstance,
         description: GoalDescription,
         libraryItems: List<LibraryItem>
@@ -69,26 +69,26 @@ class SessionRepositoryImpl(
         )
     }
 
-    private fun sectionsForGoal (
+    private suspend fun sectionsForGoal (
         startTimestamp: ZonedDateTime,
         endTimestamp: ZonedDateTime,
         itemIds: List<UUID>? = null
-    ) = if (itemIds == null) sectionDao.get(
+    ) = if (itemIds == null) sectionDao.getInTimeframe(
         startTimestamp = startTimestamp,
         endTimestamp = endTimestamp,
-    ) else sectionDao.get(
+    ) else sectionDao.getInTimeframeForItemId(
         startTimestamp = startTimestamp,
         endTimestamp = endTimestamp,
         itemIds = itemIds
     )
 
-    override fun sectionsForGoal (goal: GoalInstanceWithDescriptionWithLibraryItems) = sectionsForGoal(
+    override suspend fun sectionsForGoal (goal: GoalInstanceWithDescriptionWithLibraryItems) = sectionsForGoal(
         startTimestamp = goal.instance.startTimestamp,
         endTimestamp = goal.endTimestampInLocalTimezone,
         itemIds = goal.description.libraryItems.map { it.id }.takeIf { it.isNotEmpty() }
     )
 
-    override fun sectionsForGoal(
+    override suspend fun sectionsForGoal(
         instance: GoalInstance,
         description: GoalDescription,
         libraryItems: List<LibraryItem>

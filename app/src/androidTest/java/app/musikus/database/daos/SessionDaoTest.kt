@@ -35,6 +35,7 @@ import org.junit.Test
 import javax.inject.Inject
 import javax.inject.Named
 import kotlin.time.Duration.Companion.days
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
 
@@ -203,7 +204,7 @@ class SessionDaoTest {
         }
 
         assertThat(exception.message).isEqualTo(
-            "Could not find the following id(s): [00000000-0000-0000-0000-000000000000]"
+            "Could not find session(s) with the following id(s): [00000000-0000-0000-0000-000000000000]"
         )
     }
 
@@ -254,7 +255,7 @@ class SessionDaoTest {
         }
 
         assertThat(exception.message).isEqualTo(
-            "Could not find the following id(s): [00000000-0000-0000-0000-000000000000]"
+            "Could not find session(s) with the following id(s): [00000000-0000-0000-0000-000000000000]"
         )
     }
 
@@ -331,7 +332,7 @@ class SessionDaoTest {
         }
 
         assertThat(exception.message).isEqualTo(
-            "Could not find the following id(s): [00000000-0000-0000-0000-000000000000]"
+            "Could not find session(s) with the following id(s): [00000000-0000-0000-0000-000000000000]"
         )
     }
 
@@ -404,7 +405,7 @@ class SessionDaoTest {
         }
 
         assertThat(exception.message).isEqualTo(
-            "Could not find the following id(s): [00000000-0000-0000-0000-000000000004]"
+            "Could not find session(s) with the following id(s): [00000000-0000-0000-0000-000000000004]"
         )
     }
 
@@ -467,7 +468,7 @@ class SessionDaoTest {
         }
 
         assertThat(exception.message).isEqualTo(
-            "Could not find the following id(s): [00000000-0000-0000-0000-000000000002]"
+            "Could not find session(s) with the following id(s): [00000000-0000-0000-0000-000000000002]"
         )
     }
 
@@ -481,12 +482,12 @@ class SessionDaoTest {
         val sectionCreationAttributes = listOf(
             SectionCreationAttributes(
                 libraryItemId = UUIDConverter.fromInt(1),
-                duration = 60.seconds,
+                duration = 5.minutes,
                 startTimestamp = fakeTimeProvider.now(),
             ),
             SectionCreationAttributes(
                 libraryItemId = UUIDConverter.fromInt(1),
-                duration = 150.seconds,
+                duration = 10.minutes,
                 startTimestamp = fakeTimeProvider.now(),
             )
         )
@@ -513,14 +514,14 @@ class SessionDaoTest {
                 id = UUIDConverter.fromInt(3),
                 sessionId = UUIDConverter.fromInt(2),
                 libraryItemId = UUIDConverter.fromInt(1),
-                durationSeconds = 60,
+                durationSeconds = 300,
                 startTimestamp = fakeTimeProvider.startTime,
             ),
             Section(
                 id = UUIDConverter.fromInt(4),
                 sessionId = UUIDConverter.fromInt(2),
                 libraryItemId = UUIDConverter.fromInt(1),
-                durationSeconds = 60,
+                durationSeconds = 600,
                 startTimestamp = fakeTimeProvider.startTime,
             )
         )

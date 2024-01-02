@@ -21,17 +21,18 @@ import app.musikus.database.entities.BaseModelDisplayAttributes
 import app.musikus.database.entities.SectionModel
 import app.musikus.database.entities.SectionUpdateAttributes
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import java.time.ZonedDateTime
 import java.util.UUID
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 data class Section(
-    @ColumnInfo(name = "id") override val id: UUID,
-    @ColumnInfo(name = "session_id") val sessionId: UUID,
-    @ColumnInfo(name = "library_item_id") val libraryItemId: UUID,
-    @ColumnInfo(name = "duration_seconds") val durationSeconds: Long,
-    @ColumnInfo(name = "start_timestamp") val startTimestamp: ZonedDateTime,
+    @ColumnInfo(name="id") override val id: UUID,
+    @ColumnInfo(name="session_id") val sessionId: UUID,
+    @ColumnInfo(name="library_item_id") val libraryItemId: UUID,
+    @ColumnInfo(name="duration_seconds") val durationSeconds: Long,
+    @ColumnInfo(name="start_timestamp") val startTimestamp: ZonedDateTime,
 ) : BaseModelDisplayAttributes() {
 
     val duration: Duration
@@ -49,7 +50,7 @@ data class Section(
 
 @Dao
 abstract class SectionDao(
-    database: MusikusDatabase
+    private val database: MusikusDatabase
 ) : BaseDao<SectionModel, SectionUpdateAttributes, Section>(
     tableName = "section",
     database = database,
@@ -79,13 +80,13 @@ abstract class SectionDao(
     @RewriteQueriesToDropUnusedColumns
     @Query("SELECT * FROM section " +
             "WHERE start_timestamp>=:startTimestamp " +
-            "AND start_timestamp<=:endTimestamp " +
+            "AND start_timestamp<:endTimestamp " +
             "AND session_id IN (" +
             "SELECT id FROM session " +
             "WHERE deleted=0 " +
             ")"
     )
-    abstract fun get(
+    abstract fun getInTimeframe(
         startTimestamp: ZonedDateTime,
         endTimestamp: ZonedDateTime,
     ): Flow<List<Section>>
@@ -93,16 +94,31 @@ abstract class SectionDao(
     @RewriteQueriesToDropUnusedColumns
     @Query("SELECT * FROM section " +
             "WHERE start_timestamp>=:startTimestamp " +
-            "AND start_timestamp<=:endTimestamp " +
+            "AND start_timestamp<:endTimestamp " +
             "AND library_item_id IN (:itemIds) " +
             "AND session_id IN (" +
             "SELECT id FROM session " +
             "WHERE deleted=0 " +
             ")"
     )
-    abstract fun get(
+    protected abstract fun directGetInTimeframeForItemId(
         startTimestamp: ZonedDateTime,
         endTimestamp: ZonedDateTime,
         itemIds: List<UUID>
     ): Flow<List<Section>>
+
+    suspend fun getInTimeframeForItemId(
+        startTimestamp: ZonedDateTime,
+        endTimestamp: ZonedDateTime,
+        itemIds: List<UUID>
+    ): Flow<List<Section>> {
+        // Check if itemIds exist by querying for them
+        database.libraryItemDao.getAsFlow(itemIds).first()
+
+        return directGetInTimeframeForItemId(
+            startTimestamp = startTimestamp,
+            endTimestamp = endTimestamp,
+            itemIds = itemIds
+        )
+    }
 }

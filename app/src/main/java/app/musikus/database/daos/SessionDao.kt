@@ -31,12 +31,12 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 data class Session(
-    @ColumnInfo(name = "id") override val id: UUID,
-    @ColumnInfo(name = "created_at") override val createdAt: ZonedDateTime,
-    @ColumnInfo(name = "modified_at") override val modifiedAt: ZonedDateTime,
-    @ColumnInfo(name = "break_duration_seconds") val breakDurationSeconds: Long,
-    @ColumnInfo(name = "rating") val rating: Int,
-    @ColumnInfo(name = "comment") val comment: String?,
+    @ColumnInfo(name="id") override val id: UUID,
+    @ColumnInfo(name="created_at") override val createdAt: ZonedDateTime,
+    @ColumnInfo(name="modified_at") override val modifiedAt: ZonedDateTime,
+    @ColumnInfo(name="break_duration_seconds") val breakDurationSeconds: Long,
+    @ColumnInfo(name="rating") val rating: Int,
+    @ColumnInfo(name="comment") val comment: String?,
 ) : SoftDeleteModelDisplayAttributes() {
 
     val breakDuration: Duration
@@ -64,7 +64,7 @@ abstract class SessionDao(
         >(
     tableName = "session",
     database = database,
-    displayAttributes = listOf("break_duration", "rating", "comment")
+    displayAttributes = listOf("break_duration_seconds", "rating", "comment")
 ) {
 
     /**

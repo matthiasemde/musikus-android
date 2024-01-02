@@ -176,7 +176,7 @@ class LibraryFolderDaoTest {
         }
 
         assertThat(exception.message).isEqualTo(
-            "Could not find the following id(s): [00000000-0000-0000-0000-000000000000]"
+            "Could not find library_folder(s) with the following id(s): [00000000-0000-0000-0000-000000000000]"
         )
     }
 
@@ -222,7 +222,7 @@ class LibraryFolderDaoTest {
         }
 
         assertThat(exception.message).isEqualTo(
-            "Could not find the following id(s): [00000000-0000-0000-0000-000000000000]"
+            "Could not find library_folder(s) with the following id(s): [00000000-0000-0000-0000-000000000000]"
         )
     }
 
@@ -293,7 +293,7 @@ class LibraryFolderDaoTest {
         }
 
         assertThat(exception.message).isEqualTo(
-            "Could not find the following id(s): [00000000-0000-0000-0000-000000000000]"
+            "Could not find library_folder(s) with the following id(s): [00000000-0000-0000-0000-000000000000]"
         )
     }
 
@@ -355,7 +355,7 @@ class LibraryFolderDaoTest {
         }
 
         assertThat(exception.message).isEqualTo(
-            "Could not find the following id(s): [00000000-0000-0000-0000-000000000001]"
+            "Could not find library_folder(s) with the following id(s): [00000000-0000-0000-0000-000000000001]"
         )
     }
 
@@ -405,7 +405,7 @@ class LibraryFolderDaoTest {
         }
 
         assertThat(exception.message).isEqualTo(
-            "Could not find the following id(s): [00000000-0000-0000-0000-000000000001]"
+            "Could not find library_folder(s) with the following id(s): [00000000-0000-0000-0000-000000000001]"
         )
     }
 

@@ -71,7 +71,7 @@ abstract class BaseDao<
     protected abstract suspend fun directInsert(rows: List<T>)
 
     open suspend fun insert(row: T) {
-        directInsert(listOf(row))
+        insert(listOf(row))
     }
 
     open suspend fun insert(rows: List<T>) {
@@ -142,7 +142,7 @@ abstract class BaseDao<
         // make sure all models were found
         if(models.size != ids.size) {
             throw IllegalArgumentException(
-                "Could not find the following id(s): ${ids - models.map { it.id }.toSet()}"
+                "Could not find ${tableName}(s) with the following id(s): ${ids - models.map { it.id }.toSet()}"
             )
         }
 
@@ -160,7 +160,7 @@ abstract class BaseDao<
     protected suspend fun get(id: UUID) = get(listOf(id)).first()
 
     protected open suspend fun get(ids: List<UUID>): List<D>  {
-        val entities = get(
+        val rows = get(
             SimpleSQLiteQuery(
                 query = "SELECT $displayAttributesString FROM $tableName WHERE " +
                         "id IN (${ids.joinToString(separator = ",") { "?" }});",
@@ -168,14 +168,14 @@ abstract class BaseDao<
             )
         )
 
-        // make sure all entities were found
-        if(entities.size != ids.size) {
+        // make sure all rows were found
+        if(rows.size != ids.size) {
             throw IllegalArgumentException(
-                "Could not find the following id(s): ${ids - entities.map { it.id }.toSet()}"
+                "Could not find ${tableName}(s) with the following id(s): ${ids - rows.map { it.id }.toSet()}"
             )
         }
 
-        return entities
+        return rows
     }
 
     protected open suspend fun getAll() = get(
@@ -310,7 +310,8 @@ abstract class SoftDeleteDao<
         val rows = get(
             SimpleSQLiteQuery(
                 query = "SELECT ${super.displayAttributesString} FROM $tableName WHERE " +
-                        "id IN (${ids.joinToString(separator = ",") { "?" }}) AND deleted=0;",
+                        "id IN (${ids.joinToString(separator = ",") { "?" }}) " +
+                        "AND deleted=0;",
                 ids.map { UUIDConverter().toByte(it) }.toTypedArray()
             )
         )
@@ -318,7 +319,7 @@ abstract class SoftDeleteDao<
         // make sure all rows were found
         if(rows.size != ids.size) {
             throw IllegalArgumentException(
-                "Could not find the following id(s): ${ids - rows.map { it.id }.toSet()}"
+                "Could not find ${tableName}(s) with the following id(s): ${ids - rows.map { it.id }.toSet()}"
             )
         }
 

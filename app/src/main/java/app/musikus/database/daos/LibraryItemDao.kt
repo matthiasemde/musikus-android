@@ -26,13 +26,13 @@ import java.time.ZonedDateTime
 import java.util.UUID
 
 data class LibraryItem(
-    @ColumnInfo(name = "id") override val id: UUID,
-    @ColumnInfo(name = "created_at") override val createdAt: ZonedDateTime,
-    @ColumnInfo(name = "modified_at") override val modifiedAt: ZonedDateTime,
-    @ColumnInfo(name = "name") val name: String = "Test",
-    @ColumnInfo(name = "color_index") val colorIndex: Int,
-    @ColumnInfo(name = "library_folder_id") val libraryFolderId: UUID?,
-    @ColumnInfo(name = "custom_order") val customOrder: Int?,
+    @ColumnInfo(name="id") override val id: UUID,
+    @ColumnInfo(name="created_at") override val createdAt: ZonedDateTime,
+    @ColumnInfo(name="modified_at") override val modifiedAt: ZonedDateTime,
+    @ColumnInfo(name="name") val name: String,
+    @ColumnInfo(name="color_index") val colorIndex: Int,
+    @ColumnInfo(name="library_folder_id") val libraryFolderId: UUID?,
+    @ColumnInfo(name="custom_order") val customOrder: Int?,
 ) : SoftDeleteModelDisplayAttributes()  {
 
     // necessary custom equals operator since default does not check super class properties
