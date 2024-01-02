@@ -8,6 +8,7 @@
 
 package app.musikus.database.daos
 
+import android.database.sqlite.SQLiteConstraintException
 import androidx.test.filters.SmallTest
 import app.musikus.database.MusikusDatabase
 import app.musikus.database.SectionWithLibraryItem
@@ -464,6 +465,32 @@ class SessionDaoTest {
                 durationSeconds = 900,
                 startTimestamp = fakeTimeProvider.startTime,
             )
+        )
+    }
+
+    @Test
+    fun insertSessionWithSectionWithInvalidLibraryItemId_throwsException() = runTest {
+        val exception = assertThrows(SQLiteConstraintException::class.java) {
+            runBlocking {
+                sessionDao.insert(
+                    SessionModel(
+                        breakDuration = 10.minutes,
+                        rating = 3,
+                        comment = "Test comment",
+                    ),
+                    sectionCreationAttributes = listOf(
+                        SectionCreationAttributes(
+                        libraryItemId = UUIDConverter.fromInt(0),
+                        duration = 10.minutes,
+                        startTimestamp = fakeTimeProvider.startTime
+                    )
+                    )
+                )
+            }
+        }
+
+        assertThat(exception.message).isEqualTo(
+            "FOREIGN KEY constraint failed (code 787 SQLITE_CONSTRAINT_FOREIGNKEY)"
         )
     }
 

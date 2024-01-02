@@ -18,6 +18,7 @@ import androidx.room.Query
 import androidx.room.RewriteQueriesToDropUnusedColumns
 import app.musikus.database.MusikusDatabase
 import app.musikus.database.entities.BaseModelDisplayAttributes
+import app.musikus.database.entities.SectionCreationAttributes
 import app.musikus.database.entities.SectionModel
 import app.musikus.database.entities.SectionUpdateAttributes
 import kotlinx.coroutines.flow.Flow
@@ -61,6 +62,31 @@ abstract class SectionDao(
         "start_timestamp"
     )
 ) {
+
+    /**
+     * @Insert
+     */
+
+    override suspend fun insert(row: SectionModel) {
+        throw NotImplementedError("Sections are inserted only in conjunction with their session")
+    }
+
+    override suspend fun insert(rows: List<SectionModel>) {
+        throw NotImplementedError("Sections are inserted only in conjunction with their session")
+    }
+
+    // this method is called only from SessionDao
+    suspend fun insert(
+        sessionId: UUID,
+        section: SectionCreationAttributes
+    ) {
+        super.insert(listOf(SectionModel(
+            sessionId = sessionId,
+            libraryItemId = section.libraryItemId,
+            duration = section.duration,
+            startTimestamp = section.startTimestamp
+        )))
+    }
 
     /**
      * @Update

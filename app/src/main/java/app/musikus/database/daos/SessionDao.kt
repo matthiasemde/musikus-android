@@ -20,7 +20,6 @@ import androidx.room.Transaction
 import app.musikus.database.MusikusDatabase
 import app.musikus.database.SessionWithSectionsWithLibraryItems
 import app.musikus.database.entities.SectionCreationAttributes
-import app.musikus.database.entities.SectionModel
 import app.musikus.database.entities.SessionModel
 import app.musikus.database.entities.SessionUpdateAttributes
 import app.musikus.database.entities.SoftDeleteModelDisplayAttributes
@@ -101,14 +100,9 @@ abstract class SessionDao(
         }
 
         super.insert(listOf(session)) // insert of single session would call the overridden insert method
-        database.sectionDao.insert(sectionCreationAttributes.map {
-            SectionModel(
-                sessionId = session.id,
-                libraryItemId = it.libraryItemId,
-                duration = it.duration,
-                startTimestamp = it.startTimestamp
-            )
-        })
+        sectionCreationAttributes.forEach {
+            database.sectionDao.insert(session.id, it)
+        }
     }
 
     /**

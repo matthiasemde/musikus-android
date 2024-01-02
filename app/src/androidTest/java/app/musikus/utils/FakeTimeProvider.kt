@@ -20,4 +20,8 @@ class FakeTimeProvider : TimeProvider {
         _currentDateTime = _currentDateTime.plus(duration.toJavaDuration())
     }
 
+    fun revertTimeBy(duration: Duration) {
+        _currentDateTime = _currentDateTime.minus(duration.toJavaDuration())
+    }
+
 }

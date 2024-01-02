@@ -8,7 +8,6 @@
 
 package app.musikus.database.daos
 
-import android.database.sqlite.SQLiteConstraintException
 import androidx.test.filters.SmallTest
 import app.musikus.database.MusikusDatabase
 import app.musikus.database.Nullable
@@ -35,10 +34,8 @@ import org.junit.Rule
 import org.junit.Test
 import javax.inject.Inject
 import javax.inject.Named
-import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
-import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
 
 
@@ -71,151 +68,105 @@ class SectionDaoTest {
                     libraryFolderId = Nullable(null),
                 ),
             )
+
             database.sessionDao.insert(
                 session = SessionModel(
-                    breakDuration = 5.minutes,
-                    rating = 5,
+                    breakDuration = 2.minutes,
+                    rating = 2,
                     comment = "Test comment",
                 ),
                 sectionCreationAttributes = listOf(
                     SectionCreationAttributes(
                         libraryItemId = UUIDConverter.fromInt(1),
-                        duration = 999.minutes, // make this section "impossible" to accidentally match
-                        startTimestamp = fakeTimeProvider.startTime.plus(999.days.toJavaDuration())
+                        duration = 2.minutes,
+                        startTimestamp = fakeTimeProvider.now()
+                    ),
+                    SectionCreationAttributes(
+                        libraryItemId = UUIDConverter.fromInt(1),
+                        duration = 4.minutes,
+                        startTimestamp = fakeTimeProvider.apply {
+                            advanceTimeBy(2.minutes)
+                        }.now()
                     )
                 )
             )
+
+            // revert the time to the start time of the session
+            fakeTimeProvider.revertTimeBy(2.minutes)
         }
     }
 
     @Test
-    fun insertSections() = runTest {
-
-        sectionDao.insert(listOf(
-            SectionModel(
-                sessionId = UUIDConverter.fromInt(2),
-                libraryItemId = UUIDConverter.fromInt(1),
-                duration = 10.minutes,
-                startTimestamp = fakeTimeProvider.startTime,
-            ),
-            SectionModel(
-                sessionId = UUIDConverter.fromInt(2),
-                libraryItemId = UUIDConverter.fromInt(1),
-                duration = 15.minutes,
-                startTimestamp = fakeTimeProvider.startTime
-            )
-        ))
-
+    fun getAll() = runTest {
+        // Get the sections
         val sections = sectionDao.getAllAsFlow().first()
 
+        // Check if the sections were retrieved correctly
         assertThat(sections).containsExactly(
-            Section( // this is the section we had to create with the session
+            Section(
                 id = UUIDConverter.fromInt(3),
                 sessionId = UUIDConverter.fromInt(2),
                 libraryItemId = UUIDConverter.fromInt(1),
-                durationSeconds = 999 * 60,
-                startTimestamp = fakeTimeProvider.startTime.plus(999.days.toJavaDuration()),
+                durationSeconds = 120,
+                startTimestamp = fakeTimeProvider.startTime,
             ),
             Section(
                 id = UUIDConverter.fromInt(4),
                 sessionId = UUIDConverter.fromInt(2),
                 libraryItemId = UUIDConverter.fromInt(1),
-                durationSeconds = 600,
-                startTimestamp = fakeTimeProvider.startTime,
-            ),
-            Section(
-                id = UUIDConverter.fromInt(5),
-                sessionId = UUIDConverter.fromInt(2),
-                libraryItemId = UUIDConverter.fromInt(1),
-                durationSeconds = 900,
-                startTimestamp = fakeTimeProvider.startTime,
+                durationSeconds = 240,
+                startTimestamp = fakeTimeProvider.startTime.plus(2.minutes.toJavaDuration()),
             )
         )
     }
 
     @Test
-    fun insertSection() = runTest {
-        val section = SectionModel(
-            sessionId = UUIDConverter.fromInt(2),
-            libraryItemId = UUIDConverter.fromInt(1),
-            duration = 10.minutes,
-            startTimestamp = fakeTimeProvider.startTime
-        )
-
-        val sectionDaoSpy = spyk(sectionDao)
-
-        sectionDaoSpy.insert(section)
-
-        coVerify (exactly = 1) { sectionDaoSpy.insert(listOf(section)) }
-    }
-
-    @Test
-    fun insertSectionWithInvalidSessionId_throwsException() = runTest {
-        val exception = assertThrows(SQLiteConstraintException::class.java) {
+    fun insertSections_throwsNotImplementedError() = runTest {
+        val exception = assertThrows(NotImplementedError::class.java) {
             runBlocking {
-                sectionDao.insert(
+                sectionDao.insert(listOf(
                     SectionModel(
-                        sessionId = UUIDConverter.fromInt(0),
+                        sessionId = UUIDConverter.fromInt(2),
                         libraryItemId = UUIDConverter.fromInt(1),
                         duration = 10.minutes,
                         startTimestamp = fakeTimeProvider.startTime
                     )
-                )
+                ))
             }
         }
 
         assertThat(exception.message).isEqualTo(
-            "FOREIGN KEY constraint failed (code 787 SQLITE_CONSTRAINT_FOREIGNKEY)"
+            "Sections are inserted only in conjunction with their session"
         )
     }
 
     @Test
-    fun insertSectionWithInvalidLibraryItemId_throwsException() = runTest {
-        val exception = assertThrows(SQLiteConstraintException::class.java) {
+    fun insertSection_throwsNotImplementedError() = runTest {
+        val exception = assertThrows(NotImplementedError::class.java) {
             runBlocking {
-                sectionDao.insert(
-                    SectionModel(
-                        sessionId = UUIDConverter.fromInt(2),
-                        libraryItemId = UUIDConverter.fromInt(0),
-                        duration = 10.minutes,
-                        startTimestamp = fakeTimeProvider.startTime
-                    )
-                )
+                sectionDao.insert(SectionModel(
+                    sessionId = UUIDConverter.fromInt(2),
+                    libraryItemId = UUIDConverter.fromInt(1),
+                    duration = 10.minutes,
+                    startTimestamp = fakeTimeProvider.startTime
+                ))
             }
         }
 
         assertThat(exception.message).isEqualTo(
-            "FOREIGN KEY constraint failed (code 787 SQLITE_CONSTRAINT_FOREIGNKEY)"
+            "Sections are inserted only in conjunction with their session"
         )
     }
 
     @Test
     fun updateSections() = runTest {
-        // Insert sections
-        sectionDao.insert(listOf(
-            SectionModel(
-                sessionId = UUIDConverter.fromInt(2),
-                libraryItemId = UUIDConverter.fromInt(1),
-                duration = 10.minutes,
-                startTimestamp = fakeTimeProvider.startTime
-            ),
-            SectionModel(
-                sessionId = UUIDConverter.fromInt(2),
-                libraryItemId = UUIDConverter.fromInt(1),
-                duration = 15.minutes,
-                startTimestamp = fakeTimeProvider.startTime
-            )
-        ))
-
-        fakeTimeProvider.advanceTimeBy(1.seconds)
-
         // Update the sections
         sectionDao.update(
             listOf(
-                UUIDConverter.fromInt(4) to SectionUpdateAttributes(
+                UUIDConverter.fromInt(3) to SectionUpdateAttributes(
                     duration = 5.minutes,
                 ),
-                UUIDConverter.fromInt(5) to SectionUpdateAttributes(
+                UUIDConverter.fromInt(4) to SectionUpdateAttributes(
                     duration = 1.hours,
                 )
             )
@@ -225,26 +176,19 @@ class SectionDaoTest {
         val updatedSections = sectionDao.getAllAsFlow().first()
 
         assertThat(updatedSections).containsExactly(
-            Section( // this is the section we had to create with the session
-                id = UUIDConverter.fromInt(3),
-                sessionId = UUIDConverter.fromInt(2),
-                libraryItemId = UUIDConverter.fromInt(1),
-                durationSeconds = 999 * 60,
-                startTimestamp = fakeTimeProvider.startTime.plus(999.days.toJavaDuration()),
-            ),
             Section(
-                id = UUIDConverter.fromInt(4),
+                id = UUIDConverter.fromInt(3),
                 sessionId = UUIDConverter.fromInt(2),
                 libraryItemId = UUIDConverter.fromInt(1),
                 durationSeconds = 300,
                 startTimestamp = fakeTimeProvider.startTime,
             ),
             Section(
-                id = UUIDConverter.fromInt(5),
+                id = UUIDConverter.fromInt(4),
                 sessionId = UUIDConverter.fromInt(2),
                 libraryItemId = UUIDConverter.fromInt(1),
                 durationSeconds = 3600,
-                startTimestamp = fakeTimeProvider.startTime,
+                startTimestamp = fakeTimeProvider.startTime.plus(2.minutes.toJavaDuration()),
             )
         )
     }
@@ -260,7 +204,7 @@ class SectionDaoTest {
                 UUIDConverter.fromInt(1),
                 updateAttributes
             )
-        } catch (e: Exception) {
+        } catch (e: IllegalArgumentException) {
             // Ignore
         }
 
@@ -318,49 +262,50 @@ class SectionDaoTest {
 
     @Test
     fun getSpecificSections() = runTest {
-        // Insert sections
-        sectionDao.insert(listOf(
-            SectionModel(
-                sessionId = UUIDConverter.fromInt(2),
-                libraryItemId = UUIDConverter.fromInt(1),
-                duration = 10.minutes,
-                startTimestamp = fakeTimeProvider.startTime
+        // Insert another session with a few more sections
+        database.sessionDao.insert(
+            session = SessionModel(
+                breakDuration = 3.minutes,
+                rating = 3,
+                comment = "Test comment2",
             ),
-            SectionModel(
-                sessionId = UUIDConverter.fromInt(2),
-                libraryItemId = UUIDConverter.fromInt(1),
-                duration = 15.minutes,
-                startTimestamp = fakeTimeProvider.startTime
-            ),
-            SectionModel(
-                sessionId = UUIDConverter.fromInt(2),
-                libraryItemId = UUIDConverter.fromInt(1),
-                duration = 20.minutes,
-                startTimestamp = fakeTimeProvider.startTime
-            ),
-        ))
+            sectionCreationAttributes = listOf(
+                SectionCreationAttributes(
+                    libraryItemId = UUIDConverter.fromInt(1),
+                    duration = 3.minutes,
+                    startTimestamp = fakeTimeProvider.now()
+                ),
+                SectionCreationAttributes(
+                    libraryItemId = UUIDConverter.fromInt(1),
+                    duration = 9.minutes,
+                    startTimestamp = fakeTimeProvider.apply {
+                        advanceTimeBy(3.minutes)
+                    }.now()
+                )
+            )
+        )
 
         // Get the sections
         val sections = sectionDao.getAsFlow(listOf(
-            UUIDConverter.fromInt(4),
-            UUIDConverter.fromInt(6)
+            UUIDConverter.fromInt(3),
+            UUIDConverter.fromInt(7)
         )).first()
 
         // Check if the sections were retrieved correctly
         assertThat(sections).containsExactly(
             Section(
-                id = UUIDConverter.fromInt(4),
+                id = UUIDConverter.fromInt(3),
                 sessionId = UUIDConverter.fromInt(2),
                 libraryItemId = UUIDConverter.fromInt(1),
-                durationSeconds = 600,
+                durationSeconds = 120,
                 startTimestamp = fakeTimeProvider.startTime,
             ),
             Section(
-                id = UUIDConverter.fromInt(6),
-                sessionId = UUIDConverter.fromInt(2),
+                id = UUIDConverter.fromInt(7),
+                sessionId = UUIDConverter.fromInt(5),
                 libraryItemId = UUIDConverter.fromInt(1),
-                durationSeconds = 1200,
-                startTimestamp = fakeTimeProvider.startTime,
+                durationSeconds = 540,
+                startTimestamp = fakeTimeProvider.startTime.plus(3.minutes.toJavaDuration()),
             )
         )
     }
@@ -371,7 +316,7 @@ class SectionDaoTest {
 
         try {
             sectionDaoSpy.getAsFlow(UUIDConverter.fromInt(2))
-        } catch (e: Exception) {
+        } catch (e: IllegalArgumentException) {
             // Ignore
         }
 
@@ -395,16 +340,8 @@ class SectionDaoTest {
 
     @Test
     fun sectionExists() = runTest {
-        // Insert a section
-        sectionDao.insert(SectionModel(
-            sessionId = UUIDConverter.fromInt(2),
-            libraryItemId = UUIDConverter.fromInt(1),
-            duration = 10.minutes,
-            startTimestamp = fakeTimeProvider.startTime
-        ))
-
         // Check if the section exists
-        assertThat(sectionDao.exists(UUIDConverter.fromInt(4))).isTrue()
+        assertThat(sectionDao.exists(UUIDConverter.fromInt(3))).isTrue()
     }
 
     @Test
@@ -414,55 +351,57 @@ class SectionDaoTest {
 
     @Test
     fun getSectionsInTimeframe() = runTest {
-        // Insert sections
-        sectionDao.insert(listOf(
-            SectionModel(
-                sessionId = UUIDConverter.fromInt(2),
-                libraryItemId = UUIDConverter.fromInt(1),
-                duration = 5.minutes,
-                startTimestamp = fakeTimeProvider.startTime
+        // Insert another session with a few more sections
+        database.sessionDao.insert(
+            session = SessionModel(
+                breakDuration = 3.minutes,
+                rating = 3,
+                comment = "Test comment2",
             ),
-            SectionModel(
-                sessionId = UUIDConverter.fromInt(2),
-                libraryItemId = UUIDConverter.fromInt(1),
-                duration = 5.minutes,
-                startTimestamp = fakeTimeProvider.startTime.plus(5.minutes.toJavaDuration())
-            ),
-            SectionModel(
-                sessionId = UUIDConverter.fromInt(2),
-                libraryItemId = UUIDConverter.fromInt(1),
-                duration = 5.minutes,
-                startTimestamp = fakeTimeProvider.startTime.plus(10.minutes.toJavaDuration())
-            ),
-            SectionModel(
-                sessionId = UUIDConverter.fromInt(2),
-                libraryItemId = UUIDConverter.fromInt(1),
-                duration = 5.minutes,
-                startTimestamp = fakeTimeProvider.startTime.plus(15.minutes.toJavaDuration())
+            sectionCreationAttributes = listOf(
+                SectionCreationAttributes(
+                    libraryItemId = UUIDConverter.fromInt(1),
+                    duration = 3.minutes,
+                    startTimestamp = fakeTimeProvider.now()
+                ),
+                SectionCreationAttributes(
+                    libraryItemId = UUIDConverter.fromInt(1),
+                    duration = 9.minutes,
+                    startTimestamp = fakeTimeProvider.apply {
+                        advanceTimeBy(3.minutes)
+                    }.now()
+                )
             )
-        ))
+        )
 
         // Get the sections
         val sections = sectionDao.getInTimeframe(
-            startTimestamp = fakeTimeProvider.startTime.plus(5.minutes.toJavaDuration()),
-            endTimestamp = fakeTimeProvider.startTime.plus(15.minutes.toJavaDuration())
+            startTimestamp = fakeTimeProvider.startTime,
+            endTimestamp = fakeTimeProvider.startTime.plus(3.minutes.toJavaDuration())
         ).first()
 
         // Check if the sections were retrieved correctly
         assertThat(sections).containsExactly(
             Section(
-                id = UUIDConverter.fromInt(5),
+                id = UUIDConverter.fromInt(3),
                 sessionId = UUIDConverter.fromInt(2),
                 libraryItemId = UUIDConverter.fromInt(1),
-                durationSeconds = 300,
-                startTimestamp = fakeTimeProvider.startTime.plus(5.minutes.toJavaDuration()),
+                durationSeconds = 120,
+                startTimestamp = fakeTimeProvider.startTime,
+            ),
+            Section(
+                id = UUIDConverter.fromInt(4),
+                sessionId = UUIDConverter.fromInt(2),
+                libraryItemId = UUIDConverter.fromInt(1),
+                durationSeconds = 240,
+                startTimestamp = fakeTimeProvider.startTime.plus(2.minutes.toJavaDuration()),
             ),
             Section(
                 id = UUIDConverter.fromInt(6),
-                sessionId = UUIDConverter.fromInt(2),
+                sessionId = UUIDConverter.fromInt(5),
                 libraryItemId = UUIDConverter.fromInt(1),
-                durationSeconds = 300,
-                startTimestamp = fakeTimeProvider.startTime.plus(10.minutes.toJavaDuration()),
+                durationSeconds = 180,
+                startTimestamp = fakeTimeProvider.startTime,
             )
         )
     }
@@ -483,65 +422,68 @@ class SectionDaoTest {
             ),
         ))
 
-        // Insert sections
-        sectionDao.insert(listOf(
-            SectionModel(
-                sessionId = UUIDConverter.fromInt(2),
-                libraryItemId = UUIDConverter.fromInt(1),
-                duration = 1.minutes,
-                startTimestamp = fakeTimeProvider.startTime
+        // Insert another session with a few more sections
+        database.sessionDao.insert(
+            session = SessionModel(
+                breakDuration = 3.minutes,
+                rating = 3,
+                comment = "Test comment2",
             ),
-            SectionModel(
-                sessionId = UUIDConverter.fromInt(2),
-                libraryItemId = UUIDConverter.fromInt(1),
-                duration = 2.minutes,
-                startTimestamp = fakeTimeProvider.startTime.plus(5.minutes.toJavaDuration())
-            ),
-            SectionModel(
-                sessionId = UUIDConverter.fromInt(2),
-                libraryItemId = UUIDConverter.fromInt(5),
-                duration = 3.minutes,
-                startTimestamp = fakeTimeProvider.startTime.plus(7.minutes.toJavaDuration())
-            ),
-            SectionModel(
-                sessionId = UUIDConverter.fromInt(2),
-                libraryItemId = UUIDConverter.fromInt(4),
-                duration = 4.minutes,
-                startTimestamp = fakeTimeProvider.startTime.plus(10.minutes.toJavaDuration())
-            ),
-            SectionModel(
-                sessionId = UUIDConverter.fromInt(2),
-                libraryItemId = UUIDConverter.fromInt(4),
-                duration = 5.minutes,
-                startTimestamp = fakeTimeProvider.startTime.plus(15.minutes.toJavaDuration())
+            sectionCreationAttributes = listOf(
+                SectionCreationAttributes(
+                    libraryItemId = UUIDConverter.fromInt(6),
+                    duration = 3.minutes,
+                    startTimestamp = fakeTimeProvider.now()
+                ),
+                SectionCreationAttributes(
+                    libraryItemId = UUIDConverter.fromInt(5),
+                    duration = 9.minutes,
+                    startTimestamp = fakeTimeProvider.apply {
+                        advanceTimeBy(3.minutes)
+                    }.now()
+                ),
+                SectionCreationAttributes(
+                    libraryItemId = UUIDConverter.fromInt(1),
+                    duration = 27.minutes,
+                    startTimestamp = fakeTimeProvider.apply {
+                        advanceTimeBy(9.minutes)
+                    }.now()
+                )
             )
-        ))
+        )
 
         // Get the sections
         val sections = sectionDao.getInTimeframeForItemId(
-            startTimestamp = fakeTimeProvider.startTime.plus(5.minutes.toJavaDuration()),
-            endTimestamp = fakeTimeProvider.startTime.plus(15.minutes.toJavaDuration()),
+            startTimestamp = fakeTimeProvider.startTime,
+            endTimestamp = fakeTimeProvider.startTime.plus(12.minutes.toJavaDuration()),
             itemIds = listOf(
                 UUIDConverter.fromInt(1),
-                UUIDConverter.fromInt(4),
+                UUIDConverter.fromInt(5),
             )
         ).first()
 
         // Check if the sections were retrieved correctly
         assertThat(sections).containsExactly(
             Section(
-                id = UUIDConverter.fromInt(7),
+                id = UUIDConverter.fromInt(3),
                 sessionId = UUIDConverter.fromInt(2),
                 libraryItemId = UUIDConverter.fromInt(1),
                 durationSeconds = 120,
-                startTimestamp = fakeTimeProvider.startTime.plus(5.minutes.toJavaDuration()),
+                startTimestamp = fakeTimeProvider.startTime,
+            ),
+            Section(
+                id = UUIDConverter.fromInt(4),
+                sessionId = UUIDConverter.fromInt(2),
+                libraryItemId = UUIDConverter.fromInt(1),
+                durationSeconds = 240,
+                startTimestamp = fakeTimeProvider.startTime.plus(2.minutes.toJavaDuration()),
             ),
             Section(
                 id = UUIDConverter.fromInt(9),
-                sessionId = UUIDConverter.fromInt(2),
-                libraryItemId = UUIDConverter.fromInt(3),
-                durationSeconds = 240,
-                startTimestamp = fakeTimeProvider.startTime.plus(10.minutes.toJavaDuration()),
+                sessionId = UUIDConverter.fromInt(7),
+                libraryItemId = UUIDConverter.fromInt(5),
+                durationSeconds = 540,
+                startTimestamp = fakeTimeProvider.startTime.plus(3.minutes.toJavaDuration()),
             )
         )
     }
