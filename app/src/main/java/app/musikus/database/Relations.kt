@@ -140,7 +140,10 @@ data class GoalInstanceWithDescription(
         entityColumn = "id"
     )
     val description: GoalDescription
-)
+) {
+    val endOfInstanceInLocalTimezone
+        get() = description.endOfInstanceInLocalTimezone(instance)
+}
 
 data class GoalDescriptionWithInstancesAndLibraryItems(
     @Embedded val description: GoalDescription,

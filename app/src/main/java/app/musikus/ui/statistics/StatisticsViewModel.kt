@@ -15,7 +15,6 @@ import app.musikus.repository.SessionRepository
 import app.musikus.ui.goals.GoalWithProgress
 import app.musikus.utils.TimeProvider
 import app.musikus.utils.getDayIndexOfWeek
-import app.musikus.utils.getStartOfDayOfWeek
 import app.musikus.utils.specificMonth
 import app.musikus.utils.weekIndexToName
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -139,10 +138,9 @@ class StatisticsViewModel @Inject constructor(
 
         val lastSevenDays = (0..6).reversed().map { dayOffset ->
             (getDayIndexOfWeek(dateTime = timeProvider.now()) - dayOffset).let {
-                getStartOfDayOfWeek(
+                timeProvider.getStartOfDayOfWeek(
                     dayIndex = (it-1).mod(7).toLong() + 1,
-                    weekOffset = if (it > 0) 0 else -1,
-                    dateTime = timeProvider.now()
+                    weekOffset = if (it > 0) 0 else -1
                 )
             }
         }

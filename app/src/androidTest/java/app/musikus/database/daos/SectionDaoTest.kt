@@ -314,14 +314,10 @@ class SectionDaoTest {
     fun getSpecificSection() = runTest {
         val sectionDaoSpy = spyk(sectionDao)
 
-        try {
-            sectionDaoSpy.getAsFlow(UUIDConverter.fromInt(2))
-        } catch (e: IllegalArgumentException) {
-            // Ignore
-        }
+        sectionDaoSpy.getAsFlow(UUIDConverter.fromInt(3))
 
         coVerify (exactly = 1) {
-            sectionDaoSpy.getAsFlow(listOf(UUIDConverter.fromInt(2)))
+            sectionDaoSpy.getAsFlow(listOf(UUIDConverter.fromInt(3)))
         }
     }
 

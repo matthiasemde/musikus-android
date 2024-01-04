@@ -18,9 +18,10 @@ import androidx.room.InvalidationTracker
 import androidx.room.OnConflictStrategy
 import androidx.room.RawQuery
 import androidx.room.Update
+import androidx.room.withTransaction
 import androidx.sqlite.db.SimpleSQLiteQuery
 import androidx.sqlite.db.SupportSQLiteQuery
-import app.musikus.Musikus
+import app.musikus.Musikus.Companion.ioThread
 import app.musikus.database.MusikusDatabase
 import app.musikus.database.UUIDConverter
 import app.musikus.database.entities.BaseModel
@@ -55,7 +56,8 @@ abstract class BaseDao<
 >(
     private val tableName: String,
     private val database: MusikusDatabase,
-    displayAttributes: List<String>
+    displayAttributes: List<String>,
+    private val dependencies: List<String>? = null // queries results will be filtered if rows in these tables are deleted
 ) {
 
     protected val displayAttributesString = (
@@ -131,18 +133,23 @@ abstract class BaseDao<
     protected suspend fun getModel(id: UUID) = getModels(listOf(id)).first()
 
     protected open suspend fun getModels(ids: List<UUID>): List<T> {
+        val uniqueIds = ids.toSet() // TODO possibly make ids Set instead of List in the first place
         val models = getModels(
             SimpleSQLiteQuery(
                 query = "SELECT * FROM $tableName WHERE " +
-                    "id IN (${ids.joinToString(separator = ",") { "?" }});",
-                ids.map { UUIDConverter().toByte(it) }.toTypedArray()
+                    "id IN (${uniqueIds.joinToString(separator = ",") { "?" }}) " +
+                    if (dependencies == null) ";"
+                    else dependencies.joinToString(separator = "") { dependentTableName ->
+                        "AND ${dependentTableName}_id IN (SELECT id FROM $dependentTableName WHERE deleted = 0) "
+                    } + ";",
+                uniqueIds.map { UUIDConverter().toByte(it) }.toTypedArray()
             )
         )
 
         // make sure all models were found
-        if(models.size != ids.size) {
+        if(models.size != uniqueIds.size) {
             throw IllegalArgumentException(
-                "Could not find ${tableName}(s) with the following id(s): ${ids - models.map { it.id }.toSet()}"
+                "Could not find ${tableName}(s) with the following id(s): ${uniqueIds - models.map { it.id }.toSet()}"
             )
         }
 
@@ -160,18 +167,23 @@ abstract class BaseDao<
     protected suspend fun get(id: UUID) = get(listOf(id)).first()
 
     protected open suspend fun get(ids: List<UUID>): List<D>  {
+        val uniqueIds = ids.toSet() // TODO possibly make ids Set instead of List in the first place
         val rows = get(
             SimpleSQLiteQuery(
                 query = "SELECT $displayAttributesString FROM $tableName WHERE " +
-                        "id IN (${ids.joinToString(separator = ",") { "?" }});",
-                ids.map { UUIDConverter().toByte(it) }.toTypedArray()
+                        "id IN (${uniqueIds.joinToString(separator = ",") { "?" }}) " +
+                        if (dependencies == null) ";"
+                        else dependencies.joinToString(separator = "") { dependentTableName ->
+                            "AND ${dependentTableName}_id IN (SELECT id FROM $dependentTableName WHERE deleted = 0) "
+                        } + ";",
+                uniqueIds.map { UUIDConverter().toByte(it) }.toTypedArray()
             )
         )
 
         // make sure all rows were found
-        if(rows.size != ids.size) {
+        if(rows.size != uniqueIds.size) {
             throw IllegalArgumentException(
-                "Could not find ${tableName}(s) with the following id(s): ${ids - rows.map { it.id }.toSet()}"
+                "Could not find ${tableName}(s) with the following id(s): ${uniqueIds - rows.map { it.id }.toSet()}"
             )
         }
 
@@ -179,7 +191,13 @@ abstract class BaseDao<
     }
 
     protected open suspend fun getAll() = get(
-        SimpleSQLiteQuery("SELECT $displayAttributesString FROM $tableName;")
+        SimpleSQLiteQuery(
+            "SELECT $displayAttributesString FROM $tableName " +
+            if (dependencies == null) ";"
+            else "WHERE " + dependencies.joinToString(separator = "AND ") { dependentTableName ->
+                "${dependentTableName}_id IN (SELECT id FROM $dependentTableName WHERE deleted = 0) "
+            } + ";"
+        )
     )
 
     /**
@@ -198,7 +216,7 @@ abstract class BaseDao<
         return flow {
             observer = observer ?: (object : InvalidationTracker.Observer(tableName) {
                 override fun onInvalidated(tables: Set<String>) {
-                    Musikus.ioThread { runBlocking {
+                    ioThread { runBlocking {
                         notify.emit("invalidated")
                     }}
                 }
@@ -230,6 +248,13 @@ abstract class BaseDao<
             false
         }
     }
+
+    /**
+     * Transactions
+     */
+    suspend fun <R> transaction(block: suspend () -> R): R {
+        return database.withTransaction(block)
+    }
 }
 
 abstract class TimestampDao<
@@ -239,13 +264,15 @@ abstract class TimestampDao<
 >(
     tableName: String,
     private val database: MusikusDatabase,
-    displayAttributes: List<String>
+    displayAttributes: List<String>,
+    dependencies: List<String>? = null
 ) : BaseDao<T, U, D>(
     tableName = tableName,
     database = database,
     displayAttributes =
         listOf("created_at", "modified_at") +
-        displayAttributes
+        displayAttributes,
+    dependencies = dependencies
 ) {
 
     override suspend fun insert(row: T) {
@@ -307,19 +334,20 @@ abstract class SoftDeleteDao<
     }
 
     override suspend fun get(ids: List<UUID>) : List<D> {
+        val uniqueIds = ids.toSet() // TODO possibly make ids Set instead of List in the first place
         val rows = get(
             SimpleSQLiteQuery(
                 query = "SELECT ${super.displayAttributesString} FROM $tableName WHERE " +
-                        "id IN (${ids.joinToString(separator = ",") { "?" }}) " +
+                        "id IN (${uniqueIds.joinToString(separator = ",") { "?" }}) " +
                         "AND deleted=0;",
-                ids.map { UUIDConverter().toByte(it) }.toTypedArray()
+                uniqueIds.map { UUIDConverter().toByte(it) }.toTypedArray()
             )
         )
 
         // make sure all rows were found
-        if(rows.size != ids.size) {
+        if(rows.size != uniqueIds.size) {
             throw IllegalArgumentException(
-                "Could not find ${tableName}(s) with the following id(s): ${ids - rows.map { it.id }.toSet()}"
+                "Could not find ${tableName}(s) with the following id(s): ${uniqueIds - rows.map { it.id }.toSet()}"
             )
         }
 

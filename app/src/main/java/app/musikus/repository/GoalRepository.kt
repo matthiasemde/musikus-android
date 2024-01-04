@@ -10,7 +10,9 @@ package app.musikus.repository
 
 import androidx.room.Transaction
 import app.musikus.database.GoalDescriptionWithInstancesAndLibraryItems
+import app.musikus.database.GoalInstanceWithDescription
 import app.musikus.database.GoalInstanceWithDescriptionWithLibraryItems
+import app.musikus.database.Nullable
 import app.musikus.database.daos.GoalDescription
 import app.musikus.database.daos.GoalDescriptionDao
 import app.musikus.database.daos.GoalInstance
@@ -21,13 +23,9 @@ import app.musikus.database.entities.GoalDescriptionModel
 import app.musikus.database.entities.GoalDescriptionUpdateAttributes
 import app.musikus.database.entities.GoalInstanceCreationAttributes
 import app.musikus.database.entities.GoalInstanceUpdateAttributes
-import app.musikus.database.entities.GoalPeriodUnit
 import app.musikus.utils.TimeProvider
-import app.musikus.utils.getStartOfDay
-import app.musikus.utils.getStartOfMonth
-import app.musikus.utils.getStartOfWeek
 import kotlinx.coroutines.flow.Flow
-import java.time.ZonedDateTime
+import java.util.UUID
 import kotlin.time.Duration
 
 interface GoalRepository {
@@ -39,10 +37,9 @@ interface GoalRepository {
     /** Mutators */
     /** Add */
     suspend fun add(
-        goalDescriptionCreationAttributes: GoalDescriptionCreationAttributes,
-        startingTimeframe : ZonedDateTime = timeProvider.now(),
+        descriptionCreationAttributes: GoalDescriptionCreationAttributes,
+        instanceCreationAttributes: GoalInstanceCreationAttributes,
         libraryItems: List<LibraryItem>?,
-        target: Duration,
     )
 
     /** Edit */
@@ -86,70 +83,66 @@ class GoalRepositoryImpl(
     override val timeProvider: TimeProvider
 ) : GoalRepository {
 
-    private suspend fun update(
-        goalsWithUpdateAttributes: List<Pair<GoalDescription, GoalDescriptionUpdateAttributes>>,
-    ) {
-        goalDescriptionDao.update(
-            goalsWithUpdateAttributes.map { (goalDescription, updateAttributes) ->
-                goalDescription.id to updateAttributes
-            }
-        )
-    }
-
-
-    override val currentGoals = goalInstanceDao.getActiveInstancesWithDescriptionWithLibraryItems()
+    override val currentGoals = goalInstanceDao.getCurrent()
     override val allGoals = goalDescriptionDao.getAllWithInstancesAndLibraryItems()
-    override val lastFiveCompletedGoals = goalInstanceDao.getLastNCompletedWithDescriptionsWithLibraryItems(5)
+    override val lastFiveCompletedGoals = goalInstanceDao.getLastNCompleted(5)
 
 
     /** Mutators */
 
     /** Add */
     override suspend fun add(
-        goalDescriptionCreationAttributes: GoalDescriptionCreationAttributes,
-        startingTimeframe : ZonedDateTime,
+        descriptionCreationAttributes: GoalDescriptionCreationAttributes,
+        instanceCreationAttributes: GoalInstanceCreationAttributes,
         libraryItems: List<LibraryItem>?,
-        target: Duration,
     ) {
-        val start = when(goalDescriptionCreationAttributes.periodUnit) {
-            GoalPeriodUnit.DAY -> getStartOfDay(dateTime = startingTimeframe)
-            GoalPeriodUnit.WEEK -> getStartOfWeek(dateTime = startingTimeframe)
-            GoalPeriodUnit.MONTH -> getStartOfMonth(dateTime = startingTimeframe)
-        }
 
         goalDescriptionDao.insert(
             description = GoalDescriptionModel(
-                type = goalDescriptionCreationAttributes.type,
-                repeat = goalDescriptionCreationAttributes.repeat,
-                periodInPeriodUnits = goalDescriptionCreationAttributes.periodInPeriodUnits,
-                periodUnit = goalDescriptionCreationAttributes.periodUnit,
+                type = descriptionCreationAttributes.type,
+                repeat = descriptionCreationAttributes.repeat,
+                periodInPeriodUnits = descriptionCreationAttributes.periodInPeriodUnits,
+                periodUnit = descriptionCreationAttributes.periodUnit,
             ),
-            instanceCreationAttributes = GoalInstanceCreationAttributes(
-                startTimestamp = start,
-                target = target
-            ),
+            instanceCreationAttributes = instanceCreationAttributes,
             libraryItemIds = libraryItems?.map { it.id },
         )
     }
 
-    private suspend fun createInstance(
-        description: GoalDescription,
-        timeframe: ZonedDateTime,
-        target: Duration,
+    private suspend fun renewInstance(
+        outdatedInstanceWithDescription: GoalInstanceWithDescription,
     ) {
-        val start = when(description.periodUnit) {
-            GoalPeriodUnit.DAY -> getStartOfDay(dateTime = timeframe)
-            GoalPeriodUnit.WEEK -> getStartOfWeek(dateTime = timeframe)
-            GoalPeriodUnit.MONTH -> getStartOfMonth(dateTime = timeframe)
-        }
+        val description = outdatedInstanceWithDescription.description
+        val outdatedInstance = outdatedInstanceWithDescription.instance
 
-        goalInstanceDao.insert(
-            description.id,
-            GoalInstanceCreationAttributes(
-                startTimestamp = start,
-                target = target
+        val outdatedInstanceEndTimestamp =
+            outdatedInstanceWithDescription.endOfInstanceInLocalTimezone
+
+        // perform the update in a transaction
+        goalInstanceDao.transaction {
+            // insert a new instance with the same target and description as the old one
+            // the start timestamp is the end timestamp of the old instance
+            goalInstanceDao.insert(
+                outdatedInstance.goalDescriptionId,
+                GoalInstanceCreationAttributes(
+                    startTimestamp = outdatedInstanceEndTimestamp,
+                    target = outdatedInstance.target
+                )
             )
-        )
+
+            if (description.paused) {
+                // if the old instance belonged to a paused goal delete it...
+                goalInstanceDao.deletePausedGoalInstance(outdatedInstance.id)
+            } else {
+                // otherwise mark it as renewed by setting its endTimestamp
+                goalInstanceDao.update(
+                    outdatedInstance.id,
+                    GoalInstanceUpdateAttributes(
+                        endTimestamp = Nullable(outdatedInstanceEndTimestamp),
+                    )
+                )
+            }
+        }
     }
 
 
@@ -158,22 +151,13 @@ class GoalRepositoryImpl(
         goal: GoalInstance,
         newTarget: Duration,
     ) {
+        // before editing we need to remove possible future instances
+        // which would still have the outdated target
+        cleanFutureInstances(listOf(goal.goalDescriptionId))
+
         goalInstanceDao.update(
             goal.id,
             GoalInstanceUpdateAttributes(target = newTarget)
-        )
-    }
-
-    private suspend fun markInstanceAsRenewed(
-        goal: GoalInstance,
-        endTimestamp: ZonedDateTime
-    ) {
-        goalInstanceDao.update(
-            goal.id,
-            GoalInstanceUpdateAttributes(
-                renewed = true,
-                endTimestamp = endTimestamp
-            )
         )
     }
 
@@ -186,9 +170,12 @@ class GoalRepositoryImpl(
 
     @Transaction
     override suspend fun pause(goals: List<GoalDescription>) {
-        update(
+        // before pausing we need to clean for possible future instances
+        cleanFutureInstances(goals.map { it.id })
+
+        goalDescriptionDao.update(
             goals.map {
-                it to GoalDescriptionUpdateAttributes(paused = true)
+                it.id to GoalDescriptionUpdateAttributes(paused = true)
             },
         )
     }
@@ -200,12 +187,14 @@ class GoalRepositoryImpl(
 
     @Transaction
     override suspend fun unpause(goals: List<GoalDescription>) {
-        update(
+        goalDescriptionDao.update(
             goals.map {
-                it to GoalDescriptionUpdateAttributes(paused = false)
+                it.id to GoalDescriptionUpdateAttributes(paused = false)
             }
         )
+        updateGoals()
     }
+
 
     /** Archive / Unarchive */
 
@@ -214,20 +203,28 @@ class GoalRepositoryImpl(
     }
 
     override suspend fun archive(goals: List<GoalDescription>) {
-        update(
-            goals.map {
+        val descriptionIds = goals.map { it.id }
+
+        // before archiving we need to check if there are instances in the future
+        cleanFutureInstances(descriptionIds)
+
+        goalDescriptionDao.transaction {
+            goalDescriptionDao.update(descriptionIds.map {
                 it to GoalDescriptionUpdateAttributes(archived = true)
-            },
-        )
-        goals.forEach {
-            goalInstanceDao.getLatest(it.id)?.let { latestInstance ->
-                goalInstanceDao.update(
-                    latestInstance.id,
-                    GoalInstanceUpdateAttributes(
-                        endTimestamp = it.endOfInstanceInLocalTimezone(latestInstance)
-                    )
-                )
+            })
+            val latestInstancesWithDescription = goalInstanceDao.getLatest(descriptionIds)
+
+            if(latestInstancesWithDescription.size != descriptionIds.size) {
+                throw IllegalStateException("Not all goals have instances")
             }
+
+            goalInstanceDao.update(
+                latestInstancesWithDescription.map {
+                    it.instance.id to GoalInstanceUpdateAttributes(
+                        endTimestamp = Nullable(it.endOfInstanceInLocalTimezone)
+                    )
+                }
+            )
         }
     }
 
@@ -236,22 +233,28 @@ class GoalRepositoryImpl(
     }
 
     override suspend fun unarchive(goals: List<GoalDescription>) {
-        update(
-            goals.map {
+        val descriptionIds = goals.map { it.id }
+
+        goalDescriptionDao.transaction {
+            goalDescriptionDao.update(descriptionIds.map {
                 it to GoalDescriptionUpdateAttributes(archived = false)
+            })
+            val latestInstancesWithDescription = goalInstanceDao.getLatest(descriptionIds)
+
+            if(latestInstancesWithDescription.size != descriptionIds.toSet().size) {
+                throw IllegalStateException("Not all goals have instances")
             }
-        )
-        goals.forEach {
-            goalInstanceDao.getLatest(it.id)?.let { latestInstance ->
-                goalInstanceDao.update(
-                    latestInstance.id,
-                    GoalInstanceUpdateAttributes(
-                        endTimestamp = it.endOfInstanceInLocalTimezone(latestInstance)
+
+            goalInstanceDao.update(
+                latestInstancesWithDescription.map {
+                    it.instance.id to GoalInstanceUpdateAttributes(
+                        endTimestamp = Nullable(null)
                     )
-                )
-            }
+                }
+            )
         }
     }
+
 
     /** Delete / Restore */
 
@@ -285,43 +288,59 @@ class GoalRepositoryImpl(
 
     /** Update Goals */
     override suspend fun updateGoals() {
-        while(true) {
-            val outdatedGoalsWithEndTimestamps = goalInstanceDao
-                .getActiveInstancesWithDescription()
-                .map {
-                    it to it.description.endOfInstanceInLocalTimezone(it.instance)
-                }.filter { (_, endTimestamp) ->
-                    timeProvider.now() > endTimestamp
-                }
+        var lastOutdatedGoals : List<GoalInstanceWithDescription>? = null
 
-            if (outdatedGoalsWithEndTimestamps.isEmpty()) return
-
-            // while there are still outdated goals, keep looping and adding new ones
-            outdatedGoalsWithEndTimestamps.forEach { (outdatedGoal, endTimestamp) ->
-                val outdatedInstance = outdatedGoal.instance
-                val description = outdatedGoal.description
-                if (description.repeat) {
-
-                    // create a new goal with the same description and target
-                    createInstance(
-                        description,
-                        endTimestamp,
-                        outdatedInstance.target
-                    )
-
-                    // if the outdated instance belonged to a paused goal delete it...
-                    if (description.paused) {
-                        goalInstanceDao.delete(outdatedInstance.id)
-
-                    // otherwise mark it as renewed
-                    } else {
-                        markInstanceAsRenewed(outdatedInstance, endTimestamp)
+        // if there are no more outdated goals, we are done
+        while(lastOutdatedGoals == null || lastOutdatedGoals.isNotEmpty()) {
+            goalInstanceDao.transaction {
+                val outdatedGoals = goalInstanceDao
+                    .getUpdateCandidates()
+                    .filter {
+                        timeProvider.now() >= it.endOfInstanceInLocalTimezone
                     }
 
-                } else if (!description.archived) {
-                    // one shot goals are archived after they are outdated
-                    archive(description)
+                // if the list of outdated goals doesn't change, we are stuck in an infinite loop
+                if (outdatedGoals == lastOutdatedGoals) {
+                    throw IllegalStateException("Stuck in infinite loop while updating goals")
                 }
+
+                // while there are still outdated goals, keep looping and adding new ones
+                outdatedGoals.forEach { outdatedGoal ->
+                    val description = outdatedGoal.description
+                    if (description.repeat) {
+                        // if the goal is repeatable, renew the instance
+                        renewInstance(outdatedGoal)
+                    } else if (!description.archived) {
+                        // one shot goals are archived after they are outdated
+                        archive(description)
+                    }
+                }
+                lastOutdatedGoals = outdatedGoals
+            }
+        }
+    }
+
+    private suspend fun cleanFutureInstances(descriptionIds: List<UUID>) {
+        var lastFutureInstances : List<GoalInstance>? = null
+
+        while(lastFutureInstances == null || lastFutureInstances.isNotEmpty()) {
+            goalInstanceDao.transaction {
+                val futureInstances = goalInstanceDao
+                    .getLatest(descriptionIds)
+                    .map { it.instance }
+                    .filter {
+                        it.startTimestamp > timeProvider.now()
+                    }
+
+                if(futureInstances == lastFutureInstances) {
+                    throw IllegalStateException("Stuck in infinite loop while cleaning future instances")
+                }
+
+                goalInstanceDao.deleteFutureGoalInstances(
+                    futureInstances.map { it.id }
+                )
+
+                lastFutureInstances = futureInstances
             }
         }
     }

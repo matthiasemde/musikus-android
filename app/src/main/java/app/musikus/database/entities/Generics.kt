@@ -32,7 +32,7 @@ abstract class BaseModelDisplayAttributes {
 
     override fun toString(): String {
         return "\nPretty print of ${this.javaClass.simpleName} entity:\n" +
-                "\tid:\t\t\t\t\t$id\n"
+                "\tid:\t\t\t\t\t\t$id\n"
     }
 }
 
@@ -44,7 +44,7 @@ abstract class BaseModel(
 
     override fun toString(): String {
         return "\nPretty print of ${this.javaClass.simpleName} entity:\n" +
-                "\tid:\t\t\t\t$id\n"
+                "\tid:\t\t\t\t\t$id\n"
     }
 }
 
@@ -76,8 +76,8 @@ abstract class TimestampModelDisplayAttributes : BaseModelDisplayAttributes() {
 
     override fun toString(): String {
         return super.toString() +
-                "\tcreated at:\t\t\t${createdAt}\n" +
-                "\tmodified_at:\t\t${modifiedAt}\n"
+                "\tcreated at:\t\t\t\t${createdAt}\n" +
+                "\tmodified_at:\t\t\t${modifiedAt}\n"
     }
 }
 abstract class TimestampModel(
@@ -87,8 +87,8 @@ abstract class TimestampModel(
 
     override fun toString(): String {
         return super.toString() +
-                "\tcreated at:\t\t$createdAt\n" +
-                "\tmodified_at:\t$modifiedAt\n"
+                "\tcreated at:\t\t\t$createdAt\n" +
+                "\tmodified_at:\t\t$modifiedAt\n"
     }
 }
 

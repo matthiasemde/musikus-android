@@ -16,18 +16,12 @@ import app.musikus.database.daos.LibraryItem
 import app.musikus.repository.SessionRepository
 import app.musikus.repository.UserPreferencesRepository
 import app.musikus.utils.DateFormat
+import app.musikus.utils.DurationFormat
 import app.musikus.utils.LibraryItemSortMode
 import app.musikus.utils.SortDirection
-import app.musikus.utils.DurationFormat
 import app.musikus.utils.TimeProvider
 import app.musikus.utils.Timeframe
 import app.musikus.utils.getDurationString
-import app.musikus.utils.getEndOfDay
-import app.musikus.utils.getEndOfMonth
-import app.musikus.utils.getEndOfWeek
-import app.musikus.utils.getStartOfDay
-import app.musikus.utils.getStartOfMonth
-import app.musikus.utils.getStartOfWeek
 import app.musikus.utils.musikusFormat
 import app.musikus.utils.sorted
 import app.musikus.utils.specificDay
@@ -148,7 +142,7 @@ class SessionStatisticsViewModel @Inject constructor(
 
     /** Private variables */
     // convenient date because first of month is a monday
-    private val release = getStartOfDay(dateTime = ZonedDateTime.parse("2022-08-01T00:00:00+02:00"))
+    private val release = timeProvider.getStartOfDay(dateTime = ZonedDateTime.parse("2022-08-01T00:00:00+02:00"))
 
     private var _barChartShowing = false
     private var _pieChartShowing = false
@@ -167,26 +161,16 @@ class SessionStatisticsViewModel @Inject constructor(
 
     /** Own state flows */
     private val _chartType = MutableStateFlow(SessionStatisticsChartType.DEFAULT)
-//    private val _selectedTab = MutableStateFlow(SessionStatisticsTab.DEFAULT)
     private val _selectedTabWithTimeframe = MutableStateFlow(
         TabWithTimeframe(
             SessionStatisticsTab.DEFAULT,
             when(SessionStatisticsTab.DEFAULT) {
                 SessionStatisticsTab.DAYS ->
-                    getStartOfDay(
-                        dayOffset = -6,
-                        dateTime = timeProvider.now()
-                    ) to getEndOfDay(dateTime = timeProvider.now())
+                    timeProvider.getStartOfDay(dayOffset = -6) to timeProvider.getEndOfDay()
                 SessionStatisticsTab.WEEKS ->
-                    getStartOfWeek(
-                        weekOffset = -6,
-                        dateTime = timeProvider.now()
-                    ) to getEndOfWeek(dateTime = timeProvider.now())
+                    timeProvider.getStartOfWeek(weekOffset = -6) to timeProvider.getEndOfWeek()
                 SessionStatisticsTab.MONTHS ->
-                    getStartOfMonth(
-                        monthOffset = -6,
-                        dateTime = timeProvider.now()
-                    ) to getEndOfMonth(dateTime = timeProvider.now())
+                    timeProvider.getStartOfMonth(monthOffset = -6) to timeProvider.getEndOfMonth()
             }
         ),
     )
@@ -289,14 +273,14 @@ class SessionStatisticsViewModel @Inject constructor(
         val timeframes = (0L..6L).reversed().map {
             when(selectedTab) {
                 SessionStatisticsTab.DAYS ->
-                    getStartOfDay(dayOffset = -it, dateTime = timeframeEnd.minusSeconds(1)) to
-                    getEndOfDay(dayOffset = -it, dateTime = timeframeEnd.minusSeconds(1))
+                    timeProvider.getStartOfDay(dayOffset = -it, dateTime = timeframeEnd.minusSeconds(1)) to
+                    timeProvider.getEndOfDay(dayOffset = -it, dateTime = timeframeEnd.minusSeconds(1))
                 SessionStatisticsTab.WEEKS ->
-                    getStartOfWeek(weekOffset = -it, dateTime = timeframeEnd.minusSeconds(1)) to
-                    getEndOfWeek(weekOffset = -it, dateTime = timeframeEnd.minusSeconds(1))
+                    timeProvider.getStartOfWeek(weekOffset = -it, dateTime = timeframeEnd.minusSeconds(1)) to
+                    timeProvider.getEndOfWeek(weekOffset = -it, dateTime = timeframeEnd.minusSeconds(1))
                 SessionStatisticsTab.MONTHS ->
-                    getStartOfMonth(monthOffset = -it, dateTime = timeframeEnd.minusSeconds(1)) to
-                    getEndOfMonth(monthOffset = -it, dateTime = timeframeEnd.minusSeconds(1))
+                    timeProvider.getStartOfMonth(monthOffset = -it, dateTime = timeframeEnd.minusSeconds(1)) to
+                    timeProvider.getEndOfMonth(monthOffset = -it, dateTime = timeframeEnd.minusSeconds(1))
             }
         }
 
@@ -458,7 +442,7 @@ class SessionStatisticsViewModel @Inject constructor(
 
         SessionStatisticsHeaderUiState(
             seekBackwardEnabled = start > release,
-            seekForwardEnabled = end < getEndOfDay(dateTime = timeProvider.now()),
+            seekForwardEnabled = end < timeProvider.getEndOfDay(),
             timeframe = timeframe,
             totalPracticeDuration = totalDuration,
         )
@@ -554,28 +538,28 @@ class SessionStatisticsViewModel @Inject constructor(
                 tab = selectedTab,
                 timeframe = when(selectedTab) {
                     SessionStatisticsTab.DAYS -> {
-                        val endOfToday = getEndOfDay(dateTime = timeProvider.now())
+                        val endOfToday = timeProvider.getEndOfDay()
                         var newEnd = end
                         if (newEnd > endOfToday) {
                             newEnd = endOfToday
                         }
-                        getStartOfDay(dayOffset = -6, dateTime = newEnd.minusSeconds(1)) to newEnd
+                        timeProvider.getStartOfDay(dayOffset = -6, dateTime = newEnd.minusSeconds(1)) to newEnd
                     }
                     SessionStatisticsTab.WEEKS -> {
-                        val endOfThisWeek = getEndOfWeek(dateTime = timeProvider.now())
-                        var newEnd = getEndOfWeek(dateTime = end.minusSeconds(1))
+                        val endOfThisWeek = timeProvider.getEndOfWeek()
+                        var newEnd = timeProvider.getEndOfWeek(dateTime = end.minusSeconds(1))
                         if (newEnd > endOfThisWeek) {
                             newEnd = endOfThisWeek
                         }
-                        getStartOfWeek(weekOffset = -6, dateTime = newEnd.minusSeconds(1)) to newEnd
+                        timeProvider.getStartOfWeek(weekOffset = -6, dateTime = newEnd.minusSeconds(1)) to newEnd
                     }
                     SessionStatisticsTab.MONTHS -> {
-                        val endOfThisMonth = getEndOfMonth(dateTime = timeProvider.now())
-                        var newEnd = getEndOfMonth(dateTime = end.minusSeconds(1))
+                        val endOfThisMonth = timeProvider.getEndOfMonth()
+                        var newEnd = timeProvider.getEndOfMonth(dateTime = end.minusSeconds(1))
                         if (newEnd > endOfThisMonth) {
                             newEnd = endOfThisMonth
                         }
-                        getStartOfMonth(monthOffset = -6, dateTime = newEnd.minusSeconds(1)) to newEnd
+                        timeProvider.getStartOfMonth(monthOffset = -6, dateTime = newEnd.minusSeconds(1)) to newEnd
                     }
                 }
             )
@@ -590,28 +574,28 @@ class SessionStatisticsViewModel @Inject constructor(
                 tab = tab,
                 timeframe = when(tab) {
                     SessionStatisticsTab.DAYS -> {
-                        val endOfToday = getEndOfDay(dateTime = timeProvider.now())
+                        val endOfToday = timeProvider.getEndOfDay()
                         var newEnd = end.plusDays(7)
                         if(newEnd > endOfToday) {
                            newEnd = endOfToday
                         }
-                        getStartOfDay(dayOffset = -6, dateTime = newEnd.minusSeconds(1)) to newEnd
+                        timeProvider.getStartOfDay(dayOffset = -6, dateTime = newEnd.minusSeconds(1)) to newEnd
                     }
                     SessionStatisticsTab.WEEKS -> {
-                        val endOfThisWeek = getEndOfWeek(dateTime = timeProvider.now())
+                        val endOfThisWeek = timeProvider.getEndOfWeek()
                         var newEnd = end.plusWeeks(7)
                         if(newEnd > endOfThisWeek) {
                            newEnd = endOfThisWeek
                         }
-                        getStartOfWeek(weekOffset = -6, dateTime = newEnd.minusSeconds(1)) to newEnd
+                        timeProvider.getStartOfWeek(weekOffset = -6, dateTime = newEnd.minusSeconds(1)) to newEnd
                     }
                     SessionStatisticsTab.MONTHS -> {
-                        val endOfThisMonth = getEndOfMonth(dateTime = timeProvider.now())
+                        val endOfThisMonth = timeProvider.getEndOfMonth()
                         var newEnd = end.plusMonths(7)
                         if(newEnd > endOfThisMonth) {
                            newEnd = endOfThisMonth
                         }
-                        getStartOfMonth(monthOffset = -6, dateTime = newEnd.minusSeconds(1)) to newEnd
+                        timeProvider.getStartOfMonth(monthOffset = -6, dateTime = newEnd.minusSeconds(1)) to newEnd
                     }
                 }
             )
@@ -630,21 +614,21 @@ class SessionStatisticsViewModel @Inject constructor(
                         if(newStart < release) {
                             newStart = release
                         }
-                        newStart to getEndOfDay(dayOffset = 6, dateTime = newStart)
+                        newStart to timeProvider.getEndOfDay(dayOffset = 6, dateTime = newStart)
                     }
                     SessionStatisticsTab.WEEKS -> {
                         var newStart = start.minusWeeks(7)
                         if(newStart < release) {
                             newStart = release
                         }
-                        newStart to getEndOfWeek(weekOffset = 6, dateTime = newStart)
+                        newStart to timeProvider.getEndOfWeek(weekOffset = 6, dateTime = newStart)
                     }
                     SessionStatisticsTab.MONTHS -> {
                         var newStart = start.minusMonths(7)
                         if(newStart < release) {
                             newStart = release
                         }
-                        newStart to getEndOfMonth(monthOffset = 6, dateTime = newStart)
+                        newStart to timeProvider.getEndOfMonth(monthOffset = 6, dateTime = newStart)
                     }
                 }
             )

@@ -153,7 +153,7 @@ class LibraryFolderDaoTest {
                 UUIDConverter.fromInt(1),
                 updateAttributes
             )
-        } catch (e: Exception) {
+        } catch (e: IllegalArgumentException) {
             // Ignore
         }
 
@@ -206,7 +206,7 @@ class LibraryFolderDaoTest {
 
         try {
             libraryFolderDaoSpy.delete(UUIDConverter.fromInt(2))
-        } catch (e: Exception) {
+        } catch (e: IllegalArgumentException) {
             // Ignore
         }
 
@@ -275,7 +275,7 @@ class LibraryFolderDaoTest {
 
         try {
             libraryFolderDaoSpy.restore(UUIDConverter.fromInt(2))
-        } catch (e: Exception) {
+        } catch (e: IllegalArgumentException) {
             // Ignore
         }
 
@@ -337,7 +337,7 @@ class LibraryFolderDaoTest {
 
         try {
             libraryFolderDaoSpy.getAsFlow(UUIDConverter.fromInt(2))
-        } catch (e: Exception) {
+        } catch (e: IllegalArgumentException) {
             // Ignore
         }
 

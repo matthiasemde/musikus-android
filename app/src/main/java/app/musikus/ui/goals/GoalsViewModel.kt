@@ -14,6 +14,7 @@ import app.musikus.database.GoalInstanceWithDescriptionWithLibraryItems
 import app.musikus.database.daos.GoalDescription
 import app.musikus.database.daos.LibraryItem
 import app.musikus.database.entities.GoalDescriptionCreationAttributes
+import app.musikus.database.entities.GoalInstanceCreationAttributes
 import app.musikus.database.entities.GoalPeriodUnit
 import app.musikus.database.entities.GoalType
 import app.musikus.repository.GoalRepository
@@ -25,6 +26,7 @@ import app.musikus.ui.library.DialogMode
 import app.musikus.utils.GoalsSortMode
 import app.musikus.utils.LibraryItemSortMode
 import app.musikus.utils.SortDirection
+import app.musikus.utils.TimeProvider
 import app.musikus.utils.sorted
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -106,6 +108,7 @@ data class GoalsUiState (
 
 @HiltViewModel
 class GoalsViewModel @Inject constructor(
+    private val timeProvider: TimeProvider,
     private val userPreferencesRepository : UserPreferencesRepository,
     libraryRepository: LibraryRepository,
     private val goalRepository : GoalRepository,
@@ -541,8 +544,15 @@ class GoalsViewModel @Inject constructor(
                             periodInPeriodUnits = dialogData.periodInPeriodUnits,
                             periodUnit = dialogData.periodUnit,
                         ),
+                        instanceCreationAttributes = GoalInstanceCreationAttributes(
+                            startTimestamp = when(dialogData.periodUnit) {
+                                GoalPeriodUnit.DAY -> timeProvider.getStartOfDay()
+                                GoalPeriodUnit.WEEK -> timeProvider.getStartOfWeek()
+                                GoalPeriodUnit.MONTH -> timeProvider.getStartOfMonth()
+                             },
+                            target = dialogData.target,
+                        ),
                         libraryItems = dialogData.selectedLibraryItems,
-                        target = dialogData.target,
                     )
                 } else {
                     goalRepository.editGoalTarget(

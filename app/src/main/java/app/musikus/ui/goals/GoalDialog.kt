@@ -135,8 +135,8 @@ fun PeriodInput(
         SelectionSpinner(
             modifier = Modifier.width(130.dp),
             expanded = periodUnitSelectorExpanded,
-            options = GoalPeriodUnit.entries.map { IntSelectionSpinnerOption(it.ordinal, GoalPeriodUnit.toString(it)) },
-            selected = IntSelectionSpinnerOption(periodUnit.ordinal, GoalPeriodUnit.toString(periodUnit)),
+            options = GoalPeriodUnit.entries.map { IntSelectionSpinnerOption(it.ordinal, it.toString()) },
+            selected = IntSelectionSpinnerOption(periodUnit.ordinal, periodUnit.toString()),
             semanticDescription = "Select period unit",
             dropdownTestTag = TestTags.GOAL_DIALOG_PERIOD_UNIT_SELECTOR_DROPDOWN,
             onExpandedChange = onPeriodUnitSelectorExpandedChanged,
@@ -213,11 +213,11 @@ fun GoalDialog(
             MyToggleButton(
                 modifier = Modifier.padding(MaterialTheme.spacing.large),
                 options = GoalType.entries.map {
-                    ToggleButtonOption(it.ordinal, GoalType.toString(it))
+                    ToggleButtonOption(it.ordinal, it.toString())
                 },
                 selected = ToggleButtonOption(
                     dialogData.goalType.ordinal,
-                    GoalType.toString(dialogData.goalType)
+                    dialogData.goalType.toString()
                 ),
                 onSelectedChanged = { option ->
                     onGoalTypeChanged(GoalType.entries[option.id])

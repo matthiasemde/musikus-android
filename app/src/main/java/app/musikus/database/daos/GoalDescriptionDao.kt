@@ -67,6 +67,18 @@ data class GoalDescription(
         HASH_FACTOR + archived.hashCode()) *
         HASH_FACTOR + customOrder.hashCode()
 
+    override fun toString(): String {
+        return super.toString() +
+            "\ttype:\t\t\t\t\t$type\n" +
+            "\trepeat:\t\t\t\t\t$repeat\n" +
+            "\tperiodInPeriodUnits:\t$periodInPeriodUnits\n" +
+            "\tperiodUnit:\t\t\t\t$periodUnit\n" +
+            "\tprogressType:\t\t\t$progressType\n" +
+            "\tpaused:\t\t\t\t\t$paused\n" +
+            "\tarchived:\t\t\t\t$archived\n" +
+            "\tcustomOrder:\t\t\t$customOrder\n"
+    }
+
     fun title(item: LibraryItem? = null) =
         item?.let {
             UiText.DynamicString(item.name)
@@ -139,23 +151,13 @@ abstract class GoalDescriptionDao(
 
     override suspend fun insert(row: GoalDescriptionModel) {
         throw NotImplementedError(
-            "Use overload insert(" +
-                    "goalDescription: GoalDescriptionModel, " +
-                    "startingTimeframe: ZonedDateTime, " +
-                    "libraryItemIds: List<UUID>?, " +
-                    "target: Duration" +
-                    ") instead"
+            "Use overload insert(description, instanceCreationAttributes, libraryItemIds) instead"
         )
     }
 
     override suspend fun insert(rows: List<GoalDescriptionModel>) {
         throw NotImplementedError(
-            "Use overload insert(" +
-                    "goalDescription: GoalDescriptionModel, " +
-                    "startingTimeframe: ZonedDateTime, " +
-                    "libraryItemIds: List<UUID>?, " +
-                    "target: Duration" +
-                    ") instead"
+            "Use overload insert(description, instanceCreationAttributes, libraryItemIds) instead"
         )
     }
 
@@ -168,19 +170,22 @@ abstract class GoalDescriptionDao(
     open suspend fun insert(
         description: GoalDescriptionModel,
         instanceCreationAttributes: GoalInstanceCreationAttributes,
-        libraryItemIds: List<UUID>?,
+        libraryItemIds: List<UUID>? = null,
     ) {
 
         super.insert(listOf(description)) // insert of single description would call the overridden insert method
 
         // Create the first instance of the newly created goal description
         database.goalInstanceDao.insert(
-            description.id,
-            instanceCreationAttributes
+            descriptionId = description.id,
+            creationAttributes = instanceCreationAttributes,
+            firstInstanceOfGoal = true
         )
 
         if(description.type == GoalType.NON_SPECIFIC && !libraryItemIds.isNullOrEmpty()) {
             throw IllegalArgumentException("Non-specific goals cannot have library items")
+        } else if(description.type != GoalType.NON_SPECIFIC && libraryItemIds.isNullOrEmpty()) {
+            throw IllegalArgumentException("Specific goals must have at least one library item")
         }
 
         libraryItemIds?.forEach { libraryItemId ->
@@ -196,6 +201,18 @@ abstract class GoalDescriptionDao(
     /**
      * @Queries
      */
+
+    @Transaction
+    @RewriteQueriesToDropUnusedColumns
+    @Query(
+        "SELECT * FROM goal_description " +
+            "WHERE id = (SELECT goal_description_id FROM goal_instance WHERE id = :instanceId) " +
+            "AND deleted=0 " +
+            "AND archived=0"
+    )
+    abstract fun getDescriptionForInstance(
+        instanceId: UUID
+    ): GoalDescription?
 
     @Transaction
     @RewriteQueriesToDropUnusedColumns

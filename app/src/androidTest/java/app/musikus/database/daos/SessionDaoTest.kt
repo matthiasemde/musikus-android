@@ -176,7 +176,7 @@ class SessionDaoTest {
 
         try {
             sessionDaoSpy.update(UUIDConverter.fromInt(1), SessionUpdateAttributes())
-        } catch (e: Exception) {
+        } catch (e: IllegalArgumentException) {
             // ignore
         }
 
@@ -221,7 +221,7 @@ class SessionDaoTest {
 
         try {
             sessionDaoSpy.delete(UUIDConverter.fromInt(1))
-        } catch (e: Exception) {
+        } catch (e: IllegalArgumentException) {
             // ignore
         }
 
@@ -285,7 +285,7 @@ class SessionDaoTest {
 
         try {
             sessionDaoSpy.restore(UUIDConverter.fromInt(1))
-        } catch (e: Exception) {
+        } catch (e: IllegalArgumentException) {
             // ignore
         }
 
@@ -342,7 +342,7 @@ class SessionDaoTest {
 
         try {
             sessionDaoSpy.getAsFlow(UUIDConverter.fromInt(2))
-        } catch (e: Exception) {
+        } catch (e: IllegalArgumentException) {
             // ignore
         }
 

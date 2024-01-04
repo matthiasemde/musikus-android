@@ -60,7 +60,8 @@ abstract class SectionDao(
         "library_item_id",
         "duration_seconds",
         "start_timestamp"
-    )
+    ),
+    dependencies = listOf("session")
 ) {
 
     /**

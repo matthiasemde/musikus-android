@@ -215,7 +215,7 @@ class LibraryItemDaoTest {
                 UUIDConverter.fromInt(2),
                 updateAttributes
             )
-        } catch (e: Exception) {
+        } catch (e: IllegalArgumentException) {
             // Ignore
         }
 
@@ -301,7 +301,7 @@ class LibraryItemDaoTest {
 
         try {
             libraryItemDaoSpy.delete(UUIDConverter.fromInt(2))
-        } catch (e: Exception) {
+        } catch (e: IllegalArgumentException) {
             // Ignore
         }
 
@@ -382,7 +382,7 @@ class LibraryItemDaoTest {
 
         try {
             libraryItemDaoSpy.restore(UUIDConverter.fromInt(2))
-        } catch (e: Exception) {
+        } catch (e: IllegalArgumentException) {
             // Ignore
         }
 
@@ -460,7 +460,7 @@ class LibraryItemDaoTest {
 
         try {
             libraryItemDaoSpy.getAsFlow(UUIDConverter.fromInt(2))
-        } catch (e: Exception) {
+        } catch (e: IllegalArgumentException) {
             // Ignore
         }
 

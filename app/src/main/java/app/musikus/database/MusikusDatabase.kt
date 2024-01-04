@@ -67,7 +67,7 @@ import javax.inject.Provider
     NullableUUIDConverter::class,
     NullableIntConverter::class,
     ZonedDateTimeConverter::class,
-//    DurationConverter::class
+    NullableZonedDateTimeConverter::class,
 )
 abstract class MusikusDatabase : RoomDatabase() {
     abstract val libraryItemDao : LibraryItemDao
@@ -125,18 +125,33 @@ class UUIDConverter {
     }
 
     companion object {
-        fun toDBString(uuid: UUID) =
-            ByteBuffer.wrap(ByteArray(16)).let { buffer ->
-                buffer.putLong(uuid.mostSignificantBits)
-                buffer.putLong(uuid.leastSignificantBits)
-                buffer.array().joinToString(separator = "") { "%02x".format(it) }
-            }
-
         fun fromInt(value: Int): UUID {
             return UUID.fromString(
                 "00000000-0000-0000-0000-${value.toString().padStart(12, '0')}"
             )
         }
+    }
+}
+
+fun UUID.toDBString() =
+    ByteBuffer.wrap(ByteArray(16)).let { buffer ->
+        buffer.putLong(this.mostSignificantBits)
+        buffer.putLong(this.leastSignificantBits)
+        buffer.array().joinToString(separator = "") { "%02x".format(it) }
+    }
+
+fun ZonedDateTime.toDatabaseString(): String =
+    this.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+
+class ZonedDateTimeConverter {
+    @TypeConverter
+    fun fromZonedDateTime(zonedDateTime: ZonedDateTime?): String? {
+        return zonedDateTime?.toDatabaseString()
+    }
+
+    @TypeConverter
+    fun toZonedDateTime(zonedDateTimeString: String?): ZonedDateTime? {
+        return zonedDateTimeString?.let { ZonedDateTime.parse(it) }
     }
 }
 
@@ -158,33 +173,7 @@ abstract class NullableConverter<T> {
 
 class NullableUUIDConverter : NullableConverter<UUID>()
 class NullableIntConverter : NullableConverter<Int>()
-
-fun ZonedDateTime.toDatabaseString(): String =
-    this.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
-
-class ZonedDateTimeConverter {
-    @TypeConverter
-    fun fromZonedDateTime(zonedDateTime: ZonedDateTime?): String? {
-        return zonedDateTime?.toDatabaseString()
-    }
-
-    @TypeConverter
-    fun toZonedDateTime(zonedDateTimeString: String?): ZonedDateTime? {
-        return zonedDateTimeString?.let { ZonedDateTime.parse(it) }
-    }
-}
-//
-//class DurationConverter {
-//    @TypeConverter
-//    fun fromDuration(duration: Duration?): Long? {
-//        return duration?.inWholeSeconds
-//    }
-//
-//    @TypeConverter
-//    fun toDuration(duration: Long?): Duration? {
-//        return duration?.seconds
-//    }
-//}
+class NullableZonedDateTimeConverter : NullableConverter<ZonedDateTime>()
 
 object PTDatabaseMigrationOneToTwo : Migration(1,2) {
     /**

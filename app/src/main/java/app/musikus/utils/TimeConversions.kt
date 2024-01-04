@@ -14,7 +14,6 @@ package app.musikus.utils
 
 import android.text.SpannableString
 import android.text.style.RelativeSizeSpan
-import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoField
@@ -276,111 +275,12 @@ fun ZonedDateTime.inLocalTimezone(): ZonedDateTime =
     this.toLocalDateTime().atZone(ZonedDateTime.now().zone)
 
 /**
- * Get the Beginning of dayOffset Days from now. dayOffset>0 -> future, dayOffset<0 -> past
- */
-fun getStartOfDay(
-    dayOffset: Long = 0,
-    weekOffset: Long = 0,
-    monthOffset: Long = 0,
-    dateTime: ZonedDateTime
-): ZonedDateTime = dateTime
-    .with(ChronoField.MILLI_OF_DAY, 0)
-    .toLocalDate()
-    .atStartOfDay(ZoneId.systemDefault())  // make sure time is 00:00
-    .plusMonths(monthOffset)
-    .plusWeeks(weekOffset)
-    .plusDays(dayOffset)
-
-/**
- * Get the End of dayOffset Days from now. Half-open: Actually get the Start of the Next day
- */
-fun getEndOfDay(
-    dayOffset: Long = 0,
-    weekOffset: Long = 0,
-    monthOffset: Long = 0,
-    dateTime: ZonedDateTime
-) = getStartOfDay(dayOffset + 1, weekOffset, monthOffset, dateTime)
-
-/**
- * get the Beginning of a Day (1=Mo, 7=Sun) of the current week (weekOffset=0) / the weeks before (weekOffset<0)
-  */
-fun getStartOfDayOfWeek(
-    dayIndex: Long = 0,
-    weekOffset: Long,
-    dateTime: ZonedDateTime
-): ZonedDateTime = dateTime
-    .with(ChronoField.SECOND_OF_DAY, 0)
-    .with(ChronoField.DAY_OF_WEEK , dayIndex )         // ISO 8601, Monday is first day of week.
-    .toLocalDate()
-    .atStartOfDay(ZoneId.systemDefault())  // make sure time is 00:00
-    .plusWeeks(weekOffset)
-
-/**
- * get the End of a Day (1=Mo, 7=Sun) of the current week (weekOffset=0) / the weeks before (weekOffset<0)
- */
-fun getEndOfDayOfWeek(
-    dayIndex: Long,
-    weekOffset: Long,
-    dateTime: ZonedDateTime
-): ZonedDateTime {
-    // because of half-open approach we have to get the "start of the _next_ day" instead of the end of the current day
-    // e.g. end of Tuesday = Start of Wednesday, so make dayIndex 2 -> 3
-    var nextDay = dayIndex + 1
-    var weekOffsetAdapted = weekOffset
-    if (dayIndex > 6) {
-        nextDay = (dayIndex + 1) % 7
-        weekOffsetAdapted += 1  // increase weekOffset so that we take the start of the first day of NEXT week as end of day
-    }
-    return getStartOfDayOfWeek(nextDay, weekOffsetAdapted, dateTime)
-}
-
-/**
- * gets start date of a Week
- */
-fun getStartOfWeek(
-    weekOffset: Long = 0,
-    dateTime: ZonedDateTime
-) = getStartOfDayOfWeek(1, weekOffset, dateTime)
-
-
-
-/**
- * gets end date of a Week
-  */
-fun getEndOfWeek(
-    weekOffset: Long = 0,
-    dateTime: ZonedDateTime
-) = getEndOfDayOfWeek(7, weekOffset, dateTime)
-
-/**
  * returns the weekDay of today from index 1=Mo until 7=Sun
   */
 
 fun getDayIndexOfWeek(
     dateTime: ZonedDateTime
 ) = dateTime.toLocalDate().dayOfWeek.value
-
-/**
- * Get the start of a month.
- * monthOffset=0 ->, monthOffset=1 -> next month, monthOffset = -1 -> last month, etc.
- */
-fun getStartOfMonth(
-    monthOffset: Long = 0,
-    dateTime: ZonedDateTime
-): ZonedDateTime = dateTime
-    .with(ChronoField.SECOND_OF_DAY, 0)
-    .with(ChronoField.DAY_OF_MONTH , 1 )    // jump to first day of this month
-    .toLocalDate()
-    .atStartOfDay(ZoneId.systemDefault())  // make sure time is 00:00
-    .plusMonths(monthOffset) // add desired number of months from now
-
-/**
- * Get the end of a month. Half-open: Actually get the Start of the next month.
- */
-fun getEndOfMonth(
-    monthOffset: Long = 0,
-    dateTime: ZonedDateTime
-) = getStartOfMonth(monthOffset + 1, dateTime)
 
 /**
  * Get specific month as in

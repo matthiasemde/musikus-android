@@ -12,6 +12,7 @@ import android.util.Log
 import app.musikus.database.MusikusDatabase
 import app.musikus.database.Nullable
 import app.musikus.database.entities.GoalDescriptionCreationAttributes
+import app.musikus.database.entities.GoalInstanceCreationAttributes
 import app.musikus.database.entities.GoalPeriodUnit
 import app.musikus.database.entities.GoalType
 import app.musikus.database.entities.LibraryFolderCreationAttributes
@@ -117,20 +118,25 @@ suspend fun prepopulateDatabase(
             ),
         ).forEach { goalDescriptionCreationAttributes ->
             goalRepository.add(
-                goalDescriptionCreationAttributes,
-                database.timeProvider.now().minus(
+                descriptionCreationAttributes = goalDescriptionCreationAttributes,
+                instanceCreationAttributes = GoalInstanceCreationAttributes(
+                    startTimestamp = database.timeProvider.now().minus(
                     (
-                            (if (goalDescriptionCreationAttributes.repeat) 10L else 1L) *
-                                    goalDescriptionCreationAttributes.periodInPeriodUnits
-                            ),
+                        (
+                            if (goalDescriptionCreationAttributes.repeat) 10L
+                            else 1L
+                        ) * goalDescriptionCreationAttributes.periodInPeriodUnits
+                    ),
                     when(goalDescriptionCreationAttributes.periodUnit) {
                         GoalPeriodUnit.DAY -> ChronoUnit.DAYS
                         GoalPeriodUnit.WEEK -> ChronoUnit.WEEKS
                         GoalPeriodUnit.MONTH -> ChronoUnit.MONTHS
-                    },
+                    }),
+                    target =((1..6).random() * 10 + 30).minutes
                 ),
-                if (goalDescriptionCreationAttributes.type == GoalType.NON_SPECIFIC) null else listOf(items.random()),
-                ((1..6).random() * 10 + 30).minutes
+                libraryItems =
+                    if (goalDescriptionCreationAttributes.type == GoalType.NON_SPECIFIC) null
+                    else listOf(items.random()),
             )
             delay(10)
         }

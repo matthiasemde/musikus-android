@@ -23,12 +23,10 @@ enum class GoalType {
 
     companion object {
         val DEFAULT = NON_SPECIFIC
-        fun toString(type: GoalType): String {
-            return when (type) {
-                NON_SPECIFIC -> "All items"
-                ITEM_SPECIFIC -> "Specific item"
-            }
-        }
+    }
+    override fun toString() = when (this) {
+        NON_SPECIFIC -> "All items"
+        ITEM_SPECIFIC -> "Specific item"
     }
 }
 
@@ -39,12 +37,10 @@ enum class GoalProgressType {
 
     companion object {
         val DEFAULT = TIME
-        fun toString(progressType: GoalProgressType): String {
-            return when (progressType) {
-                TIME -> "Time"
-                SESSION_COUNT -> "Sessions"
-            }
-        }
+    }
+    override fun toString() = when (this) {
+        TIME -> "Time"
+        SESSION_COUNT -> "Sessions"
     }
 }
 
@@ -53,13 +49,6 @@ enum class GoalPeriodUnit {
 
     companion object {
         val DEFAULT = DAY
-        fun toString(periodUnit: GoalPeriodUnit): String {
-            return when (periodUnit) {
-                DAY -> "Day"
-                WEEK -> "Week"
-                MONTH -> "Month"
-            }
-        }
     }
 
     override fun toString() = when (this) {

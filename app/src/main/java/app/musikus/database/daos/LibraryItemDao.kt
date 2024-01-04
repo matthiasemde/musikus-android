@@ -53,10 +53,10 @@ data class LibraryItem(
 
     override fun toString(): String {
         return super.toString() +
-                "\tname:\t\t\t\t$name\n" +
-                "\tcolorIndex:\t\t\t$colorIndex\n" +
-                "\tlibraryFolderId:\t$libraryFolderId\n" +
-                "\tcustomOrder:\t\t$customOrder\n"
+                "\tname:\t\t\t\t\t$name\n" +
+                "\tcolorIndex:\t\t\t\t$colorIndex\n" +
+                "\tlibraryFolderId:\t\t$libraryFolderId\n" +
+                "\tcustomOrder:\t\t\t$customOrder\n"
     }
 }
 
