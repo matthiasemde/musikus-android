@@ -25,7 +25,6 @@ import app.musikus.database.entities.GoalInstanceCreationAttributes
 import app.musikus.database.entities.GoalInstanceUpdateAttributes
 import app.musikus.utils.TimeProvider
 import kotlinx.coroutines.flow.Flow
-import java.util.UUID
 import kotlin.time.Duration
 
 interface GoalRepository {
@@ -120,16 +119,6 @@ class GoalRepositoryImpl(
 
         // perform the update in a transaction
         goalInstanceDao.transaction {
-            // insert a new instance with the same target and description as the old one
-            // the start timestamp is the end timestamp of the old instance
-            goalInstanceDao.insert(
-                outdatedInstance.goalDescriptionId,
-                GoalInstanceCreationAttributes(
-                    startTimestamp = outdatedInstanceEndTimestamp,
-                    target = outdatedInstance.target
-                )
-            )
-
             if (description.paused) {
                 // if the old instance belonged to a paused goal delete it...
                 goalInstanceDao.deletePausedGoalInstance(outdatedInstance.id)
@@ -142,6 +131,16 @@ class GoalRepositoryImpl(
                     )
                 )
             }
+
+            // insert a new instance with the same target and description as the old one
+            // the start timestamp is the end timestamp of the old instance
+            goalInstanceDao.insert(
+                outdatedInstance.goalDescriptionId,
+                GoalInstanceCreationAttributes(
+                    startTimestamp = outdatedInstanceEndTimestamp,
+                    target = outdatedInstance.target
+                )
+            )
         }
     }
 
@@ -153,7 +152,7 @@ class GoalRepositoryImpl(
     ) {
         // before editing we need to remove possible future instances
         // which would still have the outdated target
-        cleanFutureInstances(listOf(goal.goalDescriptionId))
+        cleanFutureInstances()
 
         goalInstanceDao.update(
             goal.id,
@@ -170,8 +169,8 @@ class GoalRepositoryImpl(
 
     @Transaction
     override suspend fun pause(goals: List<GoalDescription>) {
-        // before pausing we need to clean for possible future instances
-        cleanFutureInstances(goals.map { it.id })
+        // before pausing we need to clean possible future instances
+        cleanFutureInstances()
 
         goalDescriptionDao.update(
             goals.map {
@@ -205,8 +204,8 @@ class GoalRepositoryImpl(
     override suspend fun archive(goals: List<GoalDescription>) {
         val descriptionIds = goals.map { it.id }
 
-        // before archiving we need to check if there are instances in the future
-        cleanFutureInstances(descriptionIds)
+        // before archiving we need to clean possible future instances
+        cleanFutureInstances()
 
         goalDescriptionDao.update(descriptionIds.map {
             it to GoalDescriptionUpdateAttributes(archived = true)
@@ -222,9 +221,12 @@ class GoalRepositoryImpl(
 
         goalDescriptionDao.transaction {
 
-            // getLatest throws an error if there isn't an instance
-            // with endTimestamp == null for every descriptionId
-            goalInstanceDao.getLatest(descriptionIds)
+            // make sure there is an open instance for each goal
+            for (descriptionId in descriptionIds) {
+                if(!goalInstanceDao.getForDescription(descriptionId).any { it.endTimestamp == null }) {
+                    throw IllegalArgumentException("Cannot unarchive goal without any open instances")
+                }
+            }
 
             goalDescriptionDao.update(descriptionIds.map {
                 it to GoalDescriptionUpdateAttributes(archived = false)
@@ -271,7 +273,7 @@ class GoalRepositoryImpl(
         while(lastOutdatedGoals == null || lastOutdatedGoals.isNotEmpty()) {
             goalInstanceDao.transaction {
                 val outdatedGoals = goalInstanceDao
-                    .getUpdateCandidates()
+                    .getLatest()
                     .filter {
                         timeProvider.now() >= it.endOfInstanceInLocalTimezone
                     }
@@ -312,13 +314,13 @@ class GoalRepositoryImpl(
         }
     }
 
-    private suspend fun cleanFutureInstances(descriptionIds: List<UUID>) {
+    private suspend fun cleanFutureInstances() {
         var lastFutureInstances : List<GoalInstance>? = null
 
         while(lastFutureInstances == null || lastFutureInstances.isNotEmpty()) {
             goalInstanceDao.transaction {
                 val futureInstances = goalInstanceDao
-                    .getLatest(descriptionIds)
+                    .getLatest()
                     .map { it.instance }
                     .filter {
                         it.startTimestamp > timeProvider.now()

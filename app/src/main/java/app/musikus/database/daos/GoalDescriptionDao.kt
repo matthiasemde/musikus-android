@@ -179,7 +179,6 @@ abstract class GoalDescriptionDao(
         database.goalInstanceDao.insert(
             descriptionId = description.id,
             creationAttributes = instanceCreationAttributes,
-            firstInstanceOfGoal = true
         )
 
         if(description.type == GoalType.NON_SPECIFIC && !libraryItemIds.isNullOrEmpty()) {

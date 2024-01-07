@@ -41,8 +41,8 @@ import org.junit.Test
 import javax.inject.Inject
 import javax.inject.Named
 import kotlin.time.Duration.Companion.days
+import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
-import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
 
 
@@ -275,7 +275,7 @@ class GoalInstanceDaoTest {
         }
 
         assertThat(exception.message).isEqualTo(
-            "Cannot insert instance with startTimestamp before latest endTimestamp: ${fakeTimeProvider.startTime.plus(1.days.toJavaDuration())}"
+            "Cannot insert instance with startTimestamp before latest endTimestamp"
         )
     }
 
@@ -749,76 +749,74 @@ class GoalInstanceDaoTest {
     }
 
     @Test
-    fun getUpdateCandidates() = runTest {
-        // Advance the time by any amount to make the latest instance a candidate
-        fakeTimeProvider.advanceTimeBy(1.seconds)
+    fun getForDescription() = runTest {
+        // Insert another goal
+        database.goalDescriptionDao.insert(
+            description = GoalDescriptionModel(
+                type = GoalType.NON_SPECIFIC,
+                repeat = true,
+                periodInPeriodUnits = 2,
+                periodUnit = GoalPeriodUnit.DAY
+            ),
+            instanceCreationAttributes = GoalInstanceCreationAttributes(
+                startTimestamp = fakeTimeProvider.now(),
+                target = 5.minutes
+            )
+        )
 
-        val instances = goalInstanceDao.getUpdateCandidates()
+        // Get the instances of the first goal
+        val instances = goalInstanceDao.getForDescription(UUIDConverter.fromInt(1))
 
+        // Check if the instances were retrieved correctly
         assertThat(instances).containsExactly(
-            GoalInstanceWithDescription(
-                instance = GoalInstance(
-                    id = UUIDConverter.fromInt(3),
-                    goalDescriptionId = UUIDConverter.fromInt(1),
-                    targetSeconds = 2100,
-                    startTimestamp = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
-                    endTimestamp = null,
-                    createdAt = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
-                    modifiedAt = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
-                ),
-                description = GoalDescription(
-                    id = UUIDConverter.fromInt(1),
-                    type = GoalType.NON_SPECIFIC,
-                    repeat = true,
-                    periodInPeriodUnits = 1,
-                    periodUnit = GoalPeriodUnit.DAY,
-                    progressType = GoalProgressType.TIME,
-                    paused = false,
-                    archived = false,
-                    customOrder = null,
-                    createdAt = fakeTimeProvider.startTime,
-                    modifiedAt = fakeTimeProvider.startTime,
-                )
+            GoalInstance(
+                id = UUIDConverter.fromInt(2),
+                goalDescriptionId = UUIDConverter.fromInt(1),
+                targetSeconds = 1800,
+                startTimestamp = fakeTimeProvider.startTime,
+                endTimestamp = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
+                createdAt = fakeTimeProvider.startTime,
+                modifiedAt = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
+            ),
+            GoalInstance(
+                id = UUIDConverter.fromInt(3),
+                goalDescriptionId = UUIDConverter.fromInt(1),
+                targetSeconds = 2100,
+                startTimestamp = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
+                endTimestamp = null,
+                createdAt = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
+                modifiedAt = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
             )
         )
     }
 
     @Test
-    fun getUpdateCandidatesAfterUpdate_noCandidates() = runTest {
-        // Advance the time by any amount to make the latest instance a candidate
-        fakeTimeProvider.advanceTimeBy(1.seconds)
+    fun getForDescriptionOfNonExistentGoal_throwsException() = runTest {
+        val exception = assertThrows(IllegalArgumentException::class.java) {
+            runBlocking {
+                goalInstanceDao.getForDescription(UUIDConverter.fromInt(0))
+            }
+        }
 
-        // Update the instance to make it no longer a candidate
-        goalInstanceDao.update(
-            UUIDConverter.fromInt(3),
-            GoalInstanceUpdateAttributes(
-                endTimestamp = Nullable(fakeTimeProvider.now())
-            )
+        assertThat(exception.message).isEqualTo(
+            "Cannot get instances for non-existing description: 00000000-0000-0000-0000-000000000000"
         )
-
-        val instances = goalInstanceDao.getUpdateCandidates()
-
-        assertThat(instances).isEmpty()
     }
 
     @Test
-    fun getUpdateCandidatesWithoutTimeAdvance_noCandidates() = runTest {
-        val instances = goalInstanceDao.getUpdateCandidates()
-
-        assertThat(instances).isEmpty()
-    }
-
-    @Test
-    fun getUpdateCandidatesForDeletedGoal_noCandidates() = runTest {
-        // Advance the time by any amount to make the latest instance a candidate
-        fakeTimeProvider.advanceTimeBy(1.seconds)
-
-        // Delete the goal to make the instance no longer a candidate
+    fun getForDescriptionOfDeletedGoal_throwsException() = runTest {
+        // Delete the goal
         database.goalDescriptionDao.delete(UUIDConverter.fromInt(1))
 
-        val instances = goalInstanceDao.getUpdateCandidates()
+        val exception = assertThrows(IllegalArgumentException::class.java) {
+            runBlocking {
+                goalInstanceDao.getForDescription(UUIDConverter.fromInt(1))
+            }
+        }
 
-        assertThat(instances).isEmpty()
+        assertThat(exception.message).isEqualTo(
+            "Cannot get instances for non-existing description: 00000000-0000-0000-0000-000000000001"
+        )
     }
 
     @Test
@@ -982,10 +980,7 @@ class GoalInstanceDaoTest {
         )
 
         // Get the instances
-        val instances = goalInstanceDao.getLatest(listOf(
-            UUIDConverter.fromInt(1),
-            UUIDConverter.fromInt(4)
-        ))
+        val instances = goalInstanceDao.getLatest()
 
         // Check if the instances were retrieved correctly
         assertThat(instances).containsExactly(
@@ -1041,100 +1036,111 @@ class GoalInstanceDaoTest {
     }
 
     @Test
-    fun getLatestForNonExistentGoal_throwsException() = runTest {
-        val exception = assertThrows(IllegalArgumentException::class.java) {
-            runBlocking {
-                goalInstanceDao.getLatest(listOf(
-                    UUIDConverter.fromInt(0)
-                ))
-            }
-        }
+    fun getLastNCompleted() = runTest {
+        // Insert another goal
+        database.goalDescriptionDao.insert(
+            description = GoalDescriptionModel(
+                type = GoalType.NON_SPECIFIC,
+                repeat = true,
+                periodInPeriodUnits = 2,
+                periodUnit = GoalPeriodUnit.DAY
+            ),
+            instanceCreationAttributes = GoalInstanceCreationAttributes(
+                startTimestamp = fakeTimeProvider.now(),
+                target = 1.hours
+            )
+        )
 
-        assertThat(exception.message).isEqualTo(
-            "Could not find goal_description(s) with the following id(s): [00000000-0000-0000-0000-000000000000]"
+        fakeTimeProvider.advanceTimeBy(1.days)
+
+        goalInstanceDao.update(
+            UUIDConverter.fromInt(3),
+            GoalInstanceUpdateAttributes(
+                endTimestamp = Nullable(fakeTimeProvider.now()),
+            )
+        )
+
+        fakeTimeProvider.advanceTimeBy(1.days)
+
+        goalInstanceDao.update(
+            UUIDConverter.fromInt(5),
+            GoalInstanceUpdateAttributes(
+                endTimestamp = Nullable(fakeTimeProvider.now()),
+            )
+        )
+
+
+        // Get the instances
+        val instances = goalInstanceDao.getLastNCompleted(n = 2).first()
+
+        // Check if the instances were retrieved correctly
+        assertThat(instances).containsExactly(
+            GoalInstanceWithDescriptionWithLibraryItems(
+                instance = GoalInstance(
+                    id = UUIDConverter.fromInt(3),
+                    goalDescriptionId = UUIDConverter.fromInt(1),
+                    targetSeconds = 2100,
+                    startTimestamp = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
+                    endTimestamp = fakeTimeProvider.startTime.plus(2.days.toJavaDuration()),
+                    createdAt = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
+                    modifiedAt = fakeTimeProvider.startTime.plus(2.days.toJavaDuration()),
+                ),
+                description = GoalDescriptionWithLibraryItems(
+                    description = GoalDescription(
+                        id = UUIDConverter.fromInt(1),
+                        type = GoalType.NON_SPECIFIC,
+                        repeat = true,
+                        periodInPeriodUnits = 1,
+                        periodUnit = GoalPeriodUnit.DAY,
+                        progressType = GoalProgressType.TIME,
+                        paused = false,
+                        archived = false,
+                        customOrder = null,
+                        createdAt = fakeTimeProvider.startTime,
+                        modifiedAt = fakeTimeProvider.startTime,
+                    ),
+                    libraryItems = emptyList()
+                )
+            ),
+            GoalInstanceWithDescriptionWithLibraryItems(
+                instance = GoalInstance(
+                    id = UUIDConverter.fromInt(5),
+                    goalDescriptionId = UUIDConverter.fromInt(4),
+                    targetSeconds = 3600,
+                    startTimestamp = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
+                    endTimestamp = fakeTimeProvider.startTime.plus(3.days.toJavaDuration()),
+                    createdAt = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
+                    modifiedAt = fakeTimeProvider.startTime.plus(3.days.toJavaDuration()),
+                ),
+                description = GoalDescriptionWithLibraryItems(
+                    description = GoalDescription(
+                        id = UUIDConverter.fromInt(4),
+                        type = GoalType.NON_SPECIFIC,
+                        repeat = true,
+                        periodInPeriodUnits = 2,
+                        periodUnit = GoalPeriodUnit.DAY,
+                        progressType = GoalProgressType.TIME,
+                        paused = false,
+                        archived = false,
+                        customOrder = null,
+                        createdAt = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
+                        modifiedAt = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
+                    ),
+                    libraryItems = emptyList()
+                )
+            )
         )
     }
 
     @Test
-    fun getLatestForDeletedGoal_throwsException() = runTest {
+    fun getLastNCompletedForDeletedGoal_noInstances() = runTest {
         // Delete the goal
         database.goalDescriptionDao.delete(UUIDConverter.fromInt(1))
 
-        val exception = assertThrows(IllegalArgumentException::class.java) {
-            runBlocking {
-                goalInstanceDao.getLatest(listOf(
-                    UUIDConverter.fromInt(1)
-                ))
-            }
-        }
+        // Get the instances
+        val instances = goalInstanceDao.getLastNCompleted(n = 2).first()
 
-        assertThat(exception.message).isEqualTo(
-            "Could not find goal_description(s) with the following id(s): [00000000-0000-0000-0000-000000000001]"
-        )
+        // Check if the instances were retrieved correctly
+        assertThat(instances).isEmpty()
     }
-
-//    @Test
-//    fun getLastNCompleted() = runTest {
-//        // Insert another goal
-//        database.goalDescriptionDao.insert(
-//            description = GoalDescriptionModel(
-//                type = GoalType.NON_SPECIFIC,
-//                repeat = true,
-//                periodInPeriodUnits = 2,
-//                periodUnit = GoalPeriodUnit.DAY
-//            ),
-//            instanceCreationAttributes = GoalInstanceCreationAttributes(
-//                startTimestamp = fakeTimeProvider.now(),
-//                target = 5.minutes
-//            )
-//        )
-//
-//        // Get the instances
-//        val instances = goalInstanceDao.getLastNCompleted(n = 2)
-//
-//        // Check if the instances were retrieved correctly
-//        assertThat(instances).containsExactly(
-//            GoalInstanceWithDescription(
-//                instance = GoalInstance(
-//                    id = UUIDConverter.fromInt(2),
-//                    goalDescriptionId = UUIDConverter.fromInt(1),
-//                    targetSeconds = 1800,
-//                    startTimestamp = fakeTimeProvider.startTime,
-//                    endTimestamp = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
-//                    createdAt = fakeTimeProvider.startTime,
-//                    modifiedAt = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
-//                ),
-//                description = GoalDescription(
-//                    id = UUIDConverter.fromInt(1),
-//                    type = GoalType.NON_SPECIFIC,
-//                    repeat = true,
-//                    periodInPeriodUnits = 1,
-//                    periodUnit = GoalPeriodUnit.DAY,
-//                    progressType = GoalProgressType.TIME,
-//                    paused = false,
-//                    archived = false,
-//                    customOrder = null,
-//                    createdAt = fakeTimeProvider.startTime,
-//                    modifiedAt = fakeTimeProvider.startTime,
-//                )
-//            ),
-//            GoalInstanceWithDescription(
-//                instance = GoalInstance(
-//                    id = UUIDConverter.fromInt(3),
-//                    goalDescriptionId = UUIDConverter.fromInt(1),
-//                    targetSeconds = 2100,
-//                    startTimestamp = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
-//                    endTimestamp = fakeTimeProvider.startTime.plus(2.days.toJavaDuration()),
-//                    createdAt = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
-//                    modifiedAt = fakeTimeProvider.startTime.plus(2.days.toJavaDuration()),
-//                ),
-//                description = GoalDescription(
-//                    id = UUIDConverter.fromInt(1),
-//                    type = GoalType.NON_SPECIFIC,
-//                    repeat = true,
-//                    periodInPeriodUnits = 1,
-//                    periodUnit = GoalPeriodUnit.DAY,
-//                    progressType = GoalProgressType.TIME,
-//                    paused = false,
-//    }
 }
