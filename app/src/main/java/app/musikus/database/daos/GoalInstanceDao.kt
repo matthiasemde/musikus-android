@@ -186,10 +186,10 @@ abstract class GoalInstanceDao(
         val instances = get(uniqueIds)
 
         if (instances.any { it.endTimestamp != null || it.startTimestamp < database.timeProvider.now() }) {
-            throw IllegalArgumentException("Can only delete instances of non-paused goals")
+            throw IllegalArgumentException("Can only delete instances in the future")
         }
 
-        super.delete(uniqueIds) // need to call listOf(id) because super.delete(id) would call overridden delete(listOf(id))
+        super.delete(uniqueIds)
     }
 
     /**
@@ -204,8 +204,7 @@ abstract class GoalInstanceDao(
             "AND datetime(start_timestamp) < datetime(:now) " +
             "AND goal_description_id IN (" +
                 "SELECT id FROM goal_description " +
-                "WHERE archived=0 " +
-                "AND deleted=0" +
+                "WHERE deleted=0 " +
             ")"
     )
     abstract suspend fun directGetUpdateCandidates(
@@ -229,9 +228,11 @@ abstract class GoalInstanceDao(
                 "AND deleted=0" +
             ")"
     )
-    abstract fun getCurrent(
+    abstract fun directGetCurrent(
         now: ZonedDateTime = database.timeProvider.now()
     ) : Flow<List<GoalInstanceWithDescriptionWithLibraryItems>>
+
+    fun getCurrent() = directGetCurrent()
 
 
     @Transaction
@@ -243,7 +244,6 @@ abstract class GoalInstanceDao(
             "WHERE goal_description_id IN (" +
                 "SELECT id FROM goal_description " +
                 "WHERE id IN (:descriptionIds) " +
-                "AND archived=0 " +
                 "AND deleted=0" +
             ")"+
         ") GROUP BY goal_description_id"
@@ -257,12 +257,14 @@ abstract class GoalInstanceDao(
     ) : List<GoalInstanceWithDescription> {
         val uniqueIds = descriptionIds.distinct()
 
+        database.goalDescriptionDao.getAsFlow(uniqueIds).first()
+
         val instances = directGetLatest(uniqueIds)
 
         // make sure all descriptions exist
         if(instances.size != uniqueIds.size) {
             throw IllegalArgumentException(
-                "Could not find goal instance for description(s) with the following id(s): ${descriptionIds - instances.map { it.description.id }.toSet()}"
+                "Could not find goal_instance(s) for goal_description(s) with the following id(s): ${descriptionIds - instances.map { it.description.id }.toSet()}"
             )
         }
 

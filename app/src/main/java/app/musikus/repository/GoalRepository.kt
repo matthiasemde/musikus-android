@@ -208,24 +208,9 @@ class GoalRepositoryImpl(
         // before archiving we need to check if there are instances in the future
         cleanFutureInstances(descriptionIds)
 
-        goalDescriptionDao.transaction {
-            goalDescriptionDao.update(descriptionIds.map {
-                it to GoalDescriptionUpdateAttributes(archived = true)
-            })
-            val latestInstancesWithDescription = goalInstanceDao.getLatest(descriptionIds)
-
-            if(latestInstancesWithDescription.size != descriptionIds.size) {
-                throw IllegalStateException("Not all goals have instances")
-            }
-
-            goalInstanceDao.update(
-                latestInstancesWithDescription.map {
-                    it.instance.id to GoalInstanceUpdateAttributes(
-                        endTimestamp = Nullable(it.endOfInstanceInLocalTimezone)
-                    )
-                }
-            )
-        }
+        goalDescriptionDao.update(descriptionIds.map {
+            it to GoalDescriptionUpdateAttributes(archived = true)
+        })
     }
 
     override suspend fun unarchive(goal: GoalDescription) {
@@ -236,22 +221,14 @@ class GoalRepositoryImpl(
         val descriptionIds = goals.map { it.id }
 
         goalDescriptionDao.transaction {
+
+            // getLatest throws an error if there isn't an instance
+            // with endTimestamp == null for every descriptionId
+            goalInstanceDao.getLatest(descriptionIds)
+
             goalDescriptionDao.update(descriptionIds.map {
                 it to GoalDescriptionUpdateAttributes(archived = false)
             })
-            val latestInstancesWithDescription = goalInstanceDao.getLatest(descriptionIds)
-
-            if(latestInstancesWithDescription.size != descriptionIds.toSet().size) {
-                throw IllegalStateException("Not all goals have instances")
-            }
-
-            goalInstanceDao.update(
-                latestInstancesWithDescription.map {
-                    it.instance.id to GoalInstanceUpdateAttributes(
-                        endTimestamp = Nullable(null)
-                    )
-                }
-            )
         }
     }
 
@@ -304,17 +281,32 @@ class GoalRepositoryImpl(
                     throw IllegalStateException("Stuck in infinite loop while updating goals")
                 }
 
-                // while there are still outdated goals, keep looping and adding new ones
-                outdatedGoals.forEach { outdatedGoal ->
-                    val description = outdatedGoal.description
-                    if (description.repeat) {
-                        // if the goal is repeatable, renew the instance
-                        renewInstance(outdatedGoal)
-                    } else if (!description.archived) {
-                        // one shot goals are archived after they are outdated
+                val (archivedOutdatedGoals, notArchivedOutdatedGoals) = outdatedGoals.partition {
+                    it.description.archived
+                }
+
+                // outdated and archived goals are finalized by setting their endTimestamp
+                goalInstanceDao.update(
+                    archivedOutdatedGoals.map {
+                        it.instance.id to GoalInstanceUpdateAttributes(
+                            endTimestamp = Nullable(it.endOfInstanceInLocalTimezone)
+                        )
+                    }
+                )
+
+                // the other outdated goals are renewed if they are repeatable
+                // or archived if they are one shot goals
+                notArchivedOutdatedGoals.forEach { goal ->
+                    val description = goal.description
+
+                    if(description.repeat) {
+                        renewInstance(goal)
+                    }
+                    else {
                         archive(description)
                     }
                 }
+
                 lastOutdatedGoals = outdatedGoals
             }
         }
