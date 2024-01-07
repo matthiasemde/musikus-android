@@ -133,7 +133,7 @@ class GoalInstanceDaoTest {
     }
 
     @Test
-    fun getAllForDeletedGoal_noInstances() = runTest {
+    fun getAllWithDeletedGoal_noInstances() = runTest {
         // Delete the goal
         database.goalDescriptionDao.delete(UUIDConverter.fromInt(1))
 

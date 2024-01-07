@@ -121,6 +121,18 @@ class SectionDaoTest {
     }
 
     @Test
+    fun getAllWithDeletedSession() = runTest {
+        // Delete the session
+        database.sessionDao.delete(UUIDConverter.fromInt(2))
+
+        // Get the sections
+        val sections = sectionDao.getAllAsFlow().first()
+
+        // Check if the sections were retrieved correctly
+        assertThat(sections).isEmpty()
+    }
+
+    @Test
     fun insertSections_throwsNotImplementedError() = runTest {
         val exception = assertThrows(NotImplementedError::class.java) {
             runBlocking {
@@ -232,6 +244,25 @@ class SectionDaoTest {
     }
 
     @Test
+    fun updateSectionOfDeletedSession_throwsException() = runTest {
+        // Delete the session
+        database.sessionDao.delete(UUIDConverter.fromInt(2))
+
+        val exception = assertThrows(IllegalArgumentException::class.java) {
+            runBlocking {
+                sectionDao.update(
+                    UUIDConverter.fromInt(3),
+                    SectionUpdateAttributes()
+                )
+            }
+        }
+
+        assertThat(exception.message).isEqualTo(
+            "Could not find section(s) with the following id(s): [00000000-0000-0000-0000-000000000003]"
+        )
+    }
+
+    @Test
     fun deleteSections_throwsNotImplementedError() = runTest {
         val exception = assertThrows(NotImplementedError::class.java) {
             runBlocking {
@@ -335,9 +366,34 @@ class SectionDaoTest {
     }
 
     @Test
+    fun getSpecificSectionOfDeletedGoal_throwsException() = runTest {
+        // Delete the session
+        database.sessionDao.delete(UUIDConverter.fromInt(2))
+
+        val exception = assertThrows(IllegalArgumentException::class.java) {
+            runBlocking {
+                sectionDao.getAsFlow(UUIDConverter.fromInt(3)).first()
+            }
+        }
+
+        assertThat(exception.message).isEqualTo(
+            "Could not find section(s) with the following id(s): [00000000-0000-0000-0000-000000000003]"
+        )
+    }
+
+    @Test
     fun sectionExists() = runTest {
         // Check if the section exists
         assertThat(sectionDao.exists(UUIDConverter.fromInt(3))).isTrue()
+    }
+
+    @Test
+    fun sectionOfDeletedSessionDoesNotExist() = runTest {
+        // Delete the session
+        database.sessionDao.delete(UUIDConverter.fromInt(2))
+
+        // Check if the section exists
+        assertThat(sectionDao.exists(UUIDConverter.fromInt(3))).isFalse()
     }
 
     @Test
@@ -400,6 +456,21 @@ class SectionDaoTest {
                 startTimestamp = fakeTimeProvider.startTime,
             )
         )
+    }
+
+    @Test
+    fun getSectionsInTimeframeWithDeletedSession_noSections() = runTest {
+        // Delete the session
+        database.sessionDao.delete(UUIDConverter.fromInt(2))
+
+        // Get the sections
+        val sections = sectionDao.getInTimeframe(
+            startTimestamp = fakeTimeProvider.startTime,
+            endTimestamp = fakeTimeProvider.startTime.plus(15.minutes.toJavaDuration()),
+        ).first()
+
+        // Check if the sections were retrieved correctly
+        assertThat(sections).isEmpty()
     }
 
     @Test
@@ -502,5 +573,23 @@ class SectionDaoTest {
         assertThat(exception.message).isEqualTo(
             "Could not find library_item(s) with the following id(s): [00000000-0000-0000-0000-000000000002]"
         )
+    }
+
+    @Test
+    fun getSectionsInTimeframeForItemIdWithDeletedSession_noSections() = runTest {
+        // Delete the session
+        database.sessionDao.delete(UUIDConverter.fromInt(2))
+
+        // Get the sections
+        val sections = sectionDao.getInTimeframeForItemId(
+            startTimestamp = fakeTimeProvider.startTime,
+            endTimestamp = fakeTimeProvider.startTime.plus(15.minutes.toJavaDuration()),
+            itemIds = listOf(
+                UUIDConverter.fromInt(1),
+            )
+        ).first()
+
+        // Check if the sections were retrieved correctly
+        assertThat(sections).isEmpty()
     }
 }
