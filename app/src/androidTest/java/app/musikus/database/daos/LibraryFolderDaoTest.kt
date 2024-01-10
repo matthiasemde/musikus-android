@@ -361,12 +361,24 @@ class LibraryFolderDaoTest {
 
     @Test
     fun folderExists() = runTest {
-        // Insert an folder
+        // Insert a folder
         libraryFolderDao.insert(LibraryFolderModel(name = "TestFolder1"))
 
         // Check if the folder exists
         assertThat(libraryFolderDao.exists(UUIDConverter.fromInt(1))).isTrue()
     }
+
+     @Test
+     fun deletedFolderDoesNotExist() = runTest {
+        // Insert a folder
+        libraryFolderDao.insert(LibraryFolderModel(name = "TestFolder1"))
+
+        // Delete the folder
+        libraryFolderDao.delete(UUIDConverter.fromInt(1))
+
+        // Check if the folder exists
+        assertThat(libraryFolderDao.exists(UUIDConverter.fromInt(1))).isFalse()
+     }
 
     @Test
     fun folderDoesNotExist() = runTest {
@@ -387,7 +399,7 @@ class LibraryFolderDaoTest {
 
         libraryFolderDao.delete(UUIDConverter.fromInt(2))
 
-        // advance time by just under a month and clean folders
+        // advance time by just under a month and clea folders
         fakeTimeProvider.advanceTimeBy(28.days)
 
         libraryFolderDao.clean()

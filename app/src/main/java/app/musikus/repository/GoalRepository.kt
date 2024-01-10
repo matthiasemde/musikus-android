@@ -198,6 +198,7 @@ class GoalRepositoryImpl(
     /** Archive / Unarchive */
 
     override suspend fun archive(goal: GoalDescription) {
+        // TODO handle archiving paused goals: simply delete current instance
         archive(listOf(goal))
     }
 

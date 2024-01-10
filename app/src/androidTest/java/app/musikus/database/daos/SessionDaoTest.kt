@@ -210,9 +210,15 @@ class SessionDaoTest {
             UUIDConverter.fromInt(4),
         ))
 
+        // check if sessions were deleted correctly
         val sessions = sessionDao.getAllAsFlow().first()
 
         assertThat(sessions).isEmpty()
+
+        // check if sections were deleted correctly as well
+        val sections = database.sectionDao.getAllAsFlow().first()
+
+        assertThat(sections).isEmpty()
     }
 
     @Test
@@ -229,7 +235,7 @@ class SessionDaoTest {
     }
 
     @Test
-    fun deleteNonExistentItem_throwsException() = runTest {
+    fun deleteNonExistentSession_throwsException() = runTest {
         val exception = assertThrows(IllegalArgumentException::class.java) {
             runBlocking {
                 sessionDao.delete(UUIDConverter.fromInt(0))
@@ -242,7 +248,7 @@ class SessionDaoTest {
     }
 
     @Test
-    fun restoreItems() = runTest {
+    fun restoreSessions() = runTest {
         repeat(2) { insertSessionWithSection() }
 
         sessionDao.delete(listOf(
@@ -277,10 +283,30 @@ class SessionDaoTest {
                 modifiedAt = fakeTimeProvider.startTime.plus(1.seconds.toJavaDuration())
             )
         )
+
+        // check if sections were restored correctly as well
+        val sections = database.sectionDao.getAllAsFlow().first()
+
+        assertThat(sections).containsExactly(
+            Section(
+                id = UUIDConverter.fromInt(3),
+                sessionId = UUIDConverter.fromInt(2),
+                libraryItemId = UUIDConverter.fromInt(1),
+                durationSeconds = 900,
+                startTimestamp = fakeTimeProvider.startTime,
+            ),
+            Section(
+                id = UUIDConverter.fromInt(5),
+                sessionId = UUIDConverter.fromInt(4),
+                libraryItemId = UUIDConverter.fromInt(1),
+                durationSeconds = 900,
+                startTimestamp = fakeTimeProvider.startTime,
+            )
+        )
     }
 
     @Test
-    fun restoreItem() = runTest {
+    fun restoreSession() = runTest {
         val sessionDaoSpy = spyk(sessionDao)
 
         try {
@@ -295,7 +321,7 @@ class SessionDaoTest {
     }
 
     @Test
-    fun restoreNonExistentItem_throwsException() = runTest {
+    fun restoreNonExistentSession_throwsException() = runTest {
         val exception = assertThrows(IllegalArgumentException::class.java) {
             runBlocking {
                 sessionDao.restore(UUIDConverter.fromInt(0))
@@ -337,7 +363,7 @@ class SessionDaoTest {
     }
 
     @Test
-    fun getSpecificItem() = runTest {
+    fun getSpecificSession() = runTest {
         val sessionDaoSpy = spyk(sessionDao)
 
         try {
@@ -352,7 +378,7 @@ class SessionDaoTest {
     }
 
     @Test
-    fun getNonExistentItem_throwsException() = runTest {
+    fun getNonExistentSession_throwsException() = runTest {
         val exception = assertThrows(IllegalArgumentException::class.java) {
             runBlocking {
                 sessionDao.getAsFlow(UUIDConverter.fromInt(4)).first()
@@ -387,15 +413,16 @@ class SessionDaoTest {
 
         sessionDao.delete(UUIDConverter.fromInt(4))
 
-        // advance time by just under a month and clean items
+        // advance time by just under a month and clean sessions
         fakeTimeProvider.advanceTimeBy(28.days)
 
         sessionDao.clean()
 
         val exception = assertThrows(IllegalArgumentException::class.java) {
             runBlocking {
-                // Restoring session with id 2 should be impossible
-                // session with id 3 should be restored
+                // Restoring session with id 2 should be impossible to
+                // restore since it was cleaned
+                // session with id 4 should be restored
                 sessionDao.restore(
                     listOf(
                         UUIDConverter.fromInt(2),
@@ -480,10 +507,10 @@ class SessionDaoTest {
                     ),
                     sectionCreationAttributes = listOf(
                         SectionCreationAttributes(
-                        libraryItemId = UUIDConverter.fromInt(0),
-                        duration = 10.minutes,
-                        startTimestamp = fakeTimeProvider.startTime
-                    )
+                            libraryItemId = UUIDConverter.fromInt(0),
+                            duration = 10.minutes,
+                            startTimestamp = fakeTimeProvider.startTime
+                        )
                     )
                 )
             }

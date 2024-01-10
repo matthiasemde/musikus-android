@@ -173,6 +173,12 @@ abstract class GoalDescriptionDao(
         libraryItemIds: List<UUID>? = null,
     ) {
 
+        if(description.type == GoalType.NON_SPECIFIC && !libraryItemIds.isNullOrEmpty()) {
+            throw IllegalArgumentException("Non-specific goals cannot have library items")
+        } else if(description.type != GoalType.NON_SPECIFIC && libraryItemIds.isNullOrEmpty()) {
+            throw IllegalArgumentException("Specific goals must have at least one library item")
+        }
+
         super.insert(listOf(description)) // insert of single description would call the overridden insert method
 
         // Create the first instance of the newly created goal description
@@ -180,12 +186,6 @@ abstract class GoalDescriptionDao(
             descriptionId = description.id,
             creationAttributes = instanceCreationAttributes,
         )
-
-        if(description.type == GoalType.NON_SPECIFIC && !libraryItemIds.isNullOrEmpty()) {
-            throw IllegalArgumentException("Non-specific goals cannot have library items")
-        } else if(description.type != GoalType.NON_SPECIFIC && libraryItemIds.isNullOrEmpty()) {
-            throw IllegalArgumentException("Specific goals must have at least one library item")
-        }
 
         libraryItemIds?.forEach { libraryItemId ->
             insertGoalDescriptionLibraryItemCrossRef(
