@@ -17,7 +17,8 @@
         <ImageView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/ic_backup" />
+            android:src="@drawable/ic_backup"
+            app:tint="?attr/colorOnSurfaceLowerContrast" />
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
