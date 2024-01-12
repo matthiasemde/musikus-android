@@ -8,6 +8,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="de.practicetime.practicetime">
 
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission
@@ -30,6 +33,7 @@
         <service
             android:name=".services.SessionForegroundService"
             android:enabled="true"
+            android:foregroundServiceType="specialUse"
             android:exported="false" />
         <service
             android:name=".services.RecorderService"
