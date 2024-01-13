@@ -38,7 +38,6 @@ import app.musikus.utils.FakeIdProvider
 import app.musikus.utils.FakeTimeProvider
 import app.musikus.utils.IdProvider
 import app.musikus.utils.TimeProvider
-import app.musikus.utils.TimeProviderImpl
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -108,8 +107,8 @@ object TestAppModule {
         @Named("test_db") database: MusikusDatabase
     ): GoalRepository {
         return GoalRepositoryImpl(
-            goalInstanceDao = database.goalInstanceDao,
-            goalDescriptionDao = database.goalDescriptionDao,
+            instanceDao = database.goalInstanceDao,
+            descriptionDao = database.goalDescriptionDao,
             timeProvider = database.timeProvider,
         )
     }

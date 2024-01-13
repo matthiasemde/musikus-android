@@ -25,12 +25,15 @@ import app.musikus.Musikus.Companion.ioThread
 import app.musikus.database.MusikusDatabase
 import app.musikus.database.UUIDConverter
 import app.musikus.database.entities.BaseModel
+import app.musikus.database.entities.BaseModelCreationAttributes
 import app.musikus.database.entities.BaseModelDisplayAttributes
 import app.musikus.database.entities.BaseModelUpdateAttributes
 import app.musikus.database.entities.SoftDeleteModel
+import app.musikus.database.entities.SoftDeleteModelCreationAttributes
 import app.musikus.database.entities.SoftDeleteModelDisplayAttributes
 import app.musikus.database.entities.SoftDeleteModelUpdateAttributes
 import app.musikus.database.entities.TimestampModel
+import app.musikus.database.entities.TimestampModelCreationAttributes
 import app.musikus.database.entities.TimestampModelDisplayAttributes
 import app.musikus.database.entities.TimestampModelUpdateAttributes
 import app.musikus.database.toDatabaseString
@@ -50,7 +53,8 @@ const val HASH_FACTOR = 524287
  */
 
 abstract class BaseDao<
-    T : BaseModel,
+    M : BaseModel,
+    C : BaseModelCreationAttributes,
     U : BaseModelUpdateAttributes,
     D : BaseModelDisplayAttributes
 >(
@@ -70,26 +74,30 @@ abstract class BaseDao<
      * @Insert queries
      */
     @Insert(onConflict = OnConflictStrategy.ABORT)
-    protected abstract suspend fun directInsert(rows: List<T>)
+    protected abstract suspend fun directInsert(models: List<M>)
 
-    open suspend fun insert(row: T) {
-        insert(listOf(row))
+    open suspend fun insert(creationAttributes: C): UUID {
+        return insert(listOf(creationAttributes)).single() // returns the id of the inserted row
     }
 
-    open suspend fun insert(rows: List<T>) {
-        rows.onEach {
-            it.id = database.idProvider.generateId()
-        }
-        directInsert(rows)
+    open suspend fun insert(creationAttributes: List<C>): List<UUID> {
+        val models = creationAttributes
+            .map { createModel(it) }
+            .onEach { it.id = database.idProvider.generateId() }
+
+        directInsert(models)
+
+        return models.map { it.id }
     }
 
+    protected abstract fun createModel(creationAttributes: C): M
 
     /**
      * @Delete queries
      */
 
     @Delete
-    protected abstract suspend fun directDelete(rows: List<T>)
+    protected abstract suspend fun directDelete(rows: List<M>)
 
     open suspend fun delete(id: UUID) {
         delete(listOf(id))
@@ -104,7 +112,7 @@ abstract class BaseDao<
      * @Update queries
      */
     @Update
-    protected abstract suspend fun directUpdate(rows: List<T>)
+    protected abstract suspend fun directUpdate(rows: List<M>)
 
     open suspend fun update(id: UUID, updateAttributes: U) {
         update(listOf(Pair(id, updateAttributes)))
@@ -114,13 +122,13 @@ abstract class BaseDao<
         rows.unzip().let { (ids, updateAttributes) ->
             directUpdate(
                 getModels(ids).zip(updateAttributes).map { (old, updateAttributes) ->
-                    applyUpdateAttributes(old, updateAttributes)
+                    modelWithAppliedUpdateAttributes(old, updateAttributes)
                 }
             )
         }
     }
 
-    protected open fun applyUpdateAttributes(old: T, updateAttributes: U): T = old
+    protected open fun modelWithAppliedUpdateAttributes(oldModel: M, updateAttributes: U): M = oldModel
 
 
     /**
@@ -128,11 +136,11 @@ abstract class BaseDao<
      */
 
     @RawQuery
-    protected abstract suspend fun getModels(query: SupportSQLiteQuery): List<T>
+    protected abstract suspend fun getModels(query: SupportSQLiteQuery): List<M>
 
     protected suspend fun getModel(id: UUID) = getModels(listOf(id)).first()
 
-    protected open suspend fun getModels(ids: List<UUID>): List<T> {
+    protected open suspend fun getModels(ids: List<UUID>): List<M> {
         val uniqueIds = ids.toSet() // TODO possibly make ids Set instead of List in the first place
         val models = getModels(
             SimpleSQLiteQuery(
@@ -258,7 +266,8 @@ abstract class BaseDao<
 }
 
 abstract class TimestampDao<
-    T : TimestampModel,
+    M : TimestampModel,
+    C : TimestampModelCreationAttributes,
     U : TimestampModelUpdateAttributes,
     D : TimestampModelDisplayAttributes
 >(
@@ -266,7 +275,7 @@ abstract class TimestampDao<
     private val database: MusikusDatabase,
     displayAttributes: List<String>,
     dependencies: List<String>? = null
-) : BaseDao<T, U, D>(
+) : BaseDao<M, C, U, D>(
     tableName = tableName,
     database = database,
     displayAttributes =
@@ -275,41 +284,47 @@ abstract class TimestampDao<
     dependencies = dependencies
 ) {
 
-    override suspend fun insert(row: T) {
-        insert(listOf(row))
-    }
-
-    override suspend fun insert(rows: List<T>) {
+    // no need to override insert (single) because it calls insert (list)
+    override suspend fun insert(creationAttributes: List<C>): List<UUID> {
         val now = database.timeProvider.now()
-        super.insert(rows.onEach {
-            it.createdAt = now
-            it.modifiedAt = now
-        })
+
+        val models = creationAttributes
+            .map { createModel(it) }
+            .onEach {
+                it.id = database.idProvider.generateId()
+                it.createdAt = now
+                it.modifiedAt = now
+            }
+
+        directInsert(models)
+
+        return models.map { it.id }
     }
 
-    override fun applyUpdateAttributes(
-        old: T,
+    override fun modelWithAppliedUpdateAttributes(
+        oldModel: M,
         updateAttributes: U
-    ): T = super.applyUpdateAttributes(old, updateAttributes).apply{
+    ): M = super.modelWithAppliedUpdateAttributes(oldModel, updateAttributes).apply {
         modifiedAt = database.timeProvider.now()
     }
 }
 
 abstract class SoftDeleteDao<
-    T : SoftDeleteModel,
+    M : SoftDeleteModel,
+    C : SoftDeleteModelCreationAttributes,
     U : SoftDeleteModelUpdateAttributes,
     D : SoftDeleteModelDisplayAttributes
 >(
     private val tableName: String,
     private val database: MusikusDatabase,
     displayAttributes: List<String>
-) : TimestampDao<T, U, D>(
+) : TimestampDao<M, C, U, D>(
     tableName = tableName,
     database = database,
     displayAttributes = displayAttributes
 ) {
     @Update
-    abstract override suspend fun directUpdate(rows: List<T>)
+    abstract override suspend fun directUpdate(rows: List<M>)
 
     override suspend fun delete(id: UUID) {
         delete(listOf(id))

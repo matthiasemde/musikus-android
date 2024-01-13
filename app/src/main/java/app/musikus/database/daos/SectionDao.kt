@@ -52,7 +52,12 @@ data class Section(
 @Dao
 abstract class SectionDao(
     private val database: MusikusDatabase
-) : BaseDao<SectionModel, SectionUpdateAttributes, Section>(
+) : BaseDao<
+        SectionModel,
+        SectionCreationAttributes,
+        SectionUpdateAttributes,
+        Section
+        >(
     tableName = "section",
     database = database,
     displayAttributes = listOf(
@@ -68,36 +73,41 @@ abstract class SectionDao(
      * @Insert
      */
 
-    override suspend fun insert(row: SectionModel) {
+    override fun createModel(creationAttributes: SectionCreationAttributes): SectionModel {
+        return SectionModel(
+            sessionId = creationAttributes.sessionId,
+            libraryItemId = creationAttributes.libraryItemId,
+            duration = creationAttributes.duration,
+            startTimestamp = creationAttributes.startTimestamp
+        )
+    }
+
+    override suspend fun insert(creationAttributes: SectionCreationAttributes): UUID {
         throw NotImplementedError("Sections are inserted only in conjunction with their session")
     }
 
-    override suspend fun insert(rows: List<SectionModel>) {
-        throw NotImplementedError("Sections are inserted only in conjunction with their session")
-    }
+    // this method should only be called from SessionDao
+    override suspend fun insert(
+        creationAttributes: List<SectionCreationAttributes>
+    ): List<UUID> {
+        val sessionId = creationAttributes.first().sessionId
 
-    // this method is called only from SessionDao
-    suspend fun insert(
-        sessionId: UUID,
-        section: SectionCreationAttributes
-    ) {
-        super.insert(listOf(SectionModel(
-            sessionId = sessionId,
-            libraryItemId = section.libraryItemId,
-            duration = section.duration,
-            startTimestamp = section.startTimestamp
-        )))
+        if(!database.sessionDao.exists(sessionId)) {
+            throw IllegalArgumentException("Could not insert sections for non-existent session $sessionId")
+        }
+
+        return super.insert(creationAttributes)
     }
 
     /**
      * @Update
      */
 
-    override fun applyUpdateAttributes(
-        old: SectionModel,
+    override fun modelWithAppliedUpdateAttributes(
+        oldModel: SectionModel,
         updateAttributes: SectionUpdateAttributes
-    ): SectionModel = super.applyUpdateAttributes(old, updateAttributes).apply {
-        duration = updateAttributes.duration ?: old.duration
+    ): SectionModel = super.modelWithAppliedUpdateAttributes(oldModel, updateAttributes).apply {
+        duration = updateAttributes.duration ?: oldModel.duration
     }
 
     /**

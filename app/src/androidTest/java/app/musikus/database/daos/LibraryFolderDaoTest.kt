@@ -13,9 +13,9 @@ import app.musikus.database.LibraryFolderWithItems
 import app.musikus.database.MusikusDatabase
 import app.musikus.database.Nullable
 import app.musikus.database.UUIDConverter
-import app.musikus.database.entities.LibraryFolderModel
+import app.musikus.database.entities.LibraryFolderCreationAttributes
 import app.musikus.database.entities.LibraryFolderUpdateAttributes
-import app.musikus.database.entities.LibraryItemModel
+import app.musikus.database.entities.LibraryItemCreationAttributes
 import app.musikus.di.AppModule
 import app.musikus.utils.FakeTimeProvider
 import com.google.common.truth.Truth.assertThat
@@ -64,8 +64,8 @@ class LibraryFolderDaoTest {
     fun insertFolders() = runTest {
 
         libraryFolderDao.insert(listOf(
-            LibraryFolderModel(name = "TestFolder1"),
-            LibraryFolderModel(name = "TestFolder2")
+            LibraryFolderCreationAttributes(name = "TestFolder1"),
+            LibraryFolderCreationAttributes(name = "TestFolder2")
         ))
 
         val folders = libraryFolderDao.getAllAsFlow().first()
@@ -90,7 +90,7 @@ class LibraryFolderDaoTest {
 
     @Test
     fun insertFolder() = runTest {
-        val folder = LibraryFolderModel(name = "TestFolder")
+        val folder = LibraryFolderCreationAttributes(name = "TestFolder")
 
         val libraryFolderDaoSpy = spyk(libraryFolderDao)
 
@@ -103,8 +103,8 @@ class LibraryFolderDaoTest {
     fun updateFolders() = runTest {
         // Insert folders
         libraryFolderDao.insert(listOf(
-            LibraryFolderModel(name = "TestFolder1"),
-            LibraryFolderModel(name = "TestFolder2")
+            LibraryFolderCreationAttributes(name = "TestFolder1"),
+            LibraryFolderCreationAttributes(name = "TestFolder2")
         ))
 
         fakeTimeProvider.advanceTimeBy(1.seconds)
@@ -184,8 +184,8 @@ class LibraryFolderDaoTest {
     fun deleteFolders() = runTest {
         // Insert folders
         libraryFolderDao.insert(listOf(
-            LibraryFolderModel(name = "TestFolder1"),
-            LibraryFolderModel(name = "TestFolder2")
+            LibraryFolderCreationAttributes(name = "TestFolder1"),
+            LibraryFolderCreationAttributes(name = "TestFolder2")
         ))
 
         // Delete the folders
@@ -230,8 +230,8 @@ class LibraryFolderDaoTest {
     fun restoreFolders() = runTest {
         // Insert folders
         libraryFolderDao.insert(listOf(
-            LibraryFolderModel(name = "TestFolder1"),
-            LibraryFolderModel(name = "TestFolder2")
+            LibraryFolderCreationAttributes(name = "TestFolder1"),
+            LibraryFolderCreationAttributes(name = "TestFolder2")
         ))
 
         // Delete the folders
@@ -301,9 +301,9 @@ class LibraryFolderDaoTest {
     fun getSpecificFolders() = runTest {
         // Insert folders
         libraryFolderDao.insert(listOf(
-            LibraryFolderModel(name = "TestFolder1"),
-            LibraryFolderModel(name = "TestFolder2"),
-            LibraryFolderModel(name = "TestFolder3"),
+            LibraryFolderCreationAttributes(name = "TestFolder1"),
+            LibraryFolderCreationAttributes(name = "TestFolder2"),
+            LibraryFolderCreationAttributes(name = "TestFolder3"),
         ))
 
         // Get the folders
@@ -362,7 +362,7 @@ class LibraryFolderDaoTest {
     @Test
     fun folderExists() = runTest {
         // Insert a folder
-        libraryFolderDao.insert(LibraryFolderModel(name = "TestFolder1"))
+        libraryFolderDao.insert(LibraryFolderCreationAttributes(name = "TestFolder1"))
 
         // Check if the folder exists
         assertThat(libraryFolderDao.exists(UUIDConverter.fromInt(1))).isTrue()
@@ -371,7 +371,7 @@ class LibraryFolderDaoTest {
      @Test
      fun deletedFolderDoesNotExist() = runTest {
         // Insert a folder
-        libraryFolderDao.insert(LibraryFolderModel(name = "TestFolder1"))
+        libraryFolderDao.insert(LibraryFolderCreationAttributes(name = "TestFolder1"))
 
         // Delete the folder
         libraryFolderDao.delete(UUIDConverter.fromInt(1))
@@ -388,8 +388,8 @@ class LibraryFolderDaoTest {
     @Test
     fun cleanFolders() = runTest {
         libraryFolderDao.insert(listOf(
-            LibraryFolderModel(name = "TestFolder1"),
-            LibraryFolderModel(name = "TestFolder2"),
+            LibraryFolderCreationAttributes(name = "TestFolder1"),
+            LibraryFolderCreationAttributes(name = "TestFolder2"),
         ))
 
         libraryFolderDao.delete(UUIDConverter.fromInt(1))
@@ -423,20 +423,18 @@ class LibraryFolderDaoTest {
 
     @Test
     fun getFoldersWithItems() = runTest {
-        libraryFolderDao.insert(LibraryFolderModel(name = "TestFolder1"))
+        libraryFolderDao.insert(LibraryFolderCreationAttributes(name = "TestFolder1"))
 
         database.libraryItemDao.insert(listOf(
-            LibraryItemModel(
+            LibraryItemCreationAttributes(
                 name = "TestItem1",
                 libraryFolderId = Nullable(UUIDConverter.fromInt(1)),
                 colorIndex = 6,
-                customOrder = null
             ),
-            LibraryItemModel(
+            LibraryItemCreationAttributes(
                 name = "TestItem2",
                 libraryFolderId = Nullable(UUIDConverter.fromInt(1)),
                 colorIndex = 3,
-                customOrder = null
             )
         ))
 

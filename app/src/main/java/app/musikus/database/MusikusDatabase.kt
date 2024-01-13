@@ -130,8 +130,13 @@ class UUIDConverter {
                 "00000000-0000-0000-0000-${value.toString().padStart(12, '0')}"
             )
         }
+
+        val deadBeef: UUID
+            get() = UUID.fromString("DEADBEEF-DEAD-BEEF-DEAD-BEEFDEADBEEF")
     }
 }
+
+
 
 fun UUID.toDBString() =
     ByteBuffer.wrap(ByteArray(16)).let { buffer ->

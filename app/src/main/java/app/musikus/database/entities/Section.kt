@@ -16,15 +16,17 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Ignore
+import app.musikus.database.UUIDConverter
 import java.time.ZonedDateTime
 import java.util.UUID
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 private interface ISectionCreationAttributes : IBaseModelCreationAttributes {
-    val libraryItemId: UUID
-    val duration: Duration
-    val startTimestamp: ZonedDateTime
+    var sessionId: UUID
+    var libraryItemId: UUID
+    var duration: Duration
+    var startTimestamp: ZonedDateTime
 }
 
 private interface ISectionUpdateAttributes : IBaseModelUpdateAttributes {
@@ -32,9 +34,10 @@ private interface ISectionUpdateAttributes : IBaseModelUpdateAttributes {
 }
 
 data class SectionCreationAttributes(
-    override val libraryItemId: UUID,
+    override var sessionId: UUID = UUIDConverter.deadBeef,
+    override var libraryItemId: UUID,
     override var duration: Duration,
-    override val startTimestamp: ZonedDateTime,
+    override var startTimestamp: ZonedDateTime,
 ) : BaseModelCreationAttributes(), ISectionCreationAttributes
 
 data class SectionUpdateAttributes(
@@ -59,10 +62,10 @@ data class SectionUpdateAttributes(
     ]
 )
 data class SectionModel (
-    @ColumnInfo(name="session_id", index = true) val sessionId: UUID,
-    @ColumnInfo(name="library_item_id", index = true) override val libraryItemId: UUID,
+    @ColumnInfo(name="session_id", index = true) override var sessionId: UUID,
+    @ColumnInfo(name="library_item_id", index = true) override var libraryItemId: UUID,
     @ColumnInfo(name="duration_seconds") var durationSeconds: Int,
-    @ColumnInfo(name="start_timestamp") override val startTimestamp: ZonedDateTime,
+    @ColumnInfo(name="start_timestamp") override var startTimestamp: ZonedDateTime,
 ) : BaseModel(), ISectionCreationAttributes, ISectionUpdateAttributes {
 
     @get:Ignore

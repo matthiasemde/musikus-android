@@ -18,6 +18,7 @@ import androidx.room.Query
 import androidx.room.Transaction
 import androidx.sqlite.db.SimpleSQLiteQuery
 import app.musikus.database.MusikusDatabase
+import app.musikus.database.entities.LibraryItemCreationAttributes
 import app.musikus.database.entities.LibraryItemModel
 import app.musikus.database.entities.LibraryItemUpdateAttributes
 import app.musikus.database.entities.SoftDeleteModelDisplayAttributes
@@ -63,24 +64,41 @@ data class LibraryItem(
 @Dao
 abstract class LibraryItemDao(
     private val database: MusikusDatabase
-) : SoftDeleteDao<LibraryItemModel, LibraryItemUpdateAttributes, LibraryItem>(
+) : SoftDeleteDao<
+        LibraryItemModel,
+        LibraryItemCreationAttributes,
+        LibraryItemUpdateAttributes,
+        LibraryItem
+        >(
     tableName = "library_item",
     database = database,
     displayAttributes = listOf("name", "color_index", "library_folder_id", "custom_order")
 ) {
 
     /**
+     * @Insert
+     */
+
+    override fun createModel(creationAttributes: LibraryItemCreationAttributes): LibraryItemModel {
+        return LibraryItemModel(
+            name = creationAttributes.name,
+            colorIndex = creationAttributes.colorIndex,
+            libraryFolderId = creationAttributes.libraryFolderId,
+        )
+    }
+
+    /**
      * @Update
      */
 
-    override fun applyUpdateAttributes(
-        old: LibraryItemModel,
+    override fun modelWithAppliedUpdateAttributes(
+        oldModel: LibraryItemModel,
         updateAttributes: LibraryItemUpdateAttributes
-    ): LibraryItemModel = super.applyUpdateAttributes(old, updateAttributes).apply{
-        name = updateAttributes.name ?: old.name
-        colorIndex = updateAttributes.colorIndex ?: old.colorIndex
-        libraryFolderId = updateAttributes.libraryFolderId ?: old.libraryFolderId
-        customOrder = updateAttributes.customOrder ?: old.customOrder
+    ): LibraryItemModel = super.modelWithAppliedUpdateAttributes(oldModel, updateAttributes).apply{
+        name = updateAttributes.name ?: oldModel.name
+        colorIndex = updateAttributes.colorIndex ?: oldModel.colorIndex
+        libraryFolderId = updateAttributes.libraryFolderId ?: oldModel.libraryFolderId
+        customOrder = updateAttributes.customOrder ?: oldModel.customOrder
     }
 
     /**

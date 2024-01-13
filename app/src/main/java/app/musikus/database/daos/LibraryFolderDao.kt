@@ -15,6 +15,7 @@ import androidx.room.RewriteQueriesToDropUnusedColumns
 import androidx.room.Transaction
 import app.musikus.database.LibraryFolderWithItems
 import app.musikus.database.MusikusDatabase
+import app.musikus.database.entities.LibraryFolderCreationAttributes
 import app.musikus.database.entities.LibraryFolderModel
 import app.musikus.database.entities.LibraryFolderUpdateAttributes
 import app.musikus.database.entities.SoftDeleteModelDisplayAttributes
@@ -54,6 +55,7 @@ abstract class LibraryFolderDao(
     database: MusikusDatabase,
 ) : SoftDeleteDao<
         LibraryFolderModel,
+        LibraryFolderCreationAttributes,
         LibraryFolderUpdateAttributes,
         LibraryFolder
         >(
@@ -63,15 +65,26 @@ abstract class LibraryFolderDao(
 ) {
 
     /**
+     * @Insert
+     */
+
+    override fun createModel(creationAttributes: LibraryFolderCreationAttributes): LibraryFolderModel {
+        return LibraryFolderModel(
+            name = creationAttributes.name,
+        )
+    }
+
+
+    /**
      * @Update
      */
 
-    override fun applyUpdateAttributes(
-        old: LibraryFolderModel,
+    override fun modelWithAppliedUpdateAttributes(
+        oldModel: LibraryFolderModel,
         updateAttributes: LibraryFolderUpdateAttributes
-    ): LibraryFolderModel = super.applyUpdateAttributes(old, updateAttributes).apply {
-        name = updateAttributes.name ?: old.name
-        customOrder = updateAttributes.customOrder ?: old.customOrder
+    ): LibraryFolderModel = super.modelWithAppliedUpdateAttributes(oldModel, updateAttributes).apply {
+        name = updateAttributes.name ?: oldModel.name
+        customOrder = updateAttributes.customOrder ?: oldModel.customOrder
     }
 
     /**

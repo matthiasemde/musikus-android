@@ -5,12 +5,14 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Ignore
 import app.musikus.database.Nullable
+import app.musikus.database.UUIDConverter
 import java.time.ZonedDateTime
 import java.util.UUID
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 private interface IGoalInstanceCreationAttributes : ITimestampModelCreationAttributes {
+    var goalDescriptionId: UUID
     var startTimestamp: ZonedDateTime
     var target: Duration
 }
@@ -21,6 +23,7 @@ private interface IGoalInstanceUpdateAttributes : ITimestampModelUpdateAttribute
 }
 
 data class GoalInstanceCreationAttributes(
+    override var goalDescriptionId: UUID = UUIDConverter.deadBeef,
     override var startTimestamp: ZonedDateTime,
     override var target: Duration,
 ) : TimestampModelCreationAttributes(), IGoalInstanceCreationAttributes
@@ -42,7 +45,7 @@ data class GoalInstanceUpdateAttributes(
     ]
 )
 data class GoalInstanceModel(
-    @ColumnInfo(name="goal_description_id", index = true) val goalDescriptionId: UUID,
+    @ColumnInfo(name="goal_description_id", index = true) override var goalDescriptionId: UUID,
     @ColumnInfo(name="start_timestamp") override var startTimestamp: ZonedDateTime,
     @ColumnInfo(name="end_timestamp") override var endTimestamp: Nullable<ZonedDateTime>? = null,
     @ColumnInfo(name="target_seconds") var targetSeconds: Long,

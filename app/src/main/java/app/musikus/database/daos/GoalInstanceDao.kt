@@ -68,7 +68,12 @@ data class GoalInstance(
 @Dao
 abstract class GoalInstanceDao(
     private val database : MusikusDatabase,
-) : TimestampDao<GoalInstanceModel, GoalInstanceUpdateAttributes, GoalInstance>(
+) : TimestampDao<
+        GoalInstanceModel,
+        GoalInstanceCreationAttributes,
+        GoalInstanceUpdateAttributes,
+        GoalInstance
+        >(
     tableName = "goal_instance",
     database = database,
     displayAttributes = listOf(
@@ -84,19 +89,24 @@ abstract class GoalInstanceDao(
      * @Insert
      */
 
-    override suspend fun insert(row: GoalInstanceModel) {
-        throw NotImplementedError("Use insert(goalDescriptionId, creationAttributes) instead")
+    override fun createModel(creationAttributes: GoalInstanceCreationAttributes): GoalInstanceModel {
+        return GoalInstanceModel(
+            goalDescriptionId = creationAttributes.goalDescriptionId,
+            startTimestamp = creationAttributes.startTimestamp,
+            target = creationAttributes.target,
+        )
     }
 
-    override suspend fun insert(rows: List<GoalInstanceModel>) {
-        throw NotImplementedError("Use insert(goalDescriptionId, creationAttributes) instead")
+    override suspend fun insert(creationAttributes: List<GoalInstanceCreationAttributes>): List<UUID> {
+        throw NotImplementedError("")
     }
 
     // create a new instance of this goal, storing the target for a single period
-    suspend fun insert(
-        descriptionId: UUID,
+    override suspend fun insert(
         creationAttributes: GoalInstanceCreationAttributes,
-    ) {
+    ) : UUID {
+        val descriptionId = creationAttributes.goalDescriptionId
+
         // throws exception if description does not exist
         val description = database.goalDescriptionDao.getAsFlow(descriptionId).first()
 
@@ -114,11 +124,7 @@ abstract class GoalInstanceDao(
             throw IllegalArgumentException("Cannot insert instance with startTimestamp before latest endTimestamp")
         }
 
-        super.insert(listOf(GoalInstanceModel(
-            goalDescriptionId = descriptionId,
-            startTimestamp = creationAttributes.startTimestamp,
-            target = creationAttributes.target,
-        )))
+        return super.insert(listOf(creationAttributes)).single() // returns the id of the inserted instance
     }
 
     /**
@@ -136,19 +142,22 @@ abstract class GoalInstanceDao(
             instances.map { it.goalDescriptionId }
         ).first()
 
-        if(descriptions.any { it.archived }) {
-            throw IllegalArgumentException("Cannot update instance(s) for archived goal(s): ${descriptions.filter {it.archived}.map { it.id }}")
+        if(
+            descriptions.any { it.archived } &&
+            rows.any { (_, updateAttributes) -> updateAttributes.target != null }
+        ) {
+            throw IllegalArgumentException("Cannot update target for instance(s) of archived goal(s): ${descriptions.filter {it.archived}.map { it.id }}")
         }
 
         super.update(rows)
     }
 
-    override fun applyUpdateAttributes(
-        old: GoalInstanceModel,
+    override fun modelWithAppliedUpdateAttributes(
+        oldModel: GoalInstanceModel,
         updateAttributes: GoalInstanceUpdateAttributes
-    ): GoalInstanceModel = super.applyUpdateAttributes(old, updateAttributes).apply {
-        endTimestamp = updateAttributes.endTimestamp ?: old.endTimestamp
-        target = updateAttributes.target ?: old.target
+    ): GoalInstanceModel = super.modelWithAppliedUpdateAttributes(oldModel, updateAttributes).apply {
+        endTimestamp = updateAttributes.endTimestamp ?: oldModel.endTimestamp
+        target = updateAttributes.target ?: oldModel.target
     }
 
     /**

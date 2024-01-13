@@ -19,7 +19,6 @@ import app.musikus.database.daos.GoalInstance
 import app.musikus.database.daos.GoalInstanceDao
 import app.musikus.database.daos.LibraryItem
 import app.musikus.database.entities.GoalDescriptionCreationAttributes
-import app.musikus.database.entities.GoalDescriptionModel
 import app.musikus.database.entities.GoalDescriptionUpdateAttributes
 import app.musikus.database.entities.GoalInstanceCreationAttributes
 import app.musikus.database.entities.GoalInstanceUpdateAttributes
@@ -77,14 +76,14 @@ interface GoalRepository {
 }
 
 class GoalRepositoryImpl(
-    private val goalInstanceDao : GoalInstanceDao,
-    private val goalDescriptionDao : GoalDescriptionDao,
+    private val instanceDao : GoalInstanceDao,
+    private val descriptionDao : GoalDescriptionDao,
     override val timeProvider: TimeProvider
 ) : GoalRepository {
 
-    override val currentGoals = goalInstanceDao.getCurrent()
-    override val allGoals = goalDescriptionDao.getAllWithInstancesAndLibraryItems()
-    override val lastFiveCompletedGoals = goalInstanceDao.getLastNCompleted(5)
+    override val currentGoals = instanceDao.getCurrent()
+    override val allGoals = descriptionDao.getAllWithInstancesAndLibraryItems()
+    override val lastFiveCompletedGoals = instanceDao.getLastNCompleted(5)
 
 
     /** Mutators */
@@ -95,14 +94,8 @@ class GoalRepositoryImpl(
         instanceCreationAttributes: GoalInstanceCreationAttributes,
         libraryItems: List<LibraryItem>?,
     ) {
-
-        goalDescriptionDao.insert(
-            description = GoalDescriptionModel(
-                type = descriptionCreationAttributes.type,
-                repeat = descriptionCreationAttributes.repeat,
-                periodInPeriodUnits = descriptionCreationAttributes.periodInPeriodUnits,
-                periodUnit = descriptionCreationAttributes.periodUnit,
-            ),
+        descriptionDao.insert(
+            descriptionCreationAttributes = descriptionCreationAttributes,
             instanceCreationAttributes = instanceCreationAttributes,
             libraryItemIds = libraryItems?.map { it.id },
         )
@@ -118,13 +111,13 @@ class GoalRepositoryImpl(
             outdatedInstanceWithDescription.endOfInstanceInLocalTimezone
 
         // perform the update in a transaction
-        goalInstanceDao.transaction {
+        instanceDao.transaction {
             if (description.paused) {
                 // if the old instance belonged to a paused goal delete it...
-                goalInstanceDao.deletePausedGoalInstance(outdatedInstance.id)
+                instanceDao.deletePausedGoalInstance(outdatedInstance.id)
             } else {
                 // otherwise mark it as renewed by setting its endTimestamp
-                goalInstanceDao.update(
+                instanceDao.update(
                     outdatedInstance.id,
                     GoalInstanceUpdateAttributes(
                         endTimestamp = Nullable(outdatedInstanceEndTimestamp),
@@ -134,9 +127,9 @@ class GoalRepositoryImpl(
 
             // insert a new instance with the same target and description as the old one
             // the start timestamp is the end timestamp of the old instance
-            goalInstanceDao.insert(
-                outdatedInstance.goalDescriptionId,
+            instanceDao.insert(
                 GoalInstanceCreationAttributes(
+                    goalDescriptionId = outdatedInstance.goalDescriptionId,
                     startTimestamp = outdatedInstanceEndTimestamp,
                     target = outdatedInstance.target
                 )
@@ -154,7 +147,7 @@ class GoalRepositoryImpl(
         // which would still have the outdated target
         cleanFutureInstances()
 
-        goalInstanceDao.update(
+        instanceDao.update(
             goal.id,
             GoalInstanceUpdateAttributes(target = newTarget)
         )
@@ -172,7 +165,7 @@ class GoalRepositoryImpl(
         // before pausing we need to clean possible future instances
         cleanFutureInstances()
 
-        goalDescriptionDao.update(
+        descriptionDao.update(
             goals.map {
                 it.id to GoalDescriptionUpdateAttributes(paused = true)
             },
@@ -186,7 +179,7 @@ class GoalRepositoryImpl(
 
     @Transaction
     override suspend fun unpause(goals: List<GoalDescription>) {
-        goalDescriptionDao.update(
+        descriptionDao.update(
             goals.map {
                 it.id to GoalDescriptionUpdateAttributes(paused = false)
             }
@@ -208,7 +201,7 @@ class GoalRepositoryImpl(
         // before archiving we need to clean possible future instances
         cleanFutureInstances()
 
-        goalDescriptionDao.update(descriptionIds.map {
+        descriptionDao.update(descriptionIds.map {
             it to GoalDescriptionUpdateAttributes(archived = true)
         })
     }
@@ -220,16 +213,16 @@ class GoalRepositoryImpl(
     override suspend fun unarchive(goals: List<GoalDescription>) {
         val descriptionIds = goals.map { it.id }
 
-        goalDescriptionDao.transaction {
+        descriptionDao.transaction {
 
             // make sure there is an open instance for each goal
             for (descriptionId in descriptionIds) {
-                if(!goalInstanceDao.getForDescription(descriptionId).any { it.endTimestamp == null }) {
+                if(!instanceDao.getForDescription(descriptionId).any { it.endTimestamp == null }) {
                     throw IllegalArgumentException("Cannot unarchive goal without any open instances")
                 }
             }
 
-            goalDescriptionDao.update(descriptionIds.map {
+            descriptionDao.update(descriptionIds.map {
                 it to GoalDescriptionUpdateAttributes(archived = false)
             })
         }
@@ -243,7 +236,7 @@ class GoalRepositoryImpl(
     }
 
     override suspend fun delete(goals: List<GoalDescription>) {
-        goalDescriptionDao.delete(goals.map { it.id })
+        descriptionDao.delete(goals.map { it.id })
     }
 
     override suspend fun restore(goal: GoalDescription) {
@@ -251,13 +244,13 @@ class GoalRepositoryImpl(
     }
 
     override suspend fun restore(goals: List<GoalDescription>) {
-        goalDescriptionDao.restore(goals.map { it.id })
+        descriptionDao.restore(goals.map { it.id })
     }
 
     /** Clean */
 
     override suspend fun clean() {
-        goalDescriptionDao.clean()
+        descriptionDao.clean()
     }
 
 
@@ -272,8 +265,8 @@ class GoalRepositoryImpl(
 
         // if there are no more outdated goals, we are done
         while(lastOutdatedGoals == null || lastOutdatedGoals.isNotEmpty()) {
-            goalInstanceDao.transaction {
-                val outdatedGoals = goalInstanceDao
+            instanceDao.transaction {
+                val outdatedGoals = instanceDao
                     .getLatest()
                     .filter {
                         timeProvider.now() >= it.endOfInstanceInLocalTimezone
@@ -289,7 +282,7 @@ class GoalRepositoryImpl(
                 }
 
                 // outdated and archived goals are finalized by setting their endTimestamp
-                goalInstanceDao.update(
+                instanceDao.update(
                     archivedOutdatedGoals.map {
                         it.instance.id to GoalInstanceUpdateAttributes(
                             endTimestamp = Nullable(it.endOfInstanceInLocalTimezone)
@@ -319,8 +312,8 @@ class GoalRepositoryImpl(
         var lastFutureInstances : List<GoalInstance>? = null
 
         while(lastFutureInstances == null || lastFutureInstances.isNotEmpty()) {
-            goalInstanceDao.transaction {
-                val futureInstances = goalInstanceDao
+            instanceDao.transaction {
+                val futureInstances = instanceDao
                     .getLatest()
                     .map { it.instance }
                     .filter {
@@ -331,7 +324,7 @@ class GoalRepositoryImpl(
                     throw IllegalStateException("Stuck in infinite loop while cleaning future instances")
                 }
 
-                goalInstanceDao.deleteFutureGoalInstances(
+                instanceDao.deleteFutureGoalInstances(
                     futureInstances.map { it.id }
                 )
 

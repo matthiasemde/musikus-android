@@ -12,11 +12,10 @@ import androidx.test.filters.SmallTest
 import app.musikus.database.MusikusDatabase
 import app.musikus.database.Nullable
 import app.musikus.database.UUIDConverter
-import app.musikus.database.entities.LibraryItemModel
+import app.musikus.database.entities.LibraryItemCreationAttributes
 import app.musikus.database.entities.SectionCreationAttributes
-import app.musikus.database.entities.SectionModel
 import app.musikus.database.entities.SectionUpdateAttributes
-import app.musikus.database.entities.SessionModel
+import app.musikus.database.entities.SessionCreationAttributes
 import app.musikus.di.AppModule
 import app.musikus.utils.FakeTimeProvider
 import com.google.common.truth.Truth.assertThat
@@ -62,7 +61,7 @@ class SectionDaoTest {
 
         runBlocking {
             database.libraryItemDao.insert(
-                LibraryItemModel(
+                LibraryItemCreationAttributes(
                     name = "TestItem1",
                     colorIndex = 6,
                     libraryFolderId = Nullable(null),
@@ -70,7 +69,7 @@ class SectionDaoTest {
             )
 
             database.sessionDao.insert(
-                session = SessionModel(
+                sessionCreationAttributes = SessionCreationAttributes(
                     breakDuration = 2.minutes,
                     rating = 2,
                     comment = "Test comment",
@@ -133,30 +132,10 @@ class SectionDaoTest {
     }
 
     @Test
-    fun insertSections_throwsNotImplementedError() = runTest {
-        val exception = assertThrows(NotImplementedError::class.java) {
-            runBlocking {
-                sectionDao.insert(listOf(
-                    SectionModel(
-                        sessionId = UUIDConverter.fromInt(2),
-                        libraryItemId = UUIDConverter.fromInt(1),
-                        duration = 10.minutes,
-                        startTimestamp = fakeTimeProvider.startTime
-                    )
-                ))
-            }
-        }
-
-        assertThat(exception.message).isEqualTo(
-            "Sections are inserted only in conjunction with their session"
-        )
-    }
-
-    @Test
     fun insertSection_throwsNotImplementedError() = runTest {
         val exception = assertThrows(NotImplementedError::class.java) {
             runBlocking {
-                sectionDao.insert(SectionModel(
+                sectionDao.insert(SectionCreationAttributes(
                     sessionId = UUIDConverter.fromInt(2),
                     libraryItemId = UUIDConverter.fromInt(1),
                     duration = 10.minutes,
@@ -295,7 +274,7 @@ class SectionDaoTest {
     fun getSpecificSections() = runTest {
         // Insert another session with a few more sections
         database.sessionDao.insert(
-            session = SessionModel(
+            sessionCreationAttributes = SessionCreationAttributes(
                 breakDuration = 3.minutes,
                 rating = 3,
                 comment = "Test comment2",
@@ -405,7 +384,7 @@ class SectionDaoTest {
     fun getSectionsInTimeframe() = runTest {
         // Insert another session with a few more sections
         database.sessionDao.insert(
-            session = SessionModel(
+            sessionCreationAttributes = SessionCreationAttributes(
                 breakDuration = 3.minutes,
                 rating = 3,
                 comment = "Test comment2",
@@ -477,12 +456,12 @@ class SectionDaoTest {
     fun getSectionsInTimeframeForItemId() = runTest {
         // Insert more library items
         database.libraryItemDao.insert(listOf(
-            LibraryItemModel(
+            LibraryItemCreationAttributes(
                 name = "TestItem2",
                 colorIndex = 6,
                 libraryFolderId = Nullable(null),
             ),
-            LibraryItemModel(
+            LibraryItemCreationAttributes(
                 name = "TestItem3",
                 colorIndex = 7,
                 libraryFolderId = Nullable(null),
@@ -491,7 +470,7 @@ class SectionDaoTest {
 
         // Insert another session with a few more sections
         database.sessionDao.insert(
-            session = SessionModel(
+            sessionCreationAttributes = SessionCreationAttributes(
                 breakDuration = 3.minutes,
                 rating = 3,
                 comment = "Test comment2",

@@ -13,11 +13,11 @@ import androidx.test.filters.SmallTest
 import app.musikus.database.MusikusDatabase
 import app.musikus.database.Nullable
 import app.musikus.database.UUIDConverter
-import app.musikus.database.entities.LibraryFolderModel
-import app.musikus.database.entities.LibraryItemModel
+import app.musikus.database.entities.LibraryFolderCreationAttributes
+import app.musikus.database.entities.LibraryItemCreationAttributes
 import app.musikus.database.entities.LibraryItemUpdateAttributes
 import app.musikus.database.entities.SectionCreationAttributes
-import app.musikus.database.entities.SessionModel
+import app.musikus.database.entities.SessionCreationAttributes
 import app.musikus.di.AppModule
 import app.musikus.utils.FakeTimeProvider
 import com.google.common.truth.Truth.assertThat
@@ -64,7 +64,7 @@ class LibraryItemDaoTest {
         // Insert a folder so we can test moving items into it
         runBlocking {
             database.libraryFolderDao.insert(
-                LibraryFolderModel("TestFolder")
+                LibraryFolderCreationAttributes("TestFolder")
             )
         }
     }
@@ -73,12 +73,12 @@ class LibraryItemDaoTest {
     fun insertItems() = runTest {
 
         libraryItemDao.insert(listOf(
-            LibraryItemModel(
+            LibraryItemCreationAttributes(
                 name = "TestItem1",
                 colorIndex = 5,
                 libraryFolderId = Nullable(null),
             ),
-            LibraryItemModel(
+            LibraryItemCreationAttributes(
                 name = "TestItem2",
                 colorIndex = 0,
                 libraryFolderId = Nullable(UUIDConverter.fromInt(1)),
@@ -111,7 +111,7 @@ class LibraryItemDaoTest {
 
     @Test
     fun insertItem() = runTest {
-        val item = LibraryItemModel(
+        val item = LibraryItemCreationAttributes(
             name = "TestItem",
             colorIndex = 0,
             libraryFolderId = Nullable(null),
@@ -128,7 +128,7 @@ class LibraryItemDaoTest {
     fun insertItemWithInvalidFolderId_throwsException() = runTest {
         val exception = assertThrows(SQLiteConstraintException::class.java) {
             runBlocking {
-                libraryItemDao.insert(LibraryItemModel(
+                libraryItemDao.insert(LibraryItemCreationAttributes(
                     name = "TestItem",
                     colorIndex = 0,
                     libraryFolderId = Nullable(UUIDConverter.fromInt(0)),
@@ -145,12 +145,12 @@ class LibraryItemDaoTest {
     fun updateItems() = runTest {
         // Insert items
         libraryItemDao.insert(listOf(
-            LibraryItemModel(
+            LibraryItemCreationAttributes(
                 name = "TestItem1",
                 colorIndex = 0,
                 libraryFolderId = Nullable(null),
             ),
-            LibraryItemModel(
+            LibraryItemCreationAttributes(
                 name = "TestItem2",
                 colorIndex = 5,
                 libraryFolderId = Nullable(UUIDConverter.fromInt(1)),
@@ -245,7 +245,7 @@ class LibraryItemDaoTest {
     @Test
     fun updateItemWithInvalidFolderId_throwsException() = runTest {
         // Insert items
-        libraryItemDao.insert(LibraryItemModel(
+        libraryItemDao.insert(LibraryItemCreationAttributes(
             name = "TestItem1",
             colorIndex = 0,
             libraryFolderId = Nullable(null)
@@ -271,12 +271,12 @@ class LibraryItemDaoTest {
     fun deleteItems() = runTest {
         // Insert items
         libraryItemDao.insert(listOf(
-            LibraryItemModel(
+            LibraryItemCreationAttributes(
                 name = "TestItem1",
                 colorIndex = 0,
                 libraryFolderId = Nullable(null),
             ),
-            LibraryItemModel(
+            LibraryItemCreationAttributes(
                 name = "TestItem2",
                 colorIndex = 5,
                 libraryFolderId = Nullable(UUIDConverter.fromInt(1)),
@@ -325,12 +325,12 @@ class LibraryItemDaoTest {
     fun restoreItems() = runTest {
         // Insert items
         libraryItemDao.insert(listOf(
-            LibraryItemModel(
+            LibraryItemCreationAttributes(
                 name = "TestItem1",
                 colorIndex = 0,
                 libraryFolderId = Nullable(null),
             ),
-            LibraryItemModel(
+            LibraryItemCreationAttributes(
                 name = "TestItem2",
                 colorIndex = 5,
                 libraryFolderId = Nullable(UUIDConverter.fromInt(1)),
@@ -408,17 +408,17 @@ class LibraryItemDaoTest {
     fun getSpecificItems() = runTest {
         // Insert items
         libraryItemDao.insert(listOf(
-            LibraryItemModel(
+            LibraryItemCreationAttributes(
                 name = "TestItem1",
                 colorIndex = 0,
                 libraryFolderId = Nullable(null),
             ),
-            LibraryItemModel(
+            LibraryItemCreationAttributes(
                 name = "TestItem2",
                 colorIndex = 5,
                 libraryFolderId = Nullable(UUIDConverter.fromInt(1)),
             ),
-            LibraryItemModel(
+            LibraryItemCreationAttributes(
                 name = "TestItem3",
                 colorIndex = 2,
                 libraryFolderId = Nullable(null),
@@ -486,7 +486,7 @@ class LibraryItemDaoTest {
     fun itemExists() = runTest {
         // Insert an item
         libraryItemDao.insert(
-            LibraryItemModel(
+            LibraryItemCreationAttributes(
                 name = "TestItem1",
                 colorIndex = 0,
                 libraryFolderId = Nullable(null),
@@ -505,17 +505,17 @@ class LibraryItemDaoTest {
     @Test
     fun cleanItems() = runTest {
         libraryItemDao.insert(listOf(
-            LibraryItemModel(
+            LibraryItemCreationAttributes(
                 name = "TestItem1",
                 colorIndex = 0,
                 libraryFolderId = Nullable(null),
             ),
-            LibraryItemModel(
+            LibraryItemCreationAttributes(
                 name = "TestItem2",
                 colorIndex = 5,
                 libraryFolderId = Nullable(UUIDConverter.fromInt(1)),
             ),
-            LibraryItemModel(
+            LibraryItemCreationAttributes(
                 name = "TestItem3",
                 colorIndex = 8,
                 libraryFolderId = Nullable(UUIDConverter.fromInt(1)),
@@ -523,7 +523,7 @@ class LibraryItemDaoTest {
         ))
 
         database.sessionDao.insert(
-            SessionModel(
+            SessionCreationAttributes(
                 breakDuration = 0.seconds,
                 rating = 0,
                 comment = "",

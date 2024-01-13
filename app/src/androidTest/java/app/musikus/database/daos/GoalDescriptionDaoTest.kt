@@ -11,14 +11,15 @@ package app.musikus.database.daos
 import androidx.test.filters.SmallTest
 import app.musikus.database.GoalDescriptionWithInstancesAndLibraryItems
 import app.musikus.database.MusikusDatabase
+import app.musikus.database.Nullable
 import app.musikus.database.UUIDConverter
-import app.musikus.database.entities.GoalDescriptionModel
+import app.musikus.database.entities.GoalDescriptionCreationAttributes
 import app.musikus.database.entities.GoalDescriptionUpdateAttributes
 import app.musikus.database.entities.GoalInstanceCreationAttributes
 import app.musikus.database.entities.GoalPeriodUnit
 import app.musikus.database.entities.GoalProgressType
 import app.musikus.database.entities.GoalType
-import app.musikus.database.entities.LibraryItemModel
+import app.musikus.database.entities.LibraryItemCreationAttributes
 import app.musikus.di.AppModule
 import app.musikus.utils.FakeTimeProvider
 import com.google.common.truth.Truth.assertThat
@@ -70,7 +71,7 @@ class GoalDescriptionDaoTest {
         val exception = assertThrows(NotImplementedError::class.java) {
             runBlocking {
                 goalDescriptionDao.insert(listOf(
-                    GoalDescriptionModel(
+                    GoalDescriptionCreationAttributes(
                         type = GoalType.NON_SPECIFIC,
                         repeat = true,
                         periodInPeriodUnits = 1,
@@ -89,7 +90,7 @@ class GoalDescriptionDaoTest {
     fun insertGoalDescription_throwsNotImplementedError() = runTest {
         val exception = assertThrows(NotImplementedError::class.java) {
             runBlocking {
-                goalDescriptionDao.insert(GoalDescriptionModel(
+                goalDescriptionDao.insert(GoalDescriptionCreationAttributes(
                     type = GoalType.NON_SPECIFIC,
                     repeat = true,
                     periodInPeriodUnits = 1,
@@ -106,7 +107,7 @@ class GoalDescriptionDaoTest {
     @Test
     fun insertNonSpecificGoal() = runTest {
         goalDescriptionDao.insert(
-            description = GoalDescriptionModel(
+            descriptionCreationAttributes = GoalDescriptionCreationAttributes(
                 type = GoalType.NON_SPECIFIC,
                 repeat = true,
                 periodInPeriodUnits = 1,
@@ -140,16 +141,15 @@ class GoalDescriptionDaoTest {
     @Test
     fun insertItemSpecificGoal() = runTest {
         database.libraryItemDao.insert(
-            LibraryItemModel(
+            LibraryItemCreationAttributes(
                 name = "TestItem",
                 colorIndex = 1,
-                libraryFolderId = null,
-                customOrder = null,
+                libraryFolderId = Nullable(null),
             )
         )
 
         goalDescriptionDao.insert(
-            description = GoalDescriptionModel(
+            descriptionCreationAttributes = GoalDescriptionCreationAttributes(
                 type = GoalType.ITEM_SPECIFIC,
                 repeat = true,
                 periodInPeriodUnits = 2,
@@ -214,7 +214,7 @@ class GoalDescriptionDaoTest {
         val exception = assertThrows(IllegalArgumentException::class.java) {
             runBlocking {
                 goalDescriptionDao.insert(
-                    description = GoalDescriptionModel(
+                    descriptionCreationAttributes = GoalDescriptionCreationAttributes(
                         type = GoalType.NON_SPECIFIC,
                         repeat = true,
                         periodInPeriodUnits = 1,
@@ -241,7 +241,7 @@ class GoalDescriptionDaoTest {
         val exception = assertThrows(IllegalArgumentException::class.java) {
             runBlocking {
                 goalDescriptionDao.insert(
-                    description = GoalDescriptionModel(
+                    descriptionCreationAttributes = GoalDescriptionCreationAttributes(
                         type = GoalType.ITEM_SPECIFIC,
                         repeat = true,
                         periodInPeriodUnits = 2,
@@ -266,7 +266,7 @@ class GoalDescriptionDaoTest {
         val exception = assertThrows(IllegalArgumentException::class.java) {
             runBlocking {
                 goalDescriptionDao.insert(
-                    description = GoalDescriptionModel(
+                    descriptionCreationAttributes = GoalDescriptionCreationAttributes(
                         type = GoalType.ITEM_SPECIFIC,
                         repeat = true,
                         periodInPeriodUnits = 2,
@@ -293,7 +293,7 @@ class GoalDescriptionDaoTest {
         // insert two goals
         repeat(2) { index ->
             goalDescriptionDao.insert(
-                description = GoalDescriptionModel(
+                descriptionCreationAttributes = GoalDescriptionCreationAttributes(
                     type = GoalType.NON_SPECIFIC,
                     repeat = true,
                     periodInPeriodUnits = index,
@@ -389,7 +389,7 @@ class GoalDescriptionDaoTest {
         // insert two goals
         repeat(2) { index ->
             goalDescriptionDao.insert(
-                description = GoalDescriptionModel(
+                descriptionCreationAttributes = GoalDescriptionCreationAttributes(
                     type = GoalType.NON_SPECIFIC,
                     repeat = true,
                     periodInPeriodUnits = index,
@@ -441,7 +441,7 @@ class GoalDescriptionDaoTest {
     fun restoreDescriptions() = runTest {
         repeat(2) { index ->
             goalDescriptionDao.insert(
-                description = GoalDescriptionModel(
+                descriptionCreationAttributes = GoalDescriptionCreationAttributes(
                     type = GoalType.NON_SPECIFIC,
                     repeat = true,
                     periodInPeriodUnits = index,
@@ -530,7 +530,7 @@ class GoalDescriptionDaoTest {
     fun getSpecificGoalDescriptions() = runTest {
         repeat(3) { index ->
             goalDescriptionDao.insert(
-                description = GoalDescriptionModel(
+                descriptionCreationAttributes = GoalDescriptionCreationAttributes(
                     type = GoalType.NON_SPECIFIC,
                     repeat = true,
                     periodInPeriodUnits = index,
@@ -609,7 +609,7 @@ class GoalDescriptionDaoTest {
     @Test
     fun goalDescriptionExists() = runTest {
         goalDescriptionDao.insert(
-            description = GoalDescriptionModel(
+            descriptionCreationAttributes = GoalDescriptionCreationAttributes(
                 type = GoalType.NON_SPECIFIC,
                 repeat = true,
                 periodInPeriodUnits = 1,
@@ -626,7 +626,7 @@ class GoalDescriptionDaoTest {
     @Test
     fun deletedGoalDescriptionDoesNotExist() = runTest {
         goalDescriptionDao.insert(
-            description = GoalDescriptionModel(
+            descriptionCreationAttributes = GoalDescriptionCreationAttributes(
                 type = GoalType.NON_SPECIFIC,
                 repeat = true,
                 periodInPeriodUnits = 1,
@@ -652,7 +652,7 @@ class GoalDescriptionDaoTest {
     fun cleanGoalDescriptions() = runTest {
         repeat(2) { index ->
             goalDescriptionDao.insert(
-                description = GoalDescriptionModel(
+                descriptionCreationAttributes = GoalDescriptionCreationAttributes(
                     type = GoalType.NON_SPECIFIC,
                     repeat = true,
                     periodInPeriodUnits = index,
@@ -702,7 +702,7 @@ class GoalDescriptionDaoTest {
     @Test
     fun getDescriptionForInstance() = runTest {
         goalDescriptionDao.insert(
-            description = GoalDescriptionModel(
+            descriptionCreationAttributes = GoalDescriptionCreationAttributes(
                 type = GoalType.NON_SPECIFIC,
                 repeat = true,
                 periodInPeriodUnits = 1,
@@ -738,18 +738,17 @@ class GoalDescriptionDaoTest {
         // insert two library items
         repeat(2) {
             database.libraryItemDao.insert(
-                LibraryItemModel(
+                LibraryItemCreationAttributes(
                     name = "TestItem$it",
                     colorIndex = it,
-                    libraryFolderId = null,
-                    customOrder = null,
+                    libraryFolderId = Nullable(null),
                 )
             )
         }
 
         // insert a non-specific goal
         goalDescriptionDao.insert(
-            description = GoalDescriptionModel(
+            descriptionCreationAttributes = GoalDescriptionCreationAttributes(
                 type = GoalType.NON_SPECIFIC,
                 repeat = true,
                 periodInPeriodUnits = 1,
@@ -763,7 +762,7 @@ class GoalDescriptionDaoTest {
 
         // insert an item-specific goal
         goalDescriptionDao.insert(
-            description = GoalDescriptionModel(
+            descriptionCreationAttributes = GoalDescriptionCreationAttributes(
                 type = GoalType.ITEM_SPECIFIC,
                 repeat = false,
                 periodInPeriodUnits = 2,

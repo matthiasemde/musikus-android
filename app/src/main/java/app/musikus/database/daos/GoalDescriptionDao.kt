@@ -22,6 +22,7 @@ import androidx.room.Transaction
 import app.musikus.R
 import app.musikus.database.GoalDescriptionWithInstancesAndLibraryItems
 import app.musikus.database.MusikusDatabase
+import app.musikus.database.entities.GoalDescriptionCreationAttributes
 import app.musikus.database.entities.GoalDescriptionLibraryItemCrossRefModel
 import app.musikus.database.entities.GoalDescriptionModel
 import app.musikus.database.entities.GoalDescriptionUpdateAttributes
@@ -114,6 +115,7 @@ abstract class GoalDescriptionDao(
     private val database : MusikusDatabase
 ) : SoftDeleteDao<
         GoalDescriptionModel,
+        GoalDescriptionCreationAttributes,
         GoalDescriptionUpdateAttributes,
         GoalDescription
         >(
@@ -135,13 +137,13 @@ abstract class GoalDescriptionDao(
      * @Update
      */
 
-    override fun applyUpdateAttributes(
-        old: GoalDescriptionModel,
+    override fun modelWithAppliedUpdateAttributes(
+        oldModel: GoalDescriptionModel,
         updateAttributes: GoalDescriptionUpdateAttributes
-    ): GoalDescriptionModel = super.applyUpdateAttributes(old, updateAttributes).apply {
-        paused = updateAttributes.paused ?: old.paused
-        archived = updateAttributes.archived ?: old.archived
-        customOrder = updateAttributes.customOrder ?: old.customOrder
+    ): GoalDescriptionModel = super.modelWithAppliedUpdateAttributes(oldModel, updateAttributes).apply {
+        paused = updateAttributes.paused ?: oldModel.paused
+        archived = updateAttributes.archived ?: oldModel.archived
+        customOrder = updateAttributes.customOrder ?: oldModel.customOrder
     }
 
 
@@ -149,13 +151,23 @@ abstract class GoalDescriptionDao(
      * @Insert
      */
 
-    override suspend fun insert(row: GoalDescriptionModel) {
+    override fun createModel(creationAttributes: GoalDescriptionCreationAttributes): GoalDescriptionModel {
+        return GoalDescriptionModel(
+            type = creationAttributes.type,
+            repeat = creationAttributes.repeat,
+            periodInPeriodUnits = creationAttributes.periodInPeriodUnits,
+            periodUnit = creationAttributes.periodUnit,
+            progressType = creationAttributes.progressType,
+        )
+    }
+
+    override suspend fun insert(creationAttributes: GoalDescriptionCreationAttributes): UUID {
         throw NotImplementedError(
             "Use overload insert(description, instanceCreationAttributes, libraryItemIds) instead"
         )
     }
 
-    override suspend fun insert(rows: List<GoalDescriptionModel>) {
+    override suspend fun insert(creationAttributes: List<GoalDescriptionCreationAttributes>): List<UUID> {
         throw NotImplementedError(
             "Use overload insert(description, instanceCreationAttributes, libraryItemIds) instead"
         )
@@ -168,33 +180,36 @@ abstract class GoalDescriptionDao(
 
     @Transaction
     open suspend fun insert(
-        description: GoalDescriptionModel,
+        descriptionCreationAttributes: GoalDescriptionCreationAttributes,
         instanceCreationAttributes: GoalInstanceCreationAttributes,
         libraryItemIds: List<UUID>? = null,
-    ) {
+    ): Pair<UUID, UUID> {
 
-        if(description.type == GoalType.NON_SPECIFIC && !libraryItemIds.isNullOrEmpty()) {
+        if(descriptionCreationAttributes.type == GoalType.NON_SPECIFIC && !libraryItemIds.isNullOrEmpty()) {
             throw IllegalArgumentException("Non-specific goals cannot have library items")
-        } else if(description.type != GoalType.NON_SPECIFIC && libraryItemIds.isNullOrEmpty()) {
+        } else if(descriptionCreationAttributes.type != GoalType.NON_SPECIFIC && libraryItemIds.isNullOrEmpty()) {
             throw IllegalArgumentException("Specific goals must have at least one library item")
         }
 
-        super.insert(listOf(description)) // insert of single description would call the overridden insert method
+        val descriptionId = super.insert(listOf(descriptionCreationAttributes)).single() // insert of description (single) would call the overridden insert method
 
         // Create the first instance of the newly created goal description
-        database.goalInstanceDao.insert(
-            descriptionId = description.id,
-            creationAttributes = instanceCreationAttributes,
+        val firstInstanceId = database.goalInstanceDao.insert(
+            creationAttributes = instanceCreationAttributes.apply {
+                goalDescriptionId = descriptionId
+            },
         )
 
         libraryItemIds?.forEach { libraryItemId ->
             insertGoalDescriptionLibraryItemCrossRef(
                 GoalDescriptionLibraryItemCrossRefModel(
-                    goalDescriptionId = description.id,
+                    goalDescriptionId = descriptionId,
                     libraryItemId = libraryItemId
                 )
             )
         }
+
+        return Pair(descriptionId, firstInstanceId)
     }
 
     /**

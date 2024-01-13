@@ -37,8 +37,8 @@ suspend fun prepopulateDatabase(
     )
 
     val goalRepository = GoalRepositoryImpl(
-        goalInstanceDao = database.goalInstanceDao,
-        goalDescriptionDao = database.goalDescriptionDao,
+        instanceDao = database.goalInstanceDao,
+        descriptionDao = database.goalDescriptionDao,
         timeProvider = database.timeProvider,
     )
 

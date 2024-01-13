@@ -11,7 +11,6 @@ import app.musikus.database.daos.Session
 import app.musikus.database.daos.SessionDao
 import app.musikus.database.entities.SectionCreationAttributes
 import app.musikus.database.entities.SessionCreationAttributes
-import app.musikus.database.entities.SessionModel
 import app.musikus.utils.Timeframe
 import kotlinx.coroutines.flow.Flow
 import java.time.ZonedDateTime
@@ -36,8 +35,8 @@ interface SessionRepository {
     /** Mutators */
     /** Add */
     suspend fun add(
-        session: SessionCreationAttributes,
-        sections: List<SectionCreationAttributes>
+        sessionCreationAttributes: SessionCreationAttributes,
+        sectionsCreationAttributes: List<SectionCreationAttributes>
     ) : UUID
 
     /** Delete / Restore */
@@ -101,16 +100,14 @@ class SessionRepositoryImpl(
     /** Mutators */
     /** Add */
     override suspend fun add(
-        session: SessionCreationAttributes,
-        sections: List<SectionCreationAttributes>
+        sessionCreationAttributes: SessionCreationAttributes,
+        sectionsCreationAttributes: List<SectionCreationAttributes>
     ) : UUID {
-        val newSession = SessionModel(
-            breakDuration = session.breakDuration,
-            rating = session.rating,
-            comment = session.comment,
+        val (sessionId, _) = sessionDao.insert(
+            sessionCreationAttributes,
+            sectionsCreationAttributes
         )
-        sessionDao.insert(newSession, sections)
-        return newSession.id
+        return sessionId
     }
 
     /** Delete / Restore */

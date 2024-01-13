@@ -11,12 +11,13 @@ package app.musikus.database.daos
 import android.database.sqlite.SQLiteConstraintException
 import androidx.test.filters.SmallTest
 import app.musikus.database.MusikusDatabase
+import app.musikus.database.Nullable
 import app.musikus.database.SectionWithLibraryItem
 import app.musikus.database.SessionWithSectionsWithLibraryItems
 import app.musikus.database.UUIDConverter
-import app.musikus.database.entities.LibraryItemModel
+import app.musikus.database.entities.LibraryItemCreationAttributes
 import app.musikus.database.entities.SectionCreationAttributes
-import app.musikus.database.entities.SessionModel
+import app.musikus.database.entities.SessionCreationAttributes
 import app.musikus.database.entities.SessionUpdateAttributes
 import app.musikus.di.AppModule
 import app.musikus.utils.FakeTimeProvider
@@ -65,17 +66,17 @@ class SessionDaoTest {
         // insert a library item so we can use it in test sessions
         runBlocking {
             database.libraryItemDao.insert(
-                LibraryItemModel(
+                LibraryItemCreationAttributes(
                     name = "TestItem",
                     colorIndex = 1,
-                    libraryFolderId = null
+                    libraryFolderId = Nullable(null)
                 )
             )
         }
     }
 
     private suspend fun insertSessionWithSection() {
-        val session = SessionModel(
+        val session = SessionCreationAttributes(
             breakDuration = 10.minutes,
             rating = 3,
             comment = "Test comment",
@@ -99,7 +100,7 @@ class SessionDaoTest {
     fun insertSessions_throwsNotImplementedError() = runTest {
         val exception = assertThrows(NotImplementedError::class.java) {
             runBlocking {
-                sessionDao.insert(listOf(SessionModel(
+                sessionDao.insert(listOf(SessionCreationAttributes(
                     breakDuration = 10.seconds,
                     rating = 3,
                     comment = "Test comment"
@@ -108,7 +109,7 @@ class SessionDaoTest {
         }
 
         assertThat(exception.message).isEqualTo(
-            "Use insert(session: SessionModel, sectionCreationAttributes: List<SectionCreationAttributes>) instead"
+            "Use insert(sessionCreationAttributes, sectionCreationAttributes) instead"
         )
     }
 
@@ -116,7 +117,7 @@ class SessionDaoTest {
     fun insertSession_throwsNotImplementedError() = runTest {
         val exception = assertThrows(NotImplementedError::class.java) {
             runBlocking {
-                sessionDao.insert(SessionModel(
+                sessionDao.insert(SessionCreationAttributes(
                     breakDuration = 10.seconds,
                     rating = 3,
                     comment = "Test comment"
@@ -125,7 +126,7 @@ class SessionDaoTest {
         }
 
         assertThat(exception.message).isEqualTo(
-            "Use insert(session: SessionModel, sectionCreationAttributes: List<SectionCreationAttributes>) instead"
+            "Use insert(sessionCreationAttributes, sectionCreationAttributes) instead"
         )
     }
 
@@ -441,7 +442,7 @@ class SessionDaoTest {
     }
 
     @Test fun insertSessionWithSections() = runTest {
-        val session = SessionModel(
+        val session = SessionCreationAttributes(
             breakDuration = 10.minutes,
             rating = 3,
             comment = "Test comment",
@@ -500,7 +501,7 @@ class SessionDaoTest {
         val exception = assertThrows(SQLiteConstraintException::class.java) {
             runBlocking {
                 sessionDao.insert(
-                    SessionModel(
+                    SessionCreationAttributes(
                         breakDuration = 10.minutes,
                         rating = 3,
                         comment = "Test comment",

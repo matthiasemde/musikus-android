@@ -21,6 +21,7 @@ import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import app.musikus.R
+import app.musikus.database.UUIDConverter
 import app.musikus.database.daos.LibraryItem
 import app.musikus.ui.activesession.ActiveSessionActivity
 import app.musikus.ui.library.LibraryItemAdapter
@@ -30,7 +31,6 @@ import com.github.appintro.SlideBackgroundColorHolder
 import com.github.appintro.SlideSelectionListener
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import java.time.ZonedDateTime
-import java.util.UUID
 import javax.inject.Inject
 
 
@@ -40,7 +40,7 @@ import javax.inject.Inject
 
 private val dummyLibraryItems = listOf(
     LibraryItem(
-        id = UUID.fromString("DEADBEEF-DEAD-BEEF-DEAD-BEEFDEADBEEF"),
+        id = UUIDConverter.deadBeef,
         createdAt = ZonedDateTime.parse("1997-05-07"),
         modifiedAt = ZonedDateTime.parse("1997-05-07"),
         name = "B-Dur",
@@ -49,7 +49,7 @@ private val dummyLibraryItems = listOf(
         customOrder = null
     ),
     LibraryItem(
-        id = UUID.fromString("DEADBEEF-DEAD-BEEF-DEAD-BEEFDEADBEEF"),
+        id = UUIDConverter.deadBeef,
         createdAt = ZonedDateTime.parse("1997-05-07"),
         modifiedAt = ZonedDateTime.parse("1997-05-07"),
         name = "Czerny Etude Nr.2",
@@ -58,7 +58,7 @@ private val dummyLibraryItems = listOf(
         customOrder = null
     ),
     LibraryItem(
-        id = UUID.fromString("DEADBEEF-DEAD-BEEF-DEAD-BEEFDEADBEEF"),
+        id = UUIDConverter.deadBeef,
         createdAt = ZonedDateTime.parse("1997-05-07"),
         modifiedAt = ZonedDateTime.parse("1997-05-07"),
         name = "Trauermarsch c-Moll",
@@ -67,7 +67,7 @@ private val dummyLibraryItems = listOf(
         customOrder = null
     ),
     LibraryItem(
-        id = UUID.fromString("DEADBEEF-DEAD-BEEF-DEAD-BEEFDEADBEEF"),
+        id = UUIDConverter.deadBeef,
         createdAt = ZonedDateTime.parse("1997-05-07"),
         modifiedAt = ZonedDateTime.parse("1997-05-07"),
         name = "Andantino",
@@ -76,7 +76,7 @@ private val dummyLibraryItems = listOf(
         customOrder = null
     ),
     LibraryItem(
-        id = UUID.fromString("DEADBEEF-DEAD-BEEF-DEAD-BEEFDEADBEEF"),
+        id = UUIDConverter.deadBeef,
         createdAt = ZonedDateTime.parse("1997-05-07"),
         modifiedAt = ZonedDateTime.parse("1997-05-07"),
         name = "Klaviersonate",
@@ -85,7 +85,7 @@ private val dummyLibraryItems = listOf(
         customOrder = null
     ),
     LibraryItem(
-        id = UUID.fromString("DEADBEEF-DEAD-BEEF-DEAD-BEEFDEADBEEF"),
+        id = UUIDConverter.deadBeef,
         createdAt = ZonedDateTime.parse("1997-05-07"),
         modifiedAt = ZonedDateTime.parse("1997-05-07"),
         name = "Mozart",
@@ -273,7 +273,7 @@ class IntroGoalsFragment : Fragment(R.layout.fragment_intro_goals) {
 //    private fun getDummyGoals(): List<GoalInstanceWithDescriptionWithLibraryItems> {
 //        val goal1 = GoalInstanceWithDescriptionWithLibraryItems(
 //            GoalInstance(
-//                goalDescriptionId = UUID.fromString("DEADBEEF-DEAD-BEEF-DEAD-BEEFDEADBEEF"),
+//                goalDescriptionId = UUIDConverter.deadBeef,
 //                startTimestamp = getStartOfDay(0).toEpochSecond(),
 //                periodInSeconds = SECONDS_PER_DAY,
 //                target = SECONDS_PER_HOUR,
@@ -294,7 +294,7 @@ class IntroGoalsFragment : Fragment(R.layout.fragment_intro_goals) {
 //        )
 //        val goal2 = GoalInstanceWithDescriptionWithLibraryItems(
 //            GoalInstance(
-//                goalDescriptionId = UUID.fromString("DEADBEEF-DEAD-BEEF-DEAD-BEEFDEADBEEF"),
+//                goalDescriptionId = UUIDConverter.deadBeef,
 //                startTimestamp = getStartOfWeek(0).toEpochSecond(),
 //                periodInSeconds = SECONDS_PER_DAY * 7,
 //                target = (SECONDS_PER_HOUR * 5.5f).roundToInt(),
@@ -348,8 +348,8 @@ class IntroSessionsFragment : Fragment(R.layout.fragment_intro_sessions) {
 //            sections = listOf(
 //                SectionWithLibraryItem(
 //                    Section(
-//                        sessionId = UUID.fromString("DEADBEEF-DEAD-BEEF-DEAD-BEEFDEADBEEF"), // we don't care about id but it can't be null
-//                        libraryItemId = UUID.fromString("DEADBEEF-DEAD-BEEF-DEAD-BEEFDEADBEEF"), // we don't care about id but it can't be null
+//                        sessionId = UUIDConverter.deadBeef, // we don't care about id but it can't be null
+//                        libraryItemId = UUIDConverter.deadBeef, // we don't care about id but it can't be null
 //                        duration = 60 * 10,
 //                        startTimestamp = timeProvider.now()
 //                    ),
@@ -357,8 +357,8 @@ class IntroSessionsFragment : Fragment(R.layout.fragment_intro_sessions) {
 //                ),
 //                SectionWithLibraryItem(
 //                    Section(
-//                        sessionId = UUID.fromString("DEADBEEF-DEAD-BEEF-DEAD-BEEFDEADBEEF"), // we don't care about id but it can't be null
-//                        libraryItemId = UUID.fromString("DEADBEEF-DEAD-BEEF-DEAD-BEEFDEADBEEF"), // we don't care about id but it can't be null
+//                        sessionId = UUIDConverter.deadBeef, // we don't care about id but it can't be null
+//                        libraryItemId = UUIDConverter.deadBeef, // we don't care about id but it can't be null
 //                        duration = 60 * 23,
 //                        startTimestamp = timeProvider.now()
 //                    ),
@@ -366,8 +366,8 @@ class IntroSessionsFragment : Fragment(R.layout.fragment_intro_sessions) {
 //                ),
 //                SectionWithLibraryItem(
 //                    Section(
-//                        sessionId = UUID.fromString("DEADBEEF-DEAD-BEEF-DEAD-BEEFDEADBEEF"), // we don't care about id but it can't be null
-//                        libraryItemId = UUID.fromString("DEADBEEF-DEAD-BEEF-DEAD-BEEFDEADBEEF"), // we don't care about id but it can't be null
+//                        sessionId = UUIDConverter.deadBeef, // we don't care about id but it can't be null
+//                        libraryItemId = UUIDConverter.deadBeef, // we don't care about id but it can't be null
 //                        duration = 60 * 37,
 //                        startTimestamp = timeProvider.now()
 //                    ),

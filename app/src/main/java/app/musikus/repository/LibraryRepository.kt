@@ -13,10 +13,8 @@ import app.musikus.database.daos.LibraryFolderDao
 import app.musikus.database.daos.LibraryItem
 import app.musikus.database.daos.LibraryItemDao
 import app.musikus.database.entities.LibraryFolderCreationAttributes
-import app.musikus.database.entities.LibraryFolderModel
 import app.musikus.database.entities.LibraryFolderUpdateAttributes
 import app.musikus.database.entities.LibraryItemCreationAttributes
-import app.musikus.database.entities.LibraryItemModel
 import app.musikus.database.entities.LibraryItemUpdateAttributes
 import kotlinx.coroutines.flow.Flow
 import java.util.UUID
@@ -61,21 +59,11 @@ class LibraryRepositoryImpl(
     /** Mutators */
     /** Add */
     override suspend fun addFolder(creationAttributes: LibraryFolderCreationAttributes) {
-        folderDao.insert(
-            LibraryFolderModel(
-                name = creationAttributes.name,
-            )
-        )
+        folderDao.insert(creationAttributes)
     }
 
     override suspend fun addItem(creationAttributes: LibraryItemCreationAttributes) {
-        itemDao.insert(
-            LibraryItemModel(
-                name = creationAttributes.name,
-                colorIndex = creationAttributes.colorIndex,
-                libraryFolderId = creationAttributes.libraryFolderId,
-            )
-        )
+        itemDao.insert(creationAttributes)
     }
 
     /** Edit */

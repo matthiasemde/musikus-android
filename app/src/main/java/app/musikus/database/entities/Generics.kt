@@ -10,6 +10,7 @@ package app.musikus.database.entities
 
 import androidx.room.ColumnInfo
 import androidx.room.PrimaryKey
+import app.musikus.database.UUIDConverter
 import app.musikus.database.daos.HASH_FACTOR
 import java.time.ZonedDateTime
 import java.util.UUID
@@ -39,7 +40,7 @@ abstract class BaseModelDisplayAttributes {
 abstract class BaseModel(
     // Can't be use null, but this id will be overwritten when inserted
     @PrimaryKey
-    var id: UUID = UUID.fromString("DEADBEEF-DEAD-BEEF-DEAD-BEEFDEADBEEF")
+    var id: UUID = UUIDConverter.deadBeef
 ) : IBaseModelCreationAttributes, IBaseModelUpdateAttributes {
 
     override fun toString(): String {

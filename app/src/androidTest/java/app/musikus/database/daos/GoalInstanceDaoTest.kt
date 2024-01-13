@@ -15,10 +15,9 @@ import app.musikus.database.GoalInstanceWithDescriptionWithLibraryItems
 import app.musikus.database.MusikusDatabase
 import app.musikus.database.Nullable
 import app.musikus.database.UUIDConverter
-import app.musikus.database.entities.GoalDescriptionModel
+import app.musikus.database.entities.GoalDescriptionCreationAttributes
 import app.musikus.database.entities.GoalDescriptionUpdateAttributes
 import app.musikus.database.entities.GoalInstanceCreationAttributes
-import app.musikus.database.entities.GoalInstanceModel
 import app.musikus.database.entities.GoalInstanceUpdateAttributes
 import app.musikus.database.entities.GoalPeriodUnit
 import app.musikus.database.entities.GoalProgressType
@@ -70,7 +69,7 @@ class GoalInstanceDaoTest {
         // Simulate a goal description which is renewed once already
         runBlocking {
             database.goalDescriptionDao.insert(
-                description = GoalDescriptionModel(
+                descriptionCreationAttributes = GoalDescriptionCreationAttributes(
                     type = GoalType.NON_SPECIFIC,
                     repeat = true,
                     periodInPeriodUnits = 1,
@@ -92,13 +91,11 @@ class GoalInstanceDaoTest {
                     )
                 )
 
-                goalInstanceDao.insert(
-                    descriptionId = UUIDConverter.fromInt(1),
-                    creationAttributes = GoalInstanceCreationAttributes(
-                        startTimestamp = fakeTimeProvider.now(),
-                        target = 35.minutes
-                    )
-                )
+                goalInstanceDao.insert(GoalInstanceCreationAttributes(
+                    goalDescriptionId = UUIDConverter.fromInt(1),
+                    startTimestamp = fakeTimeProvider.now(),
+                    target = 35.minutes
+                ))
             }
         }
     }
@@ -149,7 +146,7 @@ class GoalInstanceDaoTest {
         val exception = assertThrows(NotImplementedError::class.java) {
             runBlocking {
                 goalInstanceDao.insert(listOf(
-                    GoalInstanceModel(
+                    GoalInstanceCreationAttributes(
                         goalDescriptionId = UUIDConverter.fromInt(1),
                         target = 30.minutes,
                         startTimestamp = fakeTimeProvider.startTime
@@ -158,26 +155,7 @@ class GoalInstanceDaoTest {
             }
         }
 
-        assertThat(exception.message).isEqualTo(
-            "Use insert(goalDescriptionId, creationAttributes) instead"
-        )
-    }
-
-    @Test
-    fun insertInstance_throwsNotImplementedError() = runTest {
-        val exception = assertThrows(NotImplementedError::class.java) {
-            runBlocking {
-                goalInstanceDao.insert(GoalInstanceModel(
-                    goalDescriptionId = UUIDConverter.fromInt(1),
-                    target = 30.minutes,
-                    startTimestamp = fakeTimeProvider.startTime
-                ))
-            }
-        }
-
-        assertThat(exception.message).isEqualTo(
-            "Use insert(goalDescriptionId, creationAttributes) instead"
-        )
+        assertThat(exception.message).isEqualTo("")
     }
 
     @Test
@@ -191,13 +169,11 @@ class GoalInstanceDaoTest {
         )
 
         // Insert a new instance
-        goalInstanceDao.insert(
-            descriptionId = UUIDConverter.fromInt(1),
-            creationAttributes = GoalInstanceCreationAttributes(
-                startTimestamp = fakeTimeProvider.now(),
-                target = 40.minutes
-            )
-        )
+        goalInstanceDao.insert(GoalInstanceCreationAttributes(
+            goalDescriptionId = UUIDConverter.fromInt(1),
+            startTimestamp = fakeTimeProvider.now(),
+            target = 40.minutes
+        ))
 
         // Check if the instance was inserted correctly
         val instances = goalInstanceDao.getAllAsFlow().first()
@@ -237,13 +213,11 @@ class GoalInstanceDaoTest {
     fun insertInstanceWithoutUpdatingPreviousInstance_throwsException() = runTest {
         val exception = assertThrows(IllegalArgumentException::class.java) {
             runBlocking {
-                goalInstanceDao.insert(
-                    descriptionId = UUIDConverter.fromInt(1),
-                    creationAttributes = GoalInstanceCreationAttributes(
-                        startTimestamp = fakeTimeProvider.now(),
-                        target = 40.minutes
-                    )
-                )
+                goalInstanceDao.insert(GoalInstanceCreationAttributes(
+                    goalDescriptionId = UUIDConverter.fromInt(1),
+                    startTimestamp = fakeTimeProvider.now(),
+                    target = 40.minutes
+                ))
             }
         }
 
@@ -264,13 +238,11 @@ class GoalInstanceDaoTest {
 
         val exception = assertThrows(IllegalArgumentException::class.java) {
             runBlocking {
-                goalInstanceDao.insert(
-                    descriptionId = UUIDConverter.fromInt(1),
-                    creationAttributes = GoalInstanceCreationAttributes(
-                        startTimestamp = fakeTimeProvider.now().minus(1.days.toJavaDuration()),
-                        target = 40.minutes
-                    )
-                )
+                goalInstanceDao.insert(GoalInstanceCreationAttributes(
+                    goalDescriptionId = UUIDConverter.fromInt(1),
+                    startTimestamp = fakeTimeProvider.now().minus(1.days.toJavaDuration()),
+                    target = 40.minutes
+                ))
             }
         }
 
@@ -283,13 +255,11 @@ class GoalInstanceDaoTest {
     fun insertInstanceForNonExistentGoal_throwsException() = runTest {
         val exception = assertThrows(IllegalArgumentException::class.java) {
             runBlocking {
-                goalInstanceDao.insert(
-                    descriptionId = UUIDConverter.fromInt(0),
-                    creationAttributes = GoalInstanceCreationAttributes(
-                        startTimestamp = fakeTimeProvider.now(),
-                        target = 40.minutes
-                    )
-                )
+                goalInstanceDao.insert(GoalInstanceCreationAttributes(
+                    goalDescriptionId = UUIDConverter.fromInt(0),
+                    startTimestamp = fakeTimeProvider.now(),
+                    target = 40.minutes
+                ))
             }
         }
 
@@ -305,13 +275,11 @@ class GoalInstanceDaoTest {
 
         val exception = assertThrows(IllegalArgumentException::class.java) {
             runBlocking {
-                goalInstanceDao.insert(
-                    descriptionId = UUIDConverter.fromInt(1),
-                    creationAttributes = GoalInstanceCreationAttributes(
-                        startTimestamp = fakeTimeProvider.now(),
-                        target = 40.minutes
-                    )
-                )
+                goalInstanceDao.insert(GoalInstanceCreationAttributes(
+                    goalDescriptionId = UUIDConverter.fromInt(1),
+                    startTimestamp = fakeTimeProvider.now(),
+                    target = 40.minutes
+                ))
             }
         }
 
@@ -330,13 +298,11 @@ class GoalInstanceDaoTest {
 
         val exception = assertThrows(IllegalArgumentException::class.java) {
             runBlocking {
-                goalInstanceDao.insert(
-                    descriptionId = UUIDConverter.fromInt(1),
-                    creationAttributes = GoalInstanceCreationAttributes(
-                        startTimestamp = fakeTimeProvider.now(),
-                        target = 40.minutes
-                    )
-                )
+                goalInstanceDao.insert(GoalInstanceCreationAttributes(
+                    goalDescriptionId = UUIDConverter.fromInt(1),
+                    startTimestamp = fakeTimeProvider.now(),
+                    target = 40.minutes
+                ))
             }
         }
 
@@ -439,7 +405,7 @@ class GoalInstanceDaoTest {
     }
 
     @Test
-    fun updateInstanceOfArchivedGoal_throwsException() = runTest {
+    fun updateTargetForInstanceOfArchivedGoal_throwsException() = runTest {
         // Archive the goal
         database.goalDescriptionDao.update(
             UUIDConverter.fromInt(1),
@@ -450,13 +416,13 @@ class GoalInstanceDaoTest {
             runBlocking {
                 goalInstanceDao.update(
                     UUIDConverter.fromInt(2),
-                    GoalInstanceUpdateAttributes()
+                    GoalInstanceUpdateAttributes(target = 40.minutes)
                 )
             }
         }
 
         assertThat(exception.message).isEqualTo(
-            "Cannot update instance(s) for archived goal(s): [00000000-0000-0000-0000-000000000001]"
+            "Cannot update target for instance(s) of archived goal(s): [00000000-0000-0000-0000-000000000001]"
         )
     }
 
@@ -645,13 +611,11 @@ class GoalInstanceDaoTest {
                 )
             )
 
-            goalInstanceDao.insert(
-                descriptionId = UUIDConverter.fromInt(1),
-                creationAttributes = GoalInstanceCreationAttributes(
-                    startTimestamp = fakeTimeProvider.now(),
-                    target = (40 + 5*index).minutes
-                )
-            )
+            goalInstanceDao.insert(GoalInstanceCreationAttributes(
+                goalDescriptionId = UUIDConverter.fromInt(1),
+                startTimestamp = fakeTimeProvider.now(),
+                target = (40 + 5*index).minutes
+            ))
         }
 
         // Get the instances
@@ -752,7 +716,7 @@ class GoalInstanceDaoTest {
     fun getForDescription() = runTest {
         // Insert another goal
         database.goalDescriptionDao.insert(
-            description = GoalDescriptionModel(
+            descriptionCreationAttributes = GoalDescriptionCreationAttributes(
                 type = GoalType.NON_SPECIFIC,
                 repeat = true,
                 periodInPeriodUnits = 2,
@@ -823,7 +787,7 @@ class GoalInstanceDaoTest {
     fun getCurrent() = runTest {
         // Insert another goal
         database.goalDescriptionDao.insert(
-            description = GoalDescriptionModel(
+            descriptionCreationAttributes = GoalDescriptionCreationAttributes(
                 type = GoalType.NON_SPECIFIC,
                 repeat = true,
                 periodInPeriodUnits = 2,
@@ -967,7 +931,7 @@ class GoalInstanceDaoTest {
     fun getLatest() = runTest {
         // Insert another goal
         database.goalDescriptionDao.insert(
-            description = GoalDescriptionModel(
+            descriptionCreationAttributes = GoalDescriptionCreationAttributes(
                 type = GoalType.NON_SPECIFIC,
                 repeat = true,
                 periodInPeriodUnits = 2,
@@ -1039,7 +1003,7 @@ class GoalInstanceDaoTest {
     fun getLastNCompleted() = runTest {
         // Insert another goal
         database.goalDescriptionDao.insert(
-            description = GoalDescriptionModel(
+            descriptionCreationAttributes = GoalDescriptionCreationAttributes(
                 type = GoalType.NON_SPECIFIC,
                 repeat = true,
                 periodInPeriodUnits = 2,

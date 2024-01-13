@@ -20,6 +20,7 @@ import androidx.room.Transaction
 import app.musikus.database.MusikusDatabase
 import app.musikus.database.SessionWithSectionsWithLibraryItems
 import app.musikus.database.entities.SectionCreationAttributes
+import app.musikus.database.entities.SessionCreationAttributes
 import app.musikus.database.entities.SessionModel
 import app.musikus.database.entities.SessionUpdateAttributes
 import app.musikus.database.entities.SoftDeleteModelDisplayAttributes
@@ -58,6 +59,7 @@ abstract class SessionDao(
     private val database : MusikusDatabase,
 ) : SoftDeleteDao<
         SessionModel,
+        SessionCreationAttributes,
         SessionUpdateAttributes,
         Session
         >(
@@ -70,39 +72,50 @@ abstract class SessionDao(
      * @Update
      */
 
-    override fun applyUpdateAttributes(
-        old: SessionModel,
+    override fun modelWithAppliedUpdateAttributes(
+        oldModel: SessionModel,
         updateAttributes: SessionUpdateAttributes
-    ): SessionModel = super.applyUpdateAttributes(old, updateAttributes).apply {
-        rating = updateAttributes.rating ?: old.rating
-        comment = updateAttributes.comment ?: old.comment
+    ): SessionModel = super.modelWithAppliedUpdateAttributes(oldModel, updateAttributes).apply {
+        rating = updateAttributes.rating ?: oldModel.rating
+        comment = updateAttributes.comment ?: oldModel.comment
     }
 
     /**
      * @Insert
-      */
+     */
 
-    override suspend fun insert(row: SessionModel) {
-        throw NotImplementedError("Use insert(session: SessionModel, sectionCreationAttributes: List<SectionCreationAttributes>) instead")
+    override fun createModel(creationAttributes: SessionCreationAttributes): SessionModel {
+        return SessionModel(
+            breakDuration = creationAttributes.breakDuration,
+            rating = creationAttributes.rating,
+            comment = creationAttributes.comment
+        )
     }
 
-    override suspend fun insert(rows: List<SessionModel>) {
-        throw NotImplementedError("Use insert(session: SessionModel, sectionCreationAttributes: List<SectionCreationAttributes>) instead")
+    override suspend fun insert(creationAttributes: SessionCreationAttributes): UUID {
+        throw NotImplementedError("Use insert(sessionCreationAttributes, sectionCreationAttributes) instead")
+    }
+
+    override suspend fun insert(creationAttributes: List<SessionCreationAttributes>): List<UUID> {
+        throw NotImplementedError("Use insert(sessionCreationAttributes, sectionCreationAttributes) instead")
     }
 
     @Transaction
     open suspend fun insert(
-        session: SessionModel,
+        sessionCreationAttributes: SessionCreationAttributes,
         sectionCreationAttributes: List<SectionCreationAttributes>
-    ) {
+    ): Pair<UUID, List<UUID>> {
         if(sectionCreationAttributes.isEmpty()) {
             throw IllegalArgumentException("Each session must include at least one section")
         }
 
-        super.insert(listOf(session)) // insert of single session would call the overridden insert method
-        sectionCreationAttributes.forEach {
-            database.sectionDao.insert(session.id, it)
-        }
+        val sessionId = super.insert(listOf(sessionCreationAttributes)).single() // insert of single session would call the overridden insert method
+
+        val sectionIds = database.sectionDao.insert(sectionCreationAttributes.onEach {
+            it.sessionId = sessionId
+        })
+
+        return Pair(sessionId, sectionIds)
     }
 
     /**
