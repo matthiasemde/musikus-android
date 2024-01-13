@@ -50,6 +50,24 @@
 
             <View style="@style/about_entry_divider"/>
 
+            <!--       Backup and Restore     -->
+
+            <TextView
+                android:id="@+id/about_tv_backup"
+                android:text="@string/backup_and_restore"
+                style="@style/about_entry"/>
+
+            <View style="@style/about_entry_divider"/>
+
+            <!--       Export Sessions     -->
+
+            <TextView
+                android:id="@+id/about_tv_export_sessions"
+                android:text="@string/export_sessions"
+                style="@style/about_entry"/>
+
+            <View style="@style/about_entry_divider"/>
+
             <!--       Support     -->
 
             <TextView

@@ -10,7 +10,12 @@ package de.practicetime.practicetime.ui.sessionlist
 import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
-import android.os.*
+import android.os.Build
+import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.os.VibrationEffect
+import android.os.VibratorManager
 import android.util.TypedValue
 import android.view.View
 import android.widget.TextView
@@ -27,11 +32,10 @@ import de.practicetime.practicetime.R
 import de.practicetime.practicetime.database.entities.SessionWithSectionsWithCategories
 import de.practicetime.practicetime.shared.setCommonToolbar
 import de.practicetime.practicetime.ui.activesession.ActiveSessionActivity
-import de.practicetime.practicetime.utils.ExportImportDialog
 import kotlinx.coroutines.Runnable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.util.*
+import java.util.Calendar
 
 class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
 
@@ -47,7 +51,6 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
     private lateinit var sessionListCollapsingToolbarLayout: CollapsingToolbarLayout
 
     private lateinit var deleteSessionDialog: AlertDialog
-    private lateinit var exportImportDialog: ExportImportDialog
 
     private val selectedSessions = ArrayList<Pair<Int, SessionSummaryAdapter>>()
 
@@ -73,9 +76,6 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
 
         // create the dialog for deleting sessions
         initDeleteSessionDialog()
-
-        // initExportImport Dialog
-        exportImportDialog = ExportImportDialog(requireActivity())
 
         // initialize the sessions list
         initSessionList()
@@ -314,16 +314,7 @@ class SessionListFragment : Fragment(R.layout.fragment_sessions_list) {
         sessionListToolbar.apply {
             menu?.clear()
             inflateMenu(R.menu.sessions_list_menu_base)
-            setCommonToolbar(requireActivity(), this) {
-                when(it) {
-                    R.id.sessionsListToolbarImportExport -> {
-                        exportImportDialog.show()
-                    }
-                    R.id.sessionsListToolbarExportAsCsv -> {
-                        PracticeTime.exportSessionsAsCsv()
-                    }
-                }
-            }
+            setCommonToolbar(requireActivity(), this) { }
             navigationIcon = null
         }
         sessionListCollapsingToolbarLayout.background = null

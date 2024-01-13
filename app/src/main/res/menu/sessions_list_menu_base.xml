@@ -6,14 +6,4 @@
 -->
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
-    <item
-        android:id="@+id/sessionsListToolbarImportExport"
-        android:enabled="true"
-        android:title="Backup"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/sessionsListToolbarExportAsCsv"
-        android:enabled="true"
-        android:title="Export sessions"
-        app:showAsAction="never" />
 </menu>

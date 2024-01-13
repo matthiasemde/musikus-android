@@ -85,3 +85,45 @@ class ExportImportDialog(
         alertDialog.show()
     }
 }
+
+
+class ExportSessionsCSVDialog(
+    context: Activity,
+) {
+
+    private val alertDialogBuilder = AlertDialog.Builder(context)
+    private val inflater = context.layoutInflater
+    private val dialogView = inflater.inflate(
+        R.layout.dialog_export_csv,
+        null,
+    )
+
+    private val exportButton = dialogView.findViewById<MaterialButton>(R.id.btn_export)
+
+    private lateinit var alertDialog: AlertDialog
+
+    init {
+        alertDialogBuilder.apply {
+            setView(dialogView)
+            setCancelable(false)
+
+            setNegativeButton("Cancel") { dialog, _ ->
+                dialog.dismiss()
+            }
+        }
+
+        exportButton.setOnClickListener {
+            PracticeTime.exportSessionsAsCsv()
+            alertDialog.dismiss()
+        }
+
+        alertDialog = alertDialogBuilder.create()
+        alertDialog.window?.setBackgroundDrawable(
+            ContextCompat.getDrawable(context, R.drawable.dialog_background)
+        )
+    }
+
+    fun show() {
+        alertDialog.show()
+    }
+}

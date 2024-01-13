@@ -17,12 +17,12 @@
         <ImageView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/ic_backup"
+            android:src="@drawable/ic_export_csv"
             app:tint="?attr/colorOnSurfaceLowerContrast" />
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Backup Data"
+            android:text="Export as CSV"
             android:textSize="24sp"
             android:padding="16dp"
         />
@@ -32,7 +32,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:text="With this dialog you can export your data to a file for backing up or transferring it to another device."
+        android:text="@string/export_csv_dialog_text"
     />
     <com.google.android.material.divider.MaterialDivider
         android:layout_width="match_parent"
@@ -51,26 +51,17 @@
             android:id="@+id/btn_export"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Create Backup"
+            android:text="Export Sessions"
             android:textAllCaps="false"
-            app:icon="@drawable/ic_backup"
-            app:iconGravity="textStart" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_import"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Load Backup"
-            android:textAllCaps="false"
-            app:icon="@drawable/ic_import"
-            app:iconGravity="textStart" />
+            app:icon="@drawable/ic_export"
+            app:iconGravity="textEnd" />
 
     </LinearLayout>
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="*Note: Loading a backup will overwrite your current data."
+        android:text="@string/export_csv_dialog_note"
         android:textStyle="bold" />
 
     <com.google.android.material.divider.MaterialDivider

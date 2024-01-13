@@ -11,11 +11,22 @@ import android.os.Bundle
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import de.practicetime.practicetime.R
+import de.practicetime.practicetime.utils.ExportImportDialog
+import de.practicetime.practicetime.utils.ExportSessionsCSVDialog
 
 class AboutActivity : AppCompatActivity() {
+
+    // initExportImport Dialog
+    private lateinit var exportImportDialog: ExportImportDialog
+    private lateinit var exportCSVDialog: ExportSessionsCSVDialog
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_about)
+
+        // initExportImport Dialog
+        exportImportDialog = ExportImportDialog(this)
+        exportCSVDialog = ExportSessionsCSVDialog(this)
 
         setSupportActionBar(findViewById(R.id.about_toolbar))
         supportActionBar?.apply {
@@ -26,6 +37,14 @@ class AboutActivity : AppCompatActivity() {
 
         findViewById<TextView>(R.id.about_tv_help).setOnClickListener {
             startActivity(Intent(this, HelpActivity::class.java))
+        }
+
+        findViewById<TextView>(R.id.about_tv_backup).setOnClickListener {
+            exportImportDialog.show()
+        }
+
+        findViewById<TextView>(R.id.about_tv_export_sessions).setOnClickListener {
+            exportCSVDialog.show()
         }
 
         findViewById<TextView>(R.id.about_tv_support).setOnClickListener {
