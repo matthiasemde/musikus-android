@@ -116,8 +116,8 @@ class PracticeTime : Application() {
                 db.close()
 
                 // create a backup of the original database
-                val tempDbFile = context.getDatabasePath(DATABASE_NAME_BACKUP)
-                copyFile(dbFile, tempDbFile)
+                val tempDbBackup = context.getDatabasePath(DATABASE_NAME_BACKUP)
+                copyFile(source = dbFile, destination = tempDbBackup)
 
                 // delete old database
                 dbFile.delete()
@@ -139,8 +139,8 @@ class PracticeTime : Application() {
                     // restore backup
                     db.close()
                     dbFile.delete()
-                    copyFile(tempDbFile, dbFile)
-                    tempDbFile.delete()
+                    copyFile(source = tempDbBackup, destination = dbFile)
+                    tempDbBackup.delete()
 
                     openDatabase(context)
                     Toast.makeText(context, "Import failed", Toast.LENGTH_LONG).show()
@@ -155,7 +155,7 @@ class PracticeTime : Application() {
         }
 
 
-        fun copyFile(source: File, destination: File) {
+        private fun copyFile(source: File, destination: File) {
             source.inputStream().let { inputStream ->
                 destination.outputStream().let { outputStream ->
                     inputStream.copyTo(outputStream)
