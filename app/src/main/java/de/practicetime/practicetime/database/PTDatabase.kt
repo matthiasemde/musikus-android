@@ -10,12 +10,22 @@ package de.practicetime.practicetime.database
 import android.content.ContentValues
 import android.database.sqlite.SQLiteDatabase
 import android.util.Log
-import androidx.room.*
-import androidx.room.migration.AutoMigrationSpec
+import androidx.room.Database
+import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
-import androidx.sqlite.db.*
-import de.practicetime.practicetime.database.daos.*
-import de.practicetime.practicetime.database.entities.*
+import androidx.sqlite.db.SupportSQLiteDatabase
+import androidx.sqlite.db.SupportSQLiteQueryBuilder
+import de.practicetime.practicetime.database.daos.CategoryDao
+import de.practicetime.practicetime.database.daos.GoalDescriptionDao
+import de.practicetime.practicetime.database.daos.GoalInstanceDao
+import de.practicetime.practicetime.database.daos.SectionDao
+import de.practicetime.practicetime.database.daos.SessionDao
+import de.practicetime.practicetime.database.entities.Category
+import de.practicetime.practicetime.database.entities.GoalDescription
+import de.practicetime.practicetime.database.entities.GoalDescriptionCategoryCrossRef
+import de.practicetime.practicetime.database.entities.GoalInstance
+import de.practicetime.practicetime.database.entities.Section
+import de.practicetime.practicetime.database.entities.Session
 import de.practicetime.practicetime.utils.getCurrTimestamp
 
 @Database(
@@ -36,6 +46,18 @@ abstract class PTDatabase : RoomDatabase() {
     abstract val goalInstanceDao : GoalInstanceDao
     abstract val sessionDao : SessionDao
     abstract val sectionDao : SectionDao
+
+    suspend fun validate(): Boolean {
+        return try {
+            val isDatabaseEmpty = listOf(categoryDao.getAll(), goalDescriptionDao.getAll(), goalInstanceDao.getAll(), sessionDao.getAll(), sectionDao.getAll()).all {
+                it.isEmpty()
+            }
+            !isDatabaseEmpty
+        } catch (e: Exception) {
+            Log.e("PTDatabase", "Validation failed:  ${e.javaClass.simpleName}: ${e.message}")
+            false
+        }
+    }
 }
 
 object PTDatabaseMigrationOneToTwo : Migration(1,2) {
@@ -43,6 +65,7 @@ object PTDatabaseMigrationOneToTwo : Migration(1,2) {
      * Thanks Elif
      */
     override fun migrate(db: SupportSQLiteDatabase) {
+        Log.d("PRE_MIGRATION", "Starting Pre Migration...")
         db.execSQL("CREATE TABLE IF NOT EXISTS `_new_goal_description` (`type` TEXT NOT NULL, `repeat` INTEGER NOT NULL, `period_in_period_units` INTEGER NOT NULL, `period_unit` TEXT NOT NULL, `progress_type` TEXT NOT NULL, `archived` INTEGER NOT NULL, `profile_id` INTEGER NOT NULL, `order` INTEGER NOT NULL DEFAULT 0, `created_at` INTEGER NOT NULL DEFAULT 0, `modified_at` INTEGER NOT NULL DEFAULT 0, `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL)")
         db.execSQL("INSERT INTO `_new_goal_description` (`period_in_period_units`, `archived`,`progress_type`,`period_unit`,`profile_id`,`repeat`,`id`,`type`) SELECT `periodInPeriodUnits`, `archived`,`progressType`,`periodUnit`,`profileId`,`oneTime`,`id`,`type` FROM `GoalDescription`")
         db.execSQL("DROP TABLE `GoalDescription`")

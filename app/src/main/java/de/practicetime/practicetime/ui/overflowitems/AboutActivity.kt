@@ -14,6 +14,7 @@ import androidx.lifecycle.lifecycleScope
 import de.practicetime.practicetime.MIME_TYPE_DATABASE
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
+import de.practicetime.practicetime.ui.MainActivity
 import de.practicetime.practicetime.utils.ExportContract
 import de.practicetime.practicetime.utils.ExportImportDialog
 import de.practicetime.practicetime.utils.ExportSessionsCSVDialog
@@ -54,7 +55,12 @@ class AboutActivity : AppCompatActivity() {
             ImportDatabaseContract()
         ) {
             lifecycleScope.launch {
-                PracticeTime.importDatabaseCallback(applicationContext, it)
+                val success = PracticeTime.importDatabaseCallback(this@AboutActivity, it)
+                if (success) {
+                    val intent = Intent(this@AboutActivity, MainActivity::class.java)
+                    startActivity(intent)
+                    finishAffinity()
+                }
             }
         }
 

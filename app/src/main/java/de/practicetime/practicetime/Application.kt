@@ -7,6 +7,7 @@
 
 package de.practicetime.practicetime
 
+import android.app.AlertDialog
 import android.app.Application
 import android.content.Context
 import android.net.Uri
@@ -110,44 +111,55 @@ class PracticeTime : Application() {
             importLauncher?.launch(arrayOf("*/*", "application/vnd.sqlite3", "application/x-sqlite3"))
         }
 
-        suspend fun importDatabaseCallback(context: Context, uri: Uri?) {
-            uri?.let {
-                // close the database to collect all logs
-                db.close()
-
-                // create a backup of the original database
-                val tempDbBackup = context.getDatabasePath(DATABASE_NAME_BACKUP)
-                copyFile(source = dbFile, destination = tempDbBackup)
-
-                // delete old database
-                dbFile.delete()
-
-                // copy new database
-                dbFile.outputStream().let { outputStream ->
-                    context.contentResolver.openInputStream(it)?.let { inputStream ->
-                        inputStream.copyTo(outputStream)
-                        inputStream.close()
-                    }
-                    outputStream.close()
-                }
-
-                // open new database
-                openDatabase(context)
-                val sessions = db.sessionDao.getAll()
-
-                if (sessions.isEmpty()) {
-                    // restore backup
-                    db.close()
-                    dbFile.delete()
-                    copyFile(source = tempDbBackup, destination = dbFile)
-                    tempDbBackup.delete()
-
-                    openDatabase(context)
-                    Toast.makeText(context, "Import failed", Toast.LENGTH_LONG).show()
-                } else {
-                    Toast.makeText(context, "Import successful", Toast.LENGTH_LONG).show()
-                }
+        suspend fun importDatabaseCallback(context: Context, uri: Uri?) : Boolean {
+            if(uri == null) {
+                Toast.makeText(context, "Backup aborted", Toast.LENGTH_LONG).show()
+                return false
             }
+
+            // close the database to collect all logs
+            db.close()
+
+            // create a backup of the original database
+            val tempDbBackup = context.getDatabasePath(DATABASE_NAME_BACKUP)
+            copyFile(source = dbFile, destination = tempDbBackup)
+
+            // delete old database
+            dbFile.delete()
+
+            // copy new database
+            dbFile.outputStream().let { outputStream ->
+                context.contentResolver.openInputStream(uri)?.let { inputStream ->
+                    inputStream.copyTo(outputStream)
+                    inputStream.close()
+                }
+                outputStream.close()
+            }
+
+            // open new database
+            openDatabase(context)
+
+            // validate database
+            if (!db.validate()) {
+                // restore backup
+                db.close()
+                dbFile.delete()
+                copyFile(source = tempDbBackup, destination = dbFile)
+                tempDbBackup.delete()
+
+                openDatabase(context)
+                // show error message as dialog
+                AlertDialog.Builder(context)
+                    .setTitle("Import failed")
+                    .setMessage("The imported database is invalid. No changes were made.")
+                    .setPositiveButton("OK") { _, _ ->
+                        Toast.makeText(context, ":-(", Toast.LENGTH_LONG).show()
+                    }
+                    .show()
+                return false
+            }
+            Toast.makeText(context, "Import successful", Toast.LENGTH_LONG).show()
+            return true
         }
 
         fun exportDatabase() {
