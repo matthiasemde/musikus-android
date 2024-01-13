@@ -108,8 +108,7 @@ class PracticeTime : Application() {
 
 
         fun importDatabase() {
-//            importLauncher?.launch(arrayOf(MIME_TYPE_DATABASE, "application/vnd.sqlite3", "application/x-sqlite3"))
-            importLauncher?.launch(arrayOf("*/*", "application/vnd.sqlite3", "application/x-sqlite3"))
+            importLauncher?.launch(arrayOf(MIME_TYPE_DATABASE, "application/vnd.sqlite3", "application/x-sqlite3"))
         }
 
         suspend fun importDatabaseCallback(context: Context, uri: Uri?) : Boolean {
