@@ -58,6 +58,7 @@ class PracticeTime : Application() {
         const val PREFERENCES_KEY_FIRSTRUN = "firstrun"
         const val PREFERENCES_KEY_THEME = "theme"
         const val PREFERENCES_KEY_APPINTRO_DONE = "appintro_done"
+        const val PREFERENCES_KEY_UPDATE_1_1_0 = "update_1_1_0"
 
         const val DATABASE_NAME = "pt-database"
         const val DATABASE_NAME_BACKUP = "pt-database.bkp"

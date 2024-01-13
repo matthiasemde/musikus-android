@@ -12,8 +12,10 @@ import android.content.SharedPreferences
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
@@ -60,6 +62,23 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun announceUpdate_1_1_0() {
+        if (!prefs.getBoolean(PracticeTime.PREFERENCES_KEY_UPDATE_1_1_0, false)) {
+            val builder = AlertDialog.Builder(this).apply {
+                setView(this@MainActivity.layoutInflater.inflate(R.layout.dialog_announce_update_1_1_0, null))
+                setPositiveButton("Awesome!") { _, _ ->
+                    prefs.edit().putBoolean(PracticeTime.PREFERENCES_KEY_UPDATE_1_1_0, true).apply()
+                }
+            }
+            val dialog = builder.create()
+
+            dialog.window?.setBackgroundDrawable(
+                ContextCompat.getDrawable(this, R.drawable.dialog_background)
+            )
+            dialog.show()
+        }
+    }
+
     private fun createDatabaseFirstRun() {
         lifecycleScope.launch {
 
@@ -94,8 +113,12 @@ class MainActivity : AppCompatActivity() {
     // periodically check if session is still running (if it is) to remove the badge if yes
     override fun onResume() {
         super.onResume()
-        if (!BuildConfig.DEBUG)
+
+        if (!BuildConfig.DEBUG) {
             launchAppIntroFirstRun()
+            announceUpdate_1_1_0()
+        }
+
         runnable = object : Runnable {
             override fun run() {
                 if (PracticeTime.serviceIsRunning) {
