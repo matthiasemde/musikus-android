@@ -53,7 +53,9 @@ class AboutActivity : AppCompatActivity() {
         PracticeTime.importLauncher = registerForActivityResult(
             ImportDatabaseContract()
         ) {
-            PracticeTime.importDatabaseCallback(applicationContext, it)
+            lifecycleScope.launch {
+                PracticeTime.importDatabaseCallback(applicationContext, it)
+            }
         }
 
         PracticeTime.csvExportLauncher = registerForActivityResult(

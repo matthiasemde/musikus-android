@@ -58,6 +58,7 @@ class PracticeTime : Application() {
         const val PREFERENCES_KEY_APPINTRO_DONE = "appintro_done"
 
         const val DATABASE_NAME = "pt-database"
+        const val DATABASE_NAME_BACKUP = "pt-database.bkp"
 
         private fun openDatabase(applicationContext: Context) {
             db = Room.databaseBuilder(
@@ -109,10 +110,14 @@ class PracticeTime : Application() {
             importLauncher?.launch(arrayOf("*/*", "application/vnd.sqlite3", "application/x-sqlite3"))
         }
 
-        fun importDatabaseCallback(context: Context, uri: Uri?) {
+        suspend fun importDatabaseCallback(context: Context, uri: Uri?) {
             uri?.let {
                 // close the database to collect all logs
                 db.close()
+
+                // create a backup of the original database
+                val tempDbFile = context.getDatabasePath(DATABASE_NAME_BACKUP)
+                copyFile(dbFile, tempDbFile)
 
                 // delete old database
                 dbFile.delete()
@@ -124,17 +129,40 @@ class PracticeTime : Application() {
                         inputStream.close()
                     }
                     outputStream.close()
-
-                    Toast.makeText(context, "Import successful", Toast.LENGTH_LONG).show()
                 }
 
                 // open new database
                 openDatabase(context)
+                val sessions = db.sessionDao.getAll()
+
+                if (sessions.isEmpty()) {
+                    // restore backup
+                    db.close()
+                    dbFile.delete()
+                    copyFile(tempDbFile, dbFile)
+                    tempDbFile.delete()
+
+                    openDatabase(context)
+                    Toast.makeText(context, "Import failed", Toast.LENGTH_LONG).show()
+                } else {
+                    Toast.makeText(context, "Import successful", Toast.LENGTH_LONG).show()
+                }
             }
         }
 
         fun exportDatabase() {
             exportLauncher?.launch("practice_time_backup")
+        }
+
+
+        fun copyFile(source: File, destination: File) {
+            source.inputStream().let { inputStream ->
+                destination.outputStream().let { outputStream ->
+                    inputStream.copyTo(outputStream)
+                    inputStream.close()
+                    outputStream.close()
+                }
+            }
         }
 
         fun exportDatabaseCallback(context: Context, uri: Uri?) {
