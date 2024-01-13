@@ -18,8 +18,11 @@ import androidx.annotation.ColorInt
 import androidx.room.Room
 import de.practicetime.practicetime.database.PTDatabase
 import de.practicetime.practicetime.database.PTDatabaseMigrationOneToTwo
-import de.practicetime.practicetime.database.daos.*
-import kotlinx.coroutines.runBlocking
+import de.practicetime.practicetime.database.daos.CategoryDao
+import de.practicetime.practicetime.database.daos.GoalDescriptionDao
+import de.practicetime.practicetime.database.daos.GoalInstanceDao
+import de.practicetime.practicetime.database.daos.SectionDao
+import de.practicetime.practicetime.database.daos.SessionDao
 import java.io.File
 import java.time.Instant
 import java.time.ZoneId
@@ -119,7 +122,7 @@ class PracticeTime : Application() {
                     }
                     outputStream.close()
 
-                    Toast.makeText(context, "Backup successful", Toast.LENGTH_LONG).show()
+                    Toast.makeText(context, "Import successful", Toast.LENGTH_LONG).show()
                 }
 
                 // open new database

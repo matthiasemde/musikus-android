@@ -10,9 +10,14 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
+import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
+import de.practicetime.practicetime.utils.ExportContract
 import de.practicetime.practicetime.utils.ExportImportDialog
 import de.practicetime.practicetime.utils.ExportSessionsCSVDialog
+import de.practicetime.practicetime.utils.ImportDatabaseContract
+import kotlinx.coroutines.launch
 
 class AboutActivity : AppCompatActivity() {
 
@@ -34,6 +39,28 @@ class AboutActivity : AppCompatActivity() {
             setDisplayShowHomeEnabled(true)
             title = getString(R.string.app_info)
         }
+
+        /**
+         initialize callback handlers for export and import features
+         */
+        PracticeTime.exportLauncher = registerForActivityResult(
+            ExportContract()
+        ) {
+            PracticeTime.exportDatabaseCallback(applicationContext, it)
+        }
+
+        PracticeTime.importLauncher = registerForActivityResult(
+            ImportDatabaseContract()
+        ) {
+            PracticeTime.importDatabaseCallback(applicationContext, it)
+        }
+
+        PracticeTime.csvExportLauncher = registerForActivityResult(
+            ExportContract()
+        ) { lifecycleScope.launch {
+            PracticeTime.exportSessionsAsCsvCallback(applicationContext, it)
+        } }
+
 
         findViewById<TextView>(R.id.about_tv_help).setOnClickListener {
             startActivity(Intent(this, HelpActivity::class.java))
