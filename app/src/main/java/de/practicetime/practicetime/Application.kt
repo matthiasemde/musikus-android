@@ -28,6 +28,7 @@ import java.io.File
 import java.time.Instant
 import java.time.ZoneId
 import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
@@ -113,7 +114,7 @@ class PracticeTime : Application() {
 
         suspend fun importDatabaseCallback(context: Context, uri: Uri?) : Boolean {
             if(uri == null) {
-                Toast.makeText(context, "Backup aborted", Toast.LENGTH_LONG).show()
+                Toast.makeText(context, "Restore aborted", Toast.LENGTH_LONG).show()
                 return false
             }
 
@@ -223,7 +224,8 @@ class PracticeTime : Application() {
                     db.sessionDao.getAllWithSectionsWithCategories().forEach { sessionWithSectionsWithCategories ->
                         val session = sessionWithSectionsWithCategories.session
                         val duration = sessionWithSectionsWithCategories.sections.sumOf { it.section.duration ?: 0 }
-                        val dateTime = ZonedDateTime.ofInstant(Instant.ofEpochSecond(session.createdAt), ZoneId.systemDefault())
+                        val dateTime = ZonedDateTime.ofInstant(Instant.ofEpochSecond(session.createdAt), ZoneId.systemDefault()).format(
+                            DateTimeFormatter.ISO_OFFSET_DATE_TIME)
                         outputStream.write(
                             "$dateTime;$duration;${session.breakDuration};${session.rating};${session.comment}\n".toByteArray()
                         )
