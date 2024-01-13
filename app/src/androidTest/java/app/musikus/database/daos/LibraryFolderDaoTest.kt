@@ -63,11 +63,18 @@ class LibraryFolderDaoTest {
     @Test
     fun insertFolders() = runTest {
 
-        libraryFolderDao.insert(listOf(
+        val folderIds = libraryFolderDao.insert(listOf(
             LibraryFolderCreationAttributes(name = "TestFolder1"),
             LibraryFolderCreationAttributes(name = "TestFolder2")
         ))
 
+        // Check if the folderIds were returned correctly
+        assertThat(folderIds).containsExactly(
+            UUIDConverter.fromInt(1),
+            UUIDConverter.fromInt(2)
+        )
+
+        // Check if the folders were inserted correctly
         val folders = libraryFolderDao.getAllAsFlow().first()
 
         assertThat(folders).containsExactly(

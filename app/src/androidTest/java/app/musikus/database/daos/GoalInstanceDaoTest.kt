@@ -169,11 +169,14 @@ class GoalInstanceDaoTest {
         )
 
         // Insert a new instance
-        goalInstanceDao.insert(GoalInstanceCreationAttributes(
+        val instanceId = goalInstanceDao.insert(GoalInstanceCreationAttributes(
             goalDescriptionId = UUIDConverter.fromInt(1),
             startTimestamp = fakeTimeProvider.now(),
             target = 40.minutes
         ))
+
+        // Check if the correct id was returned
+        assertThat(instanceId).isEqualTo(UUIDConverter.fromInt(4))
 
         // Check if the instance was inserted correctly
         val instances = goalInstanceDao.getAllAsFlow().first()

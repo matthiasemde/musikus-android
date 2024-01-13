@@ -106,7 +106,7 @@ class GoalDescriptionDaoTest {
 
     @Test
     fun insertNonSpecificGoal() = runTest {
-        goalDescriptionDao.insert(
+        val (descriptionId, instanceId) = goalDescriptionDao.insert(
             descriptionCreationAttributes = GoalDescriptionCreationAttributes(
                 type = GoalType.NON_SPECIFIC,
                 repeat = true,
@@ -119,6 +119,11 @@ class GoalDescriptionDaoTest {
             )
         )
 
+        // check if the correct ids were returned
+        assertThat(descriptionId).isEqualTo(UUIDConverter.fromInt(1))
+        assertThat(instanceId).isEqualTo(UUIDConverter.fromInt(2))
+
+        // check if the correct data was inserted
         val descriptions = goalDescriptionDao.getAllAsFlow().first()
 
         assertThat(descriptions).containsExactly(
@@ -148,7 +153,7 @@ class GoalDescriptionDaoTest {
             )
         )
 
-        goalDescriptionDao.insert(
+        val (descriptionId, instanceId) = goalDescriptionDao.insert(
             descriptionCreationAttributes = GoalDescriptionCreationAttributes(
                 type = GoalType.ITEM_SPECIFIC,
                 repeat = true,
@@ -163,6 +168,10 @@ class GoalDescriptionDaoTest {
                 UUIDConverter.fromInt(1)
             )
         )
+
+        // check if the correct ids were returned
+        assertThat(descriptionId).isEqualTo(UUIDConverter.fromInt(2))
+        assertThat(instanceId).isEqualTo(UUIDConverter.fromInt(3))
 
         val goalDescriptionWithLibraryItems = goalDescriptionDao
             .getAllWithInstancesAndLibraryItems()

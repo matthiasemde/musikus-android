@@ -131,6 +131,73 @@ class SessionDaoTest {
     }
 
     @Test
+    fun insertSessions() = runTest {
+        val sessionCreationAttributes = SessionCreationAttributes(
+            breakDuration = 10.minutes,
+            rating = 3,
+            comment = "Test comment",
+        )
+
+        val sectionCreationAttributes = listOf(
+            SectionCreationAttributes(
+                libraryItemId = UUIDConverter.fromInt(1),
+                duration = 15.minutes,
+                startTimestamp = fakeTimeProvider.now(),
+            ),
+            SectionCreationAttributes(
+                libraryItemId = UUIDConverter.fromInt(1),
+                duration = 25.minutes,
+                startTimestamp = fakeTimeProvider.now(),
+            )
+        )
+
+        val (sessionId, sectionIds) = sessionDao.insert(
+            sessionCreationAttributes,
+            sectionCreationAttributes
+        )
+
+        // Check if session and section ids were returned correctly
+        assertThat(sessionId).isEqualTo(UUIDConverter.fromInt(2))
+        assertThat(sectionIds).containsExactly(
+            UUIDConverter.fromInt(3),
+            UUIDConverter.fromInt(4)
+        )
+
+        // Check if session and sections were inserted correctly
+        val sessions = sessionDao.getAllAsFlow().first()
+
+        assertThat(sessions).containsExactly(
+            Session(
+                id = UUIDConverter.fromInt(2),
+                breakDurationSeconds = 600,
+                rating = 3,
+                comment = "Test comment",
+                createdAt = fakeTimeProvider.startTime,
+                modifiedAt = fakeTimeProvider.startTime
+            )
+        )
+
+        val sections = database.sectionDao.getAllAsFlow().first()
+
+        assertThat(sections).containsExactly(
+            Section(
+                id = UUIDConverter.fromInt(3),
+                sessionId = UUIDConverter.fromInt(2),
+                libraryItemId = UUIDConverter.fromInt(1),
+                durationSeconds = 900,
+                startTimestamp = fakeTimeProvider.startTime,
+            ),
+            Section(
+                id = UUIDConverter.fromInt(4),
+                sessionId = UUIDConverter.fromInt(2),
+                libraryItemId = UUIDConverter.fromInt(1),
+                durationSeconds = 1500,
+                startTimestamp = fakeTimeProvider.startTime,
+            )
+        )
+    }
+
+    @Test
     fun updateSessions() = runTest {
         repeat(2) { insertSessionWithSection() }
 

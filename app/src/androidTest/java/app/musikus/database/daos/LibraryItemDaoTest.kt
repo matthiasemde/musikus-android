@@ -72,7 +72,7 @@ class LibraryItemDaoTest {
     @Test
     fun insertItems() = runTest {
 
-        libraryItemDao.insert(listOf(
+        val itemIds = libraryItemDao.insert(listOf(
             LibraryItemCreationAttributes(
                 name = "TestItem1",
                 colorIndex = 5,
@@ -85,6 +85,13 @@ class LibraryItemDaoTest {
             )
         ))
 
+        // Check if the correct ids were returned
+        assertThat(itemIds).containsExactly(
+            UUIDConverter.fromInt(2),
+            UUIDConverter.fromInt(3)
+        )
+
+        // Check if the items were inserted correctly
         val items = libraryItemDao.getAllAsFlow().first()
 
         assertThat(items).containsExactly(
