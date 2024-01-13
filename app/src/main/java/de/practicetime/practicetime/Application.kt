@@ -105,7 +105,8 @@ class PracticeTime : Application() {
 
 
         fun importDatabase() {
-            importLauncher?.launch(arrayOf(MIME_TYPE_DATABASE, "application/vnd.sqlite3", "application/x-sqlite3"))
+//            importLauncher?.launch(arrayOf(MIME_TYPE_DATABASE, "application/vnd.sqlite3", "application/x-sqlite3"))
+            importLauncher?.launch(arrayOf("*/*", "application/vnd.sqlite3", "application/x-sqlite3"))
         }
 
         fun importDatabaseCallback(context: Context, uri: Uri?) {
@@ -137,24 +138,34 @@ class PracticeTime : Application() {
         }
 
         fun exportDatabaseCallback(context: Context, uri: Uri?) {
-            uri?.let {
-                // close the database to collect all logs
-                db.close()
-
-                // copy database
-                context.contentResolver.openOutputStream(it)?.let { outputStream ->
-                    dbFile.inputStream().let { inputStream ->
-                        inputStream.copyTo(outputStream)
-                        inputStream.close()
-                    }
-                    outputStream.close()
-
-                    Toast.makeText(context, "Backup successful", Toast.LENGTH_LONG).show()
-                }
-
-                // open database again
-                openDatabase(context)
+            if(uri == null) {
+                Toast.makeText(context, "Backup aborted", Toast.LENGTH_LONG).show()
+                return
             }
+
+            // close the database to collect all logs
+            db.close()
+
+            // copy database
+            val outputStream = context.contentResolver.openOutputStream(uri)
+            if(outputStream == null) {
+                Toast.makeText(context, "Failed to create Backup", Toast.LENGTH_LONG).show()
+                return
+            }
+
+            dbFile.inputStream().let { inputStream ->
+                val bytes = inputStream.copyTo(outputStream)
+                if(bytes == 0L) {
+                    Toast.makeText(context, "Failed to create Backup", Toast.LENGTH_LONG).show()
+                }
+                inputStream.close()
+            }
+            outputStream.close()
+
+            Toast.makeText(context, "Backup successful", Toast.LENGTH_LONG).show()
+
+            // open database again
+            openDatabase(context)
         }
 
         fun exportSessionsAsCsv() {
