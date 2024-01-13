@@ -21,11 +21,13 @@ import com.google.android.material.button.MaterialButton
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
 
-class ExportContract : ActivityResultContracts.CreateDocument() {
+class ExportContract(
+    private val mimeType: String
+) : ActivityResultContracts.CreateDocument() {
     override fun createIntent(context: Context, input: String) =
         super.createIntent(context, input).apply {
             addCategory(Intent.CATEGORY_OPENABLE)
-            type="image/png"
+            type=mimeType
             if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 putExtra(DocumentsContract.EXTRA_INITIAL_URI, Environment.DIRECTORY_DOWNLOADS)
             }
@@ -35,8 +37,8 @@ class ExportContract : ActivityResultContracts.CreateDocument() {
 class ImportDatabaseContract : ActivityResultContracts.OpenDocument() {
     override fun createIntent(context: Context, input: Array<String>) =
         super.createIntent(context, input).apply {
+            type = "application/octet-stream"
             addCategory(Intent.CATEGORY_OPENABLE)
-            type="image/png"
             if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 putExtra(DocumentsContract.EXTRA_INITIAL_URI, Environment.DIRECTORY_DOWNLOADS)
             }

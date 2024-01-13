@@ -30,6 +30,8 @@ import java.time.ZonedDateTime
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
+const val MIME_TYPE_DATABASE = "application/octet-stream"
+
 class PracticeTime : Application() {
     val executorService: ExecutorService = Executors.newFixedThreadPool(4)
 
@@ -103,7 +105,7 @@ class PracticeTime : Application() {
 
 
         fun importDatabase() {
-            importLauncher?.launch(arrayOf("*/*"))
+            importLauncher?.launch(arrayOf(MIME_TYPE_DATABASE, "application/vnd.sqlite3", "application/x-sqlite3"))
         }
 
         fun importDatabaseCallback(context: Context, uri: Uri?) {

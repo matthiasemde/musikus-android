@@ -11,6 +11,7 @@ import android.os.Bundle
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import de.practicetime.practicetime.MIME_TYPE_DATABASE
 import de.practicetime.practicetime.PracticeTime
 import de.practicetime.practicetime.R
 import de.practicetime.practicetime.utils.ExportContract
@@ -44,7 +45,7 @@ class AboutActivity : AppCompatActivity() {
          initialize callback handlers for export and import features
          */
         PracticeTime.exportLauncher = registerForActivityResult(
-            ExportContract()
+            ExportContract(MIME_TYPE_DATABASE)
         ) {
             PracticeTime.exportDatabaseCallback(applicationContext, it)
         }
@@ -56,7 +57,7 @@ class AboutActivity : AppCompatActivity() {
         }
 
         PracticeTime.csvExportLauncher = registerForActivityResult(
-            ExportContract()
+            ExportContract("text/comma-separated-values")
         ) { lifecycleScope.launch {
             PracticeTime.exportSessionsAsCsvCallback(applicationContext, it)
         } }
