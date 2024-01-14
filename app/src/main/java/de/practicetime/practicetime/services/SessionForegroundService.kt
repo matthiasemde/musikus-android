@@ -33,10 +33,10 @@ import de.practicetime.practicetime.utils.secondsDurationToHoursMinSec
 import java.util.Date
 import kotlin.math.roundToInt
 
+const val SESSION_SERVICE_CHANNEL_ID = "PT_Channel_ID"
+const val SESSION_SERVICE_NOTIFICATION_ID = 42
 
 class SessionForegroundService : Service() {
-    private val CHANNEL_ID = "PT_Channel_ID"
-    private val NOTIFICATION_ID = 42
     private val binder = LocalBinder()         // interface for clients that bind
     private var allowRebind: Boolean = true    // indicates whether onRebind should be used
 
@@ -68,7 +68,7 @@ class SessionForegroundService : Service() {
         // set the Service to foreground to displaying the notification
         // this is different to displaying the notification via notify() since it automatically
         // produces a non-cancellable notification
-        startForeground(NOTIFICATION_ID, getNotification( "title", "content"))
+        startForeground(SESSION_SERVICE_NOTIFICATION_ID, getNotification( "title", "content"))
 
         return START_NOT_STICKY
     }
@@ -134,7 +134,7 @@ class SessionForegroundService : Service() {
 
         val notification: Notification = getNotification(title, desc)
         val mNotificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-        mNotificationManager.notify(NOTIFICATION_ID, notification)
+        mNotificationManager.notify(SESSION_SERVICE_NOTIFICATION_ID, notification)
     }
 
     private fun getNotification(title: String, contentText: String) : Notification {
@@ -152,7 +152,7 @@ class SessionForegroundService : Service() {
         } else {
             R.drawable.ic_play
         }
-        return  NotificationCompat.Builder(this, CHANNEL_ID)
+        return  NotificationCompat.Builder(this, SESSION_SERVICE_CHANNEL_ID)
             .setSmallIcon(icon)
             .setContentTitle(title)
             .setContentText(contentText)
@@ -170,7 +170,7 @@ class SessionForegroundService : Service() {
             val name = getString(R.string.notification_settings_description)
             val descriptionText = "Notification to keep track of the running session"
             val importance = NotificationManager.IMPORTANCE_LOW
-            val channel = NotificationChannel(CHANNEL_ID, name, importance).apply {
+            val channel = NotificationChannel(SESSION_SERVICE_CHANNEL_ID, name, importance).apply {
                 description = descriptionText
             }
             // Register the channel with the system

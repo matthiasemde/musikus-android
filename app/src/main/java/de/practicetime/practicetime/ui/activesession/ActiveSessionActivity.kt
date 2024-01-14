@@ -8,6 +8,8 @@
 package de.practicetime.practicetime.ui.activesession
 
 import android.Manifest
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.content.BroadcastReceiver
 import android.content.ComponentName
 import android.content.ContentUris
@@ -42,12 +44,14 @@ import android.widget.SeekBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.LayoutRes
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.app.ActivityCompat
+import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.core.widget.NestedScrollView
 import androidx.lifecycle.lifecycleScope
@@ -70,6 +74,7 @@ import de.practicetime.practicetime.database.entities.Section
 import de.practicetime.practicetime.database.entities.Session
 import de.practicetime.practicetime.database.entities.SessionWithSections
 import de.practicetime.practicetime.services.RecorderService
+import de.practicetime.practicetime.services.SESSION_SERVICE_CHANNEL_ID
 import de.practicetime.practicetime.services.SessionForegroundService
 import de.practicetime.practicetime.ui.goals.ProgressUpdateActivity
 import de.practicetime.practicetime.ui.goals.updateGoals
@@ -86,6 +91,7 @@ import java.util.Date
 import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.round
+
 
 class ActiveSessionActivity : AppCompatActivity() {
 
@@ -123,29 +129,7 @@ class ActiveSessionActivity : AppCompatActivity() {
                 // same time, respect the user's decision. Don't link to system
                 // settings in an effort to convince the user to change their
                 // decision.
-                val builder = AlertDialog.Builder(this).apply {
-                    setView(this@ActiveSessionActivity.layoutInflater.inflate(R.layout.dialog_permission_denied, null))
-                    setCancelable(false)
-                    setPositiveButton("Open Settings") { _, _ ->
-                        // open notification settings https://stackoverflow.com/a/45192258
-                        val intent = Intent()
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                            intent.action = Settings.ACTION_APP_NOTIFICATION_SETTINGS
-                            intent.putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName);
-                        } else {
-                            intent.setAction("android.settings.APP_NOTIFICATION_SETTINGS");
-                            intent.putExtra("app_package", context.packageName);
-                            intent.putExtra("app_uid", context.applicationInfo.uid);
-                        }
-                        startActivity(intent)
-                    }
-                }
-                val dialog = builder.create()
-
-                dialog.window?.setBackgroundDrawable(
-                    ContextCompat.getDrawable(this, R.drawable.dialog_background)
-                )
-                dialog.show()
+                showRequestPermissionDialog(R.layout.dialog_permission_denied)
             }
         }
 
@@ -194,6 +178,8 @@ class ActiveSessionActivity : AppCompatActivity() {
             IntentFilter("RecordingStopped")
         )
 
+        var permissionsRequested = false
+
         // check notification permission
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             when {
@@ -212,24 +198,48 @@ class ActiveSessionActivity : AppCompatActivity() {
                     // features are disabled if it's declined. In this UI, include a
                     // "cancel" or "no thanks" button that lets the user continue
                     // using your app without granting the permission.
-                    Log.d("TAG", "Show rationale")
                     requestPermissionLauncher.launch(
                         Manifest.permission.POST_NOTIFICATIONS
-
                     )
+                    permissionsRequested = true
                 }
                 else -> {
-                    Log.d("TAG", "Ask for permission")
                     // You can directly ask for the permission.
                     // The registered ActivityResultCallback gets the result of this request.
                     requestPermissionLauncher.launch(
                         Manifest.permission.POST_NOTIFICATIONS
-
                     )
+                    permissionsRequested = true
                 }
             }
         }
 
+        if (permissionsRequested) {
+            return
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+
+            // check if notifications are enabled
+            val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+
+            if(!manager.areNotificationsEnabled()) {
+                showRequestPermissionDialog(R.layout.dialog_permission_denied)
+            }
+
+            // for versions greater than Oreo, check if notification channel is enabled
+            val channel = manager.getNotificationChannel(SESSION_SERVICE_CHANNEL_ID) as NotificationChannel?
+            if (channel?.importance == NotificationManager.IMPORTANCE_NONE) {
+                showRequestPermissionDialog(R.layout.dialog_channel_denied)
+            }
+        } else {
+            // check if notifications are enabled
+            val areNotificationsEnabled = NotificationManagerCompat.from(this).areNotificationsEnabled()
+
+            if(!areNotificationsEnabled) {
+                showRequestPermissionDialog(R.layout.dialog_permission_denied)
+            }
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -282,6 +292,41 @@ class ActiveSessionActivity : AppCompatActivity() {
     override fun onRestart() {
         super.onRestart()
         updateRecordingsList()
+    }
+
+    private fun showRequestPermissionDialog(
+        @LayoutRes layout: Int
+    ) {
+        // in case a session is running, pause it
+        if (this::mService.isInitialized) {
+            mService.paused = true
+            // adapt UI to changes
+            adaptUIPausedState(true)
+        }
+
+        val builder = AlertDialog.Builder(this).apply {
+            setView(this@ActiveSessionActivity.layoutInflater.inflate(layout, null))
+            setCancelable(false)
+            setPositiveButton("Open Settings") { _, _ ->
+                // open notification settings https://stackoverflow.com/a/45192258
+                val intent = Intent()
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    intent.action = Settings.ACTION_APP_NOTIFICATION_SETTINGS
+                    intent.putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName);
+                } else {
+                    intent.setAction("android.settings.APP_NOTIFICATION_SETTINGS");
+                    intent.putExtra("app_package", context.packageName);
+                    intent.putExtra("app_uid", context.applicationInfo.uid);
+                }
+                startActivity(intent)
+            }
+        }
+        val dialog = builder.create()
+
+        dialog.window?.setBackgroundDrawable(
+            ContextCompat.getDrawable(this, R.drawable.dialog_background)
+        )
+        dialog.show()
     }
 
     private fun initCategoryList() {
