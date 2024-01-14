@@ -91,10 +91,10 @@ abstract class LibraryItemDao(
      * @Update
      */
 
-    override fun modelWithAppliedUpdateAttributes(
+    override fun applyUpdateAttributes(
         oldModel: LibraryItemModel,
         updateAttributes: LibraryItemUpdateAttributes
-    ): LibraryItemModel = super.modelWithAppliedUpdateAttributes(oldModel, updateAttributes).apply{
+    ): LibraryItemModel = super.applyUpdateAttributes(oldModel, updateAttributes).apply{
         name = updateAttributes.name ?: oldModel.name
         colorIndex = updateAttributes.colorIndex ?: oldModel.colorIndex
         libraryFolderId = updateAttributes.libraryFolderId ?: oldModel.libraryFolderId

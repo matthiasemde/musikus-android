@@ -72,10 +72,10 @@ abstract class SessionDao(
      * @Update
      */
 
-    override fun modelWithAppliedUpdateAttributes(
+    override fun applyUpdateAttributes(
         oldModel: SessionModel,
         updateAttributes: SessionUpdateAttributes
-    ): SessionModel = super.modelWithAppliedUpdateAttributes(oldModel, updateAttributes).apply {
+    ): SessionModel = super.applyUpdateAttributes(oldModel, updateAttributes).apply {
         rating = updateAttributes.rating ?: oldModel.rating
         comment = updateAttributes.comment ?: oldModel.comment
     }

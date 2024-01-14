@@ -137,10 +137,10 @@ abstract class GoalDescriptionDao(
      * @Update
      */
 
-    override fun modelWithAppliedUpdateAttributes(
+    override fun applyUpdateAttributes(
         oldModel: GoalDescriptionModel,
         updateAttributes: GoalDescriptionUpdateAttributes
-    ): GoalDescriptionModel = super.modelWithAppliedUpdateAttributes(oldModel, updateAttributes).apply {
+    ): GoalDescriptionModel = super.applyUpdateAttributes(oldModel, updateAttributes).apply {
         paused = updateAttributes.paused ?: oldModel.paused
         archived = updateAttributes.archived ?: oldModel.archived
         customOrder = updateAttributes.customOrder ?: oldModel.customOrder

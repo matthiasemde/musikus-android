@@ -79,10 +79,10 @@ abstract class LibraryFolderDao(
      * @Update
      */
 
-    override fun modelWithAppliedUpdateAttributes(
+    override fun applyUpdateAttributes(
         oldModel: LibraryFolderModel,
         updateAttributes: LibraryFolderUpdateAttributes
-    ): LibraryFolderModel = super.modelWithAppliedUpdateAttributes(oldModel, updateAttributes).apply {
+    ): LibraryFolderModel = super.applyUpdateAttributes(oldModel, updateAttributes).apply {
         name = updateAttributes.name ?: oldModel.name
         customOrder = updateAttributes.customOrder ?: oldModel.customOrder
     }

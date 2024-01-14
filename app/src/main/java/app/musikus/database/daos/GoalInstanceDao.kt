@@ -152,10 +152,10 @@ abstract class GoalInstanceDao(
         super.update(rows)
     }
 
-    override fun modelWithAppliedUpdateAttributes(
+    override fun applyUpdateAttributes(
         oldModel: GoalInstanceModel,
         updateAttributes: GoalInstanceUpdateAttributes
-    ): GoalInstanceModel = super.modelWithAppliedUpdateAttributes(oldModel, updateAttributes).apply {
+    ): GoalInstanceModel = super.applyUpdateAttributes(oldModel, updateAttributes).apply {
         endTimestamp = updateAttributes.endTimestamp ?: oldModel.endTimestamp
         target = updateAttributes.target ?: oldModel.target
     }

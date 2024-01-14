@@ -103,10 +103,10 @@ abstract class SectionDao(
      * @Update
      */
 
-    override fun modelWithAppliedUpdateAttributes(
+    override fun applyUpdateAttributes(
         oldModel: SectionModel,
         updateAttributes: SectionUpdateAttributes
-    ): SectionModel = super.modelWithAppliedUpdateAttributes(oldModel, updateAttributes).apply {
+    ): SectionModel = super.applyUpdateAttributes(oldModel, updateAttributes).apply {
         duration = updateAttributes.duration ?: oldModel.duration
     }
 

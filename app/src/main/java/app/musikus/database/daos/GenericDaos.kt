@@ -122,13 +122,13 @@ abstract class BaseDao<
         rows.unzip().let { (ids, updateAttributes) ->
             directUpdate(
                 getModels(ids).zip(updateAttributes).map { (old, updateAttributes) ->
-                    modelWithAppliedUpdateAttributes(old, updateAttributes)
+                    applyUpdateAttributes(old, updateAttributes)
                 }
             )
         }
     }
 
-    protected open fun modelWithAppliedUpdateAttributes(oldModel: M, updateAttributes: U): M = oldModel
+    protected open fun applyUpdateAttributes(oldModel: M, updateAttributes: U): M = oldModel
 
 
     /**
@@ -301,10 +301,10 @@ abstract class TimestampDao<
         return models.map { it.id }
     }
 
-    override fun modelWithAppliedUpdateAttributes(
+    override fun applyUpdateAttributes(
         oldModel: M,
         updateAttributes: U
-    ): M = super.modelWithAppliedUpdateAttributes(oldModel, updateAttributes).apply {
+    ): M = super.applyUpdateAttributes(oldModel, updateAttributes).apply {
         modifiedAt = database.timeProvider.now()
     }
 }
