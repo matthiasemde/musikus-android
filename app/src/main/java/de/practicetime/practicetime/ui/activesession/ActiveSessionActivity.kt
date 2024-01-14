@@ -8,13 +8,26 @@
 package de.practicetime.practicetime.ui.activesession
 
 import android.Manifest
-import android.content.*
+import android.content.BroadcastReceiver
+import android.content.ComponentName
+import android.content.ContentUris
+import android.content.ContentValues
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.graphics.drawable.AnimatedVectorDrawable
 import android.net.Uri
-import android.os.*
+import android.os.Build
+import android.os.Bundle
+import android.os.Environment
+import android.os.Handler
+import android.os.IBinder
+import android.os.Looper
 import android.provider.MediaStore
+import android.provider.Settings
 import android.text.TextUtils
 import android.util.Log
 import android.util.TypedValue
@@ -22,17 +35,28 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
-import android.widget.*
+import android.widget.EditText
+import android.widget.ImageButton
+import android.widget.LinearLayout
+import android.widget.SeekBar
+import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.coordinatorlayout.widget.CoordinatorLayout
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.widget.NestedScrollView
 import androidx.lifecycle.lifecycleScope
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
-import androidx.recyclerview.widget.*
+import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.ItemTouchHelper
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.SimpleItemAnimator
 import androidx.transition.Fade
 import androidx.transition.TransitionManager
 import com.google.android.material.bottomsheet.BottomSheetBehavior
@@ -58,7 +82,8 @@ import kotlinx.coroutines.launch
 import java.io.File
 import java.io.IOException
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
+import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.round
 
@@ -82,6 +107,48 @@ class ActiveSessionActivity : AppCompatActivity() {
 
     private lateinit var recordingBottomSheet: NestedScrollView
     private lateinit var recordingBottomSheetBehaviour: BottomSheetBehavior<NestedScrollView>
+
+    val requestPermissionLauncher =
+        registerForActivityResult(
+            ActivityResultContracts.RequestPermission()
+        ) { isGranted: Boolean ->
+            if (isGranted) {
+                Log.d("TAG", "Permission granted")
+                // Permission is granted. Continue the action or workflow in your
+                // app.
+            } else {
+                Log.d("TAG", "Permission denied")
+                // Explain to the user that the feature is unavailable because the
+                // feature requires a permission that the user has denied. At the
+                // same time, respect the user's decision. Don't link to system
+                // settings in an effort to convince the user to change their
+                // decision.
+                val builder = AlertDialog.Builder(this).apply {
+                    setView(this@ActiveSessionActivity.layoutInflater.inflate(R.layout.dialog_permission_denied, null))
+                    setCancelable(false)
+                    setPositiveButton("Open Settings") { _, _ ->
+                        // open notification settings https://stackoverflow.com/a/45192258
+                        val intent = Intent()
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            intent.action = Settings.ACTION_APP_NOTIFICATION_SETTINGS
+                            intent.putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName);
+                        } else {
+                            intent.setAction("android.settings.APP_NOTIFICATION_SETTINGS");
+                            intent.putExtra("app_package", context.packageName);
+                            intent.putExtra("app_uid", context.applicationInfo.uid);
+                        }
+                        startActivity(intent)
+                    }
+                }
+                val dialog = builder.create()
+
+                dialog.window?.setBackgroundDrawable(
+                    ContextCompat.getDrawable(this, R.drawable.dialog_background)
+                )
+                dialog.show()
+            }
+        }
+
 
     /** Defines callbacks for service binding, passed to bindService()  */
     private val connection = object : ServiceConnection {
@@ -126,6 +193,43 @@ class ActiveSessionActivity : AppCompatActivity() {
             stopRecordingReceiver,
             IntentFilter("RecordingStopped")
         )
+
+        // check notification permission
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            when {
+                ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) == PackageManager.PERMISSION_GRANTED -> {
+                    // success
+                }
+
+                ActivityCompat.shouldShowRequestPermissionRationale(
+                    this, Manifest.permission.POST_NOTIFICATIONS
+                ) -> {
+                    // In an educational UI, explain to the user why your app requires this
+                    // permission for a specific feature to behave as expected, and what
+                    // features are disabled if it's declined. In this UI, include a
+                    // "cancel" or "no thanks" button that lets the user continue
+                    // using your app without granting the permission.
+                    Log.d("TAG", "Show rationale")
+                    requestPermissionLauncher.launch(
+                        Manifest.permission.POST_NOTIFICATIONS
+
+                    )
+                }
+                else -> {
+                    Log.d("TAG", "Ask for permission")
+                    // You can directly ask for the permission.
+                    // The registered ActivityResultCallback gets the result of this request.
+                    requestPermissionLauncher.launch(
+                        Manifest.permission.POST_NOTIFICATIONS
+
+                    )
+                }
+            }
+        }
+
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -811,6 +915,36 @@ class ActiveSessionActivity : AppCompatActivity() {
      *  Timing stuff
      ********************************************/
 
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+    private fun checkNofificationPermission() : Boolean {
+        when {
+            ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED -> {
+                return true
+            }
+            ActivityCompat.shouldShowRequestPermissionRationale(
+                this, Manifest.permission.POST_NOTIFICATIONS) -> {
+                // In an educational UI, explain to the user why your app requires this
+                // permission for a specific feature to behave as expected, and what
+                // features are disabled if it's declined. In this UI, include a
+                // "cancel" or "no thanks" button that lets the user continue
+                // using your app without granting the permission.
+                Log.d("TAG", "should show rationale")
+                requestPermissionLauncher.launch(
+                    Manifest.permission.POST_NOTIFICATIONS)
+                return false
+            }
+            else -> {
+                // not yet asked
+                requestPermissionLauncher.launch(
+                    Manifest.permission.POST_NOTIFICATIONS)
+                return false
+            }
+        }
+    }
+
     // the routine for handling presses to category buttons
     private fun categoryPressed(index: Int) {
         val categoryId = activeCategories[index].id
@@ -826,8 +960,8 @@ class ActiveSessionActivity : AppCompatActivity() {
             // when the session start, also update the goals
             lifecycleScope.launch { updateGoals() }
         } else if (mService.sectionBuffer.last().let {         // when session is running, don't allow starting if...
-            (categoryId == it.first.categoryId) ||           // ... in the same category
-            (it.first.duration ?: 0 - it.second < 1)           // ... section running for less than 1sec
+            (categoryId == it.first.categoryId) ||             // ... in the same category
+            ((it.first.duration ?: 0) - it.second < 1)         // ... section running for less than 1sec
         }) {
             return  // ignore press then
         }

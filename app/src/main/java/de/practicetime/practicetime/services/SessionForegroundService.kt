@@ -7,13 +7,22 @@
 
 package de.practicetime.practicetime.services
 
-import android.app.*
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.app.Service
+import android.app.TaskStackBuilder
 import android.content.Context
 import android.content.Intent
 import android.media.AudioAttributes
 import android.media.AudioFormat
 import android.media.AudioTrack
-import android.os.*
+import android.os.Binder
+import android.os.Build
+import android.os.Handler
+import android.os.IBinder
+import android.os.Looper
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import de.practicetime.practicetime.PracticeTime
@@ -21,7 +30,7 @@ import de.practicetime.practicetime.R
 import de.practicetime.practicetime.database.entities.Section
 import de.practicetime.practicetime.ui.activesession.ActiveSessionActivity
 import de.practicetime.practicetime.utils.secondsDurationToHoursMinSec
-import java.util.*
+import java.util.Date
 import kotlin.math.roundToInt
 
 
@@ -147,6 +156,7 @@ class SessionForegroundService : Service() {
             .setSmallIcon(icon)
             .setContentTitle(title)
             .setContentText(contentText)
+            .setOngoing(true)   // notification cannot be swiped away
             .setContentIntent(resultPendingIntent)
             .setOnlyAlertOnce(true)
             .build()

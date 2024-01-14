@@ -258,5 +258,7 @@
 
     <string name="update_1_1_0_title">PracticeTime! just got better!</string>
     <string name="update_1_1_0_message">We have added a backup feature to help you move from one device to another without losing your precious practice data.\n\nFind it in the main menu under \"App Info\" > \"Backup &amp; Restore\".</string>
+    <string name="notification_permission_dialog_title">Permission denied</string>
+    <string name="notification_permission_dialog_message">In order to track your time in the background during an active session, we need the notification permission. Please enable all notifications in the following screen.</string>
 
 </resources>
