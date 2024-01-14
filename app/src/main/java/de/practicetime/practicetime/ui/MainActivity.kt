@@ -114,12 +114,12 @@ class MainActivity : AppCompatActivity() {
 
         if (!BuildConfig.DEBUG) {
             if (!prefs.getBoolean(PracticeTime.PREFERENCES_KEY_APPINTRO_DONE, false)) {
+                // make sure the update message is not shown after app intro
+                prefs.edit().putBoolean(PracticeTime.PREFERENCES_KEY_UPDATE_1_1_0, true).apply()
+
                 launchAppIntro()
             }
-            if (
-                prefs.getBoolean(PracticeTime.PREFERENCES_KEY_APPINTRO_DONE, false) &&
-                !prefs.getBoolean(PracticeTime.PREFERENCES_KEY_UPDATE_1_1_0, false)
-            ) {
+            if (!prefs.getBoolean(PracticeTime.PREFERENCES_KEY_UPDATE_1_1_0, false)) {
                 announceUpdate(layout = R.layout.dialog_announce_update_1_1_0) {
                     prefs.edit().putBoolean(PracticeTime.PREFERENCES_KEY_UPDATE_1_1_0, true).apply()
                 }
