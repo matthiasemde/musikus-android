@@ -216,7 +216,7 @@
 
     <string name="donations_title">Support us!</string>
     <string name="donations_text">If you are enjoying the app and would like to support us, we would be very thankful for a small donation.\n\nThis will help us in developing awesome new features like:</string>
-    <string name="app_info">App info</string>
+    <string name="settings">Settings</string>
     <string-array name="array_donations_text_bulletlist">
         <item>Sharable sessions</item>
         <item>Integrated tuner</item>
@@ -257,7 +257,7 @@
     <string name="export_csv_dialog_note">Note:\nThis will <u>not</u> export your Goals and Library items! This file cannot be imported. For Backups, use the \"Backup and Restore\" function.</string>
 
     <string name="update_1_1_0_title">PracticeTime! just got better!</string>
-    <string name="update_1_1_0_message">We have added a backup feature to help you move from one device to another without losing your precious practice data.\n\nFind it in the main menu under \"App Info\" > \"Backup &amp; Restore\".</string>
+    <string name="update_1_1_0_message">We have added a backup feature to help you move from one device to another without losing your precious practice data.\n\nFind it in the main menu under \"Settings\" > \"Backup &amp; Restore\".</string>
     <string name="notification_permission_dialog_title">Permission denied</string>
     <string name="notification_permission_dialog_message">In order to track your time in the background during an active session, we need the notification permission. Please enable all notifications in the following screen.</string>
 

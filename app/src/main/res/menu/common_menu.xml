@@ -33,7 +33,7 @@
     <item
         android:id="@+id/commonToolbarInfo"
         android:enabled="true"
-        android:title="@string/app_info"
+        android:title="@string/settings"
         app:showAsAction="never" />
 
 </menu>
