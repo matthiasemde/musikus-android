@@ -12,6 +12,7 @@ import android.content.SharedPreferences
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import androidx.annotation.LayoutRes
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
@@ -49,34 +50,31 @@ class MainActivity : AppCompatActivity() {
 
         if (BuildConfig.DEBUG) {
             createDatabaseFirstRun()
-//            launchAppIntroFirstRun()
         }
         setTheme()
     }
 
-    private fun launchAppIntroFirstRun() {
-        if (!prefs.getBoolean(PracticeTime.PREFERENCES_KEY_APPINTRO_DONE, false)) {
-            val i = Intent(this, AppIntroActivity::class.java)
-            i.flags = Intent.FLAG_ACTIVITY_NO_HISTORY
-            startActivity(i)
-        }
+    private fun launchAppIntro() {
+        val i = Intent(this, AppIntroActivity::class.java)
+        i.flags = Intent.FLAG_ACTIVITY_NO_HISTORY
+        startActivity(i)
     }
 
-    private fun announceUpdate_1_1_0() {
-        if (!prefs.getBoolean(PracticeTime.PREFERENCES_KEY_UPDATE_1_1_0, false)) {
-            val builder = AlertDialog.Builder(this).apply {
-                setView(this@MainActivity.layoutInflater.inflate(R.layout.dialog_announce_update_1_1_0, null))
-                setPositiveButton("Awesome!") { _, _ ->
-                    prefs.edit().putBoolean(PracticeTime.PREFERENCES_KEY_UPDATE_1_1_0, true).apply()
-                }
-            }
-            val dialog = builder.create()
-
-            dialog.window?.setBackgroundDrawable(
-                ContextCompat.getDrawable(this, R.drawable.dialog_background)
-            )
-            dialog.show()
+    private fun announceUpdate(
+        @LayoutRes layout: Int,
+        onConfirm: () -> Unit
+    ) {
+        val builder = AlertDialog.Builder(this).apply {
+            setCancelable(false)
+            setView(this@MainActivity.layoutInflater.inflate(layout, null))
+            setPositiveButton("Awesome!") { _, _ -> onConfirm() }
         }
+        val dialog = builder.create()
+
+        dialog.window?.setBackgroundDrawable(
+            ContextCompat.getDrawable(this, R.drawable.dialog_background)
+        )
+        dialog.show()
     }
 
     private fun createDatabaseFirstRun() {
@@ -115,8 +113,17 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
 
         if (!BuildConfig.DEBUG) {
-            launchAppIntroFirstRun()
-            announceUpdate_1_1_0()
+            if (!prefs.getBoolean(PracticeTime.PREFERENCES_KEY_APPINTRO_DONE, false)) {
+                launchAppIntro()
+            }
+            if (
+                prefs.getBoolean(PracticeTime.PREFERENCES_KEY_APPINTRO_DONE, false) &&
+                !prefs.getBoolean(PracticeTime.PREFERENCES_KEY_UPDATE_1_1_0, false)
+            ) {
+                announceUpdate(layout = R.layout.dialog_announce_update_1_1_0) {
+                    prefs.edit().putBoolean(PracticeTime.PREFERENCES_KEY_UPDATE_1_1_0, true).apply()
+                }
+            }
         }
 
         runnable = object : Runnable {
