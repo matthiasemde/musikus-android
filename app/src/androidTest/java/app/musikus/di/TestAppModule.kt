@@ -19,6 +19,8 @@ import app.musikus.repository.LibraryRepositoryImpl
 import app.musikus.repository.SessionRepository
 import app.musikus.repository.SessionRepositoryImpl
 import app.musikus.repository.UserPreferencesRepository
+import app.musikus.usecase.goals.AddGoalUseCase
+import app.musikus.usecase.goals.GoalsUseCases
 import app.musikus.usecase.library.AddFolderUseCase
 import app.musikus.usecase.library.AddItemUseCase
 import app.musikus.usecase.library.DeleteFoldersUseCase
@@ -124,7 +126,7 @@ object TestAppModule {
     }
 
     @Provides
-    fun libraryUseCases(
+    fun provideLibraryUseCases(
         libraryRepository: LibraryRepository,
         userPreferencesRepository: UserPreferencesRepository
     ): LibraryUseCases {
@@ -144,6 +146,16 @@ object TestAppModule {
             selectItemSortMode = SelectItemSortModeUseCase(userPreferencesRepository),
             getFolderSortInfo = GetFolderSortInfoUseCase(userPreferencesRepository),
             selectFolderSortMode = SelectFolderSortModeUseCase(userPreferencesRepository),
+        )
+    }
+
+    @Provides
+    fun provideGoalsUseCases(
+        goalRepository: GoalRepository,
+        timeProvider: TimeProvider
+    ): GoalsUseCases {
+        return GoalsUseCases(
+            addGoal = AddGoalUseCase(goalRepository, timeProvider),
         )
     }
 }

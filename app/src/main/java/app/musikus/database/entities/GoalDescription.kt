@@ -101,3 +101,5 @@ data class GoalDescriptionModel (
 //    @ColumnInfo(name="profile_id", index = true) override val profileId: UUID? = null,
     @ColumnInfo(name="custom_order", defaultValue = "null") override var customOrder: Nullable<Int>? = null,
 ) : SoftDeleteModel(), IGoalDescriptionCreationAttributes, IGoalDescriptionUpdateAttributes
+
+class InvalidGoalDescriptionException(message: String) : Exception(message)

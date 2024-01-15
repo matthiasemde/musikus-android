@@ -134,9 +134,9 @@ suspend fun prepopulateDatabase(
                     }),
                     target =((1..6).random() * 10 + 30).minutes
                 ),
-                libraryItems =
+                libraryItemIds =
                     if (goalDescriptionCreationAttributes.type == GoalType.NON_SPECIFIC) null
-                    else listOf(items.random()),
+                    else listOf(items.random().id),
             )
             delay(10)
         }

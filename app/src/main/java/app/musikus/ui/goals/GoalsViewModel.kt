@@ -23,6 +23,7 @@ import app.musikus.repository.SessionRepository
 import app.musikus.repository.UserPreferencesRepository
 import app.musikus.shared.TopBarUiState
 import app.musikus.ui.library.DialogMode
+import app.musikus.usecase.goals.GoalsUseCases
 import app.musikus.utils.GoalsSortMode
 import app.musikus.utils.LibraryItemSortMode
 import app.musikus.utils.SortDirection
@@ -112,6 +113,7 @@ class GoalsViewModel @Inject constructor(
     private val userPreferencesRepository : UserPreferencesRepository,
     libraryRepository: LibraryRepository,
     private val goalRepository : GoalRepository,
+    private val goalsUseCases: GoalsUseCases,
     sessionRepository : SessionRepository,
 ) : ViewModel() {
 
@@ -537,7 +539,7 @@ class GoalsViewModel @Inject constructor(
             val dialogData = uiState.dialogData
             viewModelScope.launch {
                 if (uiState.goalToEdit == null) {
-                    goalRepository.add(
+                    goalsUseCases.addGoal(
                         GoalDescriptionCreationAttributes(
                             type = dialogData.goalType,
                             repeat = !dialogData.oneShot,
@@ -552,7 +554,7 @@ class GoalsViewModel @Inject constructor(
                              },
                             target = dialogData.target,
                         ),
-                        libraryItems = dialogData.selectedLibraryItems,
+                        libraryItemIds = dialogData.selectedLibraryItems.map { it.id },
                     )
                 } else {
                     goalRepository.editGoalTarget(

@@ -25,6 +25,8 @@ import app.musikus.repository.SessionRepository
 import app.musikus.repository.SessionRepositoryImpl
 import app.musikus.repository.UserPreferencesRepository
 import app.musikus.repository.UserPreferencesRepositoryImpl
+import app.musikus.usecase.goals.AddGoalUseCase
+import app.musikus.usecase.goals.GoalsUseCases
 import app.musikus.usecase.library.AddFolderUseCase
 import app.musikus.usecase.library.AddItemUseCase
 import app.musikus.usecase.library.DeleteFoldersUseCase
@@ -58,6 +60,18 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {
+
+    @Provides
+    @Singleton
+    fun provideTimeProvider(): TimeProvider {
+        return TimeProviderImpl()
+    }
+
+    @Provides
+    @Singleton
+    fun provideIdProvider(): IdProvider {
+        return IdProviderImpl()
+    }
 
     @Provides
     @Singleton
@@ -159,14 +173,12 @@ object AppModule {
     }
 
     @Provides
-    @Singleton
-    fun provideTimeProvider(): TimeProvider {
-        return TimeProviderImpl()
-    }
-
-    @Provides
-    @Singleton
-    fun provideIdProvider(): IdProvider {
-        return IdProviderImpl()
+    fun providesGoalUseCases(
+        goalRepository: GoalRepository,
+        timeProvider: TimeProvider
+    ): GoalsUseCases {
+        return GoalsUseCases(
+            addGoal = AddGoalUseCase(goalRepository, timeProvider),
+        )
     }
 }

@@ -68,3 +68,4 @@ data class GoalInstanceModel(
     )
 }
 
+class InvalidGoalInstanceException(message: String) : Exception(message)

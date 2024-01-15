@@ -17,17 +17,16 @@ import app.musikus.database.daos.GoalDescription
 import app.musikus.database.daos.GoalDescriptionDao
 import app.musikus.database.daos.GoalInstance
 import app.musikus.database.daos.GoalInstanceDao
-import app.musikus.database.daos.LibraryItem
 import app.musikus.database.entities.GoalDescriptionCreationAttributes
 import app.musikus.database.entities.GoalDescriptionUpdateAttributes
 import app.musikus.database.entities.GoalInstanceCreationAttributes
 import app.musikus.database.entities.GoalInstanceUpdateAttributes
 import app.musikus.utils.TimeProvider
 import kotlinx.coroutines.flow.Flow
+import java.util.UUID
 import kotlin.time.Duration
 
 interface GoalRepository {
-    val timeProvider: TimeProvider
     val currentGoals: Flow<List<GoalInstanceWithDescriptionWithLibraryItems>>
     val allGoals: Flow<List<GoalDescriptionWithInstancesAndLibraryItems>>
     val lastFiveCompletedGoals: Flow<List<GoalInstanceWithDescriptionWithLibraryItems>>
@@ -37,7 +36,7 @@ interface GoalRepository {
     suspend fun add(
         descriptionCreationAttributes: GoalDescriptionCreationAttributes,
         instanceCreationAttributes: GoalInstanceCreationAttributes,
-        libraryItems: List<LibraryItem>?,
+        libraryItemIds: List<UUID>?,
     )
 
     /** Edit */
@@ -78,7 +77,7 @@ interface GoalRepository {
 class GoalRepositoryImpl(
     private val instanceDao : GoalInstanceDao,
     private val descriptionDao : GoalDescriptionDao,
-    override val timeProvider: TimeProvider
+    private val timeProvider: TimeProvider
 ) : GoalRepository {
 
     override val currentGoals = instanceDao.getCurrent()
@@ -92,12 +91,12 @@ class GoalRepositoryImpl(
     override suspend fun add(
         descriptionCreationAttributes: GoalDescriptionCreationAttributes,
         instanceCreationAttributes: GoalInstanceCreationAttributes,
-        libraryItems: List<LibraryItem>?,
+        libraryItemIds: List<UUID>?,
     ) {
         descriptionDao.insert(
             descriptionCreationAttributes = descriptionCreationAttributes,
             instanceCreationAttributes = instanceCreationAttributes,
-            libraryItemIds = libraryItems?.map { it.id },
+            libraryItemIds = libraryItemIds,
         )
     }
 
