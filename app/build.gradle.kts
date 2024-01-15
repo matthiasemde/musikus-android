@@ -1,3 +1,5 @@
+@file:Suppress("UnstableApiUsage")
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -52,7 +54,11 @@ android {
     }
 
     // needed for mockk
-    testOptions { packagingOptions { jniLibs { useLegacyPackaging = true } } }
+    testOptions {
+        packaging {
+            jniLibs { useLegacyPackaging = true }
+        }
+    }
 
     kotlinOptions {
         jvmTarget = JavaVersion.VERSION_11.toString()
@@ -81,7 +87,7 @@ dependencies {
     val navVersion = "2.7.5"
     val daggerHiltVersion = "2.49"
     val kotlinCoroutineVersion = "1.7.3"
-    val mockkVersion = "1.13.8"
+    val mockkVersion = "1.13.9"
 
     implementation("androidx.navigation:navigation-runtime-ktx:$navVersion")
     implementation("androidx.legacy:legacy-support-v4:1.0.0")
