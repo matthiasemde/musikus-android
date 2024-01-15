@@ -175,10 +175,11 @@ object AppModule {
     @Provides
     fun providesGoalUseCases(
         goalRepository: GoalRepository,
+        libraryRepository: LibraryRepository,
         timeProvider: TimeProvider
     ): GoalsUseCases {
         return GoalsUseCases(
-            addGoal = AddGoalUseCase(goalRepository, timeProvider),
+            addGoal = AddGoalUseCase(goalRepository, libraryRepository, timeProvider),
         )
     }
 }
