@@ -32,9 +32,9 @@ class AddGoalUseCaseTest {
     private lateinit var fakeIdProvider: FakeIdProvider
 
     private lateinit var fakeLibraryRepository: FakeLibraryRepository
+    private lateinit var fakeGoalRepository: FakeGoalRepository
 
     private lateinit var addGoal: AddGoalUseCase
-    private lateinit var fakeGoalRepository: FakeGoalRepository
 
     private lateinit var validDescriptionCreationAttributes: GoalDescriptionCreationAttributes
     private lateinit var validInstanceCreationAttributes: GoalInstanceCreationAttributes

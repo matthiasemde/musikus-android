@@ -27,6 +27,8 @@ import app.musikus.repository.UserPreferencesRepository
 import app.musikus.repository.UserPreferencesRepositoryImpl
 import app.musikus.usecase.goals.AddGoalUseCase
 import app.musikus.usecase.goals.GoalsUseCases
+import app.musikus.usecase.goals.PauseGoalsUseCase
+import app.musikus.usecase.goals.UnpauseGoalsUseCase
 import app.musikus.usecase.library.AddFolderUseCase
 import app.musikus.usecase.library.AddItemUseCase
 import app.musikus.usecase.library.DeleteFoldersUseCase
@@ -179,7 +181,9 @@ object AppModule {
         timeProvider: TimeProvider
     ): GoalsUseCases {
         return GoalsUseCases(
-            addGoal = AddGoalUseCase(goalRepository, libraryRepository, timeProvider),
+            add = AddGoalUseCase(goalRepository, libraryRepository, timeProvider),
+            pause = PauseGoalsUseCase(goalRepository),
+            unpause = UnpauseGoalsUseCase(goalRepository)
         )
     }
 }

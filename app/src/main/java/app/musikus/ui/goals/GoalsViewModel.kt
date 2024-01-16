@@ -428,8 +428,8 @@ class GoalsViewModel @Inject constructor(
 
     fun onPauseAction() {
         viewModelScope.launch {
-            goalRepository.pause(_selectedGoals.value.toList().map {
-                it.description.description
+            goalsUseCases.pause(_selectedGoals.value.toList().map {
+                it.description.description.id
             })
             clearActionMode()
         }
@@ -437,8 +437,8 @@ class GoalsViewModel @Inject constructor(
 
     fun onUnpauseAction() {
         viewModelScope.launch {
-            goalRepository.unpause(_selectedGoals.value.toList().map {
-                it.description.description
+            goalsUseCases.unpause(_selectedGoals.value.toList().map {
+                it.description.description.id
             })
             clearActionMode()
         }
@@ -539,7 +539,7 @@ class GoalsViewModel @Inject constructor(
             val dialogData = uiState.dialogData
             viewModelScope.launch {
                 if (uiState.goalToEdit == null) {
-                    goalsUseCases.addGoal(
+                    goalsUseCases.add(
                         GoalDescriptionCreationAttributes(
                             type = dialogData.goalType,
                             repeat = !dialogData.oneShot,

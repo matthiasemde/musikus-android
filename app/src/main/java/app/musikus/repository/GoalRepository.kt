@@ -8,7 +8,6 @@
 
 package app.musikus.repository
 
-import androidx.room.Transaction
 import app.musikus.database.GoalDescriptionWithInstancesAndLibraryItems
 import app.musikus.database.GoalInstanceWithDescription
 import app.musikus.database.GoalInstanceWithDescriptionWithLibraryItems
@@ -40,6 +39,11 @@ interface GoalRepository {
     )
 
     /** Edit */
+
+    suspend fun updateGoalDescriptions(
+        idsWithUpdateAttributes: List<Pair<UUID, GoalDescriptionUpdateAttributes>>,
+    )
+
     suspend fun editGoalTarget(
         goal: GoalInstance,
         newTarget: Duration,
@@ -47,11 +51,11 @@ interface GoalRepository {
 
 
     /** Pause / Unpause */
-    suspend fun pause(goal: GoalDescription)
-    suspend fun pause(goals: List<GoalDescription>)
-
-    suspend fun unpause(goal: GoalDescription)
-    suspend fun unpause(goals: List<GoalDescription>)
+//    suspend fun pause(goal: GoalDescription)
+//    suspend fun pause(goals: List<GoalDescription>)
+//
+//    suspend fun unpause(goal: GoalDescription)
+//    suspend fun unpause(goals: List<GoalDescription>)
 
     /** Archive / Unarchive */
     suspend fun archive(goal: GoalDescription)
@@ -138,6 +142,13 @@ class GoalRepositoryImpl(
 
 
     /** Edit */
+
+    override suspend fun updateGoalDescriptions(
+        idsWithUpdateAttributes: List<Pair<UUID, GoalDescriptionUpdateAttributes>>
+    ) {
+        descriptionDao.update(idsWithUpdateAttributes)
+    }
+
     override suspend fun editGoalTarget(
         goal: GoalInstance,
         newTarget: Duration,
@@ -153,38 +164,38 @@ class GoalRepositoryImpl(
     }
 
 
-    /** Pause / Unpause */
-    @Transaction
-    override suspend fun pause(goal: GoalDescription) {
-        pause(listOf(goal))
-    }
-
-    @Transaction
-    override suspend fun pause(goals: List<GoalDescription>) {
-        // before pausing we need to clean possible future instances
-        cleanFutureInstances()
-
-        descriptionDao.update(
-            goals.map {
-                it.id to GoalDescriptionUpdateAttributes(paused = true)
-            },
-        )
-    }
-
-    @Transaction
-    override suspend fun unpause(goal: GoalDescription) {
-        unpause(listOf(goal))
-    }
-
-    @Transaction
-    override suspend fun unpause(goals: List<GoalDescription>) {
-        descriptionDao.update(
-            goals.map {
-                it.id to GoalDescriptionUpdateAttributes(paused = false)
-            }
-        )
-        updateGoals()
-    }
+//    /** Pause / Unpause */
+//    @Transaction
+//    override suspend fun pause(goal: GoalDescription) {
+//        pause(listOf(goal))
+//    }
+//
+//    @Transaction
+//    override suspend fun pause(goals: List<GoalDescription>) {
+//        // before pausing we need to clean possible future instances
+//        cleanFutureInstances()
+//
+//        descriptionDao.update(
+//            goals.map {
+//                it.id to GoalDescriptionUpdateAttributes(paused = true)
+//            },
+//        )
+//    }
+//
+//    @Transaction
+//    override suspend fun unpause(goal: GoalDescription) {
+//        unpause(listOf(goal))
+//    }
+//
+//    @Transaction
+//    override suspend fun unpause(goals: List<GoalDescription>) {
+//        descriptionDao.update(
+//            goals.map {
+//                it.id to GoalDescriptionUpdateAttributes(paused = false)
+//            }
+//        )
+//        updateGoals()
+//    }
 
 
     /** Archive / Unarchive */

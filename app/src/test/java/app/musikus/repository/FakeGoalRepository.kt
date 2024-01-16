@@ -5,6 +5,7 @@ import app.musikus.database.GoalInstanceWithDescriptionWithLibraryItems
 import app.musikus.database.daos.GoalDescription
 import app.musikus.database.daos.GoalInstance
 import app.musikus.database.entities.GoalDescriptionCreationAttributes
+import app.musikus.database.entities.GoalDescriptionUpdateAttributes
 import app.musikus.database.entities.GoalInstanceCreationAttributes
 import app.musikus.utils.IdProvider
 import app.musikus.utils.TimeProvider
@@ -69,25 +70,32 @@ class FakeGoalRepository(
         )
     }
 
+    override suspend fun updateGoalDescriptions(
+        idsWithUpdateAttributes: List<Pair<UUID, GoalDescriptionUpdateAttributes>>
+    ) {
+        for ((id, updateAttributes) in idsWithUpdateAttributes) {
+            val oldGoal = _goalDescriptionWithInstancesAndLibraryItems.first {
+                it.description.id == id
+            }
+
+            _goalDescriptionWithInstancesAndLibraryItems.remove(oldGoal)
+            _goalDescriptionWithInstancesAndLibraryItems.add(
+                oldGoal.copy(
+                    description = oldGoal.description.copy(
+                        modifiedAt = timeProvider.now(),
+                        paused = updateAttributes.paused ?: oldGoal.description.paused,
+                        archived = updateAttributes.archived ?: oldGoal.description.archived,
+                        customOrder = updateAttributes.customOrder?.value ?: oldGoal.description.customOrder
+                    )
+                )
+            )
+        }
+    }
+
     override suspend fun editGoalTarget(goal: GoalInstance, newTarget: Duration) {
         TODO("Not yet implemented")
     }
 
-    override suspend fun pause(goal: GoalDescription) {
-        TODO("Not yet implemented")
-    }
-
-    override suspend fun pause(goals: List<GoalDescription>) {
-        TODO("Not yet implemented")
-    }
-
-    override suspend fun unpause(goal: GoalDescription) {
-        TODO("Not yet implemented")
-    }
-
-    override suspend fun unpause(goals: List<GoalDescription>) {
-        TODO("Not yet implemented")
-    }
 
     override suspend fun archive(goal: GoalDescription) {
         TODO("Not yet implemented")

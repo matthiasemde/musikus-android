@@ -1,5 +1,7 @@
 package app.musikus.usecase.goals
 
 data class GoalsUseCases(
-    val addGoal: AddGoalUseCase,
+    val add: AddGoalUseCase,
+    val pause: PauseGoalsUseCase,
+    val unpause: UnpauseGoalsUseCase
 )
