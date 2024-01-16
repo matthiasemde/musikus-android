@@ -36,7 +36,9 @@ class PauseGoalsUseCaseTest {
         fakeLibraryRepository = FakeLibraryRepository(fakeTimeProvider, fakeIdProvider)
         fakeGoalRepository = FakeGoalRepository(fakeLibraryRepository, fakeTimeProvider, fakeIdProvider)
 
-        pauseGoals = PauseGoalsUseCase(fakeGoalRepository)
+        val cleanFutureGoalInstancesUseCase = CleanFutureGoalInstancesUseCase(fakeGoalRepository, fakeTimeProvider)
+
+        pauseGoals = PauseGoalsUseCase(fakeGoalRepository, cleanFutureGoalInstancesUseCase)
 
         runBlocking {
             fakeGoalRepository.add(

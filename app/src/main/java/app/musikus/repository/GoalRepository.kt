@@ -8,19 +8,18 @@
 
 package app.musikus.repository
 
+import androidx.room.withTransaction
 import app.musikus.database.GoalDescriptionWithInstancesAndLibraryItems
 import app.musikus.database.GoalInstanceWithDescription
 import app.musikus.database.GoalInstanceWithDescriptionWithLibraryItems
+import app.musikus.database.MusikusDatabase
 import app.musikus.database.Nullable
 import app.musikus.database.daos.GoalDescription
-import app.musikus.database.daos.GoalDescriptionDao
 import app.musikus.database.daos.GoalInstance
-import app.musikus.database.daos.GoalInstanceDao
 import app.musikus.database.entities.GoalDescriptionCreationAttributes
 import app.musikus.database.entities.GoalDescriptionUpdateAttributes
 import app.musikus.database.entities.GoalInstanceCreationAttributes
 import app.musikus.database.entities.GoalInstanceUpdateAttributes
-import app.musikus.utils.TimeProvider
 import kotlinx.coroutines.flow.Flow
 import java.util.UUID
 import kotlin.time.Duration
@@ -29,6 +28,8 @@ interface GoalRepository {
     val currentGoals: Flow<List<GoalInstanceWithDescriptionWithLibraryItems>>
     val allGoals: Flow<List<GoalDescriptionWithInstancesAndLibraryItems>>
     val lastFiveCompletedGoals: Flow<List<GoalInstanceWithDescriptionWithLibraryItems>>
+
+    suspend fun getLatestInstances(): List<GoalInstanceWithDescription>
 
     /** Mutators */
     /** Add */
@@ -65,28 +66,37 @@ interface GoalRepository {
     suspend fun unarchive(goals: List<GoalDescription>)
 
     /** Delete / Restore */
-    suspend fun delete(goal: GoalDescription)
     suspend fun delete(goals: List<GoalDescription>)
 
-    suspend fun restore(goal: GoalDescription)
     suspend fun restore(goals: List<GoalDescription>)
+
+    suspend fun deleteFutureInstances(instanceIds: List<UUID>)
 
     /** Clean */
     suspend fun clean()
+
+    /** Transaction */
+    suspend fun withTransaction(block: suspend () -> Unit)
 
     /** Update Goals */
     suspend fun updateGoals()
 }
 
 class GoalRepositoryImpl(
-    private val instanceDao : GoalInstanceDao,
-    private val descriptionDao : GoalDescriptionDao,
-    private val timeProvider: TimeProvider
+    private val database: MusikusDatabase,
 ) : GoalRepository {
+
+    private val instanceDao = database.goalInstanceDao
+    private val descriptionDao = database.goalDescriptionDao
+    private val timeProvider = database.timeProvider
 
     override val currentGoals = instanceDao.getCurrent()
     override val allGoals = descriptionDao.getAllWithInstancesAndLibraryItems()
     override val lastFiveCompletedGoals = instanceDao.getLastNCompleted(5)
+
+    override suspend fun getLatestInstances(): List<GoalInstanceWithDescription> {
+        return instanceDao.getLatest()
+    }
 
 
     /** Mutators */
@@ -117,7 +127,7 @@ class GoalRepositoryImpl(
         instanceDao.transaction {
             if (description.paused) {
                 // if the old instance belonged to a paused goal delete it...
-                instanceDao.deletePausedGoalInstance(outdatedInstance.id)
+                instanceDao.deletePausedInstance(outdatedInstance.id)
             } else {
                 // otherwise mark it as renewed by setting its endTimestamp
                 instanceDao.update(
@@ -164,40 +174,6 @@ class GoalRepositoryImpl(
     }
 
 
-//    /** Pause / Unpause */
-//    @Transaction
-//    override suspend fun pause(goal: GoalDescription) {
-//        pause(listOf(goal))
-//    }
-//
-//    @Transaction
-//    override suspend fun pause(goals: List<GoalDescription>) {
-//        // before pausing we need to clean possible future instances
-//        cleanFutureInstances()
-//
-//        descriptionDao.update(
-//            goals.map {
-//                it.id to GoalDescriptionUpdateAttributes(paused = true)
-//            },
-//        )
-//    }
-//
-//    @Transaction
-//    override suspend fun unpause(goal: GoalDescription) {
-//        unpause(listOf(goal))
-//    }
-//
-//    @Transaction
-//    override suspend fun unpause(goals: List<GoalDescription>) {
-//        descriptionDao.update(
-//            goals.map {
-//                it.id to GoalDescriptionUpdateAttributes(paused = false)
-//            }
-//        )
-//        updateGoals()
-//    }
-
-
     /** Archive / Unarchive */
 
     override suspend fun archive(goal: GoalDescription) {
@@ -241,20 +217,16 @@ class GoalRepositoryImpl(
 
     /** Delete / Restore */
 
-    override suspend fun delete(goal: GoalDescription) {
-        delete(listOf(goal))
-    }
-
     override suspend fun delete(goals: List<GoalDescription>) {
         descriptionDao.delete(goals.map { it.id })
     }
 
-    override suspend fun restore(goal: GoalDescription) {
-        restore(listOf(goal))
-    }
-
     override suspend fun restore(goals: List<GoalDescription>) {
         descriptionDao.restore(goals.map { it.id })
+    }
+
+    override suspend fun deleteFutureInstances(instanceIds: List<UUID>) {
+        instanceDao.deleteFutureInstances(instanceIds)
     }
 
     /** Clean */
@@ -263,6 +235,11 @@ class GoalRepositoryImpl(
         descriptionDao.clean()
     }
 
+    /** Transaction */
+
+    override suspend fun withTransaction(block: suspend () -> Unit) {
+        return database.withTransaction(block)
+    }
 
     /**
      * Utility functions
@@ -334,7 +311,7 @@ class GoalRepositoryImpl(
                     throw IllegalStateException("Stuck in infinite loop while cleaning future instances")
                 }
 
-                instanceDao.deleteFutureGoalInstances(
+                instanceDao.deleteFutureInstances(
                     futureInstances.map { it.id }
                 )
 

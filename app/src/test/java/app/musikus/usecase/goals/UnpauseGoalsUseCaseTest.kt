@@ -27,6 +27,8 @@ class UnpauseGoalsUseCaseTest {
 
     private lateinit var unpauseGoals: UnpauseGoalsUseCase
 
+    private lateinit var pauseGoals: PauseGoalsUseCase
+
     @BeforeEach
     fun setUp() {
         fakeTimeProvider = FakeTimeProvider()
@@ -34,6 +36,10 @@ class UnpauseGoalsUseCaseTest {
 
         fakeLibraryRepository = FakeLibraryRepository(fakeTimeProvider, fakeIdProvider)
         fakeGoalRepository = FakeGoalRepository(fakeLibraryRepository, fakeTimeProvider, fakeIdProvider)
+
+        val cleanFutureGoalInstancesUseCase = CleanFutureGoalInstancesUseCase(fakeGoalRepository, fakeTimeProvider)
+
+        pauseGoals = PauseGoalsUseCase(fakeGoalRepository, cleanFutureGoalInstancesUseCase)
 
         unpauseGoals = UnpauseGoalsUseCase(fakeGoalRepository)
 
@@ -56,7 +62,7 @@ class UnpauseGoalsUseCaseTest {
 
     @Test
     fun `Unpause paused goal, goal is unpaused`() = runTest {
-        PauseGoalsUseCase(fakeGoalRepository)(listOf(UUIDConverter.fromInt(1)))
+        pauseGoals(listOf(UUIDConverter.fromInt(1)))
 
         val pausedGoal = fakeGoalRepository.allGoals.first().first()
         Truth.assertThat(pausedGoal.description.paused).isTrue()

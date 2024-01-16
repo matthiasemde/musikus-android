@@ -19,9 +19,6 @@ import app.musikus.database.entities.LibraryFolderCreationAttributes
 import app.musikus.database.entities.LibraryItemCreationAttributes
 import app.musikus.database.entities.SectionCreationAttributes
 import app.musikus.database.entities.SessionCreationAttributes
-import app.musikus.repository.GoalRepositoryImpl
-import app.musikus.repository.LibraryRepositoryImpl
-import app.musikus.repository.SessionRepositoryImpl
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import java.time.temporal.ChronoUnit
@@ -31,34 +28,18 @@ import kotlin.time.Duration.Companion.minutes
 suspend fun prepopulateDatabase(
     database: MusikusDatabase,
 ) {
-    val libraryRepository = LibraryRepositoryImpl(
-        itemDao = database.libraryItemDao,
-        folderDao = database.libraryFolderDao,
-    )
-
-    val goalRepository = GoalRepositoryImpl(
-        instanceDao = database.goalInstanceDao,
-        descriptionDao = database.goalDescriptionDao,
-        timeProvider = database.timeProvider,
-    )
-
-    val sessionRepository = SessionRepositoryImpl(
-        sessionDao = database.sessionDao,
-        sectionDao = database.sectionDao,
-    )
 
     listOf(
         LibraryFolderCreationAttributes(name = "Schupra"),
         LibraryFolderCreationAttributes(name = "Fagott"),
         LibraryFolderCreationAttributes(name = "Gesang"),
     ).forEach {
-        libraryRepository.addFolder(it)
+        database.libraryFolderDao.insert(it)
         Log.d("MainActivity", "Folder ${it.name} created")
         delay(10) //make sure folders have different createdAt values
     }
 
-    libraryRepository.folders.first().let { foldersWithItems ->
-        val folders = foldersWithItems.map { it.folder }
+    database.libraryFolderDao.getAllAsFlow().first().let { folders ->
         // populate the libraryItem table on first run
         listOf(
             LibraryItemCreationAttributes(name = "Die Schöpfung", colorIndex = 0, libraryFolderId = Nullable(folders[0].id)),
@@ -71,14 +52,14 @@ suspend fun prepopulateDatabase(
             LibraryItemCreationAttributes(name = "Klaviersonate", colorIndex = 7),
             LibraryItemCreationAttributes(name = "Trauermarsch", colorIndex = 8),
         ).forEach {
-            libraryRepository.addItem(it)
+            database.libraryItemDao.insert(it)
             Log.d("MainActivity", "LibraryItem ${it.name} created")
             delay(10) //make sure items have different createdAt values
         }
     }
 
 
-    libraryRepository.items.first().let { items ->
+    database.libraryItemDao.getAllAsFlow().first().let { items ->
         listOf(
             GoalDescriptionCreationAttributes(
                 type = GoalType.NON_SPECIFIC,
@@ -117,7 +98,7 @@ suspend fun prepopulateDatabase(
                 periodUnit = GoalPeriodUnit.WEEK,
             ),
         ).forEach { goalDescriptionCreationAttributes ->
-            goalRepository.add(
+            database.goalDescriptionDao.insert(
                 descriptionCreationAttributes = goalDescriptionCreationAttributes,
                 instanceCreationAttributes = GoalInstanceCreationAttributes(
                     startTimestamp = database.timeProvider.now().minus(
@@ -141,7 +122,7 @@ suspend fun prepopulateDatabase(
             delay(10)
         }
 
-        goalRepository.updateGoals()
+        // TODO update goals
 
         (0..80).map { sessionNum ->
             sessionNum to SessionCreationAttributes(
@@ -150,7 +131,7 @@ suspend fun prepopulateDatabase(
                 comment = "",
             )
         }.forEach { (sessionNum, session) ->
-            sessionRepository.add(
+            database.sessionDao.insert(
                 session,
                 (1..(1..5).random()).map { SectionCreationAttributes(
                     libraryItemId = items.random().id,

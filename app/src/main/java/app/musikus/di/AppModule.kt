@@ -26,6 +26,7 @@ import app.musikus.repository.SessionRepositoryImpl
 import app.musikus.repository.UserPreferencesRepository
 import app.musikus.repository.UserPreferencesRepositoryImpl
 import app.musikus.usecase.goals.AddGoalUseCase
+import app.musikus.usecase.goals.CleanFutureGoalInstancesUseCase
 import app.musikus.usecase.goals.GoalsUseCases
 import app.musikus.usecase.goals.PauseGoalsUseCase
 import app.musikus.usecase.goals.UnpauseGoalsUseCase
@@ -133,11 +134,7 @@ object AppModule {
     fun provideGoalRepository(
         database: MusikusDatabase
     ): GoalRepository {
-        return GoalRepositoryImpl(
-            instanceDao = database.goalInstanceDao,
-            descriptionDao = database.goalDescriptionDao,
-            timeProvider = database.timeProvider
-        )
+        return GoalRepositoryImpl(database = database)
     }
 
     @Provides
@@ -180,9 +177,11 @@ object AppModule {
         libraryRepository: LibraryRepository,
         timeProvider: TimeProvider
     ): GoalsUseCases {
+        val cleanFutureGoalInstancesUseCase = CleanFutureGoalInstancesUseCase(goalRepository, timeProvider)
+
         return GoalsUseCases(
             add = AddGoalUseCase(goalRepository, libraryRepository, timeProvider),
-            pause = PauseGoalsUseCase(goalRepository),
+            pause = PauseGoalsUseCase(goalRepository, cleanFutureGoalInstancesUseCase),
             unpause = UnpauseGoalsUseCase(goalRepository)
         )
     }

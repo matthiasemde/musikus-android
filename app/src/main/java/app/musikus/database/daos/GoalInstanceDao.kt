@@ -176,7 +176,7 @@ abstract class GoalInstanceDao(
         )
     }
 
-    suspend fun deletePausedGoalInstance(id: UUID) {
+    suspend fun deletePausedInstance(id: UUID) {
         // try to get the description of the instance
         // if null is returned, it must be because the instance does not exist
         val description = database.goalDescriptionDao.getDescriptionForInstance(id) ?:
@@ -189,7 +189,7 @@ abstract class GoalInstanceDao(
         super.delete(listOf(id)) // need to call listOf(id) because super.delete(id) would call overridden delete(listOf(id))
     }
 
-    suspend fun deleteFutureGoalInstances(ids: List<UUID>) {
+    suspend fun deleteFutureInstances(ids: List<UUID>) {
         val uniqueIds = ids.distinct()
 
         val instances = get(uniqueIds)

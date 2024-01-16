@@ -467,7 +467,7 @@ class GoalInstanceDaoTest {
         )
 
         // delete the instance
-        goalInstanceDao.deletePausedGoalInstance(UUIDConverter.fromInt(2))
+        goalInstanceDao.deletePausedInstance(UUIDConverter.fromInt(2))
 
         // check if the instance is no longer in the list of instances
         val instances = goalInstanceDao.getAllAsFlow().first()
@@ -489,7 +489,7 @@ class GoalInstanceDaoTest {
     fun deletePausedGoalInstanceOnNonExistentInstance_throwsException() = runTest {
         val exception = assertThrows(IllegalArgumentException::class.java) {
             runBlocking {
-                goalInstanceDao.deletePausedGoalInstance(UUIDConverter.fromInt(0))
+                goalInstanceDao.deletePausedInstance(UUIDConverter.fromInt(0))
             }
         }
 
@@ -502,7 +502,7 @@ class GoalInstanceDaoTest {
     fun deletePausedGoalInstanceOnNonPausedGoalInstance_throwsException() = runTest {
         val exception = assertThrows(IllegalArgumentException::class.java) {
             runBlocking {
-                goalInstanceDao.deletePausedGoalInstance(UUIDConverter.fromInt(3))
+                goalInstanceDao.deletePausedInstance(UUIDConverter.fromInt(3))
             }
         }
 
@@ -516,7 +516,7 @@ class GoalInstanceDaoTest {
         // Revert the time to make the latest instance be in the future
         fakeTimeProvider.revertTimeBy(1.days)
 
-        goalInstanceDao.deleteFutureGoalInstances(listOf(
+        goalInstanceDao.deleteFutureInstances(listOf(
             UUIDConverter.fromInt(3)
         ))
 
@@ -540,7 +540,7 @@ class GoalInstanceDaoTest {
     fun deleteFutureGoalInstancesOnNonExistentInstance_throwsException() = runTest {
         val exception = assertThrows(IllegalArgumentException::class.java) {
             runBlocking {
-                goalInstanceDao.deleteFutureGoalInstances(listOf(
+                goalInstanceDao.deleteFutureInstances(listOf(
                     UUIDConverter.fromInt(0)
                 ))
             }
@@ -558,7 +558,7 @@ class GoalInstanceDaoTest {
 
         val exception = assertThrows(IllegalArgumentException::class.java) {
             runBlocking {
-                goalInstanceDao.deleteFutureGoalInstances(listOf(
+                goalInstanceDao.deleteFutureInstances(listOf(
                     UUIDConverter.fromInt(2)
                 ))
             }
@@ -573,7 +573,7 @@ class GoalInstanceDaoTest {
     fun deleteFutureGoalInstancesOnGoalInPast_throwsException() = runTest {
         val exception = assertThrows(IllegalArgumentException::class.java) {
             runBlocking {
-                goalInstanceDao.deleteFutureGoalInstances(listOf(
+                goalInstanceDao.deleteFutureInstances(listOf(
                     UUIDConverter.fromInt(2)
                 ))
             }
@@ -590,7 +590,7 @@ class GoalInstanceDaoTest {
 
         val exception = assertThrows(IllegalArgumentException::class.java) {
             runBlocking {
-                goalInstanceDao.deleteFutureGoalInstances(listOf(
+                goalInstanceDao.deleteFutureInstances(listOf(
                     UUIDConverter.fromInt(2)
                 ))
             }

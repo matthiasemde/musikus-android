@@ -1,6 +1,7 @@
 package app.musikus.repository
 
 import app.musikus.database.GoalDescriptionWithInstancesAndLibraryItems
+import app.musikus.database.GoalInstanceWithDescription
 import app.musikus.database.GoalInstanceWithDescriptionWithLibraryItems
 import app.musikus.database.daos.GoalDescription
 import app.musikus.database.daos.GoalInstance
@@ -28,6 +29,15 @@ class FakeGoalRepository(
         get() = flowOf(_goalDescriptionWithInstancesAndLibraryItems)
     override val lastFiveCompletedGoals: Flow<List<GoalInstanceWithDescriptionWithLibraryItems>>
         get() = TODO("Not yet implemented")
+
+    override suspend fun getLatestInstances(): List<GoalInstanceWithDescription> {
+        return _goalDescriptionWithInstancesAndLibraryItems.map {
+            GoalInstanceWithDescription(
+                instance = it.instances.single { instance -> instance.endTimestamp == null },
+                description = it.description
+            )
+        }
+    }
 
     override suspend fun add(
         descriptionCreationAttributes: GoalDescriptionCreationAttributes,
@@ -113,20 +123,20 @@ class FakeGoalRepository(
         TODO("Not yet implemented")
     }
 
-    override suspend fun delete(goal: GoalDescription) {
-        TODO("Not yet implemented")
-    }
-
     override suspend fun delete(goals: List<GoalDescription>) {
-        TODO("Not yet implemented")
-    }
-
-    override suspend fun restore(goal: GoalDescription) {
         TODO("Not yet implemented")
     }
 
     override suspend fun restore(goals: List<GoalDescription>) {
         TODO("Not yet implemented")
+    }
+
+    override suspend fun deleteFutureInstances(instanceIds: List<UUID>) {
+        _goalDescriptionWithInstancesAndLibraryItems.replaceAll { goal ->
+            goal.copy(
+                instances = goal.instances.filter { it.id !in instanceIds }
+            )
+        }
     }
 
     override suspend fun clean() {
@@ -135,5 +145,9 @@ class FakeGoalRepository(
 
     override suspend fun updateGoals() {
         TODO("Not yet implemented")
+    }
+
+    override suspend fun withTransaction(block: suspend () -> Unit) {
+       block()
     }
 }
