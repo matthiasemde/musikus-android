@@ -167,7 +167,7 @@ fun Statistics(
                 }
                 contentUiState.goalCardUiState?.let {
                     item {
-                        StatisticsGoalCard(it, navigateToGoalStatistics)
+                        StatisticsGoalCard(it, navigateToGoalStatistics, timeProvider)
                     }
                 }
                 contentUiState.ratingsCardUiState?.let {
@@ -384,6 +384,7 @@ fun StatisticsPracticeDurationCard(
 fun StatisticsGoalCard(
     uiState: StatisticsGoalCardUiState,
     navigateToGoalStatistics: () -> Unit,
+    timeProvider: TimeProvider,
 ) {
     ElevatedCard(modifier = Modifier
         .fillMaxWidth()
@@ -488,7 +489,9 @@ fun StatisticsGoalCard(
                             }
                             Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
                             Text(
-                                text = goal.endTimestampInLocalTimezone.musikusFormat(DateFormat.DAY_AND_MONTH),
+                                text = goal
+                                    .endTimestampInLocalTimezone(timeProvider)
+                                    .musikusFormat(DateFormat.DAY_AND_MONTH),
                                 style = MaterialTheme.typography.labelSmall
                             )
                         }

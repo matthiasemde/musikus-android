@@ -126,7 +126,7 @@ fun GoalCard(
                     /** remaining time */
                     val remainingTime = ChronoUnit.SECONDS.between(
                         timeProvider.now(),
-                        goal.endTimestampInLocalTimezone,
+                        goal.endTimestampInLocalTimezone(timeProvider)
                     ).seconds
 
                     Surface(

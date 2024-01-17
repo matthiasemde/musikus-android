@@ -118,9 +118,11 @@ object TestAppModule {
 
     @Provides
     fun provideSessionRepository(
-        @Named("test_db") database: MusikusDatabase
+        @Named("test_db") database: MusikusDatabase,
+        timeProvider: TimeProvider
     ): SessionRepository {
         return SessionRepositoryImpl(
+            timeProvider = timeProvider,
             sessionDao = database.sessionDao,
             sectionDao = database.sectionDao,
         )

@@ -141,9 +141,11 @@ object AppModule {
 
     @Provides
     fun provideSessionRepository(
-        database: MusikusDatabase
+        database: MusikusDatabase,
+        timeProvider: TimeProvider
     ): SessionRepository {
         return SessionRepositoryImpl(
+            timeProvider = timeProvider,
             sessionDao = database.sessionDao,
             sectionDao = database.sectionDao,
         )

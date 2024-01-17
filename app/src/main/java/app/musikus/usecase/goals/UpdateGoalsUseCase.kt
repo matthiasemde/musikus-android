@@ -19,7 +19,7 @@ class UpdateGoalsUseCase(
         val outdatedInstance = outdatedInstanceWithDescription.instance
 
         val outdatedInstanceEndTimestamp =
-            outdatedInstanceWithDescription.endOfInstanceInLocalTimezone
+            outdatedInstanceWithDescription.endOfInstanceInLocalTimezone(timeProvider)
 
         // perform the update in a transaction
         goalRepository.withTransaction {
@@ -57,7 +57,7 @@ class UpdateGoalsUseCase(
                 val outdatedGoals = goalRepository
                     .getLatestInstances()
                     .filter {
-                        timeProvider.now() >= it.endOfInstanceInLocalTimezone
+                        timeProvider.now() >= it.endOfInstanceInLocalTimezone(timeProvider)
                     }
 
                 // if the list of outdated goals doesn't change, we are stuck in an infinite loop
@@ -74,7 +74,7 @@ class UpdateGoalsUseCase(
                     goalRepository.updateGoalInstance(
                         goal.instance.id,
                         GoalInstanceUpdateAttributes(
-                            endTimestamp = Nullable(goal.endOfInstanceInLocalTimezone)
+                            endTimestamp = Nullable(goal.endOfInstanceInLocalTimezone(timeProvider))
                         )
                     )
                 }

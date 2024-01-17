@@ -32,6 +32,7 @@ import app.musikus.database.entities.GoalProgressType
 import app.musikus.database.entities.GoalType
 import app.musikus.database.entities.SoftDeleteModelDisplayAttributes
 import app.musikus.utils.DurationFormat
+import app.musikus.utils.TimeProvider
 import app.musikus.utils.UiText
 import app.musikus.utils.getDurationString
 import app.musikus.utils.inLocalTimezone
@@ -100,14 +101,17 @@ data class GoalDescription(
         )
     )
 
-    fun endOfInstanceInLocalTimezone(instance: GoalInstance): ZonedDateTime =
+    fun endOfInstanceInLocalTimezone(
+        instance: GoalInstance,
+        timeProvider: TimeProvider
+    ): ZonedDateTime =
         when(periodUnit) {
             GoalPeriodUnit.DAY -> instance.startTimestamp.plusDays(periodInPeriodUnits.toLong())
             GoalPeriodUnit.WEEK -> instance.startTimestamp.plusWeeks(periodInPeriodUnits.toLong())
             GoalPeriodUnit.MONTH -> instance.startTimestamp.plusMonths(periodInPeriodUnits.toLong())
         }
         // removes timezone information since the end timestamp is always in the local timezone
-        .inLocalTimezone()
+        .inLocalTimezone(timeProvider)
 }
 
 @Dao

@@ -11,6 +11,7 @@ import app.musikus.database.daos.Session
 import app.musikus.database.daos.SessionDao
 import app.musikus.database.entities.SectionCreationAttributes
 import app.musikus.database.entities.SessionCreationAttributes
+import app.musikus.utils.TimeProvider
 import app.musikus.utils.Timeframe
 import kotlinx.coroutines.flow.Flow
 import java.time.ZonedDateTime
@@ -48,6 +49,7 @@ interface SessionRepository {
 }
 
 class SessionRepositoryImpl(
+    private val timeProvider: TimeProvider,
     private val sessionDao : SessionDao,
     private val sectionDao : SectionDao,
 ) : SessionRepository {
@@ -83,7 +85,7 @@ class SessionRepositoryImpl(
 
     override suspend fun sectionsForGoal (goal: GoalInstanceWithDescriptionWithLibraryItems) = sectionsForGoal(
         startTimestamp = goal.instance.startTimestamp,
-        endTimestamp = goal.endTimestampInLocalTimezone,
+        endTimestamp = goal.endTimestampInLocalTimezone(timeProvider),
         itemIds = goal.description.libraryItems.map { it.id }.takeIf { it.isNotEmpty() }
     )
 
@@ -93,7 +95,7 @@ class SessionRepositoryImpl(
         libraryItems: List<LibraryItem>
     ) = sectionsForGoal(
         startTimestamp = instance.startTimestamp,
-        endTimestamp = description.endOfInstanceInLocalTimezone(instance),
+        endTimestamp = description.endOfInstanceInLocalTimezone(instance, timeProvider),
         itemIds = libraryItems.map { it.id }.takeIf { it.isNotEmpty() }
     )
 

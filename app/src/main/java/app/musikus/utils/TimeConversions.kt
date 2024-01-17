@@ -271,8 +271,8 @@ private fun getSpannableHourMinShrunk(str: String, scaleFactor: Float = 0.6f): C
 /**
  * Copies the time from the original timezone to the local timezone without adjusting it
   */
-fun ZonedDateTime.inLocalTimezone(): ZonedDateTime =
-    this.toLocalDateTime().atZone(ZonedDateTime.now().zone)
+fun ZonedDateTime.inLocalTimezone(timeProvider: TimeProvider): ZonedDateTime =
+    this.toLocalDateTime().atZone(timeProvider.localZoneId())
 
 /**
  * returns the weekDay of today from index 1=Mo until 7=Sun

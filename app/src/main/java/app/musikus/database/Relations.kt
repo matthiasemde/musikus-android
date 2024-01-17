@@ -26,6 +26,7 @@ import app.musikus.database.entities.GoalDescriptionModel
 import app.musikus.database.entities.GoalInstanceModel
 import app.musikus.database.entities.LibraryItemModel
 import app.musikus.database.entities.SectionModel
+import app.musikus.utils.TimeProvider
 
 
 data class SectionWithLibraryItem(
@@ -68,8 +69,8 @@ data class GoalDescriptionWithLibraryItems(
     val title
         get() = description.title(libraryItems.firstOrNull())
 
-    fun endOfInstanceInLocalTimezone(instance: GoalInstance) =
-        description.endOfInstanceInLocalTimezone(instance)
+    fun endOfInstanceInLocalTimezone(instance: GoalInstance, timeProvider: TimeProvider) =
+        description.endOfInstanceInLocalTimezone(instance, timeProvider)
 }
 
 data class LibraryFolderWithItems(
@@ -141,8 +142,8 @@ data class GoalInstanceWithDescription(
     )
     val description: GoalDescription
 ) {
-    val endOfInstanceInLocalTimezone
-        get() = description.endOfInstanceInLocalTimezone(instance)
+    fun endOfInstanceInLocalTimezone(timeProvider: TimeProvider) =
+        description.endOfInstanceInLocalTimezone(instance, timeProvider)
 }
 
 data class GoalDescriptionWithInstancesAndLibraryItems(
@@ -169,13 +170,14 @@ data class GoalDescriptionWithInstancesAndLibraryItems(
         get () = description.title(libraryItems.firstOrNull())
 
     val subtitle
-        get() = instances.lastOrNull()?.let { description.subtitle(it) }
+        get() = instances.maxWith (compareBy { it.startTimestamp }).let { description.subtitle(it) }
 
     val startTime
-        get() = instances.minOfOrNull { it.startTimestamp }
+        get() = instances.minOf { it.startTimestamp }
 
-    val endTime
-        get() = instances.maxOfOrNull { description.endOfInstanceInLocalTimezone(it) }
+    fun endTime(timeProvider: TimeProvider) = instances.maxOf {
+        description.endOfInstanceInLocalTimezone(it, timeProvider)
+    }
 }
 
 data class GoalInstanceWithDescriptionWithLibraryItems(
@@ -194,6 +196,6 @@ data class GoalInstanceWithDescriptionWithLibraryItems(
     val subtitle
         get() = description.description.subtitle(instance)
 
-    val endTimestampInLocalTimezone
-        get() = description.endOfInstanceInLocalTimezone(instance)
+    fun endTimestampInLocalTimezone(timeProvider: TimeProvider) =
+        description.endOfInstanceInLocalTimezone(instance, timeProvider)
 }

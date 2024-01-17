@@ -18,6 +18,8 @@ import java.time.temporal.ChronoField
 interface TimeProvider {
     fun now(): ZonedDateTime
 
+    fun localZoneId(): ZoneId = now().zone
+
     /**
      * Get the Beginning of dayOffset Days from now. dayOffset>0 -> future, dayOffset<0 -> past
      */

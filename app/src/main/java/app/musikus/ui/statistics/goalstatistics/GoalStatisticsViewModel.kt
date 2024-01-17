@@ -24,6 +24,7 @@ import app.musikus.repository.UserPreferencesRepository
 import app.musikus.utils.DateFormat
 import app.musikus.utils.GoalsSortMode
 import app.musikus.utils.SortDirection
+import app.musikus.utils.TimeProvider
 import app.musikus.utils.Timeframe
 import app.musikus.utils.UiText
 import app.musikus.utils.inLocalTimezone
@@ -99,6 +100,7 @@ class GoalStatisticsViewModel @Inject constructor(
     userPreferencesRepository : UserPreferencesRepository,
     goalRepository : GoalRepository,
     sessionRepository : SessionRepository,
+    private val timeProvider: TimeProvider,
     application: Application
 ) : AndroidViewModel(application) {
 
@@ -109,8 +111,8 @@ class GoalStatisticsViewModel @Inject constructor(
     /** Private methods */
 
     private fun timeframeForGoal(selectedGoal: GoalDescriptionWithInstancesAndLibraryItems)
-    : Timeframe? {
-        val end = selectedGoal.endTime ?: return null
+    : Timeframe {
+        val end = selectedGoal.endTime(timeProvider)
 
         val offset = selectedGoal.description.periodInPeriodUnits.toLong() * 7
 
@@ -126,8 +128,8 @@ class GoalStatisticsViewModel @Inject constructor(
             val (goal, timeframe) = pair ?: return@update null
             val (start, end) = timeframe ?: return@update null
 
-            val goalStart = goal.startTime ?: return@update null
-            val goalEnd = goal.endTime ?: return@update null
+            val goalStart = goal.startTime
+            val goalEnd = goal.endTime(timeProvider)
 
             var newStart = start
             var newEnd = end
@@ -240,7 +242,7 @@ class GoalStatisticsViewModel @Inject constructor(
             timeframe,
             selectedGoal.copy(
                 instances = selectedGoal.instances.filter { goalInstance ->
-                    goalInstance.startTimestamp.inLocalTimezone().let {
+                    goalInstance.startTimestamp.inLocalTimezone(timeProvider).let {
                         start <= it && it < end
                     }
                 }
@@ -379,7 +381,7 @@ class GoalStatisticsViewModel @Inject constructor(
                 Pair(
                     start.musikusFormat(DateFormat.DAY_AND_MONTH),
                     goalsWithProgress.firstOrNull { (goalInstance, _) ->
-                        goalInstance.startTimestamp.inLocalTimezone().let {
+                        goalInstance.startTimestamp.inLocalTimezone(timeProvider).let {
                             start <= it && it < end
                         }
                     }?.let { (_, progress) -> progress } ?: 0.seconds
@@ -410,7 +412,7 @@ class GoalStatisticsViewModel @Inject constructor(
 
         GoalStatisticsHeaderUiState(
             seekBackwardEnabled = start > selectedGoal.startTime,
-            seekForwardEnabled = end < selectedGoal.endTime,
+            seekForwardEnabled = end < selectedGoal.endTime(timeProvider),
             timeframe = timeframeWithGoalsWithProgress.timeframe,
             successRate = goalsWithProgress.filter { (goal, progress) ->
                 progress >= goal.target
