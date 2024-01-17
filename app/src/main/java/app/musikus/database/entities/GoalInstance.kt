@@ -6,6 +6,7 @@ import androidx.room.ForeignKey
 import androidx.room.Ignore
 import app.musikus.database.Nullable
 import app.musikus.database.UUIDConverter
+import app.musikus.utils.TimeProvider
 import java.time.ZonedDateTime
 import java.util.UUID
 import kotlin.time.Duration
@@ -24,7 +25,7 @@ private interface IGoalInstanceUpdateAttributes : ITimestampModelUpdateAttribute
 
 data class GoalInstanceCreationAttributes(
     override var goalDescriptionId: UUID = UUIDConverter.deadBeef,
-    override var startTimestamp: ZonedDateTime,
+    override var startTimestamp: ZonedDateTime = TimeProvider.uninitializedDateTime,
     override var target: Duration,
 ) : TimestampModelCreationAttributes(), IGoalInstanceCreationAttributes
 

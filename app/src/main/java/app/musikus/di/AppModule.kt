@@ -26,10 +26,12 @@ import app.musikus.repository.SessionRepositoryImpl
 import app.musikus.repository.UserPreferencesRepository
 import app.musikus.repository.UserPreferencesRepositoryImpl
 import app.musikus.usecase.goals.AddGoalUseCase
+import app.musikus.usecase.goals.ArchiveGoalsUseCase
 import app.musikus.usecase.goals.CleanFutureGoalInstancesUseCase
 import app.musikus.usecase.goals.GoalsUseCases
 import app.musikus.usecase.goals.PauseGoalsUseCase
 import app.musikus.usecase.goals.UnpauseGoalsUseCase
+import app.musikus.usecase.goals.UpdateGoalsUseCase
 import app.musikus.usecase.library.AddFolderUseCase
 import app.musikus.usecase.library.AddItemUseCase
 import app.musikus.usecase.library.DeleteFoldersUseCase
@@ -178,11 +180,18 @@ object AppModule {
         timeProvider: TimeProvider
     ): GoalsUseCases {
         val cleanFutureGoalInstancesUseCase = CleanFutureGoalInstancesUseCase(goalRepository, timeProvider)
+        val archiveGoalsUseCase = ArchiveGoalsUseCase(goalRepository)
 
         return GoalsUseCases(
             add = AddGoalUseCase(goalRepository, libraryRepository, timeProvider),
             pause = PauseGoalsUseCase(goalRepository, cleanFutureGoalInstancesUseCase),
-            unpause = UnpauseGoalsUseCase(goalRepository)
+            unpause = UnpauseGoalsUseCase(goalRepository),
+            archive = archiveGoalsUseCase,
+            update = UpdateGoalsUseCase(
+                goalRepository = goalRepository,
+                archiveGoals = archiveGoalsUseCase,
+                timeProvider = timeProvider,
+            ),
         )
     }
 }

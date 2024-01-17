@@ -3,6 +3,7 @@ package app.musikus.usecase.goals
 import app.musikus.database.UUIDConverter
 import app.musikus.database.entities.GoalDescriptionCreationAttributes
 import app.musikus.database.entities.GoalInstanceCreationAttributes
+import app.musikus.database.entities.GoalPeriodUnit
 import app.musikus.database.entities.GoalType
 import app.musikus.database.entities.InvalidGoalDescriptionException
 import app.musikus.database.entities.InvalidGoalInstanceException
@@ -34,8 +35,8 @@ class AddGoalUseCase(
             throw InvalidGoalDescriptionException("Target must be finite and greater than 0")
         }
 
-        if(instanceCreationAttributes.startTimestamp > timeProvider.now()) {
-            throw InvalidGoalInstanceException("Start timestamp must be in the past")
+        if(instanceCreationAttributes.startTimestamp != TimeProvider.uninitializedDateTime) {
+            throw InvalidGoalInstanceException("Start timestamp must be in the past, it is set automatically")
         }
 
         // check if the goal description id was changed from the default value
@@ -58,9 +59,18 @@ class AddGoalUseCase(
             }
         }
 
-        goalRepository.add(
+        // adjust the startTimestamp to be at the beginning of the current period
+        val startTimestamp = when(descriptionCreationAttributes.periodUnit) {
+            GoalPeriodUnit.DAY -> timeProvider.getStartOfDay()
+            GoalPeriodUnit.WEEK -> timeProvider.getStartOfWeek()
+            GoalPeriodUnit.MONTH -> timeProvider.getStartOfMonth()
+        }
+
+        goalRepository.addNewGoal(
             descriptionCreationAttributes = descriptionCreationAttributes,
-            instanceCreationAttributes = instanceCreationAttributes,
+            instanceCreationAttributes = instanceCreationAttributes.copy(
+                startTimestamp = startTimestamp
+            ),
             libraryItemIds = libraryItemIds
         )
     }

@@ -41,7 +41,7 @@ class PauseGoalsUseCaseTest {
         pauseGoals = PauseGoalsUseCase(fakeGoalRepository, cleanFutureGoalInstancesUseCase)
 
         runBlocking {
-            fakeGoalRepository.add(
+            fakeGoalRepository.addNewGoal(
                 descriptionCreationAttributes = GoalDescriptionCreationAttributes(
                     type = GoalType.NON_SPECIFIC,
                     repeat = true,

@@ -25,7 +25,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import kotlin.time.Duration.Companion.hours
-import kotlin.time.toJavaDuration
 
 class AddGoalUseCaseTest {
     private lateinit var fakeTimeProvider: FakeTimeProvider
@@ -57,7 +56,6 @@ class AddGoalUseCaseTest {
 
         validInstanceCreationAttributes = GoalInstanceCreationAttributes(
             target = 1.hours,
-            startTimestamp = fakeTimeProvider.now(),
         )
     }
 
@@ -75,8 +73,8 @@ class AddGoalUseCaseTest {
             GoalDescriptionWithInstancesAndLibraryItems(
                 description = GoalDescription(
                     id = UUIDConverter.fromInt(1),
-                    createdAt = fakeTimeProvider.now(),
-                    modifiedAt = fakeTimeProvider.now(),
+                    createdAt = fakeTimeProvider.startTime,
+                    modifiedAt = fakeTimeProvider.startTime,
                     type = GoalType.NON_SPECIFIC,
                     repeat = true,
                     periodInPeriodUnits = 1,
@@ -89,10 +87,12 @@ class AddGoalUseCaseTest {
                 instances = listOf(
                     GoalInstance(
                         id = UUIDConverter.fromInt(2),
-                        createdAt = fakeTimeProvider.now(),
-                        modifiedAt = fakeTimeProvider.now(),
+                        createdAt = fakeTimeProvider.startTime,
+                        modifiedAt = fakeTimeProvider.startTime,
                         goalDescriptionId = UUIDConverter.fromInt(1),
-                        startTimestamp = fakeTimeProvider.now(),
+                        startTimestamp = fakeTimeProvider.getStartOfDay(
+                            dateTime = fakeTimeProvider.startTime
+                        ),
                         targetSeconds = 3600,
                         endTimestamp = null
                     )
@@ -126,8 +126,8 @@ class AddGoalUseCaseTest {
             GoalDescriptionWithInstancesAndLibraryItems(
                 description = GoalDescription(
                     id = UUIDConverter.fromInt(2),
-                    createdAt = fakeTimeProvider.now(),
-                    modifiedAt = fakeTimeProvider.now(),
+                    createdAt = fakeTimeProvider.startTime,
+                    modifiedAt = fakeTimeProvider.startTime,
                     type = GoalType.ITEM_SPECIFIC,
                     repeat = true,
                     periodInPeriodUnits = 1,
@@ -140,10 +140,12 @@ class AddGoalUseCaseTest {
                 instances = listOf(
                     GoalInstance(
                         id = UUIDConverter.fromInt(3),
-                        createdAt = fakeTimeProvider.now(),
-                        modifiedAt = fakeTimeProvider.now(),
+                        createdAt = fakeTimeProvider.startTime,
+                        modifiedAt = fakeTimeProvider.startTime,
                         goalDescriptionId = UUIDConverter.fromInt(2),
-                        startTimestamp = fakeTimeProvider.now(),
+                        startTimestamp = fakeTimeProvider.getStartOfDay(
+                            dateTime = fakeTimeProvider.startTime
+                        ),
                         targetSeconds = 3600,
                         endTimestamp = null
                     )
@@ -151,8 +153,8 @@ class AddGoalUseCaseTest {
                 libraryItems = listOf(
                     LibraryItem(
                         id = UUIDConverter.fromInt(1),
-                        createdAt = fakeTimeProvider.now(),
-                        modifiedAt = fakeTimeProvider.now(),
+                        createdAt = fakeTimeProvider.startTime,
+                        modifiedAt = fakeTimeProvider.startTime,
                         name = "Item 1",
                         colorIndex = 0,
                         customOrder = null,
@@ -209,18 +211,18 @@ class AddGoalUseCaseTest {
     }
 
     @Test
-    fun `Add goal with startTimestamp in the future, InvalidGoalInstanceException('Start timestamp must be in the past')`() = runTest {
+    fun `Add goal with startTimestamp set, InvalidGoalInstanceException`() = runTest {
         val exception = assertThrows<InvalidGoalInstanceException> {
             addGoal(
                 descriptionCreationAttributes = validDescriptionCreationAttributes,
                 instanceCreationAttributes = validInstanceCreationAttributes.copy(
-                    startTimestamp = fakeTimeProvider.now().plus(1.hours.toJavaDuration())
+                    startTimestamp = fakeTimeProvider.now()
                 ),
                 libraryItemIds = emptyList()
             )
         }
 
-        assertThat(exception.message).isEqualTo("Start timestamp must be in the past")
+        assertThat(exception.message).isEqualTo("Start timestamp must be in the past, it is set automatically")
     }
 
     @Test

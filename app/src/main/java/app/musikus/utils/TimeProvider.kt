@@ -8,6 +8,7 @@
 
 package app.musikus.utils
 
+import java.time.Instant
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.temporal.ChronoField
@@ -28,7 +29,7 @@ interface TimeProvider {
     ): ZonedDateTime = dateTime
         .with(ChronoField.MILLI_OF_DAY, 0)
         .toLocalDate()
-        .atStartOfDay(ZoneId.systemDefault())  // make sure time is 00:00
+        .atStartOfDay(dateTime.zone)  // make sure time is 00:00
         .plusMonths(monthOffset)
         .plusWeeks(weekOffset)
         .plusDays(dayOffset)
@@ -54,7 +55,7 @@ interface TimeProvider {
         .with(ChronoField.SECOND_OF_DAY, 0)
         .with(ChronoField.DAY_OF_WEEK , dayIndex )         // ISO 8601, Monday is first day of week.
         .toLocalDate()
-        .atStartOfDay(ZoneId.systemDefault())  // make sure time is 00:00
+        .atStartOfDay(dateTime.zone)  // make sure time is 00:00
         .plusWeeks(weekOffset)
 
     /**
@@ -106,7 +107,7 @@ interface TimeProvider {
         .with(ChronoField.SECOND_OF_DAY, 0)
         .with(ChronoField.DAY_OF_MONTH , 1 )    // jump to first day of this month
         .toLocalDate()
-        .atStartOfDay(ZoneId.systemDefault())  // make sure time is 00:00
+        .atStartOfDay(dateTime.zone)  // make sure time is 00:00
         .plusMonths(monthOffset) // add desired number of months from now
 
     /**
@@ -116,6 +117,11 @@ interface TimeProvider {
         monthOffset: Long = 0,
         dateTime: ZonedDateTime = now()
     ) = getStartOfMonth(monthOffset + 1, dateTime)
+
+    companion object {
+        val uninitializedDateTime: ZonedDateTime =
+            ZonedDateTime.ofInstant(Instant.ofEpochSecond(0), ZoneId.systemDefault())
+    }
 }
 
 class TimeProviderImpl : TimeProvider {

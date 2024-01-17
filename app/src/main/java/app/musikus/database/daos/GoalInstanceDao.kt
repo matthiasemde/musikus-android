@@ -44,17 +44,17 @@ data class GoalInstance(
     val target : Duration
         get() = targetSeconds.seconds
 
-    // necessary custom equals operator since default does not check super class properties
-    override fun equals(other: Any?) =
-        super.equals(other) &&
-                (other is GoalInstance) &&
-                (other.endTimestamp == endTimestamp) &&
-                (other.targetSeconds == targetSeconds)
-
-    override fun hashCode() =
-        (super.hashCode() *
-                HASH_FACTOR + endTimestamp.hashCode()) *
-                HASH_FACTOR + targetSeconds.hashCode()
+//    // necessary custom equals operator since default does not check super class properties
+//    override fun equals(other: Any?) =
+//        super.equals(other) &&
+//                (other is GoalInstance) &&
+//                (other.endTimestamp == endTimestamp) &&
+//                (other.targetSeconds == targetSeconds)
+//
+//    override fun hashCode() =
+//        (super.hashCode() *
+//                HASH_FACTOR + endTimestamp.hashCode()) *
+//                HASH_FACTOR + targetSeconds.hashCode()
 
     override fun toString(): String {
         return super.toString() +

@@ -122,7 +122,7 @@ class GoalsViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            goalRepository.updateGoals()
+            goalsUseCases.update()
         }
     }
 

@@ -8,6 +8,7 @@ import app.musikus.database.daos.GoalInstance
 import app.musikus.database.entities.GoalDescriptionCreationAttributes
 import app.musikus.database.entities.GoalDescriptionUpdateAttributes
 import app.musikus.database.entities.GoalInstanceCreationAttributes
+import app.musikus.database.entities.GoalInstanceUpdateAttributes
 import app.musikus.utils.IdProvider
 import app.musikus.utils.TimeProvider
 import kotlinx.coroutines.flow.Flow
@@ -31,15 +32,19 @@ class FakeGoalRepository(
         get() = TODO("Not yet implemented")
 
     override suspend fun getLatestInstances(): List<GoalInstanceWithDescription> {
-        return _goalDescriptionWithInstancesAndLibraryItems.map {
-            GoalInstanceWithDescription(
-                instance = it.instances.single { instance -> instance.endTimestamp == null },
-                description = it.description
-            )
+        return _goalDescriptionWithInstancesAndLibraryItems.mapNotNull { goal ->
+            goal.instances
+                .singleOrNull { instance -> instance.endTimestamp == null }
+                ?.let { instance ->
+                    GoalInstanceWithDescription(
+                        instance = instance,
+                        description = goal.description
+                    )
+                }
         }
     }
 
-    override suspend fun add(
+    override suspend fun addNewGoal(
         descriptionCreationAttributes: GoalDescriptionCreationAttributes,
         instanceCreationAttributes: GoalInstanceCreationAttributes,
         libraryItemIds: List<UUID>?
@@ -76,6 +81,52 @@ class FakeGoalRepository(
                 libraryItems = libraryItemIds?.let { itemIds ->
                     fakeLibraryRepository.items.first().filter { item -> itemIds.contains(item.id) }
                 } ?: emptyList()
+            )
+        )
+    }
+
+    override suspend fun addNewInstance(instanceCreationAttributes: GoalInstanceCreationAttributes) {
+        val oldGoal = _goalDescriptionWithInstancesAndLibraryItems.single {
+            it.description.id == instanceCreationAttributes.goalDescriptionId
+        }
+
+        _goalDescriptionWithInstancesAndLibraryItems.remove(oldGoal)
+        _goalDescriptionWithInstancesAndLibraryItems.add(
+            oldGoal.copy(
+                instances = oldGoal.instances + GoalInstance(
+                    id = idProvider.generateId(),
+                    createdAt = timeProvider.now(),
+                    modifiedAt = timeProvider.now(),
+                    goalDescriptionId = instanceCreationAttributes.goalDescriptionId,
+                    startTimestamp = instanceCreationAttributes.startTimestamp,
+                    targetSeconds = instanceCreationAttributes.target.inWholeSeconds,
+                    endTimestamp = null
+                )
+            )
+        )
+    }
+
+    override suspend fun updateGoalInstance(
+        id: UUID,
+        updateAttributes: GoalInstanceUpdateAttributes
+    ) {
+        val oldGoal = _goalDescriptionWithInstancesAndLibraryItems.single {
+            it.instances.any { instance -> instance.id == id }
+        }
+
+        _goalDescriptionWithInstancesAndLibraryItems.remove(oldGoal)
+        _goalDescriptionWithInstancesAndLibraryItems.add(
+            oldGoal.copy(
+                instances = oldGoal.instances.map { instance ->
+                    if (instance.id == id) {
+                        instance.copy(
+                            modifiedAt = timeProvider.now(),
+                            endTimestamp = updateAttributes.endTimestamp?.value
+                        )
+                    } else {
+                        instance
+                    }
+                }
             )
         )
     }
@@ -139,11 +190,20 @@ class FakeGoalRepository(
         }
     }
 
-    override suspend fun clean() {
-        TODO("Not yet implemented")
+    override suspend fun deletePausedInstance(instanceId: UUID) {
+        val oldGoal = _goalDescriptionWithInstancesAndLibraryItems.single {
+            it.instances.any { instance -> instance.id == instanceId }
+        }
+
+        _goalDescriptionWithInstancesAndLibraryItems.remove(oldGoal)
+        _goalDescriptionWithInstancesAndLibraryItems.add(
+            oldGoal.copy(
+                instances = oldGoal.instances.filter { it.id != instanceId }
+            )
+        )
     }
 
-    override suspend fun updateGoals() {
+    override suspend fun clean() {
         TODO("Not yet implemented")
     }
 

@@ -19,6 +19,9 @@ import app.musikus.database.entities.LibraryFolderCreationAttributes
 import app.musikus.database.entities.LibraryItemCreationAttributes
 import app.musikus.database.entities.SectionCreationAttributes
 import app.musikus.database.entities.SessionCreationAttributes
+import app.musikus.repository.GoalRepositoryImpl
+import app.musikus.usecase.goals.ArchiveGoalsUseCase
+import app.musikus.usecase.goals.UpdateGoalsUseCase
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import java.time.temporal.ChronoUnit
@@ -122,7 +125,13 @@ suspend fun prepopulateDatabase(
             delay(10)
         }
 
-        // TODO update goals
+        GoalRepositoryImpl(database).let { goalRepository ->
+            UpdateGoalsUseCase(
+                goalRepository,
+                ArchiveGoalsUseCase(goalRepository),
+                database.timeProvider
+            )()
+        }
 
         (0..80).map { sessionNum ->
             sessionNum to SessionCreationAttributes(

@@ -6,7 +6,7 @@ import app.musikus.utils.TimeProvider
 
 class CleanFutureGoalInstancesUseCase(
     private val goalRepository: GoalRepository,
-    private val timeProvider: TimeProvider
+    private val timeProvider: TimeProvider,
 ) {
 
     @Throws(IllegalStateException::class)
