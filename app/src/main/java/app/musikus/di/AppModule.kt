@@ -28,6 +28,7 @@ import app.musikus.repository.UserPreferencesRepositoryImpl
 import app.musikus.usecase.goals.AddGoalUseCase
 import app.musikus.usecase.goals.ArchiveGoalsUseCase
 import app.musikus.usecase.goals.CleanFutureGoalInstancesUseCase
+import app.musikus.usecase.goals.DeleteGoalsUseCase
 import app.musikus.usecase.goals.EditGoalUseCase
 import app.musikus.usecase.goals.GoalsUseCases
 import app.musikus.usecase.goals.PauseGoalsUseCase
@@ -196,6 +197,7 @@ object AppModule {
                 timeProvider = timeProvider,
             ),
             edit = EditGoalUseCase(goalRepository, cleanFutureGoalInstancesUseCase),
+            delete = DeleteGoalsUseCase(goalRepository),
         )
     }
 }

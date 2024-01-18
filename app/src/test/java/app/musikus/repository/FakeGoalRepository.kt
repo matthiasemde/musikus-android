@@ -25,6 +25,9 @@ class FakeGoalRepository(
 ) : GoalRepository {
 
     private val _goalDescriptionWithInstancesAndLibraryItems = mutableListOf<GoalDescriptionWithInstancesAndLibraryItems>()
+
+    private var _goalBuffer = listOf<GoalDescriptionWithInstancesAndLibraryItems>()
+
     override val currentGoals: Flow<List<GoalInstanceWithDescriptionWithLibraryItems>>
         get() = TODO("Not yet implemented")
     override val allGoals: Flow<List<GoalDescriptionWithInstancesAndLibraryItems>>
@@ -178,8 +181,13 @@ class FakeGoalRepository(
         TODO("Not yet implemented")
     }
 
-    override suspend fun delete(goals: List<GoalDescription>) {
-        TODO("Not yet implemented")
+    override suspend fun delete(descriptionIds: List<UUID>) {
+        _goalBuffer = _goalDescriptionWithInstancesAndLibraryItems.filter { goal ->
+            goal.description.id in descriptionIds
+        }.toMutableList()
+        _goalDescriptionWithInstancesAndLibraryItems.removeIf { goal ->
+            goal.description.id in descriptionIds
+        }
     }
 
     override suspend fun restore(goals: List<GoalDescription>) {

@@ -66,7 +66,7 @@ interface GoalRepository {
     suspend fun unarchive(goals: List<GoalDescription>)
 
     /** Delete / Restore */
-    suspend fun delete(goals: List<GoalDescription>)
+    suspend fun delete(descriptionIds: List<UUID>)
 
     suspend fun restore(goals: List<GoalDescription>)
 
@@ -195,8 +195,8 @@ class GoalRepositoryImpl(
 
     /** Delete / Restore */
 
-    override suspend fun delete(goals: List<GoalDescription>) {
-        descriptionDao.delete(goals.map { it.id })
+    override suspend fun delete(descriptionIds: List<UUID>) {
+        descriptionDao.delete(descriptionIds)
     }
 
     override suspend fun restore(goals: List<GoalDescription>) {
