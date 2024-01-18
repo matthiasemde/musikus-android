@@ -197,7 +197,7 @@ class GoalDescriptionDaoTest {
                         id = UUIDConverter.fromInt(3),
                         createdAt = fakeTimeProvider.startTime,
                         modifiedAt = fakeTimeProvider.startTime,
-                        descriptionId = UUIDConverter.fromInt(1),
+                        descriptionId = UUIDConverter.fromInt(2),
                         previousInstanceId = null,
                         targetSeconds = 7200,
                         startTimestamp = fakeTimeProvider.startTime,

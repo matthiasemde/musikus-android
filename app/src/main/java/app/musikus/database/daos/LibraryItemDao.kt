@@ -22,6 +22,7 @@ import app.musikus.database.entities.LibraryItemCreationAttributes
 import app.musikus.database.entities.LibraryItemModel
 import app.musikus.database.entities.LibraryItemUpdateAttributes
 import app.musikus.database.entities.SoftDeleteModelDisplayAttributes
+import app.musikus.database.toDatabaseInterpretableString
 import kotlinx.coroutines.flow.Flow
 import java.time.ZonedDateTime
 import java.util.UUID
@@ -129,13 +130,9 @@ abstract class LibraryItemDao(
             "deleted=1 " +
             "AND (NOT EXISTS (SELECT id FROM section WHERE library_item_id = library_item.id)) " +
             "AND (NOT EXISTS (SELECT id FROM goal_description_library_item_cross_ref WHERE library_item_id = library_item.id)) " +
-            "AND (datetime(modified_at) < datetime(:now, '-1 month'));"
+            "AND (datetime(SUBSTR(modified_at, 1, INSTR(modified_at, '[') - 1)) < datetime(:now, '-1 month'));"
     )
     protected abstract suspend fun cleanItems(
-        now : ZonedDateTime = database.timeProvider.now()
+        now : String = database.timeProvider.now().toDatabaseInterpretableString()
     ) : Int
-
-//    @Transaction
-//    @Query("SELECT * FROM library_item WHERE id=:id")
-//    abstract suspend fun getWithGoalDescriptions(id: UUID): LibraryItemWithGoalDescriptions?
 }

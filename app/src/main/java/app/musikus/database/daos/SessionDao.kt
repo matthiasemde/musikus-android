@@ -24,6 +24,7 @@ import app.musikus.database.entities.SessionCreationAttributes
 import app.musikus.database.entities.SessionModel
 import app.musikus.database.entities.SessionUpdateAttributes
 import app.musikus.database.entities.SoftDeleteModelDisplayAttributes
+import app.musikus.database.toDatabaseInterpretableString
 import kotlinx.coroutines.flow.Flow
 import java.time.ZonedDateTime
 import java.util.UUID
@@ -147,12 +148,22 @@ abstract class SessionDao(
     @Transaction
     @RewriteQueriesToDropUnusedColumns
     @Query("SELECT * FROM session " +
-            "WHERE datetime(:startTimestamp) <= (SELECT min(datetime(start_timestamp)) FROM section WHERE section.session_id = session.id) " +
-            "AND datetime(:endTimestamp) > (SELECT min(datetime(start_timestamp)) FROM section WHERE section.session_id = session.id) " +
+            "WHERE datetime(:startTimestamp) <= (SELECT min(datetime(SUBSTR(start_timestamp, 1, INSTR(start_timestamp, '[') - 1))) FROM section WHERE section.session_id = session.id) " +
+            "AND datetime(:endTimestamp) > (SELECT min(datetime(SUBSTR(start_timestamp, 1, INSTR(start_timestamp, '[') - 1))) FROM section WHERE section.session_id = session.id) " +
             "AND deleted=0"
     )
-    abstract fun getFromTimeframe(
-        startTimestamp: ZonedDateTime,
-        endTimestamp: ZonedDateTime
+    abstract fun directGetFromTimeframe(
+        startTimestamp: String,
+        endTimestamp: String
     ): Flow<List<SessionWithSectionsWithLibraryItems>>
+
+    fun getFromTimeframe(
+        startTimestamp: ZonedDateTime,
+        endTimestamp: ZonedDateTime,
+    ): Flow<List<SessionWithSectionsWithLibraryItems>> {
+        return directGetFromTimeframe(
+            startTimestamp.toDatabaseInterpretableString(),
+            endTimestamp.toDatabaseInterpretableString()
+        )
+    }
 }

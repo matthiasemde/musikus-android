@@ -12,6 +12,7 @@
 
 package app.musikus.database.daos
 
+import android.util.Log
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.InvalidationTracker
@@ -36,7 +37,7 @@ import app.musikus.database.entities.TimestampModel
 import app.musikus.database.entities.TimestampModelCreationAttributes
 import app.musikus.database.entities.TimestampModelDisplayAttributes
 import app.musikus.database.entities.TimestampModelUpdateAttributes
-import app.musikus.database.toDatabaseString
+import app.musikus.database.toDatabaseInterpretableString
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.flow
@@ -376,11 +377,11 @@ abstract class SoftDeleteDao<
     @RawQuery
     abstract suspend fun clean(
         query: SimpleSQLiteQuery = SimpleSQLiteQuery(
-            query = "DELETE FROM $tableName WHERE " +
+            query = ("DELETE FROM $tableName WHERE " +
                 "deleted=1 " +
-                "AND (datetime(modified_at) < " +
-                    "datetime('${database.timeProvider.now().toDatabaseString()}', '-1 month')" +
-                    ");"
+                "AND (datetime(SUBSTR(modified_at, 1, INSTR(modified_at, '[') - 1)) < " +
+                    "datetime('${database.timeProvider.now().toDatabaseInterpretableString()}', '-1 month')" +
+                    ");").also { Log.d("CLEAN", it) }
         )
     ) : Int
 }

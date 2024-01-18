@@ -145,13 +145,16 @@ fun UUID.toDBString() =
         buffer.array().joinToString(separator = "") { "%02x".format(it) }
     }
 
-fun ZonedDateTime.toDatabaseString(): String =
+fun ZonedDateTime.toDatabaseStorageString(): String =
+    this.format(DateTimeFormatter.ISO_ZONED_DATE_TIME)
+
+fun ZonedDateTime.toDatabaseInterpretableString(): String =
     this.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
 
 class ZonedDateTimeConverter {
     @TypeConverter
     fun fromZonedDateTime(zonedDateTime: ZonedDateTime?): String? {
-        return zonedDateTime?.toDatabaseString()
+        return zonedDateTime?.toDatabaseStorageString()
     }
 
     @TypeConverter

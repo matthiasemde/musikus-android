@@ -24,6 +24,7 @@ import app.musikus.database.entities.GoalInstanceCreationAttributes
 import app.musikus.database.entities.GoalInstanceModel
 import app.musikus.database.entities.GoalInstanceUpdateAttributes
 import app.musikus.database.entities.TimestampModelDisplayAttributes
+import app.musikus.database.toDatabaseInterpretableString
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import java.time.ZonedDateTime
@@ -227,10 +228,10 @@ abstract class GoalInstanceDao(
     @RewriteQueriesToDropUnusedColumns
     @Query(
         "SELECT * FROM goal_instance " +
-            "WHERE datetime(start_timestamp) <= datetime(:now) " +
+            "WHERE datetime(SUBSTR(start_timestamp, 1, INSTR(start_timestamp, '[') - 1)) <= datetime(:now) " +
             "AND (" +
                 "end_timestamp IS NULL " +
-                "OR datetime(:now) < datetime(end_timestamp)" +
+                "OR datetime(:now) < datetime(SUBSTR(end_timestamp, 1, INSTR(end_timestamp, '[') - 1))" +
             ") " +
             "AND goal_description_id IN (" +
                 "SELECT id FROM goal_description " +
@@ -239,7 +240,7 @@ abstract class GoalInstanceDao(
             ")"
     )
     abstract fun directGetCurrent(
-        now: ZonedDateTime = database.timeProvider.now()
+        now: String = database.timeProvider.now().toDatabaseInterpretableString()
     ) : Flow<List<GoalInstanceWithDescriptionWithLibraryItems>>
 
     fun getCurrent() = directGetCurrent()
@@ -266,7 +267,7 @@ abstract class GoalInstanceDao(
                 "WHERE deleted=0" +
                 ")" +
                 "AND end_timestamp IS NOT NULL " +
-                "ORDER BY datetime(end_timestamp) DESC " +
+                "ORDER BY datetime(SUBSTR(end_timestamp, 1, INSTR(end_timestamp, \"[\") - 1)) DESC " +
                 "LIMIT :n"
     )
     abstract fun getLastNCompleted(
