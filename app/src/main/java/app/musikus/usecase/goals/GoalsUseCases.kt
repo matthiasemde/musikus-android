@@ -5,5 +5,6 @@ data class GoalsUseCases(
     val pause: PauseGoalsUseCase,
     val unpause: UnpauseGoalsUseCase,
     val archive: ArchiveGoalsUseCase,
-    val update: UpdateGoalsUseCase
+    val update: UpdateGoalsUseCase,
+    val edit: EditGoalUseCase,
 )

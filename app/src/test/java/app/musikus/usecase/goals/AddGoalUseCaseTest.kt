@@ -184,8 +184,8 @@ class AddGoalUseCaseTest {
     }
 
     @Test
-    fun `Add goal with target 0, InvalidGoalDescriptionException('Target must be finite and greater than 0')`() = runTest {
-        val exception = assertThrows<InvalidGoalDescriptionException> {
+    fun `Add goal with target 0, InvalidGoalInstanceException('Target must be finite and greater than 0')`() = runTest {
+        val exception = assertThrows<InvalidGoalInstanceException> {
             addGoal(
                 descriptionCreationAttributes = validDescriptionCreationAttributes,
                 instanceCreationAttributes = validInstanceCreationAttributes.copy(
@@ -199,8 +199,8 @@ class AddGoalUseCaseTest {
     }
 
     @Test
-    fun `Add goal with infinite target, InvalidGoalDescriptionException('Target must be finite and greater than 0')`() = runTest {
-        val exception = assertThrows<InvalidGoalDescriptionException> {
+    fun `Add goal with infinite target, InvalidGoalInstanceException('Target must be finite and greater than 0')`() = runTest {
+        val exception = assertThrows<InvalidGoalInstanceException> {
             addGoal(
                 descriptionCreationAttributes = validDescriptionCreationAttributes,
                 instanceCreationAttributes = validInstanceCreationAttributes.copy(

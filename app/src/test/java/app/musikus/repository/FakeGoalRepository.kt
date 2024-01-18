@@ -3,6 +3,7 @@ package app.musikus.repository
 import app.musikus.database.GoalDescriptionWithInstancesAndLibraryItems
 import app.musikus.database.GoalInstanceWithDescription
 import app.musikus.database.GoalInstanceWithDescriptionWithLibraryItems
+import app.musikus.database.Nullable
 import app.musikus.database.daos.GoalDescription
 import app.musikus.database.daos.GoalInstance
 import app.musikus.database.entities.GoalDescriptionCreationAttributes
@@ -123,7 +124,8 @@ class FakeGoalRepository(
                     if (instance.id == id) {
                         instance.copy(
                             modifiedAt = timeProvider.now(),
-                            endTimestamp = updateAttributes.endTimestamp?.value
+                            targetSeconds = updateAttributes.target?.inWholeSeconds ?: instance.targetSeconds,
+                            endTimestamp = (updateAttributes.endTimestamp ?: Nullable(instance.endTimestamp)).value
                         )
                     } else {
                         instance
@@ -203,6 +205,12 @@ class FakeGoalRepository(
                 instances = oldGoal.instances.filter { it.id != instanceId }
             )
         )
+    }
+
+    override suspend fun existsDescription(descriptionId: UUID): Boolean {
+        return _goalDescriptionWithInstancesAndLibraryItems.any { goal ->
+            goal.description.id == descriptionId
+        }
     }
 
     override suspend fun clean() {

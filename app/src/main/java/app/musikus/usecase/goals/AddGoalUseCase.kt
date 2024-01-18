@@ -32,7 +32,7 @@ class AddGoalUseCase(
             instanceCreationAttributes.target.isFinite() &&
             instanceCreationAttributes.target.inWholeSeconds > 0
         )) {
-            throw InvalidGoalDescriptionException("Target must be finite and greater than 0")
+            throw InvalidGoalInstanceException("Target must be finite and greater than 0")
         }
 
         if(instanceCreationAttributes.startTimestamp != TimeProvider.uninitializedDateTime) {

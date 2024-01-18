@@ -45,10 +45,10 @@ data class GoalInstance(
 
     override fun toString(): String {
         return super.toString() +
-            "\tgoalDescriptionId:\t\t$descriptionId\n" +
-            "\tpreviousInstanceId:\t\t$previousInstanceId\n" +
-            "\tstartTimestamp:\t\t\t$startTimestamp\n" +
-            "\tendTimestamp:\t\t\t$endTimestamp\n" +
+            "\tgoalDescriptionId:\t$descriptionId\n" +
+            "\tpreviousInstanceId:\t$previousInstanceId\n" +
+            "\tstartTimestamp:\t\t$startTimestamp\n" +
+            "\tendTimestamp:\t\t$endTimestamp\n" +
             "\ttarget:\t\t\t\t$target\n"
     }
 
@@ -290,7 +290,7 @@ abstract class GoalInstanceDao(
                 "WHERE deleted=0" +
                 ")" +
                 "AND end_timestamp IS NOT NULL " +
-                "ORDER BY datetime(SUBSTR(end_timestamp, 1, INSTR(end_timestamp, \"[\") - 1)) DESC " +
+                "ORDER BY datetime(SUBSTR(end_timestamp, 1, INSTR(end_timestamp, '[') - 1)) DESC " +
                 "LIMIT :n"
     )
     abstract fun getLastNCompleted(

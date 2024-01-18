@@ -74,6 +74,8 @@ interface GoalRepository {
 
     suspend fun deletePausedInstance(instanceId: UUID)
 
+    suspend fun existsDescription(descriptionId: UUID): Boolean
+
     /** Clean */
     suspend fun clean()
 
@@ -207,6 +209,10 @@ class GoalRepositoryImpl(
 
     override suspend fun deletePausedInstance(instanceId: UUID) {
         instanceDao.deletePausedInstance(instanceId)
+    }
+
+    override suspend fun existsDescription(descriptionId: UUID): Boolean {
+        return descriptionDao.exists(descriptionId)
     }
 
     /** Clean */
