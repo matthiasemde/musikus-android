@@ -17,13 +17,13 @@ import app.musikus.database.daos.LibraryFolder
 import app.musikus.database.daos.LibraryItem
 import app.musikus.datastore.ThemeSelections
 import app.musikus.datastore.UserPreferences
+import app.musikus.utils.GoalSortInfo
 import app.musikus.utils.GoalsSortMode
 import app.musikus.utils.LibraryFolderSortMode
 import app.musikus.utils.LibraryItemSortMode
 import app.musikus.utils.SortDirection
 import app.musikus.utils.SortInfo
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
 object PreferenceKeys {
@@ -43,6 +43,7 @@ interface UserPreferencesRepository {
 
     val itemSortInfo: Flow<SortInfo<LibraryItem>>
     val folderSortInfo: Flow<SortInfo<LibraryFolder>>
+    val goalSortInfo: Flow<GoalSortInfo>
 
     /** Mutators */
     suspend fun updateTheme(theme: ThemeSelections)
@@ -50,7 +51,7 @@ interface UserPreferencesRepository {
     suspend fun updateLibraryItemSortInfo(sortInfo: SortInfo<LibraryItem>)
     suspend fun updateLibraryFolderSortInfo(sortInfo: SortInfo<LibraryFolder>)
 
-    suspend fun updateGoalsSortMode(mode: GoalsSortMode)
+    suspend fun updateGoalSortInfo(sortInfo: GoalSortInfo)
     suspend fun updateShowPausedGoals(value: Boolean)
 
     suspend fun updateAppIntroDone(value: Boolean)
@@ -94,6 +95,14 @@ class UserPreferencesRepositoryImpl(
             )
         }
 
+    override val goalSortInfo : Flow<GoalSortInfo> =
+        userPreferences.map { preferences ->
+            SortInfo(
+                mode = preferences.goalsSortMode,
+                direction = preferences.goalsSortDirection
+            )
+        }
+
 
     /** Mutators */
     override suspend fun updateTheme(theme: ThemeSelections) {
@@ -117,22 +126,10 @@ class UserPreferencesRepositoryImpl(
     }
 
 
-    override suspend fun updateGoalsSortMode(mode: GoalsSortMode) {
-        userPreferences.map { preferences ->
-            Pair(preferences.goalsSortMode, preferences.goalsSortDirection)
-        }.first().let { (currentMode, currentDirection) ->
-            if (currentMode != mode) {
-                dataStore.edit { preferences ->
-                    preferences[PreferenceKeys.GOALS_SORT_MODE] = mode.name
-                    preferences[PreferenceKeys.GOALS_SORT_DIRECTION] =
-                        SortDirection.ASCENDING.name
-                }
-            } else {
-                dataStore.edit { preferences ->
-                    preferences[PreferenceKeys.GOALS_SORT_DIRECTION] =
-                        currentDirection.invert().name
-                }
-            }
+    override suspend fun updateGoalSortInfo(sortInfo: GoalSortInfo) {
+        dataStore.edit { preferences ->
+            preferences[PreferenceKeys.GOALS_SORT_MODE] = sortInfo.mode.name
+            preferences[PreferenceKeys.GOALS_SORT_DIRECTION] = sortInfo.direction.name
         }
     }
 

@@ -8,29 +8,28 @@
 
 package app.musikus.usecase.library
 
-import app.musikus.database.daos.LibraryFolder
 import app.musikus.repository.UserPreferencesRepository
+import app.musikus.utils.LibraryFolderSortMode
 import app.musikus.utils.SortDirection
 import app.musikus.utils.SortInfo
-import app.musikus.utils.SortMode
 import kotlinx.coroutines.flow.first
 
 class SelectFolderSortModeUseCase(
     private val userPreferencesRepository: UserPreferencesRepository
 ) {
 
-        suspend operator fun invoke(sortMode: SortMode<LibraryFolder>) {
-            val currentSortInfo = userPreferencesRepository.folderSortInfo.first()
+    suspend operator fun invoke(sortMode: LibraryFolderSortMode) {
+        val currentSortInfo = userPreferencesRepository.folderSortInfo.first()
 
-            if (currentSortInfo.mode == sortMode) {
-                userPreferencesRepository.updateLibraryFolderSortInfo(currentSortInfo.copy(
-                    direction = currentSortInfo.direction.invert()
-                ))
-                return
-            }
-            userPreferencesRepository.updateLibraryFolderSortInfo(SortInfo(
-                mode = sortMode,
-                direction = SortDirection.DEFAULT
+        if (currentSortInfo.mode == sortMode) {
+            userPreferencesRepository.updateLibraryFolderSortInfo(currentSortInfo.copy(
+                direction = currentSortInfo.direction.invert()
             ))
+            return
         }
+        userPreferencesRepository.updateLibraryFolderSortInfo(SortInfo(
+            mode = sortMode,
+            direction = SortDirection.DEFAULT
+        ))
+    }
 }

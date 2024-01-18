@@ -12,6 +12,7 @@ import app.musikus.database.daos.LibraryFolder
 import app.musikus.database.daos.LibraryItem
 import app.musikus.datastore.ThemeSelections
 import app.musikus.datastore.UserPreferences
+import app.musikus.utils.GoalSortInfo
 import app.musikus.utils.GoalsSortMode
 import app.musikus.utils.LibraryFolderSortMode
 import app.musikus.utils.LibraryItemSortMode
@@ -37,6 +38,7 @@ class FakeUserPreferencesRepository : UserPreferencesRepository {
     ))
     override val userPreferences: Flow<UserPreferences>
         get() = _preferences
+    
     override val itemSortInfo: Flow<SortInfo<LibraryItem>>
         get() = _preferences.map { preferences ->
             SortInfo(
@@ -44,11 +46,20 @@ class FakeUserPreferencesRepository : UserPreferencesRepository {
                 direction = preferences.libraryItemSortDirection,
             )
         }
+    
     override val folderSortInfo: Flow<SortInfo<LibraryFolder>>
         get() = _preferences.map { preferences ->
             SortInfo(
                 mode = preferences.libraryFolderSortMode,
                 direction = preferences.libraryFolderSortDirection,
+            )
+        }
+    
+    override val goalSortInfo: Flow<GoalSortInfo>
+        get() = _preferences.map { preferences ->
+            SortInfo(
+                mode = preferences.goalsSortMode,
+                direction = preferences.goalsSortDirection,
             )
         }
 
@@ -76,9 +87,12 @@ class FakeUserPreferencesRepository : UserPreferencesRepository {
         }
     }
 
-    override suspend fun updateGoalsSortMode(mode: GoalsSortMode) {
+    override suspend fun updateGoalSortInfo(sortInfo: GoalSortInfo) {
         _preferences.update {
-            it.copy(goalsSortMode = mode)
+            it.copy(
+                goalsSortMode = sortInfo.mode as GoalsSortMode,
+                goalsSortDirection = sortInfo.direction,
+            )
         }
     }
 

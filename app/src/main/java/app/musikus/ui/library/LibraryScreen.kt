@@ -89,7 +89,6 @@ import app.musikus.ui.MainUIEvent
 import app.musikus.ui.MainUiState
 import app.musikus.utils.LibraryFolderSortMode
 import app.musikus.utils.LibraryItemSortMode
-import app.musikus.utils.SortMode
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -317,9 +316,9 @@ fun LibraryContent(
     contentPadding: PaddingValues,
     contentUiState: LibraryContentUiState,
     onShowFolderSortMenuChange: (Boolean) -> Unit,
-    onFolderSortModeSelected: (SortMode<LibraryFolder>) -> Unit,
+    onFolderSortModeSelected: (LibraryFolderSortMode) -> Unit,
     onShowItemSortMenuChange: (Boolean) -> Unit,
-    onItemSortModeSelected: (SortMode<LibraryItem>) -> Unit,
+    onItemSortModeSelected: (LibraryItemSortMode) -> Unit,
     onFolderClicked: (LibraryFolder, Boolean) -> Unit,
     onItemClicked: (LibraryItem, Boolean) -> Unit,
 ) {
@@ -358,7 +357,9 @@ fun LibraryContent(
                         currentSortDirection = sortMenuUiState.direction,
                         sortItemDescription = "folders",
                         onShowMenuChanged = onShowFolderSortMenuChange,
-                        onSelectionHandler = onFolderSortModeSelected
+                        onSelectionHandler = {
+                            onFolderSortModeSelected(it as LibraryFolderSortMode)
+                        }
                     )
                 }
             }
@@ -421,7 +422,9 @@ fun LibraryContent(
                         currentSortDirection = sortMenuUiState.direction,
                         sortItemDescription = "items",
                         onShowMenuChanged = onShowItemSortMenuChange,
-                        onSelectionHandler = onItemSortModeSelected
+                        onSelectionHandler = {
+                            onItemSortModeSelected(it as LibraryItemSortMode)
+                        }
                     )
                 }
             }

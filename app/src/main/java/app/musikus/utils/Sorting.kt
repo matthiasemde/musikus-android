@@ -49,6 +49,7 @@ interface SortMode<T> {
     val isDefault: Boolean
 }
 
+typealias GoalSortInfo = SortInfo<Pair<GoalDescription, GoalInstance>>
 enum class GoalsSortMode : SortMode<Pair<GoalDescription, GoalInstance>> {
     DATE_ADDED {
         override val label = "Date added"

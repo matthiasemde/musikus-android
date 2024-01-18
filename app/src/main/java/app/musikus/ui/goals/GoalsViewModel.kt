@@ -410,7 +410,7 @@ class GoalsViewModel @Inject constructor(
     fun onSortModeSelected(selection: GoalsSortMode) {
         _showSortModeMenu.update { false }
         viewModelScope.launch {
-            userPreferencesRepository.updateGoalsSortMode(selection)
+            goalsUseCases.selectSortMode(selection)
         }
     }
 

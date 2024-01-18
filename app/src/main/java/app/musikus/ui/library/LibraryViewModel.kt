@@ -10,7 +10,6 @@ package app.musikus.ui.library
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import app.musikus.database.MusikusDatabase
 import app.musikus.database.Nullable
 import app.musikus.database.daos.LibraryFolder
 import app.musikus.database.daos.LibraryItem
@@ -23,7 +22,6 @@ import app.musikus.utils.LibraryFolderSortMode
 import app.musikus.utils.LibraryItemSortMode
 import app.musikus.utils.SortDirection
 import app.musikus.utils.SortInfo
-import app.musikus.utils.SortMode
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -557,14 +555,14 @@ class LibraryViewModel @Inject constructor(
         _selectedFolders.update { emptySet() }
     }
 
-    fun onItemSortModeSelected(selection: SortMode<LibraryItem>) {
+    fun onItemSortModeSelected(selection: LibraryItemSortMode) {
         _showItemSortMenu.update { false }
         viewModelScope.launch {
             libraryUseCases.selectItemSortMode(selection)
         }
     }
 
-    fun onFolderSortModeSelected(selection: SortMode<LibraryFolder>) {
+    fun onFolderSortModeSelected(selection: LibraryFolderSortMode) {
         _showFolderSortMenu.update { false }
         viewModelScope.launch {
             libraryUseCases.selectFolderSortMode(selection)
