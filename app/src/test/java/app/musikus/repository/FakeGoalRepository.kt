@@ -190,8 +190,12 @@ class FakeGoalRepository(
         }
     }
 
-    override suspend fun restore(goals: List<GoalDescription>) {
-        TODO("Not yet implemented")
+    override suspend fun restore(descriptionIds: List<UUID>) {
+        _goalDescriptionWithInstancesAndLibraryItems.addAll(
+            _goalBuffer.filter { goal ->
+                goal.description.id in descriptionIds
+            }
+        )
     }
 
     override suspend fun deleteFutureInstances(instanceIds: List<UUID>) {

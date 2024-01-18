@@ -466,14 +466,14 @@ class GoalsViewModel @Inject constructor(
     fun onDeleteAction() {
         viewModelScope.launch {
             _goalsCache = _selectedGoals.value.map { it.description.description }
-            goalRepository.delete(_goalsCache)
+            goalRepository.delete(_goalsCache.map { it.id })
             clearActionMode()
         }
     }
 
     fun onRestoreAction() {
         viewModelScope.launch {
-            goalRepository.restore(_goalsCache)
+            goalRepository.restore(_goalsCache.map { it.id })
         }
     }
 

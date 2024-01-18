@@ -110,12 +110,12 @@ class FakeLibraryRepository(
     }
 
     override suspend fun restoreItems(itemIds: List<UUID>) {
-        _items.addAll(_itemsBuffer)
+        _items.addAll(_itemsBuffer.filter { item -> item.id in itemIds })
         _itemsBuffer = emptyList()
     }
 
     override suspend fun restoreFolders(folderIds: List<UUID>) {
-        _folders.addAll(_foldersBuffer)
+        _folders.addAll(_foldersBuffer.filter { folderWithItems -> folderWithItems.folder.id in folderIds })
         _foldersBuffer = emptyList()
     }
 
