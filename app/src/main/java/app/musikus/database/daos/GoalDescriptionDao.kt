@@ -200,7 +200,7 @@ abstract class GoalDescriptionDao(
         // Create the first instance of the newly created goal description
         val firstInstanceId = database.goalInstanceDao.insert(
             creationAttributes = instanceCreationAttributes.apply {
-                goalDescriptionId = descriptionId
+                this.descriptionId = descriptionId
             },
         )
 

@@ -13,7 +13,8 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 private interface IGoalInstanceCreationAttributes : ITimestampModelCreationAttributes {
-    var goalDescriptionId: UUID
+    var descriptionId: UUID
+    var previousInstanceId: UUID?
     var startTimestamp: ZonedDateTime
     var target: Duration
 }
@@ -24,7 +25,8 @@ private interface IGoalInstanceUpdateAttributes : ITimestampModelUpdateAttribute
 }
 
 data class GoalInstanceCreationAttributes(
-    override var goalDescriptionId: UUID = UUIDConverter.deadBeef,
+    override var descriptionId: UUID = UUIDConverter.deadBeef,
+    override var previousInstanceId: UUID? = null,
     override var startTimestamp: ZonedDateTime = TimeProvider.uninitializedDateTime,
     override var target: Duration,
 ) : TimestampModelCreationAttributes(), IGoalInstanceCreationAttributes
@@ -46,7 +48,8 @@ data class GoalInstanceUpdateAttributes(
     ]
 )
 data class GoalInstanceModel(
-    @ColumnInfo(name="goal_description_id", index = true) override var goalDescriptionId: UUID,
+    @ColumnInfo(name="goal_description_id", index = true) override var descriptionId: UUID,
+    @ColumnInfo(name="previous_goal_instance_id", index = true) override var previousInstanceId: UUID?,
     @ColumnInfo(name="start_timestamp") override var startTimestamp: ZonedDateTime,
     @ColumnInfo(name="end_timestamp") override var endTimestamp: Nullable<ZonedDateTime>? = null,
     @ColumnInfo(name="target_seconds") var targetSeconds: Long,
@@ -59,11 +62,13 @@ data class GoalInstanceModel(
 
     @Ignore
     constructor(
-        goalDescriptionId: UUID,
+        descriptionId: UUID,
+        previousInstanceId: UUID?,
         startTimestamp: ZonedDateTime,
         target: Duration,
     ) : this(
-        goalDescriptionId = goalDescriptionId,
+        descriptionId = descriptionId,
+        previousInstanceId = previousInstanceId,
         startTimestamp = startTimestamp,
         targetSeconds = target.inWholeSeconds,
     )

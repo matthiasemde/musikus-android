@@ -72,7 +72,8 @@ class FakeGoalRepository(
                         id = instanceId,
                         createdAt = timeProvider.now(),
                         modifiedAt = timeProvider.now(),
-                        goalDescriptionId = descriptionId,
+                        descriptionId = descriptionId,
+                        previousInstanceId = instanceCreationAttributes.previousInstanceId,
                         startTimestamp = instanceCreationAttributes.startTimestamp,
                         targetSeconds = instanceCreationAttributes.target.inWholeSeconds,
                         endTimestamp = null
@@ -87,7 +88,7 @@ class FakeGoalRepository(
 
     override suspend fun addNewInstance(instanceCreationAttributes: GoalInstanceCreationAttributes) {
         val oldGoal = _goalDescriptionWithInstancesAndLibraryItems.single {
-            it.description.id == instanceCreationAttributes.goalDescriptionId
+            it.description.id == instanceCreationAttributes.descriptionId
         }
 
         _goalDescriptionWithInstancesAndLibraryItems.remove(oldGoal)
@@ -97,7 +98,8 @@ class FakeGoalRepository(
                     id = idProvider.generateId(),
                     createdAt = timeProvider.now(),
                     modifiedAt = timeProvider.now(),
-                    goalDescriptionId = instanceCreationAttributes.goalDescriptionId,
+                    descriptionId = instanceCreationAttributes.descriptionId,
+                    previousInstanceId = instanceCreationAttributes.previousInstanceId,
                     startTimestamp = instanceCreationAttributes.startTimestamp,
                     targetSeconds = instanceCreationAttributes.target.inWholeSeconds,
                     endTimestamp = null

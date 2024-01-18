@@ -40,7 +40,7 @@ class AddGoalUseCase(
         }
 
         // check if the goal description id was changed from the default value
-        if(instanceCreationAttributes.goalDescriptionId != UUIDConverter.deadBeef) {
+        if(instanceCreationAttributes.descriptionId != UUIDConverter.deadBeef) {
             throw InvalidGoalInstanceException("Goal description id must not be set, it is set automatically")
         }
 

@@ -33,30 +33,31 @@ class AddGoalUseCaseTest {
     private lateinit var fakeLibraryRepository: FakeLibraryRepository
     private lateinit var fakeGoalRepository: FakeGoalRepository
 
+    /** SUT */
     private lateinit var addGoal: AddGoalUseCase
 
-    private lateinit var validDescriptionCreationAttributes: GoalDescriptionCreationAttributes
-    private lateinit var validInstanceCreationAttributes: GoalInstanceCreationAttributes
+    private val validDescriptionCreationAttributes = GoalDescriptionCreationAttributes(
+        type = GoalType.NON_SPECIFIC,
+        repeat = true,
+        periodInPeriodUnits = 1,
+        periodUnit = GoalPeriodUnit.DAY,
+    )
+
+    private val validInstanceCreationAttributes = GoalInstanceCreationAttributes(
+        target = 1.hours,
+    )
 
 
     @BeforeEach
     fun setUp() {
         fakeTimeProvider = FakeTimeProvider()
         fakeIdProvider = FakeIdProvider()
+
         fakeLibraryRepository = FakeLibraryRepository(fakeTimeProvider, fakeIdProvider)
         fakeGoalRepository = FakeGoalRepository(fakeLibraryRepository, fakeTimeProvider, fakeIdProvider)
+
+        /** SUT */
         addGoal = AddGoalUseCase(fakeGoalRepository, fakeLibraryRepository, fakeTimeProvider)
-
-        validDescriptionCreationAttributes = GoalDescriptionCreationAttributes(
-            type = GoalType.NON_SPECIFIC,
-            repeat = true,
-            periodInPeriodUnits = 1,
-            periodUnit = GoalPeriodUnit.DAY,
-        )
-
-        validInstanceCreationAttributes = GoalInstanceCreationAttributes(
-            target = 1.hours,
-        )
     }
 
     @Test
@@ -89,7 +90,8 @@ class AddGoalUseCaseTest {
                         id = UUIDConverter.fromInt(2),
                         createdAt = fakeTimeProvider.startTime,
                         modifiedAt = fakeTimeProvider.startTime,
-                        goalDescriptionId = UUIDConverter.fromInt(1),
+                        descriptionId = UUIDConverter.fromInt(1),
+                        previousInstanceId = null,
                         startTimestamp = fakeTimeProvider.getStartOfDay(
                             dateTime = fakeTimeProvider.startTime
                         ),
@@ -142,7 +144,8 @@ class AddGoalUseCaseTest {
                         id = UUIDConverter.fromInt(3),
                         createdAt = fakeTimeProvider.startTime,
                         modifiedAt = fakeTimeProvider.startTime,
-                        goalDescriptionId = UUIDConverter.fromInt(2),
+                        descriptionId = UUIDConverter.fromInt(2),
+                        previousInstanceId = null,
                         startTimestamp = fakeTimeProvider.getStartOfDay(
                             dateTime = fakeTimeProvider.startTime
                         ),
@@ -231,7 +234,7 @@ class AddGoalUseCaseTest {
             addGoal(
                 descriptionCreationAttributes = validDescriptionCreationAttributes,
                 instanceCreationAttributes = validInstanceCreationAttributes.copy(
-                    goalDescriptionId = UUIDConverter.fromInt(1)
+                    descriptionId = UUIDConverter.fromInt(1)
                 ),
                 libraryItemIds = emptyList()
             )

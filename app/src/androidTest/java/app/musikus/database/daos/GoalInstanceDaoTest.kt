@@ -92,7 +92,8 @@ class GoalInstanceDaoTest {
                 )
 
                 goalInstanceDao.insert(GoalInstanceCreationAttributes(
-                    goalDescriptionId = UUIDConverter.fromInt(1),
+                    descriptionId = UUIDConverter.fromInt(1),
+                    previousInstanceId = UUIDConverter.fromInt(2),
                     startTimestamp = fakeTimeProvider.now(),
                     target = 35.minutes
                 ))
@@ -110,21 +111,23 @@ class GoalInstanceDaoTest {
         assertThat(instances).containsExactly(
             GoalInstance(
                 id = UUIDConverter.fromInt(2),
-                goalDescriptionId = UUIDConverter.fromInt(1),
+                createdAt = fakeTimeProvider.startTime,
+                modifiedAt = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
+                descriptionId = UUIDConverter.fromInt(1),
+                previousInstanceId = null,
                 targetSeconds = 1800,
                 startTimestamp = fakeTimeProvider.startTime,
                 endTimestamp = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
-                createdAt = fakeTimeProvider.startTime,
-                modifiedAt = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
             ),
             GoalInstance(
                 id = UUIDConverter.fromInt(3),
-                goalDescriptionId = UUIDConverter.fromInt(1),
+                createdAt = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
+                modifiedAt = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
+                descriptionId = UUIDConverter.fromInt(1),
+                previousInstanceId = UUIDConverter.fromInt(2),
                 targetSeconds = 2100,
                 startTimestamp = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
                 endTimestamp = null,
-                createdAt = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
-                modifiedAt = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
             )
         )
     }
@@ -147,7 +150,7 @@ class GoalInstanceDaoTest {
             runBlocking {
                 goalInstanceDao.insert(listOf(
                     GoalInstanceCreationAttributes(
-                        goalDescriptionId = UUIDConverter.fromInt(1),
+                        descriptionId = UUIDConverter.fromInt(1),
                         target = 30.minutes,
                         startTimestamp = fakeTimeProvider.startTime
                     )
@@ -170,7 +173,8 @@ class GoalInstanceDaoTest {
 
         // Insert a new instance
         val instanceId = goalInstanceDao.insert(GoalInstanceCreationAttributes(
-            goalDescriptionId = UUIDConverter.fromInt(1),
+            descriptionId = UUIDConverter.fromInt(1),
+            previousInstanceId = UUIDConverter.fromInt(3),
             startTimestamp = fakeTimeProvider.now(),
             target = 40.minutes
         ))
@@ -184,30 +188,33 @@ class GoalInstanceDaoTest {
         assertThat(instances).containsExactly(
             GoalInstance(
                 id = UUIDConverter.fromInt(2),
-                goalDescriptionId = UUIDConverter.fromInt(1),
+                createdAt = fakeTimeProvider.startTime,
+                modifiedAt = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
+                descriptionId = UUIDConverter.fromInt(1),
+                previousInstanceId = null,
                 targetSeconds = 1800,
                 startTimestamp = fakeTimeProvider.startTime,
                 endTimestamp = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
-                createdAt = fakeTimeProvider.startTime,
-                modifiedAt = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
             ),
             GoalInstance(
                 id = UUIDConverter.fromInt(3),
-                goalDescriptionId = UUIDConverter.fromInt(1),
+                createdAt = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
+                modifiedAt = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
+                descriptionId = UUIDConverter.fromInt(1),
+                previousInstanceId = UUIDConverter.fromInt(2),
                 targetSeconds = 2100,
                 startTimestamp = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
                 endTimestamp = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
-                createdAt = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
-                modifiedAt = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
             ),
             GoalInstance(
                 id = UUIDConverter.fromInt(4),
-                goalDescriptionId = UUIDConverter.fromInt(1),
+                createdAt = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
+                modifiedAt = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
+                descriptionId = UUIDConverter.fromInt(1),
+                previousInstanceId = UUIDConverter.fromInt(3),
                 targetSeconds = 2400,
                 startTimestamp = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
                 endTimestamp = null,
-                createdAt = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
-                modifiedAt = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
             )
         )
     }
@@ -217,7 +224,7 @@ class GoalInstanceDaoTest {
         val exception = assertThrows(IllegalArgumentException::class.java) {
             runBlocking {
                 goalInstanceDao.insert(GoalInstanceCreationAttributes(
-                    goalDescriptionId = UUIDConverter.fromInt(1),
+                    descriptionId = UUIDConverter.fromInt(1),
                     startTimestamp = fakeTimeProvider.now(),
                     target = 40.minutes
                 ))
@@ -242,7 +249,7 @@ class GoalInstanceDaoTest {
         val exception = assertThrows(IllegalArgumentException::class.java) {
             runBlocking {
                 goalInstanceDao.insert(GoalInstanceCreationAttributes(
-                    goalDescriptionId = UUIDConverter.fromInt(1),
+                    descriptionId = UUIDConverter.fromInt(1),
                     startTimestamp = fakeTimeProvider.now().minus(1.days.toJavaDuration()),
                     target = 40.minutes
                 ))
@@ -259,7 +266,7 @@ class GoalInstanceDaoTest {
         val exception = assertThrows(IllegalArgumentException::class.java) {
             runBlocking {
                 goalInstanceDao.insert(GoalInstanceCreationAttributes(
-                    goalDescriptionId = UUIDConverter.fromInt(0),
+                    descriptionId = UUIDConverter.fromInt(0),
                     startTimestamp = fakeTimeProvider.now(),
                     target = 40.minutes
                 ))
@@ -279,7 +286,7 @@ class GoalInstanceDaoTest {
         val exception = assertThrows(IllegalArgumentException::class.java) {
             runBlocking {
                 goalInstanceDao.insert(GoalInstanceCreationAttributes(
-                    goalDescriptionId = UUIDConverter.fromInt(1),
+                    descriptionId = UUIDConverter.fromInt(1),
                     startTimestamp = fakeTimeProvider.now(),
                     target = 40.minutes
                 ))
@@ -302,7 +309,7 @@ class GoalInstanceDaoTest {
         val exception = assertThrows(IllegalArgumentException::class.java) {
             runBlocking {
                 goalInstanceDao.insert(GoalInstanceCreationAttributes(
-                    goalDescriptionId = UUIDConverter.fromInt(1),
+                    descriptionId = UUIDConverter.fromInt(1),
                     startTimestamp = fakeTimeProvider.now(),
                     target = 40.minutes
                 ))
@@ -328,21 +335,23 @@ class GoalInstanceDaoTest {
         assertThat(updatedInstances).containsExactly(
             GoalInstance(
                 id = UUIDConverter.fromInt(2),
-                goalDescriptionId = UUIDConverter.fromInt(1),
+                createdAt = fakeTimeProvider.startTime,
+                modifiedAt = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
+                descriptionId = UUIDConverter.fromInt(1),
+                previousInstanceId = null,
                 targetSeconds = 2400,
                 startTimestamp = fakeTimeProvider.startTime,
                 endTimestamp = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
-                createdAt = fakeTimeProvider.startTime,
-                modifiedAt = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
             ),
             GoalInstance(
                 id = UUIDConverter.fromInt(3),
-                goalDescriptionId = UUIDConverter.fromInt(1),
+                createdAt = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
+                modifiedAt = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
+                descriptionId = UUIDConverter.fromInt(1),
+                previousInstanceId = UUIDConverter.fromInt(2),
                 targetSeconds = 2700,
                 startTimestamp = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
                 endTimestamp = null,
-                createdAt = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
-                modifiedAt = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
             )
         )
     }
@@ -475,12 +484,13 @@ class GoalInstanceDaoTest {
         assertThat(instances).containsExactly(
             GoalInstance(
                 id = UUIDConverter.fromInt(3),
-                goalDescriptionId = UUIDConverter.fromInt(1),
+                createdAt = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
+                modifiedAt = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
+                descriptionId = UUIDConverter.fromInt(1),
+                previousInstanceId = null,
                 targetSeconds = 2100,
                 startTimestamp = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
                 endTimestamp = null,
-                createdAt = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
-                modifiedAt = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
             )
         )
     }
@@ -526,12 +536,13 @@ class GoalInstanceDaoTest {
         assertThat(instances).containsExactly(
             GoalInstance(
                 id = UUIDConverter.fromInt(2),
-                goalDescriptionId = UUIDConverter.fromInt(1),
+                createdAt = fakeTimeProvider.startTime,
+                modifiedAt = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
+                descriptionId = UUIDConverter.fromInt(1),
+                previousInstanceId = null,
                 targetSeconds = 1800,
                 startTimestamp = fakeTimeProvider.startTime,
                 endTimestamp = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
-                createdAt = fakeTimeProvider.startTime,
-                modifiedAt = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
             )
         )
     }
@@ -615,7 +626,7 @@ class GoalInstanceDaoTest {
             )
 
             goalInstanceDao.insert(GoalInstanceCreationAttributes(
-                goalDescriptionId = UUIDConverter.fromInt(1),
+                descriptionId = UUIDConverter.fromInt(1),
                 startTimestamp = fakeTimeProvider.now(),
                 target = (40 + 5*index).minutes
             ))
@@ -631,21 +642,23 @@ class GoalInstanceDaoTest {
         assertThat(instances).containsExactly(
             GoalInstance(
                 id = UUIDConverter.fromInt(3),
-                goalDescriptionId = UUIDConverter.fromInt(1),
+                createdAt = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
+                modifiedAt = fakeTimeProvider.startTime.plus(2.days.toJavaDuration()),
+                descriptionId = UUIDConverter.fromInt(1),
+                previousInstanceId = null,
                 targetSeconds = 2100,
                 startTimestamp = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
                 endTimestamp = fakeTimeProvider.startTime.plus(2.days.toJavaDuration()),
-                createdAt = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
-                modifiedAt = fakeTimeProvider.startTime.plus(2.days.toJavaDuration()),
             ),
             GoalInstance(
                 id = UUIDConverter.fromInt(5),
-                goalDescriptionId = UUIDConverter.fromInt(1),
+                createdAt = fakeTimeProvider.startTime.plus(3.days.toJavaDuration()),
+                modifiedAt = fakeTimeProvider.startTime.plus(3.days.toJavaDuration()),
+                descriptionId = UUIDConverter.fromInt(1),
+                previousInstanceId = null,
                 targetSeconds = 2700,
                 startTimestamp = fakeTimeProvider.startTime.plus(3.days.toJavaDuration()),
                 endTimestamp = null,
-                createdAt = fakeTimeProvider.startTime.plus(3.days.toJavaDuration()),
-                modifiedAt = fakeTimeProvider.startTime.plus(3.days.toJavaDuration()),
             )
         )
     }
@@ -738,21 +751,23 @@ class GoalInstanceDaoTest {
         assertThat(instances).containsExactly(
             GoalInstance(
                 id = UUIDConverter.fromInt(2),
-                goalDescriptionId = UUIDConverter.fromInt(1),
+                createdAt = fakeTimeProvider.startTime,
+                modifiedAt = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
+                descriptionId = UUIDConverter.fromInt(1),
+                previousInstanceId = null,
                 targetSeconds = 1800,
                 startTimestamp = fakeTimeProvider.startTime,
                 endTimestamp = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
-                createdAt = fakeTimeProvider.startTime,
-                modifiedAt = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
             ),
             GoalInstance(
                 id = UUIDConverter.fromInt(3),
-                goalDescriptionId = UUIDConverter.fromInt(1),
+                createdAt = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
+                modifiedAt = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
+                descriptionId = UUIDConverter.fromInt(1),
+                previousInstanceId = null,
                 targetSeconds = 2100,
                 startTimestamp = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
                 endTimestamp = null,
-                createdAt = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
-                modifiedAt = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
             )
         )
     }
@@ -810,12 +825,13 @@ class GoalInstanceDaoTest {
             GoalInstanceWithDescriptionWithLibraryItems(
                 instance = GoalInstance(
                     id = UUIDConverter.fromInt(3),
-                    goalDescriptionId = UUIDConverter.fromInt(1),
+                    createdAt = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
+                    modifiedAt = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
+                    descriptionId = UUIDConverter.fromInt(1),
+                    previousInstanceId = null,
                     targetSeconds = 2100,
                     startTimestamp = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
                     endTimestamp = null,
-                    createdAt = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
-                    modifiedAt = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
                 ),
                 description = GoalDescriptionWithLibraryItems(
                     description = GoalDescription(
@@ -837,12 +853,13 @@ class GoalInstanceDaoTest {
             GoalInstanceWithDescriptionWithLibraryItems(
                 instance = GoalInstance(
                     id = UUIDConverter.fromInt(5),
-                    goalDescriptionId = UUIDConverter.fromInt(4),
+                    createdAt = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
+                    modifiedAt = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
+                    descriptionId = UUIDConverter.fromInt(4),
+                    previousInstanceId = null,
                     targetSeconds = 300,
                     startTimestamp = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
                     endTimestamp = null,
-                    createdAt = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
-                    modifiedAt = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
                 ),
                 description = GoalDescriptionWithLibraryItems(
                     description = GoalDescription(
@@ -876,12 +893,13 @@ class GoalInstanceDaoTest {
             GoalInstanceWithDescriptionWithLibraryItems(
                 instance = GoalInstance(
                     id = UUIDConverter.fromInt(2),
-                    goalDescriptionId = UUIDConverter.fromInt(1),
+                    createdAt = fakeTimeProvider.startTime,
+                    modifiedAt = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
+                    descriptionId = UUIDConverter.fromInt(1),
+                    previousInstanceId = null,
                     targetSeconds = 1800,
                     startTimestamp = fakeTimeProvider.startTime,
                     endTimestamp = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
-                    createdAt = fakeTimeProvider.startTime,
-                    modifiedAt = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
                 ),
                 description = GoalDescriptionWithLibraryItems(
                     description = GoalDescription(
@@ -954,12 +972,13 @@ class GoalInstanceDaoTest {
             GoalInstanceWithDescription(
                 instance = GoalInstance(
                     id = UUIDConverter.fromInt(3),
-                    goalDescriptionId = UUIDConverter.fromInt(1),
+                    createdAt = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
+                    modifiedAt = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
+                    descriptionId = UUIDConverter.fromInt(1),
+                    previousInstanceId = null,
                     targetSeconds = 2100,
                     startTimestamp = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
                     endTimestamp = null,
-                    createdAt = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
-                    modifiedAt = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
                 ),
                 description = GoalDescription(
                     id = UUIDConverter.fromInt(1),
@@ -978,12 +997,13 @@ class GoalInstanceDaoTest {
             GoalInstanceWithDescription(
                 instance = GoalInstance(
                     id = UUIDConverter.fromInt(5),
-                    goalDescriptionId = UUIDConverter.fromInt(4),
+                    createdAt = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
+                    modifiedAt = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
+                    descriptionId = UUIDConverter.fromInt(4),
+                    previousInstanceId = null,
                     targetSeconds = 300,
                     startTimestamp = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
                     endTimestamp = null,
-                    createdAt = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
-                    modifiedAt = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
                 ),
                 description = GoalDescription(
                     id = UUIDConverter.fromInt(4),
@@ -1045,12 +1065,13 @@ class GoalInstanceDaoTest {
             GoalInstanceWithDescriptionWithLibraryItems(
                 instance = GoalInstance(
                     id = UUIDConverter.fromInt(3),
-                    goalDescriptionId = UUIDConverter.fromInt(1),
+                    createdAt = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
+                    modifiedAt = fakeTimeProvider.startTime.plus(2.days.toJavaDuration()),
+                    descriptionId = UUIDConverter.fromInt(1),
+                    previousInstanceId = null,
                     targetSeconds = 2100,
                     startTimestamp = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
                     endTimestamp = fakeTimeProvider.startTime.plus(2.days.toJavaDuration()),
-                    createdAt = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
-                    modifiedAt = fakeTimeProvider.startTime.plus(2.days.toJavaDuration()),
                 ),
                 description = GoalDescriptionWithLibraryItems(
                     description = GoalDescription(
@@ -1072,12 +1093,13 @@ class GoalInstanceDaoTest {
             GoalInstanceWithDescriptionWithLibraryItems(
                 instance = GoalInstance(
                     id = UUIDConverter.fromInt(5),
-                    goalDescriptionId = UUIDConverter.fromInt(4),
+                    createdAt = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
+                    modifiedAt = fakeTimeProvider.startTime.plus(3.days.toJavaDuration()),
+                    descriptionId = UUIDConverter.fromInt(4),
+                    previousInstanceId = null,
                     targetSeconds = 3600,
                     startTimestamp = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
                     endTimestamp = fakeTimeProvider.startTime.plus(3.days.toJavaDuration()),
-                    createdAt = fakeTimeProvider.startTime.plus(1.days.toJavaDuration()),
-                    modifiedAt = fakeTimeProvider.startTime.plus(3.days.toJavaDuration()),
                 ),
                 description = GoalDescriptionWithLibraryItems(
                     description = GoalDescription(

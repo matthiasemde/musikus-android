@@ -23,9 +23,12 @@ class UpdateGoalsUseCase(
 
         // perform the update in a transaction
         goalRepository.withTransaction {
-            if (description.paused) {
+            val previousInstanceId = if (description.paused) {
                 // if the old instance belonged to a paused goal delete it...
                 goalRepository.deletePausedInstance(outdatedInstance.id)
+
+                // ... and return its previousInstanceId as the new previousInstanceId
+                outdatedInstance.previousInstanceId
             } else {
                 // otherwise mark it as renewed by setting its endTimestamp
                 goalRepository.updateGoalInstance(
@@ -34,13 +37,17 @@ class UpdateGoalsUseCase(
                         endTimestamp = Nullable(outdatedInstanceEndTimestamp),
                     )
                 )
+
+                // and return its id as the new previousInstanceId
+                outdatedInstance.id
             }
 
             // insert a new instance with the same target and description as the old one
             // the start timestamp is the end timestamp of the old instance
             goalRepository.addNewInstance(
                 GoalInstanceCreationAttributes(
-                    goalDescriptionId = outdatedInstance.goalDescriptionId,
+                    descriptionId = outdatedInstance.descriptionId,
+                    previousInstanceId = previousInstanceId,
                     startTimestamp = outdatedInstanceEndTimestamp,
                     target = outdatedInstance.target
                 )

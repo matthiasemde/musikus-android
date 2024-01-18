@@ -35,7 +35,8 @@ data class GoalInstance(
     @ColumnInfo(name="id") override val id: UUID,
     @ColumnInfo(name="created_at") override val createdAt: ZonedDateTime,
     @ColumnInfo(name="modified_at") override val modifiedAt: ZonedDateTime,
-    @ColumnInfo(name="goal_description_id") val goalDescriptionId: UUID,
+    @ColumnInfo(name="goal_description_id") val descriptionId: UUID,
+    @ColumnInfo(name="previous_goal_instance_id") val previousInstanceId: UUID?,
     @ColumnInfo(name="start_timestamp") val startTimestamp: ZonedDateTime,
     @ColumnInfo(name="end_timestamp") val endTimestamp: ZonedDateTime?,
     @ColumnInfo(name="target_seconds") val targetSeconds: Long,
@@ -44,21 +45,11 @@ data class GoalInstance(
     val target : Duration
         get() = targetSeconds.seconds
 
-//    // necessary custom equals operator since default does not check super class properties
-//    override fun equals(other: Any?) =
-//        super.equals(other) &&
-//                (other is GoalInstance) &&
-//                (other.endTimestamp == endTimestamp) &&
-//                (other.targetSeconds == targetSeconds)
-//
-//    override fun hashCode() =
-//        (super.hashCode() *
-//                HASH_FACTOR + endTimestamp.hashCode()) *
-//                HASH_FACTOR + targetSeconds.hashCode()
 
     override fun toString(): String {
         return super.toString() +
-            "\tgoalDescriptionId:\t\t$goalDescriptionId\n" +
+            "\tgoalDescriptionId:\t\t$descriptionId\n" +
+            "\tpreviousInstanceId:\t\t$previousInstanceId\n" +
             "\tstartTimestamp:\t\t\t$startTimestamp\n" +
             "\tendTimestamp:\t\t\t$endTimestamp\n" +
             "\ttargetSeconds:\t\t\t$targetSeconds\n"
@@ -78,6 +69,7 @@ abstract class GoalInstanceDao(
     database = database,
     displayAttributes = listOf(
         "goal_description_id",
+        "previous_goal_instance_id",
         "start_timestamp",
         "end_timestamp",
         "target_seconds",
@@ -91,7 +83,8 @@ abstract class GoalInstanceDao(
 
     override fun createModel(creationAttributes: GoalInstanceCreationAttributes): GoalInstanceModel {
         return GoalInstanceModel(
-            goalDescriptionId = creationAttributes.goalDescriptionId,
+            descriptionId = creationAttributes.descriptionId,
+            previousInstanceId = creationAttributes.previousInstanceId,
             startTimestamp = creationAttributes.startTimestamp,
             target = creationAttributes.target,
         )
@@ -105,7 +98,7 @@ abstract class GoalInstanceDao(
     override suspend fun insert(
         creationAttributes: GoalInstanceCreationAttributes,
     ) : UUID {
-        val descriptionId = creationAttributes.goalDescriptionId
+        val descriptionId = creationAttributes.descriptionId
 
         // throws exception if description does not exist
         val description = database.goalDescriptionDao.getAsFlow(descriptionId).first()
@@ -139,7 +132,7 @@ abstract class GoalInstanceDao(
         // get all descriptions of the instances to be updated
         // throws exception if any description does not exist
         val descriptions = database.goalDescriptionDao.getAsFlow(
-            instances.map { it.goalDescriptionId }
+            instances.map { it.descriptionId }
         ).first()
 
         if(
