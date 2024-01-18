@@ -202,6 +202,7 @@ abstract class GoalDescriptionDao(
             creationAttributes = instanceCreationAttributes.apply {
                 this.descriptionId = descriptionId
             },
+            firstInstance = true
         )
 
         libraryItemIds?.forEach { libraryItemId ->

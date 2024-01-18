@@ -220,48 +220,6 @@ class GoalInstanceDaoTest {
     }
 
     @Test
-    fun insertInstanceWithoutUpdatingPreviousInstance_throwsException() = runTest {
-        val exception = assertThrows(IllegalArgumentException::class.java) {
-            runBlocking {
-                goalInstanceDao.insert(GoalInstanceCreationAttributes(
-                    descriptionId = UUIDConverter.fromInt(1),
-                    startTimestamp = fakeTimeProvider.now(),
-                    target = 40.minutes
-                ))
-            }
-        }
-
-        assertThat(exception.message).isEqualTo(
-            "Cannot insert instance before finalizing previous instance"
-        )
-    }
-
-    @Test
-    fun insertInstanceBeforeLatestEndTimestamp_throwsException() = runTest {
-        // Update the latest instance so we can insert a new one
-        goalInstanceDao.update(
-            UUIDConverter.fromInt(3),
-            GoalInstanceUpdateAttributes(
-                endTimestamp = Nullable(fakeTimeProvider.now()),
-            )
-        )
-
-        val exception = assertThrows(IllegalArgumentException::class.java) {
-            runBlocking {
-                goalInstanceDao.insert(GoalInstanceCreationAttributes(
-                    descriptionId = UUIDConverter.fromInt(1),
-                    startTimestamp = fakeTimeProvider.now().minus(1.days.toJavaDuration()),
-                    target = 40.minutes
-                ))
-            }
-        }
-
-        assertThat(exception.message).isEqualTo(
-            "Cannot insert instance with startTimestamp before latest endTimestamp"
-        )
-    }
-
-    @Test
     fun insertInstanceForNonExistentGoal_throwsException() = runTest {
         val exception = assertThrows(IllegalArgumentException::class.java) {
             runBlocking {
@@ -318,6 +276,104 @@ class GoalInstanceDaoTest {
 
         assertThat(exception.message).isEqualTo(
             "Cannot insert instance for archived goal: 00000000-0000-0000-0000-000000000001"
+        )
+    }
+
+    @Test
+    fun insertInstanceWithNullPreviousInstanceId_throwsException() = runTest {
+        val exception = assertThrows(IllegalArgumentException::class.java) {
+            runBlocking {
+                goalInstanceDao.insert(GoalInstanceCreationAttributes(
+                    descriptionId = UUIDConverter.fromInt(1),
+                    startTimestamp = fakeTimeProvider.now(),
+                    target = 40.minutes
+                ))
+            }
+        }
+
+        assertThat(exception.message).isEqualTo(
+            "Cannot insert instance without providing id of previous instance"
+        )
+    }
+
+    @Test
+    fun insertInstanceWithDuplicatePreviousInstanceId_throwsException() = runTest {
+        val exception = assertThrows(IllegalArgumentException::class.java) {
+            runBlocking {
+                goalInstanceDao.insert(GoalInstanceCreationAttributes(
+                    descriptionId = UUIDConverter.fromInt(1),
+                    previousInstanceId = UUIDConverter.fromInt(2),
+                    startTimestamp = fakeTimeProvider.now(),
+                    target = 40.minutes
+                ))
+            }
+        }
+
+        assertThat(exception.message).isEqualTo(
+            "Cannot insert instance with previous instance id that matches" +
+                " previous instance id of another instance for the same description"
+        )
+    }
+
+    @Test
+    fun insertInstanceWithNonExistentPreviousInstanceId_throwsException() = runTest {
+        val exception = assertThrows(IllegalArgumentException::class.java) {
+            runBlocking {
+                goalInstanceDao.insert(GoalInstanceCreationAttributes(
+                    descriptionId = UUIDConverter.fromInt(1),
+                    previousInstanceId = UUIDConverter.fromInt(0),
+                    startTimestamp = fakeTimeProvider.now(),
+                    target = 40.minutes
+                ))
+            }
+        }
+
+        assertThat(exception.message).isEqualTo(
+            "Goal description does not contain instance with id: 00000000-0000-0000-0000-000000000000"
+        )
+    }
+
+    @Test
+    fun insertInstanceWithoutUpdatingPreviousInstance_throwsException() = runTest {
+        val exception = assertThrows(IllegalArgumentException::class.java) {
+            runBlocking {
+                goalInstanceDao.insert(GoalInstanceCreationAttributes(
+                    descriptionId = UUIDConverter.fromInt(1),
+                    previousInstanceId = UUIDConverter.fromInt(3),
+                    startTimestamp = fakeTimeProvider.now(),
+                    target = 40.minutes
+                ))
+            }
+        }
+
+        assertThat(exception.message).isEqualTo(
+            "Cannot insert instance before finalizing previous instance (endTimestamp is null)"
+        )
+    }
+
+    @Test
+    fun insertInstanceBeforeLatestEndTimestamp_throwsException() = runTest {
+        // Update the latest instance so we can insert a new one
+        goalInstanceDao.update(
+            UUIDConverter.fromInt(3),
+            GoalInstanceUpdateAttributes(
+                endTimestamp = Nullable(fakeTimeProvider.now()),
+            )
+        )
+
+        val exception = assertThrows(IllegalArgumentException::class.java) {
+            runBlocking {
+                goalInstanceDao.insert(GoalInstanceCreationAttributes(
+                    descriptionId = UUIDConverter.fromInt(1),
+                    previousInstanceId = UUIDConverter.fromInt(3),
+                    startTimestamp = fakeTimeProvider.now().minus(1.days.toJavaDuration()),
+                    target = 40.minutes
+                ))
+            }
+        }
+
+        assertThat(exception.message).isEqualTo(
+            "Cannot insert instance with startTimestamp before latest endTimestamp"
         )
     }
 

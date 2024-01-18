@@ -91,13 +91,21 @@ abstract class GoalInstanceDao(
         )
     }
 
+    override suspend fun insert(creationAttributes: GoalInstanceCreationAttributes): UUID {
+        return insert(
+            creationAttributes = creationAttributes,
+            firstInstance = false
+        )
+    }
+
     override suspend fun insert(creationAttributes: List<GoalInstanceCreationAttributes>): List<UUID> {
         throw NotImplementedError("")
     }
 
     // create a new instance of this goal, storing the target for a single period
-    override suspend fun insert(
+    suspend fun insert(
         creationAttributes: GoalInstanceCreationAttributes,
+        firstInstance: Boolean
     ) : UUID {
         val descriptionId = creationAttributes.descriptionId
 
@@ -108,14 +116,30 @@ abstract class GoalInstanceDao(
             throw IllegalArgumentException("Cannot insert instance for archived goal: $descriptionId")
         }
 
-        val previousInstances = getForDescription(descriptionId)
+        if(!firstInstance) {
+            val previousInstanceId = creationAttributes.previousInstanceId
+                ?: throw IllegalArgumentException("Cannot insert instance without providing id of previous instance")
 
-        if (previousInstances.any { it.endTimestamp == null }) {
-            throw IllegalArgumentException("Cannot insert instance before finalizing previous instance")
-        }
+            val instancesForDescription = getForDescription(descriptionId)
 
-        if (previousInstances.any { it.endTimestamp!! > creationAttributes.startTimestamp }) {
-            throw IllegalArgumentException("Cannot insert instance with startTimestamp before latest endTimestamp")
+            if(instancesForDescription.any { it.previousInstanceId == previousInstanceId }) {
+                throw IllegalArgumentException("Cannot insert instance with previous instance id that matches previous instance id of another instance for the same description")
+            }
+
+            // throws exception if previous instance does not exist
+            val previousInstance = try {
+                instancesForDescription.single { it.id == previousInstanceId }
+            } catch(e: NoSuchElementException) {
+                throw IllegalArgumentException("Goal description does not contain instance with id: $previousInstanceId")
+            }
+
+            if (previousInstance.endTimestamp == null) {
+                throw IllegalArgumentException("Cannot insert instance before finalizing previous instance (endTimestamp is null)")
+            }
+
+            if (previousInstance.endTimestamp > creationAttributes.startTimestamp) {
+                throw IllegalArgumentException("Cannot insert instance with startTimestamp before latest endTimestamp")
+            }
         }
 
         return super.insert(listOf(creationAttributes)).single() // returns the id of the inserted instance
