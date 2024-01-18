@@ -11,7 +11,6 @@ package app.musikus.database.entities
 import androidx.room.ColumnInfo
 import androidx.room.PrimaryKey
 import app.musikus.database.UUIDConverter
-import app.musikus.database.daos.HASH_FACTOR
 import java.time.ZonedDateTime
 import java.util.UUID
 
@@ -24,12 +23,6 @@ abstract class BaseModelUpdateAttributes : IBaseModelUpdateAttributes
 
 abstract class BaseModelDisplayAttributes {
     abstract val id: UUID
-
-    // necessary custom equals operator since default does not check super class properties
-    override fun equals(other: Any?) =
-        (other is BaseModelDisplayAttributes) && (other.id == id)
-
-    override fun hashCode() = id.hashCode()
 
     override fun toString(): String {
         return "\nPretty print of ${this.javaClass.simpleName} entity:\n" +
@@ -66,15 +59,6 @@ abstract class TimestampModelDisplayAttributes : BaseModelDisplayAttributes() {
     abstract val createdAt: ZonedDateTime
     abstract val modifiedAt: ZonedDateTime
 
-    override fun equals(other: Any?) =
-        super.equals(other) &&
-        (other is TimestampModelDisplayAttributes) &&
-        (other.modifiedAt == modifiedAt)
-
-    override fun hashCode() =
-        super.hashCode() *
-        HASH_FACTOR + modifiedAt.hashCode()
-
     override fun toString(): String {
         return super.toString() +
                 "\tcreated at:\t\t\t\t${createdAt}\n" +
@@ -107,8 +91,7 @@ abstract class SoftDeleteModelUpdateAttributes
     : TimestampModelUpdateAttributes(), ISoftDeleteModelUpdateAttributes
 
 abstract class SoftDeleteModelDisplayAttributes
-    : TimestampModelDisplayAttributes() {
-}
+    : TimestampModelDisplayAttributes()
 
 abstract class SoftDeleteModel(
     @ColumnInfo(name="deleted", defaultValue = "false") var deleted: Boolean = false

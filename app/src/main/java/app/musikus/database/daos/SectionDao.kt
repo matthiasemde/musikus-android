@@ -36,17 +36,16 @@ data class Section(
     @ColumnInfo(name="start_timestamp") val startTimestamp: ZonedDateTime,
 ) : BaseModelDisplayAttributes() {
 
+    override fun toString(): String {
+        return super.toString() +
+            "\tsessionId:\t\t\t\t$sessionId\n" +
+            "\tlibraryItemId:\t\t\t$libraryItemId\n" +
+            "\tdurationSeconds:\t\t$durationSeconds\n" +
+            "\tstartTimestamp:\t\t\t$startTimestamp\n"
+    }
+
     val duration: Duration
         get() = durationSeconds.seconds
-
-    // necessary custom equals operator since default does not check super class properties
-    override fun equals(other: Any?) =
-        super.equals(other) &&
-                (other is Section) &&
-                (other.durationSeconds == durationSeconds)
-
-    override fun hashCode() =
-        super.hashCode() * HASH_FACTOR + durationSeconds.hashCode()
 }
 
 @Dao

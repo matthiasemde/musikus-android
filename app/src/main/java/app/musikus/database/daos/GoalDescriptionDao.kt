@@ -55,19 +55,6 @@ data class GoalDescription(
     @ColumnInfo(name="custom_order") val customOrder: Int?,
 ) : SoftDeleteModelDisplayAttributes() {
 
-    // necessary custom equals operator since default does not check super class properties
-    override fun equals(other: Any?) =
-        super.equals(other) &&
-        (other is GoalDescription) &&
-        (other.paused == paused) &&
-        (other.archived == archived) &&
-        (other.customOrder == customOrder)
-
-    override fun hashCode() =
-        ((super.hashCode() *
-        HASH_FACTOR + paused.hashCode()) *
-        HASH_FACTOR + archived.hashCode()) *
-        HASH_FACTOR + customOrder.hashCode()
 
     override fun toString(): String {
         return super.toString() +

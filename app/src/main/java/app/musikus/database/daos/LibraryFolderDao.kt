@@ -31,18 +31,6 @@ data class LibraryFolder(
     @ColumnInfo(name="custom_order") val customOrder: Int?,
 ) : SoftDeleteModelDisplayAttributes() {
 
-    // necessary custom equals operator since default does not check super class properties
-    override fun equals(other: Any?) =
-        super.equals(other) &&
-                (other is LibraryFolder) &&
-                (other.name == name) &&
-                (other.customOrder == customOrder)
-
-    override fun hashCode() =
-        (super.hashCode() *
-                HASH_FACTOR + name.hashCode()) *
-                HASH_FACTOR + customOrder.hashCode()
-
     override fun toString(): String {
         return super.toString() +
                 "\tname:\t\t\t\t\t$name\n" +

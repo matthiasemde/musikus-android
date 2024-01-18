@@ -40,20 +40,15 @@ data class Session(
     @ColumnInfo(name="comment") val comment: String?,
 ) : SoftDeleteModelDisplayAttributes() {
 
+    override fun toString(): String {
+        return super.toString() +
+            "\tbreakDuration:\t$breakDuration\n" +
+            "\trating:\t\t\t\t\t$rating\n" +
+            "\tcomment:\t\t\t\t$comment\n"
+    }
+
     val breakDuration: Duration
         get() = breakDurationSeconds.seconds
-
-    // necessary custom equals operator since default does not check super class properties
-    override fun equals(other: Any?) =
-        super.equals(other) &&
-                (other is Session) &&
-                (other.rating == rating) &&
-                (other.comment == comment)
-
-    override fun hashCode() =
-        (super.hashCode() *
-                HASH_FACTOR + rating.hashCode()) *
-                HASH_FACTOR + comment.hashCode()
 }
 @Dao
 abstract class SessionDao(

@@ -306,11 +306,11 @@ class GoalDescriptionDaoTest {
                 descriptionCreationAttributes = GoalDescriptionCreationAttributes(
                     type = GoalType.NON_SPECIFIC,
                     repeat = true,
-                    periodInPeriodUnits = index,
+                    periodInPeriodUnits = index + 1,
                     periodUnit = GoalPeriodUnit.DAY
                 ),
                 instanceCreationAttributes = GoalInstanceCreationAttributes(
-                    target = index.hours,
+                    target = (index + 1).hours,
                     startTimestamp = fakeTimeProvider.now(),
                 )
             )
@@ -337,10 +337,10 @@ class GoalDescriptionDaoTest {
                 id = UUIDConverter.fromInt(1),
                 createdAt = fakeTimeProvider.startTime,
                 modifiedAt = fakeTimeProvider.startTime.plus(1.seconds.toJavaDuration()),
-                type = GoalType.ITEM_SPECIFIC,
+                type = GoalType.NON_SPECIFIC,
                 repeat = true,
                 periodInPeriodUnits = 1,
-                periodUnit = GoalPeriodUnit.WEEK,
+                periodUnit = GoalPeriodUnit.DAY,
                 progressType = GoalProgressType.TIME,
                 paused = true,
                 archived = false,
@@ -350,10 +350,10 @@ class GoalDescriptionDaoTest {
                 id = UUIDConverter.fromInt(3),
                 createdAt = fakeTimeProvider.startTime,
                 modifiedAt = fakeTimeProvider.startTime.plus(1.seconds.toJavaDuration()),
-                type = GoalType.ITEM_SPECIFIC,
+                type = GoalType.NON_SPECIFIC,
                 repeat = true,
                 periodInPeriodUnits = 2,
-                periodUnit = GoalPeriodUnit.WEEK,
+                periodUnit = GoalPeriodUnit.DAY,
                 progressType = GoalProgressType.TIME,
                 paused = true,
                 archived = true,
@@ -402,11 +402,11 @@ class GoalDescriptionDaoTest {
                 descriptionCreationAttributes = GoalDescriptionCreationAttributes(
                     type = GoalType.NON_SPECIFIC,
                     repeat = true,
-                    periodInPeriodUnits = index,
+                    periodInPeriodUnits = index + 1,
                     periodUnit = GoalPeriodUnit.DAY
                 ),
                 instanceCreationAttributes = GoalInstanceCreationAttributes(
-                    target = index.hours,
+                    target = (index + 1).hours,
                     startTimestamp = fakeTimeProvider.now(),
                 )
             )
@@ -454,11 +454,11 @@ class GoalDescriptionDaoTest {
                 descriptionCreationAttributes = GoalDescriptionCreationAttributes(
                     type = GoalType.NON_SPECIFIC,
                     repeat = true,
-                    periodInPeriodUnits = index,
+                    periodInPeriodUnits = index + 1,
                     periodUnit = GoalPeriodUnit.DAY
                 ),
                 instanceCreationAttributes = GoalInstanceCreationAttributes(
-                    target = index.hours,
+                    target = (index + 1).hours,
                     startTimestamp = fakeTimeProvider.now(),
                 )
             )
@@ -483,10 +483,10 @@ class GoalDescriptionDaoTest {
                 id = UUIDConverter.fromInt(1),
                 createdAt = fakeTimeProvider.startTime,
                 modifiedAt = fakeTimeProvider.startTime.plus(1.seconds.toJavaDuration()),
-                type = GoalType.ITEM_SPECIFIC,
+                type = GoalType.NON_SPECIFIC,
                 repeat = true,
                 periodInPeriodUnits = 1,
-                periodUnit = GoalPeriodUnit.WEEK,
+                periodUnit = GoalPeriodUnit.DAY,
                 progressType = GoalProgressType.TIME,
                 paused = false,
                 archived = false,
@@ -496,10 +496,10 @@ class GoalDescriptionDaoTest {
                 id = UUIDConverter.fromInt(3),
                 createdAt = fakeTimeProvider.startTime,
                 modifiedAt = fakeTimeProvider.startTime.plus(1.seconds.toJavaDuration()),
-                type = GoalType.ITEM_SPECIFIC,
+                type = GoalType.NON_SPECIFIC,
                 repeat = true,
                 periodInPeriodUnits = 2,
-                periodUnit = GoalPeriodUnit.WEEK,
+                periodUnit = GoalPeriodUnit.DAY,
                 progressType = GoalProgressType.TIME,
                 paused = false,
                 archived = false,
@@ -543,11 +543,11 @@ class GoalDescriptionDaoTest {
                 descriptionCreationAttributes = GoalDescriptionCreationAttributes(
                     type = GoalType.NON_SPECIFIC,
                     repeat = true,
-                    periodInPeriodUnits = index,
+                    periodInPeriodUnits = index + 1,
                     periodUnit = GoalPeriodUnit.DAY
                 ),
                 instanceCreationAttributes = GoalInstanceCreationAttributes(
-                    target = index.hours,
+                    target = (index + 1).hours,
                     startTimestamp = fakeTimeProvider.now(),
                 )
             )
@@ -563,10 +563,10 @@ class GoalDescriptionDaoTest {
                 id = UUIDConverter.fromInt(1),
                 createdAt = fakeTimeProvider.startTime,
                 modifiedAt = fakeTimeProvider.startTime,
-                type = GoalType.ITEM_SPECIFIC,
+                type = GoalType.NON_SPECIFIC,
                 repeat = true,
                 periodInPeriodUnits = 1,
-                periodUnit = GoalPeriodUnit.WEEK,
+                periodUnit = GoalPeriodUnit.DAY,
                 progressType = GoalProgressType.TIME,
                 paused = false,
                 archived = false,
@@ -576,10 +576,10 @@ class GoalDescriptionDaoTest {
                 id = UUIDConverter.fromInt(5),
                 createdAt = fakeTimeProvider.startTime,
                 modifiedAt = fakeTimeProvider.startTime,
-                type = GoalType.ITEM_SPECIFIC,
+                type = GoalType.NON_SPECIFIC,
                 repeat = true,
                 periodInPeriodUnits = 3,
-                periodUnit = GoalPeriodUnit.WEEK,
+                periodUnit = GoalPeriodUnit.DAY,
                 progressType = GoalProgressType.TIME,
                 paused = false,
                 archived = false,
@@ -665,11 +665,11 @@ class GoalDescriptionDaoTest {
                 descriptionCreationAttributes = GoalDescriptionCreationAttributes(
                     type = GoalType.NON_SPECIFIC,
                     repeat = true,
-                    periodInPeriodUnits = index,
+                    periodInPeriodUnits = index + 1,
                     periodUnit = GoalPeriodUnit.DAY
                 ),
                 instanceCreationAttributes = GoalInstanceCreationAttributes(
-                    target = index.hours,
+                    target = (index + 1).hours,
                     startTimestamp = fakeTimeProvider.now(),
                 )
             )
@@ -731,10 +731,10 @@ class GoalDescriptionDaoTest {
                 id = UUIDConverter.fromInt(1),
                 createdAt = fakeTimeProvider.startTime,
                 modifiedAt = fakeTimeProvider.startTime,
-                type = GoalType.ITEM_SPECIFIC,
+                type = GoalType.NON_SPECIFIC,
                 repeat = true,
                 periodInPeriodUnits = 1,
-                periodUnit = GoalPeriodUnit.WEEK,
+                periodUnit = GoalPeriodUnit.DAY,
                 progressType = GoalProgressType.TIME,
                 paused = false,
                 archived = false,

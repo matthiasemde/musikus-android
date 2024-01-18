@@ -46,8 +46,6 @@ import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.runBlocking
 import java.util.UUID
 
-const val HASH_FACTOR = 524287
-
 
 /**
  * @Dao Base dao

@@ -43,18 +43,17 @@ data class GoalInstance(
     @ColumnInfo(name="target_seconds") val targetSeconds: Long,
 ) : TimestampModelDisplayAttributes() {
 
-    val target : Duration
-        get() = targetSeconds.seconds
-
-
     override fun toString(): String {
         return super.toString() +
             "\tgoalDescriptionId:\t\t$descriptionId\n" +
             "\tpreviousInstanceId:\t\t$previousInstanceId\n" +
             "\tstartTimestamp:\t\t\t$startTimestamp\n" +
             "\tendTimestamp:\t\t\t$endTimestamp\n" +
-            "\ttargetSeconds:\t\t\t$targetSeconds\n"
+            "\ttarget:\t\t\t\t$target\n"
     }
+
+    val target : Duration
+        get() = targetSeconds.seconds
 }
 
 @Dao
