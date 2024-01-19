@@ -22,8 +22,14 @@ import app.musikus.repository.UserPreferencesRepository
 import app.musikus.usecase.goals.AddGoalUseCase
 import app.musikus.usecase.goals.ArchiveGoalsUseCase
 import app.musikus.usecase.goals.CleanFutureGoalInstancesUseCase
+import app.musikus.usecase.goals.DeleteGoalsUseCase
+import app.musikus.usecase.goals.EditGoalUseCase
+import app.musikus.usecase.goals.GetAllGoalsUseCase
 import app.musikus.usecase.goals.GoalsUseCases
 import app.musikus.usecase.goals.PauseGoalsUseCase
+import app.musikus.usecase.goals.RestoreGoalsUseCase
+import app.musikus.usecase.goals.SelectGoalSortModeUseCase
+import app.musikus.usecase.goals.SortGoalsUseCase
 import app.musikus.usecase.goals.UnpauseGoalsUseCase
 import app.musikus.usecase.goals.UpdateGoalsUseCase
 import app.musikus.usecase.library.AddFolderUseCase
@@ -156,12 +162,15 @@ object TestAppModule {
     fun provideGoalsUseCases(
         goalRepository: GoalRepository,
         libraryRepository: LibraryRepository,
+        userPreferencesRepository: UserPreferencesRepository,
         timeProvider: TimeProvider
     ): GoalsUseCases {
         val cleanFutureGoalInstancesUseCase = CleanFutureGoalInstancesUseCase(goalRepository, timeProvider)
         val archiveGoalsUseCase = ArchiveGoalsUseCase(goalRepository)
+        val sortGoalsUseCase = SortGoalsUseCase(userPreferencesRepository)
 
         return GoalsUseCases(
+            getAll = GetAllGoalsUseCase(goalRepository, sortGoalsUseCase),
             add = AddGoalUseCase(goalRepository, libraryRepository, timeProvider),
             pause = PauseGoalsUseCase(goalRepository, cleanFutureGoalInstancesUseCase),
             unpause = UnpauseGoalsUseCase(goalRepository),
@@ -170,7 +179,11 @@ object TestAppModule {
                 goalRepository = goalRepository,
                 archiveGoals = archiveGoalsUseCase,
                 timeProvider = timeProvider,
-            )
+            ),
+            edit = EditGoalUseCase(goalRepository, cleanFutureGoalInstancesUseCase),
+            delete = DeleteGoalsUseCase(goalRepository),
+            restore = RestoreGoalsUseCase(goalRepository),
+            selectSortMode = SelectGoalSortModeUseCase(userPreferencesRepository),
         )
     }
 }

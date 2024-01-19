@@ -9,6 +9,7 @@
 package app.musikus.usecase.goals
 
 data class GoalsUseCases(
+    val getAll: GetAllGoalsUseCase,
     val add: AddGoalUseCase,
     val pause: PauseGoalsUseCase,
     val unpause: UnpauseGoalsUseCase,

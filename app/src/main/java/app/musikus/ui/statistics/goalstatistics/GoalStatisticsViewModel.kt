@@ -18,18 +18,14 @@ import app.musikus.database.GoalDescriptionWithLibraryItems
 import app.musikus.database.daos.GoalInstance
 import app.musikus.database.entities.GoalPeriodUnit
 import app.musikus.database.entities.GoalType
-import app.musikus.repository.GoalRepository
 import app.musikus.repository.SessionRepository
-import app.musikus.repository.UserPreferencesRepository
+import app.musikus.usecase.goals.GoalsUseCases
 import app.musikus.utils.DateFormat
-import app.musikus.utils.GoalsSortMode
-import app.musikus.utils.SortDirection
 import app.musikus.utils.TimeProvider
 import app.musikus.utils.Timeframe
 import app.musikus.utils.UiText
 import app.musikus.utils.inLocalTimezone
 import app.musikus.utils.musikusFormat
-import app.musikus.utils.sorted
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -97,8 +93,7 @@ data class GoalWithInstancesWithProgress(
 
 @HiltViewModel
 class GoalStatisticsViewModel @Inject constructor(
-    userPreferencesRepository : UserPreferencesRepository,
-    goalRepository : GoalRepository,
+    goalsUseCases: GoalsUseCases,
     sessionRepository : SessionRepository,
     private val timeProvider: TimeProvider,
     application: Application
@@ -182,30 +177,12 @@ class GoalStatisticsViewModel @Inject constructor(
     }
 
     /** Imported Flows */
-    private val goalSortInfo = userPreferencesRepository.userPreferences.map {
-        it.goalsSortMode to it.goalsSortDirection
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = GoalsSortMode.DEFAULT to SortDirection.DEFAULT
-    )
-
-    private val goals = goalRepository.allGoals.stateIn(
+    private val goals = goalsUseCases.getAll().stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = emptyList()
     )
 
-    private val sortedGoals = combine(
-        goals,
-        goalSortInfo
-    ) { goals, (sortMode, sortDirection) ->
-        goals.sorted(sortMode, sortDirection)
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = emptyList()
-    )
 
     /** Own state flows */
     private val _selectedGoalWithTimeframe =
@@ -217,7 +194,7 @@ class GoalStatisticsViewModel @Inject constructor(
     @OptIn(ExperimentalCoroutinesApi::class)
     private val timeframeWithGoalsWithProgress = combine(
         _selectedGoalWithTimeframe,
-        sortedGoals,
+        goals,
     ) { selectedGoalWithTimeframe, goals ->
 
         // if there are no goals, return null
@@ -313,13 +290,13 @@ class GoalStatisticsViewModel @Inject constructor(
 
 
     private val sortedGoalInfo = combine(
-        sortedGoals,
+        goals,
         goalToSuccessRate,
         _selectedGoalWithTimeframe
-    ) { sortedGoals, goalToSuccessRate, selectedGoalWithTimeframe ->
-        if (sortedGoals.isEmpty()) return@combine null
+    ) { goals, goalToSuccessRate, selectedGoalWithTimeframe ->
+        if (goals.isEmpty()) return@combine null
 
-        sortedGoals.map { goalDescriptionWithInstancesAndLibraryItems ->
+        goals.map { goalDescriptionWithInstancesAndLibraryItems ->
             val description = goalDescriptionWithInstancesAndLibraryItems.description
 
             val title = description.title(

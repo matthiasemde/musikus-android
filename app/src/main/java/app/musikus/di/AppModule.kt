@@ -30,10 +30,12 @@ import app.musikus.usecase.goals.ArchiveGoalsUseCase
 import app.musikus.usecase.goals.CleanFutureGoalInstancesUseCase
 import app.musikus.usecase.goals.DeleteGoalsUseCase
 import app.musikus.usecase.goals.EditGoalUseCase
+import app.musikus.usecase.goals.GetAllGoalsUseCase
 import app.musikus.usecase.goals.GoalsUseCases
 import app.musikus.usecase.goals.PauseGoalsUseCase
 import app.musikus.usecase.goals.RestoreGoalsUseCase
 import app.musikus.usecase.goals.SelectGoalSortModeUseCase
+import app.musikus.usecase.goals.SortGoalsUseCase
 import app.musikus.usecase.goals.UnpauseGoalsUseCase
 import app.musikus.usecase.goals.UpdateGoalsUseCase
 import app.musikus.usecase.library.AddFolderUseCase
@@ -188,8 +190,10 @@ object AppModule {
     ): GoalsUseCases {
         val cleanFutureGoalInstancesUseCase = CleanFutureGoalInstancesUseCase(goalRepository, timeProvider)
         val archiveGoalsUseCase = ArchiveGoalsUseCase(goalRepository)
+        val sortGoalsUseCase = SortGoalsUseCase(userPreferencesRepository)
 
         return GoalsUseCases(
+            getAll = GetAllGoalsUseCase(goalRepository, sortGoalsUseCase),
             add = AddGoalUseCase(goalRepository, libraryRepository, timeProvider),
             pause = PauseGoalsUseCase(goalRepository, cleanFutureGoalInstancesUseCase),
             unpause = UnpauseGoalsUseCase(goalRepository),
