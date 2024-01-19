@@ -169,8 +169,11 @@ data class GoalDescriptionWithInstancesAndLibraryItems(
     val title
         get () = description.title(libraryItems.firstOrNull())
 
+    val latestInstance
+        get() = instances.maxWith (compareBy { it.startTimestamp })
+
     val subtitle
-        get() = instances.maxWith (compareBy { it.startTimestamp }).let { description.subtitle(it) }
+        get() = latestInstance.let { description.subtitle(it) }
 
     val startTime
         get() = instances.minOf { it.startTimestamp }

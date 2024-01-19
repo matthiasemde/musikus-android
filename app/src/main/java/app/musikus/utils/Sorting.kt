@@ -111,9 +111,9 @@ fun List<GoalDescriptionWithInstancesAndLibraryItems>.sorted(
 ) : List<GoalDescriptionWithInstancesAndLibraryItems> = this.sortedWith(
     when(direction) {
         SortDirection.ASCENDING ->
-            compareBy (mode.comparator) { it.description to it.instances.last() }
+            compareBy (mode.comparator) { it.description to it.latestInstance }
         SortDirection.DESCENDING ->
-            compareByDescending(mode.comparator) { it.description to it.instances.last() }
+            compareByDescending(mode.comparator) { it.description to it.latestInstance }
     }
 )
 

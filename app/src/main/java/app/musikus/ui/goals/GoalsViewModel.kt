@@ -18,17 +18,15 @@ import app.musikus.database.entities.GoalInstanceCreationAttributes
 import app.musikus.database.entities.GoalPeriodUnit
 import app.musikus.database.entities.GoalType
 import app.musikus.repository.GoalRepository
-import app.musikus.repository.LibraryRepository
 import app.musikus.repository.SessionRepository
 import app.musikus.repository.UserPreferencesRepository
 import app.musikus.shared.TopBarUiState
 import app.musikus.ui.library.DialogMode
 import app.musikus.usecase.goals.GoalsUseCases
+import app.musikus.usecase.library.LibraryUseCases
 import app.musikus.utils.GoalsSortMode
-import app.musikus.utils.LibraryItemSortMode
 import app.musikus.utils.SortDirection
 import app.musikus.utils.TimeProvider
-import app.musikus.utils.sorted
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -111,9 +109,9 @@ data class GoalsUiState (
 class GoalsViewModel @Inject constructor(
     private val timeProvider: TimeProvider,
     private val userPreferencesRepository : UserPreferencesRepository,
-    libraryRepository: LibraryRepository,
     private val goalRepository : GoalRepository,
     private val goalsUseCases: GoalsUseCases,
+    libraryUseCases: LibraryUseCases,
     sessionRepository : SessionRepository,
 ) : ViewModel() {
 
@@ -138,14 +136,6 @@ class GoalsViewModel @Inject constructor(
         initialValue = true
     )
 
-    private val itemsSortInfo = userPreferences.map {
-        it.libraryItemSortMode to it.libraryItemSortDirection
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = LibraryItemSortMode.DEFAULT to SortDirection.DEFAULT
-    )
-
     private val goalsSortInfo = userPreferences.map {
         it.goalsSortMode to it.goalsSortDirection
     }.stateIn(
@@ -154,27 +144,16 @@ class GoalsViewModel @Inject constructor(
         initialValue = GoalsSortMode.DEFAULT to SortDirection.DEFAULT
     )
 
-    private val currentGoals = goalRepository.currentGoals.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = emptyList()
-    )
-
-    private val items = libraryRepository.items.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = emptyList()
-    )
-
-    private val sortedItems = combine(
-        items,
-        itemsSortInfo
-    ) { items, (sortMode, sortDirection) ->
-        items.sorted(
-            mode = sortMode,
-            direction = sortDirection
-        )
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val currentGoals = showPausedGoals.flatMapLatest { showPaused ->
+        goalsUseCases.getCurrent(showPaused = showPaused)
     }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
+
+    private val items = libraryUseCases.getItems().stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = emptyList()
@@ -193,35 +172,9 @@ class GoalsViewModel @Inject constructor(
     private val _selectedGoals = MutableStateFlow<Set<GoalInstanceWithDescriptionWithLibraryItems>>(emptySet())
 
     /** Combining imported and own state flows */
-    private val filteredGoals = combine(
-        currentGoals,
-        showPausedGoals
-    ) { goals, showPausedGoals ->
-        goals.filter { goal ->
-            showPausedGoals || !goal.description.description.paused
-        }
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = emptyList()
-    )
-
-    private val sortedGoals = combine(
-        filteredGoals,
-        goalsSortInfo
-    ) { goals, (sortMode, sortDirection) ->
-        goals.sorted(
-            sortMode,
-            sortDirection
-        )
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = emptyList()
-    )
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    private val goalProgress = filteredGoals.flatMapLatest { goals ->
+    private val goalProgress = currentGoals.flatMapLatest { goals ->
         val sections = goals.map { goal ->
             sessionRepository.sectionsForGoal(goal).map { sections ->
                 goal to sections
@@ -318,11 +271,11 @@ class GoalsViewModel @Inject constructor(
     )
 
     private val contentUiState = combine(
-        sortedGoals,
+        currentGoals,
         goalProgress,
         _selectedGoals,
-    ) { sortedGoals, goalProgress, selectedGoals ->
-        val goalsWithProgress = sortedGoals.map { goal ->
+    ) { currentGoals, goalProgress, selectedGoals ->
+        val goalsWithProgress = currentGoals.map { goal ->
             GoalWithProgress(
                 goal = goal,
                 progress = if (goal.description.description.paused) 0.seconds else
@@ -347,15 +300,15 @@ class GoalsViewModel @Inject constructor(
     private val dialogUiState = combine(
         _dialogData,
         _goalToEdit,
-        sortedItems,
-    ) { dialogData, goalToEdit, sortedItems ->
+        items,
+    ) { dialogData, goalToEdit, items ->
         if(dialogData == null) return@combine null // if data == null, the ui state should be null ergo we don't show the dialog
 
         GoalsDialogUiState(
             mode = if (goalToEdit == null) DialogMode.ADD else DialogMode.EDIT,
             dialogData = dialogData,
             goalToEdit = goalToEdit,
-            libraryItems = sortedItems,
+            libraryItems = items,
         )
     }.stateIn(
         scope = viewModelScope,
@@ -396,7 +349,7 @@ class GoalsViewModel @Inject constructor(
                 periodUnit = GoalPeriodUnit.DAY,
                 goalType = GoalType.NON_SPECIFIC,
                 oneShot = oneShot,
-                selectedLibraryItems = sortedItems.value.firstOrNull()?.let {
+                selectedLibraryItems = items.value.firstOrNull()?.let {
                     listOf(it)
                 } ?: emptyList(),
             )
