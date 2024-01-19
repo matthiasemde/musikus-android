@@ -172,8 +172,8 @@ class SessionDaoTest {
                 breakDurationSeconds = 600,
                 rating = 3,
                 comment = "Test comment",
-                createdAt = fakeTimeProvider.startTime,
-                modifiedAt = fakeTimeProvider.startTime
+                createdAt = FakeTimeProvider.START_TIME,
+                modifiedAt = FakeTimeProvider.START_TIME
             )
         )
 
@@ -185,14 +185,14 @@ class SessionDaoTest {
                 sessionId = UUIDConverter.fromInt(2),
                 libraryItemId = UUIDConverter.fromInt(1),
                 durationSeconds = 900,
-                startTimestamp = fakeTimeProvider.startTime,
+                startTimestamp = FakeTimeProvider.START_TIME,
             ),
             Section(
                 id = UUIDConverter.fromInt(4),
                 sessionId = UUIDConverter.fromInt(2),
                 libraryItemId = UUIDConverter.fromInt(1),
                 durationSeconds = 1500,
-                startTimestamp = fakeTimeProvider.startTime,
+                startTimestamp = FakeTimeProvider.START_TIME,
             )
         )
     }
@@ -224,16 +224,16 @@ class SessionDaoTest {
                 breakDurationSeconds = 600,
                 rating = 5,
                 comment = "",
-                createdAt = fakeTimeProvider.startTime,
-                modifiedAt = fakeTimeProvider.startTime.plus(1.seconds.toJavaDuration())
+                createdAt = FakeTimeProvider.START_TIME,
+                modifiedAt = FakeTimeProvider.START_TIME.plus(1.seconds.toJavaDuration())
             ),
             Session(
                 id = UUIDConverter.fromInt(4),
                 breakDurationSeconds = 600,
                 rating = 1,
                 comment = "Edited comment",
-                createdAt = fakeTimeProvider.startTime,
-                modifiedAt = fakeTimeProvider.startTime.plus(1.seconds.toJavaDuration())
+                createdAt = FakeTimeProvider.START_TIME,
+                modifiedAt = FakeTimeProvider.START_TIME.plus(1.seconds.toJavaDuration())
             )
         )
     }
@@ -339,16 +339,16 @@ class SessionDaoTest {
                 breakDurationSeconds = 600,
                 rating = 3,
                 comment = "Test comment",
-                createdAt = fakeTimeProvider.startTime,
-                modifiedAt = fakeTimeProvider.startTime.plus(1.seconds.toJavaDuration())
+                createdAt = FakeTimeProvider.START_TIME,
+                modifiedAt = FakeTimeProvider.START_TIME.plus(1.seconds.toJavaDuration())
             ),
             Session(
                 id = UUIDConverter.fromInt(4),
                 breakDurationSeconds = 600,
                 rating = 3,
                 comment = "Test comment",
-                createdAt = fakeTimeProvider.startTime,
-                modifiedAt = fakeTimeProvider.startTime.plus(1.seconds.toJavaDuration())
+                createdAt = FakeTimeProvider.START_TIME,
+                modifiedAt = FakeTimeProvider.START_TIME.plus(1.seconds.toJavaDuration())
             )
         )
 
@@ -361,14 +361,14 @@ class SessionDaoTest {
                 sessionId = UUIDConverter.fromInt(2),
                 libraryItemId = UUIDConverter.fromInt(1),
                 durationSeconds = 900,
-                startTimestamp = fakeTimeProvider.startTime,
+                startTimestamp = FakeTimeProvider.START_TIME,
             ),
             Section(
                 id = UUIDConverter.fromInt(5),
                 sessionId = UUIDConverter.fromInt(4),
                 libraryItemId = UUIDConverter.fromInt(1),
                 durationSeconds = 900,
-                startTimestamp = fakeTimeProvider.startTime,
+                startTimestamp = FakeTimeProvider.START_TIME,
             )
         )
     }
@@ -416,16 +416,16 @@ class SessionDaoTest {
                 breakDurationSeconds = 600,
                 rating = 3,
                 comment = "Test comment",
-                createdAt = fakeTimeProvider.startTime,
-                modifiedAt = fakeTimeProvider.startTime
+                createdAt = FakeTimeProvider.START_TIME,
+                modifiedAt = FakeTimeProvider.START_TIME
             ),
             Session(
                 id = UUIDConverter.fromInt(6),
                 breakDurationSeconds = 600,
                 rating = 3,
                 comment = "Test comment",
-                createdAt = fakeTimeProvider.startTime,
-                modifiedAt = fakeTimeProvider.startTime
+                createdAt = FakeTimeProvider.START_TIME,
+                modifiedAt = FakeTimeProvider.START_TIME
             )
         )
     }
@@ -538,8 +538,8 @@ class SessionDaoTest {
                 breakDurationSeconds = 600,
                 rating = 3,
                 comment = "Test comment",
-                createdAt = fakeTimeProvider.startTime,
-                modifiedAt = fakeTimeProvider.startTime
+                createdAt = FakeTimeProvider.START_TIME,
+                modifiedAt = FakeTimeProvider.START_TIME
             )
         )
 
@@ -551,14 +551,14 @@ class SessionDaoTest {
                 sessionId = UUIDConverter.fromInt(2),
                 libraryItemId = UUIDConverter.fromInt(1),
                 durationSeconds = 300,
-                startTimestamp = fakeTimeProvider.startTime,
+                startTimestamp = FakeTimeProvider.START_TIME,
             ),
             Section(
                 id = UUIDConverter.fromInt(4),
                 sessionId = UUIDConverter.fromInt(2),
                 libraryItemId = UUIDConverter.fromInt(1),
                 durationSeconds = 900,
-                startTimestamp = fakeTimeProvider.startTime,
+                startTimestamp = FakeTimeProvider.START_TIME,
             )
         )
     }
@@ -577,7 +577,7 @@ class SessionDaoTest {
                         SectionCreationAttributes(
                             libraryItemId = UUIDConverter.fromInt(0),
                             duration = 10.minutes,
-                            startTimestamp = fakeTimeProvider.startTime
+                            startTimestamp = FakeTimeProvider.START_TIME
                         )
                     )
                 )
@@ -602,8 +602,8 @@ class SessionDaoTest {
                     breakDurationSeconds = 600,
                     rating = 3,
                     comment = "Test comment",
-                    createdAt = fakeTimeProvider.startTime,
-                    modifiedAt = fakeTimeProvider.startTime
+                    createdAt = FakeTimeProvider.START_TIME,
+                    modifiedAt = FakeTimeProvider.START_TIME
                 ),
                 sections = listOf(
                     SectionWithLibraryItem(
@@ -612,7 +612,7 @@ class SessionDaoTest {
                             sessionId = UUIDConverter.fromInt(2),
                             libraryItemId = UUIDConverter.fromInt(1),
                             durationSeconds = 900,
-                            startTimestamp = fakeTimeProvider.startTime,
+                            startTimestamp = FakeTimeProvider.START_TIME,
                         ),
                         libraryItem = LibraryItem(
                             id = UUIDConverter.fromInt(1),
@@ -620,8 +620,8 @@ class SessionDaoTest {
                             colorIndex = 1,
                             libraryFolderId = null,
                             customOrder = null,
-                            createdAt = fakeTimeProvider.startTime,
-                            modifiedAt = fakeTimeProvider.startTime
+                            createdAt = FakeTimeProvider.START_TIME,
+                            modifiedAt = FakeTimeProvider.START_TIME
                         )
                     )
                 )
@@ -644,8 +644,8 @@ class SessionDaoTest {
                     breakDurationSeconds = 600,
                     rating = 3,
                     comment = "Test comment",
-                    createdAt = fakeTimeProvider.startTime,
-                    modifiedAt = fakeTimeProvider.startTime
+                    createdAt = FakeTimeProvider.START_TIME,
+                    modifiedAt = FakeTimeProvider.START_TIME
                 ),
                 sections = listOf(
                     SectionWithLibraryItem(
@@ -654,7 +654,7 @@ class SessionDaoTest {
                             sessionId = UUIDConverter.fromInt(2),
                             libraryItemId = UUIDConverter.fromInt(1),
                             durationSeconds = 900,
-                            startTimestamp = fakeTimeProvider.startTime,
+                            startTimestamp = FakeTimeProvider.START_TIME,
                         ),
                         libraryItem = LibraryItem(
                             id = UUIDConverter.fromInt(1),
@@ -662,8 +662,8 @@ class SessionDaoTest {
                             colorIndex = 1,
                             libraryFolderId = null,
                             customOrder = null,
-                            createdAt = fakeTimeProvider.startTime,
-                            modifiedAt = fakeTimeProvider.startTime
+                            createdAt = FakeTimeProvider.START_TIME,
+                            modifiedAt = FakeTimeProvider.START_TIME
                         )
                     )
                 )
@@ -699,8 +699,8 @@ class SessionDaoTest {
         insertSessionWithSection()
 
         val sessions = sessionDao.getFromTimeframe(
-            startTimestamp = fakeTimeProvider.startTime.plus(1.seconds.toJavaDuration()),
-            endTimestamp = fakeTimeProvider.startTime.plus(2.seconds.toJavaDuration())
+            startTimestamp = FakeTimeProvider.START_TIME.plus(1.seconds.toJavaDuration()),
+            endTimestamp = FakeTimeProvider.START_TIME.plus(2.seconds.toJavaDuration())
         ).first()
 
         assertThat(sessions).containsExactly(
@@ -710,8 +710,8 @@ class SessionDaoTest {
                     breakDurationSeconds = 600,
                     rating = 3,
                     comment = "Test comment",
-                    createdAt = fakeTimeProvider.startTime.plus(1.seconds.toJavaDuration()),
-                    modifiedAt = fakeTimeProvider.startTime.plus(1.seconds.toJavaDuration())
+                    createdAt = FakeTimeProvider.START_TIME.plus(1.seconds.toJavaDuration()),
+                    modifiedAt = FakeTimeProvider.START_TIME.plus(1.seconds.toJavaDuration())
                 ),
                 sections = listOf(
                     SectionWithLibraryItem(
@@ -720,7 +720,7 @@ class SessionDaoTest {
                             sessionId = UUIDConverter.fromInt(4),
                             libraryItemId = UUIDConverter.fromInt(1),
                             durationSeconds = 900,
-                            startTimestamp = fakeTimeProvider.startTime.plus(1.seconds.toJavaDuration()),
+                            startTimestamp = FakeTimeProvider.START_TIME.plus(1.seconds.toJavaDuration()),
                         ),
                         libraryItem = LibraryItem(
                             id = UUIDConverter.fromInt(1),
@@ -728,8 +728,8 @@ class SessionDaoTest {
                             colorIndex = 1,
                             libraryFolderId = null,
                             customOrder = null,
-                            createdAt = fakeTimeProvider.startTime,
-                            modifiedAt = fakeTimeProvider.startTime
+                            createdAt = FakeTimeProvider.START_TIME,
+                            modifiedAt = FakeTimeProvider.START_TIME
                         )
                     )
                 )

@@ -117,8 +117,8 @@ class GetItemsUseCaseTest {
         assertThat(items).containsExactly(
             LibraryItem(
                 id = UUIDConverter.fromInt(2),
-                createdAt = fakeTimeProvider.startTime.plus(0.seconds.toJavaDuration()),
-                modifiedAt = fakeTimeProvider.startTime.plus(0.seconds.toJavaDuration()),
+                createdAt = FakeTimeProvider.START_TIME.plus(0.seconds.toJavaDuration()),
+                modifiedAt = FakeTimeProvider.START_TIME.plus(0.seconds.toJavaDuration()),
                 name = "TestItem3",
                 colorIndex = 0,
                 libraryFolderId = null,
@@ -126,8 +126,8 @@ class GetItemsUseCaseTest {
             ),
             LibraryItem(
                 id = UUIDConverter.fromInt(4),
-                createdAt = fakeTimeProvider.startTime.plus(1.seconds.toJavaDuration()),
-                modifiedAt = fakeTimeProvider.startTime.plus(1.seconds.toJavaDuration()),
+                createdAt = FakeTimeProvider.START_TIME.plus(1.seconds.toJavaDuration()),
+                modifiedAt = FakeTimeProvider.START_TIME.plus(1.seconds.toJavaDuration()),
                 name = "TestItem3",
                 colorIndex = 8,
                 libraryFolderId = null,
@@ -135,8 +135,8 @@ class GetItemsUseCaseTest {
             ),
             LibraryItem(
                 id = UUIDConverter.fromInt(6),
-                createdAt = fakeTimeProvider.startTime.plus(2.seconds.toJavaDuration()),
-                modifiedAt = fakeTimeProvider.startTime.plus(6.seconds.toJavaDuration()),
+                createdAt = FakeTimeProvider.START_TIME.plus(2.seconds.toJavaDuration()),
+                modifiedAt = FakeTimeProvider.START_TIME.plus(6.seconds.toJavaDuration()),
                 name = "RenamedItem2",
                 colorIndex = 3,
                 libraryFolderId = null,
@@ -144,8 +144,8 @@ class GetItemsUseCaseTest {
             ),
             LibraryItem(
                 id = UUIDConverter.fromInt(8),
-                createdAt = fakeTimeProvider.startTime.plus(3.seconds.toJavaDuration()),
-                modifiedAt = fakeTimeProvider.startTime.plus(3.seconds.toJavaDuration()),
+                createdAt = FakeTimeProvider.START_TIME.plus(3.seconds.toJavaDuration()),
+                modifiedAt = FakeTimeProvider.START_TIME.plus(3.seconds.toJavaDuration()),
                 name = "TestItem1",
                 colorIndex = 9,
                 libraryFolderId = null,
@@ -153,8 +153,8 @@ class GetItemsUseCaseTest {
             ),
             LibraryItem(
                 id = UUIDConverter.fromInt(10),
-                createdAt = fakeTimeProvider.startTime.plus(4.seconds.toJavaDuration()),
-                modifiedAt = fakeTimeProvider.startTime.plus(5.seconds.toJavaDuration()),
+                createdAt = FakeTimeProvider.START_TIME.plus(4.seconds.toJavaDuration()),
+                modifiedAt = FakeTimeProvider.START_TIME.plus(5.seconds.toJavaDuration()),
                 name = "RenamedItem1",
                 colorIndex = 2,
                 libraryFolderId = null,
@@ -170,8 +170,8 @@ class GetItemsUseCaseTest {
         assertThat(items).containsExactly(
             LibraryItem(
                 id = UUIDConverter.fromInt(3),
-                createdAt = fakeTimeProvider.startTime.plus(0.seconds.toJavaDuration()),
-                modifiedAt = fakeTimeProvider.startTime.plus(0.seconds.toJavaDuration()),
+                createdAt = FakeTimeProvider.START_TIME.plus(0.seconds.toJavaDuration()),
+                modifiedAt = FakeTimeProvider.START_TIME.plus(0.seconds.toJavaDuration()),
                 name = "TestItem3",
                 colorIndex = 0,
                 libraryFolderId = UUIDConverter.fromInt(1),
@@ -179,8 +179,8 @@ class GetItemsUseCaseTest {
             ),
             LibraryItem(
                 id = UUIDConverter.fromInt(5),
-                createdAt = fakeTimeProvider.startTime.plus(1.seconds.toJavaDuration()),
-                modifiedAt = fakeTimeProvider.startTime.plus(1.seconds.toJavaDuration()),
+                createdAt = FakeTimeProvider.START_TIME.plus(1.seconds.toJavaDuration()),
+                modifiedAt = FakeTimeProvider.START_TIME.plus(1.seconds.toJavaDuration()),
                 name = "TestItem3",
                 colorIndex = 8,
                 libraryFolderId = UUIDConverter.fromInt(1),
@@ -188,8 +188,8 @@ class GetItemsUseCaseTest {
             ),
             LibraryItem(
                 id = UUIDConverter.fromInt(7),
-                createdAt = fakeTimeProvider.startTime.plus(2.seconds.toJavaDuration()),
-                modifiedAt = fakeTimeProvider.startTime.plus(6.seconds.toJavaDuration()),
+                createdAt = FakeTimeProvider.START_TIME.plus(2.seconds.toJavaDuration()),
+                modifiedAt = FakeTimeProvider.START_TIME.plus(6.seconds.toJavaDuration()),
                 name = "RenamedItem2",
                 colorIndex = 3,
                 libraryFolderId = UUIDConverter.fromInt(1),
@@ -197,8 +197,8 @@ class GetItemsUseCaseTest {
             ),
             LibraryItem(
                 id = UUIDConverter.fromInt(9),
-                createdAt = fakeTimeProvider.startTime.plus(3.seconds.toJavaDuration()),
-                modifiedAt = fakeTimeProvider.startTime.plus(3.seconds.toJavaDuration()),
+                createdAt = FakeTimeProvider.START_TIME.plus(3.seconds.toJavaDuration()),
+                modifiedAt = FakeTimeProvider.START_TIME.plus(3.seconds.toJavaDuration()),
                 name = "TestItem1",
                 colorIndex = 9,
                 libraryFolderId = UUIDConverter.fromInt(1),
@@ -206,8 +206,8 @@ class GetItemsUseCaseTest {
             ),
             LibraryItem(
                 id = UUIDConverter.fromInt(11),
-                createdAt = fakeTimeProvider.startTime.plus(4.seconds.toJavaDuration()),
-                modifiedAt = fakeTimeProvider.startTime.plus(5.seconds.toJavaDuration()),
+                createdAt = FakeTimeProvider.START_TIME.plus(4.seconds.toJavaDuration()),
+                modifiedAt = FakeTimeProvider.START_TIME.plus(5.seconds.toJavaDuration()),
                 name = "RenamedItem1",
                 colorIndex = 2,
                 libraryFolderId = UUIDConverter.fromInt(1),

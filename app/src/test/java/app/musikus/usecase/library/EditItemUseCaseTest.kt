@@ -130,8 +130,8 @@ class EditItemUseCaseTest {
 
         val expectedItem = LibraryItem(
             id = UUIDConverter.fromInt(2),
-            createdAt = fakeTimeProvider.startTime,
-            modifiedAt = fakeTimeProvider.startTime,
+            createdAt = FakeTimeProvider.START_TIME,
+            modifiedAt = FakeTimeProvider.START_TIME,
             name = "NewName",
             colorIndex = 8,
             customOrder = null,

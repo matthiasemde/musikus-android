@@ -82,8 +82,8 @@ class AddGoalUseCaseTest {
             GoalDescriptionWithInstancesAndLibraryItems(
                 description = GoalDescription(
                     id = UUIDConverter.fromInt(1),
-                    createdAt = fakeTimeProvider.startTime,
-                    modifiedAt = fakeTimeProvider.startTime,
+                    createdAt = FakeTimeProvider.START_TIME,
+                    modifiedAt = FakeTimeProvider.START_TIME,
                     type = GoalType.NON_SPECIFIC,
                     repeat = true,
                     periodInPeriodUnits = 1,
@@ -96,12 +96,12 @@ class AddGoalUseCaseTest {
                 instances = listOf(
                     GoalInstance(
                         id = UUIDConverter.fromInt(2),
-                        createdAt = fakeTimeProvider.startTime,
-                        modifiedAt = fakeTimeProvider.startTime,
+                        createdAt = FakeTimeProvider.START_TIME,
+                        modifiedAt = FakeTimeProvider.START_TIME,
                         descriptionId = UUIDConverter.fromInt(1),
                         previousInstanceId = null,
                         startTimestamp = fakeTimeProvider.getStartOfDay(
-                            dateTime = fakeTimeProvider.startTime
+                            dateTime = FakeTimeProvider.START_TIME
                         ),
                         targetSeconds = 3600,
                         endTimestamp = null
@@ -136,8 +136,8 @@ class AddGoalUseCaseTest {
             GoalDescriptionWithInstancesAndLibraryItems(
                 description = GoalDescription(
                     id = UUIDConverter.fromInt(2),
-                    createdAt = fakeTimeProvider.startTime,
-                    modifiedAt = fakeTimeProvider.startTime,
+                    createdAt = FakeTimeProvider.START_TIME,
+                    modifiedAt = FakeTimeProvider.START_TIME,
                     type = GoalType.ITEM_SPECIFIC,
                     repeat = true,
                     periodInPeriodUnits = 1,
@@ -150,12 +150,12 @@ class AddGoalUseCaseTest {
                 instances = listOf(
                     GoalInstance(
                         id = UUIDConverter.fromInt(3),
-                        createdAt = fakeTimeProvider.startTime,
-                        modifiedAt = fakeTimeProvider.startTime,
+                        createdAt = FakeTimeProvider.START_TIME,
+                        modifiedAt = FakeTimeProvider.START_TIME,
                         descriptionId = UUIDConverter.fromInt(2),
                         previousInstanceId = null,
                         startTimestamp = fakeTimeProvider.getStartOfDay(
-                            dateTime = fakeTimeProvider.startTime
+                            dateTime = FakeTimeProvider.START_TIME
                         ),
                         targetSeconds = 3600,
                         endTimestamp = null
@@ -164,8 +164,8 @@ class AddGoalUseCaseTest {
                 libraryItems = listOf(
                     LibraryItem(
                         id = UUIDConverter.fromInt(1),
-                        createdAt = fakeTimeProvider.startTime,
-                        modifiedAt = fakeTimeProvider.startTime,
+                        createdAt = FakeTimeProvider.START_TIME,
+                        modifiedAt = FakeTimeProvider.START_TIME,
                         name = "Item 1",
                         colorIndex = 0,
                         customOrder = null,

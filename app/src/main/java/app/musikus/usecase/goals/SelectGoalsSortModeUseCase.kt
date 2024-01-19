@@ -14,7 +14,7 @@ import app.musikus.utils.SortDirection
 import app.musikus.utils.SortInfo
 import kotlinx.coroutines.flow.first
 
-class SelectGoalSortModeUseCase(
+class SelectGoalsSortModeUseCase(
     private val userPreferencesRepository: UserPreferencesRepository
 ) {
 

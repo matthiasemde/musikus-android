@@ -129,8 +129,8 @@ class GoalDescriptionDaoTest {
         assertThat(descriptions).containsExactly(
             GoalDescription(
                 id = UUIDConverter.fromInt(1),
-                createdAt = fakeTimeProvider.startTime,
-                modifiedAt = fakeTimeProvider.startTime,
+                createdAt = FakeTimeProvider.START_TIME,
+                modifiedAt = FakeTimeProvider.START_TIME,
                 type = GoalType.NON_SPECIFIC,
                 repeat = true,
                 periodInPeriodUnits = 1,
@@ -181,8 +181,8 @@ class GoalDescriptionDaoTest {
             GoalDescriptionWithInstancesAndLibraryItems(
                 description = GoalDescription(
                     id = UUIDConverter.fromInt(2),
-                    createdAt = fakeTimeProvider.startTime,
-                    modifiedAt = fakeTimeProvider.startTime,
+                    createdAt = FakeTimeProvider.START_TIME,
+                    modifiedAt = FakeTimeProvider.START_TIME,
                     type = GoalType.ITEM_SPECIFIC,
                     repeat = true,
                     periodInPeriodUnits = 2,
@@ -195,20 +195,20 @@ class GoalDescriptionDaoTest {
                 instances = listOf(
                     GoalInstance(
                         id = UUIDConverter.fromInt(3),
-                        createdAt = fakeTimeProvider.startTime,
-                        modifiedAt = fakeTimeProvider.startTime,
+                        createdAt = FakeTimeProvider.START_TIME,
+                        modifiedAt = FakeTimeProvider.START_TIME,
                         descriptionId = UUIDConverter.fromInt(2),
                         previousInstanceId = null,
                         targetSeconds = 7200,
-                        startTimestamp = fakeTimeProvider.startTime,
+                        startTimestamp = FakeTimeProvider.START_TIME,
                         endTimestamp = null,
                     )
                 ),
                 libraryItems = listOf(
                     LibraryItem(
                         id = UUIDConverter.fromInt(1),
-                        createdAt = fakeTimeProvider.startTime,
-                        modifiedAt = fakeTimeProvider.startTime,
+                        createdAt = FakeTimeProvider.START_TIME,
+                        modifiedAt = FakeTimeProvider.START_TIME,
                         name = "TestItem",
                         colorIndex = 1,
                         libraryFolderId = null,
@@ -335,8 +335,8 @@ class GoalDescriptionDaoTest {
         assertThat(goalDescriptions).containsExactly(
             GoalDescription(
                 id = UUIDConverter.fromInt(1),
-                createdAt = fakeTimeProvider.startTime,
-                modifiedAt = fakeTimeProvider.startTime.plus(1.seconds.toJavaDuration()),
+                createdAt = FakeTimeProvider.START_TIME,
+                modifiedAt = FakeTimeProvider.START_TIME.plus(1.seconds.toJavaDuration()),
                 type = GoalType.NON_SPECIFIC,
                 repeat = true,
                 periodInPeriodUnits = 1,
@@ -348,8 +348,8 @@ class GoalDescriptionDaoTest {
             ),
             GoalDescription(
                 id = UUIDConverter.fromInt(3),
-                createdAt = fakeTimeProvider.startTime,
-                modifiedAt = fakeTimeProvider.startTime.plus(1.seconds.toJavaDuration()),
+                createdAt = FakeTimeProvider.START_TIME,
+                modifiedAt = FakeTimeProvider.START_TIME.plus(1.seconds.toJavaDuration()),
                 type = GoalType.NON_SPECIFIC,
                 repeat = true,
                 periodInPeriodUnits = 2,
@@ -481,8 +481,8 @@ class GoalDescriptionDaoTest {
         assertThat(goalDescriptions).containsExactly(
             GoalDescription(
                 id = UUIDConverter.fromInt(1),
-                createdAt = fakeTimeProvider.startTime,
-                modifiedAt = fakeTimeProvider.startTime.plus(1.seconds.toJavaDuration()),
+                createdAt = FakeTimeProvider.START_TIME,
+                modifiedAt = FakeTimeProvider.START_TIME.plus(1.seconds.toJavaDuration()),
                 type = GoalType.NON_SPECIFIC,
                 repeat = true,
                 periodInPeriodUnits = 1,
@@ -494,8 +494,8 @@ class GoalDescriptionDaoTest {
             ),
             GoalDescription(
                 id = UUIDConverter.fromInt(3),
-                createdAt = fakeTimeProvider.startTime,
-                modifiedAt = fakeTimeProvider.startTime.plus(1.seconds.toJavaDuration()),
+                createdAt = FakeTimeProvider.START_TIME,
+                modifiedAt = FakeTimeProvider.START_TIME.plus(1.seconds.toJavaDuration()),
                 type = GoalType.NON_SPECIFIC,
                 repeat = true,
                 periodInPeriodUnits = 2,
@@ -561,8 +561,8 @@ class GoalDescriptionDaoTest {
         assertThat(goalDescriptions).containsExactly(
             GoalDescription(
                 id = UUIDConverter.fromInt(1),
-                createdAt = fakeTimeProvider.startTime,
-                modifiedAt = fakeTimeProvider.startTime,
+                createdAt = FakeTimeProvider.START_TIME,
+                modifiedAt = FakeTimeProvider.START_TIME,
                 type = GoalType.NON_SPECIFIC,
                 repeat = true,
                 periodInPeriodUnits = 1,
@@ -574,8 +574,8 @@ class GoalDescriptionDaoTest {
             ),
             GoalDescription(
                 id = UUIDConverter.fromInt(5),
-                createdAt = fakeTimeProvider.startTime,
-                modifiedAt = fakeTimeProvider.startTime,
+                createdAt = FakeTimeProvider.START_TIME,
+                modifiedAt = FakeTimeProvider.START_TIME,
                 type = GoalType.NON_SPECIFIC,
                 repeat = true,
                 periodInPeriodUnits = 3,
@@ -729,8 +729,8 @@ class GoalDescriptionDaoTest {
         assertThat(goalDescription).isEqualTo(
             GoalDescription(
                 id = UUIDConverter.fromInt(1),
-                createdAt = fakeTimeProvider.startTime,
-                modifiedAt = fakeTimeProvider.startTime,
+                createdAt = FakeTimeProvider.START_TIME,
+                modifiedAt = FakeTimeProvider.START_TIME,
                 type = GoalType.NON_SPECIFIC,
                 repeat = true,
                 periodInPeriodUnits = 1,
@@ -796,8 +796,8 @@ class GoalDescriptionDaoTest {
             GoalDescriptionWithInstancesAndLibraryItems(
                 description = GoalDescription(
                     id = UUIDConverter.fromInt(3),
-                    createdAt = fakeTimeProvider.startTime,
-                    modifiedAt = fakeTimeProvider.startTime,
+                    createdAt = FakeTimeProvider.START_TIME,
+                    modifiedAt = FakeTimeProvider.START_TIME,
                     type = GoalType.NON_SPECIFIC,
                     repeat = true,
                     periodInPeriodUnits = 1,
@@ -810,12 +810,12 @@ class GoalDescriptionDaoTest {
                 instances = listOf(
                     GoalInstance(
                         id = UUIDConverter.fromInt(4),
-                        createdAt = fakeTimeProvider.startTime,
-                        modifiedAt = fakeTimeProvider.startTime,
+                        createdAt = FakeTimeProvider.START_TIME,
+                        modifiedAt = FakeTimeProvider.START_TIME,
                         descriptionId = UUIDConverter.fromInt(3),
                         previousInstanceId = null,
                         targetSeconds = 3600,
-                        startTimestamp = fakeTimeProvider.startTime,
+                        startTimestamp = FakeTimeProvider.START_TIME,
                         endTimestamp = null,
                     )
                 ),
@@ -824,8 +824,8 @@ class GoalDescriptionDaoTest {
             GoalDescriptionWithInstancesAndLibraryItems(
                 description = GoalDescription(
                     id = UUIDConverter.fromInt(5),
-                    createdAt = fakeTimeProvider.startTime,
-                    modifiedAt = fakeTimeProvider.startTime,
+                    createdAt = FakeTimeProvider.START_TIME,
+                    modifiedAt = FakeTimeProvider.START_TIME,
                     type = GoalType.ITEM_SPECIFIC,
                     repeat = false,
                     periodInPeriodUnits = 2,
@@ -838,20 +838,20 @@ class GoalDescriptionDaoTest {
                 instances = listOf(
                     GoalInstance(
                         id = UUIDConverter.fromInt(6),
-                        createdAt = fakeTimeProvider.startTime,
-                        modifiedAt = fakeTimeProvider.startTime,
+                        createdAt = FakeTimeProvider.START_TIME,
+                        modifiedAt = FakeTimeProvider.START_TIME,
                         descriptionId = UUIDConverter.fromInt(5),
                         previousInstanceId = null,
                         targetSeconds = 7200,
-                        startTimestamp = fakeTimeProvider.startTime,
+                        startTimestamp = FakeTimeProvider.START_TIME,
                         endTimestamp = null,
                     )
                 ),
                 libraryItems = listOf(
                     LibraryItem(
                         id = UUIDConverter.fromInt(1),
-                        createdAt = fakeTimeProvider.startTime,
-                        modifiedAt = fakeTimeProvider.startTime,
+                        createdAt = FakeTimeProvider.START_TIME,
+                        modifiedAt = FakeTimeProvider.START_TIME,
                         name = "TestItem0",
                         colorIndex = 0,
                         libraryFolderId = null,
@@ -859,8 +859,8 @@ class GoalDescriptionDaoTest {
                     ),
                     LibraryItem(
                         id = UUIDConverter.fromInt(2),
-                        createdAt = fakeTimeProvider.startTime,
-                        modifiedAt = fakeTimeProvider.startTime,
+                        createdAt = FakeTimeProvider.START_TIME,
+                        modifiedAt = FakeTimeProvider.START_TIME,
                         name = "TestItem1",
                         colorIndex = 1,
                         libraryFolderId = null,

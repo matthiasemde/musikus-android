@@ -86,8 +86,8 @@ class EditFolderUseCaseTest {
 
         assertThat(updatedFolder).isEqualTo(LibraryFolder(
             id = UUIDConverter.fromInt(1),
-            createdAt = fakeTimeProvider.startTime,
-            modifiedAt = fakeTimeProvider.startTime,
+            createdAt = FakeTimeProvider.START_TIME,
+            modifiedAt = FakeTimeProvider.START_TIME,
             name = "NewName",
             customOrder = null
         ))

@@ -96,8 +96,8 @@ class AddItemUseCaseTest {
 
         assertThat(addedItem).isEqualTo(LibraryItem(
             id = UUIDConverter.fromInt(2), // id 1 is already used by the folder
-            createdAt = fakeTimeProvider.startTime,
-            modifiedAt = fakeTimeProvider.startTime,
+            createdAt = FakeTimeProvider.START_TIME,
+            modifiedAt = FakeTimeProvider.START_TIME,
             name = validItemCreationAttributes.name,
             colorIndex = validItemCreationAttributes.colorIndex,
             customOrder = null,
@@ -113,8 +113,8 @@ class AddItemUseCaseTest {
 
         val expectedItem = LibraryItem(
             id = UUIDConverter.fromInt(2), // id 1 is already used by the folder
-            createdAt = fakeTimeProvider.startTime,
-            modifiedAt = fakeTimeProvider.startTime,
+            createdAt = FakeTimeProvider.START_TIME,
+            modifiedAt = FakeTimeProvider.START_TIME,
             name = validItemCreationAttributes.name,
             colorIndex = validItemCreationAttributes.colorIndex,
             customOrder = null,

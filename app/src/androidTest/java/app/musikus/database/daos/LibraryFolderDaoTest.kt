@@ -82,15 +82,15 @@ class LibraryFolderDaoTest {
                 id = UUIDConverter.fromInt(1),
                 name = "TestFolder1",
                 customOrder = null,
-                createdAt = fakeTimeProvider.startTime,
-                modifiedAt = fakeTimeProvider.startTime,
+                createdAt = FakeTimeProvider.START_TIME,
+                modifiedAt = FakeTimeProvider.START_TIME,
             ),
             LibraryFolder(
                 id = UUIDConverter.fromInt(2),
                 name = "TestFolder2",
                 customOrder = null,
-                createdAt = fakeTimeProvider.startTime,
-                modifiedAt = fakeTimeProvider.startTime,
+                createdAt = FakeTimeProvider.START_TIME,
+                modifiedAt = FakeTimeProvider.START_TIME,
             )
         )
     }
@@ -136,15 +136,15 @@ class LibraryFolderDaoTest {
                 id = UUIDConverter.fromInt(1),
                 name = "UpdatedFolder1",
                 customOrder = null,
-                createdAt = fakeTimeProvider.startTime,
-                modifiedAt = fakeTimeProvider.startTime.plus(1.seconds.toJavaDuration()),
+                createdAt = FakeTimeProvider.START_TIME,
+                modifiedAt = FakeTimeProvider.START_TIME.plus(1.seconds.toJavaDuration()),
             ),
             LibraryFolder(
                 id = UUIDConverter.fromInt(2),
                 name = "UpdatedFolder2",
                 customOrder = null,
-                createdAt = fakeTimeProvider.startTime,
-                modifiedAt = fakeTimeProvider.startTime.plus(1.seconds.toJavaDuration()),
+                createdAt = FakeTimeProvider.START_TIME,
+                modifiedAt = FakeTimeProvider.START_TIME.plus(1.seconds.toJavaDuration()),
             )
         )
     }
@@ -263,15 +263,15 @@ class LibraryFolderDaoTest {
                 id = UUIDConverter.fromInt(1),
                 name = "TestFolder1",
                 customOrder = null,
-                createdAt = fakeTimeProvider.startTime,
-                modifiedAt = fakeTimeProvider.startTime.plus(1.seconds.toJavaDuration()),
+                createdAt = FakeTimeProvider.START_TIME,
+                modifiedAt = FakeTimeProvider.START_TIME.plus(1.seconds.toJavaDuration()),
             ),
             LibraryFolder(
                 id = UUIDConverter.fromInt(2),
                 name = "TestFolder2",
                 customOrder = null,
-                createdAt = fakeTimeProvider.startTime,
-                modifiedAt = fakeTimeProvider.startTime.plus(1.seconds.toJavaDuration()),
+                createdAt = FakeTimeProvider.START_TIME,
+                modifiedAt = FakeTimeProvider.START_TIME.plus(1.seconds.toJavaDuration()),
             )
         )
     }
@@ -325,15 +325,15 @@ class LibraryFolderDaoTest {
                 id = UUIDConverter.fromInt(1),
                 name = "TestFolder1",
                 customOrder = null,
-                createdAt = fakeTimeProvider.startTime,
-                modifiedAt = fakeTimeProvider.startTime,
+                createdAt = FakeTimeProvider.START_TIME,
+                modifiedAt = FakeTimeProvider.START_TIME,
             ),
             LibraryFolder(
                 id = UUIDConverter.fromInt(3),
                 name = "TestFolder3",
                 customOrder = null,
-                createdAt = fakeTimeProvider.startTime,
-                modifiedAt = fakeTimeProvider.startTime,
+                createdAt = FakeTimeProvider.START_TIME,
+                modifiedAt = FakeTimeProvider.START_TIME,
             )
         )
     }
@@ -453,8 +453,8 @@ class LibraryFolderDaoTest {
                     id = UUIDConverter.fromInt(1),
                     name = "TestFolder1",
                     customOrder = null,
-                    createdAt = fakeTimeProvider.startTime,
-                    modifiedAt = fakeTimeProvider.startTime,
+                    createdAt = FakeTimeProvider.START_TIME,
+                    modifiedAt = FakeTimeProvider.START_TIME,
                 ),
                 items = listOf(
                     LibraryItem(
@@ -463,8 +463,8 @@ class LibraryFolderDaoTest {
                         colorIndex = 6,
                         libraryFolderId = UUIDConverter.fromInt(1),
                         customOrder = null,
-                        createdAt = fakeTimeProvider.startTime,
-                        modifiedAt = fakeTimeProvider.startTime,
+                        createdAt = FakeTimeProvider.START_TIME,
+                        modifiedAt = FakeTimeProvider.START_TIME,
                     ),
                     LibraryItem(
                         id = UUIDConverter.fromInt(3),
@@ -472,8 +472,8 @@ class LibraryFolderDaoTest {
                         colorIndex = 3,
                         libraryFolderId = UUIDConverter.fromInt(1),
                         customOrder = null,
-                        createdAt = fakeTimeProvider.startTime,
-                        modifiedAt = fakeTimeProvider.startTime,
+                        createdAt = FakeTimeProvider.START_TIME,
+                        modifiedAt = FakeTimeProvider.START_TIME,
                     )
                 )
             )

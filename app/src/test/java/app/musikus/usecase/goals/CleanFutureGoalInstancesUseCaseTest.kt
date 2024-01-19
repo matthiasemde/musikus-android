@@ -94,8 +94,8 @@ class CleanFutureGoalInstancesUseCaseTest {
             GoalDescriptionWithInstancesAndLibraryItems(
                 description = GoalDescription(
                     id = UUIDConverter.fromInt(1),
-                    createdAt = fakeTimeProvider.startTime,
-                    modifiedAt = fakeTimeProvider.startTime,
+                    createdAt = FakeTimeProvider.START_TIME,
+                    modifiedAt = FakeTimeProvider.START_TIME,
                     type = GoalType.NON_SPECIFIC,
                     repeat = true,
                     periodInPeriodUnits = 2,
@@ -108,54 +108,54 @@ class CleanFutureGoalInstancesUseCaseTest {
                 instances = listOf(
                     GoalInstance(
                         id = UUIDConverter.fromInt(2),
-                        createdAt = fakeTimeProvider.startTime,
-                        modifiedAt = fakeTimeProvider.startTime.plus(6.days.toJavaDuration()),
+                        createdAt = FakeTimeProvider.START_TIME,
+                        modifiedAt = FakeTimeProvider.START_TIME.plus(6.days.toJavaDuration()),
                         descriptionId = UUIDConverter.fromInt(1),
                         previousInstanceId = null,
                         startTimestamp = fakeTimeProvider.getStartOfDay(
-                            dateTime = fakeTimeProvider.startTime
+                            dateTime = FakeTimeProvider.START_TIME
                         ),
                         targetSeconds = 3600,
                         endTimestamp = fakeTimeProvider.getStartOfDay(
-                            dateTime = fakeTimeProvider.startTime
+                            dateTime = FakeTimeProvider.START_TIME
                         ).plus(2.days.toJavaDuration())
                     ),
                     GoalInstance(
                         id = UUIDConverter.fromInt(3),
-                        createdAt = fakeTimeProvider.startTime.plus(6.days.toJavaDuration()),
-                        modifiedAt = fakeTimeProvider.startTime.plus(6.days.toJavaDuration()),
+                        createdAt = FakeTimeProvider.START_TIME.plus(6.days.toJavaDuration()),
+                        modifiedAt = FakeTimeProvider.START_TIME.plus(6.days.toJavaDuration()),
                         descriptionId = UUIDConverter.fromInt(1),
                         previousInstanceId = UUIDConverter.fromInt(2),
                         startTimestamp = fakeTimeProvider.getStartOfDay(
-                            dateTime = fakeTimeProvider.startTime
+                            dateTime = FakeTimeProvider.START_TIME
                         ).plus(2.days.toJavaDuration()),
                         targetSeconds = 3600,
                         endTimestamp = fakeTimeProvider.getStartOfDay(
-                            dateTime = fakeTimeProvider.startTime
+                            dateTime = FakeTimeProvider.START_TIME
                         ).plus(4.days.toJavaDuration())
                     ),
                     GoalInstance(
                         id = UUIDConverter.fromInt(4),
-                        createdAt = fakeTimeProvider.startTime.plus(6.days.toJavaDuration()),
-                        modifiedAt = fakeTimeProvider.startTime.plus(6.days.toJavaDuration()),
+                        createdAt = FakeTimeProvider.START_TIME.plus(6.days.toJavaDuration()),
+                        modifiedAt = FakeTimeProvider.START_TIME.plus(6.days.toJavaDuration()),
                         descriptionId = UUIDConverter.fromInt(1),
                         previousInstanceId = UUIDConverter.fromInt(3),
                         startTimestamp = fakeTimeProvider.getStartOfDay(
-                            dateTime = fakeTimeProvider.startTime
+                            dateTime = FakeTimeProvider.START_TIME
                         ).plus(4.days.toJavaDuration()),
                         targetSeconds = 3600,
                         endTimestamp = fakeTimeProvider.getStartOfDay(
-                            dateTime = fakeTimeProvider.startTime
+                            dateTime = FakeTimeProvider.START_TIME
                         ).plus(6.days.toJavaDuration())
                     ),
                     GoalInstance(
                         id = UUIDConverter.fromInt(5),
-                        createdAt = fakeTimeProvider.startTime.plus(6.days.toJavaDuration()),
-                        modifiedAt = fakeTimeProvider.startTime.plus(6.days.toJavaDuration()),
+                        createdAt = FakeTimeProvider.START_TIME.plus(6.days.toJavaDuration()),
+                        modifiedAt = FakeTimeProvider.START_TIME.plus(6.days.toJavaDuration()),
                         descriptionId = UUIDConverter.fromInt(1),
                         previousInstanceId = UUIDConverter.fromInt(4),
                         startTimestamp = fakeTimeProvider.getStartOfDay(
-                            dateTime = fakeTimeProvider.startTime
+                            dateTime = FakeTimeProvider.START_TIME
                         ).plus(6.days.toJavaDuration()),
                         targetSeconds = 3600,
                         endTimestamp = null
@@ -175,8 +175,8 @@ class CleanFutureGoalInstancesUseCaseTest {
             GoalDescriptionWithInstancesAndLibraryItems(
                 description = GoalDescription(
                     id = UUIDConverter.fromInt(1),
-                    createdAt = fakeTimeProvider.startTime,
-                    modifiedAt = fakeTimeProvider.startTime,
+                    createdAt = FakeTimeProvider.START_TIME,
+                    modifiedAt = FakeTimeProvider.START_TIME,
                     type = GoalType.NON_SPECIFIC,
                     repeat = true,
                     periodInPeriodUnits = 2,
@@ -189,26 +189,26 @@ class CleanFutureGoalInstancesUseCaseTest {
                 instances = listOf(
                     GoalInstance(
                         id = UUIDConverter.fromInt(2),
-                        createdAt = fakeTimeProvider.startTime,
-                        modifiedAt = fakeTimeProvider.startTime.plus(6.days.toJavaDuration()),
+                        createdAt = FakeTimeProvider.START_TIME,
+                        modifiedAt = FakeTimeProvider.START_TIME.plus(6.days.toJavaDuration()),
                         descriptionId = UUIDConverter.fromInt(1),
                         previousInstanceId = null,
                         startTimestamp = fakeTimeProvider.getStartOfDay(
-                            dateTime = fakeTimeProvider.startTime
+                            dateTime = FakeTimeProvider.START_TIME
                         ),
                         targetSeconds = 3600,
                         endTimestamp = fakeTimeProvider.getStartOfDay(
-                            dateTime = fakeTimeProvider.startTime
+                            dateTime = FakeTimeProvider.START_TIME
                         ).plus(2.days.toJavaDuration())
                     ),
                     GoalInstance(
                         id = UUIDConverter.fromInt(3),
-                        createdAt = fakeTimeProvider.startTime.plus(6.days.toJavaDuration()),
-                        modifiedAt = fakeTimeProvider.startTime.plus(3.days.toJavaDuration()),
+                        createdAt = FakeTimeProvider.START_TIME.plus(6.days.toJavaDuration()),
+                        modifiedAt = FakeTimeProvider.START_TIME.plus(3.days.toJavaDuration()),
                         descriptionId = UUIDConverter.fromInt(1),
                         previousInstanceId = UUIDConverter.fromInt(2),
                         startTimestamp = fakeTimeProvider.getStartOfDay(
-                            dateTime = fakeTimeProvider.startTime
+                            dateTime = FakeTimeProvider.START_TIME
                         ).plus(2.days.toJavaDuration()),
                         targetSeconds = 3600,
                         endTimestamp = null
@@ -237,8 +237,8 @@ class CleanFutureGoalInstancesUseCaseTest {
             GoalDescriptionWithInstancesAndLibraryItems(
                 description = GoalDescription(
                     id = UUIDConverter.fromInt(1),
-                    createdAt = fakeTimeProvider.startTime,
-                    modifiedAt = fakeTimeProvider.startTime,
+                    createdAt = FakeTimeProvider.START_TIME,
+                    modifiedAt = FakeTimeProvider.START_TIME,
                     type = GoalType.NON_SPECIFIC,
                     repeat = true,
                     periodInPeriodUnits = 2,
@@ -251,12 +251,12 @@ class CleanFutureGoalInstancesUseCaseTest {
                 instances = listOf(
                     GoalInstance(
                         id = UUIDConverter.fromInt(2),
-                        createdAt = fakeTimeProvider.startTime,
-                        modifiedAt = fakeTimeProvider.startTime,
+                        createdAt = FakeTimeProvider.START_TIME,
+                        modifiedAt = FakeTimeProvider.START_TIME,
                         descriptionId = UUIDConverter.fromInt(1),
                         previousInstanceId = null,
                         startTimestamp = fakeTimeProvider.getStartOfDay(
-                            dateTime = fakeTimeProvider.startTime
+                            dateTime = FakeTimeProvider.START_TIME
                         ),
                         targetSeconds = 3600,
                         endTimestamp = null

@@ -101,8 +101,8 @@ class LibraryItemDaoTest {
                 colorIndex = 5,
                 libraryFolderId = null,
                 customOrder = null,
-                createdAt = fakeTimeProvider.startTime,
-                modifiedAt = fakeTimeProvider.startTime,
+                createdAt = FakeTimeProvider.START_TIME,
+                modifiedAt = FakeTimeProvider.START_TIME,
             ),
             LibraryItem(
                 id = UUIDConverter.fromInt(3),
@@ -110,8 +110,8 @@ class LibraryItemDaoTest {
                 colorIndex = 0,
                 libraryFolderId = UUIDConverter.fromInt(1),
                 customOrder = null,
-                createdAt = fakeTimeProvider.startTime,
-                modifiedAt = fakeTimeProvider.startTime,
+                createdAt = FakeTimeProvider.START_TIME,
+                modifiedAt = FakeTimeProvider.START_TIME,
             )
         )
     }
@@ -192,8 +192,8 @@ class LibraryItemDaoTest {
                 colorIndex = 0,
                 libraryFolderId = UUIDConverter.fromInt(1),
                 customOrder = null,
-                createdAt = fakeTimeProvider.startTime,
-                modifiedAt = fakeTimeProvider.startTime.plus(1.seconds.toJavaDuration()),
+                createdAt = FakeTimeProvider.START_TIME,
+                modifiedAt = FakeTimeProvider.START_TIME.plus(1.seconds.toJavaDuration()),
             ),
             LibraryItem(
                 id = UUIDConverter.fromInt(3),
@@ -201,8 +201,8 @@ class LibraryItemDaoTest {
                 colorIndex = 9,
                 libraryFolderId = null,
                 customOrder = null,
-                createdAt = fakeTimeProvider.startTime,
-                modifiedAt = fakeTimeProvider.startTime.plus(1.seconds.toJavaDuration()),
+                createdAt = FakeTimeProvider.START_TIME,
+                modifiedAt = FakeTimeProvider.START_TIME.plus(1.seconds.toJavaDuration()),
             )
         )
     }
@@ -368,8 +368,8 @@ class LibraryItemDaoTest {
                 colorIndex = 0,
                 libraryFolderId = null,
                 customOrder = null,
-                createdAt = fakeTimeProvider.startTime,
-                modifiedAt = fakeTimeProvider.startTime.plus(1.seconds.toJavaDuration()),
+                createdAt = FakeTimeProvider.START_TIME,
+                modifiedAt = FakeTimeProvider.START_TIME.plus(1.seconds.toJavaDuration()),
             ),
             LibraryItem(
                 id = UUIDConverter.fromInt(3),
@@ -377,8 +377,8 @@ class LibraryItemDaoTest {
                 colorIndex = 5,
                 libraryFolderId = UUIDConverter.fromInt(1),
                 customOrder = null,
-                createdAt = fakeTimeProvider.startTime,
-                modifiedAt = fakeTimeProvider.startTime.plus(1.seconds.toJavaDuration()),
+                createdAt = FakeTimeProvider.START_TIME,
+                modifiedAt = FakeTimeProvider.START_TIME.plus(1.seconds.toJavaDuration()),
             )
         )
     }
@@ -446,8 +446,8 @@ class LibraryItemDaoTest {
                 colorIndex = 0,
                 libraryFolderId = null,
                 customOrder = null,
-                createdAt = fakeTimeProvider.startTime,
-                modifiedAt = fakeTimeProvider.startTime,
+                createdAt = FakeTimeProvider.START_TIME,
+                modifiedAt = FakeTimeProvider.START_TIME,
             ),
             LibraryItem(
                 id = UUIDConverter.fromInt(3),
@@ -455,8 +455,8 @@ class LibraryItemDaoTest {
                 colorIndex = 5,
                 libraryFolderId = UUIDConverter.fromInt(1),
                 customOrder = null,
-                createdAt = fakeTimeProvider.startTime,
-                modifiedAt = fakeTimeProvider.startTime,
+                createdAt = FakeTimeProvider.START_TIME,
+                modifiedAt = FakeTimeProvider.START_TIME,
             )
         )
     }
@@ -537,7 +537,7 @@ class LibraryItemDaoTest {
             ),
             listOf(SectionCreationAttributes(
                 libraryItemId = UUIDConverter.fromInt(2),
-                startTimestamp = fakeTimeProvider.startTime,
+                startTimestamp = FakeTimeProvider.START_TIME,
                 duration = 1.seconds,
             ))
         )

@@ -92,8 +92,8 @@ class GetFoldersUseCaseTest {
             LibraryFolderWithItems(
                 folder = LibraryFolder(
                     id = UUIDConverter.fromInt(1),
-                    createdAt = fakeTimeProvider.startTime.plus(0.seconds.toJavaDuration()),
-                    modifiedAt = fakeTimeProvider.startTime.plus(0.seconds.toJavaDuration()),
+                    createdAt = FakeTimeProvider.START_TIME.plus(0.seconds.toJavaDuration()),
+                    modifiedAt = FakeTimeProvider.START_TIME.plus(0.seconds.toJavaDuration()),
                     name = "TestFolder3",
                     customOrder = null
                 ),
@@ -102,8 +102,8 @@ class GetFoldersUseCaseTest {
             LibraryFolderWithItems(
                 folder = LibraryFolder(
                     id = UUIDConverter.fromInt(2),
-                    createdAt = fakeTimeProvider.startTime.plus(1.seconds.toJavaDuration()),
-                    modifiedAt = fakeTimeProvider.startTime.plus(1.seconds.toJavaDuration()),
+                    createdAt = FakeTimeProvider.START_TIME.plus(1.seconds.toJavaDuration()),
+                    modifiedAt = FakeTimeProvider.START_TIME.plus(1.seconds.toJavaDuration()),
                     name = "TestFolder3",
                     customOrder = null
                 ),
@@ -112,8 +112,8 @@ class GetFoldersUseCaseTest {
             LibraryFolderWithItems(
                 folder = LibraryFolder(
                     id = UUIDConverter.fromInt(3),
-                    createdAt = fakeTimeProvider.startTime.plus(2.seconds.toJavaDuration()),
-                    modifiedAt = fakeTimeProvider.startTime.plus(6.seconds.toJavaDuration()),
+                    createdAt = FakeTimeProvider.START_TIME.plus(2.seconds.toJavaDuration()),
+                    modifiedAt = FakeTimeProvider.START_TIME.plus(6.seconds.toJavaDuration()),
                     name = "RenamedFolder2",
                     customOrder = null
                 ),
@@ -122,8 +122,8 @@ class GetFoldersUseCaseTest {
             LibraryFolderWithItems(
                 folder = LibraryFolder(
                     id = UUIDConverter.fromInt(4),
-                    createdAt = fakeTimeProvider.startTime.plus(3.seconds.toJavaDuration()),
-                    modifiedAt = fakeTimeProvider.startTime.plus(3.seconds.toJavaDuration()),
+                    createdAt = FakeTimeProvider.START_TIME.plus(3.seconds.toJavaDuration()),
+                    modifiedAt = FakeTimeProvider.START_TIME.plus(3.seconds.toJavaDuration()),
                     name = "TestFolder1",
                     customOrder = null
                 ),
@@ -132,8 +132,8 @@ class GetFoldersUseCaseTest {
             LibraryFolderWithItems(
                 folder = LibraryFolder(
                     id = UUIDConverter.fromInt(5),
-                    createdAt = fakeTimeProvider.startTime.plus(4.seconds.toJavaDuration()),
-                    modifiedAt = fakeTimeProvider.startTime.plus(5.seconds.toJavaDuration()),
+                    createdAt = FakeTimeProvider.START_TIME.plus(4.seconds.toJavaDuration()),
+                    modifiedAt = FakeTimeProvider.START_TIME.plus(5.seconds.toJavaDuration()),
                     name = "RenamedFolder1",
                     customOrder = null
                 ),

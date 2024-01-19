@@ -28,7 +28,7 @@ import app.musikus.usecase.goals.GetAllGoalsUseCase
 import app.musikus.usecase.goals.GoalsUseCases
 import app.musikus.usecase.goals.PauseGoalsUseCase
 import app.musikus.usecase.goals.RestoreGoalsUseCase
-import app.musikus.usecase.goals.SelectGoalSortModeUseCase
+import app.musikus.usecase.goals.SelectGoalsSortModeUseCase
 import app.musikus.usecase.goals.SortGoalsUseCase
 import app.musikus.usecase.goals.UnpauseGoalsUseCase
 import app.musikus.usecase.goals.UpdateGoalsUseCase
@@ -183,7 +183,7 @@ object TestAppModule {
             edit = EditGoalUseCase(goalRepository, cleanFutureGoalInstancesUseCase),
             delete = DeleteGoalsUseCase(goalRepository),
             restore = RestoreGoalsUseCase(goalRepository),
-            selectSortMode = SelectGoalSortModeUseCase(userPreferencesRepository),
+            selectSortMode = SelectGoalsSortModeUseCase(userPreferencesRepository),
         )
     }
 }

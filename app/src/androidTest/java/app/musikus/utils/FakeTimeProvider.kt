@@ -5,8 +5,7 @@ import kotlin.time.Duration
 import kotlin.time.toJavaDuration
 
 class FakeTimeProvider : TimeProvider {
-    val startTime: ZonedDateTime = ZonedDateTime.parse("1969-07-20T20:17:40Z[UTC]")
-    private var _currentDateTime = startTime
+    private var _currentDateTime = START_TIME
 
     override fun now(): ZonedDateTime {
         return _currentDateTime
@@ -24,4 +23,7 @@ class FakeTimeProvider : TimeProvider {
         _currentDateTime = _currentDateTime.minus(duration.toJavaDuration())
     }
 
+    companion object {
+        val START_TIME: ZonedDateTime = ZonedDateTime.parse("1969-07-20T20:17:40Z[UTC]")
+    }
 }

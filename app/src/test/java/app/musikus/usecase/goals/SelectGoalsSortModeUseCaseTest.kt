@@ -20,13 +20,13 @@ import org.junit.jupiter.api.Test
 
 
 class SelectGoalsSortModeUseCaseTest {
-    private lateinit var selectGoalSortMode: SelectGoalSortModeUseCase
+    private lateinit var selectGoalSortMode: SelectGoalsSortModeUseCase
     private lateinit var fakeUserPreferencesRepository: FakeUserPreferencesRepository
 
     @BeforeEach
     fun setUp() {
         fakeUserPreferencesRepository = FakeUserPreferencesRepository()
-        selectGoalSortMode = SelectGoalSortModeUseCase(
+        selectGoalSortMode = SelectGoalsSortModeUseCase(
             userPreferencesRepository = fakeUserPreferencesRepository,
         )
     }

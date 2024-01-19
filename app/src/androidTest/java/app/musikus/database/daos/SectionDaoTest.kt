@@ -107,14 +107,14 @@ class SectionDaoTest {
                 sessionId = UUIDConverter.fromInt(2),
                 libraryItemId = UUIDConverter.fromInt(1),
                 durationSeconds = 120,
-                startTimestamp = fakeTimeProvider.startTime,
+                startTimestamp = FakeTimeProvider.START_TIME,
             ),
             Section(
                 id = UUIDConverter.fromInt(4),
                 sessionId = UUIDConverter.fromInt(2),
                 libraryItemId = UUIDConverter.fromInt(1),
                 durationSeconds = 240,
-                startTimestamp = fakeTimeProvider.startTime.plus(2.minutes.toJavaDuration()),
+                startTimestamp = FakeTimeProvider.START_TIME.plus(2.minutes.toJavaDuration()),
             )
         )
     }
@@ -139,7 +139,7 @@ class SectionDaoTest {
                     sessionId = UUIDConverter.fromInt(2),
                     libraryItemId = UUIDConverter.fromInt(1),
                     duration = 10.minutes,
-                    startTimestamp = fakeTimeProvider.startTime
+                    startTimestamp = FakeTimeProvider.START_TIME
                 ))
             }
         }
@@ -172,14 +172,14 @@ class SectionDaoTest {
                 sessionId = UUIDConverter.fromInt(2),
                 libraryItemId = UUIDConverter.fromInt(1),
                 durationSeconds = 300,
-                startTimestamp = fakeTimeProvider.startTime,
+                startTimestamp = FakeTimeProvider.START_TIME,
             ),
             Section(
                 id = UUIDConverter.fromInt(4),
                 sessionId = UUIDConverter.fromInt(2),
                 libraryItemId = UUIDConverter.fromInt(1),
                 durationSeconds = 3600,
-                startTimestamp = fakeTimeProvider.startTime.plus(2.minutes.toJavaDuration()),
+                startTimestamp = FakeTimeProvider.START_TIME.plus(2.minutes.toJavaDuration()),
             )
         )
     }
@@ -308,14 +308,14 @@ class SectionDaoTest {
                 sessionId = UUIDConverter.fromInt(2),
                 libraryItemId = UUIDConverter.fromInt(1),
                 durationSeconds = 120,
-                startTimestamp = fakeTimeProvider.startTime,
+                startTimestamp = FakeTimeProvider.START_TIME,
             ),
             Section(
                 id = UUIDConverter.fromInt(7),
                 sessionId = UUIDConverter.fromInt(5),
                 libraryItemId = UUIDConverter.fromInt(1),
                 durationSeconds = 540,
-                startTimestamp = fakeTimeProvider.startTime.plus(3.minutes.toJavaDuration()),
+                startTimestamp = FakeTimeProvider.START_TIME.plus(3.minutes.toJavaDuration()),
             )
         )
     }
@@ -407,8 +407,8 @@ class SectionDaoTest {
 
         // Get the sections
         val sections = sectionDao.getInTimeframe(
-            startTimestamp = fakeTimeProvider.startTime,
-            endTimestamp = fakeTimeProvider.startTime.plus(3.minutes.toJavaDuration())
+            startTimestamp = FakeTimeProvider.START_TIME,
+            endTimestamp = FakeTimeProvider.START_TIME.plus(3.minutes.toJavaDuration())
         ).first()
 
         // Check if the sections were retrieved correctly
@@ -418,21 +418,21 @@ class SectionDaoTest {
                 sessionId = UUIDConverter.fromInt(2),
                 libraryItemId = UUIDConverter.fromInt(1),
                 durationSeconds = 120,
-                startTimestamp = fakeTimeProvider.startTime,
+                startTimestamp = FakeTimeProvider.START_TIME,
             ),
             Section(
                 id = UUIDConverter.fromInt(4),
                 sessionId = UUIDConverter.fromInt(2),
                 libraryItemId = UUIDConverter.fromInt(1),
                 durationSeconds = 240,
-                startTimestamp = fakeTimeProvider.startTime.plus(2.minutes.toJavaDuration()),
+                startTimestamp = FakeTimeProvider.START_TIME.plus(2.minutes.toJavaDuration()),
             ),
             Section(
                 id = UUIDConverter.fromInt(6),
                 sessionId = UUIDConverter.fromInt(5),
                 libraryItemId = UUIDConverter.fromInt(1),
                 durationSeconds = 180,
-                startTimestamp = fakeTimeProvider.startTime,
+                startTimestamp = FakeTimeProvider.START_TIME,
             )
         )
     }
@@ -444,8 +444,8 @@ class SectionDaoTest {
 
         // Get the sections
         val sections = sectionDao.getInTimeframe(
-            startTimestamp = fakeTimeProvider.startTime,
-            endTimestamp = fakeTimeProvider.startTime.plus(15.minutes.toJavaDuration()),
+            startTimestamp = FakeTimeProvider.START_TIME,
+            endTimestamp = FakeTimeProvider.START_TIME.plus(15.minutes.toJavaDuration()),
         ).first()
 
         // Check if the sections were retrieved correctly
@@ -500,8 +500,8 @@ class SectionDaoTest {
 
         // Get the sections
         val sections = sectionDao.getInTimeframeForItemId(
-            startTimestamp = fakeTimeProvider.startTime,
-            endTimestamp = fakeTimeProvider.startTime.plus(12.minutes.toJavaDuration()),
+            startTimestamp = FakeTimeProvider.START_TIME,
+            endTimestamp = FakeTimeProvider.START_TIME.plus(12.minutes.toJavaDuration()),
             itemIds = listOf(
                 UUIDConverter.fromInt(1),
                 UUIDConverter.fromInt(5),
@@ -515,21 +515,21 @@ class SectionDaoTest {
                 sessionId = UUIDConverter.fromInt(2),
                 libraryItemId = UUIDConverter.fromInt(1),
                 durationSeconds = 120,
-                startTimestamp = fakeTimeProvider.startTime,
+                startTimestamp = FakeTimeProvider.START_TIME,
             ),
             Section(
                 id = UUIDConverter.fromInt(4),
                 sessionId = UUIDConverter.fromInt(2),
                 libraryItemId = UUIDConverter.fromInt(1),
                 durationSeconds = 240,
-                startTimestamp = fakeTimeProvider.startTime.plus(2.minutes.toJavaDuration()),
+                startTimestamp = FakeTimeProvider.START_TIME.plus(2.minutes.toJavaDuration()),
             ),
             Section(
                 id = UUIDConverter.fromInt(9),
                 sessionId = UUIDConverter.fromInt(7),
                 libraryItemId = UUIDConverter.fromInt(5),
                 durationSeconds = 540,
-                startTimestamp = fakeTimeProvider.startTime.plus(3.minutes.toJavaDuration()),
+                startTimestamp = FakeTimeProvider.START_TIME.plus(3.minutes.toJavaDuration()),
             )
         )
     }
@@ -539,8 +539,8 @@ class SectionDaoTest {
         val exception = assertThrows(IllegalArgumentException::class.java) {
             runBlocking {
                 sectionDao.getInTimeframeForItemId(
-                    startTimestamp = fakeTimeProvider.startTime.plus(5.minutes.toJavaDuration()),
-                    endTimestamp = fakeTimeProvider.startTime.plus(15.minutes.toJavaDuration()),
+                    startTimestamp = FakeTimeProvider.START_TIME.plus(5.minutes.toJavaDuration()),
+                    endTimestamp = FakeTimeProvider.START_TIME.plus(15.minutes.toJavaDuration()),
                     itemIds = listOf(
                         UUIDConverter.fromInt(1),
                         UUIDConverter.fromInt(2),
@@ -561,8 +561,8 @@ class SectionDaoTest {
 
         // Get the sections
         val sections = sectionDao.getInTimeframeForItemId(
-            startTimestamp = fakeTimeProvider.startTime,
-            endTimestamp = fakeTimeProvider.startTime.plus(15.minutes.toJavaDuration()),
+            startTimestamp = FakeTimeProvider.START_TIME,
+            endTimestamp = FakeTimeProvider.START_TIME.plus(15.minutes.toJavaDuration()),
             itemIds = listOf(
                 UUIDConverter.fromInt(1),
             )
