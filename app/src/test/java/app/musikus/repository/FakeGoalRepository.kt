@@ -1,6 +1,7 @@
 package app.musikus.repository
 
 import app.musikus.database.GoalDescriptionWithInstancesAndLibraryItems
+import app.musikus.database.GoalDescriptionWithLibraryItems
 import app.musikus.database.GoalInstanceWithDescription
 import app.musikus.database.GoalInstanceWithDescriptionWithLibraryItems
 import app.musikus.database.Nullable
@@ -16,7 +17,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import java.util.UUID
-import kotlin.time.Duration
 
 class FakeGoalRepository(
     private val fakeLibraryRepository: FakeLibraryRepository,
@@ -29,7 +29,15 @@ class FakeGoalRepository(
     private var _goalBuffer = listOf<GoalDescriptionWithInstancesAndLibraryItems>()
 
     override val currentGoals: Flow<List<GoalInstanceWithDescriptionWithLibraryItems>>
-        get() = TODO("Not yet implemented")
+        get() = flowOf(_goalDescriptionWithInstancesAndLibraryItems.map {
+            GoalInstanceWithDescriptionWithLibraryItems(
+                instance = it.latestInstance,
+                description = GoalDescriptionWithLibraryItems(
+                    description = it.description,
+                    libraryItems = it.libraryItems
+                )
+            )
+        })
     override val allGoals: Flow<List<GoalDescriptionWithInstancesAndLibraryItems>>
         get() = flowOf(_goalDescriptionWithInstancesAndLibraryItems)
     override val lastFiveCompletedGoals: Flow<List<GoalInstanceWithDescriptionWithLibraryItems>>
@@ -159,11 +167,6 @@ class FakeGoalRepository(
             )
         }
     }
-
-    override suspend fun editGoalTarget(goal: GoalInstance, newTarget: Duration) {
-        TODO("Not yet implemented")
-    }
-
 
     override suspend fun archive(goal: GoalDescription) {
         TODO("Not yet implemented")

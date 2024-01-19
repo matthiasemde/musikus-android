@@ -14,14 +14,12 @@ import app.musikus.database.GoalInstanceWithDescription
 import app.musikus.database.GoalInstanceWithDescriptionWithLibraryItems
 import app.musikus.database.MusikusDatabase
 import app.musikus.database.daos.GoalDescription
-import app.musikus.database.daos.GoalInstance
 import app.musikus.database.entities.GoalDescriptionCreationAttributes
 import app.musikus.database.entities.GoalDescriptionUpdateAttributes
 import app.musikus.database.entities.GoalInstanceCreationAttributes
 import app.musikus.database.entities.GoalInstanceUpdateAttributes
 import kotlinx.coroutines.flow.Flow
 import java.util.UUID
-import kotlin.time.Duration
 
 interface GoalRepository {
     val currentGoals: Flow<List<GoalInstanceWithDescriptionWithLibraryItems>>
@@ -51,11 +49,6 @@ interface GoalRepository {
 
     suspend fun updateGoalDescriptions(
         idsWithUpdateAttributes: List<Pair<UUID, GoalDescriptionUpdateAttributes>>,
-    )
-
-    suspend fun editGoalTarget(
-        goal: GoalInstance,
-        newTarget: Duration,
     )
 
     /** Archive / Unarchive */
@@ -136,21 +129,6 @@ class GoalRepositoryImpl(
     ) {
         descriptionDao.update(idsWithUpdateAttributes)
     }
-
-    override suspend fun editGoalTarget(
-        goal: GoalInstance,
-        newTarget: Duration,
-    ) {
-        // before editing we need to remove possible future instances
-        // which would still have the outdated target
-//        cleanFutureInstances()
-
-        instanceDao.update(
-            goal.id,
-            GoalInstanceUpdateAttributes(target = newTarget)
-        )
-    }
-
 
     /** Archive / Unarchive */
 

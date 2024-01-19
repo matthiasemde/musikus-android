@@ -15,6 +15,7 @@ import app.musikus.database.daos.GoalDescription
 import app.musikus.database.daos.LibraryItem
 import app.musikus.database.entities.GoalDescriptionCreationAttributes
 import app.musikus.database.entities.GoalInstanceCreationAttributes
+import app.musikus.database.entities.GoalInstanceUpdateAttributes
 import app.musikus.database.entities.GoalPeriodUnit
 import app.musikus.database.entities.GoalType
 import app.musikus.repository.GoalRepository
@@ -146,7 +147,7 @@ class GoalsViewModel @Inject constructor(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private val currentGoals = showPausedGoals.flatMapLatest { showPaused ->
-        goalsUseCases.getCurrent(showPaused = showPaused)
+        goalsUseCases.getCurrent(excludePaused = !showPaused)
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
@@ -510,9 +511,11 @@ class GoalsViewModel @Inject constructor(
                         libraryItemIds = dialogData.selectedLibraryItems.map { it.id },
                     )
                 } else {
-                    goalRepository.editGoalTarget(
-                        goal = uiState.goalToEdit.instance,
-                        newTarget = dialogData.target
+                    goalsUseCases.edit(
+                        descriptionId = uiState.goalToEdit.description.description.id,
+                        instanceUpdateAttributes = GoalInstanceUpdateAttributes(
+                            target = dialogData.target,
+                        ),
                     )
                 }
                 clearDialog()

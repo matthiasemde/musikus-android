@@ -19,13 +19,13 @@ class GetCurrentGoalsUseCase(
 ) {
 
     operator fun invoke(
-        showPaused: Boolean
+        excludePaused: Boolean
     ) : Flow<List<GoalInstanceWithDescriptionWithLibraryItems>> {
         return sortGoalsUseCase(goalRepository.currentGoals).map { goals ->
-            if (showPaused) {
-                goals
-            } else {
+            if (excludePaused) {
                 goals.filter { !it.description.description.paused }
+            } else {
+                goals
             }
         }
     }
