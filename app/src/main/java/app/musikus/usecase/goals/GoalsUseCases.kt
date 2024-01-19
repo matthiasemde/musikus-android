@@ -15,6 +15,7 @@ data class GoalsUseCases(
     val pause: PauseGoalsUseCase,
     val unpause: UnpauseGoalsUseCase,
     val archive: ArchiveGoalsUseCase,
+    val unarchive: UnarchiveGoalsUseCase,
     val update: UpdateGoalsUseCase,
     val edit: EditGoalUseCase,
     val delete: DeleteGoalsUseCase,

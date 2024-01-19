@@ -10,17 +10,49 @@ package app.musikus.usecase.goals
 
 import app.musikus.database.entities.GoalDescriptionUpdateAttributes
 import app.musikus.repository.GoalRepository
+import kotlinx.coroutines.flow.first
 import java.util.UUID
 
 class ArchiveGoalsUseCase(
-    private val goalRepository: GoalRepository
+    private val goalRepository: GoalRepository,
+    private val cleanFutureGoalInstancesUseCase: CleanFutureGoalInstancesUseCase,
 ) {
 
-        suspend operator fun invoke(
-            goalDescriptionIds: List<UUID>
-        ) {
-            goalRepository.updateGoalDescriptions(
-                goalDescriptionIds.map { it to GoalDescriptionUpdateAttributes(archived = true) }
-            )
+    suspend operator fun invoke(
+        goalDescriptionIds: List<UUID>
+    ) {
+        val uniqueGoalDescriptionIds = goalDescriptionIds.distinct()
+
+        val currentGoals = goalRepository.currentGoals.first().filter {
+            it.description.description.id in uniqueGoalDescriptionIds
         }
+
+        val missingGoalIds = uniqueGoalDescriptionIds - currentGoals.map { it.description.description.id }.toSet()
+        if(missingGoalIds.isNotEmpty()) {
+            throw IllegalArgumentException("Could not find goal(s) with descriptionId(s): $missingGoalIds")
+        }
+
+        val archivedGoals = currentGoals.filter { it.description.description.archived }
+        if(archivedGoals.isNotEmpty()) {
+            throw IllegalArgumentException("Cannot archive already archived goals: ${archivedGoals.map { it.description.description.id }}")
+        }
+
+        // clean future instances before archiving
+        cleanFutureGoalInstancesUseCase()
+
+        // when archiving a paused goal, delete the current instance
+        for (currentGoal in currentGoals) {
+            val description = currentGoal.description.description
+
+            // if previous instance id is zero, the goal instance is the first instance of the goal
+            // and should not be deleted
+            if(description.paused && currentGoal.instance.previousInstanceId != null) {
+                goalRepository.deletePausedInstance(currentGoal.instance.id)
+            }
+        }
+
+        goalRepository.updateGoalDescriptions(
+            goalDescriptionIds.map { it to GoalDescriptionUpdateAttributes(archived = true) }
+        )
+    }
 }
