@@ -168,22 +168,6 @@ class FakeGoalRepository(
         }
     }
 
-    override suspend fun archive(goal: GoalDescription) {
-        TODO("Not yet implemented")
-    }
-
-    override suspend fun archive(goals: List<GoalDescription>) {
-        TODO("Not yet implemented")
-    }
-
-    override suspend fun unarchive(goal: GoalDescription) {
-        TODO("Not yet implemented")
-    }
-
-    override suspend fun unarchive(goals: List<GoalDescription>) {
-        TODO("Not yet implemented")
-    }
-
     override suspend fun delete(descriptionIds: List<UUID>) {
         _goalBuffer = _goalDescriptionWithInstancesAndLibraryItems.filter { goal ->
             goal.description.id in descriptionIds

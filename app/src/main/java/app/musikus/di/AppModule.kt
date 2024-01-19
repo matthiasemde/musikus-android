@@ -197,7 +197,7 @@ object AppModule {
         )
         val archiveGoalsUseCase = ArchiveGoalsUseCase(
             goalRepository = goalRepository,
-            cleanFutureGoalInstancesUseCase = cleanFutureGoalInstancesUseCase,
+            cleanFutureGoalInstances = cleanFutureGoalInstancesUseCase,
         )
 
         return GoalsUseCases(

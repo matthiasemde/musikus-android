@@ -14,10 +14,10 @@ import kotlinx.coroutines.flow.Flow
 
 class GetAllGoalsUseCase(
     private val goalRepository: GoalRepository,
-    private val sortGoalsUseCase: SortGoalsUseCase
+    private val sortGoals: SortGoalsUseCase
 ) {
 
     operator fun invoke() : Flow<List<GoalDescriptionWithInstancesAndLibraryItems>> {
-        return sortGoalsUseCase(goalRepository.allGoals)
+        return sortGoals(goalRepository.allGoals)
     }
 }

@@ -15,13 +15,13 @@ import kotlinx.coroutines.flow.map
 
 class GetCurrentGoalsUseCase(
     private val goalRepository: GoalRepository,
-    private val sortGoalsUseCase: SortGoalsUseCase
+    private val sortGoals: SortGoalsUseCase
 ) {
 
     operator fun invoke(
         excludePaused: Boolean
     ) : Flow<List<GoalInstanceWithDescriptionWithLibraryItems>> {
-        return sortGoalsUseCase(goalRepository.currentGoals).map { goals ->
+        return sortGoals(goalRepository.currentGoals).map { goals ->
             if (excludePaused) {
                 goals.filter { !it.description.description.paused }
             } else {

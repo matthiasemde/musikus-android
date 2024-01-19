@@ -15,7 +15,7 @@ import java.util.UUID
 
 class PauseGoalsUseCase(
     private val goalRepository: GoalRepository,
-    private val cleanFutureGoalInstancesUseCase: CleanFutureGoalInstancesUseCase
+    private val cleanFutureGoalInstances: CleanFutureGoalInstancesUseCase
 ) {
 
     suspend operator fun invoke(
@@ -40,7 +40,7 @@ class PauseGoalsUseCase(
             throw IllegalArgumentException("Cannot pause already paused goals: ${pausedGoals.map { it.description.id }}")
         }
 
-        cleanFutureGoalInstancesUseCase()
+        cleanFutureGoalInstances()
 
         goalRepository.updateGoalDescriptions(
             goalDescriptionIds.map { it to GoalDescriptionUpdateAttributes(paused = true) }

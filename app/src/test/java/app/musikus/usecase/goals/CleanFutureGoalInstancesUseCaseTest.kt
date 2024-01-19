@@ -23,7 +23,6 @@ import app.musikus.utils.FakeIdProvider
 import app.musikus.utils.FakeTimeProvider
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -65,15 +64,12 @@ class CleanFutureGoalInstancesUseCaseTest {
         fakeGoalRepository = FakeGoalRepository(fakeLibraryRepository, fakeTimeProvider, fakeIdProvider)
 
         addGoalUseCase = AddGoalUseCase(fakeGoalRepository, fakeLibraryRepository, fakeTimeProvider)
-        archiveGoalsUseCase = ArchiveGoalsUseCase(fakeGoalRepository)
-        updateGoalsUseCase = UpdateGoalsUseCase(fakeGoalRepository, archiveGoalsUseCase, fakeTimeProvider)
 
         /** SUT */
         cleanFutureGoalInstancesUseCase = CleanFutureGoalInstancesUseCase(fakeGoalRepository, fakeTimeProvider)
 
-        runBlocking {
-
-        }
+        archiveGoalsUseCase = ArchiveGoalsUseCase(fakeGoalRepository, cleanFutureGoalInstancesUseCase)
+        updateGoalsUseCase = UpdateGoalsUseCase(fakeGoalRepository, archiveGoalsUseCase, fakeTimeProvider)
     }
 
     @Test

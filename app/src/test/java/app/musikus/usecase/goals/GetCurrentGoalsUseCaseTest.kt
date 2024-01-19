@@ -74,7 +74,7 @@ class GetCurrentGoalsUseCaseTest {
         /** SUT */
         getCurrentGoals = GetCurrentGoalsUseCase(
             goalRepository = fakeGoalRepository,
-            sortGoalsUseCase = sortGoalsUseCase,
+            sortGoals = sortGoalsUseCase,
         )
 
         runBlocking {

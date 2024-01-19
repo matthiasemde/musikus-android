@@ -18,7 +18,6 @@ import app.musikus.database.entities.GoalInstanceCreationAttributes
 import app.musikus.database.entities.GoalInstanceUpdateAttributes
 import app.musikus.database.entities.GoalPeriodUnit
 import app.musikus.database.entities.GoalType
-import app.musikus.repository.GoalRepository
 import app.musikus.repository.SessionRepository
 import app.musikus.repository.UserPreferencesRepository
 import app.musikus.shared.TopBarUiState
@@ -110,7 +109,6 @@ data class GoalsUiState (
 class GoalsViewModel @Inject constructor(
     private val timeProvider: TimeProvider,
     private val userPreferencesRepository : UserPreferencesRepository,
-    private val goalRepository : GoalRepository,
     private val goalsUseCases: GoalsUseCases,
     libraryUseCases: LibraryUseCases,
     sessionRepository : SessionRepository,
@@ -406,28 +404,28 @@ class GoalsViewModel @Inject constructor(
     fun onArchiveAction() {
         viewModelScope.launch {
             _goalsCache = _selectedGoals.value.map { it.description.description }
-            goalRepository.archive(_goalsCache)
+            goalsUseCases.archive(_goalsCache.map { it.id })
             clearActionMode()
         }
     }
 
     fun onUndoArchiveAction() {
         viewModelScope.launch {
-            goalRepository.unarchive(_goalsCache)
+            goalsUseCases.unarchive(_goalsCache.map { it.id })
         }
     }
 
     fun onDeleteAction() {
         viewModelScope.launch {
             _goalsCache = _selectedGoals.value.map { it.description.description }
-            goalRepository.delete(_goalsCache.map { it.id })
+            goalsUseCases.delete(_goalsCache.map { it.id })
             clearActionMode()
         }
     }
 
     fun onRestoreAction() {
         viewModelScope.launch {
-            goalRepository.restore(_goalsCache.map { it.id })
+            goalsUseCases.restore(_goalsCache.map { it.id })
         }
     }
 

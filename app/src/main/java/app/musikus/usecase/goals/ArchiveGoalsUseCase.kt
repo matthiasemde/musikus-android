@@ -15,7 +15,7 @@ import java.util.UUID
 
 class ArchiveGoalsUseCase(
     private val goalRepository: GoalRepository,
-    private val cleanFutureGoalInstancesUseCase: CleanFutureGoalInstancesUseCase,
+    private val cleanFutureGoalInstances: CleanFutureGoalInstancesUseCase,
 ) {
 
     suspend operator fun invoke(
@@ -34,11 +34,11 @@ class ArchiveGoalsUseCase(
 
         val archivedGoals = currentGoals.filter { it.description.description.archived }
         if(archivedGoals.isNotEmpty()) {
-            throw IllegalArgumentException("Cannot archive already archived goals: ${archivedGoals.map { it.description.description.id }}")
+            throw IllegalArgumentException("Cannot archive already archived goal(s): ${archivedGoals.map { it.description.description.id }}")
         }
 
         // clean future instances before archiving
-        cleanFutureGoalInstancesUseCase()
+        cleanFutureGoalInstances()
 
         // when archiving a paused goal, delete the current instance
         for (currentGoal in currentGoals) {

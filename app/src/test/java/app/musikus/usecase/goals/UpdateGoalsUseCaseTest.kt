@@ -74,11 +74,11 @@ class UpdateGoalsUseCaseTest {
             fakeLibraryRepository,
             fakeTimeProvider
         )
-        archiveGoalsUseCase = ArchiveGoalsUseCase(fakeGoalRepository)
         cleanFutureGoalInstancesUseCase = CleanFutureGoalInstancesUseCase(
             fakeGoalRepository,
             fakeTimeProvider
         )
+        archiveGoalsUseCase = ArchiveGoalsUseCase(fakeGoalRepository, cleanFutureGoalInstancesUseCase)
         pauseGoalsUseCase = PauseGoalsUseCase(
             fakeGoalRepository,
             cleanFutureGoalInstancesUseCase

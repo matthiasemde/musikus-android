@@ -13,7 +13,6 @@ import app.musikus.database.GoalDescriptionWithInstancesAndLibraryItems
 import app.musikus.database.GoalInstanceWithDescription
 import app.musikus.database.GoalInstanceWithDescriptionWithLibraryItems
 import app.musikus.database.MusikusDatabase
-import app.musikus.database.daos.GoalDescription
 import app.musikus.database.entities.GoalDescriptionCreationAttributes
 import app.musikus.database.entities.GoalDescriptionUpdateAttributes
 import app.musikus.database.entities.GoalInstanceCreationAttributes
@@ -51,13 +50,6 @@ interface GoalRepository {
         idsWithUpdateAttributes: List<Pair<UUID, GoalDescriptionUpdateAttributes>>,
     )
 
-    /** Archive / Unarchive */
-    suspend fun archive(goal: GoalDescription)
-    suspend fun archive(goals: List<GoalDescription>)
-
-    suspend fun unarchive(goal: GoalDescription)
-    suspend fun unarchive(goals: List<GoalDescription>)
-
     /** Delete / Restore */
     suspend fun delete(descriptionIds: List<UUID>)
 
@@ -67,6 +59,7 @@ interface GoalRepository {
 
     suspend fun deletePausedInstance(instanceId: UUID)
 
+    /** Exists */
     suspend fun existsDescription(descriptionId: UUID): Boolean
 
     /** Clean */
@@ -130,46 +123,6 @@ class GoalRepositoryImpl(
         descriptionDao.update(idsWithUpdateAttributes)
     }
 
-    /** Archive / Unarchive */
-
-    override suspend fun archive(goal: GoalDescription) {
-        // TODO handle archiving paused goals: simply delete current instance
-        archive(listOf(goal))
-    }
-
-    override suspend fun archive(goals: List<GoalDescription>) {
-        val descriptionIds = goals.map { it.id }
-
-        // before archiving we need to clean possible future instances
-//        cleanFutureInstances()
-
-        descriptionDao.update(descriptionIds.map {
-            it to GoalDescriptionUpdateAttributes(archived = true)
-        })
-    }
-
-    override suspend fun unarchive(goal: GoalDescription) {
-        unarchive(listOf(goal))
-    }
-
-    override suspend fun unarchive(goals: List<GoalDescription>) {
-        val descriptionIds = goals.map { it.id }
-
-        descriptionDao.transaction {
-
-            // make sure there is an open instance for each goal
-            for (descriptionId in descriptionIds) {
-                if(!instanceDao.getForDescription(descriptionId).any { it.endTimestamp == null }) {
-                    throw IllegalArgumentException("Cannot unarchive goal without any open instances")
-                }
-            }
-
-            descriptionDao.update(descriptionIds.map {
-                it to GoalDescriptionUpdateAttributes(archived = false)
-            })
-        }
-    }
-
 
     /** Delete / Restore */
 
@@ -188,6 +141,8 @@ class GoalRepositoryImpl(
     override suspend fun deletePausedInstance(instanceId: UUID) {
         instanceDao.deletePausedInstance(instanceId)
     }
+
+    /** Exists */
 
     override suspend fun existsDescription(descriptionId: UUID): Boolean {
         return descriptionDao.exists(descriptionId)

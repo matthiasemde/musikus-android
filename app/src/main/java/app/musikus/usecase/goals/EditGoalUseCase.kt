@@ -18,7 +18,7 @@ import java.util.UUID
 
 class EditGoalUseCase(
     private val goalRepository: GoalRepository,
-    private val cleanFutureGoalInstancesUseCase: CleanFutureGoalInstancesUseCase
+    private val cleanFutureGoalInstances: CleanFutureGoalInstancesUseCase
 ) {
 
     suspend operator fun invoke(
@@ -44,7 +44,7 @@ class EditGoalUseCase(
         }
 
         // Before we can update the goal instance, we need to make sure that there are no future instances
-        cleanFutureGoalInstancesUseCase()
+        cleanFutureGoalInstances()
 
         val latestInstance = try {
             goalRepository.getLatestInstances().single {

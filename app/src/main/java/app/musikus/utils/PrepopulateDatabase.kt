@@ -22,8 +22,6 @@ import app.musikus.database.entities.SessionCreationAttributes
 import app.musikus.repository.GoalRepositoryImpl
 import app.musikus.usecase.goals.ArchiveGoalsUseCase
 import app.musikus.usecase.goals.CleanFutureGoalInstancesUseCase
-import app.musikus.usecase.goals.GetCurrentGoalsUseCase
-import app.musikus.usecase.goals.SortGoalsUseCase
 import app.musikus.usecase.goals.UpdateGoalsUseCase
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
@@ -133,7 +131,7 @@ suspend fun prepopulateDatabase(
                 goalRepository,
                 ArchiveGoalsUseCase(
                     goalRepository = goalRepository,
-                    cleanFutureGoalInstancesUseCase = CleanFutureGoalInstancesUseCase(
+                    cleanFutureGoalInstances = CleanFutureGoalInstancesUseCase(
                         goalRepository = goalRepository,
                         timeProvider = database.timeProvider
                     )

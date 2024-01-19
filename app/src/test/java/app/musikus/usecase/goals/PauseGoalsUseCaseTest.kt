@@ -57,9 +57,9 @@ class PauseGoalsUseCaseTest {
         fakeGoalRepository = FakeGoalRepository(fakeLibraryRepository, fakeTimeProvider, fakeIdProvider)
 
         addGoalUseCase = AddGoalUseCase(fakeGoalRepository, fakeLibraryRepository, fakeTimeProvider)
-        archiveGoalsUseCase = ArchiveGoalsUseCase(fakeGoalRepository)
-        updateGoalsUseCase = UpdateGoalsUseCase(fakeGoalRepository, archiveGoalsUseCase, fakeTimeProvider)
         cleanFutureGoalInstancesUseCase = CleanFutureGoalInstancesUseCase(fakeGoalRepository, fakeTimeProvider)
+        archiveGoalsUseCase = ArchiveGoalsUseCase(fakeGoalRepository, cleanFutureGoalInstancesUseCase)
+        updateGoalsUseCase = UpdateGoalsUseCase(fakeGoalRepository, archiveGoalsUseCase, fakeTimeProvider)
 
         /** SUT */
         pauseGoals = PauseGoalsUseCase(fakeGoalRepository, cleanFutureGoalInstancesUseCase)
