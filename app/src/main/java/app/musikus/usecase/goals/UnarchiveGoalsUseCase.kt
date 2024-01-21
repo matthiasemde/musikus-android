@@ -33,10 +33,10 @@ class UnarchiveGoalsUseCase(
         }
 
         goalRepository.withTransaction {
-            // when unarchiving a paused goal or a goal which has been finalized, insert a new instance
+            // when unarchiving a goal which has already been finalized, insert a new instance
             for (goal in goals) {
                 val latestInstance = goal.latestInstance
-                if(goal.description.paused || latestInstance.endTimestamp != null) {
+                if(latestInstance.endTimestamp != null) {
                     goalRepository.addNewInstance(
                         GoalInstanceCreationAttributes(
                             descriptionId = goal.description.id,
