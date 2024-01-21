@@ -10,9 +10,9 @@ package app.musikus.ui.statistics
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import app.musikus.repository.GoalRepository
 import app.musikus.repository.SessionRepository
 import app.musikus.ui.goals.GoalWithProgress
+import app.musikus.usecase.goals.GoalsUseCases
 import app.musikus.utils.TimeProvider
 import app.musikus.utils.getDayIndexOfWeek
 import app.musikus.utils.specificMonth
@@ -72,7 +72,7 @@ data class StatisticsRatingsCardUiState(
 @HiltViewModel
 class StatisticsViewModel @Inject constructor(
     timeProvider: TimeProvider,
-    goalRepository : GoalRepository,
+    goalsUseCases: GoalsUseCases,
     sessionRepository : SessionRepository,
 ) : ViewModel() {
 
@@ -82,7 +82,7 @@ class StatisticsViewModel @Inject constructor(
         initialValue = emptyList(),
     )
 
-    private val lastFiveCompletedGoals = goalRepository.lastFiveCompletedGoals.stateIn(
+    private val lastFiveCompletedGoals = goalsUseCases.getLastFiveCompleted().stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = emptyList(),

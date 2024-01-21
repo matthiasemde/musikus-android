@@ -11,6 +11,7 @@ package app.musikus.usecase.goals
 data class GoalsUseCases(
     val getAll: GetAllGoalsUseCase,
     val getCurrent: GetCurrentGoalsUseCase,
+    val getLastFiveCompleted: GetLastFiveCompletedGoalsUseCase,
     val add: AddGoalUseCase,
     val pause: PauseGoalsUseCase,
     val unpause: UnpauseGoalsUseCase,

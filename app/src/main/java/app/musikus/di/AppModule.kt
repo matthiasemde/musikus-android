@@ -32,6 +32,7 @@ import app.musikus.usecase.goals.DeleteGoalsUseCase
 import app.musikus.usecase.goals.EditGoalUseCase
 import app.musikus.usecase.goals.GetAllGoalsUseCase
 import app.musikus.usecase.goals.GetCurrentGoalsUseCase
+import app.musikus.usecase.goals.GetLastFiveCompletedGoalsUseCase
 import app.musikus.usecase.goals.GoalsUseCases
 import app.musikus.usecase.goals.PauseGoalsUseCase
 import app.musikus.usecase.goals.RestoreGoalsUseCase
@@ -203,6 +204,7 @@ object AppModule {
         return GoalsUseCases(
             getAll = GetAllGoalsUseCase(goalRepository, sortGoalsUseCase),
             getCurrent = GetCurrentGoalsUseCase(goalRepository, sortGoalsUseCase),
+            getLastFiveCompleted = GetLastFiveCompletedGoalsUseCase(goalRepository),
             add = AddGoalUseCase(goalRepository, libraryRepository, timeProvider),
             pause = PauseGoalsUseCase(goalRepository, cleanFutureGoalInstancesUseCase),
             unpause = UnpauseGoalsUseCase(goalRepository),
