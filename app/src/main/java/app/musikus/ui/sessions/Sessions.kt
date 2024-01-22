@@ -67,6 +67,7 @@ fun Sessions(
     mainUiState: MainUiState,
     mainEventHandler: (event: MainUIEvent) -> Unit,
     onSessionEdit: (sessionId: UUID) -> Unit,
+    onSessionStart: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -305,4 +306,3 @@ fun DayHeader(
 //        handler.removeCallbacks(runnable)
 //    }
 //
-

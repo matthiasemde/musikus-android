@@ -51,6 +51,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import app.musikus.R
 import app.musikus.shared.MultiFabState
+import app.musikus.ui.activesession.ActiveSession
 import app.musikus.ui.goals.Goals
 import app.musikus.ui.goals.ProgressUpdate
 import app.musikus.ui.library.Library
@@ -81,6 +82,11 @@ sealed class Screen(
     data object EditSession : Screen(
         route = "editSession/{sessionId}",
     )
+
+    data object ActiveSession : Screen(
+        route = "activeSession",
+    )
+
     data object Goals : Screen(
         route = "goals",
         NavigationBarData(
@@ -295,7 +301,12 @@ fun MusikusApp(
                                     sessionId.toString()
                                 )
                             )
-                        }
+                        },
+                        onSessionStart = {
+                            navController.navigate(
+                                Screen.ActiveSession.route
+                            )
+                        },
                     )
                 }
                 composable(
@@ -346,6 +357,13 @@ fun MusikusApp(
                         navigateUp = navController::navigateUp
                     )
                 }
+                composable(
+                    route = Screen.ActiveSession.route,
+                ) { ActiveSession(
+                        mainUiState = uiState,
+                        mainEventHandler = mainViewModel::onEvent,
+                        timeProvider = timeProvider
+                ) }
             }
 
             /** Export / Import Dialog */
