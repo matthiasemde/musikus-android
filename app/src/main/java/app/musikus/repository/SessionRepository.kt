@@ -1,3 +1,11 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ *
+ * Copyright (c) 2023 Matthias Emde
+ */
+
 package app.musikus.repository
 
 import app.musikus.database.GoalInstanceWithDescriptionWithLibraryItems
@@ -38,7 +46,7 @@ interface SessionRepository {
     suspend fun add(
         sessionCreationAttributes: SessionCreationAttributes,
         sectionsCreationAttributes: List<SectionCreationAttributes>
-    ) : UUID
+    ) : Pair<UUID, List<UUID>>
 
     /** Delete / Restore */
     suspend fun delete(sessions: List<Session>)
@@ -104,12 +112,11 @@ class SessionRepositoryImpl(
     override suspend fun add(
         sessionCreationAttributes: SessionCreationAttributes,
         sectionsCreationAttributes: List<SectionCreationAttributes>
-    ) : UUID {
-        val (sessionId, _) = sessionDao.insert(
+    ): Pair<UUID, List<UUID>> {
+        return sessionDao.insert(
             sessionCreationAttributes,
             sectionsCreationAttributes
         )
-        return sessionId
     }
 
     /** Delete / Restore */

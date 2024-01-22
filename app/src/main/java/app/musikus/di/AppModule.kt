@@ -56,6 +56,8 @@ import app.musikus.usecase.library.RestoreFoldersUseCase
 import app.musikus.usecase.library.RestoreItemsUseCase
 import app.musikus.usecase.library.SelectFolderSortModeUseCase
 import app.musikus.usecase.library.SelectItemSortModeUseCase
+import app.musikus.usecase.sessions.AddSessionUseCase
+import app.musikus.usecase.sessions.SessionsUseCases
 import app.musikus.utils.IdProvider
 import app.musikus.utils.IdProviderImpl
 import app.musikus.utils.TimeProvider
@@ -219,6 +221,16 @@ object AppModule {
             delete = DeleteGoalsUseCase(goalRepository),
             restore = RestoreGoalsUseCase(goalRepository),
             selectSortMode = SelectGoalsSortModeUseCase(userPreferencesRepository),
+        )
+    }
+
+    @Provides
+    fun provideSessionsUseCases(
+        sessionRepository: SessionRepository,
+        libraryRepository: LibraryRepository
+    ): SessionsUseCases {
+        return SessionsUseCases(
+            add = AddSessionUseCase(sessionRepository, libraryRepository),
         )
     }
 }

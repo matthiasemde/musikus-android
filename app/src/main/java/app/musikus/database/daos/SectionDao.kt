@@ -170,3 +170,5 @@ abstract class SectionDao(
         )
     }
 }
+
+class InvalidSectionException(message: String) : Exception(message)

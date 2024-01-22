@@ -126,19 +126,19 @@ suspend fun prepopulateDatabase(
             delay(10)
         }
 
-        GoalRepositoryImpl(database).let { goalRepository ->
-            UpdateGoalsUseCase(
-                goalRepository,
-                ArchiveGoalsUseCase(
+        val goalRepository = GoalRepositoryImpl(database)
+
+        UpdateGoalsUseCase(
+            goalRepository,
+            ArchiveGoalsUseCase(
+                goalRepository = goalRepository,
+                cleanFutureGoalInstances = CleanFutureGoalInstancesUseCase(
                     goalRepository = goalRepository,
-                    cleanFutureGoalInstances = CleanFutureGoalInstancesUseCase(
-                        goalRepository = goalRepository,
-                        timeProvider = database.timeProvider
-                    )
-                ),
-                database.timeProvider
-            )()
-        }
+                    timeProvider = database.timeProvider
+                )
+            ),
+            database.timeProvider
+        )()
 
         (0..80).map { sessionNum ->
             sessionNum to SessionCreationAttributes(

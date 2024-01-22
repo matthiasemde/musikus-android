@@ -162,3 +162,5 @@ abstract class SessionDao(
         )
     }
 }
+
+class InvalidSessionException(message: String) : Exception(message)
