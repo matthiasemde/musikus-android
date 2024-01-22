@@ -37,18 +37,18 @@ class FakeSessionRepository(
     private val _sessions = mutableListOf<SessionWithSectionsWithLibraryItems>()
 
     override val sessions: Flow<List<Session>>
-        get() = TODO("Not yet implemented")
+        get() = throw NotImplementedError()
     override val sections: Flow<List<Section>>
         get() = flowOf(_sessions.flatMap { session -> session.sections.map { it.section } })
     override val sessionsWithSectionsWithLibraryItems: Flow<List<SessionWithSectionsWithLibraryItems>>
         get() = flowOf(_sessions)
 
     override suspend fun sessionWithSectionsWithLibraryItems(id: UUID): SessionWithSectionsWithLibraryItems {
-        TODO("Not yet implemented")
+        throw NotImplementedError()
     }
 
     override fun sessionsInTimeframe(timeframe: Timeframe): Flow<List<SessionWithSectionsWithLibraryItems>> {
-        TODO("Not yet implemented")
+        throw NotImplementedError()
     }
 
     override suspend fun sectionsForSession(sessionId: UUID): List<Section> {
@@ -56,7 +56,7 @@ class FakeSessionRepository(
     }
 
     override suspend fun sectionsForGoal(goal: GoalInstanceWithDescriptionWithLibraryItems): Flow<List<Section>> {
-        TODO("Not yet implemented")
+        throw NotImplementedError()
     }
 
     override suspend fun sectionsForGoal(
@@ -64,7 +64,7 @@ class FakeSessionRepository(
         description: GoalDescription,
         libraryItems: List<LibraryItem>
     ): Flow<List<Section>> {
-        TODO("Not yet implemented")
+        throw NotImplementedError()
     }
 
     override suspend fun add(
@@ -145,12 +145,12 @@ class FakeSessionRepository(
         )
     }
 
-    override suspend fun delete(sessions: List<Session>) {
-        TODO("Not yet implemented")
+    override suspend fun delete(sessionIds: List<UUID>) {
+        throw NotImplementedError()
     }
 
-    override suspend fun restore(sessions: List<Session>) {
-        TODO("Not yet implemented")
+    override suspend fun restore(sessionIds: List<UUID>) {
+        throw NotImplementedError()
     }
 
     override suspend fun existsSession(id: UUID): Boolean {
@@ -158,7 +158,7 @@ class FakeSessionRepository(
     }
 
     override suspend fun clean() {
-        TODO("Not yet implemented")
+        throw NotImplementedError()
     }
 
     override suspend fun withTransaction(block: suspend () -> Unit) {

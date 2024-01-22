@@ -128,7 +128,7 @@ class FakeLibraryRepository(
     }
 
     override suspend fun clean() {
-        TODO("Not yet implemented")
+        throw NotImplementedError()
     }
 
 }

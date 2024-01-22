@@ -14,6 +14,7 @@ import app.musikus.database.SessionWithSectionsWithLibraryItems
 import app.musikus.database.daos.Session
 import app.musikus.repository.SessionRepository
 import app.musikus.shared.TopBarUiState
+import app.musikus.usecase.sessions.SessionsUseCases
 import app.musikus.utils.specificDay
 import app.musikus.utils.specificMonth
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -68,7 +69,8 @@ data class SessionsUiState(
 
 @HiltViewModel
 class SessionsViewModel @Inject constructor(
-    private val sessionRepository : SessionRepository,
+    sessionRepository : SessionRepository,
+    private val sessionsUseCases: SessionsUseCases,
 ) : ViewModel() {
 
     private var _sessionsCache = emptyList<Session>()
@@ -262,14 +264,14 @@ class SessionsViewModel @Inject constructor(
     fun onDeleteAction() {
         viewModelScope.launch {
             _sessionsCache = _selectedSessions.value.map { it.session }
-            sessionRepository.delete(_sessionsCache)
+            sessionsUseCases.delete(_sessionsCache.map { it.id })
             clearActionMode()
         }
     }
 
     fun onRestoreAction() {
         viewModelScope.launch {
-            sessionRepository.restore(_sessionsCache)
+            sessionsUseCases.restore(_sessionsCache.map { it.id })
         }
     }
 

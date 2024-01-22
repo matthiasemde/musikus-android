@@ -64,8 +64,8 @@ interface SessionRepository {
     )
 
     /** Delete / Restore */
-    suspend fun delete(sessions: List<Session>)
-    suspend fun restore(sessions: List<Session>)
+    suspend fun delete(sessionIds: List<UUID>)
+    suspend fun restore(sessionIds: List<UUID>)
 
     /** Exists */
     suspend fun existsSession(id: UUID) : Boolean
@@ -161,12 +161,12 @@ class SessionRepositoryImpl(
     }
 
     /** Delete / Restore */
-    override suspend fun delete(sessions: List<Session>) {
-        sessionDao.delete(sessions.map { it.id })
+    override suspend fun delete(sessionIds: List<UUID>) {
+        sessionDao.delete(sessionIds)
     }
 
-    override suspend fun restore(sessions: List<Session>) {
-        sessionDao.restore(sessions.map { it.id })
+    override suspend fun restore(sessionIds: List<UUID>) {
+        sessionDao.restore(sessionIds)
     }
 
     override suspend fun existsSession(id: UUID): Boolean {

@@ -58,7 +58,9 @@ import app.musikus.usecase.library.RestoreItemsUseCase
 import app.musikus.usecase.library.SelectFolderSortModeUseCase
 import app.musikus.usecase.library.SelectItemSortModeUseCase
 import app.musikus.usecase.sessions.AddSessionUseCase
+import app.musikus.usecase.sessions.DeleteSessionsUseCase
 import app.musikus.usecase.sessions.EditSessionUseCase
+import app.musikus.usecase.sessions.RestoreSessionsUseCase
 import app.musikus.usecase.sessions.SessionsUseCases
 import app.musikus.utils.IdProvider
 import app.musikus.utils.IdProviderImpl
@@ -234,7 +236,9 @@ object AppModule {
     ): SessionsUseCases {
         return SessionsUseCases(
             add = AddSessionUseCase(sessionRepository, libraryRepository),
-            edit = EditSessionUseCase(sessionRepository)
+            edit = EditSessionUseCase(sessionRepository),
+            delete = DeleteSessionsUseCase(sessionRepository),
+            restore = RestoreSessionsUseCase(sessionRepository),
         )
     }
 }

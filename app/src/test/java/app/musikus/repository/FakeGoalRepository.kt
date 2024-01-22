@@ -41,7 +41,7 @@ class FakeGoalRepository(
     override val allGoals: Flow<List<GoalDescriptionWithInstancesAndLibraryItems>>
         get() = flowOf(_goalDescriptionWithInstancesAndLibraryItems)
     override val lastFiveCompletedGoals: Flow<List<GoalInstanceWithDescriptionWithLibraryItems>>
-        get() = TODO("Not yet implemented")
+        get() = throw NotImplementedError()
 
     override suspend fun getLatestInstances(): List<GoalInstanceWithDescription> {
         return _goalDescriptionWithInstancesAndLibraryItems.mapNotNull { goal ->
@@ -213,7 +213,7 @@ class FakeGoalRepository(
     }
 
     override suspend fun clean() {
-        TODO("Not yet implemented")
+        throw NotImplementedError()
     }
 
     override suspend fun withTransaction(block: suspend () -> Unit) {
