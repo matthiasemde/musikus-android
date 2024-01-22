@@ -18,7 +18,9 @@ import app.musikus.database.daos.SectionDao
 import app.musikus.database.daos.Session
 import app.musikus.database.daos.SessionDao
 import app.musikus.database.entities.SectionCreationAttributes
+import app.musikus.database.entities.SectionUpdateAttributes
 import app.musikus.database.entities.SessionCreationAttributes
+import app.musikus.database.entities.SessionUpdateAttributes
 import app.musikus.utils.TimeProvider
 import app.musikus.utils.Timeframe
 import kotlinx.coroutines.flow.Flow
@@ -34,6 +36,8 @@ interface SessionRepository {
 
     fun sessionsInTimeframe (timeframe: Timeframe) : Flow<List<SessionWithSectionsWithLibraryItems>>
 
+    suspend fun sectionsForSession(sessionId: UUID): List<Section>
+
     suspend fun sectionsForGoal (goal: GoalInstanceWithDescriptionWithLibraryItems) : Flow<List<Section>>
     suspend fun sectionsForGoal (
         instance: GoalInstance,
@@ -45,21 +49,39 @@ interface SessionRepository {
     /** Add */
     suspend fun add(
         sessionCreationAttributes: SessionCreationAttributes,
-        sectionsCreationAttributes: List<SectionCreationAttributes>
+        sectionCreationAttributes: List<SectionCreationAttributes>
     ) : Pair<UUID, List<UUID>>
+
+    /** Update */
+
+    suspend fun updateSession(
+        id: UUID,
+        sessionUpdateAttributes: SessionUpdateAttributes,
+    )
+
+    suspend fun updateSections(
+        updateData: List<Pair<UUID, SectionUpdateAttributes>>
+    )
 
     /** Delete / Restore */
     suspend fun delete(sessions: List<Session>)
     suspend fun restore(sessions: List<Session>)
 
+    /** Exists */
+    suspend fun existsSession(id: UUID) : Boolean
+
     /** Clean */
     suspend fun clean()
+
+    /** Transaction */
+    suspend fun withTransaction(block: suspend () -> Unit)
 }
 
 class SessionRepositoryImpl(
     private val timeProvider: TimeProvider,
     private val sessionDao : SessionDao,
     private val sectionDao : SectionDao,
+    private val withDatabaseTransaction: suspend (suspend () -> Unit) -> Unit,
 ) : SessionRepository {
 
 
@@ -76,6 +98,10 @@ class SessionRepositoryImpl(
             startTimestamp = timeframe.first,
             endTimestamp = timeframe.second
         )
+    }
+
+    override suspend fun sectionsForSession(sessionId: UUID): List<Section> {
+        return sectionDao.getForSession(sessionId)
     }
 
     private suspend fun sectionsForGoal (
@@ -111,12 +137,27 @@ class SessionRepositoryImpl(
     /** Add */
     override suspend fun add(
         sessionCreationAttributes: SessionCreationAttributes,
-        sectionsCreationAttributes: List<SectionCreationAttributes>
+        sectionCreationAttributes: List<SectionCreationAttributes>
     ): Pair<UUID, List<UUID>> {
         return sessionDao.insert(
             sessionCreationAttributes,
-            sectionsCreationAttributes
+            sectionCreationAttributes
         )
+    }
+
+    /** Update */
+
+    override suspend fun updateSession(
+        id: UUID,
+        sessionUpdateAttributes: SessionUpdateAttributes,
+    ) {
+        sessionDao.update(id, sessionUpdateAttributes)
+    }
+
+    override suspend fun updateSections(
+        updateData: List<Pair<UUID, SectionUpdateAttributes>>,
+    ) {
+        sectionDao.update(updateData)
     }
 
     /** Delete / Restore */
@@ -128,8 +169,19 @@ class SessionRepositoryImpl(
         sessionDao.restore(sessions.map { it.id })
     }
 
+    override suspend fun existsSession(id: UUID): Boolean {
+        return sessionDao.exists(id)
+    }
+
     /** Clean */
     override suspend fun clean() {
         sessionDao.clean()
+    }
+
+
+    /** Transaction */
+
+    override suspend fun withTransaction(block: suspend () -> Unit) {
+        withDatabaseTransaction(block)
     }
 }

@@ -15,6 +15,7 @@ import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.preferencesDataStoreFile
+import androidx.room.withTransaction
 import app.musikus.Musikus
 import app.musikus.database.MusikusDatabase
 import app.musikus.repository.GoalRepository
@@ -57,6 +58,7 @@ import app.musikus.usecase.library.RestoreItemsUseCase
 import app.musikus.usecase.library.SelectFolderSortModeUseCase
 import app.musikus.usecase.library.SelectItemSortModeUseCase
 import app.musikus.usecase.sessions.AddSessionUseCase
+import app.musikus.usecase.sessions.EditSessionUseCase
 import app.musikus.usecase.sessions.SessionsUseCases
 import app.musikus.utils.IdProvider
 import app.musikus.utils.IdProviderImpl
@@ -159,6 +161,7 @@ object AppModule {
             timeProvider = timeProvider,
             sessionDao = database.sessionDao,
             sectionDao = database.sectionDao,
+            withDatabaseTransaction = { block -> database.withTransaction(block) }
         )
     }
 
@@ -231,6 +234,7 @@ object AppModule {
     ): SessionsUseCases {
         return SessionsUseCases(
             add = AddSessionUseCase(sessionRepository, libraryRepository),
+            edit = EditSessionUseCase(sessionRepository)
         )
     }
 }

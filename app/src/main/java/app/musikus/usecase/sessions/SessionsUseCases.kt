@@ -10,4 +10,5 @@ package app.musikus.usecase.sessions
 
 data class SessionsUseCases(
     val add: AddSessionUseCase,
+    val edit: EditSessionUseCase
 )

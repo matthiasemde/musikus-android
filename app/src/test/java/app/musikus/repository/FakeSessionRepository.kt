@@ -17,7 +17,9 @@ import app.musikus.database.daos.LibraryItem
 import app.musikus.database.daos.Section
 import app.musikus.database.daos.Session
 import app.musikus.database.entities.SectionCreationAttributes
+import app.musikus.database.entities.SectionUpdateAttributes
 import app.musikus.database.entities.SessionCreationAttributes
+import app.musikus.database.entities.SessionUpdateAttributes
 import app.musikus.utils.FakeIdProvider
 import app.musikus.utils.TimeProvider
 import app.musikus.utils.Timeframe
@@ -37,7 +39,7 @@ class FakeSessionRepository(
     override val sessions: Flow<List<Session>>
         get() = TODO("Not yet implemented")
     override val sections: Flow<List<Section>>
-        get() = TODO("Not yet implemented")
+        get() = flowOf(_sessions.flatMap { session -> session.sections.map { it.section } })
     override val sessionsWithSectionsWithLibraryItems: Flow<List<SessionWithSectionsWithLibraryItems>>
         get() = flowOf(_sessions)
 
@@ -47,6 +49,10 @@ class FakeSessionRepository(
 
     override fun sessionsInTimeframe(timeframe: Timeframe): Flow<List<SessionWithSectionsWithLibraryItems>> {
         TODO("Not yet implemented")
+    }
+
+    override suspend fun sectionsForSession(sessionId: UUID): List<Section> {
+        return _sessions.first { it.session.id == sessionId }.sections.map { it.section }
     }
 
     override suspend fun sectionsForGoal(goal: GoalInstanceWithDescriptionWithLibraryItems): Flow<List<Section>> {
@@ -63,10 +69,10 @@ class FakeSessionRepository(
 
     override suspend fun add(
         sessionCreationAttributes: SessionCreationAttributes,
-        sectionsCreationAttributes: List<SectionCreationAttributes>
+        sectionCreationAttributes: List<SectionCreationAttributes>
     ): Pair<UUID, List<UUID>> {
         val sessionId = idProvider.generateId()
-        val sectionIds = sectionsCreationAttributes.map { idProvider.generateId() }
+        val sectionIds = sectionCreationAttributes.map { idProvider.generateId() }
 
         val libraryItems = fakeLibraryRepository.items.first()
 
@@ -80,7 +86,7 @@ class FakeSessionRepository(
                     rating = sessionCreationAttributes.rating,
                     comment = sessionCreationAttributes.comment
                 ),
-                sections = sectionsCreationAttributes
+                sections = sectionCreationAttributes
                     .zip(sectionIds)
                     .map { (sectionCreationAttributes, id) ->
                     SectionWithLibraryItem(
@@ -102,6 +108,43 @@ class FakeSessionRepository(
         return Pair(sessionId, sectionIds)
     }
 
+    override suspend fun updateSession(id: UUID, sessionUpdateAttributes: SessionUpdateAttributes) {
+        val oldSession = _sessions.first { it.session.id == id }
+        _sessions.remove(oldSession)
+        _sessions.add(
+            oldSession.copy(
+                session = oldSession.session.copy(
+                    modifiedAt = timeProvider.now(),
+                    rating = sessionUpdateAttributes.rating ?: oldSession.session.rating,
+                    comment = sessionUpdateAttributes.comment ?: oldSession.session.comment
+                )
+            )
+        )
+    }
+
+    override suspend fun updateSections(updateData: List<Pair<UUID, SectionUpdateAttributes>>) {
+        val oldSession = _sessions.first { sessionWithSections ->
+            sessionWithSections.sections.any { section -> section.section.id in updateData.map { it.first } }
+        }
+
+        _sessions.remove(oldSession)
+
+        _sessions.add(
+            oldSession.copy(
+                sections = oldSession.sections.map { oldSection ->
+                    updateData.firstOrNull { it.first == oldSection.section.id }?.let {
+                        oldSection.copy(
+                            section = oldSection.section.copy(
+                                durationSeconds = it.second.duration?.inWholeSeconds ?: oldSection.section.durationSeconds,
+                            )
+                        )
+
+                    } ?: oldSection
+                }
+            )
+        )
+    }
+
     override suspend fun delete(sessions: List<Session>) {
         TODO("Not yet implemented")
     }
@@ -110,8 +153,16 @@ class FakeSessionRepository(
         TODO("Not yet implemented")
     }
 
+    override suspend fun existsSession(id: UUID): Boolean {
+        return _sessions.any { it.session.id == id }
+    }
+
     override suspend fun clean() {
         TODO("Not yet implemented")
+    }
+
+    override suspend fun withTransaction(block: suspend () -> Unit) {
+        block()
     }
 
 }

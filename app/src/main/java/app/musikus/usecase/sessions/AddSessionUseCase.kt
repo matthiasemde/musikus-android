@@ -35,7 +35,7 @@ class AddSessionUseCase(
             throw InvalidSessionException("Comment must be less than 500 characters")
         }
 
-        if(sessionCreationAttributes.breakDuration.inWholeSeconds < 0) {
+        if(sessionCreationAttributes.breakDuration.inWholeSeconds <= 0) {
             throw InvalidSessionException("Break duration must be greater than or equal to 0")
         }
 

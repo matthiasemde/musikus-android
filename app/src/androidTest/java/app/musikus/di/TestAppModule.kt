@@ -10,6 +10,7 @@ package app.musikus.di
 
 import android.app.Application
 import androidx.room.Room
+import androidx.room.withTransaction
 import app.musikus.database.MusikusDatabase
 import app.musikus.repository.FakeUserPreferencesRepository
 import app.musikus.repository.GoalRepository
@@ -134,6 +135,7 @@ object TestAppModule {
             timeProvider = timeProvider,
             sessionDao = database.sessionDao,
             sectionDao = database.sectionDao,
+            withDatabaseTransaction = { block -> database.withTransaction(block) }
         )
     }
 

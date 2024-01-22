@@ -27,7 +27,7 @@ class EditGoalUseCase(
         instanceUpdateAttributes: GoalInstanceUpdateAttributes? = null,
     ) {
 
-        if(!goalRepository.existsDescription(descriptionId)) {
+        if (!goalRepository.existsDescription(descriptionId)) {
             throw IllegalArgumentException("Goal with id $descriptionId does not exist")
         }
 

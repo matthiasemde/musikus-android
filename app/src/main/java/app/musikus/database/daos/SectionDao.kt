@@ -126,6 +126,10 @@ abstract class SectionDao(
      */
 
     @RewriteQueriesToDropUnusedColumns
+    @Query("SELECT * FROM section WHERE session_id=:sessionId")
+    abstract fun getForSession(sessionId: UUID): List<Section>
+
+    @RewriteQueriesToDropUnusedColumns
     @Query("SELECT * FROM section " +
             "WHERE start_timestamp>=:startTimestamp " +
             "AND start_timestamp<:endTimestamp " +

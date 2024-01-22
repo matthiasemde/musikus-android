@@ -381,6 +381,30 @@ class SectionDaoTest {
     }
 
     @Test
+    fun getSectionsForSession() = runTest {
+        // Get the sections
+        val sections = sectionDao.getForSession(UUIDConverter.fromInt(2))
+
+        // Check if the sections were retrieved correctly
+        assertThat(sections).containsExactly(
+            Section(
+                id = UUIDConverter.fromInt(3),
+                sessionId = UUIDConverter.fromInt(2),
+                libraryItemId = UUIDConverter.fromInt(1),
+                durationSeconds = 120,
+                startTimestamp = FakeTimeProvider.START_TIME,
+            ),
+            Section(
+                id = UUIDConverter.fromInt(4),
+                sessionId = UUIDConverter.fromInt(2),
+                libraryItemId = UUIDConverter.fromInt(1),
+                durationSeconds = 240,
+                startTimestamp = FakeTimeProvider.START_TIME.plus(2.minutes.toJavaDuration()),
+            )
+        )
+    }
+
+    @Test
     fun getSectionsInTimeframe() = runTest {
         // Insert another session with a few more sections
         database.sessionDao.insert(
