@@ -122,12 +122,13 @@ class LibraryViewModel @Inject constructor(
     private val items = _activeFolder.flatMapLatest { activeFolder ->
         libraryUseCases.getSortedItems(
             folderId = Nullable(activeFolder?.id)
-        ).stateIn(
-            scope = viewModelScope,
-            started = WhileSubscribed(5000),
-            initialValue = emptyList()
         )
-    }
+    }.stateIn(
+        scope = viewModelScope,
+        started = WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
+
 
     /**
      * Composing the Ui state
@@ -168,7 +169,7 @@ class LibraryViewModel @Inject constructor(
 
     private val foldersSortMenuUiState = combine(
         _showFolderSortMenu,
-        folderSortInfo,
+        libraryUseCases.getFolderSortInfo(),
     ) { showMenu, sortInfo ->
         LibraryFoldersSortMenuUiState(
             show = showMenu,
@@ -179,7 +180,7 @@ class LibraryViewModel @Inject constructor(
         scope = viewModelScope,
         started = WhileSubscribed(5000),
         initialValue = LibraryFoldersSortMenuUiState(
-            show = false,
+            show = _showFolderSortMenu.value,
             mode = LibraryFolderSortMode.DEFAULT,
             direction = SortDirection.DEFAULT,
         )
