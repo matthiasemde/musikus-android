@@ -362,7 +362,8 @@ fun MusikusApp(
                 ) { ActiveSession(
                         mainUiState = uiState,
                         mainEventHandler = mainViewModel::onEvent,
-                        timeProvider = timeProvider
+                        timeProvider = timeProvider,
+                        navigateUp = navController::navigateUp
                 ) }
             }
 
