@@ -13,12 +13,13 @@ import app.musikus.database.daos.InvalidSectionException
 import app.musikus.database.daos.InvalidSessionException
 import app.musikus.database.entities.SectionCreationAttributes
 import app.musikus.database.entities.SessionCreationAttributes
-import app.musikus.repository.LibraryRepository
 import app.musikus.repository.SessionRepository
+import app.musikus.usecase.library.GetItemsUseCase
+import kotlinx.coroutines.flow.first
 
 class AddSessionUseCase(
     private val sessionRepository: SessionRepository,
-    private val libraryRepository: LibraryRepository,
+    private val getLibraryItems: GetItemsUseCase,
 ) {
 
     @Throws(InvalidSessionException::class, InvalidSectionException::class)
@@ -51,14 +52,13 @@ class AddSessionUseCase(
             throw InvalidSectionException("Session id must not be set, it is set automatically")
         }
 
-        val libraryItems = sectionCreationAttributes.map { it.libraryItemId }.toSet()
-        val nonExistentLibraryItemIds = libraryItems.filter { !libraryRepository.existsItem(it) }
+        val libraryItemIds = sectionCreationAttributes.map { it.libraryItemId }.toSet()
+        val allLibraryItemIds = getLibraryItems().first().map { it.id }.toSet()
+        val nonExistentLibraryItemIds = libraryItemIds - allLibraryItemIds
 
         if(nonExistentLibraryItemIds.isNotEmpty()) {
             throw InvalidSectionException("Library items do not exist: $nonExistentLibraryItemIds")
         }
-
-        // TODO change start to be saved in the session instead of the section
 
         sessionRepository.add(
             sessionCreationAttributes,

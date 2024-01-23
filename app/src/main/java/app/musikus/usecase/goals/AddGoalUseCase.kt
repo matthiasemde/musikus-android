@@ -16,13 +16,14 @@ import app.musikus.database.entities.GoalType
 import app.musikus.database.entities.InvalidGoalDescriptionException
 import app.musikus.database.entities.InvalidGoalInstanceException
 import app.musikus.repository.GoalRepository
-import app.musikus.repository.LibraryRepository
+import app.musikus.usecase.library.GetItemsUseCase
 import app.musikus.utils.TimeProvider
+import kotlinx.coroutines.flow.first
 import java.util.UUID
 
 class AddGoalUseCase(
     private val goalRepository: GoalRepository,
-    private val libraryRepository: LibraryRepository,
+    private val getLibraryItems: GetItemsUseCase,
     private val timeProvider: TimeProvider
 ) {
 
@@ -61,7 +62,8 @@ class AddGoalUseCase(
                 throw InvalidGoalDescriptionException("Item specific goals must have at least one library item")
             }
 
-            val nonExistentLibraryItemIds = libraryItemIds.filter { !libraryRepository.existsItem(it) }
+            val allLibraryItemIds = getLibraryItems().first().map { it.id }.toSet()
+            val nonExistentLibraryItemIds = libraryItemIds - allLibraryItemIds
             if(nonExistentLibraryItemIds.isNotEmpty()) {
                 throw InvalidGoalDescriptionException("Library items do not exist: $nonExistentLibraryItemIds")
             }

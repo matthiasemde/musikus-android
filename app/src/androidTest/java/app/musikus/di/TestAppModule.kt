@@ -173,7 +173,7 @@ object TestAppModule {
     @Provides
     fun provideGoalsUseCases(
         goalRepository: GoalRepository,
-        libraryRepository: LibraryRepository,
+        libraryUseCases: LibraryUseCases,
         userPreferencesUseCases: UserPreferencesUseCases,
         timeProvider: TimeProvider
     ): GoalsUseCases {
@@ -191,7 +191,7 @@ object TestAppModule {
             getAll = GetAllGoalsUseCase(goalRepository, sortGoalsUseCase),
             getCurrent = GetCurrentGoalsUseCase(goalRepository, sortGoalsUseCase),
             getLastFiveCompleted = GetLastFiveCompletedGoalsUseCase(goalRepository),
-            add = AddGoalUseCase(goalRepository, libraryRepository, timeProvider),
+            add = AddGoalUseCase(goalRepository, libraryUseCases.getItems, timeProvider),
             pause = PauseGoalsUseCase(goalRepository, cleanFutureGoalInstancesUseCase),
             unpause = UnpauseGoalsUseCase(goalRepository),
             archive = archiveGoalsUseCase,
@@ -210,12 +210,12 @@ object TestAppModule {
     @Provides
     fun provideSessionUseCases(
         sessionRepository: SessionRepository,
-        libraryRepository: LibraryRepository,
+        libraryUseCases: LibraryUseCases,
     ): SessionsUseCases {
         return SessionsUseCases(
             getAll = GetAllSessionsUseCase(sessionRepository),
             getInTimeframe = GetSessionsInTimeframeUseCase(sessionRepository),
-            add = AddSessionUseCase(sessionRepository, libraryRepository),
+            add = AddSessionUseCase(sessionRepository, libraryUseCases.getItems),
             edit = EditSessionUseCase(sessionRepository),
             delete = DeleteSessionsUseCase(sessionRepository),
             restore = RestoreSessionsUseCase(sessionRepository),
