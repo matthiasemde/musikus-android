@@ -10,14 +10,14 @@ package app.musikus.usecase.goals
 
 import app.musikus.database.GoalDescriptionWithInstancesAndLibraryItems
 import app.musikus.database.GoalInstanceWithDescriptionWithLibraryItems
-import app.musikus.repository.UserPreferencesRepository
+import app.musikus.usecase.userpreferences.GetGoalSortInfoUseCase
 import app.musikus.utils.GoalsSortMode
 import app.musikus.utils.sorted
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 
 class SortGoalsUseCase(
-    private val userPreferencesRepository: UserPreferencesRepository
+    private val getGoalSortInfo: GetGoalSortInfoUseCase
 ) {
 
     @JvmName("sortGoalDescriptionWithInstances")
@@ -26,7 +26,7 @@ class SortGoalsUseCase(
     ) : Flow<List<GoalDescriptionWithInstancesAndLibraryItems>> {
         return combine(
             goalsFlow,
-            userPreferencesRepository.goalSortInfo
+            getGoalSortInfo()
         ) { goals, (sortMode, sortDirection) ->
             goals.sorted(sortMode as GoalsSortMode, sortDirection)
         }
@@ -38,7 +38,7 @@ class SortGoalsUseCase(
     ) : Flow<List<GoalInstanceWithDescriptionWithLibraryItems>> {
         return combine(
             goalsFlow,
-            userPreferencesRepository.goalSortInfo
+            getGoalSortInfo()
         ) { goals, (sortMode, sortDirection) ->
             goals.sorted(sortMode as GoalsSortMode, sortDirection)
         }

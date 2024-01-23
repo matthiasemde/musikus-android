@@ -19,13 +19,14 @@ import app.musikus.database.entities.GoalInstanceUpdateAttributes
 import app.musikus.database.entities.GoalPeriodUnit
 import app.musikus.database.entities.GoalType
 import app.musikus.repository.SessionRepository
-import app.musikus.repository.UserPreferencesRepository
 import app.musikus.shared.TopBarUiState
 import app.musikus.ui.library.DialogMode
 import app.musikus.usecase.goals.GoalsUseCases
 import app.musikus.usecase.library.LibraryUseCases
+import app.musikus.usecase.userpreferences.UserPreferencesUseCases
 import app.musikus.utils.GoalsSortMode
 import app.musikus.utils.SortDirection
+import app.musikus.utils.SortInfo
 import app.musikus.utils.TimeProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -65,15 +66,10 @@ data class GoalsSortMenuUiState(
     val direction: SortDirection,
 )
 
-data class GoalsOverflowMenuUiState(
-    val showPausedGoals: Boolean,
-)
-
 data class GoalsTopBarUiState(
     override val title: String,
     override val showBackButton: Boolean,
     val sortMenuUiState: GoalsSortMenuUiState,
-    val overflowMenuUiState: GoalsOverflowMenuUiState,
 ) : TopBarUiState
 
 data class GoalsActionModeUiState(
@@ -108,7 +104,7 @@ data class GoalsUiState (
 @HiltViewModel
 class GoalsViewModel @Inject constructor(
     private val timeProvider: TimeProvider,
-    private val userPreferencesRepository : UserPreferencesRepository,
+    private val userPreferencesUseCases: UserPreferencesUseCases,
     private val goalsUseCases: GoalsUseCases,
     libraryUseCases: LibraryUseCases,
     sessionRepository : SessionRepository,
@@ -125,28 +121,16 @@ class GoalsViewModel @Inject constructor(
 
     /** Imported flows */
 
-    private val userPreferences = userPreferencesRepository.userPreferences
-
-    private val showPausedGoals = userPreferences.map {
-        it.showPausedGoals
-    }.stateIn(
+    private val goalsSortInfo = userPreferencesUseCases.getGoalSortInfo().stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = true
+        initialValue = SortInfo(
+            mode = GoalsSortMode.DEFAULT,
+            direction = SortDirection.DEFAULT
+        )
     )
 
-    private val goalsSortInfo = userPreferences.map {
-        it.goalsSortMode to it.goalsSortDirection
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = GoalsSortMode.DEFAULT to SortDirection.DEFAULT
-    )
-
-    @OptIn(ExperimentalCoroutinesApi::class)
-    private val currentGoals = showPausedGoals.flatMapLatest { showPaused ->
-        goalsUseCases.getCurrent(excludePaused = !showPaused)
-    }.stateIn(
+    private val currentGoals = goalsUseCases.getCurrent(excludePaused = false).stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = emptyList()
@@ -203,7 +187,7 @@ class GoalsViewModel @Inject constructor(
     ) { (mode, direction), show ->
         GoalsSortMenuUiState(
             show = show,
-            mode = mode,
+            mode = mode as GoalsSortMode,
             direction = direction,
         )
     }.stateIn(
@@ -216,27 +200,11 @@ class GoalsViewModel @Inject constructor(
         )
     )
 
-    private val overflowMenuUiState = showPausedGoals.map {
-        GoalsOverflowMenuUiState(
-            showPausedGoals = it
-        )
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = GoalsOverflowMenuUiState(
-            showPausedGoals = showPausedGoals.value
-        )
-    )
-
-    private val topBarUiState = combine(
-        sortMenuUiState,
-        overflowMenuUiState,
-    ) { sortMenuUiState, overflowMenuUiState ->
+    private val topBarUiState = sortMenuUiState.map { sortMenuUiState ->
         GoalsTopBarUiState(
             title = "Goals",
             showBackButton = false,
             sortMenuUiState = sortMenuUiState,
-            overflowMenuUiState = overflowMenuUiState,
         )
     }.stateIn(
         scope = viewModelScope,
@@ -245,7 +213,6 @@ class GoalsViewModel @Inject constructor(
             title = "Goals",
             showBackButton = false,
             sortMenuUiState = sortMenuUiState.value,
-            overflowMenuUiState = overflowMenuUiState.value,
         )
     )
 
@@ -362,7 +329,7 @@ class GoalsViewModel @Inject constructor(
     fun onSortModeSelected(selection: GoalsSortMode) {
         _showSortModeMenu.update { false }
         viewModelScope.launch {
-            goalsUseCases.selectSortMode(selection)
+            userPreferencesUseCases.selectGoalSortMode(selection)
         }
     }
 
@@ -376,29 +343,6 @@ class GoalsViewModel @Inject constructor(
             }
         }
         clearActionMode()
-    }
-
-    fun onPauseAction() {
-        viewModelScope.launch {
-            goalsUseCases.pause(_selectedGoals.value.toList().map {
-                it.description.description.id
-            })
-            clearActionMode()
-        }
-    }
-
-    fun onUnpauseAction() {
-        viewModelScope.launch {
-            goalsUseCases.unpause(_selectedGoals.value.toList().map {
-                it.description.description.id
-            })
-            clearActionMode()
-        }
-    }
-    fun onPausedGoalsChanged(newValue: Boolean) {
-        viewModelScope.launch {
-            userPreferencesRepository.updateShowPausedGoals(newValue)
-        }
     }
 
     fun onArchiveAction() {

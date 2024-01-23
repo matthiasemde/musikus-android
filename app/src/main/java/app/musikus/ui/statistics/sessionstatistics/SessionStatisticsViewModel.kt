@@ -13,12 +13,13 @@ import androidx.lifecycle.viewModelScope
 import app.musikus.database.SectionWithLibraryItem
 import app.musikus.database.SessionWithSectionsWithLibraryItems
 import app.musikus.database.daos.LibraryItem
-import app.musikus.repository.UserPreferencesRepository
 import app.musikus.usecase.sessions.SessionsUseCases
+import app.musikus.usecase.userpreferences.UserPreferencesUseCases
 import app.musikus.utils.DateFormat
 import app.musikus.utils.DurationFormat
 import app.musikus.utils.LibraryItemSortMode
 import app.musikus.utils.SortDirection
+import app.musikus.utils.SortInfo
 import app.musikus.utils.TimeProvider
 import app.musikus.utils.Timeframe
 import app.musikus.utils.getDurationString
@@ -136,7 +137,7 @@ data class PieChartData(
 @HiltViewModel
 class SessionStatisticsViewModel @Inject constructor(
     private val timeProvider: TimeProvider,
-    userPreferencesRepository : UserPreferencesRepository,
+    userPreferencesUseCases: UserPreferencesUseCases,
     sessionsUseCases: SessionsUseCases
 ) : ViewModel() {
 
@@ -151,12 +152,13 @@ class SessionStatisticsViewModel @Inject constructor(
     private var _pieChartStateBuffer: SessionStatisticsPieChartUiState? = null
 
     /** Imported Flows */
-    private val itemsSortInfo = userPreferencesRepository.userPreferences.map {
-        it.libraryItemSortMode to it.libraryItemSortDirection
-    }.stateIn(
+    private val itemsSortInfo = userPreferencesUseCases.getItemSortInfo().stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = LibraryItemSortMode.DEFAULT to SortDirection.DEFAULT
+        initialValue = SortInfo(
+            mode = LibraryItemSortMode.DEFAULT,
+            direction = SortDirection.DEFAULT
+        )
     )
 
     /** Own state flows */
@@ -238,7 +240,7 @@ class SessionStatisticsViewModel @Inject constructor(
         }
 
         itemsToDurationTimeframe.keys.toList().sorted(
-            itemSortMode,
+            itemSortMode as LibraryItemSortMode,
             itemSortDirection
         ).map { item ->
             Triple (
@@ -320,7 +322,7 @@ class SessionStatisticsViewModel @Inject constructor(
 
         BarChartData(
             barData = barData,
-            itemSortMode = itemSortMode,
+            itemSortMode = itemSortMode as LibraryItemSortMode,
             itemSortDirection = itemSortDirection,
             maxDuration = barData.maxOf { it.totalDuration }
         )
@@ -347,7 +349,7 @@ class SessionStatisticsViewModel @Inject constructor(
 
         PieChartData(
             libraryItemToDuration = libraryItemToDuration,
-            itemSortMode = itemSortMode,
+            itemSortMode = itemSortMode as LibraryItemSortMode,
             itemSortDirection = itemSortDirection
         )
     }.stateIn(

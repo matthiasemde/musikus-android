@@ -6,28 +6,28 @@
  * Copyright (c) 2023 Matthias Emde
  */
 
-package app.musikus.usecase.goals
+package app.musikus.usecase.userpreferences
 
 import app.musikus.repository.UserPreferencesRepository
-import app.musikus.utils.GoalsSortMode
+import app.musikus.utils.LibraryItemSortMode
 import app.musikus.utils.SortDirection
 import app.musikus.utils.SortInfo
 import kotlinx.coroutines.flow.first
 
-class SelectGoalsSortModeUseCase(
+class SelectItemSortModeUseCase(
     private val userPreferencesRepository: UserPreferencesRepository
 ) {
 
-    suspend operator fun invoke(sortMode: GoalsSortMode) {
-        val currentSortInfo = userPreferencesRepository.goalSortInfo.first()
+    suspend operator fun invoke(sortMode: LibraryItemSortMode) {
+        val currentSortInfo = userPreferencesRepository.itemSortInfo.first()
 
         if (currentSortInfo.mode == sortMode) {
-            userPreferencesRepository.updateGoalSortInfo(currentSortInfo.copy(
+            userPreferencesRepository.updateLibraryItemSortInfo(currentSortInfo.copy(
                 direction = currentSortInfo.direction.invert()
             ))
             return
         }
-        userPreferencesRepository.updateGoalSortInfo(SortInfo(
+        userPreferencesRepository.updateLibraryItemSortInfo(SortInfo(
             mode = sortMode,
             direction = SortDirection.DEFAULT
         ))

@@ -33,17 +33,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.rounded.Archive
-import androidx.compose.material.icons.rounded.Pause
-import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Repeat
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -165,21 +161,7 @@ fun Goals(
                                     }
                                 }
                             },
-                            uniqueMenuItems = {
-                                val overflowMenuUiState = topBarUiState.overflowMenuUiState
-                                DropdownMenuItem(
-                                    text = { Text(text = "Show paused goals") },
-                                    trailingIcon = {
-                                        Switch(
-                                            checked = overflowMenuUiState.showPausedGoals,
-                                            onCheckedChange = viewModel::onPausedGoalsChanged,
-                                        )
-                                    },
-                                    onClick = {
-                                        viewModel.onPausedGoalsChanged(!overflowMenuUiState.showPausedGoals)
-                                    },
-                                )
-                            }
+                            uniqueMenuItems = {}
                         )
                         ThemeMenu(
                             expanded = mainMenuUiState.showThemeSubMenu,
@@ -202,22 +184,6 @@ fun Goals(
                 ActionBar(
                     numSelectedItems = actionModeUiState.numberOfSelections,
                     uniqueActions = {
-                        if (actionModeUiState.showPauseAction) {
-                            IconButton(onClick = viewModel::onPauseAction) {
-                                Icon(
-                                    imageVector = Icons.Rounded.Pause,
-                                    contentDescription = "Pause",
-                                )
-                            }
-                        }
-                        if (actionModeUiState.showUnpauseAction) {
-                            IconButton(onClick = viewModel::onUnpauseAction) {
-                                Icon(
-                                    imageVector = Icons.Rounded.PlayArrow,
-                                    contentDescription = "Unpause",
-                                )
-                            }
-                        }
                         IconButton(onClick = {
                             viewModel.onArchiveAction()
                             mainEventHandler(MainUIEvent.ShowSnackbar(

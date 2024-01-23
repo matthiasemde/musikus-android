@@ -11,7 +11,8 @@ package app.musikus.usecase.library
 import app.musikus.database.Nullable
 import app.musikus.database.daos.LibraryItem
 import app.musikus.repository.LibraryRepository
-import app.musikus.repository.UserPreferencesRepository
+import app.musikus.usecase.userpreferences.GetItemSortInfoUseCase
+import app.musikus.utils.LibraryItemSortMode
 import app.musikus.utils.sorted
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -20,7 +21,7 @@ import java.util.UUID
 
 class GetItemsUseCase(
     private val libraryRepository: LibraryRepository,
-    private val userPreferencesRepository: UserPreferencesRepository,
+    private val getItemSortInfo: GetItemSortInfoUseCase,
 ) {
 
     /**
@@ -41,11 +42,11 @@ class GetItemsUseCase(
                 }
             }
             .combine(
-                userPreferencesRepository.userPreferences
-            ) { filteredItems, preferences ->
+                getItemSortInfo()
+            ) { filteredItems, itemSortInfo ->
                 filteredItems.sorted(
-                    preferences.libraryItemSortMode,
-                    preferences.libraryItemSortDirection
+                    itemSortInfo.mode as LibraryItemSortMode,
+                    itemSortInfo.direction
                 )
             }
     }

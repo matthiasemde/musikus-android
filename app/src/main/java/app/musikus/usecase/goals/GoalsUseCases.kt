@@ -21,5 +21,4 @@ data class GoalsUseCases(
     val edit: EditGoalUseCase,
     val delete: DeleteGoalsUseCase,
     val restore: RestoreGoalsUseCase,
-    val selectSortMode: SelectGoalsSortModeUseCase,
 )

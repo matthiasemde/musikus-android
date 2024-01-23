@@ -6,7 +6,7 @@
  * Copyright (c) 2023 Matthias Emde
  */
 
-package app.musikus.usecase.library
+package app.musikus.usecase.userpreferences
 
 import app.musikus.repository.UserPreferencesRepository
 

@@ -18,6 +18,7 @@ import app.musikus.database.entities.LibraryFolderUpdateAttributes
 import app.musikus.database.entities.LibraryItemCreationAttributes
 import app.musikus.database.entities.LibraryItemUpdateAttributes
 import app.musikus.usecase.library.LibraryUseCases
+import app.musikus.usecase.userpreferences.UserPreferencesUseCases
 import app.musikus.utils.LibraryFolderSortMode
 import app.musikus.utils.LibraryItemSortMode
 import app.musikus.utils.SortDirection
@@ -58,6 +59,7 @@ data class LibraryDialogState(
 @HiltViewModel
 class LibraryViewModel @Inject constructor(
     private val libraryUseCases: LibraryUseCases,
+    private val userPreferencesUseCases: UserPreferencesUseCases,
 ) : ViewModel() {
 
 
@@ -73,7 +75,7 @@ class LibraryViewModel @Inject constructor(
         initialValue = emptyList()
     )
 
-    private val itemSortInfo = libraryUseCases.getItemSortInfo().stateIn(
+    private val itemSortInfo = userPreferencesUseCases.getItemSortInfo().stateIn(
         scope = viewModelScope,
         started = WhileSubscribed(5000),
         initialValue = SortInfo(
@@ -82,7 +84,7 @@ class LibraryViewModel @Inject constructor(
         )
     )
 
-    private val folderSortInfo = libraryUseCases.getFolderSortInfo().stateIn(
+    private val folderSortInfo = userPreferencesUseCases.getFolderSortInfo().stateIn(
         scope = viewModelScope,
         started = WhileSubscribed(5000),
         initialValue = SortInfo(
@@ -558,14 +560,14 @@ class LibraryViewModel @Inject constructor(
     fun onItemSortModeSelected(selection: LibraryItemSortMode) {
         _showItemSortMenu.update { false }
         viewModelScope.launch {
-            libraryUseCases.selectItemSortMode(selection)
+            userPreferencesUseCases.selectItemSortMode(selection)
         }
     }
 
     fun onFolderSortModeSelected(selection: LibraryFolderSortMode) {
         _showFolderSortMenu.update { false }
         viewModelScope.launch {
-            libraryUseCases.selectFolderSortMode(selection)
+            userPreferencesUseCases.selectFolderSortMode(selection)
         }
     }
 }
