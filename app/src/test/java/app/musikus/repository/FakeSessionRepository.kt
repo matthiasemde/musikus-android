@@ -43,7 +43,7 @@ class FakeSessionRepository(
     override val sessionsWithSectionsWithLibraryItems: Flow<List<SessionWithSectionsWithLibraryItems>>
         get() = flowOf(_sessions)
 
-    override suspend fun sessionWithSectionsWithLibraryItems(id: UUID): SessionWithSectionsWithLibraryItems {
+    override suspend fun getSession(id: UUID): SessionWithSectionsWithLibraryItems {
         throw NotImplementedError()
     }
 

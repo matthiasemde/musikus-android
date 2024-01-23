@@ -11,6 +11,7 @@ package app.musikus.usecase.sessions
 data class SessionsUseCases(
     val getAll: GetAllSessionsUseCase,
     val getInTimeframe: GetSessionsInTimeframeUseCase,
+    val getById: GetSessionByIdUseCase,
     val add: AddSessionUseCase,
     val edit: EditSessionUseCase,
     val delete: DeleteSessionsUseCase,

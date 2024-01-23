@@ -3,8 +3,7 @@ package app.musikus.ui.sessions.editsession
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.musikus.database.SectionWithLibraryItem
-import app.musikus.repository.LibraryRepository
-import app.musikus.repository.SessionRepository
+import app.musikus.usecase.sessions.SessionsUseCases
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted.Companion.WhileSubscribed
@@ -34,8 +33,7 @@ data class EditSessionUiState(
 
 @HiltViewModel
 class EditSessionViewModel @Inject constructor(
-    private val libraryRepository : LibraryRepository,
-    sessionRepository : SessionRepository,
+    sessionsUseCases: SessionsUseCases,
 ) : ViewModel() {
 
     /** Repositories */
@@ -54,7 +52,7 @@ class EditSessionViewModel @Inject constructor(
     /** Combining imported and own flows */
     private val sessionToEdit = _sessionToEditId.map { sessionId ->
         if (sessionId != null) {
-            sessionRepository.sessionWithSectionsWithLibraryItems(sessionId)
+            sessionsUseCases.getById(sessionId)
         } else {
             null
         }

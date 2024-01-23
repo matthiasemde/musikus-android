@@ -42,6 +42,7 @@ import app.musikus.usecase.sessions.AddSessionUseCase
 import app.musikus.usecase.sessions.DeleteSessionsUseCase
 import app.musikus.usecase.sessions.EditSessionUseCase
 import app.musikus.usecase.sessions.GetAllSessionsUseCase
+import app.musikus.usecase.sessions.GetSessionByIdUseCase
 import app.musikus.usecase.sessions.GetSessionsInTimeframeUseCase
 import app.musikus.usecase.sessions.RestoreSessionsUseCase
 import app.musikus.usecase.sessions.SessionsUseCases
@@ -134,6 +135,7 @@ object UseCasesModule {
         return SessionsUseCases(
             getAll = GetAllSessionsUseCase(sessionRepository),
             getInTimeframe = GetSessionsInTimeframeUseCase(sessionRepository),
+            getById = GetSessionByIdUseCase(sessionRepository),
             add = AddSessionUseCase(sessionRepository, libraryUseCases.getItems),
             edit = EditSessionUseCase(sessionRepository),
             delete = DeleteSessionsUseCase(sessionRepository),
