@@ -90,14 +90,16 @@ class SessionRepositoryImpl(
     override val sections = sectionDao.getAllAsFlow()
 
     override val sessionsWithSectionsWithLibraryItems = sessionDao.getAllWithSectionsWithLibraryItemsAsFlow()
-    override suspend fun sessionWithSectionsWithLibraryItems(id: UUID) = sessionDao.getWithSectionsWithLibraryItems(id)
+    override suspend fun sessionWithSectionsWithLibraryItems(
+        id: UUID
+    ): SessionWithSectionsWithLibraryItems {
+        return sessionDao.getWithSectionsWithLibraryItems(id)
+    }
 
-    override fun sessionsInTimeframe (timeframe: Timeframe) : Flow<List<SessionWithSectionsWithLibraryItems>> {
-        assert (timeframe.first < timeframe.second)
-        return sessionDao.getFromTimeframe(
-            startTimestamp = timeframe.first,
-            endTimestamp = timeframe.second
-        )
+    override fun sessionsInTimeframe (
+        timeframe: Timeframe
+    ) : Flow<List<SessionWithSectionsWithLibraryItems>> {
+        return sessionDao.getFromTimeframe(timeframe)
     }
 
     override suspend fun sectionsForSession(sessionId: UUID): List<Section> {

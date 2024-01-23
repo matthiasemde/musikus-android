@@ -12,7 +12,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.musikus.database.SessionWithSectionsWithLibraryItems
 import app.musikus.database.daos.Session
-import app.musikus.repository.SessionRepository
 import app.musikus.shared.TopBarUiState
 import app.musikus.usecase.sessions.SessionsUseCases
 import app.musikus.utils.specificDay
@@ -69,7 +68,6 @@ data class SessionsUiState(
 
 @HiltViewModel
 class SessionsViewModel @Inject constructor(
-    sessionRepository : SessionRepository,
     private val sessionsUseCases: SessionsUseCases,
 ) : ViewModel() {
 
@@ -77,7 +75,7 @@ class SessionsViewModel @Inject constructor(
 
 
     /** Imported Flows */
-    private val sessions = sessionRepository.sessionsWithSectionsWithLibraryItems.stateIn(
+    private val sessions = sessionsUseCases.getAll().stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = emptyList()

@@ -54,6 +54,8 @@ import app.musikus.usecase.library.SelectItemSortModeUseCase
 import app.musikus.usecase.sessions.AddSessionUseCase
 import app.musikus.usecase.sessions.DeleteSessionsUseCase
 import app.musikus.usecase.sessions.EditSessionUseCase
+import app.musikus.usecase.sessions.GetAllSessionsUseCase
+import app.musikus.usecase.sessions.GetSessionsInTimeframeUseCase
 import app.musikus.usecase.sessions.RestoreSessionsUseCase
 import app.musikus.usecase.sessions.SessionsUseCases
 import app.musikus.utils.FakeIdProvider
@@ -215,6 +217,8 @@ object TestAppModule {
         libraryRepository: LibraryRepository,
     ): SessionsUseCases {
         return SessionsUseCases(
+            getAll = GetAllSessionsUseCase(sessionRepository),
+            getInTimeframe = GetSessionsInTimeframeUseCase(sessionRepository),
             add = AddSessionUseCase(sessionRepository, libraryRepository),
             edit = EditSessionUseCase(sessionRepository),
             delete = DeleteSessionsUseCase(sessionRepository),

@@ -13,6 +13,7 @@ import androidx.lifecycle.viewModelScope
 import app.musikus.repository.SessionRepository
 import app.musikus.ui.goals.GoalWithProgress
 import app.musikus.usecase.goals.GoalsUseCases
+import app.musikus.usecase.sessions.SessionsUseCases
 import app.musikus.utils.TimeProvider
 import app.musikus.utils.getDayIndexOfWeek
 import app.musikus.utils.specificMonth
@@ -73,10 +74,21 @@ data class StatisticsRatingsCardUiState(
 class StatisticsViewModel @Inject constructor(
     timeProvider: TimeProvider,
     goalsUseCases: GoalsUseCases,
-    sessionRepository : SessionRepository,
+    sessionsUseCases: SessionsUseCases,
+    sessionRepository: SessionRepository
 ) : ViewModel() {
 
-    private val sessions = sessionRepository.sessionsWithSectionsWithLibraryItems.stateIn(
+    /** Imported flows */
+
+    private val _timeframe = Pair(
+        minOf(
+            timeProvider.getStartOfMonth(),
+            timeProvider.getStartOfDay(dayOffset = -7)
+        ),
+        timeProvider.getEndOfMonth(),
+    )
+
+    private val sessions = sessionsUseCases.getInTimeframe(_timeframe).stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = emptyList(),

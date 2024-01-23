@@ -696,8 +696,8 @@ class SessionDaoTest {
         insertSessionWithSection()
 
         val sessions = sessionDao.getFromTimeframe(
-            startTimestamp = FakeTimeProvider.START_TIME.plus(1.seconds.toJavaDuration()),
-            endTimestamp = FakeTimeProvider.START_TIME.plus(2.seconds.toJavaDuration())
+            FakeTimeProvider.START_TIME.plus(1.seconds.toJavaDuration()) to
+            FakeTimeProvider.START_TIME.plus(2.seconds.toJavaDuration())
         ).first()
 
         assertThat(sessions).containsExactly(

@@ -13,8 +13,8 @@ import androidx.lifecycle.viewModelScope
 import app.musikus.database.SectionWithLibraryItem
 import app.musikus.database.SessionWithSectionsWithLibraryItems
 import app.musikus.database.daos.LibraryItem
-import app.musikus.repository.SessionRepository
 import app.musikus.repository.UserPreferencesRepository
+import app.musikus.usecase.sessions.SessionsUseCases
 import app.musikus.utils.DateFormat
 import app.musikus.utils.DurationFormat
 import app.musikus.utils.LibraryItemSortMode
@@ -137,7 +137,7 @@ data class PieChartData(
 class SessionStatisticsViewModel @Inject constructor(
     private val timeProvider: TimeProvider,
     userPreferencesRepository : UserPreferencesRepository,
-    sessionRepository : SessionRepository,
+    sessionsUseCases: SessionsUseCases
 ) : ViewModel() {
 
     /** Private variables */
@@ -182,7 +182,7 @@ class SessionStatisticsViewModel @Inject constructor(
     @OptIn(ExperimentalCoroutinesApi::class)
     private val tabWithTimeframeWithSessions =
         _selectedTabWithTimeframe.flatMapLatest { tabWithTimeframe ->
-        sessionRepository.sessionsInTimeframe(tabWithTimeframe.timeframe).map {
+        sessionsUseCases.getInTimeframe(tabWithTimeframe.timeframe).map {
             TabWithTimeframeWithSessions(
                 tabWithTimeframe = tabWithTimeframe,
                 sessions = it

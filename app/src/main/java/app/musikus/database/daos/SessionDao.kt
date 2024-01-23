@@ -25,6 +25,7 @@ import app.musikus.database.entities.SessionModel
 import app.musikus.database.entities.SessionUpdateAttributes
 import app.musikus.database.entities.SoftDeleteModelDisplayAttributes
 import app.musikus.database.toDatabaseInterpretableString
+import app.musikus.utils.Timeframe
 import kotlinx.coroutines.flow.Flow
 import java.time.ZonedDateTime
 import java.util.UUID
@@ -153,12 +154,11 @@ abstract class SessionDao(
     ): Flow<List<SessionWithSectionsWithLibraryItems>>
 
     fun getFromTimeframe(
-        startTimestamp: ZonedDateTime,
-        endTimestamp: ZonedDateTime,
+        timeframe: Timeframe
     ): Flow<List<SessionWithSectionsWithLibraryItems>> {
         return directGetFromTimeframe(
-            startTimestamp.toDatabaseInterpretableString(),
-            endTimestamp.toDatabaseInterpretableString()
+            startTimestamp = timeframe.first.toDatabaseInterpretableString(),
+            endTimestamp = timeframe.second.toDatabaseInterpretableString()
         )
     }
 }

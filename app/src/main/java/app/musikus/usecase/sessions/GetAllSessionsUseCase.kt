@@ -8,11 +8,11 @@
 
 package app.musikus.usecase.sessions
 
-data class SessionsUseCases(
-    val getAll: GetAllSessionsUseCase,
-    val getInTimeframe: GetSessionsInTimeframeUseCase,
-    val add: AddSessionUseCase,
-    val edit: EditSessionUseCase,
-    val delete: DeleteSessionsUseCase,
-    val restore: RestoreSessionsUseCase,
-)
+import app.musikus.repository.SessionRepository
+
+class GetAllSessionsUseCase(
+    private val sessionsRepository: SessionRepository
+) {
+
+    operator fun invoke() = sessionsRepository.sessionsWithSectionsWithLibraryItems
+}
