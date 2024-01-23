@@ -33,7 +33,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.test.core.app.ApplicationProvider
 import app.musikus.R
-import app.musikus.di.AppModule
 import app.musikus.ui.MainActivity
 import app.musikus.ui.MainViewModel
 import app.musikus.ui.Screen
@@ -42,11 +41,9 @@ import app.musikus.utils.LibraryFolderSortMode
 import app.musikus.utils.LibraryItemSortMode
 import app.musikus.utils.SortMode
 import app.musikus.utils.TestTags
-import app.musikus.utils.TimeProvider
 import com.google.android.material.composethemeadapter3.Mdc3Theme
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
-import dagger.hilt.android.testing.UninstallModules
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -55,7 +52,6 @@ import kotlin.time.Duration.Companion.seconds
 
 
 @HiltAndroidTest
-@UninstallModules(AppModule::class)
 class LibraryScreenTest {
 
     @Inject lateinit var fakeTimeProvider: FakeTimeProvider

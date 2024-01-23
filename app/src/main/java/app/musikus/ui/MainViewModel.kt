@@ -8,16 +8,12 @@
 
 package app.musikus.ui
 
-import android.util.Log
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.musikus.datastore.ThemeSelections
-import app.musikus.repository.GoalRepository
-import app.musikus.repository.LibraryRepository
-import app.musikus.repository.SessionRepository
 import app.musikus.repository.UserPreferencesRepository
 import app.musikus.shared.MultiFabState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -61,21 +57,7 @@ data class MainUiState(
 @HiltViewModel
 class MainViewModel @Inject constructor(
     private val userPreferencesRepository : UserPreferencesRepository,
-    libraryRepository : LibraryRepository,
-    goalRepository: GoalRepository,
-    sessionRepository: SessionRepository,
 ) : ViewModel() {
-
-    /** Initialization */
-    init {
-        // Clean up soft-deleted items
-        viewModelScope.launch {
-            Log.d("Musikus", "Clean up soft-deleted items")
-            sessionRepository.clean()
-            goalRepository.clean()
-            libraryRepository.clean()
-        }
-    }
 
     /** Menu */
     private val _showMainMenu = MutableStateFlow(false)

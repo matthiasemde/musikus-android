@@ -22,12 +22,10 @@ import app.musikus.database.entities.GoalInstanceUpdateAttributes
 import app.musikus.database.entities.GoalPeriodUnit
 import app.musikus.database.entities.GoalProgressType
 import app.musikus.database.entities.GoalType
-import app.musikus.di.AppModule
 import app.musikus.utils.FakeTimeProvider
 import com.google.common.truth.Truth.assertThat
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
-import dagger.hilt.android.testing.UninstallModules
 import io.mockk.coVerify
 import io.mockk.spyk
 import kotlinx.coroutines.flow.first
@@ -46,7 +44,6 @@ import kotlin.time.toJavaDuration
 
 
 @HiltAndroidTest
-@UninstallModules(AppModule::class)
 @SmallTest
 class GoalInstanceDaoTest {
 

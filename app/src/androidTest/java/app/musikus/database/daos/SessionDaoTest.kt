@@ -19,12 +19,10 @@ import app.musikus.database.entities.LibraryItemCreationAttributes
 import app.musikus.database.entities.SectionCreationAttributes
 import app.musikus.database.entities.SessionCreationAttributes
 import app.musikus.database.entities.SessionUpdateAttributes
-import app.musikus.di.AppModule
 import app.musikus.utils.FakeTimeProvider
 import com.google.common.truth.Truth.assertThat
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
-import dagger.hilt.android.testing.UninstallModules
 import io.mockk.coVerify
 import io.mockk.spyk
 import kotlinx.coroutines.flow.first
@@ -42,7 +40,6 @@ import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
 
 @HiltAndroidTest
-@UninstallModules(AppModule::class)
 @SmallTest
 class SessionDaoTest {
 

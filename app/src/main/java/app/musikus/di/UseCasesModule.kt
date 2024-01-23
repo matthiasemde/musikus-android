@@ -3,29 +3,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2023 Matthias Emde
+ * Copyright (c) 2024 Matthias Emde
  */
 
 package app.musikus.di
 
-import android.app.Application
-import androidx.datastore.core.DataStore
-import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
-import androidx.datastore.preferences.core.PreferenceDataStoreFactory
-import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.emptyPreferences
-import androidx.datastore.preferences.preferencesDataStoreFile
-import androidx.room.withTransaction
-import app.musikus.Musikus
-import app.musikus.database.MusikusDatabase
+import android.util.Log
 import app.musikus.repository.GoalRepository
-import app.musikus.repository.GoalRepositoryImpl
 import app.musikus.repository.LibraryRepository
-import app.musikus.repository.LibraryRepositoryImpl
 import app.musikus.repository.SessionRepository
-import app.musikus.repository.SessionRepositoryImpl
 import app.musikus.repository.UserPreferencesRepository
-import app.musikus.repository.UserPreferencesRepositoryImpl
 import app.musikus.usecase.goals.AddGoalUseCase
 import app.musikus.usecase.goals.ArchiveGoalsUseCase
 import app.musikus.usecase.goals.CleanFutureGoalInstancesUseCase
@@ -62,116 +49,25 @@ import app.musikus.usecase.sessions.DeleteSessionsUseCase
 import app.musikus.usecase.sessions.EditSessionUseCase
 import app.musikus.usecase.sessions.RestoreSessionsUseCase
 import app.musikus.usecase.sessions.SessionsUseCases
-import app.musikus.utils.IdProvider
-import app.musikus.utils.IdProviderImpl
 import app.musikus.utils.TimeProvider
-import app.musikus.utils.TimeProviderImpl
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.components.SingletonComponent
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers.IO
-import kotlinx.coroutines.SupervisorJob
-import javax.inject.Provider
-import javax.inject.Singleton
-
+import dagger.hilt.android.components.ViewModelComponent
+import dagger.hilt.android.scopes.ViewModelScoped
 
 @Module
-@InstallIn(SingletonComponent::class)
-object AppModule {
+@InstallIn(ViewModelComponent::class)
+object UseCasesModule {
 
     @Provides
-    @Singleton
-    fun provideTimeProvider(): TimeProvider {
-        return TimeProviderImpl()
-    }
-
-    @Provides
-    @Singleton
-    fun provideIdProvider(): IdProvider {
-        return IdProviderImpl()
-    }
-
-    @Provides
-    @Singleton
-    fun provideDataStore(app: Application): DataStore<Preferences> {
-
-        // source: https://medium.com/androiddevelopers/datastore-and-dependency-injection-ea32b95704e3
-        return PreferenceDataStoreFactory.create(
-            corruptionHandler = ReplaceFileCorruptionHandler {
-                emptyPreferences()
-            },
-            scope = CoroutineScope(IO + SupervisorJob()),
-            produceFile = { app.preferencesDataStoreFile(Musikus.USER_PREFERENCES_NAME) }
-        )
-    }
-
-    @Provides
-    fun provideUserPreferencesRepository(
-        dataStore: DataStore<Preferences>
-    ): UserPreferencesRepository {
-        return UserPreferencesRepositoryImpl(dataStore)
-    }
-
-
-    /**
-     * Dependency injection for the database
-     * @param app Application
-     * @param databaseProvider Provider<MusikusDatabase>: Needed for prepopulating the database
-     * */
-    @Provides
-    @Singleton
-    fun provideMusikusDatabase(
-        app: Application,
-        databaseProvider: Provider<MusikusDatabase>,
-        timeProvider: TimeProvider,
-        idProvider: IdProvider
-    ): MusikusDatabase {
-        return MusikusDatabase.buildDatabase(
-            app,
-            databaseProvider,
-        ).apply {
-            this.timeProvider = timeProvider
-            this.idProvider = idProvider
-        }
-    }
-
-    @Provides
-    fun provideLibraryRepository(
-        database: MusikusDatabase
-    ): LibraryRepository {
-        return LibraryRepositoryImpl(
-            itemDao = database.libraryItemDao,
-            folderDao = database.libraryFolderDao,
-        )
-    }
-
-    @Provides
-    fun provideGoalRepository(
-        database: MusikusDatabase
-    ): GoalRepository {
-        return GoalRepositoryImpl(database = database)
-    }
-
-    @Provides
-    fun provideSessionRepository(
-        database: MusikusDatabase,
-        timeProvider: TimeProvider
-    ): SessionRepository {
-        return SessionRepositoryImpl(
-            timeProvider = timeProvider,
-            sessionDao = database.sessionDao,
-            sectionDao = database.sectionDao,
-            withDatabaseTransaction = { block -> database.withTransaction(block) }
-        )
-    }
-
-    @Provides
+    @ViewModelScoped
     fun provideLibraryUseCases(
         libraryRepository: LibraryRepository,
         userPreferencesRepository: UserPreferencesRepository
     ): LibraryUseCases {
+        Log.d("UseCasesModule", "providesLibraryUseCases")
+
         return LibraryUseCases(
             getItems = GetItemsUseCase(libraryRepository, userPreferencesRepository),
             getFolders = GetFoldersUseCase(libraryRepository, userPreferencesRepository),
@@ -192,12 +88,15 @@ object AppModule {
     }
 
     @Provides
+    @ViewModelScoped
     fun providesGoalUseCases(
         goalRepository: GoalRepository,
         libraryRepository: LibraryRepository,
         userPreferencesRepository: UserPreferencesRepository,
         timeProvider: TimeProvider
     ): GoalsUseCases {
+
+        Log.d("UseCasesModule", "providesGoalUseCases")
         val sortGoalsUseCase = SortGoalsUseCase(userPreferencesRepository)
         val cleanFutureGoalInstancesUseCase = CleanFutureGoalInstancesUseCase(
             goalRepository = goalRepository,
@@ -230,6 +129,7 @@ object AppModule {
     }
 
     @Provides
+    @ViewModelScoped
     fun provideSessionsUseCases(
         sessionRepository: SessionRepository,
         libraryRepository: LibraryRepository

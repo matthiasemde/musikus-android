@@ -12,7 +12,6 @@
 
 package app.musikus.database.daos
 
-import android.util.Log
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.InvalidationTracker
@@ -379,7 +378,7 @@ abstract class SoftDeleteDao<
                 "deleted=1 " +
                 "AND (datetime(SUBSTR(modified_at, 1, INSTR(modified_at, '[') - 1)) < " +
                     "datetime('${database.timeProvider.now().toDatabaseInterpretableString()}', '-1 month')" +
-                    ");").also { Log.d("CLEAN", it) }
+                    ");")
         )
     ) : Int
 }
