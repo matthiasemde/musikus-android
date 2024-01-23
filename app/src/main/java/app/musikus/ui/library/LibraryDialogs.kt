@@ -32,19 +32,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import app.musikus.Musikus
 import app.musikus.R
 import app.musikus.database.daos.LibraryFolder
 import app.musikus.shared.DialogHeader
 import app.musikus.shared.SelectionSpinner
 import app.musikus.shared.UUIDSelectionSpinnerOption
+import app.musikus.ui.theme.libraryItemColors
 import app.musikus.utils.TestTags
 import java.util.UUID
 
@@ -197,7 +196,7 @@ fun LibraryItemDialog(
                             for (j in 0..1) {
                                 val index = 2*i+j
                                 ColorSelectRadioButton(
-                                    color = Color(Musikus.getLibraryItemColors(LocalContext.current)[index]),
+                                    color = libraryItemColors[index],
                                     selected = itemData.colorIndex == index,
                                     colorDescription = "Color ${index+1}",
                                     onClick = { onColorIndexChange(index) }

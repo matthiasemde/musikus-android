@@ -39,19 +39,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import app.musikus.Musikus
 import app.musikus.R
 import app.musikus.database.GoalInstanceWithDescriptionWithLibraryItems
 import app.musikus.database.entities.GoalType
-import app.musikus.utils.SCALE_FACTOR_FOR_SMALL_TEXT
+import app.musikus.ui.theme.libraryItemColors
 import app.musikus.utils.DurationFormat
+import app.musikus.utils.SCALE_FACTOR_FOR_SMALL_TEXT
 import app.musikus.utils.TimeProvider
 import app.musikus.utils.asString
 import app.musikus.utils.getDurationString
@@ -72,7 +70,7 @@ fun GoalCard(
     val (description, libraryItems) = descriptionWithLibraryItems
 
     val libraryItemColor = if(description.type == GoalType.ITEM_SPECIFIC) {
-        Color(Musikus.getLibraryItemColors(LocalContext.current)[libraryItems.first().colorIndex])
+        libraryItemColors[libraryItems.first().colorIndex]
     } else null
 
     ElevatedCard(modifier = modifier

@@ -41,7 +41,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import app.musikus.Musikus
-import app.musikus.spacing
+import app.musikus.ui.theme.spacing
 
 class ExportDatabaseContract : ActivityResultContracts.CreateDocument("*/*") {
     override fun createIntent(context: Context, input: String) =

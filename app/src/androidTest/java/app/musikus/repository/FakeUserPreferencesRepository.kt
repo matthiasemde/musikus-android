@@ -36,8 +36,8 @@ class FakeUserPreferencesRepository : UserPreferencesRepository {
         goalsSortDirection = SortDirection.DEFAULT,
         showPausedGoals = true,
     ))
-    override val userPreferences: Flow<UserPreferences>
-        get() = _preferences
+    override val theme: Flow<ThemeSelections>
+        get() = _preferences.map { it.theme }
 
     override val itemSortInfo: Flow<SortInfo<LibraryItem>>
         get() = _preferences.map { preferences ->

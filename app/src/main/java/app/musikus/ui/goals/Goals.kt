@@ -3,12 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2022 Matthias Emde
- *
- * Parts of this software are licensed under the MIT license
- *
- * Copyright (c) 2022, Javier Carbone, author Matthias Emde
- * Additions and modifications, author Michael Prommersberger
+ * Copyright (c) 2024 Matthias Emde
  */
 
 package app.musikus.ui.goals
@@ -60,9 +55,9 @@ import app.musikus.shared.MultiFabState
 import app.musikus.shared.Selectable
 import app.musikus.shared.SortMenu
 import app.musikus.shared.ThemeMenu
-import app.musikus.spacing
 import app.musikus.ui.MainUIEvent
 import app.musikus.ui.MainUiState
+import app.musikus.ui.theme.spacing
 import app.musikus.utils.GoalsSortMode
 import app.musikus.utils.TimeProvider
 

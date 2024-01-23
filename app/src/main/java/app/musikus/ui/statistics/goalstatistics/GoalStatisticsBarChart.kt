@@ -69,9 +69,7 @@ fun GoalStatisticsBarChart(
     val onPrimaryColor = MaterialTheme.colorScheme.onPrimary
 //    val primaryContainerColor = MaterialTheme.colorScheme.primaryContainer
 //    val onPrimaryContainerColor = MaterialTheme.colorScheme.onPrimaryContainer
-//    val libraryColors = Musikus.getLibraryItemColors(LocalContext.current).map {
-//        Color(it)
-//    }
+//    val libraryColors = libraryItemColors
 
     val barColor = remember { mutableStateOf(primaryColor) }
 

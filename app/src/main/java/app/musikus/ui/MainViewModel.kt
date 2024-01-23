@@ -14,13 +14,12 @@ import androidx.compose.material3.SnackbarResult
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.musikus.datastore.ThemeSelections
-import app.musikus.repository.UserPreferencesRepository
 import app.musikus.shared.MultiFabState
+import app.musikus.usecase.userpreferences.UserPreferencesUseCases
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -50,13 +49,13 @@ data class MainUiState(
     val menuUiState: MainMenuUiState,
     val showExportImportDialog: Boolean,
     val multiFabState: MultiFabState,
-    val activeTheme: ThemeSelections,
+    val activeTheme: ThemeSelections?,
     var snackbarHost: SnackbarHostState,
 )
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
-    private val userPreferencesRepository : UserPreferencesRepository,
+    private val userPreferencesUseCases: UserPreferencesUseCases,
 ) : ViewModel() {
 
     /** Menu */
@@ -73,12 +72,11 @@ class MainViewModel @Inject constructor(
     private val _snackbarHost = MutableStateFlow(SnackbarHostState())
 
     /** Theme */
-    private val _activeTheme = userPreferencesRepository.userPreferences.map { it.theme }
-        .stateIn(
-            viewModelScope,
-            SharingStarted.WhileSubscribed(5000),
-            ThemeSelections.DEFAULT
-        )
+    private val _activeTheme = userPreferencesUseCases.getTheme().stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = null
+    )
 
     fun onEvent(event: MainUIEvent) {
         when(event) {
@@ -135,7 +133,7 @@ class MainViewModel @Inject constructor(
 
     private fun setTheme(theme: ThemeSelections) {
         viewModelScope.launch {
-            userPreferencesRepository.updateTheme(theme)
+            userPreferencesUseCases.selectTheme(theme)
         }
     }
 

@@ -48,9 +48,11 @@ import app.musikus.usecase.sessions.SessionsUseCases
 import app.musikus.usecase.userpreferences.GetFolderSortInfoUseCase
 import app.musikus.usecase.userpreferences.GetGoalSortInfoUseCase
 import app.musikus.usecase.userpreferences.GetItemSortInfoUseCase
+import app.musikus.usecase.userpreferences.GetThemeUseCase
 import app.musikus.usecase.userpreferences.SelectFolderSortModeUseCase
 import app.musikus.usecase.userpreferences.SelectGoalsSortModeUseCase
 import app.musikus.usecase.userpreferences.SelectItemSortModeUseCase
+import app.musikus.usecase.userpreferences.SelectThemeUseCase
 import app.musikus.usecase.userpreferences.UserPreferencesUseCases
 import app.musikus.utils.TimeProvider
 import dagger.Module
@@ -145,9 +147,11 @@ object UseCasesModule {
         userPreferencesRepository: UserPreferencesRepository
     ): UserPreferencesUseCases {
         return UserPreferencesUseCases(
+            getTheme = GetThemeUseCase(userPreferencesRepository),
             getItemSortInfo = GetItemSortInfoUseCase(userPreferencesRepository),
             getFolderSortInfo = GetFolderSortInfoUseCase(userPreferencesRepository),
             getGoalSortInfo = GetGoalSortInfoUseCase(userPreferencesRepository),
+            selectTheme = SelectThemeUseCase(userPreferencesRepository),
             selectItemSortMode = SelectItemSortModeUseCase(userPreferencesRepository),
             selectFolderSortMode = SelectFolderSortModeUseCase(userPreferencesRepository),
             selectGoalSortMode = SelectGoalsSortModeUseCase(userPreferencesRepository),

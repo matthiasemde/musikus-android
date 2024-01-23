@@ -30,17 +30,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import app.musikus.Musikus
 import app.musikus.ui.sessions.RatingBar
-import app.musikus.utils.SCALE_FACTOR_FOR_SMALL_TEXT
+import app.musikus.ui.theme.libraryItemColors
 import app.musikus.utils.DurationFormat
+import app.musikus.utils.SCALE_FACTOR_FOR_SMALL_TEXT
 import app.musikus.utils.getDurationString
 import java.util.UUID
 
@@ -104,11 +102,7 @@ fun EditSession(
                                     .padding(end = 8.dp)
                                     .width(6.dp)
                                     .clip(RoundedCornerShape(4.dp))
-                                    .background(
-                                        Color(
-                                            Musikus.getLibraryItemColors(LocalContext.current)[sectionWithLibraryItem.libraryItem.colorIndex]
-                                        )
-                                    )
+                                    .background(libraryItemColors[sectionWithLibraryItem.libraryItem.colorIndex])
                             )
                             Text(
                                 text = sectionWithLibraryItem.libraryItem.name,

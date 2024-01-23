@@ -38,19 +38,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import app.musikus.Musikus
 import app.musikus.R
 import app.musikus.database.SessionWithSectionsWithLibraryItems
+import app.musikus.ui.theme.libraryItemColors
 import app.musikus.utils.DateFormat
-import app.musikus.utils.SCALE_FACTOR_FOR_SMALL_TEXT
 import app.musikus.utils.DurationFormat
+import app.musikus.utils.SCALE_FACTOR_FOR_SMALL_TEXT
 import app.musikus.utils.getDurationString
 import app.musikus.utils.musikusFormat
 import kotlin.time.Duration.Companion.seconds
@@ -170,11 +169,7 @@ fun SessionCard(
                                 .padding(end = 8.dp)
                                 .width(6.dp)
                                 .clip(RoundedCornerShape(4.dp))
-                                .background(
-                                    Color(
-                                        Musikus.getLibraryItemColors(LocalContext.current)[sectionWithLibraryItem.libraryItem.colorIndex]
-                                    )
-                                )
+                                .background(libraryItemColors[sectionWithLibraryItem.libraryItem.colorIndex])
                         )
                         Text(
                             text = sectionWithLibraryItem.libraryItem.name,

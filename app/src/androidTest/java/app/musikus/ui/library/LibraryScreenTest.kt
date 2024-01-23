@@ -33,15 +33,16 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.test.core.app.ApplicationProvider
 import app.musikus.R
+import app.musikus.datastore.ThemeSelections
 import app.musikus.ui.MainActivity
 import app.musikus.ui.MainViewModel
 import app.musikus.ui.Screen
+import app.musikus.ui.theme.MusikusTheme
 import app.musikus.utils.FakeTimeProvider
 import app.musikus.utils.LibraryFolderSortMode
 import app.musikus.utils.LibraryItemSortMode
 import app.musikus.utils.SortMode
 import app.musikus.utils.TestTags
-import com.google.android.material.composethemeadapter3.Mdc3Theme
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import org.junit.Before
@@ -72,7 +73,7 @@ class LibraryScreenTest {
             val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
             val navController = rememberNavController()
-            Mdc3Theme {
+            MusikusTheme(theme = ThemeSelections.DAY) {
                 NavHost(
                     navController = navController,
                     startDestination = Screen.Library.route

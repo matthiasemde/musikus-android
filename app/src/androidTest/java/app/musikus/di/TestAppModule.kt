@@ -56,9 +56,11 @@ import app.musikus.usecase.sessions.SessionsUseCases
 import app.musikus.usecase.userpreferences.GetFolderSortInfoUseCase
 import app.musikus.usecase.userpreferences.GetGoalSortInfoUseCase
 import app.musikus.usecase.userpreferences.GetItemSortInfoUseCase
+import app.musikus.usecase.userpreferences.GetThemeUseCase
 import app.musikus.usecase.userpreferences.SelectFolderSortModeUseCase
 import app.musikus.usecase.userpreferences.SelectGoalsSortModeUseCase
 import app.musikus.usecase.userpreferences.SelectItemSortModeUseCase
+import app.musikus.usecase.userpreferences.SelectThemeUseCase
 import app.musikus.usecase.userpreferences.UserPreferencesUseCases
 import app.musikus.utils.FakeIdProvider
 import app.musikus.utils.FakeTimeProvider
@@ -227,9 +229,11 @@ object TestAppModule {
         userPreferencesRepository: UserPreferencesRepository
     ): UserPreferencesUseCases {
         return UserPreferencesUseCases(
+            getTheme = GetThemeUseCase(userPreferencesRepository),
             getFolderSortInfo = GetFolderSortInfoUseCase(userPreferencesRepository),
             getItemSortInfo = GetItemSortInfoUseCase(userPreferencesRepository),
             getGoalSortInfo = GetGoalSortInfoUseCase(userPreferencesRepository),
+            selectTheme = SelectThemeUseCase(userPreferencesRepository),
             selectFolderSortMode = SelectFolderSortModeUseCase(userPreferencesRepository),
             selectItemSortMode = SelectItemSortModeUseCase(userPreferencesRepository),
             selectGoalSortMode = SelectGoalsSortModeUseCase(userPreferencesRepository),

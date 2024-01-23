@@ -59,6 +59,7 @@ import app.musikus.ui.sessions.editsession.EditSession
 import app.musikus.ui.statistics.Statistics
 import app.musikus.ui.statistics.goalstatistics.GoalStatistics
 import app.musikus.ui.statistics.sessionstatistics.SessionStatistics
+import app.musikus.ui.theme.MusikusTheme
 import app.musikus.utils.ExportImportDialog
 import app.musikus.utils.TimeProvider
 import java.util.UUID
@@ -230,126 +231,136 @@ fun MusikusApp(
     navController: NavHostController = rememberNavController(),
 ) {
     val uiState by mainViewModel.uiState.collectAsStateWithLifecycle()
-    Scaffold(
-    snackbarHost = {
-        SnackbarHost(hostState = uiState.snackbarHost)
-    },
-    bottomBar = {
-        MusikusBottomBar(
-            mainEventHandler = mainViewModel::onEvent,
-            navController = navController,
-            mainUiState = uiState
-        )
-    }
-    ) { innerPadding ->
 
-        Log.d("MainScreen", "paddingVals: $innerPadding")
+    // This line ensures, that the app is only drawn when the proper theme is loaded
+    // TODO: make sure this is the right way to do it
+    val theme = uiState.activeTheme ?: return
 
-        val animationDuration = 400
-        NavHost(
-            navController,
-            startDestination = Screen.Sessions.route,
-            Modifier.padding(bottom = innerPadding.calculateBottomPadding()),
-            enterTransition = {
-                slideInVertically(
-                    animationSpec = tween(animationDuration),
-                    initialOffsetY = { fullHeight -> -(fullHeight / 10) }
-                ) + fadeIn(
-                    animationSpec = tween(
-                        animationDuration / 2,
-                        animationDuration / 2
+    MusikusTheme(
+        theme = theme
+    ) {
+        Scaffold(
+        snackbarHost = {
+            SnackbarHost(hostState = uiState.snackbarHost)
+        },
+        bottomBar = {
+            MusikusBottomBar(
+                mainEventHandler = mainViewModel::onEvent,
+                navController = navController,
+                mainUiState = uiState
+            )
+        }
+        ) { innerPadding ->
+
+            Log.d("MainScreen", "paddingVals: $innerPadding")
+
+            val animationDuration = 400
+            NavHost(
+                navController,
+                startDestination = Screen.Sessions.route,
+                Modifier.padding(bottom = innerPadding.calculateBottomPadding()),
+                enterTransition = {
+                    slideInVertically(
+                        animationSpec = tween(animationDuration),
+                        initialOffsetY = { fullHeight -> -(fullHeight / 10) }
+                    ) + fadeIn(
+                        animationSpec = tween(
+                            animationDuration / 2,
+                            animationDuration / 2
+                        )
                     )
-                )
-            },
-            exitTransition = {
-                slideOutVertically(
-                    animationSpec = tween(animationDuration),
-                    targetOffsetY = { fullHeight -> (fullHeight / 10) }
-                ) + fadeOut(animationSpec = tween(animationDuration / 2))
-            }
-        ) {
-            composable(
-                route = Screen.Sessions.route,
+                },
                 exitTransition = {
-                    if(initialState.destination.route == Screen.ProgressUpdate.route) {
-                        fadeOut(tween(0))
-                    } else null
+                    slideOutVertically(
+                        animationSpec = tween(animationDuration),
+                        targetOffsetY = { fullHeight -> (fullHeight / 10) }
+                    ) + fadeOut(animationSpec = tween(animationDuration / 2))
                 }
             ) {
-                Sessions(
+                composable(
+                    route = Screen.Sessions.route,
+                    exitTransition = {
+                        if(initialState.destination.route == Screen.ProgressUpdate.route) {
+                            fadeOut(tween(0))
+                        } else null
+                    }
+                ) {
+                    Sessions(
+                        mainUiState = uiState,
+                        mainEventHandler = mainViewModel::onEvent,
+                        onSessionEdit = { sessionId: UUID ->
+                            navController.navigate(
+                                Screen.EditSession.route.replace(
+                                    "{sessionId}",
+                                    sessionId.toString()
+                                )
+                            )
+                        }
+                    )
+                }
+                composable(
+                    route = Screen.Goals.route,
+                ) { Goals(
                     mainUiState = uiState,
                     mainEventHandler = mainViewModel::onEvent,
-                    onSessionEdit = { sessionId: UUID ->
-                        navController.navigate(
-                            Screen.EditSession.route.replace(
-                                "{sessionId}",
-                                sessionId.toString()
-                            )
-                        )
-                    }
-                )
-            }
-            composable(
-                route = Screen.Goals.route,
-            ) { Goals(
-                mainUiState = uiState,
-                mainEventHandler = mainViewModel::onEvent,
-                timeProvider = timeProvider
-            ) }
-            composable(
-                route = Screen.Statistics.route,
-            ) { Statistics(
-                mainEventHandler = mainViewModel::onEvent,
-                mainViewModel = mainViewModel,
-                navigateToSessionStatistics = {
-                    navController.navigate(Screen.SessionStatistics.route)
-                },
-                navigateToGoalStatistics = {
-                    navController.navigate(Screen.GoalStatistics.route)
-                },
-                timeProvider = timeProvider
-            ) }
-            composable(
-                route = Screen.SessionStatistics.route,
-            ) { SessionStatistics(navigateUp = navController::navigateUp) }
-            composable(
-                route = Screen.GoalStatistics.route,
-            ) { GoalStatistics(navigateUp = navController::navigateUp) }
-            composable(
-                route = Screen.Library.route,
-            ) { Library (
-                mainUiState = uiState,
-                mainEventHandler = mainViewModel::onEvent
-            ) }
-            composable(
-                route = Screen.ProgressUpdate.route,
-                enterTransition = { fadeIn(tween(0)) }
-            ) { ProgressUpdate() }
-            composable(
-                route = Screen.EditSession.route,
-                arguments = listOf(navArgument("sessionId") { type = NavType.StringType})
-            ) {backStackEntry ->
-                val sessionId = backStackEntry.arguments?.getString("sessionId")
-                    ?: return@composable navController.navigate(Screen.Sessions.route)
+                    timeProvider = timeProvider
+                ) }
+                composable(
+                    route = Screen.Statistics.route,
+                ) { Statistics(
+                    mainEventHandler = mainViewModel::onEvent,
+                    mainViewModel = mainViewModel,
+                    navigateToSessionStatistics = {
+                        navController.navigate(Screen.SessionStatistics.route)
+                    },
+                    navigateToGoalStatistics = {
+                        navController.navigate(Screen.GoalStatistics.route)
+                    },
+                    timeProvider = timeProvider
+                ) }
+                composable(
+                    route = Screen.SessionStatistics.route,
+                ) { SessionStatistics(navigateUp = navController::navigateUp) }
+                composable(
+                    route = Screen.GoalStatistics.route,
+                ) { GoalStatistics(navigateUp = navController::navigateUp) }
+                composable(
+                    route = Screen.Library.route,
+                ) { Library (
+                    mainUiState = uiState,
+                    mainEventHandler = mainViewModel::onEvent
+                ) }
+                composable(
+                    route = Screen.ProgressUpdate.route,
+                    enterTransition = { fadeIn(tween(0)) }
+                ) { ProgressUpdate() }
+                composable(
+                    route = Screen.EditSession.route,
+                    arguments = listOf(navArgument("sessionId") { type = NavType.StringType})
+                ) {backStackEntry ->
+                    val sessionId = backStackEntry.arguments?.getString("sessionId")
+                        ?: return@composable navController.navigate(Screen.Sessions.route)
 
-                EditSession(
-                    sessionToEditId = UUID.fromString(sessionId),
-                    navigateUp = navController::navigateUp
-                )
+                    EditSession(
+                        sessionToEditId = UUID.fromString(sessionId),
+                        navigateUp = navController::navigateUp
+                    )
+                }
             }
+
+            /** Export / Import Dialog */
+            ExportImportDialog(
+                show = uiState.showExportImportDialog,
+                onDismissHandler = { mainViewModel.onEvent(MainUIEvent.HideExportImportDialog) }
+            )
+
+            // TODO remove
+            // if there is a new session added to the intent, navigate to progress update
+    //        intent.extras?.getLong("KEY_SESSION")?.let { _ ->
+    //            intent.removeExtra("KEY_SESSION")
+    ////                        mainViewModel.navigateTo(Screen.ProgressUpdate.route)
+    //        }
         }
 
-        /** Export / Import Dialog */
-        ExportImportDialog(
-            show = uiState.showExportImportDialog,
-            onDismissHandler = { mainViewModel.onEvent(MainUIEvent.HideExportImportDialog) }
-        )
-
-        // TODO remove
-        // if there is a new session added to the intent, navigate to progress update
-//        intent.extras?.getLong("KEY_SESSION")?.let { _ ->
-//            intent.removeExtra("KEY_SESSION")
-////                        mainViewModel.navigateTo(Screen.ProgressUpdate.route)
-//        }
     }
 }

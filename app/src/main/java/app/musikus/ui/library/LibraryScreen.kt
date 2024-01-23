@@ -62,16 +62,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import app.musikus.Musikus
 import app.musikus.R
 import app.musikus.database.daos.LibraryFolder
 import app.musikus.database.daos.LibraryItem
@@ -84,9 +81,10 @@ import app.musikus.shared.MultiFabState
 import app.musikus.shared.Selectable
 import app.musikus.shared.SortMenu
 import app.musikus.shared.ThemeMenu
-import app.musikus.spacing
 import app.musikus.ui.MainUIEvent
 import app.musikus.ui.MainUiState
+import app.musikus.ui.theme.libraryItemColors
+import app.musikus.ui.theme.spacing
 import app.musikus.utils.LibraryFolderSortMode
 import app.musikus.utils.LibraryItemSortMode
 
@@ -521,9 +519,7 @@ fun LibraryItem(
                     .fillMaxHeight()
                     .clip(RoundedCornerShape(5.dp))
                     .align(Alignment.CenterVertically)
-                    .background(
-                        Color(Musikus.getLibraryItemColors(LocalContext.current)[item.colorIndex])
-                    )
+                    .background(libraryItemColors[item.colorIndex])
             )
             Column(
                 modifier = Modifier

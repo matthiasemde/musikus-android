@@ -52,10 +52,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -66,15 +64,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import app.musikus.Musikus
 import app.musikus.R
 import app.musikus.database.entities.GoalType
 import app.musikus.shared.CommonMenuSelections
 import app.musikus.shared.MainMenu
 import app.musikus.shared.ThemeMenu
-import app.musikus.spacing
 import app.musikus.ui.MainUIEvent
 import app.musikus.ui.MainViewModel
+import app.musikus.ui.theme.libraryItemColors
+import app.musikus.ui.theme.spacing
 import app.musikus.utils.DateFormat
 import app.musikus.utils.DurationFormat
 import app.musikus.utils.TimeProvider
@@ -459,9 +457,7 @@ fun StatisticsGoalCard(
                             )
                             val color =
                                 if (goal.description.description.type == GoalType.ITEM_SPECIFIC)
-                                    Color(Musikus.getLibraryItemColors(
-                                        LocalContext.current
-                                    )[goal.description.libraryItems.first().colorIndex])
+                                    libraryItemColors[goal.description.libraryItems.first().colorIndex]
                                 else
                                     MaterialTheme.colorScheme.primary
                             Box{
@@ -529,7 +525,6 @@ fun StatisticsRatingsCard(
                 color = MaterialTheme.colorScheme.onSurface,
             )
             val starCharacter = stringResource(R.string.star_sign)
-            val colors = Musikus.getLibraryItemColors(LocalContext.current)
             val textMeasurer = rememberTextMeasurer()
             val numOfRatingsToAngleFactor = uiState.numOfRatingsFromOneToFive
                 .sum()
@@ -584,7 +579,7 @@ fun StatisticsRatingsCard(
 
                     /** pie piece */
                     drawArc(
-                        color = Color(colors[index]),
+                        color = libraryItemColors[index],
                         startAngle = startAngle,
                         sweepAngle = angle,
                         useCenter = true,
@@ -602,7 +597,7 @@ fun StatisticsRatingsCard(
 
                     /** angled line */
                     drawLine(
-                        color = Color(colors[index]).copy(alpha = labelAlpha),
+                        color = libraryItemColors[index].copy(alpha = labelAlpha),
                         start = pieChartCenter + halfSweepEdgePoint,
                         end = lineCornerPoint,
                         strokeWidth = 1.dp.toPx()
@@ -616,7 +611,7 @@ fun StatisticsRatingsCard(
 
                     /** horizontal line */
                     drawLine(
-                        color = Color(colors[index]).copy(alpha = labelAlpha),
+                        color = libraryItemColors[index].copy(alpha = labelAlpha),
                         start = pieChartCenter + halfSweepEdgePoint * 1.2f,
                         end = lineEndPoint,
                         strokeWidth = 1.dp.toPx()

@@ -49,19 +49,17 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import app.musikus.Musikus
 import app.musikus.R
 import app.musikus.database.daos.LibraryItem
 import app.musikus.shared.conditional
 import app.musikus.shared.simpleVerticalScrollbar
-import app.musikus.spacing
+import app.musikus.ui.theme.libraryItemColors
+import app.musikus.ui.theme.spacing
 import app.musikus.utils.DurationFormat
 import app.musikus.utils.Timeframe
 import app.musikus.utils.getDurationString
@@ -199,12 +197,12 @@ fun SessionStatisticsLibraryItemSelector(
                     .clickable(onClick = { onLibraryItemCheckboxClicked(item) }),
                 verticalAlignment = CenterVertically
             ) {
-                val libraryColor = Color(Musikus.getLibraryItemColors(LocalContext.current)[item.colorIndex])
+                val libraryItemColor = libraryItemColors[item.colorIndex]
                 Checkbox(
                     checked = checked,
                     colors = CheckboxDefaults.colors(
-                        checkedColor = libraryColor,
-                        uncheckedColor = libraryColor,
+                        checkedColor = libraryItemColor,
+                        uncheckedColor = libraryItemColor,
                     ),
                     onCheckedChange = { onLibraryItemCheckboxClicked(item) }
                 )

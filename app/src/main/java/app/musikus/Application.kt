@@ -15,37 +15,18 @@ package app.musikus
 
 import android.app.Application
 import android.content.Context
-import android.content.ContextWrapper
 import android.content.SharedPreferences
 import android.net.Uri
-import android.util.TypedValue
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
-import androidx.annotation.AttrRes
-import androidx.annotation.ColorInt
-import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.app.AppCompatDelegate
 import app.musikus.database.MusikusDatabase
-import app.musikus.repository.UserPreferencesRepository
-import app.musikus.utils.TimeProvider
 import dagger.hilt.android.HiltAndroidApp
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.launch
 import java.io.File
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
-import javax.inject.Inject
-
-fun Context.getActivity(): AppCompatActivity? = when (this) {
-    is AppCompatActivity -> this
-    is ContextWrapper -> baseContext.getActivity()
-    else -> null
-}
 
 @HiltAndroidApp
 class Musikus : Application() {
-    @Inject lateinit var userPreferencesRepository: UserPreferencesRepository
 
     companion object {
         val executorService: ExecutorService = Executors.newFixedThreadPool(4)
@@ -69,23 +50,6 @@ class Musikus : Application() {
         const val USER_PREFERENCES_NAME = "user_preferences"
 
 
-
-        /**
-         * Get a color int from a theme attribute.
-         * Activity context must be used instead of applicationContext: https://stackoverflow.com/q/34052810
-         * Access like Musikus.getThemeColor() in Activity
-         * */
-        @ColorInt
-        fun getThemeColor(@AttrRes color: Int, activityContext: Context): Int {
-            val typedValue = TypedValue()
-            activityContext.theme.resolveAttribute(color, typedValue, true)
-            return typedValue.data
-        }
-
-        fun getLibraryItemColors(context: Context): MutableList<Int> {
-            return context.resources?.getIntArray(R.array.library_item_colors)
-                ?.toCollection(mutableListOf()) ?: mutableListOf()
-        }
 
         fun getRandomQuote(context: Context) : CharSequence {
             return context.resources.getTextArray(R.array.quotes).random()
@@ -156,13 +120,5 @@ class Musikus : Application() {
         prefs = getSharedPreferences(getString(R.string.filename_shared_preferences), Context.MODE_PRIVATE)
 
         dbFile = getDatabasePath("practice_time.db")
-
-        MainScope().launch {
-            userPreferencesRepository.userPreferences.map { preferences ->
-                preferences.theme
-            }.collect {
-                AppCompatDelegate.setDefaultNightMode(it.ordinal)
-            }
-        }
     }
 }

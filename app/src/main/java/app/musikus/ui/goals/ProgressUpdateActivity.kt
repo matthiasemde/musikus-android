@@ -12,7 +12,6 @@
 
 package app.musikus.ui.goals
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -40,7 +39,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import app.musikus.R
 import app.musikus.database.GoalInstanceWithDescriptionWithLibraryItems
-import app.musikus.spacing
+import app.musikus.ui.theme.spacing
 import kotlinx.coroutines.CoroutineScope
 import java.util.UUID
 
@@ -70,7 +69,7 @@ fun rememberProgressUpdateState(
 ) = remember(coroutineScope) { ProgressUpdateState(coroutineScope, scrollBehavior) }
 
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProgressUpdate() {
     val progressUpdateState = rememberProgressUpdateState()

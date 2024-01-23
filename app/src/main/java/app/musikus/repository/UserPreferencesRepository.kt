@@ -39,7 +39,8 @@ object PreferenceKeys {
 }
 
 interface UserPreferencesRepository {
-    val userPreferences: Flow<UserPreferences>
+
+    val theme: Flow<ThemeSelections>
 
     val itemSortInfo: Flow<SortInfo<LibraryItem>>
     val folderSortInfo: Flow<SortInfo<LibraryFolder>>
@@ -60,7 +61,7 @@ interface UserPreferencesRepository {
 class UserPreferencesRepositoryImpl(
     private val dataStore: DataStore<Preferences>,
 ) : UserPreferencesRepository {
-    override val userPreferences = dataStore.data.map { preferences ->
+    private val userPreferences = dataStore.data.map { preferences ->
         UserPreferences(
             theme = ThemeSelections.valueOrDefault(preferences[PreferenceKeys.THEME]),
 
@@ -77,6 +78,10 @@ class UserPreferencesRepositoryImpl(
 
             showPausedGoals =  preferences[PreferenceKeys.SHOW_PAUSED_GOALS] ?: true,
         )
+    }
+
+    override val theme: Flow<ThemeSelections> = userPreferences.map { preferences ->
+        preferences.theme
     }
 
     override val itemSortInfo : Flow<SortInfo<LibraryItem>> =

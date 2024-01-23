@@ -12,13 +12,13 @@ import android.app.Application
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import app.musikus.Musikus
 import app.musikus.database.GoalDescriptionWithInstancesAndLibraryItems
 import app.musikus.database.GoalDescriptionWithLibraryItems
 import app.musikus.database.daos.GoalInstance
 import app.musikus.database.entities.GoalPeriodUnit
 import app.musikus.database.entities.GoalType
 import app.musikus.repository.SessionRepository
+import app.musikus.ui.theme.libraryItemColors
 import app.musikus.usecase.goals.GoalsUseCases
 import app.musikus.utils.DateFormat
 import app.musikus.utils.TimeProvider
@@ -101,7 +101,6 @@ class GoalStatisticsViewModel @Inject constructor(
 
     /** Private variables */
     private var _redraw = true
-    private val libraryColors = Musikus.getLibraryItemColors(application)
 
     /** Private methods */
 
@@ -311,7 +310,7 @@ class GoalStatisticsViewModel @Inject constructor(
                 subtitle = subtitle,
                 uniqueColor = goalDescriptionWithInstancesAndLibraryItems.libraryItems
                     .firstOrNull()
-                    ?.let { Color(libraryColors[it.colorIndex]) },
+                    ?.let { libraryItemColors[it.colorIndex] },
                 successRate = goalToSuccessRate?.get(description),
                 selected = description == selectedGoalWithTimeframe?.let { (goal, _) -> goal.description }
             )
@@ -365,7 +364,7 @@ class GoalStatisticsViewModel @Inject constructor(
                 )
             },
             uniqueColor = if(description.type == GoalType.ITEM_SPECIFIC) {
-                Color(libraryColors[selectedGoal.goal.libraryItems.first().colorIndex])
+                libraryItemColors[selectedGoal.goal.libraryItems.first().colorIndex]
             } else null,
             redraw = _redraw.also { _redraw = false }
         )

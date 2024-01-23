@@ -53,9 +53,9 @@ import app.musikus.shared.CommonMenuSelections
 import app.musikus.shared.MainMenu
 import app.musikus.shared.Selectable
 import app.musikus.shared.ThemeMenu
-import app.musikus.spacing
 import app.musikus.ui.MainUIEvent
 import app.musikus.ui.MainUiState
+import app.musikus.ui.theme.spacing
 import app.musikus.utils.DateFormat
 import app.musikus.utils.DurationFormat
 import app.musikus.utils.getDurationString
@@ -126,7 +126,7 @@ fun Sessions(
                             show = mainMenuUiState.show,
                             onDismissHandler = { mainEventHandler(MainUIEvent.HideMainMenu) },
                             onSelectionHandler = { commonSelection ->
-                                mainEventHandler(MainUIEvent.ShowMainMenu)
+                                mainEventHandler(MainUIEvent.HideMainMenu)
 
                                 when (commonSelection) {
                                     CommonMenuSelections.APP_INFO -> {}

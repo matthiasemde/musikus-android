@@ -72,7 +72,7 @@ fun MainMenu(
 @Composable
 fun ThemeMenu(
     expanded: Boolean,
-    currentTheme: ThemeSelections,
+    currentTheme: ThemeSelections?,
     onDismissHandler: () -> Unit,
     onSelectionHandler: (ThemeSelections) -> Unit,
 ) {

@@ -51,7 +51,7 @@ import app.musikus.shared.MyToggleButton
 import app.musikus.shared.SelectionSpinner
 import app.musikus.shared.ToggleButtonOption
 import app.musikus.shared.UUIDSelectionSpinnerOption
-import app.musikus.spacing
+import app.musikus.ui.theme.spacing
 import app.musikus.utils.TestTags
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours

@@ -50,8 +50,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.musikus.R
 import app.musikus.shared.conditional
 import app.musikus.shared.simpleVerticalScrollbar
-import app.musikus.spacing
 import app.musikus.ui.statistics.sessionstatistics.TimeframeSelectionHeader
+import app.musikus.ui.theme.spacing
 import app.musikus.utils.asString
 import java.util.UUID
 

@@ -22,10 +22,8 @@ import app.musikus.Musikus
 import app.musikus.utils.ExportDatabaseContract
 import app.musikus.utils.ImportDatabaseContract
 import app.musikus.utils.TimeProvider
-import com.google.android.material.composethemeadapter3.Mdc3Theme
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
-
 
 
 @AndroidEntryPoint
@@ -64,9 +62,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         setContent {
-            Mdc3Theme {
-                MusikusApp(timeProvider)
-            }
+            MusikusApp(timeProvider)
         }
     }
 

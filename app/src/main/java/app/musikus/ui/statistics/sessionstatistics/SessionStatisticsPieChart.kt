@@ -24,14 +24,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Fill
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
-import app.musikus.Musikus
 import app.musikus.database.daos.LibraryItem
+import app.musikus.ui.theme.libraryItemColors
 import app.musikus.utils.sorted
 import kotlinx.coroutines.launch
 import kotlin.math.cos
@@ -63,8 +61,8 @@ fun SessionStatisticsPieChart(
     val spacerThickness = 4.dp
 
     val surfaceColor = MaterialTheme.colorScheme.surface
-    val libraryColors = Musikus.getLibraryItemColors(LocalContext.current).map {
-        Color(it).copy(alpha = 0.8f)
+    val libraryColors = libraryItemColors.map {
+        it.copy(alpha = 0.8f)
     }
 
     val noData =

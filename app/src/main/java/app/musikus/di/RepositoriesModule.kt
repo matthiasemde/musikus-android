@@ -24,15 +24,17 @@ import app.musikus.utils.TimeProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.components.SingletonComponent
+import dagger.hilt.android.components.ViewModelComponent
+import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 @Module
-@InstallIn(SingletonComponent::class)
+@InstallIn(ViewModelComponent::class)
 object RepositoriesModule {
 
     @Provides
+    @ViewModelScoped
     fun provideUserPreferencesRepository(
         dataStore: DataStore<Preferences>
     ): UserPreferencesRepository {
@@ -40,6 +42,7 @@ object RepositoriesModule {
     }
 
     @Provides
+    @ViewModelScoped
     fun provideLibraryRepository(
         database: MusikusDatabase,
         @IoScope ioScope: CoroutineScope
@@ -55,6 +58,7 @@ object RepositoriesModule {
     }
 
     @Provides
+    @ViewModelScoped
     fun provideGoalRepository(
         database: MusikusDatabase,
         @IoScope ioScope: CoroutineScope
@@ -69,6 +73,7 @@ object RepositoriesModule {
     }
 
     @Provides
+    @ViewModelScoped
     fun provideSessionRepository(
         database: MusikusDatabase,
         timeProvider: TimeProvider,
