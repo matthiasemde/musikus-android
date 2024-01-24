@@ -1,13 +1,17 @@
 package app.musikus.ui.activesession
 
+import android.app.Application
+import android.content.Intent
+import android.os.Build
 import android.util.Log
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import app.musikus.database.LibraryFolderWithItems
 import app.musikus.database.Nullable
 import app.musikus.database.daos.LibraryItem
 import app.musikus.database.entities.SectionCreationAttributes
 import app.musikus.database.entities.SessionCreationAttributes
+import app.musikus.services.SessionService
 import app.musikus.usecase.library.LibraryUseCases
 import app.musikus.usecase.sessions.SessionsUseCases
 import app.musikus.utils.TimeProvider
@@ -15,7 +19,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -50,8 +53,9 @@ data class PracticeSection(
 class ActiveSessionViewModel @Inject constructor(
     private val libraryUseCases: LibraryUseCases,
     private val sessionUseCases: SessionsUseCases,
-    private val timeProvider: TimeProvider
-): ViewModel() {
+    private val timeProvider: TimeProvider,
+    private val application: Application
+): AndroidViewModel(application) {
 
     val testTime = MutableStateFlow(0.seconds)
 
@@ -64,11 +68,6 @@ class ActiveSessionViewModel @Inject constructor(
     private val _isPaused = MutableStateFlow(false)
 
     private val _sections = MutableStateFlow<List<PracticeSection>>(listOf())
-
-
-    val endpoint = libraryUseCases.getFolders().map {
-        Log.d("TAG", it.toString())
-    }
 
     // ####################### Library #######################
 
@@ -208,6 +207,24 @@ class ActiveSessionViewModel @Inject constructor(
             )
         }
         _timer?.cancel()
+    }
+
+    // ################################### Service ############################################
+
+    fun startService() {
+        Log.d("TAG", "startService Button pressed")
+        val intent = Intent(application, SessionService::class.java) // Build the intent for the service
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            Log.d("TAG", "start Foreground Service ")
+            application.startForegroundService(intent)
+        } else {
+            application.startService(intent)
+        }
+    }
+
+    override fun onCleared() {
+        Log.d("TAG", "onCleared")
+        super.onCleared()
     }
 
 }

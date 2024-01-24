@@ -37,9 +37,15 @@
         android:theme="@style/Theme.PracticeTime">
 
         <service
-            android:name=".services.SessionForegroundService"
-            android:enabled="true"
-            android:exported="false" />
+            android:name=".services.SessionService"
+            android:foregroundServiceType="specialUse"
+            android:exported="false">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value=
+                    "This service is used to track the user's time
+                    during an active practice session
+                    as well as show an accompanying notification." />
         <service
             android:name=".services.MetronomeService"
             android:enabled="true"

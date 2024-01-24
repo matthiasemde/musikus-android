@@ -183,7 +183,6 @@ fun ActiveSession(
                     }
                 }
 
-
                 Row (
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceEvenly
@@ -197,6 +196,10 @@ fun ActiveSession(
                         navigateUp()
                     }) {
                         Text(text = "Save Session")
+                    }
+
+                    Button(onClick = viewModel::startService) {
+                        Text("Start Service")
                     }
                 }
 
