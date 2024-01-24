@@ -169,7 +169,7 @@ class LibraryViewModel @Inject constructor(
 
     private val foldersSortMenuUiState = combine(
         _showFolderSortMenu,
-        libraryUseCases.getFolderSortInfo(),
+        folderSortInfo,
     ) { showMenu, sortInfo ->
         LibraryFoldersSortMenuUiState(
             show = showMenu,
