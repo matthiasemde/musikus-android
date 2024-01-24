@@ -32,7 +32,8 @@ data class ActiveSessionUiState(
     val libraryUiState: LibraryCardUiState,
     val totalSessionDuration: Duration,
     val totalBreakDuration: Duration,
-    val sections: List<Pair<String, Duration>>
+    val sections: List<Pair<String, Duration>>,
+    val isPaused: Boolean
 )
 
 data class LibraryCardUiState(
@@ -56,7 +57,7 @@ class ActiveSessionViewModel @Inject constructor(
 
     private var _timer: java.util.Timer? = null
 
-    private val timerInterval = 100.milliseconds
+    private val timerInterval = 1.seconds
 
     private val _currentSectionDuration = MutableStateFlow(0.seconds)
     private val _pauseDuration = MutableStateFlow(0.seconds)
@@ -83,17 +84,6 @@ class ActiveSessionViewModel @Inject constructor(
         initialValue = listOf()
     )
 
-    private val allLibraryItems = combine(
-        rootItems,
-        folderWithItems
-    ) { rootItems, folderWithItems ->
-        rootItems + folderWithItems.flatMap { it.items }
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(),
-        initialValue = listOf()
-    )
-
     private val libraryUiState = combine(
         rootItems,
         folderWithItems
@@ -111,8 +101,6 @@ class ActiveSessionViewModel @Inject constructor(
         )
     )
 
-
-
     val uiState = combine(
         libraryUiState,
         _currentSectionDuration,
@@ -124,7 +112,8 @@ class ActiveSessionViewModel @Inject constructor(
             libraryUiState = libraryUiState,
             totalSessionDuration = sections.sumOf { (it.duration ?: currentSectionDuration).inWholeMilliseconds }.milliseconds,
             totalBreakDuration = pauseDuration,
-            sections = sections.map { section ->
+            isPaused = isPaused,
+            sections = sections.reversed().map { section ->
                 Pair(
                     section.libraryItem.name,
                     section.duration ?: currentSectionDuration
@@ -138,18 +127,25 @@ class ActiveSessionViewModel @Inject constructor(
             libraryUiState = libraryUiState.value,
             totalSessionDuration = 0.milliseconds,
             totalBreakDuration = _pauseDuration.value,
-            sections = emptyList()
+            sections = emptyList(),
+            isPaused = _isPaused.value
         )
     )
 
-
     fun itemClicked(item: LibraryItem) {
+        // prevent starting a new section too fast
+        if (_sections.value.isNotEmpty() && _currentSectionDuration.value < 1.seconds) return
+        // prevent starting the same section twice in a row
+        if (item == _sections.value.lastOrNull()?.libraryItem) return
+
         startTimer()
         // end current section and store its duration
         var currentSectionDuration = 0.seconds
         _currentSectionDuration.update {
-            currentSectionDuration = it
-            0.seconds
+            // only store whole seconds, so floor current section duration
+            currentSectionDuration = it.inWholeSeconds.seconds
+            // the remaining part (sub-seconds) will be added to the new section upfront
+            it - currentSectionDuration
         }
 
         _sections.update {
@@ -172,7 +168,7 @@ class ActiveSessionViewModel @Inject constructor(
         }
     }
 
-    fun pauseTimer() {
+    fun togglePause() {
         _isPaused.update { !it }
     }
 
