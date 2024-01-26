@@ -66,6 +66,7 @@ import app.musikus.utils.ExportImportDialog
 import app.musikus.utils.TimeProvider
 import java.util.UUID
 
+const val DEEP_LINK_KEY = "argument"
 
 sealed class Screen(
     val route: String,
@@ -361,14 +362,16 @@ fun MusikusApp(
                 composable(
                     route = Screen.ActiveSession.route,
                     deepLinks = listOf(navDeepLink {
-                        uriPattern = "musikus://activeSession"
+                        uriPattern = "musikus://activeSession/{$DEEP_LINK_KEY}"
                     })
-                ) { ActiveSession(
+                ) { backStackEntry ->
+                    ActiveSession(
                         mainUiState = uiState,
                         mainEventHandler = mainViewModel::onEvent,
                         timeProvider = timeProvider,
-                        navigateUp = navController::navigateUp
-                ) }
+                        navigateUp = navController::navigateUp,
+                        deepLinkArgument = backStackEntry.arguments?.getString(DEEP_LINK_KEY)
+                    ) }
             }
 
             /** Export / Import Dialog */

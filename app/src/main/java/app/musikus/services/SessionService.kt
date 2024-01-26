@@ -3,13 +3,17 @@ package app.musikus.services
 import android.app.PendingIntent
 import android.app.Service
 import android.app.TaskStackBuilder
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.ServiceInfo
 import android.os.Binder
 import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
+import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import app.musikus.CHANNEL_ID
 import app.musikus.R
@@ -24,6 +28,10 @@ import kotlin.time.Duration.Companion.seconds
 
 
 const val NOTIFCATION_ID = 42
+const val BROADCAST_INTENT_FILTER = "activeSessionAction"
+const val ACTION_PAUSE = "pause"
+const val ACTION_FINISH = "finish"
+const val ACTION_OPEN = "open"
 
 class SessionService : Service() {
 
@@ -32,6 +40,14 @@ class SessionService : Service() {
     inner class LocalBinder : Binder() {
         // Return this instance of SessionService so clients can call public methods
         fun getService(): SessionService = this@SessionService
+    }
+
+    private val myReceiver: BroadcastReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            when (intent.getStringExtra("action")) {
+                ACTION_PAUSE -> togglePause()
+            }
+        }
     }
 
     // ################ Session State ################
@@ -66,13 +82,30 @@ class SessionService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.d("TAG", "onStartCommand")
 
+        ContextCompat.registerReceiver(
+            this,
+            myReceiver,
+            IntentFilter(BROADCAST_INTENT_FILTER),
+            ContextCompat.RECEIVER_NOT_EXPORTED
+        )
+
         // trigger deep link to open ActiveSession https://stackoverflow.com/a/72769863
-        val pendingIntent : PendingIntent? = TaskStackBuilder.create(this).run {
+        val pendingIntentTapAction = TaskStackBuilder.create(this).run {
             addNextIntentWithParentStack(
-                Intent(
-                    Intent.ACTION_VIEW,
-                    "musikus://activeSession".toUri()
-                )
+                Intent(Intent.ACTION_VIEW, "musikus://activeSession/$ACTION_OPEN".toUri())
+            )
+            getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+        }
+
+        val pendingIntentActionPause = PendingIntent.getBroadcast(
+            this,
+            0,
+            Intent(BROADCAST_INTENT_FILTER).also { it.putExtra("action", "pause")},
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+
+        val pendingIntentActionFinish = TaskStackBuilder.create(this).run {
+            addNextIntentWithParentStack(
+                Intent(Intent.ACTION_VIEW, "musikus://activeSession/$ACTION_FINISH".toUri())
             )
             getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         }
@@ -83,7 +116,10 @@ class SessionService : Service() {
             .setContentTitle("Practice Session")
             .setContentText("You are currently practicing!")
             .setPriority(NotificationCompat.PRIORITY_HIGH) // only relevant below Oreo, else channel priority is used
-            .setContentIntent(pendingIntent)
+            .setContentIntent(pendingIntentTapAction)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .addAction(R.drawable.ic_play, "Pause", pendingIntentActionPause)
+            .addAction(R.drawable.ic_play, "Finish Session", pendingIntentActionFinish)
             .setStyle(
                 NotificationCompat.BigTextStyle()
                     .bigText("You are currently practicing!")

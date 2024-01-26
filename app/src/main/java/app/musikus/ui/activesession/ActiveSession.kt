@@ -27,6 +27,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -36,6 +37,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.musikus.database.daos.LibraryFolder
 import app.musikus.database.daos.LibraryItem
+import app.musikus.services.ACTION_FINISH
 import app.musikus.ui.MainUIEvent
 import app.musikus.ui.MainUiState
 import app.musikus.ui.theme.spacing
@@ -47,16 +49,15 @@ import app.musikus.utils.getDurationString
 fun ActiveSession(
     mainUiState: MainUiState,
     mainEventHandler: (event: MainUIEvent) -> Unit,
+    deepLinkArgument: String?,
     viewModel: ActiveSessionViewModel = hiltViewModel(),
     timeProvider: TimeProvider,
     navigateUp: () -> Unit
 ) {
-
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     Scaffold (
         content = { paddingValues ->
-
             if(uiState.isPaused) {
                 Dialog(
                     properties = DialogProperties(
@@ -105,6 +106,11 @@ fun ActiveSession(
                     .fillMaxWidth()
             ) {
 
+                if(deepLinkArgument == ACTION_FINISH) {
+                    Text("Clicked on Finish in Notification",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = Color.Red)
+                }
 
                 // Practice Timer
                 Text(
@@ -202,10 +208,6 @@ fun ActiveSession(
                         Text("Start Service")
                     }
                 }
-
-
-
-
             }
         }
     )
