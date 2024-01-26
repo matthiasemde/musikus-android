@@ -31,6 +31,9 @@ import java.util.concurrent.Executors
 const val METRONOME_NOTIFICATION_CHANNEL_ID = "metronome_notification_channel"
 const val METRONOME_NOTIFICATION_CHANNEL_NAME = "Metronome notification"
 
+const val CHANNEL_ID = "session_channel"
+const val CHANNEL_NAME = "Running Channel"
+
 @HiltAndroidApp
 class Musikus : Application() {
 
@@ -122,14 +125,30 @@ class Musikus : Application() {
 
     override fun onCreate() {
         super.onCreate()
-
         prefs = getSharedPreferences(getString(R.string.filename_shared_preferences), Context.MODE_PRIVATE)
-
         dbFile = getDatabasePath("practice_time.db")
-        createNotificationChannel()
+
+        createNotificationChannelSessionService()
+        createNotificationChannelMetronomeService()
     }
 
-    private fun createNotificationChannel() {
+    private fun createNotificationChannelSessionService() {
+        // Create the NotificationChannel, but only on API 26+ because
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val descriptionText = "Notification to keep track of the running session"
+            val channel = NotificationChannel(
+                CHANNEL_ID,
+                CHANNEL_NAME,
+                NotificationManager.IMPORTANCE_HIGH).apply {
+                description = descriptionText
+            }
+            // Register the channel with the system
+            val notificationManager: NotificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(channel)
+        }
+    }
+
+    private fun createNotificationChannelMetronomeService() {
         // Create the NotificationChannel, but only on API 26+ because
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val descriptionText = "Notification to keep track of the running session"

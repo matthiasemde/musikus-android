@@ -221,9 +221,9 @@ class ActiveSessionViewModel @Inject constructor(
 
     fun startService() {
         Log.d("TAG", "startService Button pressed")
+        Log.d("TAG", "start Foreground Service ")
         val intent = Intent(application, SessionService::class.java) // Build the intent for the service
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            Log.d("TAG", "start Foreground Service ")
             application.startForegroundService(intent)
         } else {
             application.startService(intent)

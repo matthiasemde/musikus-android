@@ -1,18 +1,14 @@
 package app.musikus.services
 
-import android.app.Notification
-import android.app.NotificationChannel
-import android.app.NotificationManager
 import android.app.Service
-import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.Binder
-import android.os.Build
 import android.os.IBinder
 import android.util.Log
-import androidx.annotation.RequiresApi
+import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
+import app.musikus.CHANNEL_ID
 import app.musikus.R
 import app.musikus.database.daos.LibraryItem
 import app.musikus.ui.activesession.PracticeSection
@@ -24,7 +20,6 @@ import kotlin.concurrent.timer
 import kotlin.time.Duration.Companion.seconds
 
 
-const val CHANNEL_ID = "session_channel"
 const val NOTIFCATION_ID = 42
 
 class SessionService : Service() {
@@ -65,18 +60,20 @@ class SessionService : Service() {
         return true
     }
 
-    @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.d("TAG", "onStartCommand")
-        createNotificationChannel()
+
+        val notification = NotificationCompat.Builder(this, CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_launcher_foreground)    // without icon, setOngoing does not work
+            .setOngoing(true)  // does not work on Android 14: https://developer.android.com/about/versions/14/behavior-changes-all#non-dismissable-notifications
+            .setContentTitle("Practice Session")
+            .setContentText("You are currently practicing!")
+            .build()
+
         ServiceCompat.startForeground(
             this,
             NOTIFCATION_ID,
-            Notification.Builder(this, CHANNEL_ID)
-                .setOngoing(true)
-                .setContentTitle("Practice Session")
-                .setContentText("You are currently practicing!")
-                .build(),
+            notification,
             ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
         )
         return START_NOT_STICKY
@@ -142,22 +139,6 @@ class SessionService : Service() {
 
     fun togglePause() {
         _isPaused.update { !it }
-    }
-
-
-    private fun createNotificationChannel() {
-        // Create the NotificationChannel, but only on API 26+ because
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val name = getString(R.string.notification_settings_description)
-            val descriptionText = "Notification to keep track of the running session"
-            val importance = NotificationManager.IMPORTANCE_LOW
-            val channel = NotificationChannel(CHANNEL_ID, name, importance).apply {
-                description = descriptionText
-            }
-            // Register the channel with the system
-            val notificationManager: NotificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            notificationManager.createNotificationChannel(channel)
-        }
     }
 
 }

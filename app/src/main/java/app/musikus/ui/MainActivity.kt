@@ -12,10 +12,12 @@
 
 package app.musikus.ui
 
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.core.app.ActivityCompat
 import androidx.core.view.WindowCompat
 import app.musikus.BuildConfig
 import app.musikus.Musikus
@@ -61,8 +63,21 @@ class MainActivity : AppCompatActivity() {
             reloadDatabase.intValue++
         }
 
+        requestRuntimePermissions()
+
         setContent {
             MusikusApp(timeProvider)
+        }
+    }
+
+    private fun requestRuntimePermissions() {
+        // TODO: handle if user rejects permission
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(android.Manifest.permission.POST_NOTIFICATIONS),
+                0
+            )
         }
     }
 
