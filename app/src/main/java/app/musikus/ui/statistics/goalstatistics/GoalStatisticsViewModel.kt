@@ -8,24 +8,25 @@
 
 package app.musikus.ui.statistics.goalstatistics
 
+import android.util.Log
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import app.musikus.database.GoalDescriptionWithInstancesAndLibraryItems
+import app.musikus.database.GoalDescriptionWithLibraryItems
 import app.musikus.database.entities.GoalType
 import app.musikus.ui.theme.libraryItemColors
-import app.musikus.usecase.goals.GoalDescriptionWithInstancesWithProgressAndLibraryItems
-import app.musikus.usecase.goals.GoalInstanceWithProgress
 import app.musikus.usecase.goals.GoalsUseCases
 import app.musikus.utils.DateFormat
-import app.musikus.utils.TimeProvider
 import app.musikus.utils.Timeframe
 import app.musikus.utils.UiText
 import app.musikus.utils.musikusFormat
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -75,42 +76,48 @@ data class GoalStatisticsGoalSelectorUiState(
     val goalsInfo: List<GoalInfo>,
 )
 
+data class GoalSelection(
+    val description: GoalDescriptionWithLibraryItems,
+    val instanceId: UUID,
+    val isLast: Boolean,
+)
+
 @HiltViewModel
 class GoalStatisticsViewModel @Inject constructor(
     private val goalsUseCases: GoalsUseCases,
-    private val timeProvider: TimeProvider,
 ) : ViewModel() {
 
     /** Private variables */
     private var _redraw = true
 
     /** Private methods */
-    private suspend fun seek(forward: Boolean) {
-        _selectedGoal.update { selectedGoal ->
-            if (selectedGoal == null) return@update null
-
+    private fun seek(forward: Boolean) {
+        _goalSelection.update {
+            val goalSelection = it ?: return@update null
+            val selectedGoalWithProgress = selectedGoalWithProgress.value ?: return@update null
             if (forward) {
-                goalsUseCases.getNextNAfterInstance(
-                    goalDescriptionWithLibraryItems = selectedGoal.goalDescriptionWithLibraryItems,
-                    instanceId = selectedGoal.instances.last().id,
-                    n = 7
+                goalSelection.copy(
+                    instanceId = selectedGoalWithProgress
+                        .instancesWithProgress.last().let { (instance, _) ->
+                            instance.id
+                        },
+                    isLast = false
                 )
             } else {
-                val previousInstanceId = selectedGoal.instances.first().previousInstanceId ?: return
-
-                goalsUseCases.getLastNBeforeInstance(
-                    goalDescriptionWithLibraryItems = selectedGoal.goalDescriptionWithLibraryItems,
-                    instanceId = previousInstanceId,
-                    n = 7
+                val previousLastInstanceId = selectedGoalWithProgress
+                    .instancesWithProgress.first().let { (instance, _) ->
+                        instance.previousInstanceId
+                    } ?: return@update null
+                goalSelection.copy(
+                    instanceId = previousLastInstanceId,
+                    isLast = true
                 )
             }
         }
     }
 
     /** Own state flows */
-    private var _selectedGoal =
-        MutableStateFlow<GoalDescriptionWithInstancesAndLibraryItems?>(null)
-
+    private val _goalSelection = MutableStateFlow<GoalSelection?>(null)
 
     /** Imported Flows */
     private val allGoals = goalsUseCases.getAll().stateIn(
@@ -122,56 +129,61 @@ class GoalStatisticsViewModel @Inject constructor(
 
     /** Combining imported and own state flows */
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     private val selectedGoalWithProgress = combine(
-        _selectedGoal,
         allGoals,
-    ) { selectedGoal, allGoals ->
+        _goalSelection,
+    ) { allGoals, goalSelection ->
 
         // if there are no goals, return null
         if (allGoals.isEmpty()) return@combine null
 
         // if there is no selected goal, select the first one
-        if (selectedGoal == null) {
-            val firstGoal = allGoals.first()
-            _selectedGoal.update {
-                goalsUseCases.getLastNBeforeInstance(
-                    goalDescriptionWithLibraryItems = firstGoal.goalDescriptionWithLibraryItems,
+        if (goalSelection == null) {
+            _goalSelection.update {
+                val firstGoal = allGoals.first()
+                GoalSelection(
+                    description = firstGoal.goalDescriptionWithLibraryItems,
                     instanceId = firstGoal.latestInstance.id,
-                    n = 7
+                    isLast = true
                 )
             }
             return@combine null
         }
 
-        val progress = goalsUseCases.calculateProgress(listOf(selectedGoal)).single()
+        Log.d("GoalStatisticsViewModel", "goalSelection: $goalSelection")
 
-        GoalDescriptionWithInstancesWithProgressAndLibraryItems(
-            description = selectedGoal.description,
-            instances = selectedGoal.instances
-                .zip(progress)
-                .map { (instance, progress) ->
-                    GoalInstanceWithProgress(
-                        instance = instance,
-                        progress = progress
-                    )
-                },
-            libraryItems = selectedGoal.libraryItems
-        )
-    }.stateIn(
+        if (goalSelection.isLast) {
+            goalsUseCases.getLastNBeforeInstance(
+                goalDescriptionWithLibraryItems = goalSelection.description,
+                lastInstanceId = goalSelection.instanceId,
+                n = 7
+            )
+        } else {
+            goalsUseCases.getNextNAfterInstance(
+                goalDescriptionWithLibraryItems = goalSelection.description,
+                firstInstanceId = goalSelection.instanceId,
+                n = 7
+            )
+        }
+
+    }.flatMapLatest { it ?: flowOf(null) }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = null
     )
 
-    private val goalToSuccessRate = allGoals.map { goals ->
-        val goalProgressForDescriptions = goalsUseCases.calculateProgress(goals)
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val goalToSuccessRate = allGoals.flatMapLatest { goals ->
+        goalsUseCases.calculateProgress(goals).map { goalProgressForDescriptions ->
 
-        goals.zip(goalProgressForDescriptions).associate { (goal, progressForInstances) ->
-            val successRate = goal.instances.zip(progressForInstances).count { (instance, progress) ->
-                progress >= instance.target
-            } to goal.instances.size
+            goals.zip(goalProgressForDescriptions).associate { (goal, progressForInstances) ->
+                val successRate = goal.instances.zip(progressForInstances).count { (instance, progress) ->
+                    progress >= instance.target
+                } to goal.instances.size
 
-            goal.description to successRate
+                goal.description to successRate
+            }
         }
     }.stateIn(
         scope = viewModelScope,
@@ -183,8 +195,8 @@ class GoalStatisticsViewModel @Inject constructor(
     private val sortedGoalInfo = combine(
         allGoals,
         goalToSuccessRate,
-        _selectedGoal
-    ) { goals, goalToSuccessRate, selectedGoal ->
+        _goalSelection
+    ) { goals, goalToSuccessRate, goalSelection ->
         if (goals.isEmpty()) return@combine null
 
         goals.map { goalDescriptionWithInstancesAndLibraryItems ->
@@ -204,7 +216,7 @@ class GoalStatisticsViewModel @Inject constructor(
                     .firstOrNull()
                     ?.let { libraryItemColors[it.colorIndex] },
                 successRate = goalToSuccessRate?.get(description),
-                selected = description == selectedGoal?.description
+                selected = description == goalSelection?.description?.description
             )
         }
     }.stateIn(
@@ -218,7 +230,7 @@ class GoalStatisticsViewModel @Inject constructor(
     private val barChartUiState = selectedGoalWithProgress.map { goalWithProgress ->
         if (goalWithProgress == null) return@map null
 
-        val instancesWithProgress = goalWithProgress.instances
+        val instancesWithProgress = goalWithProgress.instancesWithProgress
 
         // in case there are less than 7 instances, pad the list with nulls
         val paddedInstances =
@@ -226,16 +238,18 @@ class GoalStatisticsViewModel @Inject constructor(
             instancesWithProgress
 
         // map the instances to a list of pairs of date and progress
-        val barData = paddedInstances.map { instanceWithProgress ->
-            if(instanceWithProgress == null) "" to 0.seconds
-            else Pair(
-                instanceWithProgress.instance.startTimestamp.musikusFormat(DateFormat.DAY_AND_MONTH),
-                instanceWithProgress.progress
+        val barData = paddedInstances.map barData@ { instanceWithProgress ->
+            val (instance, progress) = instanceWithProgress ?: return@barData "" to 0.seconds
+            Pair(
+                instance.startTimestamp.musikusFormat(DateFormat.DAY_AND_MONTH),
+                progress
             )
         }
 
         GoalStatisticsBarChartUiState(
-            target = instancesWithProgress.maxBy { it.instance.startTimestamp }.instance.target,
+            target = instancesWithProgress
+                .maxBy { (instance, _) -> instance.startTimestamp }
+                .let { (instance, _) -> instance.target },
             data = barData,
             uniqueColor = if(goalWithProgress.description.type == GoalType.ITEM_SPECIFIC) {
                 libraryItemColors[goalWithProgress.libraryItems.first().colorIndex]
@@ -251,17 +265,20 @@ class GoalStatisticsViewModel @Inject constructor(
     private val headerUiState = selectedGoalWithProgress.map { goalWithProgress ->
         if (goalWithProgress == null) return@map null
 
+        val instances = goalWithProgress.instancesWithProgress.unzip().first
+
+        Log.d("GoalStatisticsViewModel", "instances: $instances")
+
         GoalStatisticsHeaderUiState(
-            seekBackwardEnabled = goalWithProgress.instances.first().instance.previousInstanceId != null,
+            seekBackwardEnabled = instances.first().previousInstanceId != null,
             seekForwardEnabled =
-                goalWithProgress.instances.last().instance.endTimestamp != null &&
-                goalWithProgress.description.archived.not()
-            ,
-            timeframe = goalWithProgress.instances.first().instance.startTimestamp to
-                    goalWithProgress.instances.last().instance.startTimestamp,
-            successRate = goalWithProgress.instances.count { (goal, progress) ->
+                instances.last().endTimestamp != null &&
+                goalWithProgress.description.archived.not(),
+            timeframe = instances.first().startTimestamp to
+                instances.last().startTimestamp,
+            successRate = goalWithProgress.instancesWithProgress.count { (goal, progress) ->
                 progress >= goal.target
-            } to goalWithProgress.instances.size
+            } to goalWithProgress.instancesWithProgress.size
         )
     }.stateIn(
         scope = viewModelScope,
@@ -319,18 +336,17 @@ class GoalStatisticsViewModel @Inject constructor(
 
     fun onGoalSelected(goalId: UUID) {
         viewModelScope.launch {
-            if (_selectedGoal.value?.description?.id == goalId) return@launch
+            if (_goalSelection.value?.description?.description?.id == goalId) return@launch
 
             val goal = allGoals.value.firstOrNull { it.description.id == goalId } ?: return@launch
 
             _redraw = true
 
-            // if there is no selected goal, select the first one
-            _selectedGoal.update {
-                goalsUseCases.getLastNBeforeInstance(
-                    goalDescriptionWithLibraryItems = goal.goalDescriptionWithLibraryItems,
+            _goalSelection.update {
+                GoalSelection(
+                    description = goal.goalDescriptionWithLibraryItems,
                     instanceId = goal.latestInstance.id,
-                    n = 7
+                    isLast = true
                 )
             }
         }

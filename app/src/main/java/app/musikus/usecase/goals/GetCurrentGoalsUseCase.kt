@@ -9,7 +9,9 @@
 package app.musikus.usecase.goals
 
 import app.musikus.repository.GoalRepository
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 
 class GetCurrentGoalsUseCase(
@@ -18,6 +20,7 @@ class GetCurrentGoalsUseCase(
     private val calculateProgress: CalculateGoalProgressUseCase
 ) {
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     operator fun invoke(
         excludePaused: Boolean
     ) : Flow<List<GoalInstanceWithProgressAndDescriptionWithLibraryItems>> {
@@ -27,14 +30,15 @@ class GetCurrentGoalsUseCase(
             } else {
                 goals
             }
-        }.map { goals ->
-            val progress = calculateProgress(goals)
-            goals.zip(progress).map { (goal, progress) ->
-                GoalInstanceWithProgressAndDescriptionWithLibraryItems(
-                    description = goal.description,
-                    instance = goal.instance,
-                    progress = progress,
-                )
+        }.flatMapLatest { goals ->
+            calculateProgress(goals).map { progress ->
+                goals.zip(progress).map { (goal, progress) ->
+                    GoalInstanceWithProgressAndDescriptionWithLibraryItems(
+                        description = goal.description,
+                        instance = goal.instance,
+                        progress = progress,
+                    )
+                }
             }
         }
     }

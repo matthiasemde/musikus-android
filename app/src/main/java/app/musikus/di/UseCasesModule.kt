@@ -23,7 +23,6 @@ import app.musikus.usecase.goals.GetCurrentGoalsUseCase
 import app.musikus.usecase.goals.GetLastFiveCompletedGoalsUseCase
 import app.musikus.usecase.goals.GetLastNBeforeInstanceUseCase
 import app.musikus.usecase.goals.GetNextNAfterInstanceUseCase
-import app.musikus.usecase.goals.GetSpecificGoalInTimeframeUseCase
 import app.musikus.usecase.goals.GoalsUseCases
 import app.musikus.usecase.goals.PauseGoalsUseCase
 import app.musikus.usecase.goals.RestoreGoalsUseCase
@@ -131,12 +130,14 @@ object UseCasesModule {
                 goalRepository = goalRepository,
                 calculateProgress = calculateGoalProgressUseCase
             ),
-            getSpecificInTimeframe = GetSpecificGoalInTimeframeUseCase(
+            getLastNBeforeInstance = GetLastNBeforeInstanceUseCase(
                 goalRepository = goalRepository,
                 calculateProgress = calculateGoalProgressUseCase
             ),
-            getLastNBeforeInstance = GetLastNBeforeInstanceUseCase(goalRepository),
-            getNextNAfterInstance = GetNextNAfterInstanceUseCase(goalRepository),
+            getNextNAfterInstance = GetNextNAfterInstanceUseCase(
+                goalRepository = goalRepository,
+                calculateProgress = calculateGoalProgressUseCase
+            ),
             add = AddGoalUseCase(goalRepository, libraryUseCases.getItems, timeProvider),
             pause = PauseGoalsUseCase(goalRepository, cleanFutureGoalInstancesUseCase),
             unpause = UnpauseGoalsUseCase(goalRepository),

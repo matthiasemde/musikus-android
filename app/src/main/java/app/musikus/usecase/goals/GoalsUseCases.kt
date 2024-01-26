@@ -13,7 +13,6 @@ data class GoalsUseCases(
     val getAll: GetAllGoalsUseCase,
     val getCurrent: GetCurrentGoalsUseCase,
     val getLastFiveCompleted: GetLastFiveCompletedGoalsUseCase,
-    val getSpecificInTimeframe: GetSpecificGoalInTimeframeUseCase,
     val getLastNBeforeInstance: GetLastNBeforeInstanceUseCase,
     val getNextNAfterInstance: GetNextNAfterInstanceUseCase,
     val add: AddGoalUseCase,

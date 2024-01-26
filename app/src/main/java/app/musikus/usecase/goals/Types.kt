@@ -8,14 +8,9 @@ import app.musikus.utils.TimeProvider
 import app.musikus.utils.UiText
 import kotlin.time.Duration
 
-data class GoalInstanceWithProgress(
-    val instance: GoalInstance,
-    val progress: Duration
-)
-
 data class GoalDescriptionWithInstancesWithProgressAndLibraryItems(
     val description: GoalDescription,
-    val instances: List<GoalInstanceWithProgress>,
+    val instancesWithProgress: List<Pair<GoalInstance, Duration>>,
     val libraryItems: List<LibraryItem>
 ) {
     val goalDescriptionWithLibraryItems by lazy {
