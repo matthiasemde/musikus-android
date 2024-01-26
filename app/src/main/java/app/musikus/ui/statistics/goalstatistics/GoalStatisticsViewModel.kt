@@ -8,7 +8,6 @@
 
 package app.musikus.ui.statistics.goalstatistics
 
-import android.util.Log
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -151,8 +150,6 @@ class GoalStatisticsViewModel @Inject constructor(
             return@combine null
         }
 
-        Log.d("GoalStatisticsViewModel", "goalSelection: $goalSelection")
-
         if (goalSelection.isLast) {
             goalsUseCases.getLastNBeforeInstance(
                 goalDescriptionWithLibraryItems = goalSelection.description,
@@ -266,8 +263,6 @@ class GoalStatisticsViewModel @Inject constructor(
         if (goalWithProgress == null) return@map null
 
         val instances = goalWithProgress.instancesWithProgress.unzip().first
-
-        Log.d("GoalStatisticsViewModel", "instances: $instances")
 
         GoalStatisticsHeaderUiState(
             seekBackwardEnabled = instances.first().previousInstanceId != null,
