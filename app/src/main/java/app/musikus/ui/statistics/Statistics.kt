@@ -65,7 +65,6 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.musikus.R
-import app.musikus.database.entities.GoalType
 import app.musikus.shared.CommonMenuSelections
 import app.musikus.shared.MainMenu
 import app.musikus.shared.ThemeMenu
@@ -165,7 +164,7 @@ fun Statistics(
                 }
                 contentUiState.goalCardUiState?.let {
                     item {
-                        StatisticsGoalCard(it, navigateToGoalStatistics, timeProvider)
+                        StatisticsGoalCard(it, navigateToGoalStatistics)
                     }
                 }
                 contentUiState.ratingsCardUiState?.let {
@@ -382,7 +381,6 @@ fun StatisticsPracticeDurationCard(
 fun StatisticsGoalCard(
     uiState: StatisticsGoalCardUiState,
     navigateToGoalStatistics: () -> Unit,
-    timeProvider: TimeProvider,
 ) {
     ElevatedCard(modifier = Modifier
         .fillMaxWidth()
@@ -419,52 +417,46 @@ fun StatisticsGoalCard(
             Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = SpaceBetween,
                 verticalAlignment = CenterVertically,
             ) {
-                Column {
-                    Text(
-                        text = "" +
-                                "${uiState.lastGoals.filter { it.progress > it.instance.target }.size}" +
-                                "/" +
-                                "${uiState.lastGoals.size}",
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            color = MaterialTheme.colorScheme.primary,
-                        ),
-                    )
-                    Text(
-                        text = "Achieved",
-                        style = MaterialTheme.typography.labelLarge.copy(
-                            color = MaterialTheme.colorScheme.onSurface.copy(
-                                alpha = 0.7f
-                            )
-                        ),
-                    )
+                uiState.successRate?.let { (successful, total) ->
+                    Column {
+                        Text(
+                            text = "" +
+                                    "$successful" +
+                                    "/" +
+                                    "$total",
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                color = MaterialTheme.colorScheme.primary,
+                            ),
+                        )
+                        Text(
+                            text = "Achieved",
+                            style = MaterialTheme.typography.labelLarge.copy(
+                                color = MaterialTheme.colorScheme.onSurface.copy(
+                                    alpha = 0.7f
+                                )
+                            ),
+                        )
+                    }
                 }
+
+                Spacer(modifier = Modifier.weight(1f))
 
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small),
                 ) {
-                    uiState.lastGoals.forEachIndexed { index, goal ->
-                        val instance = goal.instance
-                        val progress = goal.progress
-                        val descriptionWithLibraryItems = goal.description
-                        val description = descriptionWithLibraryItems.description
-                        val libraryItems = descriptionWithLibraryItems.libraryItems
+                    uiState.lastGoalsDisplayData.forEachIndexed { index, displayData ->
                         Column(horizontalAlignment = CenterHorizontally) {
                             val animatedProgress by animateFloatAsState(
-                                targetValue = (progress.inWholeSeconds.toFloat() / instance.target.inWholeSeconds).coerceAtMost(1f),
+                                targetValue = displayData.progress,
                                 animationSpec = tween(
                                     durationMillis = 1500,
                                     delayMillis = 100 * index
                                 ),
                                 label = "goal-animation-$index"
                             )
-                            val color =
-                                if (description.type == GoalType.ITEM_SPECIFIC)
-                                    libraryItemColors[libraryItems.first().colorIndex]
-                                else
-                                    MaterialTheme.colorScheme.primary
+                            val color = displayData.color ?: MaterialTheme.colorScheme.primary
                             Box{
                                 CircularProgressIndicator(
                                     modifier = Modifier.size(35.dp),
@@ -490,9 +482,7 @@ fun StatisticsGoalCard(
                             }
                             Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
                             Text(
-                                text = goal
-                                    .endTimestampInLocalTimezone(timeProvider)
-                                    .musikusFormat(DateFormat.DAY_AND_MONTH),
+                                text = displayData.label,
                                 style = MaterialTheme.typography.labelSmall
                             )
                         }

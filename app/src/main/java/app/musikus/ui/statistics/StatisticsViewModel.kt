@@ -8,13 +8,16 @@
 
 package app.musikus.ui.statistics
 
+import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import app.musikus.usecase.goals.GoalInstanceWithProgressAndDescriptionWithLibraryItems
+import app.musikus.ui.theme.libraryItemColors
 import app.musikus.usecase.goals.GoalsUseCases
 import app.musikus.usecase.sessions.SessionsUseCases
+import app.musikus.utils.DateFormat
 import app.musikus.utils.TimeProvider
 import app.musikus.utils.getDayIndexOfWeek
+import app.musikus.utils.musikusFormat
 import app.musikus.utils.specificMonth
 import app.musikus.utils.weekIndexToName
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -61,8 +64,15 @@ data class PracticeDurationPerDay(
     val duration: Duration,
 )
 
+data class GoalCardGoalDisplayData(
+    val label: String,
+    val progress: Float,
+    val color: Color?
+)
+
 data class StatisticsGoalCardUiState(
-    val lastGoals: List<GoalInstanceWithProgressAndDescriptionWithLibraryItems>,
+    val successRate: Pair<Int, Int>?,
+    val lastGoalsDisplayData: List<GoalCardGoalDisplayData>,
 )
 
 data class StatisticsRatingsCardUiState(
@@ -214,13 +224,35 @@ class StatisticsViewModel @Inject constructor(
 
         flow {
             if (_noSessionsForGoalCard) {
-//                emit(StatisticsGoalCardUiState(lastGoals = lastFiveGoals.map { GoalWithProgress(
-//                    it.copy(progress = 0.seconds)
-//                } ))
+                emit(StatisticsGoalCardUiState(
+                    successRate = null,
+                    lastGoalsDisplayData = lastFiveGoals.map {
+                        GoalCardGoalDisplayData(
+                            label = "",
+                            progress = 0f,
+                            color = null
+                        )
+                    }
+                ))
                 delay(350)
                 _noSessionsForGoalCard = false
             }
-            emit(StatisticsGoalCardUiState(lastGoals = lastFiveGoals.reversed()))
+            emit(StatisticsGoalCardUiState(
+                successRate = lastFiveGoals.count {
+                    it.progress >= it.instance.target
+                } to lastFiveGoals.size,
+                lastGoalsDisplayData = lastFiveGoals.map {
+                    GoalCardGoalDisplayData(
+                        label = it.instance.startTimestamp.musikusFormat(DateFormat.DAY_AND_MONTH),
+                        progress = (
+                            it.progress.inWholeSeconds.toFloat() / it.instance.target.inWholeSeconds
+                        ).coerceAtMost(1f),
+                        color = it.description.libraryItems.firstOrNull()?.let { item ->
+                            libraryItemColors[item.colorIndex]
+                        }
+                    )
+                }
+            ))
         }
     }.stateIn(
         scope = viewModelScope,
