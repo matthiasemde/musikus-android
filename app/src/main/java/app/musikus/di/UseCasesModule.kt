@@ -14,12 +14,16 @@ import app.musikus.repository.SessionRepository
 import app.musikus.repository.UserPreferencesRepository
 import app.musikus.usecase.goals.AddGoalUseCase
 import app.musikus.usecase.goals.ArchiveGoalsUseCase
+import app.musikus.usecase.goals.CalculateGoalProgressUseCase
 import app.musikus.usecase.goals.CleanFutureGoalInstancesUseCase
 import app.musikus.usecase.goals.DeleteGoalsUseCase
 import app.musikus.usecase.goals.EditGoalUseCase
 import app.musikus.usecase.goals.GetAllGoalsUseCase
 import app.musikus.usecase.goals.GetCurrentGoalsUseCase
 import app.musikus.usecase.goals.GetLastFiveCompletedGoalsUseCase
+import app.musikus.usecase.goals.GetLastNBeforeInstanceUseCase
+import app.musikus.usecase.goals.GetNextNAfterInstanceUseCase
+import app.musikus.usecase.goals.GetSpecificGoalInTimeframeUseCase
 import app.musikus.usecase.goals.GoalsUseCases
 import app.musikus.usecase.goals.PauseGoalsUseCase
 import app.musikus.usecase.goals.RestoreGoalsUseCase
@@ -92,6 +96,7 @@ object UseCasesModule {
     fun providesGoalUseCases(
         goalRepository: GoalRepository,
         libraryUseCases: LibraryUseCases,
+        sessionsUseCases: SessionsUseCases,
         userPreferencesUseCases: UserPreferencesUseCases,
         timeProvider: TimeProvider
     ): GoalsUseCases {
@@ -106,10 +111,32 @@ object UseCasesModule {
             cleanFutureGoalInstances = cleanFutureGoalInstancesUseCase,
         )
 
+        val calculateGoalProgressUseCase = CalculateGoalProgressUseCase(
+        getSessionsInTimeframe = sessionsUseCases.getInTimeframe,
+        timeProvider = timeProvider
+        )
+
         return GoalsUseCases(
-            getAll = GetAllGoalsUseCase(goalRepository, sortGoalsUseCase),
-            getCurrent = GetCurrentGoalsUseCase(goalRepository, sortGoalsUseCase),
-            getLastFiveCompleted = GetLastFiveCompletedGoalsUseCase(goalRepository),
+            calculateProgress = calculateGoalProgressUseCase,
+            getAll = GetAllGoalsUseCase(
+                goalRepository = goalRepository,
+                sortGoals = sortGoalsUseCase,
+            ),
+            getCurrent = GetCurrentGoalsUseCase(
+                goalRepository = goalRepository,
+                sortGoals = sortGoalsUseCase,
+                calculateProgress = calculateGoalProgressUseCase
+            ),
+            getLastFiveCompleted = GetLastFiveCompletedGoalsUseCase(
+                goalRepository = goalRepository,
+                calculateProgress = calculateGoalProgressUseCase
+            ),
+            getSpecificInTimeframe = GetSpecificGoalInTimeframeUseCase(
+                goalRepository = goalRepository,
+                calculateProgress = calculateGoalProgressUseCase
+            ),
+            getLastNBeforeInstance = GetLastNBeforeInstanceUseCase(goalRepository),
+            getNextNAfterInstance = GetNextNAfterInstanceUseCase(goalRepository),
             add = AddGoalUseCase(goalRepository, libraryUseCases.getItems, timeProvider),
             pause = PauseGoalsUseCase(goalRepository, cleanFutureGoalInstancesUseCase),
             unpause = UnpauseGoalsUseCase(goalRepository),

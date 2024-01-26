@@ -45,9 +45,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.musikus.R
-import app.musikus.database.GoalInstanceWithDescriptionWithLibraryItems
 import app.musikus.database.entities.GoalType
 import app.musikus.ui.theme.libraryItemColors
+import app.musikus.usecase.goals.GoalInstanceWithProgressAndDescriptionWithLibraryItems
 import app.musikus.utils.DurationFormat
 import app.musikus.utils.SCALE_FACTOR_FOR_SMALL_TEXT
 import app.musikus.utils.TimeProvider
@@ -60,14 +60,14 @@ import kotlin.time.Duration.Companion.seconds
 @Composable
 fun GoalCard(
     modifier: Modifier = Modifier,
-    goal: GoalInstanceWithDescriptionWithLibraryItems,
-    progress: Duration = 0.seconds,
+    goal: GoalInstanceWithProgressAndDescriptionWithLibraryItems,
     progressOffset: Duration = 0.seconds,
     timeProvider: TimeProvider
 ) {
 
-    val (_, descriptionWithLibraryItems) = goal
+    val descriptionWithLibraryItems = goal.description
     val (description, libraryItems) = descriptionWithLibraryItems
+    val progress = goal.progress
 
     val libraryItemColor = if(description.type == GoalType.ITEM_SPECIFIC) {
         libraryItemColors[libraryItems.first().colorIndex]

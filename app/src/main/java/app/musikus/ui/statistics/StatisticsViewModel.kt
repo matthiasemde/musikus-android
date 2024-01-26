@@ -10,8 +10,7 @@ package app.musikus.ui.statistics
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import app.musikus.repository.SessionRepository
-import app.musikus.ui.goals.GoalWithProgress
+import app.musikus.usecase.goals.GoalInstanceWithProgressAndDescriptionWithLibraryItems
 import app.musikus.usecase.goals.GoalsUseCases
 import app.musikus.usecase.sessions.SessionsUseCases
 import app.musikus.utils.TimeProvider
@@ -63,7 +62,7 @@ data class PracticeDurationPerDay(
 )
 
 data class StatisticsGoalCardUiState(
-    val lastGoals: List<GoalWithProgress>,
+    val lastGoals: List<GoalInstanceWithProgressAndDescriptionWithLibraryItems>,
 )
 
 data class StatisticsRatingsCardUiState(
@@ -75,7 +74,6 @@ class StatisticsViewModel @Inject constructor(
     timeProvider: TimeProvider,
     goalsUseCases: GoalsUseCases,
     sessionsUseCases: SessionsUseCases,
-    sessionRepository: SessionRepository
 ) : ViewModel() {
 
     /** Imported flows */
@@ -193,9 +191,9 @@ class StatisticsViewModel @Inject constructor(
             }
             emit(
                 StatisticsPracticeDurationCardUiState(
-                lastSevenDayPracticeDuration = lastSevenDayPracticeDuration,
-                totalPracticeDuration = totalPracticeDuration,
-            )
+                    lastSevenDayPracticeDuration = lastSevenDayPracticeDuration,
+                    totalPracticeDuration = totalPracticeDuration,
+                )
             )
         }
 
@@ -205,50 +203,24 @@ class StatisticsViewModel @Inject constructor(
         initialValue = null
     )
 
-    @OptIn(ExperimentalCoroutinesApi::class)
-    private val lastFiveCompletedGoalsWithProgress = lastFiveCompletedGoals.flatMapLatest { goals ->
-        val sections = goals.map { goal ->
-            sessionRepository.sectionsForGoal(goal).map { sections ->
-                goal to sections
-            }
-        }
-
-        combine(sections) { combinedGoalsWithSections ->
-            combinedGoalsWithSections.map { (goal, sections) ->
-                GoalWithProgress(
-                    goal = goal,
-                    progress = sections.sumOf { section ->
-                        section.duration.inWholeSeconds
-                    }.seconds
-                )
-            }
-        }
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = emptyList()
-    )
-
     private var _noSessionsForGoalCard = true
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    private val goalCardUiState = lastFiveCompletedGoalsWithProgress.flatMapLatest { goals ->
-        if (goals.isEmpty()) {
+    private val goalCardUiState = lastFiveCompletedGoals.flatMapLatest { lastFiveGoals ->
+        if (lastFiveGoals.isEmpty()) {
             _noSessionsForGoalCard = true
             return@flatMapLatest flow { emit(null) }
         }
 
         flow {
             if (_noSessionsForGoalCard) {
-                emit(StatisticsGoalCardUiState(lastGoals = goals.map { GoalWithProgress(
-                    goal = it.goal,
-                    progress = 0.seconds
-                )
-                }))
+//                emit(StatisticsGoalCardUiState(lastGoals = lastFiveGoals.map { GoalWithProgress(
+//                    it.copy(progress = 0.seconds)
+//                } ))
                 delay(350)
                 _noSessionsForGoalCard = false
             }
-            emit(StatisticsGoalCardUiState(lastGoals = goals.reversed()))
+            emit(StatisticsGoalCardUiState(lastGoals = lastFiveGoals.reversed()))
         }
     }.stateIn(
         scope = viewModelScope,

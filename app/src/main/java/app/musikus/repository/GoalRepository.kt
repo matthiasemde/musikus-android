@@ -13,10 +13,12 @@ import app.musikus.database.GoalDescriptionWithInstancesAndLibraryItems
 import app.musikus.database.GoalInstanceWithDescription
 import app.musikus.database.GoalInstanceWithDescriptionWithLibraryItems
 import app.musikus.database.MusikusDatabase
+import app.musikus.database.daos.GoalInstance
 import app.musikus.database.entities.GoalDescriptionCreationAttributes
 import app.musikus.database.entities.GoalDescriptionUpdateAttributes
 import app.musikus.database.entities.GoalInstanceCreationAttributes
 import app.musikus.database.entities.GoalInstanceUpdateAttributes
+import app.musikus.utils.Timeframe
 import kotlinx.coroutines.flow.Flow
 import java.util.UUID
 
@@ -24,6 +26,14 @@ interface GoalRepository {
     val currentGoals: Flow<List<GoalInstanceWithDescriptionWithLibraryItems>>
     val allGoals: Flow<List<GoalDescriptionWithInstancesAndLibraryItems>>
     val lastFiveCompletedGoals: Flow<List<GoalInstanceWithDescriptionWithLibraryItems>>
+
+    fun getInstance(id: UUID): Flow<GoalInstance>
+    fun getInstanceByPreviousInstanceId(previousInstanceId: UUID): Flow<GoalInstance>
+
+    fun getSpecificGoalInTimeframe(
+        descriptionId: UUID,
+        timeframe: Timeframe
+    ) : Flow<GoalDescriptionWithInstancesAndLibraryItems>
 
     suspend fun getLatestInstances(): List<GoalInstanceWithDescription>
 
@@ -80,6 +90,21 @@ class GoalRepositoryImpl(
     override val currentGoals = instanceDao.getCurrent()
     override val allGoals = descriptionDao.getAllWithInstancesAndLibraryItems()
     override val lastFiveCompletedGoals = instanceDao.getLastNCompleted(5)
+
+    override fun getInstance(id: UUID): Flow<GoalInstance> {
+        return instanceDao.getAsFlow(id)
+    }
+
+    override fun getInstanceByPreviousInstanceId(previousInstanceId: UUID): Flow<GoalInstance> {
+        return instanceDao.getByPreviousInstanceId(previousInstanceId)
+    }
+
+    override fun getSpecificGoalInTimeframe(
+        descriptionId: UUID,
+        timeframe: Timeframe
+    ): Flow<GoalDescriptionWithInstancesAndLibraryItems> {
+        return descriptionDao.getForDescriptionAndTimeframe(descriptionId, timeframe)
+    }
 
     override suspend fun getLatestInstances(): List<GoalInstanceWithDescription> {
         return instanceDao.getLatest()

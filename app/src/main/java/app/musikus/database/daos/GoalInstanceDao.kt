@@ -222,6 +222,14 @@ abstract class GoalInstanceDao(
      * @Queries
      */
 
+    @RewriteQueriesToDropUnusedColumns
+    @Query(
+        "SELECT * FROM goal_instance WHERE " +
+        "previous_goal_instance_id=:previousInstanceId"
+    )
+    abstract fun getByPreviousInstanceId(previousInstanceId: UUID?): Flow<GoalInstance>
+
+
     @Transaction
     @RewriteQueriesToDropUnusedColumns
     @Query(
@@ -232,7 +240,7 @@ abstract class GoalInstanceDao(
             "AND deleted = 0" +
         ")"
     )
-    abstract suspend fun directGetForDescription(
+    protected abstract suspend fun directGetForDescription(
         descriptionId: UUID
     ): List<GoalInstance>
 
@@ -262,7 +270,7 @@ abstract class GoalInstanceDao(
                 "AND deleted=0" +
             ")"
     )
-    abstract fun directGetCurrent(
+    protected abstract fun directGetCurrent(
         now: String = database.timeProvider.now().toDatabaseInterpretableString()
     ) : Flow<List<GoalInstanceWithDescriptionWithLibraryItems>>
 

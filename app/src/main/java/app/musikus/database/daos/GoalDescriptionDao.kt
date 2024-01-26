@@ -31,8 +31,10 @@ import app.musikus.database.entities.GoalPeriodUnit
 import app.musikus.database.entities.GoalProgressType
 import app.musikus.database.entities.GoalType
 import app.musikus.database.entities.SoftDeleteModelDisplayAttributes
+import app.musikus.database.toDatabaseInterpretableString
 import app.musikus.utils.DurationFormat
 import app.musikus.utils.TimeProvider
+import app.musikus.utils.Timeframe
 import app.musikus.utils.UiText
 import app.musikus.utils.getDurationString
 import app.musikus.utils.inLocalTimezone
@@ -228,5 +230,35 @@ abstract class GoalDescriptionDao(
     )
     abstract fun getAllWithInstancesAndLibraryItems()
     : Flow<List<GoalDescriptionWithInstancesAndLibraryItems>>
+
+    @Transaction
+    @RewriteQueriesToDropUnusedColumns
+    @Query(
+        "SELECT * FROM goal_description " +
+        "JOIN goal_instance ON goal_instance.goal_description_id = goal_description.id " +
+        "WHERE goal_description.id = :descriptionId " +
+        "AND datetime(SUBSTR(start_timestamp, 1, INSTR(start_timestamp, '[') - 1)) >= datetime(:startTimestamp) " +
+        "AND (" +
+        "end_timestamp IS NULL " +
+        "OR datetime(:endTimestamp) < datetime(SUBSTR(end_timestamp, 1, INSTR(end_timestamp, '[') - 1))" +
+        ") "
+    )
+    protected abstract fun directGetForDescriptionAndTimeframe(
+        descriptionId: UUID,
+        startTimestamp: String,
+        endTimestamp: String
+    ) : Flow<GoalDescriptionWithInstancesAndLibraryItems>
+
+    // TODO write tests
+    fun getForDescriptionAndTimeframe(
+        descriptionId: UUID,
+        timeframe: Timeframe
+    ) : Flow<GoalDescriptionWithInstancesAndLibraryItems> {
+        return directGetForDescriptionAndTimeframe(
+            descriptionId = descriptionId,
+            startTimestamp = timeframe.first.toDatabaseInterpretableString(),
+            endTimestamp = timeframe.second.toDatabaseInterpretableString()
+        )
+    }
 }
 

@@ -9,7 +9,6 @@
 package app.musikus.usecase.goals
 
 import app.musikus.database.GoalDescriptionWithLibraryItems
-import app.musikus.database.GoalInstanceWithDescriptionWithLibraryItems
 import app.musikus.database.UUIDConverter
 import app.musikus.database.daos.GoalDescription
 import app.musikus.database.daos.GoalInstance
@@ -19,9 +18,14 @@ import app.musikus.database.entities.GoalInstanceCreationAttributes
 import app.musikus.database.entities.GoalPeriodUnit
 import app.musikus.database.entities.GoalProgressType
 import app.musikus.database.entities.GoalType
+import app.musikus.database.entities.SectionCreationAttributes
+import app.musikus.database.entities.SessionCreationAttributes
 import app.musikus.repository.FakeGoalRepository
 import app.musikus.repository.FakeLibraryRepository
+import app.musikus.repository.FakeSessionRepository
 import app.musikus.repository.FakeUserPreferencesRepository
+import app.musikus.usecase.sessions.GetSessionsInTimeframeUseCase
+import app.musikus.usecase.userpreferences.GetGoalSortInfoUseCase
 import app.musikus.utils.FakeIdProvider
 import app.musikus.utils.FakeTimeProvider
 import com.google.common.truth.Truth.assertThat
@@ -31,6 +35,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.seconds
 
 class GetCurrentGoalsUseCaseTest {
     private lateinit var fakeTimeProvider: FakeTimeProvider
@@ -38,9 +43,14 @@ class GetCurrentGoalsUseCaseTest {
 
     private lateinit var fakeLibraryRepository: FakeLibraryRepository
     private lateinit var fakeGoalRepository: FakeGoalRepository
+    private lateinit var fakeSessionRepository: FakeSessionRepository
     private lateinit var fakeUserPreferencesRepository: FakeUserPreferencesRepository
 
-    private lateinit var sortGoalsUseCase: SortGoalsUseCase
+    private lateinit var getSessionInTimeframe: GetSessionsInTimeframeUseCase
+    private lateinit var getGoalSortInfo: GetGoalSortInfoUseCase
+    private lateinit var sortGoals: SortGoalsUseCase
+
+    private lateinit var calculateGoalProgress: CalculateGoalProgressUseCase
 
     /** SUT */
     private lateinit var getCurrentGoals: GetCurrentGoalsUseCase
@@ -67,17 +77,27 @@ class GetCurrentGoalsUseCaseTest {
 
         fakeLibraryRepository = FakeLibraryRepository(fakeTimeProvider, fakeIdProvider)
         fakeGoalRepository = FakeGoalRepository(fakeLibraryRepository, fakeTimeProvider, fakeIdProvider)
+        fakeSessionRepository = FakeSessionRepository(fakeLibraryRepository, fakeTimeProvider, fakeIdProvider)
         fakeUserPreferencesRepository = FakeUserPreferencesRepository()
 
-        sortGoalsUseCase = SortGoalsUseCase(fakeUserPreferencesRepository)
+        getSessionInTimeframe = GetSessionsInTimeframeUseCase(fakeSessionRepository)
+        getGoalSortInfo = GetGoalSortInfoUseCase(fakeUserPreferencesRepository)
+        sortGoals = SortGoalsUseCase(getGoalSortInfo)
+
+        calculateGoalProgress = CalculateGoalProgressUseCase(
+            getSessionsInTimeframe = getSessionInTimeframe,
+            timeProvider = fakeTimeProvider,
+        )
 
         /** SUT */
         getCurrentGoals = GetCurrentGoalsUseCase(
             goalRepository = fakeGoalRepository,
-            sortGoals = sortGoalsUseCase,
+            sortGoals = sortGoals,
+            calculateProgress = calculateGoalProgress,
         )
 
         runBlocking {
+
             fakeGoalRepository.addNewGoal(
                 descriptionCreationAttributes = baseDescription,
                 instanceCreationAttributes = baseInstance,
@@ -88,6 +108,21 @@ class GetCurrentGoalsUseCaseTest {
                 UUIDConverter.fromInt(1) to
                 GoalDescriptionUpdateAttributes(paused = true)
             ))
+
+            fakeSessionRepository.add(
+                sessionCreationAttributes = SessionCreationAttributes(
+                    rating = 3,
+                    comment = "",
+                    breakDuration = 0.seconds,
+                ),
+                sectionCreationAttributes = listOf(
+                    SectionCreationAttributes(
+                        libraryItemId = UUIDConverter.fromInt(1),
+                        startTimestamp = FakeTimeProvider.START_TIME,
+                        duration = 1.hours
+                    )
+                )
+            )
         }
     }
 
@@ -96,17 +131,7 @@ class GetCurrentGoalsUseCaseTest {
         val goals = getCurrentGoals(excludePaused = false).first()
 
         assertThat(goals).containsExactly(
-            GoalInstanceWithDescriptionWithLibraryItems(
-                instance = GoalInstance(
-                    id = UUIDConverter.fromInt(2),
-                    createdAt = FakeTimeProvider.START_TIME,
-                    modifiedAt = FakeTimeProvider.START_TIME,
-                    descriptionId = UUIDConverter.fromInt(1),
-                    previousInstanceId = null,
-                    startTimestamp = FakeTimeProvider.START_TIME,
-                    targetSeconds = 3600,
-                    endTimestamp = null
-                ),
+            GoalInstanceWithProgressAndDescriptionWithLibraryItems(
                 description = GoalDescriptionWithLibraryItems(
                     description = GoalDescription(
                         id = UUIDConverter.fromInt(1),
@@ -123,6 +148,17 @@ class GetCurrentGoalsUseCaseTest {
                     ),
                     libraryItems = emptyList()
                 ),
+                instance = GoalInstance(
+                    id = UUIDConverter.fromInt(2),
+                    createdAt = FakeTimeProvider.START_TIME,
+                    modifiedAt = FakeTimeProvider.START_TIME,
+                    descriptionId = UUIDConverter.fromInt(1),
+                    previousInstanceId = null,
+                    startTimestamp = FakeTimeProvider.START_TIME,
+                    targetSeconds = 3600,
+                    endTimestamp = null
+                ),
+                progress = 1.hours
             )
         )
     }

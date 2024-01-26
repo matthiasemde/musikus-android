@@ -66,8 +66,10 @@ data class GoalDescriptionWithLibraryItems(
     )
     val libraryItems: List<LibraryItem>
 ) {
-    val title
-        get() = description.title(libraryItems.firstOrNull())
+    val title by lazy { description.title(libraryItems.firstOrNull()) }
+
+    fun subtitle(instance: GoalInstance) = description.subtitle(instance)
+
 
     fun endOfInstanceInLocalTimezone(instance: GoalInstance, timeProvider: TimeProvider) =
         description.endOfInstanceInLocalTimezone(instance, timeProvider)
@@ -166,21 +168,25 @@ data class GoalDescriptionWithInstancesAndLibraryItems(
     )
     val libraryItems: List<LibraryItem>
 ) {
-    val title
-        get () = description.title(libraryItems.firstOrNull())
+    val title by lazy { description.title(libraryItems.firstOrNull()) }
 
-    val latestInstance
-        get() = instances.maxWith (compareBy { it.startTimestamp })
+    val latestInstance by lazy {
+        instances.singleOrNull { it.endTimestamp == null } ?:
+        instances.maxWith(compareBy { it.startTimestamp })
+    }
 
-    val subtitle
-        get() = latestInstance.let { description.subtitle(it) }
+    val subtitle by lazy { latestInstance.let { description.subtitle(it) } }
 
-    val startTime
-        get() = instances.minOf { it.startTimestamp }
+    val startTime by lazy { instances.minOf { it.startTimestamp } }
 
     fun endTime(timeProvider: TimeProvider) = instances.maxOf {
         description.endOfInstanceInLocalTimezone(it, timeProvider)
     }
+
+    val goalDescriptionWithLibraryItems by lazy { GoalDescriptionWithLibraryItems(
+        description = description,
+        libraryItems = libraryItems
+    ) }
 }
 
 data class GoalInstanceWithDescriptionWithLibraryItems(
@@ -194,10 +200,9 @@ data class GoalInstanceWithDescriptionWithLibraryItems(
 ) {
 
     val title
-        get() = description.description.title(description.libraryItems.firstOrNull())
+        get() = description.title
 
-    val subtitle
-        get() = description.description.subtitle(instance)
+    val subtitle by lazy { description.description.subtitle(instance) }
 
     fun endTimestampInLocalTimezone(timeProvider: TimeProvider) =
         description.endOfInstanceInLocalTimezone(instance, timeProvider)

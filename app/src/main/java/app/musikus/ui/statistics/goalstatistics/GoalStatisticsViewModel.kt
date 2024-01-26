@@ -8,34 +8,28 @@
 
 package app.musikus.ui.statistics.goalstatistics
 
-import android.app.Application
 import androidx.compose.ui.graphics.Color
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.musikus.database.GoalDescriptionWithInstancesAndLibraryItems
-import app.musikus.database.GoalDescriptionWithLibraryItems
-import app.musikus.database.daos.GoalInstance
-import app.musikus.database.entities.GoalPeriodUnit
 import app.musikus.database.entities.GoalType
-import app.musikus.repository.SessionRepository
 import app.musikus.ui.theme.libraryItemColors
+import app.musikus.usecase.goals.GoalDescriptionWithInstancesWithProgressAndLibraryItems
+import app.musikus.usecase.goals.GoalInstanceWithProgress
 import app.musikus.usecase.goals.GoalsUseCases
 import app.musikus.utils.DateFormat
 import app.musikus.utils.TimeProvider
 import app.musikus.utils.Timeframe
 import app.musikus.utils.UiText
-import app.musikus.utils.inLocalTimezone
 import app.musikus.utils.musikusFormat
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
 import kotlin.time.Duration
@@ -81,205 +75,103 @@ data class GoalStatisticsGoalSelectorUiState(
     val goalsInfo: List<GoalInfo>,
 )
 
-data class TimeframeWithGoalsWithProgress(
-    val timeframe: Timeframe,
-    val goalWithInstancesWithProgress: GoalWithInstancesWithProgress,
-)
-
-data class GoalWithInstancesWithProgress(
-    val goal: GoalDescriptionWithLibraryItems,
-    val instancesWithProgress: List<Pair<GoalInstance, Duration>>,
-)
-
 @HiltViewModel
 class GoalStatisticsViewModel @Inject constructor(
-    goalsUseCases: GoalsUseCases,
-    sessionRepository : SessionRepository,
+    private val goalsUseCases: GoalsUseCases,
     private val timeProvider: TimeProvider,
-    application: Application
-) : AndroidViewModel(application) {
+) : ViewModel() {
 
     /** Private variables */
     private var _redraw = true
 
     /** Private methods */
-
-    private fun timeframeForGoal(selectedGoal: GoalDescriptionWithInstancesAndLibraryItems)
-    : Timeframe {
-        val end = selectedGoal.endTime(timeProvider)
-
-        val offset = selectedGoal.description.periodInPeriodUnits.toLong() * 7
-
-        return when(selectedGoal.description.periodUnit) {
-            GoalPeriodUnit.DAY -> end.minusDays(offset) to end
-            GoalPeriodUnit.WEEK -> end.minusWeeks(offset) to end
-            GoalPeriodUnit.MONTH -> end.minusMonths(offset) to end
-        }
-    }
-
-    private fun seek(forward: Boolean) {
-        _selectedGoalWithTimeframe.update { pair ->
-            val (goal, timeframe) = pair ?: return@update null
-            val (start, end) = timeframe ?: return@update null
-
-            val goalStart = goal.startTime
-            val goalEnd = goal.endTime(timeProvider)
-
-            var newStart = start
-            var newEnd = end
-
-            val periodInPeriodUnits = goal.description.periodInPeriodUnits.toLong()
+    private suspend fun seek(forward: Boolean) {
+        _selectedGoal.update { selectedGoal ->
+            if (selectedGoal == null) return@update null
 
             if (forward) {
-                for (i in 0L..6L) {
-                    val (tmpStart, tmpEnd) = when (goal.description.periodUnit) {
-                        GoalPeriodUnit.DAY ->
-                            newStart.plusDays(periodInPeriodUnits) to
-                            newEnd.plusDays(periodInPeriodUnits)
-
-                        GoalPeriodUnit.WEEK ->
-                            newStart.plusWeeks(periodInPeriodUnits) to
-                            newEnd.plusWeeks(periodInPeriodUnits)
-
-                        GoalPeriodUnit.MONTH ->
-                            newStart.plusMonths(periodInPeriodUnits) to
-                            newEnd.plusMonths(periodInPeriodUnits)
-                    }
-
-                    if (tmpEnd > goalEnd) break
-
-                    newStart = tmpStart
-                    newEnd = tmpEnd
-                }
+                goalsUseCases.getNextNAfterInstance(
+                    goalDescriptionWithLibraryItems = selectedGoal.goalDescriptionWithLibraryItems,
+                    instanceId = selectedGoal.instances.last().id,
+                    n = 7
+                )
             } else {
-                if (start > goalStart) {
-                    when (goal.description.periodUnit) {
-                        GoalPeriodUnit.DAY -> {
-                            newStart = newStart.minusDays(7 * periodInPeriodUnits)
-                            newEnd = newEnd.minusDays(7 * periodInPeriodUnits)
-                        }
-                        GoalPeriodUnit.WEEK -> {
-                            newStart = newStart.minusWeeks(7 * periodInPeriodUnits)
-                            newEnd = newEnd.minusWeeks(7 * periodInPeriodUnits)
-                        }
+                val previousInstanceId = selectedGoal.instances.first().previousInstanceId ?: return
 
-                        GoalPeriodUnit.MONTH -> {
-                            newStart = newStart.minusMonths(7 * periodInPeriodUnits)
-                            newEnd = newEnd.minusMonths(7 * periodInPeriodUnits)
-                        }
-                    }
-                }
+                goalsUseCases.getLastNBeforeInstance(
+                    goalDescriptionWithLibraryItems = selectedGoal.goalDescriptionWithLibraryItems,
+                    instanceId = previousInstanceId,
+                    n = 7
+                )
             }
-
-            goal to (newStart to newEnd)
         }
     }
 
+    /** Own state flows */
+    private var _selectedGoal =
+        MutableStateFlow<GoalDescriptionWithInstancesAndLibraryItems?>(null)
+
+
     /** Imported Flows */
-    private val goals = goalsUseCases.getAll().stateIn(
+    private val allGoals = goalsUseCases.getAll().stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = emptyList()
     )
 
 
-    /** Own state flows */
-    private val _selectedGoalWithTimeframe =
-        MutableStateFlow<Pair<GoalDescriptionWithInstancesAndLibraryItems, Timeframe?>?>(null)
-
-
     /** Combining imported and own state flows */
 
-    @OptIn(ExperimentalCoroutinesApi::class)
-    private val timeframeWithGoalsWithProgress = combine(
-        _selectedGoalWithTimeframe,
-        goals,
-    ) { selectedGoalWithTimeframe, goals ->
+    private val selectedGoalWithProgress = combine(
+        _selectedGoal,
+        allGoals,
+    ) { selectedGoal, allGoals ->
 
         // if there are no goals, return null
-        if (goals.isEmpty()) return@combine null
+        if (allGoals.isEmpty()) return@combine null
 
         // if there is no selected goal, select the first one
-        // if there is no time frame, initialize it according to the selected goal
-        if (selectedGoalWithTimeframe == null) {
-            _selectedGoalWithTimeframe.update {
-                val selectedGoal = goals.first()
-                selectedGoal to timeframeForGoal(selectedGoal)
+        if (selectedGoal == null) {
+            val firstGoal = allGoals.first()
+            _selectedGoal.update {
+                goalsUseCases.getLastNBeforeInstance(
+                    goalDescriptionWithLibraryItems = firstGoal.goalDescriptionWithLibraryItems,
+                    instanceId = firstGoal.latestInstance.id,
+                    n = 7
+                )
             }
             return@combine null
         }
 
-        val (selectedGoal, timeframe) = selectedGoalWithTimeframe
+        val progress = goalsUseCases.calculateProgress(listOf(selectedGoal)).single()
 
-        // if all the necessary data is available, return the filtered goals
-        val (start, end) = timeframe ?: return@combine null
-
-        Pair(
-            timeframe,
-            selectedGoal.copy(
-                instances = selectedGoal.instances.filter { goalInstance ->
-                    goalInstance.startTimestamp.inLocalTimezone(timeProvider).let {
-                        start <= it && it < end
-                    }
-                }
-            ),
+        GoalDescriptionWithInstancesWithProgressAndLibraryItems(
+            description = selectedGoal.description,
+            instances = selectedGoal.instances
+                .zip(progress)
+                .map { (instance, progress) ->
+                    GoalInstanceWithProgress(
+                        instance = instance,
+                        progress = progress
+                    )
+                },
+            libraryItems = selectedGoal.libraryItems
         )
-    }.flatMapLatest { timeframeWithFilteredGoal ->
-        if (timeframeWithFilteredGoal == null) return@flatMapLatest flowOf(null)
-
-        val (timeframe, goal) = timeframeWithFilteredGoal
-
-        // get a flow of sections for each goal instance
-        combine(goal.instances.map { instance ->
-            sessionRepository.sectionsForGoal(
-                instance = instance,
-                description = goal.description,
-                libraryItems = goal.libraryItems,
-            ).map { sections ->
-                instance to sections.sumOf { it.duration.inWholeSeconds }.seconds
-            }
-        // and combine them into a single flow with a list of pairs of goals and progress
-        }) { goalInstancesWithSections ->
-            val goalWithInstancesWithProgress = GoalWithInstancesWithProgress(
-                goal = GoalDescriptionWithLibraryItems(
-                    description = goal.description,
-                    libraryItems = goal.libraryItems
-                ),
-                instancesWithProgress = goalInstancesWithSections.toList()
-            )
-
-            TimeframeWithGoalsWithProgress(
-                timeframe = timeframe,
-                goalWithInstancesWithProgress = goalWithInstancesWithProgress
-            )
-        }
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = null
     )
 
-    @OptIn(ExperimentalCoroutinesApi::class)
-    private val goalToSuccessRate = goals.flatMapLatest { goals ->
-        combine(
-            goals.map { goalDescriptionWithInstancesAndLibraryItems ->
-                combine(
-                    goalDescriptionWithInstancesAndLibraryItems.instances.map { instance ->
-                        sessionRepository.sectionsForGoal(
-                            instance = instance,
-                            description = goalDescriptionWithInstancesAndLibraryItems.description,
-                            libraryItems = goalDescriptionWithInstancesAndLibraryItems.libraryItems
-                        ).map { sections ->
-                            sections.sumOf { it.duration.inWholeSeconds }.seconds >= instance.target
-                        }
-                    }
-                ) { successes ->
-                    goalDescriptionWithInstancesAndLibraryItems.description to
-                    (successes.count { it } to successes.size)
-                }
-            }
-        ) {
-            it.toMap()
+    private val goalToSuccessRate = allGoals.map { goals ->
+        val goalProgressForDescriptions = goalsUseCases.calculateProgress(goals)
+
+        goals.zip(goalProgressForDescriptions).associate { (goal, progressForInstances) ->
+            val successRate = goal.instances.zip(progressForInstances).count { (instance, progress) ->
+                progress >= instance.target
+            } to goal.instances.size
+
+            goal.description to successRate
         }
     }.stateIn(
         scope = viewModelScope,
@@ -289,10 +181,10 @@ class GoalStatisticsViewModel @Inject constructor(
 
 
     private val sortedGoalInfo = combine(
-        goals,
+        allGoals,
         goalToSuccessRate,
-        _selectedGoalWithTimeframe
-    ) { goals, goalToSuccessRate, selectedGoalWithTimeframe ->
+        _selectedGoal
+    ) { goals, goalToSuccessRate, selectedGoal ->
         if (goals.isEmpty()) return@combine null
 
         goals.map { goalDescriptionWithInstancesAndLibraryItems ->
@@ -312,7 +204,7 @@ class GoalStatisticsViewModel @Inject constructor(
                     .firstOrNull()
                     ?.let { libraryItemColors[it.colorIndex] },
                 successRate = goalToSuccessRate?.get(description),
-                selected = description == selectedGoalWithTimeframe?.let { (goal, _) -> goal.description }
+                selected = description == selectedGoal?.description
             )
         }
     }.stateIn(
@@ -323,48 +215,30 @@ class GoalStatisticsViewModel @Inject constructor(
 
     /** Composing the Ui state */
 
-    private val barChartUiState = timeframeWithGoalsWithProgress.map { timeframeWithGoalsWithProgress ->
-        if (timeframeWithGoalsWithProgress == null) return@map null
+    private val barChartUiState = selectedGoalWithProgress.map { goalWithProgress ->
+        if (goalWithProgress == null) return@map null
 
-        val (_, end) = timeframeWithGoalsWithProgress.timeframe
+        val instancesWithProgress = goalWithProgress.instances
 
-        val selectedGoal = timeframeWithGoalsWithProgress.goalWithInstancesWithProgress
-        val lastInstance = selectedGoal.instancesWithProgress.lastOrNull()?.let { (instance, _) -> instance }
-        val description = selectedGoal.goal.description
+        // in case there are less than 7 instances, pad the list with nulls
+        val paddedInstances =
+            (0 until 7 - instancesWithProgress.size).map { null } +
+            instancesWithProgress
 
-        val barTimeframes = (0L..6L).reversed().map {
-            when(description.periodUnit) {
-                GoalPeriodUnit.DAY -> {
-                    end.minusDays((it + 1) * description.periodInPeriodUnits) to
-                    end.minusDays(it * description.periodInPeriodUnits)
-                }
-                GoalPeriodUnit.WEEK -> {
-                    end.minusWeeks((it + 1) * description.periodInPeriodUnits) to
-                    end.minusWeeks(it * description.periodInPeriodUnits)
-                }
-                GoalPeriodUnit.MONTH -> {
-                    end.minusMonths((it + 1) * description.periodInPeriodUnits) to
-                    end.minusMonths(it * description.periodInPeriodUnits)
-                }
-            }
+        // map the instances to a list of pairs of date and progress
+        val barData = paddedInstances.map { instanceWithProgress ->
+            if(instanceWithProgress == null) "" to 0.seconds
+            else Pair(
+                instanceWithProgress.instance.startTimestamp.musikusFormat(DateFormat.DAY_AND_MONTH),
+                instanceWithProgress.progress
+            )
         }
 
-        val goalsWithProgress = selectedGoal.instancesWithProgress
-
         GoalStatisticsBarChartUiState(
-            target = lastInstance?.target ?: 0.seconds,
-            data = barTimeframes.map { (start, end) ->
-                Pair(
-                    start.musikusFormat(DateFormat.DAY_AND_MONTH),
-                    goalsWithProgress.firstOrNull { (goalInstance, _) ->
-                        goalInstance.startTimestamp.inLocalTimezone(timeProvider).let {
-                            start <= it && it < end
-                        }
-                    }?.let { (_, progress) -> progress } ?: 0.seconds
-                )
-            },
-            uniqueColor = if(description.type == GoalType.ITEM_SPECIFIC) {
-                libraryItemColors[selectedGoal.goal.libraryItems.first().colorIndex]
+            target = instancesWithProgress.maxBy { it.instance.startTimestamp }.instance.target,
+            data = barData,
+            uniqueColor = if(goalWithProgress.description.type == GoalType.ITEM_SPECIFIC) {
+                libraryItemColors[goalWithProgress.libraryItems.first().colorIndex]
             } else null,
             redraw = _redraw.also { _redraw = false }
         )
@@ -374,25 +248,20 @@ class GoalStatisticsViewModel @Inject constructor(
         initialValue = null
     )
 
-    private val headerUiState = combine(
-        _selectedGoalWithTimeframe,
-        timeframeWithGoalsWithProgress,
-    ) { selectedGoalWithTimeframe, timeframeWithGoalsWithProgress ->
-        if (timeframeWithGoalsWithProgress == null) return@combine null
-
-        val (selectedGoal, timeframe) = selectedGoalWithTimeframe ?: return@combine null
-        val (start, end) = timeframe ?: return@combine null
-
-        val goalWithInstancesWithProgress = timeframeWithGoalsWithProgress.goalWithInstancesWithProgress
-        val goalsWithProgress = goalWithInstancesWithProgress.instancesWithProgress
+    private val headerUiState = selectedGoalWithProgress.map { goalWithProgress ->
+        if (goalWithProgress == null) return@map null
 
         GoalStatisticsHeaderUiState(
-            seekBackwardEnabled = start > selectedGoal.startTime,
-            seekForwardEnabled = end < selectedGoal.endTime(timeProvider),
-            timeframe = timeframeWithGoalsWithProgress.timeframe,
-            successRate = goalsWithProgress.filter { (goal, progress) ->
+            seekBackwardEnabled = goalWithProgress.instances.first().instance.previousInstanceId != null,
+            seekForwardEnabled =
+                goalWithProgress.instances.last().instance.endTimestamp != null &&
+                goalWithProgress.description.archived.not()
+            ,
+            timeframe = goalWithProgress.instances.first().instance.startTimestamp to
+                    goalWithProgress.instances.last().instance.startTimestamp,
+            successRate = goalWithProgress.instances.count { (goal, progress) ->
                 progress >= goal.target
-            }.size to goalsWithProgress.size
+            } to goalWithProgress.instances.size
         )
     }.stateIn(
         scope = viewModelScope,
@@ -437,23 +306,33 @@ class GoalStatisticsViewModel @Inject constructor(
     /** State mutators */
 
     fun seekForwards() {
-        seek(forward = true)
+        viewModelScope.launch {
+            seek(forward = true)
+        }
     }
 
     fun seekBackwards() {
-        seek(forward = false)
+        viewModelScope.launch {
+            seek(forward = false)
+        }
     }
 
     fun onGoalSelected(goalId: UUID) {
-        if (_selectedGoalWithTimeframe.value?.let {
-                (selectedGoal, _) -> selectedGoal.description.id
-        } == goalId) return
+        viewModelScope.launch {
+            if (_selectedGoal.value?.description?.id == goalId) return@launch
 
-        val goal = goals.value.firstOrNull { it.description.id == goalId } ?: return
+            val goal = allGoals.value.firstOrNull { it.description.id == goalId } ?: return@launch
 
-        _redraw = true
-        _selectedGoalWithTimeframe.update {
-            goal to timeframeForGoal(goal)
+            _redraw = true
+
+            // if there is no selected goal, select the first one
+            _selectedGoal.update {
+                goalsUseCases.getLastNBeforeInstance(
+                    goalDescriptionWithLibraryItems = goal.goalDescriptionWithLibraryItems,
+                    instanceId = goal.latestInstance.id,
+                    n = 7
+                )
+            }
         }
     }
 }

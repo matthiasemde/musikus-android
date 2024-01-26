@@ -221,18 +221,18 @@ fun Goals(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 items(
-                    items = contentUiState.goalsWithProgress,
-                    key = { it.goal.instance.id },
-                ) { (goal, progress) ->
+                    items = contentUiState.currentGoals,
+                    key = { it.instance.id },
+                ) { goal ->
+                    val descriptionId = goal.description.description.id
                     Selectable(
                         modifier = Modifier.animateItemPlacement(),
-                        selected = goal in contentUiState.selectedGoals,
+                        selected = descriptionId in contentUiState.selectedGoalIds,
                         onShortClick = { viewModel.onGoalClicked(goal, false) },
                         onLongClick = { viewModel.onGoalClicked(goal, true) }
                     ) {
                         GoalCard(
                             goal = goal,
-                            progress = progress,
                             timeProvider = timeProvider
                         )
                     }
@@ -243,7 +243,7 @@ fun Goals(
             val dialogUiState = uiState.dialogUiState
 
             if (dialogUiState != null) {
-                if (dialogUiState.goalToEdit == null) {
+                if (dialogUiState.goalToEditId == null) {
                     GoalDialog(
                         dialogData = dialogUiState.dialogData,
                         libraryItems = dialogUiState.libraryItems,

@@ -425,7 +425,7 @@ fun StatisticsGoalCard(
                 Column {
                     Text(
                         text = "" +
-                                "${uiState.lastGoals.filter { it.progress > it.goal.instance.target }.size}" +
+                                "${uiState.lastGoals.filter { it.progress > it.instance.target }.size}" +
                                 "/" +
                                 "${uiState.lastGoals.size}",
                         style = MaterialTheme.typography.titleMedium.copy(
@@ -445,10 +445,15 @@ fun StatisticsGoalCard(
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small),
                 ) {
-                    uiState.lastGoals.forEachIndexed { index, (goal, progress) ->
+                    uiState.lastGoals.forEachIndexed { index, goal ->
+                        val instance = goal.instance
+                        val progress = goal.progress
+                        val descriptionWithLibraryItems = goal.description
+                        val description = descriptionWithLibraryItems.description
+                        val libraryItems = descriptionWithLibraryItems.libraryItems
                         Column(horizontalAlignment = CenterHorizontally) {
                             val animatedProgress by animateFloatAsState(
-                                targetValue = (progress.inWholeSeconds.toFloat() / goal.instance.target.inWholeSeconds).coerceAtMost(1f),
+                                targetValue = (progress.inWholeSeconds.toFloat() / instance.target.inWholeSeconds).coerceAtMost(1f),
                                 animationSpec = tween(
                                     durationMillis = 1500,
                                     delayMillis = 100 * index
@@ -456,8 +461,8 @@ fun StatisticsGoalCard(
                                 label = "goal-animation-$index"
                             )
                             val color =
-                                if (goal.description.description.type == GoalType.ITEM_SPECIFIC)
-                                    libraryItemColors[goal.description.libraryItems.first().colorIndex]
+                                if (description.type == GoalType.ITEM_SPECIFIC)
+                                    libraryItemColors[libraryItems.first().colorIndex]
                                 else
                                     MaterialTheme.colorScheme.primary
                             Box{

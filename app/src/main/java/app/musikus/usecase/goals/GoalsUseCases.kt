@@ -9,9 +9,13 @@
 package app.musikus.usecase.goals
 
 data class GoalsUseCases(
+    val calculateProgress: CalculateGoalProgressUseCase,
     val getAll: GetAllGoalsUseCase,
     val getCurrent: GetCurrentGoalsUseCase,
     val getLastFiveCompleted: GetLastFiveCompletedGoalsUseCase,
+    val getSpecificInTimeframe: GetSpecificGoalInTimeframeUseCase,
+    val getLastNBeforeInstance: GetLastNBeforeInstanceUseCase,
+    val getNextNAfterInstance: GetNextNAfterInstanceUseCase,
     val add: AddGoalUseCase,
     val pause: PauseGoalsUseCase,
     val unpause: UnpauseGoalsUseCase,

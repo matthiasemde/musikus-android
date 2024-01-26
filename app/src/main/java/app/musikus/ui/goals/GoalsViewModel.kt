@@ -10,17 +10,15 @@ package app.musikus.ui.goals
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import app.musikus.database.GoalInstanceWithDescriptionWithLibraryItems
-import app.musikus.database.daos.GoalDescription
 import app.musikus.database.daos.LibraryItem
 import app.musikus.database.entities.GoalDescriptionCreationAttributes
 import app.musikus.database.entities.GoalInstanceCreationAttributes
 import app.musikus.database.entities.GoalInstanceUpdateAttributes
 import app.musikus.database.entities.GoalPeriodUnit
 import app.musikus.database.entities.GoalType
-import app.musikus.repository.SessionRepository
 import app.musikus.shared.TopBarUiState
 import app.musikus.ui.library.DialogMode
+import app.musikus.usecase.goals.GoalInstanceWithProgressAndDescriptionWithLibraryItems
 import app.musikus.usecase.goals.GoalsUseCases
 import app.musikus.usecase.library.LibraryUseCases
 import app.musikus.usecase.userpreferences.UserPreferencesUseCases
@@ -29,23 +27,18 @@ import app.musikus.utils.SortDirection
 import app.musikus.utils.SortInfo
 import app.musikus.utils.TimeProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.UUID
 import javax.inject.Inject
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
-data class GoalWithProgress(
-    val goal: GoalInstanceWithDescriptionWithLibraryItems,
-    val progress: Duration,
-)
 
 data class GoalDialogData(
     val target: Duration = 0.seconds,
@@ -76,20 +69,18 @@ data class GoalsActionModeUiState(
     val isActionMode: Boolean,
     val numberOfSelections: Int,
     val showEditAction: Boolean,
-    val showPauseAction: Boolean,
-    val showUnpauseAction: Boolean,
 )
 
 data class GoalsContentUiState(
-    val goalsWithProgress: List<GoalWithProgress>,
-    val selectedGoals: Set<GoalInstanceWithDescriptionWithLibraryItems>,
+    val currentGoals: List<GoalInstanceWithProgressAndDescriptionWithLibraryItems>,
+    val selectedGoalIds: Set<UUID>,
 
     val showHint: Boolean,
 )
 
 data class GoalsDialogUiState(
     val mode: DialogMode,
-    val goalToEdit: GoalInstanceWithDescriptionWithLibraryItems?,
+    val goalToEditId: UUID?,
     val dialogData: GoalDialogData,
     val libraryItems: List<LibraryItem>,
 )
@@ -107,11 +98,9 @@ class GoalsViewModel @Inject constructor(
     private val userPreferencesUseCases: UserPreferencesUseCases,
     private val goalsUseCases: GoalsUseCases,
     libraryUseCases: LibraryUseCases,
-    sessionRepository : SessionRepository,
 ) : ViewModel() {
 
-    private var _goalsCache: List<GoalDescription> = emptyList()
-
+    private var _goalIdsCache: Set<UUID> = emptySet()
 
     init {
         viewModelScope.launch {
@@ -149,33 +138,10 @@ class GoalsViewModel @Inject constructor(
 
     // Goal dialog
     private val _dialogData = MutableStateFlow<GoalDialogData?>(null)
-    private val _goalToEdit = MutableStateFlow<GoalInstanceWithDescriptionWithLibraryItems?>(null)
+    private val _goalToEditId = MutableStateFlow<UUID?>(null)
 
     // Action mode
-    private val _selectedGoals = MutableStateFlow<Set<GoalInstanceWithDescriptionWithLibraryItems>>(emptySet())
-
-    /** Combining imported and own state flows */
-
-    @OptIn(ExperimentalCoroutinesApi::class)
-    private val goalProgress = currentGoals.flatMapLatest { goals ->
-        val sections = goals.map { goal ->
-            sessionRepository.sectionsForGoal(goal).map { sections ->
-                goal to sections
-            }
-        }
-
-        combine(sections) { combinedGoalsWithSections ->
-            combinedGoalsWithSections.associate { (goal, sections) ->
-                goal.instance.id to sections.sumOf { section ->
-                    section.duration.inWholeSeconds
-                }.seconds
-            }
-        }
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = emptyMap()
-    )
+    private val _selectedGoalIds = MutableStateFlow<Set<UUID>>(emptySet())
 
 
     /**
@@ -216,13 +182,11 @@ class GoalsViewModel @Inject constructor(
         )
     )
 
-    private val actionModeUiState = _selectedGoals.map {
+    private val actionModeUiState = _selectedGoalIds.map {
         GoalsActionModeUiState(
             isActionMode = it.isNotEmpty(),
             numberOfSelections = it.size,
-            showEditAction = it.size == 1 && it.none { goal -> goal.description.description.paused },
-            showPauseAction = it.any { goal -> !goal.description.description.paused },
-            showUnpauseAction = it.any { goal -> goal.description.description.paused },
+            showEditAction = it.size == 1,
         )
     }.stateIn(
         scope = viewModelScope,
@@ -231,49 +195,40 @@ class GoalsViewModel @Inject constructor(
             isActionMode = false,
             numberOfSelections = 0,
             showEditAction = false,
-            showPauseAction = false,
-            showUnpauseAction = false,
         )
     )
 
     private val contentUiState = combine(
         currentGoals,
-        goalProgress,
-        _selectedGoals,
-    ) { currentGoals, goalProgress, selectedGoals ->
-        val goalsWithProgress = currentGoals.map { goal ->
-            GoalWithProgress(
-                goal = goal,
-                progress = if (goal.description.description.paused) 0.seconds else
-                    goalProgress[goal.instance.id] ?: 0.seconds,
-            )
-        }
+        _selectedGoalIds,
+    ) { currentGoals, selectedGoals ->
         GoalsContentUiState(
-            goalsWithProgress = goalsWithProgress,
-            selectedGoals = selectedGoals,
-            showHint = goalsWithProgress.isEmpty(),
+            currentGoals = currentGoals,
+            selectedGoalIds = selectedGoals,
+            showHint = currentGoals.isEmpty(),
         )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = GoalsContentUiState(
-            goalsWithProgress = emptyList(),
-            selectedGoals = emptySet(),
+            currentGoals = currentGoals.value,
+            selectedGoalIds = _selectedGoalIds.value,
             showHint = true,
         )
     )
 
     private val dialogUiState = combine(
         _dialogData,
-        _goalToEdit,
+        _goalToEditId,
         items,
-    ) { dialogData, goalToEdit, items ->
-        if(dialogData == null) return@combine null // if data == null, the ui state should be null ergo we don't show the dialog
+    ) { dialogData, goalToEditId, items ->
+        // if data == null, the ui state should be null ergo we don't show the dialog
+        if(dialogData == null) return@combine null
 
         GoalsDialogUiState(
-            mode = if (goalToEdit == null) DialogMode.ADD else DialogMode.EDIT,
+            mode = if (goalToEditId == null) DialogMode.ADD else DialogMode.EDIT,
             dialogData = dialogData,
-            goalToEdit = goalToEdit,
+            goalToEditId = goalToEditId,
             libraryItems = items,
         )
     }.stateIn(
@@ -334,62 +289,66 @@ class GoalsViewModel @Inject constructor(
     }
 
     fun onEditAction() {
-        _selectedGoals.value.first().let {goalToEdit ->
-            _goalToEdit.update { goalToEdit }
-            _dialogData.update {
-                GoalDialogData(
-                    target = goalToEdit.instance.target,
-                )
-            }
+        val selectedGoalId = _selectedGoalIds.value.single()
+        val goalToEdit = currentGoals.value.single {
+            it.description.description.id == selectedGoalId
+        }
+        _goalToEditId.update { goalToEdit.description.description.id }
+        _dialogData.update {
+            GoalDialogData(
+                target = goalToEdit.instance.target,
+            )
         }
         clearActionMode()
     }
 
     fun onArchiveAction() {
         viewModelScope.launch {
-            _goalsCache = _selectedGoals.value.map { it.description.description }
-            goalsUseCases.archive(_goalsCache.map { it.id })
+            _goalIdsCache = _selectedGoalIds.value
+            goalsUseCases.archive(_selectedGoalIds.value.toList())
             clearActionMode()
         }
     }
 
     fun onUndoArchiveAction() {
         viewModelScope.launch {
-            goalsUseCases.unarchive(_goalsCache.map { it.id })
+            goalsUseCases.unarchive(_goalIdsCache.toList())
         }
     }
 
     fun onDeleteAction() {
         viewModelScope.launch {
-            _goalsCache = _selectedGoals.value.map { it.description.description }
-            goalsUseCases.delete(_goalsCache.map { it.id })
+            _goalIdsCache = _selectedGoalIds.value
+            goalsUseCases.delete(_selectedGoalIds.value.toList())
             clearActionMode()
         }
     }
 
     fun onRestoreAction() {
         viewModelScope.launch {
-            goalsUseCases.restore(_goalsCache.map { it.id })
+            goalsUseCases.restore(_goalIdsCache.toList())
         }
     }
 
     fun clearActionMode() {
-        _selectedGoals.update{ emptySet() }
+        _selectedGoalIds.update{ emptySet() }
     }
 
     fun onGoalClicked(
-        goal: GoalInstanceWithDescriptionWithLibraryItems,
+        goal: GoalInstanceWithProgressAndDescriptionWithLibraryItems,
         longClick: Boolean = false
     ) {
+        val descriptionId = goal.description.description.id
+
         if (longClick) {
-            _selectedGoals.update { it + goal }
+            _selectedGoalIds.update { it + descriptionId }
             return
         }
 
         // Short Click
         if(!actionModeUiState.value.isActionMode) {
             if(!goal.description.description.paused) {
-                _goalToEdit.update { goal }
+                _goalToEditId.update { descriptionId }
                 _dialogData.update {
                     GoalDialogData(
                         target = goal.instance.target,
@@ -397,10 +356,10 @@ class GoalsViewModel @Inject constructor(
                 }
             }
         } else {
-            if(_selectedGoals.value.contains(goal)) {
-                _selectedGoals.update { it - goal }
+            if(descriptionId in _selectedGoalIds.value) {
+                _selectedGoalIds.update { it - descriptionId }
             } else {
-                _selectedGoals.update { it + goal }
+                _selectedGoalIds.update { it + descriptionId }
             }
         }
     }
@@ -427,14 +386,14 @@ class GoalsViewModel @Inject constructor(
 
     fun clearDialog() {
         _dialogData.update { null }
-        _goalToEdit.update { null }
+        _goalToEditId.update { null }
     }
 
     fun onDialogConfirm() {
         dialogUiState.value?.let { uiState ->
             val dialogData = uiState.dialogData
             viewModelScope.launch {
-                if (uiState.goalToEdit == null) {
+                if (uiState.goalToEditId == null) {
                     goalsUseCases.add(
                         GoalDescriptionCreationAttributes(
                             type = dialogData.goalType,
@@ -454,7 +413,7 @@ class GoalsViewModel @Inject constructor(
                     )
                 } else {
                     goalsUseCases.edit(
-                        descriptionId = uiState.goalToEdit.description.description.id,
+                        descriptionId = uiState.goalToEditId,
                         instanceUpdateAttributes = GoalInstanceUpdateAttributes(
                             target = dialogData.target,
                         ),
