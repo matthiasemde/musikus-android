@@ -1,6 +1,8 @@
 package app.musikus.services
 
+import android.app.PendingIntent
 import android.app.Service
+import android.app.TaskStackBuilder
 import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.Binder
@@ -8,6 +10,7 @@ import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
+import androidx.core.net.toUri
 import app.musikus.CHANNEL_ID
 import app.musikus.R
 import app.musikus.database.daos.LibraryItem
@@ -63,11 +66,28 @@ class SessionService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.d("TAG", "onStartCommand")
 
+        // trigger deep link to open ActiveSession https://stackoverflow.com/a/72769863
+        val pendingIntent : PendingIntent? = TaskStackBuilder.create(this).run {
+            addNextIntentWithParentStack(
+                Intent(
+                    Intent.ACTION_VIEW,
+                    "musikus://activeSession".toUri()
+                )
+            )
+            getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+        }
+
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_launcher_foreground)    // without icon, setOngoing does not work
             .setOngoing(true)  // does not work on Android 14: https://developer.android.com/about/versions/14/behavior-changes-all#non-dismissable-notifications
             .setContentTitle("Practice Session")
             .setContentText("You are currently practicing!")
+            .setPriority(NotificationCompat.PRIORITY_HIGH) // only relevant below Oreo, else channel priority is used
+            .setContentIntent(pendingIntent)
+            .setStyle(
+                NotificationCompat.BigTextStyle()
+                    .bigText("You are currently practicing!")
+            )
             .build()
 
         ServiceCompat.startForeground(

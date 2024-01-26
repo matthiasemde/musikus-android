@@ -49,6 +49,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import androidx.navigation.navDeepLink
 import app.musikus.R
 import app.musikus.shared.MultiFabState
 import app.musikus.ui.activesession.ActiveSession
@@ -359,6 +360,9 @@ fun MusikusApp(
                 }
                 composable(
                     route = Screen.ActiveSession.route,
+                    deepLinks = listOf(navDeepLink {
+                        uriPattern = "musikus://activeSession"
+                    })
                 ) { ActiveSession(
                         mainUiState = uiState,
                         mainEventHandler = mainViewModel::onEvent,
