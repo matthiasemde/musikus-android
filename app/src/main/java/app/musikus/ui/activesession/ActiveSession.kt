@@ -1,8 +1,19 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ *
+ * Copyright (c) 2024 Michael Prommersberger
+ *
+ */
+
 package app.musikus.ui.activesession
 
+import android.content.res.Configuration
 import android.util.Log
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.AnchoredDraggableState
 import androidx.compose.foundation.gestures.DraggableAnchors
 import androidx.compose.foundation.gestures.Orientation
@@ -14,17 +25,22 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowColumn
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -41,12 +57,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -61,6 +78,11 @@ import app.musikus.ui.theme.spacing
 import app.musikus.utils.DurationFormat
 import app.musikus.utils.TimeProvider
 import app.musikus.utils.getDurationString
+import kotlin.math.roundToInt
+
+
+const val FRACTION_HEIGHT_SEPARATION_FROM_TOP = 0.6f
+const val FRACTION_HEIGHT_EXTENDED_FROM_TOP = 0.1f
 
 @Composable
 fun ActiveSession(
@@ -75,20 +97,23 @@ fun ActiveSession(
     val uiEvent: (ActiveSessionUIEvent) -> Unit = viewModel::onEvent
 
     Scaffold (
-        content = { paddingValues ->
+        contentWindowInsets = WindowInsets(bottom = 0.dp),
+        content = {contentPadding ->
             if(uiState.isPaused) {
                PauseDialog(uiState, uiEvent)
             }
 
             Column(
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier
+                    .padding(contentPadding)
+                    .fillMaxSize()
             ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier
-                        .padding(paddingValues)
                         .fillMaxWidth()
-                        .fillMaxHeight(0.5f)
+                        .fillMaxHeight(FRACTION_HEIGHT_SEPARATION_FROM_TOP)
+                        .background(MaterialTheme.colorScheme.primaryContainer)
                 ) {
                     // DEBUG
                     if (deepLinkArgument == Actions.FINISH.toString()) {
@@ -102,7 +127,7 @@ fun ActiveSession(
                     HeaderBar(uiState)
                     Spacer(modifier = Modifier.height(MaterialTheme.spacing.large))
                     PracticeTimer(uiState)
-                    CurrentItem(uiState = uiState)
+                    CurrentPracticingItem(uiState = uiState)
                     LibraryCard(
                         uiState = uiState.libraryUiState,
                         onLibraryItemClicked = { uiEvent(ActiveSessionUIEvent.StartNewSection(it)) },
@@ -110,27 +135,71 @@ fun ActiveSession(
                     )
 
                 }
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .fillMaxHeight()
-                ) {
-                    DraggableCard(uiState, Modifier.weight(1f).fillMaxWidth())
 
+                DraggableCard(uiState = uiState, Modifier.padding(
+                    start = MaterialTheme.spacing.large,
+                    end = MaterialTheme.spacing.large,
+                ))
+//                Pager(
+//                    uiState = uiState,
+//                    modifier = Modifier.fillMaxSize().background(Color.Red)
+//                )
 
 //                SectionsList(uiState, Modifier.weight(1f))
 //                BottomRow(uiState, onSaveClicked = {
 //                    uiEvent(ActiveSessionUIEvent.StopSession)
 //                    navigateUp()
 //                })
-                }
             }
         }
     )
 }
 
 
-enum class DragValue { Start, End }
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun Pager(
+    uiState: ActiveSessionUiState,
+    modifier: Modifier = Modifier
+) {
+    val pagerState = rememberPagerState(pageCount = { 4 })
+    HorizontalPager(
+        modifier = modifier,
+        state = pagerState,
+        pageSpacing = MaterialTheme.spacing.medium,
+        contentPadding = PaddingValues(
+            start = MaterialTheme.spacing.large,
+            end =  MaterialTheme.spacing.large,
+            top = 40.dp
+        )
+    ) {page ->
+        DraggableCard(
+            uiState = uiState
+        )
+
+    }
+}
+
+
+@OptIn(ExperimentalFoundationApi::class)
+private fun getXAnchors(
+    pageIndex: Int,
+    screenDensity: Density,
+    screenConfig: Configuration
+) : DraggableAnchors<DragValueX> {
+    with(screenDensity) {
+        val scrollWidth = screenConfig.screenWidthDp.dp.toPx()
+        return DraggableAnchors {
+            DragValueX.Page1 at 0.dp.toPx()
+            DragValueX.Page2 at scrollWidth * -1
+            DragValueX.Page3 at scrollWidth * -2
+            DragValueX.Page4 at scrollWidth * -3
+        }
+    }
+}
+
+enum class DragValueY { Start, End }
+enum class DragValueX { Page1, Page2, Page3, Page4 }
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -138,50 +207,72 @@ private fun DraggableCard(
     uiState: ActiveSessionUiState,
     modifier: Modifier = Modifier
 ) {
+    val fractionOfHeightToMove = FRACTION_HEIGHT_SEPARATION_FROM_TOP - FRACTION_HEIGHT_EXTENDED_FROM_TOP
 
     val density = LocalDensity.current
     val configuration = LocalConfiguration.current
-    val anchors = with(density) {
+
+    val yAnchors = with(density) {
         DraggableAnchors {
-            val offset = (configuration.screenHeightDp * 0.25).dp.toPx()
-            DragValue.Start at 0.dp.toPx()
-            DragValue.End at -offset
+            val offset = (configuration.screenHeightDp * fractionOfHeightToMove).dp.toPx()
+            DragValueY.Start at 0.dp.toPx()
+            DragValueY.End at -offset
         }
     }
-    val state = remember { AnchoredDraggableState(
-        initialValue = DragValue.Start,
+    val yState = remember { AnchoredDraggableState(
+        initialValue = DragValueY.Start,
         positionalThreshold = { distance: Float -> distance * 0.5f },
         velocityThreshold = { with(density) { 100.dp.toPx() } },
         animationSpec = tween()
     ).apply {
-        updateAnchors(anchors)
+        updateAnchors(yAnchors)
     } }
 
 
+    val xState = remember { AnchoredDraggableState(
+        initialValue = DragValueX.Page1,
+        positionalThreshold = { distance: Float -> distance * 0.5f },
+        velocityThreshold = { with(density) { 100.dp.toPx() } },
+        animationSpec = tween()
+    ).apply {
+        updateAnchors(getXAnchors(0, density, configuration))
+    } }
 
-    ElevatedCard (
-        modifier = modifier
-            .wrapContentSize(unbounded = true)
-            .fillMaxWidth()
-            .height((configuration.screenHeightDp * 0.75f).dp)
-            .anchoredDraggable(state, Orientation.Vertical)
-            .graphicsLayer {
-               translationY = state.requireOffset() // TODO: try offset modifier
-            },
-        shape = RoundedCornerShape(16.dp)
-    ) {
+    Box {
+        for (i in 0..3) {
+            ElevatedCard(
+                modifier = modifier
+                    .wrapContentHeight(unbounded = true, align = Alignment.Top)
+                    .fillMaxWidth()
+                    .anchoredDraggable(yState, Orientation.Vertical)
+                    .anchoredDraggable(xState, Orientation.Horizontal)
+                    .offset {
+                        IntOffset(
+                            x = (xState.requireOffset() + i * configuration.screenWidthDp.dp.toPx()).roundToInt(),
+                            y = yState.requireOffset().roundToInt()
+                        )
+                    }
+                    .height((LocalConfiguration.current.screenHeightDp * (1 - FRACTION_HEIGHT_EXTENDED_FROM_TOP)).dp),
+                shape = RoundedCornerShape(16.dp)
+            ) {
 //        SectionsList(uiState = uiState)
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(32.dp),
-        ) {
-            // Add your child elements here
-            items(100) { index ->
-                // Child element
-                // You can add any content for child elements here
-                Text(modifier = Modifier.fillMaxWidth() ,
-                    text = "Item $index")
+                Log.d("TAG", "Offset : ${yState.requireOffset()}")
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(32.dp),
+                    userScrollEnabled = yState.requireOffset() < -150
+                ) {
+                    // Add your child elements here
+                    items(100) { index ->
+                        // Child element
+                        // You can add any content for child elements here
+                        Text(
+                            modifier = Modifier.fillMaxWidth(),
+                            text = "Item $index"
+                        )
+                    }
+                }
             }
         }
     }
@@ -209,7 +300,7 @@ private fun PracticeTimer(
 
 
 @Composable
-private fun CurrentItem(
+private fun CurrentPracticingItem(
     uiState: ActiveSessionUiState
 ) {
     if (uiState.sections.isNotEmpty()) {

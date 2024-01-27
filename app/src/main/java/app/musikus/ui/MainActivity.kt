@@ -44,7 +44,9 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        WindowCompat.setDecorFitsSystemWindows(window, false)
+        // Set to true to not have stuff behind status bar
+        // TODO: Color status bar -> dark theme currently broken!
+        WindowCompat.setDecorFitsSystemWindows(window, true)
 
         if (BuildConfig.DEBUG) {
 //            launchAppIntroFirstRun()
