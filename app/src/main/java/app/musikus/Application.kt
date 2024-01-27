@@ -141,7 +141,7 @@ class Musikus : Application() {
             val channel = NotificationChannel(
                 CHANNEL_ID,
                 CHANNEL_NAME,
-                NotificationManager.IMPORTANCE_HIGH).apply {
+                NotificationManager.IMPORTANCE_LOW).apply {
                 description = descriptionText
             }
             // Register the channel with the system
