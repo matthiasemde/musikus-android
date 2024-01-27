@@ -15,7 +15,9 @@ import app.musikus.database.Nullable
 import app.musikus.database.daos.LibraryItem
 import app.musikus.database.entities.SectionCreationAttributes
 import app.musikus.database.entities.SessionCreationAttributes
+import app.musikus.services.SessionEvent
 import app.musikus.services.SessionService
+import app.musikus.services.SessionState
 import app.musikus.usecase.library.LibraryUseCases
 import app.musikus.usecase.sessions.SessionsUseCases
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -33,7 +35,6 @@ import java.time.ZonedDateTime
 import javax.inject.Inject
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.Duration.Companion.seconds
 
 const val TAG = "ActiveSessionViewModel"
 
@@ -64,54 +65,27 @@ class ActiveSessionViewModel @Inject constructor(
 ): AndroidViewModel(application) {
     
     // ################## mirrors of session state
-    
-    private val sectionsWrapper = MutableStateFlow<StateFlow<List<PracticeSection>>?>(null)
-    private val currentSectionDurationWrapper = MutableStateFlow<StateFlow<Duration>?>(null)
-    private val pauseDurationWrapper =  MutableStateFlow<StateFlow<Duration>?>(null)
-    private val isPausedWrapper =  MutableStateFlow<StateFlow<Boolean>?>(null)
 
-    private val sections = sectionsWrapper.flatMapLatest { it ?: flowOf(emptyList()) }
+    private val sessionStateWrapper = MutableStateFlow<StateFlow<SessionState>?>(null)
+    private val sessionState = sessionStateWrapper.flatMapLatest { it ?: flowOf(SessionState()) }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(),
-            initialValue = emptyList()
-        )
-    private val currentSectionDuration = currentSectionDurationWrapper.flatMapLatest { it ?: flowOf(0.seconds) }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(),
-            initialValue = 0.seconds
-        )
-    private val pauseDuration = pauseDurationWrapper.flatMapLatest { it ?: flowOf(0.seconds) }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(),
-            initialValue = 0.seconds
-        )
-    private val isPaused = isPausedWrapper.flatMapLatest { it ?: flowOf(false) }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(),
-            initialValue = false
+            initialValue = SessionState()
         )
 
     // #############################################    
 
-    private lateinit var sessionService: SessionService
+    private var sessionEvent: (SessionEvent) -> Unit = { Log.d("TAG", "not implemented") }
     private var bound = false
 
     private val connection = object : ServiceConnection {
         /** called by service when we have connection to the service => we have mService reference */
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
-            // We've bound to SessionForegroundService, cast the IBinder and get SessionForegroundService instance
-            Log.d("TAG", "onServiceConnected")
+            // We've bound to SessionForegroundService, cast the Binder and get SessionService instance
             val binder = service as SessionService.LocalBinder
-            sessionService = binder.getService()
-
-            sectionsWrapper.update { sessionService.sections }
-            currentSectionDurationWrapper.update { sessionService.currentSectionDuration }
-            pauseDurationWrapper.update { sessionService.pauseDuration }
-            isPausedWrapper.update { sessionService.isPaused }
+            sessionEvent = binder.getOnEvent()
+            sessionStateWrapper.update { binder.getSessionStateFlow() }
 
             bound = true
         }
@@ -158,20 +132,18 @@ class ActiveSessionViewModel @Inject constructor(
 
     val uiState = combine(
         libraryUiState,
-        currentSectionDuration,
-        isPaused,
-        sections,
-        pauseDuration
-    ) { libraryUiState, currentSectionDuration, isPaused, sections, pauseDuration ->
+        sessionState
+    ) { libraryUiState, sessionState ->
         ActiveSessionUiState(
             libraryUiState = libraryUiState,
-            totalSessionDuration = sections.sumOf { (it.duration ?: currentSectionDuration).inWholeMilliseconds }.milliseconds,
-            totalBreakDuration = pauseDuration,
-            isPaused = isPaused,
-            sections = sections.reversed().map { section ->
+            totalSessionDuration = sessionState.sections.sumOf {
+                (it.duration ?: sessionState.currentSectionDuration).inWholeMilliseconds }.milliseconds,
+            totalBreakDuration = sessionState.pauseDuration,
+            isPaused = sessionState.isPaused,
+            sections = sessionState.sections.reversed().map { section ->
                 Pair(
                     section.libraryItem.name,
-                    section.duration ?: currentSectionDuration
+                    section.duration ?: sessionState.currentSectionDuration
                 )
             }
         )
@@ -181,40 +153,40 @@ class ActiveSessionViewModel @Inject constructor(
         initialValue = ActiveSessionUiState(
             libraryUiState = libraryUiState.value,
             totalSessionDuration = 0.milliseconds,
-            totalBreakDuration = pauseDuration.value,
+            totalBreakDuration = sessionState.value.pauseDuration,
             sections = emptyList(),
-            isPaused = isPaused.value
+            isPaused = sessionState.value.isPaused
         )
     )
 
     fun itemClicked(item: LibraryItem) {
         if (!bound) return
-        sessionService.newSection(item)
+        sessionEvent(SessionEvent.StartNewSection(item))
         startService()
     }
 
     fun togglePause() {
-        sessionService.togglePause()
+        sessionEvent(SessionEvent.TogglePause)
     }
 
     fun stopSession() {
         viewModelScope.launch {
             sessionUseCases.add(
                 sessionCreationAttributes = SessionCreationAttributes(
-                    breakDuration = pauseDuration.value,
+                    breakDuration = sessionState.value.pauseDuration,
                     comment = "New Session from new ActiveSession Screen!",
                     rating = 5
                 ),
-                sectionCreationAttributes = sections.value.map {
+                sectionCreationAttributes = sessionState.value.sections.map {
                     SectionCreationAttributes(
                         libraryItemId = it.libraryItem.id,
-                        duration = it.duration ?: currentSectionDuration.value,
+                        duration = it.duration ?: sessionState.value.currentSectionDuration,
                         startTimestamp = it.startTimestamp
                     )
                 }
             )
         }
-        sessionService.stopTimer()
+        sessionEvent(SessionEvent.StopTimer)
     }
 
     // ################################### Service ############################################

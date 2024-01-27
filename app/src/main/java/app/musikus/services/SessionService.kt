@@ -24,16 +24,37 @@ import app.musikus.ui.activesession.PracticeSection
 import app.musikus.utils.DurationFormat
 import app.musikus.utils.getDurationString
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import java.time.ZonedDateTime
 import kotlin.concurrent.timer
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 
 const val NOTIFCATION_ID = 42
 const val BROADCAST_INTENT_FILTER = "activeSessionAction"
+
+
+/**
+ * Encapsulates the state of the current session, is passed to the binding Activity / ViewModel
+ */
+data class SessionState(
+    val sections: List<PracticeSection> = emptyList(),
+    val currentSectionDuration: Duration = 0.seconds,
+    val pauseDuration: Duration = 0.seconds,
+    val isPaused: Boolean = false
+)
+
+/**
+ * Exposed interface for events between Service and Activity / ViewModel
+ */
+sealed class SessionEvent {
+    data object StopTimer: SessionEvent()
+    data object TogglePause: SessionEvent()
+    data class StartNewSection(val item: LibraryItem): SessionEvent()
+}
+
 
 /**
  * Actions that can be triggered by the Notification
@@ -53,14 +74,16 @@ data class NotificationActionButtonConfig(
 
 class SessionService : Service() {
 
-    private var _timer: java.util.Timer? = null
-    private val timerInterval = 1.seconds
-
     private val binder = LocalBinder()         // interface object for clients that bind
     inner class LocalBinder : Binder() {
         // Return this instance of SessionService so clients can call public methods
-        fun getService(): SessionService = this@SessionService
+        fun getSessionStateFlow() = sessionState
+        fun getOnEvent(): (SessionEvent) -> Unit = ::onEvent
     }
+
+    private val sessionState = MutableStateFlow(SessionState())  // Session State
+    private var _timer: java.util.Timer? = null
+    private val timerInterval = 1.seconds
 
     /** Broadcast receiver (currently only for pause action) */
     private val myReceiver: BroadcastReceiver = object : BroadcastReceiver() {
@@ -82,77 +105,66 @@ class SessionService : Service() {
     private var finishActionButton : NotificationActionButtonConfig? = null
 
 
-    /** ---------------------------------- Session State ---------------------------------- */
-
-    // TODO: bundle these in a data class
-
-    private val _sections = MutableStateFlow<List<PracticeSection>>(listOf())
-    val sections = _sections.asStateFlow()
-
-    private val _currentSectionDuration = MutableStateFlow(0.seconds)
-    val currentSectionDuration = _currentSectionDuration.asStateFlow()
-
-    private val _pauseDuration = MutableStateFlow(0.seconds)
-    val pauseDuration = _pauseDuration.asStateFlow()
-
-    private val _isPaused = MutableStateFlow(false)
-    val isPaused = _isPaused.asStateFlow()
-
     /**
      *  ---------------------- Interface for Activity / ViewModel ----------------------
      */
-
-    fun newSection(item: LibraryItem) {
-        // prevent starting a new section too fast
-        if (_sections.value.isNotEmpty() && _currentSectionDuration.value < 1.seconds) return
-        // prevent starting the same section twice in a row
-        if (item == _sections.value.lastOrNull()?.libraryItem) return
-
-        startTimer()
-        // end current section and store its duration
-        var currentSectionDuration = 0.seconds
-        _currentSectionDuration.update {
-            // only store whole seconds, so floor current section duration
-            currentSectionDuration = it.inWholeSeconds.seconds
-            // the remaining part (sub-seconds) will be added to the new section upfront
-            it - currentSectionDuration
+    fun onEvent(event: SessionEvent) {
+        when(event) {
+            is SessionEvent.StopTimer -> stopTimer()
+            is SessionEvent.TogglePause -> togglePause()
+            is SessionEvent.StartNewSection -> newSection(event.item)
         }
-
-        _sections.update {
-            // update duration in newest section
-            val updatedLastSection =
-                it.lastOrNull()?.copy(duration = currentSectionDuration)
-            // create new section
-            val newItem = PracticeSection(
-                libraryItem = item,
-                duration = null,
-                startTimestamp = ZonedDateTime.now() //TODO: use timeprovider
-            )
-
-            if(updatedLastSection != null) {
-                // return new list with updated item
-                it.dropLast(1) + updatedLastSection + newItem
-            } else {
-                listOf(newItem)
-            }
-        }
-        updateNotification()
     }
 
-    fun stopTimer() {
-        _timer?.cancel()
-        stopSelf()
-    }
-
-    fun togglePause() {
-        _isPaused.update { !it }
-        updateNotification()
-    }
 
 
     /**
      * ----------------------------------- private functions ------------------------------------
      */
+
+    private fun newSection(item: LibraryItem) {
+        // prevent starting a new section too fast
+        if (sessionState.value.sections.isNotEmpty() && sessionState.value.currentSectionDuration < 1.seconds) return
+        // prevent starting the same section twice in a row
+        if (item == sessionState.value.sections.lastOrNull()?.libraryItem) return
+
+        startTimer()
+        // end current section and store its duration
+
+        sessionState.update {
+            val finishedSectionDur = it.currentSectionDuration
+            val flooredFinishedDur = finishedSectionDur.inWholeSeconds.seconds  // floor to seconds
+
+            // update last section with tracked duration
+            val updatedLastSection = it.sections.lastOrNull()?.copy(duration = flooredFinishedDur)
+            val newItem = PracticeSection(
+                libraryItem = item,
+                duration = null,
+                startTimestamp = ZonedDateTime.now() //TODO: use timeprovider
+            )
+            it.copy(
+                // the remaining part (sub-seconds) will be added to the new section upfront
+                currentSectionDuration =  finishedSectionDur - flooredFinishedDur,
+                sections =
+                    if (updatedLastSection == null) {
+                        listOf(newItem)   // first section started, only add new item
+                    } else {
+                        it.sections.dropLast(1) + updatedLastSection + newItem
+                    }
+            )
+        }
+        updateNotification()
+    }
+
+    private fun stopTimer() {
+        _timer?.cancel()
+        stopSelf()
+    }
+
+    private fun togglePause() {
+        sessionState.update { it.copy(isPaused = !it.isPaused) }
+        updateNotification()
+    }
 
     private fun startTimer() {
         if (_timer != null) {
@@ -163,10 +175,14 @@ class SessionService : Service() {
             initialDelay = timerInterval.inWholeMilliseconds,
             period = timerInterval.inWholeMilliseconds
         ) {
-            if (_isPaused.value) {
-                _pauseDuration.update { it + timerInterval }
+            if (sessionState.value.isPaused) {
+                sessionState.update { it.copy(
+                    pauseDuration = it.pauseDuration + timerInterval)
+                }
             } else {
-                _currentSectionDuration.update { it + timerInterval }
+                sessionState.update { it.copy(
+                    currentSectionDuration = it.currentSectionDuration + timerInterval)
+                }
             }
             updateNotification()
         }
@@ -181,17 +197,17 @@ class SessionService : Service() {
      * Creates a notification object based on current session state
      */
     private fun createNotification() : Notification {
-        val totalPracticeDuration = _sections.value.sumOf {
-            (it.duration ?: _currentSectionDuration.value).inWholeMilliseconds }.milliseconds
+        val totalPracticeDuration = sessionState.value.sections.sumOf {
+            (it.duration ?: sessionState.value.currentSectionDuration).inWholeMilliseconds }.milliseconds
         val totalPracticeDurationStr =
             getDurationString(totalPracticeDuration, DurationFormat.HMS_DIGITAL)
 
-        val currentSectionName = _sections.value.lastOrNull()?.libraryItem?.name ?: "No Section"
+        val currentSectionName = sessionState.value.sections.lastOrNull()?.libraryItem?.name ?: "No Section"
 
         val title: String
         val description: String
 
-        if (_isPaused.value) {
+        if (sessionState.value.isPaused) {
             title = "Practicing Paused"
             description = "$currentSectionName - Total: $totalPracticeDurationStr"
         } else {
@@ -199,7 +215,7 @@ class SessionService : Service() {
             description = currentSectionName
         }
 
-        val actionButton1Intent = if(_isPaused.value) {
+        val actionButton1Intent = if(sessionState.value.isPaused) {
             resumeActionButton
         } else {
             pauseActionButton
