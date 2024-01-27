@@ -37,7 +37,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.musikus.database.daos.LibraryFolder
 import app.musikus.database.daos.LibraryItem
-import app.musikus.services.ACTION_FINISH
+import app.musikus.services.Actions
 import app.musikus.ui.MainUIEvent
 import app.musikus.ui.MainUiState
 import app.musikus.ui.theme.spacing
@@ -106,7 +106,7 @@ fun ActiveSession(
                     .fillMaxWidth()
             ) {
 
-                if(deepLinkArgument == ACTION_FINISH) {
+                if(deepLinkArgument == Actions.FINISH.toString()) {
                     Text("Clicked on Finish in Notification",
                         style = MaterialTheme.typography.titleMedium,
                         color = Color.Red)

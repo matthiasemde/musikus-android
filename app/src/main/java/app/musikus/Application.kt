@@ -134,6 +134,8 @@ class Musikus : Application() {
 
     private fun createNotificationChannelSessionService() {
         // Create the NotificationChannel, but only on API 26+ because
+        // TODO: IMPORTANCE_HIGH also triggers Heads-Up Notification. Is this wanted?
+        // TODO: Maybe launch notification only when ActiveSession becomes in background, else display no notification
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val descriptionText = "Notification to keep track of the running session"
             val channel = NotificationChannel(
