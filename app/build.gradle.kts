@@ -104,7 +104,7 @@ dependencies {
     implementation("androidx.compose.animation:animation-graphics")
 
     //Foundation
-    implementation("androidx.compose.foundation:foundation")
+    implementation("androidx.compose.foundation:foundation:1.6.0")
     implementation("androidx.compose.foundation:foundation-layout")
 
     // Material
