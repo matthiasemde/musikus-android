@@ -55,6 +55,7 @@ fun ActiveSession(
     navigateUp: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val uiEvent: (ActiveSessionUIEvent) -> Unit = viewModel::onEvent
 
     Scaffold (
         content = { paddingValues ->
@@ -92,7 +93,7 @@ fun ActiveSession(
 
                         Spacer(Modifier.height(32.dp))
 
-                        Button(onClick = viewModel::togglePause) {
+                        Button(onClick = { uiEvent(ActiveSessionUIEvent.TogglePause) }) {
                             Text("Resume")
                         }
                     }
@@ -119,14 +120,12 @@ fun ActiveSession(
                 )
                 Text(text = "Practice time")
 
-
-
                 Spacer(modifier = Modifier.height(MaterialTheme.spacing.large))
 
                 // Library Items
                 LibraryCard(
                     uiState = uiState.libraryUiState,
-                    onLibraryItemClicked = viewModel::itemClicked,
+                    onLibraryItemClicked = { uiEvent(ActiveSessionUIEvent.StartNewSection(it)) },
                     onFolderClicked = {}
                 )
 
@@ -193,19 +192,15 @@ fun ActiveSession(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ){
-                    Button(onClick = viewModel::togglePause) {
+                    Button(onClick = { uiEvent(ActiveSessionUIEvent.TogglePause) }) {
                         Text(text = "Pause")
                     }
 
                     Button(onClick = {
-                        viewModel.stopSession()
+                        uiEvent(ActiveSessionUIEvent.StopSession)
                         navigateUp()
                     }) {
                         Text(text = "Save Session")
-                    }
-
-                    Button(onClick = viewModel::startService) {
-                        Text("Start Service")
                     }
                 }
             }

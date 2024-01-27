@@ -38,6 +38,13 @@ import kotlin.time.Duration.Companion.milliseconds
 
 const val TAG = "ActiveSessionViewModel"
 
+
+sealed class ActiveSessionUIEvent {
+    data class StartNewSection(val libraryItem: LibraryItem): ActiveSessionUIEvent()
+    data object TogglePause: ActiveSessionUIEvent()
+    data object StopSession: ActiveSessionUIEvent()
+}
+
 data class ActiveSessionUiState(
     val libraryUiState: LibraryCardUiState,
     val totalSessionDuration: Duration,
@@ -159,17 +166,29 @@ class ActiveSessionViewModel @Inject constructor(
         )
     )
 
-    fun itemClicked(item: LibraryItem) {
+
+    /** UI Event handler */
+    fun onEvent(event: ActiveSessionUIEvent) = when (event) {
+        is ActiveSessionUIEvent.StartNewSection -> itemClicked(event.libraryItem)
+        is ActiveSessionUIEvent.TogglePause -> togglePause()
+        is ActiveSessionUIEvent.StopSession -> stopSession()
+    }
+
+
+
+    /** ---------------------------------- private methods ----------------------------------- */
+
+    private fun itemClicked(item: LibraryItem) {
         if (!bound) return
         sessionEvent(SessionEvent.StartNewSection(item))
         startService()
     }
 
-    fun togglePause() {
+    private fun togglePause() {
         sessionEvent(SessionEvent.TogglePause)
     }
 
-    fun stopSession() {
+    private fun stopSession() {
         viewModelScope.launch {
             sessionUseCases.add(
                 sessionCreationAttributes = SessionCreationAttributes(
@@ -191,7 +210,7 @@ class ActiveSessionViewModel @Inject constructor(
 
     // ################################### Service ############################################
 
-    fun startService() {
+    private fun startService() {
         Log.d("TAG", "startService Button pressed")
         Log.d("TAG", "start Foreground Service ")
         val intent = Intent(application, SessionService::class.java) // Build the intent for the service
@@ -202,7 +221,7 @@ class ActiveSessionViewModel @Inject constructor(
         }
     }
 
-    fun bindService() {
+    private fun bindService() {
         Log.d("TAG", "bindService Button pressed")
         val intent = Intent(application, SessionService::class.java) // Build the intent for the service
         application.bindService(intent, connection, Context.BIND_AUTO_CREATE)

@@ -55,7 +55,6 @@ sealed class SessionEvent {
     data class StartNewSection(val item: LibraryItem): SessionEvent()
 }
 
-
 /**
  * Actions that can be triggered by the Notification
  */
@@ -115,7 +114,6 @@ class SessionService : Service() {
             is SessionEvent.StartNewSection -> newSection(event.item)
         }
     }
-
 
 
     /**
