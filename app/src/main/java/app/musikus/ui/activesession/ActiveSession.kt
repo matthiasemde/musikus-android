@@ -11,6 +11,7 @@ package app.musikus.ui.activesession
 
 import android.content.res.Configuration
 import android.util.Log
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -28,7 +29,6 @@ import androidx.compose.foundation.layout.FlowColumn
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -44,13 +44,14 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
@@ -89,6 +90,7 @@ import app.musikus.utils.getDurationString
 const val FRACTION_HEIGHT_COLLAPSED = 0.3f
 const val FRACTION_HEIGHT_EXTENDED = 0.7f
 
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun ActiveSession(
     mainUiState: MainUiState,
@@ -101,8 +103,32 @@ fun ActiveSession(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val uiEvent: (ActiveSessionUIEvent) -> Unit = viewModel::onEvent
 
-    Scaffold (
-        contentWindowInsets = WindowInsets(bottom = 0.dp),
+    BottomSheetScaffold (
+        sheetContent = {
+            val pagerState = rememberPagerState(pageCount = { 4 })
+            HorizontalPager(
+                verticalAlignment = Alignment.Top,
+                modifier = Modifier.animateContentSize(),
+                state = pagerState,
+                pageSpacing = MaterialTheme.spacing.medium,
+//                contentPadding = PaddingValues(
+//                    start = MaterialTheme.spacing.large,
+//                    end =  MaterialTheme.spacing.large,
+//                    top = 40.dp
+//                )
+            ) {page ->
+                LazyColumn(
+                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                    content = {
+                        items(
+                            if (page == 1) 5 else 100
+                        ) {
+                            Text(text = "Page $page Item $it")
+                        }
+                    }
+                )
+            }
+        },
         content = {contentPadding ->
             if(uiState.isPaused) {
                PauseDialog(uiState, uiEvent)
@@ -141,15 +167,15 @@ fun ActiveSession(
 
                 }
 
-                DraggableCard(uiState = uiState,
-                    Modifier
-                        .padding(
-                            start = MaterialTheme.spacing.large,
-                            end = MaterialTheme.spacing.large,
-                        )
-                        .align(Alignment.BottomCenter),
-
-                )
+//                DraggableCard(uiState = uiState,
+//                    Modifier
+//                        .padding(
+//                            start = MaterialTheme.spacing.large,
+//                            end = MaterialTheme.spacing.large,
+//                        )
+//                        .align(Alignment.BottomCenter),
+//
+//                )
             }
         }
     )
