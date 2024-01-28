@@ -18,9 +18,6 @@ import androidx.compose.foundation.gestures.AnchoredDraggableState
 import androidx.compose.foundation.gestures.DraggableAnchors
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.anchoredDraggable
-import androidx.compose.foundation.gestures.awaitEachGesture
-import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -65,14 +62,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
-import androidx.compose.ui.input.nestedscroll.NestedScrollSource
-import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.input.pointer.PointerEvent
-import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
@@ -262,38 +254,7 @@ private fun DraggableCard(
             .fillMaxWidth()
             .offset(x = 0.dp, y = 20.dp)
             .anchoredDraggable(yState, Orientation.Vertical)
-            .pointerInput(Unit) {
-                detectDragGestures { change, dragAmount ->
-                    Log.d("TAG", "drag Gesture")
-                    Log.d("TAG", "dragAmount: $dragAmount")
-                    Log.d("TAG", "change: $change")
-                }
-
-                awaitEachGesture {
-
-                    awaitFirstDown(
-                        requireUnconsumed = false,
-                        pass = PointerEventPass.Initial)
-                    // ACTION_DOWN here
-
-                    do {
-
-                        //This PointerEvent contains details including
-                        // event, id, position and more
-                        val event: PointerEvent = awaitPointerEvent(pass = PointerEventPass.Initial)
-
-
-                        // ACTION_MOVE loop
-                        Log.d("TAG", "event: ${event.changes.first()}")
-
-//                        event.changes.forEach { it.consume() }
-
-                    } while (event.changes.any { it.pressed })
-
-                    // ACTION_UP is here
-
-                }
-            },
+        ,
         shape = RoundedCornerShape(16.dp)
     ) {
 
@@ -304,48 +265,20 @@ private fun DraggableCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(20.dp)
-                .nestedScroll(
-                    connection =  object : NestedScrollConnection {
-                        override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
-                            val delta = available.y
-//                            Log.d("TAG" , "delta: $delta")
-                            return Offset.Zero
-                        }
-                        private fun isScroll() : Boolean {
-                            return true
-                        }
-                    }
-                )
-                .pointerInput(Unit) {
-                    awaitEachGesture {
+                .pointerInteropFilter { event ->
+                    Log.d("TAG", event.toString())
+//                    if (event.action == MotionEvent.ACTION_DOWN) {
+//                        Log.d("TAG", "ACTION_DOWN")
+//                    }
+//                    if (event.action == MotionEvent.ACTION_MOVE) {
+//                        Log.d("TAG", "ACTION_MOVE")
+//
+//                    }
+//                    if (event.action == MotionEvent.ACTION_UP) {
+//                        Log.d("TAG", "ACTION_UP")
+//                    }
 
-                        awaitFirstDown()
-                        // ACTION_DOWN here
-
-                        do {
-
-                            //This PointerEvent contains details including
-                            // event, id, position and more
-                            val event: PointerEvent = awaitPointerEvent()
-                            // ACTION_MOVE loop
-
-
-
-                            val y = event.changes.first().position.y
-                            movedFingerDown.value = y > lastY.value
-                            lastY.value = y
-                            event.changes.forEach { it.consume() }
-//                            Log.d("TAG", "event: ${event.changes.first()}")
-
-//                            Log.d("TAG", "movedFingerDown: ${movedFingerDown.value}")
-
-
-                        } while (event.changes.any { it.pressed })
-
-                        // ACTION_UP is here
-
-
-                    }
+                    false
                 }
             ,
             state = listState,
