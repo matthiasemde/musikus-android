@@ -18,6 +18,9 @@ import androidx.compose.foundation.gestures.AnchoredDraggableState
 import androidx.compose.foundation.gestures.DraggableAnchors
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.anchoredDraggable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -36,9 +39,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
@@ -52,18 +56,28 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.input.pointer.PointerEvent
+import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Density
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -78,11 +92,10 @@ import app.musikus.ui.theme.spacing
 import app.musikus.utils.DurationFormat
 import app.musikus.utils.TimeProvider
 import app.musikus.utils.getDurationString
-import kotlin.math.roundToInt
 
 
-const val FRACTION_HEIGHT_SEPARATION_FROM_TOP = 0.6f
-const val FRACTION_HEIGHT_EXTENDED_FROM_TOP = 0.1f
+const val FRACTION_HEIGHT_COLLAPSED = 0.3f
+const val FRACTION_HEIGHT_EXTENDED = 0.7f
 
 @Composable
 fun ActiveSession(
@@ -103,7 +116,7 @@ fun ActiveSession(
                PauseDialog(uiState, uiEvent)
             }
 
-            Column(
+            Box(
                 modifier = Modifier
                     .padding(contentPadding)
                     .fillMaxSize()
@@ -112,7 +125,7 @@ fun ActiveSession(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .fillMaxHeight(FRACTION_HEIGHT_SEPARATION_FROM_TOP)
+                        .fillMaxHeight(1 - FRACTION_HEIGHT_COLLAPSED)
                         .background(MaterialTheme.colorScheme.primaryContainer)
                 ) {
                     // DEBUG
@@ -136,20 +149,15 @@ fun ActiveSession(
 
                 }
 
-                DraggableCard(uiState = uiState, Modifier.padding(
-                    start = MaterialTheme.spacing.large,
-                    end = MaterialTheme.spacing.large,
-                ))
-//                Pager(
-//                    uiState = uiState,
-//                    modifier = Modifier.fillMaxSize().background(Color.Red)
-//                )
+                DraggableCard(uiState = uiState,
+                    Modifier
+                        .padding(
+                            start = MaterialTheme.spacing.large,
+                            end = MaterialTheme.spacing.large,
+                        )
+                        .align(Alignment.BottomCenter),
 
-//                SectionsList(uiState, Modifier.weight(1f))
-//                BottomRow(uiState, onSaveClicked = {
-//                    uiEvent(ActiveSessionUIEvent.StopSession)
-//                    navigateUp()
-//                })
+                )
             }
         }
     )
@@ -201,13 +209,13 @@ private fun getXAnchors(
 enum class DragValueY { Start, End }
 enum class DragValueX { Page1, Page2, Page3, Page4 }
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalComposeUiApi::class)
 @Composable
 private fun DraggableCard(
     uiState: ActiveSessionUiState,
     modifier: Modifier = Modifier
 ) {
-    val fractionOfHeightToMove = FRACTION_HEIGHT_SEPARATION_FROM_TOP - FRACTION_HEIGHT_EXTENDED_FROM_TOP
+    val fractionOfHeightToMove = FRACTION_HEIGHT_EXTENDED - FRACTION_HEIGHT_COLLAPSED
 
     val density = LocalDensity.current
     val configuration = LocalConfiguration.current
@@ -228,56 +236,169 @@ private fun DraggableCard(
         updateAnchors(yAnchors)
     } }
 
+    val xState = remember {
+        AnchoredDraggableState(
+            initialValue = DragValueX.Page1,
+            positionalThreshold = { distance: Float -> distance * 0.5f },
+            velocityThreshold = { with(density) { 100.dp.toPx() } },
+            animationSpec = tween()
+        ).apply {
+            updateAnchors(getXAnchors(0, density, configuration))
+        }
+    }
 
-    val xState = remember { AnchoredDraggableState(
-        initialValue = DragValueX.Page1,
-        positionalThreshold = { distance: Float -> distance * 0.5f },
-        velocityThreshold = { with(density) { 100.dp.toPx() } },
-        animationSpec = tween()
-    ).apply {
-        updateAnchors(getXAnchors(0, density, configuration))
-    } }
+    val initialHeight = (LocalConfiguration.current.screenHeightDp * FRACTION_HEIGHT_COLLAPSED).dp
 
-    Box {
-        for (i in 0..3) {
-            ElevatedCard(
-                modifier = modifier
-                    .wrapContentHeight(unbounded = true, align = Alignment.Top)
-                    .fillMaxWidth()
-                    .anchoredDraggable(yState, Orientation.Vertical)
-                    .anchoredDraggable(xState, Orientation.Horizontal)
-                    .offset {
-                        IntOffset(
-                            x = (xState.requireOffset() + i * configuration.screenWidthDp.dp.toPx()).roundToInt(),
-                            y = yState.requireOffset().roundToInt()
-                        )
+    val lastY = remember { mutableStateOf(0f) }
+    val movedFingerDown = remember { mutableStateOf(false) }
+
+    ElevatedCard(
+        modifier = modifier
+            .height(initialHeight - with(LocalDensity.current) {
+                yState
+                    .requireOffset()
+                    .toDp()
+            })
+            .fillMaxWidth()
+            .offset(x = 0.dp, y = 20.dp)
+            .anchoredDraggable(yState, Orientation.Vertical)
+            .pointerInput(Unit) {
+                detectDragGestures { change, dragAmount ->
+                    Log.d("TAG", "drag Gesture")
+                    Log.d("TAG", "dragAmount: $dragAmount")
+                    Log.d("TAG", "change: $change")
+                }
+
+                awaitEachGesture {
+
+                    awaitFirstDown(
+                        requireUnconsumed = false,
+                        pass = PointerEventPass.Initial)
+                    // ACTION_DOWN here
+
+                    do {
+
+                        //This PointerEvent contains details including
+                        // event, id, position and more
+                        val event: PointerEvent = awaitPointerEvent(pass = PointerEventPass.Initial)
+
+
+                        // ACTION_MOVE loop
+                        Log.d("TAG", "event: ${event.changes.first()}")
+
+//                        event.changes.forEach { it.consume() }
+
+                    } while (event.changes.any { it.pressed })
+
+                    // ACTION_UP is here
+
+                }
+            },
+        shape = RoundedCornerShape(16.dp)
+    ) {
+
+        val listState = rememberLazyListState()
+
+
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp)
+                .nestedScroll(
+                    connection =  object : NestedScrollConnection {
+                        override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                            val delta = available.y
+//                            Log.d("TAG" , "delta: $delta")
+                            return Offset.Zero
+                        }
+                        private fun isScroll() : Boolean {
+                            return true
+                        }
                     }
-                    .height((LocalConfiguration.current.screenHeightDp * (1 - FRACTION_HEIGHT_EXTENDED_FROM_TOP)).dp),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-//        SectionsList(uiState = uiState)
-                Log.d("TAG", "Offset : ${yState.requireOffset()}")
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(32.dp),
-                    userScrollEnabled = yState.requireOffset() < -150
-                ) {
-                    // Add your child elements here
-                    items(100) { index ->
-                        // Child element
-                        // You can add any content for child elements here
-                        Text(
-                            modifier = Modifier.fillMaxWidth(),
-                            text = "Item $index"
-                        )
+                )
+                .pointerInput(Unit) {
+                    awaitEachGesture {
+
+                        awaitFirstDown()
+                        // ACTION_DOWN here
+
+                        do {
+
+                            //This PointerEvent contains details including
+                            // event, id, position and more
+                            val event: PointerEvent = awaitPointerEvent()
+                            // ACTION_MOVE loop
+
+
+
+                            val y = event.changes.first().position.y
+                            movedFingerDown.value = y > lastY.value
+                            lastY.value = y
+                            event.changes.forEach { it.consume() }
+//                            Log.d("TAG", "event: ${event.changes.first()}")
+
+//                            Log.d("TAG", "movedFingerDown: ${movedFingerDown.value}")
+
+
+                        } while (event.changes.any { it.pressed })
+
+                        // ACTION_UP is here
+
+
                     }
                 }
+            ,
+            state = listState,
+            userScrollEnabled = true//(!listState.canScrollBackward) || movedFingerDown.value
+
+        ) {
+            val toTopScrolled = !listState.canScrollBackward
+            if (toTopScrolled) {
+                Log.d("TAG", "reached end")
+            }
+            // Add your child elements here
+            items(100) { index ->
+
+
+
+//                scrollingDisabled.value =
+//                    (yState.requireOffset() == 0f) ||                                   // card collapsed
+//                    (movedFingerDown.value && listState.canScrollBackward)     // down moving finger && top of list
+
+//                Log.d("TAG", "canScrollBackward: ${listState.canScrollBackward}")
+
+//                Log.d("TAG", "scrollingDisabled: ${scrollingDisabled.value}"    )
+
+                Text(
+                    modifier = Modifier.fillMaxWidth(),
+                    text = "Item $index"
+                )
             }
         }
     }
 }
 
+
+/**
+ * Returns whether the lazy list is currently scrolling up.
+ */
+@Composable
+private fun LazyListState.isScrollingUp(): Boolean {
+    var previousIndex by remember(this) { mutableIntStateOf(firstVisibleItemIndex) }
+    var previousScrollOffset by remember(this) { mutableIntStateOf(firstVisibleItemScrollOffset) }
+    return remember(this) {
+        derivedStateOf {
+            if (previousIndex != firstVisibleItemIndex) {
+                previousIndex > firstVisibleItemIndex
+            } else {
+                previousScrollOffset >= firstVisibleItemScrollOffset
+            }.also {
+                previousIndex = firstVisibleItemIndex
+                previousScrollOffset = firstVisibleItemScrollOffset
+            }
+        }
+    }.value
+}
 
 @Composable
 private fun HeaderBar(
