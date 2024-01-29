@@ -8,7 +8,11 @@
 
 package app.musikus.ui.statistics.goalstatistics
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -181,36 +185,55 @@ fun GoalStatisticsGoalSelector(
                         style = MaterialTheme.typography.labelSmall,
                     )
                 }
-                goalInfo.successRate?.let { (successful, total) ->
-                    Column(
-                        modifier = Modifier
-                            .padding(start = MaterialTheme.spacing.medium)
-                            .widthIn(min = 65.dp)
-                            .width(IntrinsicSize.Min)
+                Column(
+                    modifier = Modifier
+                        .padding(start = MaterialTheme.spacing.medium)
+                        .widthIn(min = 65.dp)
+                        .width(IntrinsicSize.Min)
+                ) {
+                    AnimatedVisibility(
+                        visible = goalInfo.successRate != null,
+                        enter = fadeIn(),
                     ) {
-                        Text(
-                            text = successful.toString(),
-                            style = MaterialTheme.typography.labelSmall,
-                        )
-                        Box(
-                            modifier = Modifier
-                                .padding(vertical = MaterialTheme.spacing.extraSmall)
-                                .fillMaxWidth()
-                                .height(4.dp)
-                        ) {
-                            LinearProgressIndicator(
-                                modifier = Modifier.matchParentSize(),
-                                progress = successful.toFloat() / total,
-                                color = color,
-                                strokeCap = StrokeCap.Round,
+                        goalInfo.successRate?.let { (successful, _) ->
+                            Text(
+                                text = successful.toString(),
+                                style = MaterialTheme.typography.labelSmall,
                             )
                         }
-                        Text(
-                            modifier = Modifier.fillMaxWidth(),
-                            text = (total - successful).toString(),
-                            style = MaterialTheme.typography.labelSmall,
-                            textAlign = End
+                    }
+                    Box(
+                        modifier = Modifier
+                            .padding(vertical = MaterialTheme.spacing.extraSmall)
+                            .fillMaxWidth()
+                            .height(4.dp)
+                    ) {
+                        val animatedProgress by animateFloatAsState(
+                            targetValue = goalInfo.successRate?.let { (successful, total) ->
+                                (successful.toFloat() / total).coerceAtMost(1f)
+                            } ?: 0f,
+                            label = "",
+                            animationSpec = tween(1500)
                         )
+                        LinearProgressIndicator(
+                            modifier = Modifier.matchParentSize(),
+                            progress = animatedProgress,
+                            color = color,
+                            strokeCap = StrokeCap.Round,
+                        )
+                    }
+                    AnimatedVisibility(
+                        visible = goalInfo.successRate != null,
+                        modifier = Modifier.fillMaxWidth(),
+                        enter = fadeIn(),
+                    ) {
+                        goalInfo.successRate?.let { (successful, total) ->
+                            Text(
+                                text = (total - successful).toString(),
+                                style = MaterialTheme.typography.labelSmall,
+                                textAlign = End
+                            )
+                        }
                     }
                 }
                 Spacer(
