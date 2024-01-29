@@ -74,7 +74,7 @@ object MainModule {
         app: Application,
         databaseProvider: Provider<MusikusDatabase>,
         timeProvider: TimeProvider,
-        idProvider: IdProvider
+        idProvider: IdProvider,
     ): MusikusDatabase {
         return MusikusDatabase.buildDatabase(
             app,

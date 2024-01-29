@@ -17,6 +17,7 @@ import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.RewriteQueriesToDropUnusedColumns
 import app.musikus.database.MusikusDatabase
+import app.musikus.database.SectionWithLibraryItem
 import app.musikus.database.entities.BaseModelDisplayAttributes
 import app.musikus.database.entities.SectionCreationAttributes
 import app.musikus.database.entities.SectionModel
@@ -128,6 +129,10 @@ abstract class SectionDao(
     @RewriteQueriesToDropUnusedColumns
     @Query("SELECT * FROM section WHERE session_id=:sessionId")
     abstract fun getForSession(sessionId: UUID): List<Section>
+
+    @RewriteQueriesToDropUnusedColumns
+    @Query("SELECT * FROM section WHERE session_id=:sessionId ORDER BY start_timestamp DESC")
+    abstract fun getOrderedForSession(sessionId: UUID): Flow<List<SectionWithLibraryItem>>
 
     @RewriteQueriesToDropUnusedColumns
     @Query("SELECT * FROM section " +

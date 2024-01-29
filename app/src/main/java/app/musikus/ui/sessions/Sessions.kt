@@ -13,9 +13,6 @@
 
 package app.musikus.ui.sessions
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
@@ -56,13 +53,7 @@ import app.musikus.shared.ThemeMenu
 import app.musikus.ui.MainUIEvent
 import app.musikus.ui.MainUiState
 import app.musikus.ui.theme.spacing
-import app.musikus.utils.DateFormat
-import app.musikus.utils.DurationFormat
-import app.musikus.utils.getDurationString
-import app.musikus.utils.musikusFormat
-import java.time.ZonedDateTime
 import java.util.UUID
-import kotlin.time.Duration
 
 @OptIn(
     ExperimentalMaterial3Api::class,
@@ -184,10 +175,9 @@ fun Sessions(
                     top = paddingValues.calculateTopPadding() + 16.dp,
                     bottom = paddingValues.calculateBottomPadding() + 56.dp,
                 ),
-//                verticalArrangement = Arrangement.spacedBy(24.dp),
                 state = sessionsListState,
             ) {
-                contentUiState.sessionsForDaysForMonths.forEach { sessionsForDaysForMonth ->
+                contentUiState.monthData.forEach { monthDatum ->
                     item {
                         Row (
                             modifier = Modifier
@@ -195,53 +185,35 @@ fun Sessions(
                                 .animateItemPlacement(),
                         ) {
                             MonthHeader(
-                                month = sessionsForDaysForMonth
-                                    .sessionsForDays.first()
-                                    .sessions.first()
-                                    .startTimestamp.month.name,
+                                month = monthDatum.month,
                                 onClickHandler = {
-                                    viewModel.onMonthHeaderClicked(sessionsForDaysForMonth.specificMonth)
+                                    viewModel.onMonthHeaderClicked(monthDatum.specificMonth)
                                 }
                             )
                         }
                     }
-                    val monthVisible = sessionsForDaysForMonth.specificMonth in contentUiState.expandedMonths
-                    sessionsForDaysForMonth.sessionsForDays.forEach { sessionsForDay ->
+                    monthDatum.dayData.forEach { dayDatum ->
                         item {
-                            AnimatedVisibility(
-                                modifier = Modifier.animateItemPlacement(),
-                                visible = monthVisible,
-                                enter = scaleIn(),
-                                exit = fadeOut()
-                            ) {
-                                DayHeader(
-                                    timestamp = sessionsForDay.sessions.first().startTimestamp,
-                                    totalPracticeDuration = sessionsForDay.totalPracticeDuration
-                                )
-                            }
+                            DayHeader(
+                                date = dayDatum.date,
+                                totalPracticeDuration = dayDatum.totalPracticeDuration
+                            )
                         }
                         items(
-                            items = sessionsForDay.sessions,
+                            items = dayDatum.sessions,
                             key = { it.session.id }
                         ) { session ->
-                            AnimatedVisibility(
-                                modifier = Modifier.animateItemPlacement(),
-                                visible = monthVisible,
-                                enter = scaleIn(),
-                                exit = fadeOut()
+                            Selectable(
+                                modifier = Modifier.padding(vertical = MaterialTheme.spacing.small),
+                                selected = session.session.id in contentUiState.selectedSessions,
+                                onShortClick = {
+                                    viewModel.onSessionClicked(session.session.id)
+                                },
+                                onLongClick = {
+                                    viewModel.onSessionClicked(session.session.id, longClick = true)
+                                },
                             ) {
-                                Selectable(
-                                    modifier = Modifier.padding(vertical = MaterialTheme.spacing.small),
-                                    selected = session in contentUiState.selectedSessions,
-                                    onShortClick = {
-                                        viewModel.onSessionClicked(session)
-                                    },
-                                    onLongClick = {
-                                        viewModel.onSessionClicked(session, longClick = true)
-                                    },
-                                ) {
-                                    SessionCard(sessionWithSectionsWithLibraryItems = session)
-                                }
+                                SessionCard(sessionWithSectionsWithLibraryItems = session)
                             }
                         }
                     }
@@ -275,8 +247,8 @@ fun MonthHeader(
 
 @Composable
 fun DayHeader(
-    timestamp: ZonedDateTime,
-    totalPracticeDuration: Duration,
+    date: String,
+    totalPracticeDuration: String,
 ) {
     Row(
         modifier = Modifier
@@ -285,13 +257,11 @@ fun DayHeader(
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(
-            text = timestamp.musikusFormat(
-                listOf(DateFormat.WEEKDAY_ABBREVIATED, DateFormat.DAY_MONTH_YEAR)
-            ),
+            text = date,
             style = MaterialTheme.typography.bodyLarge
         )
         Text(
-            text = getDurationString(totalPracticeDuration, DurationFormat.HUMAN_PRETTY).toString(),
+            text = totalPracticeDuration,
             style = MaterialTheme.typography.bodyLarge
         )
     }

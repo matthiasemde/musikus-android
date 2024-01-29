@@ -11,11 +11,10 @@ package app.musikus.ui.sessions
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.musikus.database.SessionWithSectionsWithLibraryItems
-import app.musikus.database.daos.Session
 import app.musikus.shared.TopBarUiState
 import app.musikus.usecase.sessions.SessionsUseCases
-import app.musikus.utils.specificDay
-import app.musikus.utils.specificMonth
+import app.musikus.utils.DurationFormat
+import app.musikus.utils.getDurationString
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -26,19 +25,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
-import kotlin.time.Duration
-import kotlin.time.Duration.Companion.seconds
 
-data class SessionsForDaysForMonth (
-    val specificMonth: Int,
-    val sessionsForDays: List<SessionsForDay>
-)
-
-data class SessionsForDay (
-    val specificDay: Int,
-    val totalPracticeDuration: Duration,
-    val sessions: List<SessionWithSectionsWithLibraryItems>
-)
 
 /** Ui state data classes */
 
@@ -53,9 +40,8 @@ data class SessionsActionModeUiState(
 )
 
 data class SessionsContentUiState (
-    val sessionsForDaysForMonths: List<SessionsForDaysForMonth>,
-    val selectedSessions: Set<SessionWithSectionsWithLibraryItems>,
-    val expandedMonths: Set<Int>,
+    val monthData: List<MonthUiDatum>,
+    val selectedSessions: Set<UUID>,
 
     val showHint: Boolean,
 )
@@ -66,16 +52,27 @@ data class SessionsUiState(
     val contentUiState: SessionsContentUiState,
 )
 
+data class MonthUiDatum(
+    val month: String,
+    val specificMonth: Int,
+    val dayData: List<DayUiDatum>,
+)
+data class DayUiDatum(
+    val date: String,
+    val totalPracticeDuration: String,
+    val sessions: List<SessionWithSectionsWithLibraryItems>,
+)
+
 @HiltViewModel
 class SessionsViewModel @Inject constructor(
     private val sessionsUseCases: SessionsUseCases,
 ) : ViewModel() {
 
-    private var _sessionsCache = emptyList<Session>()
+    private var _sessionIdsCache = emptyList<UUID>()
 
 
     /** Imported Flows */
-    private val sessions = sessionsUseCases.getAll().stateIn(
+    private val sessionsForDaysForMonths = sessionsUseCases.getAll().stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = emptyList()
@@ -83,109 +80,53 @@ class SessionsViewModel @Inject constructor(
 
     /** Own state flow */
 
-    private val _selectedSessions = MutableStateFlow<Set<SessionWithSectionsWithLibraryItems>>(emptySet())
+    private val _selectedSessions = MutableStateFlow<Set<UUID>>(emptySet())
 
     private val _expandedMonths = MutableStateFlow<Set<Int>>(emptySet())
 
 
     /** Combining imported and own state flows */
 
+    private var areSessionsLoaded = false
 
-    private val sessionsForDaysForMonths = sessions.map { sessions ->
-        if(sessions.isEmpty()) {
-            return@map emptyList()
-        }
-
-        val sessionsForDaysForMonths = mutableListOf<SessionsForDaysForMonth>()
-
-        // initialize variables to keep track of the current month, current day,
-        // the index of its first session and the total duration of the current day
-        var (currentDay, currentMonth) = sessions.first().startTimestamp.let { timestamp ->
-            Pair(timestamp.specificDay, timestamp.specificMonth)
-        }
-
-        var firstSessionOfDayIndex = 0
-        var totalPracticeDuration = 0.seconds
-
-        val sessionsForDaysForMonth = mutableListOf<SessionsForDay>()
-
-        // then loop trough all of the sessions...
-        sessions.forEachIndexed { index, session ->
-            // ...get the month and day...
-            val sessionTimestamp = session.startTimestamp
-            val (day, month) = sessionTimestamp.let { timestamp ->
-                Pair(timestamp.specificDay, timestamp.specificMonth)
-            }
-
-            val sessionPracticeDuration = session.sections.sumOf {
-                it.section.duration.inWholeSeconds
-            }.seconds
-
-            // ...and compare them to the current day first.
-            if(day == currentDay) {
-                totalPracticeDuration += sessionPracticeDuration
-                return@forEachIndexed
-            }
-
-            // if it differs, create a new SessionsForDay object
-            // with the respective subList of sessions
-            sessionsForDaysForMonth.add(
-                SessionsForDay(
-                    specificDay = currentDay,
-                    totalPracticeDuration = totalPracticeDuration,
-                    sessions = sessions.slice(firstSessionOfDayIndex until index)
-                )
-            )
-
-            // reset / set tracking variables appropriately
-            currentDay = day
-            firstSessionOfDayIndex = index
-            totalPracticeDuration = sessionPracticeDuration
-
-            // then compare the month to the current month.
-            // if it differs, create a new SessionsForDaysForMonth object
-            // storing the specific month along with the list of SessionsForDay objects
-            if(month == currentMonth) return@forEachIndexed
-
-            sessionsForDaysForMonths.add(
-                SessionsForDaysForMonth(
-                    specificMonth = currentMonth,
-                    sessionsForDays = sessionsForDaysForMonth.toList()
-                )
-            )
-
-            // set tracking variable and reset list
-            currentMonth = month
-            sessionsForDaysForMonth.clear()
-        }
-
-        // importantly, add the last SessionsForDaysForMonth object
-        sessionsForDaysForMonth.add(
-            SessionsForDay(
-                specificDay = currentDay,
-                totalPracticeDuration = totalPracticeDuration,
-                sessions = sessions.slice(firstSessionOfDayIndex until sessions.size)
-            )
-        )
-        sessionsForDaysForMonths.add(
-            SessionsForDaysForMonth(
-                specificMonth = currentMonth,
-                sessionsForDays = sessionsForDaysForMonth
-            )
-        )
+    private val monthUiData = combine(
+        sessionsForDaysForMonths,
+        _expandedMonths,
+    ) { sessionsForDaysForMonths, expandedMonths ->
+        if (sessionsForDaysForMonths.isEmpty()) return@combine emptyList()
 
         // if there are no expanded months, expand the latest month
-        if(_expandedMonths.value.isEmpty()) {
+        if (!areSessionsLoaded) {
+            areSessionsLoaded = true
             _expandedMonths.update { setOf(sessionsForDaysForMonths.first().specificMonth) }
+            return@combine emptyList()
         }
 
-        // finally return the list as immutable
-        sessionsForDaysForMonths.toList()
+        sessionsForDaysForMonths.map { sessionsForDaysForMonth ->
+            MonthUiDatum(
+                month = sessionsForDaysForMonth.month.name,
+                specificMonth = sessionsForDaysForMonth.specificMonth,
+                dayData =
+                    if(sessionsForDaysForMonth.specificMonth in expandedMonths)
+                        sessionsForDaysForMonth.sessionsForDays.map { sessionsForDay ->
+                            DayUiDatum(
+                                date = sessionsForDay.day,
+                                totalPracticeDuration = getDurationString(
+                                    sessionsForDay.totalPracticeDuration,
+                                    DurationFormat.HUMAN_PRETTY
+                                ).toString(),
+                                sessions = sessionsForDay.sessions,
+                            )
+                        }
+                    else emptyList()
+            )
+        }
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = emptyList()
     )
+
 
     /** Composing the Ui state */
     private val topBarUiState = MutableStateFlow(
@@ -210,23 +151,20 @@ class SessionsViewModel @Inject constructor(
     )
 
     private val contentUiState = combine(
-        sessionsForDaysForMonths,
+        monthUiData,
         _selectedSessions,
-        _expandedMonths,
-    ) { sessionsForDaysForMonths, selectedSessions, expandedMonths ->
+    ) { monthUiData, selectedSessions ->
         SessionsContentUiState(
-            sessionsForDaysForMonths = sessionsForDaysForMonths,
+            monthData = monthUiData,
             selectedSessions = selectedSessions,
-            expandedMonths = expandedMonths,
-            showHint = sessionsForDaysForMonths.isEmpty(),
+            showHint = monthUiData.isEmpty(),
         )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = SessionsContentUiState(
-            sessionsForDaysForMonths = emptyList(),
-            selectedSessions = emptySet(),
-            expandedMonths = emptySet(),
+            monthData = monthUiData.value,
+            selectedSessions = _selectedSessions.value,
             showHint = true,
         )
     )
@@ -254,22 +192,21 @@ class SessionsViewModel @Inject constructor(
     /** Mutators */
 
     fun onEditAction(editSession: (id: UUID) -> Unit) {
-        assert(_selectedSessions.value.size == 1)
-        editSession(_selectedSessions.value.first().session.id)
+        editSession(_selectedSessions.value.single())
         clearActionMode()
     }
 
     fun onDeleteAction() {
         viewModelScope.launch {
-            _sessionsCache = _selectedSessions.value.map { it.session }
-            sessionsUseCases.delete(_sessionsCache.map { it.id })
+            _sessionIdsCache = _selectedSessions.value.toList()
+            sessionsUseCases.delete(_selectedSessions.value.toList())
             clearActionMode()
         }
     }
 
     fun onRestoreAction() {
         viewModelScope.launch {
-            sessionsUseCases.restore(_sessionsCache.map { it.id })
+            sessionsUseCases.restore(_sessionIdsCache.toList())
         }
     }
 
@@ -288,11 +225,11 @@ class SessionsViewModel @Inject constructor(
     }
 
     fun onSessionClicked(
-        session: SessionWithSectionsWithLibraryItems,
+        sessionId: UUID,
         longClick: Boolean = false
     ) {
         if(longClick) {
-            _selectedSessions.update { it + session }
+            _selectedSessions.update { it + sessionId }
             return
         }
 
@@ -300,10 +237,10 @@ class SessionsViewModel @Inject constructor(
         if(!actionModeUiState.value.isActionMode) {
             // go to session detail screen
         } else {
-            if(_selectedSessions.value.contains(session)) {
-                _selectedSessions.update { it - session }
+            if(_selectedSessions.value.contains(sessionId)) {
+                _selectedSessions.update { it - sessionId }
             } else {
-                _selectedSessions.update { it + session }
+                _selectedSessions.update { it + sessionId }
             }
         }
     }
