@@ -66,6 +66,7 @@ data class SectionModel (
     @ColumnInfo(name="library_item_id", index = true) override var libraryItemId: UUID,
     @ColumnInfo(name="duration_seconds") var durationSeconds: Int,
     @ColumnInfo(name="start_timestamp") override var startTimestamp: ZonedDateTime,
+    @ColumnInfo(name = "start_timestamp_seconds", index = true) val startTimestampSeconds: Long,
 ) : BaseModel(), ISectionCreationAttributes, ISectionUpdateAttributes {
 
     @get:Ignore
@@ -83,6 +84,7 @@ data class SectionModel (
         sessionId = sessionId,
         libraryItemId = libraryItemId,
         durationSeconds = duration.inWholeSeconds.toInt(),
-        startTimestamp = startTimestamp
+        startTimestamp = startTimestamp,
+        startTimestampSeconds = startTimestamp.toEpochSecond(),
     )
 }

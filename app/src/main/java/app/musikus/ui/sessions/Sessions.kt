@@ -26,6 +26,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
@@ -111,6 +112,9 @@ fun Sessions(
                 title = { Text(text = topBarUiState.title) },
                 scrollBehavior = scrollBehavior,
                 actions = {
+                    IconButton(onClick = viewModel::benchmark) {
+                        Icon(Icons.Default.Speed, contentDescription = "benchmark")
+                    }
                     IconButton(onClick = { mainEventHandler(MainUIEvent.ShowMainMenu) } ) {
                         Icon(Icons.Default.MoreVert, contentDescription = "more")
                         MainMenu (

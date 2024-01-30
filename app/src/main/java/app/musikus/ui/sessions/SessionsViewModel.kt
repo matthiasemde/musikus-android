@@ -8,23 +8,30 @@
 
 package app.musikus.ui.sessions
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.musikus.database.SessionWithSectionsWithLibraryItems
+import app.musikus.di.IoScope
+import app.musikus.repository.SessionRepository
 import app.musikus.shared.TopBarUiState
 import app.musikus.usecase.sessions.SessionsUseCases
 import app.musikus.utils.DurationFormat
 import app.musikus.utils.getDurationString
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import java.util.UUID
 import javax.inject.Inject
+import kotlin.system.measureTimeMillis
 
 
 /** Ui state data classes */
@@ -66,7 +73,13 @@ data class DayUiDatum(
 @HiltViewModel
 class SessionsViewModel @Inject constructor(
     private val sessionsUseCases: SessionsUseCases,
+    private val sessionRepository: SessionRepository,
+    @IoScope private val ioScope: CoroutineScope,
 ) : ViewModel() {
+
+//    init {
+//        benchmark()
+//    }
 
     private var _sessionIdsCache = emptyList<UUID>()
 
@@ -242,6 +255,17 @@ class SessionsViewModel @Inject constructor(
             } else {
                 _selectedSessions.update { it + sessionId }
             }
+        }
+    }
+
+    fun benchmark() {
+//        ioScope.launch {
+        viewModelScope.launch {
+            val elapsedTimes = (1..10).map { measureTimeMillis {
+                sessionRepository.sessionsWithSectionsWithLibraryItemsOrdered.first()
+//                sessionRepository.getSessionsWithSectionsWithLibraryItemsOrdered()
+            } }
+            Log.d("BENCHMARK", "(Coroutine) Time for getting sessions: ${elapsedTimes.joinToString(", ") { "${it}ms" }}")
         }
     }
 }

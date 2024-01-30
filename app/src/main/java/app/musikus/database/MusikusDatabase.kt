@@ -42,7 +42,6 @@ import app.musikus.database.entities.SessionModel
 import app.musikus.utils.IdProvider
 import app.musikus.utils.TimeProvider
 import app.musikus.utils.prepopulateDatabase
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.runBlocking
 import java.nio.ByteBuffer
 import java.time.ZonedDateTime
@@ -160,7 +159,8 @@ class ZonedDateTimeConverter {
 
     @TypeConverter
     fun toZonedDateTime(zonedDateTimeString: String?): ZonedDateTime? {
-        return zonedDateTimeString?.let { ZonedDateTime.parse(it) }
+//        return zonedDateTimeString?.let { ZonedDateTime.parse(it) }
+        return TimeProvider.uninitializedDateTime
     }
 }
 

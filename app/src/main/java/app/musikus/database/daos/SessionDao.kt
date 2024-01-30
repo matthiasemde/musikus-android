@@ -13,7 +13,6 @@
 package app.musikus.database.daos
 
 import android.database.Cursor
-import android.util.Log
 import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Query
@@ -30,13 +29,13 @@ import app.musikus.database.entities.SessionModel
 import app.musikus.database.entities.SessionUpdateAttributes
 import app.musikus.database.entities.SoftDeleteModelDisplayAttributes
 import app.musikus.database.toDatabaseInterpretableString
+import app.musikus.utils.TimeProvider
 import app.musikus.utils.Timeframe
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.launch
 import java.time.ZonedDateTime
 import java.util.UUID
 import kotlin.time.Duration
@@ -150,12 +149,47 @@ abstract class SessionDao(
     abstract fun getAllWithSectionsWithLibraryItemsAsFlow()
         : Flow<List<SessionWithSectionsWithLibraryItems>>
 
+    @Transaction
+    @RewriteQueriesToDropUnusedColumns
+    @Query(
+        "SELECT session.* FROM session " +
+            "JOIN (" +
+                "SELECT session_id, min(datetime(SUBSTR(start_timestamp, 1, INSTR(start_timestamp, '[') - 1))) AS start_timestamp FROM section " +
+                "GROUP BY session_id" +
+            ") AS ordered_ids_with_start_timestamp ON ordered_ids_with_start_timestamp.session_id = session.id " +
+            "WHERE deleted=0 " +
+            "ORDER BY ordered_ids_with_start_timestamp.start_timestamp DESC " +
+//            "LIMIT 50" +
+            ""
+    )
+    abstract fun getOrderedWithSectionsWithLibraryItems()
+        : Flow<List<SessionWithSectionsWithLibraryItems>>
+
+    @Transaction
+    @RewriteQueriesToDropUnusedColumns
+    @Query(
+        "SELECT session.* FROM session " +
+            "JOIN (" +
+                "SELECT session_id, min(start_timestamp_seconds) AS start_timestamp FROM section " +
+                "GROUP BY session_id" +
+            ") AS ordered_ids_with_start_timestamp ON ordered_ids_with_start_timestamp.session_id = session.id " +
+            "WHERE deleted=0 " +
+            "ORDER BY ordered_ids_with_start_timestamp.start_timestamp DESC " +
+//            "LIMIT 50" +
+            ""
+    )
+    abstract fun getOrderedWithSectionsWithLibraryItemsUsingEpochSeconds()
+        : Flow<List<SessionWithSectionsWithLibraryItems>>
+
 
     @RewriteQueriesToDropUnusedColumns
     @Query(
         "SELECT * FROM session " +
             "WHERE deleted=0 " +
-            "ORDER BY (SELECT min(datetime(SUBSTR(start_timestamp, 1, INSTR(start_timestamp, '[') - 1))) FROM section WHERE section.session_id = session.id) DESC"
+//            "ORDER BY (SELECT min(datetime(SUBSTR(start_timestamp, 1, INSTR(start_timestamp, '[') - 1))) FROM section WHERE section.session_id = session.id) DESC"
+            "ORDER BY (SELECT min(datetime(SUBSTR(start_timestamp, 1, INSTR(start_timestamp, '[') - 1))) FROM section WHERE section.session_id = session.id) DESC " +
+//             "LIMIT 10" +
+            ""
     )
     abstract fun getOrdered()
         : Flow<List<Session>>
@@ -195,6 +229,7 @@ abstract class SessionDao(
             "JOIN section ON section.session_id = session.id " +
             "JOIN library_item ON section.library_item_id = library_item.id " +
             "WHERE session.deleted = 0 " +
+//            "ORDER BY start_timestamp_seconds DESC"
             "ORDER BY datetime(SUBSTR(section.start_timestamp, 1, INSTR(section.start_timestamp, '[') - 1)) DESC"
     )
     protected abstract fun getCursorForAllSessionsWithSectionsWithLibraryItems(
@@ -218,6 +253,8 @@ abstract class SessionDao(
 
             val sessions = mutableListOf<SessionWithSectionsWithLibraryItems>()
 
+            val dummyId = UUIDConverter.fromInt(1)
+
             if (cursor.moveToFirst()) {
                 var session : Session? = null
                 val sections = mutableListOf<SectionWithLibraryItem>()
@@ -239,12 +276,15 @@ abstract class SessionDao(
 
                         session = Session(
                             id = sessionId,
+//                            createdAt = TimeProvider.uninitializedDateTime,
                             createdAt = cursor.getString(columnIndexSessionCreatedAt).let {
                                 zonedDateTimeConverter.toZonedDateTime(it)
                             } ?: throw InvalidSessionException("Session createdAt must not be null"),
+//                            modifiedAt = TimeProvider.uninitializedDateTime,
                             modifiedAt = cursor.getString(columnIndexSessionModifiedAt).let {
                                 zonedDateTimeConverter.toZonedDateTime(it)
                             } ?: throw InvalidSessionException("Session modifiedAt must not be null"),
+//                            breakDurationSeconds = 0L,
                             breakDurationSeconds = cursor.getLong(columnIndexSessionBreakDurationSeconds),
                             rating = 1,
                             comment = ""
@@ -254,20 +294,22 @@ abstract class SessionDao(
                     sections.add(
                         SectionWithLibraryItem(
                             section = Section(
+//                                id = dummyId,
                                 id = cursor.getBlob(columnIndexSectionId).let {
                                     uuidConverter.fromByte(it)
                                 } ?: throw InvalidSessionException("Section id must not be null"),
+//                                startTimestamp = TimeProvider.uninitializedDateTime,
                                 startTimestamp = cursor.getString(columnIndexSectionStartTimestamp).let {
                                     zonedDateTimeConverter.toZonedDateTime(it)
                                 } ?: throw InvalidSessionException("Section startTimestamp must not be null"),
                                 durationSeconds = 100,
-                                libraryItemId = UUIDConverter.fromInt(1),
+                                libraryItemId = dummyId,
                                 sessionId = sessionId
                             ),
                             libraryItem = LibraryItem(
-                                id = UUIDConverter.fromInt(1),
-                                createdAt = ZonedDateTime.now(),
-                                modifiedAt = ZonedDateTime.now(),
+                                id = dummyId,
+                                createdAt = TimeProvider.uninitializedDateTime,
+                                modifiedAt = TimeProvider.uninitializedDateTime,
                                 name = "Test",
                                 colorIndex = 3,
                                 customOrder = null,

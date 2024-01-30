@@ -131,7 +131,7 @@ abstract class SectionDao(
     abstract fun getForSession(sessionId: UUID): List<Section>
 
     @RewriteQueriesToDropUnusedColumns
-    @Query("SELECT * FROM section WHERE session_id=:sessionId ORDER BY start_timestamp DESC")
+    @Query("SELECT * FROM section WHERE session_id=:sessionId ORDER BY datetime(SUBSTR(start_timestamp, 1, INSTR(start_timestamp, '[') - 1)) DESC")
     abstract fun getOrderedForSession(sessionId: UUID): Flow<List<SectionWithLibraryItem>>
 
     @RewriteQueriesToDropUnusedColumns

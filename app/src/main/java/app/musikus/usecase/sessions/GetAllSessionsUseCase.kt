@@ -8,7 +8,6 @@
 
 package app.musikus.usecase.sessions
 
-import android.util.Log
 import app.musikus.repository.SessionRepository
 import app.musikus.utils.specificDay
 import app.musikus.utils.specificMonth
@@ -21,12 +20,10 @@ class GetAllSessionsUseCase(
 ) {
 
     operator fun invoke() : Flow<List<SessionsForDaysForMonth>> {
-        return sessionsRepository.sessionsWithSectionsWithLibraryItems.map { sessions ->
+        return sessionsRepository.sessionsWithSectionsWithLibraryItemsOrderedSeconds.map { sessions ->
             if (sessions.isEmpty()) {
                 return@map emptyList()
             }
-
-            Log.d("GetAllSessionsUseCase", "sessions: ${sessions.first()}")
 
             val sessionsForDaysForMonths = mutableListOf<SessionsForDaysForMonth>()
 

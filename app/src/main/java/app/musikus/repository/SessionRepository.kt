@@ -8,6 +8,7 @@
 
 package app.musikus.repository
 
+import android.util.Log
 import app.musikus.database.GoalInstanceWithDescriptionWithLibraryItems
 import app.musikus.database.SessionWithSectionsWithLibraryItems
 import app.musikus.database.daos.GoalDescription
@@ -24,14 +25,22 @@ import app.musikus.database.entities.SessionUpdateAttributes
 import app.musikus.utils.TimeProvider
 import app.musikus.utils.Timeframe
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 import java.time.ZonedDateTime
 import java.util.UUID
+import kotlin.system.measureTimeMillis
 
 interface SessionRepository {
     val sessions : Flow<List<Session>>
     val sections : Flow<List<Section>>
 
-    val sessionsWithSectionsWithLibraryItems : Flow<List<SessionWithSectionsWithLibraryItems>>
+    val sessionsWithSectionsWithLibraryItemsUnordered : Flow<List<SessionWithSectionsWithLibraryItems>>
+    val sessionsWithSectionsWithLibraryItemsOrdered : Flow<List<SessionWithSectionsWithLibraryItems>>
+    val sessionsWithSectionsWithLibraryItemsOrderedSeconds : Flow<List<SessionWithSectionsWithLibraryItems>>
+    val sessionsWithSectionsWithLibraryItemsOrderedComposite : Flow<List<SessionWithSectionsWithLibraryItems>>
+    suspend fun getSessionsWithSectionsWithLibraryItemsOrdered() : List<SessionWithSectionsWithLibraryItems>
+
     suspend fun getSession(id: UUID) : SessionWithSectionsWithLibraryItems
 
     fun sessionsInTimeframe (timeframe: Timeframe) : Flow<List<SessionWithSectionsWithLibraryItems>>
@@ -89,7 +98,14 @@ class SessionRepositoryImpl(
     override val sessions = sessionDao.getAllAsFlow()
     override val sections = sectionDao.getAllAsFlow()
 
-    override val sessionsWithSectionsWithLibraryItems = sessionDao.getOrderedWithOrderedSections()
+    override val sessionsWithSectionsWithLibraryItemsUnordered = sessionDao.getAllWithSectionsWithLibraryItemsAsFlow()
+    override val sessionsWithSectionsWithLibraryItemsOrdered = sessionDao.getOrderedWithSectionsWithLibraryItems()
+    override val sessionsWithSectionsWithLibraryItemsOrderedSeconds = sessionDao.getOrderedWithSectionsWithLibraryItemsUsingEpochSeconds()
+    override val sessionsWithSectionsWithLibraryItemsOrderedComposite = sessionDao.getOrderedWithOrderedSections()
+    override suspend fun getSessionsWithSectionsWithLibraryItemsOrdered(): List<SessionWithSectionsWithLibraryItems> {
+        return sessionDao.getAllWithSectionsWithLibraryItems()
+    }
+
     override suspend fun getSession(
         id: UUID
     ): SessionWithSectionsWithLibraryItems {
