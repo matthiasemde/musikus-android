@@ -44,6 +44,7 @@ import app.musikus.utils.TimeProvider
 import app.musikus.utils.prepopulateDatabase
 import kotlinx.coroutines.runBlocking
 import java.nio.ByteBuffer
+import java.time.OffsetDateTime
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
@@ -154,13 +155,17 @@ fun ZonedDateTime.toDatabaseInterpretableString(): String =
 class ZonedDateTimeConverter {
     @TypeConverter
     fun fromZonedDateTime(zonedDateTime: ZonedDateTime?): String? {
-        return zonedDateTime?.toDatabaseStorageString()
+        return zonedDateTime?.format(formatter)
     }
 
     @TypeConverter
     fun toZonedDateTime(zonedDateTimeString: String?): ZonedDateTime? {
-//        return zonedDateTimeString?.let { ZonedDateTime.parse(it) }
-        return TimeProvider.uninitializedDateTime
+        return zonedDateTimeString?.let { OffsetDateTime.parse(it, formatter).toZonedDateTime() }
+//        return TimeProvider.uninitializedDateTime
+    }
+
+    companion object {
+        val formatter: DateTimeFormatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME
     }
 }
 

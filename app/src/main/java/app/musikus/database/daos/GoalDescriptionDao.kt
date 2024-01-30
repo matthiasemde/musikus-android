@@ -237,10 +237,10 @@ abstract class GoalDescriptionDao(
         "SELECT * FROM goal_description " +
         "JOIN goal_instance ON goal_instance.goal_description_id = goal_description.id " +
         "WHERE goal_description.id = :descriptionId " +
-        "AND datetime(SUBSTR(start_timestamp, 1, INSTR(start_timestamp, '[') - 1)) >= datetime(:startTimestamp) " +
+        "AND datetime(start_timestamp) >= datetime(:startTimestamp) " +
         "AND (" +
         "end_timestamp IS NULL " +
-        "OR datetime(:endTimestamp) < datetime(SUBSTR(end_timestamp, 1, INSTR(end_timestamp, '[') - 1))" +
+        "OR datetime(:endTimestamp) < datetime(end_timestamp)" +
         ") "
     )
     protected abstract fun directGetForDescriptionAndTimeframe(

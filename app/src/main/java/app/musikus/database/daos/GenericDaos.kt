@@ -376,7 +376,7 @@ abstract class SoftDeleteDao<
         query: SimpleSQLiteQuery = SimpleSQLiteQuery(
             query = ("DELETE FROM $tableName WHERE " +
                 "deleted=1 " +
-                "AND (datetime(SUBSTR(modified_at, 1, INSTR(modified_at, '[') - 1)) < " +
+                "AND (datetime(modified_at) < " +
                     "datetime('${database.timeProvider.now().toDatabaseInterpretableString()}', '-1 month')" +
                     ");")
         )

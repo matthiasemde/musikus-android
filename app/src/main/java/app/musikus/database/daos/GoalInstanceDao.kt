@@ -259,10 +259,10 @@ abstract class GoalInstanceDao(
     @RewriteQueriesToDropUnusedColumns
     @Query(
         "SELECT * FROM goal_instance " +
-            "WHERE datetime(SUBSTR(start_timestamp, 1, INSTR(start_timestamp, '[') - 1)) <= datetime(:now) " +
+            "WHERE datetime(start_timestamp) <= datetime(:now) " +
             "AND (" +
                 "end_timestamp IS NULL " +
-                "OR datetime(:now) < datetime(SUBSTR(end_timestamp, 1, INSTR(end_timestamp, '[') - 1))" +
+                "OR datetime(:now) < datetime(end_timestamp)" +
             ") " +
             "AND goal_description_id IN (" +
                 "SELECT id FROM goal_description " +
@@ -298,7 +298,7 @@ abstract class GoalInstanceDao(
                 "WHERE deleted=0" +
                 ")" +
                 "AND end_timestamp IS NOT NULL " +
-                "ORDER BY datetime(SUBSTR(end_timestamp, 1, INSTR(end_timestamp, '[') - 1)) DESC " +
+                "ORDER BY datetime(end_timestamp) DESC " +
                 "LIMIT :n"
     )
     abstract fun getLastNCompleted(

@@ -261,8 +261,9 @@ class SessionsViewModel @Inject constructor(
     fun benchmark() {
 //        ioScope.launch {
         viewModelScope.launch {
+            lateinit var sessions : List<SessionWithSectionsWithLibraryItems>
             val elapsedTimes = (1..10).map { measureTimeMillis {
-                sessionRepository.sessionsWithSectionsWithLibraryItemsOrdered.first()
+                sessions = sessionRepository.sessionsWithSectionsWithLibraryItemsOrdered.first()
 //                sessionRepository.getSessionsWithSectionsWithLibraryItemsOrdered()
             } }
             Log.d("BENCHMARK", "(Coroutine) Time for getting sessions: ${elapsedTimes.joinToString(", ") { "${it}ms" }}")

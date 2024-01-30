@@ -114,7 +114,7 @@ abstract class LibraryItemDao(
             "deleted=1 " +
             "AND (NOT EXISTS (SELECT id FROM section WHERE library_item_id = library_item.id)) " +
             "AND (NOT EXISTS (SELECT id FROM goal_description_library_item_cross_ref WHERE library_item_id = library_item.id)) " +
-            "AND (datetime(SUBSTR(modified_at, 1, INSTR(modified_at, '[') - 1)) < datetime(:now, '-1 month'));"
+            "AND (datetime(modified_at) < datetime(:now, '-1 month'));"
     )
     protected abstract suspend fun cleanItems(
         now : String = database.timeProvider.now().toDatabaseInterpretableString()

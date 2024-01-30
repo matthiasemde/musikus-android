@@ -154,7 +154,7 @@ abstract class SessionDao(
     @Query(
         "SELECT session.* FROM session " +
             "JOIN (" +
-                "SELECT session_id, min(datetime(SUBSTR(start_timestamp, 1, INSTR(start_timestamp, '[') - 1))) AS start_timestamp FROM section " +
+                "SELECT session_id, min(datetime(start_timestamp)) AS start_timestamp FROM section " +
                 "GROUP BY session_id" +
             ") AS ordered_ids_with_start_timestamp ON ordered_ids_with_start_timestamp.session_id = session.id " +
             "WHERE deleted=0 " +
@@ -187,7 +187,7 @@ abstract class SessionDao(
         "SELECT * FROM session " +
             "WHERE deleted=0 " +
 //            "ORDER BY (SELECT min(datetime(SUBSTR(start_timestamp, 1, INSTR(start_timestamp, '[') - 1))) FROM section WHERE section.session_id = session.id) DESC"
-            "ORDER BY (SELECT min(datetime(SUBSTR(start_timestamp, 1, INSTR(start_timestamp, '[') - 1))) FROM section WHERE section.session_id = session.id) DESC " +
+            "ORDER BY (SELECT min(datetime(start_timestamp)) FROM section WHERE section.session_id = session.id) DESC " +
 //             "LIMIT 10" +
             ""
     )
@@ -230,7 +230,7 @@ abstract class SessionDao(
             "JOIN library_item ON section.library_item_id = library_item.id " +
             "WHERE session.deleted = 0 " +
 //            "ORDER BY start_timestamp_seconds DESC"
-            "ORDER BY datetime(SUBSTR(section.start_timestamp, 1, INSTR(section.start_timestamp, '[') - 1)) DESC"
+            "ORDER BY datetime(section.start_timestamp) DESC"
     )
     protected abstract fun getCursorForAllSessionsWithSectionsWithLibraryItems(
     ) : Cursor
@@ -338,8 +338,8 @@ abstract class SessionDao(
     @Transaction
     @RewriteQueriesToDropUnusedColumns
     @Query("SELECT * FROM session " +
-            "WHERE datetime(:startTimestamp) <= (SELECT min(datetime(SUBSTR(start_timestamp, 1, INSTR(start_timestamp, '[') - 1))) FROM section WHERE section.session_id = session.id) " +
-            "AND datetime(:endTimestamp) > (SELECT min(datetime(SUBSTR(start_timestamp, 1, INSTR(start_timestamp, '[') - 1))) FROM section WHERE section.session_id = session.id) " +
+            "WHERE datetime(:startTimestamp) <= (SELECT min(start_timestamp) FROM section WHERE section.session_id = session.id) " +
+            "AND datetime(:endTimestamp) > (SELECT min(start_timestamp) FROM section WHERE section.session_id = session.id) " +
             "AND deleted=0"
     )
     abstract fun directGetFromTimeframe(
