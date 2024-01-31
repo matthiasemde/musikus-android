@@ -36,8 +36,6 @@ class EditSessionViewModel @Inject constructor(
     sessionsUseCases: SessionsUseCases,
 ) : ViewModel() {
 
-    /** Repositories */
-
     /** Own state flows */
     private val _sessionToEditId: MutableStateFlow<UUID?> = MutableStateFlow(null)
     private val _showConfirmationDialog = MutableStateFlow(false)
