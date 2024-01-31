@@ -49,7 +49,8 @@ class FakeSessionRepository(
 
     override fun sessionsInTimeframe(timeframe: Timeframe): Flow<List<SessionWithSectionsWithLibraryItems>> {
         return flowOf(_sessions.filter { session ->
-            session.startTimestamp in timeframe.first..timeframe.second
+            session.startTimestamp >= timeframe.first &&
+            session.startTimestamp < timeframe.second
         })
     }
 

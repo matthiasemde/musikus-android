@@ -12,6 +12,7 @@
 
 package app.musikus.database.daos
 
+import android.util.Log
 import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Query
@@ -179,8 +180,8 @@ abstract class SessionDao(
                 ON ids_with_start_timestamp.session_id = session.id
         
         WHERE 
-            datetime(:startTimestamp) <= start_timestamp AND
-            datetime(:endTimestamp) > start_timestamp AND
+            start_timestamp >= datetime(:startTimestamp) AND
+            start_timestamp < datetime(:endTimestamp) AND
             deleted=0
     """)
     protected abstract fun directGetFromTimeframe(
