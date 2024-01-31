@@ -8,5 +8,7 @@ data class UserPreferencesUseCases (
     val selectTheme: SelectThemeUseCase,
     val selectFolderSortMode: SelectFolderSortModeUseCase,
     val selectItemSortMode: SelectItemSortModeUseCase,
-    val selectGoalSortMode: SelectGoalsSortModeUseCase
+    val selectGoalSortMode: SelectGoalsSortModeUseCase,
+    val getMetronomeSettings: GetMetronomeSettingsUseCase,
+    val changeMetronomeSettings: ChangeMetronomeSettingsUseCase
 )

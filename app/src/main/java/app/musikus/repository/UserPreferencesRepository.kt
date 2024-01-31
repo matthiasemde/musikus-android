@@ -12,11 +12,13 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import app.musikus.database.daos.LibraryFolder
 import app.musikus.database.daos.LibraryItem
 import app.musikus.datastore.ThemeSelections
 import app.musikus.datastore.UserPreferences
+import app.musikus.ui.activesession.metronome.MetronomeSettings
 import app.musikus.utils.GoalSortInfo
 import app.musikus.utils.GoalsSortMode
 import app.musikus.utils.LibraryFolderSortMode
@@ -29,13 +31,21 @@ import kotlinx.coroutines.flow.map
 object PreferenceKeys {
     val THEME = stringPreferencesKey("theme")
     val APPINTRO_DONE = booleanPreferencesKey("appintro_done")
+
     val LIBRARY_FOLDER_SORT_MODE = stringPreferencesKey("library_folder_sort_mode")
     val LIBRARY_FOLDER_SORT_DIRECTION = stringPreferencesKey("library_folder_sort_direction")
+
     val LIBRARY_ITEM_SORT_MODE = stringPreferencesKey("library_item_sort_mode")
     val LIBRARY_ITEM_SORT_DIRECTION = stringPreferencesKey("library_item_sort_direction")
+
     val GOALS_SORT_MODE = stringPreferencesKey("goals_sort_mode")
     val GOALS_SORT_DIRECTION = stringPreferencesKey("goals_sort_direction")
+
     val SHOW_PAUSED_GOALS = booleanPreferencesKey("show_paused_goals")
+
+    val METRONOME_BPM = intPreferencesKey("metronome_bpm")
+    val METRONOME_BEATS_PER_BAR = intPreferencesKey("metronome_beats_per_bar")
+    val METRONOME_CLICKS_PER_BEAT = intPreferencesKey("metronome_clicks_per_beat")
 }
 
 interface UserPreferencesRepository {
@@ -45,6 +55,8 @@ interface UserPreferencesRepository {
     val itemSortInfo: Flow<SortInfo<LibraryItem>>
     val folderSortInfo: Flow<SortInfo<LibraryFolder>>
     val goalSortInfo: Flow<GoalSortInfo>
+
+    val metronomeSettings: Flow<MetronomeSettings>
 
     /** Mutators */
     suspend fun updateTheme(theme: ThemeSelections)
@@ -56,6 +68,8 @@ interface UserPreferencesRepository {
     suspend fun updateShowPausedGoals(value: Boolean)
 
     suspend fun updateAppIntroDone(value: Boolean)
+
+    suspend fun updateMetronomeSettings(settings: MetronomeSettings)
 }
 
 class UserPreferencesRepositoryImpl(
@@ -77,6 +91,12 @@ class UserPreferencesRepositoryImpl(
             goalsSortDirection = SortDirection.valueOrDefault(preferences[PreferenceKeys.GOALS_SORT_DIRECTION]),
 
             showPausedGoals =  preferences[PreferenceKeys.SHOW_PAUSED_GOALS] ?: true,
+
+            metronomeSettings = MetronomeSettings(
+                bpm = preferences[PreferenceKeys.METRONOME_BPM] ?: MetronomeSettings.DEFAULT.bpm,
+                beatsPerBar = preferences[PreferenceKeys.METRONOME_BEATS_PER_BAR] ?: MetronomeSettings.DEFAULT.beatsPerBar,
+                clicksPerBeat = preferences[PreferenceKeys.METRONOME_CLICKS_PER_BEAT] ?: MetronomeSettings.DEFAULT.clicksPerBeat
+            )
         )
     }
 
@@ -108,6 +128,9 @@ class UserPreferencesRepositoryImpl(
             )
         }
 
+    override val metronomeSettings: Flow<MetronomeSettings> = userPreferences.map { preferences ->
+        preferences.metronomeSettings
+    }
 
     /** Mutators */
     override suspend fun updateTheme(theme: ThemeSelections) {
@@ -146,5 +169,13 @@ class UserPreferencesRepositoryImpl(
 
     override suspend fun updateAppIntroDone(value: Boolean) {
         TODO("Not yet implemented")
+    }
+
+    override suspend fun updateMetronomeSettings(settings: MetronomeSettings) {
+        dataStore.edit { preferences ->
+            preferences[PreferenceKeys.METRONOME_BPM] = settings.bpm
+            preferences[PreferenceKeys.METRONOME_BEATS_PER_BAR] = settings.beatsPerBar
+            preferences[PreferenceKeys.METRONOME_CLICKS_PER_BEAT] = settings.clicksPerBeat
+        }
     }
 }

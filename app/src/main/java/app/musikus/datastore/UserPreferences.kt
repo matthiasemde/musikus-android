@@ -8,6 +8,7 @@
 
 package app.musikus.datastore
 
+import app.musikus.ui.activesession.metronome.MetronomeSettings
 import app.musikus.utils.GoalsSortMode
 import app.musikus.utils.LibraryFolderSortMode
 import app.musikus.utils.LibraryItemSortMode
@@ -49,4 +50,7 @@ data class UserPreferences (
 
     // Show paused goals
     val showPausedGoals: Boolean,
+
+    // Metronome
+    val metronomeSettings: MetronomeSettings
 )
