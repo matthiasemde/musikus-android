@@ -48,8 +48,9 @@ data class SessionWithSectionsWithLibraryItems(
     )
     val sections: List<SectionWithLibraryItem>
 ) {
-    val startTimestamp
-        get() = sections.minOf { it.section.startTimestamp }
+    val startTimestamp by lazy {
+        sections.minOf { it.section.startTimestamp }
+    }
 }
 
 data class GoalDescriptionWithLibraryItems(

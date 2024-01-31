@@ -89,7 +89,7 @@ class SessionRepositoryImpl(
     override val sessions = sessionDao.getAllAsFlow()
     override val sections = sectionDao.getAllAsFlow()
 
-    override val sessionsWithSectionsWithLibraryItems = sessionDao.getOrderedWithOrderedSections()
+    override val sessionsWithSectionsWithLibraryItems = sessionDao.getOrderedWithSectionsWithLibraryItems()
     override suspend fun getSession(
         id: UUID
     ): SessionWithSectionsWithLibraryItems {

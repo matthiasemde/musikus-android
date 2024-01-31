@@ -42,7 +42,6 @@ import app.musikus.database.entities.SessionModel
 import app.musikus.utils.IdProvider
 import app.musikus.utils.TimeProvider
 import app.musikus.utils.prepopulateDatabase
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.runBlocking
 import java.nio.ByteBuffer
 import java.time.ZonedDateTime
@@ -146,21 +145,22 @@ fun UUID.toDBString() =
         buffer.array().joinToString(separator = "") { "%02x".format(it) }
     }
 
-fun ZonedDateTime.toDatabaseStorageString(): String =
-    this.format(DateTimeFormatter.ISO_ZONED_DATE_TIME)
-
 fun ZonedDateTime.toDatabaseInterpretableString(): String =
     this.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
 
 class ZonedDateTimeConverter {
     @TypeConverter
     fun fromZonedDateTime(zonedDateTime: ZonedDateTime?): String? {
-        return zonedDateTime?.toDatabaseStorageString()
+        return zonedDateTime?.format(formatter)
     }
 
     @TypeConverter
     fun toZonedDateTime(zonedDateTimeString: String?): ZonedDateTime? {
-        return zonedDateTimeString?.let { ZonedDateTime.parse(it) }
+        return zonedDateTimeString?.let { ZonedDateTime.parse(it, formatter) }
+    }
+
+    companion object {
+        val formatter: DateTimeFormatter = DateTimeFormatter.ISO_ZONED_DATE_TIME
     }
 }
 
