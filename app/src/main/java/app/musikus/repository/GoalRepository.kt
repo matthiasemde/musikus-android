@@ -18,7 +18,6 @@ import app.musikus.database.entities.GoalDescriptionCreationAttributes
 import app.musikus.database.entities.GoalDescriptionUpdateAttributes
 import app.musikus.database.entities.GoalInstanceCreationAttributes
 import app.musikus.database.entities.GoalInstanceUpdateAttributes
-import app.musikus.utils.Timeframe
 import kotlinx.coroutines.flow.Flow
 import java.util.UUID
 
@@ -29,11 +28,6 @@ interface GoalRepository {
 
     fun getInstance(id: UUID): Flow<GoalInstance>
     fun getInstanceByPreviousInstanceId(previousInstanceId: UUID): Flow<GoalInstance>
-
-    fun getSpecificGoalInTimeframe(
-        descriptionId: UUID,
-        timeframe: Timeframe
-    ) : Flow<GoalDescriptionWithInstancesAndLibraryItems>
 
     suspend fun getLatestInstances(): List<GoalInstanceWithDescription>
 
@@ -97,13 +91,6 @@ class GoalRepositoryImpl(
 
     override fun getInstanceByPreviousInstanceId(previousInstanceId: UUID): Flow<GoalInstance> {
         return instanceDao.getByPreviousInstanceId(previousInstanceId)
-    }
-
-    override fun getSpecificGoalInTimeframe(
-        descriptionId: UUID,
-        timeframe: Timeframe
-    ): Flow<GoalDescriptionWithInstancesAndLibraryItems> {
-        return descriptionDao.getForDescriptionAndTimeframe(descriptionId, timeframe)
     }
 
     override suspend fun getLatestInstances(): List<GoalInstanceWithDescription> {
