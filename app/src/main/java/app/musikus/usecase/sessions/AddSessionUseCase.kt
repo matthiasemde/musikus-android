@@ -14,12 +14,12 @@ import app.musikus.database.daos.InvalidSessionException
 import app.musikus.database.entities.SectionCreationAttributes
 import app.musikus.database.entities.SessionCreationAttributes
 import app.musikus.repository.SessionRepository
-import app.musikus.usecase.library.GetItemsUseCase
+import app.musikus.usecase.library.GetAllLibraryItemsUseCase
 import kotlinx.coroutines.flow.first
 
 class AddSessionUseCase(
     private val sessionRepository: SessionRepository,
-    private val getLibraryItems: GetItemsUseCase,
+    private val getLibraryItems: GetAllLibraryItemsUseCase,
 ) {
 
     @Throws(InvalidSessionException::class, InvalidSectionException::class)

@@ -9,6 +9,7 @@
 package app.musikus.usecase.goals
 
 import app.musikus.database.GoalDescriptionWithLibraryItems
+import app.musikus.database.Nullable
 import app.musikus.database.UUIDConverter
 import app.musikus.database.daos.GoalDescription
 import app.musikus.database.daos.GoalInstance
@@ -18,6 +19,7 @@ import app.musikus.database.entities.GoalInstanceCreationAttributes
 import app.musikus.database.entities.GoalPeriodUnit
 import app.musikus.database.entities.GoalProgressType
 import app.musikus.database.entities.GoalType
+import app.musikus.database.entities.LibraryItemCreationAttributes
 import app.musikus.database.entities.SectionCreationAttributes
 import app.musikus.database.entities.SessionCreationAttributes
 import app.musikus.repository.FakeGoalRepository
@@ -97,6 +99,13 @@ class GetCurrentGoalsUseCaseTest {
         )
 
         runBlocking {
+            fakeLibraryRepository.addItem(
+                LibraryItemCreationAttributes(
+                    name = "Test item",
+                    colorIndex = 5,
+                    libraryFolderId = Nullable(null)
+                )
+            )
 
             fakeGoalRepository.addNewGoal(
                 descriptionCreationAttributes = baseDescription,
@@ -105,7 +114,7 @@ class GetCurrentGoalsUseCaseTest {
             )
 
             fakeGoalRepository.updateGoalDescriptions(listOf(
-                UUIDConverter.fromInt(1) to
+                UUIDConverter.fromInt(2) to
                 GoalDescriptionUpdateAttributes(paused = true)
             ))
 
@@ -134,7 +143,7 @@ class GetCurrentGoalsUseCaseTest {
             GoalInstanceWithProgressAndDescriptionWithLibraryItems(
                 description = GoalDescriptionWithLibraryItems(
                     description = GoalDescription(
-                        id = UUIDConverter.fromInt(1),
+                        id = UUIDConverter.fromInt(2),
                         createdAt = FakeTimeProvider.START_TIME,
                         modifiedAt = FakeTimeProvider.START_TIME,
                         type = GoalType.NON_SPECIFIC,
@@ -149,10 +158,10 @@ class GetCurrentGoalsUseCaseTest {
                     libraryItems = emptyList()
                 ),
                 instance = GoalInstance(
-                    id = UUIDConverter.fromInt(2),
+                    id = UUIDConverter.fromInt(3),
                     createdAt = FakeTimeProvider.START_TIME,
                     modifiedAt = FakeTimeProvider.START_TIME,
-                    descriptionId = UUIDConverter.fromInt(1),
+                    descriptionId = UUIDConverter.fromInt(2),
                     previousInstanceId = null,
                     startTimestamp = FakeTimeProvider.START_TIME,
                     targetSeconds = 3600,

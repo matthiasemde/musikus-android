@@ -27,8 +27,10 @@ class AddFolderUseCaseTest {
     private lateinit var fakeTimeProvider: FakeTimeProvider
     private lateinit var fakeIdProvider: FakeIdProvider
 
-    private lateinit var addFolder: AddFolderUseCase
     private lateinit var fakeLibraryRepository: FakeLibraryRepository
+
+    /** SUT */
+    private lateinit var addFolder: AddFolderUseCase
 
     private val validFolderCreationAttributes = LibraryFolderCreationAttributes(
         name = "Test",
@@ -39,6 +41,8 @@ class AddFolderUseCaseTest {
         fakeTimeProvider = FakeTimeProvider()
         fakeIdProvider = FakeIdProvider()
         fakeLibraryRepository = FakeLibraryRepository(fakeTimeProvider, fakeIdProvider)
+
+        /** SUT */
         addFolder = AddFolderUseCase(fakeLibraryRepository)
     }
 

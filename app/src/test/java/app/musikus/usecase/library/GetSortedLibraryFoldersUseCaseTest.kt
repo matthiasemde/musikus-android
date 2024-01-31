@@ -20,6 +20,7 @@ import app.musikus.utils.LibraryFolderSortMode
 import app.musikus.utils.SortDirection
 import app.musikus.utils.SortInfo
 import app.musikus.database.UUIDConverter
+import app.musikus.usecase.userpreferences.GetFolderSortInfoUseCase
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -30,13 +31,15 @@ import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
 
 
-class GetFoldersUseCaseTest {
+class GetSortedLibraryFoldersUseCaseTest {
     private lateinit var fakeTimeProvider: FakeTimeProvider
     private lateinit var fakeIdProvider: FakeIdProvider
 
-    private lateinit var getFolders: GetFoldersUseCase
     private lateinit var fakeLibraryRepository: FakeLibraryRepository
     private lateinit var fakeUserPreferencesRepository: FakeUserPreferencesRepository
+
+    /** SUT */
+    private lateinit var getSortedFolders: GetSortedLibraryFoldersUseCase
 
     @BeforeEach
     fun setUp() {
@@ -44,9 +47,11 @@ class GetFoldersUseCaseTest {
         fakeIdProvider = FakeIdProvider()
         fakeLibraryRepository = FakeLibraryRepository(fakeTimeProvider, fakeIdProvider)
         fakeUserPreferencesRepository = FakeUserPreferencesRepository()
-        getFolders = GetFoldersUseCase(
+
+        /** SUT */
+        getSortedFolders = GetSortedLibraryFoldersUseCase(
             libraryRepository = fakeLibraryRepository,
-            userPreferencesRepository = fakeUserPreferencesRepository,
+            getFolderSortInfo = GetFolderSortInfoUseCase(fakeUserPreferencesRepository),
         )
 
         val folderCreationAttributes = listOf(
@@ -86,7 +91,7 @@ class GetFoldersUseCaseTest {
 
     @Test
     fun `Get folders, list contains all folders`() = runTest {
-        val folders = getFolders().first()
+        val folders = getSortedFolders().first()
 
         assertThat(folders).containsExactly(
             LibraryFolderWithItems(
@@ -144,7 +149,7 @@ class GetFoldersUseCaseTest {
 
     @Test
     fun `Get folders, folders are sorted by 'date added' descending`() = runTest {
-        val folderIds = getFolders().first().map { it.folder.id }
+        val folderIds = getSortedFolders().first().map { it.folder.id }
 
         val expectedFolderIds = listOf(5, 4, 3, 2, 1).map { UUIDConverter.fromInt(it) }
 
@@ -164,7 +169,7 @@ class GetFoldersUseCaseTest {
         val expectedFolderIds = listOf(1, 2, 3, 4, 5).map { UUIDConverter.fromInt(it) }
 
         // Get folders and map them to their id and map them to their id
-        val folderIs = getFolders().first().map { it.folder.id }
+        val folderIs = getSortedFolders().first().map { it.folder.id }
 
         // Check if folders are sorted correctly
         assertThat(folderIs).isEqualTo(expectedFolderIds)
@@ -183,7 +188,7 @@ class GetFoldersUseCaseTest {
         val expectedFolderIds = listOf(3, 5, 4, 2, 1).map { UUIDConverter.fromInt(it) }
 
         // Get folders and map them to their id
-        val folderIds = getFolders().first().map { it.folder.id }
+        val folderIds = getSortedFolders().first().map { it.folder.id }
 
         // Check if folders are sorted correctly
         assertThat(folderIds).isEqualTo(expectedFolderIds)
@@ -202,7 +207,7 @@ class GetFoldersUseCaseTest {
         val expectedFolderIds = listOf(1, 2, 4, 5, 3).map { UUIDConverter.fromInt(it) }
 
         // Get folders and map them to their id
-        val folderIds = getFolders().first().map { it.folder.id }
+        val folderIds = getSortedFolders().first().map { it.folder.id }
 
         // Check if folders are sorted correctly
         assertThat(folderIds).isEqualTo(expectedFolderIds)
@@ -227,7 +232,7 @@ class GetFoldersUseCaseTest {
         ).map { UUIDConverter.fromInt(it) }
 
         // Get folders and map them to their id
-        val folderIds = getFolders().first().map { it.folder.id }
+        val folderIds = getSortedFolders().first().map { it.folder.id }
 
         // Check if folders are sorted correctly
         assertThat(folderIds).isEqualTo(expectedFolderIds)
@@ -252,7 +257,7 @@ class GetFoldersUseCaseTest {
         ).map { UUIDConverter.fromInt(it) }
 
         // Get folders and map them to their id
-        val folderIds = getFolders().first().map { it.folder.id }
+        val folderIds = getSortedFolders().first().map { it.folder.id }
 
         // Check if folders are sorted correctly
         assertThat(folderIds).isEqualTo(expectedOutcome)

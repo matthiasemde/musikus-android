@@ -20,6 +20,7 @@ import app.musikus.database.entities.GoalProgressType
 import app.musikus.database.entities.GoalType
 import app.musikus.repository.FakeGoalRepository
 import app.musikus.repository.FakeLibraryRepository
+import app.musikus.usecase.library.GetAllLibraryItemsUseCase
 import app.musikus.utils.FakeIdProvider
 import app.musikus.utils.FakeTimeProvider
 import com.google.common.truth.Truth.assertThat
@@ -56,7 +57,11 @@ class PauseGoalsUseCaseTest {
         fakeLibraryRepository = FakeLibraryRepository(fakeTimeProvider, fakeIdProvider)
         fakeGoalRepository = FakeGoalRepository(fakeLibraryRepository, fakeTimeProvider, fakeIdProvider)
 
-        addGoalUseCase = AddGoalUseCase(fakeGoalRepository, fakeLibraryRepository, fakeTimeProvider)
+        addGoalUseCase = AddGoalUseCase(
+            fakeGoalRepository,
+            GetAllLibraryItemsUseCase(fakeLibraryRepository),
+            fakeTimeProvider
+        )
         cleanFutureGoalInstancesUseCase = CleanFutureGoalInstancesUseCase(fakeGoalRepository, fakeTimeProvider)
         archiveGoalsUseCase = ArchiveGoalsUseCase(fakeGoalRepository, cleanFutureGoalInstancesUseCase)
         updateGoalsUseCase = UpdateGoalsUseCase(fakeGoalRepository, archiveGoalsUseCase, fakeTimeProvider)

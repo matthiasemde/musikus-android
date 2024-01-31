@@ -30,8 +30,10 @@ class AddItemUseCaseTest {
     private lateinit var fakeTimeProvider: FakeTimeProvider
     private lateinit var fakeIdProvider: FakeIdProvider
 
-    private lateinit var addItem: AddItemUseCase
     private lateinit var fakeLibraryRepository: FakeLibraryRepository
+
+    /** SUT */
+    private lateinit var addItem: AddItemUseCase
 
     private val validItemCreationAttributes = LibraryItemCreationAttributes(
         name = "test",
@@ -44,6 +46,8 @@ class AddItemUseCaseTest {
         fakeTimeProvider = FakeTimeProvider()
         fakeIdProvider = FakeIdProvider()
         fakeLibraryRepository = FakeLibraryRepository(fakeTimeProvider, fakeIdProvider)
+
+        /** SUT */
         addItem = AddItemUseCase(fakeLibraryRepository)
 
         val folderCreationAttributes = LibraryFolderCreationAttributes(

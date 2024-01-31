@@ -48,7 +48,9 @@ class FakeSessionRepository(
     }
 
     override fun sessionsInTimeframe(timeframe: Timeframe): Flow<List<SessionWithSectionsWithLibraryItems>> {
-        throw NotImplementedError()
+        return flowOf(_sessions.filter { session ->
+            session.startTimestamp in timeframe.first..timeframe.second
+        })
     }
 
     override suspend fun sectionsForSession(sessionId: UUID): List<Section> {

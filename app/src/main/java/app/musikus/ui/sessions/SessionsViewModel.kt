@@ -72,7 +72,7 @@ class SessionsViewModel @Inject constructor(
 
 
     /** Imported Flows */
-    private val sessionsForDaysForMonths = sessionsUseCases.getAll().stateIn(
+    private val sessionsForDaysForMonths = sessionsUseCases.getSessionsForDaysForMonths().stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = emptyList()

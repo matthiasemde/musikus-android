@@ -30,14 +30,18 @@ class EditItemUseCaseTest {
     private lateinit var fakeTimeProvider: FakeTimeProvider
     private lateinit var fakeIdProvider: FakeIdProvider
 
-    private lateinit var editItem: EditItemUseCase
     private lateinit var fakeLibraryRepository: FakeLibraryRepository
+
+    /** SUT */
+    private lateinit var editItem: EditItemUseCase
 
     @BeforeEach
     fun setUp() {
         fakeTimeProvider = FakeTimeProvider()
         fakeIdProvider = FakeIdProvider()
         fakeLibraryRepository = FakeLibraryRepository(fakeTimeProvider, fakeIdProvider)
+
+        /** SUT */
         editItem = EditItemUseCase(fakeLibraryRepository)
 
         val itemCreationAttributes = LibraryItemCreationAttributes(

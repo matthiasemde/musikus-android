@@ -24,6 +24,7 @@ import app.musikus.database.entities.InvalidGoalDescriptionException
 import app.musikus.database.entities.InvalidGoalInstanceException
 import app.musikus.repository.FakeGoalRepository
 import app.musikus.repository.FakeLibraryRepository
+import app.musikus.usecase.library.GetAllLibraryItemsUseCase
 import app.musikus.utils.FakeIdProvider
 import app.musikus.utils.FakeTimeProvider
 import com.google.common.truth.Truth.assertThat
@@ -61,7 +62,11 @@ class EditGoalUseCaseTest {
         fakeGoalRepository = FakeGoalRepository(fakeLibraryRepository, fakeTimeProvider, fakeIdProvider)
 
         cleanFutureGoalInstancesUseCase = CleanFutureGoalInstancesUseCase(fakeGoalRepository, fakeTimeProvider)
-        addGoal = AddGoalUseCase(fakeGoalRepository, fakeLibraryRepository, fakeTimeProvider)
+        addGoal = AddGoalUseCase(
+            fakeGoalRepository,
+            GetAllLibraryItemsUseCase(fakeLibraryRepository),
+            fakeTimeProvider
+        )
         archiveGoalsUseCase = ArchiveGoalsUseCase(fakeGoalRepository, cleanFutureGoalInstancesUseCase)
         updateGoalsUseCase = UpdateGoalsUseCase(fakeGoalRepository, archiveGoalsUseCase, fakeTimeProvider)
 

@@ -24,6 +24,7 @@ import app.musikus.database.entities.InvalidGoalInstanceException
 import app.musikus.database.entities.LibraryItemCreationAttributes
 import app.musikus.repository.FakeGoalRepository
 import app.musikus.repository.FakeLibraryRepository
+import app.musikus.usecase.library.GetAllLibraryItemsUseCase
 import app.musikus.utils.FakeIdProvider
 import app.musikus.utils.FakeTimeProvider
 import com.google.common.truth.Truth.assertThat
@@ -64,8 +65,10 @@ class AddGoalUseCaseTest {
         fakeLibraryRepository = FakeLibraryRepository(fakeTimeProvider, fakeIdProvider)
         fakeGoalRepository = FakeGoalRepository(fakeLibraryRepository, fakeTimeProvider, fakeIdProvider)
 
+        val getItems = GetAllLibraryItemsUseCase(fakeLibraryRepository)
+
         /** SUT */
-        addGoal = AddGoalUseCase(fakeGoalRepository, fakeLibraryRepository, fakeTimeProvider)
+        addGoal = AddGoalUseCase(fakeGoalRepository, getItems, fakeTimeProvider)
     }
 
     @Test

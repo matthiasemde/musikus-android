@@ -125,7 +125,7 @@ class GoalsViewModel @Inject constructor(
         initialValue = emptyList()
     )
 
-    private val items = libraryUseCases.getItems().stateIn(
+    private val items = libraryUseCases.getSortedItems().stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = emptyList()

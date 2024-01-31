@@ -19,7 +19,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import java.util.UUID
 
-class GetItemsUseCase(
+class GetSortedLibraryItemsUseCase(
     private val libraryRepository: LibraryRepository,
     private val getItemSortInfo: GetItemSortInfoUseCase,
 ) {

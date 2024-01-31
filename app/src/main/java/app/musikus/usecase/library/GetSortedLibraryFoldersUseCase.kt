@@ -16,7 +16,7 @@ import app.musikus.utils.sorted
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 
-class GetFoldersUseCase(
+class GetSortedLibraryFoldersUseCase(
     private val libraryRepository: LibraryRepository,
     private val getFolderSortInfo: GetFolderSortInfoUseCase,
 ) {

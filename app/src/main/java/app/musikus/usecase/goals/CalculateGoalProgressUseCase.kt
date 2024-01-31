@@ -9,6 +9,7 @@ import app.musikus.usecase.sessions.GetSessionsInTimeframeUseCase
 import app.musikus.utils.TimeProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import java.util.UUID
 import kotlin.time.Duration
@@ -51,6 +52,8 @@ class CalculateGoalProgressUseCase(
     operator fun invoke(
         goals: List<GoalInstanceWithDescriptionWithLibraryItems>
     ): Flow<List<Duration>> {
+        if(goals.isEmpty()) return flowOf(emptyList())
+
         return combine(goals.map { goal ->
             val descriptionWithLibraryItems = goal.description
             val description = descriptionWithLibraryItems.description
@@ -72,6 +75,8 @@ class CalculateGoalProgressUseCase(
     operator fun invoke(
         goals: List<GoalDescriptionWithInstancesAndLibraryItems>
     ): Flow<List<List<Duration>>> {
+        if(goals.isEmpty()) return flowOf(emptyList())
+
         return combine(goals.map { goal ->
             val libraryItemIds = goal.libraryItems.map { it.id }
 

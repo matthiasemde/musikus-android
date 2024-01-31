@@ -16,14 +16,14 @@ import app.musikus.database.entities.GoalType
 import app.musikus.database.entities.InvalidGoalDescriptionException
 import app.musikus.database.entities.InvalidGoalInstanceException
 import app.musikus.repository.GoalRepository
-import app.musikus.usecase.library.GetItemsUseCase
+import app.musikus.usecase.library.GetAllLibraryItemsUseCase
 import app.musikus.utils.TimeProvider
 import kotlinx.coroutines.flow.first
 import java.util.UUID
 
 class AddGoalUseCase(
     private val goalRepository: GoalRepository,
-    private val getLibraryItems: GetItemsUseCase,
+    private val getLibraryItems: GetAllLibraryItemsUseCase,
     private val timeProvider: TimeProvider
 ) {
 

@@ -69,7 +69,7 @@ class LibraryViewModel @Inject constructor(
 
     /** Imported flows */
 
-    private val foldersWithItems = libraryUseCases.getFolders().stateIn(
+    private val foldersWithItems = libraryUseCases.getSortedFolders().stateIn(
         scope = viewModelScope,
         started = WhileSubscribed(5000),
         initialValue = emptyList()
@@ -120,7 +120,7 @@ class LibraryViewModel @Inject constructor(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private val items = _activeFolder.flatMapLatest { activeFolder ->
-        libraryUseCases.getItems(
+        libraryUseCases.getSortedItems(
             folderId = Nullable(activeFolder?.id)
         ).stateIn(
             scope = viewModelScope,

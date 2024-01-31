@@ -17,6 +17,7 @@ import app.musikus.database.entities.GoalProgressType
 import app.musikus.database.entities.GoalType
 import app.musikus.repository.FakeUserPreferencesRepository
 import app.musikus.repository.UserPreferencesRepository
+import app.musikus.usecase.userpreferences.GetGoalSortInfoUseCase
 import app.musikus.utils.FakeTimeProvider
 import app.musikus.utils.GoalsSortMode
 import app.musikus.utils.SortDirection
@@ -132,7 +133,9 @@ class SortGoalsUseCaseTest {
         fakeUserPreferencesRepository = FakeUserPreferencesRepository()
 
         /** SUT */
-        sortGoals = SortGoalsUseCase(fakeUserPreferencesRepository)
+        sortGoals = SortGoalsUseCase(
+            GetGoalSortInfoUseCase(fakeUserPreferencesRepository)
+        )
     }
 
     @Test

@@ -16,6 +16,7 @@ import app.musikus.database.entities.LibraryItemCreationAttributes
 import app.musikus.database.entities.LibraryItemUpdateAttributes
 import app.musikus.repository.FakeLibraryRepository
 import app.musikus.repository.FakeUserPreferencesRepository
+import app.musikus.usecase.userpreferences.GetItemSortInfoUseCase
 import app.musikus.utils.FakeIdProvider
 import app.musikus.utils.FakeTimeProvider
 import app.musikus.utils.LibraryItemSortMode
@@ -31,13 +32,15 @@ import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
 
 
-class GetItemsUseCaseTest {
+class GetSortedLibraryItemsUseCaseTest {
     private lateinit var fakeTimeProvider: FakeTimeProvider
     private lateinit var fakeIdProvider: FakeIdProvider
 
-    private lateinit var getItems: GetItemsUseCase
     private lateinit var fakeLibraryRepository: FakeLibraryRepository
     private lateinit var fakeUserPreferencesRepository: FakeUserPreferencesRepository
+
+    /** SUT */
+    private lateinit var getSortedItems: GetSortedLibraryItemsUseCase
 
     @BeforeEach
     fun setUp() {
@@ -45,9 +48,11 @@ class GetItemsUseCaseTest {
         fakeIdProvider = FakeIdProvider()
         fakeLibraryRepository = FakeLibraryRepository(fakeTimeProvider, fakeIdProvider)
         fakeUserPreferencesRepository = FakeUserPreferencesRepository()
-        getItems = GetItemsUseCase(
+
+        /** SUT */
+        getSortedItems = GetSortedLibraryItemsUseCase(
             libraryRepository = fakeLibraryRepository,
-            userPreferencesRepository = fakeUserPreferencesRepository,
+            getItemSortInfo = GetItemSortInfoUseCase(fakeUserPreferencesRepository),
         )
 
         val itemCreationAttributes = listOf(
@@ -112,7 +117,7 @@ class GetItemsUseCaseTest {
 
     @Test
     fun `Get items from root folder, list contains all items`() = runTest {
-        val items = getItems(folderId = Nullable(null)).first()
+        val items = getSortedItems(folderId = Nullable(null)).first()
 
         assertThat(items).containsExactly(
             LibraryItem(
@@ -165,7 +170,7 @@ class GetItemsUseCaseTest {
 
     @Test
     fun `Get items from 'TestFolder', list contains all items`() = runTest {
-        val items = getItems(folderId = Nullable(UUIDConverter.fromInt(1))).first()
+        val items = getSortedItems(folderId = Nullable(UUIDConverter.fromInt(1))).first()
 
         assertThat(items).containsExactly(
             LibraryItem(
@@ -219,7 +224,7 @@ class GetItemsUseCaseTest {
     @Test
     fun `Get items, items are sorted by 'date added' descending`() = runTest {
         // Get items and map them to their ids
-        val itemIds = getItems(folderId = Nullable(null)).first().map { it.id }
+        val itemIds = getSortedItems(folderId = Nullable(null)).first().map { it.id }
 
         // Check if items are sorted by 'date added' descending by default
         val expectedItemIds = listOf(10, 8, 6, 4, 2).map { UUIDConverter.fromInt(it) }
@@ -238,7 +243,7 @@ class GetItemsUseCaseTest {
         )
 
         // Get items and map them to their ids
-        val itemIds = getItems(folderId = Nullable(null)).first().map { it.id }
+        val itemIds = getSortedItems(folderId = Nullable(null)).first().map { it.id }
 
         // Check if items are sorted correctly
         val expectedItemIds = listOf(2, 4, 6, 8, 10).map { UUIDConverter.fromInt(it) }
@@ -257,7 +262,7 @@ class GetItemsUseCaseTest {
         )
 
         // Get items and map them to their ids
-        val itemIds = getItems(folderId = Nullable(null)).first().map { it.id }
+        val itemIds = getSortedItems(folderId = Nullable(null)).first().map { it.id }
 
         // Check if items are sorted correctly
         val expectedItemIds = listOf(6, 10, 8, 4, 2).map { UUIDConverter.fromInt(it) }
@@ -276,7 +281,7 @@ class GetItemsUseCaseTest {
         )
 
         // Get items and map them to their ids
-        val itemIds = getItems(folderId = Nullable(null)).first().map { it.id }
+        val itemIds = getSortedItems(folderId = Nullable(null)).first().map { it.id }
 
         // Check if items are sorted correctly
         val expectedItemIds = listOf(2, 4, 8, 10, 6).map { UUIDConverter.fromInt(it) }
@@ -295,7 +300,7 @@ class GetItemsUseCaseTest {
         )
 
         // Get items and map them to their ids
-        val itemIds = getItems(folderId = Nullable(null)).first().map { it.id }
+        val itemIds = getSortedItems(folderId = Nullable(null)).first().map { it.id }
 
         // Check if items are sorted correctly
         val expectedItemIds = listOf(
@@ -320,7 +325,7 @@ class GetItemsUseCaseTest {
         )
 
         // Get items and map them to their ids
-        val itemIds = getItems(folderId = Nullable(null)).first().map { it.id }
+        val itemIds = getSortedItems(folderId = Nullable(null)).first().map { it.id }
 
         // Check if items are sorted correctly
         val expectedItemIds = listOf(
@@ -345,7 +350,7 @@ class GetItemsUseCaseTest {
         )
 
         // Get items and map them to their ids
-        val itemIds = getItems(folderId = Nullable(null)).first().map { it.id }
+        val itemIds = getSortedItems(folderId = Nullable(null)).first().map { it.id }
 
         // Check if items are sorted correctly
         val expectedItemIds = listOf(
@@ -370,7 +375,7 @@ class GetItemsUseCaseTest {
         )
 
         // Get items and map them to their ids
-        val itemIds = getItems(folderId = Nullable(null)).first().map { it.id }
+        val itemIds = getSortedItems(folderId = Nullable(null)).first().map { it.id }
 
         // Check if items are sorted correctly
         val expectedItemIds = listOf(

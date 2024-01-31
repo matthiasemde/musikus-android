@@ -30,14 +30,18 @@ class EditFolderUseCaseTest {
     private lateinit var fakeTimeProvider: FakeTimeProvider
     private lateinit var fakeIdProvider: FakeIdProvider
 
-    private lateinit var editFolder: EditFolderUseCase
     private lateinit var fakeLibraryRepository: FakeLibraryRepository
+
+    /** SUT */
+    private lateinit var editFolder: EditFolderUseCase
 
     @BeforeEach
     fun setUp() {
         fakeTimeProvider = FakeTimeProvider()
         fakeIdProvider = FakeIdProvider()
         fakeLibraryRepository = FakeLibraryRepository(fakeTimeProvider, fakeIdProvider)
+
+        /** SUT */
         editFolder = EditFolderUseCase(fakeLibraryRepository)
 
         val folderCreationAttributes = LibraryFolderCreationAttributes("TestFolder")

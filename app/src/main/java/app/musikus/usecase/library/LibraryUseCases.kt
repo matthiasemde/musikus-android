@@ -9,8 +9,9 @@
 package app.musikus.usecase.library
 
 data class LibraryUseCases(
-    val getItems: GetItemsUseCase,
-    val getFolders: GetFoldersUseCase,
+    val getAllItems: GetAllLibraryItemsUseCase,
+    val getSortedItems: GetSortedLibraryItemsUseCase,
+    val getSortedFolders: GetSortedLibraryFoldersUseCase,
     val addItem: AddItemUseCase,
     val addFolder: AddFolderUseCase,
     val editItem: EditItemUseCase,

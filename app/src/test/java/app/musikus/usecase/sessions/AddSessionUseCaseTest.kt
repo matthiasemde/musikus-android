@@ -22,6 +22,7 @@ import app.musikus.database.entities.SectionCreationAttributes
 import app.musikus.database.entities.SessionCreationAttributes
 import app.musikus.repository.FakeLibraryRepository
 import app.musikus.repository.FakeSessionRepository
+import app.musikus.usecase.library.GetAllLibraryItemsUseCase
 import app.musikus.utils.FakeIdProvider
 import app.musikus.utils.FakeTimeProvider
 import com.google.common.truth.Truth.assertThat
@@ -66,7 +67,10 @@ class AddSessionUseCaseTest {
         fakeSessionRepository = FakeSessionRepository(fakeLibraryRepository, fakeTimeProvider, fakeIdProvider)
 
         /** SUT */
-        addSession = AddSessionUseCase(fakeSessionRepository, fakeLibraryRepository)
+        addSession = AddSessionUseCase(
+            fakeSessionRepository,
+            GetAllLibraryItemsUseCase(fakeLibraryRepository)
+        )
 
         runBlocking {
             repeat(2) { index ->

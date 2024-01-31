@@ -36,15 +36,16 @@ import app.musikus.usecase.library.DeleteFoldersUseCase
 import app.musikus.usecase.library.DeleteItemsUseCase
 import app.musikus.usecase.library.EditFolderUseCase
 import app.musikus.usecase.library.EditItemUseCase
-import app.musikus.usecase.library.GetFoldersUseCase
-import app.musikus.usecase.library.GetItemsUseCase
+import app.musikus.usecase.library.GetAllLibraryItemsUseCase
+import app.musikus.usecase.library.GetSortedLibraryFoldersUseCase
+import app.musikus.usecase.library.GetSortedLibraryItemsUseCase
 import app.musikus.usecase.library.LibraryUseCases
 import app.musikus.usecase.library.RestoreFoldersUseCase
 import app.musikus.usecase.library.RestoreItemsUseCase
 import app.musikus.usecase.sessions.AddSessionUseCase
 import app.musikus.usecase.sessions.DeleteSessionsUseCase
 import app.musikus.usecase.sessions.EditSessionUseCase
-import app.musikus.usecase.sessions.GetAllSessionsUseCase
+import app.musikus.usecase.sessions.GetSessionsForDaysForMonthsUseCase
 import app.musikus.usecase.sessions.GetSessionByIdUseCase
 import app.musikus.usecase.sessions.GetSessionsInTimeframeUseCase
 import app.musikus.usecase.sessions.RestoreSessionsUseCase
@@ -77,8 +78,9 @@ object UseCasesModule {
     ): LibraryUseCases {
 
         return LibraryUseCases(
-            getItems = GetItemsUseCase(libraryRepository, userPreferencesUseCases.getItemSortInfo),
-            getFolders = GetFoldersUseCase(libraryRepository, userPreferencesUseCases.getFolderSortInfo),
+            getAllItems = GetAllLibraryItemsUseCase(libraryRepository),
+            getSortedItems = GetSortedLibraryItemsUseCase(libraryRepository, userPreferencesUseCases.getItemSortInfo),
+            getSortedFolders = GetSortedLibraryFoldersUseCase(libraryRepository, userPreferencesUseCases.getFolderSortInfo),
             addItem = AddItemUseCase(libraryRepository),
             addFolder = AddFolderUseCase(libraryRepository),
             editItem = EditItemUseCase(libraryRepository),
@@ -138,7 +140,7 @@ object UseCasesModule {
                 goalRepository = goalRepository,
                 calculateProgress = calculateGoalProgressUseCase
             ),
-            add = AddGoalUseCase(goalRepository, libraryUseCases.getItems, timeProvider),
+            add = AddGoalUseCase(goalRepository, libraryUseCases.getAllItems, timeProvider),
             pause = PauseGoalsUseCase(goalRepository, cleanFutureGoalInstancesUseCase),
             unpause = UnpauseGoalsUseCase(goalRepository),
             archive = archiveGoalsUseCase,
@@ -161,10 +163,10 @@ object UseCasesModule {
         libraryUseCases: LibraryUseCases
     ): SessionsUseCases {
         return SessionsUseCases(
-            getAll = GetAllSessionsUseCase(sessionRepository),
+            getSessionsForDaysForMonths = GetSessionsForDaysForMonthsUseCase(sessionRepository),
             getInTimeframe = GetSessionsInTimeframeUseCase(sessionRepository),
             getById = GetSessionByIdUseCase(sessionRepository),
-            add = AddSessionUseCase(sessionRepository, libraryUseCases.getItems),
+            add = AddSessionUseCase(sessionRepository, libraryUseCases.getAllItems),
             edit = EditSessionUseCase(sessionRepository),
             delete = DeleteSessionsUseCase(sessionRepository),
             restore = RestoreSessionsUseCase(sessionRepository),

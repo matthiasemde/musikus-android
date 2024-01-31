@@ -15,7 +15,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlin.time.Duration.Companion.seconds
 
-class GetAllSessionsUseCase(
+class GetSessionsForDaysForMonthsUseCase(
     private val sessionsRepository: SessionRepository
 ) {
 

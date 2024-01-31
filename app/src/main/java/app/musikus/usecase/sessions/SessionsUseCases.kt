@@ -9,7 +9,7 @@
 package app.musikus.usecase.sessions
 
 data class SessionsUseCases(
-    val getAll: GetAllSessionsUseCase,
+    val getSessionsForDaysForMonths: GetSessionsForDaysForMonthsUseCase,
     val getInTimeframe: GetSessionsInTimeframeUseCase,
     val getById: GetSessionByIdUseCase,
     val add: AddSessionUseCase,
