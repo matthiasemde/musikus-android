@@ -12,7 +12,6 @@
 
 package app.musikus.database.daos
 
-import android.util.Log
 import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Query

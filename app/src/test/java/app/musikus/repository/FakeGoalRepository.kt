@@ -44,11 +44,11 @@ class FakeGoalRepository(
         get() = throw NotImplementedError()
 
     override fun getInstance(id: UUID): Flow<GoalInstance> {
-        TODO("Not yet implemented")
+        throw NotImplementedError()
     }
 
     override fun getInstanceByPreviousInstanceId(previousInstanceId: UUID): Flow<GoalInstance> {
-        TODO("Not yet implemented")
+        throw NotImplementedError()
     }
 
     override suspend fun getLatestInstances(): List<GoalInstanceWithDescription> {

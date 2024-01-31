@@ -29,6 +29,8 @@ import kotlin.time.toJavaDuration
 
 class CalculateGoalProgressUseCaseTest {
 
+
+    private lateinit var fakeLibraryRepository: FakeLibraryRepository
     private lateinit var fakeSessionRepository: FakeSessionRepository
     private lateinit var fakeGoalRepository: FakeGoalRepository
 
@@ -41,7 +43,7 @@ class CalculateGoalProgressUseCaseTest {
         val fakeTimeProvider = FakeTimeProvider()
         val fakeIdProvider = FakeIdProvider()
 
-        val fakeLibraryRepository = FakeLibraryRepository(fakeTimeProvider, fakeIdProvider)
+        fakeLibraryRepository = FakeLibraryRepository(fakeTimeProvider, fakeIdProvider)
         fakeSessionRepository = FakeSessionRepository(
             fakeLibraryRepository,
             fakeTimeProvider,
@@ -138,5 +140,60 @@ class CalculateGoalProgressUseCaseTest {
         val goalProgress = calculateGoalProgress(goals = goals).first()
 
         assertThat(goalProgress).isEqualTo(listOf(listOf(3.minutes)))
+    }
+
+    @Test
+    fun `calculate progress for item-specific goal`() = runTest {
+        fakeLibraryRepository.addItem(LibraryItemCreationAttributes(
+            name = "Test Item 2",
+            colorIndex = 5,
+            libraryFolderId = Nullable(null)
+        ))
+
+        fakeGoalRepository.addNewGoal(
+            descriptionCreationAttributes = GoalDescriptionCreationAttributes(
+                type = GoalType.ITEM_SPECIFIC,
+                repeat = true,
+                periodInPeriodUnits = 1,
+                periodUnit = GoalPeriodUnit.DAY,
+                progressType = GoalProgressType.TIME,
+            ),
+            instanceCreationAttributes = GoalInstanceCreationAttributes(
+                descriptionId = UUIDConverter.fromInt(2),
+                previousInstanceId = null,
+                startTimestamp = FakeTimeProvider.START_TIME,
+                target = 1.hours
+            ),
+            libraryItemIds = listOf(
+                UUIDConverter.fromInt(1),
+            )
+        )
+
+        // add a session during the goals active period
+        fakeSessionRepository.add(
+            sessionCreationAttributes = SessionCreationAttributes(
+                rating = 3,
+                breakDuration = 10.minutes,
+                comment = "Test comment"
+            ),
+            sectionCreationAttributes = listOf(
+                SectionCreationAttributes(
+                    libraryItemId = UUIDConverter.fromInt(1),
+                    startTimestamp = FakeTimeProvider.START_TIME,
+                    duration = 1.minutes
+                ),
+                SectionCreationAttributes(
+                    libraryItemId = UUIDConverter.fromInt(2),
+                    startTimestamp = FakeTimeProvider.START_TIME,
+                    duration = 2.minutes
+                ),
+            )
+        )
+
+        val goals = fakeGoalRepository.allGoals.first()
+
+        val goalProgress = calculateGoalProgress(goals = goals).first()
+
+        assertThat(goalProgress).isEqualTo(listOf(listOf(1.minutes)))
     }
 }
