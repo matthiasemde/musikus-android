@@ -145,12 +145,16 @@ abstract class SessionDao(
     @RewriteQueriesToDropUnusedColumns
     @Query("""
     SELECT session.*
-    FROM session
-    JOIN (
-        SELECT session_id, min(datetime(SUBSTR(start_timestamp, 1, INSTR(start_timestamp, '[') - 1))) AS start_timestamp
-        FROM section
-        GROUP BY session_id
-    ) AS ids_with_start_timestamp ON ids_with_start_timestamp.session_id = session.id 
+    FROM
+        session
+        JOIN (
+            SELECT
+                session_id,
+                min(datetime(SUBSTR(start_timestamp, 1, INSTR(start_timestamp, '[') - 1))) AS start_timestamp
+            FROM section
+            GROUP BY session_id
+        ) AS ids_with_start_timestamp
+            ON ids_with_start_timestamp.session_id = session.id 
     WHERE deleted=0 
     ORDER BY ids_with_start_timestamp.start_timestamp DESC 
     """)
@@ -161,12 +165,25 @@ abstract class SessionDao(
 
     @Transaction
     @RewriteQueriesToDropUnusedColumns
-    @Query("SELECT * FROM session " +
-            "WHERE datetime(:startTimestamp) <= (SELECT min(datetime(SUBSTR(start_timestamp, 1, INSTR(start_timestamp, '[') - 1))) FROM section WHERE section.session_id = session.id) " +
-            "AND datetime(:endTimestamp) > (SELECT min(datetime(SUBSTR(start_timestamp, 1, INSTR(start_timestamp, '[') - 1))) FROM section WHERE section.session_id = session.id) " +
-            "AND deleted=0"
-    )
-    abstract fun directGetFromTimeframe(
+    @Query("""
+        SELECT session.*
+        FROM
+            session
+            JOIN (
+                SELECT
+                    session_id,
+                    min(datetime(SUBSTR(start_timestamp, 1, INSTR(start_timestamp, '[') - 1))) AS start_timestamp
+                FROM section
+                GROUP BY session_id
+            ) AS ids_with_start_timestamp
+                ON ids_with_start_timestamp.session_id = session.id
+        
+        WHERE 
+            datetime(:startTimestamp) <= start_timestamp AND
+            datetime(:endTimestamp) > start_timestamp AND
+            deleted=0
+    """)
+    protected abstract fun directGetFromTimeframe(
         startTimestamp: String,
         endTimestamp: String
     ): Flow<List<SessionWithSectionsWithLibraryItems>>
