@@ -587,20 +587,147 @@ class SessionDaoTest {
     }
 
     @Test
-    fun getSessionsWithSectionsWithLibraryItems() = runTest {
-        insertSessionWithSection()
+    fun getOrderedWithSectionsWithLibraryItems() = runTest {
 
-        val sessionsWithSectionsWithLibraryItems = sessionDao.getAllWithSectionsWithLibraryItemsAsFlow().first()
+        // insert three unordered sessions
+        sessionDao.insert(
+            sessionCreationAttributes = SessionCreationAttributes(
+                breakDuration = 10.minutes,
+                rating = 3,
+                comment = "Test comment",
+            ),
+            sectionCreationAttributes = listOf(
+                SectionCreationAttributes(
+                    libraryItemId = UUIDConverter.fromInt(1),
+                    duration = 2.minutes,
+                    startTimestamp = fakeTimeProvider.now(),
+                ),
+                SectionCreationAttributes(
+                    libraryItemId = UUIDConverter.fromInt(1),
+                    duration = 4.minutes,
+                    startTimestamp = fakeTimeProvider.also { it.advanceTimeBy(2.minutes) }.now(),
+                )
+            )
+        )
 
-        assertThat(sessionsWithSectionsWithLibraryItems).containsExactly(
+        fakeTimeProvider.advanceTimeBy(1.days)
+
+        sessionDao.insert(
+            sessionCreationAttributes = SessionCreationAttributes(
+                breakDuration = 10.minutes,
+                rating = 3,
+                comment = "Test comment",
+            ),
+            sectionCreationAttributes = listOf(
+                SectionCreationAttributes(
+                    libraryItemId = UUIDConverter.fromInt(1),
+                    duration = 3.minutes,
+                    startTimestamp = fakeTimeProvider.now(),
+                )
+            )
+        )
+
+        // place the last session between the two sections of the first session to see if it gets sorted correctly
+        fakeTimeProvider.setCurrentDateTime(
+            FakeTimeProvider.START_TIME.plus(1.minutes.toJavaDuration())
+        )
+
+        sessionDao.insert(
+            sessionCreationAttributes = SessionCreationAttributes(
+                breakDuration = 10.minutes,
+                rating = 3,
+                comment = "Test comment",
+            ),
+            sectionCreationAttributes = listOf(
+                SectionCreationAttributes(
+                    libraryItemId = UUIDConverter.fromInt(1),
+                    duration = 5.minutes,
+                    startTimestamp = fakeTimeProvider.now(),
+                ),
+            )
+        )
+
+        val sessionsWithSectionsWithLibraryItems = sessionDao.getOrderedWithSectionsWithLibraryItems().first()
+
+        val expectedItem = LibraryItem(
+            id = UUIDConverter.fromInt(1),
+            name = "TestItem",
+            colorIndex = 1,
+            libraryFolderId = null,
+            customOrder = null,
+            createdAt = FakeTimeProvider.START_TIME,
+            modifiedAt = FakeTimeProvider.START_TIME
+        )
+
+        assertThat(sessionsWithSectionsWithLibraryItems).isEqualTo(listOf(
+            SessionWithSectionsWithLibraryItems(
+                session = Session(
+                    id = UUIDConverter.fromInt(5),
+                    breakDurationSeconds = 600,
+                    rating = 3,
+                    comment = "Test comment",
+                    createdAt = FakeTimeProvider.START_TIME.plus(
+                        (2.minutes + 1.days).toJavaDuration()
+                    ),
+                    modifiedAt = FakeTimeProvider.START_TIME.plus(
+                        (2.minutes + 1.days).toJavaDuration()
+                    )
+                ),
+                sections = listOf(
+                    SectionWithLibraryItem(
+                        section = Section(
+                            id = UUIDConverter.fromInt(6),
+                            sessionId = UUIDConverter.fromInt(5),
+                            libraryItemId = UUIDConverter.fromInt(1),
+                            durationSeconds = 180,
+                            startTimestamp = FakeTimeProvider.START_TIME.plus(
+                                (2.minutes + 1.days).toJavaDuration()
+                            ),
+                        ),
+                        libraryItem = expectedItem
+                    )
+                )
+            ),
+            SessionWithSectionsWithLibraryItems(
+                session = Session(
+                    id = UUIDConverter.fromInt(7),
+                    breakDurationSeconds = 600,
+                    rating = 3,
+                    comment = "Test comment",
+                    createdAt = FakeTimeProvider.START_TIME.plus(
+                        (1.minutes).toJavaDuration()
+                    ),
+                    modifiedAt = FakeTimeProvider.START_TIME.plus(
+                        (1.minutes).toJavaDuration()
+                    )
+                ),
+                sections = listOf(
+                    SectionWithLibraryItem(
+                        section = Section(
+                            id = UUIDConverter.fromInt(8),
+                            sessionId = UUIDConverter.fromInt(7),
+                            libraryItemId = UUIDConverter.fromInt(1),
+                            durationSeconds = 300,
+                            startTimestamp = FakeTimeProvider.START_TIME.plus(
+                                (1.minutes).toJavaDuration()
+                            ),
+                        ),
+                        libraryItem = expectedItem
+                    )
+                )
+            ),
             SessionWithSectionsWithLibraryItems(
                 session = Session(
                     id = UUIDConverter.fromInt(2),
                     breakDurationSeconds = 600,
                     rating = 3,
                     comment = "Test comment",
-                    createdAt = FakeTimeProvider.START_TIME,
-                    modifiedAt = FakeTimeProvider.START_TIME
+                    createdAt = FakeTimeProvider.START_TIME.plus(
+                        (2.minutes).toJavaDuration()
+                    ),
+                    modifiedAt = FakeTimeProvider.START_TIME.plus(
+                        (2.minutes).toJavaDuration()
+                    )
                 ),
                 sections = listOf(
                     SectionWithLibraryItem(
@@ -608,26 +735,30 @@ class SessionDaoTest {
                             id = UUIDConverter.fromInt(3),
                             sessionId = UUIDConverter.fromInt(2),
                             libraryItemId = UUIDConverter.fromInt(1),
-                            durationSeconds = 900,
+                            durationSeconds = 120,
                             startTimestamp = FakeTimeProvider.START_TIME,
                         ),
-                        libraryItem = LibraryItem(
-                            id = UUIDConverter.fromInt(1),
-                            name = "TestItem",
-                            colorIndex = 1,
-                            libraryFolderId = null,
-                            customOrder = null,
-                            createdAt = FakeTimeProvider.START_TIME,
-                            modifiedAt = FakeTimeProvider.START_TIME
-                        )
+                        libraryItem = expectedItem
+                    ),
+                    SectionWithLibraryItem(
+                        section = Section(
+                            id = UUIDConverter.fromInt(4),
+                            sessionId = UUIDConverter.fromInt(2),
+                            libraryItemId = UUIDConverter.fromInt(1),
+                            durationSeconds = 240,
+                            startTimestamp = FakeTimeProvider.START_TIME.plus(
+                                (2.minutes).toJavaDuration()
+                            ),
+                        ),
+                        libraryItem = expectedItem
                     )
                 )
             )
-        )
+        ))
     }
 
     @Test
-    fun getWithSectionsWithLibraryItemsAsFlow() = runTest {
+    fun getWithSectionsWithLibraryItems() = runTest {
         repeat(2) { insertSessionWithSection() }
 
         val sessionWithSectionsWithLibraryItems = sessionDao.getWithSectionsWithLibraryItems(
@@ -669,7 +800,7 @@ class SessionDaoTest {
     }
 
     @Test
-    fun getWithSectionsWithLibraryItemsAsFlow_nonExistentSession() = runTest {
+    fun getWithSectionsWithLibraryItems_nonExistentSession() = runTest {
         val exception = assertThrows(IllegalArgumentException::class.java) {
             runBlocking {
                 sessionDao.getWithSectionsWithLibraryItems(
@@ -682,6 +813,7 @@ class SessionDaoTest {
             "Session with id 00000000-0000-0000-0000-000000000002 not found"
         )
     }
+
 
     @Test
     fun getFromTimeFrame() = runTest {
