@@ -20,7 +20,7 @@ class GetSessionsForDaysForMonthsUseCase(
 ) {
 
     operator fun invoke() : Flow<List<SessionsForDaysForMonth>> {
-        return sessionsRepository.sessionsWithSectionsWithLibraryItems.map { rawSessions ->
+        return sessionsRepository.orderedSessionsWithSectionsWithLibraryItems.map { rawSessions ->
             if (rawSessions.isEmpty()) {
                 return@map emptyList()
             }

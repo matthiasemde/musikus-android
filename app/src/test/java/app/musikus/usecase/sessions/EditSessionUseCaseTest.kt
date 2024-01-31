@@ -182,7 +182,7 @@ class EditSessionUseCaseTest {
                 sectionUpdateData = validSectionUpdateData
             )
 
-            val sessions = fakeSessionRepository.sessionsWithSectionsWithLibraryItems.first()
+            val sessions = fakeSessionRepository.orderedSessionsWithSectionsWithLibraryItems.first()
 
             assertThat(sessions).containsExactly(
                 SessionWithSectionsWithLibraryItems(

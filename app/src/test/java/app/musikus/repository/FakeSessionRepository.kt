@@ -40,8 +40,8 @@ class FakeSessionRepository(
         get() = throw NotImplementedError()
     override val sections: Flow<List<Section>>
         get() = flowOf(_sessions.flatMap { session -> session.sections.map { it.section } })
-    override val sessionsWithSectionsWithLibraryItems: Flow<List<SessionWithSectionsWithLibraryItems>>
-        get() = flowOf(_sessions)
+    override val orderedSessionsWithSectionsWithLibraryItems: Flow<List<SessionWithSectionsWithLibraryItems>>
+        get() = flowOf(_sessions.sortedByDescending { it.startTimestamp })
 
     override suspend fun getSession(id: UUID): SessionWithSectionsWithLibraryItems {
         throw NotImplementedError()

@@ -31,7 +31,7 @@ interface SessionRepository {
     val sessions : Flow<List<Session>>
     val sections : Flow<List<Section>>
 
-    val sessionsWithSectionsWithLibraryItems : Flow<List<SessionWithSectionsWithLibraryItems>>
+    val orderedSessionsWithSectionsWithLibraryItems : Flow<List<SessionWithSectionsWithLibraryItems>>
     suspend fun getSession(id: UUID) : SessionWithSectionsWithLibraryItems
 
     fun sessionsInTimeframe (timeframe: Timeframe) : Flow<List<SessionWithSectionsWithLibraryItems>>
@@ -89,7 +89,7 @@ class SessionRepositoryImpl(
     override val sessions = sessionDao.getAllAsFlow()
     override val sections = sectionDao.getAllAsFlow()
 
-    override val sessionsWithSectionsWithLibraryItems = sessionDao.getOrderedWithSectionsWithLibraryItems()
+    override val orderedSessionsWithSectionsWithLibraryItems = sessionDao.getOrderedWithSectionsWithLibraryItems()
     override suspend fun getSession(
         id: UUID
     ): SessionWithSectionsWithLibraryItems {
