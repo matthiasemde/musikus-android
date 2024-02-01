@@ -26,6 +26,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
@@ -52,6 +53,7 @@ import app.musikus.shared.Selectable
 import app.musikus.shared.ThemeMenu
 import app.musikus.ui.MainUIEvent
 import app.musikus.ui.MainUiState
+import app.musikus.ui.activesession.metronome.Metronome
 import app.musikus.ui.theme.spacing
 import java.util.UUID
 
@@ -86,24 +88,26 @@ fun Sessions(
         )
     }
 
-    Scaffold(
-        contentWindowInsets = WindowInsets(bottom = 0.dp),
+    BottomSheetScaffold(
+//    Scaffold(
+//        contentWindowInsets = WindowInsets(bottom = 0.dp),
         modifier = Modifier
             .nestedScroll(scrollBehavior.nestedScrollConnection),
-        floatingActionButton = {
-            ExtendedFloatingActionButton(
-                icon = {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "new session"
-                    )
-                },
-                text = { Text(text = "Start Session") },
-                onClick = {
-                },
-                expanded = fabExpanded,
-            )
-        },
+//        floatingActionButton = {
+//            ExtendedFloatingActionButton(
+//                icon = {
+//                    Icon(
+//                        imageVector = Icons.Default.Add,
+//                        contentDescription = "new session"
+//                    )
+//                },
+//                text = { Text(text = "Start Session") },
+//                onClick = {
+//                },
+//                expanded = fabExpanded,
+//            )
+//        },
+        sheetContent = { Metronome() },
         topBar = {
             val mainMenuUiState = mainUiState.menuUiState
             val topBarUiState = uiState.topBarUiState
