@@ -19,6 +19,9 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.math.abs
+import kotlin.math.round
+import kotlin.time.Duration.Companion.minutes
 
 data class MetronomeSettings(
     val bpm: Int,
@@ -181,7 +184,23 @@ class MetronomeViewModel @Inject constructor(
         }
     }
 
-    private fun tabTempo() {
+    private var lastTab = System.currentTimeMillis()
 
+    private fun tabTempo() {
+        val currentBpm = metronomeSettings.value.bpm
+
+        val now = System.currentTimeMillis()
+        val bpmSinceLastTab = 1.minutes.inWholeMilliseconds.toFloat() / (now - lastTab)
+        val alpha = when(abs(currentBpm - bpmSinceLastTab)) {
+            in 0f..10f -> 0.1f
+            in 10f..20f -> 0.2f
+            in 20f..50f -> 0.3f
+            else -> 1f
+        }
+        val runningAverageBpm = (1 - alpha) * currentBpm + alpha * bpmSinceLastTab
+
+        changeBpm(round(runningAverageBpm).toInt())
+
+        lastTab = now
     }
 }
