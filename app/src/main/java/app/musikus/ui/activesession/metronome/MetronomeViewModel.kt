@@ -8,13 +8,28 @@
 
 package app.musikus.ui.activesession.metronome
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import android.content.ComponentName
+import android.content.Context
+import android.content.Intent
+import android.content.ServiceConnection
+import android.os.Build
+import android.os.IBinder
+import android.util.Log
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import app.musikus.services.MetronomeService
+import app.musikus.services.MetronomeServiceEvent
+import app.musikus.services.MetronomeServiceState
 import app.musikus.usecase.userpreferences.UserPreferencesUseCases
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -35,7 +50,7 @@ data class MetronomeSettings(
             clicksPerBeat = 1
         )
 
-        val BPM_RANGE = 40..240
+        val BPM_RANGE = 40..1040
         val BEATS_PER_BAR_RANGE = 1..12
         val CLICKS_PER_BEAT_RANGE = 1..4
     }
@@ -61,10 +76,70 @@ sealed class MetronomeUiEvent {
     data object TabTempo : MetronomeUiEvent()
 }
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class MetronomeViewModel @Inject constructor(
-    private val userPreferencesUseCases: UserPreferencesUseCases
-) : ViewModel() {
+    private val userPreferencesUseCases: UserPreferencesUseCases,
+    private val application: Application
+) : AndroidViewModel(application) {
+
+    /** ------------------ Service --------------------- */
+
+    /** Service state wrapper and event handler */
+    private val serviceStateWrapper = MutableStateFlow<Flow<MetronomeServiceState>?>(null)
+    private val serviceState = serviceStateWrapper.flatMapLatest {
+        it ?: flowOf(null)
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(),
+        initialValue = null
+    )
+
+    private var serviceEventHandler: ((MetronomeServiceEvent) -> Unit)? = null
+
+    /** Service binding */
+
+    private val connection = object : ServiceConnection {
+        override fun onServiceConnected(className: ComponentName, service: IBinder) {
+            // We've bound to SessionForegroundService, cast the Binder and get SessionService instance
+            Log.d("MetronomeViewModel", "onServiceConnected")
+            val binder = service as MetronomeService.LocalBinder
+            serviceEventHandler = binder.getEventHandler()
+            serviceStateWrapper.update { binder.getServiceState() }
+        }
+
+        override fun onServiceDisconnected(arg0: ComponentName) {
+            serviceEventHandler = null
+            serviceStateWrapper.update { null }
+        }
+    }
+
+    init {
+        // try to bind to SessionService
+        bindService()
+    }
+
+    private fun startService() {
+        val intent = Intent(application, MetronomeService::class.java)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            application.startForegroundService(intent)
+        } else {
+            application.startService(intent)
+        }
+    }
+
+    private fun bindService() {
+        Log.d("MetronomeViewModel", "bindService")
+        val intent = Intent(application, MetronomeService::class.java)
+        application.bindService(intent, connection, Context.BIND_AUTO_CREATE)
+    }
+
+    override fun onCleared() {
+        if (serviceStateWrapper.value != null) {
+            application.unbindService(connection)
+        }
+        super.onCleared()
+    }
 
     /** Imported flows */
     private val metronomeSettings = userPreferencesUseCases.getMetronomeSettings().stateIn(
@@ -74,16 +149,15 @@ class MetronomeViewModel @Inject constructor(
     )
 
     /** Own flows */
-    private val _isPlaying = MutableStateFlow(false)
     private val _sliderValue = MutableStateFlow(metronomeSettings.value.bpm.toFloat())
 
     /** Composing the Ui state */
 
     val uiState = combine(
         metronomeSettings,
-        _isPlaying,
+        serviceState,
         _sliderValue
-    ) { settings, isPlaying, sliderValue ->
+    ) { settings, serviceState, sliderValue ->
         val tempoDescription = when(settings.bpm) {
             in 20 until 40 -> "Grave"
             in 40 until 55 -> "Largo"
@@ -102,7 +176,7 @@ class MetronomeViewModel @Inject constructor(
         MetronomeUiState(
             settings = settings,
             tempoDescription = tempoDescription,
-            isPlaying = isPlaying,
+            isPlaying = serviceState?.isPlaying ?: false,
             sliderValue = if(sliderValue.toInt() != settings.bpm) {
                 settings.bpm.toFloat()
             } else {
@@ -115,7 +189,7 @@ class MetronomeViewModel @Inject constructor(
         initialValue = MetronomeUiState(
             settings = metronomeSettings.value,
             tempoDescription = "Allegro",
-            isPlaying = _isPlaying.value,
+            isPlaying = serviceState.value?.isPlaying ?: false,
             sliderValue = _sliderValue.value
         )
     )
@@ -124,7 +198,12 @@ class MetronomeViewModel @Inject constructor(
 
     fun onUiEvent(event: MetronomeUiEvent) {
         when (event) {
-            is MetronomeUiEvent.ToggleIsPlaying -> toggleIsPlaying()
+            is MetronomeUiEvent.ToggleIsPlaying -> {
+                startService()
+                serviceEventHandler?.invoke(
+                    MetronomeServiceEvent.TogglePlaying
+                )
+            }
             is MetronomeUiEvent.UpdateSliderValue -> updateSliderValue(event.value)
             is MetronomeUiEvent.IncrementBpm -> changeBpm(
                 metronomeSettings.value.bpm + event.increment
@@ -137,10 +216,6 @@ class MetronomeViewModel @Inject constructor(
 
             is MetronomeUiEvent.TabTempo -> tabTempo()
         }
-    }
-
-    private fun toggleIsPlaying() {
-        _isPlaying.value = !_isPlaying.value
     }
 
     private fun updateSliderValue(value: Float) {

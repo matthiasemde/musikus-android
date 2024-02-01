@@ -14,9 +14,12 @@
 package app.musikus
 
 import android.app.Application
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.content.Context
 import android.content.SharedPreferences
 import android.net.Uri
+import android.os.Build
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import app.musikus.database.MusikusDatabase
@@ -24,6 +27,9 @@ import dagger.hilt.android.HiltAndroidApp
 import java.io.File
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+
+const val METRONOME_NOTIFICATION_CHANNEL_ID = "metronome_notification_channel"
+const val METRONOME_NOTIFICATION_CHANNEL_NAME = "Metronome notification"
 
 @HiltAndroidApp
 class Musikus : Application() {
@@ -120,5 +126,22 @@ class Musikus : Application() {
         prefs = getSharedPreferences(getString(R.string.filename_shared_preferences), Context.MODE_PRIVATE)
 
         dbFile = getDatabasePath("practice_time.db")
+        createNotificationChannel()
+    }
+
+    private fun createNotificationChannel() {
+        // Create the NotificationChannel, but only on API 26+ because
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val descriptionText = "Notification to keep track of the running session"
+            val channel = NotificationChannel(
+                METRONOME_NOTIFICATION_CHANNEL_ID,
+                METRONOME_NOTIFICATION_CHANNEL_NAME,
+                NotificationManager.IMPORTANCE_HIGH).apply {
+                description = descriptionText
+            }
+            // Register the channel with the system
+            val notificationManager: NotificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(channel)
+        }
     }
 }

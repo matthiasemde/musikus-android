@@ -11,12 +11,14 @@
     Copyright (c) 2022, Javier Carbone, author Michael Prommersberger
     Additions and modifications, author Matthias Emde
 -->
-<manifest xmlns:tools="http://schemas.android.com/tools"
+<manifest
     xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
     <uses-permission
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="28" />
@@ -39,11 +41,17 @@
             android:enabled="true"
             android:exported="false" />
         <service
+            android:name=".services.MetronomeService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="specialUse"
+        />
+        <service
             android:name=".services.RecorderService"
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="microphone"
-            tools:ignore="ForegroundServicePermission" />
+        />
 
         <activity
             android:name=".ui.intro.AppIntroActivity"

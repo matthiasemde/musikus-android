@@ -45,8 +45,8 @@ import app.musikus.usecase.library.RestoreItemsUseCase
 import app.musikus.usecase.sessions.AddSessionUseCase
 import app.musikus.usecase.sessions.DeleteSessionsUseCase
 import app.musikus.usecase.sessions.EditSessionUseCase
-import app.musikus.usecase.sessions.GetSessionsForDaysForMonthsUseCase
 import app.musikus.usecase.sessions.GetSessionByIdUseCase
+import app.musikus.usecase.sessions.GetSessionsForDaysForMonthsUseCase
 import app.musikus.usecase.sessions.GetSessionsInTimeframeUseCase
 import app.musikus.usecase.sessions.RestoreSessionsUseCase
 import app.musikus.usecase.sessions.SessionsUseCases
@@ -65,15 +65,15 @@ import app.musikus.utils.TimeProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.components.ViewModelComponent
-import dagger.hilt.android.scopes.ViewModelScoped
+import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
 
 @Module
-@InstallIn(ViewModelComponent::class)
+@InstallIn(SingletonComponent::class)
 object UseCasesModule {
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun provideLibraryUseCases(
         libraryRepository: LibraryRepository,
         userPreferencesUseCases: UserPreferencesUseCases
@@ -95,7 +95,7 @@ object UseCasesModule {
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun providesGoalUseCases(
         goalRepository: GoalRepository,
         libraryUseCases: LibraryUseCases,
@@ -159,7 +159,7 @@ object UseCasesModule {
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun provideSessionsUseCases(
         sessionRepository: SessionRepository,
         libraryUseCases: LibraryUseCases
@@ -176,7 +176,7 @@ object UseCasesModule {
     }
 
     @Provides
-    @ViewModelScoped
+    @Singleton
     fun provideUserPreferencesUseCases(
         userPreferencesRepository: UserPreferencesRepository
     ): UserPreferencesUseCases {
