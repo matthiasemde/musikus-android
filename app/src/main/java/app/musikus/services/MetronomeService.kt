@@ -22,7 +22,7 @@ import app.musikus.METRONOME_NOTIFICATION_CHANNEL_ID
 import app.musikus.R
 import app.musikus.di.ApplicationScope
 import app.musikus.di.IoScope
-import app.musikus.ui.activesession.metronome.MetronomePlayer
+import app.musikus.utils.Metronome
 import app.musikus.usecase.userpreferences.UserPreferencesUseCases
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
@@ -63,8 +63,8 @@ class MetronomeService : Service() {
     @IoScope
     lateinit var ioScope: CoroutineScope
 
-    private val metronomePlayer by lazy {
-        val player = MetronomePlayer(
+    private val metronome by lazy {
+        val player = Metronome(
             applicationScope = applicationScope,
             context = this
         )
@@ -117,9 +117,9 @@ class MetronomeService : Service() {
     private fun toggleIsPlaying() {
         _isPlaying.update { !it }
         if (_isPlaying.value) {
-            metronomePlayer.play()
+            metronome.play()
         } else {
-            metronomePlayer.stop()
+            metronome.stop()
         }
     }
 
@@ -171,7 +171,7 @@ class MetronomeService : Service() {
 
     override fun onDestroy() {
         metronomeSettingsUpdateJob.cancel()
-        metronomePlayer.stop()
+        metronome.stop()
         super.onDestroy()
     }
 }

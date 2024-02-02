@@ -31,8 +31,12 @@ import java.util.concurrent.Executors
 const val METRONOME_NOTIFICATION_CHANNEL_ID = "metronome_notification_channel"
 const val METRONOME_NOTIFICATION_CHANNEL_NAME = "Metronome notification"
 
-const val CHANNEL_ID = "session_channel"
-const val CHANNEL_NAME = "Running Channel"
+const val SESSION_NOTIFICATION_CHANNEL_ID = "session_notification_channel"
+const val SESSION_NOTIFICATION_CHANNEL_NAME = "Running Channel"
+
+const val RECORDER_NOTIFICATION_CHANNEL_ID = "recording_notification_channel"
+const val RECORDER_NOTIFICATION_CHANNEL_NAME = "Recorder notification"
+
 
 @HiltAndroidApp
 class Musikus : Application() {
@@ -127,42 +131,42 @@ class Musikus : Application() {
         super.onCreate()
         prefs = getSharedPreferences(getString(R.string.filename_shared_preferences), Context.MODE_PRIVATE)
         dbFile = getDatabasePath("practice_time.db")
-
-        createNotificationChannelSessionService()
-        createNotificationChannelMetronomeService()
+        createNotificationChannels()
     }
 
-    private fun createNotificationChannelSessionService() {
+    private fun createNotificationChannels() {
         // Create the NotificationChannel, but only on API 26+ because
-        // TODO: IMPORTANCE_HIGH also triggers Heads-Up Notification. Is this wanted?
-        // TODO: Maybe launch notification only when ActiveSession becomes in background, else display no notification
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val descriptionText = "Notification to keep track of the running session"
-            val channel = NotificationChannel(
-                CHANNEL_ID,
-                CHANNEL_NAME,
-                NotificationManager.IMPORTANCE_LOW).apply {
-                description = descriptionText
-            }
-            // Register the channel with the system
             val notificationManager: NotificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            notificationManager.createNotificationChannel(channel)
-        }
-    }
 
-    private fun createNotificationChannelMetronomeService() {
-        // Create the NotificationChannel, but only on API 26+ because
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val descriptionText = "Notification to keep track of the running session"
-            val channel = NotificationChannel(
+            val sessionNotificationChannel = NotificationChannel(
+                SESSION_NOTIFICATION_CHANNEL_ID,
+                SESSION_NOTIFICATION_CHANNEL_NAME,
+                NotificationManager.IMPORTANCE_LOW).apply {
+                description = "Notification to keep track of the running session"
+            }
+
+            // Register the channel with the system
+            notificationManager.createNotificationChannel(sessionNotificationChannel)
+
+            val metronomeNotificationChannel = NotificationChannel(
                 METRONOME_NOTIFICATION_CHANNEL_ID,
                 METRONOME_NOTIFICATION_CHANNEL_NAME,
                 NotificationManager.IMPORTANCE_HIGH).apply {
-                description = descriptionText
+                description = "Notification to keep track of the metronome"
+            }
+
+            // Register the channel with the system
+            notificationManager.createNotificationChannel(metronomeNotificationChannel)
+
+            val recorderNotificationChannel = NotificationChannel(
+                RECORDER_NOTIFICATION_CHANNEL_ID,
+                RECORDER_NOTIFICATION_CHANNEL_NAME,
+                NotificationManager.IMPORTANCE_HIGH).apply {
+                description = "Notification to keep track of the recorder"
             }
             // Register the channel with the system
-            val notificationManager: NotificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            notificationManager.createNotificationChannel(channel)
+            notificationManager.createNotificationChannel(recorderNotificationChannel)
         }
     }
 }

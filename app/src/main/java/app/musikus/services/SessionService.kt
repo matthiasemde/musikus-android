@@ -17,7 +17,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
-import app.musikus.CHANNEL_ID
+import app.musikus.SESSION_NOTIFICATION_CHANNEL_ID
 import app.musikus.R
 import app.musikus.database.daos.LibraryItem
 import app.musikus.ui.activesession.PracticeSection
@@ -270,7 +270,7 @@ class SessionService : Service() {
 
         val icon = R.drawable.ic_launcher_foreground
 
-        val builder = NotificationCompat.Builder(this, CHANNEL_ID)
+        val builder = NotificationCompat.Builder(this, SESSION_NOTIFICATION_CHANNEL_ID)
             .setSmallIcon(icon)    // without icon, setOngoing does not work
             .setOngoing(true)  // does not work on Android 14: https://developer.android.com/about/versions/14/behavior-changes-all#non-dismissable-notifications
             .setOnlyAlertOnce(true)

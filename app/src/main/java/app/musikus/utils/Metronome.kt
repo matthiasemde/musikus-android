@@ -6,7 +6,7 @@
  * Copyright (c) 2024 Matthias Emde
  */
 
-package app.musikus.ui.activesession.metronome
+package app.musikus.utils
 
 import android.content.Context
 import android.media.AudioAttributes
@@ -16,6 +16,7 @@ import android.media.AudioTrack
 import androidx.annotation.RawRes
 import app.musikus.R
 import app.musikus.di.ApplicationScope
+import app.musikus.ui.activesession.metronome.MetronomeSettings
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.isActive
@@ -26,7 +27,7 @@ import kotlin.math.min
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
-class MetronomePlayer(
+class Metronome(
     @ApplicationScope private val applicationScope: CoroutineScope,
     context: Context
 ) {

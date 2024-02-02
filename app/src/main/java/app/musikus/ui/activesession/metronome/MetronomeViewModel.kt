@@ -138,6 +138,8 @@ class MetronomeViewModel @Inject constructor(
         super.onCleared()
     }
 
+    /** ------------------ Main ViewModel --------------------- */
+
     /** Imported flows */
     private val metronomeSettings = userPreferencesUseCases.getMetronomeSettings().stateIn(
         scope = viewModelScope,
