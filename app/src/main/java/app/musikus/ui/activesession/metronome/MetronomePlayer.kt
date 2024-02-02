@@ -23,7 +23,6 @@ import kotlinx.coroutines.launch
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import kotlin.math.min
-import kotlin.properties.Delegates
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
@@ -38,11 +37,12 @@ class MetronomePlayer(
     private val mediumNote by lazy { createNote(R.raw.beat_2, context) }
     private val lowNote by lazy { createNote(R.raw.beat_3, context) }
 
-    private var settingsInitialized = false
-    private var beatsPerBar by Delegates.notNull<Int>()
-    private var clicksPerBeat by Delegates.notNull<Int>()
-    private var clicksPerBar by Delegates.notNull<Int>()
-    private var nanosecondsBetweenClicks by Delegates.notNull<Long>()
+    private var beatsPerBar = MetronomeSettings.DEFAULT.beatsPerBar
+    private var clicksPerBeat = MetronomeSettings.DEFAULT.clicksPerBeat
+    private var clicksPerBar = beatsPerBar * clicksPerBeat
+    private var nanosecondsBetweenClicks = (
+        1.minutes.inWholeNanoseconds / (MetronomeSettings.DEFAULT.bpm * clicksPerBeat)
+    )
 
     fun updateSettings(settings: MetronomeSettings) {
         beatsPerBar = settings.beatsPerBar
@@ -50,17 +50,16 @@ class MetronomePlayer(
         clicksPerBar = beatsPerBar * clicksPerBeat
         nanosecondsBetweenClicks = (1.minutes.inWholeNanoseconds / (settings.bpm * clicksPerBeat))
 //        Log.d("Metronome","nanosecondsBetweenClicks: $nanosecondsBetweenClicks")
-        settingsInitialized = true
     }
 
     fun play() {
-        if (!settingsInitialized) return
         playerJob = createPlayerJob()
     }
 
     fun stop() {
         playerJob?.cancel()
     }
+
 
     private fun createPlayerJob() : Job {
         return applicationScope.launch {

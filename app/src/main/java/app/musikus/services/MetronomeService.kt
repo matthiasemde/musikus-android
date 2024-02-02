@@ -69,7 +69,7 @@ class MetronomeService : Service() {
             context = this
         )
 
-        // along with the player, we start a coroutine that listens to changes
+        // along with the player, start a coroutine that listens to changes
         // in the metronome settings and updates the player accordingly
         metronomeSettingsUpdateJob = applicationScope.launch {
             metronomeSettings.collect {
@@ -148,6 +148,7 @@ class MetronomeService : Service() {
         return START_NOT_STICKY
     }
 
+    // TODO manage notification and service lifecycle
     private fun getNotification(
         title: String,
         description: String
