@@ -15,7 +15,6 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.Build
 import android.os.IBinder
-import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import app.musikus.services.MetronomeService
@@ -102,7 +101,6 @@ class MetronomeViewModel @Inject constructor(
     private val connection = object : ServiceConnection {
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
             // We've bound to SessionForegroundService, cast the Binder and get SessionService instance
-            Log.d("MetronomeViewModel", "onServiceConnected")
             val binder = service as MetronomeService.LocalBinder
             serviceEventHandler = binder.getEventHandler()
             serviceStateWrapper.update { binder.getServiceState() }
@@ -129,7 +127,6 @@ class MetronomeViewModel @Inject constructor(
     }
 
     private fun bindService() {
-        Log.d("MetronomeViewModel", "bindService")
         val intent = Intent(application, MetronomeService::class.java)
         application.bindService(intent, connection, Context.BIND_AUTO_CREATE)
     }

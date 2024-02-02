@@ -12,31 +12,24 @@ import android.app.Notification
 import android.app.Service
 import android.content.Intent
 import android.content.pm.ServiceInfo
-import android.media.AudioAttributes
-import android.media.SoundPool
 import android.os.Binder
 import android.os.Build
 import android.os.IBinder
-import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import app.musikus.METRONOME_NOTIFICATION_CHANNEL_ID
 import app.musikus.R
 import app.musikus.di.ApplicationScope
+import app.musikus.di.IoScope
+import app.musikus.ui.activesession.metronome.MetronomePlayer
 import app.musikus.usecase.userpreferences.UserPreferencesUseCases
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
-import java.util.Timer
 import javax.inject.Inject
-import kotlin.concurrent.timer
-import kotlin.time.Duration.Companion.minutes
 
 
 const val METRONOME_NOTIFICATION_ID = 69
@@ -63,6 +56,16 @@ class MetronomeService : Service() {
     @Inject
     @ApplicationScope
     lateinit var applicationScope: CoroutineScope
+
+    @Inject
+    @IoScope
+    lateinit var ioScope: CoroutineScope
+
+    private val metronomePlayer by lazy { MetronomePlayer(
+        scope = applicationScope,
+        ioScope = ioScope,
+        context = this
+    ) }
 
     /** Interface object for clients that bind */
     private val binder = LocalBinder()
@@ -100,10 +103,9 @@ class MetronomeService : Service() {
     private fun toggleIsPlaying() {
         _isPlaying.update { !it }
         if (_isPlaying.value) {
-            startMetronome()
+            metronomePlayer.play()
         } else {
-            _metronomeJob?.cancel()
-            _metronomeTimer?.cancel()
+            metronomePlayer.stop()
         }
     }
 
@@ -122,8 +124,6 @@ class MetronomeService : Service() {
 
     @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Log.d("MetronomeService", "onStartCommand")
-
         ServiceCompat.startForeground(
             this,
             METRONOME_NOTIFICATION_ID,
@@ -151,46 +151,6 @@ class MetronomeService : Service() {
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
 
         return builder.build()
-
-    }
-
-    /** Metronome playing logic */
-    private var _metronomeTimer : Timer? = null
-
-    private var _metronomeJob : Job? = null
-
-    private var _soundPool: SoundPool? = null
-    private var _soundId: Int? = null
-    private fun startMetronome() {
-
-        if(_soundPool == null) {
-            _soundPool = SoundPool.Builder()
-                .setMaxStreams(1)
-                .setAudioAttributes(
-                    AudioAttributes.Builder()
-                        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                        .build()
-                )
-                .build()
-
-            _soundId = _soundPool?.load(this, R.raw.beat_1, 1)
-        }
-
-        _metronomeJob?.cancel() // make sure any old jobs are canceled
-        _metronomeJob = applicationScope.launch {
-            metronomeSettings.collectLatest { settings ->
-                Log.d("MetronomeService", "metronomeSettings: $settings")
-                _metronomeTimer?.cancel() // cancel previous timer if it exists
-                _metronomeTimer = timer(
-                    name = "MetronomeTimer",
-                    initialDelay = 0,
-                    period = 1.minutes.inWholeMilliseconds / settings.bpm
-                ) {
-//                    Log.d("MetronomeService", "tick")
-                    _soundId?.let { _soundPool?.play(it, 1f, 1f, 0, 0, 1f) }
-                }
-            }
-        }
 
     }
 }
