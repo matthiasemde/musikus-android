@@ -25,10 +25,12 @@ import kotlinx.coroutines.launch
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import kotlin.math.min
+import kotlin.properties.Delegates
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 
 class MetronomePlayer(
-    @ApplicationScope private val scope: CoroutineScope,
-    @IoScope private val ioScope: CoroutineScope,
+    @ApplicationScope private val applicationScope: CoroutineScope,
     context: Context
 ) {
 
@@ -38,6 +40,12 @@ class MetronomePlayer(
     private val mediumNote by lazy { createNote(R.raw.beat_2, context) }
     private val lowNote by lazy { createNote(R.raw.beat_3, context) }
 
+    private var settingsInitialized = false
+    private var beatsPerBar by Delegates.notNull<Int>()
+    private var clicksPerBeat by Delegates.notNull<Int>()
+    private var clicksPerBar by Delegates.notNull<Int>()
+    private var nanosecondsBetweenClicks by Delegates.notNull<Long>()
+
     init {
 //        ioScope.launch {
 //            highNote
@@ -46,7 +54,16 @@ class MetronomePlayer(
 //        }
     }
 
+    fun updateSettings(settings: MetronomeSettings) {
+        beatsPerBar = settings.beatsPerBar
+        clicksPerBeat = settings.clicksPerBeat
+        clicksPerBar = beatsPerBar * clicksPerBeat
+        nanosecondsBetweenClicks = (1.minutes.inWholeNanoseconds / (settings.bpm * clicksPerBeat))
+        settingsInitialized = true
+    }
+
     fun play() {
+        if (!settingsInitialized) return
         playerJob = createPlayerJob()
     }
 
@@ -55,18 +72,23 @@ class MetronomePlayer(
     }
 
     private fun createPlayerJob() : Job {
-        return scope.launch {
+        return applicationScope.launch {
             val track = createTrack()
+
+            val nanosecondsPerFrame = 1.seconds.inWholeNanoseconds / track.sampleRate
 
             val bufferSize = track.bufferSizeInFrames / 4
             val buffer = FloatArray(bufferSize)
 
-            Log.d("MetronomePlayer", "bufferSize: ${bufferSize}")
+            Log.d("MetronomePlayer", "bufferSize: $bufferSize")
             Log.d("MetronomePlayer", "noteSize: ${highNote.size}")
 
 
-
             track.play()
+
+            var currentClick = 1
+            var framesUntilNextClick = 0
+            var clickSampleFrame : Int? = null
 
             /**
              * The loop playing the metronome
@@ -77,11 +99,74 @@ class MetronomePlayer(
                     break
                 }
 
+                // initialize buffer with 0 (silence)
                 buffer.fill(0f)
 
-                for (i in 0 until min(bufferSize, highNote.size)) {
-                    buffer[i] += highNote[i]
+                var nextBufferFrame = 0
+
+                while(nextBufferFrame < bufferSize) {
+                    val currentClickSample = when(currentClick) {
+                        1 -> highNote
+                        else -> lowNote
+//                        2 -> mediumNote
+//                        3 -> lowNote
+                    }
+
+                    // if there is no clickSampleFrame aka no click is being written to the
+                    // buffer, initiate the clickSampleFrame and calculate the number of frames
+                    if (clickSampleFrame == null) {
+                        val remainingBufferFrames = bufferSize - nextBufferFrame
+
+                        // if the number of frames until the next click is larger or equal
+                        // than the remaining buffer frames, break the loop and wait for the next buffer
+                        if (framesUntilNextClick >= remainingBufferFrames) {
+                            framesUntilNextClick -= remainingBufferFrames
+                            break
+                        }
+
+                        // otherwise, initiate clickSampleFrame to 0,
+                        // advance the nextBufferFrame,
+                        // and calculate the number of frames until the next click
+                        clickSampleFrame = 0
+                        nextBufferFrame += framesUntilNextClick
+                        framesUntilNextClick = (nanosecondsBetweenClicks / nanosecondsPerFrame).toInt()
+
+                    }
+
+                    // calculate how many frames can be written by taking the min
+                    // of the remaining frames in the clickSample
+                    // and the remaining frames until either the next click starts or the buffer is full
+                    val remainingClickFrames = currentClickSample.size - clickSampleFrame
+                    val remainingFramesUntilNextClickOrEndOfBuffer = min(
+                        framesUntilNextClick,
+                        bufferSize - nextBufferFrame
+                    )
+
+                    val framesToWrite = min(
+                        remainingClickFrames,
+                        remainingFramesUntilNextClickOrEndOfBuffer
+                    )
+
+                    // write the frames to the buffer
+                    for(i in 0 until framesToWrite) {
+                        buffer[nextBufferFrame + i] = currentClickSample[clickSampleFrame + i]
+                    }
+
+                    // update the buffer frame counter
+                    nextBufferFrame += framesToWrite
+
+                    // check if the clickSample is finished
+                    clickSampleFrame = if(framesToWrite < remainingClickFrames) {
+                        // if it is not finished, update the clickSampleFrame
+                        clickSampleFrame + framesToWrite
+                    } else {
+                        // if it is finished, update the click count
+                        // and reset clickSampleFrame back to null
+                        currentClick = currentClick % clicksPerBar + 1
+                        null
+                    }
                 }
+
 
                 // write() is a blocking call
                 track.write(buffer, 0, bufferSize, AudioTrack.WRITE_BLOCKING)

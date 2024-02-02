@@ -26,9 +26,11 @@ import app.musikus.ui.activesession.metronome.MetronomePlayer
 import app.musikus.usecase.userpreferences.UserPreferencesUseCases
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 
@@ -61,11 +63,21 @@ class MetronomeService : Service() {
     @IoScope
     lateinit var ioScope: CoroutineScope
 
-    private val metronomePlayer by lazy { MetronomePlayer(
-        scope = applicationScope,
-        ioScope = ioScope,
-        context = this
-    ) }
+    private val metronomePlayer by lazy {
+        val player = MetronomePlayer(
+            applicationScope = applicationScope,
+            context = this
+        )
+
+        // along with the player, we start a coroutine that listens to changes
+        // in the metronome settings and updates the player accordingly
+        metronomeSettingsUpdateJob = applicationScope.launch {
+            metronomeSettings.collect {
+                player.updateSettings(it)
+            }
+        }
+        player
+    }
 
     /** Interface object for clients that bind */
     private val binder = LocalBinder()
@@ -78,6 +90,8 @@ class MetronomeService : Service() {
     private val metronomeSettings by lazy {
         userPreferencesUseCases.getMetronomeSettings()
     }
+
+    private lateinit var metronomeSettingsUpdateJob : Job
 
     /** Own state flows */
     private val _isPlaying = MutableStateFlow(false)
@@ -152,5 +166,11 @@ class MetronomeService : Service() {
 
         return builder.build()
 
+    }
+
+    override fun onDestroy() {
+        metronomeSettingsUpdateJob.cancel()
+        metronomePlayer.stop()
+        super.onDestroy()
     }
 }
