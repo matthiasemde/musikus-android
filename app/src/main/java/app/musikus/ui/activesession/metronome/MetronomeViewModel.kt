@@ -49,9 +49,9 @@ data class MetronomeSettings(
             clicksPerBeat = 1
         )
 
-        val BPM_RANGE = 40..1040
+        val BPM_RANGE = 40..240
         val BEATS_PER_BAR_RANGE = 1..12
-        val CLICKS_PER_BEAT_RANGE = 1..4
+        val CLICKS_PER_BEAT_RANGE = 1..20
     }
 }
 

@@ -13,11 +13,9 @@ import android.media.AudioAttributes
 import android.media.AudioFormat
 import android.media.AudioManager
 import android.media.AudioTrack
-import android.util.Log
 import androidx.annotation.RawRes
 import app.musikus.R
 import app.musikus.di.ApplicationScope
-import app.musikus.di.IoScope
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.isActive
@@ -46,19 +44,12 @@ class MetronomePlayer(
     private var clicksPerBar by Delegates.notNull<Int>()
     private var nanosecondsBetweenClicks by Delegates.notNull<Long>()
 
-    init {
-//        ioScope.launch {
-//            highNote
-//            mediumNote
-//            lowNote
-//        }
-    }
-
     fun updateSettings(settings: MetronomeSettings) {
         beatsPerBar = settings.beatsPerBar
         clicksPerBeat = settings.clicksPerBeat
         clicksPerBar = beatsPerBar * clicksPerBeat
         nanosecondsBetweenClicks = (1.minutes.inWholeNanoseconds / (settings.bpm * clicksPerBeat))
+//        Log.d("Metronome","nanosecondsBetweenClicks: $nanosecondsBetweenClicks")
         settingsInitialized = true
     }
 
@@ -75,20 +66,24 @@ class MetronomePlayer(
         return applicationScope.launch {
             val track = createTrack()
 
+
             val nanosecondsPerFrame = 1.seconds.inWholeNanoseconds / track.sampleRate
 
+            // frame size = sample size in bytes * number of channels (4 byte float * 1 channel)
+            // buffer size is 1/4 of the track buffer size to avoid overfilling
             val bufferSize = track.bufferSizeInFrames / 4
             val buffer = FloatArray(bufferSize)
 
-            Log.d("MetronomePlayer", "bufferSize: $bufferSize")
-            Log.d("MetronomePlayer", "noteSize: ${highNote.size}")
 
+//            Log.d("Metronome", "Sample rate: ${track.sampleRate}")
+//            Log.d("Metronome", "Buffer size: $bufferSize")
+//            Log.d("Metronome", "Note size: ${highNote.size}")
 
             track.play()
 
-            var currentClick = 1
+            var currentClick = 0
             var framesUntilNextClick = 0
-            var clickSampleFrame : Int? = null
+            var clickSampleFramePointer : Int? = null
 
             /**
              * The loop playing the metronome
@@ -102,74 +97,87 @@ class MetronomePlayer(
                 // initialize buffer with 0 (silence)
                 buffer.fill(0f)
 
-                var nextBufferFrame = 0
+                var bufferFramePointer = 0
 
-                while(nextBufferFrame < bufferSize) {
-                    val currentClickSample = when(currentClick) {
-                        1 -> highNote
-                        else -> lowNote
-//                        2 -> mediumNote
-//                        3 -> lowNote
+                while(bufferFramePointer < bufferSize) {
+                    val currentClickSample = when {
+                        currentClick == 0 -> highNote
+                        (currentClick % clicksPerBeat) != 0 -> lowNote
+                        else -> mediumNote
                     }
 
                     // if there is no clickSampleFrame aka no click is being written to the
                     // buffer, initiate the clickSampleFrame and calculate the number of frames
-                    if (clickSampleFrame == null) {
-                        val remainingBufferFrames = bufferSize - nextBufferFrame
+                    if (clickSampleFramePointer == null) {
+                        val remainingBufferFrames = bufferSize - bufferFramePointer
 
                         // if the number of frames until the next click is larger or equal
                         // than the remaining buffer frames, break the loop and wait for the next buffer
                         if (framesUntilNextClick >= remainingBufferFrames) {
                             framesUntilNextClick -= remainingBufferFrames
                             break
+                        } else {
+                            // otherwise, move the bufferFramePointer to the beginning of the next click
+                            bufferFramePointer += framesUntilNextClick
                         }
 
-                        // otherwise, initiate clickSampleFrame to 0,
-                        // advance the nextBufferFrame,
-                        // and calculate the number of frames until the next click
-                        clickSampleFrame = 0
-                        nextBufferFrame += framesUntilNextClick
-                        framesUntilNextClick = (nanosecondsBetweenClicks / nanosecondsPerFrame).toInt()
+                        // to write the next click sample to the buffer,
+                        // initiate the clickSampleFramePointer to 0
+                        clickSampleFramePointer = 0
 
+                        // now calculate the number of frames until the next click
+                        framesUntilNextClick = (nanosecondsBetweenClicks / nanosecondsPerFrame).toInt().coerceAtLeast(1)
+//                        Log.d("Metronome", "Frames until next click: $framesUntilNextClick, starting at $bufferFramePointer")
                     }
 
-                    // calculate how many frames can be written by taking the min
-                    // of the remaining frames in the clickSample
-                    // and the remaining frames until either the next click starts or the buffer is full
-                    val remainingClickFrames = currentClickSample.size - clickSampleFrame
+                    // calculate how many frames can at most be written by taking the min
+                    // of the remaining frames until either the next click starts or the buffer is full
+                    val remainingClickFrames = currentClickSample.size - clickSampleFramePointer
                     val remainingFramesUntilNextClickOrEndOfBuffer = min(
                         framesUntilNextClick,
-                        bufferSize - nextBufferFrame
+                        bufferSize - bufferFramePointer
                     )
 
+                    // calculate how many frames should be written by taking the min
+                    // of the remaining frames in the click sample and the max frames that can be written
                     val framesToWrite = min(
                         remainingClickFrames,
                         remainingFramesUntilNextClickOrEndOfBuffer
                     )
 
+//                    Log.d("Metronome", "Constraints: remainingClickFrames: $remainingClickFrames, framesUntilNextClick: $framesUntilNextClick, remainingBufferFrames: ${bufferSize - bufferFramePointer}")
+//                    Log.d("Metronome", "Writing $framesToWrite frames to buffer at $bufferFramePointer")
+
                     // write the frames to the buffer
                     for(i in 0 until framesToWrite) {
-                        buffer[nextBufferFrame + i] = currentClickSample[clickSampleFrame + i]
+                        buffer[bufferFramePointer + i] = currentClickSample[clickSampleFramePointer + i]
                     }
 
-                    // update the buffer frame counter
-                    nextBufferFrame += framesToWrite
+                    // update the buffer frame pointer and the frames until the next click counter
+                    bufferFramePointer += framesToWrite
+                    framesUntilNextClick -= framesToWrite
 
-                    // check if the clickSample is finished
-                    clickSampleFrame = if(framesToWrite < remainingClickFrames) {
-                        // if it is not finished, update the clickSampleFrame
-                        clickSampleFrame + framesToWrite
-                    } else {
+                    // check if the clickSample is finished or not
+                    if(framesToWrite >= remainingClickFrames || framesUntilNextClick == 0) {
                         // if it is finished, update the click count
-                        // and reset clickSampleFrame back to null
-                        currentClick = currentClick % clicksPerBar + 1
-                        null
+                        // and reset clickSampleFramePointer back to null
+                        currentClick++
+                        if(currentClick >= clicksPerBar) {
+                            currentClick = 0
+                        }
+                        clickSampleFramePointer = null
+                    } else {
+                        // if it is not finished, update the click sample frame pointer
+                        clickSampleFramePointer += framesToWrite
                     }
                 }
 
 
                 // write() is a blocking call
                 track.write(buffer, 0, bufferSize, AudioTrack.WRITE_BLOCKING)
+//                if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && track.underrunCount > 0) {
+//                    Log.w("Metronome", "Underrun: ${track.underrunCount}")
+//                }
             }
 
             track.stop()
@@ -180,10 +188,9 @@ class MetronomePlayer(
     companion object {
         fun createTrack() : AudioTrack {
             val nativeSampleRate = AudioTrack.getNativeOutputSampleRate(AudioManager.STREAM_MUSIC)
-            val bufferSize = 5 * AudioTrack.getMinBufferSize(
+            val bufferSize = 4 * AudioTrack.getMinBufferSize(
                 nativeSampleRate, AudioFormat.CHANNEL_OUT_MONO,
                 AudioFormat.ENCODING_PCM_FLOAT
-//                AudioFormat.ENCODING_PCM_16BIT
             )
 
             return AudioTrack.Builder()
@@ -196,13 +203,11 @@ class MetronomePlayer(
                 .setAudioFormat(
                     AudioFormat.Builder()
                         .setEncoding(AudioFormat.ENCODING_PCM_FLOAT)
-//                        .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
                         .setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
                         .setSampleRate(nativeSampleRate)
                         .build()
                 )
                 .setBufferSizeInBytes(bufferSize)
-//                .setTransferMode(AudioTrack.MODE_STREAM)
                 .build()
         }
 
