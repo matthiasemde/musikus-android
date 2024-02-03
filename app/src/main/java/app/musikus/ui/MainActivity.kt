@@ -15,7 +15,6 @@ package app.musikus.ui
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.compose.setContent
-import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.core.app.ActivityCompat
 import androidx.core.view.WindowCompat
@@ -23,13 +22,18 @@ import app.musikus.BuildConfig
 import app.musikus.Musikus
 import app.musikus.utils.ExportDatabaseContract
 import app.musikus.utils.ImportDatabaseContract
+import app.musikus.utils.PermissionChecker
+import app.musikus.utils.PermissionCheckerActivity
 import app.musikus.utils.TimeProvider
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
 
 @AndroidEntryPoint
-class MainActivity : AppCompatActivity() {
+class MainActivity : PermissionCheckerActivity() {
+
+    @Inject
+    override lateinit var permissionChecker: PermissionChecker
 
     @Inject
     lateinit var timeProvider: TimeProvider

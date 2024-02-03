@@ -15,11 +15,13 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.Build
 import android.os.IBinder
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import app.musikus.services.RecorderService
 import app.musikus.services.RecorderServiceEvent
 import app.musikus.services.RecorderServiceState
+import app.musikus.usecase.permissions.PermissionRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -30,6 +32,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 
@@ -45,7 +48,8 @@ sealed class RecorderUiEvent {
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class RecorderViewModel @Inject constructor(
-    private val application: Application
+    private val application: Application,
+    private val permissionRepository: PermissionRepository
 ) : AndroidViewModel(application) {
 
     /** ------------------ Service --------------------- */
@@ -125,8 +129,11 @@ class RecorderViewModel @Inject constructor(
     fun onUiEvent(event: RecorderUiEvent) {
         when(event) {
             is RecorderUiEvent.ToggleRecording -> {
-                startService()
-                serviceEventHandler?.invoke(RecorderServiceEvent.ToggleRecording)
+                viewModelScope.launch {
+                    Log.d("RecorderViewModel", "Microphone permission request finished successfully: ${permissionRepository.requestPermission(android.Manifest.permission.RECORD_AUDIO)}")
+                    startService()
+                    serviceEventHandler?.invoke(RecorderServiceEvent.ToggleRecording)
+                }
             }
         }
     }
