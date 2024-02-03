@@ -9,9 +9,14 @@
 
 package app.musikus.ui.activesession
 
-import androidx.compose.animation.animateContentSize
+import android.util.Log
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.AnchoredDraggableState
+import androidx.compose.foundation.gestures.DraggableAnchors
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.anchoredDraggable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -29,27 +34,33 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.BottomSheetScaffold
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -66,10 +77,16 @@ import app.musikus.ui.theme.spacing
 import app.musikus.utils.DurationFormat
 import app.musikus.utils.TimeProvider
 import app.musikus.utils.getDurationString
+import kotlin.math.roundToInt
 
 
 const val FRACTION_HEIGHT_COLLAPSED = 0.3f
 const val FRACTION_HEIGHT_EXTENDED = 0.7f
+
+enum class States {
+    EXPANDED,
+    COLLAPSED
+}
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -84,22 +101,7 @@ fun ActiveSession(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val uiEvent: (ActiveSessionUIEvent) -> Unit = viewModel::onEvent
 
-    BottomSheetScaffold (
-        sheetContent = {
-            val pagerState = rememberPagerState(pageCount = { 4 })
-            HorizontalPager(
-                verticalAlignment = Alignment.Top,
-                modifier = Modifier.animateContentSize(),
-                state = pagerState,
-                pageSpacing = MaterialTheme.spacing.medium,
-            ) {page ->
-                BottomSheetPage(page, uiState, uiEvent)
-            }
-        },
-        sheetShadowElevation = 12.dp,
-        sheetDragHandle = {},
-        sheetTonalElevation = 12.dp,
-        content = {contentPadding ->
+    Scaffold  {contentPadding ->
             if(uiState.isPaused) {
                PauseDialog(uiState, uiEvent)
             }
@@ -113,7 +115,7 @@ fun ActiveSession(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .fillMaxHeight(1 - FRACTION_HEIGHT_COLLAPSED)
+                        .fillMaxHeight()
                         .background(MaterialTheme.colorScheme.primaryContainer)
                 ) {
                     // DEBUG
@@ -136,25 +138,23 @@ fun ActiveSession(
                     )
 
                 }
+
+                Column(
+                    Modifier.align(Alignment.BottomCenter)
+                ) {
+                    DraggableCard(
+                        header = {CardHeader()},
+                        body = {LibraryList(uiState = uiState.libraryUiState, onLibraryItemClicked = {} )}
+                    )
+                }
+
             }
         }
-    )
 }
 
 
-/**
- * A scaffold for a page inside the bottom sheet
- *
- * @param page the page to display
- * @param uiState the current ui state
- * @param uiEvent the event handler
- */
 @Composable
-fun BottomSheetPage(
-    pageIndex: Int,
-    uiState: ActiveSessionUiState,
-    uiEvent: (ActiveSessionUIEvent) -> Unit
-) {
+private fun CardHeader() {
     Column (
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -166,39 +166,154 @@ fun BottomSheetPage(
         )
         Spacer(Modifier.height(5.dp))
         HorizontalDivider()
+    }
+}
 
-        /*
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(200.dp)
-        ) {
-            Text(
-                modifier = Modifier.align(Alignment.Center),
-                text = "Page placeholder"
-            )
+
+enum class DragValueY {
+    Start,
+    End
+}
+
+/**
+ * DraggableCard BottomSheet-like implementation based on
+ * https://www.droidcon.com/2021/11/09/how-to-master-swipeable-and-nestedscroll-modifiers-in-jetpack-compose/
+ * and https://gist.github.com/arcadefire/7fe138c0ded1a36bee6dd57acdfa3d18, adapted to use
+ * AnchoredDraggableState instead of SwipeableState
+ */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun DraggableCard(
+    header: @Composable () -> Unit,
+    body: @Composable () -> Unit
+) {
+
+    val density = LocalDensity.current
+
+    val yAnchors = with(density) {
+        DraggableAnchors {
+            DragValueY.Start at 0.dp.toPx()
+            DragValueY.End at -300.dp.toPx()
         }
-        */
+    }
+    val yState = remember { AnchoredDraggableState(
+        initialValue = DragValueY.Start,
+        positionalThreshold = { distance: Float -> distance * 0.5f },
+        velocityThreshold = { with(density) { 100.dp.toPx() } },
+        animationSpec = tween()
+    ).apply {
+        updateAnchors(yAnchors)
+    } }
 
-        when(pageIndex) {
-            0 -> {
-                LibraryList(
-                    uiState = uiState.libraryUiState,
-                    onLibraryItemClicked = {}
-                )
-            }
-            1 -> {
+    val scrollState = rememberScrollState()
 
-            }
-            2 -> {
+    Log.d("TAG", "offset: ${yState.requireOffset().roundToInt()}")
 
-            }
-            3 -> {
+    Box (
+        Modifier
+            .anchoredDraggable(yState, Orientation.Vertical)
+            .height(with(density) {300.dp - yState.requireOffset().roundToInt().toDp()})
+            .nestedScroll(
+                object : NestedScrollConnection {
 
+                    /**
+                     * Lets the parent (this Box) consume gestures before the inner list scrolls.
+                     *
+                     * Relevant when "opening" the Bottom Sheet so that it swipes up instead of scrolling.
+                     */
+                    override fun onPreScroll(
+                        available: Offset,
+                        source: NestedScrollSource
+                    ): Offset {
+                        val delta = available.y
+                        return if (delta < 0) {
+                            Offset(
+                                x = 0f,
+                                y = yState.dispatchRawDelta(delta)
+                            )
+                        } else {
+                            Offset.Zero
+                        }
+                    }
+
+                    /**
+                     * Lets the parent (this Box) consume gestures after scrolling of the child is finished.
+                     *
+                     * Relevant for "closing" the Bottom Sheet so that it is dragged down when
+                     * the list cannot be scrolled anymore.
+                     */
+                    override fun onPostScroll(
+                        consumed: Offset,
+                        available: Offset,
+                        source: NestedScrollSource
+                    ): Offset {
+                        if (source != NestedScrollSource.Drag) {
+                            // We don't want to close the Bottom Sheet on "Fling" gestures,
+                            // only when dragging
+                            return Offset.Zero
+                        }
+                        val delta = available.y
+                        return Offset(
+                            x = 0f,
+                            y = yState.dispatchRawDelta(delta)
+                        )
+                    }
+
+
+                    /**
+                     * Lets us actively invoke a "settle" (pull towards anchors) before a fling.
+                     *
+                     * Needed for getting pulled to the anchors on drag up when list is
+                     * scrolled to the top.
+                     */
+                    override suspend fun onPreFling(available: Velocity): Velocity {
+                        return if (available.y < 0 && scrollState.value == 0) {
+                            yState.settle(velocity = available.y)
+                            available
+                        } else {
+                            Velocity.Zero
+                        }
+                    }
+
+
+                    /**
+                     * Lets us actively invoke a "settle" (pull towards anchors) after a fling of the
+                     * scrollable child.
+                     *
+                     * Needed for closing the Bottom sheet completely when starting to "drag it down".
+                     */
+                    override suspend fun onPostFling(
+                        consumed: Velocity,
+                        available: Velocity
+                    ): Velocity {
+                        yState.settle(velocity = available.y)
+                        return super.onPostFling(consumed, available)
+                    }
+                }
+            )
+    ){
+        Column(
+            Modifier
+                .background(MaterialTheme.colorScheme.surfaceColorAtElevation(5.dp))
+                .fillMaxHeight()
+        ) {
+
+            header()
+
+            Box(
+                Modifier
+                    .verticalScroll(scrollState)
+                    .fillMaxWidth()
+            ) {
+
+                body()
             }
         }
     }
 }
+
+
+
 
 
 @Composable
@@ -346,33 +461,36 @@ private fun LibraryList(
 ) {
     val activeFolder = remember { mutableStateOf(UUIDConverter.deadBeef) }
 
-    // Header Folder List
-    LazyRow(modifier = Modifier.fillMaxWidth()) {
-        items(uiState.foldersWithItems) {folder ->
-            Row {
-                Button(onClick = {
-                    activeFolder.value = folder.folder.id
-                }) {
-                    Text(folder.folder.name)
+    Column(modifier = Modifier.fillMaxWidth()) {
+        // Header Folder List
+        LazyRow(modifier = Modifier.fillMaxWidth()) {
+            items(uiState.foldersWithItems) { folder ->
+                Row {
+                    Button(onClick = {
+                        activeFolder.value = folder.folder.id
+                    }) {
+                        Text(folder.folder.name)
+                    }
                 }
             }
         }
-    }
-    // Library Items
-    Column {
-        // show folder items or if folderId could not be found, show root Items
-        val shownItems =
-            uiState.foldersWithItems.find { it.folder.id == activeFolder.value }?.items ?: uiState.rootItems
-        for (item in shownItems) {
-            LibraryUiItem(
-                modifier = Modifier.padding(
-                    vertical = MaterialTheme.spacing.small,
-                    horizontal = MaterialTheme.spacing.large
-                ),
-                item = item,
-                selected = false,
-                onShortClick = { /*TODO*/ },
-                onLongClick = { /*TODO*/})
+        // Library Items
+        Column {
+            // show folder items or if folderId could not be found, show root Items
+            val shownItems =
+                uiState.foldersWithItems.find { it.folder.id == activeFolder.value }?.items
+                    ?: uiState.rootItems
+            for (item in shownItems) {
+                LibraryUiItem(
+                    modifier = Modifier.padding(
+                        vertical = MaterialTheme.spacing.small,
+                        horizontal = MaterialTheme.spacing.large
+                    ),
+                    item = item,
+                    selected = false,
+                    onShortClick = { /*TODO*/ },
+                    onLongClick = { /*TODO*/ })
+            }
         }
     }
 }
