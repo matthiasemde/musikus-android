@@ -14,9 +14,10 @@ package app.musikus.ui.activesession
  * File encapsulating Logic For Bottom-Sheet like draggable Draggable Cards inside a HorizontalPager
  */
 
-import android.util.Log
+import android.content.res.Configuration
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.AnchoredDraggableState
 import androidx.compose.foundation.gestures.DraggableAnchors
@@ -45,14 +46,16 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import app.musikus.ui.theme.spacing
 
 
 enum class DragValueY {
-    Start,
-    End
+    Collapsed,
+    Normal,
+    Full,
 }
 
 const val FRACTION_HEIGHT_COLLAPSED = 0.5f
@@ -62,6 +65,11 @@ const val FRACTION_HEIGHT_EXTENDED = 0.8f
  * Public interface for instantiating the complete pager.
  *
  * This has to be placed inside a Box()
+ *
+ * @param pageCount the number of pages
+ * @param pageContent content of each page (composable)
+ * @param headerContent header content of each page (composable)
+ * @param boxScope the outer BoxScope
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -77,65 +85,99 @@ fun DraggableCardsPagerLayout(
         ) {
             val density = LocalDensity.current
             val configuration = LocalConfiguration.current
-            val maxOffsetPx: Float
 
-            /** DraggableAnchorState initialization */
-            val yAnchors = with(density) {
-                val offset =
-                    (FRACTION_HEIGHT_EXTENDED - FRACTION_HEIGHT_COLLAPSED) * configuration.screenHeightDp
-                maxOffsetPx = -offset.dp.toPx()     //actual offset is negative (because swiping up), so invert
-                DraggableAnchors {
-                    DragValueY.Start at 0.dp.toPx()
-                    DragValueY.End at -offset.dp.toPx()
-                }
+            /** scroll states for each page */
+            val scrollStates = ArrayList<ScrollState>()
+            for (i in 0..< pageCount) {
+                val scrollState = rememberScrollState()
+                scrollStates.add(scrollState)
             }
-            val yState = remember {
-                AnchoredDraggableState(
-                    initialValue = DragValueY.Start,
-                    positionalThreshold = { distance: Float -> distance * 0.5f },
-                    velocityThreshold = { with(density) { 100.dp.toPx() } },
-                    animationSpec = tween()
-                ).apply {
-                    updateAnchors(yAnchors)
-                }
+
+            /** DraggableAnchorState initialization. Each page gets own state. */
+            val stateList = ArrayList<AnchoredDraggableState<DragValueY>>()
+            for (i in 0..< pageCount) {
+                stateList.add(
+                    AnchoredDraggableState(
+                        initialValue = DragValueY.Normal,
+                        positionalThreshold = { distance: Float -> distance * 0.5f },
+                        velocityThreshold = { with(density) { 100.dp.toPx() } },
+                        animationSpec = tween()
+                    ).apply {
+                        updateAnchors(getAnchors(
+                            LocalDensity.current,
+                            LocalConfiguration.current,
+                            false
+                        ))
+                    }
+                )
             }
+            val anchorStates = remember { stateList }
 
             CardsPager(
                 pageContent = { pageIndex ->
                     DraggableCard(
                         header = { headerContent(pageIndex) },
                         body = { pageContent(pageIndex) },
-                        yState = yState
+                        yState = anchorStates[pageIndex],
+                        scrollState = scrollStates[pageIndex]
                     )
                 },
-                anchorState = yState,
+                anchorStates = anchorStates,
                 pageCount = pageCount,
-                maxOffsetPx = maxOffsetPx
+                maxOffsetPx = with(density) {
+                        -(FRACTION_HEIGHT_EXTENDED - FRACTION_HEIGHT_COLLAPSED) *
+                                configuration.screenHeightDp.dp.toPx()
+                }
             )
         }
     }
 }
 
 
+@OptIn(ExperimentalFoundationApi::class)
+private fun getAnchors(
+    density: Density,
+    configuration: Configuration,
+    expansionAllowed: Boolean = true
+) : DraggableAnchors<DragValueY> {
+    with(density) {
+
+        val collapsedAllowed = false
+        val offset =
+            (FRACTION_HEIGHT_EXTENDED - FRACTION_HEIGHT_COLLAPSED) * configuration.screenHeightDp
+
+        return DraggableAnchors {
+            DragValueY.Normal at 0f
+            DragValueY.Full at if (expansionAllowed) { -offset.dp.toPx() } else { 0f }
+            DragValueY.Collapsed at if (collapsedAllowed) 200.dp.toPx() else 0f
+        }
+    }
+}
+
 /**
  * A HorizontalPager adjusting its contentPadding depending on the anchorState's distance to a
  * specific anchor.
+ *
+ * @param pageCount number of pages
+ * @param pageContent content of each page
+ * @param anchorStates list of AnchoredDraggableStates for each page
+ * @param maxOffsetPx maximum offset in pixels (usually negative). Used to calculate the padding
+ * @param modifier Modifier
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun CardsPager(
-    pageContent : @Composable (page: Int) -> Unit,
-    pageCount: Int,
     modifier: Modifier = Modifier,
-    anchorState : AnchoredDraggableState<DragValueY>,
-    maxOffsetPx: Float
+    pageCount: Int,
+    pageContent : @Composable (page: Int) -> Unit,
+    anchorStates : List<AnchoredDraggableState<DragValueY>>,
+    maxOffsetPx: Float,
 ) {
-    Log.d("TAG", "maxOffsetPx}")
+    val pagerState = rememberPagerState(pageCount = { pageCount })
 
-    val offsetFraction = (maxOffsetPx - anchorState.requireOffset()) / maxOffsetPx
+    val offsetFraction = (maxOffsetPx - anchorStates[pagerState.currentPage].requireOffset()) / maxOffsetPx
     val maxContentPaddingDp = 30
 
-    val pagerState = rememberPagerState(pageCount = { pageCount })
     HorizontalPager(
         modifier = modifier,
         state = pagerState,
@@ -145,7 +187,7 @@ private fun CardsPager(
             start = (offsetFraction * maxContentPaddingDp).dp,
             end = (offsetFraction * maxContentPaddingDp).dp,
         ),
-        userScrollEnabled = anchorState.requireOffset() == 0f
+        userScrollEnabled = anchorStates[pagerState.currentPage].requireOffset() >= 0f
     ) {page ->
         pageContent(page)
     }
@@ -158,6 +200,11 @@ private fun CardsPager(
  * https://www.droidcon.com/2021/11/09/how-to-master-swipeable-and-nestedscroll-modifiers-in-jetpack-compose/
  * and https://gist.github.com/arcadefire/7fe138c0ded1a36bee6dd57acdfa3d18,
  * adapted to use AnchoredDraggableState instead of SwipeableState
+ *
+ * @param yState AnchoredDraggableState for the vertical axis
+ * @param header header content composable
+ * @param body body content composable
+ * @param scrollState ScrollState for the body content
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -165,21 +212,19 @@ private fun DraggableCard(
     yState : AnchoredDraggableState<DragValueY>,
     header: @Composable () -> Unit,
     body: @Composable () -> Unit,
+    scrollState: ScrollState
 ) {
     val density = LocalDensity.current
     val configuration = LocalConfiguration.current
 
-    val scrollState = rememberScrollState()
+    val height = with(density) {
+        (configuration.screenHeightDp * FRACTION_HEIGHT_COLLAPSED).dp - yState.requireOffset().toDp()
+    }
 
     Box (
         Modifier
             .anchoredDraggable(yState, Orientation.Vertical)
-            .height(with(density) {
-                (configuration.screenHeightDp * FRACTION_HEIGHT_COLLAPSED).dp - yState
-                    .requireOffset()
-                    .toDp()
-            })
-//            .fillMaxWidth(0.8f + if (yState.requireOffset() < 0 ) { yState.progress*0.2f } else {0f})
+            .height(height)
             .nestedScroll(
                 object : NestedScrollConnection {
 
@@ -269,9 +314,21 @@ private fun DraggableCard(
                 Modifier
                     .verticalScroll(scrollState)
                     .fillMaxWidth()
+
             ) {
                 body()
             }
         }
+    }
+
+    // update anchors according to required size inside
+    // if content is scrollable (maxValue > 0), allow expanding
+    // only update if in normal position to prevent force-shrinking it
+    if (yState.requireOffset() == 0f) {
+        yState.updateAnchors(
+            getAnchors(
+                density,configuration,scrollState.maxValue > 0
+            )
+        )
     }
 }

@@ -138,12 +138,14 @@ fun ActiveSession(
                     },
                     pageContent = { pageIndex ->
                           when(pageIndex) {
-                              else -> LibraryList(
-                                  uiState = uiState.libraryUiState,
-                                  onLibraryItemClicked = {
-                                      uiEvent(ActiveSessionUIEvent.StartNewSection(it))
-                                  }
-                              )
+                              else ->  {
+                                  LibraryList(
+                                      uiState = uiState.libraryUiState,
+                                      onLibraryItemClicked = {
+                                          uiEvent(ActiveSessionUIEvent.StartNewSection(it))
+                                      }
+                                  )
+                              }
                           }
                     },
                     boxScope = this@Box
