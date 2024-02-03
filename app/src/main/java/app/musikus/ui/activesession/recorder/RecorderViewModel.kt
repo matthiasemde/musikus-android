@@ -15,7 +15,6 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.Build
 import android.os.IBinder
-import android.util.Log
 import android.widget.Toast
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -131,16 +130,23 @@ class RecorderViewModel @Inject constructor(
         when(event) {
             is RecorderUiEvent.ToggleRecording -> {
                 viewModelScope.launch {
-                    val permissionResult = permissionsUseCases.request(
+                    val recordingPermissionResult = permissionsUseCases.request(
                         listOf(android.Manifest.permission.RECORD_AUDIO)
                     )
-                    Log.d(
-                        "RecorderViewModel",
-                        "Microphone permission request finished successfully: $permissionResult"
-                    )
-                    if(!permissionResult) {
+                    if(!recordingPermissionResult) {
                         Toast.makeText(application, "Microphone permission required", Toast.LENGTH_SHORT).show()
                         return@launch
+                    }
+
+                    if(Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+                        val writeExternalStoragePermissionResult = permissionsUseCases.request(
+                            listOf(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                        )
+
+                        if (!writeExternalStoragePermissionResult) {
+                            Toast.makeText(application, "Storage permission required", Toast.LENGTH_SHORT).show()
+                            return@launch
+                        }
                     }
 
                     startService()

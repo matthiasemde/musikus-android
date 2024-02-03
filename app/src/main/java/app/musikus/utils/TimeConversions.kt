@@ -87,7 +87,10 @@ enum class DateFormat {
     YEAR,
 
     /** year shortened, e.g. "18", "22" */
-    YEAR_SHORT;
+    YEAR_SHORT,
+
+    /** date format used for naming recordings, e.g. "02_12_2024T20_21_22 e*/
+    RECORDING;
 
     companion object {
         fun formatString(format: DateFormat) = when(format) {
@@ -102,6 +105,7 @@ enum class DateFormat {
             MONTH_ABBREVIATED -> "MMM"
             YEAR -> "y"
             YEAR_SHORT -> "yy"
+            RECORDING -> "dd_MM_yyyy'T'H_mm_ss"
         }
     }
 }

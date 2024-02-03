@@ -8,47 +8,141 @@
 
 package app.musikus.utils
 
+import android.content.ContentValues
 import android.content.Context
 import android.media.MediaRecorder
+import android.net.Uri
 import android.os.Build
-import android.util.Log
+import android.os.Environment
+import android.provider.MediaStore
+import java.io.File
 import java.io.FileDescriptor
-import java.util.Date
+import java.io.IOException
+import java.time.ZonedDateTime
 
 class Recorder(
-    private val context: Context
+    private val context: Context,
+    private val timeProvider: TimeProvider
 ) {
 
     private var isRecording = false
-    private var recordingStartTime: Long? = null
+    private var recordingUri: Uri? = null
+    private var mediaRecorder: MediaRecorder? = null
 
-    private lateinit var mediaRecorder: MediaRecorder
+    fun start(recordingName: String) : Result<ZonedDateTime> {
+        if(isRecording) {
+            throw IllegalStateException("Recorder is already recording")
+        }
 
-//    fun startRecording(uri: Uri) {
-//        try {
-//            contentResolver.openFileDescriptor(uri,"w")?.fileDescriptor
-//        } catch (e: Exception) {
-//            null
-//        }
-//
-//        if(fileDescriptor != null) {
-//            startRecording(fileDescriptor)
-//
-//        }
-//        else
-//            Log.d("REC_SERVICE", "onStart: No valid file descriptor passed")
-//
-//    }
+        val startTime = timeProvider.now()
 
-    @Suppress("DEPRECATION")
-    private fun start(outputFile: FileDescriptor) {
+        val displayName = "${recordingName}_${startTime.musikusFormat(DateFormat.RECORDING)}"
+
+        // initialize the content values for the new recording
+        val contentValues = getContentValues(startTime, displayName)
+
+        // if the build version is less than Q, manually create the directory for the new recording
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            val recordingDirectory = File(
+                Environment.getExternalStoragePublicDirectory(
+                    Environment.DIRECTORY_MUSIC
+                ).toString() + "/Musikus"
+            )
+            if (!recordingDirectory.exists()) {
+                recordingDirectory.mkdirs()
+            }
+            contentValues.put(
+                MediaStore.Audio.Media.DATA,
+                File(recordingDirectory, displayName).absolutePath
+            )
+        }
+
+
+        // create the uri for the new recording from the current time and the provided display name
+        val contentUri = if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+        } else {
+            MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+        }
+
+        context.contentResolver.insert(contentUri, contentValues)?.let { uri ->
+            recordingUri = uri
+            context.contentResolver.openFileDescriptor(uri, "w")?.use {
+                initializeMediaRecorder(it.fileDescriptor)
+            }
+        } ?: throw IOException("Couldn't create MediaStore entry")
+
+        mediaRecorder?.start() ?: throw IOException("Tried to start recording without initializing mediaRecorder")
+        isRecording = true
+        return Result.success(startTime)
+    }
+
+
+    fun stop() {
+        if(!isRecording) {
+            throw IllegalStateException("Recorder is not recording")
+        }
+
+        mediaRecorder?.apply {
+            stop()
+            release()
+        } ?: throw IllegalStateException("Tried to stop recording without initializing mediaRecorder")
+        isRecording = false
+
+        // finally update the recordings content values to mark it as no longer pending
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            ContentValues().apply {
+                put(MediaStore.MediaColumns.IS_PENDING, false)
+                context.contentResolver.update(
+                    recordingUri ?: throw IllegalStateException("Recording URI is null"),
+                    this,
+                    null,
+                    null
+                )
+            }
+        }
+
+        recordingUri = null
+        mediaRecorder = null
+    }
+
+    /**
+     * --------------- Private methods ---------------
+     */
+
+    private fun getContentValues(time: ZonedDateTime, displayName: String): ContentValues {
+        return ContentValues().apply {
+
+            put(MediaStore.Audio.Media.DISPLAY_NAME, displayName)
+            put(MediaStore.Audio.Media.TITLE, displayName)
+            put(MediaStore.Audio.Media.MIME_TYPE, "audio/mp4")
+            put(MediaStore.Audio.Media.ALBUM, "Musikus")
+            put(MediaStore.Audio.Media.DATE_ADDED, time.toString())
+            put(MediaStore.Audio.Media.DATE_MODIFIED, time.toString())
+            put(MediaStore.Audio.Media.IS_MUSIC, 1)
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                put(MediaStore.MediaColumns.RELATIVE_PATH, "Music/Musikus")
+                put(MediaStore.MediaColumns.IS_PENDING, true)
+            }
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                put(MediaStore.Audio.Media.GENRE, "Recording")
+            }
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                put(MediaStore.Audio.Media.IS_RECORDING, 1)
+            }
+        }
+    }
+
+    private fun initializeMediaRecorder(outputFile: FileDescriptor) {
         mediaRecorder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             MediaRecorder(context)
         } else {
+            @Suppress("DEPRECATION")
             MediaRecorder()
-        }
-
-        mediaRecorder.apply {
+        }.apply {
             setAudioSource(MediaRecorder.AudioSource.MIC)
             setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
             setAudioEncoder(MediaRecorder.AudioEncoder.HE_AAC)
@@ -57,22 +151,6 @@ class Recorder(
             setAudioSamplingRate(44_100)
             setOutputFile(outputFile)
             prepare()
-            start()
-        }
-        isRecording = true
-        recordingStartTime = Date().time
-    }
-
-
-    fun stop() {
-        Log.d("RecService", "Stop reocrding")
-        if(isRecording) {
-            mediaRecorder.apply {
-                stop()
-                release()
-            }
-            isRecording = false
-            recordingStartTime = null
         }
     }
 }

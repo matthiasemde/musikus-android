@@ -17,6 +17,7 @@ import android.content.pm.ServiceInfo
 import android.os.Binder
 import android.os.Build
 import android.os.IBinder
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
@@ -25,10 +26,13 @@ import app.musikus.RECORDER_NOTIFICATION_CHANNEL_ID
 import app.musikus.ui.activesession.ActiveSessionActivity
 import app.musikus.utils.DurationFormat
 import app.musikus.utils.Recorder
+import app.musikus.utils.TimeProvider
 import app.musikus.utils.getDurationString
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
+import javax.inject.Inject
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -47,7 +51,11 @@ sealed class RecorderServiceEvent {
     data object ToggleRecording: RecorderServiceEvent()
 }
 
+@AndroidEntryPoint
 class RecorderService : Service() {
+
+    @Inject
+    lateinit var timeProvider: TimeProvider
 
     /** Interface object for clients that bind */
     private val binder = LocalBinder()
@@ -61,7 +69,10 @@ class RecorderService : Service() {
      */
 
     private val recorder by lazy {
-        Recorder(context = this)
+        Recorder(
+            context = this,
+            timeProvider = timeProvider
+        )
     }
 
     /** Own state flows */
@@ -92,7 +103,8 @@ class RecorderService : Service() {
     private fun toggleIsRecording() {
         _isRecording.update { !it }
         if (_isRecording.value) {
-//            recorder.startRecording()
+            val result = recorder.start("Musikus")
+            Log.d("RecorderService", "Recording started: $result")
         } else {
             recorder.stop()
         }
@@ -118,7 +130,7 @@ class RecorderService : Service() {
             this,
             RECORDER_NOTIFICATION_ID,
             getNotification(0.seconds),
-            ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+            ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
         )
 
         return START_NOT_STICKY
