@@ -11,7 +11,6 @@ package app.musikus.utils
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -60,8 +59,6 @@ class PermissionChecker(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     suspend fun requestPermission(vararg permissions: String): Result<Unit> {
-        Log.d("PermissionChecker", "requestPermission: ${permissions.joinToString(", ")}")
-
         if (!this::activity.isInitialized) {
             return Result.failure(IllegalStateException("No activity available"))
         }

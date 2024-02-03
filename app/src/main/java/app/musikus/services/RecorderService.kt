@@ -1,7 +1,9 @@
 /*
- * This software is licensed under the MIT license
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2022, Javier Carbone, author Matthias Emde
+ * Copyright (c) 2024 Matthias Emde
  */
 
 package app.musikus.services
@@ -15,7 +17,6 @@ import android.content.pm.ServiceInfo
 import android.os.Binder
 import android.os.Build
 import android.os.IBinder
-import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
@@ -126,7 +127,6 @@ class RecorderService : Service() {
     override fun onDestroy() {
         recorder.stop()
         super.onDestroy()
-        Log.d("RecService", "Destroyed")
     }
 
 //    private fun updateNotification(duration: Duration) {

@@ -8,7 +8,10 @@
 
 package app.musikus.usecase.permissions
 
-
-interface PermissionRepository {
-    suspend fun requestPermissions(permissions: List<String>): Boolean
+class RequestPermissionsUseCase(
+    private val permissionRepository: PermissionRepository
+) {
+    suspend operator fun invoke(permissions: List<String>) : Boolean {
+        return permissionRepository.requestPermissions(permissions)
+    }
 }

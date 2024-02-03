@@ -8,21 +8,14 @@
 
 package app.musikus.repository
 
-import android.util.Log
 import app.musikus.usecase.permissions.PermissionRepository
 import app.musikus.utils.PermissionChecker
-import kotlinx.coroutines.flow.Flow
 
 class PermissionRepositoryImpl(
     private val permissionChecker: PermissionChecker
 ) : PermissionRepository {
-    override suspend fun requestPermission(permission: String): Boolean {
-        val result = permissionChecker.requestPermission(permission)
-        Log.d("PermissionRepositoryImpl", "requestPermission: $permission, result: $result")
+    override suspend fun requestPermissions(permissions: List<String>): Boolean {
+        val result = permissionChecker.requestPermission(*permissions.toTypedArray())
         return result.isSuccess
     }
-
-    override val permissions: Flow<List<String>>
-        get() = TODO("Not yet implemented")
-
 }

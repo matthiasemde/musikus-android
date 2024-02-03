@@ -16,12 +16,13 @@ import android.content.ServiceConnection
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
+import android.widget.Toast
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import app.musikus.services.RecorderService
 import app.musikus.services.RecorderServiceEvent
 import app.musikus.services.RecorderServiceState
-import app.musikus.usecase.permissions.PermissionRepository
+import app.musikus.usecase.permissions.PermissionsUseCases
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -49,7 +50,7 @@ sealed class RecorderUiEvent {
 @HiltViewModel
 class RecorderViewModel @Inject constructor(
     private val application: Application,
-    private val permissionRepository: PermissionRepository
+    private val permissionsUseCases: PermissionsUseCases
 ) : AndroidViewModel(application) {
 
     /** ------------------ Service --------------------- */
@@ -130,7 +131,18 @@ class RecorderViewModel @Inject constructor(
         when(event) {
             is RecorderUiEvent.ToggleRecording -> {
                 viewModelScope.launch {
-                    Log.d("RecorderViewModel", "Microphone permission request finished successfully: ${permissionRepository.requestPermission(android.Manifest.permission.RECORD_AUDIO)}")
+                    val permissionResult = permissionsUseCases.request(
+                        listOf(android.Manifest.permission.RECORD_AUDIO)
+                    )
+                    Log.d(
+                        "RecorderViewModel",
+                        "Microphone permission request finished successfully: $permissionResult"
+                    )
+                    if(!permissionResult) {
+                        Toast.makeText(application, "Microphone permission required", Toast.LENGTH_SHORT).show()
+                        return@launch
+                    }
+
                     startService()
                     serviceEventHandler?.invoke(RecorderServiceEvent.ToggleRecording)
                 }
