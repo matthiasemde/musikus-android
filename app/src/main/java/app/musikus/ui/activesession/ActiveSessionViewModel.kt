@@ -54,7 +54,7 @@ data class ActiveSessionUiState(
 )
 
 data class LibraryCardUiState(
-    val items: List<LibraryItem>,
+    val rootItems: List<LibraryItem>,
     val foldersWithItems: List<LibraryFolderWithItems>
 )
 data class PracticeSection(
@@ -125,14 +125,14 @@ class ActiveSessionViewModel @Inject constructor(
         folderWithItems
     ) { rootItems, folderWithItems ->
         LibraryCardUiState(
-            items = rootItems,
+            rootItems = rootItems,
             foldersWithItems = folderWithItems
         )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(),
         initialValue = LibraryCardUiState(
-            items = rootItems.value,
+            rootItems = rootItems.value,
             foldersWithItems = folderWithItems.value
         )
     )

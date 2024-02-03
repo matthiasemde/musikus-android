@@ -9,37 +9,26 @@
 
 package app.musikus.ui.activesession
 
-import android.content.res.Configuration
-import android.util.Log
 import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.AnchoredDraggableState
-import androidx.compose.foundation.gestures.DraggableAnchors
-import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.anchoredDraggable
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowColumn
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
@@ -48,39 +37,31 @@ import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.input.pointer.pointerInteropFilter
-import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.musikus.database.UUIDConverter
 import app.musikus.database.daos.LibraryFolder
 import app.musikus.database.daos.LibraryItem
 import app.musikus.services.Actions
 import app.musikus.ui.MainUIEvent
 import app.musikus.ui.MainUiState
+import app.musikus.ui.library.LibraryUiItem
 import app.musikus.ui.theme.spacing
 import app.musikus.utils.DurationFormat
 import app.musikus.utils.TimeProvider
@@ -111,24 +92,13 @@ fun ActiveSession(
                 modifier = Modifier.animateContentSize(),
                 state = pagerState,
                 pageSpacing = MaterialTheme.spacing.medium,
-//                contentPadding = PaddingValues(
-//                    start = MaterialTheme.spacing.large,
-//                    end =  MaterialTheme.spacing.large,
-//                    top = 40.dp
-//                )
             ) {page ->
-                LazyColumn(
-                    modifier = Modifier.fillMaxWidth().padding(16.dp),
-                    content = {
-                        items(
-                            if (page == 1) 5 else 100
-                        ) {
-                            Text(text = "Page $page Item $it")
-                        }
-                    }
-                )
+                BottomSheetPage(page, uiState, uiEvent)
             }
         },
+        sheetShadowElevation = 12.dp,
+        sheetDragHandle = {},
+        sheetTonalElevation = 12.dp,
         content = {contentPadding ->
             if(uiState.isPaused) {
                PauseDialog(uiState, uiEvent)
@@ -166,204 +136,89 @@ fun ActiveSession(
                     )
 
                 }
-
-//                DraggableCard(uiState = uiState,
-//                    Modifier
-//                        .padding(
-//                            start = MaterialTheme.spacing.large,
-//                            end = MaterialTheme.spacing.large,
-//                        )
-//                        .align(Alignment.BottomCenter),
-//
-//                )
             }
         }
     )
 }
 
 
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-private fun Pager(
-    uiState: ActiveSessionUiState,
-    modifier: Modifier = Modifier
-) {
-    val pagerState = rememberPagerState(pageCount = { 4 })
-    HorizontalPager(
-        modifier = modifier,
-        state = pagerState,
-        pageSpacing = MaterialTheme.spacing.medium,
-        contentPadding = PaddingValues(
-            start = MaterialTheme.spacing.large,
-            end =  MaterialTheme.spacing.large,
-            top = 40.dp
-        )
-    ) {page ->
-        DraggableCard(
-            uiState = uiState
-        )
-
-    }
-}
-
-
-@OptIn(ExperimentalFoundationApi::class)
-private fun getXAnchors(
-    pageIndex: Int,
-    screenDensity: Density,
-    screenConfig: Configuration
-) : DraggableAnchors<DragValueX> {
-    with(screenDensity) {
-        val scrollWidth = screenConfig.screenWidthDp.dp.toPx()
-        return DraggableAnchors {
-            DragValueX.Page1 at 0.dp.toPx()
-            DragValueX.Page2 at scrollWidth * -1
-            DragValueX.Page3 at scrollWidth * -2
-            DragValueX.Page4 at scrollWidth * -3
-        }
-    }
-}
-
-enum class DragValueY { Start, End }
-enum class DragValueX { Page1, Page2, Page3, Page4 }
-
-@OptIn(ExperimentalFoundationApi::class, ExperimentalComposeUiApi::class)
-@Composable
-private fun DraggableCard(
-    uiState: ActiveSessionUiState,
-    modifier: Modifier = Modifier
-) {
-    val fractionOfHeightToMove = FRACTION_HEIGHT_EXTENDED - FRACTION_HEIGHT_COLLAPSED
-
-    val density = LocalDensity.current
-    val configuration = LocalConfiguration.current
-
-    val yAnchors = with(density) {
-        DraggableAnchors {
-            val offset = (configuration.screenHeightDp * fractionOfHeightToMove).dp.toPx()
-            DragValueY.Start at 0.dp.toPx()
-            DragValueY.End at -offset
-        }
-    }
-    val yState = remember { AnchoredDraggableState(
-        initialValue = DragValueY.Start,
-        positionalThreshold = { distance: Float -> distance * 0.5f },
-        velocityThreshold = { with(density) { 100.dp.toPx() } },
-        animationSpec = tween()
-    ).apply {
-        updateAnchors(yAnchors)
-    } }
-
-    val xState = remember {
-        AnchoredDraggableState(
-            initialValue = DragValueX.Page1,
-            positionalThreshold = { distance: Float -> distance * 0.5f },
-            velocityThreshold = { with(density) { 100.dp.toPx() } },
-            animationSpec = tween()
-        ).apply {
-            updateAnchors(getXAnchors(0, density, configuration))
-        }
-    }
-
-    val initialHeight = (LocalConfiguration.current.screenHeightDp * FRACTION_HEIGHT_COLLAPSED).dp
-
-    val lastY = remember { mutableStateOf(0f) }
-    val movedFingerDown = remember { mutableStateOf(false) }
-
-    ElevatedCard(
-        modifier = modifier
-            .height(initialHeight - with(LocalDensity.current) {
-                yState
-                    .requireOffset()
-                    .toDp()
-            })
-            .fillMaxWidth()
-            .offset(x = 0.dp, y = 20.dp)
-            .anchoredDraggable(yState, Orientation.Vertical)
-        ,
-        shape = RoundedCornerShape(16.dp)
-    ) {
-
-        val listState = rememberLazyListState()
-
-
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp)
-                .pointerInteropFilter { event ->
-                    Log.d("TAG", event.toString())
-//                    if (event.action == MotionEvent.ACTION_DOWN) {
-//                        Log.d("TAG", "ACTION_DOWN")
-//                    }
-//                    if (event.action == MotionEvent.ACTION_MOVE) {
-//                        Log.d("TAG", "ACTION_MOVE")
-//
-//                    }
-//                    if (event.action == MotionEvent.ACTION_UP) {
-//                        Log.d("TAG", "ACTION_UP")
-//                    }
-
-                    false
-                }
-            ,
-            state = listState,
-            userScrollEnabled = true//(!listState.canScrollBackward) || movedFingerDown.value
-
-        ) {
-            val toTopScrolled = !listState.canScrollBackward
-            if (toTopScrolled) {
-                Log.d("TAG", "reached end")
-            }
-            // Add your child elements here
-            items(100) { index ->
-
-
-
-//                scrollingDisabled.value =
-//                    (yState.requireOffset() == 0f) ||                                   // card collapsed
-//                    (movedFingerDown.value && listState.canScrollBackward)     // down moving finger && top of list
-
-//                Log.d("TAG", "canScrollBackward: ${listState.canScrollBackward}")
-
-//                Log.d("TAG", "scrollingDisabled: ${scrollingDisabled.value}"    )
-
-                Text(
-                    modifier = Modifier.fillMaxWidth(),
-                    text = "Item $index"
-                )
-            }
-        }
-    }
-}
-
-
 /**
- * Returns whether the lazy list is currently scrolling up.
+ * A scaffold for a page inside the bottom sheet
+ *
+ * @param page the page to display
+ * @param uiState the current ui state
+ * @param uiEvent the event handler
  */
 @Composable
-private fun LazyListState.isScrollingUp(): Boolean {
-    var previousIndex by remember(this) { mutableIntStateOf(firstVisibleItemIndex) }
-    var previousScrollOffset by remember(this) { mutableIntStateOf(firstVisibleItemScrollOffset) }
-    return remember(this) {
-        derivedStateOf {
-            if (previousIndex != firstVisibleItemIndex) {
-                previousIndex > firstVisibleItemIndex
-            } else {
-                previousScrollOffset >= firstVisibleItemScrollOffset
-            }.also {
-                previousIndex = firstVisibleItemIndex
-                previousScrollOffset = firstVisibleItemScrollOffset
+fun BottomSheetPage(
+    pageIndex: Int,
+    uiState: ActiveSessionUiState,
+    uiEvent: (ActiveSessionUIEvent) -> Unit
+) {
+    Column (
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Spacer(Modifier.height(MaterialTheme.spacing.large))
+        Text(
+            modifier = Modifier.align(Alignment.CenterHorizontally),
+            text = "Heading",
+            style = MaterialTheme.typography.titleMedium
+        )
+        Spacer(Modifier.height(5.dp))
+        HorizontalDivider()
+
+        /*
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(200.dp)
+        ) {
+            Text(
+                modifier = Modifier.align(Alignment.Center),
+                text = "Page placeholder"
+            )
+        }
+        */
+
+        when(pageIndex) {
+            0 -> {
+                LibraryList(
+                    uiState = uiState.libraryUiState,
+                    onLibraryItemClicked = {}
+                )
+            }
+            1 -> {
+
+            }
+            2 -> {
+
+            }
+            3 -> {
+
             }
         }
-    }.value
+    }
 }
+
 
 @Composable
 private fun HeaderBar(
     uiState: ActiveSessionUiState
 ) {
-    Text("<Header Placeholder>")
+    Row (
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceEvenly
+    ){
+        Button(
+            onClick = {  }
+        ) {
+            Text(text = "Pause")
+        }
+
+        Button(onClick = {}) {
+            Text(text = "Save Session")
+        }
+    }
 }
 
 
@@ -469,7 +324,7 @@ private fun LibraryCard(
         horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small),
     ) {
         // show a button for each library item
-        for(libraryItem in (uiState.items + uiState.foldersWithItems.flatMap { it.items })) {
+        for(libraryItem in (uiState.rootItems + uiState.foldersWithItems.flatMap { it.items })) {
             Button(
                 modifier = Modifier
                     .height(50.dp)
@@ -479,6 +334,45 @@ private fun LibraryCard(
                 }) {
                 Text(text = libraryItem.name)
             }
+        }
+    }
+}
+
+
+@Composable
+private fun LibraryList(
+    uiState: LibraryCardUiState,
+    onLibraryItemClicked: (LibraryItem) -> Unit,
+) {
+    val activeFolder = remember { mutableStateOf(UUIDConverter.deadBeef) }
+
+    // Header Folder List
+    LazyRow(modifier = Modifier.fillMaxWidth()) {
+        items(uiState.foldersWithItems) {folder ->
+            Row {
+                Button(onClick = {
+                    activeFolder.value = folder.folder.id
+                }) {
+                    Text(folder.folder.name)
+                }
+            }
+        }
+    }
+    // Library Items
+    Column {
+        // show folder items or if folderId could not be found, show root Items
+        val shownItems =
+            uiState.foldersWithItems.find { it.folder.id == activeFolder.value }?.items ?: uiState.rootItems
+        for (item in shownItems) {
+            LibraryUiItem(
+                modifier = Modifier.padding(
+                    vertical = MaterialTheme.spacing.small,
+                    horizontal = MaterialTheme.spacing.large
+                ),
+                item = item,
+                selected = false,
+                onShortClick = { /*TODO*/ },
+                onLongClick = { /*TODO*/})
         }
     }
 }
@@ -519,32 +413,6 @@ private fun SectionsList(
                     .align(Alignment.Center),
                 text = "Quotes",
             )
-        }
-    }
-}
-
-@Composable
-private fun BottomRow(
-    uiState: ActiveSessionUiState,
-    onSaveClicked: () -> Unit
-) {
-    Row (
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceEvenly
-    ){
-        Button(
-            modifier = Modifier.pointerInput(Unit) {
-                detectTapGestures (
-                    onDoubleTap = { Log.d("TAGH", "Double Tap") }
-                )
-            },
-            onClick = {  }
-        ) {
-            Text(text = "Pause")
-        }
-
-        Button(onClick = onSaveClicked) {
-            Text(text = "Save Session")
         }
     }
 }

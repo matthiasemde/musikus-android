@@ -433,7 +433,7 @@ fun LibraryContent(
                 Box(
                     modifier = Modifier.animateItemPlacement()
                 ) {
-                    LibraryItem(
+                    LibraryUiItem(
                         modifier = Modifier.padding(
                             vertical = MaterialTheme.spacing.small,
                             horizontal = MaterialTheme.spacing.large
@@ -495,7 +495,7 @@ fun LibraryFolder(
 }
 
 @Composable
-fun LibraryItem(
+fun LibraryUiItem(
     modifier: Modifier = Modifier,
     item: LibraryItem,
     selected: Boolean,
