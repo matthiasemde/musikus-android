@@ -46,6 +46,7 @@
                     "This service is used to track the user's time
                     during an active practice session
                     as well as show an accompanying notification." />
+        </service>
         <service
             android:name=".services.MetronomeService"
             android:enabled="true"

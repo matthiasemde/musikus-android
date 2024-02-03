@@ -108,13 +108,13 @@ class ActiveSessionViewModel @Inject constructor(
 
     // ####################### Library #######################
 
-    private val rootItems = libraryUseCases.getItems(Nullable(null)).stateIn(
+    private val rootItems = libraryUseCases.getSortedItems(Nullable(null)).stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(),
         initialValue = listOf()
     )
 
-    private val folderWithItems = libraryUseCases.getFolders().stateIn(
+    private val folderWithItems = libraryUseCases.getSortedFolders().stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(),
         initialValue = listOf()

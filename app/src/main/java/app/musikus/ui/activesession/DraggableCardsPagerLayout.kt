@@ -18,7 +18,6 @@ import android.content.res.Configuration
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.ScrollState
-import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.AnchoredDraggableState
 import androidx.compose.foundation.gestures.DraggableAnchors
 import androidx.compose.foundation.gestures.Orientation
@@ -30,12 +29,17 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CornerSize
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.CardColors
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -57,9 +61,6 @@ enum class DragValueY {
     Normal,
     Full,
 }
-
-const val FRACTION_HEIGHT_COLLAPSED = 0.5f
-const val FRACTION_HEIGHT_EXTENDED = 0.8f
 
 /**
  * Public interface for instantiating the complete pager.
@@ -304,16 +305,28 @@ private fun DraggableCard(
                 }
             )
     ){
-        Column(
-            Modifier
-                .background(MaterialTheme.colorScheme.surfaceColorAtElevation(5.dp))
-                .fillMaxHeight()
+        ElevatedCard(
+            modifier = Modifier.fillMaxHeight(),
+            colors = CardColors(
+                containerColor = MaterialTheme.colorScheme.surface,
+                contentColor = MaterialTheme.colorScheme.onSurface,
+                disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            ),
+            shape = RoundedCornerShape(
+                topStart = MaterialTheme.shapes.medium.topStart,
+                topEnd = MaterialTheme.shapes.medium.topEnd,
+                bottomStart = CornerSize(0.dp),
+                bottomEnd = CornerSize(0.dp)
+            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 5.dp)
         ) {
             header()
             Box(
                 Modifier
                     .verticalScroll(scrollState)
                     .fillMaxWidth()
+                    .padding(MaterialTheme.spacing.small),
 
             ) {
                 body()

@@ -9,8 +9,8 @@
 
 package app.musikus.ui.activesession
 
+import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowColumn
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -36,6 +35,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -44,7 +44,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -55,9 +54,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.musikus.database.UUIDConverter
 import app.musikus.database.daos.LibraryFolder
 import app.musikus.database.daos.LibraryItem
-import app.musikus.services.Actions
 import app.musikus.ui.MainUIEvent
 import app.musikus.ui.MainUiState
+import app.musikus.ui.activesession.metronome.Metronome
 import app.musikus.ui.library.LibraryUiItem
 import app.musikus.ui.theme.spacing
 import app.musikus.utils.DurationFormat
@@ -66,6 +65,8 @@ import app.musikus.utils.getDurationString
 
 
 
+const val FRACTION_HEIGHT_COLLAPSED = 0.5f
+const val FRACTION_HEIGHT_EXTENDED = 0.8f
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -80,79 +81,91 @@ fun ActiveSession(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val uiEvent: (ActiveSessionUIEvent) -> Unit = viewModel::onEvent
 
-    Scaffold  {contentPadding ->
-            if(uiState.isPaused) {
-               PauseDialog(uiState, uiEvent)
-            }
+    Scaffold { contentPadding ->
+        if(uiState.isPaused) {
+           PauseDialog(uiState, uiEvent)
+        }
 
-            Box(
+        Box(
+            modifier = Modifier
+                .padding(contentPadding)
+                .fillMaxSize()
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
-                    .padding(contentPadding)
                     .fillMaxSize()
+                    .padding(
+                        start = MaterialTheme.spacing.medium,
+                        end = MaterialTheme.spacing.medium
+                    )
             ) {
+
+                /** ------------------- Area above extended Cards ------------------- */
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .fillMaxHeight()
-                        .background(MaterialTheme.colorScheme.primaryContainer)
-                ) {
-                    // DEBUG
-                    if (deepLinkArgument == Actions.FINISH.toString()) {
-                        Text(
-                            "Clicked on Finish in Notification",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = Color.Red
-                        )
-                    }
-
-                    HeaderBar(uiState)
-                    Spacer(modifier = Modifier.height(MaterialTheme.spacing.large))
+                        .weight(1 - FRACTION_HEIGHT_EXTENDED)
+//                        .background(Color.Green)
+                ){
+                    HeaderBar(uiState, uiEvent)
+                    Spacer(modifier = Modifier.weight(1f))
                     PracticeTimer(uiState)
-                    CurrentPracticingItem(uiState = uiState)
-                    LibraryCard(
-                        uiState = uiState.libraryUiState,
-                        onLibraryItemClicked = { uiEvent(ActiveSessionUIEvent.StartNewSection(it)) },
-                        onFolderClicked = {}
-                    )
-
                 }
 
-                /**
-                 *
-                 *  ------------------- Bottom Draggable Cards Layout -------------------
-                 *
-                 */
-
-                DraggableCardsPagerLayout(
-                    pageCount = 3,
-                    headerContent = {pageIndex ->
-                        CardHeader(
-                            text = when(pageIndex) {
-                                0 -> "Library"
-                                1 -> "Recorder"
-                                2 -> "Metronome"
-                                else -> "unknown"
-                            }
-                        )
-                    },
-                    pageContent = { pageIndex ->
-                          when(pageIndex) {
-                              else ->  {
-                                  LibraryList(
-                                      uiState = uiState.libraryUiState,
-                                      onLibraryItemClicked = {
-                                          uiEvent(ActiveSessionUIEvent.StartNewSection(it))
-                                      }
-                                  )
-                              }
-                          }
-                    },
-                    boxScope = this@Box
-                )
+                /** ------------------- Remaining area ------------------- */
+                Column (
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier
+                        .weight(FRACTION_HEIGHT_EXTENDED)
+                        .fillMaxWidth()
+//                        .background(Color.Blue)
+                ) {
+                    Spacer(modifier = Modifier.height(MaterialTheme.spacing.extraLarge))
+                    CurrentPracticingItem(uiState = uiState)
+                    SectionsList(uiState = uiState)
+                }
 
             }
+
+            /**
+             *
+             *  ------------------- Bottom Draggable Cards Layout -------------------
+             *
+             */
+
+            DraggableCardsPagerLayout(
+                pageCount = 3,
+                headerContent = {pageIndex ->
+                    CardHeader(
+                        text = when(pageIndex) {
+                            0 -> "Library"
+                            1 -> "Recorder"
+                            2 -> "Metronome"
+                            else -> "unknown"
+                        }
+                    )
+                },
+                pageContent = { pageIndex ->
+                      when(pageIndex) {
+                          0 ->  {
+                              LibraryList(
+                                  uiState = uiState.libraryUiState,
+                                  onLibraryItemClicked = {
+                                      Log.d("ZAG", "Clicked on LibraryItem: $it")
+                                      uiEvent(ActiveSessionUIEvent.StartNewSection(it))
+                                  }
+                              )
+                          }
+                          2 -> Metronome()
+                          else -> Text("TBA", modifier = Modifier.align(Alignment.Center))
+                      }
+                },
+                boxScope = this@Box
+            )
+
         }
+    }
 }
 
 
@@ -171,35 +184,32 @@ private fun CardHeader(
             text = text,
             style = MaterialTheme.typography.titleMedium
         )
-        Spacer(Modifier.height(5.dp))
+        Spacer(Modifier.height(MaterialTheme.spacing.small))
         HorizontalDivider()
     }
 }
 
 
 
-
-
-
-
-
 @Composable
 private fun HeaderBar(
-    uiState: ActiveSessionUiState
+    uiState: ActiveSessionUiState,
+    uiEvent: (ActiveSessionUIEvent) -> Unit
 ) {
     Row (
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceEvenly
+        horizontalArrangement = Arrangement.End
     ){
-        Button(
-            onClick = {  }
+        OutlinedButton(
+            onClick = { uiEvent(ActiveSessionUIEvent.TogglePause)  }
         ) {
             Text(text = "Pause")
         }
-
-        Button(onClick = {}) {
+        Spacer(modifier = Modifier.width(MaterialTheme.spacing.medium))
+        OutlinedButton(onClick = { uiEvent(ActiveSessionUIEvent.StopSession) }) {
             Text(text = "Save Session")
         }
+        Spacer(modifier = Modifier.width(MaterialTheme.spacing.medium))
     }
 }
 
@@ -210,7 +220,8 @@ private fun PracticeTimer(
 ) {
     Text(
         style = MaterialTheme.typography.displayMedium,
-        text = getDurationString(uiState.totalSessionDuration, DurationFormat.HMS_DIGITAL).toString()
+        text = getDurationString(uiState.totalSessionDuration, DurationFormat.HMS_DIGITAL).toString(),
+        fontWeight = FontWeight.Bold
     )
     Text(text = "Practice time")
 }
@@ -222,9 +233,12 @@ private fun CurrentPracticingItem(
 ) {
     if (uiState.sections.isNotEmpty()) {
         val (name, duration) = uiState.sections.first()
-        Row {
+        Row (
+            modifier = Modifier
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
             Text(
-                modifier = Modifier.weight(1f),
                 text = name,
                 style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.primary,
@@ -242,6 +256,7 @@ private fun CurrentPracticingItem(
         }
         Spacer(modifier = Modifier.padding(MaterialTheme.spacing.small))
         HorizontalDivider(modifier = Modifier.fillMaxWidth())
+        Spacer(modifier = Modifier.padding(MaterialTheme.spacing.small))
     }
 }
 
@@ -355,7 +370,9 @@ private fun LibraryList(
                     ),
                     item = item,
                     selected = false,
-                    onShortClick = { /*TODO*/ },
+                    onShortClick = {
+                        onLibraryItemClicked(item)
+                    },
                     onLongClick = { /*TODO*/ })
             }
         }
@@ -372,8 +389,7 @@ private fun SectionsList(
     if (uiState.sections.isNotEmpty()) {
         LazyColumn(
             modifier = modifier
-                .fillMaxWidth()
-                .padding(MaterialTheme.spacing.medium),
+                .fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small)
         ) {
             items(

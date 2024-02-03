@@ -41,6 +41,7 @@ import app.musikus.ui.theme.spacing
 
 @Composable
 fun Metronome(
+    modifier: Modifier = Modifier,
     viewModel: MetronomeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -48,7 +49,7 @@ fun Metronome(
 
 
     Column(
-        modifier = Modifier.padding(horizontal = MaterialTheme.spacing.medium)
+        modifier = modifier.padding(horizontal = MaterialTheme.spacing.medium)
     ) {
         MetronomeTopBar(
             uiState = uiState,
@@ -80,8 +81,6 @@ fun Metronome(
             uiState = uiState,
             eventHandler = eventHandler
         )
-
-
 
         Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
     }
