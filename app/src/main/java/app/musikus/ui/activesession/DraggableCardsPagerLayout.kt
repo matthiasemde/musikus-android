@@ -23,6 +23,7 @@ import androidx.compose.foundation.gestures.AnchoredDraggableState
 import androidx.compose.foundation.gestures.DraggableAnchors
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.anchoredDraggable
+import androidx.compose.foundation.gestures.animateTo
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -132,6 +133,8 @@ fun BoxScope.DraggableCardsPagerLayout(
         val cardsPagerState = rememberPagerState(pageCount = { pageCount })
         val bottomPagerState = rememberPagerState(pageCount = { pageCount })
 
+        val animationScope = rememberCoroutineScope()
+
         CardsPager(
             modifier = Modifier.zIndex(1f),
             pageContent = { pageIndex ->
@@ -140,7 +143,21 @@ fun BoxScope.DraggableCardsPagerLayout(
                     body = { pages(pageIndex).content() },
                     yState = anchorStates[pageIndex],
                     scrollState = scrollStates[pageIndex],
-                    cardIsExpandable = pages(pageIndex).isExpandable
+                    cardIsExpandable = pages(pageIndex).isExpandable,
+                    onCollapsed = {
+                        anchorStates.forEach {
+                            animationScope.launch {
+                                it.animateTo(DragValueY.Collapsed)
+                            }
+                        }
+                    },
+                    onUnCollapsed = {
+                        anchorStates.forEach {
+                            animationScope.launch {
+                                it.animateTo(DragValueY.Normal)
+                            }
+                        }
+                    }
                 )
             },
             anchorStates = anchorStates,
@@ -222,16 +239,22 @@ private fun CardsPager(
     val maxOffsetDownDirPx = with(LocalDensity.current) { (CARD_HEIGHT_NORMAL - CARD_HEIGHT_PEEK).toPx()}
     val offsetFractionDown = maxOf(currentOffset / maxOffsetDownDirPx, 0f)
 
+//    val offsetFractionOfInterest =
+//        if (currentOffset > 0) (1 - offsetFractionDown)
+//        else offsetFractionUp
+
+    val offsetFractionOfInterest = offsetFractionUp  // disable full-width collapsing for now
+
     HorizontalPager(
         // bottom padding is dependent on the offsetFraction, means it will
         modifier = modifier
-            .padding(bottom = (offsetFractionUp * HEIGHT_BOTTOM_BUTTONS_DP).dp),
+            .padding(bottom = (offsetFractionOfInterest * HEIGHT_BOTTOM_BUTTONS_DP).dp),
         state = ownPagerState,
         verticalAlignment = Alignment.Bottom,
-        pageSpacing = MaterialTheme.spacing.medium,
+        pageSpacing = (offsetFractionOfInterest * maxContentPaddingDp).dp,
         contentPadding = PaddingValues(
-            start = (offsetFractionUp * maxContentPaddingDp).dp,
-            end = (offsetFractionUp * maxContentPaddingDp).dp,
+            start = (offsetFractionOfInterest * maxContentPaddingDp).dp,
+            end = (offsetFractionOfInterest * maxContentPaddingDp).dp,
         ),
         userScrollEnabled = anchorStates[ownPagerState.currentPage].requireOffset() >= 0f
     ) {page ->
@@ -362,7 +385,9 @@ private fun DraggableCard(
     header: @Composable () -> Unit,
     body: @Composable () -> Unit,
     scrollState: ScrollState,
-    cardIsExpandable: Boolean
+    cardIsExpandable: Boolean,
+    onCollapsed: () -> Unit = {},    // callback when card is collapsed
+    onUnCollapsed: () -> Unit = {}    // callback when card is uncollapsed
 ) {
     val density = LocalDensity.current
     val configuration = LocalConfiguration.current
@@ -489,6 +514,16 @@ private fun DraggableCard(
                 density, configuration, cardIsExpandable
             )
         )
+    }
+
+    LaunchedEffect(key1 = yState.currentValue) {
+        if (yState.currentValue == DragValueY.Collapsed) {
+            onCollapsed()
+        }
+        if (yState.currentValue == DragValueY.Normal) {
+            onUnCollapsed()
+        }
+
     }
 }
 
