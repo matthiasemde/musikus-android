@@ -88,8 +88,7 @@ data class DraggableCardPage(
  * This has to be placed inside a Box()
  *
  * @param pageCount the number of pages
- * @param pageContent content of each page (composable)
- * @param headerContent header content of each page (composable)
+ * @param pages a function returning a DraggableCardPage for each page
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -309,17 +308,25 @@ private fun BottomButtonPager(
             val contentPadding = PaddingValues(
                 start =  MaterialTheme.spacing.medium,
                 end = MaterialTheme.spacing.medium,
-                top = MaterialTheme.spacing.small,
-                bottom = MaterialTheme.spacing.small,
             )
             if (page == ownPagerState.currentPage) {
                 Button(
+                    modifier = Modifier.height(
+                        // height is set height minus two times the "simulated" padding
+                        // now make HEIGHT_BOTTOM_BUTTONS_DP as high as asthetically pleasing
+                        HEIGHT_BOTTOM_BUTTONS_DP.dp -
+                        MaterialTheme.spacing.small - MaterialTheme.spacing.small
+                    ),
                     contentPadding = contentPadding,
                     onClick = { onClick() },
                     content = { content() }
                 )
             } else {
                 TextButton(
+                    modifier = Modifier.height(
+                        HEIGHT_BOTTOM_BUTTONS_DP.dp -
+                        MaterialTheme.spacing.small - MaterialTheme.spacing.small
+                    ),
                     contentPadding = contentPadding,
                     onClick = { onClick() },
                     content = { content() }

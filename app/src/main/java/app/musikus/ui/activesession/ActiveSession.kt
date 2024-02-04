@@ -64,7 +64,7 @@ import app.musikus.utils.getDurationString
 const val CARD_HEIGHT_EXTENDED_FRACTION_OF_SCREEN = 0.7f
 val CARD_HEIGHT_NORMAL = 300.dp
 val CARD_HEIGHT_PEEK = 100.dp
-const val HEIGHT_BOTTOM_BUTTONS_DP = 60
+const val HEIGHT_BOTTOM_BUTTONS_DP = 50
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -141,19 +141,19 @@ fun ActiveSession(
                         0 -> DraggableCardPage(
                             title = "Library",
                             isExpandable = true,
-                            content = {
-                                LibraryList(
-                                    uiState = uiState.libraryUiState,
-                                    onLibraryItemClicked = {
-                                        uiEvent(ActiveSessionUIEvent.StartNewSection(it))
-                                    }
-                                )
-                            },
                             header = {
                                 LibraryHeader(
                                     uiState = uiState.libraryUiState,
                                     onFolderIconClicked = {
                                         uiEvent(ActiveSessionUIEvent.ChangeFolderDisplayed(it))
+                                    }
+                                )
+                            },
+                            content = {
+                                LibraryList(
+                                    uiState = uiState.libraryUiState,
+                                    onLibraryItemClicked = {
+                                        uiEvent(ActiveSessionUIEvent.StartNewSection(it))
                                     }
                                 )
                             }
@@ -419,15 +419,15 @@ private fun SectionListElement(
     sectionElement: SectionListItem
 ) {
     Surface(
-        shape = MaterialTheme.shapes.small,
-        modifier = modifier.padding(horizontal = MaterialTheme.spacing.large),
-        color = MaterialTheme.colorScheme.surfaceContainer
+        shape = MaterialTheme.shapes.medium,
+        modifier = modifier.padding(horizontal = MaterialTheme.spacing.large),  // margin around list
+        color = MaterialTheme.colorScheme.surfaceContainerLow
     ) {
         Row (
             modifier = Modifier
                 .padding(
-                    horizontal = MaterialTheme.spacing.small,
-                    vertical = MaterialTheme.spacing.small
+                    horizontal = MaterialTheme.spacing.medium,
+                    vertical = MaterialTheme.spacing.medium
                 ),
             verticalAlignment = Alignment.CenterVertically
         ) {
