@@ -190,11 +190,17 @@ private fun HeaderBar(
         horizontalArrangement = Arrangement.SpaceBetween
     ){
         OutlinedButton(
+            enabled = uiState.sections.isNotEmpty(),
             onClick = { uiEvent(ActiveSessionUIEvent.TogglePause)  }
         ) {
             Text(text = "Pause")
         }
-        TextButton(onClick = { uiEvent(ActiveSessionUIEvent.StopSession) }) {
+        TextButton(
+            enabled = uiState.sections.isNotEmpty(),
+            onClick = {
+                uiEvent(ActiveSessionUIEvent.StopSession)
+
+            }) {
             Text(text = "Save Session")
         }
     }
