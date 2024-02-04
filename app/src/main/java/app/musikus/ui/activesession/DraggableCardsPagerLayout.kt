@@ -48,7 +48,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -319,16 +318,6 @@ private fun BottomButtonPager(
         }
     }
 }
-
-
-@Composable
-private fun BottomPagerButton(
-    isCurrentPage: Boolean
-    manuallyClickedState: MutableState<Boolean>
-) {
-
-}
-
 
 /**
  * DraggableCard BottomSheet-like implementation based on
