@@ -53,6 +53,7 @@ import app.musikus.database.daos.LibraryItem
 import app.musikus.ui.MainUIEvent
 import app.musikus.ui.MainUiState
 import app.musikus.ui.activesession.metronome.Metronome
+import app.musikus.ui.activesession.recorder.Recorder
 import app.musikus.ui.library.LibraryUiItem
 import app.musikus.ui.theme.spacing
 import app.musikus.utils.DurationFormat
@@ -160,7 +161,7 @@ fun ActiveSession(
                         1-> DraggableCardPage(
                             title = "Recorder",
                             isExpandable = false,
-                            content = { Text("TBA") },
+                            content = { Recorder() },
                         )
                         2-> DraggableCardPage(
                             title = "Metronome",
