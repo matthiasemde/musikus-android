@@ -29,7 +29,6 @@ import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -44,7 +43,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -169,24 +167,6 @@ fun BoxScope.DraggableCardsPagerLayout(
     }
 }
 
-@Composable
-private fun CardHeader(
-    text: String
-) {
-    Column (
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Spacer(Modifier.height(MaterialTheme.spacing.large))
-        Text(
-            modifier = Modifier.align(Alignment.CenterHorizontally),
-            text = text,
-            style = MaterialTheme.typography.titleMedium
-        )
-        Spacer(Modifier.height(MaterialTheme.spacing.small))
-        HorizontalDivider()
-    }
-}
-
 @OptIn(ExperimentalFoundationApi::class)
 private fun getAnchors(
     density: Density,
@@ -203,7 +183,7 @@ private fun getAnchors(
 
         return DraggableAnchors {
             DragValueY.Normal at 0f
-            DragValueY.Full at if (expansionAllowed) -travelOffset.toPx() else 0f
+            DragValueY.Full at if (expansionAllowed) - travelOffset.toPx() else 0f
             DragValueY.Collapsed at if (collapsedAllowed) (CARD_HEIGHT_NORMAL - CARD_HEIGHT_PEEK).toPx() else 0f
         }
     }
@@ -226,23 +206,33 @@ private fun CardsPager(
     pageCount: Int,
     pageContent : @Composable (page: Int) -> Unit,
     anchorStates : List<AnchoredDraggableState<DragValueY>>,
-    maxOffsetPx: Float,
+    maxOffsetPx: Float, // maximum offset possible in up direction (negative)
     ownPagerState: PagerState,
     bottomPagerState: PagerState
 ) {
-    val currentOffset = anchorStates[ownPagerState.currentPage].requireOffset()
-    val offsetFraction = minOf((maxOffsetPx - currentOffset) / maxOffsetPx, 1f)
-        .coerceAtLeast(0f)  // prevent negative values (once experienced due to floating point errors I guess)
     val maxContentPaddingDp = 16
+    val currentOffset = anchorStates[ownPagerState.currentPage].requireOffset()
+
+    // Swipe UP: fraction of the offset to the max offset in north direction
+    // (changes during swiping up from 1 -> 0)
+    val offsetFractionUp = minOf((maxOffsetPx - currentOffset) / maxOffsetPx, 1f)
+        .coerceAtLeast(0f)  // prevent negative values (once experienced due to floating point errors I guess)
+
+    // Swipe DOWN: fraction of the offset to the max offset in south direction
+    // (changes during swiping down from 0 -> 1)
+    val maxOffsetDownDirPx = with(LocalDensity.current) { (CARD_HEIGHT_NORMAL - CARD_HEIGHT_PEEK).toPx()}
+    val offsetFractionDown = maxOf(currentOffset / maxOffsetDownDirPx, 0f)
 
     HorizontalPager(
-        modifier = modifier.padding(bottom = (offsetFraction * HEIGHT_BOTTOM_BUTTONS_DP).dp),
+        // bottom padding is dependent on the offsetFraction, means it will
+        modifier = modifier
+            .padding(bottom = (offsetFractionUp * HEIGHT_BOTTOM_BUTTONS_DP).dp),
         state = ownPagerState,
         verticalAlignment = Alignment.Bottom,
         pageSpacing = MaterialTheme.spacing.medium,
         contentPadding = PaddingValues(
-            start = (offsetFraction * maxContentPaddingDp).dp,
-            end = (offsetFraction * maxContentPaddingDp).dp,
+            start = (offsetFractionUp * maxContentPaddingDp).dp,
+            end = (offsetFractionUp * maxContentPaddingDp).dp,
         ),
         userScrollEnabled = anchorStates[ownPagerState.currentPage].requireOffset() >= 0f
     ) {page ->
