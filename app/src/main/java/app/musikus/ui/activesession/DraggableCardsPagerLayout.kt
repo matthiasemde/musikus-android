@@ -136,8 +136,8 @@ fun BoxScope.DraggableCardsPagerLayout(
             anchorStates = anchorStates,
             pageCount = pageCount,
             maxOffsetPx = with(density) {
-                val heightExtended = (CARD_FRACTION_HEIGHT_EXTENDED * configuration.screenHeightDp).dp
-                val heightCollapsed = CARD_HEIGHT_COLLAPSED
+                val heightExtended = (CARD_HEIGHT_EXTENDED_FRACTION_OF_SCREEN * configuration.screenHeightDp).dp
+                val heightCollapsed = CARD_HEIGHT_NORMAL
                 -(heightExtended - heightCollapsed).toPx()// negative value because sliding up
             },
             ownPagerState = cardsPagerState,
@@ -182,14 +182,14 @@ private fun getAnchors(
 
         val collapsedAllowed = true
 
-        val heightExtended = (CARD_FRACTION_HEIGHT_EXTENDED * configuration.screenHeightDp).dp
-        val heightCollapsed = CARD_HEIGHT_COLLAPSED
+        val heightExtended = (CARD_HEIGHT_EXTENDED_FRACTION_OF_SCREEN * configuration.screenHeightDp).dp
+        val heightCollapsed = CARD_HEIGHT_NORMAL
         val travelOffset = (heightExtended - heightCollapsed)
 
         return DraggableAnchors {
             DragValueY.Normal at 0f
             DragValueY.Full at if (expansionAllowed) -travelOffset.toPx() else 0f
-            DragValueY.Collapsed at if (collapsedAllowed) (CARD_HEIGHT_COLLAPSED - CARD_HEIGHT_PEEK).toPx() else 0f
+            DragValueY.Collapsed at if (collapsedAllowed) (CARD_HEIGHT_NORMAL - CARD_HEIGHT_PEEK).toPx() else 0f
         }
     }
 }
@@ -342,8 +342,10 @@ private fun DraggableCard(
     val configuration = LocalConfiguration.current
 
     val height = with(density) {
-        CARD_HEIGHT_COLLAPSED - yState.requireOffset().toDp()
+        CARD_HEIGHT_NORMAL - yState.requireOffset().toDp()
     }
+
+    val cardIsExpandale = scrollState.maxValue > 0
 
     Box (
         Modifier
@@ -439,8 +441,8 @@ private fun DraggableCard(
             shape = RoundedCornerShape(
                 topStart = MaterialTheme.shapes.medium.topStart,
                 topEnd = MaterialTheme.shapes.medium.topEnd,
-                bottomStart = CornerSize(0.dp),
-                bottomEnd = CornerSize(0.dp)
+                bottomStart = if (cardIsExpandale) CornerSize(0.dp) else MaterialTheme.shapes.medium.bottomStart,
+                bottomEnd = if (cardIsExpandale) CornerSize(0.dp) else MaterialTheme.shapes.medium.bottomEnd
             ),
             elevation = CardDefaults.cardElevation(defaultElevation = 5.dp)
         ) {
@@ -463,7 +465,7 @@ private fun DraggableCard(
     if (yState.requireOffset() == 0f) {
         yState.updateAnchors(
             getAnchors(
-                density,configuration,scrollState.maxValue > 0
+                density,configuration,cardIsExpandale
             )
         )
     }

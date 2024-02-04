@@ -64,8 +64,8 @@ import app.musikus.utils.getDurationString
 
 
 
-const val CARD_FRACTION_HEIGHT_EXTENDED = 0.8f
-val CARD_HEIGHT_COLLAPSED = 300.dp
+const val CARD_HEIGHT_EXTENDED_FRACTION_OF_SCREEN = 0.8f
+val CARD_HEIGHT_NORMAL = 300.dp
 val CARD_HEIGHT_PEEK = 50.dp
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
@@ -105,7 +105,7 @@ fun ActiveSession(
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier
-                        .weight(1 - CARD_FRACTION_HEIGHT_EXTENDED)
+                        .weight(1 - CARD_HEIGHT_EXTENDED_FRACTION_OF_SCREEN)
                 ){
                     HeaderBar(uiState, uiEvent)
                     Spacer(modifier = Modifier.weight(1f))
@@ -116,7 +116,7 @@ fun ActiveSession(
                 Column (
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier
-                        .weight(CARD_FRACTION_HEIGHT_EXTENDED)
+                        .weight(CARD_HEIGHT_EXTENDED_FRACTION_OF_SCREEN)
                         .fillMaxWidth()
                 ) {
                     Spacer(modifier = Modifier.height(MaterialTheme.spacing.extraLarge))
