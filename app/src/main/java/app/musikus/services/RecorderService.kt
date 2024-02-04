@@ -17,7 +17,6 @@ import android.content.pm.ServiceInfo
 import android.os.Binder
 import android.os.Build
 import android.os.IBinder
-import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
@@ -30,9 +29,11 @@ import app.musikus.utils.TimeProvider
 import app.musikus.utils.getDurationString
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
+import java.util.Timer
 import javax.inject.Inject
+import kotlin.concurrent.timer
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -40,7 +41,8 @@ const val RECORDER_NOTIFICATION_ID = 97
 
 
 data class RecorderServiceState(
-    val isRecording: Boolean
+    val isRecording: Boolean,
+    val recordingDuration: Duration
 )
 
 
@@ -76,22 +78,35 @@ class RecorderService : Service() {
     }
 
     /** Own state flows */
-    private val _isRecording = MutableStateFlow(false)
 
+    private val _isRecording = MutableStateFlow(false)
+    private val _recordingDuration = MutableStateFlow(0.seconds)
+
+    private var _recordingTimer : Timer? = null
 
     /**
      *  ----------- Interface for Activity / ViewModel -------
      */
 
-    val serviceState = _isRecording.map {
+    val serviceState = combine(
+        _isRecording,
+        _recordingDuration
+    ) { isRecording, recordingDuration ->
         RecorderServiceState(
-            isRecording = it
+            isRecording = isRecording,
+            recordingDuration = recordingDuration
         )
     }
 
     fun onEvent(event: RecorderServiceEvent) {
         when(event) {
-            is RecorderServiceEvent.ToggleRecording -> toggleIsRecording()
+            is RecorderServiceEvent.ToggleRecording -> {
+                if (_isRecording.value) {
+                    stopRecording()
+                } else {
+                    startRecording()
+                }
+            }
         }
     }
 
@@ -99,14 +114,28 @@ class RecorderService : Service() {
      *  --------------- Private methods ---------------
      */
 
+    private fun startRecording() : Result<Unit> {
+        return recorder.start("Musikus").also { result ->
+            if(result.isSuccess) {
+                _isRecording.update { true }
+                _recordingTimer = timer(
+                    name = "recording_timer",
+                    period = 0.01.seconds.inWholeMilliseconds, // 10ms
+                    initialDelay = 0.01.seconds.inWholeMilliseconds
+                ) {
+                    _recordingDuration.update { it + 0.01.seconds }
+                }
+            }
+        }
+    }
 
-    private fun toggleIsRecording() {
-        _isRecording.update { !it }
-        if (_isRecording.value) {
-            val result = recorder.start("Musikus")
-            Log.d("RecorderService", "Recording started: $result")
-        } else {
-            recorder.stop()
+    private fun stopRecording() : Result<Unit> {
+        return recorder.stop().also {
+            if(it.isSuccess) {
+                _isRecording.update { false }
+                _recordingDuration.update { 0.seconds }
+                _recordingTimer?.cancel()
+            }
         }
     }
 

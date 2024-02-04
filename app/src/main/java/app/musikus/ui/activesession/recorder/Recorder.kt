@@ -53,7 +53,7 @@ fun Recorder(
                 .padding(horizontal = MaterialTheme.spacing.medium)
         ) {
             Text(
-                text = uiState.recordingTime,
+                text = uiState.recordingDuration,
                 style = MaterialTheme.typography.displayMedium,
                 fontWeight = FontWeight.Bold
             )

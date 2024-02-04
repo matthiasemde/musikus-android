@@ -22,6 +22,8 @@ import app.musikus.services.RecorderService
 import app.musikus.services.RecorderServiceEvent
 import app.musikus.services.RecorderServiceState
 import app.musikus.usecase.permissions.PermissionsUseCases
+import app.musikus.utils.DurationFormat
+import app.musikus.utils.getDurationString
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -34,11 +36,12 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.seconds
 
 
 data class RecorderUiState(
     val isRecording: Boolean,
-    val recordingTime: String,
+    val recordingDuration: String,
 )
 
 sealed class RecorderUiEvent {
@@ -114,14 +117,17 @@ class RecorderViewModel @Inject constructor(
     val uiState = serviceState.map {
         RecorderUiState(
             isRecording = it?.isRecording ?: false,
-            recordingTime = "00:00"
+            recordingDuration = getDurationString(
+                (it?.recordingDuration ?: 0.seconds),
+                DurationFormat.HMSC_DIGITAL
+            ).toString()
         )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = RecorderUiState(
             isRecording = false,
-            recordingTime = "00:00"
+            recordingDuration = "00:00"
         )
     )
 
@@ -133,7 +139,7 @@ class RecorderViewModel @Inject constructor(
                     val recordingPermissionResult = permissionsUseCases.request(
                         listOf(android.Manifest.permission.RECORD_AUDIO)
                     )
-                    if(!recordingPermissionResult) {
+                    if(recordingPermissionResult.isFailure) {
                         Toast.makeText(application, "Microphone permission required", Toast.LENGTH_SHORT).show()
                         return@launch
                     }
@@ -143,7 +149,7 @@ class RecorderViewModel @Inject constructor(
                             listOf(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
                         )
 
-                        if (!writeExternalStoragePermissionResult) {
+                        if (writeExternalStoragePermissionResult.isFailure) {
                             Toast.makeText(application, "Storage permission required", Toast.LENGTH_SHORT).show()
                             return@launch
                         }

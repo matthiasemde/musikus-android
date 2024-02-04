@@ -10,5 +10,5 @@ package app.musikus.usecase.permissions
 
 
 interface PermissionRepository {
-    suspend fun requestPermissions(permissions: List<String>): Boolean
+    suspend fun requestPermissions(permissions: List<String>): Result<Unit>
 }

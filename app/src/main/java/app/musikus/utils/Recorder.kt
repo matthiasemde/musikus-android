@@ -29,7 +29,7 @@ class Recorder(
     private var recordingUri: Uri? = null
     private var mediaRecorder: MediaRecorder? = null
 
-    fun start(recordingName: String) : Result<ZonedDateTime> {
+    fun start(recordingName: String) : Result<Unit> {
         if(isRecording) {
             throw IllegalStateException("Recorder is already recording")
         }
@@ -74,36 +74,42 @@ class Recorder(
 
         mediaRecorder?.start() ?: throw IOException("Tried to start recording without initializing mediaRecorder")
         isRecording = true
-        return Result.success(startTime)
+        return Result.success(Unit)
     }
 
 
-    fun stop() {
-        if(!isRecording) {
-            throw IllegalStateException("Recorder is not recording")
-        }
-
-        mediaRecorder?.apply {
-            stop()
-            release()
-        } ?: throw IllegalStateException("Tried to stop recording without initializing mediaRecorder")
-        isRecording = false
-
-        // finally update the recordings content values to mark it as no longer pending
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            ContentValues().apply {
-                put(MediaStore.MediaColumns.IS_PENDING, false)
-                context.contentResolver.update(
-                    recordingUri ?: throw IllegalStateException("Recording URI is null"),
-                    this,
-                    null,
-                    null
-                )
+    fun stop() : Result<Unit> {
+        try {
+            if(!isRecording) {
+                throw IllegalStateException("Recorder is not recording")
             }
-        }
 
-        recordingUri = null
-        mediaRecorder = null
+            mediaRecorder?.apply {
+                stop()
+                release()
+            } ?: throw  IllegalStateException("Tried to stop recording without initializing mediaRecorder")
+            isRecording = false
+
+            // finally update the recordings content values to mark it as no longer pending
+            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                ContentValues().apply {
+                    put(MediaStore.MediaColumns.IS_PENDING, false)
+                    context.contentResolver.update(
+                        recordingUri ?: throw IllegalStateException("Recording URI is null"),
+                        this,
+                        null,
+                        null
+                    )
+                }
+            }
+
+            recordingUri = null
+            mediaRecorder = null
+
+        } catch (throwable: Throwable) {
+            return Result.failure(throwable)
+        }
+        return Result.success(Unit)
     }
 
     /**

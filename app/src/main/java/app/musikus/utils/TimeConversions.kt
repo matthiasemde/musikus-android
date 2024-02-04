@@ -21,6 +21,7 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 
 typealias Timeframe = Pair<ZonedDateTime, ZonedDateTime>
 
@@ -45,7 +46,10 @@ enum class DurationFormat {
     MS_DIGITAL,
 
     /** Fixed format HH:MM for >1h, else e.g. "32 min" for <1h (used in GoalsProgressBar) */
-    HM_DIGITAL_OR_MIN_HUMAN;
+    HM_DIGITAL_OR_MIN_HUMAN,
+
+    /** Fixed format HH:MM:SS:CC (C = Centi seconds) */
+    HMSC_DIGITAL;
 }
 
 /** The scaling factor of 'h' an 'm' in time strings for smaller text. */
@@ -166,6 +170,9 @@ fun getDurationString(duration: Duration, format: DurationFormat, scale: Float =
     remainingDuration -= minutes.minutes
 
     val seconds = (remainingDuration).inWholeSeconds
+    remainingDuration -= seconds.seconds
+
+    val milliseconds = remainingDuration.inWholeMilliseconds
 
     val spaceOrNot = when(format) {
         DurationFormat.HUMAN_PRETTY -> " "
@@ -186,6 +193,15 @@ fun getDurationString(duration: Duration, format: DurationFormat, scale: Float =
                     ("%dm").format(minutes)
                 }
             return getSpannableHourMinShrunk(str, scale)
+        }
+
+        DurationFormat.HMSC_DIGITAL -> {
+            return "%02d:%02d:%02d:%02d".format(
+                totalHours,
+                minutes,
+                seconds,
+                milliseconds / 10 // centi seconds
+            )
         }
 
         DurationFormat.HMS_DIGITAL -> {

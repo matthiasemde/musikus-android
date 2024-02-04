@@ -14,8 +14,7 @@ import app.musikus.utils.PermissionChecker
 class PermissionRepositoryImpl(
     private val permissionChecker: PermissionChecker
 ) : PermissionRepository {
-    override suspend fun requestPermissions(permissions: List<String>): Boolean {
-        val result = permissionChecker.requestPermission(*permissions.toTypedArray())
-        return result.isSuccess
+    override suspend fun requestPermissions(permissions: List<String>): Result<Unit> {
+        return permissionChecker.requestPermission(*permissions.toTypedArray())
     }
 }
