@@ -16,14 +16,16 @@ import android.content.ServiceConnection
 import android.os.Build
 import android.os.IBinder
 import android.widget.Toast
+import androidx.compose.ui.text.AnnotatedString
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import app.musikus.services.RecorderService
 import app.musikus.services.RecorderServiceEvent
 import app.musikus.services.RecorderServiceState
-import app.musikus.usecase.permissions.PermissionsUseCases
 import app.musikus.utils.DurationFormat
+import app.musikus.utils.DurationString
 import app.musikus.utils.getDurationString
+import app.musikus.usecase.permissions.PermissionsUseCases
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -41,7 +43,7 @@ import kotlin.time.Duration.Companion.seconds
 
 data class RecorderUiState(
     val isRecording: Boolean,
-    val recordingDuration: String,
+    val recordingDuration: DurationString,
 )
 
 sealed class RecorderUiEvent {
@@ -120,14 +122,14 @@ class RecorderViewModel @Inject constructor(
             recordingDuration = getDurationString(
                 (it?.recordingDuration ?: 0.seconds),
                 DurationFormat.HMSC_DIGITAL
-            ).toString()
+            )
         )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = RecorderUiState(
             isRecording = false,
-            recordingDuration = "00:00"
+            recordingDuration = AnnotatedString("")
         )
     )
 

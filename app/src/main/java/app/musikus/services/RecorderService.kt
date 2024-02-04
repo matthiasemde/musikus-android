@@ -24,9 +24,9 @@ import app.musikus.R
 import app.musikus.RECORDER_NOTIFICATION_CHANNEL_ID
 import app.musikus.ui.activesession.ActiveSessionActivity
 import app.musikus.utils.DurationFormat
+import app.musikus.utils.getDurationString
 import app.musikus.utils.Recorder
 import app.musikus.utils.TimeProvider
-import app.musikus.utils.getDurationString
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine

@@ -10,7 +10,7 @@
  * Copyright (c) 2022, Javier Carbone, author Matthias Emde
  */
 
-package app.musikus.components
+package app.musikus.ui.components
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource

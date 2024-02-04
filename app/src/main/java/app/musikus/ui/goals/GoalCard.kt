@@ -46,13 +46,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.musikus.R
 import app.musikus.database.entities.GoalType
+import app.musikus.utils.DurationFormat
+import app.musikus.utils.getDurationString
 import app.musikus.ui.theme.libraryItemColors
 import app.musikus.usecase.goals.GoalInstanceWithProgressAndDescriptionWithLibraryItems
-import app.musikus.utils.DurationFormat
-import app.musikus.utils.SCALE_FACTOR_FOR_SMALL_TEXT
 import app.musikus.utils.TimeProvider
 import app.musikus.utils.asString
-import app.musikus.utils.getDurationString
 import java.time.temporal.ChronoUnit
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -196,9 +195,8 @@ fun GoalCard(
                                 modifier = Modifier.padding(horizontal = 16.dp),
                                 text = getDurationString(
                                     animatedProgress.toInt().seconds,
-                                    DurationFormat.HUMAN_PRETTY,
-                                    SCALE_FACTOR_FOR_SMALL_TEXT
-                                ).toString(),
+                                    DurationFormat.HUMAN_PRETTY
+                                ),
                                 style = MaterialTheme.typography.titleMedium.copy(
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
@@ -207,9 +205,8 @@ fun GoalCard(
                                 modifier = Modifier.padding(horizontal = 16.dp),
                                 text = getDurationString(
                                     animatedProgressLeft.toInt().seconds,
-                                    DurationFormat.HUMAN_PRETTY,
-                                    SCALE_FACTOR_FOR_SMALL_TEXT
-                                ).toString(),
+                                    DurationFormat.HUMAN_PRETTY
+                                ),
                                 style = MaterialTheme.typography.titleMedium.copy(
                                     color = MaterialTheme.colorScheme.onSurface
                                 )

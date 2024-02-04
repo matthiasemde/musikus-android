@@ -39,9 +39,9 @@ import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import app.musikus.R
-import app.musikus.ui.statistics.sessionstatistics.ScaleLineData
 import app.musikus.utils.DurationFormat
 import app.musikus.utils.getDurationString
+import app.musikus.ui.statistics.sessionstatistics.ScaleLineData
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.time.Duration
@@ -134,7 +134,7 @@ fun GoalStatisticsBarChart(
         }.map {
             ScaleLineData(
                 label = textMeasurer.measure(
-                    getDurationString(it, DurationFormat.HUMAN_PRETTY).toString(),
+                    getDurationString(it, DurationFormat.HUMAN_PRETTY),
                     labelTextStyle
                 ),
                 duration = it,
@@ -146,7 +146,7 @@ fun GoalStatisticsBarChart(
         }.plus(
             ScaleLineData(
                 label = textMeasurer.measure(
-                    getDurationString(uiState.target, DurationFormat.HUMAN_PRETTY).toString(),
+                    getDurationString(uiState.target, DurationFormat.HUMAN_PRETTY),
                     labelTextStyle
                 ),
                 duration = uiState.target,

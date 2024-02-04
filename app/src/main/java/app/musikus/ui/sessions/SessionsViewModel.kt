@@ -12,9 +12,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.musikus.database.SessionWithSectionsWithLibraryItems
 import app.musikus.shared.TopBarUiState
-import app.musikus.usecase.sessions.SessionsUseCases
 import app.musikus.utils.DurationFormat
+import app.musikus.utils.DurationString
 import app.musikus.utils.getDurationString
+import app.musikus.usecase.sessions.SessionsUseCases
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -59,7 +60,7 @@ data class MonthUiDatum(
 )
 data class DayUiDatum(
     val date: String,
-    val totalPracticeDuration: String,
+    val totalPracticeDuration: DurationString,
     val sessions: List<SessionWithSectionsWithLibraryItems>,
 )
 
@@ -114,7 +115,7 @@ class SessionsViewModel @Inject constructor(
                                 totalPracticeDuration = getDurationString(
                                     sessionsForDay.totalPracticeDuration,
                                     DurationFormat.HUMAN_PRETTY
-                                ).toString(),
+                                ),
                                 sessions = sessionsForDay.sessions,
                             )
                         }

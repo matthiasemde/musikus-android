@@ -1,3 +1,11 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ *
+ * Copyright (c) 2024 Matthias Emde
+ */
+
 package app.musikus.ui.sessions.editsession
 
 import androidx.compose.foundation.background
@@ -35,11 +43,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.musikus.utils.DurationFormat
+import app.musikus.utils.getDurationString
 import app.musikus.ui.sessions.RatingBar
 import app.musikus.ui.theme.libraryItemColors
-import app.musikus.utils.DurationFormat
-import app.musikus.utils.SCALE_FACTOR_FOR_SMALL_TEXT
-import app.musikus.utils.getDurationString
 import java.util.UUID
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -115,9 +122,8 @@ fun EditSession(
                                 .weight(2f),
                             text = getDurationString(
                                 sectionWithLibraryItem.section.duration,
-                                DurationFormat.HUMAN_PRETTY,
-                                SCALE_FACTOR_FOR_SMALL_TEXT
-                            ).toString(),
+                                DurationFormat.HUMAN_PRETTY
+                            ),
                             style = MaterialTheme.typography.bodySmall,
                             textAlign = TextAlign.End
                         )

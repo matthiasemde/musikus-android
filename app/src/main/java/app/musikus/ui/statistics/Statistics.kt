@@ -56,6 +56,7 @@ import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
@@ -70,12 +71,12 @@ import app.musikus.shared.MainMenu
 import app.musikus.shared.ThemeMenu
 import app.musikus.ui.MainUIEvent
 import app.musikus.ui.MainViewModel
+import app.musikus.utils.DurationFormat
+import app.musikus.utils.getDurationString
 import app.musikus.ui.theme.libraryItemColors
 import app.musikus.ui.theme.spacing
 import app.musikus.utils.DateFormat
-import app.musikus.utils.DurationFormat
 import app.musikus.utils.TimeProvider
-import app.musikus.utils.getDurationString
 import app.musikus.utils.musikusFormat
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -213,18 +214,18 @@ fun StatisticsCurrentMonth(
         "Total duration" to getDurationString(
             uiState.totalPracticeDuration,
             DurationFormat.HUMAN_PRETTY_SHORT
-        ).toString(),
-        "Per session" to stringResource(R.string.average_sign) + " " + getDurationString(
+        ),
+        "Per session" to AnnotatedString(stringResource(R.string.average_sign) + " ") + getDurationString(
             uiState.averageDurationPerSession,
             DurationFormat.HUMAN_PRETTY_SHORT
-        ).toString(),
+        ),
         "Break per hour" to getDurationString(
             uiState.breakDurationPerHour,
             DurationFormat.HUMAN_PRETTY_SHORT
-        ).toString(),
-        "Average rating" to stringResource(R.string.average_sign) + " %.1f".format(
-            uiState.averageRatingPerSession
         ),
+        "Average rating" to AnnotatedString(stringResource(R.string.average_sign) + " %.1f".format(
+            uiState.averageRatingPerSession
+        )),
     )
 
     Column {

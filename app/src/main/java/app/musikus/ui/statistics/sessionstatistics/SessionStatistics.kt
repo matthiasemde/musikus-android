@@ -58,11 +58,11 @@ import app.musikus.R
 import app.musikus.database.daos.LibraryItem
 import app.musikus.shared.conditional
 import app.musikus.shared.simpleVerticalScrollbar
+import app.musikus.utils.DurationFormat
+import app.musikus.utils.getDurationString
 import app.musikus.ui.theme.libraryItemColors
 import app.musikus.ui.theme.spacing
-import app.musikus.utils.DurationFormat
 import app.musikus.utils.Timeframe
-import app.musikus.utils.getDurationString
 import app.musikus.utils.musikusFormat
 
 @OptIn(ExperimentalMaterial3Api::class)

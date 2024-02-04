@@ -4,7 +4,7 @@
  * Copyright (c) 2022, Javier Carbone, author Matthias Emde
  */
 
-package app.musikus.components
+package app.musikus.ui.components
 
 import android.annotation.SuppressLint
 import android.content.Context

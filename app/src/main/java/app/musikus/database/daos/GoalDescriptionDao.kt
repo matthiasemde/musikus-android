@@ -32,9 +32,9 @@ import app.musikus.database.entities.GoalProgressType
 import app.musikus.database.entities.GoalType
 import app.musikus.database.entities.SoftDeleteModelDisplayAttributes
 import app.musikus.utils.DurationFormat
+import app.musikus.utils.getDurationString
 import app.musikus.utils.TimeProvider
 import app.musikus.utils.UiText
-import app.musikus.utils.getDurationString
 import app.musikus.utils.inLocalTimezone
 import kotlinx.coroutines.flow.Flow
 import java.time.ZonedDateTime
@@ -74,8 +74,8 @@ data class GoalDescription(
         } ?: UiText.StringResource(R.string.goal_name_non_specific)
 
     fun subtitle(instance: GoalInstance) = listOf(
-        UiText.DynamicString(
-            getDurationString(instance.target, DurationFormat.HUMAN_PRETTY).toString()
+        UiText.DynamicAnnotatedString(
+            getDurationString(instance.target, DurationFormat.HUMAN_PRETTY)
         ),
         UiText.PluralResource(
             resId = when(periodUnit) {

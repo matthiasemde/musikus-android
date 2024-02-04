@@ -46,11 +46,10 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import app.musikus.R
 import app.musikus.database.SessionWithSectionsWithLibraryItems
+import app.musikus.utils.DurationFormat
+import app.musikus.utils.getDurationString
 import app.musikus.ui.theme.libraryItemColors
 import app.musikus.utils.DateFormat
-import app.musikus.utils.DurationFormat
-import app.musikus.utils.SCALE_FACTOR_FOR_SMALL_TEXT
-import app.musikus.utils.getDurationString
 import app.musikus.utils.musikusFormat
 import kotlin.time.Duration.Companion.seconds
 
@@ -127,14 +126,14 @@ fun SessionCard(
                     modifier = Modifier
                         .width(0.dp)
                         .weight(4f),
-                    text = getDurationString(practiceDuration, DurationFormat.HUMAN_PRETTY).toString(),
+                    text = getDurationString(practiceDuration, DurationFormat.HUMAN_PRETTY),
                     style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold)
                 )
                 Text(
                     modifier = Modifier
                         .width(0.dp)
                         .weight(2f),
-                    text = getDurationString(session.breakDuration, DurationFormat.HUMAN_PRETTY, SCALE_FACTOR_FOR_SMALL_TEXT).toString(),
+                    text = getDurationString(session.breakDuration, DurationFormat.HUMAN_PRETTY),
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                 )
             }
@@ -182,9 +181,8 @@ fun SessionCard(
                             .weight(2f),
                         text = getDurationString(
                             sectionWithLibraryItem.section.duration,
-                            DurationFormat.HUMAN_PRETTY,
-                            SCALE_FACTOR_FOR_SMALL_TEXT
-                        ).toString(),
+                            DurationFormat.HUMAN_PRETTY
+                        ),
                         style = MaterialTheme.typography.bodySmall,
                         textAlign = TextAlign.End
                     )

@@ -53,6 +53,7 @@ import app.musikus.shared.ThemeMenu
 import app.musikus.ui.MainUIEvent
 import app.musikus.ui.MainUiState
 import app.musikus.ui.theme.spacing
+import app.musikus.utils.DurationString
 import java.util.UUID
 
 @OptIn(
@@ -250,7 +251,7 @@ fun MonthHeader(
 @Composable
 fun DayHeader(
     date: String,
-    totalPracticeDuration: String,
+    totalPracticeDuration: DurationString,
 ) {
     Row(
         modifier = Modifier

@@ -40,7 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import app.musikus.R
-import app.musikus.components.NumberInput
+import app.musikus.ui.components.NumberInput
 import app.musikus.database.daos.LibraryItem
 import app.musikus.database.entities.GoalPeriodUnit
 import app.musikus.database.entities.GoalType
