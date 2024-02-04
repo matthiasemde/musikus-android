@@ -10,12 +10,9 @@
 package app.musikus.ui.activesession
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowColumn
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -26,16 +23,15 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -51,7 +47,6 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.musikus.database.UUIDConverter
-import app.musikus.database.daos.LibraryFolder
 import app.musikus.database.daos.LibraryItem
 import app.musikus.ui.MainUIEvent
 import app.musikus.ui.MainUiState
@@ -67,6 +62,7 @@ import app.musikus.utils.getDurationString
 const val CARD_HEIGHT_EXTENDED_FRACTION_OF_SCREEN = 0.7f
 val CARD_HEIGHT_NORMAL = 300.dp
 val CARD_HEIGHT_PEEK = 100.dp
+const val HEIGHT_BOTTOM_BUTTONS_DP = 60
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -93,12 +89,7 @@ fun ActiveSession(
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(
-                        start = MaterialTheme.spacing.medium,
-                        end = MaterialTheme.spacing.medium
-                    )
+                modifier = Modifier.fillMaxSize()
             ) {
 
                 /** ------------------- Area above extended Cards ------------------- */
@@ -106,11 +97,12 @@ fun ActiveSession(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier
                         .weight(1 - CARD_HEIGHT_EXTENDED_FRACTION_OF_SCREEN)
+                        .padding(horizontal = MaterialTheme.spacing.medium)
                 ){
                     HeaderBar(uiState, uiEvent)
                     Spacer(modifier = Modifier.weight(1f))
                     PracticeTimer(uiState)
-                    Spacer(modifier = Modifier.height(MaterialTheme.spacing.extraLarge))
+                    Spacer(modifier = Modifier.weight(1f))
                     CurrentPracticingItem(uiState = uiState)
                 }
 
@@ -120,8 +112,17 @@ fun ActiveSession(
                     modifier = Modifier
                         .weight(CARD_HEIGHT_EXTENDED_FRACTION_OF_SCREEN)
                         .fillMaxWidth()
+                        .padding(horizontal = MaterialTheme.spacing.medium)
                 ) {
-                    SectionsList(uiState = uiState)
+                    SectionsList(
+                        modifier = Modifier.weight(1f),
+                        uiState = uiState)
+                    // prevent section list items to hide behind peek'ed Cards
+                    Spacer(
+                        Modifier.height(
+                            HEIGHT_BOTTOM_BUTTONS_DP.dp + CARD_HEIGHT_PEEK
+                        )
+                    )
                 }
 
             }
@@ -133,38 +134,41 @@ fun ActiveSession(
              */
             DraggableCardsPagerLayout(
                 pageCount = 3,
-                pageTitles = { pageIndex ->
-                        when(pageIndex) {
-                            0 -> "Library"
-                            1 -> "Recorder"
-                            2 -> "Metronome"
-                            else -> "unknown"
-                        }
-                },
-                pageContent = { pageIndex ->
-                      when(pageIndex) {
-                          0 ->  {
-                              LibraryList(
-                                  uiState = uiState.libraryUiState,
-                                  onLibraryItemClicked = {
-                                      uiEvent(ActiveSessionUIEvent.StartNewSection(it))
-                                  }
-                              )
-                          }
-                          2 -> Metronome()
-                          else -> Text("TBA", modifier = Modifier.align(Alignment.Center))
-                      }
+                pages = { pageIndex ->
+                    when(pageIndex) {
+                        0 -> DraggableCardPage(
+                            title = "Library",
+                            isExpandable = true,
+                            content = {
+                                LibraryList(
+                                    uiState = uiState.libraryUiState,
+                                    onLibraryItemClicked = {
+                                        uiEvent(ActiveSessionUIEvent.StartNewSection(it))
+                                    }
+                                )
+                            },
+                        )
+                        1-> DraggableCardPage(
+                            title = "Recorder",
+                            isExpandable = false,
+                            content = { Text("TBA") },
+                        )
+                        2-> DraggableCardPage(
+                            title = "Metronome",
+                            isExpandable = false,
+                            content = { Metronome() },
+                        )
+                        else -> DraggableCardPage(
+                            title = "unknown",
+                            isExpandable = false,
+                            content = {},
+                        )
+                    }
                 }
             )
         }
     }
 }
-
-
-
-
-
-
 
 
 @Composable
@@ -202,37 +206,44 @@ private fun PracticeTimer(
     Text(text = "Practice time")
 }
 
-
 @Composable
 private fun CurrentPracticingItem(
     uiState: ActiveSessionUiState
 ) {
     if (uiState.sections.isNotEmpty()) {
         val (name, duration) = uiState.sections.first()
-        Row (
-            modifier = Modifier
-                .fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+
+        Surface(
+            color = MaterialTheme.colorScheme.tertiaryContainer,
+            shape = RoundedCornerShape(50)
         ) {
-            Text(
-                text = name,
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                text = getDurationString(
-                    duration,
-                    DurationFormat.HMS_DIGITAL
-                ).toString(),
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Bold
-            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        horizontal = MaterialTheme.spacing.large,
+                        vertical = MaterialTheme.spacing.medium
+                    ),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    modifier = Modifier.weight(1f),
+                    text = name,
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onTertiaryContainer,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = getDurationString(
+                        duration,
+                        DurationFormat.HMS_DIGITAL
+                    ).toString(),
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onTertiaryContainer,
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
-        Spacer(modifier = Modifier.padding(MaterialTheme.spacing.small))
-        HorizontalDivider(modifier = Modifier.fillMaxWidth())
-        Spacer(modifier = Modifier.padding(MaterialTheme.spacing.small))
     }
 }
 
@@ -276,36 +287,6 @@ private fun PauseDialog(
 
             Button(onClick = { uiEvent(ActiveSessionUIEvent.TogglePause) }) {
                 Text("Resume")
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-private fun LibraryCard(
-    uiState: LibraryCardUiState,
-    onLibraryItemClicked: (LibraryItem) -> Unit,
-    onFolderClicked: (LibraryFolder) -> Unit,
-) {
-    FlowColumn(
-        maxItemsInEachColumn = 3,
-        modifier = Modifier
-            .horizontalScroll(rememberScrollState())
-            .padding(MaterialTheme.spacing.small),
-        verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small),
-        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small),
-    ) {
-        // show a button for each library item
-        for(libraryItem in (uiState.rootItems + uiState.foldersWithItems.flatMap { it.items })) {
-            Button(
-                modifier = Modifier
-                    .height(50.dp)
-                    .width(200.dp),
-                onClick = {
-                    onLibraryItemClicked(libraryItem)
-                }) {
-                Text(text = libraryItem.name)
             }
         }
     }
@@ -361,24 +342,56 @@ private fun SectionsList(
     uiState: ActiveSessionUiState,
     modifier: Modifier = Modifier
 ) {
-    // Sections List
     if (uiState.sections.isNotEmpty()) {
         LazyColumn(
             modifier = modifier
                 .fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small)
+            verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.extraSmall)
         ) {
+
+            // first item is spacer
+            item {
+                Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
+            }
+
             items(
                 items = uiState.sections.drop(1)
             ) { (name, duration) ->
-
-                Row {
-                    Text(
-                        modifier = Modifier.weight(1f),
-                        text = name)
-
-                    Text(text = getDurationString(duration, DurationFormat.HMS_DIGITAL).toString())
+                Surface(
+                    shape = MaterialTheme.shapes.small,
+                    modifier = Modifier.padding(horizontal = MaterialTheme.spacing.large),
+                    color = MaterialTheme.colorScheme.surfaceContainer
+                ) {
+                    Row (
+                        modifier = Modifier
+                            .padding(
+                                horizontal = MaterialTheme.spacing.small,
+                                vertical = MaterialTheme.spacing.small
+                            ),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            modifier = Modifier.weight(1f),
+                            text = name,
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Spacer(modifier = Modifier.width(MaterialTheme.spacing.small))
+                        Text(
+                            text = getDurationString(
+                                duration,
+                                DurationFormat.HMS_DIGITAL
+                            ).toString(),
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
                 }
+            }
+
+            // last item is spacer when scrolled down to the fullest
+            item {
+                Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
             }
         }
     } else {
@@ -386,8 +399,6 @@ private fun SectionsList(
             modifier = modifier
         ) {
             Text(
-                modifier = Modifier
-                    .align(Alignment.Center),
                 text = "Quotes",
             )
         }
