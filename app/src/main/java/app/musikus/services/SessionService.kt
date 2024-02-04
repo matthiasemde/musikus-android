@@ -121,8 +121,8 @@ class SessionService : Service() {
      */
 
     private fun newSection(item: LibraryItem) {
-        // prevent starting a new section too fast
-        if (sessionState.value.sections.isNotEmpty() && sessionState.value.currentSectionDuration < 1.seconds) return
+        // prevent starting a new section too fast (when they are started in same seconds, app crashed due to list key!)
+        if (sessionState.value.sections.isNotEmpty() && sessionState.value.currentSectionDuration < 2.seconds) return
         // prevent starting the same section twice in a row
         if (item == sessionState.value.sections.lastOrNull()?.libraryItem) return
 

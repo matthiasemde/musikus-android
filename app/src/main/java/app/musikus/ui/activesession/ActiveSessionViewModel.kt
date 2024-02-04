@@ -12,6 +12,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import app.musikus.database.LibraryFolderWithItems
 import app.musikus.database.Nullable
+import app.musikus.database.daos.LibraryFolder
 import app.musikus.database.daos.LibraryItem
 import app.musikus.database.entities.SectionCreationAttributes
 import app.musikus.database.entities.SessionCreationAttributes
@@ -43,19 +44,27 @@ sealed class ActiveSessionUIEvent {
     data class StartNewSection(val libraryItem: LibraryItem): ActiveSessionUIEvent()
     data object TogglePause: ActiveSessionUIEvent()
     data object StopSession: ActiveSessionUIEvent()
+    data class ChangeFolderDisplayed(val folder: LibraryFolder?): ActiveSessionUIEvent()
 }
+
+data class SectionListItem(
+    val id : Long,
+    val name: String,
+    val duration: Duration
+)
 
 data class ActiveSessionUiState(
     val libraryUiState: LibraryCardUiState,
     val totalSessionDuration: Duration,
     val totalBreakDuration: Duration,
-    val sections: List<Pair<String, Duration>>,
+    val sections: List<SectionListItem>,
     val isPaused: Boolean
 )
 
 data class LibraryCardUiState(
     val rootItems: List<LibraryItem>,
-    val foldersWithItems: List<LibraryFolderWithItems>
+    val foldersWithItems: List<LibraryFolderWithItems>,
+    val selectedFolder: LibraryFolder?
 )
 data class PracticeSection(
     val libraryItem: LibraryItem,
@@ -70,7 +79,12 @@ class ActiveSessionViewModel @Inject constructor(
     private val sessionUseCases: SessionsUseCases,
     private val application: Application
 ): AndroidViewModel(application) {
-    
+
+
+    /** own stateFlows */
+
+    private val _selectedFolder = MutableStateFlow<LibraryFolder?>(null)
+
     // ################## mirrors of session state
 
     private val sessionStateWrapper = MutableStateFlow<StateFlow<SessionState>?>(null)
@@ -122,18 +136,21 @@ class ActiveSessionViewModel @Inject constructor(
 
     private val libraryUiState = combine(
         rootItems,
-        folderWithItems
-    ) { rootItems, folderWithItems ->
+        folderWithItems,
+        _selectedFolder
+    ) { rootItems, folderWithItems, selectedFolder ->
         LibraryCardUiState(
             rootItems = rootItems,
-            foldersWithItems = folderWithItems
+            foldersWithItems = folderWithItems,
+            selectedFolder = selectedFolder
         )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(),
         initialValue = LibraryCardUiState(
             rootItems = rootItems.value,
-            foldersWithItems = folderWithItems.value
+            foldersWithItems = folderWithItems.value,
+            selectedFolder = _selectedFolder.value
         )
     )
 
@@ -141,16 +158,18 @@ class ActiveSessionViewModel @Inject constructor(
         libraryUiState,
         sessionState
     ) { libraryUiState, sessionState ->
+        val totalDuration = sessionState.sections.sumOf {
+            (it.duration ?: sessionState.currentSectionDuration).inWholeMilliseconds }.milliseconds
         ActiveSessionUiState(
             libraryUiState = libraryUiState,
-            totalSessionDuration = sessionState.sections.sumOf {
-                (it.duration ?: sessionState.currentSectionDuration).inWholeMilliseconds }.milliseconds,
+            totalSessionDuration = totalDuration,
             totalBreakDuration = sessionState.pauseDuration,
             isPaused = sessionState.isPaused,
             sections = sessionState.sections.reversed().map { section ->
-                Pair(
-                    section.libraryItem.name,
-                    section.duration ?: sessionState.currentSectionDuration
+                SectionListItem(
+                    id = section.startTimestamp.toEpochSecond(),
+                    name = section.libraryItem.name,
+                    duration = section.duration ?: sessionState.currentSectionDuration
                 )
             }
         )
@@ -172,6 +191,7 @@ class ActiveSessionViewModel @Inject constructor(
         is ActiveSessionUIEvent.StartNewSection -> itemClicked(event.libraryItem)
         is ActiveSessionUIEvent.TogglePause -> togglePause()
         is ActiveSessionUIEvent.StopSession -> stopSession()
+        is ActiveSessionUIEvent.ChangeFolderDisplayed -> _selectedFolder.update { event.folder }
     }
 
 

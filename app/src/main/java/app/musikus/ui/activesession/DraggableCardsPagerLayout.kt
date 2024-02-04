@@ -79,6 +79,7 @@ enum class DragValueY {
 
 data class DraggableCardPage(
     val content: @Composable () -> Unit,
+    val header: @Composable () -> Unit = {},
     val title: String,
     val isExpandable: Boolean
 )
@@ -138,7 +139,7 @@ fun BoxScope.DraggableCardsPagerLayout(
             modifier = Modifier.zIndex(1f),
             pageContent = { pageIndex ->
                 DraggableCard(
-                    header = { CardHeader(text = pages(pageIndex).title) },
+                    header = { pages(pageIndex).header() },
                     body = { pages(pageIndex).content() },
                     yState = anchorStates[pageIndex],
                     scrollState = scrollStates[pageIndex],
@@ -469,7 +470,7 @@ private fun DraggableCard(
             elevation = CardDefaults.cardElevation(10.dp)
         ) {
             GrabHandle()
-//            header()
+            header()
             Box(
                 Modifier
                     .verticalScroll(scrollState)

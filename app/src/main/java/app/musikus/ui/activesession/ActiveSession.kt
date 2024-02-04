@@ -14,6 +14,7 @@ import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -29,15 +30,15 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -47,7 +48,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import app.musikus.database.UUIDConverter
+import app.musikus.database.daos.LibraryFolder
 import app.musikus.database.daos.LibraryItem
 import app.musikus.ui.MainUIEvent
 import app.musikus.ui.MainUiState
@@ -57,7 +58,6 @@ import app.musikus.ui.theme.spacing
 import app.musikus.utils.DurationFormat
 import app.musikus.utils.TimeProvider
 import app.musikus.utils.getDurationString
-
 
 
 const val CARD_HEIGHT_EXTENDED_FRACTION_OF_SCREEN = 0.7f
@@ -148,6 +148,14 @@ fun ActiveSession(
                                     }
                                 )
                             },
+                            header = {
+                                LibraryHeader(
+                                    uiState = uiState.libraryUiState,
+                                    onFolderIconClicked = {
+                                        uiEvent(ActiveSessionUIEvent.ChangeFolderDisplayed(it))
+                                    }
+                                )
+                            }
                         )
                         1-> DraggableCardPage(
                             title = "Recorder",
@@ -179,18 +187,16 @@ private fun HeaderBar(
 ) {
     Row (
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.End
+        horizontalArrangement = Arrangement.SpaceBetween
     ){
         OutlinedButton(
             onClick = { uiEvent(ActiveSessionUIEvent.TogglePause)  }
         ) {
             Text(text = "Pause")
         }
-        Spacer(modifier = Modifier.width(MaterialTheme.spacing.medium))
-        OutlinedButton(onClick = { uiEvent(ActiveSessionUIEvent.StopSession) }) {
+        TextButton(onClick = { uiEvent(ActiveSessionUIEvent.StopSession) }) {
             Text(text = "Save Session")
         }
-        Spacer(modifier = Modifier.width(MaterialTheme.spacing.medium))
     }
 }
 
@@ -214,7 +220,7 @@ private fun CurrentPracticingItem(
 ) {
     if (uiState.sections.isNotEmpty()) {
 
-        val (name, duration) = uiState.sections.first()
+        val firstSection = uiState.sections.first()
         Surface(
             color = MaterialTheme.colorScheme.tertiaryContainer,
             shape = RoundedCornerShape(50)
@@ -229,8 +235,10 @@ private fun CurrentPracticingItem(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    modifier = Modifier.weight(1f).basicMarquee(),
-                    text = name,
+                    modifier = Modifier
+                        .weight(1f)
+                        .basicMarquee(),
+                    text = firstSection.name,
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.onTertiaryContainer,
                     fontWeight = FontWeight.Bold,
@@ -241,7 +249,7 @@ private fun CurrentPracticingItem(
 
                 Text(
                     text = getDurationString(
-                        duration,
+                        firstSection.duration,
                         DurationFormat.HMS_DIGITAL
                     ).toString(),
                     style = MaterialTheme.typography.titleLarge,
@@ -300,49 +308,72 @@ private fun PauseDialog(
 
 
 @Composable
-private fun LibraryList(
+private fun LibraryHeader(
+    modifier: Modifier = Modifier,
     uiState: LibraryCardUiState,
-    onLibraryItemClicked: (LibraryItem) -> Unit,
+    onFolderIconClicked: (LibraryFolder?) -> Unit
 ) {
-    val activeFolder = remember { mutableStateOf(UUIDConverter.deadBeef) }
+    // Header Folder List
+    LazyRow(
+        modifier = modifier
+            .padding(top = MaterialTheme.spacing.small)
+            .fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small),
+        contentPadding = PaddingValues(horizontal = MaterialTheme.spacing.small),
+    ) {
 
-    Column(modifier = Modifier.fillMaxWidth()) {
-        // Header Folder List
-        LazyRow(modifier = Modifier.fillMaxWidth()) {
-            items(uiState.foldersWithItems) { folder ->
-                Row {
-                    OutlinedButton(onClick = {
-                        activeFolder.value = folder.folder.id
-                    }) {
-                        Text(folder.folder.name)
-                    }
-                }
-            }
+        item {
+            FilterChip(
+                onClick = { onFolderIconClicked(null) },
+                label = {
+                    Text("no folder")
+                },
+                selected = uiState.selectedFolder == null
+            )
         }
-        // Library Items
-        Column {
-            // show folder items or if folderId could not be found, show root Items
-            val shownItems =
-                uiState.foldersWithItems.find { it.folder.id == activeFolder.value }?.items
-                    ?: uiState.rootItems
-            for (item in shownItems) {
-                LibraryUiItem(
-                    modifier = Modifier.padding(
-                        vertical = MaterialTheme.spacing.small,
-                        horizontal = MaterialTheme.spacing.large
-                    ),
-                    item = item,
-                    selected = false,
-                    onShortClick = {
-                        onLibraryItemClicked(item)
+
+        items(uiState.foldersWithItems) { folder ->
+            Row {
+                FilterChip(
+                    onClick = {
+                        onFolderIconClicked(folder.folder)
                     },
-                    onLongClick = { /*TODO*/ })
+                    label = { Text(folder.folder.name) },
+                    selected = folder.folder == uiState.selectedFolder
+                )
             }
         }
     }
 }
 
+@Composable
+private fun LibraryList(
+    uiState: LibraryCardUiState,
+    onLibraryItemClicked: (LibraryItem) -> Unit,
+) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        // show folder items or if folderId could not be found, show root Items
+        val shownItems =
+            uiState.foldersWithItems.find { it.folder == uiState.selectedFolder }?.items
+                ?: uiState.rootItems
+        for (item in shownItems) {
+            LibraryUiItem(
+                modifier = Modifier.padding(
+                    vertical = MaterialTheme.spacing.small,
+                    horizontal = MaterialTheme.spacing.large
+                ),
+                item = item,
+                selected = false,
+                onShortClick = {
+                    onLibraryItemClicked(item)
+                },
+                onLongClick = { /*TODO*/ })
+        }
+    }
+}
 
+
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun SectionsList(
     uiState: ActiveSessionUiState,
@@ -352,53 +383,17 @@ private fun SectionsList(
         LazyColumn(
             modifier = modifier
                 .fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.extraSmall)
+            verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.extraSmall),
+            contentPadding = PaddingValues(vertical = MaterialTheme.spacing.small),
         ) {
 
-            // first item is spacer
-            item {
-                Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
-            }
-
             items(
-                items = uiState.sections.drop(1)
-            ) { (name, duration) ->
-                Surface(
-                    shape = MaterialTheme.shapes.small,
-                    modifier = Modifier.padding(horizontal = MaterialTheme.spacing.large),
-                    color = MaterialTheme.colorScheme.surfaceContainer
-                ) {
-                    Row (
-                        modifier = Modifier
-                            .padding(
-                                horizontal = MaterialTheme.spacing.small,
-                                vertical = MaterialTheme.spacing.small
-                            ),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            modifier = Modifier.weight(1f),
-                            text = name,
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Spacer(modifier = Modifier.width(MaterialTheme.spacing.small))
-                        Text(
-                            text = getDurationString(
-                                duration,
-                                DurationFormat.HMS_DIGITAL
-                            ).toString(),
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                }
+                items = uiState.sections.drop(1),
+                key = { (sectionElement) -> sectionElement },
+            ) { sectionElement ->
+                SectionListElement(Modifier.animateItemPlacement(), sectionElement)
             }
 
-            // last item is spacer when scrolled down to the fullest
-            item {
-                Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
-            }
         }
     } else {
         Box (
@@ -406,6 +401,43 @@ private fun SectionsList(
         ) {
             Text(
                 text = "Quotes",
+            )
+        }
+    }
+}
+
+@Composable
+private fun SectionListElement(
+    modifier: Modifier = Modifier,
+    sectionElement: SectionListItem
+) {
+    Surface(
+        shape = MaterialTheme.shapes.small,
+        modifier = modifier.padding(horizontal = MaterialTheme.spacing.large),
+        color = MaterialTheme.colorScheme.surfaceContainer
+    ) {
+        Row (
+            modifier = Modifier
+                .padding(
+                    horizontal = MaterialTheme.spacing.small,
+                    vertical = MaterialTheme.spacing.small
+                ),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                modifier = Modifier.weight(1f),
+                text = sectionElement.name,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(modifier = Modifier.width(MaterialTheme.spacing.small))
+            Text(
+                text = getDurationString(
+                    sectionElement.duration,
+                    DurationFormat.HMS_DIGITAL
+                ).toString(),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
     }
