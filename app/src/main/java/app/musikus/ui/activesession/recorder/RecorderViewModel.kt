@@ -22,18 +22,20 @@ import androidx.lifecycle.viewModelScope
 import app.musikus.services.RecorderService
 import app.musikus.services.RecorderServiceEvent
 import app.musikus.services.RecorderServiceState
+import app.musikus.usecase.permissions.PermissionsUseCases
+import app.musikus.usecase.recordings.Recording
+import app.musikus.usecase.recordings.RecordingsUseCases
 import app.musikus.utils.DurationFormat
 import app.musikus.utils.DurationString
 import app.musikus.utils.getDurationString
-import app.musikus.usecase.permissions.PermissionsUseCases
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -44,6 +46,7 @@ import kotlin.time.Duration.Companion.seconds
 data class RecorderUiState(
     val isRecording: Boolean,
     val recordingDuration: DurationString,
+    val recordings: List<Recording>
 )
 
 sealed class RecorderUiEvent {
@@ -54,7 +57,8 @@ sealed class RecorderUiEvent {
 @HiltViewModel
 class RecorderViewModel @Inject constructor(
     private val application: Application,
-    private val permissionsUseCases: PermissionsUseCases
+    private val permissionsUseCases: PermissionsUseCases,
+    private val recordingsUseCases: RecordingsUseCases
 ) : AndroidViewModel(application) {
 
     /** ------------------ Service --------------------- */
@@ -115,21 +119,34 @@ class RecorderViewModel @Inject constructor(
 
     /** ------------------ Main ViewModel --------------------- */
 
+    /** Imported Flows */
+
+    val recordings = recordingsUseCases.get().stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
+
     /** Composing the UI state */
-    val uiState = serviceState.map {
+    val uiState = combine(
+        serviceState,
+        recordings
+    ) { serviceState, recordings ->
         RecorderUiState(
-            isRecording = it?.isRecording ?: false,
+            isRecording = serviceState?.isRecording ?: false,
             recordingDuration = getDurationString(
-                (it?.recordingDuration ?: 0.seconds),
+                (serviceState?.recordingDuration ?: 0.seconds),
                 DurationFormat.HMSC_DIGITAL
-            )
+            ),
+            recordings = recordings
         )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = RecorderUiState(
             isRecording = false,
-            recordingDuration = AnnotatedString("")
+            recordingDuration = AnnotatedString(""),
+            recordings = emptyList()
         )
     )
 

@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Mic
@@ -36,6 +38,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.musikus.ui.theme.spacing
+import app.musikus.usecase.recordings.Recording
+import app.musikus.utils.DurationFormat
+import app.musikus.utils.getDurationString
 
 @Composable
 fun Recorder(
@@ -98,7 +103,44 @@ fun Recorder(
                 }
             }
         )
+
+        Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
+
+        LazyColumn {
+            items(
+                items = uiState.recordings,
+                key = { it.id }
+            ) {
+                Recording(
+                    recording = it,
+                )
+            }
+        }
+
         
         Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
+    }
+}
+
+@Composable
+fun Recording (
+    recording: Recording
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = MaterialTheme.spacing.small)
+    ) {
+        Text(
+            text = recording.title,
+            style = MaterialTheme.typography.bodyMedium
+        )
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        Text(
+            text = getDurationString(recording.duration, DurationFormat.HMS_DIGITAL),
+            style = MaterialTheme.typography.bodySmall
+        )
     }
 }

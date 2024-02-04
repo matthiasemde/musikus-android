@@ -42,6 +42,9 @@ import app.musikus.usecase.library.GetSortedLibraryItemsUseCase
 import app.musikus.usecase.library.LibraryUseCases
 import app.musikus.usecase.library.RestoreFoldersUseCase
 import app.musikus.usecase.library.RestoreItemsUseCase
+import app.musikus.usecase.recordings.GetRecordingsUseCase
+import app.musikus.usecase.recordings.RecordingsRepository
+import app.musikus.usecase.recordings.RecordingsUseCases
 import app.musikus.usecase.sessions.AddSessionUseCase
 import app.musikus.usecase.sessions.DeleteSessionsUseCase
 import app.musikus.usecase.sessions.EditSessionUseCase
@@ -191,6 +194,16 @@ object UseCasesModule {
             selectGoalSortMode = SelectGoalsSortModeUseCase(userPreferencesRepository),
             getMetronomeSettings = GetMetronomeSettingsUseCase(userPreferencesRepository),
             changeMetronomeSettings = ChangeMetronomeSettingsUseCase(userPreferencesRepository),
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideRecordingsUseCases(
+        recordingsRepository: RecordingsRepository
+    ): RecordingsUseCases {
+        return RecordingsUseCases(
+            get = GetRecordingsUseCase(recordingsRepository),
         )
     }
 }
