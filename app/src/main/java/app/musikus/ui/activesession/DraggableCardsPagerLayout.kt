@@ -38,6 +38,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
 import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
@@ -47,6 +48,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -246,52 +249,84 @@ private fun BottomButtonPager(
     ownPagerState: PagerState,
     cardsPagerState: PagerState
 ) {
-    val buttonWidth = 100.dp
+
+
+    val effectivePageWidth = 100.dp
     val screenWidth = LocalConfiguration.current.run {
         screenWidthDp.dp
     }
     val animationScope = rememberCoroutineScope()
+    var manuallyClicked = remember{ mutableStateOf(false) }
 
     HorizontalPager(
         modifier = modifier.fillMaxWidth(),
         state = ownPagerState,
         verticalAlignment = Alignment.CenterVertically,
         contentPadding = PaddingValues(
-            start = screenWidth/2 - buttonWidth/2,
-            end = screenWidth/2 - buttonWidth/2
+            start = screenWidth/2 - effectivePageWidth/2,
+            end = screenWidth/2 - effectivePageWidth/2
         ),
-    ) {
+    ) {page ->
         Column(
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-            TextButton(
-                modifier = Modifier,
-//                    .width(buttonWidth),
-                onClick = {
-                    // based on https://github.com/androidx/androidx/blob/ef05d08d7cc4ae20ada9dd176f
-                    // c2fc52c574c5c6/compose/foundation/foundation/samples/src/main/java/androidx/
-                    // compose/foundation/samples/PagerSamples.kt#L266
-                    animationScope.launch {
-                        ownPagerState.animateScrollToPage(it)
-                    }
-                    animationScope.launch {
-                        cardsPagerState.animateScrollToPage(it)
-                    }
+            fun onClick() {
+                // based on https://github.com/androidx/androidx/blob/ef05d08d7cc4ae20ada9dd176f
+                // c2fc52c574c5c6/compose/foundation/foundation/samples/src/main/java/androidx/
+                // compose/foundation/samples/PagerSamples.kt#L266
+                animationScope.launch {
+                    manuallyClicked.value = true
+                    ownPagerState.animateScrollToPage(page)
+                    manuallyClicked.value = false
                 }
-            ) {
+                animationScope.launch {
+                    manuallyClicked.value = true
+                    cardsPagerState.animateScrollToPage(page)
+                    manuallyClicked.value = false
+                }
+            }
+
+            @Composable
+            fun content() {
                 Text(
-                    pageTitles(it),
-                    style = MaterialTheme.typography.titleSmall
+                    pageTitles(page),
+                    style = MaterialTheme.typography.titleSmall,
+                    maxLines = 1,
+                )
+            }
+
+            if (page == ownPagerState.currentPage) {
+                Button(
+                    onClick = { onClick() },
+                    content = { content() }
+                )
+            } else {
+                TextButton(
+                    onClick = { onClick() },
+                    content = { content() }
                 )
             }
         }
     }
-    // sync bottomPagerState with ownPagerState on scroll
-    LaunchedEffect(key1 = ownPagerState.currentPage) {
-        cardsPagerState.animateScrollToPage(ownPagerState.currentPage)
+    // prevent the call on button click because jumping over a page wouldn't work anymore since
+    // this call will lead to the other pager again changing this pager hindering us
+    if (!manuallyClicked.value) {
+        // sync bottomPagerState with ownPagerState on scroll
+        LaunchedEffect(key1 = ownPagerState.currentPage) {
+            cardsPagerState.animateScrollToPage(ownPagerState.currentPage)
+        }
     }
+}
+
+
+@Composable
+private fun BottomPagerButton(
+    isCurrentPage: Boolean
+    manuallyClickedState: MutableState<Boolean>
+) {
+
 }
 
 
@@ -420,7 +455,7 @@ private fun DraggableCard(
             ),
             elevation = CardDefaults.cardElevation(defaultElevation = 5.dp)
         ) {
-            header()
+//            header()
             Box(
                 Modifier
                     .verticalScroll(scrollState)
