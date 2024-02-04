@@ -64,9 +64,9 @@ import app.musikus.utils.getDurationString
 
 
 
-const val CARD_HEIGHT_EXTENDED_FRACTION_OF_SCREEN = 0.8f
+const val CARD_HEIGHT_EXTENDED_FRACTION_OF_SCREEN = 0.7f
 val CARD_HEIGHT_NORMAL = 300.dp
-val CARD_HEIGHT_PEEK = 50.dp
+val CARD_HEIGHT_PEEK = 100.dp
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -110,6 +110,8 @@ fun ActiveSession(
                     HeaderBar(uiState, uiEvent)
                     Spacer(modifier = Modifier.weight(1f))
                     PracticeTimer(uiState)
+                    Spacer(modifier = Modifier.height(MaterialTheme.spacing.extraLarge))
+                    CurrentPracticingItem(uiState = uiState)
                 }
 
                 /** ------------------- Remaining area ------------------- */
@@ -119,8 +121,6 @@ fun ActiveSession(
                         .weight(CARD_HEIGHT_EXTENDED_FRACTION_OF_SCREEN)
                         .fillMaxWidth()
                 ) {
-                    Spacer(modifier = Modifier.height(MaterialTheme.spacing.extraLarge))
-                    CurrentPracticingItem(uiState = uiState)
                     SectionsList(uiState = uiState)
                 }
 

@@ -62,6 +62,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import app.musikus.ui.theme.spacing
 import kotlinx.coroutines.launch
 
@@ -71,6 +72,8 @@ enum class DragValueY {
     Normal,
     Full,
 }
+
+const val HEIGHT_BOTTOM_BUTTONS_DP = 60
 
 /**
  * Public interface for instantiating the complete pager.
@@ -88,7 +91,7 @@ fun BoxScope.DraggableCardsPagerLayout(
     pageContent: @Composable (pageIndex: Int) -> Unit,
     pageTitles: (pageIndex: Int) -> String,
 ) {
-    Column(
+    Box(
         Modifier.align(Alignment.BottomCenter)
     ) {
         val density = LocalDensity.current
@@ -125,6 +128,7 @@ fun BoxScope.DraggableCardsPagerLayout(
         val bottomPagerState = rememberPagerState(pageCount = { pageCount })
 
         CardsPager(
+            modifier = Modifier.zIndex(1f),
             pageContent = { pageIndex ->
                 DraggableCard(
                     header = { CardHeader(text = pageTitles(pageIndex)) },
@@ -145,6 +149,7 @@ fun BoxScope.DraggableCardsPagerLayout(
         )
 
         BottomButtonPager(
+            modifier = Modifier.align(Alignment.BottomCenter),
             pageCount = pageCount,
             pageTitles = { pageTitles(it) },
             ownPagerState = bottomPagerState,
@@ -216,17 +221,18 @@ private fun CardsPager(
     bottomPagerState: PagerState
 ) {
     val currentOffset = anchorStates[ownPagerState.currentPage].requireOffset()
-    val offsetFraction = (maxOffsetPx - currentOffset) / maxOffsetPx
+    val offsetFraction = minOf((maxOffsetPx - currentOffset) / maxOffsetPx, 1f)
+        .coerceAtLeast(0f)  // prevent negative values (once experienced due to floating point errors I guess)
     val maxContentPaddingDp = 30
 
     HorizontalPager(
-        modifier = modifier,
+        modifier = modifier.padding(bottom = (offsetFraction * HEIGHT_BOTTOM_BUTTONS_DP).dp),
         state = ownPagerState,
         verticalAlignment = Alignment.Bottom,
         pageSpacing = MaterialTheme.spacing.medium,
         contentPadding = PaddingValues(
-            start = (minOf(offsetFraction, 1f) * maxContentPaddingDp).dp,
-            end = (minOf(offsetFraction, 1f) * maxContentPaddingDp).dp,
+            start = (offsetFraction * maxContentPaddingDp).dp,
+            end = (offsetFraction * maxContentPaddingDp).dp,
         ),
         userScrollEnabled = anchorStates[ownPagerState.currentPage].requireOffset() >= 0f
     ) {page ->
@@ -249,16 +255,17 @@ private fun BottomButtonPager(
     cardsPagerState: PagerState
 ) {
 
-
-    val effectivePageWidth = 100.dp
+    val effectivePageWidth = 100.dp // the amount of dp one button has when centered
     val screenWidth = LocalConfiguration.current.run {
         screenWidthDp.dp
     }
     val animationScope = rememberCoroutineScope()
-    var manuallyClicked = remember{ mutableStateOf(false) }
+    val manuallyClicked = remember{ mutableStateOf(false) }
 
     HorizontalPager(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .height(HEIGHT_BOTTOM_BUTTONS_DP.dp),
         state = ownPagerState,
         verticalAlignment = Alignment.CenterVertically,
         contentPadding = PaddingValues(
@@ -345,7 +352,7 @@ private fun DraggableCard(
         CARD_HEIGHT_NORMAL - yState.requireOffset().toDp()
     }
 
-    val cardIsExpandale = scrollState.maxValue > 0
+    val cardIsExpandable = scrollState.maxValue > 0
 
     Box (
         Modifier
@@ -439,10 +446,10 @@ private fun DraggableCard(
                 disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
             ),
             shape = RoundedCornerShape(
-                topStart = MaterialTheme.shapes.medium.topStart,
-                topEnd = MaterialTheme.shapes.medium.topEnd,
-                bottomStart = if (cardIsExpandale) CornerSize(0.dp) else MaterialTheme.shapes.medium.bottomStart,
-                bottomEnd = if (cardIsExpandale) CornerSize(0.dp) else MaterialTheme.shapes.medium.bottomEnd
+                topStart = MaterialTheme.shapes.large.topStart,
+                topEnd = MaterialTheme.shapes.large.topEnd,
+                bottomStart = if (cardIsExpandable) CornerSize(0.dp) else MaterialTheme.shapes.large.bottomStart,
+                bottomEnd = if (cardIsExpandable) CornerSize(0.dp) else MaterialTheme.shapes.large.bottomEnd
             ),
             elevation = CardDefaults.cardElevation(defaultElevation = 5.dp)
         ) {
@@ -465,7 +472,7 @@ private fun DraggableCard(
     if (yState.requireOffset() == 0f) {
         yState.updateAnchors(
             getAnchors(
-                density,configuration,cardIsExpandale
+                density,configuration,cardIsExpandable
             )
         )
     }
