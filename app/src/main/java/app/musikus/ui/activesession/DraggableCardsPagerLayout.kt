@@ -26,11 +26,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CornerSize
@@ -39,9 +41,14 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -54,6 +61,7 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import app.musikus.ui.theme.spacing
+import kotlinx.coroutines.launch
 
 
 enum class DragValueY {
@@ -70,70 +78,97 @@ enum class DragValueY {
  * @param pageCount the number of pages
  * @param pageContent content of each page (composable)
  * @param headerContent header content of each page (composable)
- * @param boxScope the outer BoxScope
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun DraggableCardsPagerLayout(
+fun BoxScope.DraggableCardsPagerLayout(
     pageCount: Int,
     pageContent: @Composable (pageIndex: Int) -> Unit,
-    headerContent: @Composable (pageIndex: Int) -> Unit,
-    boxScope: BoxScope
+    pageTitles: (pageIndex: Int) -> String,
 ) {
-    with (boxScope) {
-        Column(
-            Modifier.align(Alignment.BottomCenter)
-        ) {
-            val density = LocalDensity.current
-            val configuration = LocalConfiguration.current
+    Column(
+        Modifier.align(Alignment.BottomCenter)
+    ) {
+        val density = LocalDensity.current
+        val configuration = LocalConfiguration.current
 
-            /** scroll states for each page */
-            val scrollStates = ArrayList<ScrollState>()
-            for (i in 0..< pageCount) {
-                val scrollState = rememberScrollState()
-                scrollStates.add(scrollState)
-            }
+        /** scroll states for each page */
+        val scrollStates = ArrayList<ScrollState>()
+        for (i in 0..< pageCount) {
+            val scrollState = rememberScrollState()
+            scrollStates.add(scrollState)
+        }
 
-            /** DraggableAnchorState initialization. Each page gets own state. */
-            val stateList = ArrayList<AnchoredDraggableState<DragValueY>>()
-            for (i in 0..< pageCount) {
-                stateList.add(
-                    AnchoredDraggableState(
-                        initialValue = DragValueY.Normal,
-                        positionalThreshold = { distance: Float -> distance * 0.5f },
-                        velocityThreshold = { with(density) { 100.dp.toPx() } },
-                        animationSpec = tween()
-                    ).apply {
-                        updateAnchors(getAnchors(
-                            LocalDensity.current,
-                            LocalConfiguration.current,
-                            false
-                        ))
-                    }
-                )
-            }
-            val anchorStates = remember { stateList }
-
-            CardsPager(
-                pageContent = { pageIndex ->
-                    DraggableCard(
-                        header = { headerContent(pageIndex) },
-                        body = { pageContent(pageIndex) },
-                        yState = anchorStates[pageIndex],
-                        scrollState = scrollStates[pageIndex]
-                    )
-                },
-                anchorStates = anchorStates,
-                pageCount = pageCount,
-                maxOffsetPx = with(density) {
-                        -(FRACTION_HEIGHT_EXTENDED - FRACTION_HEIGHT_COLLAPSED) *
-                                configuration.screenHeightDp.dp.toPx()
+        /** DraggableAnchorState initialization. Each page gets own state. */
+        val stateList = ArrayList<AnchoredDraggableState<DragValueY>>()
+        for (i in 0..< pageCount) {
+            stateList.add(
+                AnchoredDraggableState(
+                    initialValue = DragValueY.Normal,
+                    positionalThreshold = { distance: Float -> distance * 0.5f },
+                    velocityThreshold = { with(density) { 100.dp.toPx() } },
+                    animationSpec = tween()
+                ).apply {
+                    updateAnchors(getAnchors(
+                        LocalDensity.current,
+                        LocalConfiguration.current,
+                        false
+                    ))
                 }
             )
         }
+        val anchorStates = remember { stateList }
+
+        val cardsPagerState = rememberPagerState(pageCount = { pageCount })
+        val bottomPagerState = rememberPagerState(pageCount = { pageCount })
+
+        CardsPager(
+            pageContent = { pageIndex ->
+                DraggableCard(
+                    header = { CardHeader(text = pageTitles(pageIndex)) },
+                    body = { pageContent(pageIndex) },
+                    yState = anchorStates[pageIndex],
+                    scrollState = scrollStates[pageIndex]
+                )
+            },
+            anchorStates = anchorStates,
+            pageCount = pageCount,
+            maxOffsetPx = with(density) {
+                val heightExtended = (CARD_FRACTION_HEIGHT_EXTENDED * configuration.screenHeightDp).dp
+                val heightCollapsed = CARD_HEIGHT_COLLAPSED
+                -(heightExtended - heightCollapsed).toPx()// negative value because sliding up
+            },
+            ownPagerState = cardsPagerState,
+            bottomPagerState = bottomPagerState
+        )
+
+        BottomButtonPager(
+            pageCount = pageCount,
+            pageTitles = { pageTitles(it) },
+            ownPagerState = bottomPagerState,
+            cardsPagerState = cardsPagerState,
+        )
+
     }
 }
 
+@Composable
+private fun CardHeader(
+    text: String
+) {
+    Column (
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Spacer(Modifier.height(MaterialTheme.spacing.large))
+        Text(
+            modifier = Modifier.align(Alignment.CenterHorizontally),
+            text = text,
+            style = MaterialTheme.typography.titleMedium
+        )
+        Spacer(Modifier.height(MaterialTheme.spacing.small))
+        HorizontalDivider()
+    }
+}
 
 @OptIn(ExperimentalFoundationApi::class)
 private fun getAnchors(
@@ -143,14 +178,16 @@ private fun getAnchors(
 ) : DraggableAnchors<DragValueY> {
     with(density) {
 
-        val collapsedAllowed = false
-        val offset =
-            (FRACTION_HEIGHT_EXTENDED - FRACTION_HEIGHT_COLLAPSED) * configuration.screenHeightDp
+        val collapsedAllowed = true
+
+        val heightExtended = (CARD_FRACTION_HEIGHT_EXTENDED * configuration.screenHeightDp).dp
+        val heightCollapsed = CARD_HEIGHT_COLLAPSED
+        val travelOffset = (heightExtended - heightCollapsed)
 
         return DraggableAnchors {
             DragValueY.Normal at 0f
-            DragValueY.Full at if (expansionAllowed) { -offset.dp.toPx() } else { 0f }
-            DragValueY.Collapsed at if (collapsedAllowed) 200.dp.toPx() else 0f
+            DragValueY.Full at if (expansionAllowed) -travelOffset.toPx() else 0f
+            DragValueY.Collapsed at if (collapsedAllowed) (CARD_HEIGHT_COLLAPSED - CARD_HEIGHT_PEEK).toPx() else 0f
         }
     }
 }
@@ -173,27 +210,89 @@ private fun CardsPager(
     pageContent : @Composable (page: Int) -> Unit,
     anchorStates : List<AnchoredDraggableState<DragValueY>>,
     maxOffsetPx: Float,
+    ownPagerState: PagerState,
+    bottomPagerState: PagerState
 ) {
-    val pagerState = rememberPagerState(pageCount = { pageCount })
-
-    val offsetFraction = (maxOffsetPx - anchorStates[pagerState.currentPage].requireOffset()) / maxOffsetPx
+    val currentOffset = anchorStates[ownPagerState.currentPage].requireOffset()
+    val offsetFraction = (maxOffsetPx - currentOffset) / maxOffsetPx
     val maxContentPaddingDp = 30
 
     HorizontalPager(
         modifier = modifier,
-        state = pagerState,
+        state = ownPagerState,
         verticalAlignment = Alignment.Bottom,
         pageSpacing = MaterialTheme.spacing.medium,
         contentPadding = PaddingValues(
-            start = (offsetFraction * maxContentPaddingDp).dp,
-            end = (offsetFraction * maxContentPaddingDp).dp,
+            start = (minOf(offsetFraction, 1f) * maxContentPaddingDp).dp,
+            end = (minOf(offsetFraction, 1f) * maxContentPaddingDp).dp,
         ),
-        userScrollEnabled = anchorStates[pagerState.currentPage].requireOffset() >= 0f
+        userScrollEnabled = anchorStates[ownPagerState.currentPage].requireOffset() >= 0f
     ) {page ->
         pageContent(page)
     }
+    // sync bottomPagerState with ownPagerState on scroll
+    LaunchedEffect(key1 = ownPagerState.currentPage) {
+        bottomPagerState.animateScrollToPage(ownPagerState.currentPage)
+    }
 }
 
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun BottomButtonPager(
+    modifier: Modifier = Modifier,
+    pageCount: Int,
+    pageTitles: (Int) -> String,
+    ownPagerState: PagerState,
+    cardsPagerState: PagerState
+) {
+    val buttonWidth = 100.dp
+    val screenWidth = LocalConfiguration.current.run {
+        screenWidthDp.dp
+    }
+    val animationScope = rememberCoroutineScope()
+
+    HorizontalPager(
+        modifier = modifier.fillMaxWidth(),
+        state = ownPagerState,
+        verticalAlignment = Alignment.CenterVertically,
+        contentPadding = PaddingValues(
+            start = screenWidth/2 - buttonWidth/2,
+            end = screenWidth/2 - buttonWidth/2
+        ),
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+
+            TextButton(
+                modifier = Modifier,
+//                    .width(buttonWidth),
+                onClick = {
+                    // based on https://github.com/androidx/androidx/blob/ef05d08d7cc4ae20ada9dd176f
+                    // c2fc52c574c5c6/compose/foundation/foundation/samples/src/main/java/androidx/
+                    // compose/foundation/samples/PagerSamples.kt#L266
+                    animationScope.launch {
+                        ownPagerState.animateScrollToPage(it)
+                    }
+                    animationScope.launch {
+                        cardsPagerState.animateScrollToPage(it)
+                    }
+                }
+            ) {
+                Text(
+                    pageTitles(it),
+                    style = MaterialTheme.typography.titleSmall
+                )
+            }
+        }
+    }
+    // sync bottomPagerState with ownPagerState on scroll
+    LaunchedEffect(key1 = ownPagerState.currentPage) {
+        cardsPagerState.animateScrollToPage(ownPagerState.currentPage)
+    }
+}
 
 
 /**
@@ -219,7 +318,7 @@ private fun DraggableCard(
     val configuration = LocalConfiguration.current
 
     val height = with(density) {
-        (configuration.screenHeightDp * FRACTION_HEIGHT_COLLAPSED).dp - yState.requireOffset().toDp()
+        CARD_HEIGHT_COLLAPSED - yState.requireOffset().toDp()
     }
 
     Box (

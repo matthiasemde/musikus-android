@@ -9,7 +9,6 @@
 
 package app.musikus.ui.activesession
 
-import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -65,8 +64,9 @@ import app.musikus.utils.getDurationString
 
 
 
-const val FRACTION_HEIGHT_COLLAPSED = 0.5f
-const val FRACTION_HEIGHT_EXTENDED = 0.8f
+const val CARD_FRACTION_HEIGHT_EXTENDED = 0.8f
+val CARD_HEIGHT_COLLAPSED = 300.dp
+val CARD_HEIGHT_PEEK = 50.dp
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -105,8 +105,7 @@ fun ActiveSession(
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier
-                        .weight(1 - FRACTION_HEIGHT_EXTENDED)
-//                        .background(Color.Green)
+                        .weight(1 - CARD_FRACTION_HEIGHT_EXTENDED)
                 ){
                     HeaderBar(uiState, uiEvent)
                     Spacer(modifier = Modifier.weight(1f))
@@ -117,9 +116,8 @@ fun ActiveSession(
                 Column (
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier
-                        .weight(FRACTION_HEIGHT_EXTENDED)
+                        .weight(CARD_FRACTION_HEIGHT_EXTENDED)
                         .fillMaxWidth()
-//                        .background(Color.Blue)
                 ) {
                     Spacer(modifier = Modifier.height(MaterialTheme.spacing.extraLarge))
                     CurrentPracticingItem(uiState = uiState)
@@ -133,18 +131,15 @@ fun ActiveSession(
              *  ------------------- Bottom Draggable Cards Layout -------------------
              *
              */
-
             DraggableCardsPagerLayout(
                 pageCount = 3,
-                headerContent = {pageIndex ->
-                    CardHeader(
-                        text = when(pageIndex) {
+                pageTitles = { pageIndex ->
+                        when(pageIndex) {
                             0 -> "Library"
                             1 -> "Recorder"
                             2 -> "Metronome"
                             else -> "unknown"
                         }
-                    )
                 },
                 pageContent = { pageIndex ->
                       when(pageIndex) {
@@ -152,7 +147,6 @@ fun ActiveSession(
                               LibraryList(
                                   uiState = uiState.libraryUiState,
                                   onLibraryItemClicked = {
-                                      Log.d("ZAG", "Clicked on LibraryItem: $it")
                                       uiEvent(ActiveSessionUIEvent.StartNewSection(it))
                                   }
                               )
@@ -160,10 +154,8 @@ fun ActiveSession(
                           2 -> Metronome()
                           else -> Text("TBA", modifier = Modifier.align(Alignment.Center))
                       }
-                },
-                boxScope = this@Box
+                }
             )
-
         }
     }
 }
@@ -171,23 +163,7 @@ fun ActiveSession(
 
 
 
-@Composable
-private fun CardHeader(
-    text: String
-) {
-    Column (
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Spacer(Modifier.height(MaterialTheme.spacing.large))
-        Text(
-            modifier = Modifier.align(Alignment.CenterHorizontally),
-            text = text,
-            style = MaterialTheme.typography.titleMedium
-        )
-        Spacer(Modifier.height(MaterialTheme.spacing.small))
-        HorizontalDivider()
-    }
-}
+
 
 
 
@@ -348,7 +324,7 @@ private fun LibraryList(
         LazyRow(modifier = Modifier.fillMaxWidth()) {
             items(uiState.foldersWithItems) { folder ->
                 Row {
-                    Button(onClick = {
+                    OutlinedButton(onClick = {
                         activeFolder.value = folder.folder.id
                     }) {
                         Text(folder.folder.name)
