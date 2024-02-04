@@ -10,6 +10,7 @@
 package app.musikus.ui.activesession
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -206,13 +207,14 @@ private fun PracticeTimer(
     Text(text = "Practice time")
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun CurrentPracticingItem(
     uiState: ActiveSessionUiState
 ) {
     if (uiState.sections.isNotEmpty()) {
-        val (name, duration) = uiState.sections.first()
 
+        val (name, duration) = uiState.sections.first()
         Surface(
             color = MaterialTheme.colorScheme.tertiaryContainer,
             shape = RoundedCornerShape(50)
@@ -227,12 +229,16 @@ private fun CurrentPracticingItem(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f).basicMarquee(),
                     text = name,
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.onTertiaryContainer,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1
                 )
+
+                Spacer(Modifier.width(MaterialTheme.spacing.small))
+
                 Text(
                     text = getDurationString(
                         duration,
@@ -240,7 +246,7 @@ private fun CurrentPracticingItem(
                     ).toString(),
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.onTertiaryContainer,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
                 )
             }
         }
