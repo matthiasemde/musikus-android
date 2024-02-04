@@ -18,6 +18,7 @@ import android.content.res.Configuration
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.AnchoredDraggableState
 import androidx.compose.foundation.gestures.DraggableAnchors
 import androidx.compose.foundation.gestures.Orientation
@@ -273,6 +274,8 @@ private fun BottomButtonPager(
     HorizontalPager(
         modifier = modifier
             .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surfaceContainer)
+            .padding(top = 20.dp)
             .height(HEIGHT_BOTTOM_BUTTONS_DP.dp),
         state = ownPagerState,
         verticalAlignment = Alignment.CenterVertically,
