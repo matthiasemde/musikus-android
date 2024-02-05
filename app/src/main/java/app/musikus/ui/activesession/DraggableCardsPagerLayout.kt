@@ -19,6 +19,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.AnchoredDraggableState
 import androidx.compose.foundation.gestures.DraggableAnchors
 import androidx.compose.foundation.gestures.Orientation
@@ -95,6 +96,7 @@ data class DraggableCardPage(
 @Composable
 fun BoxScope.DraggableCardsPagerLayout(
     pageCount: Int,
+    anchorStates: List<AnchoredDraggableState<DragValueY>>,
     pages: (Int) -> DraggableCardPage
 ) {
     Box(
@@ -128,7 +130,6 @@ fun BoxScope.DraggableCardsPagerLayout(
                 }
             )
         }
-        val anchorStates = remember { stateList }
 
         val cardsPagerState = rememberPagerState(pageCount = { pageCount })
         val bottomPagerState = rememberPagerState(pageCount = { pageCount })
@@ -181,6 +182,37 @@ fun BoxScope.DraggableCardsPagerLayout(
         )
 
     }
+}
+
+
+/**
+ * Returns a list of AnchoredDraggableStates for each page
+ */
+@Composable
+@OptIn(ExperimentalFoundationApi::class)
+fun getDraggableStateList(
+    pageCount: Int
+) : List<AnchoredDraggableState<DragValueY>> {
+    val density = LocalDensity.current
+    val stateList = ArrayList<AnchoredDraggableState<DragValueY>>()
+
+    for (i in 0..< pageCount) {
+        stateList.add(
+            AnchoredDraggableState(
+                initialValue = DragValueY.Normal,
+                positionalThreshold = { distance: Float -> distance * 0.5f },
+                velocityThreshold = { with(density) { 100.dp.toPx() } },
+                animationSpec = tween()
+            ).apply {
+                updateAnchors(getAnchors(
+                    density,
+                    LocalConfiguration.current,
+                    false
+                ))
+            }
+        )
+    }
+    return stateList
 }
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -491,7 +523,7 @@ private fun DraggableCard(
             ),
             elevation = CardDefaults.cardElevation(10.dp)
         ) {
-            GrabHandle()
+            GrabHandle(dragState = yState)
             header()
             Box(
                 Modifier
@@ -527,12 +559,25 @@ private fun DraggableCard(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun GrabHandle() {
+private fun GrabHandle(
+    dragState: AnchoredDraggableState<DragValueY>
+) {
+    val animationScope = rememberCoroutineScope()
     Row (
         horizontalArrangement = Arrangement.Center,
         modifier = Modifier
             .fillMaxWidth()
+            .clickable {
+                animationScope.launch {
+                    if (dragState.currentValue == DragValueY.Collapsed) {
+                        dragState.animateTo(DragValueY.Normal)
+                    } else {
+                        dragState.animateTo(DragValueY.Collapsed)
+                    }
+                }
+            }
     ) {
         Surface (
             color = MaterialTheme.colorScheme.outline,

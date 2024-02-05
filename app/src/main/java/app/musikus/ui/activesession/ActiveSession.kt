@@ -24,6 +24,7 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.basicMarquee
+import androidx.compose.foundation.gestures.animateTo
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -52,6 +53,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -73,6 +76,7 @@ import app.musikus.ui.theme.spacing
 import app.musikus.utils.DurationFormat
 import app.musikus.utils.TimeProvider
 import app.musikus.utils.getDurationString
+import kotlinx.coroutines.launch
 
 
 const val CARD_HEIGHT_EXTENDED_FRACTION_OF_SCREEN = 0.7f
@@ -149,8 +153,15 @@ fun ActiveSession(
              *  ------------------- Bottom Draggable Cards Layout -------------------
              *
              */
+
+            val pageCount = 3
+            val stateListDraggableCards = getDraggableStateList(pageCount = pageCount)
+            val anchorStates = remember { stateListDraggableCards }
+            val animationScope = rememberCoroutineScope()
+
             DraggableCardsPagerLayout(
-                pageCount = 3,
+                pageCount = pageCount,
+                anchorStates = anchorStates,
                 pages = { pageIndex ->
                     when(pageIndex) {
                         0 -> DraggableCardPage(
@@ -169,6 +180,11 @@ fun ActiveSession(
                                     uiState = uiState.libraryUiState,
                                     onLibraryItemClicked = {
                                         uiEvent(ActiveSessionUIEvent.StartNewSection(it))
+                                        animationScope.launch {
+                                            anchorStates[pageIndex].animateTo(
+                                                DragValueY.Normal
+                                            )
+                                        }
                                     }
                                 )
                             }
