@@ -91,7 +91,7 @@ class MetronomeService : Service() {
         userPreferencesUseCases.getMetronomeSettings()
     }
 
-    private lateinit var metronomeSettingsUpdateJob : Job
+    private var metronomeSettingsUpdateJob : Job? = null
 
     /** Own state flows */
     private val _isPlaying = MutableStateFlow(false)
@@ -170,7 +170,7 @@ class MetronomeService : Service() {
     }
 
     override fun onDestroy() {
-        metronomeSettingsUpdateJob.cancel()
+        metronomeSettingsUpdateJob?.cancel()
         metronome.stop()
         super.onDestroy()
     }
