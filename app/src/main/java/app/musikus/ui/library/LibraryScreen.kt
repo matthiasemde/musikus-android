@@ -61,6 +61,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
@@ -498,21 +499,25 @@ fun LibraryUiItem(
     selected: Boolean,
     onShortClick: () -> Unit,
     onLongClick: () -> Unit,
+    compact: Boolean = false,
+    enabled: Boolean = true,
 ) {
     Selectable(
         selected = selected,
         onShortClick = onShortClick,
         onLongClick = onLongClick,
+        enabled = enabled,
         shape = RoundedCornerShape(0.dp),
     ) {
         Row(
             modifier = modifier
                 .fillMaxWidth()
                 .height(IntrinsicSize.Min)
+                .alpha(if (!enabled) 0.5f else 1f),
         ) {
             Box(
                 modifier = Modifier
-                    .width(10.dp)
+                    .width(if(compact) 8.dp else 10.dp)
                     .fillMaxHeight()
                     .clip(RoundedCornerShape(5.dp))
                     .align(Alignment.CenterVertically)
@@ -520,15 +525,19 @@ fun LibraryUiItem(
             )
             Column(
                 modifier = Modifier
-                    .padding(start = 12.dp),
+                    .padding(start = MaterialTheme.spacing.small),
             ) {
                 Text(
                     text = item.name,
-                    style = MaterialTheme.typography.titleMedium,
+                    style = if (compact) {
+                        MaterialTheme.typography.titleSmall
+                    } else {
+                        MaterialTheme.typography.titleMedium
+                    },
                 )
                 Text(
                     text = "last practiced: yesterday",
-                    style = MaterialTheme.typography.labelMedium,
+                    style = if(compact) MaterialTheme.typography.labelSmall else MaterialTheme.typography.labelMedium,
                     color = colorScheme.onSurface.copy(alpha = 0.6f)
                 )
             }

@@ -177,6 +177,7 @@ fun ActiveSession(
             val anchorStates = remember { stateListDraggableCards }
             val scrollStates = getScrollableStateList(pageCount = pageCount)
 
+
             DraggableCardsPagerLayout(
                 pageCount = pageCount,
                 anchorStates = anchorStates,
@@ -215,6 +216,7 @@ fun ActiveSession(
                                         uiState.sections.firstOrNull()?.let { activeSection ->
                                             folderId == activeSection.libraryItem.libraryFolderId
                                         } ?: false
+
                                     }
                                 )
                             },
@@ -229,7 +231,8 @@ fun ActiveSession(
                                                 DragValueY.Normal
                                             )
                                         }
-                                    }
+                                    },
+                                    currentPracticedItem = uiState.sections.firstOrNull()?.libraryItem
                                 )
                             }
                         )
@@ -566,7 +569,8 @@ private fun LibraryFolderElement(
 private fun LibraryList(
     uiState: LibraryCardUiState,
     onLibraryItemClicked: (LibraryItem) -> Unit,
-    cardScrollState: ScrollState
+    cardScrollState: ScrollState,
+    currentPracticedItem: LibraryItem?
 ) {
     Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
     Column(
@@ -578,6 +582,7 @@ private fun LibraryList(
         val shownItems =
             uiState.foldersWithItems.find { it.folder == uiState.selectedFolder }?.items
                 ?: uiState.rootItems
+
         for (item in shownItems) {
             LibraryUiItem(
                 modifier = Modifier.padding(
@@ -589,7 +594,10 @@ private fun LibraryList(
                 onShortClick = {
                     onLibraryItemClicked(item)
                 },
-                onLongClick = { /*TODO*/ })
+                onLongClick = { /*TODO*/ },
+                compact = true,
+                enabled = currentPracticedItem != item
+            )
         }
     }
 }

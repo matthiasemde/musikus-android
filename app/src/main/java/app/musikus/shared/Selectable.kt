@@ -19,17 +19,20 @@ fun Selectable(
     onShortClick: () -> Unit,
     onLongClick: () -> Unit,
     shape: CornerBasedShape = MaterialTheme.shapes.medium,
-    content: @Composable () -> Unit
+    enabled: Boolean = true,
+    content: @Composable () -> Unit,
 ) {
     Box(modifier = modifier.clip(shape)) {
         content()
         Box(
             modifier = Modifier
                 .matchParentSize()
-                .combinedClickable(
-                    onClick = onShortClick,
-                    onLongClick = onLongClick
-                )
+                .conditional(enabled) {
+                    combinedClickable(
+                        onClick = onShortClick,
+                        onLongClick = onLongClick
+                    )
+                }
                 .background(
                     if (selected) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
                     else Color.Transparent,
