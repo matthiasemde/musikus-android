@@ -187,7 +187,7 @@ fun ActiveSession(
                         0 -> DraggableCardPage(
                             title = "Library",
                             isExpandable = true,
-                            showFab = true,
+                            showFab = anchorStates[pageIndex].currentValue != DragValueY.Collapsed,
                             fabAction = {
                                 uiEvent(ActiveSessionUIEvent.CreateNewLibraryItem(
                                     uiState.libraryUiState.selectedFolder?.id))
