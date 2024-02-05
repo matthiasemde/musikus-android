@@ -97,10 +97,12 @@ object RepositoriesModule {
     @Provides
     @Singleton
     fun provideRecordingsRepository(
-        application: Application
+        application: Application,
+        @IoScope ioScope: CoroutineScope
     ): RecordingsRepository {
         return RecordingsRepositoryImpl(
-            contentResolver = application.contentResolver
+            contentResolver = application.contentResolver,
+            ioScope = ioScope
         )
     }
 }
