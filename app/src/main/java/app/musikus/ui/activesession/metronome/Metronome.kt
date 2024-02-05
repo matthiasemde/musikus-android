@@ -1,5 +1,7 @@
 package app.musikus.ui.activesession.metronome
 
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -29,6 +31,7 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -43,7 +46,8 @@ import app.musikus.ui.theme.spacing
 @Composable
 fun Metronome(
     modifier: Modifier = Modifier,
-    viewModel: MetronomeViewModel = hiltViewModel()
+    viewModel: MetronomeViewModel = hiltViewModel(),
+    onTextClicked: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val eventHandler = viewModel::onUiEvent
@@ -56,7 +60,8 @@ fun Metronome(
     ) {
         MetronomeTopBar(
             uiState = uiState,
-            eventHandler = eventHandler
+            eventHandler = eventHandler,
+            onTextClicked = onTextClicked
         )
 
         HorizontalDivider()
@@ -95,7 +100,8 @@ fun Metronome(
 @Composable
 fun MetronomeTopBar(
     uiState: MetronomeUiState,
-    eventHandler: (MetronomeUiEvent) -> Unit
+    eventHandler: (MetronomeUiEvent) -> Unit,
+    onTextClicked: () -> Unit
 ) {
     Row(
         modifier = Modifier
@@ -120,7 +126,13 @@ fun MetronomeTopBar(
 
         // Bpm
         Text(
-            modifier = Modifier.width(100.dp),
+            modifier = Modifier
+                .width(100.dp)
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = onTextClicked
+                ),
             text = uiState.settings.bpm.toString(),
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.displayMedium,

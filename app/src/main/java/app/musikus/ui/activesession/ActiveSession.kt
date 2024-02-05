@@ -244,7 +244,21 @@ fun ActiveSession(
                         2-> DraggableCardPage(
                             title = "Metronome",
                             isExpandable = false,
-                            content = { Metronome() },
+                            content = { Metronome(
+                                /** change Card height */
+                                onTextClicked = {
+                                    val target = if (anchorStates[pageIndex].currentValue == DragValueY.Collapsed) {
+                                        DragValueY.Normal
+                                    } else {
+                                        DragValueY.Collapsed
+                                    }
+                                    animationScope.launch {
+                                        anchorStates[pageIndex].animateTo(
+                                            target
+                                        )
+                                    }
+                                }
+                            ) },
                         )
                         else -> DraggableCardPage(
                             title = "unknown",
