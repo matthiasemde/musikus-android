@@ -41,6 +41,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -74,6 +75,7 @@ import app.musikus.ui.MainUiState
 import app.musikus.ui.activesession.metronome.Metronome
 import app.musikus.ui.activesession.recorder.Recorder
 import app.musikus.ui.components.SwipeToDeleteContainer
+import app.musikus.ui.components.fadingEdge
 import app.musikus.ui.library.LibraryUiItem
 import app.musikus.ui.theme.dimensions
 import app.musikus.ui.theme.spacing
@@ -167,6 +169,7 @@ fun ActiveSession(
             DraggableCardsPagerLayout(
                 pageCount = pageCount,
                 anchorStates = anchorStates,
+                scrollStates = getScrollableStateList(pageCount = pageCount),
                 pages = { pageIndex ->
                     when(pageIndex) {
                         0 -> DraggableCardPage(
@@ -189,7 +192,8 @@ fun ActiveSession(
                                                 DragValueY.Normal
                                             )
                                         }
-                                    }
+                                    },
+                                    isCardCollapsed = anchorStates[pageIndex].currentValue == DragValueY.Collapsed
                                 )
                             },
                             content = {
@@ -328,6 +332,7 @@ private fun CurrentPracticingItem(
         }
     }
 }
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun SectionsList(
@@ -342,8 +347,12 @@ private fun SectionsList(
         return
     }
 
+    val listState = rememberLazyListState()
+
     LazyColumn(
+        state = listState,
         modifier = modifier
+            .fadingEdge(listState)
             .fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.extraSmall),
         contentPadding = PaddingValues(vertical = MaterialTheme.spacing.small),
@@ -412,7 +421,8 @@ private fun LibraryHeader(
     modifier: Modifier = Modifier,
     uiState: LibraryCardUiState,
     onFolderIconClicked: (LibraryFolder?) -> Unit,
-    extendCardIfCollapsed: () -> Unit
+    extendCardIfCollapsed: () -> Unit,
+    isCardCollapsed: Boolean
 ) {
     // Header Folder List
     LazyRow(
@@ -425,11 +435,14 @@ private fun LibraryHeader(
 
         item {
             FilterChip(
-                onClick = { onFolderIconClicked(null) },
+                onClick = {
+                    onFolderIconClicked(null)
+                    extendCardIfCollapsed()
+                },
                 label = {
                     Text("no folder")
                 },
-                selected = uiState.selectedFolder == null
+                selected = uiState.selectedFolder == null && !isCardCollapsed
             )
         }
 
@@ -441,7 +454,7 @@ private fun LibraryHeader(
                         extendCardIfCollapsed()
                     },
                     label = { Text(folder.folder.name) },
-                    selected = folder.folder == uiState.selectedFolder
+                    selected = folder.folder == uiState.selectedFolder && !isCardCollapsed
                 )
             }
         }

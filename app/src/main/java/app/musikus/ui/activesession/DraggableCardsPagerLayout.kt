@@ -98,6 +98,7 @@ val DRAG_HANDLE_HEIGHT = 3.dp
 fun BoxScope.DraggableCardsPagerLayout(
     pageCount: Int,
     anchorStates: List<AnchoredDraggableState<DragValueY>>,
+    scrollStates: List<ScrollState>,
     pages: (Int) -> DraggableCardPage
 ) {
 
@@ -106,13 +107,6 @@ fun BoxScope.DraggableCardsPagerLayout(
     ) {
         val density = LocalDensity.current
         val configuration = LocalConfiguration.current
-
-        /** scroll states for each page */
-        val scrollStates = ArrayList<ScrollState>()
-        for (i in 0..< pageCount) {
-            val scrollState = rememberScrollState()
-            scrollStates.add(scrollState)
-        }
 
         val cardsPagerState = rememberPagerState(pageCount = { pageCount })
         val bottomPagerState = rememberPagerState(pageCount = { pageCount })
@@ -188,6 +182,20 @@ fun getDraggableStateList(
         )
     }
     return stateList
+}
+
+/**
+ * Returns a list of ScrollStates for each page.
+ */
+@Composable
+fun getScrollableStateList(
+    pageCount: Int
+) : List<ScrollState> {
+    val scrollStates = ArrayList<ScrollState>()
+    repeat(pageCount) {
+        scrollStates.add(rememberScrollState())
+    }
+    return scrollStates
 }
 
 
