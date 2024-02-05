@@ -9,6 +9,7 @@
 package app.musikus.services
 
 import android.app.Notification
+import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
 import android.app.TaskStackBuilder
@@ -124,6 +125,9 @@ class RecorderService : Service() {
                     initialDelay = 0.01.seconds.inWholeMilliseconds
                 ) {
                     _recordingDuration.update { it + 0.01.seconds }
+                    if (_recordingDuration.value.inWholeMilliseconds % 1000 == 0L) {
+                        updateNotification(_recordingDuration.value)
+                    }
                 }
             }
         }
@@ -170,11 +174,11 @@ class RecorderService : Service() {
         super.onDestroy()
     }
 
-//    private fun updateNotification(duration: Duration) {
-//        val notification: Notification = getNotification(duration)
-//        val mNotificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-//        mNotificationManager.notify(RECORDER_NOTIFICATION_ID, notification)
-//    }
+    private fun updateNotification(duration: Duration) {
+        val notification: Notification = getNotification(duration)
+        val mNotificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        mNotificationManager.notify(RECORDER_NOTIFICATION_ID, notification)
+    }
 
     private fun getNotification(duration: Duration) : Notification {
         val resultIntent = Intent(this, ActiveSessionActivity::class.java)
