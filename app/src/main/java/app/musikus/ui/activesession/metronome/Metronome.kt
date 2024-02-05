@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.musikus.ui.theme.dimensions
 import app.musikus.ui.theme.spacing
 
 @Composable
@@ -49,14 +50,17 @@ fun Metronome(
 
 
     Column(
-        modifier = modifier.padding(horizontal = MaterialTheme.spacing.medium)
+        modifier = modifier
+            .padding(horizontal = MaterialTheme.spacing.medium)
+            .height(MaterialTheme.dimensions.cardNormalContentHeight)
     ) {
         MetronomeTopBar(
             uiState = uiState,
             eventHandler = eventHandler
         )
 
-        HorizontalDivider(modifier = Modifier.padding(vertical = MaterialTheme.spacing.medium))
+        HorizontalDivider()
+        Spacer(modifier = Modifier.weight(1f))  // flexible space
 
         /** Tempo Slider */
         Text(
@@ -73,7 +77,7 @@ fun Metronome(
             onValueChange = { eventHandler(MetronomeUiEvent.UpdateSliderValue(it)) },
         )
 
-        Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
+        Spacer(modifier = Modifier.weight(1f))  // flexible space
 
         /** Beats per bar, Click per beat and Tab tempo */
 
@@ -82,7 +86,7 @@ fun Metronome(
             eventHandler = eventHandler
         )
 
-        Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
+        Spacer(modifier = Modifier.height(MaterialTheme.spacing.large))
     }
 
 }
@@ -94,9 +98,12 @@ fun MetronomeTopBar(
     eventHandler: (MetronomeUiEvent) -> Unit
 ) {
     Row(
-        verticalAlignment = Alignment.CenterVertically
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(MaterialTheme.dimensions.cardPeekContentHeight),    // should fit in peeked card
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceAround
     ) {
-        Spacer(modifier = Modifier.width(MaterialTheme.spacing.small))
 
         // -5 Bpm
         MetronomeIncrementBpmButton(
@@ -113,9 +120,7 @@ fun MetronomeTopBar(
 
         // Bpm
         Text(
-            modifier = Modifier
-                .padding(MaterialTheme.spacing.small)
-                .width(100.dp),
+            modifier = Modifier.width(100.dp),
             text = uiState.settings.bpm.toString(),
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.displayMedium,
@@ -135,12 +140,13 @@ fun MetronomeTopBar(
             eventHandler = eventHandler
         )
 
-        Spacer(modifier = Modifier.weight(1f))
+
+        Spacer(modifier = Modifier.width(MaterialTheme.spacing.small))
 
         // Start/Stop Metronome
         FilledIconButton(
             onClick = { eventHandler(MetronomeUiEvent.ToggleIsPlaying) },
-            modifier = Modifier,
+            modifier = Modifier.size(50.dp),
             shape = CircleShape,
         ) {
             if(!uiState.isPlaying) {
@@ -160,7 +166,6 @@ fun MetronomeTopBar(
             }
         }
 
-        Spacer(modifier = Modifier.width(MaterialTheme.spacing.medium))
     }
 }
 
@@ -172,9 +177,7 @@ fun MetronomeIncrementBpmButton(
 ) {
     OutlinedButton(
         onClick = { eventHandler(MetronomeUiEvent.IncrementBpm(bpmIncrement)) },
-        modifier = Modifier
-            .padding(MaterialTheme.spacing.extraSmall)
-            .size(size),
+        modifier = Modifier.size(size),
         shape = CircleShape,
         contentPadding = PaddingValues(0.dp)
     ) {
@@ -192,7 +195,7 @@ fun MetronomeExtraSettingsRow(
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
+        verticalAlignment = Alignment.Top,
         horizontalArrangement = Arrangement.SpaceAround
     ) {
 
@@ -229,11 +232,14 @@ fun MetronomeExtraSettingsRow(
 
 @Composable
 fun MetronomeExtraSettingsColumn(
+    modifier: Modifier = Modifier,
     label: String,
     content: @Composable () -> Unit
 ) {
     Column(
-        horizontalAlignment = Alignment.CenterHorizontally
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Top
     ) {
         Text(
             text = label,

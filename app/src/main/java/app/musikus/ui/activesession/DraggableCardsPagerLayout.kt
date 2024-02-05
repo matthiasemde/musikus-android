@@ -525,10 +525,8 @@ private fun DraggableCard(
             GrabHandle(dragState = yState)
             header()
             Box(
-                Modifier
-                    .verticalScroll(scrollState)
-                    .fillMaxWidth()
-                    .padding(MaterialTheme.spacing.small),
+                Modifier.verticalScroll(scrollState)
+                    .fillMaxWidth(),
 
             ) {
                 body()

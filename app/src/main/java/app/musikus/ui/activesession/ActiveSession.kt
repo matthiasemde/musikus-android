@@ -485,7 +485,7 @@ private fun LibraryList(
             LibraryUiItem(
                 modifier = Modifier.padding(
                     vertical = MaterialTheme.spacing.small,
-                    horizontal = MaterialTheme.spacing.large
+                    horizontal = MaterialTheme.spacing.medium
                 ),
                 item = item,
                 selected = false,
@@ -557,9 +557,7 @@ private fun getDynamicHeaderHeight(
     anchorState: AnchoredDraggableState<DragValueY>
 ) : Dp {
     val fraction = getCurrentOffsetFraction(state = anchorState)
-    val peekHeightContent =
-        MaterialTheme.dimensions.cardPeekHeight -
-                MaterialTheme.dimensions.cardHandleHeight
+    val peekHeightContent = MaterialTheme.dimensions.cardPeekContentHeight
     val height = if (anchorState.targetValue != DragValueY.Full){
         (fraction * peekHeightContent.value).dp
     } else 0.dp
