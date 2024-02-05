@@ -29,6 +29,10 @@ import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -118,14 +122,15 @@ fun LibraryItemDialog(
     mode: DialogMode,
     folders: List<LibraryFolder>,
     itemData: LibraryItemEditData,
-    folderSelectorExpanded: Boolean,
     onNameChange: (String) -> Unit,
     onColorIndexChange: (Int) -> Unit,
     onSelectedFolderIdChange: (UUID?) -> Unit,
-    onFolderSelectorExpandedChange: (Boolean) -> Unit,
     onConfirmHandler: () -> Unit,
     onDismissHandler: () -> Unit,
 ) {
+
+    var folderSelectorExpanded by remember { mutableStateOf(false) }
+
     Dialog(onDismissRequest = onDismissHandler) {
         Column(
             modifier = Modifier
@@ -176,7 +181,7 @@ fun LibraryItemDialog(
                         specialOption = UUIDSelectionSpinnerOption(null, "No folder"),
                         semanticDescription = "Select folder",
                         dropdownTestTag = TestTags.ITEM_DIALOG_FOLDER_SELECTOR_DROPDOWN,
-                        onExpandedChange = onFolderSelectorExpandedChange,
+                        onExpandedChange = { folderSelectorExpanded = it },
                         onSelectedChange = {
                             onSelectedFolderIdChange((it as UUIDSelectionSpinnerOption).id)
                         },

@@ -15,16 +15,20 @@ package app.musikus.ui.activesession
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.keyframes
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.basicMarquee
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.AnchoredDraggableState
 import androidx.compose.foundation.gestures.animateTo
 import androidx.compose.foundation.layout.Arrangement
@@ -38,17 +42,22 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Folder
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
@@ -63,6 +72,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -77,6 +87,8 @@ import app.musikus.ui.activesession.metronome.Metronome
 import app.musikus.ui.activesession.recorder.Recorder
 import app.musikus.ui.components.SwipeToDeleteContainer
 import app.musikus.ui.components.fadingEdge
+import app.musikus.ui.library.DialogMode
+import app.musikus.ui.library.LibraryItemDialog
 import app.musikus.ui.library.LibraryUiItem
 import app.musikus.ui.theme.dimensions
 import app.musikus.ui.theme.spacing
@@ -84,6 +96,7 @@ import app.musikus.utils.DurationFormat
 import app.musikus.utils.TimeProvider
 import app.musikus.utils.getDurationString
 import kotlinx.coroutines.launch
+import java.util.UUID
 
 
 const val CARD_HEIGHT_EXTENDED_FRACTION_OF_SCREEN = 0.7f
@@ -102,10 +115,6 @@ fun ActiveSession(
     val uiEvent: (ActiveSessionUIEvent) -> Unit = viewModel::onEvent
 
     Scaffold { contentPadding ->
-        if(uiState.isPaused) {
-           PauseDialog(uiState, uiEvent)
-        }
-
         Box(
             modifier = Modifier
                 .padding(contentPadding)
@@ -127,7 +136,7 @@ fun ActiveSession(
                     Spacer(modifier = Modifier.weight(1f))
                     PracticeTimer(uiState)
                     Spacer(modifier = Modifier.weight(1f))
-                    CurrentPracticingItem(uiState = uiState)
+                    CurrentPracticingItem(sections = uiState.sections)
                 }
 
                 /** ------------------- Remaining area ------------------- */
@@ -177,12 +186,17 @@ fun ActiveSession(
                         0 -> DraggableCardPage(
                             title = "Library",
                             isExpandable = true,
+                            showFab = true,
+                            fabAction = {
+                                uiEvent(ActiveSessionUIEvent.CreateNewLibraryItem(
+                                    uiState.libraryUiState.selectedFolder?.id))
+                            },
                             header = {
                                 val calculatedHeight = getDynamicHeaderHeight(anchorStates[pageIndex])
                                 LibraryHeader(
                                     modifier = Modifier.defaultMinSize(minHeight = calculatedHeight),
                                     uiState = uiState.libraryUiState,
-                                    onFolderIconClicked = {
+                                    onFolderClicked = {
                                         uiEvent(ActiveSessionUIEvent.ChangeFolderDisplayed(it))
                                     },
                                     extendCardIfCollapsed = {
@@ -195,7 +209,13 @@ fun ActiveSession(
                                             )
                                         }
                                     },
-                                    isCardCollapsed = anchorStates[pageIndex].currentValue == DragValueY.Collapsed
+                                    isCardCollapsed = anchorStates[pageIndex].currentValue == DragValueY.Collapsed,
+                                    shouldShowBadge = { folderId ->
+                                        // look if current item is inside of folder
+                                        uiState.sections.firstOrNull()?.let { activeSection ->
+                                            folderId == activeSection.libraryItem.libraryFolderId
+                                        } ?: false
+                                    }
                                 )
                             },
                             content = {
@@ -232,6 +252,25 @@ fun ActiveSession(
                 }
             )
         }
+
+
+        if(uiState.isPaused) {
+            PauseDialog(uiState, uiEvent)
+        }
+
+        uiState.newLibraryItemData?.let { editData ->
+            LibraryItemDialog(
+                mode = DialogMode.ADD,
+                folders = uiState.libraryUiState.foldersWithItems.map { it.folder },
+                itemData = editData,
+                onNameChange = { uiEvent(ActiveSessionUIEvent.NewLibraryItemNameChanged(it)) },
+                onColorIndexChange = {uiEvent(ActiveSessionUIEvent.NewLibraryItemColorChanged(it))},
+                onSelectedFolderIdChange = {uiEvent(ActiveSessionUIEvent.NewLibraryItemFolderChanged(it))},
+                onConfirmHandler = { /*TODO*/ },
+                onDismissHandler = { uiEvent(ActiveSessionUIEvent.NewLibraryItemDialogDismissed) }
+            )
+        }
+
     }
 }
 
@@ -277,13 +316,13 @@ private fun PracticeTimer(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun CurrentPracticingItem(
-    uiState: ActiveSessionUiState
+    sections: List<SectionListItemUiState>
 ) {
     AnimatedVisibility(
-        visible = uiState.sections.isNotEmpty(),
+        visible = sections.isNotEmpty(),
         enter = expandVertically() + fadeIn(animationSpec = keyframes { durationMillis = 200 }),
     ) {
-        val firstSection = uiState.sections.first()
+        val firstSection = sections.first()
         Surface(
             modifier = Modifier.animateContentSize(),
             color = MaterialTheme.colorScheme.tertiaryContainer,
@@ -292,7 +331,7 @@ private fun CurrentPracticingItem(
         ) {
 
             AnimatedContent(
-                targetState = firstSection.name,
+                targetState = firstSection.libraryItem.name,
                 label = "currentPracticingItem",
                 transitionSpec = {
                     slideInVertically { -it } togetherWith slideOutVertically { it }
@@ -399,7 +438,7 @@ private fun SectionListElement(
                 ) {
                     Text(
                         modifier = Modifier.weight(1f),
-                        text = sectionElement.name,
+                        text = sectionElement.libraryItem.name,
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurface
                     )
@@ -423,7 +462,8 @@ private fun SectionListElement(
 private fun LibraryHeader(
     modifier: Modifier = Modifier,
     uiState: LibraryCardUiState,
-    onFolderIconClicked: (LibraryFolder?) -> Unit,
+    shouldShowBadge: (UUID?) -> Boolean,
+    onFolderClicked: (LibraryFolder?) -> Unit,
     extendCardIfCollapsed: () -> Unit,
     isCardCollapsed: Boolean
 ) {
@@ -436,36 +476,91 @@ private fun LibraryHeader(
             .fadingEdge(state, vertical = false),
         horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small),
         verticalAlignment = Alignment.CenterVertically,
-        contentPadding = PaddingValues(horizontal = MaterialTheme.spacing.small),
+        contentPadding = PaddingValues(MaterialTheme.spacing.small),
     ) {
 
         item {
-            FilterChip(
+            LibraryFolderElement(
+                folder = null,
                 onClick = {
-                    onFolderIconClicked(null)
+                    onFolderClicked(null)
                     extendCardIfCollapsed()
                 },
-                label = {
-                    Text("no folder")
-                },
-                selected = uiState.selectedFolder == null && !isCardCollapsed
+                isSelected = uiState.selectedFolder == null && !isCardCollapsed,
+                showBadge = shouldShowBadge(null)
             )
         }
 
         items(uiState.foldersWithItems) { folder ->
-            Row {
-                FilterChip(
-                    onClick = {
-                        onFolderIconClicked(folder.folder)
-                        extendCardIfCollapsed()
-                    },
-                    label = { Text(folder.folder.name) },
-                    selected = folder.folder == uiState.selectedFolder && !isCardCollapsed
+            LibraryFolderElement(folder = folder.folder,
+                onClick = {
+                    onFolderClicked(folder.folder)
+                    extendCardIfCollapsed()
+                },
+                isSelected = folder.folder == uiState.selectedFolder && !isCardCollapsed,
+                showBadge = shouldShowBadge(folder.folder.id)
+            )
+        }
+    }
+}
+
+
+@Composable
+private fun LibraryFolderElement(
+    folder: LibraryFolder?,
+    showBadge: Boolean = false ,
+    onClick: (LibraryFolder?) -> Unit,
+    isSelected: Boolean,
+) {
+    val color by animateColorAsState(targetValue =
+        if (isSelected) {
+            MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.7f)
+        } else {
+            MaterialTheme.colorScheme.secondaryContainer.copy(0f)
+        },
+        label = "color",
+        animationSpec = tween(200)
+    )
+    Surface(
+        shape = MaterialTheme.shapes.medium,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+    ) {
+        Surface(
+            modifier = Modifier
+                .size(80.dp)
+                .clickable { onClick(folder) },
+            color = color
+        ) {
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                BadgedBox(
+                    modifier = Modifier
+                        .padding(horizontal = MaterialTheme.spacing.small),
+                    badge = { if (showBadge) Badge() }
+                ) {
+                    Icon(
+                        Icons.Default.Folder,
+                        tint = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f),
+                        contentDescription = null
+                    )
+                }
+                Spacer(modifier = Modifier.height(MaterialTheme.spacing.extraSmall))
+                Text(
+                    text = folder?.name ?: "no folder",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                    textAlign = TextAlign.Center,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }
     }
 }
+
 
 @Composable
 private fun LibraryList(
@@ -473,9 +568,11 @@ private fun LibraryList(
     onLibraryItemClicked: (LibraryItem) -> Unit,
     cardScrollState: ScrollState
 ) {
-    Column(modifier = Modifier
-        .fillMaxWidth()
-        .fadingEdge(cardScrollState)
+    Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .fadingEdge(cardScrollState)
     ) {
         // show folder items or if folderId could not be found, show root Items
         val shownItems =
@@ -552,6 +649,7 @@ private fun PauseDialog(
  *
  * @param anchorState the state of the DraggableCardPage
  */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun getDynamicHeaderHeight(
     anchorState: AnchoredDraggableState<DragValueY>

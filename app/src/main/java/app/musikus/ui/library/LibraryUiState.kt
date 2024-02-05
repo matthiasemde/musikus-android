@@ -71,7 +71,6 @@ data class LibraryItemDialogUiState(
     val mode: DialogMode,
     val itemData: LibraryItemEditData,
     val folders : List<LibraryFolder>,
-    val isFolderSelectorExpanded: Boolean,
     val confirmButtonEnabled: Boolean,
     val itemToEdit: LibraryItem?,
 )

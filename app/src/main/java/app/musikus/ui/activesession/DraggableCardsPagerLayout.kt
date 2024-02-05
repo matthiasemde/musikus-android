@@ -40,10 +40,12 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Button
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -80,7 +82,9 @@ data class DraggableCardPage(
     val content: @Composable () -> Unit,
     val header: @Composable () -> Unit = {},
     val title: String,
-    val isExpandable: Boolean
+    val isExpandable: Boolean,
+    val showFab: Boolean = false,
+    val fabAction: () -> Unit = {}
 )
 
 val DRAG_HANDLE_HEIGHT = 3.dp
@@ -122,6 +126,7 @@ fun BoxScope.DraggableCardsPagerLayout(
                     yState = anchorStates[pageIndex],
                     scrollState = scrollStates[pageIndex],
                     cardIsExpandable = pages(pageIndex).isExpandable,
+                    showFab = pages(pageIndex).showFab,
                     onCollapsed = {
                         anchorStates.forEach {
                             animationScope.launch {
@@ -135,7 +140,8 @@ fun BoxScope.DraggableCardsPagerLayout(
                                 it.animateTo(DragValueY.Normal)
                             }
                         }
-                    }
+                    },
+                    fabAction = pages(pageIndex).fabAction
                 )
             },
             anchorStates = anchorStates,
@@ -417,6 +423,8 @@ private fun DraggableCard(
     body: @Composable () -> Unit,
     scrollState: ScrollState,
     cardIsExpandable: Boolean,
+    showFab: Boolean,
+    fabAction: () -> Unit,
     onCollapsed: () -> Unit = {},    // callback when card is collapsed
     onUnCollapsed: () -> Unit = {}    // callback when card is uncollapsed
 ) {
@@ -512,24 +520,40 @@ private fun DraggableCard(
                 }
             )
     ){
-        ElevatedCard (
-            modifier = Modifier.fillMaxHeight(),
+        Surface (
+            modifier = Modifier
+                .fillMaxHeight(),
             shape = RoundedCornerShape(
                 topStart = MaterialTheme.shapes.large.topStart,
                 topEnd = MaterialTheme.shapes.large.topEnd,
                 bottomStart = MaterialTheme.shapes.large.bottomStart,
                 bottomEnd = MaterialTheme.shapes.large.bottomEnd
             ),
-            elevation = CardDefaults.cardElevation(10.dp)
+            shadowElevation = 10.dp,
+            tonalElevation = 10.dp,
+            color = MaterialTheme.colorScheme.surface
         ) {
-            GrabHandle(dragState = yState)
-            header()
-            Box(
-                Modifier.verticalScroll(scrollState)
-                    .fillMaxWidth(),
+            Column {
+                GrabHandle(dragState = yState)
+                header()
+                Box(
+                    Modifier
+                        .verticalScroll(scrollState)
+                        .fillMaxWidth(),
+                    ) {
+                    body()
+                }
+            }
+        }
 
+        if (showFab) {
+            SmallFloatingActionButton(
+                modifier = Modifier
+                    .padding(MaterialTheme.spacing.medium)
+                    .align(Alignment.BottomEnd),
+                onClick = { fabAction() }
             ) {
-                body()
+                Icon(Icons.Default.Add, contentDescription = null)
             }
         }
     }

@@ -132,7 +132,7 @@ data class Spacing(
 )
 
 data class Dimensions(
-    val cardPeekHeight: Dp = 100.dp,
+    val cardPeekHeight: Dp = 105.dp,
     val cardNormalHeight: Dp = 300.dp,
     val cardHandleHeight: Dp = 19.dp,   // ~3dp handle height + 2*small spacing
     val bottomButtonsPagerHeight: Dp = 50.dp,

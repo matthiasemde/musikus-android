@@ -109,8 +109,6 @@ class LibraryViewModel @Inject constructor(
     private val _itemEditData = MutableStateFlow<LibraryItemEditData?>(null)
     private val _itemToEdit = MutableStateFlow<LibraryItem?>(null)
 
-    private val _folderSelectorExpanded = MutableStateFlow(false)
-
     // Action mode
     private val _selectedFolders = MutableStateFlow<Set<LibraryFolder>>(emptySet())
     private val _selectedItems = MutableStateFlow<Set<LibraryItem>>(emptySet())
@@ -284,8 +282,7 @@ class LibraryViewModel @Inject constructor(
         _itemEditData,
         _itemToEdit,
         foldersWithItems,
-        _folderSelectorExpanded,
-    ) { editData, itemToEdit, foldersWithItems, isFolderSelectorExpanded ->
+    ) { editData, itemToEdit, foldersWithItems ->
         if(editData == null) return@combine null
         val confirmButtonEnabled = editData.name.isNotBlank()
 
@@ -293,7 +290,6 @@ class LibraryViewModel @Inject constructor(
             mode = if (itemToEdit == null) DialogMode.ADD else DialogMode.EDIT,
             itemData = editData,
             folders = foldersWithItems.map { it.folder },
-            isFolderSelectorExpanded = isFolderSelectorExpanded,
             confirmButtonEnabled = confirmButtonEnabled,
             itemToEdit = itemToEdit,
         )
@@ -495,11 +491,6 @@ class LibraryViewModel @Inject constructor(
 
     fun onItemDialogFolderIdChanged(newFolderId: UUID?) {
         _itemEditData.update { it?.copy(folderId = newFolderId) }
-        _folderSelectorExpanded.update { false }
-    }
-
-    fun onFolderSelectorExpandedChanged(isExpanded: Boolean) {
-        _folderSelectorExpanded.update { isExpanded }
     }
 
     fun clearFolderDialog() {
@@ -510,7 +501,6 @@ class LibraryViewModel @Inject constructor(
     fun clearItemDialog() {
         _itemToEdit.update { null }
         _itemEditData.update { null }
-        _folderSelectorExpanded.update { false }
     }
 
     fun onFolderDialogConfirmed() {

@@ -275,11 +275,9 @@ fun Library(
                     mode = itemDialogUiState.mode,
                     folders = itemDialogUiState.folders,
                     itemData = itemDialogUiState.itemData,
-                    folderSelectorExpanded = itemDialogUiState.isFolderSelectorExpanded,
                     onNameChange = viewModel::onItemDialogNameChanged,
                     onColorIndexChange = viewModel::onItemDialogColorIndexChanged,
                     onSelectedFolderIdChange = viewModel::onItemDialogFolderIdChanged,
-                    onFolderSelectorExpandedChange = viewModel::onFolderSelectorExpandedChanged,
                     onConfirmHandler = viewModel::onItemDialogConfirmed,
                     onDismissHandler = viewModel::clearItemDialog,
                 )
@@ -466,8 +464,7 @@ fun LibraryFolder(
         Surface(
             modifier = Modifier
                 .size(150.dp),
-            color = colorScheme.surface,
-            tonalElevation = 1.dp,
+            color = colorScheme.surfaceContainer,
         ) {
             Column(
                 modifier = Modifier

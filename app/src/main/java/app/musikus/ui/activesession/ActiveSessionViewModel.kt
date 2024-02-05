@@ -19,6 +19,7 @@ import app.musikus.database.entities.SessionCreationAttributes
 import app.musikus.services.SessionEvent
 import app.musikus.services.SessionService
 import app.musikus.services.SessionState
+import app.musikus.ui.library.LibraryItemEditData
 import app.musikus.usecase.library.LibraryUseCases
 import app.musikus.usecase.sessions.SessionsUseCases
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -33,6 +34,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.ZonedDateTime
+import java.util.UUID
 import javax.inject.Inject
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
@@ -46,11 +48,16 @@ sealed class ActiveSessionUIEvent {
     data object StopSession: ActiveSessionUIEvent()
     data class ChangeFolderDisplayed(val folder: LibraryFolder?): ActiveSessionUIEvent()
     data class DeleteSection(val itemId: Int): ActiveSessionUIEvent()
+    data class CreateNewLibraryItem(val folderId: UUID?): ActiveSessionUIEvent()
+    data object NewLibraryItemDialogDismissed: ActiveSessionUIEvent()
+    data class NewLibraryItemNameChanged(val newName: String): ActiveSessionUIEvent()
+    data class NewLibraryItemColorChanged(val newColorIndex: Int): ActiveSessionUIEvent()
+    data class NewLibraryItemFolderChanged(val newFolderId: UUID?): ActiveSessionUIEvent()
 }
 
 data class SectionListItemUiState(
     val id: Int,
-    val name: String,
+    val libraryItem: LibraryItem,
     val duration: Duration
 )
 
@@ -59,7 +66,8 @@ data class ActiveSessionUiState(
     val totalSessionDuration: Duration,
     val totalBreakDuration: Duration,
     val sections: List<SectionListItemUiState>,
-    val isPaused: Boolean
+    val isPaused: Boolean,
+    val newLibraryItemData: LibraryItemEditData?
 )
 
 data class LibraryCardUiState(
@@ -86,6 +94,7 @@ class ActiveSessionViewModel @Inject constructor(
     /** own stateFlows */
 
     private val _selectedFolder = MutableStateFlow<LibraryFolder?>(null)
+    private val _addLibraryItemData = MutableStateFlow<LibraryItemEditData?>(null)
 
     // ################## mirrors of session state
 
@@ -158,8 +167,9 @@ class ActiveSessionViewModel @Inject constructor(
 
     val uiState = combine(
         libraryUiState,
-        sessionState
-    ) { libraryUiState, sessionState ->
+        sessionState,
+        _addLibraryItemData
+    ) { libraryUiState, sessionState, newLibraryItemData ->
         val totalDuration = sessionState.sections.sumOf {
             (it.duration ?: sessionState.currentSectionDuration).inWholeMilliseconds }.milliseconds
         ActiveSessionUiState(
@@ -167,10 +177,11 @@ class ActiveSessionViewModel @Inject constructor(
             totalSessionDuration = totalDuration,
             totalBreakDuration = sessionState.pauseDuration,
             isPaused = sessionState.isPaused,
+            newLibraryItemData = newLibraryItemData,
             sections = sessionState.sections.reversed().map { section ->
                 SectionListItemUiState(
                     id = section.id,    // also used as id
-                    name = section.libraryItem.name,
+                    libraryItem = section.libraryItem,
                     duration = section.duration ?: sessionState.currentSectionDuration
                 )
             }
@@ -183,7 +194,8 @@ class ActiveSessionViewModel @Inject constructor(
             totalSessionDuration = 0.milliseconds,
             totalBreakDuration = sessionState.value.pauseDuration,
             sections = emptyList(),
-            isPaused = sessionState.value.isPaused
+            isPaused = sessionState.value.isPaused,
+            newLibraryItemData = _addLibraryItemData.value
         )
     )
 
@@ -195,6 +207,11 @@ class ActiveSessionViewModel @Inject constructor(
         is ActiveSessionUIEvent.StopSession -> stopSession()
         is ActiveSessionUIEvent.ChangeFolderDisplayed -> _selectedFolder.update { event.folder }
         is ActiveSessionUIEvent.DeleteSection -> removeSection(event.itemId)
+        is ActiveSessionUIEvent.CreateNewLibraryItem -> createLibraryItemDialog(event.folderId)
+        is ActiveSessionUIEvent.NewLibraryItemNameChanged -> _addLibraryItemData.update { it?.copy(name = event.newName) }
+        is ActiveSessionUIEvent.NewLibraryItemColorChanged -> _addLibraryItemData.update { it?.copy(colorIndex = event.newColorIndex) }
+        is ActiveSessionUIEvent.NewLibraryItemFolderChanged -> _addLibraryItemData.update { it?.copy(folderId = event.newFolderId) }
+        is ActiveSessionUIEvent.NewLibraryItemDialogDismissed -> _addLibraryItemData.update { null }
     }
 
 
@@ -235,6 +252,15 @@ class ActiveSessionViewModel @Inject constructor(
         sessionEvent(SessionEvent.DeleteSection(itemId))
     }
 
+    private fun createLibraryItemDialog(folderId: UUID? = null) {
+        _addLibraryItemData.update {
+            LibraryItemEditData(
+                name = "",
+                colorIndex = (Math.random() * 10).toInt(),
+                folderId = folderId
+            )
+        }
+    }
 
     // ################################### Service ############################################
 
