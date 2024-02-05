@@ -12,7 +12,6 @@ import android.content.IntentFilter
 import android.content.pm.ServiceInfo
 import android.os.Binder
 import android.os.IBinder
-import android.util.Log
 import androidx.annotation.DrawableRes
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
@@ -23,10 +22,12 @@ import app.musikus.SESSION_NOTIFICATION_CHANNEL_ID
 import app.musikus.database.daos.LibraryItem
 import app.musikus.ui.activesession.PracticeSection
 import app.musikus.utils.DurationFormat
+import app.musikus.utils.TimeProvider
 import app.musikus.utils.getDurationString
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
-import java.time.ZonedDateTime
+import javax.inject.Inject
 import kotlin.concurrent.timer
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
@@ -54,7 +55,7 @@ sealed class SessionEvent {
     data object StopTimer: SessionEvent()
     data object TogglePause: SessionEvent()
     data class StartNewSection(val item: LibraryItem): SessionEvent()
-    data class DeleteSection(val sectionStartTimeStamp: ZonedDateTime): SessionEvent()
+    data class DeleteSection(val sectionId: Int): SessionEvent()
 }
 
 /**
@@ -73,7 +74,11 @@ data class NotificationActionButtonConfig(
     val tapIntent: PendingIntent?
 )
 
+@AndroidEntryPoint
 class SessionService : Service() {
+
+    @Inject
+    lateinit var timeProvider: TimeProvider
 
     private val binder = LocalBinder()         // interface object for clients that bind
     inner class LocalBinder : Binder() {
@@ -85,6 +90,7 @@ class SessionService : Service() {
     private val sessionState = MutableStateFlow(SessionState())  // Session State
     private var _timer: java.util.Timer? = null
     private val timerInterval = 1.seconds
+    private var _sectionIdCounter = 0
 
     /** Broadcast receiver (currently only for pause action) */
     private val myReceiver: BroadcastReceiver = object : BroadcastReceiver() {
@@ -114,7 +120,7 @@ class SessionService : Service() {
             is SessionEvent.StopTimer -> stopTimer()
             is SessionEvent.TogglePause -> togglePause()
             is SessionEvent.StartNewSection -> newSection(event.item)
-            is SessionEvent.DeleteSection -> removeSection(event.sectionStartTimeStamp)
+            is SessionEvent.DeleteSection -> removeSection(event.sectionId)
         }
     }
 
@@ -124,8 +130,8 @@ class SessionService : Service() {
      */
 
     private fun newSection(item: LibraryItem) {
-        // prevent starting a new section too fast (when they are started in same seconds, app crashed due to list key!)
-        if (sessionState.value.sections.isNotEmpty() && sessionState.value.currentSectionDuration < 2.seconds) return
+        // prevent starting a new section too fast
+        if (sessionState.value.sections.isNotEmpty() && sessionState.value.currentSectionDuration < 1.seconds) return
         // prevent starting the same section twice in a row
         if (item == sessionState.value.sections.lastOrNull()?.libraryItem) return
 
@@ -139,9 +145,10 @@ class SessionService : Service() {
             // update last section with tracked duration
             val updatedLastSection = it.sections.lastOrNull()?.copy(duration = flooredFinishedDur)
             val newItem = PracticeSection(
+                id = _sectionIdCounter++,
                 libraryItem = item,
                 duration = null,
-                startTimestamp = ZonedDateTime.now() //TODO: use timeprovider
+                startTimestamp = timeProvider.now()
             )
             it.copy(
                 // the remaining part (sub-seconds) will be added to the new section upfront
@@ -157,10 +164,8 @@ class SessionService : Service() {
         updateNotification()
     }
 
-    private fun removeSection(startTimeStamp: ZonedDateTime) {
-        Log.d("TAG", "removing section, size=${sessionState.value.sections.size}")
-        val updatedSections = sessionState.value.sections.filter { it.startTimestamp != startTimeStamp }
-        Log.d("TAG", "removed section, size=${updatedSections.size}")
+    private fun removeSection(sectionId: Int) {
+        val updatedSections = sessionState.value.sections.filter { it.id != sectionId }
         sessionState.update { it.copy(sections = updatedSections) }
     }
 

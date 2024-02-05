@@ -23,6 +23,7 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.gestures.AnchoredDraggableState
 import androidx.compose.foundation.gestures.animateTo
@@ -140,7 +141,7 @@ fun ActiveSession(
                     SectionsList(
                         modifier = Modifier.weight(1f),
                         uiState = uiState,
-                        onSectionDeleted = { uiEvent(ActiveSessionUIEvent.DeleteSection(it)) }
+                        onSectionDeleted = { uiEvent(ActiveSessionUIEvent.DeleteSection(it.id)) }
                     )
                     // prevent section list items to hide behind peek'ed Cards
                     Spacer(
@@ -165,11 +166,12 @@ fun ActiveSession(
             // DraggableAnchorState initialization. Each page gets own state.
             val stateListDraggableCards = getDraggableStateList(pageCount = pageCount)
             val anchorStates = remember { stateListDraggableCards }
+            val scrollStates = getScrollableStateList(pageCount = pageCount)
 
             DraggableCardsPagerLayout(
                 pageCount = pageCount,
                 anchorStates = anchorStates,
-                scrollStates = getScrollableStateList(pageCount = pageCount),
+                scrollStates = scrollStates,
                 pages = { pageIndex ->
                     when(pageIndex) {
                         0 -> DraggableCardPage(
@@ -199,6 +201,7 @@ fun ActiveSession(
                             content = {
                                 LibraryList(
                                     uiState = uiState.libraryUiState,
+                                    cardScrollState = scrollStates[pageIndex],
                                     onLibraryItemClicked = {
                                         uiEvent(ActiveSessionUIEvent.StartNewSection(it))
                                         animationScope.launch {
@@ -338,7 +341,7 @@ private fun CurrentPracticingItem(
 private fun SectionsList(
     uiState: ActiveSessionUiState,
     modifier: Modifier = Modifier,
-    onSectionDeleted: (SectionListItem) -> Unit = {}
+    onSectionDeleted: (SectionListItemUiState) -> Unit = {}
 ) {
     if (uiState.sections.isEmpty()) {
         Box (modifier = modifier) {
@@ -360,7 +363,7 @@ private fun SectionsList(
 
         items(
             items = uiState.sections.drop(1),
-            key = { sectionElement -> sectionElement.startTimeStamp },
+            key = { sectionElement -> sectionElement.id },
         ) { sectionElement ->
             SectionListElement(
                 Modifier.animateItemPlacement(),
@@ -375,8 +378,8 @@ private fun SectionsList(
 @Composable
 private fun SectionListElement(
     modifier: Modifier = Modifier,
-    sectionElement: SectionListItem,
-    onSectionDeleted: (SectionListItem) -> Unit
+    sectionElement: SectionListItemUiState,
+    onSectionDeleted: (SectionListItemUiState) -> Unit
 ) {
     Surface(   // Surface for setting shape + padding of list item
         modifier = modifier.padding(horizontal = MaterialTheme.spacing.large),  // margin around list
@@ -425,9 +428,12 @@ private fun LibraryHeader(
     isCardCollapsed: Boolean
 ) {
     // Header Folder List
+    val state = rememberLazyListState()
     LazyRow(
+        state = state,
         modifier = modifier
-            .fillMaxWidth(),
+            .fillMaxWidth()
+            .fadingEdge(state, vertical = false),
         horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small),
         verticalAlignment = Alignment.CenterVertically,
         contentPadding = PaddingValues(horizontal = MaterialTheme.spacing.small),
@@ -465,8 +471,12 @@ private fun LibraryHeader(
 private fun LibraryList(
     uiState: LibraryCardUiState,
     onLibraryItemClicked: (LibraryItem) -> Unit,
+    cardScrollState: ScrollState
 ) {
-    Column(modifier = Modifier.fillMaxWidth()) {
+    Column(modifier = Modifier
+        .fillMaxWidth()
+        .fadingEdge(cardScrollState)
+    ) {
         // show folder items or if folderId could not be found, show root Items
         val shownItems =
             uiState.foldersWithItems.find { it.folder == uiState.selectedFolder }?.items

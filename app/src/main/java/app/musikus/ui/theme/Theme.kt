@@ -147,6 +147,7 @@ val MaterialTheme.spacing: Spacing
     @ReadOnlyComposable
     get() = LocalSpacing.current
 
+@Suppress("UnusedReceiverParameter")
 val MaterialTheme.dimensions: Dimensions
     @Composable
     @ReadOnlyComposable

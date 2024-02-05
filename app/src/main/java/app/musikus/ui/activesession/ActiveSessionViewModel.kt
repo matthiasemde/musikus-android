@@ -45,11 +45,11 @@ sealed class ActiveSessionUIEvent {
     data object TogglePause: ActiveSessionUIEvent()
     data object StopSession: ActiveSessionUIEvent()
     data class ChangeFolderDisplayed(val folder: LibraryFolder?): ActiveSessionUIEvent()
-    data class DeleteSection(val sectionListItem: SectionListItem): ActiveSessionUIEvent()
+    data class DeleteSection(val itemId: Int): ActiveSessionUIEvent()
 }
 
-data class SectionListItem(
-    val startTimeStamp : ZonedDateTime,     // also used as id
+data class SectionListItemUiState(
+    val id: Int,
     val name: String,
     val duration: Duration
 )
@@ -58,7 +58,7 @@ data class ActiveSessionUiState(
     val libraryUiState: LibraryCardUiState,
     val totalSessionDuration: Duration,
     val totalBreakDuration: Duration,
-    val sections: List<SectionListItem>,
+    val sections: List<SectionListItemUiState>,
     val isPaused: Boolean
 )
 
@@ -68,6 +68,7 @@ data class LibraryCardUiState(
     val selectedFolder: LibraryFolder?
 )
 data class PracticeSection(
+    val id: Int,
     val libraryItem: LibraryItem,
     val startTimestamp: ZonedDateTime,
     var duration: Duration?
@@ -167,8 +168,8 @@ class ActiveSessionViewModel @Inject constructor(
             totalBreakDuration = sessionState.pauseDuration,
             isPaused = sessionState.isPaused,
             sections = sessionState.sections.reversed().map { section ->
-                SectionListItem(
-                    startTimeStamp = section.startTimestamp,    // also used as id
+                SectionListItemUiState(
+                    id = section.id,    // also used as id
                     name = section.libraryItem.name,
                     duration = section.duration ?: sessionState.currentSectionDuration
                 )
@@ -193,7 +194,7 @@ class ActiveSessionViewModel @Inject constructor(
         is ActiveSessionUIEvent.TogglePause -> togglePause()
         is ActiveSessionUIEvent.StopSession -> stopSession()
         is ActiveSessionUIEvent.ChangeFolderDisplayed -> _selectedFolder.update { event.folder }
-        is ActiveSessionUIEvent.DeleteSection -> removeSection(event.sectionListItem)
+        is ActiveSessionUIEvent.DeleteSection -> removeSection(event.itemId)
     }
 
 
@@ -230,8 +231,8 @@ class ActiveSessionViewModel @Inject constructor(
         sessionEvent(SessionEvent.StopTimer)
     }
 
-    private fun removeSection(sectionListItem: SectionListItem) {
-        sessionEvent(SessionEvent.DeleteSection(sectionListItem.startTimeStamp))
+    private fun removeSection(itemId: Int) {
+        sessionEvent(SessionEvent.DeleteSection(itemId))
     }
 
 
