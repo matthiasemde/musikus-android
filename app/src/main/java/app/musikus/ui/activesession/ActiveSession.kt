@@ -31,6 +31,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -72,6 +73,7 @@ import app.musikus.ui.activesession.metronome.Metronome
 import app.musikus.ui.activesession.recorder.Recorder
 import app.musikus.ui.components.SwipeToDeleteContainer
 import app.musikus.ui.library.LibraryUiItem
+import app.musikus.ui.theme.dimensions
 import app.musikus.ui.theme.spacing
 import app.musikus.utils.DurationFormat
 import app.musikus.utils.TimeProvider
@@ -80,9 +82,6 @@ import kotlinx.coroutines.launch
 
 
 const val CARD_HEIGHT_EXTENDED_FRACTION_OF_SCREEN = 0.7f
-val CARD_HEIGHT_NORMAL = 300.dp
-val CARD_HEIGHT_PEEK = 100.dp
-const val HEIGHT_BOTTOM_BUTTONS_DP = 50
 
 @Composable
 fun ActiveSession(
@@ -141,7 +140,8 @@ fun ActiveSession(
                     // prevent section list items to hide behind peek'ed Cards
                     Spacer(
                         Modifier.height(
-                            HEIGHT_BOTTOM_BUTTONS_DP.dp + CARD_HEIGHT_PEEK
+                            MaterialTheme.dimensions.draggableCardBottomButtonsHeight +
+                            MaterialTheme.dimensions.draggableCardPeekHeight
                         )
                     )
                 }
@@ -155,9 +155,11 @@ fun ActiveSession(
              */
 
             val pageCount = 3
+            val animationScope = rememberCoroutineScope()
+
+            // DraggableAnchorState initialization. Each page gets own state.
             val stateListDraggableCards = getDraggableStateList(pageCount = pageCount)
             val anchorStates = remember { stateListDraggableCards }
-            val animationScope = rememberCoroutineScope()
 
             DraggableCardsPagerLayout(
                 pageCount = pageCount,
@@ -168,7 +170,18 @@ fun ActiveSession(
                             title = "Library",
                             isExpandable = true,
                             header = {
+
+                                val anchorState = anchorStates[pageIndex]
+                                val fraction = getCurrentOffsetFraction(state = anchorState)
+                                val peekHeightContent = MaterialTheme.dimensions.draggableCardPeekHeight -
+                                            MaterialTheme.dimensions.draggableCardHandleHeight
+                                val height = if (anchorState.targetValue != DragValueY.Full){
+                                    (fraction * peekHeightContent.value).dp
+                                } else 0.dp
+
                                 LibraryHeader(
+                                    modifier = Modifier
+                                        .defaultMinSize(minHeight = height),
                                     uiState = uiState.libraryUiState,
                                     onFolderIconClicked = {
                                         uiEvent(ActiveSessionUIEvent.ChangeFolderDisplayed(it))
@@ -210,7 +223,6 @@ fun ActiveSession(
         }
     }
 }
-
 
 @Composable
 private fun HeaderBar(
@@ -368,9 +380,9 @@ private fun LibraryHeader(
     // Header Folder List
     LazyRow(
         modifier = modifier
-            .padding(top = MaterialTheme.spacing.small)
             .fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small),
+        verticalAlignment = Alignment.CenterVertically,
         contentPadding = PaddingValues(horizontal = MaterialTheme.spacing.small),
     ) {
 

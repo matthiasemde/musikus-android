@@ -131,10 +131,23 @@ data class Spacing(
     val extraLarge: Dp = 32.dp,
 )
 
+data class Dimensions(
+    val draggableCardPeekHeight: Dp = 100.dp,
+    val draggableCardNormalHeight: Dp = 300.dp,
+    val draggableCardHandleHeight: Dp = 19.dp,
+    val draggableCardBottomButtonsHeight: Dp = 50.dp,
+)
+
 val LocalSpacing = compositionLocalOf { Spacing() }
+val LocalDimensions = compositionLocalOf { Dimensions() }
 
 @Suppress("UnusedReceiverParameter")
 val MaterialTheme.spacing: Spacing
     @Composable
     @ReadOnlyComposable
     get() = LocalSpacing.current
+
+val MaterialTheme.dimensions: Dimensions
+    @Composable
+    @ReadOnlyComposable
+    get() = LocalDimensions.current
