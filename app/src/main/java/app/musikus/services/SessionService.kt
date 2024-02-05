@@ -12,13 +12,14 @@ import android.content.IntentFilter
 import android.content.pm.ServiceInfo
 import android.os.Binder
 import android.os.IBinder
+import android.util.Log
 import androidx.annotation.DrawableRes
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
-import app.musikus.SESSION_NOTIFICATION_CHANNEL_ID
 import app.musikus.R
+import app.musikus.SESSION_NOTIFICATION_CHANNEL_ID
 import app.musikus.database.daos.LibraryItem
 import app.musikus.ui.activesession.PracticeSection
 import app.musikus.utils.DurationFormat
@@ -53,6 +54,7 @@ sealed class SessionEvent {
     data object StopTimer: SessionEvent()
     data object TogglePause: SessionEvent()
     data class StartNewSection(val item: LibraryItem): SessionEvent()
+    data class DeleteSection(val sectionStartTimeStamp: ZonedDateTime): SessionEvent()
 }
 
 /**
@@ -112,6 +114,7 @@ class SessionService : Service() {
             is SessionEvent.StopTimer -> stopTimer()
             is SessionEvent.TogglePause -> togglePause()
             is SessionEvent.StartNewSection -> newSection(event.item)
+            is SessionEvent.DeleteSection -> removeSection(event.sectionStartTimeStamp)
         }
     }
 
@@ -152,6 +155,13 @@ class SessionService : Service() {
             )
         }
         updateNotification()
+    }
+
+    private fun removeSection(startTimeStamp: ZonedDateTime) {
+        Log.d("TAG", "removing section, size=${sessionState.value.sections.size}")
+        val updatedSections = sessionState.value.sections.filter { it.startTimestamp != startTimeStamp }
+        Log.d("TAG", "removed section, size=${updatedSections.size}")
+        sessionState.update { it.copy(sections = updatedSections) }
     }
 
     private fun stopTimer() {

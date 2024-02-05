@@ -7,6 +7,10 @@
  *
  */
 
+@file:OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class,
+    ExperimentalFoundationApi::class
+)
+
 package app.musikus.ui.activesession
 
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -54,6 +58,7 @@ import app.musikus.ui.MainUIEvent
 import app.musikus.ui.MainUiState
 import app.musikus.ui.activesession.metronome.Metronome
 import app.musikus.ui.activesession.recorder.Recorder
+import app.musikus.ui.components.SwipeToDeleteContainer
 import app.musikus.ui.library.LibraryUiItem
 import app.musikus.ui.theme.spacing
 import app.musikus.utils.DurationFormat
@@ -66,7 +71,6 @@ val CARD_HEIGHT_NORMAL = 300.dp
 val CARD_HEIGHT_PEEK = 100.dp
 const val HEIGHT_BOTTOM_BUTTONS_DP = 50
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun ActiveSession(
     mainUiState: MainUiState,
@@ -118,7 +122,9 @@ fun ActiveSession(
                 ) {
                     SectionsList(
                         modifier = Modifier.weight(1f),
-                        uiState = uiState)
+                        uiState = uiState,
+                        onSectionDeleted = { uiEvent(ActiveSessionUIEvent.DeleteSection(it)) }
+                    )
                     // prevent section list items to hide behind peek'ed Cards
                     Spacer(
                         Modifier.height(
@@ -220,7 +226,6 @@ private fun PracticeTimer(
     Text(text = "Practice time")
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun CurrentPracticingItem(
     uiState: ActiveSessionUiState
@@ -379,73 +384,80 @@ private fun LibraryList(
     }
 }
 
-
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun SectionsList(
     uiState: ActiveSessionUiState,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onSectionDeleted: (SectionListItem) -> Unit = {}
 ) {
-    if (uiState.sections.isNotEmpty()) {
-        LazyColumn(
-            modifier = modifier
-                .fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.extraSmall),
-            contentPadding = PaddingValues(vertical = MaterialTheme.spacing.small),
-        ) {
-
-            items(
-                items = uiState.sections.drop(1),
-                key = { (sectionElement) -> sectionElement },
-            ) { sectionElement ->
-                SectionListElement(Modifier.animateItemPlacement(), sectionElement)
-            }
-
+    if (uiState.sections.isEmpty()) {
+        Box (modifier = modifier) {
+            Text(text = "Quotes",)
         }
-    } else {
-        Box (
-            modifier = modifier
-        ) {
-            Text(
-                text = "Quotes",
+        return
+    }
+
+    LazyColumn(
+        modifier = modifier
+            .fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.extraSmall),
+        contentPadding = PaddingValues(vertical = MaterialTheme.spacing.small),
+    ) {
+
+        items(
+            items = uiState.sections.drop(1),
+            key = { sectionElement -> sectionElement.startTimeStamp },
+        ) { sectionElement ->
+            SectionListElement(
+                Modifier.animateItemPlacement(),
+                sectionElement,
+                onSectionDeleted = onSectionDeleted
             )
         }
+
     }
 }
 
 @Composable
 private fun SectionListElement(
     modifier: Modifier = Modifier,
-    sectionElement: SectionListItem
+    sectionElement: SectionListItem,
+    onSectionDeleted: (SectionListItem) -> Unit
 ) {
-    Surface(
-        shape = MaterialTheme.shapes.medium,
+    Surface(   // Surface for setting shape + padding of list item
         modifier = modifier.padding(horizontal = MaterialTheme.spacing.large),  // margin around list
-        color = MaterialTheme.colorScheme.surfaceContainerLow
+        shape = MaterialTheme.shapes.medium,
     ) {
-        Row (
-            modifier = Modifier
-                .padding(
-                    horizontal = MaterialTheme.spacing.medium,
-                    vertical = MaterialTheme.spacing.medium
-                ),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                modifier = Modifier.weight(1f),
-                text = sectionElement.name,
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Spacer(modifier = Modifier.width(MaterialTheme.spacing.small))
-            Text(
-                text = getDurationString(
-                    sectionElement.duration,
-                    DurationFormat.HMS_DIGITAL
-                ).toString(),
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface
-            )
+        SwipeToDeleteContainer(onDeleted = { onSectionDeleted(sectionElement) }) {
+            Surface(    // Surface for setting the Color of the List item
+                color = MaterialTheme.colorScheme.surfaceContainerLow
+            ) {
+                Row(
+                    modifier = Modifier
+                        .padding(
+                            horizontal = MaterialTheme.spacing.medium,
+                            vertical = MaterialTheme.spacing.medium
+                        ),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        modifier = Modifier.weight(1f),
+                        text = sectionElement.name,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(modifier = Modifier.width(MaterialTheme.spacing.small))
+                    Text(
+                        text = getDurationString(
+                            sectionElement.duration,
+                            DurationFormat.HMS_DIGITAL
+                        ).toString(),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            }
         }
     }
 }

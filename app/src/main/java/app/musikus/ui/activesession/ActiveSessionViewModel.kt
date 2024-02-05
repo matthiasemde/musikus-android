@@ -45,10 +45,11 @@ sealed class ActiveSessionUIEvent {
     data object TogglePause: ActiveSessionUIEvent()
     data object StopSession: ActiveSessionUIEvent()
     data class ChangeFolderDisplayed(val folder: LibraryFolder?): ActiveSessionUIEvent()
+    data class DeleteSection(val sectionListItem: SectionListItem): ActiveSessionUIEvent()
 }
 
 data class SectionListItem(
-    val id : Long,
+    val startTimeStamp : ZonedDateTime,     // also used as id
     val name: String,
     val duration: Duration
 )
@@ -167,7 +168,7 @@ class ActiveSessionViewModel @Inject constructor(
             isPaused = sessionState.isPaused,
             sections = sessionState.sections.reversed().map { section ->
                 SectionListItem(
-                    id = section.startTimestamp.toEpochSecond(),
+                    startTimeStamp = section.startTimestamp,    // also used as id
                     name = section.libraryItem.name,
                     duration = section.duration ?: sessionState.currentSectionDuration
                 )
@@ -192,6 +193,7 @@ class ActiveSessionViewModel @Inject constructor(
         is ActiveSessionUIEvent.TogglePause -> togglePause()
         is ActiveSessionUIEvent.StopSession -> stopSession()
         is ActiveSessionUIEvent.ChangeFolderDisplayed -> _selectedFolder.update { event.folder }
+        is ActiveSessionUIEvent.DeleteSection -> removeSection(event.sectionListItem)
     }
 
 
@@ -227,6 +229,11 @@ class ActiveSessionViewModel @Inject constructor(
         }
         sessionEvent(SessionEvent.StopTimer)
     }
+
+    private fun removeSection(sectionListItem: SectionListItem) {
+        sessionEvent(SessionEvent.DeleteSection(sectionListItem.startTimeStamp))
+    }
+
 
     // ################################### Service ############################################
 
