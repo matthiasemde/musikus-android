@@ -13,6 +13,15 @@
 
 package app.musikus.ui.activesession
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.keyframes
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.layout.Arrangement
@@ -226,48 +235,63 @@ private fun PracticeTimer(
     Text(text = "Practice time")
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun CurrentPracticingItem(
     uiState: ActiveSessionUiState
 ) {
-    if (uiState.sections.isNotEmpty()) {
-
+    AnimatedVisibility(
+        visible = uiState.sections.isNotEmpty(),
+        enter = expandVertically() + fadeIn(animationSpec = keyframes { durationMillis = 200 }),
+    ) {
         val firstSection = uiState.sections.first()
         Surface(
+            modifier = Modifier.animateContentSize(),
             color = MaterialTheme.colorScheme.tertiaryContainer,
-            shape = RoundedCornerShape(50)
+            shape = RoundedCornerShape(50),
+            shadowElevation = 1.dp
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        horizontal = MaterialTheme.spacing.large,
-                        vertical = MaterialTheme.spacing.medium
-                    ),
-                horizontalArrangement = Arrangement.SpaceBetween
+
+            AnimatedContent(
+                targetState = firstSection.name,
+                label = "currentPracticingItem",
+                transitionSpec = {
+                    slideInVertically { -it } togetherWith slideOutVertically { it }
+                }
             ) {
-                Text(
+                Row(
                     modifier = Modifier
-                        .weight(1f)
-                        .basicMarquee(),
-                    text = firstSection.name,
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onTertiaryContainer,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 1
-                )
+                        .fillMaxWidth()
+                        .padding(
+                            horizontal = MaterialTheme.spacing.large,
+                            vertical = MaterialTheme.spacing.medium
+                        ),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
 
-                Spacer(Modifier.width(MaterialTheme.spacing.small))
+                    Text(
+                        modifier = Modifier
+                            .weight(1f)
+                            .basicMarquee(),
+                        text = it,
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onTertiaryContainer,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1
+                    )
 
-                Text(
-                    text = getDurationString(
-                        firstSection.duration,
-                        DurationFormat.HMS_DIGITAL
-                    ).toString(),
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onTertiaryContainer,
-                    fontWeight = FontWeight.Bold,
-                )
+                    Spacer(Modifier.width(MaterialTheme.spacing.small))
+
+                    Text(
+                        text = getDurationString(
+                            firstSection.duration,
+                            DurationFormat.HMS_DIGITAL
+                        ).toString(),
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onTertiaryContainer,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
             }
         }
     }
