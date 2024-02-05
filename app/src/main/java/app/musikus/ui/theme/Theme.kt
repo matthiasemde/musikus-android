@@ -132,10 +132,10 @@ data class Spacing(
 )
 
 data class Dimensions(
-    val draggableCardPeekHeight: Dp = 100.dp,
-    val draggableCardNormalHeight: Dp = 300.dp,
-    val draggableCardHandleHeight: Dp = 19.dp,
-    val draggableCardBottomButtonsHeight: Dp = 50.dp,
+    val cardPeekHeight: Dp = 100.dp,
+    val cardNormalHeight: Dp = 300.dp,
+    val cardHandleHeight: Dp = 19.dp,   // ~3dp handle height + 2*small spacing
+    val bottomButtonsPagerHeight: Dp = 50.dp,
 )
 
 val LocalSpacing = compositionLocalOf { Spacing() }

@@ -206,9 +206,9 @@ fun getCurrentOffsetFraction(
     val offsetPx = state.requireOffset()
 
     val maxOffset = if (offsetPx >= 0) {
-        MaterialTheme.dimensions.draggableCardNormalHeight - MaterialTheme.dimensions.draggableCardPeekHeight
+        MaterialTheme.dimensions.cardNormalHeight - MaterialTheme.dimensions.cardPeekHeight
     } else {
-        MaterialTheme.dimensions.draggableCardNormalHeight -
+        MaterialTheme.dimensions.cardNormalHeight -
                 (CARD_HEIGHT_EXTENDED_FRACTION_OF_SCREEN * LocalConfiguration.current.screenHeightDp).dp
     }
     val maxOffsetPx = with(LocalDensity.current) { maxOffset.toPx() }
@@ -228,8 +228,8 @@ private fun getAnchors(
         val collapsedAllowed = true
 
         val heightExtended = (CARD_HEIGHT_EXTENDED_FRACTION_OF_SCREEN * configuration.screenHeightDp).dp
-        val heightNormal = MaterialTheme.dimensions.draggableCardNormalHeight
-        val heightPeek = MaterialTheme.dimensions.draggableCardPeekHeight
+        val heightNormal = MaterialTheme.dimensions.cardNormalHeight
+        val heightPeek = MaterialTheme.dimensions.cardPeekHeight
         val travelOffset = (heightExtended - heightNormal)
 
         return DraggableAnchors {
@@ -268,7 +268,7 @@ private fun CardsPager(
         if (currentOffset <= 0) getCurrentOffsetFraction(state = state)
         else 0f
 
-    val pagerHeight = MaterialTheme.dimensions.draggableCardBottomButtonsHeight
+    val pagerHeight = MaterialTheme.dimensions.bottomButtonsPagerHeight
     HorizontalPager(
         // bottom padding is dependent on the offsetFraction, means it will
         modifier = modifier
@@ -312,7 +312,7 @@ private fun BottomButtonPager(
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.surfaceContainer)
             .padding(top = 20.dp)
-            .height(MaterialTheme.dimensions.draggableCardBottomButtonsHeight),
+            .height(MaterialTheme.dimensions.bottomButtonsPagerHeight),
         state = ownPagerState,
         verticalAlignment = Alignment.CenterVertically,
         contentPadding = PaddingValues(
@@ -360,7 +360,7 @@ private fun BottomButtonPager(
                     modifier = Modifier.height(
                         // height is set height minus two times the "simulated" padding
                         // now make MaterialTheme.dimensions.draggableCardBottomButtonsHeight as high as asthetically pleasing
-                        MaterialTheme.dimensions.draggableCardBottomButtonsHeight -
+                        MaterialTheme.dimensions.bottomButtonsPagerHeight -
                         MaterialTheme.spacing.small - MaterialTheme.spacing.small
                     ),
                     contentPadding = contentPadding,
@@ -370,7 +370,7 @@ private fun BottomButtonPager(
             } else {
                 TextButton(
                     modifier = Modifier.height(
-                        MaterialTheme.dimensions.draggableCardBottomButtonsHeight -
+                        MaterialTheme.dimensions.bottomButtonsPagerHeight -
                         MaterialTheme.spacing.small - MaterialTheme.spacing.small
                     ),
                     contentPadding = contentPadding,
@@ -416,7 +416,7 @@ private fun DraggableCard(
     val configuration = LocalConfiguration.current
 
     val height = with(density) {
-        MaterialTheme.dimensions.draggableCardNormalHeight - yState.requireOffset().toDp()
+        MaterialTheme.dimensions.cardNormalHeight - yState.requireOffset().toDp()
     }
 
 //    val cardIsExpandable = scrollState.maxValue > 0
@@ -560,7 +560,7 @@ private fun GrabHandle(
         contentAlignment = Alignment.Center,
         modifier = Modifier
             .fillMaxWidth()
-            .height(MaterialTheme.dimensions.draggableCardHandleHeight)
+            .height(MaterialTheme.dimensions.cardHandleHeight)
             .clickable {
                 animationScope.launch {
                     if (dragState.currentValue == DragValueY.Collapsed) {
