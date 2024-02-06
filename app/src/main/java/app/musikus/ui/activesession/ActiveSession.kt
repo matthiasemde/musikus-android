@@ -28,7 +28,6 @@ import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.AnchoredDraggableState
-import androidx.compose.foundation.gestures.animateTo
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -63,7 +62,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -94,13 +92,11 @@ import app.musikus.ui.theme.spacing
 import app.musikus.utils.DurationFormat
 import app.musikus.utils.TimeProvider
 import app.musikus.utils.getDurationString
-import kotlinx.coroutines.launch
 import java.util.UUID
 
 
 const val CARD_HEIGHT_EXTENDED_FRACTION_OF_SCREEN = 0.7f
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ActiveSession(
     mainUiState: MainUiState,
@@ -168,105 +164,62 @@ fun ActiveSession(
              *
              */
 
-            val pageCount = 3
-            val animationScope = rememberCoroutineScope()
-
-            // DraggableAnchorState initialization. Each page gets own state.
-            val stateListDraggableCards = getDraggableStateList(pageCount = pageCount)
-            val anchorStates = remember { stateListDraggableCards }
-            val scrollStates = getScrollableStateList(pageCount = pageCount)
-
-
             DraggableCardsPagerLayout(
-                pageCount = pageCount,
-                anchorStates = anchorStates,
-                scrollStates = scrollStates,
-                pages = { pageIndex ->
-                    when(pageIndex) {
-                        0 -> DraggableCardPage(
-                            title = "Library",
-                            isExpandable = true,
-                            showFab = anchorStates[pageIndex].currentValue != DragValueY.Collapsed,
-                            fabAction = {
-                                uiEvent(ActiveSessionUIEvent.CreateNewLibraryItem(
-                                    uiState.libraryUiState.selectedFolder?.id))
-                            },
-                            header = {
-                                LibraryHeader(
-                                    modifier = Modifier.fillMaxSize(),
-                                    uiState = uiState.libraryUiState,
-                                    onFolderClicked = {
-                                        uiEvent(ActiveSessionUIEvent.ChangeFolderDisplayed(it))
-                                    },
-                                    extendCardIfCollapsed = {
-                                        if (anchorStates[pageIndex].currentValue != DragValueY.Collapsed) {
-                                            return@LibraryHeader
-                                        }
-                                        animationScope.launch {
-                                            anchorStates[pageIndex].animateTo(
-                                                DragValueY.Normal
-                                            )
-                                        }
-                                    },
-                                    isCardCollapsed = anchorStates[pageIndex].currentValue == DragValueY.Collapsed,
-                                    shouldShowBadge = { folderId ->
-                                        // look if current item is inside of folder
-                                        uiState.sections.firstOrNull()?.let { activeSection ->
-                                            folderId == activeSection.libraryItem.libraryFolderId
-                                        } ?: false
+                pages = listOf(
+                    DraggableCardPageData(
+                        title = "Library",
+                        isExpandable = true,
+                        fabAction = {
+                            uiEvent(ActiveSessionUIEvent.CreateNewLibraryItem(
+                                uiState.libraryUiState.selectedFolder?.id))
+                        },
+                        header = { isCollapsed, onExpandToNormal ->
+                            LibraryHeader(
+                                modifier = Modifier.fillMaxSize(),
+                                uiState = uiState.libraryUiState,
+                                onFolderClicked = {
+                                    uiEvent(ActiveSessionUIEvent.ChangeFolderDisplayed(it))
+                                },
+                                shouldShowBadge = { folderId ->
+                                    // look if current item is inside of folder
+                                    uiState.sections.firstOrNull()?.let { activeSection ->
+                                        folderId == activeSection.libraryItem.libraryFolderId
+                                    } ?: false
 
-                                    }
-                                )
-                            },
-                            content = {
-                                LibraryList(
-                                    uiState = uiState.libraryUiState,
-                                    cardScrollState = scrollStates[pageIndex],
-                                    onLibraryItemClicked = {
-                                        uiEvent(ActiveSessionUIEvent.StartNewSection(it))
-                                        animationScope.launch {
-                                            anchorStates[pageIndex].animateTo(
-                                                DragValueY.Normal
-                                            )
-                                        }
-                                    },
-                                    currentPracticedItem = uiState.sections.firstOrNull()?.libraryItem
-                                )
-                            }
-                        )
-                        1-> DraggableCardPage(
-                            title = "Recorder",
-                            isExpandable = true,
-                            header = { RecorderHeader() },
-                            content = { RecorderBody() },
-                        )
-                        2-> DraggableCardPage(
-                            title = "Metronome",
-                            isExpandable = false,
-                            header = { MetronomeHeader(
-                                /** change Card height */
-                                onTextClicked = {
-                                    val target = if (anchorStates[pageIndex].currentValue == DragValueY.Collapsed) {
-                                        DragValueY.Normal
-                                    } else {
-                                        DragValueY.Collapsed
-                                    }
-                                    animationScope.launch {
-                                        anchorStates[pageIndex].animateTo(
-                                            target
-                                        )
-                                    }
-                                }
-                            ) },
-                            content = { MetronomeBody() },
-                        )
-                        else -> DraggableCardPage(
-                            title = "unknown",
-                            isExpandable = false,
-                            content = {},
-                        )
-                    }
-                }
+                                },
+                                isCardCollapsed = isCollapsed,
+                                onExtendCardToNormal = onExpandToNormal
+                            )
+                        },
+                        body = { modifier, scrollState, onShrinkToNormal ->
+                            LibraryList(
+                                modifier = modifier,
+                                uiState = uiState.libraryUiState,
+                                cardScrollState = scrollState,
+                                onLibraryItemClicked = {
+                                    uiEvent(ActiveSessionUIEvent.StartNewSection(it))
+                                    onShrinkToNormal()
+                                },
+                                currentPracticedItem = uiState.sections.firstOrNull()?.libraryItem
+                            )
+                        }
+                    ),
+                    DraggableCardPageData(
+                        title = "Recorder",
+                        isExpandable = true,
+                        header = { _, _ -> RecorderHeader() },
+                        body = { modifier, _, _ -> RecorderBody(modifier = modifier) },
+                    ),
+                    DraggableCardPageData(
+                        title = "Metronome",
+                        isExpandable = false,
+                        header = { _, onExpandToNormal -> MetronomeHeader(
+                            /** change Card height */
+                            onTextClicked = onExpandToNormal
+                        ) },
+                        body = { modifier, _, _ -> MetronomeBody(modifier = modifier) },
+                    )
+                )
             )
         }
 
@@ -481,7 +434,7 @@ private fun LibraryHeader(
     uiState: LibraryCardUiState,
     shouldShowBadge: (UUID?) -> Boolean,
     onFolderClicked: (LibraryFolder?) -> Unit,
-    extendCardIfCollapsed: () -> Unit,
+    onExtendCardToNormal: () -> Unit,
     isCardCollapsed: Boolean
 ) {
     // Header Folder List
@@ -501,7 +454,7 @@ private fun LibraryHeader(
                 folder = null,
                 onClick = {
                     onFolderClicked(null)
-                    extendCardIfCollapsed()
+                    if(isCardCollapsed) onExtendCardToNormal()
                 },
                 isSelected = uiState.selectedFolder == null && !isCardCollapsed,
                 showBadge = shouldShowBadge(null)
@@ -512,7 +465,7 @@ private fun LibraryHeader(
             LibraryFolderElement(folder = folder.folder,
                 onClick = {
                     onFolderClicked(folder.folder)
-                    extendCardIfCollapsed()
+                    if(isCardCollapsed) onExtendCardToNormal()
                 },
                 isSelected = folder.folder == uiState.selectedFolder && !isCardCollapsed,
                 showBadge = shouldShowBadge(folder.folder.id)
@@ -584,14 +537,15 @@ private fun LibraryFolderElement(
 
 @Composable
 private fun LibraryList(
+    modifier: Modifier = Modifier,
     uiState: LibraryCardUiState,
     onLibraryItemClicked: (LibraryItem) -> Unit,
     cardScrollState: ScrollState,
     currentPracticedItem: LibraryItem?
 ) {
-    Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
+//    Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium)) TODO
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .fadingEdge(cardScrollState)
     ) {
@@ -604,7 +558,7 @@ private fun LibraryList(
             LibraryUiItem(
                 modifier = Modifier.padding(
                     vertical = MaterialTheme.spacing.small,
-                    horizontal = MaterialTheme.spacing.medium
+                    horizontal = MaterialTheme.spacing.medium + MaterialTheme.spacing.small,
                 ),
                 item = item,
                 selected = false,

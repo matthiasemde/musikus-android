@@ -27,12 +27,14 @@ import androidx.compose.foundation.gestures.anchoredDraggable
 import androidx.compose.foundation.gestures.animateTo
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
@@ -58,6 +60,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -68,6 +71,7 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import app.musikus.shared.conditional
 import app.musikus.ui.theme.dimensions
 import app.musikus.ui.theme.spacing
 import kotlinx.coroutines.launch
@@ -79,12 +83,34 @@ enum class DragValueY {
     Full,
 }
 
-data class DraggableCardPage(
-    val content: @Composable () -> Unit,
-    val header: @Composable () -> Unit = {},
+sealed class DraggableCardData(
     val title: String,
     val isExpandable: Boolean,
-    val showFab: Boolean = false,
+    val hasFab: Boolean = false,
+    val fabAction: () -> Unit = {}
+) {
+    data object LibraryCardData : DraggableCardData(
+        title = "Library",
+        isExpandable = true,
+        hasFab = true,
+        fabAction = {}
+    )
+
+}
+
+data class DraggableCardPageData(
+    val body: @Composable (
+        modifier: Modifier,
+        scrollState: ScrollState,
+        onShrinkToNormal: () -> Unit,
+    ) -> Unit,
+    val header: @Composable (
+        Boolean,      // isExpanded
+        () -> Unit,   // onExpandToNormal
+    ) -> Unit,
+    val title: String,
+    val isExpandable: Boolean,
+    val hasFab: Boolean = false,
     val fabAction: () -> Unit = {}
 )
 
@@ -101,33 +127,64 @@ val DRAG_HANDLE_HEIGHT = 3.dp
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun BoxScope.DraggableCardsPagerLayout(
-    pageCount: Int,
-    anchorStates: List<AnchoredDraggableState<DragValueY>>,
-    scrollStates: List<ScrollState>,
-    pages: (Int) -> DraggableCardPage
+    pages: List<DraggableCardPageData>
 ) {
+
+    val pageCount = pages.size
+
+    // DraggableAnchorState initialization. Each page gets own state.
+    val stateListDraggableCards = getDraggableStateList(pageCount = pageCount)
+    val anchorStates = remember { stateListDraggableCards }
+    val scrollStates = getScrollableStateList(pageCount = pageCount)
+
+    val cardsPagerState = rememberPagerState(pageCount = { pageCount })
+    val bottomPagerState = rememberPagerState(pageCount = { pageCount })
+
+    val animationScope = rememberCoroutineScope()
+
 
     Box(
         Modifier.align(Alignment.BottomCenter)
     ) {
-        val density = LocalDensity.current
-        val configuration = LocalConfiguration.current
-
-        val cardsPagerState = rememberPagerState(pageCount = { pageCount })
-        val bottomPagerState = rememberPagerState(pageCount = { pageCount })
-
-        val animationScope = rememberCoroutineScope()
-
         CardsPager(
             modifier = Modifier.zIndex(1f),
             pageContent = { pageIndex ->
+                val page = pages[pageIndex]
+                val scrollState = scrollStates[pageIndex]
+                val anchorState = anchorStates[pageIndex]
+
+
+
                 DraggableCard(
-                    header = { pages(pageIndex).header() },
-                    body = { pages(pageIndex).content() },
-                    yState = anchorStates[pageIndex],
+                    header = {
+                        page.header(
+                            // isCollapsed
+                            anchorState.currentValue == DragValueY.Collapsed
+                        ) {
+                            // onExpandToNormal
+                            animationScope.launch {
+                                anchorState.animateTo(DragValueY.Normal)
+                            }
+                        }
+                    },
+                    body = { modifier ->
+                        page.body(
+                            modifier,
+                            // scrollState
+                            scrollState
+                        ) {
+                            // onShrinkToNormal
+                            animationScope.launch {
+                                anchorState.animateTo(DragValueY.Normal)
+                            }
+                        }
+                    },
+                    yState = anchorState,
                     scrollState = scrollStates[pageIndex],
-                    cardIsExpandable = pages(pageIndex).isExpandable,
-                    showFab = pages(pageIndex).showFab,
+                    cardIsExpandable = page.isExpandable,
+                    showFab =
+                        page.hasFab &&
+                        anchorState.currentValue != DragValueY.Collapsed,
                     onCollapsed = {
                         anchorStates.forEach {
                             animationScope.launch {
@@ -142,7 +199,7 @@ fun BoxScope.DraggableCardsPagerLayout(
                             }
                         }
                     },
-                    fabAction = pages(pageIndex).fabAction
+                    fabAction = page.fabAction
                 )
             },
             anchorStates = anchorStates,
@@ -152,7 +209,7 @@ fun BoxScope.DraggableCardsPagerLayout(
 
         BottomButtonPager(
             modifier = Modifier.align(Alignment.BottomCenter),
-            pageTitles = { pages(it).title },
+            pageTitles = { pageIndex -> pages[pageIndex].title },
             ownPagerState = bottomPagerState,
             cardsPagerState = cardsPagerState,
         )
@@ -421,7 +478,7 @@ private fun BottomButtonPager(
 private fun DraggableCard(
     yState : AnchoredDraggableState<DragValueY>,
     header: @Composable () -> Unit,
-    body: @Composable () -> Unit,
+    body: @Composable (modifier: Modifier) -> Unit,
     scrollState: ScrollState,
     cardIsExpandable: Boolean,
     showFab: Boolean,
@@ -522,8 +579,7 @@ private fun DraggableCard(
             )
     ){
         Surface (
-            modifier = Modifier
-                .fillMaxHeight(),
+            modifier = Modifier.fillMaxSize(),
             shape = RoundedCornerShape(
                 topStart = MaterialTheme.shapes.large.topStart,
                 topEnd = MaterialTheme.shapes.large.topEnd,
@@ -537,7 +593,7 @@ private fun DraggableCard(
             Column {
                 GrabHandle(dragState = yState)
                 Box(
-                    Modifier
+                    modifier = Modifier
                         .fillMaxWidth()
                         .height(MaterialTheme.dimensions.cardPeekContentHeight)
                 ) {
@@ -546,13 +602,15 @@ private fun DraggableCard(
 
                 HorizontalDivider(Modifier.padding(horizontal = MaterialTheme.spacing.medium))
 
-                Box(
+                body(
                     Modifier
+                        .conditional(!cardIsExpandable) {
+                            requiredHeight(180.dp)
+//                            height(MaterialTheme.dimensions.cardNormalContentHeight)
+                        }
                         .verticalScroll(scrollState)
-                        .fillMaxWidth(),
-                    ) {
-                    body()
-                }
+                        .fillMaxWidth()
+                )
             }
         }
 

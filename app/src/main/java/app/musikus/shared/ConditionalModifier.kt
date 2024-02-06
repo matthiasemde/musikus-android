@@ -14,10 +14,14 @@ import androidx.compose.ui.Modifier
 // source: https://stackoverflow.com/questions/67768746/chaining-modifier-based-on-certain-conditions-in-android-compose
 
 @Composable
-fun Modifier.conditional(condition : Boolean, modifier : @Composable Modifier.() -> Modifier) : Modifier {
+fun Modifier.conditional(
+    condition : Boolean,
+    alternativeModifier: @Composable Modifier.() -> Modifier = { this },
+    modifier : @Composable Modifier.() -> Modifier,
+) : Modifier {
     return if (condition) {
         then(modifier(Modifier))
     } else {
-        this
+        then(alternativeModifier(Modifier))
     }
 }
