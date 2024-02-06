@@ -24,7 +24,6 @@ import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.FilledIconButton
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
@@ -41,6 +40,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -49,18 +49,65 @@ import androidx.media3.session.MediaController
 import app.musikus.ui.components.PlayerState
 import app.musikus.ui.components.rememberManagedMediaController
 import app.musikus.ui.components.state
-import app.musikus.ui.theme.dimensions
 import app.musikus.ui.theme.spacing
 import app.musikus.usecase.recordings.Recording
 import app.musikus.utils.DurationFormat
 import app.musikus.utils.getDurationString
 
 @Composable
-fun Recorder(
+fun RecorderHeader(
+    modifier: Modifier = Modifier,
     viewModel: RecorderViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val eventHandler = viewModel::onUiEvent
+
+    Row(
+        modifier
+            .fillMaxSize()
+            .padding(horizontal = MaterialTheme.spacing.extraLarge),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = uiState.recordingDuration,
+            style = MaterialTheme.typography.headlineMedium,
+        )
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        FilledIconButton(
+            modifier = Modifier.size(48.dp),
+            onClick = { eventHandler(RecorderUiEvent.ToggleRecording) },
+            shape = CircleShape,
+            colors = IconButtonDefaults.filledIconButtonColors(
+                containerColor = MaterialTheme.colorScheme.error,
+                contentColor = MaterialTheme.colorScheme.onError
+            ),
+        ) {
+            Box(Modifier.padding(MaterialTheme.spacing.small)) {
+                if (uiState.isRecording) {
+                    Icon(
+                        modifier = Modifier.fillMaxSize(),
+                        imageVector = Icons.Default.Pause,
+                        contentDescription = "Stop recording"
+                    )
+                } else {
+                    Icon(
+                        modifier = Modifier.fillMaxSize(),
+                        imageVector = Icons.Default.Mic,
+                        contentDescription = "Start recording"
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun RecorderBody(
+    viewModel: RecorderViewModel = hiltViewModel()
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     val mediaController by rememberManagedMediaController()
 
@@ -86,51 +133,10 @@ fun Recorder(
     }
 
     Column(
-        modifier = Modifier.padding(horizontal = MaterialTheme.spacing.medium)
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = MaterialTheme.spacing.medium)
     ) {
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .height(MaterialTheme.dimensions.cardPeekContentHeight)
-                .padding(MaterialTheme.spacing.medium),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = uiState.recordingDuration,
-                style = MaterialTheme.typography.headlineMedium,
-            )
-
-            Spacer(modifier = Modifier.weight(1f))
-
-            FilledIconButton(
-                modifier = Modifier.size(50.dp),
-                onClick = { eventHandler(RecorderUiEvent.ToggleRecording) },
-                shape = CircleShape,
-                colors = IconButtonDefaults.filledIconButtonColors(
-                    containerColor = MaterialTheme.colorScheme.error,
-                    contentColor = MaterialTheme.colorScheme.onError
-                ),
-            ) {
-                Box(Modifier.padding(MaterialTheme.spacing.small)) {
-                    if (uiState.isRecording) {
-                        Icon(
-                            modifier = Modifier.fillMaxSize(),
-                            imageVector = Icons.Default.Pause,
-                            contentDescription = "Stop recording"
-                        )
-                    } else {
-                        Icon(
-                            modifier = Modifier.fillMaxSize(),
-                            imageVector = Icons.Default.Mic,
-                            contentDescription = "Start recording"
-                        )
-                    }
-                }
-            }
-        }
-
-        HorizontalDivider()
-
 
         Text(
             modifier = Modifier.padding(vertical = MaterialTheme.spacing.small),
@@ -171,7 +177,8 @@ fun Recording (
     ) {
         Text(
             text = recording.title,
-            style = MaterialTheme.typography.bodyMedium
+            style = MaterialTheme.typography.bodyMedium,
+            overflow = TextOverflow.Ellipsis,
         )
 
         Spacer(modifier = Modifier.weight(1f))
@@ -183,9 +190,7 @@ fun Recording (
 
         FilledIconButton(
             onClick = {
-                Log.d("Recorder", "Trying to play recording: ${recording.title}")
                 mediaController?.run {
-                    Log.d("Recorder", "Playing recording: ${recording.title}")
                     setMediaItem(recording.mediaItem)
                     prepare()
                     play()

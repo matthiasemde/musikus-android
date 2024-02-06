@@ -1,3 +1,11 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ *
+ * Copyright (c) 2024 Matthias Emde
+ */
+
 package app.musikus.ui.activesession.metronome
 
 import androidx.compose.foundation.clickable
@@ -23,7 +31,6 @@ import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.filled.TouchApp
 import androidx.compose.material3.FilledIconButton
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -41,11 +48,10 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import app.musikus.ui.theme.dimensions
 import app.musikus.ui.theme.spacing
 
 @Composable
-fun Metronome(
+fun MetronomeHeader(
     modifier: Modifier = Modifier,
     viewModel: MetronomeViewModel = hiltViewModel(),
     onTextClicked: () -> Unit
@@ -53,19 +59,107 @@ fun Metronome(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val eventHandler = viewModel::onUiEvent
 
+    Row(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(horizontal = MaterialTheme.spacing.large),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+
+        val smallIncrementButtonSize = 30.dp
+        val largeIncrementButtonSize = 35.dp
+
+        // -5 Bpm
+        MetronomeIncrementBpmButton(
+            bpmIncrement = -5,
+            size = largeIncrementButtonSize,
+            eventHandler = eventHandler
+        )
+
+        Spacer(modifier = Modifier.width(MaterialTheme.spacing.small))
+
+        // -1 Bpm
+        MetronomeIncrementBpmButton(
+            bpmIncrement = -1,
+            size = smallIncrementButtonSize,
+            eventHandler = eventHandler
+        )
+
+        // Bpm
+        Text(
+            modifier = Modifier
+                .width(100.dp)
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = onTextClicked
+                ),
+            text = uiState.settings.bpm.toString(),
+            textAlign = TextAlign.Center,
+            style = MaterialTheme.typography.displayMedium,
+            fontWeight = FontWeight.Bold
+        )
+
+        // +1 Bpm
+        MetronomeIncrementBpmButton(
+            bpmIncrement = 1,
+            size = smallIncrementButtonSize,
+            eventHandler = eventHandler
+        )
+
+        Spacer(modifier = Modifier.width(MaterialTheme.spacing.small))
+
+        // +5 Bpm
+        MetronomeIncrementBpmButton(
+            bpmIncrement = 5,
+            size = largeIncrementButtonSize,
+            eventHandler = eventHandler
+        )
+
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        // Start/Stop Metronome
+        FilledIconButton(
+            modifier = Modifier.size(48.dp),
+            onClick = { eventHandler(MetronomeUiEvent.ToggleIsPlaying) },
+            shape = CircleShape,
+        ) {
+            Box(Modifier.padding(MaterialTheme.spacing.small)) {
+                if (!uiState.isPlaying) {
+                    Icon(
+                        modifier = Modifier.fillMaxSize(),
+                        imageVector = Icons.Default.PlayArrow,
+                        contentDescription = "Start metronome"
+                    )
+                } else {
+                    Icon(
+                        modifier = Modifier.fillMaxSize(),
+                        imageVector = Icons.Default.Stop,
+                        contentDescription = "Stop metronome"
+                    )
+                }
+            }
+        }
+
+    }
+}
+
+@Composable
+fun MetronomeBody(
+    modifier: Modifier = Modifier,
+    viewModel: MetronomeViewModel = hiltViewModel(),
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val eventHandler = viewModel::onUiEvent
+
 
     Column(
         modifier = modifier
-            .height(MaterialTheme.dimensions.cardNormalContentHeight)
+            .fillMaxWidth()
             .padding(horizontal = MaterialTheme.spacing.medium)
     ) {
-        MetronomeTopBar(
-            uiState = uiState,
-            eventHandler = eventHandler,
-            onTextClicked = onTextClicked
-        )
 
-        HorizontalDivider()
         Spacer(modifier = Modifier.weight(1f))  // flexible space
 
         /** Tempo Slider */
@@ -99,90 +193,6 @@ fun Metronome(
 
 
 @Composable
-fun MetronomeTopBar(
-    uiState: MetronomeUiState,
-    eventHandler: (MetronomeUiEvent) -> Unit,
-    onTextClicked: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(MaterialTheme.dimensions.cardPeekContentHeight),    // should fit in peeked card
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceAround
-    ) {
-
-        // -5 Bpm
-        MetronomeIncrementBpmButton(
-            bpmIncrement = -5,
-            size = 30.dp,
-            eventHandler = eventHandler
-        )
-        // -1 Bpm
-        MetronomeIncrementBpmButton(
-            bpmIncrement = -1,
-            size = 25.dp,
-            eventHandler = eventHandler
-        )
-
-        // Bpm
-        Text(
-            modifier = Modifier
-                .width(100.dp)
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null,
-                    onClick = onTextClicked
-                ),
-            text = uiState.settings.bpm.toString(),
-            textAlign = TextAlign.Center,
-            style = MaterialTheme.typography.displayMedium,
-            fontWeight = FontWeight.Bold
-        )
-
-        // +1 Bpm
-        MetronomeIncrementBpmButton(
-            bpmIncrement = 1,
-            size = 25.dp,
-            eventHandler = eventHandler
-        )
-        // +5 Bpm
-        MetronomeIncrementBpmButton(
-            bpmIncrement = 5,
-            size = 30.dp,
-            eventHandler = eventHandler
-        )
-
-
-        Spacer(modifier = Modifier.width(MaterialTheme.spacing.small))
-
-        // Start/Stop Metronome
-        FilledIconButton(
-            modifier = Modifier.size(50.dp),
-            onClick = { eventHandler(MetronomeUiEvent.ToggleIsPlaying) },
-            shape = CircleShape,
-        ) {
-            Box(Modifier.padding(MaterialTheme.spacing.small)) {
-                if (!uiState.isPlaying) {
-                    Icon(
-                        modifier = Modifier.fillMaxSize(),
-                        imageVector = Icons.Default.PlayArrow,
-                        contentDescription = "Start metronome"
-                    )
-                } else {
-                    Icon(
-                        modifier = Modifier.fillMaxSize(),
-                        imageVector = Icons.Default.Stop,
-                        contentDescription = "Stop metronome"
-                    )
-                }
-            }
-        }
-
-    }
-}
-
-@Composable
 fun MetronomeIncrementBpmButton(
     bpmIncrement: Int,
     size: Dp,
@@ -192,7 +202,7 @@ fun MetronomeIncrementBpmButton(
         onClick = { eventHandler(MetronomeUiEvent.IncrementBpm(bpmIncrement)) },
         modifier = Modifier.size(size),
         shape = CircleShape,
-        contentPadding = PaddingValues(0.dp)
+        contentPadding = PaddingValues(MaterialTheme.spacing.extraSmall)
     ) {
         Text(
             text = (if(bpmIncrement > 0) "+" else "") + bpmIncrement.toString(),

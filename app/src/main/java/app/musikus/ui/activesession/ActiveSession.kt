@@ -7,9 +7,7 @@
  *
  */
 
-@file:OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class,
-    ExperimentalFoundationApi::class
-)
+@file:OptIn(ExperimentalFoundationApi::class)
 
 package app.musikus.ui.activesession
 
@@ -37,12 +35,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -56,7 +54,6 @@ import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -83,8 +80,10 @@ import app.musikus.database.daos.LibraryFolder
 import app.musikus.database.daos.LibraryItem
 import app.musikus.ui.MainUIEvent
 import app.musikus.ui.MainUiState
-import app.musikus.ui.activesession.metronome.Metronome
-import app.musikus.ui.activesession.recorder.Recorder
+import app.musikus.ui.activesession.metronome.MetronomeBody
+import app.musikus.ui.activesession.metronome.MetronomeHeader
+import app.musikus.ui.activesession.recorder.RecorderBody
+import app.musikus.ui.activesession.recorder.RecorderHeader
 import app.musikus.ui.components.SwipeToDeleteContainer
 import app.musikus.ui.components.fadingEdge
 import app.musikus.ui.library.DialogMode
@@ -193,9 +192,8 @@ fun ActiveSession(
                                     uiState.libraryUiState.selectedFolder?.id))
                             },
                             header = {
-                                val calculatedHeight = getDynamicHeaderHeight(anchorStates[pageIndex])
                                 LibraryHeader(
-                                    modifier = Modifier.defaultMinSize(minHeight = calculatedHeight),
+                                    modifier = Modifier.fillMaxSize(),
                                     uiState = uiState.libraryUiState,
                                     onFolderClicked = {
                                         uiEvent(ActiveSessionUIEvent.ChangeFolderDisplayed(it))
@@ -238,13 +236,14 @@ fun ActiveSession(
                         )
                         1-> DraggableCardPage(
                             title = "Recorder",
-                            isExpandable = false,
-                            content = { Recorder() },
+                            isExpandable = true,
+                            header = { RecorderHeader() },
+                            content = { RecorderBody() },
                         )
                         2-> DraggableCardPage(
                             title = "Metronome",
                             isExpandable = false,
-                            content = { Metronome(
+                            header = { MetronomeHeader(
                                 /** change Card height */
                                 onTextClicked = {
                                     val target = if (anchorStates[pageIndex].currentValue == DragValueY.Collapsed) {
@@ -259,6 +258,7 @@ fun ActiveSession(
                                     }
                                 }
                             ) },
+                            content = { MetronomeBody() },
                         )
                         else -> DraggableCardPage(
                             title = "unknown",
@@ -401,7 +401,7 @@ private fun SectionsList(
 ) {
     if (uiState.sections.isEmpty()) {
         Box (modifier = modifier) {
-            Text(text = "Quotes",)
+            Text(text = "Quotes")
         }
         return
     }
@@ -489,11 +489,11 @@ private fun LibraryHeader(
     LazyRow(
         state = state,
         modifier = modifier
-            .fillMaxWidth()
-            .fadingEdge(state, vertical = false),
+            .fadingEdge(state, vertical = false)
+            .padding(vertical = MaterialTheme.spacing.small),
         horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small),
         verticalAlignment = Alignment.CenterVertically,
-        contentPadding = PaddingValues(MaterialTheme.spacing.small),
+        contentPadding = PaddingValues(horizontal = MaterialTheme.spacing.medium),
     ) {
 
         item {
@@ -539,12 +539,15 @@ private fun LibraryFolderElement(
         animationSpec = tween(200)
     )
     Surface(
+        modifier = Modifier
+            .fillMaxHeight()
+            .aspectRatio(1f),
         shape = MaterialTheme.shapes.medium,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
         Surface(
             modifier = Modifier
-                .size(80.dp)
+                .fillMaxSize()
                 .clickable { onClick(folder) },
             color = color
         ) {

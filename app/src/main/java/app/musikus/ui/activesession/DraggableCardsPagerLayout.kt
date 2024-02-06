@@ -43,6 +43,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Button
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SmallFloatingActionButton
@@ -258,10 +259,10 @@ private fun getAnchors(
  * A HorizontalPager adjusting its contentPadding depending on the anchorState's distance to a
  * specific anchor.
  *
- * @param pageCount number of pages
+ * @param modifier Modifier
  * @param pageContent content of each page
  * @param anchorStates list of AnchoredDraggableStates for each page
- * @param maxOffsetPx maximum offset in pixels (usually negative). Used to calculate the padding
+ * @param ownPagerState PagerState for this pager
  * @param modifier Modifier
  */
 @OptIn(ExperimentalFoundationApi::class)
@@ -535,7 +536,16 @@ private fun DraggableCard(
         ) {
             Column {
                 GrabHandle(dragState = yState)
-                header()
+                Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .height(MaterialTheme.dimensions.cardPeekContentHeight)
+                ) {
+                    header()
+                }
+
+                HorizontalDivider(Modifier.padding(horizontal = MaterialTheme.spacing.medium))
+
                 Box(
                     Modifier
                         .verticalScroll(scrollState)
