@@ -11,9 +11,26 @@ package app.musikus.ui.activesession
 import app.musikus.database.Nullable
 import app.musikus.database.daos.LibraryFolder
 import app.musikus.database.daos.LibraryItem
+import app.musikus.ui.library.LibraryItemEditData
 import java.util.UUID
+import kotlin.time.Duration
 
 
+
+data class ActiveSessionUiState(
+    val libraryCardUiState: ActiveSessionDraggableCardUiState.LibraryCardUiState,
+    val totalSessionDuration: Duration,
+    val totalBreakDuration: Duration,
+    val sections: List<SectionListItemUiState>,
+    val isPaused: Boolean,
+    val newLibraryItemData: LibraryItemEditData?
+)
+
+data class SectionListItemUiState(
+    val id: Int,
+    val libraryItem: LibraryItem,
+    val duration: Duration
+)
 
 sealed class ActiveSessionDraggableCardHeaderUiState : DraggableCardHeaderUiState {
     data class LibraryCardHeaderUiState(
@@ -43,3 +60,16 @@ sealed class ActiveSessionDraggableCardUiState : DraggableCardUiState<
         override val fabAction: () -> Unit,
     ) : ActiveSessionDraggableCardUiState()
 }
+
+sealed class ActiveSessionUiEvent : DraggableCardUiEvent() {
+    data class SelectFolder(val folderId: UUID?) : ActiveSessionUiEvent()
+    data class SelectItem(val item: LibraryItem) : ActiveSessionUiEvent()
+
+    data class DeleteSection(val sectionId: Int) : ActiveSessionUiEvent()
+
+    data object TogglePause : ActiveSessionUiEvent()
+    data object StopSession : ActiveSessionUiEvent()
+
+}
+
+typealias ActiveSessionUiEventHandler = (ActiveSessionUiEvent) -> Unit

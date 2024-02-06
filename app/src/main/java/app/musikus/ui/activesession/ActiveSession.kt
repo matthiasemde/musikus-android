@@ -85,6 +85,7 @@ import app.musikus.ui.theme.spacing
 import app.musikus.utils.DurationFormat
 import app.musikus.utils.TimeProvider
 import app.musikus.utils.getDurationString
+import kotlin.time.Duration
 
 
 const val CARD_HEIGHT_EXTENDED_FRACTION_OF_SCREEN = 0.7f
@@ -99,7 +100,7 @@ fun ActiveSession(
     navigateUp: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val uiEvent: (ActiveSessionUIEvent) -> Unit = viewModel::onEvent
+    val eventHandler = viewModel::onUiEvent
 
     Scaffold { contentPadding ->
         Box(
@@ -119,7 +120,7 @@ fun ActiveSession(
                         .weight(1 - CARD_HEIGHT_EXTENDED_FRACTION_OF_SCREEN)
                         .padding(horizontal = MaterialTheme.spacing.medium)
                 ){
-                    HeaderBar(uiState, uiEvent)
+                    HeaderBar(uiState, eventHandler)
                     Spacer(modifier = Modifier.weight(1f))
                     PracticeTimer(uiState)
                     Spacer(modifier = Modifier.weight(1f))
@@ -137,7 +138,7 @@ fun ActiveSession(
                     SectionsList(
                         modifier = Modifier.weight(1f),
                         uiState = uiState,
-                        onSectionDeleted = { uiEvent(ActiveSessionUIEvent.DeleteSection(it.id)) }
+                        onSectionDeleted = { eventHandler(ActiveSessionUiEvent.DeleteSection(it.id)) }
                     )
                     // prevent section list items to hide behind peek'ed Cards
                     Spacer(
@@ -213,18 +214,24 @@ fun ActiveSession(
 //                        body = { modifier, _, _ -> MetronomeBody(modifier = modifier) },
 //                    )
                 ),
-                cardHeaderComposable = { uiState, cardState ->
-                    ActiveSessionDraggableCardHeader(uiState, cardState)
+                cardHeaderComposable = { headerUiState, cardState, eventHandler ->
+                    ActiveSessionDraggableCardHeader(headerUiState, cardState, eventHandler)
                 },
-                cardBodyComposable = { uiState, cardState ->
-                    ActiveSessionDraggableCardBody(uiState, cardState)
+                cardBodyComposable = { bodyState, cardState, eventHandler ->
+                    ActiveSessionDraggableCardBody(bodyState, cardState, eventHandler)
                 },
+                eventHandler = { event ->
+                    when(event) {
+                        is ActiveSessionUiEvent -> eventHandler(event)
+                        else -> throw IllegalArgumentException("Unknown event: $event")
+                    }
+                }
             )
         }
 
 
         if(uiState.isPaused) {
-            PauseDialog(uiState, uiEvent)
+            PauseDialog(uiState.totalBreakDuration, eventHandler)
         }
 
 //        uiState.newLibraryItemData?.let { editData ->
@@ -246,7 +253,7 @@ fun ActiveSession(
 @Composable
 private fun HeaderBar(
     uiState: ActiveSessionUiState,
-    uiEvent: (ActiveSessionUIEvent) -> Unit
+    eventHandler: ActiveSessionUiEventHandler
 ) {
     Row (
         modifier = Modifier.fillMaxWidth(),
@@ -254,14 +261,14 @@ private fun HeaderBar(
     ){
         OutlinedButton(
             enabled = uiState.sections.isNotEmpty(),
-            onClick = { uiEvent(ActiveSessionUIEvent.TogglePause)  }
+            onClick = { eventHandler(ActiveSessionUiEvent.TogglePause)  }
         ) {
             Text(text = "Pause")
         }
         TextButton(
             enabled = uiState.sections.isNotEmpty(),
             onClick = {
-                uiEvent(ActiveSessionUIEvent.StopSession)
+                eventHandler(ActiveSessionUiEvent.StopSession)
 
             }) {
             Text(text = "Save Session")
@@ -430,19 +437,19 @@ private fun SectionListElement(
 @Composable
 private fun ActiveSessionDraggableCardHeader(
     uiState: ActiveSessionDraggableCardHeaderUiState,
-    cardState: DraggableCardLocalState
+    cardState: DraggableCardLocalState,
+    eventHandler: DraggableCardUiEventHandler
 ) {
     when(uiState) {
         is ActiveSessionDraggableCardHeaderUiState.LibraryCardHeaderUiState -> {
             LibraryCardHeader(
                 uiState = uiState,
                 onFolderClicked = {
-//                    uiEvent(ActiveSessionUIEvent.ChangeFolderDisplayed(it))
+                    eventHandler(ActiveSessionUiEvent.SelectFolder(it?.id))
                 },
                 isCardCollapsed = false,
-                onExtendCardToNormal = { }
 //                isCardCollapsed = isCollapsed,
-//                onExtendCardToNormal = onExpandToNormal
+                onExtendCardToNormal = { eventHandler(DraggableCardUiEvent.ExpandCard) }
             )
         }
 //        is ActiveSessionRecorderCardUiState -> {
@@ -458,13 +465,14 @@ private fun ActiveSessionDraggableCardHeader(
 @Composable
 private fun ActiveSessionDraggableCardBody(
     uiState: ActiveSessionDraggableCardBodyUiState,
-    cardState: DraggableCardLocalState
+    cardState: DraggableCardLocalState,
+    eventHandler: DraggableCardUiEventHandler
 ) {
     when (uiState) {
         is ActiveSessionDraggableCardBodyUiState.LibraryCardBodyUiState -> {
             LibraryCardBody(
                 uiState = uiState,
-                onLibraryItemClicked = { /*TODO*/ },
+                onLibraryItemClicked = { eventHandler(ActiveSessionUiEvent.SelectItem(it) ) },
                 cardScrollState = cardState.scrollState,
                 currentPracticedItem = null
             )
@@ -603,8 +611,8 @@ private fun LibraryCardBody(
 
 @Composable
 private fun PauseDialog(
-    uiState: ActiveSessionUiState,
-    uiEvent: (ActiveSessionUIEvent) -> Unit
+    totalBreakDuration: Duration,
+    eventHandler: ActiveSessionUiEventHandler
 ) {
     Dialog(
         properties = DialogProperties(
@@ -628,7 +636,7 @@ private fun PauseDialog(
                         .padding(MaterialTheme.spacing.large),
                     text = "Pause: ${
                         getDurationString(
-                            uiState.totalBreakDuration,
+                            totalBreakDuration,
                             DurationFormat.HMS_DIGITAL
                         )
                     }",
@@ -639,7 +647,7 @@ private fun PauseDialog(
 
             Spacer(Modifier.height(32.dp))
 
-            Button(onClick = { uiEvent(ActiveSessionUIEvent.TogglePause) }) {
+            Button(onClick = { eventHandler(ActiveSessionUiEvent.TogglePause) }) {
                 Text("Resume")
             }
         }

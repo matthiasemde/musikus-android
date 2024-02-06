@@ -11,7 +11,6 @@ import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import app.musikus.database.Nullable
-import app.musikus.database.daos.LibraryFolder
 import app.musikus.database.daos.LibraryItem
 import app.musikus.database.entities.SectionCreationAttributes
 import app.musikus.database.entities.SessionCreationAttributes
@@ -41,35 +40,6 @@ import kotlin.time.Duration.Companion.milliseconds
 
 const val TAG = "ActiveSessionViewModel"
 
-
-sealed class ActiveSessionUIEvent {
-    data class StartNewSection(val libraryItem: LibraryItem): ActiveSessionUIEvent()
-    data object TogglePause: ActiveSessionUIEvent()
-    data object StopSession: ActiveSessionUIEvent()
-    data class ChangeFolderDisplayed(val folder: LibraryFolder?): ActiveSessionUIEvent()
-    data class DeleteSection(val itemId: Int): ActiveSessionUIEvent()
-    data class CreateNewLibraryItem(val folderId: UUID?): ActiveSessionUIEvent()
-    data object NewLibraryItemDialogDismissed: ActiveSessionUIEvent()
-    data class NewLibraryItemNameChanged(val newName: String): ActiveSessionUIEvent()
-    data class NewLibraryItemColorChanged(val newColorIndex: Int): ActiveSessionUIEvent()
-    data class NewLibraryItemFolderChanged(val newFolderId: UUID?): ActiveSessionUIEvent()
-}
-
-data class SectionListItemUiState(
-    val id: Int,
-    val libraryItem: LibraryItem,
-    val duration: Duration
-)
-
-data class ActiveSessionUiState(
-    val libraryCardUiState: ActiveSessionDraggableCardUiState.LibraryCardUiState,
-    val totalSessionDuration: Duration,
-    val totalBreakDuration: Duration,
-    val sections: List<SectionListItemUiState>,
-    val isPaused: Boolean,
-    val newLibraryItemData: LibraryItemEditData?
-)
-
 data class PracticeSection(
     val id: Int,
     val libraryItem: LibraryItem,
@@ -88,7 +58,7 @@ class ActiveSessionViewModel @Inject constructor(
 
     /** own stateFlows */
 
-    private val _selectedFolder = MutableStateFlow<LibraryFolder?>(null)
+    private val _selectedFolderId = MutableStateFlow<UUID?>(null)
     private val _addLibraryItemData = MutableStateFlow<LibraryItemEditData?>(null)
 
     // ################## mirrors of session state
@@ -129,8 +99,8 @@ class ActiveSessionViewModel @Inject constructor(
 
     // ####################### Library #######################
 
-    private val itemsInSelectedFolder = _selectedFolder.flatMapLatest { selectedFolder ->
-        libraryUseCases.getSortedItems(Nullable(selectedFolder?.id))
+    private val itemsInSelectedFolder = _selectedFolderId.flatMapLatest { selectedFolderId ->
+        libraryUseCases.getSortedItems(Nullable(selectedFolderId))
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
@@ -157,12 +127,12 @@ class ActiveSessionViewModel @Inject constructor(
 
     private val libraryCardHeaderUiState = combine(
         foldersWithItems,
-        _selectedFolder,
+        _selectedFolderId,
         currentlyPracticedSection
-    ) { foldersWithItems, selectedFolder, currentlyPracticedSection ->
+    ) { foldersWithItems, selectedFolderId, currentlyPracticedSection ->
         ActiveSessionDraggableCardHeaderUiState.LibraryCardHeaderUiState(
             folders = listOf(null) + foldersWithItems.map { it.folder },
-            selectedFolderId = selectedFolder?.id,
+            selectedFolderId = selectedFolderId,
             activeFolderId = currentlyPracticedSection?.let {
                 Nullable(it.libraryItem.libraryFolderId)
             }
@@ -255,17 +225,19 @@ class ActiveSessionViewModel @Inject constructor(
 
 
     /** UI Event handler */
-    fun onEvent(event: ActiveSessionUIEvent) = when (event) {
-        is ActiveSessionUIEvent.StartNewSection -> itemClicked(event.libraryItem)
-        is ActiveSessionUIEvent.TogglePause -> togglePause()
-        is ActiveSessionUIEvent.StopSession -> stopSession()
-        is ActiveSessionUIEvent.ChangeFolderDisplayed -> _selectedFolder.update { event.folder }
-        is ActiveSessionUIEvent.DeleteSection -> removeSection(event.itemId)
-        is ActiveSessionUIEvent.CreateNewLibraryItem -> createLibraryItemDialog(event.folderId)
-        is ActiveSessionUIEvent.NewLibraryItemNameChanged -> _addLibraryItemData.update { it?.copy(name = event.newName) }
-        is ActiveSessionUIEvent.NewLibraryItemColorChanged -> _addLibraryItemData.update { it?.copy(colorIndex = event.newColorIndex) }
-        is ActiveSessionUIEvent.NewLibraryItemFolderChanged -> _addLibraryItemData.update { it?.copy(folderId = event.newFolderId) }
-        is ActiveSessionUIEvent.NewLibraryItemDialogDismissed -> _addLibraryItemData.update { null }
+
+    fun onUiEvent(event: ActiveSessionUiEvent) = when (event) {
+        is ActiveSessionUiEvent.SelectFolder -> _selectedFolderId.update { event.folderId }
+        is ActiveSessionUiEvent.SelectItem -> itemClicked(event.item)
+        is ActiveSessionUiEvent.TogglePause -> togglePause()
+        is ActiveSessionUiEvent.StopSession -> stopSession()
+//        is ActiveSessionUIEvent.ChangeFolderDisplayed -> _selectedFolder.update { event.folder }
+        is ActiveSessionUiEvent.DeleteSection -> removeSection(event.sectionId)
+//        is ActiveSessionUIEvent.CreateNewLibraryItem -> createLibraryItemDialog(event.folderId)
+//        is ActiveSessionUIEvent.NewLibraryItemNameChanged -> _addLibraryItemData.update { it?.copy(name = event.newName) }
+//        is ActiveSessionUIEvent.NewLibraryItemColorChanged -> _addLibraryItemData.update { it?.copy(colorIndex = event.newColorIndex) }
+//        is ActiveSessionUIEvent.NewLibraryItemFolderChanged -> _addLibraryItemData.update { it?.copy(folderId = event.newFolderId) }
+//        is ActiveSessionUIEvent.NewLibraryItemDialogDismissed -> _addLibraryItemData.update { null }
     }
 
 

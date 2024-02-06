@@ -104,13 +104,20 @@ interface DraggableCardUiState <
     val bodyUiState: B
 }
 
+sealed class DraggableCardUiEvent {
+    data object ExpandCard : DraggableCardUiEvent()
+    data object CollapseCard : DraggableCardUiEvent()
+
+}
+
+
+typealias DraggableCardUiEventHandler = (DraggableCardUiEvent) -> Unit
+
 @OptIn(ExperimentalFoundationApi::class)
 data class DraggableCardLocalState(
     val yState: AnchoredDraggableState<DragValueY>,
     val scrollState: ScrollState,
 )
-
-//typealias DraggableCardHeaderComposable<H> = @Composable (H) -> Unit
 
 /**
  * Public interface for instantiating the complete pager.
@@ -125,11 +132,12 @@ data class DraggableCardLocalState(
 fun <
         C : DraggableCardUiState<H, B>,
         H : DraggableCardHeaderUiState,
-        B : DraggableCardBodyUiState
+        B : DraggableCardBodyUiState,
     > BoxScope.DraggableCardsPagerLayout(
     cardUiStates: List<C>,
-    cardHeaderComposable: @Composable (H, DraggableCardLocalState) -> Unit,
-    cardBodyComposable: @Composable (B, DraggableCardLocalState) -> Unit
+    cardHeaderComposable: @Composable (H, DraggableCardLocalState, DraggableCardUiEventHandler) -> Unit,
+    cardBodyComposable: @Composable (B, DraggableCardLocalState, DraggableCardUiEventHandler) -> Unit,
+    eventHandler: (DraggableCardUiEvent) -> Unit
 ) {
 
     val pageCount = cardUiStates.size
@@ -161,21 +169,25 @@ fun <
                     headerComposable = cardHeaderComposable,
                     bodyComposable = cardBodyComposable,
                     cardState = cardState,
-                    onCollapsed = {
-                        anchorStates.forEach {
-                            animationScope.launch {
-                                it.animateTo(DragValueY.Collapsed)
+                    eventHandler = { event ->
+                        when(event) {
+                            is DraggableCardUiEvent.ExpandCard -> {
+                                anchorStates.forEach {
+                                    animationScope.launch {
+                                        it.animateTo(DragValueY.Normal)
+                                    }
+                                }
                             }
-                        }
-                    },
-                    onUnCollapsed = {
-                        anchorStates.forEach {
-                            animationScope.launch {
-                                it.animateTo(DragValueY.Normal)
+                            is DraggableCardUiEvent.CollapseCard -> {
+                                anchorStates.forEach {
+                                    animationScope.launch {
+                                        it.animateTo(DragValueY.Collapsed)
+                                    }
+                                }
                             }
+                            else -> eventHandler(event)
                         }
-                    },
-                    fabAction = cardUiState.fabAction
+                    }
                 )
             },
             anchorStates = anchorStates,
@@ -445,12 +457,10 @@ private fun <
         B : DraggableCardBodyUiState
     > DraggableCard(
     uiState : C,
-    headerComposable: @Composable (H, DraggableCardLocalState) -> Unit,
-    bodyComposable: @Composable (B, DraggableCardLocalState) -> Unit,
+    headerComposable: @Composable (H, DraggableCardLocalState, DraggableCardUiEventHandler) -> Unit,
+    bodyComposable: @Composable (B, DraggableCardLocalState, DraggableCardUiEventHandler) -> Unit,
     cardState: DraggableCardLocalState,
-    fabAction: () -> Unit,
-    onCollapsed: () -> Unit = {},    // callback when card is collapsed
-    onUnCollapsed: () -> Unit = {}    // callback when card is uncollapsed
+    eventHandler: DraggableCardUiEventHandler,
 ) {
     val yState = cardState.yState
     val scrollState = cardState.scrollState
@@ -566,7 +576,11 @@ private fun <
                         .fillMaxWidth()
                         .height(MaterialTheme.dimensions.cardPeekContentHeight)
                 ) {
-                    headerComposable(uiState.headerUiState, cardState)
+                    headerComposable(
+                        uiState.headerUiState,
+                        cardState,
+                        eventHandler
+                    )
                 }
 
                 HorizontalDivider(Modifier.padding(horizontal = MaterialTheme.spacing.medium))
@@ -580,7 +594,11 @@ private fun <
                         .verticalScroll(scrollState)
                         .fillMaxWidth()
                 ) {
-                    bodyComposable(uiState.bodyUiState, cardState)
+                    bodyComposable(
+                        uiState.bodyUiState,
+                        cardState,
+                        eventHandler
+                    )
                 }
             }
         }
@@ -593,7 +611,7 @@ private fun <
                 modifier = Modifier
                     .padding(MaterialTheme.spacing.medium)
                     .align(Alignment.BottomEnd),
-                onClick = { fabAction() }
+                onClick = { eventHandler(DraggableCardUiEvent.CollapseCard) }
             ) {
                 Icon(Icons.Default.Add, contentDescription = null)
             }
@@ -624,12 +642,11 @@ private fun <
 
     LaunchedEffect(key1 = yState.currentValue) {
         if (yState.currentValue == DragValueY.Collapsed) {
-            onCollapsed()
+            eventHandler(DraggableCardUiEvent.CollapseCard)
         }
         if (yState.currentValue == DragValueY.Normal) {
-            onUnCollapsed()
+            eventHandler(DraggableCardUiEvent.ExpandCard)
         }
-
     }
 }
 
