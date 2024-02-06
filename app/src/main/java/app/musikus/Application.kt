@@ -32,9 +32,9 @@ const val METRONOME_NOTIFICATION_CHANNEL_ID = "metronome_notification_channel"
 const val METRONOME_NOTIFICATION_CHANNEL_NAME = "Metronome notification"
 
 const val SESSION_NOTIFICATION_CHANNEL_ID = "session_notification_channel"
-const val SESSION_NOTIFICATION_CHANNEL_NAME = "Running Channel"
+const val SESSION_NOTIFICATION_CHANNEL_NAME = "Session notification"
 
-const val RECORDER_NOTIFICATION_CHANNEL_ID = "recording_notification_channel"
+const val RECORDER_NOTIFICATION_CHANNEL_ID = "recorder_notification_channel"
 const val RECORDER_NOTIFICATION_CHANNEL_NAME = "Recorder notification"
 
 

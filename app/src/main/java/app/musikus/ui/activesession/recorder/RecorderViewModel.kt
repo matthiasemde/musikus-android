@@ -53,6 +53,8 @@ sealed class RecorderUiEvent {
     data object ToggleRecording : RecorderUiEvent()
 }
 
+typealias RecorderUiEventHandler = (event: RecorderUiEvent) -> Unit
+
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class RecorderViewModel @Inject constructor(
@@ -61,11 +63,11 @@ class RecorderViewModel @Inject constructor(
     private val recordingsUseCases: RecordingsUseCases
 ) : AndroidViewModel(application) {
 
-    /** ------------------ Service --------------------- */
+    /** ------------------ Recorder Service --------------------- */
 
-    /** Service state wrapper and event handler */
-    private val serviceStateWrapper = MutableStateFlow<Flow<RecorderServiceState>?>(null)
-    private val serviceState = serviceStateWrapper.flatMapLatest {
+    /** state wrapper and event handler */
+    private val recorderServiceStateWrapper = MutableStateFlow<Flow<RecorderServiceState>?>(null)
+    private val recorderServiceState = recorderServiceStateWrapper.flatMapLatest {
         it ?: flowOf(null)
     }.stateIn(
         scope = viewModelScope,
@@ -73,30 +75,30 @@ class RecorderViewModel @Inject constructor(
         initialValue = null
     )
 
-    private var serviceEventHandler: ((RecorderServiceEvent) -> Unit)? = null
+    private var recorderServiceEventHandler: ((RecorderServiceEvent) -> Unit)? = null
 
-    /** Service binding */
+    /** binding */
 
-    private val connection = object : ServiceConnection {
+    private val recorderServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
             // We've bound to SessionForegroundService, cast the Binder and get SessionService instance
             val binder = service as RecorderService.LocalBinder
-            serviceEventHandler = binder.getEventHandler()
-            serviceStateWrapper.update { binder.getServiceState() }
+            recorderServiceEventHandler = binder.getEventHandler()
+            recorderServiceStateWrapper.update { binder.getServiceState() }
         }
 
         override fun onServiceDisconnected(arg0: ComponentName) {
-            serviceEventHandler = null
-            serviceStateWrapper.update { null }
+            recorderServiceEventHandler = null
+            recorderServiceStateWrapper.update { null }
         }
     }
 
     init {
-        // try to bind to SessionService
-        bindService()
+        // try to bind to Recorder and Media Player services
+        bindRecorderService()
     }
 
-    private fun startService() {
+    private fun startRecorderService() {
         val intent = Intent(application, RecorderService::class.java)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             application.startForegroundService(intent)
@@ -105,14 +107,15 @@ class RecorderViewModel @Inject constructor(
         }
     }
 
-    private fun bindService() {
-        val intent = Intent(application, RecorderService::class.java)
-        application.bindService(intent, connection, Context.BIND_AUTO_CREATE)
+    private fun bindRecorderService() {
+        // Bind the recorder service
+        val recorderServiceBindIntent = Intent(application, RecorderService::class.java)
+        application.bindService(recorderServiceBindIntent, recorderServiceConnection, Context.BIND_AUTO_CREATE)
     }
 
     override fun onCleared() {
-        if (serviceStateWrapper.value != null) {
-            application.unbindService(connection)
+        if (recorderServiceStateWrapper.value != null) {
+            application.unbindService(recorderServiceConnection)
         }
         super.onCleared()
     }
@@ -129,7 +132,7 @@ class RecorderViewModel @Inject constructor(
 
     /** Composing the UI state */
     val uiState = combine(
-        serviceState,
+        recorderServiceState,
         recordings
     ) { serviceState, recordings ->
         RecorderUiState(
@@ -174,8 +177,8 @@ class RecorderViewModel @Inject constructor(
                         }
                     }
 
-                    startService()
-                    serviceEventHandler?.invoke(RecorderServiceEvent.ToggleRecording)
+                    startRecorderService()
+                    recorderServiceEventHandler?.invoke(RecorderServiceEvent.ToggleRecording)
                 }
             }
         }

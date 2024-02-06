@@ -9,12 +9,13 @@
 package app.musikus.usecase.recordings
 
 import android.net.Uri
+import androidx.media3.common.MediaItem
 import kotlinx.coroutines.flow.Flow
 import java.time.ZonedDateTime
 import kotlin.time.Duration
 
 data class Recording(
-    val id: Long,
+    val mediaItem: MediaItem,
     val title: String,
     val duration: Duration,
     val date: ZonedDateTime,

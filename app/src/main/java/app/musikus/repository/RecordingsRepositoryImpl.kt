@@ -13,6 +13,7 @@ import android.content.ContentUris
 import android.database.ContentObserver
 import android.os.Build
 import android.provider.MediaStore
+import androidx.media3.common.MediaItem
 import app.musikus.di.IoScope
 import app.musikus.usecase.recordings.Recording
 import app.musikus.usecase.recordings.RecordingsRepository
@@ -100,11 +101,11 @@ class RecordingsRepositoryImpl(
                 )
                 recordingList.add(
                     Recording(
-                        id = id,
+                        mediaItem = MediaItem.fromUri(contentUri),
                         title = displayName,
                         duration = duration.milliseconds,
                         date = ZonedDateTime.ofInstant(Instant.ofEpochSecond(date), ZoneId.systemDefault()),
-                        contentUri
+                        contentUri = contentUri
                     )
                 )
             }

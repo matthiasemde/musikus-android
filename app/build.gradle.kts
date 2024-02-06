@@ -88,6 +88,8 @@ dependencies {
     val daggerHiltVersion = "2.49"
     val kotlinCoroutineVersion = "1.7.3"
     val mockkVersion = "1.13.9"
+    val media3Version = "1.2.1"
+
 
     implementation("androidx.navigation:navigation-runtime-ktx:$navVersion")
     implementation("androidx.legacy:legacy-support-v4:1.0.0")
@@ -164,6 +166,12 @@ dependencies {
     implementation("com.google.android.material:material:1.10.0")
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
     implementation("androidx.recyclerview:recyclerview:1.3.2")
+
+    // Media Playback
+    // For media playback using ExoPlayer
+    implementation("androidx.media3:media3-exoplayer:$media3Version")
+// For exposing and controlling media sessions
+    implementation("androidx.media3:media3-session:$media3Version")
 
     // Testing
     androidTestImplementation(platform("androidx.compose:compose-bom:$bomVersion"))
