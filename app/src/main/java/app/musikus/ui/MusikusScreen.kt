@@ -366,9 +366,6 @@ fun MusikusApp(
                     })
                 ) { backStackEntry ->
                     ActiveSession(
-                        mainUiState = uiState,
-                        mainEventHandler = mainViewModel::onEvent,
-                        timeProvider = timeProvider,
                         navigateUp = navController::navigateUp,
                         deepLinkArgument = backStackEntry.arguments?.getString(DEEP_LINK_KEY)
                     ) }

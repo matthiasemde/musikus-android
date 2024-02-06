@@ -122,6 +122,7 @@ fun LibraryItemDialog(
     mode: DialogMode,
     folders: List<LibraryFolder>,
     itemData: LibraryItemEditData,
+    isConfirmButtonEnabled: Boolean,
     onNameChange: (String) -> Unit,
     onColorIndexChange: (Int) -> Unit,
     onSelectedFolderIdChange: (UUID?) -> Unit,
@@ -230,7 +231,7 @@ fun LibraryItemDialog(
                     }
                     TextButton(
                         onClick = onConfirmHandler,
-                        enabled = itemData.name.isNotEmpty(),
+                        enabled = isConfirmButtonEnabled,
                         colors = ButtonDefaults.textButtonColors(
                             contentColor = MaterialTheme.colorScheme.primary
                         ),

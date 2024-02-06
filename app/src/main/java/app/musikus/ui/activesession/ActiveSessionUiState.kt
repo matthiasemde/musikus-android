@@ -18,12 +18,18 @@ import kotlin.time.Duration
 
 
 data class ActiveSessionUiState(
-    val libraryCardUiState: ActiveSessionDraggableCardUiState.LibraryCardUiState,
+    val cardUiStates: List<ActiveSessionDraggableCardUiState>,
     val totalSessionDuration: Duration,
     val totalBreakDuration: Duration,
     val sections: List<SectionListItemUiState>,
     val isPaused: Boolean,
-    val newLibraryItemData: LibraryItemEditData?
+    val addItemDialogUiState: ActiveSessionAddLibraryItemDialogUiState?
+)
+
+data class ActiveSessionAddLibraryItemDialogUiState(
+    val folders: List<LibraryFolder>,
+    val itemData: LibraryItemEditData,
+    val isConfirmButtonEnabled: Boolean
 )
 
 data class SectionListItemUiState(
@@ -38,6 +44,8 @@ sealed class ActiveSessionDraggableCardHeaderUiState : DraggableCardHeaderUiStat
         val selectedFolderId: UUID?,
         val activeFolderId: Nullable<UUID>?, // null = no active folder, Nullable(null) = root folder
     ) : ActiveSessionDraggableCardHeaderUiState()
+
+    data object RecorderCardHeaderUiState : ActiveSessionDraggableCardHeaderUiState()
 }
 
 sealed class ActiveSessionDraggableCardBodyUiState : DraggableCardBodyUiState {
@@ -45,6 +53,8 @@ sealed class ActiveSessionDraggableCardBodyUiState : DraggableCardBodyUiState {
         val items: List<LibraryItem>,
         val activeItemId: UUID?
     ) : ActiveSessionDraggableCardBodyUiState()
+
+    data object RecorderCardBodyUiState : ActiveSessionDraggableCardBodyUiState()
 }
 
 sealed class ActiveSessionDraggableCardUiState : DraggableCardUiState<
@@ -57,11 +67,19 @@ sealed class ActiveSessionDraggableCardUiState : DraggableCardUiState<
         override val title: String,
         override val isExpandable: Boolean,
         override val hasFab: Boolean,
-        override val fabAction: () -> Unit,
+    ) : ActiveSessionDraggableCardUiState()
+
+    data class RecorderCardUiState(
+        override val headerUiState: ActiveSessionDraggableCardHeaderUiState.RecorderCardHeaderUiState,
+        override val bodyUiState: ActiveSessionDraggableCardBodyUiState.RecorderCardBodyUiState,
+        override val title: String,
+        override val isExpandable: Boolean,
+        override val hasFab: Boolean,
     ) : ActiveSessionDraggableCardUiState()
 }
 
 sealed class ActiveSessionUiEvent : DraggableCardUiEvent() {
+
     data class SelectFolder(val folderId: UUID?) : ActiveSessionUiEvent()
     data class SelectItem(val item: LibraryItem) : ActiveSessionUiEvent()
 
@@ -70,6 +88,13 @@ sealed class ActiveSessionUiEvent : DraggableCardUiEvent() {
     data object TogglePause : ActiveSessionUiEvent()
     data object StopSession : ActiveSessionUiEvent()
 
+    data object CreateNewLibraryItem : ActiveSessionUiEvent()
+
+    data class NewLibraryItemNameChanged(val newName: String) : ActiveSessionUiEvent()
+    data class NewLibraryItemColorChanged(val newColorIndex: Int) : ActiveSessionUiEvent()
+    data class NewLibraryItemFolderChanged(val newFolderId: UUID?) : ActiveSessionUiEvent()
+    data object NewLibraryItemDialogConfirmed : ActiveSessionUiEvent()
+    data object NewLibraryItemDialogDismissed : ActiveSessionUiEvent()
 }
 
 typealias ActiveSessionUiEventHandler = (ActiveSessionUiEvent) -> Unit

@@ -99,7 +99,6 @@ interface DraggableCardUiState <
     val title : String
     val isExpandable: Boolean
     val hasFab: Boolean
-    val fabAction: () -> Unit
     val headerUiState: H
     val bodyUiState: B
 }
@@ -107,7 +106,7 @@ interface DraggableCardUiState <
 sealed class DraggableCardUiEvent {
     data object ExpandCard : DraggableCardUiEvent()
     data object CollapseCard : DraggableCardUiEvent()
-
+    data object FabAction : DraggableCardUiEvent()
 }
 
 
@@ -309,7 +308,6 @@ private fun CardsPager(
 ) {
     val maxContentPaddingDp = 16
     val state = anchorStates[ownPagerState.currentPage]
-
 
     val currentOffset = anchorStates[ownPagerState.currentPage].requireOffset()
     val fraction =
@@ -611,7 +609,7 @@ private fun <
                 modifier = Modifier
                     .padding(MaterialTheme.spacing.medium)
                     .align(Alignment.BottomEnd),
-                onClick = { eventHandler(DraggableCardUiEvent.CollapseCard) }
+                onClick = { eventHandler(DraggableCardUiEvent.FabAction) }
             ) {
                 Icon(Icons.Default.Add, contentDescription = null)
             }

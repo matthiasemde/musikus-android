@@ -12,6 +12,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import app.musikus.database.Nullable
 import app.musikus.database.daos.LibraryItem
+import app.musikus.database.entities.LibraryItemCreationAttributes
 import app.musikus.database.entities.SectionCreationAttributes
 import app.musikus.database.entities.SessionCreationAttributes
 import app.musikus.services.SessionEvent
@@ -37,6 +38,7 @@ import java.util.UUID
 import javax.inject.Inject
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 const val TAG = "ActiveSessionViewModel"
 
@@ -55,13 +57,28 @@ class ActiveSessionViewModel @Inject constructor(
     private val application: Application
 ): AndroidViewModel(application) {
 
+    /**
+     *  --------------------- Private properties ---------------------
+     */
 
-    /** own stateFlows */
+    private val _recorderUiState = ActiveSessionDraggableCardUiState.RecorderCardUiState(
+        title = "Recorder",
+        isExpandable = true,
+        hasFab = false,
+        headerUiState = ActiveSessionDraggableCardHeaderUiState.RecorderCardHeaderUiState,
+        bodyUiState = ActiveSessionDraggableCardBodyUiState.RecorderCardBodyUiState
+    )
+
+
+    /** stateFlows */
 
     private val _selectedFolderId = MutableStateFlow<UUID?>(null)
     private val _addLibraryItemData = MutableStateFlow<LibraryItemEditData?>(null)
 
-    // ################## mirrors of session state
+
+    /**
+     *  --------------------- Session service  ---------------------
+     */
 
     private val sessionStateWrapper = MutableStateFlow<StateFlow<SessionState>?>(null)
     private val sessionState = sessionStateWrapper.flatMapLatest {
@@ -121,6 +138,17 @@ class ActiveSessionViewModel @Inject constructor(
         initialValue = null
     )
 
+
+    private val totalDurationRoundedDownToNextSecond = sessionState.map { sessionState ->
+        sessionState.sections.sumOf {
+            (it.duration ?: sessionState.currentSectionDuration).inWholeMilliseconds
+        }.milliseconds.inWholeSeconds.seconds
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = 0.seconds
+    )
+
     /**
      *  ---------------- Composing the Ui state --------------------
      */
@@ -172,7 +200,6 @@ class ActiveSessionViewModel @Inject constructor(
             title = "Library",
             isExpandable = true,
             hasFab = true,
-            fabAction = { createLibraryItemDialog(headUiState.selectedFolderId) },
             headerUiState = headUiState,
             bodyUiState = bodyUiState
         )
@@ -183,25 +210,43 @@ class ActiveSessionViewModel @Inject constructor(
             title = "Library",
             isExpandable = true,
             hasFab = true,
-            fabAction = { createLibraryItemDialog(null) },
             headerUiState = libraryCardHeaderUiState.value,
             bodyUiState = libraryCardBodyUiState.value
         )
     )
 
+    private val addLibraryItemDialogUiState = combine(
+        foldersWithItems,
+        _addLibraryItemData
+    ) { foldersWithItems, itemData ->
+        if(itemData == null) return@combine null
+
+        ActiveSessionAddLibraryItemDialogUiState(
+            folders = foldersWithItems.map { it.folder },
+            itemData = itemData,
+            isConfirmButtonEnabled = itemData.name.isNotBlank()
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = null
+    )
+
     val uiState = combine(
         libraryCardUiState,
         sessionState,
-        _addLibraryItemData
-    ) { libraryCardUiState, sessionState, newLibraryItemData ->
-        val totalDuration = sessionState.sections.sumOf {
-            (it.duration ?: sessionState.currentSectionDuration).inWholeMilliseconds }.milliseconds
+        addLibraryItemDialogUiState,
+        totalDurationRoundedDownToNextSecond
+    ) { libraryCardUiState, sessionState, addItemDialogUiState, totalDuration ->
         ActiveSessionUiState(
-            libraryCardUiState = libraryCardUiState,
+            cardUiStates = listOf(
+                libraryCardUiState,
+                _recorderUiState
+            ),
             totalSessionDuration = totalDuration,
             totalBreakDuration = sessionState.pauseDuration,
             isPaused = sessionState.isPaused,
-            newLibraryItemData = newLibraryItemData,
+            addItemDialogUiState = addItemDialogUiState,
             sections = sessionState.sections.reversed().map { section ->
                 SectionListItemUiState(
                     id = section.id,    // also used as id
@@ -214,30 +259,51 @@ class ActiveSessionViewModel @Inject constructor(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = ActiveSessionUiState(
-            libraryCardUiState = libraryCardUiState.value,
+            cardUiStates = emptyList(),
             totalSessionDuration = 0.milliseconds,
             totalBreakDuration = sessionState.value.pauseDuration,
             sections = emptyList(),
             isPaused = sessionState.value.isPaused,
-            newLibraryItemData = _addLibraryItemData.value
+            addItemDialogUiState = addLibraryItemDialogUiState.value
         )
     )
 
 
     /** UI Event handler */
 
-    fun onUiEvent(event: ActiveSessionUiEvent) = when (event) {
-        is ActiveSessionUiEvent.SelectFolder -> _selectedFolderId.update { event.folderId }
-        is ActiveSessionUiEvent.SelectItem -> itemClicked(event.item)
-        is ActiveSessionUiEvent.TogglePause -> togglePause()
-        is ActiveSessionUiEvent.StopSession -> stopSession()
-//        is ActiveSessionUIEvent.ChangeFolderDisplayed -> _selectedFolder.update { event.folder }
-        is ActiveSessionUiEvent.DeleteSection -> removeSection(event.sectionId)
-//        is ActiveSessionUIEvent.CreateNewLibraryItem -> createLibraryItemDialog(event.folderId)
-//        is ActiveSessionUIEvent.NewLibraryItemNameChanged -> _addLibraryItemData.update { it?.copy(name = event.newName) }
-//        is ActiveSessionUIEvent.NewLibraryItemColorChanged -> _addLibraryItemData.update { it?.copy(colorIndex = event.newColorIndex) }
-//        is ActiveSessionUIEvent.NewLibraryItemFolderChanged -> _addLibraryItemData.update { it?.copy(folderId = event.newFolderId) }
-//        is ActiveSessionUIEvent.NewLibraryItemDialogDismissed -> _addLibraryItemData.update { null }
+    fun onUiEvent(event: ActiveSessionUiEvent) {
+        when (event) {
+            is ActiveSessionUiEvent.SelectFolder -> _selectedFolderId.update { event.folderId }
+            is ActiveSessionUiEvent.SelectItem -> itemClicked(event.item)
+            is ActiveSessionUiEvent.TogglePause -> togglePause()
+            is ActiveSessionUiEvent.StopSession -> stopSession()
+            is ActiveSessionUiEvent.DeleteSection -> removeSection(event.sectionId)
+            is ActiveSessionUiEvent.CreateNewLibraryItem -> createLibraryItemDialog()
+            is ActiveSessionUiEvent.NewLibraryItemNameChanged ->
+                _addLibraryItemData.update { it?.copy(name = event.newName) }
+            is ActiveSessionUiEvent.NewLibraryItemColorChanged ->
+                _addLibraryItemData.update { it?.copy(colorIndex = event.newColorIndex) }
+            is ActiveSessionUiEvent.NewLibraryItemFolderChanged ->
+                _addLibraryItemData.update { it?.copy(folderId = event.newFolderId) }
+            is ActiveSessionUiEvent.NewLibraryItemDialogDismissed ->
+                _addLibraryItemData.update { null }
+            is ActiveSessionUiEvent.NewLibraryItemDialogConfirmed -> {
+                viewModelScope.launch {
+                    _addLibraryItemData.value?.let {
+                        libraryUseCases.addItem(
+                            LibraryItemCreationAttributes(
+                                name = it.name,
+                                colorIndex = it.colorIndex,
+                                libraryFolderId = Nullable(it.folderId)
+                            )
+                        )
+                    }
+                    _addLibraryItemData.update {
+                        null
+                    }
+                }
+            }
+        }
     }
 
 
@@ -278,12 +344,12 @@ class ActiveSessionViewModel @Inject constructor(
         sessionEvent(SessionEvent.DeleteSection(itemId))
     }
 
-    private fun createLibraryItemDialog(folderId: UUID? = null) {
+    private fun createLibraryItemDialog() {
         _addLibraryItemData.update {
             LibraryItemEditData(
                 name = "",
                 colorIndex = (Math.random() * 10).toInt(),
-                folderId = folderId
+                folderId = _selectedFolderId.value
             )
         }
     }

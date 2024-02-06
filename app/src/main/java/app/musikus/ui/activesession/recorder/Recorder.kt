@@ -61,7 +61,7 @@ import app.musikus.utils.getDurationString
 import app.musikus.utils.musikusFormat
 
 @Composable
-fun RecorderHeader(
+fun RecorderCardHeader(
     modifier: Modifier = Modifier,
     viewModel: RecorderViewModel = hiltViewModel()
 ) {
@@ -111,7 +111,7 @@ fun RecorderHeader(
 }
 
 @Composable
-fun RecorderBody(
+fun RecorderCardBody(
     modifier: Modifier = Modifier,
     viewModel: RecorderViewModel = hiltViewModel()
 ) {

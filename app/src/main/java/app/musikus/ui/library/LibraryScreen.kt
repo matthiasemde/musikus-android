@@ -276,6 +276,7 @@ fun Library(
                     mode = itemDialogUiState.mode,
                     folders = itemDialogUiState.folders,
                     itemData = itemDialogUiState.itemData,
+                    isConfirmButtonEnabled = itemDialogUiState.confirmButtonEnabled,
                     onNameChange = viewModel::onItemDialogNameChanged,
                     onColorIndexChange = viewModel::onItemDialogColorIndexChanged,
                     onSelectedFolderIdChange = viewModel::onItemDialogFolderIdChanged,
