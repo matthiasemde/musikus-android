@@ -10,7 +10,6 @@ import android.os.IBinder
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import app.musikus.database.LibraryFolderWithItems
 import app.musikus.database.Nullable
 import app.musikus.database.daos.LibraryFolder
 import app.musikus.database.daos.LibraryItem
@@ -30,6 +29,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -62,7 +62,7 @@ data class SectionListItemUiState(
 )
 
 data class ActiveSessionUiState(
-    val libraryUiState: LibraryCardUiState,
+    val libraryCardUiState: ActiveSessionDraggableCardUiState.LibraryCardUiState,
     val totalSessionDuration: Duration,
     val totalBreakDuration: Duration,
     val sections: List<SectionListItemUiState>,
@@ -70,11 +70,6 @@ data class ActiveSessionUiState(
     val newLibraryItemData: LibraryItemEditData?
 )
 
-data class LibraryCardUiState(
-    val rootItems: List<LibraryItem>,
-    val foldersWithItems: List<LibraryFolderWithItems>,
-    val selectedFolder: LibraryFolder?
-)
 data class PracticeSection(
     val id: Int,
     val libraryItem: LibraryItem,
@@ -99,12 +94,13 @@ class ActiveSessionViewModel @Inject constructor(
     // ################## mirrors of session state
 
     private val sessionStateWrapper = MutableStateFlow<StateFlow<SessionState>?>(null)
-    private val sessionState = sessionStateWrapper.flatMapLatest { it ?: flowOf(SessionState()) }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(),
-            initialValue = SessionState()
-        )
+    private val sessionState = sessionStateWrapper.flatMapLatest {
+        it ?: flowOf(SessionState())
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = SessionState()
+    )
 
     // #############################################    
 
@@ -133,47 +129,105 @@ class ActiveSessionViewModel @Inject constructor(
 
     // ####################### Library #######################
 
-    private val rootItems = libraryUseCases.getSortedItems(Nullable(null)).stateIn(
+    private val itemsInSelectedFolder = _selectedFolder.flatMapLatest { selectedFolder ->
+        libraryUseCases.getSortedItems(Nullable(selectedFolder?.id))
+    }.stateIn(
         scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(),
+        started = SharingStarted.WhileSubscribed(5000),
         initialValue = listOf()
     )
 
-    private val folderWithItems = libraryUseCases.getSortedFolders().stateIn(
+    private val foldersWithItems = libraryUseCases.getSortedFolders().stateIn(
         scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(),
+        started = SharingStarted.WhileSubscribed(5000),
         initialValue = listOf()
     )
 
-    private val libraryUiState = combine(
-        rootItems,
-        folderWithItems,
-        _selectedFolder
-    ) { rootItems, folderWithItems, selectedFolder ->
-        LibraryCardUiState(
-            rootItems = rootItems,
-            foldersWithItems = folderWithItems,
-            selectedFolder = selectedFolder
+    private val currentlyPracticedSection = sessionState.map {
+        it.sections.lastOrNull()
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = null
+    )
+
+    /**
+     *  ---------------- Composing the Ui state --------------------
+     */
+
+    private val libraryCardHeaderUiState = combine(
+        foldersWithItems,
+        _selectedFolder,
+        currentlyPracticedSection
+    ) { foldersWithItems, selectedFolder, currentlyPracticedSection ->
+        ActiveSessionDraggableCardHeaderUiState.LibraryCardHeaderUiState(
+            folders = listOf(null) + foldersWithItems.map { it.folder },
+            selectedFolderId = selectedFolder?.id,
+            activeFolderId = currentlyPracticedSection?.let {
+                Nullable(it.libraryItem.libraryFolderId)
+            }
         )
     }.stateIn(
         scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(),
-        initialValue = LibraryCardUiState(
-            rootItems = rootItems.value,
-            foldersWithItems = folderWithItems.value,
-            selectedFolder = _selectedFolder.value
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = ActiveSessionDraggableCardHeaderUiState.LibraryCardHeaderUiState(
+            folders = emptyList(),
+            selectedFolderId = null,
+            activeFolderId = null
+        )
+    )
+
+    private val libraryCardBodyUiState = combine(
+        itemsInSelectedFolder,
+        currentlyPracticedSection
+    ) { itemsInSelectedFolder, currentlyPracticedSection ->
+        ActiveSessionDraggableCardBodyUiState.LibraryCardBodyUiState(
+            items = itemsInSelectedFolder,
+            activeItemId = currentlyPracticedSection?.libraryItem?.id
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = ActiveSessionDraggableCardBodyUiState.LibraryCardBodyUiState(
+            items = itemsInSelectedFolder.value,
+            activeItemId = null
+        )
+    )
+
+    private val libraryCardUiState = combine(
+        libraryCardHeaderUiState,
+        libraryCardBodyUiState,
+    ) { headUiState, bodyUiState ->
+        ActiveSessionDraggableCardUiState.LibraryCardUiState(
+            title = "Library",
+            isExpandable = true,
+            hasFab = true,
+            fabAction = { createLibraryItemDialog(headUiState.selectedFolderId) },
+            headerUiState = headUiState,
+            bodyUiState = bodyUiState
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = ActiveSessionDraggableCardUiState.LibraryCardUiState(
+            title = "Library",
+            isExpandable = true,
+            hasFab = true,
+            fabAction = { createLibraryItemDialog(null) },
+            headerUiState = libraryCardHeaderUiState.value,
+            bodyUiState = libraryCardBodyUiState.value
         )
     )
 
     val uiState = combine(
-        libraryUiState,
+        libraryCardUiState,
         sessionState,
         _addLibraryItemData
-    ) { libraryUiState, sessionState, newLibraryItemData ->
+    ) { libraryCardUiState, sessionState, newLibraryItemData ->
         val totalDuration = sessionState.sections.sumOf {
             (it.duration ?: sessionState.currentSectionDuration).inWholeMilliseconds }.milliseconds
         ActiveSessionUiState(
-            libraryUiState = libraryUiState,
+            libraryCardUiState = libraryCardUiState,
             totalSessionDuration = totalDuration,
             totalBreakDuration = sessionState.pauseDuration,
             isPaused = sessionState.isPaused,
@@ -188,9 +242,9 @@ class ActiveSessionViewModel @Inject constructor(
         )
     }.stateIn(
         scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(),
+        started = SharingStarted.WhileSubscribed(5000),
         initialValue = ActiveSessionUiState(
-            libraryUiState = libraryUiState.value,
+            libraryCardUiState = libraryCardUiState.value,
             totalSessionDuration = 0.milliseconds,
             totalBreakDuration = sessionState.value.pauseDuration,
             sections = emptyList(),

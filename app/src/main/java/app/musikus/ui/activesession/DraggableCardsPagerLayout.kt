@@ -14,7 +14,6 @@ package app.musikus.ui.activesession
  * File encapsulating Logic For Bottom-Sheet like draggable Draggable Cards inside a HorizontalPager
  */
 
-import android.content.res.Configuration
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.ScrollState
@@ -27,7 +26,6 @@ import androidx.compose.foundation.gestures.anchoredDraggable
 import androidx.compose.foundation.gestures.animateTo
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -54,13 +52,13 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -68,6 +66,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
@@ -83,38 +82,35 @@ enum class DragValueY {
     Full,
 }
 
-sealed class DraggableCardData(
-    val title: String,
-    val isExpandable: Boolean,
-    val hasFab: Boolean = false,
-    val fabAction: () -> Unit = {}
-) {
-    data object LibraryCardData : DraggableCardData(
-        title = "Library",
-        isExpandable = true,
-        hasFab = true,
-        fabAction = {}
-    )
-
-}
-
-data class DraggableCardPageData(
-    val body: @Composable (
-        modifier: Modifier,
-        scrollState: ScrollState,
-        onShrinkToNormal: () -> Unit,
-    ) -> Unit,
-    val header: @Composable (
-        Boolean,      // isExpanded
-        () -> Unit,   // onExpandToNormal
-    ) -> Unit,
-    val title: String,
-    val isExpandable: Boolean,
-    val hasFab: Boolean = false,
-    val fabAction: () -> Unit = {}
-)
 
 val DRAG_HANDLE_HEIGHT = 3.dp
+
+
+interface DraggableCardHeaderUiState {
+}
+
+interface DraggableCardBodyUiState {
+}
+
+interface DraggableCardUiState <
+    H : DraggableCardHeaderUiState,
+    B : DraggableCardBodyUiState
+>{
+    val title : String
+    val isExpandable: Boolean
+    val hasFab: Boolean
+    val fabAction: () -> Unit
+    val headerUiState: H
+    val bodyUiState: B
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+data class DraggableCardLocalState(
+    val yState: AnchoredDraggableState<DragValueY>,
+    val scrollState: ScrollState,
+)
+
+//typealias DraggableCardHeaderComposable<H> = @Composable (H) -> Unit
 
 /**
  * Public interface for instantiating the complete pager.
@@ -126,16 +122,21 @@ val DRAG_HANDLE_HEIGHT = 3.dp
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun BoxScope.DraggableCardsPagerLayout(
-    pages: List<DraggableCardPageData>
+fun <
+        C : DraggableCardUiState<H, B>,
+        H : DraggableCardHeaderUiState,
+        B : DraggableCardBodyUiState
+    > BoxScope.DraggableCardsPagerLayout(
+    cardUiStates: List<C>,
+    cardHeaderComposable: @Composable (H, DraggableCardLocalState) -> Unit,
+    cardBodyComposable: @Composable (B, DraggableCardLocalState) -> Unit
 ) {
 
-    val pageCount = pages.size
+    val pageCount = cardUiStates.size
 
     // DraggableAnchorState initialization. Each page gets own state.
-    val stateListDraggableCards = getDraggableStateList(pageCount = pageCount)
-    val anchorStates = remember { stateListDraggableCards }
-    val scrollStates = getScrollableStateList(pageCount = pageCount)
+    val anchorStates = rememberDraggableStates(pageCount = pageCount)
+    val scrollStates = (0..pageCount).map { rememberScrollState() }
 
     val cardsPagerState = rememberPagerState(pageCount = { pageCount })
     val bottomPagerState = rememberPagerState(pageCount = { pageCount })
@@ -149,42 +150,17 @@ fun BoxScope.DraggableCardsPagerLayout(
         CardsPager(
             modifier = Modifier.zIndex(1f),
             pageContent = { pageIndex ->
-                val page = pages[pageIndex]
-                val scrollState = scrollStates[pageIndex]
-                val anchorState = anchorStates[pageIndex]
-
-
+                val cardUiState = cardUiStates[pageIndex]
+                val cardState = DraggableCardLocalState(
+                    scrollState = scrollStates[pageIndex],
+                    yState = anchorStates[pageIndex]
+                )
 
                 DraggableCard(
-                    header = {
-                        page.header(
-                            // isCollapsed
-                            anchorState.currentValue == DragValueY.Collapsed
-                        ) {
-                            // onExpandToNormal
-                            animationScope.launch {
-                                anchorState.animateTo(DragValueY.Normal)
-                            }
-                        }
-                    },
-                    body = { modifier ->
-                        page.body(
-                            modifier,
-                            // scrollState
-                            scrollState
-                        ) {
-                            // onShrinkToNormal
-                            animationScope.launch {
-                                anchorState.animateTo(DragValueY.Normal)
-                            }
-                        }
-                    },
-                    yState = anchorState,
-                    scrollState = scrollStates[pageIndex],
-                    cardIsExpandable = page.isExpandable,
-                    showFab =
-                        page.hasFab &&
-                        anchorState.currentValue != DragValueY.Collapsed,
+                    uiState = cardUiState,
+                    headerComposable = cardHeaderComposable,
+                    bodyComposable = cardBodyComposable,
+                    cardState = cardState,
                     onCollapsed = {
                         anchorStates.forEach {
                             animationScope.launch {
@@ -199,7 +175,7 @@ fun BoxScope.DraggableCardsPagerLayout(
                             }
                         }
                     },
-                    fabAction = page.fabAction
+                    fabAction = cardUiState.fabAction
                 )
             },
             anchorStates = anchorStates,
@@ -209,7 +185,7 @@ fun BoxScope.DraggableCardsPagerLayout(
 
         BottomButtonPager(
             modifier = Modifier.align(Alignment.BottomCenter),
-            pageTitles = { pageIndex -> pages[pageIndex].title },
+            pageTitles = { pageIndex -> cardUiStates[pageIndex].title },
             ownPagerState = bottomPagerState,
             cardsPagerState = cardsPagerState,
         )
@@ -223,43 +199,33 @@ fun BoxScope.DraggableCardsPagerLayout(
  */
 @Composable
 @OptIn(ExperimentalFoundationApi::class)
-fun getDraggableStateList(
+fun rememberDraggableStates(
     pageCount: Int
 ) : List<AnchoredDraggableState<DragValueY>> {
     val density = LocalDensity.current
-    val stateList = ArrayList<AnchoredDraggableState<DragValueY>>()
+    val configuration = LocalConfiguration.current
 
-    for (i in 0..< pageCount) {
-        stateList.add(
+    val extendedHeight = (CARD_HEIGHT_EXTENDED_FRACTION_OF_SCREEN * configuration.screenHeightDp).dp
+    val normalHeight = MaterialTheme.dimensions.cardNormalHeight
+    val peekHeight = MaterialTheme.dimensions.cardPeekHeight
+
+    return (0..< pageCount).map {
+        remember {
             AnchoredDraggableState(
+                anchors = getAnchors(
+                    density = density,
+                    extendedHeight = extendedHeight,
+                    normalHeight = normalHeight,
+                    peekHeight = peekHeight,
+                    expansionAllowed = false
+                ),
                 initialValue = DragValueY.Normal,
                 positionalThreshold = { distance: Float -> distance * 0.5f },
                 velocityThreshold = { with(density) { 100.dp.toPx() } },
                 animationSpec = tween()
-            ).apply {
-                updateAnchors(getAnchors(
-                    density,
-                    LocalConfiguration.current,
-                    false
-                ))
-            }
-        )
+            )
+        }
     }
-    return stateList
-}
-
-/**
- * Returns a list of ScrollStates for each page.
- */
-@Composable
-fun getScrollableStateList(
-    pageCount: Int
-) : List<ScrollState> {
-    val scrollStates = ArrayList<ScrollState>()
-    repeat(pageCount) {
-        scrollStates.add(rememberScrollState())
-    }
-    return scrollStates
 }
 
 
@@ -288,26 +254,24 @@ fun getCurrentOffsetFraction(
     return (offsetPx / maxOffsetPx).coerceIn(0f, 1f)
 }
 
-@Composable
 @OptIn(ExperimentalFoundationApi::class)
 private fun getAnchors(
     density: Density,
-    configuration: Configuration,
+    extendedHeight: Dp,
+    normalHeight: Dp,
+    peekHeight: Dp,
     expansionAllowed: Boolean = true
 ) : DraggableAnchors<DragValueY> {
     with(density) {
 
         val collapsedAllowed = true
 
-        val heightExtended = (CARD_HEIGHT_EXTENDED_FRACTION_OF_SCREEN * configuration.screenHeightDp).dp
-        val heightNormal = MaterialTheme.dimensions.cardNormalHeight
-        val heightPeek = MaterialTheme.dimensions.cardPeekHeight
-        val travelOffset = (heightExtended - heightNormal)
+        val travelOffset = (extendedHeight - normalHeight)
 
         return DraggableAnchors {
             DragValueY.Normal at 0f
             DragValueY.Full at if (expansionAllowed) - travelOffset.toPx() else 0f
-            DragValueY.Collapsed at if (collapsedAllowed) (heightNormal - heightPeek).toPx() else 0f
+            DragValueY.Collapsed at if (collapsedAllowed) (normalHeight - peekHeight).toPx() else 0f
         }
     }
 }
@@ -475,17 +439,22 @@ private fun BottomButtonPager(
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun DraggableCard(
-    yState : AnchoredDraggableState<DragValueY>,
-    header: @Composable () -> Unit,
-    body: @Composable (modifier: Modifier) -> Unit,
-    scrollState: ScrollState,
-    cardIsExpandable: Boolean,
-    showFab: Boolean,
+private fun <
+        C : DraggableCardUiState<H, B>,
+        H : DraggableCardHeaderUiState,
+        B : DraggableCardBodyUiState
+    > DraggableCard(
+    uiState : C,
+    headerComposable: @Composable (H, DraggableCardLocalState) -> Unit,
+    bodyComposable: @Composable (B, DraggableCardLocalState) -> Unit,
+    cardState: DraggableCardLocalState,
     fabAction: () -> Unit,
     onCollapsed: () -> Unit = {},    // callback when card is collapsed
     onUnCollapsed: () -> Unit = {}    // callback when card is uncollapsed
 ) {
+    val yState = cardState.yState
+    val scrollState = cardState.scrollState
+
     val density = LocalDensity.current
     val configuration = LocalConfiguration.current
 
@@ -597,24 +566,29 @@ private fun DraggableCard(
                         .fillMaxWidth()
                         .height(MaterialTheme.dimensions.cardPeekContentHeight)
                 ) {
-                    header()
+                    headerComposable(uiState.headerUiState, cardState)
                 }
 
                 HorizontalDivider(Modifier.padding(horizontal = MaterialTheme.spacing.medium))
 
-                body(
-                    Modifier
-                        .conditional(!cardIsExpandable) {
+                Box(
+                    modifier = Modifier
+                        .conditional(!uiState.isExpandable) {
                             requiredHeight(180.dp)
-//                            height(MaterialTheme.dimensions.cardNormalContentHeight)
+                            //                            height(MaterialTheme.dimensions.cardNormalContentHeight)
                         }
                         .verticalScroll(scrollState)
                         .fillMaxWidth()
-                )
+                ) {
+                    bodyComposable(uiState.bodyUiState, cardState)
+                }
             }
         }
 
-        if (showFab) {
+        if (
+            uiState.hasFab &&
+            cardState.yState.currentValue != DragValueY.Collapsed
+        ) {
             SmallFloatingActionButton(
                 modifier = Modifier
                     .padding(MaterialTheme.spacing.medium)
@@ -630,11 +604,22 @@ private fun DraggableCard(
     // if content is scrollable (maxValue > 0), allow expanding
     // only update if in normal position to prevent force-shrinking it
     if (yState.requireOffset() == 0f) {
-        yState.updateAnchors(
-            getAnchors(
-                density, configuration, cardIsExpandable
+
+        val extendedHeight = (CARD_HEIGHT_EXTENDED_FRACTION_OF_SCREEN * configuration.screenHeightDp).dp
+        val normalHeight = MaterialTheme.dimensions.cardNormalHeight
+        val peekHeight = MaterialTheme.dimensions.cardPeekHeight
+
+        SideEffect {
+            yState.updateAnchors(
+                getAnchors(
+                    density = density,
+                    extendedHeight = extendedHeight,
+                    normalHeight = normalHeight,
+                    peekHeight = peekHeight,
+                    expansionAllowed = uiState.isExpandable
+                )
             )
-        )
+        }
     }
 
     LaunchedEffect(key1 = yState.currentValue) {
