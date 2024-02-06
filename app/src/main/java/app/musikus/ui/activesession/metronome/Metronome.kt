@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -55,8 +56,8 @@ fun Metronome(
 
     Column(
         modifier = modifier
-            .padding(horizontal = MaterialTheme.spacing.medium)
             .height(MaterialTheme.dimensions.cardNormalContentHeight)
+            .padding(horizontal = MaterialTheme.spacing.medium)
     ) {
         MetronomeTopBar(
             uiState = uiState,
@@ -157,24 +158,24 @@ fun MetronomeTopBar(
 
         // Start/Stop Metronome
         FilledIconButton(
-            onClick = { eventHandler(MetronomeUiEvent.ToggleIsPlaying) },
             modifier = Modifier.size(50.dp),
+            onClick = { eventHandler(MetronomeUiEvent.ToggleIsPlaying) },
             shape = CircleShape,
         ) {
-            if(!uiState.isPlaying) {
-                Icon(
-                    modifier = Modifier
-                        .size(25.dp),
-                    imageVector = Icons.Default.PlayArrow,
-                    contentDescription = "Start metronome"
-                )
-            } else {
-                Icon(
-                    modifier = Modifier
-                        .size(25.dp),
-                    imageVector = Icons.Default.Stop,
-                    contentDescription = "Stop metronome"
-                )
+            Box(Modifier.padding(MaterialTheme.spacing.small)) {
+                if (!uiState.isPlaying) {
+                    Icon(
+                        modifier = Modifier.fillMaxSize(),
+                        imageVector = Icons.Default.PlayArrow,
+                        contentDescription = "Start metronome"
+                    )
+                } else {
+                    Icon(
+                        modifier = Modifier.fillMaxSize(),
+                        imageVector = Icons.Default.Stop,
+                        contentDescription = "Stop metronome"
+                    )
+                }
             }
         }
 
