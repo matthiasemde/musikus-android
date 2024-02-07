@@ -123,8 +123,10 @@ data class DraggableCardLocalState(
  *
  * This has to be placed inside a Box()
  *
- * @param pageCount the number of pages
- * @param pages a function returning a DraggableCardPage for each page
+ * @param cardUiStates list of DraggableCardUiStates
+ * @param cardHeaderComposable composable for the header
+ * @param cardBodyComposable composable for the body
+ * @param eventHandler event handler for the cards
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -442,10 +444,11 @@ private fun BottomButtonPager(
  * and https://gist.github.com/arcadefire/7fe138c0ded1a36bee6dd57acdfa3d18,
  * adapted to use AnchoredDraggableState instead of SwipeableState
  *
- * @param yState AnchoredDraggableState for the vertical axis
- * @param header header content composable
- * @param body body content composable
- * @param scrollState ScrollState for the body content
+ * @param uiState the state of the card
+ * @param headerComposable composable for the header
+ * @param bodyComposable composable for the body
+ * @param cardState the local state of the card
+ * @param eventHandler event handler for the card
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
