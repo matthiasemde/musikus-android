@@ -8,6 +8,8 @@
 
 package app.musikus.ui.activesession.recorder
 
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.clickable
@@ -41,6 +43,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -327,10 +330,22 @@ fun MediaPlayerBar(
                     .weight(1f)
                     .padding(horizontal = MaterialTheme.spacing.small)
             ) {
+                var currentPosition by remember { mutableFloatStateOf(0f) }
+
+                val handler = object : Runnable {
+                    override fun run() {
+                        currentPosition = playerState.player.currentPosition.toFloat() / mediaController.duration.toFloat()
+                        if (playerState.isPlaying) {
+                            Handler(Looper.getMainLooper()).postDelayed(this, 100)
+                        }
+                    }
+                }
+
+                Handler(Looper.getMainLooper()).postDelayed(handler, 100)
+
                 Waveform(
-                    playerState = playerState,
                     rawRecording = rawRecording,
-                    mediaController = mediaController
+                    playBackMarker = currentPosition
                 )
             }
         } ?: Spacer(Modifier.weight(1f))
