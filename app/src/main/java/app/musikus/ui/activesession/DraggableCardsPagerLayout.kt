@@ -5,7 +5,7 @@ package app.musikus.ui.activesession
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2024 Michael Prommersberger
+ * Copyright (c) 2024 Michael Prommersberger, Matthias Emde
  *
  */
 
@@ -86,11 +86,9 @@ enum class DragValueY {
 val DRAG_HANDLE_HEIGHT = 3.dp
 
 
-interface DraggableCardHeaderUiState {
-}
+interface DraggableCardHeaderUiState
 
-interface DraggableCardBodyUiState {
-}
+interface DraggableCardBodyUiState
 
 interface DraggableCardUiState <
     H : DraggableCardHeaderUiState,
@@ -588,11 +586,11 @@ private fun <
 
                 Box(
                     modifier = Modifier
-                        .conditional(!uiState.isExpandable) {
-                            requiredHeight(180.dp)
-                            //                            height(MaterialTheme.dimensions.cardNormalContentHeight)
-                        }
-                        .verticalScroll(scrollState)
+                        .conditional(
+                            !uiState.isExpandable,
+                            modifier = { requiredHeight(180.dp) }, // TODO fix with Michi
+                            alternativeModifier = { verticalScroll(scrollState) }
+                        )
                         .fillMaxWidth()
                 ) {
                     bodyComposable(

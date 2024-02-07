@@ -8,12 +8,10 @@
 
 package app.musikus.ui.activesession.metronome
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -44,13 +42,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.musikus.ui.theme.spacing
@@ -158,54 +154,34 @@ fun MetronomeCardBody(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val eventHandler = viewModel::onUiEvent
-    BoxWithConstraints(
+    Column(
         modifier = modifier
+            .fillMaxSize()
+            .padding(horizontal = MaterialTheme.spacing.medium),
+        verticalArrangement = Arrangement.SpaceAround
     ) {
-        Text(
-            modifier = Modifier.zIndex(4f).background(Color.White).align(Alignment.TopEnd),
-            text = "MetronomeBody min/maxHeight: $minHeight/$maxWidth, min/maxWidth: $maxWidth/$maxWidth",
-            style = MaterialTheme.typography.labelSmall
-        )
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = MaterialTheme.spacing.medium),
-            verticalArrangement = Arrangement.SpaceAround
-        ) {
-            BoxWithConstraints {
-                Text(
-                    modifier = Modifier.zIndex(4f).background(Color.White).align(Alignment.BottomEnd),
-                    text = "MetronomeInnderBody min/maxHeight: $minHeight/$maxWidth, min/maxWidth: $maxWidth/$maxWidth",
-                    style = MaterialTheme.typography.labelSmall
-                )
+        Column {
+            /** Tempo Slider */
+            Text(
+                modifier = Modifier.padding(start = MaterialTheme.spacing.medium),
+                text = uiState.tempoDescription,
+                style = MaterialTheme.typography.bodyLarge,
+            )
 
-                Column {
-                    /** Tempo Slider */
-                    /** Tempo Slider */
-                    Text(
-                        modifier = Modifier.padding(start = MaterialTheme.spacing.medium),
-                        text = uiState.tempoDescription,
-                        style = MaterialTheme.typography.bodyLarge,
-                    )
-
-                    Slider(
-                        value = uiState.sliderValue,
-                        valueRange =
-                        MetronomeSettings.BPM_RANGE.first.toFloat()..
-                                MetronomeSettings.BPM_RANGE.last.toFloat(),
-                        onValueChange = { eventHandler(MetronomeUiEvent.UpdateSliderValue(it)) },
-                    )
-                }
-
-                /** Beats per bar, Click per beat and Tab tempo */
-
-                /** Beats per bar, Click per beat and Tab tempo */
-                MetronomeExtraSettingsRow(
-                    uiState = uiState,
-                    eventHandler = eventHandler
-                )
-            }
+            Slider(
+                value = uiState.sliderValue,
+                valueRange =
+                MetronomeSettings.BPM_RANGE.first.toFloat()..
+                        MetronomeSettings.BPM_RANGE.last.toFloat(),
+                onValueChange = { eventHandler(MetronomeUiEvent.UpdateSliderValue(it)) },
+            )
         }
+
+        /** Beats per bar, Click per beat and Tab tempo */
+        MetronomeExtraSettingsRow(
+            uiState = uiState,
+            eventHandler = eventHandler
+        )
     }
 }
 
