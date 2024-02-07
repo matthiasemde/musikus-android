@@ -27,7 +27,6 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.AnchoredDraggableState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -67,13 +66,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.musikus.database.daos.LibraryFolder
+import app.musikus.ui.activesession.metronome.MetronomeCardBody
+import app.musikus.ui.activesession.metronome.MetronomeCardHeader
 import app.musikus.ui.activesession.recorder.RecorderCardBody
 import app.musikus.ui.activesession.recorder.RecorderCardHeader
 import app.musikus.ui.components.SwipeToDeleteContainer
@@ -407,9 +407,11 @@ private fun ActiveSessionDraggableCardHeader(
         is ActiveSessionDraggableCardHeaderUiState.RecorderCardHeaderUiState -> {
             RecorderCardHeader()
         }
-//        is ActiveSessionMetronomeCardUiState -> {
-//            MetronomeCard()
-//        }
+        is ActiveSessionDraggableCardHeaderUiState.MetronomeCardHeaderUiState -> {
+            MetronomeCardHeader(
+                onTextClicked = { eventHandler(DraggableCardUiEvent.ExpandCard) }
+            )
+        }
     }
 }
 
@@ -430,6 +432,9 @@ private fun ActiveSessionDraggableCardBody(
         }
         is ActiveSessionDraggableCardBodyUiState.RecorderCardBodyUiState -> {
             RecorderCardBody()
+        }
+        is ActiveSessionDraggableCardBodyUiState.MetronomeCardBodyUiState -> {
+            MetronomeCardBody()
         }
     }
 }
@@ -608,23 +613,23 @@ private fun PauseDialog(
 
 
 
-/**
- * Returns a offset-dependent height which gradually increases from 0dp to the maximum usable height
- * when a card is in Peek state.
- * Can be used for the header of a DraggableCardPage. Use it with the defaultMinSize modifier.
- *
- * @param anchorState the state of the DraggableCardPage
- */
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-private fun getDynamicHeaderHeight(
-    anchorState: AnchoredDraggableState<DragValueY>
-) : Dp {
-    val fraction = getCurrentOffsetFraction(state = anchorState)
-    val peekHeightContent = MaterialTheme.dimensions.cardPeekContentHeight
-    val height = if (anchorState.targetValue != DragValueY.Full){
-        (fraction * peekHeightContent.value).dp
-    } else 0.dp
-
-    return height
-}
+///**
+// * Returns a offset-dependent height which gradually increases from 0dp to the maximum usable height
+// * when a card is in Peek state.
+// * Can be used for the header of a DraggableCardPage. Use it with the defaultMinSize modifier.
+// *
+// * @param anchorState the state of the DraggableCardPage
+// */
+//@OptIn(ExperimentalFoundationApi::class)
+//@Composable
+//private fun getDynamicHeaderHeight(
+//    anchorState: AnchoredDraggableState<DragValueY>
+//) : Dp {
+//    val fraction = getCurrentOffsetFraction(state = anchorState)
+//    val peekHeightContent = MaterialTheme.dimensions.cardPeekContentHeight
+//    val height = if (anchorState.targetValue != DragValueY.Full){
+//        (fraction * peekHeightContent.value).dp
+//    } else 0.dp
+//
+//    return height
+//}

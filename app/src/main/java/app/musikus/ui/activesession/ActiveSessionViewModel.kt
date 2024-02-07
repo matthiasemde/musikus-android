@@ -69,6 +69,14 @@ class ActiveSessionViewModel @Inject constructor(
         bodyUiState = ActiveSessionDraggableCardBodyUiState.RecorderCardBodyUiState
     )
 
+    private val _metronomeUiState = ActiveSessionDraggableCardUiState.MetronomeCardUiState(
+        title = "Metronome",
+        isExpandable = false,
+        hasFab = false,
+        headerUiState = ActiveSessionDraggableCardHeaderUiState.MetronomeCardHeaderUiState,
+        bodyUiState = ActiveSessionDraggableCardBodyUiState.MetronomeCardBodyUiState
+    )
+
 
     /** stateFlows */
 
@@ -241,7 +249,8 @@ class ActiveSessionViewModel @Inject constructor(
         ActiveSessionUiState(
             cardUiStates = listOf(
                 libraryCardUiState,
-                _recorderUiState
+                _recorderUiState,
+                _metronomeUiState
             ),
             totalSessionDuration = totalDuration,
             totalBreakDuration = sessionState.pauseDuration,

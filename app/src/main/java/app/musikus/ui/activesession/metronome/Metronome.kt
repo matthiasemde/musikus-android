@@ -56,7 +56,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.musikus.ui.theme.spacing
 
 @Composable
-fun MetronomeHeader(
+fun MetronomeCardHeader(
     modifier: Modifier = Modifier,
     viewModel: MetronomeViewModel = hiltViewModel(),
     onTextClicked: () -> Unit
@@ -152,7 +152,7 @@ fun MetronomeHeader(
 }
 
 @Composable
-fun MetronomeBody(
+fun MetronomeCardBody(
     modifier: Modifier = Modifier,
     viewModel: MetronomeViewModel = hiltViewModel(),
 ) {

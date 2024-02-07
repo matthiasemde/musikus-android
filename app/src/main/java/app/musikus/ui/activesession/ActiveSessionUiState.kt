@@ -46,6 +46,7 @@ sealed class ActiveSessionDraggableCardHeaderUiState : DraggableCardHeaderUiStat
     ) : ActiveSessionDraggableCardHeaderUiState()
 
     data object RecorderCardHeaderUiState : ActiveSessionDraggableCardHeaderUiState()
+    data object MetronomeCardHeaderUiState : ActiveSessionDraggableCardHeaderUiState()
 }
 
 sealed class ActiveSessionDraggableCardBodyUiState : DraggableCardBodyUiState {
@@ -55,6 +56,7 @@ sealed class ActiveSessionDraggableCardBodyUiState : DraggableCardBodyUiState {
     ) : ActiveSessionDraggableCardBodyUiState()
 
     data object RecorderCardBodyUiState : ActiveSessionDraggableCardBodyUiState()
+    data object MetronomeCardBodyUiState : ActiveSessionDraggableCardBodyUiState()
 }
 
 sealed class ActiveSessionDraggableCardUiState : DraggableCardUiState<
@@ -72,6 +74,14 @@ sealed class ActiveSessionDraggableCardUiState : DraggableCardUiState<
     data class RecorderCardUiState(
         override val headerUiState: ActiveSessionDraggableCardHeaderUiState.RecorderCardHeaderUiState,
         override val bodyUiState: ActiveSessionDraggableCardBodyUiState.RecorderCardBodyUiState,
+        override val title: String,
+        override val isExpandable: Boolean,
+        override val hasFab: Boolean,
+    ) : ActiveSessionDraggableCardUiState()
+
+    data class MetronomeCardUiState(
+        override val headerUiState: ActiveSessionDraggableCardHeaderUiState.MetronomeCardHeaderUiState,
+        override val bodyUiState: ActiveSessionDraggableCardBodyUiState.MetronomeCardBodyUiState,
         override val title: String,
         override val isExpandable: Boolean,
         override val hasFab: Boolean,
