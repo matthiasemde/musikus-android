@@ -22,15 +22,18 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -49,7 +52,9 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.media3.common.Player
 import androidx.media3.session.MediaController
+import app.musikus.shared.conditional
 import app.musikus.ui.components.PlayerState
 import app.musikus.ui.components.rememberManagedMediaController
 import app.musikus.ui.components.state
@@ -92,17 +97,15 @@ fun RecorderCardHeader(
     }
 
     Box(modifier = modifier) {
-        if(playerState?.isPlaying == true) {
-            mediaController?.let {
-                MediaPlayerBar(
-                    mediaController = it,
-                    uiState = uiState,
-                    eventHandler = eventHandler
-                )
-            }
+        if(playerState?.currentMediaItem != null) {
+            MediaPlayerBar(
+                playerState = playerState,
+                mediaController = mediaController,
+            )
         } else {
             RecorderBar(
                 uiState = uiState,
+                playerState = playerState,
                 eventHandler = eventHandler
             )
         }
@@ -161,6 +164,7 @@ fun RecorderCardBody(
             for (recording in  uiState.recordings) {
                 Recording(
                     recording = recording,
+                    isRecording = uiState.isRecording,
                     mediaController = mediaController
                 )
             }
@@ -173,18 +177,19 @@ fun RecorderCardBody(
 @Composable
 fun Recording (
     recording: Recording,
+    isRecording: Boolean,
     mediaController: MediaController?
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable {
+            .conditional(!isRecording) { clickable {
                 mediaController?.run {
                     setMediaItem(recording.mediaItem)
-                    prepare()
-                    play()
+                    if (mediaController.isCommandAvailable(Player.COMMAND_PREPARE)) prepare()
+                    if (mediaController.isCommandAvailable(Player.COMMAND_PLAY_PAUSE)) play()
                 }
-            }
+            } }
             .padding(
                 horizontal = MaterialTheme.spacing.medium + MaterialTheme.spacing.small,
                 vertical = MaterialTheme.spacing.small
@@ -219,6 +224,7 @@ fun Recording (
 fun RecorderBar(
     modifier: Modifier = Modifier,
     uiState: RecorderUiState,
+    playerState: PlayerState?,
     eventHandler: (RecorderUiEvent) -> Unit
 ) {
     Row(
@@ -238,6 +244,7 @@ fun RecorderBar(
             modifier = Modifier.size(48.dp),
             onClick = { eventHandler(RecorderUiEvent.ToggleRecording) },
             shape = CircleShape,
+            enabled = playerState?.isPlaying != true,
             colors = IconButtonDefaults.filledIconButtonColors(
                 containerColor = MaterialTheme.colorScheme.error,
                 contentColor = MaterialTheme.colorScheme.onError
@@ -265,10 +272,11 @@ fun RecorderBar(
 @Composable
 fun MediaPlayerBar(
     modifier: Modifier = Modifier,
-    uiState: RecorderUiState,
-    eventHandler: (RecorderUiEvent) -> Unit,
-    mediaController: MediaController
+    playerState: PlayerState?,
+    mediaController: MediaController?,
 ) {
+    if(playerState == null || mediaController == null) return
+
     Row(
         modifier
             .fillMaxSize()
@@ -276,22 +284,35 @@ fun MediaPlayerBar(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center
     ) {
-        OutlinedButton(
-            onClick = { /*TODO*/ },
+        IconButton(onClick = { mediaController.clearMediaItems() }) {
+            Icon(Icons.Default.Close, contentDescription = "Close player")
+        }
+        OutlinedIconButton(
+            onClick = { mediaController.seekBack() },
             shape = CircleShape
         ) {
             Icon(Icons.Default.SkipPrevious, contentDescription = null)
         }
 
-        OutlinedButton(
-            onClick = { /*TODO*/ },
+        OutlinedIconButton(
+            onClick = {
+                if (playerState.isPlaying) {
+                    mediaController.pause()
+                } else {
+                    mediaController.play()
+                }
+            },
             shape = CircleShape
         ) {
-            Icon(Icons.Default.Pause, contentDescription = null)
+            if (playerState.isPlaying) {
+                Icon(Icons.Default.Pause, contentDescription = null)
+            } else {
+                Icon(Icons.Default.PlayArrow, contentDescription = null)
+            }
         }
 
-        OutlinedButton(
-            onClick = { /*TODO*/ },
+        OutlinedIconButton(
+            onClick = { mediaController.seekForward() },
             shape = CircleShape
         ) {
             Icon(Icons.Default.SkipNext, contentDescription = null)
