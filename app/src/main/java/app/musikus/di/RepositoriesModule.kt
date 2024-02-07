@@ -101,6 +101,7 @@ object RepositoriesModule {
         @IoScope ioScope: CoroutineScope
     ): RecordingsRepository {
         return RecordingsRepositoryImpl(
+            application = application,
             contentResolver = application.contentResolver,
             ioScope = ioScope
         )

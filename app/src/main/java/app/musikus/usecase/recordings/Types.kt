@@ -24,4 +24,6 @@ data class Recording(
 
 interface RecordingsRepository {
     val recordings: Flow<List<Recording>>
+
+    suspend fun getRawRecording(contentUri: Uri): Result<FloatArray>
 }

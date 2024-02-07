@@ -13,8 +13,10 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
+import android.net.Uri
 import android.os.Build
 import android.os.IBinder
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.ui.text.AnnotatedString
 import androidx.lifecycle.AndroidViewModel
@@ -36,6 +38,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -46,14 +49,23 @@ import kotlin.time.Duration.Companion.seconds
 data class RecorderUiState(
     val isRecording: Boolean,
     val recordingDuration: DurationString,
-    val recordings: List<Recording>
+    val recordings: List<Recording>,
+    val currentRawRecording: FloatArray?,
 )
 
 sealed class RecorderUiEvent {
     data object ToggleRecording : RecorderUiEvent()
+    data class LoadRecording(val contentUri: Uri) : RecorderUiEvent()
 }
 
 typealias RecorderUiEventHandler = (event: RecorderUiEvent) -> Unit
+
+sealed class RecorderException(message: String) : Exception(message) {
+    data object NoMicrophonePermission : RecorderException("Microphone permission required")
+    data object NoStoragePermission : RecorderException("Storage permission required")
+
+    data object CouldNotLoadRecording : RecorderException("Could not load recording")
+}
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
@@ -122,26 +134,50 @@ class RecorderViewModel @Inject constructor(
 
     /** ------------------ Main ViewModel --------------------- */
 
+    /** Own state flows */
+
+    val exception = MutableStateFlow<Exception?>(null)
+
+    private val _currentRecordingUri = MutableStateFlow<Uri?>(null)
+
     /** Imported Flows */
 
-    val recordings = recordingsUseCases.get().stateIn(
+    private val recordings = recordingsUseCases.get().stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = emptyList()
     )
 
+    private val currentRawRecording = _currentRecordingUri.map { currentRawRecording ->
+        currentRawRecording?.let {
+            Log.d("RecorderViewModel", "Loading raw recording: $it")
+            recordingsUseCases.getRawRecording(it).getOrElse {
+                exception.update { RecorderException.CouldNotLoadRecording }
+                return@map null
+            }.also {
+                Log.d("RecorderViewModel", "Loaded raw recording: ${it.size} samples")
+            }
+        }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = null
+    )
+
     /** Composing the UI state */
     val uiState = combine(
         recorderServiceState,
-        recordings
-    ) { serviceState, recordings ->
+        recordings,
+        currentRawRecording
+    ) { serviceState, recordings, currentRawRecording ->
         RecorderUiState(
             isRecording = serviceState?.isRecording ?: false,
             recordingDuration = getDurationString(
                 (serviceState?.recordingDuration ?: 0.seconds),
                 DurationFormat.HMSC_DIGITAL
             ),
-            recordings = recordings
+            recordings = recordings,
+            currentRawRecording = currentRawRecording
         )
     }.stateIn(
         scope = viewModelScope,
@@ -149,7 +185,8 @@ class RecorderViewModel @Inject constructor(
         initialValue = RecorderUiState(
             isRecording = false,
             recordingDuration = AnnotatedString(""),
-            recordings = emptyList()
+            recordings = emptyList(),
+            currentRawRecording = null
         )
     )
 
@@ -181,6 +218,7 @@ class RecorderViewModel @Inject constructor(
                     recorderServiceEventHandler?.invoke(RecorderServiceEvent.ToggleRecording)
                 }
             }
+            is RecorderUiEvent.LoadRecording -> _currentRecordingUri.update { event.contentUri }
         }
     }
 }

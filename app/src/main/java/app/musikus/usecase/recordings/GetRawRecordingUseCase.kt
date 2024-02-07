@@ -8,7 +8,11 @@
 
 package app.musikus.usecase.recordings
 
-data class RecordingsUseCases(
-    val get: GetRecordingsUseCase,
-    val getRawRecording: GetRawRecordingUseCase
-)
+import android.net.Uri
+
+class GetRawRecordingUseCase(
+    private val recordingsRepository: RecordingsRepository
+) {
+
+    suspend operator fun invoke(contentUri: Uri): Result<FloatArray> = recordingsRepository.getRawRecording(contentUri)
+}

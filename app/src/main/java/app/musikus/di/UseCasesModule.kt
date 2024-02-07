@@ -42,6 +42,7 @@ import app.musikus.usecase.library.GetSortedLibraryItemsUseCase
 import app.musikus.usecase.library.LibraryUseCases
 import app.musikus.usecase.library.RestoreFoldersUseCase
 import app.musikus.usecase.library.RestoreItemsUseCase
+import app.musikus.usecase.recordings.GetRawRecordingUseCase
 import app.musikus.usecase.recordings.GetRecordingsUseCase
 import app.musikus.usecase.recordings.RecordingsRepository
 import app.musikus.usecase.recordings.RecordingsUseCases
@@ -204,6 +205,7 @@ object UseCasesModule {
     ): RecordingsUseCases {
         return RecordingsUseCases(
             get = GetRecordingsUseCase(recordingsRepository),
+            getRawRecording = GetRawRecordingUseCase(recordingsRepository)
         )
     }
 }
