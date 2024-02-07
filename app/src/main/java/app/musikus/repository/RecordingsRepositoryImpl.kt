@@ -51,12 +51,12 @@ class RecordingsRepositoryImpl(
     override val recordings: Flow<List<Recording>>
         get() = subscribeTo { getRecordings() }
 
-    private val mediaExtractor = MediaExtractor()
-
 
     // source: https://stackoverflow.com/questions/55212362/how-to-decode-an-m4a-audio-on-android
     @OptIn(ExperimentalCoroutinesApi::class)
     override suspend fun getRawRecording(contentUri: Uri): Result<FloatArray> {
+
+        val mediaExtractor = MediaExtractor()
 
         Log.d("RecordingsRepository", "getRawRecording: $contentUri")
 
@@ -74,10 +74,7 @@ class RecordingsRepositoryImpl(
         }
 
         mediaFormat?.let { nonNullMediaFormat ->
-            // we get the parameter from the mediaFormat
-//            val channelCount = nonNullMediaFormat.getInteger(MediaFormat.KEY_CHANNEL_COUNT)
-//            val sampleRate = nonNullMediaFormat.getInteger(MediaFormat.KEY_SAMPLE_RATE)
-//            val duration = nonNullMediaFormat.getLong(MediaFormat.KEY_DURATION)
+            // we get the mime type from the mediaFormat
             val mimeType = nonNullMediaFormat.getString(MediaFormat.KEY_MIME) ?: return Result.failure(Exception("No mime type found"))
 
             Log.d("RecordingsRepository", "Mime type: $mimeType")
@@ -86,6 +83,11 @@ class RecordingsRepositoryImpl(
 
             return withContext(ioScope.coroutineContext) {
                 suspendCancellableCoroutine { coroutine ->
+
+                    coroutine.invokeOnCancellation {
+                        decoder.release()
+                        mediaExtractor.release()
+                    }
 
                     decoder.setCallback(object : MediaCodec.Callback() {
                         override fun onInputBufferAvailable(codec: MediaCodec, index: Int) {
