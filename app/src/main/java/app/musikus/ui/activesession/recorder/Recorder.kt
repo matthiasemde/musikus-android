@@ -61,6 +61,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.Player
 import androidx.media3.session.MediaController
 import app.musikus.shared.conditional
+import app.musikus.ui.components.ExceptionHandler
 import app.musikus.ui.components.PlayerState
 import app.musikus.ui.components.Waveform
 import app.musikus.ui.components.rememberManagedMediaController
@@ -76,10 +77,10 @@ import app.musikus.utils.musikusFormat
 @Composable
 fun RecorderCardHeader(
     modifier: Modifier = Modifier,
-    viewModel: RecorderViewModel = hiltViewModel()
+    viewModel: RecorderViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val exception by viewModel.exception.collectAsStateWithLifecycle()
+    val exceptionChannel = viewModel.exceptionChannel
     val eventHandler = viewModel::onUiEvent
 
     val context = LocalContext.current
@@ -87,16 +88,14 @@ fun RecorderCardHeader(
     /**
      * Exception handling
      */
+    ExceptionHandler<RecorderException>(
+        exceptionChannel,
+        exceptionHandler = { exception ->
+            Toast.makeText(context, exception.message, Toast.LENGTH_SHORT).show()
+        },
+        onUnhandledException = { throw(it) }
+    )
 
-    LaunchedEffect(key1 = exception) {
-        exception?.let { e ->
-            when(e) {
-                is RecorderException ->
-                    Toast.makeText(context, e.message, Toast.LENGTH_SHORT).show()
-                else -> throw(e)
-            }
-        }
-    }
 
     /**
      * MediaController

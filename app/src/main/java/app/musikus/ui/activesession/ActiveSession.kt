@@ -94,7 +94,7 @@ const val CARD_HEIGHT_EXTENDED_FRACTION_OF_SCREEN = 0.7f
 fun ActiveSession(
     viewModel: ActiveSessionViewModel = hiltViewModel(),
     deepLinkArgument: String?,
-    navigateUp: () -> Unit
+    navigateUp: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val eventHandler = viewModel::onUiEvent

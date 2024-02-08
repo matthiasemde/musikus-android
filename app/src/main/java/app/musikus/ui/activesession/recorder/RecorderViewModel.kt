@@ -16,7 +16,6 @@ import android.content.ServiceConnection
 import android.net.Uri
 import android.os.Build
 import android.os.IBinder
-import android.widget.Toast
 import androidx.compose.ui.text.AnnotatedString
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -31,6 +30,7 @@ import app.musikus.utils.DurationString
 import app.musikus.utils.getDurationString
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -38,6 +38,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -135,7 +136,8 @@ class RecorderViewModel @Inject constructor(
 
     /** Own state flows */
 
-    val exception = MutableStateFlow<Exception?>(null)
+    private val _exceptionChannel = Channel<Exception>()
+    val exceptionChannel = _exceptionChannel.receiveAsFlow()
 
     private val _currentRecordingUri = MutableStateFlow<Uri?>(null)
 
@@ -150,7 +152,7 @@ class RecorderViewModel @Inject constructor(
     private val currentRawRecording = _currentRecordingUri.map { currentRawRecording ->
         currentRawRecording?.let {
             recordingsUseCases.getRawRecording(it).getOrElse {
-                exception.update { RecorderException.CouldNotLoadRecording }
+                _exceptionChannel.send(RecorderException.CouldNotLoadRecording)
                 return@map null
             }
         }
@@ -195,7 +197,7 @@ class RecorderViewModel @Inject constructor(
                         listOf(android.Manifest.permission.RECORD_AUDIO)
                     )
                     if(recordingPermissionResult.isFailure) {
-                        Toast.makeText(application, "Microphone permission required", Toast.LENGTH_SHORT).show()
+                        _exceptionChannel.send(RecorderException.NoMicrophonePermission)
                         return@launch
                     }
 
@@ -205,7 +207,7 @@ class RecorderViewModel @Inject constructor(
                         )
 
                         if (writeExternalStoragePermissionResult.isFailure) {
-                            Toast.makeText(application, "Storage permission required", Toast.LENGTH_SHORT).show()
+                            _exceptionChannel.send(RecorderException.NoStoragePermission)
                             return@launch
                         }
                     }
