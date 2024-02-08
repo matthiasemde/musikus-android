@@ -10,10 +10,11 @@ package app.musikus.ui.components
 
 import android.util.Log
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -22,6 +23,7 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.input.pointer.pointerInput
 import kotlin.math.abs
 import kotlin.math.pow
 
@@ -30,7 +32,11 @@ import kotlin.math.pow
 fun Waveform(
     modifier: Modifier = Modifier,
     rawRecording: FloatArray,
-    playBackMarker : Float
+    playBackMarker : Float,
+    onDragStart: () -> Unit,
+    onDragEnd: () -> Unit,
+    onDrag: (Float) -> Unit,
+    onClick: (Float) -> Unit
 ) {
 
     val minAmplitudeThreshold = 10.0f
@@ -38,10 +44,6 @@ fun Waveform(
     val minMaxAmplitude = 0.1f
     val exponent = 0.4f
     val numberOfBars = 30
-
-    LaunchedEffect(key1 = rawRecording) {
-        Log.d("Waveform", "rawRecording: ${rawRecording.size}")
-    }
 
     val normalizedBars by remember(rawRecording) {
         derivedStateOf {
@@ -56,7 +58,7 @@ fun Waveform(
                 }
                 .map { bar ->
                     (bar - minAmplitudeThreshold).coerceAtLeast(0f) // filter out background noise
-                }.also { Log.d("Waveform","Pre log: $it") }
+                }
                 .map { bar ->
                     bar.pow(exponent)
                 }
@@ -93,19 +95,33 @@ fun Waveform(
         modifier = modifier
             .fillMaxSize()
             .clipToBounds()
+            .pointerInput(Unit) {
+                detectTapGestures { offset -> onClick(offset.x / size.width) }
+            }
+            .pointerInput(Unit) {
+                detectDragGestures(
+                    onDragStart = { onDragStart() },
+                    onDragEnd = onDragEnd
+                ) { change, _ ->
+                    change.consume()
+                    onDrag(change.position.x / size.width)
+                }
+            }
     ) {
         val barSpacing = size.width / (numberOfBars * 3 + 2)
         val barWidth = 2 * barSpacing
 
         var barIndex = 0
 
-
-
         repeat(2) { i ->
             while (barIndex < normalizedBars.size) {
                 val barX = barIndex * (barWidth + barSpacing) + barWidth / 2
 
-                val barHeight = size.height * normalizedBars[barIndex].coerceAtLeast(minProportionalBarHeight) * 0.95f
+                val barHeight =
+                    size.height *
+                    normalizedBars[barIndex].coerceAtLeast(minProportionalBarHeight) *
+                    0.9f // the rounded Caps of the bars extend beyond the bar height, so we shrink them down to where they fit again
+
                 val distFromTop = (size.height - barHeight) / 2
 
                 val drawBar = {

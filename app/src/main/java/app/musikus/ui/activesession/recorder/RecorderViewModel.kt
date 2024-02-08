@@ -16,7 +16,6 @@ import android.content.ServiceConnection
 import android.net.Uri
 import android.os.Build
 import android.os.IBinder
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.ui.text.AnnotatedString
 import androidx.lifecycle.AndroidViewModel
@@ -150,12 +149,9 @@ class RecorderViewModel @Inject constructor(
 
     private val currentRawRecording = _currentRecordingUri.map { currentRawRecording ->
         currentRawRecording?.let {
-            Log.d("RecorderViewModel", "Loading raw recording: $it")
             recordingsUseCases.getRawRecording(it).getOrElse {
                 exception.update { RecorderException.CouldNotLoadRecording }
                 return@map null
-            }.also {
-                Log.d("RecorderViewModel", "Loaded raw recording: ${it.size} samples")
             }
         }
     }.stateIn(

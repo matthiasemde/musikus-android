@@ -43,7 +43,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -64,6 +64,7 @@ import app.musikus.shared.conditional
 import app.musikus.ui.components.PlayerState
 import app.musikus.ui.components.Waveform
 import app.musikus.ui.components.rememberManagedMediaController
+import app.musikus.ui.components.seekToRelativePosition
 import app.musikus.ui.components.state
 import app.musikus.ui.theme.spacing
 import app.musikus.usecase.recordings.Recording
@@ -124,12 +125,37 @@ fun RecorderCardHeader(
         }
     }
 
+    var currentPosition by remember { mutableLongStateOf(0) }
+
+    val playerPositionTracker = object : Runnable {
+        override fun run() {
+            playerState?.player?.let {
+                currentPosition = it.currentPosition
+                if(it.isPlaying) {
+                    Handler(Looper.getMainLooper()).postDelayed(this, 100)
+                }
+            }
+        }
+    }
+
+    LaunchedEffect(key1 = playerState?.isPlaying) {
+        if(playerState?.isPlaying == true) {
+            Handler(Looper.getMainLooper()).postDelayed(playerPositionTracker, 100)
+        }
+    }
+
+
+
     Box(modifier = modifier.padding(vertical = MaterialTheme.spacing.small)) {
         if(playerState?.currentMediaItem != null) {
             MediaPlayerBar(
                 uiState = uiState,
                 playerState = playerState,
+                currentPosition = currentPosition,
                 mediaController = mediaController,
+                onSetCurrentPosition = { position ->
+                    currentPosition = position
+                }
             )
         } else {
             RecorderBar(
@@ -308,7 +334,9 @@ fun MediaPlayerBar(
     modifier: Modifier = Modifier,
     uiState: RecorderUiState,
     playerState: PlayerState?,
+    currentPosition: Long,
     mediaController: MediaController?,
+    onSetCurrentPosition: (Long) -> Unit
 ) {
     if(playerState == null || mediaController == null) return
 
@@ -330,29 +358,33 @@ fun MediaPlayerBar(
                     .weight(1f)
                     .padding(horizontal = MaterialTheme.spacing.small)
             ) {
-                var currentPosition by remember { mutableFloatStateOf(0f) }
 
-                val handler = object : Runnable {
-                    override fun run() {
-                        currentPosition = playerState.player.currentPosition.toFloat() / mediaController.duration.toFloat()
-                        if (playerState.isPlaying) {
-                            Handler(Looper.getMainLooper()).postDelayed(this, 100)
-                        }
-                    }
-                }
-
-                Handler(Looper.getMainLooper()).postDelayed(handler, 100)
+                var wasPlayerPlayingPreDrag = remember { false }
 
                 Waveform(
                     rawRecording = rawRecording,
-                    playBackMarker = currentPosition
+                    playBackMarker = currentPosition.toFloat() / playerState.player.duration,
+                    onDragStart = {
+                        wasPlayerPlayingPreDrag = playerState.isPlaying
+                        mediaController.pause()
+                    },
+                    onDragEnd = {
+                        if (wasPlayerPlayingPreDrag) mediaController.play()
+                    },
+                    onDrag = { position ->
+                        onSetCurrentPosition((position * playerState.player.duration).toLong())
+                        mediaController.seekToRelativePosition(position)
+                    },
+                    onClick = { position ->
+                        onSetCurrentPosition((position * playerState.player.duration).toLong())
+                        mediaController.seekToRelativePosition(position)
+                    }
                 )
             }
         } ?: Spacer(Modifier.weight(1f))
 
         OutlinedIconButton(
-            onClick = { mediaController.seekBack() },
-            shape = CircleShape
+            onClick = { mediaController.seekBack() }
         ) {
             Icon(Icons.Default.SkipPrevious, contentDescription = null)
         }
@@ -364,9 +396,11 @@ fun MediaPlayerBar(
                 } else {
                     mediaController.play()
                 }
-            },
-            shape = CircleShape
+            }
         ) {
+            // rather annoyingly, mediaController.seekTo() causes the player to pause
+            // for a split second which toggles the icon back and forth
+            // TODO fix with animation
             if (playerState.isPlaying) {
                 Icon(Icons.Default.Pause, contentDescription = null)
             } else {
@@ -375,8 +409,7 @@ fun MediaPlayerBar(
         }
 
         OutlinedIconButton(
-            onClick = { mediaController.seekForward() },
-            shape = CircleShape
+            onClick = { mediaController.seekForward() }
         ) {
             Icon(Icons.Default.SkipNext, contentDescription = null)
         }

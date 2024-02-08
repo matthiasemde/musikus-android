@@ -138,3 +138,10 @@ internal class MediaControllerManager private constructor(context: Context) : Re
         }
     }
 }
+
+fun MediaController.seekToRelativePosition(relativePosition: Float) {
+    if (!isCommandAvailable(MediaController.COMMAND_SEEK_IN_CURRENT_MEDIA_ITEM)) return
+
+    val position = (duration * relativePosition.coerceIn(0f, 1f)).toLong()
+    seekTo(position)
+}
