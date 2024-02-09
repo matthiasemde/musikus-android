@@ -31,6 +31,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.size
@@ -588,7 +589,11 @@ private fun <
                     modifier = Modifier
                         .conditional(
                             !uiState.isExpandable,
-                            modifier = { requiredHeight(180.dp) }, // TODO fix with Michi
+                            modifier = {
+                                this
+                                    .requiredHeight(195.dp)
+                                    .offset(y = with(LocalDensity.current) { (yState.requireOffset() * 0.5f).toDp() })
+                            }, // TODO fix this hot mess with Michi
                             alternativeModifier = { verticalScroll(scrollState) }
                         )
                         .fillMaxWidth()
