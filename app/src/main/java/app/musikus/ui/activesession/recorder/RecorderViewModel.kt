@@ -36,8 +36,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -149,12 +149,16 @@ class RecorderViewModel @Inject constructor(
         initialValue = emptyList()
     )
 
-    private val currentRawRecording = _currentRecordingUri.map { currentRawRecording ->
-        currentRawRecording?.let {
-            recordingsUseCases.getRawRecording(it).getOrElse {
-                _exceptionChannel.send(RecorderException.CouldNotLoadRecording)
-                return@map null
-            }
+    private val currentRawRecording = _currentRecordingUri.flatMapLatest { currentRawRecording ->
+        flow {
+            emit(null)
+
+            emit(currentRawRecording?.let {
+                recordingsUseCases.getRawRecording(it).getOrElse {
+                    _exceptionChannel.send(RecorderException.CouldNotLoadRecording)
+                    null
+                }
+            })
         }
     }.stateIn(
         scope = viewModelScope,

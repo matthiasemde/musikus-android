@@ -30,7 +30,6 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
@@ -350,37 +349,35 @@ fun MediaPlayerBar(
             Icon(Icons.Default.Close, contentDescription = "Close player")
         }
 
-        uiState.currentRawRecording?.let { rawRecording ->
-            Box(
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .weight(1f)
-                    .padding(horizontal = MaterialTheme.spacing.small)
-            ) {
+        Box(
+            modifier = Modifier
+                .fillMaxHeight()
+                .weight(1f)
+                .padding(horizontal = MaterialTheme.spacing.small)
+        ) {
 
-                var wasPlayerPlayingPreDrag = remember { false }
+            var wasPlayerPlayingPreDrag = remember { false }
 
-                Waveform(
-                    rawRecording = rawRecording,
-                    playBackMarker = currentPosition.toFloat() / playerState.player.duration,
-                    onDragStart = {
-                        wasPlayerPlayingPreDrag = playerState.isPlaying
-                        mediaController.pause()
-                    },
-                    onDragEnd = {
-                        if (wasPlayerPlayingPreDrag) mediaController.play()
-                    },
-                    onDrag = { position ->
-                        onSetCurrentPosition((position * playerState.player.duration).toLong())
-                        mediaController.seekToRelativePosition(position)
-                    },
-                    onClick = { position ->
-                        onSetCurrentPosition((position * playerState.player.duration).toLong())
-                        mediaController.seekToRelativePosition(position)
-                    }
-                )
-            }
-        } ?: Spacer(Modifier.weight(1f))
+            Waveform(
+                rawRecording = uiState.currentRawRecording,
+                playBackMarker = currentPosition.toFloat() / playerState.player.duration,
+                onDragStart = {
+                    wasPlayerPlayingPreDrag = playerState.isPlaying
+                    mediaController.pause()
+                },
+                onDragEnd = {
+                    if (wasPlayerPlayingPreDrag) mediaController.play()
+                },
+                onDrag = { position ->
+                    onSetCurrentPosition((position * playerState.player.duration).toLong())
+                    mediaController.seekToRelativePosition(position)
+                },
+                onClick = { position ->
+                    onSetCurrentPosition((position * playerState.player.duration).toLong())
+                    mediaController.seekToRelativePosition(position)
+                }
+            )
+        }
 
         OutlinedIconButton(
             onClick = { mediaController.seekBack() }
@@ -405,12 +402,6 @@ fun MediaPlayerBar(
             } else {
                 Icon(Icons.Default.PlayArrow, contentDescription = null)
             }
-        }
-
-        OutlinedIconButton(
-            onClick = { mediaController.seekForward() }
-        ) {
-            Icon(Icons.Default.SkipNext, contentDescription = null)
         }
     }
 }

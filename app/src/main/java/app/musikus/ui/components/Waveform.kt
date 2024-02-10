@@ -8,15 +8,15 @@
 
 package app.musikus.ui.components
 
-import android.util.Log
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
@@ -24,14 +24,17 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.input.pointer.pointerInput
-import kotlin.math.abs
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlin.math.pow
+import kotlin.math.sqrt
 
 
 @Composable
 fun Waveform(
     modifier: Modifier = Modifier,
-    rawRecording: FloatArray,
+    rawRecording: FloatArray?,
     playBackMarker : Float,
     onDragStart: () -> Unit,
     onDragEnd: () -> Unit,
@@ -39,55 +42,67 @@ fun Waveform(
     onClick: (Float) -> Unit
 ) {
 
-    val minAmplitudeThreshold = 10.0f
-    val minProportionalBarHeight = 0.05f
-    val minMaxAmplitude = 0.1f
-    val exponent = 0.4f
+    val loudnessScaling = 0.0001f
+    val minProportionalBarHeight = 0.02f
+    // the rounded Caps of the bars extend beyond the bar height,
+    // so we shrink them down to where they fit again
+    val maxProportionalBarHeight = 0.9f
+
     val numberOfBars = 30
 
-    val normalizedBars by remember(rawRecording) {
-        derivedStateOf {
-            if(rawRecording.isEmpty()) return@derivedStateOf emptyList()
+    val barHeightAnimatables = remember {
+        (0 until numberOfBars).map { Animatable(0f) }
+    }
 
-            val chunkedAbsoluteBars = rawRecording
-                .asSequence()
-                .map { abs(it) }
-                .chunked(rawRecording.size / numberOfBars)
-                .map { chunk ->
-                    chunk.average().toFloat()
-                }
-                .map { bar ->
-                    (bar - minAmplitudeThreshold).coerceAtLeast(0f) // filter out background noise
-                }
-                .map { bar ->
-                    bar.pow(exponent)
-                }
+    LaunchedEffect(key1 = rawRecording) {
 
-//            val minAmplitude = chunkedAbsoluteBars.min() // .coerceAtMost(log(0.1f, base))
-            val maxAmplitude = chunkedAbsoluteBars.max().coerceAtLeast(0.01f)
+        if (rawRecording == null) {
+            barHeightAnimatables.forEachIndexed { i, animatable -> launch {
+                animatable.animateTo(
+                    targetValue = 0f,
+                    animationSpec = tween(200, delayMillis = i * 5)
+                )
+            } }
+            return@LaunchedEffect
+        }
 
-            Log.d("Waveform", "min/maxAmplitude: $maxAmplitude")
+        withContext(Dispatchers.Default) {
 
-            val normalizedBars = chunkedAbsoluteBars
-                .map { (it / maxAmplitude) }
-                .toList()
-                .also { bars ->
-                    Log.d("Waveform", "normalizedBars: ${bars}")
-                }
+            val numberOfSamplesPerBar = rawRecording.size.floorDiv(numberOfBars - 1)
 
-            val startEndMask = listOf(0.6f, 0.8f)
+            // Calculate the loudness of the recording as RMS
+            val squaredSamples = FloatArray(rawRecording.size) { i ->
+                rawRecording[i].pow(2)
+            }
 
-            return@derivedStateOf normalizedBars.mapIndexed { index, bar ->
-                if (index < startEndMask.size) {
-                    bar * startEndMask[index]
-                } else if (index > normalizedBars.size - startEndMask.size) {
-                    bar * startEndMask[normalizedBars.size - index - 1]
+            val rms = DoubleArray(numberOfBars) { i ->
+                val start = i * numberOfSamplesPerBar
+                val end = if (i < numberOfBars - 1) {
+                    (i + 1) * numberOfSamplesPerBar
                 } else {
-                    bar
+                    rawRecording.size
+                }
+                sqrt(
+                    squaredSamples
+                        .sliceArray(start until end)
+                        .average()
+                ) * loudnessScaling
+            }
+            rms.zip(barHeightAnimatables).forEachIndexed { i, (rms, animatable) ->
+                launch {
+                    animatable.animateTo(
+                        targetValue = rms.toFloat(),
+                        animationSpec = tween(
+                            durationMillis = 250,
+                            delayMillis = i * 15
+                        ),
+                    )
                 }
             }
         }
     }
+
+    val animatedProportionalBarHeights = barHeightAnimatables.map { it.asState().value }
 
     val primaryColor = MaterialTheme.colorScheme.primary
 
@@ -114,13 +129,16 @@ fun Waveform(
         var barIndex = 0
 
         repeat(2) { i ->
-            while (barIndex < normalizedBars.size) {
+            while (barIndex < numberOfBars) {
                 val barX = barIndex * (barWidth + barSpacing) + barWidth / 2
 
                 val barHeight =
                     size.height *
-                    normalizedBars[barIndex].coerceAtLeast(minProportionalBarHeight) *
-                    0.9f // the rounded Caps of the bars extend beyond the bar height, so we shrink them down to where they fit again
+                    animatedProportionalBarHeights[barIndex].coerceIn(
+                        minimumValue = minProportionalBarHeight,
+                        maximumValue = maxProportionalBarHeight
+                    )
+
 
                 val distFromTop = (size.height - barHeight) / 2
 
@@ -135,7 +153,7 @@ fun Waveform(
                 }
 
                 // find the bar that the playBackMarker is currently on
-                if(barIndex != (normalizedBars.size * playBackMarker).toInt()) {
+                if(barIndex != (numberOfBars * playBackMarker).toInt()) {
                     drawBar()
                 } else {
                     // if we are in "already played" section (i==0),
