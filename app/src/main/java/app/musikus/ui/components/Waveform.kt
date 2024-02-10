@@ -21,8 +21,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.input.pointer.pointerInput
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -42,7 +44,7 @@ fun Waveform(
     onClick: (Float) -> Unit
 ) {
 
-    val loudnessScaling = 0.0001f
+    val loudnessScaling = 0.00015f
     val minProportionalBarHeight = 0.02f
     // the rounded Caps of the bars extend beyond the bar height,
     // so we shrink them down to where they fit again
@@ -51,7 +53,7 @@ fun Waveform(
     val numberOfBars = 30
 
     val barHeightAnimatables = remember {
-        (0 until numberOfBars).map { Animatable(0f) }
+        (0 until numberOfBars).map { Animatable(minProportionalBarHeight) }
     }
 
     LaunchedEffect(key1 = rawRecording) {
@@ -91,7 +93,10 @@ fun Waveform(
             rms.zip(barHeightAnimatables).forEachIndexed { i, (rms, animatable) ->
                 launch {
                     animatable.animateTo(
-                        targetValue = rms.toFloat(),
+                        targetValue = rms.toFloat().coerceIn(
+                            minimumValue = minProportionalBarHeight,
+                            maximumValue = maxProportionalBarHeight
+                        ),
                         animationSpec = tween(
                             durationMillis = 250,
                             delayMillis = i * 15
@@ -126,63 +131,55 @@ fun Waveform(
         val barSpacing = size.width / (numberOfBars * 3 + 2)
         val barWidth = 2 * barSpacing
 
-        var barIndex = 0
 
-        repeat(2) { i ->
-            while (barIndex < numberOfBars) {
-                val barX = barIndex * (barWidth + barSpacing) + barWidth / 2
+        val clipPath = Path().apply {
+            animatedProportionalBarHeights.forEachIndexed { index, proportionalBarHeight ->
+                val x = index * (barWidth + barSpacing)
+                val barHeight = proportionalBarHeight * size.height
 
-                val barHeight =
-                    size.height *
-                    animatedProportionalBarHeights[barIndex].coerceIn(
-                        minimumValue = minProportionalBarHeight,
-                        maximumValue = maxProportionalBarHeight
-                    )
+                val topY = (size.height - barHeight) / 2
+                val bottomY = size.height - (size.height - barHeight) / 2
 
-
-                val distFromTop = (size.height - barHeight) / 2
-
-                val drawBar = {
-                    drawLine(
-                        color = primaryColor.copy(alpha = if(i == 0) 1f else 0.5f),
-                        start = Offset(barX, distFromTop),
-                        end = Offset(barX, distFromTop + barHeight),
-                        strokeWidth = barWidth,
-                        cap = StrokeCap.Round
-                    )
-                }
-
-                // find the bar that the playBackMarker is currently on
-                if(barIndex != (numberOfBars * playBackMarker).toInt()) {
-                    drawBar()
-                } else {
-                    // if we are in "already played" section (i==0),
-                    // clip the bar to the right of the playBackMarker and break the loop
-                    if(i == 0) {
-                        clipRect(
-                            left = 0f,
-                            top = 0f,
-                            right = size.width * playBackMarker,
-                            bottom = size.height
-                        ) {
-                            drawBar()
-                        }
-                        break
-                    }
-                    // if we are in "not yet played" section (i!=0),
-                    // clip the bar to the left of the playBackMarker
-                    clipRect(
-                        left = size.width * playBackMarker,
-                        top = 0f,
-                        right = size.width,
-                        bottom = size.height
-                    ) {
-                        drawBar()
-                    }
-                }
-
-                barIndex++
+                moveTo(x, bottomY)
+                arcTo(
+                    rect = Rect(
+                        left = x,
+                        top = topY - barWidth / 2,
+                        right = x + barWidth,
+                        bottom = topY + barWidth / 2
+                    ),
+                    startAngleDegrees = 180f,
+                    sweepAngleDegrees = 180f,
+                    forceMoveTo = false
+                )
+                arcTo(
+                    rect = Rect(
+                        left = x,
+                        top = bottomY - barWidth / 2,
+                        right = x + barWidth,
+                        bottom = bottomY + barWidth / 2
+                    ),
+                    startAngleDegrees = 0f,
+                    sweepAngleDegrees = 180f,
+                    forceMoveTo = false
+                )
             }
+        }
+
+        clipPath(
+            path = clipPath
+        ) {
+            drawRect(
+                color = primaryColor.copy(alpha = 0.5f),
+                topLeft = Offset(0f, 0f),
+                size = size
+            )
+
+            drawRect(
+                color = primaryColor.copy(alpha = 0.5f),
+                topLeft = Offset(0f, 0f),
+                size = Size(size.width * playBackMarker, size.height)
+            )
         }
     }
 }
