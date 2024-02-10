@@ -8,8 +8,6 @@
 
 package app.musikus.ui.activesession.recorder
 
-import android.os.Handler
-import android.os.Looper
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.clickable
@@ -72,6 +70,7 @@ import app.musikus.utils.DateFormat
 import app.musikus.utils.DurationFormat
 import app.musikus.utils.getDurationString
 import app.musikus.utils.musikusFormat
+import kotlinx.coroutines.delay
 
 @Composable
 fun RecorderCardHeader(
@@ -125,24 +124,12 @@ fun RecorderCardHeader(
 
     var currentPosition by remember { mutableLongStateOf(0) }
 
-    val playerPositionTracker = object : Runnable {
-        override fun run() {
-            playerState?.player?.let {
-                currentPosition = it.currentPosition
-                if(it.isPlaying) {
-                    Handler(Looper.getMainLooper()).postDelayed(this, 100)
-                }
-            }
-        }
-    }
-
     LaunchedEffect(key1 = playerState?.isPlaying) {
-        if(playerState?.isPlaying == true) {
-            Handler(Looper.getMainLooper()).postDelayed(playerPositionTracker, 100)
+        while(playerState?.isPlaying == true) {
+            currentPosition = playerState?.player?.currentPosition ?: 0
+            delay(100)
         }
     }
-
-
 
     Box(modifier = modifier.padding(vertical = MaterialTheme.spacing.small)) {
         if(playerState?.currentMediaItem != null) {
@@ -241,10 +228,14 @@ fun Recording (
             .conditional(!isRecording) {
                 clickable {
                     mediaController?.run {
-                        setMediaItem(recording.mediaItem)
+                        if (isCommandAvailable(Player.COMMAND_STOP)) stop()
+                        if (isCommandAvailable(Player.COMMAND_CHANGE_MEDIA_ITEMS)) clearMediaItems()
+                        if (isCommandAvailable(Player.COMMAND_SET_MEDIA_ITEM)) setMediaItem(
+                            recording.mediaItem
+                        )
                         eventHandler(RecorderUiEvent.LoadRecording(recording.contentUri))
-                        if (mediaController.isCommandAvailable(Player.COMMAND_PREPARE)) prepare()
-                        if (mediaController.isCommandAvailable(Player.COMMAND_PLAY_PAUSE)) play()
+                        if (isCommandAvailable(Player.COMMAND_PREPARE)) prepare()
+                        if (isCommandAvailable(Player.COMMAND_PLAY_PAUSE)) play()
                     }
                 }
             }
