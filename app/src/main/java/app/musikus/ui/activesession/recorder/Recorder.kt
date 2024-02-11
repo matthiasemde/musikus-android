@@ -28,7 +28,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.SkipPrevious
+import androidx.compose.material.icons.filled.Replay5
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -71,6 +71,7 @@ import app.musikus.utils.DurationFormat
 import app.musikus.utils.getDurationString
 import app.musikus.utils.musikusFormat
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 
 @Composable
 fun RecorderCardHeader(
@@ -124,11 +125,13 @@ fun RecorderCardHeader(
 
     var currentPosition by remember { mutableLongStateOf(0) }
 
-    LaunchedEffect(key1 = playerState?.isPlaying) {
-        while(playerState?.isPlaying == true) {
+    LaunchedEffect(key1 = playerState?.currentMediaItem) {
+        Log.d("Recorder", "Start tracking duration")
+        while(playerState?.currentMediaItem != null && isActive) {
             currentPosition = playerState?.player?.currentPosition ?: 0
             delay(100)
         }
+        Log.d("Recorder", "Stop tracking duration")
     }
 
     Box(modifier = modifier.padding(vertical = MaterialTheme.spacing.small)) {
@@ -370,10 +373,12 @@ fun MediaPlayerBar(
             )
         }
 
-        OutlinedIconButton(
-            onClick = { mediaController.seekBack() }
+        IconButton(
+            onClick = {
+                mediaController.seekTo(mediaController.currentPosition - 5000)
+            }
         ) {
-            Icon(Icons.Default.SkipPrevious, contentDescription = null)
+            Icon(Icons.Default.Replay5, contentDescription = null)
         }
 
         OutlinedIconButton(

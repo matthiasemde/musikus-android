@@ -92,7 +92,7 @@ fun Waveform(
             rms.zip(barHeightAnimatables).forEachIndexed { i, (rms, animatable) ->
                 launch {
                     animatable.animateTo(
-                        targetValue = rms.toFloat().coerceIn(
+                        targetValue = (rms.toFloat().takeUnless { it.isNaN() } ?: 0f).coerceIn(
                             minimumValue = minProportionalBarHeight,
                             maximumValue = maxProportionalBarHeight
                         ),
