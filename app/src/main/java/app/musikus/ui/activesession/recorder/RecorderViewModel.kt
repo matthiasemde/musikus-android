@@ -16,6 +16,7 @@ import android.content.ServiceConnection
 import android.net.Uri
 import android.os.Build
 import android.os.IBinder
+import android.util.Log
 import androidx.compose.ui.text.AnnotatedString
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -50,7 +51,7 @@ data class RecorderUiState(
     val isRecording: Boolean,
     val recordingDuration: DurationString,
     val recordings: List<Recording>,
-    val currentRawRecording: FloatArray?,
+    val currentRawRecording: ShortArray?,
 )
 
 sealed class RecorderUiEvent {
@@ -157,7 +158,7 @@ class RecorderViewModel @Inject constructor(
                 recordingsUseCases.getRawRecording(it).getOrElse {
                     _exceptionChannel.send(RecorderException.CouldNotLoadRecording)
                     null
-                }
+                }.also { Log.d("RecorderViewModel", "rawRecording $it") }
             })
         }
     }.stateIn(

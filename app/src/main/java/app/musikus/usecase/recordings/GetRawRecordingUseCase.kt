@@ -14,5 +14,5 @@ class GetRawRecordingUseCase(
     private val recordingsRepository: RecordingsRepository
 ) {
 
-    suspend operator fun invoke(contentUri: Uri): Result<FloatArray> = recordingsRepository.getRawRecording(contentUri)
+    suspend operator fun invoke(contentUri: Uri): Result<ShortArray> = recordingsRepository.getRawRecording(contentUri)
 }

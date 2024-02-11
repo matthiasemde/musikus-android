@@ -29,14 +29,13 @@ import androidx.compose.ui.input.pointer.pointerInput
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlin.math.pow
 import kotlin.math.sqrt
 
 
 @Composable
 fun Waveform(
     modifier: Modifier = Modifier,
-    rawRecording: FloatArray?,
+    rawRecording: ShortArray?,
     playBackMarker : Float,
     onDragStart: () -> Unit,
     onDragEnd: () -> Unit,
@@ -58,7 +57,7 @@ fun Waveform(
 
     LaunchedEffect(key1 = rawRecording) {
 
-        if (rawRecording == null) {
+        if (rawRecording == null || rawRecording.isEmpty()) {
             barHeightAnimatables.forEachIndexed { i, animatable -> launch {
                 animatable.animateTo(
                     targetValue = 0f,
@@ -73,8 +72,8 @@ fun Waveform(
             val numberOfSamplesPerBar = rawRecording.size.floorDiv(numberOfBars - 1)
 
             // Calculate the loudness of the recording as RMS
-            val squaredSamples = FloatArray(rawRecording.size) { i ->
-                rawRecording[i].pow(2)
+            val squaredSamples = IntArray(rawRecording.size) { i ->
+                rawRecording[i] * rawRecording[i]
             }
 
             val rms = DoubleArray(numberOfBars) { i ->
