@@ -18,6 +18,7 @@ import app.musikus.database.entities.SessionCreationAttributes
 import app.musikus.services.SessionEvent
 import app.musikus.services.SessionService
 import app.musikus.services.SessionState
+import app.musikus.ui.library.LibraryItemDialogUiEvent
 import app.musikus.ui.library.LibraryItemEditData
 import app.musikus.usecase.library.LibraryUseCases
 import app.musikus.usecase.sessions.SessionsUseCases
@@ -257,7 +258,7 @@ class ActiveSessionViewModel @Inject constructor(
             isPaused = sessionState.isPaused,
             addItemDialogUiState = addItemDialogUiState,
             sections = sessionState.sections.reversed().map { section ->
-                SectionListItemUiState(
+                ActiveSessionSectionListItemUiState(
                     id = section.id,    // also used as id
                     libraryItem = section.libraryItem,
                     duration = section.duration ?: sessionState.currentSectionDuration
@@ -288,28 +289,29 @@ class ActiveSessionViewModel @Inject constructor(
             is ActiveSessionUiEvent.StopSession -> stopSession()
             is ActiveSessionUiEvent.DeleteSection -> removeSection(event.sectionId)
             is ActiveSessionUiEvent.CreateNewLibraryItem -> createLibraryItemDialog()
-            is ActiveSessionUiEvent.NewLibraryItemNameChanged ->
-                _addLibraryItemData.update { it?.copy(name = event.newName) }
-            is ActiveSessionUiEvent.NewLibraryItemColorChanged ->
-                _addLibraryItemData.update { it?.copy(colorIndex = event.newColorIndex) }
-            is ActiveSessionUiEvent.NewLibraryItemFolderChanged ->
-                _addLibraryItemData.update { it?.copy(folderId = event.newFolderId) }
-            is ActiveSessionUiEvent.NewLibraryItemDialogDismissed ->
-                _addLibraryItemData.update { null }
-            is ActiveSessionUiEvent.NewLibraryItemDialogConfirmed -> {
-                viewModelScope.launch {
-                    _addLibraryItemData.value?.let {
-                        libraryUseCases.addItem(
-                            LibraryItemCreationAttributes(
-                                name = it.name,
-                                colorIndex = it.colorIndex,
-                                libraryFolderId = Nullable(it.folderId)
-                            )
-                        )
-                    }
-                    _addLibraryItemData.update {
-                        null
-                    }
+            is ActiveSessionUiEvent.ItemDialogUiEvent -> {
+                when(val dialogEvent = event.dialogEvent) {
+                    is LibraryItemDialogUiEvent.NameChanged ->
+                        _addLibraryItemData.update { it?.copy(name = dialogEvent.name) }
+                    is LibraryItemDialogUiEvent.ColorIndexChanged ->
+                        _addLibraryItemData.update { it?.copy(colorIndex = dialogEvent.colorIndex) }
+                    is LibraryItemDialogUiEvent.FolderIdChanged ->
+                        _addLibraryItemData.update { it?.copy(folderId = dialogEvent.folderId) }
+                    is LibraryItemDialogUiEvent.Confirmed ->
+                        viewModelScope.launch {
+                            _addLibraryItemData.value?.let { itemData ->
+                                libraryUseCases.addItem(
+                                    LibraryItemCreationAttributes(
+                                        name = itemData.name,
+                                        colorIndex = itemData.colorIndex,
+                                        libraryFolderId = Nullable(itemData.folderId)
+                                    )
+                                )
+                                _selectedFolderId.update { itemData.folderId }
+                            }
+                            _addLibraryItemData.update { null }
+                        }
+                    is LibraryItemDialogUiEvent.Dismissed -> _addLibraryItemData.update { null }
                 }
             }
         }

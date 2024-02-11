@@ -78,7 +78,6 @@ import app.musikus.ui.activesession.recorder.RecorderCardBody
 import app.musikus.ui.activesession.recorder.RecorderCardHeader
 import app.musikus.ui.components.SwipeToDeleteContainer
 import app.musikus.ui.components.fadingEdge
-import app.musikus.ui.library.DialogMode
 import app.musikus.ui.library.LibraryItemDialog
 import app.musikus.ui.library.LibraryUiItem
 import app.musikus.ui.theme.dimensions
@@ -192,15 +191,8 @@ fun ActiveSession(
 
         uiState.addItemDialogUiState?.let { dialogUiState ->
             LibraryItemDialog(
-                mode = DialogMode.ADD,
-                folders = dialogUiState.folders,
-                itemData = dialogUiState.itemData,
-                isConfirmButtonEnabled = dialogUiState.isConfirmButtonEnabled,
-                onNameChange = { eventHandler(ActiveSessionUiEvent.NewLibraryItemNameChanged(it)) },
-                onColorIndexChange = {eventHandler(ActiveSessionUiEvent.NewLibraryItemColorChanged(it))},
-                onSelectedFolderIdChange = {eventHandler(ActiveSessionUiEvent.NewLibraryItemFolderChanged(it))},
-                onConfirmHandler = { eventHandler(ActiveSessionUiEvent.NewLibraryItemDialogConfirmed) },
-                onDismissHandler = { eventHandler(ActiveSessionUiEvent.NewLibraryItemDialogDismissed) }
+                uiState = dialogUiState,
+                eventHandler = { eventHandler(ActiveSessionUiEvent.ItemDialogUiEvent(it)) },
             )
         }
     }
@@ -248,7 +240,7 @@ private fun PracticeTimer(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun CurrentPracticingItem(
-    sections: List<SectionListItemUiState>
+    sections: List<ActiveSessionSectionListItemUiState>
 ) {
     AnimatedVisibility(
         visible = sections.isNotEmpty(),
@@ -312,7 +304,7 @@ private fun CurrentPracticingItem(
 private fun SectionsList(
     uiState: ActiveSessionUiState,
     modifier: Modifier = Modifier,
-    onSectionDeleted: (SectionListItemUiState) -> Unit = {}
+    onSectionDeleted: (ActiveSessionSectionListItemUiState) -> Unit = {}
 ) {
     if (uiState.sections.isEmpty()) {
         Box (modifier = modifier) {
@@ -349,8 +341,8 @@ private fun SectionsList(
 @Composable
 private fun SectionListElement(
     modifier: Modifier = Modifier,
-    sectionElement: SectionListItemUiState,
-    onSectionDeleted: (SectionListItemUiState) -> Unit
+    sectionElement: ActiveSessionSectionListItemUiState,
+    onSectionDeleted: (ActiveSessionSectionListItemUiState) -> Unit
 ) {
     Surface(   // Surface for setting shape + padding of list item
         modifier = modifier.padding(horizontal = MaterialTheme.spacing.large),  // margin around list
@@ -390,6 +382,7 @@ private fun SectionListElement(
 }
 
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun ActiveSessionDraggableCardHeader(
     uiState: ActiveSessionDraggableCardHeaderUiState,
@@ -409,7 +402,7 @@ private fun ActiveSessionDraggableCardHeader(
         }
         is ActiveSessionDraggableCardHeaderUiState.MetronomeCardHeaderUiState -> {
             MetronomeCardHeader(
-                onTextClicked = { eventHandler(DraggableCardUiEvent.ExpandCard) }
+                onTextClicked = { eventHandler(DraggableCardUiEvent.ResizeCard(DragValueY.Normal)) }
             )
         }
     }
@@ -463,7 +456,7 @@ private fun LibraryCardHeader(
                 folder = folder,
                 onClick = {
                     eventHandler(ActiveSessionUiEvent.SelectFolder(folder?.id))
-                    if(isCardCollapsed) eventHandler(DraggableCardUiEvent.ExpandCard)
+                    if(isCardCollapsed) eventHandler(DraggableCardUiEvent.ResizeCard(DragValueY.Normal))
                 },
                 isSelected = folder?.id == uiState.selectedFolderId && !isCardCollapsed,
                 showBadge = uiState.activeFolderId?.let { it.value == folder?.id} ?: false
@@ -556,6 +549,7 @@ private fun LibraryCardBody(
                 selected = false,
                 onShortClick = {
                     eventHandler(ActiveSessionUiEvent.SelectItem(item))
+                    eventHandler(DraggableCardUiEvent.ResizeCard(DragValueY.Normal))
                 },
                 onLongClick = { /*TODO*/ },
                 compact = true,

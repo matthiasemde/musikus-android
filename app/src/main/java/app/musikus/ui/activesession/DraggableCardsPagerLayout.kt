@@ -102,10 +102,10 @@ interface DraggableCardUiState <
     val bodyUiState: B
 }
 
-sealed class DraggableCardUiEvent {
-    data object ExpandCard : DraggableCardUiEvent()
-    data object CollapseCard : DraggableCardUiEvent()
-    data object FabAction : DraggableCardUiEvent()
+sealed interface DraggableCardUiEvent {
+
+    data class ResizeCard(val target: DragValueY) : DraggableCardUiEvent
+    data object FabAction : DraggableCardUiEvent
 }
 
 
@@ -171,17 +171,10 @@ fun <
                     cardState = cardState,
                     eventHandler = { event ->
                         when(event) {
-                            is DraggableCardUiEvent.ExpandCard -> {
+                            is DraggableCardUiEvent.ResizeCard -> {
                                 anchorStates.forEach {
                                     animationScope.launch {
-                                        it.animateTo(DragValueY.Normal)
-                                    }
-                                }
-                            }
-                            is DraggableCardUiEvent.CollapseCard -> {
-                                anchorStates.forEach {
-                                    animationScope.launch {
-                                        it.animateTo(DragValueY.Collapsed)
+                                        it.animateTo(event.target)
                                     }
                                 }
                             }
@@ -644,13 +637,9 @@ private fun <
         }
     }
 
+    // when yState changes, update all cards
     LaunchedEffect(key1 = yState.currentValue) {
-        if (yState.currentValue == DragValueY.Collapsed) {
-            eventHandler(DraggableCardUiEvent.CollapseCard)
-        }
-        if (yState.currentValue == DragValueY.Normal) {
-            eventHandler(DraggableCardUiEvent.ExpandCard)
-        }
+        eventHandler(DraggableCardUiEvent.ResizeCard(yState.currentValue))
     }
 }
 

@@ -8,14 +8,14 @@
 
 package app.musikus.usecase.library
 
-import app.musikus.database.daos.LibraryItem
 import app.musikus.repository.LibraryRepository
+import java.util.UUID
 
 class DeleteItemsUseCase(
     private val libraryRepository: LibraryRepository
 ) {
 
-    suspend operator fun invoke(items : List<LibraryItem>) {
-        libraryRepository.deleteItems(items.map { it.id })
+    suspend operator fun invoke(itemIds : List<UUID>) {
+        libraryRepository.deleteItems(itemIds)
     }
 }

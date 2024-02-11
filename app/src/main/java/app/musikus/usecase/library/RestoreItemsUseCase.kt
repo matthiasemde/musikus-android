@@ -8,14 +8,14 @@
 
 package app.musikus.usecase.library
 
-import app.musikus.database.daos.LibraryItem
 import app.musikus.repository.LibraryRepository
+import java.util.UUID
 
 class RestoreItemsUseCase(
     private val libraryRepository: LibraryRepository
 ) {
 
-    suspend operator fun invoke(items: List<LibraryItem>) {
-        libraryRepository.restoreItems(items.map { it.id })
+    suspend operator fun invoke(itemIds: List<UUID>) {
+        libraryRepository.restoreItems(itemIds)
     }
 }

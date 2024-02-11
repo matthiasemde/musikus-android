@@ -51,10 +51,6 @@ data class LibraryItemEditData(
     val folderId: UUID?,
 )
 
-data class LibraryDialogState(
-    val folderDialogUiState: LibraryFolderDialogUiState?,
-    val itemDialogUiState: LibraryItemDialogUiState?,
-)
 
 @HiltViewModel
 class LibraryViewModel @Inject constructor(
@@ -64,8 +60,8 @@ class LibraryViewModel @Inject constructor(
 
 
     /** Private variables */
-    private var _foldersCache = emptyList<LibraryFolder>()
-    private var _itemsCache = emptyList<LibraryItem>()
+    private var _foldersCache = emptyList<UUID>()
+    private var _itemsCache = emptyList<UUID>()
 
     /** Imported flows */
 
@@ -103,15 +99,15 @@ class LibraryViewModel @Inject constructor(
 
     // Folder dialog
     private val _folderEditData = MutableStateFlow<LibraryFolderEditData?>(null)
-    private val _folderToEdit = MutableStateFlow<LibraryFolder?>(null)
+    private val _folderToEditId = MutableStateFlow<UUID?>(null)
 
     // Item dialog
     private val _itemEditData = MutableStateFlow<LibraryItemEditData?>(null)
-    private val _itemToEdit = MutableStateFlow<LibraryItem?>(null)
+    private val _itemToEditId = MutableStateFlow<UUID?>(null)
 
     // Action mode
-    private val _selectedFolders = MutableStateFlow<Set<LibraryFolder>>(emptySet())
-    private val _selectedItems = MutableStateFlow<Set<LibraryItem>>(emptySet())
+    private val _selectedFolderIds = MutableStateFlow<Set<UUID>>(emptySet())
+    private val _selectedItemIds = MutableStateFlow<Set<UUID>>(emptySet())
 
 
     /** Combining imported and own flows  */
@@ -149,8 +145,8 @@ class LibraryViewModel @Inject constructor(
     )
 
     private val actionModeUiState = combine(
-        _selectedFolders,
-        _selectedItems,
+        _selectedFolderIds,
+        _selectedItemIds,
     ) { selectedFolders, selectedItems ->
         LibraryActionModeUiState(
             isActionMode = selectedFolders.isNotEmpty() || selectedItems.isNotEmpty(),
@@ -186,14 +182,14 @@ class LibraryViewModel @Inject constructor(
 
     private val foldersUiState = combine(
         foldersWithItems,
-        _selectedFolders,
+        _selectedFolderIds,
         foldersSortMenuUiState,
     ) { foldersWithItems, selectedFolders, sortMenuUiState ->
         if(foldersWithItems.isEmpty()) return@combine null
 
         LibraryFoldersUiState(
             foldersWithItems = foldersWithItems,
-            selectedFolders = selectedFolders,
+            selectedFolderIds = selectedFolders,
             sortMenuUiState = sortMenuUiState,
         )
     }.stateIn(
@@ -223,14 +219,14 @@ class LibraryViewModel @Inject constructor(
 
     private val itemsUiState = combine(
         items,
-        _selectedItems,
+        _selectedItemIds,
         itemsSortMenuUiState,
     ) { items, selectedItems, sortMenuUiState ->
         if(items.isEmpty()) return@combine null
 
         LibraryItemsUiState(
             items = items,
-            selectedItems = selectedItems,
+            selectedItemIds = selectedItems,
             sortMenuUiState = sortMenuUiState,
         )
     }.stateIn(
@@ -261,16 +257,16 @@ class LibraryViewModel @Inject constructor(
 
     private val folderDialogUiState = combine(
         _folderEditData,
-        _folderToEdit,
-    ) { editData, folderToEdit ->
+        _folderToEditId,
+    ) { editData, folderToEditId ->
         if(editData == null) return@combine null
         val confirmButtonEnabled = editData.name.isNotBlank()
 
         LibraryFolderDialogUiState(
-            mode = if (folderToEdit == null) DialogMode.ADD else DialogMode.EDIT,
+            mode = if (folderToEditId == null) DialogMode.ADD else DialogMode.EDIT,
             folderData = editData,
             confirmButtonEnabled = confirmButtonEnabled,
-            folderToEdit = folderToEdit,
+            folderToEditId = folderToEditId,
         )
     }.stateIn(
         scope = viewModelScope,
@@ -280,18 +276,17 @@ class LibraryViewModel @Inject constructor(
 
     private val itemDialogUiState = combine(
         _itemEditData,
-        _itemToEdit,
+        _itemToEditId,
         foldersWithItems,
-    ) { editData, itemToEdit, foldersWithItems ->
+    ) { editData, itemToEditId, foldersWithItems ->
         if(editData == null) return@combine null
         val confirmButtonEnabled = editData.name.isNotBlank()
 
-        LibraryItemDialogUiState(
-            mode = if (itemToEdit == null) DialogMode.ADD else DialogMode.EDIT,
+        LibraryLibraryItemDialogUiState(
+            mode = if (itemToEditId == null) DialogMode.ADD else DialogMode.EDIT,
             itemData = editData,
             folders = foldersWithItems.map { it.folder },
-            confirmButtonEnabled = confirmButtonEnabled,
-            itemToEdit = itemToEdit,
+            isConfirmButtonEnabled = confirmButtonEnabled,
         )
     }.stateIn(
         scope = viewModelScope,
@@ -304,14 +299,14 @@ class LibraryViewModel @Inject constructor(
         itemDialogUiState,
     ) { folderDialogUiState, itemDialogUiState ->
         assert (folderDialogUiState == null || itemDialogUiState == null)
-        LibraryDialogState(
+        LibraryDialogUiState(
             folderDialogUiState = folderDialogUiState,
             itemDialogUiState = itemDialogUiState,
         )
     }.stateIn(
         scope = viewModelScope,
         started = WhileSubscribed(5000),
-        initialValue = LibraryDialogState(
+        initialValue = LibraryDialogUiState(
             folderDialogUiState = folderDialogUiState.value,
             itemDialogUiState = itemDialogUiState.value,
         )
@@ -355,20 +350,51 @@ class LibraryViewModel @Inject constructor(
         )
     )
 
+    fun onUiEvent(event: LibraryUiEvent) {
+        when(event) {
+            is LibraryUiEvent.BackButtonPressed -> onTopBarBackPressed()
+            is LibraryUiEvent.FolderPressed -> onFolderClicked(event.folder, event.longClick)
+            is LibraryUiEvent.FolderSortMenuPressed -> onFolderSortMenuChanged(_showFolderSortMenu.value.not())
+            is LibraryUiEvent.FolderSortModePressed -> onFolderSortModeSelected(event.mode)
+            is LibraryUiEvent.ItemPressed -> onItemClicked(event.item, event.longClick)
+            is LibraryUiEvent.ItemSortMenuPressed -> onItemSortMenuChanged(_showItemSortMenu.value.not())
+            is LibraryUiEvent.ItemSortModePressed -> onItemSortModeSelected(event.mode)
+            is LibraryUiEvent.DeleteButtonPressed -> onDeleteAction()
+            is LibraryUiEvent.RestoreButtonPressed -> onRestoreAction()
+            is LibraryUiEvent.EditButtonPressed -> onEditAction()
+            is LibraryUiEvent.AddFolderButtonPressed -> showFolderDialog()
+            is LibraryUiEvent.AddItemButtonPressed -> showItemDialog()
+            is LibraryUiEvent.FolderDialogNameChanged -> onFolderDialogNameChanged(event.name)
+            is LibraryUiEvent.FolderDialogConfirmed -> onFolderDialogConfirmed()
+            is LibraryUiEvent.FolderDialogDismissed -> clearFolderDialog()
+            is LibraryUiEvent.ItemDialogUiEvent -> {
+                when(val dialogEvent = event.dialogEvent) {
+                    is LibraryItemDialogUiEvent.NameChanged -> onItemDialogNameChanged(dialogEvent.name)
+                    is LibraryItemDialogUiEvent.ColorIndexChanged -> onItemDialogColorIndexChanged(dialogEvent.colorIndex)
+                    is LibraryItemDialogUiEvent.FolderIdChanged -> onItemDialogFolderIdChanged(dialogEvent.folderId)
+                    is LibraryItemDialogUiEvent.Confirmed -> onItemDialogConfirmed()
+                    is LibraryItemDialogUiEvent.Dismissed -> clearItemDialog()
+                }
+            }
+            is LibraryUiEvent.ClearActionMode -> clearActionMode()
+        }
+    }
+
+
     /**
      * Mutators
      */
 
-    fun onTopBarBackPressed() {
+    private fun onTopBarBackPressed() {
         _activeFolder.update { null }
     }
 
-    fun onFolderClicked(
+    private fun onFolderClicked(
         folder: LibraryFolder,
         longClick: Boolean = false
     ) {
         if (longClick) {
-            _selectedFolders.update { it + folder }
+            _selectedFolderIds.update { it + folder.id }
             return
         }
 
@@ -376,30 +402,30 @@ class LibraryViewModel @Inject constructor(
         if(!uiState.value.actionModeUiState.isActionMode) {
             _activeFolder.update { folder }
         } else {
-            if(_selectedFolders.value.contains(folder)) {
-                _selectedFolders.update { it - folder }
+            if(_selectedFolderIds.value.contains(folder.id)) {
+                _selectedFolderIds.update { it - folder.id }
             } else {
-                _selectedFolders.update { it + folder }
+                _selectedFolderIds.update { it + folder.id }
             }
         }
     }
 
-    fun onFolderSortMenuChanged(show: Boolean) {
+    private fun onFolderSortMenuChanged(show: Boolean) {
         _showFolderSortMenu.update { show }
     }
 
-    fun onItemClicked(
+    private fun onItemClicked(
         item: LibraryItem,
         longClick: Boolean = false
     ) {
         if (longClick) {
-            _selectedItems.update { it + item }
+            _selectedItemIds.update { it + item.id }
             return
         }
 
         // Short Click
         if(!uiState.value.actionModeUiState.isActionMode) {
-            _itemToEdit.update { item }
+            _itemToEditId.update { item.id }
             _itemEditData.update {
                 LibraryItemEditData(
                     name = item.name,
@@ -408,22 +434,22 @@ class LibraryViewModel @Inject constructor(
                 )
             }
         } else {
-            if(_selectedItems.value.contains(item)) {
-                _selectedItems.update { it - item }
+            if(_selectedItemIds.value.contains(item.id)) {
+                _selectedItemIds.update { it - item.id }
             } else {
-                _selectedItems.update { it + item }
+                _selectedItemIds.update { it + item.id }
             }
         }
     }
 
-    fun onItemSortMenuChanged(show: Boolean) {
+    private fun onItemSortMenuChanged(show: Boolean) {
         _showItemSortMenu.update { show }
     }
 
-    fun onDeleteAction() {
+    private fun onDeleteAction() {
         viewModelScope.launch {
-            _foldersCache = _selectedFolders.value.toList()
-            _itemsCache = _selectedItems.value.toList()
+            _foldersCache = _selectedFolderIds.value.toList()
+            _itemsCache = _selectedItemIds.value.toList()
 
             libraryUseCases.deleteFolders(_foldersCache)
             libraryUseCases.deleteItems(_itemsCache)
@@ -432,23 +458,27 @@ class LibraryViewModel @Inject constructor(
         }
     }
 
-    fun onRestoreAction() {
+    private fun onRestoreAction() {
         viewModelScope.launch {
             libraryUseCases.restoreFolders(_foldersCache)
             libraryUseCases.restoreItems(_itemsCache)
         }
     }
-    fun onEditAction() {
-        _selectedFolders.value.firstOrNull()?.let { folderToEdit ->
-            _folderToEdit.update { folderToEdit }
+    private fun onEditAction() {
+        _selectedFolderIds.value.firstOrNull()?.let { selectedFolderId ->
+            _folderToEditId.update { selectedFolderId }
             _folderEditData.update {
+                val folderToEdit = foldersWithItems.value.single {
+                    it.folder.id == selectedFolderId
+                }.folder
                 LibraryFolderEditData(
                     name = folderToEdit.name
                 )
             }
-        } ?: _selectedItems.value.firstOrNull()?.let { itemToEdit ->
-            _itemToEdit.update { itemToEdit }
+        } ?: _selectedItemIds.value.firstOrNull()?.let { selectedItemId ->
+            _itemToEditId.update { selectedItemId }
             _itemEditData.update {
+                val itemToEdit = items.value.single { it.id == selectedItemId }
                 LibraryItemEditData(
                     name = itemToEdit.name,
                     colorIndex = itemToEdit.colorIndex,
@@ -459,7 +489,7 @@ class LibraryViewModel @Inject constructor(
         clearActionMode()
     }
 
-    fun showFolderDialog() {
+    private fun showFolderDialog() {
         _folderEditData.update {
             LibraryFolderEditData(
                 name = ""
@@ -467,48 +497,48 @@ class LibraryViewModel @Inject constructor(
         }
     }
 
-    fun showItemDialog(folderId: UUID? = null) {
+    private fun showItemDialog() {
         _itemEditData.update {
             LibraryItemEditData(
                 name = "",
                 colorIndex = (Math.random() * 10).toInt(),
-                folderId = folderId
+                folderId = _activeFolder.value?.id
             )
         }
     }
 
-    fun onFolderDialogNameChanged(newName: String) {
+    private fun onFolderDialogNameChanged(newName: String) {
         _folderEditData.update { it?.copy(name = newName) }
     }
 
-    fun onItemDialogNameChanged(newName: String) {
+    private fun onItemDialogNameChanged(newName: String) {
         _itemEditData.update { it?.copy(name = newName) }
     }
 
-    fun onItemDialogColorIndexChanged(newColorIndex: Int) {
+    private fun onItemDialogColorIndexChanged(newColorIndex: Int) {
         _itemEditData.update { it?.copy(colorIndex = newColorIndex) }
     }
 
-    fun onItemDialogFolderIdChanged(newFolderId: UUID?) {
+    private fun onItemDialogFolderIdChanged(newFolderId: UUID?) {
         _itemEditData.update { it?.copy(folderId = newFolderId) }
     }
 
-    fun clearFolderDialog() {
-        _folderToEdit.update { null }
+    private fun clearFolderDialog() {
+        _folderToEditId.update { null }
         _folderEditData.update { null }
     }
 
-    fun clearItemDialog() {
-        _itemToEdit.update { null }
+    private fun clearItemDialog() {
+        _itemToEditId.update { null }
         _itemEditData.update { null }
     }
 
-    fun onFolderDialogConfirmed() {
+    private fun onFolderDialogConfirmed() {
         viewModelScope.launch {
             val folderData = _folderEditData.value ?: return@launch
-            _folderToEdit.value?.let {
+            _folderToEditId.value?.let {
                 libraryUseCases.editFolder(
-                    id = it.id,
+                    id = it,
                     updateAttributes = LibraryFolderUpdateAttributes(
                         name = folderData.name
                     )
@@ -520,12 +550,12 @@ class LibraryViewModel @Inject constructor(
         }
     }
 
-    fun onItemDialogConfirmed() {
+    private fun onItemDialogConfirmed() {
         viewModelScope.launch {
             val itemData = _itemEditData.value ?: return@launch
-            _itemToEdit.value?.let {
+            _itemToEditId.value?.let {
                 libraryUseCases.editItem(
-                    id = it.id,
+                    id = it,
                     LibraryItemUpdateAttributes (
                         name = itemData.name,
                         colorIndex = itemData.colorIndex,
@@ -543,19 +573,19 @@ class LibraryViewModel @Inject constructor(
         }
     }
 
-    fun clearActionMode() {
-        _selectedItems.update { emptySet() }
-        _selectedFolders.update { emptySet() }
+    private fun clearActionMode() {
+        _selectedItemIds.update { emptySet() }
+        _selectedFolderIds.update { emptySet() }
     }
 
-    fun onItemSortModeSelected(selection: LibraryItemSortMode) {
+    private fun onItemSortModeSelected(selection: LibraryItemSortMode) {
         _showItemSortMenu.update { false }
         viewModelScope.launch {
             userPreferencesUseCases.selectItemSortMode(selection)
         }
     }
 
-    fun onFolderSortModeSelected(selection: LibraryFolderSortMode) {
+    private fun onFolderSortModeSelected(selection: LibraryFolderSortMode) {
         _showFolderSortMenu.update { false }
         viewModelScope.launch {
             userPreferencesUseCases.selectFolderSortMode(selection)

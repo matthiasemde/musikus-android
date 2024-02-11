@@ -54,19 +54,16 @@ import java.util.UUID
 
 @Composable
 fun LibraryFolderDialog(
-    mode: DialogMode,
-    folderData: LibraryFolderEditData,
-    onFolderNameChange: (String) -> Unit,
-    onConfirmHandler: () -> Unit,
-    onDismissHandler: () -> Unit,
+    uiState: LibraryFolderDialogUiState,
+    eventHandler: LibraryUiEventHandler
 ) {
-    Dialog(onDismissRequest = onDismissHandler) {
+    Dialog(onDismissRequest = { eventHandler(LibraryUiEvent.FolderDialogDismissed) }) {
         Column(
             modifier = Modifier
                 .clip(MaterialTheme.shapes.extraLarge)
                 .background(MaterialTheme.colorScheme.surface)
         ) {
-            DialogHeader(title = when(mode) {
+            DialogHeader(title = when(uiState.mode) {
                     DialogMode.ADD -> "Create folder"
                     DialogMode.EDIT -> "Edit folder"
                 },
@@ -76,8 +73,8 @@ fun LibraryFolderDialog(
                     modifier = Modifier
                         .padding(horizontal = 24.dp)
                         .testTag(TestTags.FOLDER_DIALOG_NAME_INPUT),
-                    value = folderData.name,
-                    onValueChange = onFolderNameChange,
+                    value = uiState.folderData.name,
+                    onValueChange = { eventHandler(LibraryUiEvent.FolderDialogNameChanged(it)) },
                     label = { Text(text = "Folder name") },
                     singleLine = true,
                 )
@@ -88,20 +85,20 @@ fun LibraryFolderDialog(
                     horizontalArrangement = Arrangement.End
                 ) {
                     TextButton(
-                        onClick = onDismissHandler,
+                        onClick = { eventHandler(LibraryUiEvent.FolderDialogDismissed) },
                         colors = ButtonDefaults.textButtonColors(
                             contentColor = MaterialTheme.colorScheme.primary
                         )
                     ) {
                         Text(text = "Cancel")
                     }
-                    val confirmText = when(mode) {
+                    val confirmText = when(uiState.mode) {
                         DialogMode.ADD -> "Create"
                         DialogMode.EDIT -> "Edit"
                     }
                     TextButton(
-                        onClick = onConfirmHandler,
-                        enabled = folderData.name.isNotEmpty(),
+                        onClick = { eventHandler(LibraryUiEvent.FolderDialogConfirmed) },
+                        enabled = uiState.folderData.name.isNotEmpty(),
                         colors = ButtonDefaults.textButtonColors(
                             contentColor = MaterialTheme.colorScheme.primary
                         ),
@@ -117,28 +114,38 @@ fun LibraryFolderDialog(
     }
 }
 
+interface LibraryItemDialogUiState {
+    val mode: DialogMode
+    val itemData: LibraryItemEditData
+    val folders : List<LibraryFolder>
+    val isConfirmButtonEnabled: Boolean
+}
+
+typealias LibraryItemDialogUiEventHandler = (LibraryItemDialogUiEvent) -> Unit
+
+sealed class LibraryItemDialogUiEvent {
+    data class NameChanged(val name: String) : LibraryItemDialogUiEvent()
+    data class ColorIndexChanged(val colorIndex: Int) : LibraryItemDialogUiEvent()
+    data class FolderIdChanged(val folderId: UUID?) : LibraryItemDialogUiEvent()
+    data object Confirmed : LibraryItemDialogUiEvent()
+    data object Dismissed : LibraryItemDialogUiEvent()
+}
+
 @Composable
 fun LibraryItemDialog(
-    mode: DialogMode,
-    folders: List<LibraryFolder>,
-    itemData: LibraryItemEditData,
-    isConfirmButtonEnabled: Boolean,
-    onNameChange: (String) -> Unit,
-    onColorIndexChange: (Int) -> Unit,
-    onSelectedFolderIdChange: (UUID?) -> Unit,
-    onConfirmHandler: () -> Unit,
-    onDismissHandler: () -> Unit,
+    uiState: LibraryItemDialogUiState,
+    eventHandler: LibraryItemDialogUiEventHandler
 ) {
 
     var folderSelectorExpanded by remember { mutableStateOf(false) }
 
-    Dialog(onDismissRequest = onDismissHandler) {
+    Dialog(onDismissRequest = { eventHandler(LibraryItemDialogUiEvent.Dismissed) }) {
         Column(
             modifier = Modifier
                 .clip(MaterialTheme.shapes.extraLarge)
                 .background(MaterialTheme.colorScheme.surface)
         ) {
-            DialogHeader(title = when(mode) {
+            DialogHeader(title = when(uiState.mode) {
                 DialogMode.ADD -> stringResource(id = R.string.addLibraryItemDialogTitle)
                 DialogMode.EDIT -> stringResource(id = R.string.addLibraryItemDialogTitleEdit)
             })
@@ -147,8 +154,8 @@ fun LibraryItemDialog(
                     modifier = Modifier
                         .padding(horizontal = 24.dp)
                         .testTag(TestTags.ITEM_DIALOG_NAME_INPUT),
-                    value = itemData.name,
-                    onValueChange = onNameChange,
+                    value = uiState.itemData.name,
+                    onValueChange = { eventHandler(LibraryItemDialogUiEvent.NameChanged(it)) },
                     leadingIcon = {
                         Icon(
                             imageVector = Icons.Default.MusicNote,
@@ -159,7 +166,7 @@ fun LibraryItemDialog(
                     label = { Text(text = "Item name") },
                     singleLine = true,
                 )
-                if(folders.isNotEmpty()) {
+                if(uiState.folders.isNotEmpty()) {
                     SelectionSpinner(
                         modifier = Modifier
                             .padding(top = 16.dp)
@@ -173,18 +180,19 @@ fun LibraryItemDialog(
                                 tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                             )
                         },
-                        options = folders.map { folder -> UUIDSelectionSpinnerOption(folder.id, folder.name) },
+                        options = uiState.folders.map { folder -> UUIDSelectionSpinnerOption(folder.id, folder.name) },
                         selected = UUIDSelectionSpinnerOption(
-                            id = itemData.folderId,
-                            name = folders.firstOrNull {
-                                it.id == itemData.folderId
+                            id = uiState.itemData.folderId,
+                            name = uiState.folders.firstOrNull {
+                                it.id == uiState.itemData.folderId
                             }?.name ?: "No folder" ),
                         specialOption = UUIDSelectionSpinnerOption(null, "No folder"),
                         semanticDescription = "Select folder",
                         dropdownTestTag = TestTags.ITEM_DIALOG_FOLDER_SELECTOR_DROPDOWN,
                         onExpandedChange = { folderSelectorExpanded = it },
                         onSelectedChange = {
-                            onSelectedFolderIdChange((it as UUIDSelectionSpinnerOption).id)
+                            eventHandler(LibraryItemDialogUiEvent.FolderIdChanged((it as UUIDSelectionSpinnerOption).id))
+                            folderSelectorExpanded = false
                         },
                     )
                 }
@@ -203,9 +211,9 @@ fun LibraryItemDialog(
                                 val index = 2*i+j
                                 ColorSelectRadioButton(
                                     color = libraryItemColors[index],
-                                    selected = itemData.colorIndex == index,
+                                    selected = uiState.itemData.colorIndex == index,
                                     colorDescription = "Color ${index+1}",
-                                    onClick = { onColorIndexChange(index) }
+                                    onClick = { eventHandler(LibraryItemDialogUiEvent.ColorIndexChanged(index)) }
                                 )
                             }
                         }
@@ -218,20 +226,20 @@ fun LibraryItemDialog(
                     horizontalArrangement = Arrangement.End
                 ) {
                     TextButton(
-                        onClick = onDismissHandler,
+                        onClick = { eventHandler(LibraryItemDialogUiEvent.Dismissed) },
                         colors = ButtonDefaults.textButtonColors(
                             contentColor = MaterialTheme.colorScheme.primary
                         )
                     ) {
                         Text(text = "Cancel")
                     }
-                    val confirmText = when(mode) {
+                    val confirmText = when(uiState.mode) {
                         DialogMode.ADD -> "Create"
                         DialogMode.EDIT -> "Edit"
                     }
                     TextButton(
-                        onClick = onConfirmHandler,
-                        enabled = isConfirmButtonEnabled,
+                        onClick = { eventHandler(LibraryItemDialogUiEvent.Confirmed) },
+                        enabled = uiState.isConfirmButtonEnabled,
                         colors = ButtonDefaults.textButtonColors(
                             contentColor = MaterialTheme.colorScheme.primary
                         ),

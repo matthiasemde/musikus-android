@@ -11,6 +11,9 @@ package app.musikus.ui.activesession
 import app.musikus.database.Nullable
 import app.musikus.database.daos.LibraryFolder
 import app.musikus.database.daos.LibraryItem
+import app.musikus.ui.library.DialogMode
+import app.musikus.ui.library.LibraryItemDialogUiEvent
+import app.musikus.ui.library.LibraryItemDialogUiState
 import app.musikus.ui.library.LibraryItemEditData
 import java.util.UUID
 import kotlin.time.Duration
@@ -21,18 +24,19 @@ data class ActiveSessionUiState(
     val cardUiStates: List<ActiveSessionDraggableCardUiState>,
     val totalSessionDuration: Duration,
     val totalBreakDuration: Duration,
-    val sections: List<SectionListItemUiState>,
+    val sections: List<ActiveSessionSectionListItemUiState>,
     val isPaused: Boolean,
     val addItemDialogUiState: ActiveSessionAddLibraryItemDialogUiState?
 )
 
 data class ActiveSessionAddLibraryItemDialogUiState(
-    val folders: List<LibraryFolder>,
-    val itemData: LibraryItemEditData,
-    val isConfirmButtonEnabled: Boolean
-)
+    override val folders: List<LibraryFolder>,
+    override val itemData: LibraryItemEditData,
+    override val isConfirmButtonEnabled: Boolean,
+    override val mode: DialogMode = DialogMode.ADD,
+) : LibraryItemDialogUiState
 
-data class SectionListItemUiState(
+data class ActiveSessionSectionListItemUiState(
     val id: Int,
     val libraryItem: LibraryItem,
     val duration: Duration
@@ -88,7 +92,7 @@ sealed class ActiveSessionDraggableCardUiState : DraggableCardUiState<
     ) : ActiveSessionDraggableCardUiState()
 }
 
-sealed class ActiveSessionUiEvent : DraggableCardUiEvent() {
+sealed class ActiveSessionUiEvent : DraggableCardUiEvent {
 
     data class SelectFolder(val folderId: UUID?) : ActiveSessionUiEvent()
     data class SelectItem(val item: LibraryItem) : ActiveSessionUiEvent()
@@ -100,11 +104,7 @@ sealed class ActiveSessionUiEvent : DraggableCardUiEvent() {
 
     data object CreateNewLibraryItem : ActiveSessionUiEvent()
 
-    data class NewLibraryItemNameChanged(val newName: String) : ActiveSessionUiEvent()
-    data class NewLibraryItemColorChanged(val newColorIndex: Int) : ActiveSessionUiEvent()
-    data class NewLibraryItemFolderChanged(val newFolderId: UUID?) : ActiveSessionUiEvent()
-    data object NewLibraryItemDialogConfirmed : ActiveSessionUiEvent()
-    data object NewLibraryItemDialogDismissed : ActiveSessionUiEvent()
+    data class ItemDialogUiEvent(val dialogEvent: LibraryItemDialogUiEvent) : ActiveSessionUiEvent()
 }
 
 typealias ActiveSessionUiEventHandler = (ActiveSessionUiEvent) -> Unit

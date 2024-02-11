@@ -99,15 +99,16 @@ fun Library(
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val eventHandler = viewModel::onUiEvent
 
     BackHandler(
         enabled = uiState.topBarUiState.showBackButton,
-        onBack = viewModel::onTopBarBackPressed
+        onBack = { eventHandler(LibraryUiEvent.BackButtonPressed) }
     )
 
     BackHandler(
         enabled = uiState.actionModeUiState.isActionMode,
-        onBack = viewModel::clearActionMode
+        onBack = { eventHandler(LibraryUiEvent.ClearActionMode) }
     )
 
     BackHandler(
@@ -124,7 +125,7 @@ fun Library(
             if(fabUiState.activeFolder != null) {
                 FloatingActionButton(
                     onClick = {
-                        viewModel.showItemDialog(fabUiState.activeFolder.id)
+                        eventHandler(LibraryUiEvent.AddItemButtonPressed)
                         mainEventHandler(MainUIEvent.CollapseMultiFab)
                     },
                 ) {
@@ -136,14 +137,14 @@ fun Library(
                     onStateChange = { state ->
                         mainEventHandler(MainUIEvent.ChangeMultiFabState(state))
                         if(state == MultiFabState.EXPANDED) {
-                            viewModel.clearActionMode()
+                            eventHandler(LibraryUiEvent.ClearActionMode)
                         }
                     },
                     contentDescription = "Add",
                     miniFABs = listOf(
                         MiniFABData(
                             onClick = {
-                                viewModel.showItemDialog()
+                                eventHandler(LibraryUiEvent.AddItemButtonPressed)
                                 mainEventHandler(MainUIEvent.CollapseMultiFab)
                             },
                             label = "Item",
@@ -151,7 +152,7 @@ fun Library(
                         ),
                         MiniFABData(
                             onClick = {
-                                viewModel.showFolderDialog()
+                                eventHandler(LibraryUiEvent.AddFolderButtonPressed)
                                 mainEventHandler(MainUIEvent.CollapseMultiFab)
                             },
                             label = "Folder",
@@ -169,7 +170,7 @@ fun Library(
                 title = { Text(text = topBarUiState.title) },
                 navigationIcon = {
                     if(topBarUiState.showBackButton) {
-                        IconButton(onClick = viewModel::onTopBarBackPressed) {
+                        IconButton(onClick = { eventHandler(LibraryUiEvent.BackButtonPressed) }) {
                             Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
                         }
                     }
@@ -214,13 +215,13 @@ fun Library(
             if(actionModeUiState.isActionMode) {
                 ActionBar(
                     numSelectedItems = actionModeUiState.numberOfSelections,
-                    onDismissHandler = viewModel::clearActionMode,
-                    onEditHandler = viewModel::onEditAction,
+                    onDismissHandler = { eventHandler(LibraryUiEvent.ClearActionMode) },
+                    onEditHandler = { eventHandler(LibraryUiEvent.EditButtonPressed) },
                     onDeleteHandler = {
-                        viewModel.onDeleteAction()
+                        eventHandler(LibraryUiEvent.DeleteButtonPressed)
                         mainEventHandler(MainUIEvent.ShowSnackbar(
                             message = "Deleted ${actionModeUiState.numberOfSelections} items",
-                            onUndo = viewModel::onRestoreAction
+                            onUndo = { eventHandler(LibraryUiEvent.RestoreButtonPressed) }
                         ))
                     }
                 )
@@ -232,12 +233,7 @@ fun Library(
             LibraryContent(
                 contentPadding = paddingValues,
                 contentUiState = contentUiState,
-                onShowFolderSortMenuChange = viewModel::onFolderSortMenuChanged,
-                onFolderSortModeSelected = viewModel::onFolderSortModeSelected,
-                onShowItemSortMenuChange = viewModel::onItemSortMenuChanged,
-                onItemSortModeSelected = viewModel::onItemSortModeSelected,
-                onFolderClicked = viewModel::onFolderClicked,
-                onItemClicked = viewModel::onItemClicked,
+                eventHandler = eventHandler
             )
 
             // Show hint if no items or folders are in the library
@@ -263,25 +259,15 @@ fun Library(
 
             if(folderDialogUiState != null) {
                 LibraryFolderDialog(
-                    mode = folderDialogUiState.mode,
-                    folderData = folderDialogUiState.folderData,
-                    onFolderNameChange = viewModel::onFolderDialogNameChanged,
-                    onConfirmHandler = viewModel::onFolderDialogConfirmed,
-                    onDismissHandler = viewModel::clearFolderDialog,
+                    uiState = folderDialogUiState,
+                    eventHandler = eventHandler
                 )
             }
 
             if(itemDialogUiState != null) {
                 LibraryItemDialog(
-                    mode = itemDialogUiState.mode,
-                    folders = itemDialogUiState.folders,
-                    itemData = itemDialogUiState.itemData,
-                    isConfirmButtonEnabled = itemDialogUiState.confirmButtonEnabled,
-                    onNameChange = viewModel::onItemDialogNameChanged,
-                    onColorIndexChange = viewModel::onItemDialogColorIndexChanged,
-                    onSelectedFolderIdChange = viewModel::onItemDialogFolderIdChanged,
-                    onConfirmHandler = viewModel::onItemDialogConfirmed,
-                    onDismissHandler = viewModel::clearItemDialog,
+                    uiState = itemDialogUiState,
+                    eventHandler = { eventHandler(LibraryUiEvent.ItemDialogUiEvent(it)) }
                 )
             }
 
@@ -313,12 +299,7 @@ fun Library(
 fun LibraryContent(
     contentPadding: PaddingValues,
     contentUiState: LibraryContentUiState,
-    onShowFolderSortMenuChange: (Boolean) -> Unit,
-    onFolderSortModeSelected: (LibraryFolderSortMode) -> Unit,
-    onShowItemSortMenuChange: (Boolean) -> Unit,
-    onItemSortModeSelected: (LibraryItemSortMode) -> Unit,
-    onFolderClicked: (LibraryFolder, Boolean) -> Unit,
-    onItemClicked: (LibraryItem, Boolean) -> Unit,
+    eventHandler: LibraryUiEventHandler
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxWidth(),
@@ -354,9 +335,9 @@ fun LibraryContent(
                         currentSortMode = sortMenuUiState.mode,
                         currentSortDirection = sortMenuUiState.direction,
                         sortItemDescription = "folders",
-                        onShowMenuChanged = onShowFolderSortMenuChange,
+                        onShowMenuChanged = { eventHandler(LibraryUiEvent.FolderSortMenuPressed) },
                         onSelectionHandler = {
-                            onFolderSortModeSelected(it as LibraryFolderSortMode)
+                            eventHandler(LibraryUiEvent.FolderSortModePressed(it as LibraryFolderSortMode))
                         }
                     )
                 }
@@ -382,9 +363,13 @@ fun LibraryContent(
                             LibraryFolder(
                                 folder = folder,
                                 numItems = folderWithItems.items.size,
-                                selected = folder in foldersUiState.selectedFolders,
-                                onShortClick = { onFolderClicked(folder, false) },
-                                onLongClick = { onFolderClicked(folder, true) }
+                                selected = folder.id in foldersUiState.selectedFolderIds,
+                                onShortClick = {
+                                    eventHandler(LibraryUiEvent.FolderPressed(folder, longClick = false))
+                                },
+                                onLongClick = {
+                                    eventHandler(LibraryUiEvent.FolderPressed(folder, longClick = true))
+                                }
                             )
                         }
                     }
@@ -419,9 +404,9 @@ fun LibraryContent(
                         currentSortMode = sortMenuUiState.mode,
                         currentSortDirection = sortMenuUiState.direction,
                         sortItemDescription = "items",
-                        onShowMenuChanged = onShowItemSortMenuChange,
+                        onShowMenuChanged = { eventHandler(LibraryUiEvent.ItemSortMenuPressed) },
                         onSelectionHandler = {
-                            onItemSortModeSelected(it as LibraryItemSortMode)
+                            eventHandler(LibraryUiEvent.ItemSortModePressed(it as LibraryItemSortMode))
                         }
                     )
                 }
@@ -439,9 +424,9 @@ fun LibraryContent(
                             horizontal = MaterialTheme.spacing.large
                         ),
                         item = item,
-                        selected = item in itemsUiState.selectedItems,
-                        onShortClick = { onItemClicked(item, false) },
-                        onLongClick = { onItemClicked(item, true) }
+                        selected = item.id in itemsUiState.selectedItemIds,
+                        onShortClick = { eventHandler(LibraryUiEvent.ItemPressed(item, longClick = false)) },
+                        onLongClick = { eventHandler(LibraryUiEvent.ItemPressed(item, longClick = true)) }
                     )
                 }
             }
@@ -518,7 +503,7 @@ fun LibraryUiItem(
         ) {
             Box(
                 modifier = Modifier
-                    .width(if(compact) 8.dp else 10.dp)
+                    .width(if (compact) 8.dp else 10.dp)
                     .fillMaxHeight()
                     .clip(RoundedCornerShape(5.dp))
                     .align(Alignment.CenterVertically)

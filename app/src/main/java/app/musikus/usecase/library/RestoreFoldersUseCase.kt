@@ -8,14 +8,14 @@
 
 package app.musikus.usecase.library
 
-import app.musikus.database.daos.LibraryFolder
 import app.musikus.repository.LibraryRepository
+import java.util.UUID
 
 class RestoreFoldersUseCase(
     private val libraryRepository: LibraryRepository
 ) {
 
-    suspend operator fun invoke(folders: List<LibraryFolder>) {
-        libraryRepository.restoreFolders(folders.map { it.id })
+    suspend operator fun invoke(folderIds: List<UUID>) {
+        libraryRepository.restoreFolders(folderIds)
     }
 }

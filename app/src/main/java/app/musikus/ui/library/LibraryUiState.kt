@@ -14,6 +14,7 @@ import app.musikus.database.daos.LibraryItem
 import app.musikus.shared.TopBarUiState
 import app.musikus.utils.SortDirection
 import app.musikus.utils.SortMode
+import java.util.UUID
 
 data class LibraryTopBarUiState(
     override val title: String,
@@ -34,7 +35,7 @@ data class LibraryFoldersSortMenuUiState(
 
 data class LibraryFoldersUiState(
     val foldersWithItems: List<LibraryFolderWithItems>,
-    val selectedFolders: Set<LibraryFolder>,
+    val selectedFolderIds: Set<UUID>,
 
     val sortMenuUiState: LibraryFoldersSortMenuUiState
 )
@@ -48,7 +49,7 @@ data class LibraryItemsSortMenuUiState(
 
 data class LibraryItemsUiState(
     val items: List<LibraryItem>,
-    val selectedItems: Set<LibraryItem>,
+    val selectedItemIds: Set<UUID>,
 
     val sortMenuUiState: LibraryItemsSortMenuUiState
 )
@@ -64,17 +65,20 @@ data class LibraryFolderDialogUiState(
     val mode: DialogMode,
     val folderData: LibraryFolderEditData,
     val confirmButtonEnabled: Boolean,
-    val folderToEdit: LibraryFolder?,
+    val folderToEditId: UUID?,
 )
 
-data class LibraryItemDialogUiState(
-    val mode: DialogMode,
-    val itemData: LibraryItemEditData,
-    val folders : List<LibraryFolder>,
-    val confirmButtonEnabled: Boolean,
-    val itemToEdit: LibraryItem?,
-)
+data class LibraryLibraryItemDialogUiState(
+    override val mode: DialogMode,
+    override val itemData: LibraryItemEditData,
+    override val folders : List<LibraryFolder>,
+    override val isConfirmButtonEnabled: Boolean,
+) : LibraryItemDialogUiState
 
+data class LibraryDialogUiState(
+    val folderDialogUiState: LibraryFolderDialogUiState?,
+    val itemDialogUiState: LibraryItemDialogUiState?,
+)
 
 data class LibraryFabUiState(
     val activeFolder: LibraryFolder?,
@@ -84,6 +88,6 @@ data class LibraryUiState (
     val topBarUiState: LibraryTopBarUiState,
     val actionModeUiState: LibraryActionModeUiState,
     val contentUiState: LibraryContentUiState,
-    val dialogUiState: LibraryDialogState,
+    val dialogUiState: LibraryDialogUiState,
     val fabUiState: LibraryFabUiState,
 )
