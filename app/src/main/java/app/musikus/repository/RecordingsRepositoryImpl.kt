@@ -33,16 +33,22 @@ import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
+import java.nio.ByteBuffer
 import java.time.Instant
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import kotlin.time.Duration.Companion.milliseconds
+
+
+private const val DECODER_INPUT_BUFFER_SIZE = 1 shl 17 // 1 MB
+private const val EXTRACTOR_OUTPUT_BUFFER_SIZE = 1 shl 11 // 1 KB
 
 class RecordingsRepositoryImpl(
     private val application: Application,
     private val contentResolver: ContentResolver,
     @IoScope private val ioScope: CoroutineScope
 ) : RecordingsRepository {
+
 
     private val collection = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
         MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL)
@@ -53,16 +59,18 @@ class RecordingsRepositoryImpl(
         get() = subscribeTo { getRecordings() }
 
 
-    // source: https://stackoverflow.com/questions/55212362/how-to-decode-an-m4a-audio-on-android
+    // inspired by: https://stackoverflow.com/questions/55212362/how-to-decode-an-m4a-audio-on-android
+    // and: https://imnotyourson.com/enhance-poor-performance-of-decoding-audio-with-mediaextractor-and-mediacodec-to-pcm/
+
     @OptIn(ExperimentalCoroutinesApi::class)
-    override suspend fun getRawRecording(contentUri: Uri): Result<FloatArray> {
+    override suspend fun getRawRecording(contentUri: Uri): Result<ShortArray> {
         return withContext(Dispatchers.IO) {
 
             val mediaExtractor = MediaExtractor()
 
             Log.d("RecordingsRepository", "getRawRecording: $contentUri")
 
-            val recordingBuffer = ArrayList<Float>()
+            val recordingBuffer = ArrayList<Short>()
             var mediaFormat : MediaFormat? = null
 
             mediaExtractor.setDataSource(application, contentUri, null)
@@ -91,42 +99,113 @@ class RecordingsRepositoryImpl(
 
             return@withContext suspendCancellableCoroutine { coroutine ->
 
-                coroutine.invokeOnCancellation {
-                    Log.d("RecordingsRepository", "Cancellation invoked")
-                    mediaExtractor.release()
-                    decoder.stop()
-                    decoder.release()
-                }
+//                coroutine.invokeOnCancellation {
+//                    Log.d("RecordingsRepository", "Cancellation invoked")
+//                    mediaExtractor.release()
+//                    decoder.stop()
+//                    decoder.release()
+//                }
 
                 decoder.setCallback(object : MediaCodec.Callback() {
+                    private var isExtractorDone = false
+                    private var isDecoderAtEof = false
+
                     override fun onInputBufferAvailable(codec: MediaCodec, index: Int) {
                         val inputBuffer = codec.getInputBuffer(index) ?: return
-                        val sampleSize = mediaExtractor.readSampleData(inputBuffer, 0)
-                        if(sampleSize < 0) {
-                            codec.queueInputBuffer(index, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM)
+                        if(isExtractorDone && isDecoderAtEof) return
+
+                        var bufferChunkSize = 0
+                        var presentationTime = 0L
+
+                        val temporaryBuffer = ByteBuffer.allocate(EXTRACTOR_OUTPUT_BUFFER_SIZE)
+
+                        while(true) {
+                            val samplesRead = mediaExtractor.readSampleData(temporaryBuffer, 0)
+
+                            if (samplesRead > 0) {
+                                bufferChunkSize += samplesRead
+                                inputBuffer.put(temporaryBuffer)
+                                presentationTime += mediaExtractor.sampleTime
+                            }
+
+                            isExtractorDone = !mediaExtractor.advance() && samplesRead == -1
+                            val isDecoderBufferNearlyFull = bufferChunkSize + EXTRACTOR_OUTPUT_BUFFER_SIZE > DECODER_INPUT_BUFFER_SIZE
+
+                            if(isExtractorDone || isDecoderBufferNearlyFull)  {
+                                Log.d("RecordingsRepository", "Samples read: $samplesRead")
+                                Log.d("RecordingsRepository", "input presentation time: ${presentationTime}")
+                                Log.d("RecordingsRepository", "isExtractorDone $isExtractorDone, isDecoderBufferNearlyFull $isDecoderBufferNearlyFull")
+                                break
+                            }
+
+                            temporaryBuffer.clear()
+                        }
+
+
+                        Log.d("RecordingsRepository", "Buffer chunk size: $bufferChunkSize")
+
+                        if(bufferChunkSize > 0) {
+                            Log.d("RecordingsRepository", "Trying to queue input buffer in $index")
+                            codec.queueInputBuffer(
+                                index,
+                                0,
+                                bufferChunkSize,
+                                presentationTime,
+                                0
+                            )
+                        } else if (isExtractorDone) {
+                            isDecoderAtEof = true
+                            Log.d("RecordingsRepository", "Trying to queue end of stream in $index")
+                            codec.queueInputBuffer(
+                                index,
+                                0,
+                                0,
+                                0,
+                                MediaCodec.BUFFER_FLAG_END_OF_STREAM
+                            )
+                            Log.d("RecordingsRepository", "Extractor done")
                         } else {
-                            codec.queueInputBuffer(index, 0, sampleSize, mediaExtractor.sampleTime, 0)
-                            mediaExtractor.advance()
+                            Log.d("RecordingsRepository", "No buffer chunk size")
                         }
                     }
 
                     override fun onOutputBufferAvailable(codec: MediaCodec, index: Int, info: MediaCodec.BufferInfo) {
-                        val outputBuffer = codec.getOutputBuffer(index) ?: return
+                        val outputBuffer = codec.getOutputBuffer(index)
 
-                        if (info.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM != 0) {
+                        if(outputBuffer == null) {
+                            Log.d("RecordingsRepository", "Output buffer is null")
+                            codec.releaseOutputBuffer(index, false)
+                            return
+                        }
+
+                        val bufferFormat = codec.outputFormat
+
+                        Log.d("RecordingsRepository", "Output buffer format: $bufferFormat")
+
+                        if ((info.flags and MediaCodec.BUFFER_FLAG_CODEC_CONFIG) != 0) {
+                            Log.d("RecordingsRepository", "audio decoder: codec config buffer")
+                            codec.releaseOutputBuffer(index, false)
+                            return
+                        }
+
+                        Log.d("RecordingsRepository", "Output buffer available: $index, presentation time: ${info.presentationTimeUs}")
+
+                        if ((info.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
                             Log.d("RecordingsRepository", "End of stream reached")
                             coroutine.resume(
-                                value = Result.success(recordingBuffer.toFloatArray()),
+                                value = Result.success(recordingBuffer.toShortArray()),
                                 onCancellation = null
                             )
                             return
                         }
 
+
+
                         for (i in 0 until info.size step 2) {
-                            recordingBuffer.add (outputBuffer.getShort(i).toFloat())
+                            recordingBuffer.add (outputBuffer.getShort(i))
                         }
 
-                        outputBuffer.clear()
+//                        outputBuffer.clear()
                         codec.releaseOutputBuffer(index, false)
                     }
 
@@ -143,7 +222,23 @@ class RecordingsRepositoryImpl(
                 /**
                  *  ------------------- Configure and start the decoder -----------------------
                  */
+
+                nonNullMediaFormat.getInteger(MediaFormat.KEY_TRACK_ID).let { trackId ->
+                    Log.d("RecordingsRepository", "Track ID: $trackId")
+                }
+
+                nonNullMediaFormat.getInteger(MediaFormat.KEY_MAX_INPUT_SIZE).let {
+                    Log.d("RecordingsRepository", "Max input size: $it")
+                }
+                nonNullMediaFormat.setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, DECODER_INPUT_BUFFER_SIZE) // huge throughput
+                nonNullMediaFormat.getInteger(MediaFormat.KEY_MAX_INPUT_SIZE).let {
+                    Log.d("RecordingsRepository", "Max input size: $it")
+                }
+
                 decoder.configure(nonNullMediaFormat, null, null, 0)
+                decoder.outputFormat.let {
+                    Log.d("RecordingsRepository", "Output format: $it")
+                }
                 decoder.start()
             }
         }
