@@ -13,7 +13,6 @@ import android.content.ContentResolver
 import android.content.ContentUris
 import android.database.ContentObserver
 import android.media.MediaCodec
-import android.media.MediaCodecList
 import android.media.MediaExtractor
 import android.media.MediaFormat
 import android.net.Uri
@@ -41,8 +40,8 @@ import java.time.ZonedDateTime
 import kotlin.time.Duration.Companion.milliseconds
 
 
-private const val DECODER_INPUT_BUFFER_SIZE = 1 shl 13 // 1 MB
-private const val EXTRACTOR_OUTPUT_BUFFER_SIZE = 1 shl 10 // 1 KB
+private const val DECODER_INPUT_BUFFER_SIZE = 1 shl 13 // 8192 Byte
+private const val EXTRACTOR_OUTPUT_BUFFER_SIZE = 1 shl 11 // 2048 Byte
 
 class RecordingsRepositoryImpl(
     private val application: Application,
@@ -65,108 +64,145 @@ class RecordingsRepositoryImpl(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     override suspend fun getRawRecording(contentUri: Uri): Result<ShortArray> {
+        return withContext(Dispatchers.IO) {
 
-        val mediaExtractor = MediaExtractor()
+            val mediaExtractor = MediaExtractor()
 
-        Log.d("RecordingsRepository", "getRawRecording: $contentUri")
+            val recordingBuffer = ArrayList<Short>()
+            var mediaFormat : MediaFormat? = null
 
-        val recordingBuffer = ArrayList<Short>()
-        var mediaFormat : MediaFormat? = null
+            mediaExtractor.setDataSource(application, contentUri, null)
 
-        mediaExtractor.setDataSource(application, contentUri, null)
-
-        repeat(mediaExtractor.trackCount) { trackIndex ->
-            mediaFormat = mediaExtractor.getTrackFormat(trackIndex)
-            if(mediaFormat?.getString(MediaFormat.KEY_MIME)?.startsWith("audio/") == true) {
-                mediaExtractor.selectTrack(trackIndex)
-                return@repeat
+            repeat(mediaExtractor.trackCount) { trackIndex ->
+                mediaFormat = mediaExtractor.getTrackFormat(trackIndex)
+                if(mediaFormat?.getString(MediaFormat.KEY_MIME)?.startsWith("audio/") == true) {
+                    mediaExtractor.selectTrack(trackIndex)
+                    return@repeat
+                }
             }
-        }
 
-        // make sure, the mediaFormat is not null
-        val nonNullMediaFormat = mediaFormat
-            ?: return Result.failure(Exception("No audio track found"))
+            // make sure, the mediaFormat is not null
+            val nonNullMediaFormat = mediaFormat
+                ?: return@withContext Result.failure(Exception("No audio track found"))
 
-        // we get the mime type from the mediaFormat
-        val mimeType = nonNullMediaFormat.getString(MediaFormat.KEY_MIME)
-            ?: return Result.failure(Exception("No mime type found"))
+            // we get the mime type from the mediaFormat
+            val mimeType = nonNullMediaFormat.getString(MediaFormat.KEY_MIME)
+                ?: return@withContext Result.failure(Exception("No mime type found"))
+
+            val decoder = MediaCodec.createDecoderByType(mimeType)
+
+            return@withContext suspendCancellableCoroutine { coroutine ->
+
+                coroutine.invokeOnCancellation {
+                    Log.d("RecordingsRepository", "Cancellation invoked")
+                    mediaExtractor.release()
+                    decoder.stop()
+                    decoder.release()
+                }
+
+                decoder.setCallback(object : MediaCodec.Callback() {
+                    private var isDecoderEosSent = false
+
+                    override fun onInputBufferAvailable(codec: MediaCodec, index: Int) {
+                        val inputBuffer = codec.getInputBuffer(index) ?: return
+                        if(isDecoderEosSent) return
+
+                        var bufferChunkSize = 0
+                        val presentationTime: Long // not sure, why this does not have to be var...
+
+                        val temporaryBuffer = ByteBuffer.allocate(EXTRACTOR_OUTPUT_BUFFER_SIZE)
+
+                        while(true) {
+                            val samplesRead = mediaExtractor.readSampleData(temporaryBuffer, 0)
+
+                            if (samplesRead > 0) {
+                                bufferChunkSize += samplesRead
+                                inputBuffer.put(temporaryBuffer)
+                            }
+
+                            val isExtractorDone = !mediaExtractor.advance() && samplesRead == -1
+                            val isDecoderBufferNearlyFull = bufferChunkSize + EXTRACTOR_OUTPUT_BUFFER_SIZE > DECODER_INPUT_BUFFER_SIZE
+
+                            if(isExtractorDone || isDecoderBufferNearlyFull)  {
+                                presentationTime = mediaExtractor.sampleTime
+                                break
+                            }
+
+                            temporaryBuffer.clear()
+                        }
 
 
-        val codec = MediaCodec.createDecoderByType(mimeType)
-
-
-        nonNullMediaFormat.setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, DECODER_INPUT_BUFFER_SIZE) // huge throughput
-
-        codec.configure(nonNullMediaFormat, null, null, 0)
-
-        codec.start()
-
-
-        while(true) {
-
-            // input buffer
-            val inputBufferId = codec.dequeueInputBuffer(10)
-
-            Log.d("RecordingsRepository", "Dequeued inputBufferId: $inputBufferId")
-
-            if(inputBufferId >= 0) {
-                val inputBuffer = codec.getInputBuffer(inputBufferId) ?: break
-
-                var bufferChunkSize = 0
-                var presentationTime = 0L
-
-                val temporaryBuffer = ByteBuffer.allocate(EXTRACTOR_OUTPUT_BUFFER_SIZE)
-
-                while(true) {
-                    val sampleSize = mediaExtractor.readSampleData(temporaryBuffer, 0)
-
-                    if(sampleSize > 0) {
-                        inputBuffer.put(temporaryBuffer)
-
-                        bufferChunkSize += sampleSize
-                        presentationTime = mediaExtractor.sampleTime
-
-                        mediaExtractor.advance()
+                        if(bufferChunkSize > 0) {
+                            codec.queueInputBuffer(
+                                index,
+                                0,
+                                bufferChunkSize,
+                                presentationTime,
+                                0
+                            )
+                        } else {
+                            isDecoderEosSent = true
+                            codec.queueInputBuffer(
+                                index,
+                                0,
+                                0,
+                                0,
+                                MediaCodec.BUFFER_FLAG_END_OF_STREAM
+                            )
+                        }
                     }
 
-                    if(bufferChunkSize > (DECODER_INPUT_BUFFER_SIZE - EXTRACTOR_OUTPUT_BUFFER_SIZE) || sampleSize == -1) {
-                        break
+                    override fun onOutputBufferAvailable(codec: MediaCodec, index: Int, info: MediaCodec.BufferInfo) {
+                        val outputBuffer = codec.getOutputBuffer(index)
+
+                        // ignore null or codec config buffers
+                        if (
+                            outputBuffer == null ||
+                            (info.flags and MediaCodec.BUFFER_FLAG_CODEC_CONFIG) != 0
+                        ) {
+                            codec.releaseOutputBuffer(index, false)
+                            return
+                        }
+
+                        if ((info.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
+                            coroutine.resume(
+                                value = Result.success(recordingBuffer.toShortArray()),
+                                onCancellation = null
+                            )
+                            return
+                        }
+
+                        for (i in 0 until info.size step 2) {
+                            recordingBuffer.add (outputBuffer.getShort(i))
+                        }
+
+                        codec.releaseOutputBuffer(index, false)
                     }
-                }
 
-                Log.d("RecordingsRepository", "Enqueued buffer: $inputBufferId, size: $bufferChunkSize, presentationTime: $presentationTime")
-                if(bufferChunkSize > 0) {
-                    codec.queueInputBuffer(inputBufferId, 0, bufferChunkSize, presentationTime, 0)
-                } else {
-                    codec.queueInputBuffer(inputBufferId, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM)
-                }
-            }
+                    override fun onError(codec: MediaCodec, e: MediaCodec.CodecException) {
+                        Log.e("RecordingsRepository", "Error in mediacodec callback: $e")
+                        coroutine.resume(Result.failure(e), onCancellation = null)
+                    }
 
-            // output buffer
-            val bufferInfo = MediaCodec.BufferInfo()
-            val outputBufferId = codec.dequeueOutputBuffer(bufferInfo, 1000)
+                    override fun onOutputFormatChanged(codec: MediaCodec, format: MediaFormat) {
+                        Log.d("RecordingsRepository", "Output format changed: $format")
+                    }
+                })
 
-            Log.d("RecordingsRepository", "Dequeued outputBuffer Id: $outputBufferId")
+                /**
+                 *  ------------------- Configure and start the decoder -----------------------
+                 */
 
+                nonNullMediaFormat.setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, DECODER_INPUT_BUFFER_SIZE)
 
-            if (outputBufferId >= 0) {
-                val outputBuffer = codec.getOutputBuffer(outputBufferId) ?: break
-                if (bufferInfo.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM != 0) {
-                    break
-                }
-                for (i in 0 until bufferInfo.size step 2) {
-                    recordingBuffer.add(outputBuffer.getShort(i))
-                }
-                Log.d("RecordingsRepository", "Released outputBuffer Id: $outputBufferId, presentationTime: ${bufferInfo.presentationTimeUs}")
-                codec.releaseOutputBuffer(outputBufferId, false)
+                decoder.configure(nonNullMediaFormat, null, null, 0)
+
+                decoder.start()
             }
         }
-        codec.stop()
-        codec.release()
-        return Result.success(recordingBuffer.toShortArray())
     }
 
-    // query has to be non-blocking
+    // query has to be main safe
     private fun <T> subscribeTo(query: suspend () -> T): Flow<T> {
         val notify = MutableSharedFlow<String>()
 
@@ -197,9 +233,10 @@ class RecordingsRepositoryImpl(
     }
 
     private suspend fun getRecordings() : List<Recording> {
-        val recordingList = mutableListOf<Recording>()
 
-        withContext(Dispatchers.IO) {
+        return withContext(Dispatchers.IO) {
+            val recordingList = mutableListOf<Recording>()
+
             contentResolver.query(
                 collection,
                 arrayOf(
@@ -237,9 +274,9 @@ class RecordingsRepositoryImpl(
                     )
                 }
             }
-        }
 
-        return recordingList
+            return@withContext recordingList
+        }
     }
 
 }
