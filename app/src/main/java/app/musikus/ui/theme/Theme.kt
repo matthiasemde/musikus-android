@@ -9,6 +9,7 @@
 package app.musikus.ui.theme
 
 import android.app.Activity
+import android.view.WindowManager
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
@@ -111,6 +112,13 @@ fun MusikusTheme(
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
+
+            // background extends behind status and nav bar (even 3 button nav bar)
+            window.setFlags(
+                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
+            )
+
             val insets = WindowCompat.getInsetsController(window, view)
             insets.isAppearanceLightStatusBars = !useDarkTheme
             insets.isAppearanceLightNavigationBars = !useDarkTheme

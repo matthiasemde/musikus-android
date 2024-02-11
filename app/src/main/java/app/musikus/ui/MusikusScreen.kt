@@ -52,6 +52,7 @@ import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
 import app.musikus.R
 import app.musikus.shared.MultiFabState
+import app.musikus.shared.conditional
 import app.musikus.ui.activesession.ActiveSession
 import app.musikus.ui.goals.Goals
 import app.musikus.ui.goals.ProgressUpdate
@@ -263,10 +264,16 @@ fun MusikusApp(
             Log.d("MainScreen", "paddingVals: $innerPadding")
 
             val animationDuration = 400
+
+            val addBottomPadding = navController.currentDestination?.route != Screen.ActiveSession.route
+
             NavHost(
-                navController,
+                navController = navController,
                 startDestination = Screen.Sessions.route,
-                Modifier.padding(bottom = innerPadding.calculateBottomPadding()),
+                modifier = Modifier
+                    .conditional(addBottomPadding) {
+                        padding(bottom = innerPadding.calculateBottomPadding())
+                    },
                 enterTransition = {
                     slideInVertically(
                         animationSpec = tween(animationDuration),
@@ -368,7 +375,8 @@ fun MusikusApp(
                     ActiveSession(
                         navigateUp = navController::navigateUp,
                         deepLinkArgument = backStackEntry.arguments?.getString(DEEP_LINK_KEY)
-                    ) }
+                    )
+                }
             }
 
             /** Export / Import Dialog */
@@ -377,13 +385,6 @@ fun MusikusApp(
                 onDismissHandler = { mainViewModel.onEvent(MainUIEvent.HideExportImportDialog) }
             )
 
-            // TODO remove
-            // if there is a new session added to the intent, navigate to progress update
-    //        intent.extras?.getLong("KEY_SESSION")?.let { _ ->
-    //            intent.removeExtra("KEY_SESSION")
-    ////                        mainViewModel.navigateTo(Screen.ProgressUpdate.route)
-    //        }
         }
-
     }
 }

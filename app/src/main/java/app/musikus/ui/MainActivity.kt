@@ -50,7 +50,7 @@ class MainActivity : PermissionCheckerActivity() {
         super.onCreate(savedInstanceState)
         // Set to true to not have stuff behind status bar
         // TODO: Color status bar -> dark theme currently broken!
-        WindowCompat.setDecorFitsSystemWindows(window, true)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
 
         if (BuildConfig.DEBUG) {
 //            launchAppIntroFirstRun()
