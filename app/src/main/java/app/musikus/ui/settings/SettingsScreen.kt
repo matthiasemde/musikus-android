@@ -8,13 +8,8 @@
 
 package app.musikus.ui.settings
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -33,8 +28,11 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import app.musikus.ui.Screen
+import app.musikus.ui.components.TwoLiner
+import app.musikus.ui.components.TwoLinerData
 import app.musikus.ui.navigateTo
 import app.musikus.ui.settings.about.AboutScreen
+import app.musikus.ui.settings.appearance.AppearanceScreen
 import app.musikus.ui.theme.spacing
 
 fun NavGraphBuilder.addSettingsNavigationGraph(navController: NavController) {
@@ -50,7 +48,9 @@ fun NavGraphBuilder.addSettingsNavigationGraph(navController: NavController) {
         )
     }
     composable(Screen.SettingsOptions.Appearance.route) {
-
+        AppearanceScreen(
+            navigateUp = { navController.navigateUp() }
+        )
     }
     composable(Screen.SettingsOptions.Backup.route) {
 
@@ -67,12 +67,28 @@ fun SettingsScreen(
     navigateTo: (Screen) -> Unit,
 ) {
     val settingsItems = listOf(
-        listOf(Screen.SettingsOptions.Donate),
+        listOf(TwoLinerData(
+            icon = Screen.SettingsOptions.Donate.displayData!!.icon,
+            firstLine = Screen.SettingsOptions.Donate.displayData.title,
+            onClick = { navigateTo(Screen.SettingsOptions.Donate )}
+        )),
         listOf(
-            Screen.SettingsOptions.Appearance,
-            Screen.SettingsOptions.Backup
+            TwoLinerData(
+                icon = Screen.SettingsOptions.Appearance.displayData!!.icon,
+                firstLine = Screen.SettingsOptions.Appearance.displayData.title,
+                onClick = { navigateTo(Screen.SettingsOptions.Appearance) }
+            ),
+            TwoLinerData(
+                icon = Screen.SettingsOptions.Backup.displayData!!.icon,
+                firstLine = Screen.SettingsOptions.Backup.displayData.title,
+                onClick = { navigateTo(Screen.SettingsOptions.Backup )}
+            )
         ),
-        listOf(Screen.SettingsOptions.About),
+        listOf(TwoLinerData(
+            icon = Screen.SettingsOptions.About.displayData!!.icon,
+            firstLine = Screen.SettingsOptions.About.displayData.title,
+            onClick = { navigateTo(Screen.SettingsOptions.About )}
+        )),
     )
 
     Scaffold(
@@ -97,26 +113,7 @@ fun SettingsScreen(
         ) {
             for(group in settingsItems) {
                 for (settingsItem in group) {
-                    if (settingsItem.displayData == null) {
-                        throw Exception("No display data for $settingsItem")
-                    }
-
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { navigateTo(settingsItem) }
-                            .padding(
-                                horizontal = MaterialTheme.spacing.extraLarge,
-                                vertical = MaterialTheme.spacing.medium
-                            )
-                    ) {
-                        Icon(
-                            imageVector = settingsItem.displayData.icon.asIcon(),
-                            contentDescription = settingsItem.displayData.title.asString()
-                        )
-                        Spacer(modifier = Modifier.width(MaterialTheme.spacing.medium))
-                        Text(text = settingsItem.displayData.title.asString())
-                    }
+                    TwoLiner(data = settingsItem)
                 }
                 if(group != settingsItems.last()) {
                     HorizontalDivider(Modifier.padding(vertical = MaterialTheme.spacing.medium))
