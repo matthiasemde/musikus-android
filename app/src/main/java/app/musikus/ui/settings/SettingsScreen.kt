@@ -33,6 +33,7 @@ import app.musikus.ui.components.TwoLinerData
 import app.musikus.ui.navigateTo
 import app.musikus.ui.settings.about.AboutScreen
 import app.musikus.ui.settings.appearance.AppearanceScreen
+import app.musikus.ui.settings.backup.BackupScreen
 import app.musikus.ui.theme.spacing
 
 fun NavGraphBuilder.addSettingsNavigationGraph(navController: NavController) {
@@ -43,17 +44,13 @@ fun NavGraphBuilder.addSettingsNavigationGraph(navController: NavController) {
         )
     }
     composable(Screen.SettingsOptions.About.route) {
-        AboutScreen(
-            navigateUp = { navController.navigateUp() }
-        )
+        AboutScreen(navigateUp = { navController.navigateUp() })
     }
     composable(Screen.SettingsOptions.Appearance.route) {
-        AppearanceScreen(
-            navigateUp = { navController.navigateUp() }
-        )
+        AppearanceScreen(navigateUp = { navController.navigateUp() })
     }
     composable(Screen.SettingsOptions.Backup.route) {
-
+        BackupScreen(navigateUp = { navController.navigateUp() })
     }
     composable(Screen.SettingsOptions.Donate.route) {
 
@@ -81,7 +78,7 @@ fun SettingsScreen(
             TwoLinerData(
                 icon = Screen.SettingsOptions.Backup.displayData!!.icon,
                 firstLine = Screen.SettingsOptions.Backup.displayData.title,
-                onClick = { navigateTo(Screen.SettingsOptions.Backup )}
+                onClick = { navigateTo(Screen.SettingsOptions.Backup) }
             )
         ),
         listOf(TwoLinerData(

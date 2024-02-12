@@ -157,7 +157,7 @@ sealed class Screen(
         )
 
         data object Donate : Screen(
-            route = "settings/backup",
+            route = "settings/donate",
             displayData = DisplayData(
                 title = UiText.StringResource(R.string.donations_title),
                 icon = UiIcon.DynamicIcon(Icons.Default.Favorite),
@@ -314,8 +314,6 @@ fun MusikusApp(
             )
         }
         ) { innerPadding ->
-
-            Log.d("MainScreen", "paddingVals: $innerPadding")
 
             val animationDuration = 400
 
