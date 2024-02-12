@@ -65,12 +65,20 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavController
+import androidx.navigation.NavGraphBuilder
+import androidx.navigation.compose.composable
 import app.musikus.R
-import app.musikus.shared.CommonMenuSelections
-import app.musikus.shared.MainMenu
-import app.musikus.shared.ThemeMenu
-import app.musikus.ui.MainUIEvent
-import app.musikus.ui.MainViewModel
+import app.musikus.ui.components.CommonMenuSelections
+import app.musikus.ui.components.MainMenu
+import app.musikus.ui.components.ThemeMenu
+import app.musikus.ui.MainUiEvent
+import app.musikus.ui.MainUiEventHandler
+import app.musikus.ui.MainUiState
+import app.musikus.ui.Screen
+import app.musikus.ui.navigateTo
+import app.musikus.ui.statistics.goalstatistics.GoalStatistics
+import app.musikus.ui.statistics.sessionstatistics.SessionStatistics
 import app.musikus.utils.DurationFormat
 import app.musikus.utils.getDurationString
 import app.musikus.ui.theme.libraryItemColors
@@ -79,17 +87,37 @@ import app.musikus.utils.DateFormat
 import app.musikus.utils.TimeProvider
 import app.musikus.utils.musikusFormat
 
+fun NavGraphBuilder.addStatisticsNavigationGraph(
+    navController: NavController,
+    mainUiState: MainUiState,
+    mainEventHandler: MainUiEventHandler,
+    timeProvider: TimeProvider
+) {
+    composable(Screen.Statistics.route) {
+        Statistics(
+            navigateTo = navController::navigateTo,
+            mainUiState = mainUiState,
+            mainEventHandler = mainEventHandler,
+            timeProvider = timeProvider
+        )
+    }
+    composable(
+        route = Screen.SessionStatistics.route,
+    ) { SessionStatistics(navigateUp = navController::navigateUp) }
+    composable(
+        route = Screen.GoalStatistics.route,
+    ) { GoalStatistics(navigateUp = navController::navigateUp) }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Statistics(
     statisticsViewModel: StatisticsViewModel = hiltViewModel(),
-    mainEventHandler: (event: MainUIEvent) -> Unit,
-    mainViewModel: MainViewModel,   // TODO remove
-    navigateToSessionStatistics: () -> Unit,
-    navigateToGoalStatistics: () -> Unit,
+    mainUiState: MainUiState,
+    mainEventHandler: MainUiEventHandler,
+    navigateTo: (Screen) -> Unit,
     timeProvider: TimeProvider,
 ) {
-    val mainUiState by mainViewModel.uiState.collectAsStateWithLifecycle()
     val statisticsUiState by statisticsViewModel.uiState.collectAsStateWithLifecycle()
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
@@ -104,23 +132,17 @@ fun Statistics(
                     val mainMenuUiState = mainUiState.menuUiState
 
                     IconButton(onClick = {
-                        mainEventHandler(MainUIEvent.ShowMainMenu)
+                        mainEventHandler(MainUiEvent.ShowMainMenu)
                     }) {
                         Icon(Icons.Default.MoreVert, contentDescription = "more")
                         MainMenu (
                             show = mainMenuUiState.show,
-                            onDismissHandler = { mainEventHandler(MainUIEvent.HideMainMenu) },
+                            onDismissHandler = { mainEventHandler(MainUiEvent.HideMainMenu) },
                             onSelectionHandler = { commonSelection ->
-                                mainEventHandler(MainUIEvent.HideMainMenu)
+                                mainEventHandler(MainUiEvent.HideMainMenu)
 
                                 when (commonSelection) {
-                                    CommonMenuSelections.APP_INFO -> {}
-                                    CommonMenuSelections.THEME -> {
-                                        mainEventHandler(MainUIEvent.ShowThemeSubMenu)
-                                    }
-                                    CommonMenuSelections.BACKUP -> {
-                                        mainEventHandler(MainUIEvent.ShowExportImportDialog)
-                                    }
+                                    CommonMenuSelections.SETTINGS -> { navigateTo(Screen.Settings) }
                                 }
                             },
                             uniqueMenuItems = {}
@@ -128,75 +150,74 @@ fun Statistics(
                         ThemeMenu(
                             expanded = mainMenuUiState.showThemeSubMenu,
                             currentTheme = mainUiState.activeTheme,
-                            onDismissHandler = { mainEventHandler(MainUIEvent.HideThemeSubMenu) },
+                            onDismissHandler = { mainEventHandler(MainUiEvent.HideThemeSubMenu) },
                             onSelectionHandler = { theme ->
-                                mainEventHandler(MainUIEvent.HideThemeSubMenu)
-                                mainEventHandler(MainUIEvent.SetTheme(theme))
+                                mainEventHandler(MainUiEvent.HideThemeSubMenu)
+                                mainEventHandler(MainUiEvent.SetTheme(theme))
                             }
                         )
                     }
                 }
             )
-        },
-        content = { paddingValues ->
-            val contentUiState = statisticsUiState.contentUiState
-            LazyColumn(
-                modifier = Modifier.fillMaxWidth(),
-                contentPadding = PaddingValues(
-                    start = MaterialTheme.spacing.large,
-                    end = MaterialTheme.spacing.large,
-                    top = paddingValues.calculateTopPadding() + 16.dp,
-                    bottom = paddingValues.calculateBottomPadding() + 56.dp,
-                ),
-                verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.medium),
-            ) {
-                contentUiState.currentMonthUiState?.let {
-                    item {
-                        StatisticsCurrentMonth(
-                            it,
-                            timeProvider = timeProvider
-                        )
-                    }
-                }
-                contentUiState.practiceDurationCardUiState?.let {
-                    item {
-                        StatisticsPracticeDurationCard(it, navigateToSessionStatistics)
-                    }
-                }
-                contentUiState.goalCardUiState?.let {
-                    item {
-                        StatisticsGoalCard(it, navigateToGoalStatistics)
-                    }
-                }
-                contentUiState.ratingsCardUiState?.let {
-                    item {
-                        StatisticsRatingsCard(it)
-                    }
-                }
-            }
-
-            // If there is no data to show, show hint
-            if (
-                contentUiState.currentMonthUiState == null &&
-                contentUiState.practiceDurationCardUiState == null &&
-                contentUiState.goalCardUiState == null &&
-                contentUiState.ratingsCardUiState == null
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(MaterialTheme.spacing.large),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = stringResource(id = R.string.statisticsHint),
-                        style = MaterialTheme.typography.titleMedium,
-                        textAlign = TextAlign.Center
+        }
+    ) { paddingValues ->
+        val contentUiState = statisticsUiState.contentUiState
+        LazyColumn(
+            modifier = Modifier.fillMaxWidth(),
+            contentPadding = PaddingValues(
+                start = MaterialTheme.spacing.large,
+                end = MaterialTheme.spacing.large,
+                top = paddingValues.calculateTopPadding() + 16.dp,
+                bottom = paddingValues.calculateBottomPadding() + 56.dp,
+            ),
+            verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.medium),
+        ) {
+            contentUiState.currentMonthUiState?.let {
+                item {
+                    StatisticsCurrentMonth(
+                        it,
+                        timeProvider = timeProvider
                     )
                 }
             }
+            contentUiState.practiceDurationCardUiState?.let {
+                item {
+                    StatisticsPracticeDurationCard(it) { navigateTo(Screen.SessionStatistics) }
+                }
+            }
+            contentUiState.goalCardUiState?.let {
+                item {
+                    StatisticsGoalCard(it) { navigateTo(Screen.GoalStatistics) }
+                }
+            }
+            contentUiState.ratingsCardUiState?.let {
+                item {
+                    StatisticsRatingsCard(it)
+                }
+            }
         }
-    )
+
+        // If there is no data to show, show hint
+        if (
+            contentUiState.currentMonthUiState == null &&
+            contentUiState.practiceDurationCardUiState == null &&
+            contentUiState.goalCardUiState == null &&
+            contentUiState.ratingsCardUiState == null
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(MaterialTheme.spacing.large),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = stringResource(id = R.string.statisticsHint),
+                    style = MaterialTheme.typography.titleMedium,
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
+    }
 }
 
 @Composable

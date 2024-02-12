@@ -14,7 +14,7 @@ import androidx.compose.material3.SnackbarResult
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.musikus.datastore.ThemeSelections
-import app.musikus.shared.MultiFabState
+import app.musikus.ui.components.MultiFabState
 import app.musikus.usecase.userpreferences.UserPreferencesUseCases
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,17 +26,19 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 
-sealed class MainUIEvent {
-    data object ShowMainMenu: MainUIEvent()
-    data object HideMainMenu: MainUIEvent()
-    data object ShowThemeSubMenu: MainUIEvent()
-    data object HideThemeSubMenu: MainUIEvent()
-    data object ShowExportImportDialog: MainUIEvent()
-    data object HideExportImportDialog: MainUIEvent()
-    data class SetTheme(val theme: ThemeSelections): MainUIEvent()
-    data object CollapseMultiFab: MainUIEvent()
-    data class ChangeMultiFabState(val state: MultiFabState): MainUIEvent()
-    data class ShowSnackbar(val message: String, val onUndo: (() -> Unit)? = null): MainUIEvent()
+typealias MainUiEventHandler = (MainUiEvent) -> Unit
+
+sealed class MainUiEvent {
+    data object ShowMainMenu: MainUiEvent()
+    data object HideMainMenu: MainUiEvent()
+    data object ShowThemeSubMenu: MainUiEvent()
+    data object HideThemeSubMenu: MainUiEvent()
+    data object ShowExportImportDialog: MainUiEvent()
+    data object HideExportImportDialog: MainUiEvent()
+    data class SetTheme(val theme: ThemeSelections): MainUiEvent()
+    data object CollapseMultiFab: MainUiEvent()
+    data class ChangeMultiFabState(val state: MultiFabState): MainUiEvent()
+    data class ShowSnackbar(val message: String, val onUndo: (() -> Unit)? = null): MainUiEvent()
 
 
 }
@@ -78,36 +80,36 @@ class MainViewModel @Inject constructor(
         initialValue = null
     )
 
-    fun onEvent(event: MainUIEvent) {
+    fun onUiEvent(event: MainUiEvent) {
         when(event) {
-            is MainUIEvent.ShowMainMenu -> {
+            is MainUiEvent.ShowMainMenu -> {
                 onShowMainMenuChanged(true)
             }
-            is MainUIEvent.HideMainMenu -> {
+            is MainUiEvent.HideMainMenu -> {
                 onShowMainMenuChanged(false)
             }
-            is MainUIEvent.ShowThemeSubMenu -> {
+            is MainUiEvent.ShowThemeSubMenu -> {
                 onShowThemeSubMenuChanged(true)
             }
-            is MainUIEvent.HideThemeSubMenu -> {
+            is MainUiEvent.HideThemeSubMenu -> {
                 onShowThemeSubMenuChanged(false)
             }
-            is MainUIEvent.ShowExportImportDialog -> {
+            is MainUiEvent.ShowExportImportDialog -> {
                 onShowExportImportDialogChanged(true)
             }
-            is MainUIEvent.HideExportImportDialog -> {
+            is MainUiEvent.HideExportImportDialog -> {
                 onShowExportImportDialogChanged(false)
             }
-            is MainUIEvent.SetTheme -> {
+            is MainUiEvent.SetTheme -> {
                 setTheme(event.theme)
             }
-            is MainUIEvent.ChangeMultiFabState -> {
+            is MainUiEvent.ChangeMultiFabState -> {
                 onMultiFabStateChanged(event.state)
             }
-            is MainUIEvent.CollapseMultiFab -> {
+            is MainUiEvent.CollapseMultiFab -> {
                 onMultiFabStateChanged(MultiFabState.COLLAPSED)
             }
-            is MainUIEvent.ShowSnackbar -> {
+            is MainUiEvent.ShowSnackbar -> {
                 showSnackbar(event.message, event.onUndo)
             }
         }

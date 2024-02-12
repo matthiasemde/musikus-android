@@ -16,7 +16,7 @@ import app.musikus.database.entities.GoalInstanceCreationAttributes
 import app.musikus.database.entities.GoalInstanceUpdateAttributes
 import app.musikus.database.entities.GoalPeriodUnit
 import app.musikus.database.entities.GoalType
-import app.musikus.shared.TopBarUiState
+import app.musikus.ui.components.TopBarUiState
 import app.musikus.ui.library.DialogMode
 import app.musikus.usecase.goals.GoalInstanceWithProgressAndDescriptionWithLibraryItems
 import app.musikus.usecase.goals.GoalsUseCases

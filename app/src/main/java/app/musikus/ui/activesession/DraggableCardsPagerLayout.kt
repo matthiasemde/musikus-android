@@ -72,7 +72,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
-import app.musikus.shared.conditional
+import app.musikus.ui.components.conditional
 import app.musikus.ui.theme.dimensions
 import app.musikus.ui.theme.spacing
 import kotlinx.coroutines.launch

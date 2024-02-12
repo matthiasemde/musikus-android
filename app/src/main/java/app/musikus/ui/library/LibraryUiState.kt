@@ -11,7 +11,7 @@ package app.musikus.ui.library
 import app.musikus.database.LibraryFolderWithItems
 import app.musikus.database.daos.LibraryFolder
 import app.musikus.database.daos.LibraryItem
-import app.musikus.shared.TopBarUiState
+import app.musikus.ui.components.TopBarUiState
 import app.musikus.utils.SortDirection
 import app.musikus.utils.SortMode
 import java.util.UUID

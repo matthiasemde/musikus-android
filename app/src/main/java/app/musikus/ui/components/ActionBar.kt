@@ -6,7 +6,7 @@
  * Copyright (c) 2022 Matthias Emde
  */
 
-package app.musikus.shared
+package app.musikus.ui.components
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close

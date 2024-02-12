@@ -6,7 +6,7 @@
  * Copyright (c) 2022 Matthias Emde
  */
 
-package app.musikus.shared
+package app.musikus.ui.components
 
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.updateTransition

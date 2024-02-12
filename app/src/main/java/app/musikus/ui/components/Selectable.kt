@@ -1,4 +1,4 @@
-package app.musikus.shared
+package app.musikus.ui.components
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background

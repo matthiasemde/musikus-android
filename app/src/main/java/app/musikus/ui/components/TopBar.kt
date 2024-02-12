@@ -11,7 +11,7 @@
  * Additions and modifications, author Michael Prommersberger
  */
 
-package app.musikus.shared
+package app.musikus.ui.components
 
 interface TopBarUiState {
     val title: String

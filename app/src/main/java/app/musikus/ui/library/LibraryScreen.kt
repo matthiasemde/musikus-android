@@ -73,17 +73,19 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.musikus.R
 import app.musikus.database.daos.LibraryFolder
 import app.musikus.database.daos.LibraryItem
-import app.musikus.shared.ActionBar
-import app.musikus.shared.CommonMenuSelections
-import app.musikus.shared.MainMenu
-import app.musikus.shared.MiniFABData
-import app.musikus.shared.MultiFAB
-import app.musikus.shared.MultiFabState
-import app.musikus.shared.Selectable
-import app.musikus.shared.SortMenu
-import app.musikus.shared.ThemeMenu
-import app.musikus.ui.MainUIEvent
+import app.musikus.ui.components.ActionBar
+import app.musikus.ui.components.CommonMenuSelections
+import app.musikus.ui.components.MainMenu
+import app.musikus.ui.components.MiniFABData
+import app.musikus.ui.components.MultiFAB
+import app.musikus.ui.components.MultiFabState
+import app.musikus.ui.components.Selectable
+import app.musikus.ui.components.SortMenu
+import app.musikus.ui.components.ThemeMenu
+import app.musikus.ui.MainUiEvent
+import app.musikus.ui.MainUiEventHandler
 import app.musikus.ui.MainUiState
+import app.musikus.ui.Screen
 import app.musikus.ui.theme.libraryItemColors
 import app.musikus.ui.theme.spacing
 import app.musikus.utils.LibraryFolderSortMode
@@ -92,8 +94,9 @@ import app.musikus.utils.LibraryItemSortMode
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Library(
-    mainEventHandler: (event: MainUIEvent) -> Unit,
+    mainEventHandler: MainUiEventHandler,
     mainUiState: MainUiState,
+    navigateTo: (Screen) -> Unit,
     viewModel: LibraryViewModel = hiltViewModel(),
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
@@ -113,7 +116,7 @@ fun Library(
 
     BackHandler(
         enabled = mainUiState.multiFabState == MultiFabState.EXPANDED,
-        onBack = { mainEventHandler(MainUIEvent.CollapseMultiFab) }
+        onBack = { mainEventHandler(MainUiEvent.CollapseMultiFab) }
     )
 
     Scaffold(
@@ -126,7 +129,7 @@ fun Library(
                 FloatingActionButton(
                     onClick = {
                         eventHandler(LibraryUiEvent.AddItemButtonPressed)
-                        mainEventHandler(MainUIEvent.CollapseMultiFab)
+                        mainEventHandler(MainUiEvent.CollapseMultiFab)
                     },
                 ) {
                     Icon(Icons.Default.Add, contentDescription = "Add item")
@@ -135,7 +138,7 @@ fun Library(
                 MultiFAB(
                     state = mainUiState.multiFabState,
                     onStateChange = { state ->
-                        mainEventHandler(MainUIEvent.ChangeMultiFabState(state))
+                        mainEventHandler(MainUiEvent.ChangeMultiFabState(state))
                         if(state == MultiFabState.EXPANDED) {
                             eventHandler(LibraryUiEvent.ClearActionMode)
                         }
@@ -145,7 +148,7 @@ fun Library(
                         MiniFABData(
                             onClick = {
                                 eventHandler(LibraryUiEvent.AddItemButtonPressed)
-                                mainEventHandler(MainUIEvent.CollapseMultiFab)
+                                mainEventHandler(MainUiEvent.CollapseMultiFab)
                             },
                             label = "Item",
                             icon = Icons.Rounded.MusicNote
@@ -153,7 +156,7 @@ fun Library(
                         MiniFABData(
                             onClick = {
                                 eventHandler(LibraryUiEvent.AddFolderButtonPressed)
-                                mainEventHandler(MainUIEvent.CollapseMultiFab)
+                                mainEventHandler(MainUiEvent.CollapseMultiFab)
                             },
                             label = "Folder",
                             icon = Icons.Rounded.Folder
@@ -177,33 +180,27 @@ fun Library(
                 },
                 actions = {
                     IconButton(onClick = {
-                        mainEventHandler(MainUIEvent.ShowMainMenu)
+                        mainEventHandler(MainUiEvent.ShowMainMenu)
                     }) {
                         Icon(Icons.Default.MoreVert, contentDescription = "more")
                         MainMenu (
                             show = mainMenuUiState.show,
-                            onDismissHandler = { mainEventHandler(MainUIEvent.HideMainMenu) },
+                            onDismissHandler = { mainEventHandler(MainUiEvent.HideMainMenu) },
                             onSelectionHandler = { commonSelection ->
-                                mainEventHandler(MainUIEvent.HideMainMenu)
+                                mainEventHandler(MainUiEvent.HideMainMenu)
 
                                 when (commonSelection) {
-                                    CommonMenuSelections.APP_INFO -> {}
-                                    CommonMenuSelections.THEME -> {
-                                        mainEventHandler(MainUIEvent.ShowThemeSubMenu)
-                                    }
-                                    CommonMenuSelections.BACKUP -> {
-                                        mainEventHandler(MainUIEvent.ShowExportImportDialog)
-                                    }
+                                    CommonMenuSelections.SETTINGS -> { navigateTo(Screen.Settings) }
                                 }
                             }
                         )
                         ThemeMenu(
                             expanded = mainMenuUiState.showThemeSubMenu,
                             currentTheme = mainUiState.activeTheme,
-                            onDismissHandler = { mainEventHandler(MainUIEvent.HideThemeSubMenu) },
+                            onDismissHandler = { mainEventHandler(MainUiEvent.HideThemeSubMenu) },
                             onSelectionHandler = { theme ->
-                                mainEventHandler(MainUIEvent.HideThemeSubMenu)
-                                mainEventHandler(MainUIEvent.SetTheme(theme))
+                                mainEventHandler(MainUiEvent.HideThemeSubMenu)
+                                mainEventHandler(MainUiEvent.SetTheme(theme))
                             }
                         )
                     }
@@ -219,7 +216,7 @@ fun Library(
                     onEditHandler = { eventHandler(LibraryUiEvent.EditButtonPressed) },
                     onDeleteHandler = {
                         eventHandler(LibraryUiEvent.DeleteButtonPressed)
-                        mainEventHandler(MainUIEvent.ShowSnackbar(
+                        mainEventHandler(MainUiEvent.ShowSnackbar(
                             message = "Deleted ${actionModeUiState.numberOfSelections} items",
                             onUndo = { eventHandler(LibraryUiEvent.RestoreButtonPressed) }
                         ))
@@ -286,7 +283,7 @@ fun Library(
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null,
-                            onClick = { mainEventHandler(MainUIEvent.CollapseMultiFab) }
+                            onClick = { mainEventHandler(MainUiEvent.CollapseMultiFab) }
                         )
                 )
             }

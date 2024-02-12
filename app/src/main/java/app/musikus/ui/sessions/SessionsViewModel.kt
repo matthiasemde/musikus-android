@@ -11,7 +11,7 @@ package app.musikus.ui.sessions
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.musikus.database.SessionWithSectionsWithLibraryItems
-import app.musikus.shared.TopBarUiState
+import app.musikus.ui.components.TopBarUiState
 import app.musikus.utils.DurationFormat
 import app.musikus.utils.DurationString
 import app.musikus.utils.getDurationString

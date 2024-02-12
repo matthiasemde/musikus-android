@@ -56,8 +56,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.musikus.R
 import app.musikus.database.daos.LibraryItem
-import app.musikus.shared.conditional
-import app.musikus.shared.simpleVerticalScrollbar
+import app.musikus.ui.components.conditional
+import app.musikus.ui.components.simpleVerticalScrollbar
 import app.musikus.utils.DurationFormat
 import app.musikus.utils.getDurationString
 import app.musikus.ui.theme.libraryItemColors

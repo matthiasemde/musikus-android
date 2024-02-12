@@ -51,7 +51,7 @@ import app.musikus.utils.getDurationString
 import app.musikus.ui.theme.libraryItemColors
 import app.musikus.usecase.goals.GoalInstanceWithProgressAndDescriptionWithLibraryItems
 import app.musikus.utils.TimeProvider
-import app.musikus.utils.asString
+import app.musikus.utils.asAnnotatedString
 import java.time.temporal.ChronoUnit
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -116,7 +116,7 @@ fun GoalCard(
                         /** Goal Title */
                         Text(
                             modifier = Modifier.weight(1f),
-                            text = goal.title.asString()
+                            text = goal.title.asAnnotatedString()
                         )
 //                    }
 
@@ -147,7 +147,7 @@ fun GoalCard(
 
                 /** Goal Description */
                 Text(
-                    text = goal.subtitle.asString(),
+                    text = goal.subtitle.asAnnotatedString(),
                     style = MaterialTheme.typography.bodyLarge.copy(fontSize = 20.sp)
                 )
 

@@ -45,13 +45,15 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import app.musikus.shared.ActionBar
-import app.musikus.shared.CommonMenuSelections
-import app.musikus.shared.MainMenu
-import app.musikus.shared.Selectable
-import app.musikus.shared.ThemeMenu
-import app.musikus.ui.MainUIEvent
+import app.musikus.ui.components.ActionBar
+import app.musikus.ui.components.CommonMenuSelections
+import app.musikus.ui.components.MainMenu
+import app.musikus.ui.components.Selectable
+import app.musikus.ui.components.ThemeMenu
+import app.musikus.ui.MainUiEvent
+import app.musikus.ui.MainUiEventHandler
 import app.musikus.ui.MainUiState
+import app.musikus.ui.Screen
 import app.musikus.ui.theme.spacing
 import app.musikus.utils.DurationString
 import java.util.UUID
@@ -64,7 +66,8 @@ import java.util.UUID
 fun Sessions(
     viewModel: SessionsViewModel = hiltViewModel(),
     mainUiState: MainUiState,
-    mainEventHandler: (event: MainUIEvent) -> Unit,
+    mainEventHandler: MainUiEventHandler,
+    navigateTo: (Screen) -> Unit,
     onSessionEdit: (sessionId: UUID) -> Unit,
     onSessionStart: () -> Unit,
 ) {
@@ -114,22 +117,16 @@ fun Sessions(
                 title = { Text(text = topBarUiState.title) },
                 scrollBehavior = scrollBehavior,
                 actions = {
-                    IconButton(onClick = { mainEventHandler(MainUIEvent.ShowMainMenu) } ) {
+                    IconButton(onClick = { mainEventHandler(MainUiEvent.ShowMainMenu) } ) {
                         Icon(Icons.Default.MoreVert, contentDescription = "more")
                         MainMenu (
                             show = mainMenuUiState.show,
-                            onDismissHandler = { mainEventHandler(MainUIEvent.HideMainMenu) },
+                            onDismissHandler = { mainEventHandler(MainUiEvent.HideMainMenu) },
                             onSelectionHandler = { commonSelection ->
-                                mainEventHandler(MainUIEvent.HideMainMenu)
+                                mainEventHandler(MainUiEvent.HideMainMenu)
 
                                 when (commonSelection) {
-                                    CommonMenuSelections.APP_INFO -> {}
-                                    CommonMenuSelections.THEME -> {
-                                        mainEventHandler(MainUIEvent.ShowThemeSubMenu)
-                                    }
-                                    CommonMenuSelections.BACKUP -> {
-                                        mainEventHandler(MainUIEvent.ShowExportImportDialog)
-                                    }
+                                    CommonMenuSelections.SETTINGS -> { navigateTo(Screen.Settings) }
                                 }
                             },
                             uniqueMenuItems = { }
@@ -137,10 +134,10 @@ fun Sessions(
                         ThemeMenu(
                             expanded = mainMenuUiState.showThemeSubMenu,
                             currentTheme = mainUiState.activeTheme,
-                            onDismissHandler = { mainEventHandler(MainUIEvent.HideThemeSubMenu) },
+                            onDismissHandler = { mainEventHandler(MainUiEvent.HideThemeSubMenu) },
                             onSelectionHandler = { theme ->
-                                mainEventHandler(MainUIEvent.HideThemeSubMenu)
-                                mainEventHandler(MainUIEvent.SetTheme(theme))
+                                mainEventHandler(MainUiEvent.HideThemeSubMenu)
+                                mainEventHandler(MainUiEvent.SetTheme(theme))
                             }
                         )
                     }
@@ -158,7 +155,7 @@ fun Sessions(
                     },
                     onDeleteHandler = {
                         viewModel.onDeleteAction()
-                        mainEventHandler(MainUIEvent.ShowSnackbar(
+                        mainEventHandler(MainUiEvent.ShowSnackbar(
                             message = "Deleted ${actionModeUiState.numberOfSelections} sessions",
                             onUndo = viewModel::onRestoreAction
                         ))

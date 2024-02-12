@@ -6,7 +6,7 @@
  * Copyright (c) 2022 Matthias Emde
  */
 
-package app.musikus.shared
+package app.musikus.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Row

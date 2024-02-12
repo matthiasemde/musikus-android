@@ -2,7 +2,6 @@ package app.musikus.ui
 
 import android.util.Log
 import androidx.annotation.DrawableRes
-import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -19,6 +18,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CloudUpload
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -32,14 +35,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavController
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -51,102 +52,155 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
 import app.musikus.R
-import app.musikus.shared.MultiFabState
-import app.musikus.shared.conditional
 import app.musikus.ui.activesession.ActiveSession
+import app.musikus.ui.components.MultiFabState
+import app.musikus.ui.components.conditional
 import app.musikus.ui.goals.Goals
 import app.musikus.ui.goals.ProgressUpdate
 import app.musikus.ui.library.Library
 import app.musikus.ui.sessions.Sessions
 import app.musikus.ui.sessions.editsession.EditSession
-import app.musikus.ui.statistics.Statistics
-import app.musikus.ui.statistics.goalstatistics.GoalStatistics
-import app.musikus.ui.statistics.sessionstatistics.SessionStatistics
+import app.musikus.ui.settings.addSettingsNavigationGraph
+import app.musikus.ui.statistics.addStatisticsNavigationGraph
 import app.musikus.ui.theme.MusikusTheme
 import app.musikus.utils.ExportImportDialog
 import app.musikus.utils.TimeProvider
+import app.musikus.utils.UiIcon
+import app.musikus.utils.UiText
 import java.util.UUID
 
 const val DEEP_LINK_KEY = "argument"
 
 sealed class Screen(
     val route: String,
-    val navigationBarData: NavigationBarData? = null
+    val displayData: DisplayData? = null,
 ) {
+
     data object Sessions : Screen(
         route = "sessionList",
-        NavigationBarData(
-            title = R.string.navigationSessionsTitle,
-            staticIcon = R.drawable.ic_sessions,
+        displayData = DisplayData(
+            title = UiText.StringResource(R.string.navigationSessionsTitle),
+            icon = UiIcon.IconResource(R.drawable.ic_sessions),
             animatedIcon = R.drawable.avd_sessions,
         )
     )
 
-    data object EditSession : Screen(
-        route = "editSession/{sessionId}",
+    data object Goals : Screen(
+        route = "goals",
+        displayData = DisplayData(
+            title = UiText.StringResource(R.string.navigationGoalsTitle),
+            icon = UiIcon.IconResource(R.drawable.ic_goals),
+            animatedIcon = R.drawable.avd_goals
+        )
+    )
+
+    data object Statistics : Screen(
+        route = "statistics",
+        displayData = DisplayData(
+            title = UiText.StringResource(R.string.navigationStatisticsTitle),
+            icon = UiIcon.IconResource(R.drawable.ic_bar_chart),
+            animatedIcon = R.drawable.avd_bar_chart
+        )
+    )
+
+    data object Library : Screen(
+        route = "library",
+        displayData = DisplayData(
+            title = UiText.StringResource(R.string.navigationLibraryTitle),
+            icon = UiIcon.IconResource(R.drawable.ic_library),
+            animatedIcon = R.drawable.avd_library
+        )
     )
 
     data object ActiveSession : Screen(
         route = "activeSession",
     )
 
-    data object Goals : Screen(
-        route = "goals",
-        NavigationBarData(
-            title = R.string.navigationGoalsTitle,
-            staticIcon = R.drawable.ic_goals,
-            animatedIcon = R.drawable.avd_goals
-        )
+    data object EditSession : Screen(
+        route = "editSession/{sessionId}",
     )
-    data object Statistics : Screen(
-        route = "statistics",
-        NavigationBarData(
-            title = R.string.navigationStatisticsTitle,
-            staticIcon = R.drawable.ic_bar_chart,
-            animatedIcon = R.drawable.avd_bar_chart
-        )
-    )
+
+
     data object SessionStatistics : Screen(
         route = "sessionStatistics",
     )
     data object GoalStatistics : Screen(
         route = "goalStatistics",
     )
-    data object Library : Screen(
-        route = "library",
-        NavigationBarData(
-            title = R.string.navigationLibraryTitle,
-            staticIcon = R.drawable.ic_library,
-            animatedIcon = R.drawable.avd_library
-        )
-    )
+
     data object ProgressUpdate : Screen(
         route = "progressUpdate",
     )
 
-    data class NavigationBarData(
-        @StringRes val title: Int,
-        @DrawableRes val staticIcon: Int,
-        @DrawableRes val animatedIcon: Int
+    data object Settings : Screen(
+        route = "settings",
+    )
+
+    sealed class SettingsOptions(
+        route: String,
+        displayData: DisplayData
+    ) : Screen(route, displayData) {
+        data object About : Screen(
+            route = "settings/about",
+            displayData = DisplayData(
+                title = UiText.StringResource(R.string.about_app_title),
+                icon = UiIcon.DynamicIcon(Icons.Default.Info),
+            )
+        )
+
+        data object Backup : Screen(
+            route = "settings/backup",
+            displayData = DisplayData(
+                title = UiText.StringResource(R.string.backup_title),
+                icon = UiIcon.DynamicIcon(Icons.Default.CloudUpload),
+            )
+        )
+
+        data object Donate : Screen(
+            route = "settings/backup",
+            displayData = DisplayData(
+                title = UiText.StringResource(R.string.donations_title),
+                icon = UiIcon.DynamicIcon(Icons.Default.Favorite),
+            )
+        )
+
+        data object Appearance : Screen(
+            route = "settings/appearance",
+            displayData = DisplayData(
+                title = UiText.StringResource(R.string.appearance_title),
+                icon = UiIcon.IconResource(R.drawable.ic_appearance),
+            )
+        )
+    }
+
+
+    data class DisplayData(
+        val title: UiText,
+        val icon: UiIcon,
+        @DrawableRes val animatedIcon: Int? = null
     )
 }
 
 
-private val navItems = listOf(
-    Screen.Sessions,
-    Screen.Goals,
-    Screen.Statistics,
-    Screen.Library
-)
+fun NavController.navigateTo(screen: Screen) {
+    navigate(screen.route)
+}
 
 
 @OptIn(ExperimentalAnimationGraphicsApi::class)
 @Composable
 fun MusikusBottomBar(
-    mainEventHandler: (event: MainUIEvent) -> Unit,
     navController: NavHostController,
-    mainUiState: MainUiState
+    mainUiState: MainUiState,
+    mainEventHandler: MainUiEventHandler,
 ) {
+
+    val navItems = listOf(
+        Screen.Sessions,
+        Screen.Goals,
+        Screen.Statistics,
+        Screen.Library
+    )
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
@@ -165,12 +219,12 @@ fun MusikusBottomBar(
                 val painterCount = 5
                 var activePainter by remember { mutableIntStateOf(0) }
                 val painter = rememberVectorPainter(
-                    image = ImageVector.vectorResource(screen.navigationBarData!!.staticIcon)
+                    image = screen.displayData!!.icon.asIcon()
                 )
                 val animatedPainters = (0..painterCount).map {
                     rememberAnimatedVectorPainter(
                         animatedImageVector = AnimatedImageVector.animatedVectorResource(
-                            screen.navigationBarData.animatedIcon
+                            screen.displayData.animatedIcon!!
                         ),
                         atEnd = selected && activePainter == it
                     )
@@ -185,7 +239,7 @@ fun MusikusBottomBar(
                     },
                     label = {
                         Text(
-                            text = stringResource(screen.navigationBarData.title),
+                            text = screen.displayData.title.asAnnotatedString(),
                             fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
                         )
                     },
@@ -226,7 +280,7 @@ fun MusikusBottomBar(
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null,
-                        onClick = { mainEventHandler(MainUIEvent.CollapseMultiFab) }
+                        onClick = { mainEventHandler(MainUiEvent.CollapseMultiFab) }
                     )
             )
         }
@@ -254,7 +308,7 @@ fun MusikusApp(
         },
         bottomBar = {
             MusikusBottomBar(
-                mainEventHandler = mainViewModel::onEvent,
+                mainEventHandler = mainViewModel::onUiEvent,
                 navController = navController,
                 mainUiState = uiState
             )
@@ -302,7 +356,8 @@ fun MusikusApp(
                 ) {
                     Sessions(
                         mainUiState = uiState,
-                        mainEventHandler = mainViewModel::onEvent,
+                        mainEventHandler = mainViewModel::onUiEvent,
+                        navigateTo = navController::navigateTo,
                         onSessionEdit = { sessionId: UUID ->
                             navController.navigate(
                                 Screen.EditSession.route.replace(
@@ -311,44 +366,23 @@ fun MusikusApp(
                                 )
                             )
                         },
-                        onSessionStart = {
-                            navController.navigate(
-                                Screen.ActiveSession.route
-                            )
-                        },
+                        onSessionStart = { navController.navigate(Screen.ActiveSession.route) },
                     )
                 }
                 composable(
                     route = Screen.Goals.route,
                 ) { Goals(
                     mainUiState = uiState,
-                    mainEventHandler = mainViewModel::onEvent,
+                    mainEventHandler = mainViewModel::onUiEvent,
+                    navigateTo = navController::navigateTo,
                     timeProvider = timeProvider
                 ) }
-                composable(
-                    route = Screen.Statistics.route,
-                ) { Statistics(
-                    mainEventHandler = mainViewModel::onEvent,
-                    mainViewModel = mainViewModel,
-                    navigateToSessionStatistics = {
-                        navController.navigate(Screen.SessionStatistics.route)
-                    },
-                    navigateToGoalStatistics = {
-                        navController.navigate(Screen.GoalStatistics.route)
-                    },
-                    timeProvider = timeProvider
-                ) }
-                composable(
-                    route = Screen.SessionStatistics.route,
-                ) { SessionStatistics(navigateUp = navController::navigateUp) }
-                composable(
-                    route = Screen.GoalStatistics.route,
-                ) { GoalStatistics(navigateUp = navController::navigateUp) }
                 composable(
                     route = Screen.Library.route,
                 ) { Library (
                     mainUiState = uiState,
-                    mainEventHandler = mainViewModel::onEvent
+                    mainEventHandler = mainViewModel::onUiEvent,
+                    navigateTo = navController::navigateTo
                 ) }
                 composable(
                     route = Screen.ProgressUpdate.route,
@@ -377,12 +411,23 @@ fun MusikusApp(
                         deepLinkArgument = backStackEntry.arguments?.getString(DEEP_LINK_KEY)
                     )
                 }
+
+                // Statistics
+                addStatisticsNavigationGraph(
+                    navController = navController,
+                    mainUiState = uiState,
+                    mainEventHandler = mainViewModel::onUiEvent,
+                    timeProvider = timeProvider
+                )
+
+                // Settings
+                addSettingsNavigationGraph(navController)
             }
 
             /** Export / Import Dialog */
             ExportImportDialog(
                 show = uiState.showExportImportDialog,
-                onDismissHandler = { mainViewModel.onEvent(MainUIEvent.HideExportImportDialog) }
+                onDismissHandler = { mainViewModel.onUiEvent(MainUiEvent.HideExportImportDialog) }
             )
 
         }

@@ -6,11 +6,10 @@
  * Copyright (c) 2022 Matthias Emde
  */
 
-package app.musikus.shared
+package app.musikus.ui.components
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -24,27 +23,25 @@ import androidx.compose.ui.unit.dp
 import app.musikus.datastore.ThemeSelections
 
 enum class CommonMenuSelections {
-    THEME,
-    APP_INFO,
-    BACKUP
+    SETTINGS,
 }
 
 @Composable
 fun CommonMenuItems(
     onSelectionHandler: (CommonMenuSelections) -> Unit
 ) {
+//    DropdownMenuItem(
+//        text = { Text(text = "Theme") },
+//        trailingIcon = { Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null) },
+//        onClick = { onSelectionHandler(CommonMenuSelections.THEME) }
+//    )
+//    DropdownMenuItem(
+//        text = { Text(text="Backup") },
+//        onClick = { onSelectionHandler(CommonMenuSelections.BACKUP) }
+//    )
     DropdownMenuItem(
-        text = { Text(text = "Theme") },
-        trailingIcon = { Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null) },
-        onClick = { onSelectionHandler(CommonMenuSelections.THEME) }
-    )
-    DropdownMenuItem(
-        text = { Text(text = "App Info") },
-        onClick = { onSelectionHandler(CommonMenuSelections.APP_INFO) }
-    )
-    DropdownMenuItem(
-        text = { Text(text="Backup") },
-        onClick = { onSelectionHandler(CommonMenuSelections.BACKUP) }
+        text = { Text(text = "Settings") },
+        onClick = { onSelectionHandler(CommonMenuSelections.SETTINGS) }
     )
 }
 

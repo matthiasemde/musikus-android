@@ -44,9 +44,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import app.musikus.R
 import app.musikus.database.daos.LibraryFolder
-import app.musikus.shared.DialogHeader
-import app.musikus.shared.SelectionSpinner
-import app.musikus.shared.UUIDSelectionSpinnerOption
+import app.musikus.ui.components.DialogHeader
+import app.musikus.ui.components.SelectionSpinner
+import app.musikus.ui.components.UUIDSelectionSpinnerOption
 import app.musikus.ui.theme.libraryItemColors
 import app.musikus.utils.TestTags
 import java.util.UUID

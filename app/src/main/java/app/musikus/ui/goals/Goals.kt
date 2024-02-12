@@ -46,17 +46,19 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import app.musikus.shared.ActionBar
-import app.musikus.shared.CommonMenuSelections
-import app.musikus.shared.MainMenu
-import app.musikus.shared.MiniFABData
-import app.musikus.shared.MultiFAB
-import app.musikus.shared.MultiFabState
-import app.musikus.shared.Selectable
-import app.musikus.shared.SortMenu
-import app.musikus.shared.ThemeMenu
-import app.musikus.ui.MainUIEvent
+import app.musikus.ui.components.ActionBar
+import app.musikus.ui.components.CommonMenuSelections
+import app.musikus.ui.components.MainMenu
+import app.musikus.ui.components.MiniFABData
+import app.musikus.ui.components.MultiFAB
+import app.musikus.ui.components.MultiFabState
+import app.musikus.ui.components.Selectable
+import app.musikus.ui.components.SortMenu
+import app.musikus.ui.components.ThemeMenu
+import app.musikus.ui.MainUiEvent
+import app.musikus.ui.MainUiEventHandler
 import app.musikus.ui.MainUiState
+import app.musikus.ui.Screen
 import app.musikus.ui.theme.spacing
 import app.musikus.utils.GoalsSortMode
 import app.musikus.utils.TimeProvider
@@ -66,7 +68,8 @@ import app.musikus.utils.TimeProvider
 @Composable
 fun Goals(
     mainUiState: MainUiState,
-    mainEventHandler: (event: MainUIEvent) -> Unit,
+    mainEventHandler: MainUiEventHandler,
+    navigateTo: (Screen) -> Unit,
     viewModel: GoalsViewModel = hiltViewModel(),
     timeProvider: TimeProvider,
 ) {
@@ -81,7 +84,7 @@ fun Goals(
 
     BackHandler(
         enabled = mainUiState.multiFabState == MultiFabState.EXPANDED,
-        onBack = { mainEventHandler(MainUIEvent.CollapseMultiFab) }
+        onBack = { mainEventHandler(MainUiEvent.CollapseMultiFab) }
     )
 
     Scaffold(
@@ -91,7 +94,7 @@ fun Goals(
             MultiFAB(
                 state = mainUiState.multiFabState,
                 onStateChange = { state ->
-                    mainEventHandler(MainUIEvent.ChangeMultiFabState(state))
+                    mainEventHandler(MainUiEvent.ChangeMultiFabState(state))
                     if (state == MultiFabState.EXPANDED) {
                         viewModel.clearActionMode()
                     }
@@ -101,7 +104,7 @@ fun Goals(
                     MiniFABData(
                         onClick = {
                             viewModel.showDialog(oneShot = true)
-                            mainEventHandler(MainUIEvent.CollapseMultiFab)
+                            mainEventHandler(MainUiEvent.CollapseMultiFab)
                         },
                         label = "One shot goal",
                         icon = Icons.Filled.LocalFireDepartment,
@@ -109,7 +112,7 @@ fun Goals(
                     MiniFABData(
                         onClick = {
                             viewModel.showDialog(oneShot = false)
-                            mainEventHandler(MainUIEvent.CollapseMultiFab)
+                            mainEventHandler(MainUiEvent.CollapseMultiFab)
                         },
                         label = "Regular goal",
                         icon = Icons.Rounded.Repeat,
@@ -136,24 +139,17 @@ fun Goals(
                         onSelectionHandler = viewModel::onSortModeSelected
                     )
                     IconButton(onClick = {
-                        mainEventHandler(MainUIEvent.ShowMainMenu)
+                        mainEventHandler(MainUiEvent.ShowMainMenu)
                     }) {
                         Icon(Icons.Default.MoreVert, contentDescription = "more")
                         MainMenu(
                             show = mainMenuUiState.show,
-                            onDismissHandler = { mainEventHandler(MainUIEvent.HideMainMenu) },
+                            onDismissHandler = { mainEventHandler(MainUiEvent.HideMainMenu) },
                             onSelectionHandler = { commonSelection ->
-                                mainEventHandler(MainUIEvent.HideMainMenu)
+                                mainEventHandler(MainUiEvent.HideMainMenu)
 
                                 when (commonSelection) {
-                                    CommonMenuSelections.APP_INFO -> {}
-                                    CommonMenuSelections.THEME -> {
-                                        mainEventHandler(MainUIEvent.ShowThemeSubMenu)
-                                    }
-
-                                    CommonMenuSelections.BACKUP -> {
-                                        mainEventHandler(MainUIEvent.ShowExportImportDialog)
-                                    }
+                                    CommonMenuSelections.SETTINGS -> { navigateTo(Screen.Settings)}
                                 }
                             },
                             uniqueMenuItems = {}
@@ -161,10 +157,10 @@ fun Goals(
                         ThemeMenu(
                             expanded = mainMenuUiState.showThemeSubMenu,
                             currentTheme = mainUiState.activeTheme,
-                            onDismissHandler = { mainEventHandler(MainUIEvent.HideThemeSubMenu) },
+                            onDismissHandler = { mainEventHandler(MainUiEvent.HideThemeSubMenu) },
                             onSelectionHandler = { theme ->
-                                mainEventHandler(MainUIEvent.HideThemeSubMenu)
-                                mainEventHandler(MainUIEvent.SetTheme(theme))
+                                mainEventHandler(MainUiEvent.HideThemeSubMenu)
+                                mainEventHandler(MainUiEvent.SetTheme(theme))
                             }
                         )
                     }
@@ -181,7 +177,7 @@ fun Goals(
                     uniqueActions = {
                         IconButton(onClick = {
                             viewModel.onArchiveAction()
-                            mainEventHandler(MainUIEvent.ShowSnackbar(
+                            mainEventHandler(MainUiEvent.ShowSnackbar(
                                 message = "Archived",
                                 onUndo = viewModel::onUndoArchiveAction
                             ))
@@ -198,7 +194,7 @@ fun Goals(
                     onEditHandler = viewModel::onEditAction,
                     onDeleteHandler = {
                         viewModel.onDeleteAction()
-                        mainEventHandler(MainUIEvent.ShowSnackbar(
+                        mainEventHandler(MainUiEvent.ShowSnackbar(
                             message = "Deleted",
                             onUndo = viewModel::onRestoreAction
                         ))
@@ -282,7 +278,7 @@ fun Goals(
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null,
-                            onClick = { mainEventHandler(MainUIEvent.CollapseMultiFab) }
+                            onClick = { mainEventHandler(MainUiEvent.CollapseMultiFab) }
                         )
                 )
             }

@@ -52,11 +52,11 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.musikus.R
-import app.musikus.shared.conditional
-import app.musikus.shared.simpleVerticalScrollbar
+import app.musikus.ui.components.conditional
+import app.musikus.ui.components.simpleVerticalScrollbar
 import app.musikus.ui.statistics.sessionstatistics.TimeframeSelectionHeader
 import app.musikus.ui.theme.spacing
-import app.musikus.utils.asString
+import app.musikus.utils.asAnnotatedString
 import java.util.UUID
 
 
@@ -171,7 +171,7 @@ fun GoalStatisticsGoalSelector(
                 ) {
                     // Title
                     Text(
-                        text = goalInfo.title.asString(),
+                        text = goalInfo.title.asAnnotatedString(),
                         style = MaterialTheme.typography.bodyMedium,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
@@ -181,7 +181,7 @@ fun GoalStatisticsGoalSelector(
 
                     // Subtitle
                     Text(
-                        text = goalInfo.subtitle?.asString() ?: "No data available", // TODO find a better solution for no instances
+                        text = goalInfo.subtitle?.asAnnotatedString() ?: "No data available", // TODO find a better solution for no instances
                         style = MaterialTheme.typography.labelSmall,
                     )
                 }

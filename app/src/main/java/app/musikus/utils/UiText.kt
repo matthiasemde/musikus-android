@@ -32,7 +32,7 @@ sealed class UiText {
     ): UiText()
 
     @Composable
-    fun asString(): AnnotatedString {
+    fun asAnnotatedString(): AnnotatedString {
         return when(this) {
             is DynamicString -> AnnotatedString(value)
             is DynamicAnnotatedString -> value
@@ -40,7 +40,17 @@ sealed class UiText {
             is PluralResource -> AnnotatedString(pluralStringResource(resId, quantity, *formatArgs))
         }
     }
+
+    @Composable
+    fun asString(): String {
+        return when(this) {
+            is DynamicString -> value
+            is DynamicAnnotatedString -> value.text
+            is StringResource -> stringResource(resId, *args)
+            is PluralResource -> pluralStringResource(resId, quantity, *formatArgs)
+        }
+    }
 }
 
 @Composable
-fun List<UiText>.asString() = map { it.asString() }.joinToString(separator = " ") { it }
+fun List<UiText>.asAnnotatedString() = map { it.asAnnotatedString() }.joinToString(separator = " ") { it }
