@@ -28,12 +28,10 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -53,15 +51,12 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -85,6 +80,7 @@ import app.musikus.ui.MainUiState
 import app.musikus.ui.Screen
 import app.musikus.ui.components.ActionBar
 import app.musikus.ui.components.CommonMenuSelections
+import app.musikus.ui.components.DeleteConfirmationBottomSheet
 import app.musikus.ui.components.MainMenu
 import app.musikus.ui.components.MiniFABData
 import app.musikus.ui.components.MultiFAB
@@ -95,6 +91,8 @@ import app.musikus.ui.theme.libraryItemColors
 import app.musikus.ui.theme.spacing
 import app.musikus.utils.LibraryFolderSortMode
 import app.musikus.utils.LibraryItemSortMode
+import app.musikus.utils.UiIcon
+import app.musikus.utils.UiText
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -260,64 +258,35 @@ fun Library(
                 )
             }
 
-            val deleteDialogSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-
             val deleteDialogUiState = dialogUiState.deleteDialogUiState
 
             if (deleteDialogUiState != null) {
-                ModalBottomSheet(
-                    windowInsets = WindowInsets(top = 0.dp), // makes sure the scrim covers the status bar
-                    onDismissRequest = { eventHandler(LibraryUiEvent.DeleteDialogDismissed) },
-                    sheetState = deleteDialogSheetState,
-                ) {
 
-                    val foldersSelected = deleteDialogUiState.numberOfSelectedFolders > 0
-                    val itemsSelected = deleteDialogUiState.numberOfSelectedItems > 0
+                val foldersSelected = deleteDialogUiState.numberOfSelectedFolders > 0
+                val itemsSelected = deleteDialogUiState.numberOfSelectedItems > 0
 
-                    val totalSelections = deleteDialogUiState.numberOfSelectedFolders + deleteDialogUiState.numberOfSelectedItems
+                val totalSelections =
+                    deleteDialogUiState.numberOfSelectedFolders + deleteDialogUiState.numberOfSelectedItems
 
-                    Text(
-                        modifier = Modifier.padding(horizontal = MaterialTheme.spacing.medium),
-                        text =
-                            "Delete " +
-                            (if (foldersSelected) "folders" else "") +
-                            (if (foldersSelected && itemsSelected) " and " else "") +
-                            (if (itemsSelected) "items" else "") +
-                            "? They will remain in your statistics, but you will no longer be able to practice them.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = LocalContentColor.current.copy(alpha = 0.8f),
-                    )
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable {
-                                eventHandler(LibraryUiEvent.DeleteDialogConfirmed)
-                                mainEventHandler(MainUiEvent.ShowSnackbar(
-                                    message = "Deleted",
-                                    onUndo = { eventHandler(LibraryUiEvent.RestoreButtonPressed) }
-                                ))
-                            }
-                            .padding(
-                                vertical = MaterialTheme.spacing.medium,
-                                horizontal = MaterialTheme.spacing.large
-                            ),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(imageVector = Icons.Default.Delete, contentDescription = null)
-                        Spacer(modifier = Modifier.width(MaterialTheme.spacing.extraLarge))
-                        Text(
-                            text = "Delete forever ($totalSelections)",
-                            style = MaterialTheme.typography.titleMedium
-                        )
+                DeleteConfirmationBottomSheet(
+                    explanation = UiText.DynamicString(
+                        "Delete " +
+                                (if (foldersSelected) "folders" else "") +
+                                (if (foldersSelected && itemsSelected) " and " else "") +
+                                (if (itemsSelected) "items" else "") +
+                                "? They will remain in your statistics, but you will no longer be able to practice them."
+                    ),
+                    confirmationIcon = UiIcon.DynamicIcon(Icons.Default.Delete),
+                    confirmationText = UiText.DynamicString("Delete forever ($totalSelections)"),
+                    onDismiss = { eventHandler(LibraryUiEvent.DeleteDialogDismissed) },
+                    onConfirm = {
+                        eventHandler(LibraryUiEvent.DeleteDialogConfirmed)
+                        mainEventHandler(MainUiEvent.ShowSnackbar(
+                            message = "Deleted",
+                            onUndo = { eventHandler(LibraryUiEvent.RestoreButtonPressed) }
+                        ))
                     }
-                    Spacer(
-                        modifier = Modifier
-                            .height(
-                                WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() +
-                                MaterialTheme.spacing.extraSmall
-                            )
-                    )
-                }
+                )
             }
 
             // Content Scrim for multiFAB
