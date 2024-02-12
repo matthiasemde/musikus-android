@@ -471,10 +471,10 @@ fun StatisticsGoalCard(
                             val color = displayData.color ?: MaterialTheme.colorScheme.primary
                             Box{
                                 CircularProgressIndicator(
+                                    progress = { animatedProgress },
                                     modifier = Modifier.size(35.dp),
-                                    progress = animatedProgress,
-                                    trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
                                     color = color,
+                                    trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
                                 )
                                 val animatedAlpha by animateFloatAsState(
                                     targetValue = if (animatedProgress == 1f) 1f else 0f,

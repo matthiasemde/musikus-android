@@ -216,8 +216,8 @@ fun GoalStatisticsGoalSelector(
                             animationSpec = tween(1500)
                         )
                         LinearProgressIndicator(
+                            progress = { animatedProgress },
                             modifier = Modifier.matchParentSize(),
-                            progress = animatedProgress,
                             color = color,
                             strokeCap = StrokeCap.Round,
                         )

@@ -174,14 +174,12 @@ fun GoalCard(
                         .clip(MaterialTheme.shapes.medium)
                 ) {
                     LinearProgressIndicator(
+                        progress = { animatedProgressPercent },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(40.dp)
-                        ,
-                        progress = animatedProgressPercent,
+                            .height(40.dp),
+                        color = libraryItemColor ?: MaterialTheme.colorScheme.primary,
                         trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f),
-                        color =
-                        libraryItemColor ?: MaterialTheme.colorScheme.primary,
                     )
                     Row(
                         modifier = Modifier
