@@ -34,6 +34,7 @@ import app.musikus.ui.navigateTo
 import app.musikus.ui.settings.about.AboutScreen
 import app.musikus.ui.settings.appearance.AppearanceScreen
 import app.musikus.ui.settings.backup.BackupScreen
+import app.musikus.ui.settings.donate.DonateScreen
 import app.musikus.ui.theme.spacing
 
 fun NavGraphBuilder.addSettingsNavigationGraph(navController: NavController) {
@@ -53,7 +54,7 @@ fun NavGraphBuilder.addSettingsNavigationGraph(navController: NavController) {
         BackupScreen(navigateUp = { navController.navigateUp() })
     }
     composable(Screen.SettingsOptions.Donate.route) {
-
+        DonateScreen(navigateUp = { navController.navigateUp() })
     }
 }
 
