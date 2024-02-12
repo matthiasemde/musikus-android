@@ -27,6 +27,9 @@ sealed class LibraryUiEvent  {
     data class ItemSortModePressed(val mode: LibraryItemSortMode) : LibraryUiEvent()
 
     data object DeleteButtonPressed : LibraryUiEvent()
+    data object DeleteDialogDismissed : LibraryUiEvent()
+    data object DeleteDialogConfirmed : LibraryUiEvent()
+
     data object RestoreButtonPressed : LibraryUiEvent()
     data object EditButtonPressed : LibraryUiEvent()
 

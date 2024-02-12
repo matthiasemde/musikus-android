@@ -301,16 +301,16 @@ fun MusikusApp(
         theme = theme
     ) {
         Scaffold(
-        snackbarHost = {
-            SnackbarHost(hostState = uiState.snackbarHost)
-        },
-        bottomBar = {
-            MusikusBottomBar(
-                mainEventHandler = mainViewModel::onUiEvent,
-                navController = navController,
-                mainUiState = uiState
-            )
-        }
+            snackbarHost = {
+                SnackbarHost(hostState = uiState.snackbarHost)
+            },
+            bottomBar = {
+                MusikusBottomBar(
+                    mainEventHandler = mainViewModel::onUiEvent,
+                    navController = navController,
+                    mainUiState = uiState
+                )
+            }
         ) { innerPadding ->
 
             val animationDuration = 400

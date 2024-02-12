@@ -75,9 +75,15 @@ data class LibraryLibraryItemDialogUiState(
     override val isConfirmButtonEnabled: Boolean,
 ) : LibraryItemDialogUiState
 
+data class LibraryDeleteDialogUiState(
+    val numberOfSelectedFolders: Int,
+    val numberOfSelectedItems: Int,
+)
+
 data class LibraryDialogUiState(
     val folderDialogUiState: LibraryFolderDialogUiState?,
     val itemDialogUiState: LibraryItemDialogUiState?,
+    val deleteDialogUiState: LibraryDeleteDialogUiState?,
 )
 
 data class LibraryFabUiState(

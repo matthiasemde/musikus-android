@@ -109,6 +109,9 @@ class LibraryViewModel @Inject constructor(
     private val _selectedFolderIds = MutableStateFlow<Set<UUID>>(emptySet())
     private val _selectedItemIds = MutableStateFlow<Set<UUID>>(emptySet())
 
+    // Delete dialog
+    private val _showDeleteDialog = MutableStateFlow(false)
+
 
     /** Combining imported and own flows  */
 
@@ -294,14 +297,33 @@ class LibraryViewModel @Inject constructor(
         initialValue = null
     )
 
+    private val deleteDialogUiState = combine(
+        _showDeleteDialog,
+        _selectedFolderIds,
+        _selectedItemIds,
+    ) { showDeleteDialog, selectedFolders, selectedItems ->
+        if (!showDeleteDialog) return@combine null
+
+        LibraryDeleteDialogUiState(
+            numberOfSelectedFolders = selectedFolders.size,
+            numberOfSelectedItems = selectedItems.size,
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = WhileSubscribed(5000),
+        initialValue = null
+    )
+
     private val dialogUiState = combine(
         folderDialogUiState,
         itemDialogUiState,
-    ) { folderDialogUiState, itemDialogUiState ->
+        deleteDialogUiState
+    ) { folderDialogUiState, itemDialogUiState, deleteDialogUiState ->
         assert (folderDialogUiState == null || itemDialogUiState == null)
         LibraryDialogUiState(
             folderDialogUiState = folderDialogUiState,
             itemDialogUiState = itemDialogUiState,
+            deleteDialogUiState = deleteDialogUiState,
         )
     }.stateIn(
         scope = viewModelScope,
@@ -309,6 +331,7 @@ class LibraryViewModel @Inject constructor(
         initialValue = LibraryDialogUiState(
             folderDialogUiState = folderDialogUiState.value,
             itemDialogUiState = itemDialogUiState.value,
+            deleteDialogUiState = deleteDialogUiState.value,
         )
     )
 
@@ -359,7 +382,15 @@ class LibraryViewModel @Inject constructor(
             is LibraryUiEvent.ItemPressed -> onItemClicked(event.item, event.longClick)
             is LibraryUiEvent.ItemSortMenuPressed -> onItemSortMenuChanged(_showItemSortMenu.value.not())
             is LibraryUiEvent.ItemSortModePressed -> onItemSortModeSelected(event.mode)
-            is LibraryUiEvent.DeleteButtonPressed -> onDeleteAction()
+            is LibraryUiEvent.DeleteButtonPressed -> _showDeleteDialog.update { true }
+            is LibraryUiEvent.DeleteDialogDismissed -> {
+                _showDeleteDialog.update { false }
+                clearActionMode()
+            }
+            is LibraryUiEvent.DeleteDialogConfirmed -> {
+                _showDeleteDialog.update { false }
+                onDeleteAction()
+            }
             is LibraryUiEvent.RestoreButtonPressed -> onRestoreAction()
             is LibraryUiEvent.EditButtonPressed -> onEditAction()
             is LibraryUiEvent.AddFolderButtonPressed -> showFolderDialog()
