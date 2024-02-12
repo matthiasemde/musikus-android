@@ -37,7 +37,6 @@ import app.musikus.datastore.ThemeSelections
 import app.musikus.ui.MainActivity
 import app.musikus.ui.MainViewModel
 import app.musikus.ui.Screen
-import app.musikus.ui.navigateTo
 import app.musikus.ui.theme.MusikusTheme
 import app.musikus.utils.FakeTimeProvider
 import app.musikus.utils.LibraryFolderSortMode

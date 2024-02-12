@@ -12,6 +12,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
@@ -19,6 +20,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -27,7 +29,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
@@ -63,10 +64,12 @@ fun SettingsScreen(
     navigateTo: (Screen) -> Unit,
 ) {
     val settingsItems = listOf(
-        Screen.SettingsOptions.About,
-        Screen.SettingsOptions.Appearance,
-        Screen.SettingsOptions.Backup,
-        Screen.SettingsOptions.Donate,
+        listOf(Screen.SettingsOptions.Donate),
+        listOf(
+            Screen.SettingsOptions.Appearance,
+            Screen.SettingsOptions.Backup
+        ),
+        listOf(Screen.SettingsOptions.About),
     )
 
     Scaffold(
@@ -89,23 +92,31 @@ fun SettingsScreen(
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
         ) {
-            for(settingsItem in settingsItems) {
+            for(group in settingsItems) {
+                for (settingsItem in group) {
+                    if (settingsItem.displayData == null) {
+                        throw Exception("No display data for $settingsItem")
+                    }
 
-                if (settingsItem.displayData == null) {
-                    throw Exception("No display data for $settingsItem")
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { navigateTo(settingsItem) }
+                            .padding(
+                                horizontal = MaterialTheme.spacing.extraLarge,
+                                vertical = MaterialTheme.spacing.medium
+                            )
+                    ) {
+                        Icon(
+                            imageVector = settingsItem.displayData.icon.asIcon(),
+                            contentDescription = settingsItem.displayData.title.asString()
+                        )
+                        Spacer(modifier = Modifier.width(MaterialTheme.spacing.medium))
+                        Text(text = settingsItem.displayData.title.asString())
+                    }
                 }
-
-                Row(
-                    modifier = Modifier
-                        .clickable { navigateTo(settingsItem) }
-                        .padding(16.dp)
-                ) {
-                    Icon(
-                        imageVector = settingsItem.displayData.icon.asIcon(),
-                        contentDescription = settingsItem.displayData.title.asString()
-                    )
-                    Spacer(modifier = Modifier.width(MaterialTheme.spacing.medium))
-                    Text(text = settingsItem.displayData.title.asString())
+                if(group != settingsItems.last()) {
+                    HorizontalDivider(Modifier.padding(vertical = MaterialTheme.spacing.medium))
                 }
             }
         }
