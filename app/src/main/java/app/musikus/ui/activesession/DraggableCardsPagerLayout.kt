@@ -39,6 +39,7 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -550,13 +551,21 @@ private fun <
                 }
             )
     ){
+
+
+        val currentOffset = yState.requireOffset()
+        val fraction =
+            if (currentOffset <= 0) getCurrentOffsetFraction(state = yState)
+            else 0f
+
+        // TODO figure out how to do this with Themed shapes
         Surface (
             modifier = Modifier.fillMaxSize(),
             shape = RoundedCornerShape(
-                topStart = MaterialTheme.shapes.large.topStart,
-                topEnd = MaterialTheme.shapes.large.topEnd,
-                bottomStart = MaterialTheme.shapes.large.bottomStart,
-                bottomEnd = MaterialTheme.shapes.large.bottomEnd
+                topStart = CornerSize(16.dp),
+                topEnd = CornerSize(16.dp),
+                bottomStart = CornerSize(((1-fraction) * 16).dp),
+                bottomEnd = CornerSize(((1-fraction) * 16).dp)
             ),
             shadowElevation = 10.dp,
             tonalElevation = 10.dp,
