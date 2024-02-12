@@ -83,13 +83,6 @@ fun Sessions(
         }
     }
 
-    @Composable
-    fun MusikusScaffold(content: @Composable (PaddingValues) -> Unit) {
-        Scaffold (
-            content = content,
-        )
-    }
-
     Scaffold(
         contentWindowInsets = WindowInsets(bottom = 0.dp),
         modifier = Modifier

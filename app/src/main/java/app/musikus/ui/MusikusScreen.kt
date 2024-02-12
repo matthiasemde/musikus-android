@@ -1,6 +1,5 @@
 package app.musikus.ui
 
-import android.util.Log
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
@@ -63,7 +62,6 @@ import app.musikus.ui.sessions.editsession.EditSession
 import app.musikus.ui.settings.addSettingsNavigationGraph
 import app.musikus.ui.statistics.addStatisticsNavigationGraph
 import app.musikus.ui.theme.MusikusTheme
-import app.musikus.utils.ExportImportDialog
 import app.musikus.utils.TimeProvider
 import app.musikus.utils.UiIcon
 import app.musikus.utils.UiText
@@ -421,13 +419,6 @@ fun MusikusApp(
                 // Settings
                 addSettingsNavigationGraph(navController)
             }
-
-            /** Export / Import Dialog */
-            ExportImportDialog(
-                show = uiState.showExportImportDialog,
-                onDismissHandler = { mainViewModel.onUiEvent(MainUiEvent.HideExportImportDialog) }
-            )
-
         }
     }
 }

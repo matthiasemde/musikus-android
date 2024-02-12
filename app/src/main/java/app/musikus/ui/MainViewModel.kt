@@ -33,8 +33,6 @@ sealed class MainUiEvent {
     data object HideMainMenu: MainUiEvent()
     data object ShowThemeSubMenu: MainUiEvent()
     data object HideThemeSubMenu: MainUiEvent()
-    data object ShowExportImportDialog: MainUiEvent()
-    data object HideExportImportDialog: MainUiEvent()
     data class SetTheme(val theme: ThemeSelections): MainUiEvent()
     data object CollapseMultiFab: MainUiEvent()
     data class ChangeMultiFabState(val state: MultiFabState): MainUiEvent()
@@ -49,7 +47,6 @@ data class MainMenuUiState(
 )
 data class MainUiState(
     val menuUiState: MainMenuUiState,
-    val showExportImportDialog: Boolean,
     val multiFabState: MultiFabState,
     val activeTheme: ThemeSelections?,
     var snackbarHost: SnackbarHostState,
@@ -63,9 +60,6 @@ class MainViewModel @Inject constructor(
     /** Menu */
     private val _showMainMenu = MutableStateFlow(false)
     private val _showThemeSubMenu = MutableStateFlow(false)
-
-    /** Import/Export */
-    private val _showExportImportDialog = MutableStateFlow(false)
 
     /** Content Scrim over NavBar for Multi FAB etc */
     private val _multiFabState = MutableStateFlow(MultiFabState.COLLAPSED)
@@ -93,12 +87,6 @@ class MainViewModel @Inject constructor(
             }
             is MainUiEvent.HideThemeSubMenu -> {
                 onShowThemeSubMenuChanged(false)
-            }
-            is MainUiEvent.ShowExportImportDialog -> {
-                onShowExportImportDialogChanged(true)
-            }
-            is MainUiEvent.HideExportImportDialog -> {
-                onShowExportImportDialogChanged(false)
             }
             is MainUiEvent.SetTheme -> {
                 setTheme(event.theme)
@@ -159,14 +147,12 @@ class MainViewModel @Inject constructor(
 
     val uiState = combine(
         menuUiState,
-        _showExportImportDialog,
         _multiFabState,
         _activeTheme,
         _snackbarHost,
-    ) { menuUiState, showExportImportDialog, multiFabState, activeTheme, snackbarHost ->
+    ) { menuUiState, multiFabState, activeTheme, snackbarHost ->
         MainUiState(
             menuUiState = menuUiState,
-            showExportImportDialog = showExportImportDialog,
             multiFabState = multiFabState,
             activeTheme = activeTheme,
             snackbarHost = snackbarHost
@@ -176,7 +162,6 @@ class MainViewModel @Inject constructor(
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = MainUiState(
             menuUiState = menuUiState.value,
-            showExportImportDialog = _showExportImportDialog.value,
             multiFabState = _multiFabState.value,
             activeTheme = _activeTheme.value,
             snackbarHost = _snackbarHost.value
@@ -194,9 +179,5 @@ class MainViewModel @Inject constructor(
 
     private fun onMultiFabStateChanged(state: MultiFabState) {
         _multiFabState.update { state }
-    }
-
-    private fun onShowExportImportDialogChanged(show: Boolean) {
-        _showExportImportDialog.update { show }
     }
 }

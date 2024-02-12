@@ -29,6 +29,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import app.musikus.Musikus
 import app.musikus.ui.theme.spacing
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -66,7 +67,7 @@ fun BackupScreen(
 
             Button(
                 modifier = Modifier.padding(MaterialTheme.spacing.small),
-                onClick = { /*TODO*/ },
+                onClick = { Musikus.exportDatabase() },
             ) {
                 Row(
                     modifier = Modifier.padding(MaterialTheme.spacing.extraSmall),
@@ -82,7 +83,7 @@ fun BackupScreen(
 
             Button(
                 modifier = Modifier.padding(MaterialTheme.spacing.small),
-                onClick = { /*TODO*/ },
+                onClick = { Musikus.importDatabase() },
             ) {
                 Row(
                     modifier = Modifier.padding(MaterialTheme.spacing.extraSmall),
