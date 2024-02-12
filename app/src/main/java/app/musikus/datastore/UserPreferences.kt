@@ -14,11 +14,20 @@ import app.musikus.utils.LibraryFolderSortMode
 import app.musikus.utils.LibraryItemSortMode
 import app.musikus.utils.SortDirection
 
+interface ThemeSelection {
+    val label: String
+}
 
-enum class ThemeSelections {
-    SYSTEM,
-    DAY,
-    NIGHT;
+enum class ThemeSelections : ThemeSelection {
+    SYSTEM {
+       override val label = "System default"
+    },
+    DAY {
+        override val label = "Light"
+    },
+    NIGHT {
+        override val label = "Dark"
+    };
 
     companion object {
         val DEFAULT = SYSTEM
