@@ -11,6 +11,7 @@ package app.musikus.ui.settings.backup
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -66,32 +67,40 @@ fun BackupScreen(
             Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
 
             Button(
-                modifier = Modifier.padding(MaterialTheme.spacing.small),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = MaterialTheme.spacing.extraLarge),
                 onClick = { Musikus.exportDatabase() },
             ) {
                 Row(
-                    modifier = Modifier.padding(MaterialTheme.spacing.extraSmall),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Icon(Icons.Default.CloudUpload, contentDescription = null)
                     Spacer(modifier = Modifier.width(MaterialTheme.spacing.small))
-                    Text("Create backup")
+                    Text(
+                        text = "Create backup",
+                        style = MaterialTheme.typography.titleMedium
+                    )
                 }
             }
 
             Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
 
             Button(
-                modifier = Modifier.padding(MaterialTheme.spacing.small),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = MaterialTheme.spacing.extraLarge),
                 onClick = { Musikus.importDatabase() },
             ) {
                 Row(
-                    modifier = Modifier.padding(MaterialTheme.spacing.extraSmall),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Icon(Icons.Default.CloudDownload, contentDescription = null)
                     Spacer(modifier = Modifier.width(MaterialTheme.spacing.small))
-                    Text("Load backup")
+                    Text(
+                        text = "Load backup",
+                        style = MaterialTheme.typography.titleMedium
+                    )
                 }
             }
 
