@@ -18,9 +18,9 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CloudUpload
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.outlined.CloudUpload
+import androidx.compose.material.icons.outlined.Favorite
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -142,7 +142,7 @@ sealed class Screen(
             route = "settings/about",
             displayData = DisplayData(
                 title = UiText.StringResource(R.string.about_app_title),
-                icon = UiIcon.DynamicIcon(Icons.Default.Info),
+                icon = UiIcon.DynamicIcon(Icons.Outlined.Info),
             )
         )
 
@@ -150,7 +150,7 @@ sealed class Screen(
             route = "settings/backup",
             displayData = DisplayData(
                 title = UiText.StringResource(R.string.backup_title),
-                icon = UiIcon.DynamicIcon(Icons.Default.CloudUpload),
+                icon = UiIcon.DynamicIcon(Icons.Outlined.CloudUpload),
             )
         )
 
@@ -158,7 +158,7 @@ sealed class Screen(
             route = "settings/donate",
             displayData = DisplayData(
                 title = UiText.StringResource(R.string.donations_title),
-                icon = UiIcon.DynamicIcon(Icons.Default.Favorite),
+                icon = UiIcon.DynamicIcon(Icons.Outlined.Favorite),
             )
         )
 

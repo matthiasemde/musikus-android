@@ -8,7 +8,11 @@
 
 package app.musikus.ui.settings
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -18,6 +22,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -106,16 +111,32 @@ fun SettingsScreen(
     ) { paddingValues ->
         Column(
             modifier = Modifier
-                .padding(paddingValues)
-                .verticalScroll(rememberScrollState())
+                .padding(top = paddingValues.calculateTopPadding())
+                .fillMaxHeight()
+            ,
+            verticalArrangement = Arrangement.SpaceBetween
         ) {
-            for(group in settingsItems) {
-                for (settingsItem in group) {
-                    TwoLiner(data = settingsItem)
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState())
+            ) {
+                for(group in settingsItems) {
+                    for (settingsItem in group) {
+                        TwoLiner(data = settingsItem)
+                    }
+                    if(group != settingsItems.last()) {
+                        HorizontalDivider(Modifier.padding(vertical = MaterialTheme.spacing.medium))
+                    }
                 }
-                if(group != settingsItems.last()) {
-                    HorizontalDivider(Modifier.padding(vertical = MaterialTheme.spacing.medium))
-                }
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = "Made with ❤️ in Munich",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = LocalContentColor.current.copy(alpha = 0.8f)
+                )
             }
         }
     }

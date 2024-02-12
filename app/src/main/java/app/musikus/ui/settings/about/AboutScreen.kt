@@ -67,10 +67,16 @@ fun AboutScreen(
                 firstLine = UiText.StringResource(R.string.development_title),
                 secondLine = UiText.StringResource(R.string.development_text)
             )),
-            listOf(TwoLinerData(
-                firstLine = UiText.DynamicString("Publisher"),
-                secondLine = UiText.DynamicString("Matthias Emde\nConnollystraße 25\n80809 Munich, Germany\ncontact@musikus.app"),
-            )),
+            listOf(
+                TwoLinerData(
+                    firstLine = UiText.DynamicString("Publisher"),
+                    secondLine = UiText.DynamicString("Matthias Emde\nConnollystraße 25\n80809 Munich, Germany\ncontact@musikus.app"),
+                ),
+                TwoLinerData(
+                    firstLine = UiText.StringResource(R.string.privacy_policy_title),
+                    secondLine = UiText.StringResource(R.string.privacy_policy),
+                )
+            ),
             listOf(
                 TwoLinerData(
                     firstLine = UiText.DynamicString("Version"),

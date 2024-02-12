@@ -168,7 +168,7 @@
     <string name="record_sheet_start_pause">Start/Pause recording</string>
     <string name="record_sheet_stop">Stop recording</string>
     <string name="record_sheet_save_location_label">Location:</string>
-    <string name="record_sheet_save_location">Music/Practice Time</string>
+    <string name="record_sheet_save_location">Music/Musikus</string>
     <string name="record_sheet_open_save_location_button">Open selected save location</string>
     <string name="record_snackbar_message">%s saved</string>
     <string name="record_snackbar_undo">Delete</string>
@@ -247,7 +247,7 @@
     <string name="publisher">Publisher</string>
     <string name="legal_text">Javier Carbone (Freelance)\nJakob Felder Weg 36\n55128, Mainz, Germany\npracticetimeapp@gmail.com</string>
     <string name="privacy_policy_title">Privacy policy</string>
-    <string name="privacy_policy">Practice Time! does not collect, share or store any personal Data.\n\nExceptions: When getting in contact with us through E-mail, we will remove your Personal Information from our records within 30 days. This information will not be shared.</string>
+    <string name="privacy_policy">Musikus does not collect, share or store any personal Data.\n\nExceptions: When getting in contact with us through E-mail, we will remove your Personal Information from our records within 30 days. This information will not be shared.</string>
     <string name="help_tutorial_title">Tutorial</string>
     <string name="licences_title">Open source licences</string>
     <string name="donations_button_text">Donate 🤍</string>
