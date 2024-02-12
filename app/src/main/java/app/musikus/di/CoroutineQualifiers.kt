@@ -5,8 +5,6 @@ import javax.inject.Qualifier
 
 // Source: https://medium.com/androiddevelopers/create-an-application-coroutinescope-using-hilt-dd444e721528
 
-// CoroutinesQualifiers.kt file
-
 @Retention(AnnotationRetention.RUNTIME)
 @Qualifier
 annotation class DefaultDispatcher
@@ -22,3 +20,11 @@ annotation class MainDispatcher
 @Retention(AnnotationRetention.BINARY)
 @Qualifier
 annotation class MainImmediateDispatcher
+
+@Retention(AnnotationRetention.RUNTIME)
+@Qualifier
+annotation class ApplicationScope
+
+@Retention(AnnotationRetention.RUNTIME)
+@Qualifier
+annotation class IoScope

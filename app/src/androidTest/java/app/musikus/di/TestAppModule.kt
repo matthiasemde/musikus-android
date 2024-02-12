@@ -9,6 +9,7 @@
 package app.musikus.di
 
 import android.app.Application
+import android.os.AsyncTask
 import androidx.room.Room
 import androidx.room.withTransaction
 import app.musikus.database.MusikusDatabase
@@ -17,6 +18,7 @@ import app.musikus.repository.GoalRepository
 import app.musikus.repository.GoalRepositoryImpl
 import app.musikus.repository.LibraryRepository
 import app.musikus.repository.LibraryRepositoryImpl
+import app.musikus.repository.RecordingsRepositoryImpl
 import app.musikus.repository.SessionRepository
 import app.musikus.repository.SessionRepositoryImpl
 import app.musikus.repository.UserPreferencesRepository
@@ -50,17 +52,23 @@ import app.musikus.usecase.library.GetSortedLibraryItemsUseCase
 import app.musikus.usecase.library.LibraryUseCases
 import app.musikus.usecase.library.RestoreFoldersUseCase
 import app.musikus.usecase.library.RestoreItemsUseCase
+import app.musikus.usecase.recordings.GetRawRecordingUseCase
+import app.musikus.usecase.recordings.GetRecordingsUseCase
+import app.musikus.usecase.recordings.RecordingsRepository
+import app.musikus.usecase.recordings.RecordingsUseCases
 import app.musikus.usecase.sessions.AddSessionUseCase
 import app.musikus.usecase.sessions.DeleteSessionsUseCase
 import app.musikus.usecase.sessions.EditSessionUseCase
-import app.musikus.usecase.sessions.GetSessionsForDaysForMonthsUseCase
 import app.musikus.usecase.sessions.GetSessionByIdUseCase
+import app.musikus.usecase.sessions.GetSessionsForDaysForMonthsUseCase
 import app.musikus.usecase.sessions.GetSessionsInTimeframeUseCase
 import app.musikus.usecase.sessions.RestoreSessionsUseCase
 import app.musikus.usecase.sessions.SessionsUseCases
+import app.musikus.usecase.userpreferences.ChangeMetronomeSettingsUseCase
 import app.musikus.usecase.userpreferences.GetFolderSortInfoUseCase
 import app.musikus.usecase.userpreferences.GetGoalSortInfoUseCase
 import app.musikus.usecase.userpreferences.GetItemSortInfoUseCase
+import app.musikus.usecase.userpreferences.GetMetronomeSettingsUseCase
 import app.musikus.usecase.userpreferences.GetThemeUseCase
 import app.musikus.usecase.userpreferences.SelectFolderSortModeUseCase
 import app.musikus.usecase.userpreferences.SelectGoalsSortModeUseCase
@@ -75,15 +83,29 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.components.SingletonComponent
 import dagger.hilt.testing.TestInstallIn
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.asCoroutineDispatcher
 import javax.inject.Named
 import javax.inject.Singleton
 
 @Module
 @TestInstallIn(
     components = [SingletonComponent::class],
-    replaces = [MainModule::class, RepositoriesModule::class, UseCasesModule::class]
+    replaces = [MainModule::class, RepositoriesModule::class, UseCasesModule::class, CoroutinesDispatchersModule::class]
 )
 object TestAppModule {
+
+    @DefaultDispatcher
+    @Provides
+    fun providesDefaultDispatcher(): CoroutineDispatcher =
+        AsyncTask.THREAD_POOL_EXECUTOR.asCoroutineDispatcher()
+
+    @IoDispatcher
+    @Provides
+    fun provideIoDispatcher(): CoroutineDispatcher {
+        return AsyncTask.THREAD_POOL_EXECUTOR.asCoroutineDispatcher()
+    }
 
     @Provides
     @Singleton
@@ -155,6 +177,18 @@ object TestAppModule {
             sessionDao = database.sessionDao,
             sectionDao = database.sectionDao,
             withDatabaseTransaction = { block -> database.withTransaction(block) }
+        )
+    }
+
+    @Provides
+    fun provideRecordingsRepository(
+        application: Application,
+        @IoScope ioScope: CoroutineScope
+    ) : RecordingsRepository {
+        return RecordingsRepositoryImpl(
+            application = application,
+            contentResolver = application.contentResolver,
+            ioScope = ioScope
         )
     }
 
@@ -257,7 +291,7 @@ object TestAppModule {
     }
 
     @Provides
-    fun providesUserPreferencesUseCases(
+    fun provideUserPreferencesUseCases(
         userPreferencesRepository: UserPreferencesRepository
     ): UserPreferencesUseCases {
         return UserPreferencesUseCases(
@@ -265,10 +299,22 @@ object TestAppModule {
             getFolderSortInfo = GetFolderSortInfoUseCase(userPreferencesRepository),
             getItemSortInfo = GetItemSortInfoUseCase(userPreferencesRepository),
             getGoalSortInfo = GetGoalSortInfoUseCase(userPreferencesRepository),
+            getMetronomeSettings = GetMetronomeSettingsUseCase(userPreferencesRepository),
             selectTheme = SelectThemeUseCase(userPreferencesRepository),
             selectFolderSortMode = SelectFolderSortModeUseCase(userPreferencesRepository),
             selectItemSortMode = SelectItemSortModeUseCase(userPreferencesRepository),
             selectGoalSortMode = SelectGoalsSortModeUseCase(userPreferencesRepository),
+            changeMetronomeSettings = ChangeMetronomeSettingsUseCase(userPreferencesRepository),
+        )
+    }
+
+    @Provides
+    fun provideRecordingsUseCases(
+        recordingRepository: RecordingsRepository,
+    ): RecordingsUseCases {
+        return RecordingsUseCases(
+            get = GetRecordingsUseCase(recordingRepository),
+            getRawRecording = GetRawRecordingUseCase(recordingRepository),
         )
     }
 }
