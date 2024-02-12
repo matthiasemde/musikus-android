@@ -34,6 +34,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import app.musikus.ui.Screen
 import app.musikus.ui.navigateTo
+import app.musikus.ui.settings.about.AboutScreen
 import app.musikus.ui.theme.spacing
 
 fun NavGraphBuilder.addSettingsNavigationGraph(navController: NavController) {
@@ -44,7 +45,9 @@ fun NavGraphBuilder.addSettingsNavigationGraph(navController: NavController) {
         )
     }
     composable(Screen.SettingsOptions.About.route) {
-
+        AboutScreen(
+            navigateUp = { navController.navigateUp() }
+        )
     }
     composable(Screen.SettingsOptions.Appearance.route) {
 
