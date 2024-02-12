@@ -45,15 +45,14 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import app.musikus.ui.components.ActionBar
-import app.musikus.ui.components.CommonMenuSelections
-import app.musikus.ui.components.MainMenu
-import app.musikus.ui.components.Selectable
-import app.musikus.ui.components.ThemeMenu
 import app.musikus.ui.MainUiEvent
 import app.musikus.ui.MainUiEventHandler
 import app.musikus.ui.MainUiState
 import app.musikus.ui.Screen
+import app.musikus.ui.components.ActionBar
+import app.musikus.ui.components.CommonMenuSelections
+import app.musikus.ui.components.MainMenu
+import app.musikus.ui.components.Selectable
 import app.musikus.ui.theme.spacing
 import app.musikus.utils.DurationString
 import java.util.UUID
@@ -130,15 +129,6 @@ fun Sessions(
                                 }
                             },
                             uniqueMenuItems = { }
-                        )
-                        ThemeMenu(
-                            expanded = mainMenuUiState.showThemeSubMenu,
-                            currentTheme = mainUiState.activeTheme,
-                            onDismissHandler = { mainEventHandler(MainUiEvent.HideThemeSubMenu) },
-                            onSelectionHandler = { theme ->
-                                mainEventHandler(MainUiEvent.HideThemeSubMenu)
-                                mainEventHandler(MainUiEvent.SetTheme(theme))
-                            }
                         )
                     }
                 }

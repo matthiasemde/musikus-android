@@ -69,22 +69,21 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import app.musikus.R
-import app.musikus.ui.components.CommonMenuSelections
-import app.musikus.ui.components.MainMenu
-import app.musikus.ui.components.ThemeMenu
 import app.musikus.ui.MainUiEvent
 import app.musikus.ui.MainUiEventHandler
 import app.musikus.ui.MainUiState
 import app.musikus.ui.Screen
+import app.musikus.ui.components.CommonMenuSelections
+import app.musikus.ui.components.MainMenu
 import app.musikus.ui.navigateTo
 import app.musikus.ui.statistics.goalstatistics.GoalStatistics
 import app.musikus.ui.statistics.sessionstatistics.SessionStatistics
-import app.musikus.utils.DurationFormat
-import app.musikus.utils.getDurationString
 import app.musikus.ui.theme.libraryItemColors
 import app.musikus.ui.theme.spacing
 import app.musikus.utils.DateFormat
+import app.musikus.utils.DurationFormat
 import app.musikus.utils.TimeProvider
+import app.musikus.utils.getDurationString
 import app.musikus.utils.musikusFormat
 
 fun NavGraphBuilder.addStatisticsNavigationGraph(
@@ -146,15 +145,6 @@ fun Statistics(
                                 }
                             },
                             uniqueMenuItems = {}
-                        )
-                        ThemeMenu(
-                            expanded = mainMenuUiState.showThemeSubMenu,
-                            currentTheme = mainUiState.activeTheme,
-                            onDismissHandler = { mainEventHandler(MainUiEvent.HideThemeSubMenu) },
-                            onSelectionHandler = { theme ->
-                                mainEventHandler(MainUiEvent.HideThemeSubMenu)
-                                mainEventHandler(MainUiEvent.SetTheme(theme))
-                            }
                         )
                     }
                 }

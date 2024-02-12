@@ -54,7 +54,6 @@ import app.musikus.ui.components.MultiFAB
 import app.musikus.ui.components.MultiFabState
 import app.musikus.ui.components.Selectable
 import app.musikus.ui.components.SortMenu
-import app.musikus.ui.components.ThemeMenu
 import app.musikus.ui.MainUiEvent
 import app.musikus.ui.MainUiEventHandler
 import app.musikus.ui.MainUiState
@@ -138,10 +137,12 @@ fun Goals(
                         onShowMenuChanged = viewModel::onSortMenuShowChanged,
                         onSelectionHandler = viewModel::onSortModeSelected
                     )
-                    IconButton(onClick = {
-                        mainEventHandler(MainUiEvent.ShowMainMenu)
-                    }) {
-                        Icon(Icons.Default.MoreVert, contentDescription = "more")
+                    Box {
+                        IconButton(onClick = {
+                            mainEventHandler(MainUiEvent.ShowMainMenu)
+                        }) {
+                            Icon(Icons.Default.MoreVert, contentDescription = "more")
+                        }
                         MainMenu(
                             show = mainMenuUiState.show,
                             onDismissHandler = { mainEventHandler(MainUiEvent.HideMainMenu) },
@@ -153,15 +154,6 @@ fun Goals(
                                 }
                             },
                             uniqueMenuItems = {}
-                        )
-                        ThemeMenu(
-                            expanded = mainMenuUiState.showThemeSubMenu,
-                            currentTheme = mainUiState.activeTheme,
-                            onDismissHandler = { mainEventHandler(MainUiEvent.HideThemeSubMenu) },
-                            onSelectionHandler = { theme ->
-                                mainEventHandler(MainUiEvent.HideThemeSubMenu)
-                                mainEventHandler(MainUiEvent.SetTheme(theme))
-                            }
                         )
                     }
                 }
