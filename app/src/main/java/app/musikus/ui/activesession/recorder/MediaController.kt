@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package app.musikus.ui.components
+package app.musikus.ui.activesession.recorder
 
 import android.content.ComponentName
 import android.content.Context

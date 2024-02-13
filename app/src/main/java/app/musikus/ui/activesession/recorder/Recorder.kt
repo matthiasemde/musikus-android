@@ -59,11 +59,7 @@ import androidx.media3.common.Player
 import androidx.media3.session.MediaController
 import app.musikus.ui.components.conditional
 import app.musikus.ui.components.ExceptionHandler
-import app.musikus.ui.components.PlayerState
 import app.musikus.ui.components.Waveform
-import app.musikus.ui.components.rememberManagedMediaController
-import app.musikus.ui.components.seekToRelativePosition
-import app.musikus.ui.components.state
 import app.musikus.ui.theme.spacing
 import app.musikus.usecase.recordings.Recording
 import app.musikus.utils.DateFormat
