@@ -25,6 +25,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
@@ -51,10 +52,13 @@ import app.musikus.ui.MainUiState
 import app.musikus.ui.Screen
 import app.musikus.ui.components.ActionBar
 import app.musikus.ui.components.CommonMenuSelections
+import app.musikus.ui.components.DeleteConfirmationBottomSheet
 import app.musikus.ui.components.MainMenu
 import app.musikus.ui.components.Selectable
 import app.musikus.ui.theme.spacing
 import app.musikus.utils.DurationString
+import app.musikus.utils.UiIcon
+import app.musikus.utils.UiText
 import java.util.UUID
 
 @OptIn(
@@ -62,7 +66,7 @@ import java.util.UUID
     ExperimentalFoundationApi::class,
 )
 @Composable
-fun Sessions(
+fun SessionsScreen(
     viewModel: SessionsViewModel = hiltViewModel(),
     mainUiState: MainUiState,
     mainEventHandler: MainUiEventHandler,
@@ -71,6 +75,7 @@ fun Sessions(
     onSessionStart: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val eventHandler: SessionsUiEventHandler = viewModel::onUiEvent
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
@@ -132,17 +137,9 @@ fun Sessions(
             if(actionModeUiState.isActionMode) {
                 ActionBar(
                     numSelectedItems = actionModeUiState.numberOfSelections,
-                    onDismissHandler = viewModel::clearActionMode,
-                    onEditHandler = {
-                        viewModel.onEditAction(onSessionEdit)
-                    },
-                    onDeleteHandler = {
-                        viewModel.onDeleteAction()
-                        mainEventHandler(MainUiEvent.ShowSnackbar(
-                            message = "Deleted ${actionModeUiState.numberOfSelections} sessions",
-                            onUndo = viewModel::onRestoreAction
-                        ))
-                    }
+                    onDismissHandler = { eventHandler(SessionsUiEvent.ClearActionMode) },
+                    onEditHandler = { eventHandler(SessionsUiEvent.EditButtonPressed(onSessionEdit)) },
+                    onDeleteHandler = { eventHandler(SessionsUiEvent.DeleteButtonPressed) }
                 )
             }
         },
@@ -170,7 +167,7 @@ fun Sessions(
                             MonthHeader(
                                 month = monthDatum.month,
                                 onClickHandler = {
-                                    viewModel.onMonthHeaderClicked(monthDatum.specificMonth)
+                                    eventHandler(SessionsUiEvent.MonthHeaderPressed(monthDatum.specificMonth))
                                 }
                             )
                         }
@@ -190,10 +187,10 @@ fun Sessions(
                                 modifier = Modifier.padding(vertical = MaterialTheme.spacing.small),
                                 selected = session.session.id in contentUiState.selectedSessions,
                                 onShortClick = {
-                                    viewModel.onSessionClicked(session.session.id)
+                                    eventHandler(SessionsUiEvent.SessionPressed(session.session.id, longClick = false))
                                 },
                                 onLongClick = {
-                                    viewModel.onSessionClicked(session.session.id, longClick = true)
+                                    eventHandler(SessionsUiEvent.SessionPressed(session.session.id, longClick = true))
                                 },
                             ) {
                                 SessionCard(sessionWithSectionsWithLibraryItems = session)
@@ -201,6 +198,25 @@ fun Sessions(
                         }
                     }
                 }
+            }
+
+            // Delete Dialog
+            val deleteDialogUiState = uiState.deleteDialogUiState
+
+            if(deleteDialogUiState != null) {
+                DeleteConfirmationBottomSheet(
+                    explanation = UiText.DynamicString("Delete sessions? Any progress you made towards your goals during these sessions will be lost."),
+                    confirmationText = UiText.DynamicString("Delete forever (${deleteDialogUiState.numberOfSelections})"),
+                    confirmationIcon = UiIcon.DynamicIcon(Icons.Default.Delete),
+                    onDismiss = { eventHandler(SessionsUiEvent.DeleteDialogDismissed) },
+                    onConfirm = {
+                        eventHandler(SessionsUiEvent.DeleteDialogConfirmed)
+                        mainEventHandler(MainUiEvent.ShowSnackbar(
+                            message = "Deleted ${deleteDialogUiState.numberOfSelections} sessions",
+                            onUndo = { eventHandler(SessionsUiEvent.UndoButtonPressed) }
+                        ))
+                    }
+                )
             }
         }
     )
@@ -249,38 +265,3 @@ fun DayHeader(
         )
     }
 }
-
-//
-//    // check if session is running every second to respond the fab design to it
-//    override fun onResume() {
-//        super.onResume()
-//        val fabRunningSession = requireView().findViewById<FloatingActionButton>(R.id.fab_running_session)
-//        // set correct FAB depending if session is running.
-//        // wait 100ms and check again to give Service time to stop after discarding session
-//        runnable = object : Runnable {
-//            override fun run() {
-//                if (Musikus.serviceIsRunning) {
-//                    // apparently there is a bug with hide() / View.GONE which causes the Toolbar to jump down
-//                    // so use Invisible so that views don't get broken
-//                    fabNewSessionView.visibility = View.INVISIBLE
-//                    fabRunningSession.show()
-//                } else {
-//                    fabRunningSession.visibility = View.INVISIBLE
-//                    fabNewSessionView.show()
-//                }
-//                if (Musikus.serviceIsRunning)
-//                    handler.postDelayed(this, 500)
-//            }
-//        }
-//        handler = Handler(Looper.getMainLooper()).also {
-//            it.post(runnable)
-//        }
-//    }
-//
-//    // remove the callback. Otherwise, the runnable will keep going and when entering the activity again,
-//    // there will be twice as much and so on...
-//    override fun onStop() {
-//        super.onStop()
-//        handler.removeCallbacks(runnable)
-//    }
-//

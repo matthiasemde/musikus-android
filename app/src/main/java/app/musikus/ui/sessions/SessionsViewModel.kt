@@ -11,11 +11,10 @@ package app.musikus.ui.sessions
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.musikus.database.SessionWithSectionsWithLibraryItems
-import app.musikus.ui.components.TopBarUiState
+import app.musikus.usecase.sessions.SessionsUseCases
 import app.musikus.utils.DurationFormat
 import app.musikus.utils.DurationString
 import app.musikus.utils.getDurationString
-import app.musikus.usecase.sessions.SessionsUseCases
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -28,30 +27,7 @@ import java.util.UUID
 import javax.inject.Inject
 
 
-/** Ui state data classes */
-
-data class SessionsTopBarUiState(
-    override val title: String,
-    override val showBackButton: Boolean,
-) : TopBarUiState
-
-data class SessionsActionModeUiState(
-    val isActionMode: Boolean,
-    val numberOfSelections: Int,
-)
-
-data class SessionsContentUiState (
-    val monthData: List<MonthUiDatum>,
-    val selectedSessions: Set<UUID>,
-
-    val showHint: Boolean,
-)
-
-data class SessionsUiState(
-    val topBarUiState: SessionsTopBarUiState,
-    val actionModeUiState: SessionsActionModeUiState,
-    val contentUiState: SessionsContentUiState,
-)
+/** Utility data classes */
 
 data class MonthUiDatum(
     val month: String,
@@ -63,6 +39,10 @@ data class DayUiDatum(
     val totalPracticeDuration: DurationString,
     val sessions: List<SessionWithSectionsWithLibraryItems>,
 )
+
+/**
+ * View model
+ */
 
 @HiltViewModel
 class SessionsViewModel @Inject constructor(
@@ -84,6 +64,8 @@ class SessionsViewModel @Inject constructor(
     private val _selectedSessions = MutableStateFlow<Set<UUID>>(emptySet())
 
     private val _expandedMonths = MutableStateFlow<Set<Int>>(emptySet())
+
+    private val _deleteDialogShowing = MutableStateFlow(false)
 
 
     /** Combining imported and own state flows */
@@ -170,15 +152,29 @@ class SessionsViewModel @Inject constructor(
         )
     )
 
+    private val deleteDialogUiState = _deleteDialogShowing.map { isShowing ->
+        if(!isShowing) return@map null
+
+        SessionsDeleteDialogUiState(
+            numberOfSelections = _selectedSessions.value.size
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = null
+    )
+
     val uiState = combine(
         topBarUiState,
         actionModeUiState,
         contentUiState,
-    ) { topBarUiState, actionModeUiState, contentUiState ->
+        deleteDialogUiState,
+    ) { topBarUiState, actionModeUiState, contentUiState, deleteDialogUiState ->
         SessionsUiState(
             topBarUiState = topBarUiState,
             actionModeUiState = actionModeUiState,
             contentUiState = contentUiState,
+            deleteDialogUiState = deleteDialogUiState,
         )
     }.stateIn(
         scope = viewModelScope,
@@ -187,17 +183,38 @@ class SessionsViewModel @Inject constructor(
             topBarUiState = topBarUiState.value,
             actionModeUiState = actionModeUiState.value,
             contentUiState = contentUiState.value,
+            deleteDialogUiState = deleteDialogUiState.value,
         )
     )
 
-    /** Mutators */
+    fun onUiEvent(event: SessionsUiEvent) {
+        when(event) {
+            is SessionsUiEvent.MonthHeaderPressed -> onMonthHeaderClicked(event.specificMonth)
+            is SessionsUiEvent.SessionPressed -> onSessionClicked(event.sessionId, event.longClick)
+            is SessionsUiEvent.EditButtonPressed -> onEditAction(event.editSession)
+            is SessionsUiEvent.DeleteButtonPressed -> _deleteDialogShowing.update { true }
+            is SessionsUiEvent.DeleteDialogDismissed -> {
+                _deleteDialogShowing.update { false }
+                clearActionMode()
+            }
+            is SessionsUiEvent.DeleteDialogConfirmed -> {
+                _deleteDialogShowing.update { false }
+                onDeleteAction()
+            }
+            is SessionsUiEvent.UndoButtonPressed -> onRestoreAction()
+            is SessionsUiEvent.ClearActionMode -> clearActionMode()
+        }
+    }
 
-    fun onEditAction(editSession: (id: UUID) -> Unit) {
+
+    /** Private state mutators */
+
+    private fun onEditAction(editSession: (id: UUID) -> Unit) {
         editSession(_selectedSessions.value.single())
         clearActionMode()
     }
 
-    fun onDeleteAction() {
+    private fun onDeleteAction() {
         viewModelScope.launch {
             _sessionIdsCache = _selectedSessions.value.toList()
             sessionsUseCases.delete(_selectedSessions.value.toList())
@@ -205,17 +222,17 @@ class SessionsViewModel @Inject constructor(
         }
     }
 
-    fun onRestoreAction() {
+    private fun onRestoreAction() {
         viewModelScope.launch {
             sessionsUseCases.restore(_sessionIdsCache.toList())
         }
     }
 
-    fun clearActionMode() {
+    private fun clearActionMode() {
         _selectedSessions.update{ emptySet() }
     }
 
-    fun onMonthHeaderClicked(specificMonth: Int) {
+    private fun onMonthHeaderClicked(specificMonth: Int) {
         _expandedMonths.update {
             if(it.contains(specificMonth)) {
                 it - specificMonth
@@ -225,7 +242,7 @@ class SessionsViewModel @Inject constructor(
         }
     }
 
-    fun onSessionClicked(
+    private fun onSessionClicked(
         sessionId: UUID,
         longClick: Boolean = false
     ) {

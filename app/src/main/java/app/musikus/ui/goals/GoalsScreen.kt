@@ -238,7 +238,13 @@ fun GoalsScreen(
 
             if (deleteOrArchiveDialogUiState != null) {
                 DeleteConfirmationBottomSheet(
-                    explanation = UiText.DynamicString("${if(deleteOrArchiveDialogUiState.isArchiveAction) "Archive" else "Delete"} goals?"),
+                    explanation = UiText.DynamicString(
+                        if(deleteOrArchiveDialogUiState.isArchiveAction) {
+                            "Archive goals? They will remain in your statistics but progress towards them will no longer be tracked."
+                        } else {
+                            "Delete goals? They will be erased from your statistics and cannot be restored. If you want to keep your statistics, consider archiving them instead."
+                        }
+                    ),
                     confirmationIcon = UiIcon.DynamicIcon(if(deleteOrArchiveDialogUiState.isArchiveAction) Icons.Rounded.Archive else Icons.Rounded.Delete),
                     confirmationText = UiText.DynamicString("${if(deleteOrArchiveDialogUiState.isArchiveAction) "Archive" else "Delete"} forever (${deleteOrArchiveDialogUiState.numberOfSelections})"),
                     onDismiss = { eventHandler(GoalsUiEvent.DeleteOrArchiveDialogDismissed) },
