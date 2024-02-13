@@ -355,7 +355,7 @@ fun LibraryContent(
                         sortItemDescription = "folders",
                         onShowMenuChanged = { eventHandler(LibraryUiEvent.FolderSortMenuPressed) },
                         onSelectionHandler = {
-                            eventHandler(LibraryUiEvent.FolderSortModePressed(it as LibraryFolderSortMode))
+                            eventHandler(LibraryUiEvent.FolderSortModeSelected(it as LibraryFolderSortMode))
                         }
                     )
                 }
@@ -424,7 +424,7 @@ fun LibraryContent(
                         sortItemDescription = "items",
                         onShowMenuChanged = { eventHandler(LibraryUiEvent.ItemSortMenuPressed) },
                         onSelectionHandler = {
-                            eventHandler(LibraryUiEvent.ItemSortModePressed(it as LibraryItemSortMode))
+                            eventHandler(LibraryUiEvent.ItemSortModeSelected(it as LibraryItemSortMode))
                         }
                     )
                 }

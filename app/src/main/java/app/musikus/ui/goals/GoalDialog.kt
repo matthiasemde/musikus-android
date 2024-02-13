@@ -5,9 +5,6 @@
  *
  * Copyright (c) 2022 Matthias Emde
  *
- * Parts of this software are licensed under the MIT license
- *
- * Copyright (c) 2022, Javier Carbone, author Matthias Emde
  */
 
 package app.musikus.ui.goals
@@ -57,6 +54,11 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
+
+sealed class GoalDialogUiEvent {
+
+}
+
 
 @Composable
 fun TimeInput(

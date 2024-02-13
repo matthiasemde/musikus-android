@@ -378,10 +378,10 @@ class LibraryViewModel @Inject constructor(
             is LibraryUiEvent.BackButtonPressed -> onTopBarBackPressed()
             is LibraryUiEvent.FolderPressed -> onFolderClicked(event.folder, event.longClick)
             is LibraryUiEvent.FolderSortMenuPressed -> onFolderSortMenuChanged(_showFolderSortMenu.value.not())
-            is LibraryUiEvent.FolderSortModePressed -> onFolderSortModeSelected(event.mode)
+            is LibraryUiEvent.FolderSortModeSelected -> onFolderSortModeSelected(event.mode)
             is LibraryUiEvent.ItemPressed -> onItemClicked(event.item, event.longClick)
             is LibraryUiEvent.ItemSortMenuPressed -> onItemSortMenuChanged(_showItemSortMenu.value.not())
-            is LibraryUiEvent.ItemSortModePressed -> onItemSortModeSelected(event.mode)
+            is LibraryUiEvent.ItemSortModeSelected -> onItemSortModeSelected(event.mode)
             is LibraryUiEvent.DeleteButtonPressed -> _showDeleteDialog.update { true }
             is LibraryUiEvent.DeleteDialogDismissed -> {
                 _showDeleteDialog.update { false }

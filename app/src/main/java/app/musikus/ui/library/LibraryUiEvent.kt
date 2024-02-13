@@ -20,11 +20,11 @@ sealed class LibraryUiEvent  {
     data object BackButtonPressed : LibraryUiEvent()
     data class FolderPressed(val folder: LibraryFolder, val longClick: Boolean) : LibraryUiEvent()
     data object FolderSortMenuPressed : LibraryUiEvent()
-    data class FolderSortModePressed(val mode: LibraryFolderSortMode) : LibraryUiEvent()
+    data class FolderSortModeSelected(val mode: LibraryFolderSortMode) : LibraryUiEvent()
 
     data class ItemPressed(val item: LibraryItem, val longClick: Boolean) : LibraryUiEvent()
     data object ItemSortMenuPressed : LibraryUiEvent()
-    data class ItemSortModePressed(val mode: LibraryItemSortMode) : LibraryUiEvent()
+    data class ItemSortModeSelected(val mode: LibraryItemSortMode) : LibraryUiEvent()
 
     data object DeleteButtonPressed : LibraryUiEvent()
     data object DeleteDialogDismissed : LibraryUiEvent()

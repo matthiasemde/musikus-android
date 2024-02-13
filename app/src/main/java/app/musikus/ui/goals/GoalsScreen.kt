@@ -28,6 +28,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.rounded.Archive
+import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Repeat
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -58,14 +59,17 @@ import app.musikus.ui.MainUiEvent
 import app.musikus.ui.MainUiEventHandler
 import app.musikus.ui.MainUiState
 import app.musikus.ui.Screen
+import app.musikus.ui.components.DeleteConfirmationBottomSheet
 import app.musikus.ui.theme.spacing
 import app.musikus.utils.GoalsSortMode
 import app.musikus.utils.TimeProvider
+import app.musikus.utils.UiIcon
+import app.musikus.utils.UiText
 
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
-fun Goals(
+fun GoalsScreen(
     mainUiState: MainUiState,
     mainEventHandler: MainUiEventHandler,
     navigateTo: (Screen) -> Unit,
@@ -73,12 +77,13 @@ fun Goals(
     timeProvider: TimeProvider,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val eventHandler = viewModel::onUiEvent
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
     BackHandler(
         enabled = uiState.actionModeUiState.isActionMode,
-        onBack = viewModel::clearActionMode
+        onBack = { eventHandler(GoalsUiEvent.ClearActionMode) }
     )
 
     BackHandler(
@@ -95,14 +100,14 @@ fun Goals(
                 onStateChange = { state ->
                     mainEventHandler(MainUiEvent.ChangeMultiFabState(state))
                     if (state == MultiFabState.EXPANDED) {
-                        viewModel.clearActionMode()
+                        eventHandler(GoalsUiEvent.ClearActionMode)
                     }
                 },
                 contentDescription = "Add",
                 miniFABs = listOf(
                     MiniFABData(
                         onClick = {
-                            viewModel.showDialog(oneShot = true)
+                            eventHandler(GoalsUiEvent.AddGoalButtonPressed(oneShot = true))
                             mainEventHandler(MainUiEvent.CollapseMultiFab)
                         },
                         label = "One shot goal",
@@ -110,7 +115,7 @@ fun Goals(
                     ),
                     MiniFABData(
                         onClick = {
-                            viewModel.showDialog(oneShot = false)
+                            eventHandler(GoalsUiEvent.AddGoalButtonPressed(oneShot = false))
                             mainEventHandler(MainUiEvent.CollapseMultiFab)
                         },
                         label = "Regular goal",
@@ -134,8 +139,8 @@ fun Goals(
                         currentSortMode = sortMenuUiState.mode,
                         currentSortDirection = sortMenuUiState.direction,
                         sortItemDescription = "goals",
-                        onShowMenuChanged = viewModel::onSortMenuShowChanged,
-                        onSelectionHandler = viewModel::onSortModeSelected
+                        onShowMenuChanged = { eventHandler(GoalsUiEvent.GoalSortMenuPressed) },
+                        onSelectionHandler = { eventHandler(GoalsUiEvent.GoalSortModeSelected(it)) }
                     )
                     Box {
                         IconButton(onClick = {
@@ -167,30 +172,17 @@ fun Goals(
                 ActionBar(
                     numSelectedItems = actionModeUiState.numberOfSelections,
                     uniqueActions = {
-                        IconButton(onClick = {
-                            viewModel.onArchiveAction()
-                            mainEventHandler(MainUiEvent.ShowSnackbar(
-                                message = "Archived",
-                                onUndo = viewModel::onUndoArchiveAction
-                            ))
-                        }) {
+                        IconButton(onClick = { eventHandler(GoalsUiEvent.ArchiveButtonPressed) }) {
                             Icon(
                                 imageVector = Icons.Rounded.Archive,
                                 contentDescription = "Archive",
                             )
                         }
-
                     },
                     editActionEnabled = { actionModeUiState.showEditAction },
-                    onDismissHandler = viewModel::clearActionMode,
-                    onEditHandler = viewModel::onEditAction,
-                    onDeleteHandler = {
-                        viewModel.onDeleteAction()
-                        mainEventHandler(MainUiEvent.ShowSnackbar(
-                            message = "Deleted",
-                            onUndo = viewModel::onRestoreAction
-                        ))
-                    }
+                    onDismissHandler = { eventHandler(GoalsUiEvent.ClearActionMode) },
+                    onEditHandler = { eventHandler(GoalsUiEvent.EditButtonPressed) },
+                    onDeleteHandler = { eventHandler(GoalsUiEvent.DeleteButtonPressed) }
                 )
             }
         },
@@ -216,8 +208,8 @@ fun Goals(
                     Selectable(
                         modifier = Modifier.animateItemPlacement(),
                         selected = descriptionId in contentUiState.selectedGoalIds,
-                        onShortClick = { viewModel.onGoalClicked(goal, false) },
-                        onLongClick = { viewModel.onGoalClicked(goal, true) }
+                        onShortClick = { eventHandler(GoalsUiEvent.GoalPressed(goal, longClick = false)) },
+                        onLongClick = { eventHandler(GoalsUiEvent.GoalPressed(goal, longClick = true)) }
                     ) {
                         GoalCard(
                             goal = goal,
@@ -230,29 +222,51 @@ fun Goals(
             /** Goal Dialog */
             val dialogUiState = uiState.dialogUiState
 
-            if (dialogUiState != null) {
-                if (dialogUiState.goalToEditId == null) {
-                    GoalDialog(
-                        dialogData = dialogUiState.dialogData,
-                        libraryItems = dialogUiState.libraryItems,
-                        onTargetChanged = viewModel::onTargetChanged,
-                        onPeriodChanged = viewModel::onPeriodChanged,
-                        onPeriodUnitChanged = viewModel::onPeriodUnitChanged,
-                        onGoalTypeChanged = viewModel::onGoalTypeChanged,
-                        onSelectedLibraryItemsChanged = viewModel::onLibraryItemsChanged,
-                        onConfirmHandler = viewModel::onDialogConfirm,
-                        onDismissHandler = viewModel::clearDialog,
-                    )
-                } else {
-                    EditGoalDialog(
-                        value = dialogUiState.dialogData.target,
-                        onValueChanged = viewModel::onTargetChanged,
-                        onConfirmHandler = viewModel::onDialogConfirm,
-                        onDismissHandler = viewModel::clearDialog
-                    )
-                }
+            val addOrEditDialogUiState = dialogUiState.addOrEditDialogUiState
+
+            if (addOrEditDialogUiState != null) {
+//                if (addOrEditDialogUiState.goalToEditId == null) {
+//                    GoalDialog(
+//                        dialogData = addOrEditDialogUiState.dialogData,
+//                        libraryItems = addOrEditDialogUiState.libraryItems,
+//                        onTargetChanged = { eventHandler(GoalsUiEvent.onTargetChanged) },
+//                        onPeriodChanged = { eventHandler(GoalsUiEvent.onPeriodChanged) },
+//                        onPeriodUnitChanged = { eventHandler(GoalsUiEvent.onPeriodUnitChanged) },
+//                        onGoalTypeChanged = { eventHandler(GoalsUiEvent.onGoalTypeChanged) },
+//                        onSelectedLibraryItemsChanged = { eventHandler(GoalsUiEvent.onLibraryItemsChanged) },
+//                        onConfirmHandler = { eventHandler(GoalsUiEvent.onDialogConfirm) },
+//                        onDismissHandler = { eventHandler(GoalsUiEvent.clearDialog) },
+//                    )
+//                } else {
+//                    EditGoalDialog(
+//                        value = addOrEditDialogUiState.dialogData.target,
+//                        onValueChanged = { eventHandler(GoalsUiEvent.onTargetChanged) },
+//                        onConfirmHandler = { eventHandler(GoalsUiEvent.onDialogConfirm) },
+//                        onDismissHandler = { eventHandler(GoalsUiEvent.clearDialog) }
+//                    )
+//                }
             }
 
+
+            // Delete Goal Dialog
+
+            val deleteOrArchiveDialogUiState = dialogUiState.deleteOrArchiveDialogUiState
+
+            if (deleteOrArchiveDialogUiState != null) {
+                DeleteConfirmationBottomSheet(
+                    explanation = UiText.DynamicString("${if(deleteOrArchiveDialogUiState.isArchiveAction) "Archive" else "Delete"} goals?"),
+                    confirmationIcon = UiIcon.DynamicIcon(if(deleteOrArchiveDialogUiState.isArchiveAction) Icons.Rounded.Archive else Icons.Rounded.Delete),
+                    confirmationText = UiText.DynamicString("${if(deleteOrArchiveDialogUiState.isArchiveAction) "Archive" else "Delete"} forever (${deleteOrArchiveDialogUiState.numberOfSelections})"),
+                    onDismiss = { eventHandler(GoalsUiEvent.DeleteOrArchiveDialogDismissed) },
+                    onConfirm = {
+                        eventHandler(GoalsUiEvent.DeleteOrArchiveDialogConfirmed)
+                        mainEventHandler(MainUiEvent.ShowSnackbar(
+                            message = if (deleteOrArchiveDialogUiState.isArchiveAction) "Archived" else "Deleted",
+                            onUndo = { eventHandler(GoalsUiEvent.UndoButtonPressed) }
+                        ))
+                    }
+                )
+            }
 
             // Content Scrim for multiFAB
 

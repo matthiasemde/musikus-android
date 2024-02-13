@@ -16,7 +16,6 @@ import app.musikus.database.entities.GoalInstanceCreationAttributes
 import app.musikus.database.entities.GoalInstanceUpdateAttributes
 import app.musikus.database.entities.GoalPeriodUnit
 import app.musikus.database.entities.GoalType
-import app.musikus.ui.components.TopBarUiState
 import app.musikus.ui.library.DialogMode
 import app.musikus.usecase.goals.GoalInstanceWithProgressAndDescriptionWithLibraryItems
 import app.musikus.usecase.goals.GoalsUseCases
@@ -47,49 +46,6 @@ data class GoalDialogData(
     val goalType: GoalType = GoalType.DEFAULT,
     val oneShot: Boolean = false,
     val selectedLibraryItems: List<LibraryItem> = emptyList(),
-)
-
-/**
- * Ui state data classes
- */
-data class GoalsSortMenuUiState(
-    val show: Boolean,
-
-    val mode: GoalsSortMode,
-    val direction: SortDirection,
-)
-
-data class GoalsTopBarUiState(
-    override val title: String,
-    override val showBackButton: Boolean,
-    val sortMenuUiState: GoalsSortMenuUiState,
-) : TopBarUiState
-
-data class GoalsActionModeUiState(
-    val isActionMode: Boolean,
-    val numberOfSelections: Int,
-    val showEditAction: Boolean,
-)
-
-data class GoalsContentUiState(
-    val currentGoals: List<GoalInstanceWithProgressAndDescriptionWithLibraryItems>,
-    val selectedGoalIds: Set<UUID>,
-
-    val showHint: Boolean,
-)
-
-data class GoalsDialogUiState(
-    val mode: DialogMode,
-    val goalToEditId: UUID?,
-    val dialogData: GoalDialogData,
-    val libraryItems: List<LibraryItem>,
-)
-
-data class GoalsUiState (
-    val topBarUiState: GoalsTopBarUiState,
-    val actionModeUiState: GoalsActionModeUiState,
-    val contentUiState: GoalsContentUiState,
-    val dialogUiState: GoalsDialogUiState?,
 )
 
 @HiltViewModel
@@ -143,6 +99,9 @@ class GoalsViewModel @Inject constructor(
     // Action mode
     private val _selectedGoalIds = MutableStateFlow<Set<UUID>>(emptySet())
 
+    // Delete or Archive dialog
+    private val _showDeleteOrArchiveDialog = MutableStateFlow(false)
+    private val _deleteOrArchiveDialogIsArchiveAction = MutableStateFlow(false)
 
     /**
      *  Composing the Ui state
@@ -217,7 +176,7 @@ class GoalsViewModel @Inject constructor(
         )
     )
 
-    private val dialogUiState = combine(
+    private val addOrEditDialogUiState = combine(
         _dialogData,
         _goalToEditId,
         items,
@@ -225,7 +184,7 @@ class GoalsViewModel @Inject constructor(
         // if data == null, the ui state should be null ergo we don't show the dialog
         if(dialogData == null) return@combine null
 
-        GoalsDialogUiState(
+        GoalsAddOrEditDialogUiState(
             mode = if (goalToEditId == null) DialogMode.ADD else DialogMode.EDIT,
             dialogData = dialogData,
             goalToEditId = goalToEditId,
@@ -235,6 +194,40 @@ class GoalsViewModel @Inject constructor(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = null
+    )
+
+    private val deleteOrArchiveDialogUiState = combine(
+        _showDeleteOrArchiveDialog,
+        _deleteOrArchiveDialogIsArchiveAction,
+        _selectedGoalIds,
+    ) { show, isArchiveAction, selectedGoalIds ->
+        if (!show) return@combine null
+
+        GoalsDeleteOrArchiveDialogUiState(
+            isArchiveAction = isArchiveAction,
+            numberOfSelections = selectedGoalIds.size,
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = null
+    )
+
+    private val dialogUiState = combine(
+        addOrEditDialogUiState,
+        deleteOrArchiveDialogUiState,
+    ) { addOrEditDialogUiState, deleteOrArchiveDialogUiState ->
+        GoalsDialogUiState(
+            addOrEditDialogUiState = addOrEditDialogUiState,
+            deleteOrArchiveDialogUiState = deleteOrArchiveDialogUiState,
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = GoalsDialogUiState(
+            addOrEditDialogUiState = addOrEditDialogUiState.value,
+            deleteOrArchiveDialogUiState = deleteOrArchiveDialogUiState.value,
+        )
     )
 
     val uiState = combine(
@@ -260,9 +253,63 @@ class GoalsViewModel @Inject constructor(
         )
     )
 
-    /** State modifiers */
+    /**
+     * Ui event handler
+     */
 
-    fun showDialog(oneShot: Boolean) {
+    fun onUiEvent(event: GoalsUiEvent) {
+        when(event) {
+            is GoalsUiEvent.BackButtonPressed -> clearActionMode()
+
+            is GoalsUiEvent.GoalPressed -> onGoalClicked(event.goal, event.longClick)
+
+            is GoalsUiEvent.GoalSortMenuPressed -> onSortMenuShowChanged(_showSortModeMenu.value.not())
+            is GoalsUiEvent.GoalSortModeSelected -> onSortModeSelected(event.mode)
+
+            is GoalsUiEvent.ArchiveButtonPressed -> {
+                _showDeleteOrArchiveDialog.update { true }
+                _deleteOrArchiveDialogIsArchiveAction.update { true }
+            }
+            is GoalsUiEvent.DeleteButtonPressed -> {
+                _showDeleteOrArchiveDialog.update { false }
+                _showDeleteOrArchiveDialog.update { true }
+            }
+            is GoalsUiEvent.DeleteOrArchiveDialogDismissed -> {
+                _showDeleteOrArchiveDialog.update { false }
+                clearActionMode()
+            }
+            is GoalsUiEvent.DeleteOrArchiveDialogConfirmed -> {
+                _showDeleteOrArchiveDialog.update { false }
+                if(_deleteOrArchiveDialogIsArchiveAction.value) {
+                    onArchiveAction()
+                } else {
+                    onDeleteAction()
+                }
+            }
+            is GoalsUiEvent.UndoButtonPressed -> {
+                if(_deleteOrArchiveDialogIsArchiveAction.value) {
+                    onUndoArchiveAction()
+                } else {
+                    onRestoreAction()
+                }
+            }
+            is GoalsUiEvent.EditButtonPressed -> onEditAction()
+
+            is GoalsUiEvent.AddGoalButtonPressed -> showDialog(event.oneShot)
+
+            is GoalsUiEvent.ClearActionMode -> clearActionMode()
+
+            is GoalsUiEvent.GoalDialogUiEvent -> {
+                // TODO
+            }
+        }
+    }
+
+    /**
+     * Private state modifiers
+     */
+
+    private fun showDialog(oneShot: Boolean) {
         _dialogData.update {
             GoalDialogData(
                 target = 0.seconds,
@@ -277,18 +324,18 @@ class GoalsViewModel @Inject constructor(
         }
     }
 
-    fun onSortMenuShowChanged(show: Boolean) {
+    private fun onSortMenuShowChanged(show: Boolean) {
         _showSortModeMenu.update { show }
     }
 
-    fun onSortModeSelected(selection: GoalsSortMode) {
+    private fun onSortModeSelected(selection: GoalsSortMode) {
         _showSortModeMenu.update { false }
         viewModelScope.launch {
             userPreferencesUseCases.selectGoalSortMode(selection)
         }
     }
 
-    fun onEditAction() {
+    private fun onEditAction() {
         val selectedGoalId = _selectedGoalIds.value.single()
         val goalToEdit = currentGoals.value.single {
             it.description.description.id == selectedGoalId
@@ -302,7 +349,7 @@ class GoalsViewModel @Inject constructor(
         clearActionMode()
     }
 
-    fun onArchiveAction() {
+    private fun onArchiveAction() {
         viewModelScope.launch {
             _goalIdsCache = _selectedGoalIds.value
             goalsUseCases.archive(_selectedGoalIds.value.toList())
@@ -310,13 +357,13 @@ class GoalsViewModel @Inject constructor(
         }
     }
 
-    fun onUndoArchiveAction() {
+    private fun onUndoArchiveAction() {
         viewModelScope.launch {
             goalsUseCases.unarchive(_goalIdsCache.toList())
         }
     }
 
-    fun onDeleteAction() {
+    private fun onDeleteAction() {
         viewModelScope.launch {
             _goalIdsCache = _selectedGoalIds.value
             goalsUseCases.delete(_selectedGoalIds.value.toList())
@@ -324,17 +371,17 @@ class GoalsViewModel @Inject constructor(
         }
     }
 
-    fun onRestoreAction() {
+    private fun onRestoreAction() {
         viewModelScope.launch {
             goalsUseCases.restore(_goalIdsCache.toList())
         }
     }
 
-    fun clearActionMode() {
+    private fun clearActionMode() {
         _selectedGoalIds.update{ emptySet() }
     }
 
-    fun onGoalClicked(
+    private fun onGoalClicked(
         goal: GoalInstanceWithProgressAndDescriptionWithLibraryItems,
         longClick: Boolean = false
     ) {
@@ -364,63 +411,59 @@ class GoalsViewModel @Inject constructor(
         }
     }
 
-    fun onTargetChanged(target: Duration) {
+    private fun onTargetChanged(target: Duration) {
         _dialogData.update { it?.copy(target = target) }
     }
 
-    fun onPeriodChanged(period: Int) {
+    private fun onPeriodChanged(period: Int) {
         _dialogData.update { it?.copy(periodInPeriodUnits = period) }
     }
 
-    fun onPeriodUnitChanged(unit: GoalPeriodUnit) {
+    private fun onPeriodUnitChanged(unit: GoalPeriodUnit) {
         _dialogData.update { it?.copy(periodUnit = unit) }
     }
 
-    fun onGoalTypeChanged(type: GoalType) {
+    private fun onGoalTypeChanged(type: GoalType) {
         _dialogData.update { it?.copy(goalType = type) }
     }
 
-    fun onLibraryItemsChanged(items: List<LibraryItem>) {
+    private fun onLibraryItemsChanged(items: List<LibraryItem>) {
         _dialogData.update { it?.copy(selectedLibraryItems = items) }
     }
 
-    fun clearDialog() {
+    private fun clearDialog() {
         _dialogData.update { null }
         _goalToEditId.update { null }
     }
 
-    fun onDialogConfirm() {
-        dialogUiState.value?.let { uiState ->
-            val dialogData = uiState.dialogData
-            viewModelScope.launch {
-                if (uiState.goalToEditId == null) {
-                    goalsUseCases.add(
-                        GoalDescriptionCreationAttributes(
-                            type = dialogData.goalType,
-                            repeat = !dialogData.oneShot,
-                            periodInPeriodUnits = dialogData.periodInPeriodUnits,
-                            periodUnit = dialogData.periodUnit,
-                        ),
-                        instanceCreationAttributes = GoalInstanceCreationAttributes(
-                            startTimestamp = when(dialogData.periodUnit) {
-                                GoalPeriodUnit.DAY -> timeProvider.getStartOfDay()
-                                GoalPeriodUnit.WEEK -> timeProvider.getStartOfWeek()
-                                GoalPeriodUnit.MONTH -> timeProvider.getStartOfMonth()
-                             },
-                            target = dialogData.target,
-                        ),
-                        libraryItemIds = dialogData.selectedLibraryItems.map { it.id },
-                    )
-                } else {
-                    goalsUseCases.edit(
-                        descriptionId = uiState.goalToEditId,
-                        instanceUpdateAttributes = GoalInstanceUpdateAttributes(
-                            target = dialogData.target,
-                        ),
-                    )
-                }
-                clearDialog()
-            }
+    private fun onDialogConfirm() {
+        val dialogData = _dialogData.value ?: return
+        viewModelScope.launch {
+            _goalToEditId.value?.let { goalToEditId ->
+                goalsUseCases.edit(
+                    descriptionId = goalToEditId,
+                    instanceUpdateAttributes = GoalInstanceUpdateAttributes(
+                        target = dialogData.target,
+                    ),
+                )
+            } ?: goalsUseCases.add(
+                GoalDescriptionCreationAttributes(
+                    type = dialogData.goalType,
+                    repeat = !dialogData.oneShot,
+                    periodInPeriodUnits = dialogData.periodInPeriodUnits,
+                    periodUnit = dialogData.periodUnit,
+                ),
+                instanceCreationAttributes = GoalInstanceCreationAttributes(
+                    startTimestamp = when(dialogData.periodUnit) {
+                        GoalPeriodUnit.DAY -> timeProvider.getStartOfDay()
+                        GoalPeriodUnit.WEEK -> timeProvider.getStartOfWeek()
+                        GoalPeriodUnit.MONTH -> timeProvider.getStartOfMonth()
+                     },
+                    target = dialogData.target,
+                ),
+                libraryItemIds = dialogData.selectedLibraryItems.map { it.id },
+            )
+            clearDialog()
         }
     }
 }

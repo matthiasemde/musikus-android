@@ -54,7 +54,7 @@ import app.musikus.R
 import app.musikus.ui.activesession.ActiveSession
 import app.musikus.ui.components.MultiFabState
 import app.musikus.ui.components.conditional
-import app.musikus.ui.goals.Goals
+import app.musikus.ui.goals.GoalsScreen
 import app.musikus.ui.goals.ProgressUpdate
 import app.musikus.ui.library.Library
 import app.musikus.ui.sessions.Sessions
@@ -367,7 +367,7 @@ fun MusikusApp(
                 }
                 composable(
                     route = Screen.Goals.route,
-                ) { Goals(
+                ) { GoalsScreen(
                     mainUiState = uiState,
                     mainEventHandler = mainViewModel::onUiEvent,
                     navigateTo = navController::navigateTo,
