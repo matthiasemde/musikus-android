@@ -55,9 +55,8 @@ import app.musikus.ui.activesession.ActiveSession
 import app.musikus.ui.components.MultiFabState
 import app.musikus.ui.components.conditional
 import app.musikus.ui.goals.GoalsScreen
-import app.musikus.ui.goals.ProgressUpdate
 import app.musikus.ui.library.Library
-import app.musikus.ui.sessions.Sessions
+import app.musikus.ui.sessions.SessionsScreen
 import app.musikus.ui.sessions.editsession.EditSession
 import app.musikus.ui.settings.addSettingsNavigationGraph
 import app.musikus.ui.statistics.addStatisticsNavigationGraph
@@ -124,10 +123,6 @@ sealed class Screen(
     )
     data object GoalStatistics : Screen(
         route = "goalStatistics",
-    )
-
-    data object ProgressUpdate : Screen(
-        route = "progressUpdate",
     )
 
     data object Settings : Screen(
@@ -343,14 +338,9 @@ fun MusikusApp(
                 }
             ) {
                 composable(
-                    route = Screen.Sessions.route,
-                    exitTransition = {
-                        if(initialState.destination.route == Screen.ProgressUpdate.route) {
-                            fadeOut(tween(0))
-                        } else null
-                    }
+                    route = Screen.Sessions.route
                 ) {
-                    Sessions(
+                    SessionsScreen(
                         mainUiState = uiState,
                         mainEventHandler = mainViewModel::onUiEvent,
                         navigateTo = navController::navigateTo,
@@ -380,10 +370,6 @@ fun MusikusApp(
                     mainEventHandler = mainViewModel::onUiEvent,
                     navigateTo = navController::navigateTo
                 ) }
-                composable(
-                    route = Screen.ProgressUpdate.route,
-                    enterTransition = { fadeIn(tween(0)) }
-                ) { ProgressUpdate() }
                 composable(
                     route = Screen.EditSession.route,
                     arguments = listOf(navArgument("sessionId") { type = NavType.StringType})
