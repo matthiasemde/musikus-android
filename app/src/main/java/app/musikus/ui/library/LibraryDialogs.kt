@@ -20,14 +20,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.MusicNote
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -44,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import app.musikus.R
 import app.musikus.database.daos.LibraryFolder
+import app.musikus.ui.components.DialogActions
 import app.musikus.ui.components.DialogHeader
 import app.musikus.ui.components.SelectionSpinner
 import app.musikus.ui.components.UUIDSelectionSpinnerOption
@@ -78,37 +77,15 @@ fun LibraryFolderDialog(
                     label = { Text(text = "Folder name") },
                     singleLine = true,
                 )
-                Row(
-                    modifier = Modifier
-                        .padding(24.dp)
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
-                ) {
-                    TextButton(
-                        onClick = { eventHandler(LibraryUiEvent.FolderDialogDismissed) },
-                        colors = ButtonDefaults.textButtonColors(
-                            contentColor = MaterialTheme.colorScheme.primary
-                        )
-                    ) {
-                        Text(text = "Cancel")
-                    }
-                    val confirmText = when(uiState.mode) {
+                DialogActions(
+                    confirmButtonText = when(uiState.mode) {
                         DialogMode.ADD -> "Create"
                         DialogMode.EDIT -> "Edit"
-                    }
-                    TextButton(
-                        onClick = { eventHandler(LibraryUiEvent.FolderDialogConfirmed) },
-                        enabled = uiState.folderData.name.isNotEmpty(),
-                        colors = ButtonDefaults.textButtonColors(
-                            contentColor = MaterialTheme.colorScheme.primary
-                        ),
-                        modifier = Modifier.semantics {
-                            contentDescription = confirmText
-                        }
-                    ) {
-                        Text(text = confirmText)
-                    }
-                }
+                    },
+                    onDismissHandler = { eventHandler(LibraryUiEvent.FolderDialogDismissed) },
+                    onConfirmHandler = { eventHandler(LibraryUiEvent.FolderDialogConfirmed) },
+                    confirmButtonEnabled = uiState.folderData.name.isNotEmpty()
+                )
             }
         }
     }
@@ -219,38 +196,16 @@ fun LibraryItemDialog(
                         }
                     }
                 }
-                Row(
-                    modifier = Modifier
-                        .padding(24.dp)
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
-                ) {
-                    TextButton(
-                        onClick = { eventHandler(LibraryItemDialogUiEvent.Dismissed) },
-                        colors = ButtonDefaults.textButtonColors(
-                            contentColor = MaterialTheme.colorScheme.primary
-                        )
-                    ) {
-                        Text(text = "Cancel")
-                    }
-                    val confirmText = when(uiState.mode) {
-                        DialogMode.ADD -> "Create"
-                        DialogMode.EDIT -> "Edit"
-                    }
-                    TextButton(
-                        onClick = { eventHandler(LibraryItemDialogUiEvent.Confirmed) },
-                        enabled = uiState.isConfirmButtonEnabled,
-                        colors = ButtonDefaults.textButtonColors(
-                            contentColor = MaterialTheme.colorScheme.primary
-                        ),
-                        modifier = Modifier.semantics {
-                            contentDescription = confirmText
-                        }
-                    ) {
-                        Text(text = confirmText)
-                    }
-                }
             }
+            DialogActions(
+                confirmButtonText = when(uiState.mode) {
+                    DialogMode.ADD -> "Create"
+                    DialogMode.EDIT -> "Edit"
+                },
+                confirmButtonEnabled = uiState.isConfirmButtonEnabled,
+                onDismissHandler = { eventHandler(LibraryItemDialogUiEvent.Dismissed) },
+                onConfirmHandler = { eventHandler(LibraryItemDialogUiEvent.Confirmed) }
+            )
         }
     }
 }

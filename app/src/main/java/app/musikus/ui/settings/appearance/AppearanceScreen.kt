@@ -9,6 +9,7 @@
 package app.musikus.ui.settings.appearance
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -18,6 +19,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -89,7 +91,47 @@ fun AppearanceScreen(
         Dialog(
             onDismissRequest = { eventHandler(AppearanceUiEvent.HideLanguageDialog) }
         ) {
+            Card(
+                shape = MaterialTheme.shapes.extraLarge,
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = MaterialTheme.spacing.medium)
+                        .padding(horizontal = (MaterialTheme.spacing.medium + MaterialTheme.spacing.small)),
+                ) {
+                    Text(
+                        text = "Language",
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                }
+                Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
+                Text(
+                    modifier = Modifier.padding(horizontal = MaterialTheme.spacing.medium),
+                    text =
+                        "More languages are coming soon! " +
+                        "If you want to help in translating the app into your native language, " +
+                        "please contact us at contribute@musikus.app",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
 
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(
+                            horizontal = MaterialTheme.spacing.large,
+                            vertical = MaterialTheme.spacing.medium
+                        ),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    Button(
+                        onClick = { eventHandler(AppearanceUiEvent.HideLanguageDialog) }
+                    ) {
+                        Text (text = "Awesome!")
+                    }
+                }
+            }
         }
     }
 
@@ -97,7 +139,9 @@ fun AppearanceScreen(
         Dialog(
             onDismissRequest = { eventHandler(AppearanceUiEvent.HideThemeDialog) }
         ) {
-            Card {
+            Card(
+                shape = MaterialTheme.shapes.extraLarge,
+            ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
