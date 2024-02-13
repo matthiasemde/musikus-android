@@ -299,8 +299,16 @@ class GoalsViewModel @Inject constructor(
 
             is GoalsUiEvent.ClearActionMode -> clearActionMode()
 
-            is GoalsUiEvent.GoalDialogUiEvent -> {
-                // TODO
+            is GoalsUiEvent.DialogUiEvent -> {
+                when(event.dialogEvent) {
+                    is GoalDialogUiEvent.TargetChanged -> onTargetChanged(event.dialogEvent.target)
+                    is GoalDialogUiEvent.PeriodChanged -> onPeriodChanged(event.dialogEvent.period)
+                    is GoalDialogUiEvent.PeriodUnitChanged -> onPeriodUnitChanged(event.dialogEvent.periodUnit)
+                    is GoalDialogUiEvent.GoalTypeChanged -> onGoalTypeChanged(event.dialogEvent.goalType)
+                    is GoalDialogUiEvent.LibraryItemsSelected -> onLibraryItemsChanged(event.dialogEvent.selectedLibraryItems)
+                    is GoalDialogUiEvent.Confirm -> onDialogConfirm()
+                    is GoalDialogUiEvent.Dismiss -> clearDialog()
+                }
             }
         }
     }

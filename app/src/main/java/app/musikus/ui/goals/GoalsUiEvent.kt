@@ -37,6 +37,6 @@ sealed class GoalsUiEvent {
 
     data object ClearActionMode : GoalsUiEvent()
 
-    data class GoalDialogUiEvent(val dialogEvent: GoalDialogUiEvent) : GoalsUiEvent()
+    data class DialogUiEvent(val dialogEvent: GoalDialogUiEvent) : GoalsUiEvent()
 }
 

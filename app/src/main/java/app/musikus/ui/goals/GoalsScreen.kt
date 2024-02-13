@@ -77,7 +77,7 @@ fun GoalsScreen(
     timeProvider: TimeProvider,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val eventHandler = viewModel::onUiEvent
+    val eventHandler: GoalsUiEventHandler = viewModel::onUiEvent
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
@@ -225,26 +225,10 @@ fun GoalsScreen(
             val addOrEditDialogUiState = dialogUiState.addOrEditDialogUiState
 
             if (addOrEditDialogUiState != null) {
-//                if (addOrEditDialogUiState.goalToEditId == null) {
-//                    GoalDialog(
-//                        dialogData = addOrEditDialogUiState.dialogData,
-//                        libraryItems = addOrEditDialogUiState.libraryItems,
-//                        onTargetChanged = { eventHandler(GoalsUiEvent.onTargetChanged) },
-//                        onPeriodChanged = { eventHandler(GoalsUiEvent.onPeriodChanged) },
-//                        onPeriodUnitChanged = { eventHandler(GoalsUiEvent.onPeriodUnitChanged) },
-//                        onGoalTypeChanged = { eventHandler(GoalsUiEvent.onGoalTypeChanged) },
-//                        onSelectedLibraryItemsChanged = { eventHandler(GoalsUiEvent.onLibraryItemsChanged) },
-//                        onConfirmHandler = { eventHandler(GoalsUiEvent.onDialogConfirm) },
-//                        onDismissHandler = { eventHandler(GoalsUiEvent.clearDialog) },
-//                    )
-//                } else {
-//                    EditGoalDialog(
-//                        value = addOrEditDialogUiState.dialogData.target,
-//                        onValueChanged = { eventHandler(GoalsUiEvent.onTargetChanged) },
-//                        onConfirmHandler = { eventHandler(GoalsUiEvent.onDialogConfirm) },
-//                        onDismissHandler = { eventHandler(GoalsUiEvent.clearDialog) }
-//                    )
-//                }
+                GoalDialog(
+                    uiState = addOrEditDialogUiState,
+                    eventHandler = { eventHandler(GoalsUiEvent.DialogUiEvent(it)) },
+                )
             }
 
 
