@@ -26,6 +26,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
@@ -51,6 +52,7 @@ import app.musikus.ui.home.HomeUiEventHandler
 import app.musikus.ui.home.HomeUiState
 import app.musikus.ui.MainUiEvent
 import app.musikus.ui.MainUiEventHandler
+import app.musikus.ui.MainUiState
 import app.musikus.ui.Screen
 import app.musikus.ui.components.ActionBar
 import app.musikus.ui.components.CommonMenuSelections
@@ -69,12 +71,13 @@ import java.util.UUID
 )
 @Composable
 fun SessionsScreen(
-    viewModel: SessionsViewModel = hiltViewModel(),
-    mainEventHandler: MainUiEventHandler,
+    mainUiState: MainUiState,
     homeUiState: HomeUiState,
-    homeEventHandler: HomeUiEventHandler,
+    viewModel: SessionsViewModel = hiltViewModel(),
     navigateTo: (Screen) -> Unit,
     onSessionEdit: (sessionId: UUID) -> Unit,
+    mainEventHandler: MainUiEventHandler,
+    homeEventHandler: HomeUiEventHandler,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val eventHandler: SessionsUiEventHandler = viewModel::onUiEvent
@@ -97,14 +100,26 @@ fun SessionsScreen(
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 icon = {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "new session"
-                    )
+                    if(mainUiState.isSessionActive) {
+                        Icon(
+                            imageVector = Icons.Default.KeyboardArrowUp,
+                            contentDescription = "resume session"
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "new session"
+                        )
+                    }
                 },
-                text = { Text(text = "Start Session") },
+                text = {
+                    Text(text = if(mainUiState.isSessionActive) "Resume session" else "Start session")
+                },
                 onClick = { navigateTo(Screen.ActiveSession) },
                 expanded = fabExpanded,
+                containerColor =
+                    if (mainUiState.isSessionActive) MaterialTheme.colorScheme.primary
+                    else MaterialTheme.colorScheme.primaryContainer
             )
         },
         topBar = {

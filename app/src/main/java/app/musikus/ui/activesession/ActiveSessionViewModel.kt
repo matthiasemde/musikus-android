@@ -392,5 +392,4 @@ class ActiveSessionViewModel @Inject constructor(
         }
         super.onCleared()
     }
-
 }
