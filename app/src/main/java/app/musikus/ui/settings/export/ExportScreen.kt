@@ -6,10 +6,9 @@
  * Copyright (c) 2024 Matthias Emde
  */
 
-package app.musikus.ui.settings.backup
+package app.musikus.ui.settings.export
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -17,8 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.CloudDownload
-import androidx.compose.material.icons.filled.CloudUpload
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -28,21 +26,24 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.capitalize
 import androidx.compose.ui.text.font.FontWeight
-import app.musikus.Musikus
+import androidx.compose.ui.text.intl.Locale
+import app.musikus.R
 import app.musikus.ui.theme.spacing
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BackupScreen(
-    navigateUp: () -> Unit,
+fun ExportScreen(
+    navigateUp: () -> Unit
 ) {
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Backup and Restore") },
+                title = { Text("Export session data") },
                 navigationIcon = {
                     IconButton(onClick = navigateUp) {
                         Icon(
@@ -59,58 +60,26 @@ fun BackupScreen(
                 .padding(paddingValues)
                 .padding(horizontal = MaterialTheme.spacing.large),
         ) {
-            Text(
-                text =
-                    "In this menu you can backup and restore your data to a file " +
-                    "for backing up or transferring it to another device.",
-            )
-
             Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
-
-            Button(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = MaterialTheme.spacing.extraLarge),
-                onClick = { Musikus.exportDatabase() },
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Icon(Icons.Default.CloudUpload, contentDescription = null)
-                    Spacer(modifier = Modifier.width(MaterialTheme.spacing.small))
-                    Text(
-                        text = "Create backup",
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
-
-            Button(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = MaterialTheme.spacing.extraLarge),
-                onClick = { Musikus.importDatabase() },
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Icon(Icons.Default.CloudDownload, contentDescription = null)
-                    Spacer(modifier = Modifier.width(MaterialTheme.spacing.small))
-                    Text(
-                        text = "Load backup",
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(MaterialTheme.spacing.extraSmall))
-
             Text(
-                text = "*Note: Loading a backup will overwrite your current data.",
+                text = stringResource(id = R.string.export_csv_dialog_text)
+            )
+            Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
+            Button(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = MaterialTheme.spacing.extraLarge),
+                onClick = { /*TODO*/ }
+            ) {
+                Icon(imageVector = Icons.Default.Download, contentDescription = null)
+                Spacer(modifier = Modifier.width(MaterialTheme.spacing.medium))
+                Text("Export sessions".capitalize(Locale.current))
+            }
+            Text(
+                text = stringResource(id = R.string.export_csv_dialog_note),
                 style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.Bold            )
+                fontWeight = FontWeight.Bold
+            )
         }
     }
 }

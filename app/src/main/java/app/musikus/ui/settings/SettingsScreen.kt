@@ -40,6 +40,8 @@ import app.musikus.ui.settings.about.AboutScreen
 import app.musikus.ui.settings.appearance.AppearanceScreen
 import app.musikus.ui.settings.backup.BackupScreen
 import app.musikus.ui.settings.donate.DonateScreen
+import app.musikus.ui.settings.export.ExportScreen
+import app.musikus.ui.settings.help.HelpScreen
 import app.musikus.ui.theme.spacing
 
 fun NavGraphBuilder.addSettingsNavigationGraph(navController: NavController) {
@@ -49,8 +51,8 @@ fun NavGraphBuilder.addSettingsNavigationGraph(navController: NavController) {
             navigateTo = navController::navigateTo
         )
     }
-    composable(Screen.SettingsOption.About.route) {
-        AboutScreen(navigateUp = { navController.navigateUp() })
+    composable(Screen.SettingsOption.Donate.route) {
+        DonateScreen(navigateUp = { navController.navigateUp() })
     }
     composable(Screen.SettingsOption.Appearance.route) {
         AppearanceScreen(navigateUp = { navController.navigateUp() })
@@ -58,8 +60,14 @@ fun NavGraphBuilder.addSettingsNavigationGraph(navController: NavController) {
     composable(Screen.SettingsOption.Backup.route) {
         BackupScreen(navigateUp = { navController.navigateUp() })
     }
-    composable(Screen.SettingsOption.Donate.route) {
-        DonateScreen(navigateUp = { navController.navigateUp() })
+    composable(Screen.SettingsOption.Export.route) {
+        ExportScreen(navigateUp = { navController.navigateUp() })
+    }
+    composable(Screen.SettingsOption.Help.route) {
+        HelpScreen(navigateUp = { navController.navigateUp() })
+    }
+    composable(Screen.SettingsOption.About.route) {
+        AboutScreen(navigateUp = { navController.navigateUp() })
     }
 }
 
@@ -85,13 +93,25 @@ fun SettingsScreen(
                 icon = Screen.SettingsOption.Backup.displayData.icon,
                 firstLine = Screen.SettingsOption.Backup.displayData.title,
                 onClick = { navigateTo(Screen.SettingsOption.Backup) }
+            ),
+            TwoLinerData(
+                icon = Screen.SettingsOption.Export.displayData.icon,
+                firstLine = Screen.SettingsOption.Export.displayData.title,
+                onClick = { navigateTo(Screen.SettingsOption.Export) }
             )
         ),
-        listOf(TwoLinerData(
-            icon = Screen.SettingsOption.About.displayData.icon,
-            firstLine = Screen.SettingsOption.About.displayData.title,
-            onClick = { navigateTo(Screen.SettingsOption.About )}
-        )),
+        listOf(
+            TwoLinerData(
+                icon = Screen.SettingsOption.Help.displayData.icon,
+                firstLine = Screen.SettingsOption.Help.displayData.title,
+                onClick = { navigateTo(Screen.SettingsOption.Help )}
+            ),
+            TwoLinerData(
+                icon = Screen.SettingsOption.About.displayData.icon,
+                firstLine = Screen.SettingsOption.About.displayData.title,
+                onClick = { navigateTo(Screen.SettingsOption.About )}
+            ),
+        ),
     )
 
     Scaffold(

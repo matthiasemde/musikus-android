@@ -76,13 +76,6 @@
             android:exported="false"
             android:screenOrientation="fullSensor" />
         <activity
-            android:name=".ui.activesession.ActiveSessionActivity"
-            android:configChanges="orientation|keyboardHidden"
-            android:exported="false"
-            android:parentActivityName=".ui.MainActivity"
-            android:screenOrientation="fullSensor"
-            android:windowSoftInputMode="adjustNothing" />
-        <activity
             android:name=".ui.MainActivity"
             android:exported="true">
             <intent-filter>
@@ -96,30 +89,6 @@
             </intent-filter>
 
         </activity>
-        <activity
-            android:name=".ui.overflowitems.AboutActivity"
-            android:exported="false"
-            android:parentActivityName=".ui.MainActivity" />
-        <activity
-            android:name=".ui.overflowitems.DonationsActivity"
-            android:exported="false"
-            android:parentActivityName=".ui.overflowitems.AboutActivity" />
-        <activity
-            android:name=".ui.overflowitems.HelpActivity"
-            android:exported="false"
-            android:parentActivityName=".ui.overflowitems.AboutActivity" />
-        <activity
-            android:name=".ui.overflowitems.LegalActivity"
-            android:exported="false"
-            android:parentActivityName=".ui.overflowitems.AboutActivity" />
-        <activity
-            android:name=".ui.overflowitems.AboutAppActivity"
-            android:exported="false"
-            android:parentActivityName=".ui.overflowitems.AboutActivity" />
-        <activity
-            android:name=".ui.overflowitems.LicenseActivity"
-            android:exported="false"
-            android:parentActivityName=".ui.overflowitems.AboutActivity" />
     </application>
 
 </manifest>

@@ -267,5 +267,7 @@
     <string name="lib2_name">AppIntro</string>
     <string name="lib2_author">By AppIntro Developers</string>
     <string name="lib2_link">https://github.com/AppIntro/AppIntro</string>
+    <string name="export_csv_dialog_text">Export all your Sessions to a CSV file. This file can be opened with spreadsheet programs like LibreOffice Calc or Microsoft Excel.</string>
+    <string name="export_csv_dialog_note">*Note: This will <u>not</u> export your Goals and Library items! This file cannot be imported. For Backups, use the \"Backup and Restore\" function.</string>
 
 </resources>

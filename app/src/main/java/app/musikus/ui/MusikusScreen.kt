@@ -1,6 +1,13 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ *
+ * Copyright (c) 2024 Matthias Emde
+ */
+
 package app.musikus.ui
 
-import androidx.annotation.DrawableRes
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
@@ -12,10 +19,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.CloudUpload
-import androidx.compose.material.icons.outlined.Favorite
-import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -32,7 +35,6 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
 import androidx.navigation.navigation
-import app.musikus.R
 import app.musikus.ui.activesession.ActiveSession
 import app.musikus.ui.home.HomeScreen
 import app.musikus.ui.sessions.editsession.EditSession
@@ -40,135 +42,9 @@ import app.musikus.ui.settings.addSettingsNavigationGraph
 import app.musikus.ui.statistics.addStatisticsNavigationGraph
 import app.musikus.ui.theme.MusikusTheme
 import app.musikus.utils.TimeProvider
-import app.musikus.utils.UiIcon
-import app.musikus.utils.UiText
 import java.util.UUID
 
 const val DEEP_LINK_KEY = "argument"
-
-sealed class Screen(
-    val route: String,
-    open val displayData: DisplayData? = null,
-) {
-
-    data object Home : Screen(
-        route = "home"
-    )
-
-    sealed class HomeTab(
-        val subRoute: String,
-        override val displayData: DisplayData
-    ) : Screen("home/$subRoute") {
-        data object Sessions : HomeTab(
-            subRoute = "sessionList",
-            displayData = DisplayData(
-                title = UiText.StringResource(R.string.navigationSessionsTitle),
-                icon = UiIcon.IconResource(R.drawable.ic_sessions),
-                animatedIcon = R.drawable.avd_sessions,
-            )
-        )
-
-        data object Goals : HomeTab(
-            subRoute = "goals",
-            displayData = DisplayData(
-                title = UiText.StringResource(R.string.navigationGoalsTitle),
-                icon = UiIcon.IconResource(R.drawable.ic_goals),
-                animatedIcon = R.drawable.avd_goals
-            )
-        )
-
-        data object Statistics : HomeTab(
-            subRoute = "statistics",
-            displayData = DisplayData(
-                title = UiText.StringResource(R.string.navigationStatisticsTitle),
-                icon = UiIcon.IconResource(R.drawable.ic_bar_chart),
-                animatedIcon = R.drawable.avd_bar_chart
-            )
-        )
-
-        data object Library : HomeTab(
-            subRoute = "library",
-            displayData = DisplayData(
-                title = UiText.StringResource(R.string.navigationLibraryTitle),
-                icon = UiIcon.IconResource(R.drawable.ic_library),
-                animatedIcon = R.drawable.avd_library
-            )
-        )
-        companion object {
-            val allTabs = listOf(Sessions, Goals, Statistics, Library)
-            val defaultTab = Sessions
-        }
-    }
-
-    data object ActiveSession : Screen(
-        route = "activeSession",
-    )
-
-    data object EditSession : Screen(
-        route = "editSession/{sessionId}",
-    )
-
-
-    data object SessionStatistics : Screen(
-        route = "sessionStatistics",
-    )
-    data object GoalStatistics : Screen(
-        route = "goalStatistics",
-    )
-
-    data object Settings : Screen(
-        route = "settings",
-    )
-
-    sealed class SettingsOption(
-        subRoute: String,
-        override val displayData: DisplayData
-    ) : Screen("settings/$subRoute") {
-        data object About : SettingsOption(
-            subRoute = "about",
-            displayData = DisplayData(
-                title = UiText.StringResource(R.string.about_app_title),
-                icon = UiIcon.DynamicIcon(Icons.Outlined.Info),
-            )
-        )
-
-        data object Backup : SettingsOption(
-            subRoute = "backup",
-            displayData = DisplayData(
-                title = UiText.StringResource(R.string.backup_title),
-                icon = UiIcon.DynamicIcon(Icons.Outlined.CloudUpload),
-            )
-        )
-
-        data object Donate : SettingsOption(
-            subRoute = "donate",
-            displayData = DisplayData(
-                title = UiText.StringResource(R.string.donations_title),
-                icon = UiIcon.DynamicIcon(Icons.Outlined.Favorite),
-            )
-        )
-
-        data object Appearance : SettingsOption(
-            subRoute = "appearance",
-            displayData = DisplayData(
-                title = UiText.StringResource(R.string.appearance_title),
-                icon = UiIcon.IconResource(R.drawable.ic_appearance),
-            )
-        )
-    }
-
-
-    data class DisplayData(
-        val title: UiText,
-        val icon: UiIcon,
-        @DrawableRes val animatedIcon: Int? = null
-    )
-}
-
-
-fun NavController.navigateTo(screen: Screen) {
-    navigate(screen.route)
-}
 
 @Composable
 fun MusikusApp(
@@ -256,6 +132,11 @@ fun MusikusApp(
         }
     }
 }
+
+fun NavController.navigateTo(screen: Screen) {
+    navigate(screen.route)
+}
+
 
 const val ANIMATION_BASE_DURATION = 400
 
