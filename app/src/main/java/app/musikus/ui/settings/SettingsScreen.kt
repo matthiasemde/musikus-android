@@ -49,16 +49,16 @@ fun NavGraphBuilder.addSettingsNavigationGraph(navController: NavController) {
             navigateTo = navController::navigateTo
         )
     }
-    composable(Screen.SettingsOptions.About.route) {
+    composable(Screen.SettingsOption.About.route) {
         AboutScreen(navigateUp = { navController.navigateUp() })
     }
-    composable(Screen.SettingsOptions.Appearance.route) {
+    composable(Screen.SettingsOption.Appearance.route) {
         AppearanceScreen(navigateUp = { navController.navigateUp() })
     }
-    composable(Screen.SettingsOptions.Backup.route) {
+    composable(Screen.SettingsOption.Backup.route) {
         BackupScreen(navigateUp = { navController.navigateUp() })
     }
-    composable(Screen.SettingsOptions.Donate.route) {
+    composable(Screen.SettingsOption.Donate.route) {
         DonateScreen(navigateUp = { navController.navigateUp() })
     }
 }
@@ -71,26 +71,26 @@ fun SettingsScreen(
 ) {
     val settingsItems = listOf(
         listOf(TwoLinerData(
-            icon = Screen.SettingsOptions.Donate.displayData!!.icon,
-            firstLine = Screen.SettingsOptions.Donate.displayData.title,
-            onClick = { navigateTo(Screen.SettingsOptions.Donate )}
+            icon = Screen.SettingsOption.Donate.displayData!!.icon,
+            firstLine = Screen.SettingsOption.Donate.displayData.title,
+            onClick = { navigateTo(Screen.SettingsOption.Donate )}
         )),
         listOf(
             TwoLinerData(
-                icon = Screen.SettingsOptions.Appearance.displayData!!.icon,
-                firstLine = Screen.SettingsOptions.Appearance.displayData.title,
-                onClick = { navigateTo(Screen.SettingsOptions.Appearance) }
+                icon = Screen.SettingsOption.Appearance.displayData!!.icon,
+                firstLine = Screen.SettingsOption.Appearance.displayData.title,
+                onClick = { navigateTo(Screen.SettingsOption.Appearance) }
             ),
             TwoLinerData(
-                icon = Screen.SettingsOptions.Backup.displayData!!.icon,
-                firstLine = Screen.SettingsOptions.Backup.displayData.title,
-                onClick = { navigateTo(Screen.SettingsOptions.Backup) }
+                icon = Screen.SettingsOption.Backup.displayData!!.icon,
+                firstLine = Screen.SettingsOption.Backup.displayData.title,
+                onClick = { navigateTo(Screen.SettingsOption.Backup) }
             )
         ),
         listOf(TwoLinerData(
-            icon = Screen.SettingsOptions.About.displayData!!.icon,
-            firstLine = Screen.SettingsOptions.About.displayData.title,
-            onClick = { navigateTo(Screen.SettingsOptions.About )}
+            icon = Screen.SettingsOption.About.displayData!!.icon,
+            firstLine = Screen.SettingsOption.About.displayData.title,
+            onClick = { navigateTo(Screen.SettingsOption.About )}
         )),
     )
 

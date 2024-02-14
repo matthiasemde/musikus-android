@@ -72,7 +72,6 @@ fun SessionsScreen(
     mainEventHandler: MainUiEventHandler,
     navigateTo: (Screen) -> Unit,
     onSessionEdit: (sessionId: UUID) -> Unit,
-    onSessionStart: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val eventHandler: SessionsUiEventHandler = viewModel::onUiEvent
@@ -101,9 +100,7 @@ fun SessionsScreen(
                     )
                 },
                 text = { Text(text = "Start Session") },
-                onClick = {
-                          onSessionStart()
-                },
+                onClick = { navigateTo(Screen.ActiveSession) },
                 expanded = fabExpanded,
             )
         },

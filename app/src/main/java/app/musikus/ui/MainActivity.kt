@@ -38,13 +38,6 @@ class MainActivity : PermissionCheckerActivity() {
     @Inject
     lateinit var timeProvider: TimeProvider
 
-    private val navItems = listOf(
-        Screen.Sessions,
-        Screen.Goals,
-        Screen.Statistics,
-        Screen.Library
-    )
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
