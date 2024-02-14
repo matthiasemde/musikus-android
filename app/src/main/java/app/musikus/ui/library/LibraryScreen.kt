@@ -74,9 +74,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.musikus.R
 import app.musikus.database.daos.LibraryFolder
 import app.musikus.database.daos.LibraryItem
+import app.musikus.home.HomeUiEvent
+import app.musikus.home.HomeUiEventHandler
+import app.musikus.home.HomeUiState
 import app.musikus.ui.MainUiEvent
 import app.musikus.ui.MainUiEventHandler
-import app.musikus.ui.MainUiState
 import app.musikus.ui.Screen
 import app.musikus.ui.components.ActionBar
 import app.musikus.ui.components.CommonMenuSelections
@@ -97,10 +99,11 @@ import app.musikus.utils.UiText
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Library(
-    mainEventHandler: MainUiEventHandler,
-    mainUiState: MainUiState,
-    navigateTo: (Screen) -> Unit,
+    homeUiState: HomeUiState,
     viewModel: LibraryViewModel = hiltViewModel(),
+    mainEventHandler: MainUiEventHandler,
+    homeEventHandler: HomeUiEventHandler,
+    navigateTo: (Screen) -> Unit,
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
@@ -117,10 +120,10 @@ fun Library(
         onBack = { eventHandler(LibraryUiEvent.ClearActionMode) }
     )
 
-    BackHandler(
-        enabled = mainUiState.multiFabState == MultiFabState.EXPANDED,
-        onBack = { mainEventHandler(MainUiEvent.CollapseMultiFab) }
-    )
+//    BackHandler(
+//        enabled = mainUiState.multiFabState == MultiFabState.EXPANDED,
+//        onBack = { mainEventHandler(MainUiEvent.CollapseMultiFab) }
+//    )
 
     Scaffold(
         contentWindowInsets = WindowInsets(bottom = 0.dp), // makes sure FAB is not shifted up
@@ -132,18 +135,20 @@ fun Library(
                 FloatingActionButton(
                     onClick = {
                         eventHandler(LibraryUiEvent.AddItemButtonPressed)
-                        mainEventHandler(MainUiEvent.CollapseMultiFab)
+                        homeEventHandler(HomeUiEvent.CollapseMultiFab)
                     },
                 ) {
                     Icon(Icons.Default.Add, contentDescription = "Add item")
                 }
             } else {
                 MultiFAB(
-                    state = mainUiState.multiFabState,
+                    state = homeUiState.multiFabState,
                     onStateChange = { state ->
-                        mainEventHandler(MainUiEvent.ChangeMultiFabState(state))
                         if(state == MultiFabState.EXPANDED) {
+                            homeEventHandler(HomeUiEvent.CollapseMultiFab)
                             eventHandler(LibraryUiEvent.ClearActionMode)
+                        } else {
+                            homeEventHandler(HomeUiEvent.ExpandMultiFab)
                         }
                     },
                     contentDescription = "Add",
@@ -151,7 +156,7 @@ fun Library(
                         MiniFABData(
                             onClick = {
                                 eventHandler(LibraryUiEvent.AddItemButtonPressed)
-                                mainEventHandler(MainUiEvent.CollapseMultiFab)
+                                homeEventHandler(HomeUiEvent.CollapseMultiFab)
                             },
                             label = "Item",
                             icon = Icons.Rounded.MusicNote
@@ -159,7 +164,7 @@ fun Library(
                         MiniFABData(
                             onClick = {
                                 eventHandler(LibraryUiEvent.AddFolderButtonPressed)
-                                mainEventHandler(MainUiEvent.CollapseMultiFab)
+                                homeEventHandler(HomeUiEvent.CollapseMultiFab)
                             },
                             label = "Folder",
                             icon = Icons.Rounded.Folder
@@ -169,7 +174,6 @@ fun Library(
             }
         },
         topBar = {
-            val mainMenuUiState = mainUiState.menuUiState
             val topBarUiState = uiState.topBarUiState
             LargeTopAppBar(
                 scrollBehavior = scrollBehavior,
@@ -183,14 +187,14 @@ fun Library(
                 },
                 actions = {
                     IconButton(onClick = {
-                        mainEventHandler(MainUiEvent.ShowMainMenu)
+                        homeEventHandler(HomeUiEvent.ShowMainMenu)
                     }) {
                         Icon(Icons.Default.MoreVert, contentDescription = "more")
                         MainMenu (
-                            show = mainMenuUiState.show,
-                            onDismissHandler = { mainEventHandler(MainUiEvent.HideMainMenu) },
+                            show = homeUiState.showMainMenu,
+                            onDismissHandler = { homeEventHandler(HomeUiEvent.HideMainMenu) },
                             onSelectionHandler = { commonSelection ->
-                                mainEventHandler(MainUiEvent.HideMainMenu)
+                                homeEventHandler(HomeUiEvent.HideMainMenu)
 
                                 when (commonSelection) {
                                     CommonMenuSelections.SETTINGS -> { navigateTo(Screen.Settings) }
@@ -293,7 +297,7 @@ fun Library(
             AnimatedVisibility(
                 modifier = Modifier
                     .zIndex(1f),
-                visible = mainUiState.multiFabState == MultiFabState.EXPANDED,
+                visible = homeUiState.multiFabState == MultiFabState.EXPANDED,
                 enter = fadeIn(),
                 exit = fadeOut()
             ) {
@@ -304,7 +308,7 @@ fun Library(
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null,
-                            onClick = { mainEventHandler(MainUiEvent.CollapseMultiFab) }
+                            onClick = { homeEventHandler(HomeUiEvent.CollapseMultiFab) }
                         )
                 )
             }

@@ -1,49 +1,21 @@
 package app.musikus.ui
 
-import androidx.activity.compose.BackHandler
 import androidx.annotation.DrawableRes
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentTransitionScope
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.graphics.ExperimentalAnimationGraphicsApi
-import androidx.compose.animation.graphics.res.animatedVectorResource
-import androidx.compose.animation.graphics.res.rememberAnimatedVectorPainter
-import androidx.compose.animation.graphics.vector.AnimatedImageVector
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CloudUpload
 import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavBackStackEntry
@@ -56,14 +28,10 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
 import app.musikus.R
+import app.musikus.home.HomeScreen
 import app.musikus.ui.activesession.ActiveSession
-import app.musikus.ui.components.MultiFabState
-import app.musikus.ui.goals.GoalsScreen
-import app.musikus.ui.library.Library
-import app.musikus.ui.sessions.SessionsScreen
 import app.musikus.ui.sessions.editsession.EditSession
 import app.musikus.ui.settings.addSettingsNavigationGraph
-import app.musikus.ui.statistics.Statistics
 import app.musikus.ui.statistics.addStatisticsNavigationGraph
 import app.musikus.ui.theme.MusikusTheme
 import app.musikus.utils.TimeProvider
@@ -121,6 +89,10 @@ sealed class Screen(
                 animatedIcon = R.drawable.avd_library
             )
         )
+        companion object {
+            val allTabs = listOf(Sessions, Goals, Statistics, Library)
+            val defaultTab = Sessions
+        }
     }
 
     data object ActiveSession : Screen(
@@ -237,7 +209,7 @@ fun MusikusApp(
 //                    navDeepLink { uriPattern = }
 //                )
             ) {
-                Home(
+                HomeScreen(
                     mainUiState = uiState,
                     mainEventHandler = eventHandler,
                     navigateTo = navController::navigateTo,
@@ -323,172 +295,6 @@ fun AnimatedContentTransitionScope<NavBackStackEntry>.getExitTransition() : Exit
                 animationSpec = tween(ANIMATION_BASE_DURATION),
                 targetOffsetY = { fullHeight -> (fullHeight / 10) }
             ) + fadeOut(animationSpec = tween(ANIMATION_BASE_DURATION / 2))
-        }
-    }
-}
-
-@Composable
-fun Home(
-    mainUiState: MainUiState,
-    mainEventHandler: MainUiEventHandler,
-    navigateTo: (Screen) -> Unit,
-    timeProvider: TimeProvider,
-) {
-
-    val originTab = Screen.HomeTab.Sessions
-
-    var currentTab by remember {
-        mutableStateOf<Screen.HomeTab>(originTab)
-    }
-
-    val tabs = listOf(
-        Screen.HomeTab.Sessions,
-        Screen.HomeTab.Goals,
-        Screen.HomeTab.Statistics,
-        Screen.HomeTab.Library
-    )
-
-    BackHandler(
-        enabled = currentTab != originTab,
-        onBack = { currentTab = originTab }
-    )
-
-    Scaffold(
-        snackbarHost = {
-            SnackbarHost(hostState = mainUiState.snackbarHost)
-        },
-        bottomBar = {
-            MusikusBottomBar(
-                tabs = tabs,
-                currentTab = currentTab,
-                mainUiState = mainUiState,
-                mainEventHandler = mainEventHandler,
-                onTabSelected = { currentTab = it },
-            )
-        }
-    ) { innerPadding ->
-        AnimatedContent(
-            modifier = Modifier.padding(innerPadding),
-            targetState = currentTab,
-            label = "homeTabContent"
-        ) { currentTab ->
-            when(currentTab) {
-                is Screen.HomeTab.Sessions -> {
-                    SessionsScreen(
-                        mainUiState = mainUiState,
-                        mainEventHandler = mainEventHandler,
-                        navigateTo = navigateTo,
-                        onSessionEdit = {}
-//                        onSessionEdit = { sessionId: UUID ->
-//                            navController.navigate(
-//                                Screen.EditSession.route.replace(
-//                                    "{sessionId}",
-//                                    sessionId.toString()
-//                                )
-//                            )
-//                        },
-                    )
-                }
-                is Screen.HomeTab.Goals -> {
-                    GoalsScreen(
-                        mainUiState = mainUiState,
-                        mainEventHandler = mainEventHandler,
-                        navigateTo = navigateTo,
-                        timeProvider = timeProvider
-                    )
-                }
-                is Screen.HomeTab.Library -> {
-                    Library (
-                        mainUiState = mainUiState,
-                        mainEventHandler = mainEventHandler,
-                        navigateTo = navigateTo
-                    )
-                }
-                is Screen.HomeTab.Statistics -> {
-                    Statistics(
-                        mainUiState = mainUiState,
-                        mainEventHandler = mainEventHandler,
-                        navigateTo = navigateTo,
-                        timeProvider = timeProvider
-                    )
-                }
-            }
-        }
-    }
-}
-
-
-
-@OptIn(ExperimentalAnimationGraphicsApi::class)
-@Composable
-fun MusikusBottomBar(
-    tabs: List<Screen.HomeTab>,
-    currentTab: Screen.HomeTab,
-    mainUiState: MainUiState,
-    mainEventHandler: MainUiEventHandler,
-    onTabSelected: (Screen.HomeTab) -> Unit,
-) {
-
-    Box {
-        NavigationBar {
-            tabs.forEach { tab ->
-                val selected = tab == currentTab
-                val painterCount = 5
-                var activePainter by remember { mutableIntStateOf(0) }
-                val painter = rememberVectorPainter(
-                    image = tab.displayData!!.icon.asIcon()
-                )
-                val animatedPainters = (0..painterCount).map {
-                    rememberAnimatedVectorPainter(
-                        animatedImageVector = AnimatedImageVector.animatedVectorResource(
-                            tab.displayData.animatedIcon!!
-                        ),
-                        atEnd = selected && activePainter == it
-                    )
-                }
-                NavigationBarItem(
-                    icon = {
-                        Image(
-                            painter = if (selected) animatedPainters[activePainter] else painter,
-                            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface),
-                            contentDescription = null
-                        )
-                    },
-                    label = {
-                        Text(
-                            text = tab.displayData.title.asAnnotatedString(),
-                            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
-                        )
-                    },
-                    selected = selected,
-                    onClick = {
-                        if (!selected) {
-                            activePainter = (activePainter + 1) % painterCount
-                        }
-                        onTabSelected(tab)
-                    }
-                )
-            }
-        }
-
-        /** Navbar Scrim */
-        AnimatedVisibility(
-            modifier = Modifier
-                .matchParentSize()
-                .zIndex(1f),
-            visible = mainUiState.multiFabState == MultiFabState.EXPANDED,
-            enter = fadeIn(),
-            exit = fadeOut()
-        ) {
-            Box(
-                modifier = Modifier
-                    .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.9f))
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null,
-                        onClick = { mainEventHandler(MainUiEvent.CollapseMultiFab) }
-                    )
-            )
         }
     }
 }

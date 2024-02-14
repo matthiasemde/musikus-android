@@ -14,14 +14,12 @@ import androidx.compose.material3.SnackbarResult
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.musikus.datastore.ThemeSelections
-import app.musikus.ui.components.MultiFabState
 import app.musikus.usecase.userpreferences.UserPreferencesUseCases
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -29,25 +27,11 @@ import javax.inject.Inject
 typealias MainUiEventHandler = (MainUiEvent) -> Unit
 
 sealed class MainUiEvent {
-    data object ShowMainMenu: MainUiEvent()
-    data object HideMainMenu: MainUiEvent()
-    data object ShowThemeSubMenu: MainUiEvent()
-    data object HideThemeSubMenu: MainUiEvent()
     data class SetTheme(val theme: ThemeSelections): MainUiEvent()
-    data object CollapseMultiFab: MainUiEvent()
-    data class ChangeMultiFabState(val state: MultiFabState): MainUiEvent()
     data class ShowSnackbar(val message: String, val onUndo: (() -> Unit)? = null): MainUiEvent()
-
-
 }
 
-data class MainMenuUiState(
-    val show: Boolean,
-    val showThemeSubMenu: Boolean,
-)
 data class MainUiState(
-    val menuUiState: MainMenuUiState,
-    val multiFabState: MultiFabState,
     val activeTheme: ThemeSelections?,
     var snackbarHost: SnackbarHostState,
 )
@@ -56,13 +40,6 @@ data class MainUiState(
 class MainViewModel @Inject constructor(
     private val userPreferencesUseCases: UserPreferencesUseCases,
 ) : ViewModel() {
-
-    /** Menu */
-    private val _showMainMenu = MutableStateFlow(false)
-    private val _showThemeSubMenu = MutableStateFlow(false)
-
-    /** Content Scrim over NavBar for Multi FAB etc */
-    private val _multiFabState = MutableStateFlow(MultiFabState.COLLAPSED)
 
     /** Snackbar */
     private val _snackbarHost = MutableStateFlow(SnackbarHostState())
@@ -74,34 +51,43 @@ class MainViewModel @Inject constructor(
         initialValue = null
     )
 
+
+    /**
+     * Composing the ui state
+     */
+
+    val uiState = combine(
+        _activeTheme,
+        _snackbarHost,
+    ) { activeTheme, snackbarHost ->
+        MainUiState(
+            activeTheme = activeTheme,
+            snackbarHost = snackbarHost
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = MainUiState(
+            activeTheme = _activeTheme.value,
+            snackbarHost = _snackbarHost.value
+        )
+    )
+
+
     fun onUiEvent(event: MainUiEvent) {
         when(event) {
-            is MainUiEvent.ShowMainMenu -> {
-                onShowMainMenuChanged(true)
-            }
-            is MainUiEvent.HideMainMenu -> {
-                onShowMainMenuChanged(false)
-            }
-            is MainUiEvent.ShowThemeSubMenu -> {
-                onShowThemeSubMenuChanged(true)
-            }
-            is MainUiEvent.HideThemeSubMenu -> {
-                onShowThemeSubMenuChanged(false)
-            }
             is MainUiEvent.SetTheme -> {
                 setTheme(event.theme)
-            }
-            is MainUiEvent.ChangeMultiFabState -> {
-                onMultiFabStateChanged(event.state)
-            }
-            is MainUiEvent.CollapseMultiFab -> {
-                onMultiFabStateChanged(MultiFabState.COLLAPSED)
             }
             is MainUiEvent.ShowSnackbar -> {
                 showSnackbar(event.message, event.onUndo)
             }
         }
     }
+
+    /**
+     * Private state mutators
+     */
 
     private fun showSnackbar(message: String, onUndo: (() -> Unit)? = null) {
         viewModelScope.launch {
@@ -125,59 +111,5 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             userPreferencesUseCases.selectTheme(theme)
         }
-    }
-
-    /** UI State */
-    private val menuUiState = combine(
-        _showMainMenu,
-        _showThemeSubMenu
-    ) { showMainMenu, showThemeSubMenu ->
-        MainMenuUiState(
-            show = showMainMenu,
-            showThemeSubMenu = showThemeSubMenu,
-        )
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = MainMenuUiState(
-            show = _showMainMenu.value,
-            showThemeSubMenu = _showThemeSubMenu.value,
-        )
-    )
-
-    val uiState = combine(
-        menuUiState,
-        _multiFabState,
-        _activeTheme,
-        _snackbarHost,
-    ) { menuUiState, multiFabState, activeTheme, snackbarHost ->
-        MainUiState(
-            menuUiState = menuUiState,
-            multiFabState = multiFabState,
-            activeTheme = activeTheme,
-            snackbarHost = snackbarHost
-        )
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = MainUiState(
-            menuUiState = menuUiState.value,
-            multiFabState = _multiFabState.value,
-            activeTheme = _activeTheme.value,
-            snackbarHost = _snackbarHost.value
-        )
-    )
-
-    /** State modifiers */
-    private fun onShowMainMenuChanged(show: Boolean) {
-        _showMainMenu.update { show }
-    }
-
-    private fun onShowThemeSubMenuChanged(show: Boolean) {
-        _showThemeSubMenu.update { show }
-    }
-
-    private fun onMultiFabStateChanged(state: MultiFabState) {
-        _multiFabState.update { state }
     }
 }

@@ -46,9 +46,11 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.musikus.home.HomeUiEvent
+import app.musikus.home.HomeUiEventHandler
+import app.musikus.home.HomeUiState
 import app.musikus.ui.MainUiEvent
 import app.musikus.ui.MainUiEventHandler
-import app.musikus.ui.MainUiState
 import app.musikus.ui.Screen
 import app.musikus.ui.components.ActionBar
 import app.musikus.ui.components.CommonMenuSelections
@@ -68,8 +70,9 @@ import java.util.UUID
 @Composable
 fun SessionsScreen(
     viewModel: SessionsViewModel = hiltViewModel(),
-    mainUiState: MainUiState,
     mainEventHandler: MainUiEventHandler,
+    homeUiState: HomeUiState,
+    homeEventHandler: HomeUiEventHandler,
     navigateTo: (Screen) -> Unit,
     onSessionEdit: (sessionId: UUID) -> Unit,
 ) {
@@ -105,19 +108,18 @@ fun SessionsScreen(
             )
         },
         topBar = {
-            val mainMenuUiState = mainUiState.menuUiState
             val topBarUiState = uiState.topBarUiState
             LargeTopAppBar(
                 title = { Text(text = topBarUiState.title) },
                 scrollBehavior = scrollBehavior,
                 actions = {
-                    IconButton(onClick = { mainEventHandler(MainUiEvent.ShowMainMenu) } ) {
+                    IconButton(onClick = { homeEventHandler(HomeUiEvent.ShowMainMenu) } ) {
                         Icon(Icons.Default.MoreVert, contentDescription = "more")
                         MainMenu (
-                            show = mainMenuUiState.show,
-                            onDismissHandler = { mainEventHandler(MainUiEvent.HideMainMenu) },
+                            show = homeUiState.showMainMenu,
+                            onDismissHandler = { homeEventHandler(HomeUiEvent.HideMainMenu) },
                             onSelectionHandler = { commonSelection ->
-                                mainEventHandler(MainUiEvent.HideMainMenu)
+                                homeEventHandler(HomeUiEvent.HideMainMenu)
 
                                 when (commonSelection) {
                                     CommonMenuSelections.SETTINGS -> { navigateTo(Screen.Settings) }

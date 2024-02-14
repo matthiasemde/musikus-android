@@ -9,18 +9,11 @@
 package app.musikus.ui.goals
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -40,26 +33,26 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.musikus.home.HomeUiEvent
+import app.musikus.home.HomeUiEventHandler
+import app.musikus.home.HomeUiState
+import app.musikus.ui.MainUiEvent
+import app.musikus.ui.MainUiEventHandler
+import app.musikus.ui.Screen
 import app.musikus.ui.components.ActionBar
 import app.musikus.ui.components.CommonMenuSelections
+import app.musikus.ui.components.DeleteConfirmationBottomSheet
 import app.musikus.ui.components.MainMenu
 import app.musikus.ui.components.MiniFABData
 import app.musikus.ui.components.MultiFAB
 import app.musikus.ui.components.MultiFabState
 import app.musikus.ui.components.Selectable
 import app.musikus.ui.components.SortMenu
-import app.musikus.ui.MainUiEvent
-import app.musikus.ui.MainUiEventHandler
-import app.musikus.ui.MainUiState
-import app.musikus.ui.Screen
-import app.musikus.ui.components.DeleteConfirmationBottomSheet
 import app.musikus.ui.theme.spacing
 import app.musikus.utils.GoalsSortMode
 import app.musikus.utils.TimeProvider
@@ -70,8 +63,9 @@ import app.musikus.utils.UiText
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun GoalsScreen(
-    mainUiState: MainUiState,
     mainEventHandler: MainUiEventHandler,
+    homeUiState: HomeUiState,
+    homeEventHandler: HomeUiEventHandler,
     navigateTo: (Screen) -> Unit,
     viewModel: GoalsViewModel = hiltViewModel(),
     timeProvider: TimeProvider,
@@ -87,8 +81,8 @@ fun GoalsScreen(
     )
 
     BackHandler(
-        enabled = mainUiState.multiFabState == MultiFabState.EXPANDED,
-        onBack = { mainEventHandler(MainUiEvent.CollapseMultiFab) }
+        enabled = homeUiState.multiFabState == MultiFabState.EXPANDED,
+        onBack = { homeEventHandler(HomeUiEvent.CollapseMultiFab) }
     )
 
     Scaffold(
@@ -96,11 +90,13 @@ fun GoalsScreen(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         floatingActionButton = {
             MultiFAB(
-                state = mainUiState.multiFabState,
+                state = homeUiState.multiFabState,
                 onStateChange = { state ->
-                    mainEventHandler(MainUiEvent.ChangeMultiFabState(state))
                     if (state == MultiFabState.EXPANDED) {
+                        homeEventHandler(HomeUiEvent.CollapseMultiFab)
                         eventHandler(GoalsUiEvent.ClearActionMode)
+                    } else {
+                        homeEventHandler(HomeUiEvent.ExpandMultiFab)
                     }
                 },
                 contentDescription = "Add",
@@ -108,7 +104,7 @@ fun GoalsScreen(
                     MiniFABData(
                         onClick = {
                             eventHandler(GoalsUiEvent.AddGoalButtonPressed(oneShot = true))
-                            mainEventHandler(MainUiEvent.CollapseMultiFab)
+                            homeEventHandler(HomeUiEvent.CollapseMultiFab)
                         },
                         label = "One shot goal",
                         icon = Icons.Filled.LocalFireDepartment,
@@ -116,7 +112,7 @@ fun GoalsScreen(
                     MiniFABData(
                         onClick = {
                             eventHandler(GoalsUiEvent.AddGoalButtonPressed(oneShot = false))
-                            mainEventHandler(MainUiEvent.CollapseMultiFab)
+                            homeEventHandler(HomeUiEvent.CollapseMultiFab)
                         },
                         label = "Regular goal",
                         icon = Icons.Rounded.Repeat,
@@ -126,7 +122,6 @@ fun GoalsScreen(
         },
         topBar = {
             // TODO find a way to re-use Composable in every screen
-            val mainMenuUiState = mainUiState.menuUiState
             val topBarUiState = uiState.topBarUiState
             LargeTopAppBar(
                 title = { Text(text = topBarUiState.title) },
@@ -144,15 +139,15 @@ fun GoalsScreen(
                     )
                     Box {
                         IconButton(onClick = {
-                            mainEventHandler(MainUiEvent.ShowMainMenu)
+                            homeEventHandler(HomeUiEvent.ShowMainMenu)
                         }) {
                             Icon(Icons.Default.MoreVert, contentDescription = "more")
                         }
                         MainMenu(
-                            show = mainMenuUiState.show,
-                            onDismissHandler = { mainEventHandler(MainUiEvent.HideMainMenu) },
+                            show = homeUiState.showMainMenu,
+                            onDismissHandler = { homeEventHandler(HomeUiEvent.HideMainMenu) },
                             onSelectionHandler = { commonSelection ->
-                                mainEventHandler(MainUiEvent.HideMainMenu)
+                                homeEventHandler(HomeUiEvent.HideMainMenu)
 
                                 when (commonSelection) {
                                     CommonMenuSelections.SETTINGS -> { navigateTo(Screen.Settings)}
@@ -260,24 +255,24 @@ fun GoalsScreen(
 
             // Content Scrim for multiFAB
 
-            AnimatedVisibility(
-                modifier = Modifier
-                    .zIndex(1f),
-                visible = mainUiState.multiFabState == MultiFabState.EXPANDED,
-                enter = fadeIn(),
-                exit = fadeOut()
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.9f))
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null,
-                            onClick = { mainEventHandler(MainUiEvent.CollapseMultiFab) }
-                        )
-                )
-            }
+//            AnimatedVisibility(
+//                modifier = Modifier
+//                    .zIndex(1f),
+//                visible = mainUiState.multiFabState == MultiFabState.EXPANDED,
+//                enter = fadeIn(),
+//                exit = fadeOut()
+//            ) {
+//                Box(
+//                    modifier = Modifier
+//                        .fillMaxSize()
+//                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.9f))
+//                        .clickable(
+//                            interactionSource = remember { MutableInteractionSource() },
+//                            indication = null,
+//                            onClick = { mainEventHandler(MainUiEvent.CollapseMultiFab) }
+//                        )
+//                )
+//            }
         }
     )
 }
