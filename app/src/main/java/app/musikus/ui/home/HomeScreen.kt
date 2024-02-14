@@ -8,6 +8,7 @@
 
 package app.musikus.ui.home
 
+import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
@@ -30,6 +31,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
@@ -41,12 +43,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import app.musikus.ui.MainUiEventHandler
 import app.musikus.ui.MainUiState
 import app.musikus.ui.Screen
 import app.musikus.ui.components.MultiFabState
 import app.musikus.ui.goals.GoalsScreen
 import app.musikus.ui.library.Library
+import app.musikus.ui.navigateTo
 import app.musikus.ui.sessions.SessionsScreen
 import app.musikus.ui.statistics.Statistics
 import app.musikus.utils.TimeProvider
@@ -56,18 +61,34 @@ import app.musikus.utils.TimeProvider
 fun HomeScreen(
     mainUiState: MainUiState,
     mainEventHandler: MainUiEventHandler,
+    tab: Screen.HomeTab?,
     viewModel: HomeViewModel = hiltViewModel(),
-    navigateTo: (Screen) -> Unit,
+    navController: NavController,
     timeProvider: TimeProvider,
 ) {
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val eventHandler: HomeUiEventHandler = viewModel::onUiEvent
 
+    val backStack by navController.currentBackStackEntryAsState()
+
+    LaunchedEffect(key1 = backStack) {
+        Log.d("HomeScreen", "backStack: $backStack")
+        Log.d("HomeScreen", "${navController.previousBackStackEntry}")
+    }
+
     BackHandler(
-        enabled = uiState.currentTab != Screen.HomeTab.defaultTab,
+        enabled =
+            navController.previousBackStackEntry == null &&
+            uiState.currentTab != Screen.HomeTab.defaultTab,
         onBack = { eventHandler(HomeUiEvent.TabSelected(Screen.HomeTab.defaultTab)) }
     )
+
+    LaunchedEffect(key1 = tab) {
+        if(tab != null && tab != uiState.currentTab) {
+            eventHandler(HomeUiEvent.TabSelected(tab))
+        }
+    }
 
     Scaffold(
         snackbarHost = {
@@ -77,8 +98,11 @@ fun HomeScreen(
             MusikusBottomBar(
                 homeUiState = uiState,
                 homeEventHandler = eventHandler,
+                currentTab = uiState.currentTab,
                 onTabSelected = {
+                    Log.d("HomeScreen", "onTabSelected: $it")
                     eventHandler(HomeUiEvent.TabSelected(it))
+                    navController.clearBackStack(Screen.Home.route)
                 },
             )
         }
@@ -94,7 +118,7 @@ fun HomeScreen(
                         mainEventHandler = mainEventHandler,
                         homeUiState = uiState,
                         homeEventHandler = eventHandler,
-                        navigateTo = navigateTo,
+                        navigateTo = navController::navigateTo,
                         onSessionEdit = {}
 //                        onSessionEdit = { sessionId: UUID ->
 //                            navController.navigate(
@@ -111,7 +135,7 @@ fun HomeScreen(
                         mainEventHandler = mainEventHandler,
                         homeUiState = uiState,
                         homeEventHandler = eventHandler,
-                        navigateTo = navigateTo,
+                        navigateTo = navController::navigateTo,
                         timeProvider = timeProvider
                     )
                 }
@@ -120,14 +144,14 @@ fun HomeScreen(
                         mainEventHandler = mainEventHandler,
                         homeUiState = uiState,
                         homeEventHandler = eventHandler,
-                        navigateTo = navigateTo
+                        navigateTo = navController::navigateTo
                     )
                 }
                 is Screen.HomeTab.Statistics -> {
                     Statistics(
                         homeUiState = uiState,
                         homeEventHandler = eventHandler,
-                        navigateTo = navigateTo,
+                        navigateTo = navController::navigateTo,
                         timeProvider = timeProvider
                     )
                 }
@@ -143,17 +167,18 @@ fun HomeScreen(
 fun MusikusBottomBar(
     homeUiState: HomeUiState,
     homeEventHandler: HomeUiEventHandler,
+    currentTab: Screen.HomeTab,
     onTabSelected: (Screen.HomeTab) -> Unit,
 ) {
 
     Box {
         NavigationBar {
             Screen.HomeTab.allTabs.forEach { tab ->
-                val selected = tab == homeUiState.currentTab
+                val selected = tab == currentTab
                 val painterCount = 5
                 var activePainter by remember { mutableIntStateOf(0) }
                 val painter = rememberVectorPainter(
-                    image = tab.displayData!!.icon.asIcon()
+                    image = tab.displayData.icon.asIcon()
                 )
                 val animatedPainters = (0..painterCount).map {
                     rememberAnimatedVectorPainter(
@@ -181,8 +206,8 @@ fun MusikusBottomBar(
                     onClick = {
                         if (!selected) {
                             activePainter = (activePainter + 1) % painterCount
+                            onTabSelected(tab)
                         }
-                        onTabSelected(tab)
                     }
                 )
             }

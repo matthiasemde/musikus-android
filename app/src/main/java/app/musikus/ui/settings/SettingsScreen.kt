@@ -41,6 +41,7 @@ import app.musikus.ui.settings.appearance.AppearanceScreen
 import app.musikus.ui.settings.backup.BackupScreen
 import app.musikus.ui.settings.donate.DonateScreen
 import app.musikus.ui.theme.spacing
+import app.musikus.utils.UiText
 
 fun NavGraphBuilder.addSettingsNavigationGraph(navController: NavController) {
     composable(Screen.Settings.route) {
@@ -71,24 +72,28 @@ fun SettingsScreen(
 ) {
     val settingsItems = listOf(
         listOf(TwoLinerData(
-            icon = Screen.SettingsOption.Donate.displayData!!.icon,
+            icon = Screen.SettingsOption.Donate.displayData.icon,
             firstLine = Screen.SettingsOption.Donate.displayData.title,
             onClick = { navigateTo(Screen.SettingsOption.Donate )}
         )),
         listOf(
             TwoLinerData(
-                icon = Screen.SettingsOption.Appearance.displayData!!.icon,
+                icon = Screen.SettingsOption.Appearance.displayData.icon,
                 firstLine = Screen.SettingsOption.Appearance.displayData.title,
                 onClick = { navigateTo(Screen.SettingsOption.Appearance) }
             ),
             TwoLinerData(
-                icon = Screen.SettingsOption.Backup.displayData!!.icon,
+                icon = Screen.SettingsOption.Backup.displayData.icon,
                 firstLine = Screen.SettingsOption.Backup.displayData.title,
                 onClick = { navigateTo(Screen.SettingsOption.Backup) }
+            ),
+            TwoLinerData(
+                firstLine = UiText.DynamicString("Test"),
+                onClick = { navigateTo(Screen.HomeTab.Goals) }
             )
         ),
         listOf(TwoLinerData(
-            icon = Screen.SettingsOption.About.displayData!!.icon,
+            icon = Screen.SettingsOption.About.displayData.icon,
             firstLine = Screen.SettingsOption.About.displayData.title,
             onClick = { navigateTo(Screen.SettingsOption.About )}
         )),

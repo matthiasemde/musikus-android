@@ -27,9 +27,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
+import androidx.navigation.navigation
 import app.musikus.R
-import app.musikus.ui.home.HomeScreen
 import app.musikus.ui.activesession.ActiveSession
+import app.musikus.ui.home.HomeScreen
 import app.musikus.ui.sessions.editsession.EditSession
 import app.musikus.ui.settings.addSettingsNavigationGraph
 import app.musikus.ui.statistics.addStatisticsNavigationGraph
@@ -43,7 +44,7 @@ const val DEEP_LINK_KEY = "argument"
 
 sealed class Screen(
     val route: String,
-    val displayData: DisplayData? = null,
+    open val displayData: DisplayData? = null,
 ) {
 
     data object Home : Screen(
@@ -51,9 +52,9 @@ sealed class Screen(
     )
 
     sealed class HomeTab(
-        subRoute: String,
-        displayData: DisplayData
-    ) : Screen("home/$subRoute", displayData) {
+        val subRoute: String,
+        override val displayData: DisplayData
+    ) : Screen("home/$subRoute") {
         data object Sessions : HomeTab(
             subRoute = "sessionList",
             displayData = DisplayData(
@@ -117,8 +118,8 @@ sealed class Screen(
 
     sealed class SettingsOption(
         subRoute: String,
-        displayData: DisplayData
-    ) : Screen("settings/$subRoute", displayData) {
+        override val displayData: DisplayData
+    ) : Screen("settings/$subRoute") {
         data object About : SettingsOption(
             subRoute = "about",
             displayData = DisplayData(
@@ -179,16 +180,6 @@ fun MusikusApp(
     val theme = uiState.activeTheme ?: return
 
 
-//    val navBackStackEntry by navController.currentBackStackEntryAsState()
-//    val currentDestination = navBackStackEntry?.destination
-//
-//    val showBottomNavigationBar = currentDestination?.hierarchy?.any { dest ->
-//        navItems.any { it.route == dest.route }
-//    } == true
-//
-//    var enterTransition by remember { mutableStateOf(EnterTransition.None) }
-//    var exitTransition by remember { mutableStateOf(ExitTransition.None) }
-
     MusikusTheme(
         theme = theme
     ) {
@@ -203,18 +194,27 @@ fun MusikusApp(
                 getExitTransition()
             }
         ) {
-            composable(
+            navigation(
                 route = Screen.Home.route,
-//                deepLinks = listOf(
-//                    navDeepLink { uriPattern = }
-//                )
+                startDestination = Screen.HomeTab.defaultTab.route
             ) {
-                HomeScreen(
-                    mainUiState = uiState,
-                    mainEventHandler = eventHandler,
-                    navigateTo = navController::navigateTo,
-                    timeProvider = timeProvider
-                )
+                composable(
+                    route = "home/{tab}",
+                    arguments = listOf(navArgument("tab") {
+                        nullable = true
+                    })
+                ) { backStackEntry ->
+                    val tabRoute = backStackEntry.arguments?.getString("tab")
+                    val tab = Screen.HomeTab.allTabs.firstOrNull { it.subRoute == tabRoute }
+
+                    HomeScreen(
+                        mainUiState = uiState,
+                        mainEventHandler = eventHandler,
+                        tab = tab,
+                        navController = navController,
+                        timeProvider = timeProvider
+                    )
+                }
             }
 
             composable(
@@ -255,14 +255,17 @@ fun MusikusApp(
 const val ANIMATION_BASE_DURATION = 800
 
 fun AnimatedContentTransitionScope<NavBackStackEntry>.getEnterTransition() : EnterTransition {
+    val initialRoute = initialState.destination.route ?: return fadeIn()
+    val targetRoute = targetState.destination.route ?: return fadeIn()
+
     return when {
-        targetState.destination.route == Screen.ActiveSession.route -> {
+        targetRoute == Screen.ActiveSession.route -> {
             slideInVertically(
                 animationSpec = tween(ANIMATION_BASE_DURATION, easing = LinearEasing),
                 initialOffsetY = { fullHeight -> fullHeight }
             )
         }
-        initialState.destination.route == Screen.ActiveSession.route -> {
+        initialRoute == Screen.ActiveSession.route -> {
             fadeIn(tween(durationMillis = 1, delayMillis = ANIMATION_BASE_DURATION))
         }
         else -> {
@@ -280,11 +283,14 @@ fun AnimatedContentTransitionScope<NavBackStackEntry>.getEnterTransition() : Ent
 }
 
 fun AnimatedContentTransitionScope<NavBackStackEntry>.getExitTransition() : ExitTransition {
+    val initialRoute = initialState.destination.route ?: return fadeOut()
+    val targetRoute = targetState.destination.route ?: return fadeOut()
+
     return when {
-        targetState.destination.route == Screen.ActiveSession.route -> {
+        targetRoute == Screen.ActiveSession.route -> {
             fadeOut(tween(durationMillis = 1, delayMillis = ANIMATION_BASE_DURATION))
         }
-        initialState.destination.route == Screen.ActiveSession.route -> {
+        initialRoute == Screen.ActiveSession.route -> {
             slideOutVertically(
                 animationSpec = tween(ANIMATION_BASE_DURATION, easing = LinearEasing),
                 targetOffsetY = { fullHeight -> fullHeight }

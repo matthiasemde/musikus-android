@@ -34,7 +34,6 @@ sealed class HomeUiEvent {
     data object HideMainMenu: HomeUiEvent()
     data object ExpandMultiFab: HomeUiEvent()
     data object CollapseMultiFab: HomeUiEvent()
-
 }
 
 @HiltViewModel
