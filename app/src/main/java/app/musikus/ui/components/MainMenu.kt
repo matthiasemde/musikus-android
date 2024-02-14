@@ -21,31 +21,29 @@ enum class CommonMenuSelections {
 
 @Composable
 fun CommonMenuItems(
-    onSelectionHandler: (CommonMenuSelections) -> Unit
+    onSelection: (CommonMenuSelections) -> Unit
 ) {
     DropdownMenuItem(
         text = { Text(text = "Settings") },
-        onClick = { onSelectionHandler(CommonMenuSelections.SETTINGS) }
+        onClick = { onSelection(CommonMenuSelections.SETTINGS) }
     )
 }
 
 @Composable
 fun MainMenu(
     show: Boolean,
-    onDismissHandler: () -> Unit,
-    onSelectionHandler: (
-        commonSelection: CommonMenuSelections
-    ) -> Unit,
+    onDismiss: () -> Unit,
+    onSelection: (commonSelection: CommonMenuSelections) -> Unit,
     uniqueMenuItems: @Composable () -> Unit = {},
 ) {
     DropdownMenu(
         expanded = show,
-        onDismissRequest = onDismissHandler,
+        onDismissRequest = onDismiss,
         offset = DpOffset(x = (-80).dp, y = 0.dp) // no idea why this value has to be so large
     ) {
         uniqueMenuItems()
         CommonMenuItems(
-            onSelectionHandler = onSelectionHandler
+            onSelection = onSelection
         )
     }
 }

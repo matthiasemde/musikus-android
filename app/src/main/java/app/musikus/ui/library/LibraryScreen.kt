@@ -74,9 +74,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.musikus.R
 import app.musikus.database.daos.LibraryFolder
 import app.musikus.database.daos.LibraryItem
-import app.musikus.ui.home.HomeUiEvent
-import app.musikus.ui.home.HomeUiEventHandler
-import app.musikus.ui.home.HomeUiState
 import app.musikus.ui.MainUiEvent
 import app.musikus.ui.MainUiEventHandler
 import app.musikus.ui.Screen
@@ -89,6 +86,9 @@ import app.musikus.ui.components.MultiFAB
 import app.musikus.ui.components.MultiFabState
 import app.musikus.ui.components.Selectable
 import app.musikus.ui.components.SortMenu
+import app.musikus.ui.home.HomeUiEvent
+import app.musikus.ui.home.HomeUiEventHandler
+import app.musikus.ui.home.HomeUiState
 import app.musikus.ui.theme.libraryItemColors
 import app.musikus.ui.theme.spacing
 import app.musikus.utils.LibraryFolderSortMode
@@ -120,10 +120,10 @@ fun Library(
         onBack = { eventHandler(LibraryUiEvent.ClearActionMode) }
     )
 
-//    BackHandler(
-//        enabled = mainUiState.multiFabState == MultiFabState.EXPANDED,
-//        onBack = { mainEventHandler(MainUiEvent.CollapseMultiFab) }
-//    )
+    BackHandler(
+        enabled = homeUiState.multiFabState == MultiFabState.EXPANDED,
+        onBack = { homeEventHandler(HomeUiEvent.CollapseMultiFab) }
+    )
 
     Scaffold(
         contentWindowInsets = WindowInsets(bottom = 0.dp), // makes sure FAB is not shifted up
@@ -143,12 +143,12 @@ fun Library(
             } else {
                 MultiFAB(
                     state = homeUiState.multiFabState,
-                    onStateChange = { state ->
-                        if(state == MultiFabState.EXPANDED) {
-                            homeEventHandler(HomeUiEvent.CollapseMultiFab)
+                    onStateChange = { newState ->
+                        if(newState == MultiFabState.EXPANDED) {
+                            homeEventHandler(HomeUiEvent.ExpandMultiFab)
                             eventHandler(LibraryUiEvent.ClearActionMode)
                         } else {
-                            homeEventHandler(HomeUiEvent.ExpandMultiFab)
+                            homeEventHandler(HomeUiEvent.CollapseMultiFab)
                         }
                     },
                     contentDescription = "Add",
@@ -192,8 +192,8 @@ fun Library(
                         Icon(Icons.Default.MoreVert, contentDescription = "more")
                         MainMenu (
                             show = homeUiState.showMainMenu,
-                            onDismissHandler = { homeEventHandler(HomeUiEvent.HideMainMenu) },
-                            onSelectionHandler = { commonSelection ->
+                            onDismiss = { homeEventHandler(HomeUiEvent.HideMainMenu) },
+                            onSelection = { commonSelection ->
                                 homeEventHandler(HomeUiEvent.HideMainMenu)
 
                                 when (commonSelection) {

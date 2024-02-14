@@ -122,8 +122,8 @@ fun Statistics(
                         Icon(Icons.Default.MoreVert, contentDescription = "more")
                         MainMenu (
                             show = homeUiState.showMainMenu,
-                            onDismissHandler = { homeEventHandler(HomeUiEvent.HideMainMenu) },
-                            onSelectionHandler = { commonSelection ->
+                            onDismiss = { homeEventHandler(HomeUiEvent.HideMainMenu) },
+                            onSelection = { commonSelection ->
                                 homeEventHandler(HomeUiEvent.HideMainMenu)
 
                                 when (commonSelection) {

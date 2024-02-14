@@ -106,7 +106,9 @@ fun ActiveSession(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val eventHandler = viewModel::onUiEvent
 
-    Column {
+    Column(
+        modifier = Modifier.background(MaterialTheme.colorScheme.background)
+    ) {
         Box(
             modifier = Modifier
                 .windowInsetsPadding(WindowInsets.statusBars)

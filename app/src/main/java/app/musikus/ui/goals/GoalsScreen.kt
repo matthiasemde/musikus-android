@@ -9,11 +9,18 @@
 package app.musikus.ui.goals
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -33,9 +40,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.musikus.ui.home.HomeUiEvent
@@ -91,12 +100,12 @@ fun GoalsScreen(
         floatingActionButton = {
             MultiFAB(
                 state = homeUiState.multiFabState,
-                onStateChange = { state ->
-                    if (state == MultiFabState.EXPANDED) {
-                        homeEventHandler(HomeUiEvent.CollapseMultiFab)
+                onStateChange = { newState ->
+                    if (newState == MultiFabState.EXPANDED) {
+                        homeEventHandler(HomeUiEvent.ExpandMultiFab)
                         eventHandler(GoalsUiEvent.ClearActionMode)
                     } else {
-                        homeEventHandler(HomeUiEvent.ExpandMultiFab)
+                        homeEventHandler(HomeUiEvent.CollapseMultiFab)
                     }
                 },
                 contentDescription = "Add",
@@ -145,8 +154,8 @@ fun GoalsScreen(
                         }
                         MainMenu(
                             show = homeUiState.showMainMenu,
-                            onDismissHandler = { homeEventHandler(HomeUiEvent.HideMainMenu) },
-                            onSelectionHandler = { commonSelection ->
+                            onDismiss = { homeEventHandler(HomeUiEvent.HideMainMenu) },
+                            onSelection = { commonSelection ->
                                 homeEventHandler(HomeUiEvent.HideMainMenu)
 
                                 when (commonSelection) {
@@ -255,24 +264,24 @@ fun GoalsScreen(
 
             // Content Scrim for multiFAB
 
-//            AnimatedVisibility(
-//                modifier = Modifier
-//                    .zIndex(1f),
-//                visible = mainUiState.multiFabState == MultiFabState.EXPANDED,
-//                enter = fadeIn(),
-//                exit = fadeOut()
-//            ) {
-//                Box(
-//                    modifier = Modifier
-//                        .fillMaxSize()
-//                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.9f))
-//                        .clickable(
-//                            interactionSource = remember { MutableInteractionSource() },
-//                            indication = null,
-//                            onClick = { mainEventHandler(MainUiEvent.CollapseMultiFab) }
-//                        )
-//                )
-//            }
+            AnimatedVisibility(
+                modifier = Modifier
+                    .zIndex(1f),
+                visible = homeUiState.multiFabState == MultiFabState.EXPANDED,
+                enter = fadeIn(),
+                exit = fadeOut()
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.9f))
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                            onClick = { homeEventHandler(HomeUiEvent.CollapseMultiFab) }
+                        )
+                )
+            }
         }
     )
 }

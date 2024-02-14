@@ -41,7 +41,6 @@ import app.musikus.ui.settings.appearance.AppearanceScreen
 import app.musikus.ui.settings.backup.BackupScreen
 import app.musikus.ui.settings.donate.DonateScreen
 import app.musikus.ui.theme.spacing
-import app.musikus.utils.UiText
 
 fun NavGraphBuilder.addSettingsNavigationGraph(navController: NavController) {
     composable(Screen.Settings.route) {
@@ -86,10 +85,6 @@ fun SettingsScreen(
                 icon = Screen.SettingsOption.Backup.displayData.icon,
                 firstLine = Screen.SettingsOption.Backup.displayData.title,
                 onClick = { navigateTo(Screen.SettingsOption.Backup) }
-            ),
-            TwoLinerData(
-                firstLine = UiText.DynamicString("Test"),
-                onClick = { navigateTo(Screen.HomeTab.Goals) }
             )
         ),
         listOf(TwoLinerData(
