@@ -253,7 +253,7 @@ fun MusikusApp(
     }
 }
 
-const val ANIMATION_BASE_DURATION = 800
+const val ANIMATION_BASE_DURATION = 400
 
 fun AnimatedContentTransitionScope<NavBackStackEntry>.getEnterTransition() : EnterTransition {
     val initialRoute = initialState.destination.route ?: return fadeIn()

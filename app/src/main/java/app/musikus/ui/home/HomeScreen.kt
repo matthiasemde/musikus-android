@@ -103,7 +103,7 @@ fun HomeScreen(
     ) { innerPadding ->
 
         AnimatedContent(
-            modifier = Modifier.padding(innerPadding),
+            modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding()),
             targetState = uiState.currentTab,
             transitionSpec = {
                 slideInVertically(

@@ -51,21 +51,10 @@ fun DeleteConfirmationBottomSheet(
         sheetState = sheetState,
     ) {
 
-//        val foldersSelected = deleteDialogUiState.numberOfSelectedFolders > 0
-//        val itemsSelected = deleteDialogUiState.numberOfSelectedItems > 0
-//
-//        val totalSelections =
-//            deleteDialogUiState.numberOfSelectedFolders + deleteDialogUiState.numberOfSelectedItems
-
         if(explanation != null) {
             Text(
                 modifier = Modifier.padding(horizontal = MaterialTheme.spacing.medium),
                 text = explanation.asString(),
-    //            "Delete " +
-    //                    (if (foldersSelected) "folders" else "") +
-    //                    (if (foldersSelected && itemsSelected) " and " else "") +
-    //                    (if (itemsSelected) "items" else "") +
-    //                    "? They will remain in your statistics, but you will no longer be able to practice them.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = LocalContentColor.current.copy(alpha = 0.8f),
             )
@@ -74,14 +63,6 @@ fun DeleteConfirmationBottomSheet(
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable(onClick = onConfirm)
-//                {
-//                    eventHandler(LibraryUiEvent.DeleteDialogConfirmed)
-//                    mainEventHandler(
-//                        MainUiEvent.ShowSnackbar(
-//                            message = "Deleted",
-//                            onUndo = { eventHandler(LibraryUiEvent.RestoreButtonPressed) }
-//                        ))
-//                }
                 .padding(
                     vertical = MaterialTheme.spacing.medium,
                     horizontal = MaterialTheme.spacing.large
@@ -92,7 +73,6 @@ fun DeleteConfirmationBottomSheet(
             Spacer(modifier = Modifier.width(MaterialTheme.spacing.extraLarge))
             Text(
                 text = confirmationText.asString(),
-//                text = "Delete forever ($totalSelections)",
                 style = MaterialTheme.typography.titleMedium
             )
         }

@@ -135,6 +135,7 @@ fun <
         H : DraggableCardHeaderUiState,
         B : DraggableCardBodyUiState,
     > BoxScope.DraggableCardsPagerLayout(
+    modifier: Modifier = Modifier,
     cardUiStates: List<C>,
     cardHeaderComposable: @Composable (H, DraggableCardLocalState, DraggableCardUiEventHandler) -> Unit,
     cardBodyComposable: @Composable (B, DraggableCardLocalState, DraggableCardUiEventHandler) -> Unit,
@@ -154,7 +155,7 @@ fun <
 
 
     Box(
-        Modifier.align(Alignment.BottomCenter)
+        modifier.align(Alignment.BottomCenter)
     ) {
         CardsPager(
             modifier = Modifier.zIndex(1f),
@@ -195,7 +196,6 @@ fun <
             ownPagerState = bottomPagerState,
             cardsPagerState = cardsPagerState,
         )
-
     }
 }
 

@@ -113,12 +113,11 @@ fun SettingsScreen(
                 }
             )
         }
-    ) { paddingValues ->
+    ) { contentPadding ->
         Column(
             modifier = Modifier
-                .padding(top = paddingValues.calculateTopPadding())
-                .fillMaxHeight()
-            ,
+                .padding(contentPadding)
+                .fillMaxHeight(),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             Column(
