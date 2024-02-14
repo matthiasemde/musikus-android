@@ -46,9 +46,9 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import app.musikus.home.HomeUiEvent
-import app.musikus.home.HomeUiEventHandler
-import app.musikus.home.HomeUiState
+import app.musikus.ui.home.HomeUiEvent
+import app.musikus.ui.home.HomeUiEventHandler
+import app.musikus.ui.home.HomeUiState
 import app.musikus.ui.MainUiEvent
 import app.musikus.ui.MainUiEventHandler
 import app.musikus.ui.Screen

@@ -69,9 +69,9 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import app.musikus.R
-import app.musikus.home.HomeUiEvent
-import app.musikus.home.HomeUiEventHandler
-import app.musikus.home.HomeUiState
+import app.musikus.ui.home.HomeUiEvent
+import app.musikus.ui.home.HomeUiEventHandler
+import app.musikus.ui.home.HomeUiState
 import app.musikus.ui.Screen
 import app.musikus.ui.components.CommonMenuSelections
 import app.musikus.ui.components.MainMenu

@@ -28,7 +28,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
 import app.musikus.R
-import app.musikus.home.HomeScreen
+import app.musikus.ui.home.HomeScreen
 import app.musikus.ui.activesession.ActiveSession
 import app.musikus.ui.sessions.editsession.EditSession
 import app.musikus.ui.settings.addSettingsNavigationGraph

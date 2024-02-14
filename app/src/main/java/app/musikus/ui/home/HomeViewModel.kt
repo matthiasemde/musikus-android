@@ -6,9 +6,8 @@
  * Copyright (c) 2024 Matthias Emde
  */
 
-package app.musikus.home
+package app.musikus.ui.home
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.musikus.ui.Screen
@@ -82,7 +81,6 @@ class HomeViewModel @Inject constructor(
     fun onUiEvent(event: HomeUiEvent) {
         when(event) {
             is HomeUiEvent.TabSelected -> {
-                Log.d("HomeViewModel", "TabSelected: ${event.tab}")
                 _currentTab.update { event.tab }
             }
             is HomeUiEvent.ShowMainMenu -> {

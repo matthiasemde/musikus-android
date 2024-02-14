@@ -6,9 +6,8 @@
  * Copyright (c) 2024 Matthias Emde
  */
 
-package app.musikus.home
+package app.musikus.ui.home
 
-import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
@@ -183,7 +182,6 @@ fun MusikusBottomBar(
                         if (!selected) {
                             activePainter = (activePainter + 1) % painterCount
                         }
-                        Log.d("MusikusBottomBar", "onTabSelected: $tab")
                         onTabSelected(tab)
                     }
                 )
