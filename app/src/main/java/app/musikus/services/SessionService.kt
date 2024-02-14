@@ -74,6 +74,10 @@ data class NotificationActionButtonConfig(
     val tapIntent: PendingIntent?
 )
 
+enum class SessionServiceAction {
+    START, STOP
+}
+
 @AndroidEntryPoint
 class SessionService : Service() {
 
@@ -258,22 +262,34 @@ class SessionService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        // register Broadcast Receiver for Pause Action
-        ContextCompat.registerReceiver(
-            this,
-            myReceiver,
-            IntentFilter(BROADCAST_INTENT_FILTER),
-            ContextCompat.RECEIVER_NOT_EXPORTED
-        )
 
-        createPendingIntents()
+        val action = intent?.action?.let { SessionServiceAction.valueOf(it) }
 
-        ServiceCompat.startForeground(
-            this,
-            NOTIFCATION_ID,
-            createNotification(),
-            ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
-        )
+        if (action == SessionServiceAction.STOP) {
+            stopTimer()
+            sessionState.update { SessionState() }
+            stopSelf()
+        }
+
+        if (action == SessionServiceAction.START) {
+            // register Broadcast Receiver for Pause Action
+            ContextCompat.registerReceiver(
+                this,
+                myReceiver,
+                IntentFilter(BROADCAST_INTENT_FILTER),
+                ContextCompat.RECEIVER_NOT_EXPORTED
+            )
+
+            createPendingIntents()
+
+            ServiceCompat.startForeground(
+                this,
+                NOTIFCATION_ID,
+                createNotification(),
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+            )
+        }
+
         return START_NOT_STICKY
     }
 

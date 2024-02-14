@@ -55,6 +55,7 @@ import kotlin.time.Duration.Companion.seconds
 
 @Composable
 fun RatingBar(
+    modifier: Modifier = Modifier,
     rating: Int = 5,
     total: Int = 7,
     image: ImageVector,
@@ -62,7 +63,7 @@ fun RatingBar(
     size: Dp = 16.dp,
     onRatingChanged: (Int) -> Unit = {}
 ) {
-    Row {
+    Row(modifier) {
         for(i in 1..total) {
             Icon(
                 modifier = Modifier

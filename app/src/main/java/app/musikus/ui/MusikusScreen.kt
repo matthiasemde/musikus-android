@@ -118,7 +118,8 @@ fun MusikusApp(
             ) { backStackEntry ->
                 ActiveSession(
                     navigateUp = navController::navigateUp,
-                    deepLinkArgument = backStackEntry.arguments?.getString(DEEP_LINK_KEY)
+                    deepLinkArgument = backStackEntry.arguments?.getString(DEEP_LINK_KEY),
+                    navigateTo = navController::navigateTo
                 )
             }
 

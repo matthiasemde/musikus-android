@@ -17,6 +17,7 @@ import app.musikus.database.entities.SectionCreationAttributes
 import app.musikus.database.entities.SessionCreationAttributes
 import app.musikus.services.SessionEvent
 import app.musikus.services.SessionService
+import app.musikus.services.SessionServiceAction
 import app.musikus.services.SessionState
 import app.musikus.ui.library.LibraryItemDialogUiEvent
 import app.musikus.ui.library.LibraryItemEditData
@@ -48,6 +49,11 @@ data class PracticeSection(
     val libraryItem: LibraryItem,
     val startTimestamp: ZonedDateTime,
     var duration: Duration?
+)
+
+data class EndDialogData(
+    val rating: Int,
+    val comment: String
 )
 
 @HiltViewModel
@@ -83,7 +89,7 @@ class ActiveSessionViewModel @Inject constructor(
 
     private val _selectedFolderId = MutableStateFlow<UUID?>(null)
     private val _addLibraryItemData = MutableStateFlow<LibraryItemEditData?>(null)
-
+    private val _endDialogData = MutableStateFlow<EndDialogData?>(null)
 
     /**
      *  --------------------- Session service  ---------------------
@@ -241,12 +247,26 @@ class ActiveSessionViewModel @Inject constructor(
         initialValue = null
     )
 
+    private val endSessionDialogUiState = _endDialogData.map { endDialogData ->
+        if(endDialogData == null) return@map null
+        ActiveSessionEndDialogUiState(
+            rating = endDialogData.rating,
+            comment = endDialogData.comment
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = null
+    )
+
+
     val uiState = combine(
         libraryCardUiState,
         sessionState,
         addLibraryItemDialogUiState,
-        totalDurationRoundedDownToNextSecond
-    ) { libraryCardUiState, sessionState, addItemDialogUiState, totalDuration ->
+        totalDurationRoundedDownToNextSecond,
+        endSessionDialogUiState
+    ) { libraryCardUiState, sessionState, addItemDialogUiState, totalDuration, endSessionDialogUiState ->
         ActiveSessionUiState(
             cardUiStates = listOf(
                 libraryCardUiState,
@@ -263,7 +283,8 @@ class ActiveSessionViewModel @Inject constructor(
                     libraryItem = section.libraryItem,
                     duration = section.duration ?: sessionState.currentSectionDuration
                 )
-            }
+            },
+            endDialogUiState = endSessionDialogUiState
         )
     }.stateIn(
         scope = viewModelScope,
@@ -274,7 +295,8 @@ class ActiveSessionViewModel @Inject constructor(
             totalBreakDuration = sessionState.value.pauseDuration,
             sections = emptyList(),
             isPaused = sessionState.value.isPaused,
-            addItemDialogUiState = addLibraryItemDialogUiState.value
+            addItemDialogUiState = addLibraryItemDialogUiState.value,
+            endDialogUiState = endSessionDialogUiState.value
         )
     )
 
@@ -286,7 +308,10 @@ class ActiveSessionViewModel @Inject constructor(
             is ActiveSessionUiEvent.SelectFolder -> _selectedFolderId.update { event.folderId }
             is ActiveSessionUiEvent.SelectItem -> itemClicked(event.item)
             is ActiveSessionUiEvent.TogglePause -> togglePause()
-            is ActiveSessionUiEvent.StopSession -> stopSession()
+            is ActiveSessionUiEvent.StopSession -> _endDialogData.update { EndDialogData(
+                rating = 3,
+                comment = ""
+            ) }
             is ActiveSessionUiEvent.DeleteSection -> removeSection(event.sectionId)
             is ActiveSessionUiEvent.CreateNewLibraryItem -> createLibraryItemDialog()
             is ActiveSessionUiEvent.ItemDialogUiEvent -> {
@@ -314,6 +339,14 @@ class ActiveSessionViewModel @Inject constructor(
                     is LibraryItemDialogUiEvent.Dismissed -> _addLibraryItemData.update { null }
                 }
             }
+            is ActiveSessionUiEvent.EndDialogRatingChanged -> _endDialogData.update {
+                it?.copy(rating = event.rating)
+            }
+            is ActiveSessionUiEvent.EndDialogCommentChanged -> _endDialogData.update {
+                it?.copy(comment = event.comment)
+            }
+            is ActiveSessionUiEvent.EndDialogDismissed -> _endDialogData.update { null }
+            is ActiveSessionUiEvent.EndDialogConfirmed -> stopSession()
         }
     }
 
@@ -347,8 +380,9 @@ class ActiveSessionViewModel @Inject constructor(
                     )
                 }
             )
+            stopService()
+            _endDialogData.update { null }
         }
-        sessionEvent(SessionEvent.StopTimer)
     }
 
     private fun removeSection(itemId: Int) {
@@ -371,6 +405,18 @@ class ActiveSessionViewModel @Inject constructor(
         Log.d("TAG", "startService Button pressed")
         Log.d("TAG", "start Foreground Service ")
         val intent = Intent(application, SessionService::class.java) // Build the intent for the service
+        intent.action = SessionServiceAction.START.name
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            application.startForegroundService(intent)
+        } else {
+            application.startService(intent)
+        }
+    }
+
+    private fun stopService() {
+        Log.d("TAG", "stopService Button pressed")
+        val intent = Intent(application, SessionService::class.java) // Build the intent for the service
+        intent.action = SessionServiceAction.STOP.name
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             application.startForegroundService(intent)
         } else {

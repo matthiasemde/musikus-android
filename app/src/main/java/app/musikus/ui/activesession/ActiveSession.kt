@@ -54,15 +54,18 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Folder
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -79,14 +82,18 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.musikus.database.daos.LibraryFolder
+import app.musikus.ui.Screen
 import app.musikus.ui.activesession.metronome.MetronomeCardBody
 import app.musikus.ui.activesession.metronome.MetronomeCardHeader
 import app.musikus.ui.activesession.recorder.RecorderCardBody
 import app.musikus.ui.activesession.recorder.RecorderCardHeader
+import app.musikus.ui.components.DialogActions
+import app.musikus.ui.components.DialogHeader
 import app.musikus.ui.components.SwipeToDeleteContainer
 import app.musikus.ui.components.fadingEdge
 import app.musikus.ui.library.LibraryItemDialog
 import app.musikus.ui.library.LibraryUiItem
+import app.musikus.ui.sessions.RatingBar
 import app.musikus.ui.theme.dimensions
 import app.musikus.ui.theme.spacing
 import app.musikus.utils.DurationFormat
@@ -102,6 +109,7 @@ fun ActiveSession(
     viewModel: ActiveSessionViewModel = hiltViewModel(),
     deepLinkArgument: String?,
     navigateUp: () -> Unit,
+    navigateTo: (Screen) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val eventHandler = viewModel::onUiEvent
@@ -126,7 +134,7 @@ fun ActiveSession(
                         .weight(1 - CARD_HEIGHT_EXTENDED_FRACTION_OF_SCREEN)
                         .padding(horizontal = MaterialTheme.spacing.medium)
                 ) {
-                    HeaderBar(uiState, eventHandler)
+                    HeaderBar(uiState, eventHandler, navigateUp)
                     Spacer(modifier = Modifier.weight(1f))
                     PracticeTimer(uiState)
                     Spacer(modifier = Modifier.weight(1f))
@@ -196,6 +204,20 @@ fun ActiveSession(
             )
         }
 
+        uiState.endDialogUiState?.let { endDialogUiState ->
+            EndSessionDialog(
+                rating = endDialogUiState.rating,
+                comment = endDialogUiState.comment,
+                onRatingChanged = { eventHandler(ActiveSessionUiEvent.EndDialogRatingChanged(it)) },
+                onCommentChanged = { eventHandler(ActiveSessionUiEvent.EndDialogCommentChanged(it)) },
+                onDismiss = { eventHandler(ActiveSessionUiEvent.EndDialogDismissed) },
+                onConfirm = {
+                    eventHandler(ActiveSessionUiEvent.EndDialogConfirmed)
+                    navigateTo(Screen.HomeTab.Sessions)
+                }
+            )
+        }
+
         // Background behind the nav bar
         Box(
             modifier = Modifier
@@ -210,17 +232,26 @@ fun ActiveSession(
 @Composable
 private fun HeaderBar(
     uiState: ActiveSessionUiState,
-    eventHandler: ActiveSessionUiEventHandler
+    eventHandler: ActiveSessionUiEventHandler,
+    navigateUp: () -> Unit
 ) {
     Row (
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
     ){
-        OutlinedButton(
-            enabled = uiState.sections.isNotEmpty(),
-            onClick = { eventHandler(ActiveSessionUiEvent.TogglePause)  }
-        ) {
-            Text(text = "Pause")
+        Row {
+            IconButton(
+                onClick = { navigateUp() }
+            ) {
+                Icon(imageVector = Icons.Default.KeyboardArrowDown, contentDescription = null)
+            }
+            Spacer(modifier = Modifier.width(MaterialTheme.spacing.small))
+            OutlinedButton(
+                enabled = uiState.sections.isNotEmpty(),
+                onClick = { eventHandler(ActiveSessionUiEvent.TogglePause)  }
+            ) {
+                Text(text = "Pause")
+            }
         }
         TextButton(
             enabled = uiState.sections.isNotEmpty(),
@@ -318,7 +349,6 @@ private fun SectionsList(
     if (uiState.sections.isEmpty()) {
         Box (modifier = modifier) {
             Text(text = "Quotes")
-            CircularProgressIndicator()
         }
         return
     }
@@ -616,24 +646,53 @@ private fun PauseDialog(
 }
 
 
-
-///**
-// * Returns a offset-dependent height which gradually increases from 0dp to the maximum usable height
-// * when a card is in Peek state.
-// * Can be used for the header of a DraggableCardPage. Use it with the defaultMinSize modifier.
-// *
-// * @param anchorState the state of the DraggableCardPage
-// */
-//@OptIn(ExperimentalFoundationApi::class)
-//@Composable
-//private fun getDynamicHeaderHeight(
-//    anchorState: AnchoredDraggableState<DragValueY>
-//) : Dp {
-//    val fraction = getCurrentOffsetFraction(state = anchorState)
-//    val peekHeightContent = MaterialTheme.dimensions.cardPeekContentHeight
-//    val height = if (anchorState.targetValue != DragValueY.Full){
-//        (fraction * peekHeightContent.value).dp
-//    } else 0.dp
-//
-//    return height
-//}
+@Composable
+fun EndSessionDialog(
+    rating: Int,
+    comment: String,
+    onRatingChanged: (Int) -> Unit,
+    onCommentChanged: (String) -> Unit,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit
+) {
+    Dialog(
+        onDismissRequest = onDismiss,
+    ) {
+        Surface(
+            shape = MaterialTheme.shapes.extraLarge,
+            color = MaterialTheme.colorScheme.surfaceContainer
+        ) {
+            Column {
+                DialogHeader(title = "Finish session")
+                Column(Modifier.padding(horizontal = MaterialTheme.spacing.medium)) {
+                    Text(text = "Rate you session: ")
+                    Spacer(Modifier.height(MaterialTheme.spacing.small))
+                    Row(
+                        horizontalArrangement = Arrangement.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        RatingBar(
+                            image = Icons.Default.Star,
+                            rating = rating,
+                            total = 5,
+                            size = 36.dp,
+                            onRatingChanged = onRatingChanged
+                        )
+                    }
+                    Spacer(Modifier.height(MaterialTheme.spacing.medium))
+                    OutlinedTextField(
+                        value = comment,
+                        placeholder = { Text("Comment (optional)") },
+                        onValueChange = onCommentChanged
+                    )
+                }
+                DialogActions(
+                    dismissButtonText = "Keep Practicing",
+                    confirmButtonText = "Save",
+                    onDismissHandler = onDismiss,
+                    onConfirmHandler = onConfirm
+                )
+            }
+        }
+    }
+}

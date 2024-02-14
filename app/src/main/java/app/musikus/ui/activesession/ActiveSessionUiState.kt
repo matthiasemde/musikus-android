@@ -26,7 +26,13 @@ data class ActiveSessionUiState(
     val totalBreakDuration: Duration,
     val sections: List<ActiveSessionSectionListItemUiState>,
     val isPaused: Boolean,
-    val addItemDialogUiState: ActiveSessionAddLibraryItemDialogUiState?
+    val addItemDialogUiState: ActiveSessionAddLibraryItemDialogUiState?,
+    val endDialogUiState: ActiveSessionEndDialogUiState?,
+)
+
+data class ActiveSessionEndDialogUiState(
+    val rating: Int,
+    val comment: String,
 )
 
 data class ActiveSessionAddLibraryItemDialogUiState(
@@ -105,6 +111,11 @@ sealed class ActiveSessionUiEvent : DraggableCardUiEvent {
     data object CreateNewLibraryItem : ActiveSessionUiEvent()
 
     data class ItemDialogUiEvent(val dialogEvent: LibraryItemDialogUiEvent) : ActiveSessionUiEvent()
+
+    data class EndDialogRatingChanged(val rating: Int) : ActiveSessionUiEvent()
+    data class EndDialogCommentChanged(val comment: String) : ActiveSessionUiEvent()
+    data object EndDialogDismissed : ActiveSessionUiEvent()
+    data object EndDialogConfirmed : ActiveSessionUiEvent()
 }
 
 typealias ActiveSessionUiEventHandler = (ActiveSessionUiEvent) -> Unit
