@@ -8,16 +8,19 @@
 
 package app.musikus.ui.home
 
-import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.graphics.ExperimentalAnimationGraphicsApi
 import androidx.compose.animation.graphics.res.animatedVectorResource
 import androidx.compose.animation.graphics.res.rememberAnimatedVectorPainter
 import androidx.compose.animation.graphics.vector.AnimatedImageVector
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -31,7 +34,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
@@ -44,7 +47,7 @@ import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import androidx.navigation.compose.currentBackStackEntryAsState
+import app.musikus.ui.ANIMATION_BASE_DURATION
 import app.musikus.ui.MainUiEventHandler
 import app.musikus.ui.MainUiState
 import app.musikus.ui.Screen
@@ -61,7 +64,7 @@ import app.musikus.utils.TimeProvider
 fun HomeScreen(
     mainUiState: MainUiState,
     mainEventHandler: MainUiEventHandler,
-    tab: Screen.HomeTab?,
+    initialTab: Screen.HomeTab?,
     viewModel: HomeViewModel = hiltViewModel(),
     navController: NavController,
     timeProvider: TimeProvider,
@@ -70,11 +73,10 @@ fun HomeScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val eventHandler: HomeUiEventHandler = viewModel::onUiEvent
 
-    val backStack by navController.currentBackStackEntryAsState()
-
-    LaunchedEffect(key1 = backStack) {
-        Log.d("HomeScreen", "backStack: $backStack")
-        Log.d("HomeScreen", "${navController.previousBackStackEntry}")
+    SideEffect {
+        if(initialTab != null && initialTab != uiState.currentTab) {
+            eventHandler(HomeUiEvent.TabSelected(initialTab))
+        }
     }
 
     BackHandler(
@@ -83,12 +85,6 @@ fun HomeScreen(
             uiState.currentTab != Screen.HomeTab.defaultTab,
         onBack = { eventHandler(HomeUiEvent.TabSelected(Screen.HomeTab.defaultTab)) }
     )
-
-    LaunchedEffect(key1 = tab) {
-        if(tab != null && tab != uiState.currentTab) {
-            eventHandler(HomeUiEvent.TabSelected(tab))
-        }
-    }
 
     Scaffold(
         snackbarHost = {
@@ -100,16 +96,30 @@ fun HomeScreen(
                 homeEventHandler = eventHandler,
                 currentTab = uiState.currentTab,
                 onTabSelected = {
-                    Log.d("HomeScreen", "onTabSelected: $it")
                     eventHandler(HomeUiEvent.TabSelected(it))
-                    navController.clearBackStack(Screen.Home.route)
                 },
             )
         }
     ) { innerPadding ->
+
         AnimatedContent(
             modifier = Modifier.padding(innerPadding),
             targetState = uiState.currentTab,
+            transitionSpec = {
+                slideInVertically(
+                    animationSpec = tween(ANIMATION_BASE_DURATION),
+                    initialOffsetY = { fullHeight -> -(fullHeight / 10) }
+                ) + fadeIn(
+                    animationSpec = tween(
+                        ANIMATION_BASE_DURATION / 2,
+                        ANIMATION_BASE_DURATION / 2
+                    )
+                ) togetherWith
+                slideOutVertically(
+                    animationSpec = tween(ANIMATION_BASE_DURATION),
+                    targetOffsetY = { fullHeight -> (fullHeight / 10) }
+                ) + fadeOut(animationSpec = tween(ANIMATION_BASE_DURATION / 2))
+            },
             label = "homeTabContent"
         ) { currentTab ->
             when(currentTab) {

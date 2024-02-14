@@ -4,7 +4,8 @@ import androidx.annotation.DrawableRes
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
-import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.EaseIn
+import androidx.compose.animation.core.EaseOut
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -210,7 +211,7 @@ fun MusikusApp(
                     HomeScreen(
                         mainUiState = uiState,
                         mainEventHandler = eventHandler,
-                        tab = tab,
+                        initialTab = tab,
                         navController = navController,
                         timeProvider = timeProvider
                     )
@@ -259,14 +260,20 @@ fun AnimatedContentTransitionScope<NavBackStackEntry>.getEnterTransition() : Ent
     val targetRoute = targetState.destination.route ?: return fadeIn()
 
     return when {
+        // when changing to active session, slide in from the bottom
         targetRoute == Screen.ActiveSession.route -> {
             slideInVertically(
-                animationSpec = tween(ANIMATION_BASE_DURATION, easing = LinearEasing),
+                animationSpec = tween(ANIMATION_BASE_DURATION, easing = EaseOut),
                 initialOffsetY = { fullHeight -> fullHeight }
             )
         }
+
+        // when changing from active session, stay invisible until active session has slid in from the bottom
         initialRoute == Screen.ActiveSession.route -> {
-            fadeIn(tween(durationMillis = 1, delayMillis = ANIMATION_BASE_DURATION))
+            fadeIn(
+                initialAlpha = 1f,
+                animationSpec = tween(durationMillis = ANIMATION_BASE_DURATION)
+            )
         }
         else -> {
             slideInVertically(
@@ -287,15 +294,20 @@ fun AnimatedContentTransitionScope<NavBackStackEntry>.getExitTransition() : Exit
     val targetRoute = targetState.destination.route ?: return fadeOut()
 
     return when {
+        // when changing to active session, show immediately
         targetRoute == Screen.ActiveSession.route -> {
             fadeOut(tween(durationMillis = 1, delayMillis = ANIMATION_BASE_DURATION))
         }
+
+        // when changing from active session, slide out to the bottom
         initialRoute == Screen.ActiveSession.route -> {
             slideOutVertically(
-                animationSpec = tween(ANIMATION_BASE_DURATION, easing = LinearEasing),
+                animationSpec = tween(ANIMATION_BASE_DURATION, easing = EaseIn),
                 targetOffsetY = { fullHeight -> fullHeight }
             )
         }
+
+        // default animation
         else -> {
             slideOutVertically(
                 animationSpec = tween(ANIMATION_BASE_DURATION),
