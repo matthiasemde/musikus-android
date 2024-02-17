@@ -8,6 +8,7 @@
 
 package app.musikus.ui.settings.help
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -26,6 +27,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.capitalize
@@ -39,6 +41,8 @@ import app.musikus.ui.theme.spacing
 fun HelpScreen(
     navigateUp: () -> Unit
 ) {
+
+    val context = LocalContext.current
 
     Scaffold(
         topBar = {
@@ -87,7 +91,10 @@ fun HelpScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = MaterialTheme.spacing.extraLarge),
-                    onClick = { /* TODO restart intro */ }
+                    onClick = {
+                        /* TODO restart intro */
+                        Toast.makeText(context, "Coming soon", Toast.LENGTH_SHORT).show()
+                    }
                 ) {
                     Text(stringResource(id = R.string.help_replay_intro).capitalize(Locale.current))
                 }

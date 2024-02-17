@@ -13,6 +13,7 @@
 
 package app.musikus.ui.sessions
 
+import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
@@ -44,12 +45,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import app.musikus.ui.home.HomeUiEvent
-import app.musikus.ui.home.HomeUiEventHandler
-import app.musikus.ui.home.HomeUiState
 import app.musikus.ui.MainUiEvent
 import app.musikus.ui.MainUiEventHandler
 import app.musikus.ui.MainUiState
@@ -59,6 +58,9 @@ import app.musikus.ui.components.CommonMenuSelections
 import app.musikus.ui.components.DeleteConfirmationBottomSheet
 import app.musikus.ui.components.MainMenu
 import app.musikus.ui.components.Selectable
+import app.musikus.ui.home.HomeUiEvent
+import app.musikus.ui.home.HomeUiEventHandler
+import app.musikus.ui.home.HomeUiState
 import app.musikus.ui.theme.spacing
 import app.musikus.utils.DurationString
 import app.musikus.utils.UiIcon
@@ -92,6 +94,8 @@ fun SessionsScreen(
             sessionsListState.firstVisibleItemIndex == 0
         }
     }
+
+    val context = LocalContext.current
 
     Scaffold(
         contentWindowInsets = WindowInsets(bottom = 0.dp),
@@ -137,7 +141,7 @@ fun SessionsScreen(
                                 homeEventHandler(HomeUiEvent.HideMainMenu)
 
                                 when (commonSelection) {
-                                    CommonMenuSelections.SETTINGS -> { navigateTo(Screen.Settings) }
+                                    CommonMenuSelections.SETTINGS -> navigateTo(Screen.Settings)
                                 }
                             },
                             uniqueMenuItems = { }
@@ -152,7 +156,10 @@ fun SessionsScreen(
                 ActionBar(
                     numSelectedItems = actionModeUiState.numberOfSelections,
                     onDismissHandler = { eventHandler(SessionsUiEvent.ClearActionMode) },
-                    onEditHandler = { eventHandler(SessionsUiEvent.EditButtonPressed(onSessionEdit)) },
+                    onEditHandler = {
+                        Toast.makeText(context, "Coming soon", Toast.LENGTH_SHORT).show()
+                        eventHandler(SessionsUiEvent.EditButtonPressed(onSessionEdit)) // TODO
+                    },
                     onDeleteHandler = { eventHandler(SessionsUiEvent.DeleteButtonPressed) }
                 )
             }
