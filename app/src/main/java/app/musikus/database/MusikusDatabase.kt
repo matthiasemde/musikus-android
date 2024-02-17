@@ -267,14 +267,70 @@ abstract class MusikusDatabase : RoomDatabase() {
             // Rename order to custom_order in goal_description
             // Delete profile_id
             db.execSQL("CREATE TABLE IF NOT EXISTS `_new_goal_description` (`type` TEXT NOT NULL, `repeat` INTEGER NOT NULL, `period_in_period_units` INTEGER NOT NULL, `period_unit` TEXT NOT NULL, `progress_type` TEXT NOT NULL, `paused` INTEGER NOT NULL DEFAULT false, `archived` INTEGER NOT NULL, `custom_order` INTEGER DEFAULT null, `deleted` INTEGER NOT NULL DEFAULT false, `created_at` TEXT NOT NULL, `modified_at` TEXT NOT NULL, `id` BLOB NOT NULL, PRIMARY KEY(`id`))")
-//            db.execSQL("INSERT INTO `_new_goal_description` (`type`,`repeat`,`period_in_period_units`,`period_unit`,`progress_type`,`archived`,`custom_order`,`created_at`,`modified_at`,`id`) SELECT `type`,`repeat`,`period_in_period_units`,`period_unit`,`progress_type`,`archived`,`order`,`created_at`,`modified_at`,`id` FROM `goal_description`")
+            db.query("SELECT * FROM `goal_description`").use { cursor ->
+                while (cursor.moveToNext()) {
+                    val type = cursor.getString(cursor.getColumnIndexOrThrow("type")).let {
+                        if (it == "CATEGORY_SPECIFIC") "ITEM_SPECIFIC" else it
+                    }
+                    val repeat = cursor.getInt(cursor.getColumnIndexOrThrow("repeat"))
+                    val periodInPeriodUnits = cursor.getInt(cursor.getColumnIndexOrThrow("period_in_period_units"))
+                    val periodUnit = cursor.getString(cursor.getColumnIndexOrThrow("period_unit"))
+                    val progressType = cursor.getString(cursor.getColumnIndexOrThrow("progress_type"))
+                    val archived = cursor.getInt(cursor.getColumnIndexOrThrow("archived"))
+                    val createdAt = longToZonedDateTimeString(cursor.getLong(cursor.getColumnIndexOrThrow("created_at")))
+                    val modifiedAt = longToZonedDateTimeString(cursor.getLong(cursor.getColumnIndexOrThrow("modified_at")))
+                    val id = longToUuidInBytes(cursor.getLong(cursor.getColumnIndexOrThrow("id")))
+
+                    db.execSQL(
+                        "INSERT INTO `_new_goal_description` (`type`,`repeat`,`period_in_period_units`,`period_unit`,`progress_type`,`archived`,`custom_order`,`created_at`,`modified_at`,`id`) VALUES (?,?,?,?,?,?,NULL,?,?,?)",
+                        arrayOf(type, repeat, periodInPeriodUnits, periodUnit, progressType, archived, createdAt, modifiedAt, id)
+                    )
+                }
+            }
             db.execSQL("DROP TABLE `goal_description`")
             db.execSQL("ALTER TABLE `_new_goal_description` RENAME TO `goal_description`")
 
             // Rename target to target_seconds in goal_instance
             // Delete period_in_seconds, renewed, progress
             db.execSQL("CREATE TABLE IF NOT EXISTS `_new_goal_instance` (`goal_description_id` BLOB NOT NULL, `previous_goal_instance_id` BLOB, `start_timestamp` TEXT NOT NULL, `end_timestamp` TEXT, `target_seconds` INTEGER NOT NULL, `created_at` TEXT NOT NULL, `modified_at` TEXT NOT NULL, `id` BLOB NOT NULL, PRIMARY KEY(`id`), FOREIGN KEY(`goal_description_id`) REFERENCES `goal_description`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )")
-//            db.execSQL("INSERT INTO `_new_goal_instance` (`goal_description_id`,`start_timestamp`,`target_seconds`,`created_at`,`modified_at`,`id`) SELECT `goal_description_id`,`start_timestamp`,`target`,`created_at`,`modified_at`,`id` FROM `goal_instance`")
+            db.query("SELECT * FROM `goal_instance` ORDER BY `goal_description_id`, `start_timestamp`").use { cursor ->
+                var previousGoalInstanceId: ByteArray? = null
+                var previousGoalDescriptionId: ByteArray? = null
+                var notDone = cursor.moveToFirst()
+                while (notDone) {
+                    val goalDescriptionId = longToUuidInBytes(cursor.getLong(cursor.getColumnIndexOrThrow("goal_description_id")))
+                    val startTimestamp = longToZonedDateTimeString(cursor.getLong(cursor.getColumnIndexOrThrow("start_timestamp")))
+                    val targetSeconds = cursor.getLong(cursor.getColumnIndexOrThrow("target"))
+                    val createdAt = longToZonedDateTimeString(cursor.getLong(cursor.getColumnIndexOrThrow("created_at")))
+                    val modifiedAt = longToZonedDateTimeString(cursor.getLong(cursor.getColumnIndexOrThrow("modified_at")))
+                    val id = longToUuidInBytes(cursor.getLong(cursor.getColumnIndexOrThrow("id")))
+
+                    if(!previousGoalDescriptionId.contentEquals(goalDescriptionId)) {
+                        previousGoalInstanceId = null
+                    }
+                    previousGoalDescriptionId = goalDescriptionId
+
+                    notDone = cursor.moveToNext()
+
+
+                    val endTimestamp = if (
+                        notDone &&
+                        previousGoalDescriptionId.contentEquals(longToUuidInBytes(cursor.getLong(cursor.getColumnIndexOrThrow("goal_description_id"))))
+                    ) {
+                        // end_timestamp is the start_timestamp of the next goal_instance
+                        longToZonedDateTimeString(cursor.getLong(cursor.getColumnIndexOrThrow("start_timestamp")))
+                    } else {
+                        null
+                    }
+
+                    db.execSQL(
+                        "INSERT INTO `_new_goal_instance` (`goal_description_id`,`previous_goal_instance_id`,`start_timestamp`,`end_timestamp`,`target_seconds`,`created_at`,`modified_at`,`id`) VALUES (?,?,?,?,?,?,?,?)",
+                        arrayOf(goalDescriptionId, previousGoalInstanceId, startTimestamp, endTimestamp, targetSeconds, createdAt, modifiedAt, id)
+                    )
+
+                    previousGoalInstanceId = id
+                }
+            }
             db.execSQL("DROP TABLE `goal_instance`")
             db.execSQL("ALTER TABLE `_new_goal_instance` RENAME TO `goal_instance`")
             db.execSQL("CREATE INDEX IF NOT EXISTS `index_goal_instance_goal_description_id` ON `goal_instance` (`goal_description_id`)")
@@ -282,15 +338,29 @@ abstract class MusikusDatabase : RoomDatabase() {
 
             // Rename category_id to library_item_id in goal_description_library_item_cross_ref, formerly goal_description_category_cross_ref
             db.execSQL("CREATE TABLE IF NOT EXISTS `_new_goal_description_library_item_cross_ref` (`goal_description_id` BLOB NOT NULL, `library_item_id` BLOB NOT NULL, PRIMARY KEY(`goal_description_id`, `library_item_id`), FOREIGN KEY(`goal_description_id`) REFERENCES `goal_description`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`library_item_id`) REFERENCES `library_item`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )")
-//            db.execSQL("INSERT INTO `_new_goal_description_library_item_cross_ref` (`goal_description_id`,`library_item_id`) SELECT `goal_description_id`,`category_id` FROM `goal_description_category_cross_ref`")
+            db.query("SELECT * FROM `goal_description_category_cross_ref`").use { cursor ->
+                while (cursor.moveToNext()) {
+                    val goalDescriptionId = longToUuidInBytes(cursor.getLong(cursor.getColumnIndexOrThrow("goal_description_id")))
+                    val libraryItemId = longToUuidInBytes(cursor.getLong(cursor.getColumnIndexOrThrow("category_id")))
+
+                    db.execSQL(
+                        "INSERT INTO `_new_goal_description_library_item_cross_ref` (`goal_description_id`,`library_item_id`) VALUES (?,?)",
+                        arrayOf(goalDescriptionId, libraryItemId)
+                    )
+                }
+            }
             db.execSQL("DROP TABLE `goal_description_category_cross_ref`")
             db.execSQL("ALTER TABLE `_new_goal_description_library_item_cross_ref` RENAME TO `goal_description_library_item_cross_ref`")
             db.execSQL("CREATE INDEX IF NOT EXISTS `index_goal_description_library_item_cross_ref_goal_description_id` ON `goal_description_library_item_cross_ref` (`goal_description_id`)")
             db.execSQL("CREATE INDEX IF NOT EXISTS `index_goal_description_library_item_cross_ref_library_item_id` ON `goal_description_library_item_cross_ref` (`library_item_id`)")
 
-            Log.d("POST_MIGRATION_2_3", "Starting Post Migration...")
-
-
+//            db.insert("section", SQLiteDatabase.CONFLICT_FAIL, ContentValues().apply {
+//                put("id", UUIDConverter.deadBeef.toDBString())
+//                put("session_id", UUIDConverter.deadBeef.toDBString())
+//                put("library_item_id", UUIDConverter.deadBeef.toDBString())
+//                put("duration_seconds", 0)
+//                put("start_timestamp", ZonedDateTime.now().toDatabaseInterpretableString())
+//            })
         }
     }
 }
