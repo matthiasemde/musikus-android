@@ -226,7 +226,7 @@ fun ActiveSession(
                 onDismiss = { eventHandler(ActiveSessionUiEvent.EndDialogDismissed) },
                 onConfirm = {
                     eventHandler(ActiveSessionUiEvent.EndDialogConfirmed)
-                    navigateTo(Screen.HomeTab.Sessions)
+                    navigateUp()
                 }
             )
         }
