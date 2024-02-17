@@ -107,7 +107,7 @@ const val CARD_HEIGHT_EXTENDED_FRACTION_OF_SCREEN = 0.7f
  * Actions that can be triggered by the Notification
  */
 enum class ActiveSessionActions {
-    OPEN, PAUSE, FINISH, METRONOME
+    OPEN, PAUSE, FINISH, METRONOME, RECORDER
 }
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -196,7 +196,11 @@ fun ActiveSession(
                         else -> throw IllegalArgumentException("Unknown event: $event")
                     }
                 },
-                initialCardIndex = if (deepLinkArgument == ActiveSessionActions.METRONOME.name) 2 else 0
+                initialCardIndex = when (deepLinkArgument) {
+                    ActiveSessionActions.RECORDER.name -> 1
+                    ActiveSessionActions.METRONOME.name -> 2
+                    else -> 0
+                }
             )
         }
 

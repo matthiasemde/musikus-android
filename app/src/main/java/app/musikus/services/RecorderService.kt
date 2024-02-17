@@ -10,7 +10,9 @@ package app.musikus.services
 
 import android.app.Notification
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.app.Service
+import android.app.TaskStackBuilder
 import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.Binder
@@ -19,8 +21,10 @@ import android.os.IBinder
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
+import androidx.core.net.toUri
 import app.musikus.R
 import app.musikus.RECORDER_NOTIFICATION_CHANNEL_ID
+import app.musikus.ui.activesession.ActiveSessionActions
 import app.musikus.utils.DurationFormat
 import app.musikus.utils.Recorder
 import app.musikus.utils.TimeProvider
@@ -82,6 +86,8 @@ class RecorderService : Service() {
 
     private var _recordingTimer : Timer? = null
 
+    private var pendingIntentTapAction : PendingIntent? = null
+
     /**
      *  ----------- Interface for Activity / ViewModel -------
      */
@@ -136,6 +142,12 @@ class RecorderService : Service() {
                 _isRecording.update { false }
                 _recordingDuration.update { 0.seconds }
                 _recordingTimer?.cancel()
+                setFinalNotification()
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    stopForeground(STOP_FOREGROUND_DETACH)
+                } else {
+                    stopForeground(false)
+                }
             }
         }
     }
@@ -156,6 +168,7 @@ class RecorderService : Service() {
 
     @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        createPendingIntent()
         ServiceCompat.startForeground(
             this,
             RECORDER_NOTIFICATION_ID,
@@ -164,6 +177,16 @@ class RecorderService : Service() {
         )
 
         return START_NOT_STICKY
+    }
+
+    private fun createPendingIntent() {
+        // trigger deep link to open ActiveSession https://stackoverflow.com/a/72769863
+        pendingIntentTapAction = TaskStackBuilder.create(this).run {
+            addNextIntentWithParentStack(
+                Intent(Intent.ACTION_VIEW, "musikus://activeSession/${ActiveSessionActions.RECORDER}".toUri())
+            )
+            getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+        }
     }
 
     override fun onDestroy() {
@@ -177,12 +200,29 @@ class RecorderService : Service() {
         mNotificationManager.notify(RECORDER_NOTIFICATION_ID, notification)
     }
 
+    private fun setFinalNotification() {
+        val notification: Notification = getBasicNotification("Recording finished", "click to open", false)
+        val mNotificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        mNotificationManager.notify(RECORDER_NOTIFICATION_ID, notification)
+    }
+
     private fun getNotification(duration: Duration) : Notification {
+        return getBasicNotification(
+            title = getString(R.string.recording_notification_settings_description),
+            text = getDurationString(duration, DurationFormat.HMS_DIGITAL)
+        )
+    }
+
+    private fun getBasicNotification(title: String, text: CharSequence, persistent: Boolean = true) : Notification {
         return  NotificationCompat.Builder(this, RECORDER_NOTIFICATION_CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_record)
-            .setContentTitle(getString(R.string.recording_notification_settings_description))
-            .setContentText(getDurationString(duration, DurationFormat.HMS_DIGITAL))
+            .setSmallIcon(R.drawable.ic_record)    // without icon, setOngoing does not work
+            .setOngoing(persistent) // does not work on Android 14: https://developer.android.com/about/versions/14/behavior-changes-all#non-dismissable-notifications
+            .setContentTitle(title)
+            .setContentText(text)
             .setOnlyAlertOnce(true)
+            .setContentIntent(pendingIntentTapAction)
+            .setPriority(NotificationCompat.PRIORITY_HIGH) // only relevant below Oreo, else channel priority is used
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .build()
     }
 }

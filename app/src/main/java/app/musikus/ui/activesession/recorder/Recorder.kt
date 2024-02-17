@@ -29,6 +29,7 @@ import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Replay5
+import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -57,9 +58,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.Player
 import androidx.media3.session.MediaController
-import app.musikus.ui.components.conditional
 import app.musikus.ui.components.ExceptionHandler
 import app.musikus.ui.components.Waveform
+import app.musikus.ui.components.conditional
 import app.musikus.ui.theme.spacing
 import app.musikus.usecase.recordings.Recording
 import app.musikus.utils.DateFormat
@@ -290,7 +291,13 @@ fun RecorderBar(
 
         FilledIconButton(
             modifier = Modifier.size(48.dp),
-            onClick = { eventHandler(RecorderUiEvent.ToggleRecording) },
+            onClick = {
+                if (uiState.isRecording) {
+                    eventHandler(RecorderUiEvent.StopRecording)
+                } else {
+                    eventHandler(RecorderUiEvent.StartRecording)
+                }
+            },
             shape = CircleShape,
             enabled = playerState?.isPlaying != true,
             colors = IconButtonDefaults.filledIconButtonColors(
@@ -302,7 +309,7 @@ fun RecorderBar(
                 if (uiState.isRecording) {
                     Icon(
                         modifier = Modifier.fillMaxSize(),
-                        imageVector = Icons.Default.Pause,
+                        imageVector = Icons.Default.Stop,
                         contentDescription = "Stop recording"
                     )
                 } else {

@@ -8,6 +8,7 @@
 
 package app.musikus.ui.activesession.recorder
 
+import android.Manifest
 import android.app.Application
 import android.content.ComponentName
 import android.content.Context
@@ -54,7 +55,8 @@ data class RecorderUiState(
 )
 
 sealed class RecorderUiEvent {
-    data object ToggleRecording : RecorderUiEvent()
+    data object StartRecording : RecorderUiEvent()
+    data object StopRecording : RecorderUiEvent()
     data class LoadRecording(val contentUri: Uri) : RecorderUiEvent()
 }
 
@@ -195,10 +197,10 @@ class RecorderViewModel @Inject constructor(
 
     fun onUiEvent(event: RecorderUiEvent) {
         when(event) {
-            is RecorderUiEvent.ToggleRecording -> {
+            is RecorderUiEvent.StartRecording -> {
                 viewModelScope.launch {
                     val recordingPermissionResult = permissionsUseCases.request(
-                        listOf(android.Manifest.permission.RECORD_AUDIO)
+                        listOf(Manifest.permission.RECORD_AUDIO)
                     )
                     if(recordingPermissionResult.isFailure) {
                         _exceptionChannel.send(RecorderException.NoMicrophonePermission)
@@ -207,7 +209,7 @@ class RecorderViewModel @Inject constructor(
 
                     if(Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
                         val writeExternalStoragePermissionResult = permissionsUseCases.request(
-                            listOf(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                            listOf(Manifest.permission.WRITE_EXTERNAL_STORAGE)
                         )
 
                         if (writeExternalStoragePermissionResult.isFailure) {
@@ -215,10 +217,12 @@ class RecorderViewModel @Inject constructor(
                             return@launch
                         }
                     }
-
                     startRecorderService()
                     recorderServiceEventHandler?.invoke(RecorderServiceEvent.ToggleRecording)
                 }
+            }
+            is RecorderUiEvent.StopRecording -> {
+                recorderServiceEventHandler?.invoke(RecorderServiceEvent.ToggleRecording)
             }
             is RecorderUiEvent.LoadRecording -> _currentRecordingUri.update { event.contentUri }
         }
