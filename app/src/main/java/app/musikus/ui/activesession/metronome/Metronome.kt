@@ -158,7 +158,7 @@ fun MetronomeCardBody(
         modifier = modifier
             .fillMaxSize()
             .padding(horizontal = MaterialTheme.spacing.medium),
-        verticalArrangement = Arrangement.SpaceAround
+        verticalArrangement = Arrangement.SpaceEvenly
     ) {
         Column {
             /** Tempo Slider */

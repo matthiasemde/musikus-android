@@ -593,9 +593,12 @@ private fun <
                             !uiState.isExpandable,
                             modifier = {
                                 this
-                                    .requiredHeight(195.dp)
+                                    .requiredHeight(
+                                        MaterialTheme.dimensions.cardNormalHeight -
+                                        MaterialTheme.dimensions.cardPeekContentHeight
+                                    )
                                     .offset(y = with(LocalDensity.current) { (yState.requireOffset() * 0.5f).toDp() })
-                            }, // TODO fix this hot mess with Michi
+                            },
                             alternativeModifier = { verticalScroll(scrollState) }
                         )
                         .fillMaxWidth()
