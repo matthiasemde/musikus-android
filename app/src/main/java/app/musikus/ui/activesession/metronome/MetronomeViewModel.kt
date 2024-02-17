@@ -198,7 +198,9 @@ class MetronomeViewModel @Inject constructor(
     fun onUiEvent(event: MetronomeUiEvent) {
         when (event) {
             is MetronomeUiEvent.ToggleIsPlaying -> {
-                startService()
+                if (serviceState.value?.isPlaying != true) {
+                    startService()
+                }
                 serviceEventHandler?.invoke(
                     MetronomeServiceEvent.TogglePlaying
                 )

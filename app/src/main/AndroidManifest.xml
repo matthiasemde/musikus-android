@@ -54,7 +54,7 @@
             android:name=".services.MetronomeService"
             android:enabled="true"
             android:exported="false"
-            android:foregroundServiceType="specialUse"
+            android:foregroundServiceType="mediaPlayback"
         />
         <service
             android:name=".services.RecorderService"

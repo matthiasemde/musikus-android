@@ -9,21 +9,24 @@
 package app.musikus.services
 
 import android.app.Notification
+import android.app.PendingIntent
 import android.app.Service
+import android.app.TaskStackBuilder
 import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.Binder
 import android.os.Build
 import android.os.IBinder
-import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
+import androidx.core.net.toUri
 import app.musikus.METRONOME_NOTIFICATION_CHANNEL_ID
 import app.musikus.R
 import app.musikus.di.ApplicationScope
 import app.musikus.di.IoScope
-import app.musikus.utils.Metronome
+import app.musikus.ui.activesession.ActiveSessionActions
 import app.musikus.usecase.userpreferences.UserPreferencesUseCases
+import app.musikus.utils.Metronome
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -62,6 +65,8 @@ class MetronomeService : Service() {
     @Inject
     @IoScope
     lateinit var ioScope: CoroutineScope
+
+    private var pendingIntentTapAction : PendingIntent? = null
 
     private val metronome by lazy {
         val player = Metronome(
@@ -120,6 +125,11 @@ class MetronomeService : Service() {
             metronome.play()
         } else {
             metronome.stop()
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                stopForeground(STOP_FOREGROUND_REMOVE)
+            } else {
+                stopForeground(true)
+            }
         }
     }
 
@@ -136,13 +146,15 @@ class MetronomeService : Service() {
         return true
     }
 
-    @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+
+        createPendingIntent()
+
         ServiceCompat.startForeground(
             this,
             METRONOME_NOTIFICATION_ID,
             getNotification("Metronome", "Metronome is running"),
-            ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+            ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
         )
 
         return START_NOT_STICKY
@@ -161,13 +173,25 @@ class MetronomeService : Service() {
             .setOngoing(true)  // does not work on Android 14: https://developer.android.com/about/versions/14/behavior-changes-all#non-dismissable-notifications
             .setOnlyAlertOnce(true)
             .setContentTitle(title)
+            .setContentIntent(pendingIntentTapAction)
             .setContentText(description)
-            .setPriority(NotificationCompat.PRIORITY_HIGH) // only relevant below Oreo, else channel priority is used
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT) // only relevant below Oreo, else channel priority is used
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
 
         return builder.build()
 
     }
+
+    private fun createPendingIntent() {
+        // trigger deep link to open ActiveSession https://stackoverflow.com/a/72769863
+        pendingIntentTapAction = TaskStackBuilder.create(this).run {
+            addNextIntentWithParentStack(
+                Intent(Intent.ACTION_VIEW, "musikus://activeSession/${ActiveSessionActions.METRONOME}".toUri())
+            )
+            getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+        }
+    }
+
 
     override fun onDestroy() {
         metronomeSettingsUpdateJob?.cancel()

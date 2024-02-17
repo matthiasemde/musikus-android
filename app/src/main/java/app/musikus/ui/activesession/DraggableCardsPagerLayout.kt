@@ -139,7 +139,8 @@ fun <
     cardUiStates: List<C>,
     cardHeaderComposable: @Composable (H, DraggableCardLocalState, DraggableCardUiEventHandler) -> Unit,
     cardBodyComposable: @Composable (B, DraggableCardLocalState, DraggableCardUiEventHandler) -> Unit,
-    eventHandler: (DraggableCardUiEvent) -> Unit
+    eventHandler: (DraggableCardUiEvent) -> Unit,
+    initialCardIndex: Int = 0
 ) {
 
     val pageCount = cardUiStates.size
@@ -153,6 +154,9 @@ fun <
 
     val animationScope = rememberCoroutineScope()
 
+    LaunchedEffect(key1 = initialCardIndex) {
+        cardsPagerState.animateScrollToPage(initialCardIndex)
+    }
 
     Box(
         modifier.align(Alignment.BottomCenter)
@@ -595,7 +599,7 @@ private fun <
                                 this
                                     .requiredHeight(
                                         MaterialTheme.dimensions.cardNormalHeight -
-                                        MaterialTheme.dimensions.cardPeekContentHeight
+                                                MaterialTheme.dimensions.cardPeekContentHeight
                                     )
                                     .offset(y = with(LocalDensity.current) { (yState.requireOffset() * 0.5f).toDp() })
                             },

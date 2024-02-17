@@ -20,6 +20,7 @@ import androidx.core.net.toUri
 import app.musikus.R
 import app.musikus.SESSION_NOTIFICATION_CHANNEL_ID
 import app.musikus.database.daos.LibraryItem
+import app.musikus.ui.activesession.ActiveSessionActions
 import app.musikus.ui.activesession.PracticeSection
 import app.musikus.utils.DurationFormat
 import app.musikus.utils.TimeProvider
@@ -59,13 +60,6 @@ sealed class SessionEvent {
 }
 
 /**
- * Actions that can be triggered by the Notification
- */
-enum class Actions {
-    OPEN, PAUSE, FINISH
-}
-
-/**
  * Data Structure for a Button inside the Notification
  */
 data class NotificationActionButtonConfig(
@@ -100,7 +94,7 @@ class SessionService : Service() {
     private val myReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             when (intent.getStringExtra("action")) {
-                Actions.PAUSE.toString() -> togglePause()
+                ActiveSessionActions.PAUSE.toString() -> togglePause()
             }
         }
     }
@@ -328,7 +322,7 @@ class SessionService : Service() {
         // trigger deep link to open ActiveSession https://stackoverflow.com/a/72769863
         pendingIntentTapAction = TaskStackBuilder.create(this).run {
             addNextIntentWithParentStack(
-                Intent(Intent.ACTION_VIEW, "musikus://activeSession/${Actions.OPEN}".toUri())
+                Intent(Intent.ACTION_VIEW, "musikus://activeSession/${ActiveSessionActions.OPEN}".toUri())
             )
             getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         }
@@ -336,13 +330,13 @@ class SessionService : Service() {
         pendingIntentActionPause = PendingIntent.getBroadcast(
             this,
             0,
-            Intent(BROADCAST_INTENT_FILTER).also { it.putExtra("action", Actions.PAUSE.toString()) },
+            Intent(BROADCAST_INTENT_FILTER).also { it.putExtra("action", ActiveSessionActions.PAUSE.toString()) },
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
         pendingIntentActionFinish = TaskStackBuilder.create(this).run {
             addNextIntentWithParentStack(
-                Intent(Intent.ACTION_VIEW, "musikus://activeSession/${Actions.FINISH}".toUri())
+                Intent(Intent.ACTION_VIEW, "musikus://activeSession/${ActiveSessionActions.FINISH}".toUri())
             )
             getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         }

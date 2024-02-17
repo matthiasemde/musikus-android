@@ -152,7 +152,7 @@ class Musikus : Application() {
             val metronomeNotificationChannel = NotificationChannel(
                 METRONOME_NOTIFICATION_CHANNEL_ID,
                 METRONOME_NOTIFICATION_CHANNEL_NAME,
-                NotificationManager.IMPORTANCE_HIGH).apply {
+                NotificationManager.IMPORTANCE_DEFAULT).apply {
                 description = "Notification to keep track of the metronome"
             }
 

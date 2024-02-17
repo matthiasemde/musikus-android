@@ -103,6 +103,13 @@ import kotlin.time.Duration
 
 const val CARD_HEIGHT_EXTENDED_FRACTION_OF_SCREEN = 0.7f
 
+/**
+ * Actions that can be triggered by the Notification
+ */
+enum class ActiveSessionActions {
+    OPEN, PAUSE, FINISH, METRONOME
+}
+
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun ActiveSession(
@@ -188,7 +195,8 @@ fun ActiveSession(
                         is DraggableCardUiEvent.FabAction -> eventHandler(ActiveSessionUiEvent.CreateNewLibraryItem)
                         else -> throw IllegalArgumentException("Unknown event: $event")
                     }
-                }
+                },
+                initialCardIndex = if (deepLinkArgument == ActiveSessionActions.METRONOME.name) 2 else 0
             )
         }
 
