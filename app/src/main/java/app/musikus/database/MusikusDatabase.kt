@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2022 Matthias Emde
+ * Copyright (c) 2024 Matthias Emde
  *
  * Parts of this software are licensed under the MIT license
  *
@@ -44,6 +44,8 @@ import app.musikus.utils.TimeProvider
 import app.musikus.utils.prepopulateDatabase
 import kotlinx.coroutines.runBlocking
 import java.nio.ByteBuffer
+import java.time.Instant
+import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
@@ -81,7 +83,7 @@ abstract class MusikusDatabase : RoomDatabase() {
     lateinit var idProvider: IdProvider
 
     companion object {
-        private const val DATABASE_NAME = "musikus-database"
+        const val DATABASE_NAME = "musikus-database"
 
         fun buildDatabase(
             app: Application,
@@ -92,7 +94,8 @@ abstract class MusikusDatabase : RoomDatabase() {
                 MusikusDatabase::class.java,
                 DATABASE_NAME
             ).addMigrations(
-                PTDatabaseMigrationOneToTwo
+                DatabaseMigrationOneToTwo,
+                DatabaseMigrationTwoToThree
             ).addCallback(object : Callback() {
                 // prepopulate the database after onCreate was called
                 override fun onCreate(db: SupportSQLiteDatabase) {
@@ -103,6 +106,192 @@ abstract class MusikusDatabase : RoomDatabase() {
                     } }
                 }
             }).build()
+    }
+
+    object DatabaseMigrationOneToTwo : Migration(1,2) {
+        /**
+         * Thanks Elif
+         */
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("CREATE TABLE IF NOT EXISTS `_new_goal_description` (`type` TEXT NOT NULL, `repeat` INTEGER NOT NULL, `period_in_period_units` INTEGER NOT NULL, `period_unit` TEXT NOT NULL, `progress_type` TEXT NOT NULL, `archived` INTEGER NOT NULL, `profile_id` INTEGER NOT NULL, `order` INTEGER NOT NULL DEFAULT 0, `created_at` INTEGER NOT NULL DEFAULT 0, `modified_at` INTEGER NOT NULL DEFAULT 0, `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL)")
+            db.execSQL("INSERT INTO `_new_goal_description` (`period_in_period_units`, `archived`,`progress_type`,`period_unit`,`profile_id`,`repeat`,`id`,`type`) SELECT `periodInPeriodUnits`, `archived`,`progressType`,`periodUnit`,`profileId`,`oneTime`,`id`,`type` FROM `GoalDescription`")
+            db.execSQL("DROP TABLE `GoalDescription`")
+            db.execSQL("ALTER TABLE `_new_goal_description` RENAME TO `goal_description`")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_goal_description_profile_id` ON `goal_description` (`profile_id`)")
+            db.execSQL("CREATE TABLE IF NOT EXISTS `_new_category` (`name` TEXT NOT NULL, `color_index` INTEGER NOT NULL, `archived` INTEGER NOT NULL, `profile_id` INTEGER NOT NULL, `order` INTEGER NOT NULL DEFAULT 0, `created_at` INTEGER NOT NULL DEFAULT 0, `modified_at` INTEGER NOT NULL DEFAULT 0, `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL)")
+            db.execSQL("INSERT INTO `_new_category` (`archived`,`profile_id`,`name`,`id`,`color_index`) SELECT `archived`,`profile_id`,`name`,`id`,`colorIndex` FROM `Category`")
+            db.execSQL("DROP TABLE `Category`")
+            db.execSQL("ALTER TABLE `_new_category` RENAME TO `category`")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_category_profile_id` ON `category` (`profile_id`)")
+            db.execSQL("CREATE TABLE IF NOT EXISTS `_new_section` (`session_id` INTEGER, `category_id` INTEGER NOT NULL, `duration` INTEGER, `timestamp` INTEGER NOT NULL, `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL)")
+            db.execSQL("INSERT INTO `_new_section` (`duration`,`category_id`,`session_id`,`id`,`timestamp`) SELECT `duration`,`category_id`,`practice_session_id`,`id`,`timestamp` FROM `PracticeSection`")
+            db.execSQL("DROP TABLE `PracticeSection`")
+            db.execSQL("ALTER TABLE `_new_section` RENAME TO `section`")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_section_session_id` ON `section` (`session_id`)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_section_category_id` ON `section` (`category_id`)")
+            db.execSQL("CREATE TABLE IF NOT EXISTS `_new_goal_instance` (`goal_description_id` INTEGER NOT NULL, `start_timestamp` INTEGER NOT NULL, `period_in_seconds` INTEGER NOT NULL, `target` INTEGER NOT NULL, `progress` INTEGER NOT NULL, `renewed` INTEGER NOT NULL, `created_at` INTEGER NOT NULL DEFAULT 0, `modified_at` INTEGER NOT NULL DEFAULT 0, `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL)")
+            db.execSQL("INSERT INTO `_new_goal_instance` (`goal_description_id`, `period_in_seconds`, `renewed`,`start_timestamp`,`progress`,`id`,`target`) SELECT `goalDescriptionId`, `periodInSeconds`, `renewed`,`startTimestamp`,`progress`,`id`,`target` FROM `GoalInstance`")
+            db.execSQL("DROP TABLE `GoalInstance`")
+            db.execSQL("ALTER TABLE `_new_goal_instance` RENAME TO `goal_instance`")
+            db.execSQL("CREATE TABLE IF NOT EXISTS `_new_goal_description_category_cross_ref` (`goal_description_id` INTEGER NOT NULL, `category_id` INTEGER NOT NULL, PRIMARY KEY(`goal_description_id`, `category_id`))")
+            db.execSQL("INSERT INTO `_new_goal_description_category_cross_ref` (`category_id`, `goal_description_id`) SELECT `categoryId`, `goalDescriptionId` FROM `GoalDescriptionCategoryCrossRef`")
+            db.execSQL("DROP TABLE `GoalDescriptionCategoryCrossRef`")
+            db.execSQL("ALTER TABLE `_new_goal_description_category_cross_ref` RENAME TO `goal_description_category_cross_ref`")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_goal_description_category_cross_ref_goal_description_id` ON `goal_description_category_cross_ref` (`goal_description_id`)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_goal_description_category_cross_ref_category_id` ON `goal_description_category_cross_ref` (`category_id`)")
+            db.execSQL("CREATE TABLE IF NOT EXISTS `_new_session` (`break_duration` INTEGER NOT NULL, `rating` INTEGER NOT NULL, `comment` TEXT, `profile_id` INTEGER NOT NULL, `created_at` INTEGER NOT NULL DEFAULT 0, `modified_at` INTEGER NOT NULL DEFAULT 0, `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL)")
+            db.execSQL("INSERT INTO `_new_session` (`profile_id`,`rating`,`comment`,`id`,`break_duration`) SELECT `profile_id`,`rating`,`comment`,`id`,`break_duration` FROM `PracticeSession`")
+            db.execSQL("DROP TABLE `PracticeSession`")
+            db.execSQL("ALTER TABLE `_new_session` RENAME TO `session`")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_session_profile_id` ON `session` (`profile_id`)")
+
+            Log.d("POST_MIGRATION", "Starting Post Migration...")
+
+            for (tableName in listOf("session", "category", "goal_description", "goal_instance")) {
+                val cursor = db.query(SupportSQLiteQueryBuilder.builder(tableName).let {
+                    it.columns(arrayOf("id"))
+                    it.create()
+                })
+                while (cursor.moveToNext()) {
+                    val id = cursor.getLong(cursor.getColumnIndexOrThrow("id"))
+                    val now = ZonedDateTime.now().toEpochSecond()
+                    db.update(tableName, SQLiteDatabase.CONFLICT_IGNORE, ContentValues().let {
+                        it.put("created_at", now + id)
+                        it.put("modified_at", now + id)
+                        it
+                    }, "id=?", arrayOf(id))
+                }
+                Log.d("POST_MIGRATION", "Added timestamps for $tableName")
+            }
+
+            val cursor = db.query(SupportSQLiteQueryBuilder.builder("goal_description").let {
+                it.columns(arrayOf("id", "repeat"))
+                it.create()
+            })
+            while (cursor.moveToNext()) {
+                val id = cursor.getLong(cursor.getColumnIndexOrThrow("id"))
+                val oneTime = cursor.getInt(cursor.getColumnIndexOrThrow("repeat"))
+                db.update("goal_description", SQLiteDatabase.CONFLICT_IGNORE, ContentValues().let {
+                    it.put("repeat", if (oneTime == 0) "1" else "0")
+                    it
+                }, "id=?", arrayOf(id))
+            }
+            Log.d("POST_MIGRATION", "Migrated 'oneTime' to 'repeat' for goal descriptions")
+
+            Log.d("POST_MIGRATION", "Post Migration complete")
+        }
+    }
+
+    object DatabaseMigrationTwoToThree : Migration (2,3) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            val longToUuidInBytes: (Long) -> ByteArray = {value ->
+                ByteBuffer.wrap(ByteArray(16)).let { buffer ->
+                    buffer.putLong(0L)
+                    buffer.putLong(value)
+                    buffer.array()
+                }
+            }
+
+            val longToZonedDateTimeString: (Long) -> String = { value ->
+                ZonedDateTime.ofInstant(
+                    Instant.ofEpochSecond(value),
+                    ZoneId.systemDefault()
+                ).format(DateTimeFormatter.ISO_ZONED_DATE_TIME)
+            }
+
+            // Create library folder table
+            db.execSQL("CREATE TABLE IF NOT EXISTS `library_folder` (`name` TEXT NOT NULL, `custom_order` INTEGER DEFAULT null, `deleted` INTEGER NOT NULL DEFAULT false, `created_at` TEXT NOT NULL, `modified_at` TEXT NOT NULL, `id` BLOB NOT NULL, PRIMARY KEY(`id`))")
+
+            // Rename order to custom_order in library_item, formerly category
+            // Delete archived and profile_id
+            db.execSQL("CREATE TABLE IF NOT EXISTS `library_item` (`name` TEXT NOT NULL, `color_index` INTEGER NOT NULL, `library_folder_id` BLOB DEFAULT null, `custom_order` INTEGER DEFAULT null, `deleted` INTEGER NOT NULL DEFAULT false, `created_at` TEXT NOT NULL, `modified_at` TEXT NOT NULL, `id` BLOB NOT NULL, PRIMARY KEY(`id`), FOREIGN KEY(`library_folder_id`) REFERENCES `library_folder`(`id`) ON UPDATE NO ACTION ON DELETE SET DEFAULT )")
+            db.query("SELECT * FROM `category`").use { cursor ->
+                while (cursor.moveToNext()) {
+                    val id = longToUuidInBytes(cursor.getLong(cursor.getColumnIndexOrThrow("id")))
+                    val name = cursor.getString(cursor.getColumnIndexOrThrow("name"))
+                    val colorIndex = cursor.getInt(cursor.getColumnIndexOrThrow("color_index"))
+                    val createdAt = longToZonedDateTimeString(cursor.getLong(cursor.getColumnIndexOrThrow("created_at")))
+                    val modifiedAt = longToZonedDateTimeString(cursor.getLong(cursor.getColumnIndexOrThrow("modified_at")))
+
+                    db.execSQL(
+                        "INSERT INTO `library_item` (`name`,`color_index`,`custom_order`,`created_at`,`modified_at`,`id`) VALUES (?,?,NULL,?,?,?)",
+                        arrayOf(name, colorIndex, createdAt, modifiedAt, id)
+                    )
+                }
+            }
+            db.execSQL("DROP TABLE `category`")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_library_item_library_folder_id` ON `library_item` (`library_folder_id`)")
+
+            // Rename break_duration to break_duration_seconds in session
+            // Delete profile_id
+            db.execSQL("CREATE TABLE IF NOT EXISTS `_new_session` (`break_duration_seconds` INTEGER NOT NULL, `rating` INTEGER NOT NULL, `comment` TEXT NOT NULL, `deleted` INTEGER NOT NULL DEFAULT false, `created_at` TEXT NOT NULL, `modified_at` TEXT NOT NULL, `id` BLOB NOT NULL, PRIMARY KEY(`id`))")
+            db.query("SELECT * FROM `session`").use { cursor ->
+                while (cursor.moveToNext()) {
+                    val breakDuration = cursor.getInt(cursor.getColumnIndexOrThrow("break_duration"))
+                    val rating = cursor.getInt(cursor.getColumnIndexOrThrow("rating"))
+                    val comment = cursor.getString(cursor.getColumnIndexOrThrow("comment"))
+                    val createdAt = longToZonedDateTimeString(cursor.getLong(cursor.getColumnIndexOrThrow("created_at")))
+                    val modifiedAt = longToZonedDateTimeString(cursor.getLong(cursor.getColumnIndexOrThrow("modified_at")))
+                    val id = longToUuidInBytes(cursor.getLong(cursor.getColumnIndexOrThrow("id")))
+
+                    db.execSQL(
+                        "INSERT INTO `_new_session` (`break_duration_seconds`,`rating`,`comment`,`created_at`,`modified_at`,`id`) VALUES (?,?,?,?,?,?)",
+                        arrayOf(breakDuration, rating, comment, createdAt, modifiedAt, id)
+                    )
+                }
+            }
+            db.execSQL("DROP TABLE `session`")
+            db.execSQL("ALTER TABLE `_new_session` RENAME TO `session`")
+
+            // Rename duration to duration_seconds, category_id to library_item_id and timestamp to start_timestamp in section
+            db.execSQL("CREATE TABLE IF NOT EXISTS `_new_section` (`session_id` BLOB NOT NULL, `library_item_id` BLOB NOT NULL, `duration_seconds` INTEGER NOT NULL, `start_timestamp` TEXT NOT NULL, `id` BLOB NOT NULL, PRIMARY KEY(`id`), FOREIGN KEY(`session_id`) REFERENCES `session`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`library_item_id`) REFERENCES `library_item`(`id`) ON UPDATE NO ACTION ON DELETE RESTRICT )")
+            db.query("SELECT * FROM `section`").use { cursor ->
+                while (cursor.moveToNext()) {
+                    val sessionId = longToUuidInBytes(cursor.getLong(cursor.getColumnIndexOrThrow("session_id")))
+                    val libraryItemId = longToUuidInBytes(cursor.getLong(cursor.getColumnIndexOrThrow("category_id")))
+                    val durationSeconds = cursor.getInt(cursor.getColumnIndexOrThrow("duration"))
+                    val startTimestamp = longToZonedDateTimeString(cursor.getLong(cursor.getColumnIndexOrThrow("timestamp")))
+                    val id = longToUuidInBytes(cursor.getLong(cursor.getColumnIndexOrThrow("id")))
+
+                    db.execSQL(
+                        "INSERT INTO `_new_section` (`session_id`,`library_item_id`,`duration_seconds`,`start_timestamp`,`id`) VALUES (?,?,?,?,?)",
+                        arrayOf(sessionId, libraryItemId, durationSeconds, startTimestamp, id)
+                    )
+                }
+            }
+            db.execSQL("DROP TABLE `section`")
+            db.execSQL("ALTER TABLE `_new_section` RENAME TO `section`")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_section_session_id` ON `section` (`session_id`)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_section_library_item_id` ON `section` (`library_item_id`)")
+
+            // Rename order to custom_order in goal_description
+            // Delete profile_id
+            db.execSQL("CREATE TABLE IF NOT EXISTS `_new_goal_description` (`type` TEXT NOT NULL, `repeat` INTEGER NOT NULL, `period_in_period_units` INTEGER NOT NULL, `period_unit` TEXT NOT NULL, `progress_type` TEXT NOT NULL, `paused` INTEGER NOT NULL DEFAULT false, `archived` INTEGER NOT NULL, `custom_order` INTEGER DEFAULT null, `deleted` INTEGER NOT NULL DEFAULT false, `created_at` TEXT NOT NULL, `modified_at` TEXT NOT NULL, `id` BLOB NOT NULL, PRIMARY KEY(`id`))")
+//            db.execSQL("INSERT INTO `_new_goal_description` (`type`,`repeat`,`period_in_period_units`,`period_unit`,`progress_type`,`archived`,`custom_order`,`created_at`,`modified_at`,`id`) SELECT `type`,`repeat`,`period_in_period_units`,`period_unit`,`progress_type`,`archived`,`order`,`created_at`,`modified_at`,`id` FROM `goal_description`")
+            db.execSQL("DROP TABLE `goal_description`")
+            db.execSQL("ALTER TABLE `_new_goal_description` RENAME TO `goal_description`")
+
+            // Rename target to target_seconds in goal_instance
+            // Delete period_in_seconds, renewed, progress
+            db.execSQL("CREATE TABLE IF NOT EXISTS `_new_goal_instance` (`goal_description_id` BLOB NOT NULL, `previous_goal_instance_id` BLOB, `start_timestamp` TEXT NOT NULL, `end_timestamp` TEXT, `target_seconds` INTEGER NOT NULL, `created_at` TEXT NOT NULL, `modified_at` TEXT NOT NULL, `id` BLOB NOT NULL, PRIMARY KEY(`id`), FOREIGN KEY(`goal_description_id`) REFERENCES `goal_description`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )")
+//            db.execSQL("INSERT INTO `_new_goal_instance` (`goal_description_id`,`start_timestamp`,`target_seconds`,`created_at`,`modified_at`,`id`) SELECT `goal_description_id`,`start_timestamp`,`target`,`created_at`,`modified_at`,`id` FROM `goal_instance`")
+            db.execSQL("DROP TABLE `goal_instance`")
+            db.execSQL("ALTER TABLE `_new_goal_instance` RENAME TO `goal_instance`")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_goal_instance_goal_description_id` ON `goal_instance` (`goal_description_id`)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_goal_instance_previous_goal_instance_id` ON `goal_instance` (`previous_goal_instance_id`)")
+
+            // Rename category_id to library_item_id in goal_description_library_item_cross_ref, formerly goal_description_category_cross_ref
+            db.execSQL("CREATE TABLE IF NOT EXISTS `_new_goal_description_library_item_cross_ref` (`goal_description_id` BLOB NOT NULL, `library_item_id` BLOB NOT NULL, PRIMARY KEY(`goal_description_id`, `library_item_id`), FOREIGN KEY(`goal_description_id`) REFERENCES `goal_description`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`library_item_id`) REFERENCES `library_item`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )")
+//            db.execSQL("INSERT INTO `_new_goal_description_library_item_cross_ref` (`goal_description_id`,`library_item_id`) SELECT `goal_description_id`,`category_id` FROM `goal_description_category_cross_ref`")
+            db.execSQL("DROP TABLE `goal_description_category_cross_ref`")
+            db.execSQL("ALTER TABLE `_new_goal_description_library_item_cross_ref` RENAME TO `goal_description_library_item_cross_ref`")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_goal_description_library_item_cross_ref_goal_description_id` ON `goal_description_library_item_cross_ref` (`goal_description_id`)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_goal_description_library_item_cross_ref_library_item_id` ON `goal_description_library_item_cross_ref` (`library_item_id`)")
+
+            Log.d("POST_MIGRATION_2_3", "Starting Post Migration...")
+
+
+        }
     }
 }
 
@@ -184,82 +373,3 @@ class NullableUUIDConverter : NullableConverter<UUID>()
 class NullableIntConverter : NullableConverter<Int>()
 class NullableZonedDateTimeConverter : NullableConverter<ZonedDateTime>()
 
-object PTDatabaseMigrationOneToTwo : Migration(1,2) {
-    /**
-     * Thanks Elif
-     */
-    override fun migrate(db: SupportSQLiteDatabase) {
-        db.execSQL("CREATE TABLE IF NOT EXISTS `_new_goal_description` (`type` TEXT NOT NULL, `repeat` INTEGER NOT NULL, `period_in_period_units` INTEGER NOT NULL, `period_unit` TEXT NOT NULL, `progress_type` TEXT NOT NULL, `archived` INTEGER NOT NULL, `profile_id` INTEGER NOT NULL, `order` INTEGER NOT NULL DEFAULT 0, `created_at` INTEGER NOT NULL DEFAULT 0, `modified_at` INTEGER NOT NULL DEFAULT 0, `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL)")
-        db.execSQL("INSERT INTO `_new_goal_description` (`period_in_period_units`, `archived`,`progress_type`,`period_unit`,`profile_id`,`repeat`,`id`,`type`) SELECT `periodInPeriodUnits`, `archived`,`progressType`,`periodUnit`,`profileId`,`oneTime`,`id`,`type` FROM `GoalDescription`")
-        db.execSQL("DROP TABLE `GoalDescription`")
-        db.execSQL("ALTER TABLE `_new_goal_description` RENAME TO `goal_description`")
-        db.execSQL("CREATE INDEX IF NOT EXISTS `index_goal_description_profile_id` ON `goal_description` (`profile_id`)")
-        db.execSQL("CREATE TABLE IF NOT EXISTS `_new_category` (`name` TEXT NOT NULL, `color_index` INTEGER NOT NULL, `archived` INTEGER NOT NULL, `profile_id` INTEGER NOT NULL, `order` INTEGER NOT NULL DEFAULT 0, `created_at` INTEGER NOT NULL DEFAULT 0, `modified_at` INTEGER NOT NULL DEFAULT 0, `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL)")
-        db.execSQL("INSERT INTO `_new_category` (`archived`,`profile_id`,`name`,`id`,`color_index`) SELECT `archived`,`profile_id`,`name`,`id`,`colorIndex` FROM `Category`")
-        db.execSQL("DROP TABLE `Category`")
-        db.execSQL("ALTER TABLE `_new_category` RENAME TO `category`")
-        db.execSQL("CREATE INDEX IF NOT EXISTS `index_category_profile_id` ON `category` (`profile_id`)")
-        db.execSQL("CREATE TABLE IF NOT EXISTS `_new_section` (`session_id` INTEGER, `category_id` INTEGER NOT NULL, `duration` INTEGER, `timestamp` INTEGER NOT NULL, `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL)")
-        db.execSQL("INSERT INTO `_new_section` (`duration`,`category_id`,`session_id`,`id`,`timestamp`) SELECT `duration`,`category_id`,`practice_session_id`,`id`,`timestamp` FROM `PracticeSection`")
-        db.execSQL("DROP TABLE `PracticeSection`")
-        db.execSQL("ALTER TABLE `_new_section` RENAME TO `section`")
-        db.execSQL("CREATE INDEX IF NOT EXISTS `index_section_session_id` ON `section` (`session_id`)")
-        db.execSQL("CREATE INDEX IF NOT EXISTS `index_section_category_id` ON `section` (`category_id`)")
-        db.execSQL("CREATE TABLE IF NOT EXISTS `_new_goal_instance` (`goal_description_id` INTEGER NOT NULL, `start_timestamp` INTEGER NOT NULL, `period_in_seconds` INTEGER NOT NULL, `target` INTEGER NOT NULL, `progress` INTEGER NOT NULL, `renewed` INTEGER NOT NULL, `created_at` INTEGER NOT NULL DEFAULT 0, `modified_at` INTEGER NOT NULL DEFAULT 0, `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL)")
-        db.execSQL("INSERT INTO `_new_goal_instance` (`goal_description_id`, `period_in_seconds`, `renewed`,`start_timestamp`,`progress`,`id`,`target`) SELECT `goalDescriptionId`, `periodInSeconds`, `renewed`,`startTimestamp`,`progress`,`id`,`target` FROM `GoalInstance`")
-        db.execSQL("DROP TABLE `GoalInstance`")
-        db.execSQL("ALTER TABLE `_new_goal_instance` RENAME TO `goal_instance`")
-        db.execSQL("CREATE TABLE IF NOT EXISTS `_new_goal_description_category_cross_ref` (`goal_description_id` INTEGER NOT NULL, `category_id` INTEGER NOT NULL, PRIMARY KEY(`goal_description_id`, `category_id`))")
-        db.execSQL("INSERT INTO `_new_goal_description_category_cross_ref` (`category_id`, `goal_description_id`) SELECT `categoryId`, `goalDescriptionId` FROM `GoalDescriptionCategoryCrossRef`")
-        db.execSQL("DROP TABLE `GoalDescriptionCategoryCrossRef`")
-        db.execSQL("ALTER TABLE `_new_goal_description_category_cross_ref` RENAME TO `goal_description_category_cross_ref`")
-        db.execSQL("CREATE INDEX IF NOT EXISTS `index_goal_description_category_cross_ref_goal_description_id` ON `goal_description_category_cross_ref` (`goal_description_id`)")
-        db.execSQL("CREATE INDEX IF NOT EXISTS `index_goal_description_category_cross_ref_category_id` ON `goal_description_category_cross_ref` (`category_id`)")
-        db.execSQL("CREATE TABLE IF NOT EXISTS `_new_session` (`break_duration` INTEGER NOT NULL, `rating` INTEGER NOT NULL, `comment` TEXT, `profile_id` INTEGER NOT NULL, `created_at` INTEGER NOT NULL DEFAULT 0, `modified_at` INTEGER NOT NULL DEFAULT 0, `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL)")
-        db.execSQL("INSERT INTO `_new_session` (`profile_id`,`rating`,`comment`,`id`,`break_duration`) SELECT `profile_id`,`rating`,`comment`,`id`,`break_duration` FROM `PracticeSession`")
-        db.execSQL("DROP TABLE `PracticeSession`")
-        db.execSQL("ALTER TABLE `_new_session` RENAME TO `session`")
-        db.execSQL("CREATE INDEX IF NOT EXISTS `index_session_profile_id` ON `session` (`profile_id`)")
-
-        Log.d("POST_MIGRATION", "Starting Post Migration...")
-
-        for (tableName in listOf("session", "category", "goal_description", "goal_instance")) {
-            val cursor = db.query(SupportSQLiteQueryBuilder.builder(tableName).let {
-                it.columns(arrayOf("id"))
-                it.create()
-            })
-            while (cursor.moveToNext()) {
-                val id = cursor.getLong(cursor.getColumnIndexOrThrow("id"))
-                val now = ZonedDateTime.now().toEpochSecond()
-                db.update(tableName, SQLiteDatabase.CONFLICT_IGNORE, ContentValues().let {
-                    it.put("created_at", now + id)
-                    it.put("modified_at", now + id)
-                    it
-                }, "id=?", arrayOf(id))
-            }
-            Log.d("POST_MIGRATION", "Added timestamps for $tableName")
-        }
-
-        val cursor = db.query(SupportSQLiteQueryBuilder.builder("goal_description").let {
-            it.columns(arrayOf("id", "repeat"))
-            it.create()
-        })
-        while (cursor.moveToNext()) {
-            val id = cursor.getLong(cursor.getColumnIndexOrThrow("id"))
-            val oneTime = cursor.getInt(cursor.getColumnIndexOrThrow("repeat"))
-            db.update("goal_description", SQLiteDatabase.CONFLICT_IGNORE, ContentValues().let {
-                it.put("repeat", if (oneTime == 0) "1" else "0")
-                it
-            }, "id=?", arrayOf(id))
-        }
-        Log.d("POST_MIGRATION", "Migrated 'oneTime' to 'repeat' for goal descriptions")
-
-        Log.d("POST_MIGRATION", "Post Migration complete")
-    }
-}
-
-//@RenameColumn(tableName = "goal_description", fromColumnName = "oneTime", toColumnName = "repeat")
-//@RenameColumn(tableName = "goal_description", fromColumnName = "oneTime", toColumnName = "repeat")
-//@RenameColumn(tableName = "goal_description", fromColumnName = "oneTime", toColumnName = "repeat")
-//object PTDatabaseMigrationTwoToThree : Migration(2,3) {
-//}

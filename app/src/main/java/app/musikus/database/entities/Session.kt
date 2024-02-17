@@ -1,8 +1,11 @@
 /*
- * This software is licensed under the MIT license
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2022, Javier Carbone, author Matthias Emde
+ * Copyright (c) 2024 Matthias Emde
  */
+
 
 package app.musikus.database.entities
 
@@ -39,7 +42,6 @@ data class SessionModel (
     @ColumnInfo(name="break_duration_seconds") val breakDurationSeconds: Int,
     @ColumnInfo(name="rating") override var rating: Int,
     @ColumnInfo(name="comment") override var comment: String,
-//    @ColumnInfo(name="profile_id", index = true) override val profileId: UUID? = null,
 ) : SoftDeleteModel(), ISessionCreationAttributes, ISessionUpdateAttributes {
 
     @get:Ignore

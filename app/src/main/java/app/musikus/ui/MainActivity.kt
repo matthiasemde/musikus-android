@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2022 Matthias Emde
+ * Copyright (c) 2024 Matthias Emde
  *
  * Parts of this software are licensed under the MIT license
  *
@@ -33,6 +33,9 @@ import javax.inject.Inject
 class MainActivity : PermissionCheckerActivity() {
 
     @Inject
+    lateinit var application: Musikus
+
+    @Inject
     override lateinit var permissionChecker: PermissionChecker
 
     @Inject
@@ -53,12 +56,12 @@ class MainActivity : PermissionCheckerActivity() {
 
         Musikus.exportLauncher = registerForActivityResult(
             ExportDatabaseContract()
-        ) { Musikus.exportDatabaseCallback(applicationContext, it) }
+        ) { application.exportDatabaseCallback(applicationContext, it) }
 
         Musikus.importLauncher = registerForActivityResult(
             ImportDatabaseContract()
         ) {
-            Musikus.importDatabaseCallback(applicationContext, it)
+            application.importDatabaseCallback(applicationContext, it)
             reloadDatabase.intValue++
         }
 

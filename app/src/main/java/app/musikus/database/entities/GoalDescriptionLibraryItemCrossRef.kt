@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2022 Matthias Emde
+ * Copyright (c) 2024 Matthias Emde
  */
 
 package app.musikus.database.entities
@@ -22,7 +22,6 @@ import java.util.UUID
             parentColumns = ["id"],
             childColumns = ["goal_description_id"],
             onDelete = ForeignKey.CASCADE,
-//            deferred = true
         ),
         ForeignKey(
             entity = LibraryItemModel::class,
