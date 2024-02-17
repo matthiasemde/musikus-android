@@ -67,7 +67,7 @@ sealed class Screen(
             )
         )
         companion object {
-            val allTabs = listOf(Sessions, Goals, Statistics, Library)
+            val allTabs by lazy { listOf(Sessions, Goals, Statistics, Library) }
             val defaultTab = Sessions
         }
     }
@@ -143,6 +143,19 @@ sealed class Screen(
                 icon = UiIcon.IconResource(R.drawable.ic_appearance),
             )
         )
+
+        companion object {
+            val allSettings by lazy {
+                listOf(
+                    About,
+                    Help,
+                    Backup,
+                    Export,
+                    Donate,
+                    Appearance
+                )
+            }
+        }
     }
 
 

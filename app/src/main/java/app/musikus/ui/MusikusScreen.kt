@@ -16,7 +16,11 @@ import androidx.compose.animation.core.EaseOut
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.material3.MaterialTheme
@@ -161,6 +165,41 @@ fun AnimatedContentTransitionScope<NavBackStackEntry>.getEnterTransition() : Ent
                 animationSpec = tween(durationMillis = ANIMATION_BASE_DURATION)
             )
         }
+
+        // when changing to settings, zoom in when coming from a sub menu
+        // and slide in from the right when coming from the home screen
+        targetRoute == Screen.Settings.route -> {
+            if(initialRoute in (Screen.SettingsOption.allSettings.map { it.route }) ) {
+                scaleIn(
+                    animationSpec = tween(ANIMATION_BASE_DURATION / 2),
+                    initialScale = 1.2f,
+                ) + fadeIn(animationSpec = tween(ANIMATION_BASE_DURATION / 2))
+            } else {
+                slideInHorizontally(
+                    animationSpec = tween(ANIMATION_BASE_DURATION),
+                    initialOffsetX = { fullWidth -> (fullWidth / 10) }
+                ) + fadeIn(animationSpec = tween(ANIMATION_BASE_DURATION / 2))
+            }
+        }
+
+
+        // when changing from settings screen, if going to setting sub menu, zoom out
+        // otherwise slide in from the right
+        initialRoute == Screen.Settings.route -> {
+            if (targetRoute in (Screen.SettingsOption.allSettings.map { it.route })) {
+                scaleIn(
+                    animationSpec = tween(ANIMATION_BASE_DURATION / 2),
+                    initialScale = 0.7f,
+                ) + fadeIn(animationSpec = tween(ANIMATION_BASE_DURATION / 2))
+            } else {
+                slideInHorizontally(
+                    animationSpec = tween(ANIMATION_BASE_DURATION),
+                    initialOffsetX = { fullWidth -> -(fullWidth / 10) }
+                ) + fadeIn(animationSpec = tween(ANIMATION_BASE_DURATION / 2))
+            }
+        }
+
+        // default animation
         else -> {
             slideInVertically(
                 animationSpec = tween(ANIMATION_BASE_DURATION),
@@ -191,6 +230,38 @@ fun AnimatedContentTransitionScope<NavBackStackEntry>.getExitTransition() : Exit
                 animationSpec = tween(ANIMATION_BASE_DURATION, easing = EaseIn),
                 targetOffsetY = { fullHeight -> fullHeight }
             )
+        }
+
+        // when changing to settings, zoom in when coming from a sub menu
+        // and slide out to the left when coming from the home screen
+        targetRoute == Screen.Settings.route -> {
+            if(initialRoute in (Screen.SettingsOption.allSettings.map { it.route })) {
+                scaleOut(
+                    animationSpec = tween(ANIMATION_BASE_DURATION / 2),
+                    targetScale = 0.7f,
+                ) + fadeOut(animationSpec = tween(ANIMATION_BASE_DURATION / 2))
+            } else {
+                slideOutHorizontally(
+                    animationSpec = tween(ANIMATION_BASE_DURATION),
+                    targetOffsetX = { fullWidth -> -(fullWidth / 10) }
+                ) + fadeOut(animationSpec = tween(ANIMATION_BASE_DURATION / 2))
+            }
+        }
+
+        // when changing from settings screen, if going to setting sub menu, zoom out
+        // otherwise slide out to the right
+        initialRoute == Screen.Settings.route -> {
+            if (targetRoute in (Screen.SettingsOption.allSettings.map { it.route })) {
+                scaleOut(
+                    animationSpec = tween(ANIMATION_BASE_DURATION / 2),
+                    targetScale = 1.2f,
+                ) + fadeOut(animationSpec = tween(ANIMATION_BASE_DURATION / 2))
+            } else {
+                slideOutHorizontally(
+                    animationSpec = tween(ANIMATION_BASE_DURATION),
+                    targetOffsetX = { fullWidth -> (fullWidth / 10) }
+                ) + fadeOut(animationSpec = tween(ANIMATION_BASE_DURATION / 2))
+            }
         }
 
         // default animation
