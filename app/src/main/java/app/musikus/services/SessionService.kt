@@ -11,7 +11,9 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.ServiceInfo
 import android.os.Binder
+import android.os.Build
 import android.os.IBinder
+import android.util.Log
 import androidx.annotation.DrawableRes
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
@@ -53,7 +55,7 @@ data class SessionState(
  * Exposed interface for events between Service and Activity / ViewModel
  */
 sealed class SessionEvent {
-    data object StopTimer: SessionEvent()
+    data object StopTimerAndFinish: SessionEvent()
     data object TogglePause: SessionEvent()
     data class StartNewSection(val item: LibraryItem): SessionEvent()
     data class DeleteSection(val sectionId: Int): SessionEvent()
@@ -115,7 +117,7 @@ class SessionService : Service() {
      */
     fun onEvent(event: SessionEvent) {
         when(event) {
-            is SessionEvent.StopTimer -> stopTimer()
+            is SessionEvent.StopTimerAndFinish -> stopTimerAndDestroy()
             is SessionEvent.TogglePause -> togglePause()
             is SessionEvent.StartNewSection -> newSection(event.item)
             is SessionEvent.DeleteSection -> removeSection(event.sectionId)
@@ -167,9 +169,16 @@ class SessionService : Service() {
         sessionState.update { it.copy(sections = updatedSections) }
     }
 
-    private fun stopTimer() {
+    private fun stopTimerAndDestroy() {
         _timer?.cancel()
+        Log.d("Tag", "stopTimerAndDestroy")
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            stopForeground(STOP_FOREGROUND_REMOVE)
+        } else {
+            stopForeground(true)
+        }
         stopSelf()
+
     }
 
     private fun togglePause() {
@@ -247,11 +256,19 @@ class SessionService : Service() {
      */
 
     override fun onBind(intent: Intent?): IBinder {
+        // register Broadcast Receiver for Pause Action
+        ContextCompat.registerReceiver(
+            this,
+            myReceiver,
+            IntentFilter(BROADCAST_INTENT_FILTER),
+            ContextCompat.RECEIVER_NOT_EXPORTED
+        )
         return binder
     }
 
     override fun onUnbind(intent: Intent): Boolean {
         // All clients have unbound with unbindService()
+        Log.d("TAG", "onUnbind")
         return true
     }
 
@@ -259,20 +276,7 @@ class SessionService : Service() {
 
         val action = intent?.action?.let { SessionServiceAction.valueOf(it) }
 
-        if (action == SessionServiceAction.STOP) {
-            stopTimer()
-            sessionState.update { SessionState() }
-            stopSelf()
-        }
-
         if (action == SessionServiceAction.START) {
-            // register Broadcast Receiver for Pause Action
-            ContextCompat.registerReceiver(
-                this,
-                myReceiver,
-                IntentFilter(BROADCAST_INTENT_FILTER),
-                ContextCompat.RECEIVER_NOT_EXPORTED
-            )
 
             createPendingIntents()
 
@@ -359,5 +363,11 @@ class SessionService : Service() {
             tapIntent = pendingIntentActionFinish
         )
 
+    }
+
+    override fun onDestroy() {
+        Log.d("Tag", "onDestroy")
+        unregisterReceiver(myReceiver)
+        super.onDestroy()
     }
 }

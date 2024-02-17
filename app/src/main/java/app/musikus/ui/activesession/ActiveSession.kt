@@ -56,6 +56,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Button
@@ -257,6 +258,14 @@ private fun HeaderBar(
             ) {
                 Icon(imageVector = Icons.Default.KeyboardArrowDown, contentDescription = null)
             }
+            IconButton(
+                onClick = {
+                    eventHandler(ActiveSessionUiEvent.DiscardSession)
+                    navigateUp()
+                }
+            ) {
+                Icon(imageVector = Icons.Outlined.Delete, contentDescription = null)
+            }
             Spacer(modifier = Modifier.width(MaterialTheme.spacing.small))
             OutlinedButton(
                 enabled = uiState.sections.isNotEmpty(),
@@ -268,7 +277,7 @@ private fun HeaderBar(
         TextButton(
             enabled = uiState.sections.isNotEmpty(),
             onClick = {
-                eventHandler(ActiveSessionUiEvent.StopSession)
+                eventHandler(ActiveSessionUiEvent.ShowFinishDialog)
             }
         ) {
             Text(text = "Save Session")
@@ -360,7 +369,7 @@ private fun SectionsList(
 ) {
     if (uiState.sections.isEmpty()) {
         Box (modifier = modifier) {
-            Text(text = "Quotes")
+            Text(text = "Select a library item to start practicing")
         }
         return
     }

@@ -191,6 +191,6 @@ class MainViewModel @Inject constructor(
     }
 
     init {
-        bindService()
+//        bindService()  // TODO: this breaks sessionservice after finishing a session
     }
 }

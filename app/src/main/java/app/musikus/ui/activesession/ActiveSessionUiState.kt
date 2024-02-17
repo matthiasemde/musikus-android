@@ -105,8 +105,10 @@ sealed class ActiveSessionUiEvent : DraggableCardUiEvent {
 
     data class DeleteSection(val sectionId: Int) : ActiveSessionUiEvent()
 
+    data object DiscardSession : ActiveSessionUiEvent()
+
     data object TogglePause : ActiveSessionUiEvent()
-    data object StopSession : ActiveSessionUiEvent()
+    data object ShowFinishDialog : ActiveSessionUiEvent()
 
     data object CreateNewLibraryItem : ActiveSessionUiEvent()
 

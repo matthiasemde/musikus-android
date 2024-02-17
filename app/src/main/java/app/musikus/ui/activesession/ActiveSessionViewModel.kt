@@ -308,7 +308,7 @@ class ActiveSessionViewModel @Inject constructor(
             is ActiveSessionUiEvent.SelectFolder -> _selectedFolderId.update { event.folderId }
             is ActiveSessionUiEvent.SelectItem -> itemClicked(event.item)
             is ActiveSessionUiEvent.TogglePause -> togglePause()
-            is ActiveSessionUiEvent.StopSession -> _endDialogData.update { EndDialogData(
+            is ActiveSessionUiEvent.ShowFinishDialog -> _endDialogData.update { EndDialogData(
                 rating = 3,
                 comment = ""
             ) }
@@ -347,6 +347,7 @@ class ActiveSessionViewModel @Inject constructor(
             }
             is ActiveSessionUiEvent.EndDialogDismissed -> _endDialogData.update { null }
             is ActiveSessionUiEvent.EndDialogConfirmed -> stopSession()
+            ActiveSessionUiEvent.DiscardSession -> discardSession()
         }
     }
 
@@ -365,12 +366,13 @@ class ActiveSessionViewModel @Inject constructor(
     }
 
     private fun stopSession() {
+        val endDialogData = _endDialogData.value ?: return
         viewModelScope.launch {
             sessionUseCases.add(
                 sessionCreationAttributes = SessionCreationAttributes(
                     breakDuration = sessionState.value.pauseDuration,
-                    comment = "New Session from new ActiveSession Screen!",
-                    rating = 5
+                    comment = endDialogData.comment,
+                    rating = endDialogData.rating
                 ),
                 sectionCreationAttributes = sessionState.value.sections.map {
                     SectionCreationAttributes(
@@ -380,9 +382,14 @@ class ActiveSessionViewModel @Inject constructor(
                     )
                 }
             )
-            stopService()
             _endDialogData.update { null }
+            sessionEvent(SessionEvent.StopTimerAndFinish)
+            unbindService()
         }
+    }
+
+    private fun discardSession() {
+        sessionEvent(SessionEvent.StopTimerAndFinish)
     }
 
     private fun removeSection(itemId: Int) {
@@ -402,21 +409,9 @@ class ActiveSessionViewModel @Inject constructor(
     // ################################### Service ############################################
 
     private fun startService() {
-        Log.d("TAG", "startService Button pressed")
         Log.d("TAG", "start Foreground Service ")
         val intent = Intent(application, SessionService::class.java) // Build the intent for the service
         intent.action = SessionServiceAction.START.name
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            application.startForegroundService(intent)
-        } else {
-            application.startService(intent)
-        }
-    }
-
-    private fun stopService() {
-        Log.d("TAG", "stopService Button pressed")
-        val intent = Intent(application, SessionService::class.java) // Build the intent for the service
-        intent.action = SessionServiceAction.STOP.name
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             application.startForegroundService(intent)
         } else {
@@ -432,10 +427,15 @@ class ActiveSessionViewModel @Inject constructor(
 
     override fun onCleared() {
         Log.d("TAG", "onCleared")
+        unbindService()
+        super.onCleared()
+    }
+
+    private fun unbindService() {
         if (bound) {
             application.unbindService(connection)
             bound = false
         }
-        super.onCleared()
     }
+
 }
