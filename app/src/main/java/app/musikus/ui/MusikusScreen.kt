@@ -199,6 +199,24 @@ fun AnimatedContentTransitionScope<NavBackStackEntry>.getEnterTransition() : Ent
             }
         }
 
+        // when changing to session or goal statistics, slide in from the right
+        targetRoute == Screen.SessionStatistics.route ||
+        targetRoute == Screen.GoalStatistics.route -> {
+            slideInHorizontally(
+                animationSpec = tween(ANIMATION_BASE_DURATION),
+                initialOffsetX = { fullWidth -> (fullWidth / 10) }
+            ) + fadeIn(animationSpec = tween(ANIMATION_BASE_DURATION / 2))
+        }
+
+        // when changing from session or goal statistics, slide in from the left
+        initialRoute == Screen.SessionStatistics.route ||
+        initialRoute == Screen.GoalStatistics.route -> {
+            slideInHorizontally(
+                animationSpec = tween(ANIMATION_BASE_DURATION),
+                initialOffsetX = { fullWidth -> -(fullWidth / 10) }
+            ) + fadeIn(animationSpec = tween(ANIMATION_BASE_DURATION / 2))
+        }
+
         // default animation
         else -> {
             slideInVertically(
@@ -262,6 +280,24 @@ fun AnimatedContentTransitionScope<NavBackStackEntry>.getExitTransition() : Exit
                     targetOffsetX = { fullWidth -> (fullWidth / 10) }
                 ) + fadeOut(animationSpec = tween(ANIMATION_BASE_DURATION / 2))
             }
+        }
+
+        // when changing to session or goal statistics, slide in from the right
+        targetRoute == Screen.SessionStatistics.route ||
+        targetRoute == Screen.GoalStatistics.route -> {
+            slideOutHorizontally(
+                animationSpec = tween(ANIMATION_BASE_DURATION),
+                targetOffsetX = { fullWidth -> (fullWidth / 10) }
+            ) + fadeOut(animationSpec = tween(ANIMATION_BASE_DURATION / 2))
+        }
+
+        // when changing from session or goal statistics, slide in from the left
+        initialRoute == Screen.SessionStatistics.route ||
+        initialRoute == Screen.GoalStatistics.route -> {
+            slideOutHorizontally(
+                animationSpec = tween(ANIMATION_BASE_DURATION),
+                targetOffsetX = { fullWidth -> -(fullWidth / 10) }
+            ) + fadeOut(animationSpec = tween(ANIMATION_BASE_DURATION / 2))
         }
 
         // default animation

@@ -32,7 +32,7 @@ sealed class Screen(
         override val displayData: DisplayData
     ) : Screen("home/$subRoute") {
         data object Sessions : HomeTab(
-            subRoute = "sessionList",
+            subRoute = "sessions",
             displayData = DisplayData(
                 title = UiText.StringResource(R.string.navigationSessionsTitle),
                 icon = UiIcon.IconResource(R.drawable.ic_sessions),
