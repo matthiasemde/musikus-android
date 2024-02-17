@@ -11,9 +11,9 @@ package app.musikus.utils
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Bundle
+import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AppCompatActivity
 import app.musikus.di.ApplicationScope
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -23,7 +23,7 @@ import kotlinx.coroutines.withContext
 
 private typealias PermissionResult = Map<String, Boolean>
 
-abstract class PermissionCheckerActivity : AppCompatActivity() {
+abstract class PermissionCheckerActivity : ComponentActivity() {
     abstract var permissionChecker: PermissionChecker
 
     lateinit var resultLauncher: ActivityResultLauncher<Array<String>>

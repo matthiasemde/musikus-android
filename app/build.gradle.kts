@@ -8,11 +8,13 @@ plugins {
     id("de.mannodermaus.android-junit5")
 }
 
-kotlin {
-    jvmToolchain(17)
-}
+//kotlin {
+//    jvmToolchain(17)
+//}
 
 android {
+    val javaVersion = JavaVersion.VERSION_17
+
     namespace = "app.musikus"
     compileSdk = 34
 
@@ -20,8 +22,8 @@ android {
         applicationId = "app.musikus"
         minSdk = 23
         targetSdk = compileSdk
-        versionCode = 8
-        versionName = "1.0.1"
+        versionCode = 1
+        versionName = "0.1.0_beta"
 
         testInstrumentationRunner = "app.musikus.HiltTestRunner"
 
@@ -50,8 +52,8 @@ android {
     compileOptions {
         // Flag to enable support for the new language APIs
         isCoreLibraryDesugaringEnabled = true
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = javaVersion
+        targetCompatibility = javaVersion
     }
 
     // needed for mockk
@@ -62,12 +64,11 @@ android {
     }
 
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_11.toString()
+        jvmTarget = javaVersion.toString()
     }
 
     buildFeatures {
         compose = true
-//        viewBinding true
         buildConfig = true
     }
 
@@ -81,11 +82,11 @@ tasks.withType<Test> {
 }
 
 dependencies {
-    val bomVersion = "2023.10.01"
+    val bomVersion = "2024.02.00"
 
-    val lifecycleVersion = "2.6.2"
+    val lifecycleVersion = "2.7.0"
     val roomVersion = "2.6.1"
-    val navVersion = "2.7.5"
+    val navVersion = "2.7.7"
     val daggerHiltVersion = "2.49"
     val kotlinCoroutineVersion = "1.7.3"
     val mockkVersion = "1.13.9"
@@ -107,11 +108,11 @@ dependencies {
     implementation("androidx.compose.animation:animation-graphics")
 
     //Foundation
-    implementation("androidx.compose.foundation:foundation:1.6.0")
+    implementation("androidx.compose.foundation:foundation")
     implementation("androidx.compose.foundation:foundation-layout")
 
     // Material
-    implementation("androidx.compose.material3:material3:1.2.0-rc01") // TODO remove explicit version once bom is updated
+    implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.material3:material3-window-size-class")
     implementation("androidx.compose.material:material-icons-core")
     implementation("androidx.compose.material:material-icons-extended")
@@ -124,11 +125,6 @@ dependencies {
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-tooling-preview")
     debugImplementation("androidx.compose.ui:ui-tooling")
-
-    // When using a MDC theme
-    implementation("androidx.activity:activity-compose:1.8.1")
-    implementation("com.google.android.material:compose-theme-adapter-3:1.1.1")
-    implementation("com.google.accompanist:accompanist-systemuicontroller:0.17.0")
 
     // Lifecycle
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:$lifecycleVersion")
@@ -152,26 +148,15 @@ dependencies {
     // Data store
     implementation("androidx.datastore:datastore-preferences:1.0.0")
 
-    // Navigation
-    implementation("androidx.navigation:navigation-fragment-ktx:$navVersion")
-    implementation("androidx.navigation:navigation-ui-ktx:$navVersion")
+    implementation("androidx.core:core-ktx:1.12.0")
 
     // Backport java.Time to SDK < 23
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
 
-    // AppIntro
-    implementation("com.github.AppIntro:AppIntro:6.2.0")
-
-    implementation("androidx.core:core-ktx:1.12.0")
-    implementation("androidx.appcompat:appcompat:1.6.1")
-    implementation("com.google.android.material:material:1.10.0")
-    implementation("androidx.constraintlayout:constraintlayout:2.1.4")
-    implementation("androidx.recyclerview:recyclerview:1.3.2")
-
     // Media Playback
     // For media playback using ExoPlayer
     implementation("androidx.media3:media3-exoplayer:$media3Version")
-// For exposing and controlling media sessions
+    // For exposing and controlling media sessions
     implementation("androidx.media3:media3-session:$media3Version")
 
     // Testing
@@ -190,7 +175,7 @@ dependencies {
 
     testImplementation("androidx.arch.core:core-testing:2.2.0")
     testImplementation("com.google.truth:truth:1.1.3")
-    debugImplementation("androidx.compose.ui:ui-test-manifest:1.5.4")
+    debugImplementation("androidx.compose.ui:ui-test-manifest:1.6.1")
 
     // Instrumentation tests
     androidTestImplementation("com.google.dagger:hilt-android-testing:$daggerHiltVersion")
@@ -198,7 +183,7 @@ dependencies {
     androidTestImplementation("junit:junit:4.13.2")
     androidTestImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:$kotlinCoroutineVersion")
     androidTestImplementation("androidx.arch.core:core-testing:2.2.0")
-    androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.5.4")
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.6.1")
     androidTestImplementation("androidx.test:core-ktx:1.5.0")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")

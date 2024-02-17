@@ -36,7 +36,8 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.PracticeTime">
+        android:theme="@style/Theme.Musikus"
+    >
 
         <service
             android:name=".services.SessionService"
@@ -71,10 +72,6 @@
             </intent-filter>
         </service>
 
-        <activity
-            android:name=".ui.intro.AppIntroActivity"
-            android:exported="false"
-            android:screenOrientation="fullSensor" />
         <activity
             android:name=".ui.MainActivity"
             android:exported="true">

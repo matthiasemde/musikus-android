@@ -5,22 +5,26 @@
 
     Copyright (c) 2022 Matthias Emde
 -->
-<vector android:height="24dp"
-    android:viewportHeight="24" android:viewportWidth="24"
-    android:width="24dp" xmlns:android="http://schemas.android.com/apk/res/android">
+<vector
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:height="24dp"
+    android:width="24dp"
+    android:viewportHeight="24"
+    android:viewportWidth="24"
+>
     <path
         android:name="bar_chart_l"
-        android:fillColor="@color/design_default_color_primary"
+        android:fillColor="@color/md_purple_A700"
         android:pathData="@string/bar_chart_l"
     />
     <path
         android:name="bar_chart_m"
-        android:fillColor="@color/design_default_color_primary"
+        android:fillColor="@color/md_purple_A700"
         android:pathData="@string/bar_chart_m"
     />
     <path
         android:name="bar_chart_r"
-        android:fillColor="@color/design_default_color_primary"
+        android:fillColor="@color/md_purple_A700"
         android:pathData="@string/bar_chart_r"
     />
 </vector>

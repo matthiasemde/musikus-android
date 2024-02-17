@@ -12,6 +12,7 @@ import app.musikus.database.daos.LibraryFolder
 import app.musikus.database.daos.LibraryItem
 import app.musikus.datastore.ThemeSelections
 import app.musikus.datastore.UserPreferences
+import app.musikus.ui.activesession.metronome.MetronomeSettings
 import app.musikus.utils.GoalSortInfo
 import app.musikus.utils.GoalsSortMode
 import app.musikus.utils.LibraryFolderSortMode
@@ -35,10 +36,11 @@ class FakeUserPreferencesRepository : UserPreferencesRepository {
         goalsSortMode = GoalsSortMode.DEFAULT,
         goalsSortDirection = SortDirection.DEFAULT,
         showPausedGoals = true,
+        metronomeSettings = MetronomeSettings.DEFAULT
     ))
     override val theme: Flow<ThemeSelections>
         get() = _preferences.map { it.theme }
-    
+
     override val itemSortInfo: Flow<SortInfo<LibraryItem>>
         get() = _preferences.map { preferences ->
             SortInfo(
@@ -46,7 +48,7 @@ class FakeUserPreferencesRepository : UserPreferencesRepository {
                 direction = preferences.libraryItemSortDirection,
             )
         }
-    
+
     override val folderSortInfo: Flow<SortInfo<LibraryFolder>>
         get() = _preferences.map { preferences ->
             SortInfo(
@@ -54,7 +56,7 @@ class FakeUserPreferencesRepository : UserPreferencesRepository {
                 direction = preferences.libraryFolderSortDirection,
             )
         }
-    
+
     override val goalSortInfo: Flow<GoalSortInfo>
         get() = _preferences.map { preferences ->
             SortInfo(
@@ -62,6 +64,8 @@ class FakeUserPreferencesRepository : UserPreferencesRepository {
                 direction = preferences.goalsSortDirection,
             )
         }
+    override val metronomeSettings: Flow<MetronomeSettings>
+        get() = _preferences.map { it.metronomeSettings }
 
     override suspend fun updateTheme(theme: ThemeSelections) {
         _preferences.update {
@@ -105,6 +109,12 @@ class FakeUserPreferencesRepository : UserPreferencesRepository {
     override suspend fun updateAppIntroDone(value: Boolean) {
         _preferences.update {
             it.copy(appIntroDone = value)
+        }
+    }
+
+    override suspend fun updateMetronomeSettings(settings: MetronomeSettings) {
+        _preferences.update {
+            it.copy(metronomeSettings = settings)
         }
     }
 }

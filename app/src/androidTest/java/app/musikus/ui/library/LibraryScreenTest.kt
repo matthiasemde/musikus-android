@@ -37,6 +37,7 @@ import app.musikus.datastore.ThemeSelections
 import app.musikus.ui.MainActivity
 import app.musikus.ui.MainViewModel
 import app.musikus.ui.Screen
+import app.musikus.ui.home.HomeViewModel
 import app.musikus.ui.theme.MusikusTheme
 import app.musikus.utils.FakeTimeProvider
 import app.musikus.utils.LibraryFolderSortMode
@@ -70,18 +71,21 @@ class LibraryScreenTest {
         composeRule.activity.setContent {
             val viewModel: MainViewModel = hiltViewModel()
 
-            val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-
             val navController = rememberNavController()
             MusikusTheme(theme = ThemeSelections.DAY) {
+
+                val homeViewModel: HomeViewModel = hiltViewModel()
+                val homeUiState by homeViewModel.uiState.collectAsStateWithLifecycle()
+
                 NavHost(
                     navController = navController,
-                    startDestination = Screen.Library.route
+                    startDestination = Screen.HomeTab.Library.route
                 ) {
-                    composable(Screen.Library.route) {
+                    composable(Screen.HomeTab.Library.route) {
                         Library(
+                            homeUiState = homeUiState,
                             mainEventHandler = viewModel::onUiEvent,
-                            mainUiState = uiState,
+                            homeEventHandler = homeViewModel::onUiEvent,
                             navigateTo = { }
                         )
                     }
