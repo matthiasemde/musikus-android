@@ -10,9 +10,7 @@ package app.musikus.services
 
 import android.app.Notification
 import android.app.NotificationManager
-import android.app.PendingIntent
 import android.app.Service
-import android.app.TaskStackBuilder
 import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.Binder
@@ -23,11 +21,10 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import app.musikus.R
 import app.musikus.RECORDER_NOTIFICATION_CHANNEL_ID
-import app.musikus.ui.activesession.ActiveSessionActivity
 import app.musikus.utils.DurationFormat
-import app.musikus.utils.getDurationString
 import app.musikus.utils.Recorder
 import app.musikus.utils.TimeProvider
+import app.musikus.utils.getDurationString
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
@@ -181,20 +178,10 @@ class RecorderService : Service() {
     }
 
     private fun getNotification(duration: Duration) : Notification {
-        val resultIntent = Intent(this, ActiveSessionActivity::class.java)
-        // Create the TaskStackBuilder for artificially creating
-        // a back stack based on android:parentActivityName in AndroidManifest.xml
-        val resultPendingIntent: PendingIntent? = TaskStackBuilder.create(this).run {
-            // Add the intent, which inflates the back stack
-            addNextIntentWithParentStack(resultIntent)
-            // Get the PendingIntent containing the entire back stack
-            getPendingIntent(0, PendingIntent.FLAG_IMMUTABLE)
-        }
         return  NotificationCompat.Builder(this, RECORDER_NOTIFICATION_CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_record)
             .setContentTitle(getString(R.string.recording_notification_settings_description))
             .setContentText(getDurationString(duration, DurationFormat.HMS_DIGITAL))
-            .setContentIntent(resultPendingIntent)
             .setOnlyAlertOnce(true)
             .build()
     }
