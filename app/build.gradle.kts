@@ -8,10 +8,6 @@ plugins {
     id("de.mannodermaus.android-junit5")
 }
 
-//kotlin {
-//    jvmToolchain(17)
-//}
-
 android {
     val javaVersion = JavaVersion.VERSION_17
 
@@ -23,20 +19,14 @@ android {
         minSdk = 23
         targetSdk = compileSdk
         versionCode = 1
-        versionName = "0.1.0_beta"
+        versionName = "0.9.0"
 
         testInstrumentationRunner = "app.musikus.HiltTestRunner"
 
         ksp {
             arg("room.schemaLocation", "$projectDir/schemas")
-//            arg("dagger.hilt.processor.moduleOutputDir", file("build/generated/source/ksp/modules"))
-//            arg("dagger.hilt.processor.invokeTurbine", "true")
         }
     }
-
-//    applicationVariants.configureEach { variant ->
-//        variant.resValue "string", "versionName", "Version " + variant.versionName
-//    }
 
     buildTypes {
         release {
