@@ -122,122 +122,130 @@ fun ActiveSession(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val eventHandler = viewModel::onUiEvent
 
-    Column(
-        modifier = Modifier.background(MaterialTheme.colorScheme.background)
+    Surface(
+        color = MaterialTheme.colorScheme.background,
     ) {
-        Box(
-            modifier = Modifier
-                .windowInsetsPadding(WindowInsets.statusBars)
-                .weight(1f)
-        ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.fillMaxSize()
+        Column {
+            Box(
+                modifier = Modifier
+                    .windowInsetsPadding(WindowInsets.statusBars)
+                    .weight(1f)
             ) {
-
-                /** ------------------- Area above extended Cards ------------------- */
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier
-                        .weight(1 - CARD_HEIGHT_EXTENDED_FRACTION_OF_SCREEN)
-                        .padding(horizontal = MaterialTheme.spacing.medium)
+                    modifier = Modifier.fillMaxSize()
                 ) {
-                    HeaderBar(uiState, eventHandler, navigateUp)
-                    Spacer(modifier = Modifier.weight(1f))
-                    PracticeTimer(uiState)
-                    Spacer(modifier = Modifier.weight(1f))
-                    CurrentPracticingItem(sections = uiState.sections)
-                }
 
-                /** ------------------- Remaining area ------------------- */
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier
-                        .weight(CARD_HEIGHT_EXTENDED_FRACTION_OF_SCREEN)
-                        .fillMaxWidth()
-                        .padding(horizontal = MaterialTheme.spacing.medium)
-                ) {
-                    SectionsList(
-                        modifier = Modifier.weight(1f),
-                        uiState = uiState,
-                        onSectionDeleted = { eventHandler(ActiveSessionUiEvent.DeleteSection(it.id)) }
-                    )
-                    // prevent section list items to hide behind peek'ed Cards
-                    Spacer(
-                        Modifier.height(
-                            MaterialTheme.dimensions.bottomButtonsPagerHeight +
-                                    MaterialTheme.dimensions.cardPeekHeight
+                    /** ------------------- Area above extended Cards ------------------- */
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier
+                            .weight(1 - CARD_HEIGHT_EXTENDED_FRACTION_OF_SCREEN)
+                            .padding(horizontal = MaterialTheme.spacing.medium)
+                    ) {
+                        HeaderBar(uiState, eventHandler, navigateUp)
+                        Spacer(modifier = Modifier.weight(1f))
+                        PracticeTimer(uiState)
+                        Spacer(modifier = Modifier.weight(1f))
+                        CurrentPracticingItem(sections = uiState.sections)
+                    }
+
+                    /** ------------------- Remaining area ------------------- */
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier
+                            .weight(CARD_HEIGHT_EXTENDED_FRACTION_OF_SCREEN)
+                            .fillMaxWidth()
+                            .padding(horizontal = MaterialTheme.spacing.medium)
+                    ) {
+                        SectionsList(
+                            modifier = Modifier.weight(1f),
+                            uiState = uiState,
+                            onSectionDeleted = { eventHandler(ActiveSessionUiEvent.DeleteSection(it.id)) }
                         )
-                    )
+                        // prevent section list items to hide behind peek'ed Cards
+                        Spacer(
+                            Modifier.height(
+                                MaterialTheme.dimensions.bottomButtonsPagerHeight +
+                                        MaterialTheme.dimensions.cardPeekHeight
+                            )
+                        )
+                    }
+
                 }
 
+                /**
+                 *
+                 *  ------------------- Bottom Draggable Cards Layout -------------------
+                 *
+                 */
+                if (uiState.cardUiStates.isEmpty()) return@Box // TODO take another look at this
+
+                DraggableCardsPagerLayout(
+                    cardUiStates = uiState.cardUiStates,
+                    cardHeaderComposable = { headerUiState, cardState, eventHandler ->
+                        ActiveSessionDraggableCardHeader(headerUiState, cardState, eventHandler)
+                    },
+                    cardBodyComposable = { bodyState, cardState, eventHandler ->
+                        ActiveSessionDraggableCardBody(bodyState, cardState, eventHandler)
+                    },
+                    eventHandler = { event ->
+                        when (event) {
+                            is ActiveSessionUiEvent -> eventHandler(event)
+                            // currently event handler can't differentiate between different fabs from
+                            // different cards... sounds like a future me problem
+                            is DraggableCardUiEvent.FabAction -> eventHandler(ActiveSessionUiEvent.CreateNewLibraryItem)
+                            else -> throw IllegalArgumentException("Unknown event: $event")
+                        }
+                    },
+                    initialCardIndex = when (deepLinkArgument) {
+                        ActiveSessionActions.RECORDER.name -> 1
+                        ActiveSessionActions.METRONOME.name -> 2
+                        else -> 0
+                    }
+                )
             }
 
-            /**
-             *
-             *  ------------------- Bottom Draggable Cards Layout -------------------
-             *
-             */
-            if (uiState.cardUiStates.isEmpty()) return@Box // TODO take another look at this
 
-            DraggableCardsPagerLayout(
-                cardUiStates = uiState.cardUiStates,
-                cardHeaderComposable = { headerUiState, cardState, eventHandler ->
-                    ActiveSessionDraggableCardHeader(headerUiState, cardState, eventHandler)
-                },
-                cardBodyComposable = { bodyState, cardState, eventHandler ->
-                    ActiveSessionDraggableCardBody(bodyState, cardState, eventHandler)
-                },
-                eventHandler = { event ->
-                    when (event) {
-                        is ActiveSessionUiEvent -> eventHandler(event)
-                        // currently event handler can't differentiate between different fabs from
-                        // different cards... sounds like a future me problem
-                        is DraggableCardUiEvent.FabAction -> eventHandler(ActiveSessionUiEvent.CreateNewLibraryItem)
-                        else -> throw IllegalArgumentException("Unknown event: $event")
+            if (uiState.isPaused) {
+                PauseDialog(uiState.totalBreakDuration, eventHandler)
+            }
+
+            uiState.addItemDialogUiState?.let { dialogUiState ->
+                LibraryItemDialog(
+                    uiState = dialogUiState,
+                    eventHandler = { eventHandler(ActiveSessionUiEvent.ItemDialogUiEvent(it)) },
+                )
+            }
+
+            uiState.endDialogUiState?.let { endDialogUiState ->
+                EndSessionDialog(
+                    rating = endDialogUiState.rating,
+                    comment = endDialogUiState.comment,
+                    onRatingChanged = { eventHandler(ActiveSessionUiEvent.EndDialogRatingChanged(it)) },
+                    onCommentChanged = {
+                        eventHandler(
+                            ActiveSessionUiEvent.EndDialogCommentChanged(
+                                it
+                            )
+                        )
+                    },
+                    onDismiss = { eventHandler(ActiveSessionUiEvent.EndDialogDismissed) },
+                    onConfirm = {
+                        eventHandler(ActiveSessionUiEvent.EndDialogConfirmed)
+                        navigateUp()
                     }
-                },
-                initialCardIndex = when (deepLinkArgument) {
-                    ActiveSessionActions.RECORDER.name -> 1
-                    ActiveSessionActions.METRONOME.name -> 2
-                    else -> 0
-                }
-            )
-        }
+                )
+            }
 
-
-        if (uiState.isPaused) {
-            PauseDialog(uiState.totalBreakDuration, eventHandler)
-        }
-
-        uiState.addItemDialogUiState?.let { dialogUiState ->
-            LibraryItemDialog(
-                uiState = dialogUiState,
-                eventHandler = { eventHandler(ActiveSessionUiEvent.ItemDialogUiEvent(it)) },
-            )
-        }
-
-        uiState.endDialogUiState?.let { endDialogUiState ->
-            EndSessionDialog(
-                rating = endDialogUiState.rating,
-                comment = endDialogUiState.comment,
-                onRatingChanged = { eventHandler(ActiveSessionUiEvent.EndDialogRatingChanged(it)) },
-                onCommentChanged = { eventHandler(ActiveSessionUiEvent.EndDialogCommentChanged(it)) },
-                onDismiss = { eventHandler(ActiveSessionUiEvent.EndDialogDismissed) },
-                onConfirm = {
-                    eventHandler(ActiveSessionUiEvent.EndDialogConfirmed)
-                    navigateUp()
-                }
-            )
-        }
-
-        // Background behind the nav bar
-        Box(
-            modifier = Modifier
-                .background(MaterialTheme.colorScheme.surfaceContainer)
-                .windowInsetsBottomHeight(WindowInsets.navigationBars),
-        ) {
-            Box(Modifier.fillMaxSize()) // necessary for the background to be drawn
+            // Background behind the nav bar
+            Box(
+                modifier = Modifier
+                    .background(MaterialTheme.colorScheme.surfaceContainer)
+                    .windowInsetsBottomHeight(WindowInsets.navigationBars),
+            ) {
+                Box(Modifier.fillMaxSize()) // necessary for the background to be drawn
+            }
         }
     }
 }
@@ -594,7 +602,6 @@ private fun LibraryCardBody(
     cardScrollState: ScrollState,
     eventHandler: DraggableCardUiEventHandler
 ) {
-//    Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium)) TODO
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -612,7 +619,7 @@ private fun LibraryCardBody(
                     eventHandler(ActiveSessionUiEvent.SelectItem(item))
                     eventHandler(DraggableCardUiEvent.ResizeCard(DragValueY.Normal))
                 },
-                onLongClick = { /*TODO*/ },
+                onLongClick = { },
                 compact = true,
                 enabled = uiState.activeItemId != item.id
             )

@@ -40,7 +40,7 @@ import java.time.ZonedDateTime
 import kotlin.time.Duration.Companion.milliseconds
 
 
-private const val DECODER_INPUT_BUFFER_SIZE = 1 shl 13 // 8192 Byte
+private const val DECODER_INPUT_BUFFER_SIZE = 1 shl 12 // 4096 Byte
 private const val EXTRACTOR_OUTPUT_BUFFER_SIZE = 1 shl 11 // 2048 Byte
 
 class RecordingsRepositoryImpl(
