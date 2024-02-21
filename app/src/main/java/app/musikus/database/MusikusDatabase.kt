@@ -353,14 +353,6 @@ abstract class MusikusDatabase : RoomDatabase() {
             db.execSQL("ALTER TABLE `_new_goal_description_library_item_cross_ref` RENAME TO `goal_description_library_item_cross_ref`")
             db.execSQL("CREATE INDEX IF NOT EXISTS `index_goal_description_library_item_cross_ref_goal_description_id` ON `goal_description_library_item_cross_ref` (`goal_description_id`)")
             db.execSQL("CREATE INDEX IF NOT EXISTS `index_goal_description_library_item_cross_ref_library_item_id` ON `goal_description_library_item_cross_ref` (`library_item_id`)")
-
-//            db.insert("section", SQLiteDatabase.CONFLICT_FAIL, ContentValues().apply {
-//                put("id", UUIDConverter.deadBeef.toDBString())
-//                put("session_id", UUIDConverter.deadBeef.toDBString())
-//                put("library_item_id", UUIDConverter.deadBeef.toDBString())
-//                put("duration_seconds", 0)
-//                put("start_timestamp", ZonedDateTime.now().toDatabaseInterpretableString())
-//            })
         }
     }
 }
