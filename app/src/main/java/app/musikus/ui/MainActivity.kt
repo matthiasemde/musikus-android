@@ -15,7 +15,6 @@ package app.musikus.ui
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.compose.setContent
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.core.app.ActivityCompat
 import androidx.core.view.WindowCompat
 import app.musikus.BuildConfig
@@ -44,15 +43,11 @@ class MainActivity : PermissionCheckerActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // Set to true to not have stuff behind status bar
-        // TODO: Color status bar -> dark theme currently broken!
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
         if (BuildConfig.DEBUG) {
 //            launchAppIntroFirstRun()
         }
-
-        val reloadDatabase = mutableIntStateOf(0)
 
         Musikus.exportLauncher = registerForActivityResult(
             ExportDatabaseContract()
@@ -60,10 +55,7 @@ class MainActivity : PermissionCheckerActivity() {
 
         Musikus.importLauncher = registerForActivityResult(
             ImportDatabaseContract()
-        ) {
-            application.importDatabaseCallback(applicationContext, it)
-            reloadDatabase.intValue++
-        }
+        ) { application.importDatabaseCallback(applicationContext, it) }
 
         requestRuntimePermissions()
 

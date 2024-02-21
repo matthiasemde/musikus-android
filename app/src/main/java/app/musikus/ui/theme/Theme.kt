@@ -9,6 +9,7 @@
 package app.musikus.ui.theme
 
 import android.app.Activity
+import android.os.Build
 import android.view.WindowManager
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
@@ -110,18 +111,20 @@ fun MusikusTheme(
     // and https://stackoverflow.com/questions/65610216/how-to-change-statusbar-color-in-jetpack-compose
     val view = LocalView.current
     if (!view.isInEditMode) {
-        SideEffect {
-            val window = (view.context as Activity).window
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.Q) {
+            SideEffect {
+                val window = (view.context as Activity).window
 
-            // background extends behind status and nav bar (even 3 button nav bar)
-            window.setFlags(
-                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
-                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
-            )
+                // background extends behind status and nav bar (even 3 button nav bar)
+                window.setFlags(
+                    WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+                    WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
+                )
 
-            val insets = WindowCompat.getInsetsController(window, view)
-            insets.isAppearanceLightStatusBars = !useDarkTheme
-            insets.isAppearanceLightNavigationBars = !useDarkTheme
+                val insets = WindowCompat.getInsetsController(window, view)
+                insets.isAppearanceLightStatusBars = !useDarkTheme
+                insets.isAppearanceLightNavigationBars = !useDarkTheme
+            }
         }
     }
 
