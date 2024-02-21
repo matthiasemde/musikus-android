@@ -60,7 +60,7 @@ class Musikus : Application() {
                 }
                 outputStream.close()
 
-                Toast.makeText(context, "Backup successful", Toast.LENGTH_LONG).show()
+                Toast.makeText(context, "Backup loaded successfully, restart your app to complete the process.", Toast.LENGTH_LONG).show()
             }
         }
 
