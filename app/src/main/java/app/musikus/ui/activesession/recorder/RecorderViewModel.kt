@@ -43,6 +43,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.seconds
 
@@ -107,11 +108,6 @@ class RecorderViewModel @Inject constructor(
         }
     }
 
-    init {
-        // try to bind to Recorder and Media Player services
-        bindRecorderService()
-    }
-
     private fun startRecorderService() {
         val intent = Intent(application, RecorderService::class.java)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -143,13 +139,24 @@ class RecorderViewModel @Inject constructor(
 
     private val _currentRecordingUri = MutableStateFlow<Uri?>(null)
 
+    private val _readPermissionsGranted = MutableStateFlow(
+        // after android 10, we don't need to request read permissions
+        value = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
+    )
+
     /** Imported Flows */
 
-    private val recordings = recordingsUseCases.get().stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = emptyList()
-    )
+    private val recordings = _readPermissionsGranted.flatMapLatest { readPermissionsGranted ->
+        if (!readPermissionsGranted) {
+            return@flatMapLatest flowOf(emptyList())
+        }
+
+        recordingsUseCases.get().stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
+    }
 
     private val currentRawRecording = _currentRecordingUri.flatMapLatest { currentRawRecording ->
         flow {
@@ -226,5 +233,24 @@ class RecorderViewModel @Inject constructor(
             }
             is RecorderUiEvent.LoadRecording -> _currentRecordingUri.update { event.contentUri }
         }
+    }
+
+    init {
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            viewModelScope.launch {
+                val storagePermissionResult = permissionsUseCases.request(
+                    listOf(android.Manifest.permission.READ_EXTERNAL_STORAGE)
+                )
+                if (storagePermissionResult.isSuccess) {
+                    _readPermissionsGranted.update { true }
+                } else {
+                    _exceptionChannel.send(RecorderException.NoStoragePermission)
+                }
+            }
+        }
+
+        // try to bind to Recorder and Media Player services
+        bindRecorderService()
     }
 }
