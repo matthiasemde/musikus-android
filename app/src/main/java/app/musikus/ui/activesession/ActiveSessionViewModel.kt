@@ -91,6 +91,8 @@ class ActiveSessionViewModel @Inject constructor(
     private val _addLibraryItemData = MutableStateFlow<LibraryItemEditData?>(null)
     private val _endDialogData = MutableStateFlow<EndDialogData?>(null)
 
+    private val _showDiscardSessionDialog = MutableStateFlow(false)
+
     /**
      *  --------------------- Session service  ---------------------
      */
@@ -259,14 +261,31 @@ class ActiveSessionViewModel @Inject constructor(
         initialValue = null
     )
 
+    private val dialogUiState = combine(
+        _showDiscardSessionDialog,
+        endSessionDialogUiState
+    ) { showDiscardSessionDialog, endDialogUiState ->
+        ActiveSessionDialogUiState(
+            showDiscardSessionDialog = showDiscardSessionDialog,
+            endDialogUiState = endDialogUiState
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = ActiveSessionDialogUiState(
+            showDiscardSessionDialog = _showDiscardSessionDialog.value,
+            endDialogUiState = endSessionDialogUiState.value
+        )
+    )
+
 
     val uiState = combine(
         libraryCardUiState,
         sessionState,
         addLibraryItemDialogUiState,
         totalDurationRoundedDownToNextSecond,
-        endSessionDialogUiState
-    ) { libraryCardUiState, sessionState, addItemDialogUiState, totalDuration, endSessionDialogUiState ->
+        dialogUiState
+    ) { libraryCardUiState, sessionState, addItemDialogUiState, totalDuration, dialogUiState ->
         ActiveSessionUiState(
             cardUiStates = listOf(
                 libraryCardUiState,
@@ -284,7 +303,7 @@ class ActiveSessionViewModel @Inject constructor(
                     duration = section.duration ?: sessionState.currentSectionDuration
                 )
             },
-            endDialogUiState = endSessionDialogUiState
+            dialogUiState = dialogUiState
         )
     }.stateIn(
         scope = viewModelScope,
@@ -296,7 +315,7 @@ class ActiveSessionViewModel @Inject constructor(
             sections = emptyList(),
             isPaused = sessionState.value.isPaused,
             addItemDialogUiState = addLibraryItemDialogUiState.value,
-            endDialogUiState = endSessionDialogUiState.value
+            dialogUiState = dialogUiState.value
         )
     )
 
@@ -347,7 +366,12 @@ class ActiveSessionViewModel @Inject constructor(
             }
             is ActiveSessionUiEvent.EndDialogDismissed -> _endDialogData.update { null }
             is ActiveSessionUiEvent.EndDialogConfirmed -> stopSession()
-            ActiveSessionUiEvent.DiscardSession -> discardSession()
+            is ActiveSessionUiEvent.ShowDiscardSessionDialog -> _showDiscardSessionDialog.update { true }
+            is ActiveSessionUiEvent.DiscardSessionDialogConfirmed -> {
+                discardSession()
+                _showDiscardSessionDialog.update { false }
+            }
+            is ActiveSessionUiEvent.DiscardSessionDialogDismissed -> _showDiscardSessionDialog.update { false }
         }
     }
 

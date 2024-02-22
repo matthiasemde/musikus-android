@@ -25,6 +25,7 @@ import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import androidx.sqlite.db.SupportSQLiteQueryBuilder
+import app.musikus.BuildConfig
 import app.musikus.Musikus.Companion.ioThread
 import app.musikus.database.daos.GoalDescriptionDao
 import app.musikus.database.daos.GoalInstanceDao
@@ -100,10 +101,12 @@ abstract class MusikusDatabase : RoomDatabase() {
                 // prepopulate the database after onCreate was called
                 override fun onCreate(db: SupportSQLiteDatabase) {
                     super.onCreate(db)
-                    // prepopulate the database
-                    ioThread { runBlocking {
-                        prepopulateDatabase(databaseProvider.get())
-                    } }
+                    // prepopulate the database if in debug configuration
+                    if (BuildConfig.DEBUG) {
+                        ioThread { runBlocking {
+                            prepopulateDatabase(databaseProvider.get())
+                        } }
+                    }
                 }
             }).build()
     }

@@ -53,6 +53,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Star
@@ -88,6 +89,7 @@ import app.musikus.ui.activesession.metronome.MetronomeCardBody
 import app.musikus.ui.activesession.metronome.MetronomeCardHeader
 import app.musikus.ui.activesession.recorder.RecorderCardBody
 import app.musikus.ui.activesession.recorder.RecorderCardHeader
+import app.musikus.ui.components.DeleteConfirmationBottomSheet
 import app.musikus.ui.components.DialogActions
 import app.musikus.ui.components.DialogHeader
 import app.musikus.ui.components.SwipeToDeleteContainer
@@ -98,6 +100,8 @@ import app.musikus.ui.sessions.RatingBar
 import app.musikus.ui.theme.dimensions
 import app.musikus.ui.theme.spacing
 import app.musikus.utils.DurationFormat
+import app.musikus.utils.UiIcon
+import app.musikus.utils.UiText
 import app.musikus.utils.getDurationString
 import kotlin.time.Duration
 
@@ -218,21 +222,31 @@ fun ActiveSession(
                 )
             }
 
-            uiState.endDialogUiState?.let { endDialogUiState ->
+            val dialogUiState = uiState.dialogUiState
+
+            dialogUiState.endDialogUiState?.let { endDialogUiState ->
                 EndSessionDialog(
                     rating = endDialogUiState.rating,
                     comment = endDialogUiState.comment,
                     onRatingChanged = { eventHandler(ActiveSessionUiEvent.EndDialogRatingChanged(it)) },
                     onCommentChanged = {
-                        eventHandler(
-                            ActiveSessionUiEvent.EndDialogCommentChanged(
-                                it
-                            )
-                        )
+                        eventHandler(ActiveSessionUiEvent.EndDialogCommentChanged(it))
                     },
                     onDismiss = { eventHandler(ActiveSessionUiEvent.EndDialogDismissed) },
                     onConfirm = {
                         eventHandler(ActiveSessionUiEvent.EndDialogConfirmed)
+                        navigateUp()
+                    }
+                )
+            }
+
+            if (dialogUiState.showDiscardSessionDialog) {
+                DeleteConfirmationBottomSheet(
+                    confirmationIcon = UiIcon.DynamicIcon(Icons.Default.Delete),
+                    confirmationText = UiText.DynamicString("Discard session?"),
+                    onDismiss = { eventHandler(ActiveSessionUiEvent.DiscardSessionDialogDismissed) },
+                    onConfirm = {
+                        eventHandler(ActiveSessionUiEvent.DiscardSessionDialogConfirmed)
                         navigateUp()
                     }
                 )
@@ -267,10 +281,7 @@ private fun HeaderBar(
                 Icon(imageVector = Icons.Default.KeyboardArrowDown, contentDescription = null)
             }
             IconButton(
-                onClick = {
-                    eventHandler(ActiveSessionUiEvent.DiscardSession)
-                    navigateUp()
-                }
+                onClick = { eventHandler(ActiveSessionUiEvent.ShowDiscardSessionDialog) }
             ) {
                 Icon(imageVector = Icons.Outlined.Delete, contentDescription = null)
             }
