@@ -18,8 +18,8 @@ android {
         applicationId = "app.musikus"
         minSdk = 23
         targetSdk = compileSdk
-        versionCode = 1
-        versionName = "0.9.0"
+        versionCode = 2
+        versionName = "0.9.1"
 
         testInstrumentationRunner = "app.musikus.HiltTestRunner"
 
