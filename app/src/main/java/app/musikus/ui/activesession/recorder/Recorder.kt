@@ -10,6 +10,7 @@ package app.musikus.ui.activesession.recorder
 
 import android.util.Log
 import android.widget.Toast
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -22,21 +23,25 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.MicOff
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Replay5
-import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedIconButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -54,10 +59,12 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.Player
 import androidx.media3.session.MediaController
+import app.musikus.ui.components.DialogActions
 import app.musikus.ui.components.ExceptionHandler
 import app.musikus.ui.components.Waveform
 import app.musikus.ui.components.conditional
@@ -65,6 +72,7 @@ import app.musikus.ui.theme.spacing
 import app.musikus.usecase.recordings.Recording
 import app.musikus.utils.DateFormat
 import app.musikus.utils.DurationFormat
+import app.musikus.utils.RecorderState
 import app.musikus.utils.getDurationString
 import app.musikus.utils.musikusFormat
 import kotlinx.coroutines.delay
@@ -150,6 +158,65 @@ fun RecorderCardHeader(
             )
         }
     }
+
+    val dialogUiState = uiState.dialogUiState
+
+    if (dialogUiState.showDeleteRecordingDialog) {
+        Dialog(onDismissRequest = { eventHandler(RecorderUiEvent.DeleteRecordingDialogDismissed) }) {
+            Surface(
+                color = MaterialTheme.colorScheme.surface,
+                shape = MaterialTheme.shapes.extraLarge
+            ) {
+                Column {
+                    Text(
+                        modifier = Modifier
+                            .padding(horizontal = MaterialTheme.spacing.large)
+                            .padding(top = MaterialTheme.spacing.medium),
+                        style = MaterialTheme.typography.titleLarge,
+                        text = "Delete recording?",
+                    )
+                    DialogActions(
+                        confirmButtonText = "Delete",
+                        onDismissHandler = { eventHandler(RecorderUiEvent.DeleteRecordingDialogDismissed) },
+                        onConfirmHandler = { eventHandler(RecorderUiEvent.DeleteRecordingDialogConfirmed) }
+                    )
+                }
+            }
+        }
+    }
+
+    dialogUiState.saveRecordingDialogUiState?.let { saveRecordingDialogUiState ->
+        Dialog(onDismissRequest = { eventHandler(RecorderUiEvent.SaveRecordingDialogDismissed) }) {
+            Surface(
+                color = MaterialTheme.colorScheme.surface,
+                shape = MaterialTheme.shapes.extraLarge
+            ) {
+                Column {
+                    Text(
+                        modifier = Modifier
+                            .padding(horizontal = MaterialTheme.spacing.large)
+                            .padding(vertical = MaterialTheme.spacing.medium),
+                        text = "Save recording as:",
+                        style = MaterialTheme.typography.titleLarge,
+                    )
+                    OutlinedTextField(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = MaterialTheme.spacing.medium),
+                        value = saveRecordingDialogUiState.recordingName,
+                        label = { Text(text = "Recording name") },
+                        onValueChange = { eventHandler(RecorderUiEvent.RecordingNameChanged(it)) },
+                    )
+                    DialogActions(
+                        confirmButtonText = "Save",
+                        onDismissHandler = { eventHandler(RecorderUiEvent.SaveRecordingDialogDismissed) },
+                        onConfirmHandler = { eventHandler(RecorderUiEvent.SaveRecordingDialogConfirmed) },
+                        confirmButtonEnabled = saveRecordingDialogUiState.recordingName.isNotEmpty()
+                    )
+                }
+            }
+        }
+    }
 }
 
 @Composable
@@ -204,7 +271,7 @@ fun RecorderCardBody(
             for (recording in  uiState.recordings) {
                 Recording(
                     recording = recording,
-                    isRecording = uiState.isRecording,
+                    isRecording = uiState.recorderState != RecorderState.IDLE,
                     mediaController = mediaController,
                     eventHandler = eventHandler
                 )
@@ -289,13 +356,25 @@ fun RecorderBar(
 
         Spacer(modifier = Modifier.weight(1f))
 
+        val showDeleteAndSave =
+            uiState.recorderState != RecorderState.IDLE &&
+            uiState.recorderState != RecorderState.UNINITIALIZED
+
+        AnimatedVisibility (showDeleteAndSave) {
+            TextButton(onClick = { eventHandler(RecorderUiEvent.DeleteRecording) }) {
+                Text(text = "Delete")
+            }
+            Spacer(modifier = Modifier.width(MaterialTheme.spacing.extraSmall))
+        }
+
         FilledIconButton(
             modifier = Modifier.size(48.dp),
             onClick = {
-                if (uiState.isRecording) {
-                    eventHandler(RecorderUiEvent.StopRecording)
-                } else {
-                    eventHandler(RecorderUiEvent.StartRecording)
+                when (uiState.recorderState) {
+                    RecorderState.UNINITIALIZED -> { /* do nothing */ }
+                    RecorderState.IDLE -> eventHandler(RecorderUiEvent.StartRecording)
+                    RecorderState.RECORDING -> eventHandler(RecorderUiEvent.PauseRecording)
+                    RecorderState.PAUSED -> eventHandler(RecorderUiEvent.ResumeRecording)
                 }
             },
             shape = CircleShape,
@@ -306,19 +385,43 @@ fun RecorderBar(
             ),
         ) {
             Box(Modifier.padding(MaterialTheme.spacing.small)) {
-                if (uiState.isRecording) {
-                    Icon(
-                        modifier = Modifier.fillMaxSize(),
-                        imageVector = Icons.Default.Stop,
-                        contentDescription = "Stop recording"
-                    )
-                } else {
-                    Icon(
-                        modifier = Modifier.fillMaxSize(),
-                        imageVector = Icons.Default.Mic,
-                        contentDescription = "Start recording"
-                    )
+                when (uiState.recorderState) {
+                    RecorderState.UNINITIALIZED -> {
+                        Icon(
+                            modifier = Modifier.fillMaxSize(),
+                            imageVector = Icons.Default.MicOff,
+                            contentDescription = "Microphone not available"
+                        )
+                    }
+                    RecorderState.IDLE -> {
+                        Icon(
+                            modifier = Modifier.fillMaxSize(),
+                            imageVector = Icons.Default.Mic,
+                            contentDescription = "Start recording"
+                        )
+                    }
+                    RecorderState.RECORDING -> {
+                        Icon(
+                            modifier = Modifier.fillMaxSize(),
+                            imageVector = Icons.Default.Pause,
+                            contentDescription = "Pause recording"
+                        )
+                    }
+                    RecorderState.PAUSED -> {
+                        Icon(
+                            modifier = Modifier.fillMaxSize(),
+                            imageVector = Icons.Default.PlayArrow,
+                            contentDescription = "Resume recording"
+                        )
+                    }
                 }
+            }
+        }
+
+        AnimatedVisibility (showDeleteAndSave) {
+            Spacer(modifier = Modifier.width(MaterialTheme.spacing.extraSmall))
+            TextButton(onClick = { eventHandler(RecorderUiEvent.SaveRecording) }) {
+                Text(text = "Save")
             }
         }
     }
