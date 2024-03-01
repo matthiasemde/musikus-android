@@ -37,14 +37,14 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 
-const val NOTIFCATION_ID = 42
+const val SESSION_NOTIFICATION_ID = 42
 const val BROADCAST_INTENT_FILTER = "activeSessionAction"
 
 
 /**
  * Encapsulates the state of the current session, is passed to the binding Activity / ViewModel
  */
-data class SessionState(
+data class SessionServiceState(
     val sections: List<PracticeSection> = emptyList(),
     val currentSectionDuration: Duration = 0.seconds,
     val pauseDuration: Duration = 0.seconds,
@@ -54,11 +54,11 @@ data class SessionState(
 /**
  * Exposed interface for events between Service and Activity / ViewModel
  */
-sealed class SessionEvent {
-    data object StopTimerAndFinish: SessionEvent()
-    data object TogglePause: SessionEvent()
-    data class StartNewSection(val item: LibraryItem): SessionEvent()
-    data class DeleteSection(val sectionId: Int): SessionEvent()
+sealed class SessionServiceEvent {
+    data object StopTimerAndFinish: SessionServiceEvent()
+    data object TogglePause: SessionServiceEvent()
+    data class StartNewSection(val item: LibraryItem): SessionServiceEvent()
+    data class DeleteSection(val sectionId: Int): SessionServiceEvent()
 }
 
 /**
@@ -70,10 +70,6 @@ data class NotificationActionButtonConfig(
     val tapIntent: PendingIntent?
 )
 
-enum class SessionServiceAction {
-    START, STOP
-}
-
 @AndroidEntryPoint
 class SessionService : Service() {
 
@@ -84,10 +80,10 @@ class SessionService : Service() {
     inner class LocalBinder : Binder() {
         // Return this instance of SessionService so clients can call public methods
         fun getSessionStateFlow() = sessionState
-        fun getOnEvent(): (SessionEvent) -> Unit = ::onEvent
+        fun getOnEvent(): (SessionServiceEvent) -> Unit = ::onEvent
     }
 
-    private val sessionState = MutableStateFlow(SessionState())  // Session State
+    private val sessionState = MutableStateFlow(SessionServiceState())  // Session State
     private var _timer: java.util.Timer? = null
     private val timerInterval = 1.seconds
     private var _sectionIdCounter = 0
@@ -115,12 +111,12 @@ class SessionService : Service() {
     /**
      *  ---------------------- Interface for Activity / ViewModel ----------------------
      */
-    fun onEvent(event: SessionEvent) {
+    fun onEvent(event: SessionServiceEvent) {
         when(event) {
-            is SessionEvent.StopTimerAndFinish -> stopTimerAndDestroy()
-            is SessionEvent.TogglePause -> togglePause()
-            is SessionEvent.StartNewSection -> newSection(event.item)
-            is SessionEvent.DeleteSection -> removeSection(event.sectionId)
+            is SessionServiceEvent.StopTimerAndFinish -> stopTimerAndDestroy()
+            is SessionServiceEvent.TogglePause -> togglePause()
+            is SessionServiceEvent.StartNewSection -> newSection(event.item)
+            is SessionServiceEvent.DeleteSection -> removeSection(event.sectionId)
         }
     }
 
@@ -171,14 +167,8 @@ class SessionService : Service() {
 
     private fun stopTimerAndDestroy() {
         _timer?.cancel()
-        Log.d("Tag", "stopTimerAndDestroy")
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            stopForeground(STOP_FOREGROUND_REMOVE)
-        } else {
-            stopForeground(true)
-        }
+        stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
-
     }
 
     private fun togglePause() {
@@ -210,7 +200,7 @@ class SessionService : Service() {
 
     private fun updateNotification() {
         val mNotificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-        mNotificationManager.notify(NOTIFCATION_ID, createNotification())
+        mNotificationManager.notify(SESSION_NOTIFICATION_ID, createNotification())
     }
 
     /**
@@ -273,17 +263,16 @@ class SessionService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        createPendingIntents()
+        val notification = createNotification()
 
-        val action = intent?.action?.let { SessionServiceAction.valueOf(it) }
-
-        if (action == SessionServiceAction.START) {
-
-            createPendingIntents()
-
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            startForeground(SESSION_NOTIFICATION_ID, notification)
+        } else {
             ServiceCompat.startForeground(
                 this,
-                NOTIFCATION_ID,
-                createNotification(),
+                SESSION_NOTIFICATION_ID,
+                notification,
                 ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
             )
         }

@@ -24,13 +24,16 @@ import app.musikus.services.RecorderService
 import app.musikus.services.RecorderServiceEvent
 import app.musikus.services.RecorderServiceState
 import app.musikus.usecase.permissions.PermissionsUseCases
-import app.musikus.usecase.recordings.Recording
 import app.musikus.usecase.recordings.RecordingsUseCases
+import app.musikus.utils.DateFormat
 import app.musikus.utils.DurationFormat
-import app.musikus.utils.DurationString
+import app.musikus.utils.RecorderState
+import app.musikus.utils.TimeProvider
 import app.musikus.utils.getDurationString
+import app.musikus.utils.musikusFormat
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -43,39 +46,17 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.seconds
 
-
-data class RecorderUiState(
-    val isRecording: Boolean,
-    val recordingDuration: DurationString,
-    val recordings: List<Recording>,
-    val currentRawRecording: ShortArray?,
-)
-
-sealed class RecorderUiEvent {
-    data object StartRecording : RecorderUiEvent()
-    data object StopRecording : RecorderUiEvent()
-    data class LoadRecording(val contentUri: Uri) : RecorderUiEvent()
-}
-
-typealias RecorderUiEventHandler = (event: RecorderUiEvent) -> Unit
-
-sealed class RecorderException(message: String) : Exception(message) {
-    data object NoMicrophonePermission : RecorderException("Microphone permission required")
-    data object NoStoragePermission : RecorderException("Storage permission required")
-
-    data object CouldNotLoadRecording : RecorderException("Could not load recording")
-}
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class RecorderViewModel @Inject constructor(
     private val application: Application,
     private val permissionsUseCases: PermissionsUseCases,
-    private val recordingsUseCases: RecordingsUseCases
+    private val recordingsUseCases: RecordingsUseCases,
+    private val timeProvider: TimeProvider
 ) : AndroidViewModel(application) {
 
     /** ------------------ Recorder Service --------------------- */
@@ -95,16 +76,25 @@ class RecorderViewModel @Inject constructor(
     /** binding */
 
     private val recorderServiceConnection = object : ServiceConnection {
+        var exceptionForwardingJob: Job? = null
+
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
             // We've bound to SessionForegroundService, cast the Binder and get SessionService instance
             val binder = service as RecorderService.LocalBinder
             recorderServiceEventHandler = binder.getEventHandler()
             recorderServiceStateWrapper.update { binder.getServiceState() }
+
+            exceptionForwardingJob = viewModelScope.launch {
+                binder.getExceptionChannel().collect {
+                    _exceptionChannel.send(RecorderException.ServiceException(it))
+                }
+            }
         }
 
         override fun onServiceDisconnected(arg0: ComponentName) {
             recorderServiceEventHandler = null
             recorderServiceStateWrapper.update { null }
+            exceptionForwardingJob?.cancel()
         }
     }
 
@@ -134,8 +124,7 @@ class RecorderViewModel @Inject constructor(
 
     /** Own state flows */
 
-    private val _exceptionChannel = Channel<Exception>()
-    val exceptionChannel = _exceptionChannel.receiveAsFlow()
+    private val _exceptionChannel = Channel<RecorderException>()
 
     private val _currentRecordingUri = MutableStateFlow<Uri?>(null)
 
@@ -143,6 +132,12 @@ class RecorderViewModel @Inject constructor(
         // after android 10, we don't need to request read permissions
         value = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
     )
+
+    private val _showDeleteRecordingDialog = MutableStateFlow(false)
+
+    private val _showSaveRecordingDialog = MutableStateFlow(false)
+    private val _recordingName = MutableStateFlow("")
+
 
     /** Imported Flows */
 
@@ -176,28 +171,62 @@ class RecorderViewModel @Inject constructor(
     )
 
     /** Composing the UI state */
+
+    private val saveRecordingDialogUiState = combine(
+        _showSaveRecordingDialog,
+        _recordingName
+    ) { showSaveRecordingDialog, recordingName ->
+        if (!showSaveRecordingDialog) return@combine null
+
+        SaveRecordingDialogUiState(recordingName)
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = null
+    )
+
+    private val dialogUiState = combine(
+        _showDeleteRecordingDialog,
+        saveRecordingDialogUiState
+    ) { showDeleteRecordingDialog, saveRecordingDialogUiState ->
+        RecorderDialogUiState(
+            showDeleteRecordingDialog,
+            saveRecordingDialogUiState
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = RecorderDialogUiState(
+            showDeleteRecordingDialog = false,
+            saveRecordingDialogUiState = null
+        )
+    )
+
     val uiState = combine(
         recorderServiceState,
         recordings,
-        currentRawRecording
-    ) { serviceState, recordings, currentRawRecording ->
+        currentRawRecording,
+        dialogUiState
+    ) { serviceState, recordings, currentRawRecording, dialogUiState ->
         RecorderUiState(
-            isRecording = serviceState?.isRecording ?: false,
+            recorderState = serviceState?.recorderState ?: RecorderState.UNINITIALIZED,
             recordingDuration = getDurationString(
                 (serviceState?.recordingDuration ?: 0.seconds),
                 DurationFormat.HMSC_DIGITAL
             ),
             recordings = recordings,
-            currentRawRecording = currentRawRecording
+            currentRawRecording = currentRawRecording,
+            dialogUiState = dialogUiState
         )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = RecorderUiState(
-            isRecording = false,
+            recorderState = RecorderState.UNINITIALIZED,
             recordingDuration = AnnotatedString(""),
             recordings = emptyList(),
-            currentRawRecording = null
+            currentRawRecording = null,
+            dialogUiState = dialogUiState.value
         )
     )
 
@@ -225,14 +254,68 @@ class RecorderViewModel @Inject constructor(
                         }
                     }
                     startRecorderService()
-                    recorderServiceEventHandler?.invoke(RecorderServiceEvent.ToggleRecording)
+                    recorderServiceEventHandler?.invoke(RecorderServiceEvent.StartRecording)
+                        ?: viewModelScope.launch {
+                            _exceptionChannel.send(RecorderException.ServiceNotFound)
+                        }
                 }
             }
-            is RecorderUiEvent.StopRecording -> {
-                recorderServiceEventHandler?.invoke(RecorderServiceEvent.ToggleRecording)
+            is RecorderUiEvent.PauseRecording -> pauseRecording()
+            is RecorderUiEvent.ResumeRecording -> {
+                recorderServiceEventHandler?.invoke(RecorderServiceEvent.ResumeRecording)
+                    ?: viewModelScope.launch {
+                        _exceptionChannel.send(RecorderException.ServiceNotFound)
+                    }
             }
+            is RecorderUiEvent.DeleteRecording -> {
+                if(recorderServiceState.value?.recorderState == RecorderState.RECORDING) {
+                    pauseRecording()
+                }
+                _showDeleteRecordingDialog.update { true }
+            }
+            is RecorderUiEvent.DeleteRecordingDialogDismissed -> _showDeleteRecordingDialog.update { false }
+            is RecorderUiEvent.DeleteRecordingDialogConfirmed -> {
+                _showDeleteRecordingDialog.update { false }
+                recorderServiceEventHandler?.invoke(RecorderServiceEvent.DeleteRecording)
+                    ?: viewModelScope.launch {
+                        _exceptionChannel.send(RecorderException.ServiceNotFound)
+                    }
+            }
+
+            is RecorderUiEvent.SaveRecording -> {
+                if(recorderServiceState.value?.recorderState == RecorderState.RECORDING) {
+                    pauseRecording()
+                }
+                _showSaveRecordingDialog.update { true }
+                _recordingName.update { "Musikus_${timeProvider.now().musikusFormat(DateFormat.RECORDING)}" }
+            }
+            is RecorderUiEvent.SaveRecordingDialogConfirmed -> {
+                _showSaveRecordingDialog.update { false }
+                recorderServiceEventHandler?.invoke(
+                    RecorderServiceEvent.SaveRecording(_recordingName.value)
+                ) ?: viewModelScope.launch {
+                    _exceptionChannel.send(RecorderException.ServiceNotFound)
+                }
+            }
+            is RecorderUiEvent.RecordingNameChanged -> _recordingName.update { event.recordingName }
+            is RecorderUiEvent.SaveRecordingDialogDismissed -> _showSaveRecordingDialog.update { false }
+
             is RecorderUiEvent.LoadRecording -> _currentRecordingUri.update { event.contentUri }
         }
+    }
+
+    val exceptionChannel = _exceptionChannel.receiveAsFlow()
+
+
+    /**
+    *  --------------- Private methods ---------------
+    */
+
+    private fun pauseRecording() {
+        recorderServiceEventHandler?.invoke(RecorderServiceEvent.PauseRecording)
+            ?: viewModelScope.launch {
+                _exceptionChannel.send(RecorderException.ServiceNotFound)
+            }
     }
 
     init {
@@ -240,7 +323,7 @@ class RecorderViewModel @Inject constructor(
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
             viewModelScope.launch {
                 val storagePermissionResult = permissionsUseCases.request(
-                    listOf(android.Manifest.permission.READ_EXTERNAL_STORAGE)
+                    listOf(Manifest.permission.READ_EXTERNAL_STORAGE)
                 )
                 if (storagePermissionResult.isSuccess) {
                     _readPermissionsGranted.update { true }

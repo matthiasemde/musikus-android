@@ -18,21 +18,30 @@ import android.content.pm.ServiceInfo
 import android.os.Binder
 import android.os.Build
 import android.os.IBinder
-import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import androidx.core.net.toUri
 import app.musikus.R
 import app.musikus.RECORDER_NOTIFICATION_CHANNEL_ID
+import app.musikus.di.ApplicationScope
 import app.musikus.ui.activesession.ActiveSessionActions
 import app.musikus.utils.DurationFormat
+import app.musikus.utils.IllegalRecorderStateException
 import app.musikus.utils.Recorder
+import app.musikus.utils.RecorderState
 import app.musikus.utils.TimeProvider
 import app.musikus.utils.getDurationString
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import java.util.Timer
 import javax.inject.Inject
 import kotlin.concurrent.timer
@@ -43,7 +52,7 @@ const val RECORDER_NOTIFICATION_ID = 97
 
 
 data class RecorderServiceState(
-    val isRecording: Boolean,
+    val recorderState: RecorderState,
     val recordingDuration: Duration
 )
 
@@ -52,7 +61,16 @@ data class RecorderServiceState(
  * Exposed interface for events between Service and Activity / ViewModel
  */
 sealed class RecorderServiceEvent {
-    data object ToggleRecording: RecorderServiceEvent()
+    data object StartRecording: RecorderServiceEvent()
+    data object PauseRecording: RecorderServiceEvent()
+    data object ResumeRecording: RecorderServiceEvent()
+    data object DeleteRecording: RecorderServiceEvent()
+    data class SaveRecording(val recordingName: String): RecorderServiceEvent()
+}
+
+sealed class RecorderServiceException(override val message: String) : Exception(message) {
+    data class IllegalRecorderState(override val message: String) : RecorderServiceException(message)
+
 }
 
 @AndroidEntryPoint
@@ -61,16 +79,23 @@ class RecorderService : Service() {
     @Inject
     lateinit var timeProvider: TimeProvider
 
+    @Inject
+    @ApplicationScope
+    lateinit var applicationScope: CoroutineScope
+
     /** Interface object for clients that bind */
     private val binder = LocalBinder()
     inner class LocalBinder : Binder() {
         fun getServiceState() = serviceState
         fun getEventHandler() = ::onEvent
+        fun getExceptionChannel() = exceptionChannel
     }
 
     /**
      *  --------------- Local variables ---------------
      */
+
+    private val _exceptionChannel = Channel<RecorderServiceException>()
 
     private val recorder by lazy {
         Recorder(
@@ -81,81 +106,134 @@ class RecorderService : Service() {
 
     /** Own state flows */
 
-    private val _isRecording = MutableStateFlow(false)
     private val _recordingDuration = MutableStateFlow(0.seconds)
 
     private var _recordingTimer : Timer? = null
 
     private var pendingIntentTapAction : PendingIntent? = null
 
+    private val dependenciesInjected = MutableStateFlow(false)
+
     /**
      *  ----------- Interface for Activity / ViewModel -------
      */
 
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val recorderState = dependenciesInjected.flatMapLatest {
+        if (!it) flowOf(RecorderState.UNINITIALIZED)
+        else recorder.state
+    }
+
     val serviceState = combine(
-        _isRecording,
+        recorderState,
         _recordingDuration
-    ) { isRecording, recordingDuration ->
+    ) { recorderState, recordingDuration ->
         RecorderServiceState(
-            isRecording = isRecording,
+            recorderState = recorderState,
             recordingDuration = recordingDuration
         )
     }
 
     fun onEvent(event: RecorderServiceEvent) {
         when(event) {
-            is RecorderServiceEvent.ToggleRecording -> {
-                if (_isRecording.value) {
-                    stopRecording()
-                } else {
-                    startRecording()
-                }
-            }
+            is RecorderServiceEvent.StartRecording -> startRecording()
+            is RecorderServiceEvent.PauseRecording -> pauseRecording()
+            is RecorderServiceEvent.ResumeRecording -> resumeRecording()
+            is RecorderServiceEvent.DeleteRecording -> deleteRecording()
+            is RecorderServiceEvent.SaveRecording -> saveRecording(event.recordingName)
         }
     }
+
+    val exceptionChannel = _exceptionChannel.receiveAsFlow()
 
     /**
      *  --------------- Private methods ---------------
      */
 
-    private fun startRecording() : Result<Unit> {
-        return recorder.start("Musikus").also { result ->
-            if(result.isSuccess) {
-                _isRecording.update { true }
-                _recordingTimer = timer(
-                    name = "recording_timer",
-                    period = 0.01.seconds.inWholeMilliseconds, // 10ms
-                    initialDelay = 0.01.seconds.inWholeMilliseconds
-                ) {
-                    _recordingDuration.update { it + 0.01.seconds }
-                    if (_recordingDuration.value.inWholeMilliseconds % 1000 == 0L) {
-                        updateNotification(_recordingDuration.value)
-                    }
-                }
+    private fun startRecording() {
+        try {
+            recorder.start()
+            startTimer()
+        } catch (e: IllegalRecorderStateException) {
+            applicationScope.launch { _exceptionChannel.send(
+                RecorderServiceException.IllegalRecorderState(e.message)
+            ) }
+        }
+    }
+
+    private fun pauseRecording() {
+        try {
+            recorder.pause()
+            _recordingTimer?.cancel()
+        } catch (e: IllegalRecorderStateException) {
+            applicationScope.launch { _exceptionChannel.send(
+                RecorderServiceException.IllegalRecorderState(e.message)
+            ) }
+        }
+    }
+
+    private fun resumeRecording() {
+        try {
+            recorder.resume()
+            startTimer()
+        } catch (e: IllegalRecorderStateException) {
+            applicationScope.launch { _exceptionChannel.send(
+                RecorderServiceException.IllegalRecorderState(e.message)
+            ) }
+        }
+    }
+
+    private fun deleteRecording() {
+        try {
+            recorder.delete()
+            reset()
+        } catch (e: IllegalRecorderStateException) {
+            applicationScope.launch { _exceptionChannel.send(
+                RecorderServiceException.IllegalRecorderState(e.message)
+            ) }
+        }
+    }
+
+    private fun saveRecording(recordingName: String) {
+        try {
+            recorder.save(recordingName)
+            setFinalNotification()
+            reset()
+        } catch (e: IllegalRecorderStateException) {
+            applicationScope.launch { _exceptionChannel.send(
+                RecorderServiceException.IllegalRecorderState(e.message)
+            ) }
+        }
+    }
+
+    private fun startTimer() {
+        _recordingTimer = timer(
+            name = "recording_timer",
+            period = 0.01.seconds.inWholeMilliseconds, // 10ms
+            initialDelay = 0.01.seconds.inWholeMilliseconds
+        ) {
+            _recordingDuration.update { it + 0.01.seconds }
+            if (_recordingDuration.value.inWholeMilliseconds % 1000 == 0L) {
+                updateNotification(_recordingDuration.value)
             }
         }
     }
 
-    private fun stopRecording() : Result<Unit> {
-        return recorder.stop().also {
-            if(it.isSuccess) {
-                _isRecording.update { false }
-                _recordingDuration.update { 0.seconds }
-                _recordingTimer?.cancel()
-                setFinalNotification()
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    stopForeground(STOP_FOREGROUND_DETACH)
-                } else {
-                    stopForeground(false)
-                }
-            }
-        }
+    private fun reset() {
+        _recordingDuration.update { 0.seconds }
+        _recordingTimer?.cancel()
+        stopForeground(STOP_FOREGROUND_DETACH)
     }
 
 
     /**
      * --------------- Service Boilerplate ------------
      */
+
+    override fun onCreate() {
+        super.onCreate()
+        dependenciesInjected.update { true }
+    }
 
     override fun onBind(p0: Intent?): IBinder {
         return binder
@@ -166,15 +244,20 @@ class RecorderService : Service() {
         return true
     }
 
-    @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         createPendingIntent()
-        ServiceCompat.startForeground(
-            this,
-            RECORDER_NOTIFICATION_ID,
-            getNotification(0.seconds),
-            ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
-        )
+        val notification = getNotification(0.seconds)
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            startForeground(RECORDER_NOTIFICATION_ID, notification)
+        } else {
+            ServiceCompat.startForeground(
+                this,
+                RECORDER_NOTIFICATION_ID,
+                notification,
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
+            )
+        }
 
         return START_NOT_STICKY
     }
@@ -190,7 +273,7 @@ class RecorderService : Service() {
     }
 
     override fun onDestroy() {
-        recorder.stop()
+        recorder.delete()
         super.onDestroy()
     }
 
@@ -215,7 +298,7 @@ class RecorderService : Service() {
 
     private fun getBasicNotification(title: String, text: CharSequence, persistent: Boolean = true) : Notification {
         return  NotificationCompat.Builder(this, RECORDER_NOTIFICATION_CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_record)    // without icon, setOngoing does not work
+            .setSmallIcon(R.drawable.ic_microphone)    // without icon, setOngoing does not work
             .setOngoing(persistent) // does not work on Android 14: https://developer.android.com/about/versions/14/behavior-changes-all#non-dismissable-notifications
             .setContentTitle(title)
             .setContentText(text)

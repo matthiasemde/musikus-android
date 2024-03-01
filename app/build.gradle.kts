@@ -16,7 +16,7 @@ android {
 
     defaultConfig {
         applicationId = "app.musikus"
-        minSdk = 23
+        minSdk = 24
         targetSdk = compileSdk
         versionCode = 2
         versionName = "0.9.1"
