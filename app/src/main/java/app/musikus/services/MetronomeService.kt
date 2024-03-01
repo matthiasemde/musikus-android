@@ -125,11 +125,7 @@ class MetronomeService : Service() {
             metronome.play()
         } else {
             metronome.stop()
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                stopForeground(STOP_FOREGROUND_REMOVE)
-            } else {
-                stopForeground(true)
-            }
+            stopForeground(STOP_FOREGROUND_REMOVE)
         }
     }
 
@@ -147,15 +143,19 @@ class MetronomeService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-
         createPendingIntent()
+        val notification = getNotification("Metronome", "Metronome is running")
 
-        ServiceCompat.startForeground(
-            this,
-            METRONOME_NOTIFICATION_ID,
-            getNotification("Metronome", "Metronome is running"),
-            ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
-        )
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            startForeground(METRONOME_NOTIFICATION_ID, notification)
+        } else {
+            ServiceCompat.startForeground(
+                this,
+                METRONOME_NOTIFICATION_ID,
+                notification,
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
+            )
+        }
 
         return START_NOT_STICKY
     }

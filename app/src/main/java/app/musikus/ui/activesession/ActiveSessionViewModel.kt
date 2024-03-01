@@ -15,10 +15,9 @@ import app.musikus.database.daos.LibraryItem
 import app.musikus.database.entities.LibraryItemCreationAttributes
 import app.musikus.database.entities.SectionCreationAttributes
 import app.musikus.database.entities.SessionCreationAttributes
-import app.musikus.services.SessionEvent
 import app.musikus.services.SessionService
-import app.musikus.services.SessionServiceAction
-import app.musikus.services.SessionState
+import app.musikus.services.SessionServiceEvent
+import app.musikus.services.SessionServiceState
 import app.musikus.ui.library.LibraryItemDialogUiEvent
 import app.musikus.ui.library.LibraryItemEditData
 import app.musikus.usecase.library.LibraryUseCases
@@ -41,8 +40,6 @@ import javax.inject.Inject
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
-
-const val TAG = "ActiveSessionViewModel"
 
 data class PracticeSection(
     val id: Int,
@@ -97,18 +94,18 @@ class ActiveSessionViewModel @Inject constructor(
      *  --------------------- Session service  ---------------------
      */
 
-    private val sessionStateWrapper = MutableStateFlow<StateFlow<SessionState>?>(null)
-    private val sessionState = sessionStateWrapper.flatMapLatest {
-        it ?: flowOf(SessionState())
+    private val sessionServiceStateWrapper = MutableStateFlow<StateFlow<SessionServiceState>?>(null)
+    private val sessionServiceState = sessionServiceStateWrapper.flatMapLatest {
+        it ?: flowOf(SessionServiceState())
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = SessionState()
+        initialValue = SessionServiceState()
     )
 
     // #############################################    
 
-    private var sessionEvent: (SessionEvent) -> Unit = { Log.d("TAG", "not implemented") }
+    private var sessionEvent: (SessionServiceEvent) -> Unit = { Log.d("TAG", "not implemented") }
     private var bound = false
 
     private val connection = object : ServiceConnection {
@@ -117,7 +114,7 @@ class ActiveSessionViewModel @Inject constructor(
             // We've bound to SessionForegroundService, cast the Binder and get SessionService instance
             val binder = service as SessionService.LocalBinder
             sessionEvent = binder.getOnEvent()
-            sessionStateWrapper.update { binder.getSessionStateFlow() }
+            sessionServiceStateWrapper.update { binder.getSessionStateFlow() }
 
             bound = true
         }
@@ -147,7 +144,7 @@ class ActiveSessionViewModel @Inject constructor(
         initialValue = listOf()
     )
 
-    private val currentlyPracticedSection = sessionState.map {
+    private val currentlyPracticedSection = sessionServiceState.map {
         it.sections.lastOrNull()
     }.stateIn(
         scope = viewModelScope,
@@ -156,7 +153,7 @@ class ActiveSessionViewModel @Inject constructor(
     )
 
 
-    private val totalDurationRoundedDownToNextSecond = sessionState.map { sessionState ->
+    private val totalDurationRoundedDownToNextSecond = sessionServiceState.map { sessionState ->
         sessionState.sections.sumOf {
             (it.duration ?: sessionState.currentSectionDuration).inWholeMilliseconds
         }.milliseconds.inWholeSeconds.seconds
@@ -281,7 +278,7 @@ class ActiveSessionViewModel @Inject constructor(
 
     val uiState = combine(
         libraryCardUiState,
-        sessionState,
+        sessionServiceState,
         addLibraryItemDialogUiState,
         totalDurationRoundedDownToNextSecond,
         dialogUiState
@@ -311,9 +308,9 @@ class ActiveSessionViewModel @Inject constructor(
         initialValue = ActiveSessionUiState(
             cardUiStates = emptyList(),
             totalSessionDuration = 0.milliseconds,
-            totalBreakDuration = sessionState.value.pauseDuration,
+            totalBreakDuration = sessionServiceState.value.pauseDuration,
             sections = emptyList(),
-            isPaused = sessionState.value.isPaused,
+            isPaused = sessionServiceState.value.isPaused,
             addItemDialogUiState = addLibraryItemDialogUiState.value,
             dialogUiState = dialogUiState.value
         )
@@ -381,12 +378,12 @@ class ActiveSessionViewModel @Inject constructor(
 
     private fun itemClicked(item: LibraryItem) {
         if (!bound) return
-        sessionEvent(SessionEvent.StartNewSection(item))
+        sessionEvent(SessionServiceEvent.StartNewSection(item))
         startService()
     }
 
     private fun togglePause() {
-        sessionEvent(SessionEvent.TogglePause)
+        sessionEvent(SessionServiceEvent.TogglePause)
     }
 
     private fun stopSession() {
@@ -394,30 +391,30 @@ class ActiveSessionViewModel @Inject constructor(
         viewModelScope.launch {
             sessionUseCases.add(
                 sessionCreationAttributes = SessionCreationAttributes(
-                    breakDuration = sessionState.value.pauseDuration,
+                    breakDuration = sessionServiceState.value.pauseDuration,
                     comment = endDialogData.comment,
                     rating = endDialogData.rating
                 ),
-                sectionCreationAttributes = sessionState.value.sections.map {
+                sectionCreationAttributes = sessionServiceState.value.sections.map {
                     SectionCreationAttributes(
                         libraryItemId = it.libraryItem.id,
-                        duration = it.duration ?: sessionState.value.currentSectionDuration,
+                        duration = it.duration ?: sessionServiceState.value.currentSectionDuration,
                         startTimestamp = it.startTimestamp
                     )
                 }
             )
             _endDialogData.update { null }
-            sessionEvent(SessionEvent.StopTimerAndFinish)
+            sessionEvent(SessionServiceEvent.StopTimerAndFinish)
             unbindService()
         }
     }
 
     private fun discardSession() {
-        sessionEvent(SessionEvent.StopTimerAndFinish)
+        sessionEvent(SessionServiceEvent.StopTimerAndFinish)
     }
 
     private fun removeSection(itemId: Int) {
-        sessionEvent(SessionEvent.DeleteSection(itemId))
+        sessionEvent(SessionServiceEvent.DeleteSection(itemId))
     }
 
     private fun createLibraryItemDialog() {
@@ -433,9 +430,7 @@ class ActiveSessionViewModel @Inject constructor(
     // ################################### Service ############################################
 
     private fun startService() {
-        Log.d("TAG", "start Foreground Service ")
         val intent = Intent(application, SessionService::class.java) // Build the intent for the service
-        intent.action = SessionServiceAction.START.name
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             application.startForegroundService(intent)
         } else {
@@ -444,13 +439,11 @@ class ActiveSessionViewModel @Inject constructor(
     }
 
     private fun bindService() {
-        Log.d("TAG", "bindService Button pressed")
         val intent = Intent(application, SessionService::class.java) // Build the intent for the service
         application.bindService(intent, connection, Context.BIND_AUTO_CREATE)
     }
 
     override fun onCleared() {
-        Log.d("TAG", "onCleared")
         unbindService()
         super.onCleared()
     }

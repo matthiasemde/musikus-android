@@ -10,6 +10,7 @@ package app.musikus.ui.activesession.recorder
 
 import android.util.Log
 import android.widget.Toast
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -131,31 +132,35 @@ fun RecorderCardHeader(
     var currentPosition by remember { mutableLongStateOf(0) }
 
     LaunchedEffect(key1 = playerState?.currentMediaItem) {
-        Log.d("Recorder", "Start tracking duration")
         while(playerState?.currentMediaItem != null && isActive) {
             currentPosition = playerState?.player?.currentPosition ?: 0
             delay(100)
         }
-        Log.d("Recorder", "Stop tracking duration")
     }
 
     Box(modifier = modifier.padding(vertical = MaterialTheme.spacing.small)) {
-        if(playerState?.currentMediaItem != null) {
-            MediaPlayerBar(
-                uiState = uiState,
-                playerState = playerState,
-                currentPosition = currentPosition,
-                mediaController = mediaController,
-                onSetCurrentPosition = { position ->
-                    currentPosition = position
-                }
-            )
-        } else {
-            RecorderBar(
-                uiState = uiState,
-                playerState = playerState,
-                eventHandler = eventHandler
-            )
+
+        AnimatedContent(
+            playerState?.currentMediaItem,
+            label = "recorder-header-content-animation"
+        ) { currentMediaItem ->
+            if (currentMediaItem != null) {
+                MediaPlayerBar(
+                    uiState = uiState,
+                    playerState = playerState,
+                    currentPosition = currentPosition,
+                    mediaController = mediaController,
+                    onSetCurrentPosition = { position ->
+                        currentPosition = position
+                    }
+                )
+            } else {
+                RecorderBar(
+                    uiState = uiState,
+                    playerState = playerState,
+                    eventHandler = eventHandler
+                )
+            }
         }
     }
 
@@ -346,7 +351,7 @@ fun RecorderBar(
     Row(
         modifier
             .fillMaxSize()
-            .padding(horizontal = MaterialTheme.spacing.extraLarge),
+            .padding(horizontal = MaterialTheme.spacing.large),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
@@ -361,10 +366,12 @@ fun RecorderBar(
             uiState.recorderState != RecorderState.UNINITIALIZED
 
         AnimatedVisibility (showDeleteAndSave) {
-            TextButton(onClick = { eventHandler(RecorderUiEvent.DeleteRecording) }) {
-                Text(text = "Delete")
+            Row {
+                TextButton(onClick = { eventHandler(RecorderUiEvent.DeleteRecording) }) {
+                    Text(text = "Delete")
+                }
+                Spacer(modifier = Modifier.width(MaterialTheme.spacing.extraSmall))
             }
-            Spacer(modifier = Modifier.width(MaterialTheme.spacing.extraSmall))
         }
 
         FilledIconButton(
@@ -419,9 +426,11 @@ fun RecorderBar(
         }
 
         AnimatedVisibility (showDeleteAndSave) {
-            Spacer(modifier = Modifier.width(MaterialTheme.spacing.extraSmall))
-            TextButton(onClick = { eventHandler(RecorderUiEvent.SaveRecording) }) {
-                Text(text = "Save")
+            Row {
+                Spacer(modifier = Modifier.width(MaterialTheme.spacing.extraSmall))
+                TextButton(onClick = { eventHandler(RecorderUiEvent.SaveRecording) }) {
+                    Text(text = "Save")
+                }
             }
         }
     }
