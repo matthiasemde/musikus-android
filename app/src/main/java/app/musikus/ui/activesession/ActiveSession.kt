@@ -262,6 +262,10 @@ fun ActiveSession(
             }
         }
     }
+
+    if (deepLinkArgument == ActiveSessionActions.FINISH.name) {
+        eventHandler(ActiveSessionUiEvent.ShowFinishDialog)
+    }
 }
 
 @Composable
