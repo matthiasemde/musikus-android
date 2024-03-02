@@ -45,7 +45,7 @@ class AddGoalUseCase(
         }
 
         if(instanceCreationAttributes.startTimestamp != TimeProvider.uninitializedDateTime) {
-            throw InvalidGoalInstanceException("Start timestamp must be in the past, it is set automatically")
+            throw InvalidGoalInstanceException("Start timestamp must not be set, it is set automatically")
         }
 
         // check if the goal description id was changed from the default value
