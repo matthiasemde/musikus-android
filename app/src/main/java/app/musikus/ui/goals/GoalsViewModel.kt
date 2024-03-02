@@ -462,11 +462,6 @@ class GoalsViewModel @Inject constructor(
                     periodUnit = dialogData.periodUnit,
                 ),
                 instanceCreationAttributes = GoalInstanceCreationAttributes(
-                    startTimestamp = when(dialogData.periodUnit) {
-                        GoalPeriodUnit.DAY -> timeProvider.getStartOfDay()
-                        GoalPeriodUnit.WEEK -> timeProvider.getStartOfWeek()
-                        GoalPeriodUnit.MONTH -> timeProvider.getStartOfMonth()
-                     },
                     target = dialogData.target,
                 ),
                 libraryItemIds = dialogData.selectedLibraryItems.map { it.id },
