@@ -24,7 +24,6 @@ import app.musikus.usecase.userpreferences.UserPreferencesUseCases
 import app.musikus.utils.GoalsSortMode
 import app.musikus.utils.SortDirection
 import app.musikus.utils.SortInfo
-import app.musikus.utils.TimeProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -41,7 +40,7 @@ import kotlin.time.Duration.Companion.seconds
 
 data class GoalDialogData(
     val target: Duration = 0.seconds,
-    val periodInPeriodUnits: Int = 0,
+    val periodInPeriodUnits: Int = 1,
     val periodUnit: GoalPeriodUnit = GoalPeriodUnit.DEFAULT,
     val goalType: GoalType = GoalType.DEFAULT,
     val oneShot: Boolean = false,
@@ -50,7 +49,6 @@ data class GoalDialogData(
 
 @HiltViewModel
 class GoalsViewModel @Inject constructor(
-    private val timeProvider: TimeProvider,
     private val userPreferencesUseCases: UserPreferencesUseCases,
     private val goalsUseCases: GoalsUseCases,
     libraryUseCases: LibraryUseCases,
@@ -319,16 +317,7 @@ class GoalsViewModel @Inject constructor(
 
     private fun showDialog(oneShot: Boolean) {
         _dialogData.update {
-            GoalDialogData(
-                target = 0.seconds,
-                periodInPeriodUnits = 1,
-                periodUnit = GoalPeriodUnit.DAY,
-                goalType = GoalType.NON_SPECIFIC,
-                oneShot = oneShot,
-                selectedLibraryItems = items.value.firstOrNull()?.let {
-                    listOf(it)
-                } ?: emptyList(),
-            )
+            GoalDialogData(oneShot = oneShot)
         }
     }
 
@@ -462,14 +451,11 @@ class GoalsViewModel @Inject constructor(
                     periodUnit = dialogData.periodUnit,
                 ),
                 instanceCreationAttributes = GoalInstanceCreationAttributes(
-                    startTimestamp = when(dialogData.periodUnit) {
-                        GoalPeriodUnit.DAY -> timeProvider.getStartOfDay()
-                        GoalPeriodUnit.WEEK -> timeProvider.getStartOfWeek()
-                        GoalPeriodUnit.MONTH -> timeProvider.getStartOfMonth()
-                     },
                     target = dialogData.target,
                 ),
-                libraryItemIds = dialogData.selectedLibraryItems.map { it.id },
+                libraryItemIds = if (dialogData.goalType == GoalType.ITEM_SPECIFIC) {
+                    dialogData.selectedLibraryItems.map { it.id }
+                } else emptyList()
             )
             clearDialog()
         }

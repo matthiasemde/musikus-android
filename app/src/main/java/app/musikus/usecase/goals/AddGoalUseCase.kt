@@ -45,7 +45,7 @@ class AddGoalUseCase(
         }
 
         if(instanceCreationAttributes.startTimestamp != TimeProvider.uninitializedDateTime) {
-            throw InvalidGoalInstanceException("Start timestamp must be in the past, it is set automatically")
+            throw InvalidGoalInstanceException("Start timestamp must not be set, it is set automatically")
         }
 
         // check if the goal description id was changed from the default value
@@ -54,7 +54,7 @@ class AddGoalUseCase(
         }
 
         if(descriptionCreationAttributes.type == GoalType.NON_SPECIFIC && !libraryItemIds.isNullOrEmpty()) {
-            throw InvalidGoalDescriptionException("Library items must be null or empty for non-specific goals")
+            throw InvalidGoalDescriptionException("Library items must be null or empty for non-specific goals but was $libraryItemIds")
         }
 
         if(descriptionCreationAttributes.type == GoalType.ITEM_SPECIFIC) {
