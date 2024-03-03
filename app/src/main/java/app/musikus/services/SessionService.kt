@@ -100,10 +100,10 @@ class SessionService : Service() {
     private var _currentPauseDuration = 0.seconds
 
     /** Own state flow */
-    val _sections = MutableStateFlow<List<PracticeSection>>(emptyList())
-    val _currentSectionDurationFlow = MutableStateFlow(0.seconds)
-    val _currentPauseDurationFlow = MutableStateFlow(0.seconds)
-    val _isPaused = MutableStateFlow(false)
+    private val _sections = MutableStateFlow<List<PracticeSection>>(emptyList())
+    private val _currentSectionDurationFlow = MutableStateFlow(0.seconds)
+    private val _currentPauseDurationFlow = MutableStateFlow(0.seconds)
+    private val _isPaused = MutableStateFlow(false)
 
 
     private var _timer: java.util.Timer? = null
