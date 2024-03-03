@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2023 Matthias Emde
+ * Copyright (c) 2024 Matthias Emde
  */
 
 package app.musikus.ui.components
@@ -34,15 +34,20 @@ fun SelectionSpinner(
     modifier: Modifier = Modifier,
     expanded: Boolean,
     label: @Composable (() -> Unit)? = null,
+    placeholder: @Composable (() -> Unit)? = null,
     leadingIcon: @Composable (() -> Unit)? = null,
     options: List<SelectionSpinnerOption>,
-    selected: SelectionSpinnerOption,
+    selected: SelectionSpinnerOption?,
     specialOption: SelectionSpinnerOption? = null,
     semanticDescription: String,
     dropdownTestTag: String,
     onExpandedChange: (Boolean) -> Unit,
     onSelectedChange: (SelectionSpinnerOption) -> Unit
 ) {
+    if(selected == null && (label == null && placeholder == null) ) {
+        throw IllegalArgumentException("SelectionSpinner needs either a label or a placeholder if no option is selected")
+    }
+
     ExposedDropdownMenuBox(
         modifier = modifier.semantics {
             contentDescription = semanticDescription
@@ -55,9 +60,10 @@ fun SelectionSpinner(
                 readOnly = true,
                 modifier = Modifier
                     .menuAnchor(),
-                value = selected.name,
+                value = selected?.name ?: "", // if no option is selected, show nothing
                 onValueChange = {},
                 label = label,
+                placeholder = placeholder,
                 leadingIcon = leadingIcon,
                 trailingIcon = {
                     ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
