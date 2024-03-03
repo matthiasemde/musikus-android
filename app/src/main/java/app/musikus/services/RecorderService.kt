@@ -272,11 +272,6 @@ class RecorderService : Service() {
         }
     }
 
-    override fun onDestroy() {
-        recorder.delete()
-        super.onDestroy()
-    }
-
     private fun updateNotification(duration: Duration) {
         val notification: Notification = getNotification(duration)
         val mNotificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
