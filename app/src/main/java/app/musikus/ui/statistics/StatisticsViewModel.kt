@@ -8,7 +8,6 @@
 
 package app.musikus.ui.statistics
 
-import android.util.Log
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -289,7 +288,7 @@ class StatisticsViewModel @Inject constructor(
         }
     }.stateIn(
         scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(50000),
+        started = SharingStarted.WhileSubscribed(500),
         initialValue = null
     )
 
@@ -315,7 +314,7 @@ class StatisticsViewModel @Inject constructor(
         )
     }.stateIn(
         scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(50000),
+        started = SharingStarted.WhileSubscribed(500),
         initialValue = StatisticsUiState(
             contentUiState = StatisticsContentUiState(
                 currentMonthUiState = currentMonthUiState.value,
@@ -326,9 +325,4 @@ class StatisticsViewModel @Inject constructor(
             ),
         )
     )
-
-    override fun onCleared() {
-        Log.d("StatisticsViewModel", "onCleared: ")
-        super.onCleared()
-    }
 }
