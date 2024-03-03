@@ -29,6 +29,7 @@ import app.musikus.utils.TimeProvider
 import app.musikus.utils.getDurationString
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 import kotlin.concurrent.timer
@@ -79,11 +80,24 @@ class SessionService : Service() {
     private val binder = LocalBinder()         // interface object for clients that bind
     inner class LocalBinder : Binder() {
         // Return this instance of SessionService so clients can call public methods
-        fun getSessionStateFlow() = sessionState
+        fun getServiceState() = serviceState
         fun getOnEvent(): (SessionServiceEvent) -> Unit = ::onEvent
     }
 
-    private val sessionState = MutableStateFlow(SessionServiceState())  // Session State
+    /**
+     * Ground truth for durations. Have to be local vars to be able to update them in the timer,
+     * even when no subscribers (e.g. screen off).
+     * */
+    private var _currentSectionDuration = 0.seconds
+    private var _currentPauseDuration = 0.seconds
+
+    /** Own state flow */
+    val _sections = MutableStateFlow<List<PracticeSection>>(emptyList())
+    val _currentSectionDurationFlow = MutableStateFlow(0.seconds)
+    val _currentPauseDurationFlow = MutableStateFlow(0.seconds)
+    val _isPaused = MutableStateFlow(false)
+
+
     private var _timer: java.util.Timer? = null
     private val timerInterval = 1.seconds
     private var _sectionIdCounter = 0
@@ -111,6 +125,22 @@ class SessionService : Service() {
     /**
      *  ---------------------- Interface for Activity / ViewModel ----------------------
      */
+
+    // Pack the service state into a single object
+    val serviceState = combine(
+        _sections,
+        _currentSectionDurationFlow,
+        _currentPauseDurationFlow,
+        _isPaused
+    ) { sections, currentSectionDuration, pauseDuration, isPaused ->
+        SessionServiceState(
+            sections = sections,
+            currentSectionDuration = currentSectionDuration,
+            pauseDuration = pauseDuration,
+            isPaused = isPaused
+        )
+    }
+
     fun onEvent(event: SessionServiceEvent) {
         when(event) {
             is SessionServiceEvent.StopTimerAndFinish -> stopTimerAndDestroy()
@@ -120,49 +150,46 @@ class SessionService : Service() {
         }
     }
 
-
     /**
      * ----------------------------------- private functions ------------------------------------
      */
 
     private fun newSection(item: LibraryItem) {
         // prevent starting a new section too fast
-        if (sessionState.value.sections.isNotEmpty() && sessionState.value.currentSectionDuration < 1.seconds) return
+        if (_sections.value.isNotEmpty() && _currentSectionDuration < 1.seconds) return
         // prevent starting the same section twice in a row
-        if (item == sessionState.value.sections.lastOrNull()?.libraryItem) return
+        if (item == _sections.value.lastOrNull()?.libraryItem) return
 
         startTimer()
         // end current section and store its duration
 
-        sessionState.update {
-            val finishedSectionDur = it.currentSectionDuration
-            val flooredFinishedDur = finishedSectionDur.inWholeSeconds.seconds  // floor to seconds
+        val finishedSectionDur = _currentSectionDuration
+        val flooredFinishedDur = finishedSectionDur.inWholeSeconds.seconds  // floor to seconds
 
-            // update last section with tracked duration
-            val updatedLastSection = it.sections.lastOrNull()?.copy(duration = flooredFinishedDur)
-            val newItem = PracticeSection(
-                id = _sectionIdCounter++,
-                libraryItem = item,
-                duration = null,
-                startTimestamp = timeProvider.now()
-            )
-            it.copy(
-                // the remaining part (sub-seconds) will be added to the new section upfront
-                currentSectionDuration =  finishedSectionDur - flooredFinishedDur,
-                sections =
-                    if (updatedLastSection == null) {
-                        listOf(newItem)   // first section started, only add new item
-                    } else {
-                        it.sections.dropLast(1) + updatedLastSection + newItem
-                    }
-            )
+        // update last section with tracked duration
+        val updatedLastSection = _sections.value.lastOrNull()?.copy(duration = flooredFinishedDur)
+        val newItem = PracticeSection(
+            id = _sectionIdCounter++,
+            libraryItem = item,
+            duration = null,
+            startTimestamp = timeProvider.now()
+        )
+
+        // the remaining part (sub-seconds) will be added to the new section upfront
+        _currentSectionDuration = finishedSectionDur - flooredFinishedDur
+        _sections.update {
+            if (updatedLastSection == null) {
+                listOf(newItem)   // first section started, only add new item
+            } else {
+                it.dropLast(1) + updatedLastSection + newItem
+            }
         }
         updateNotification()
     }
 
     private fun removeSection(sectionId: Int) {
-        val updatedSections = sessionState.value.sections.filter { it.id != sectionId }
-        sessionState.update { it.copy(sections = updatedSections) }
+        _sections.update { sectionList ->
+            sectionList.filter { it.id != sectionId } }
     }
 
     private fun stopTimerAndDestroy() {
@@ -172,7 +199,7 @@ class SessionService : Service() {
     }
 
     private fun togglePause() {
-        sessionState.update { it.copy(isPaused = !it.isPaused) }
+        _isPaused.update { !it }
         updateNotification()
     }
 
@@ -185,14 +212,12 @@ class SessionService : Service() {
             initialDelay = timerInterval.inWholeMilliseconds,
             period = timerInterval.inWholeMilliseconds
         ) {
-            if (sessionState.value.isPaused) {
-                sessionState.update { it.copy(
-                    pauseDuration = it.pauseDuration + timerInterval)
-                }
+            if (_isPaused.value) {
+                _currentPauseDuration += timerInterval
+                _currentPauseDurationFlow.update { _currentPauseDuration }
             } else {
-                sessionState.update { it.copy(
-                    currentSectionDuration = it.currentSectionDuration + timerInterval)
-                }
+                _currentSectionDuration += timerInterval
+                _currentSectionDurationFlow.update { _currentSectionDuration }
             }
             updateNotification()
         }
@@ -207,17 +232,17 @@ class SessionService : Service() {
      * Creates a notification object based on current session state
      */
     private fun createNotification() : Notification {
-        val totalPracticeDuration = sessionState.value.sections.sumOf {
-            (it.duration ?: sessionState.value.currentSectionDuration).inWholeMilliseconds }.milliseconds
+        val totalPracticeDuration = _sections.value.sumOf {
+            (it.duration ?: _currentSectionDuration).inWholeMilliseconds }.milliseconds
         val totalPracticeDurationStr =
             getDurationString(totalPracticeDuration, DurationFormat.HMS_DIGITAL)
 
-        val currentSectionName = sessionState.value.sections.lastOrNull()?.libraryItem?.name ?: "No Section"
+        val currentSectionName = _sections.value.lastOrNull()?.libraryItem?.name ?: "No Section"
 
         val title: String
         val description: String
 
-        if (sessionState.value.isPaused) {
+        if (_isPaused.value) {
             title = "Practicing Paused"
             description = "$currentSectionName - Total: $totalPracticeDurationStr"
         } else {
@@ -225,7 +250,7 @@ class SessionService : Service() {
             description = currentSectionName
         }
 
-        val actionButton1Intent = if(sessionState.value.isPaused) {
+        val actionButton1Intent = if(_isPaused.value) {
             resumeActionButton
         } else {
             pauseActionButton

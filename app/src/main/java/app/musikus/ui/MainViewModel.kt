@@ -26,9 +26,9 @@ import app.musikus.services.SessionServiceState
 import app.musikus.usecase.userpreferences.UserPreferencesUseCases
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
@@ -84,7 +84,7 @@ class MainViewModel @Inject constructor(
      * Imported flows
      */
 
-    private val activeSessionServiceStateWrapper = MutableStateFlow<StateFlow<SessionServiceState>?>(null)
+    private val activeSessionServiceStateWrapper = MutableStateFlow<Flow<SessionServiceState>?>(null)
     private val activeSessionState = activeSessionServiceStateWrapper.flatMapLatest {
         it ?: flowOf(null)
     }.stateIn(
@@ -173,7 +173,7 @@ class MainViewModel @Inject constructor(
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
             // We've bound to SessionForegroundService, cast the Binder and get SessionService instance
             val binder = service as SessionService.LocalBinder
-            activeSessionServiceStateWrapper.update { binder.getSessionStateFlow() }
+            activeSessionServiceStateWrapper.update { binder.getServiceState() }
         }
 
         override fun onServiceDisconnected(p0: ComponentName?) {
