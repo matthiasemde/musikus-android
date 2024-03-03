@@ -110,7 +110,7 @@ fun GoalDialog(
             confirmButtonEnabled = confirmButtonEnabled && dialogData.target > 0.seconds
 
             if(!isEditMode) {
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
                 PeriodInput(
                     periodInPeriodUnits = dialogData.periodInPeriodUnits,
                     periodUnit = dialogData.periodUnit,
@@ -134,7 +134,7 @@ fun GoalDialog(
                 Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
 
                 MyToggleButton(
-                    modifier = Modifier.padding(MaterialTheme.spacing.large),
+                    modifier = Modifier.padding(horizontal = MaterialTheme.spacing.large),
                     options = GoalType.entries.map {
                         ToggleButtonOption(it.ordinal, it.toString())
                     },
@@ -155,12 +155,11 @@ fun GoalDialog(
                     if (libraryItems.isNotEmpty()) {
                         SelectionSpinner(
                             expanded = libraryItemsSelectorExpanded,
+                            placeholder = { Text(text = "Select a library item") },
                             options = libraryItems.map {
                                 UUIDSelectionSpinnerOption(it.id, it.name)
                             },
                             selected = dialogData.selectedLibraryItems.firstOrNull()?.let {
-                                UUIDSelectionSpinnerOption(it.id, it.name)
-                            } ?: libraryItems.first().let {
                                 UUIDSelectionSpinnerOption(it.id, it.name)
                             },
                             semanticDescription = "Select library item",
@@ -229,7 +228,7 @@ fun PeriodInput(
             semanticDescription = "Select period unit",
             dropdownTestTag = TestTags.GOAL_DIALOG_PERIOD_UNIT_SELECTOR_DROPDOWN,
             onExpandedChange = onPeriodUnitSelectorExpandedChanged,
-            onSelectedChange = {selection ->
+            onSelectedChange = { selection ->
                 onPeriodUnitChanged(GoalPeriodUnit.entries[(selection as IntSelectionSpinnerOption?)?.id ?: 0])
                 onPeriodUnitSelectorExpandedChanged(false)
             }
