@@ -8,6 +8,7 @@
 
 package app.musikus.ui.components
 
+import android.os.Build
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -76,12 +77,19 @@ fun DeleteConfirmationBottomSheet(
                 style = MaterialTheme.typography.titleMedium
             )
         }
+
+        // WindowsInsets.navigationBars doesn't work on API level <= 29,
+        // so we need to add a fixed padding to make sure
+        // the bottom sheet is above the navigation bar
+        val navigationBarHeight = if (Build.VERSION.SDK_INT > Build.VERSION_CODES.Q) {
+            WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+        } else {
+            48.dp
+        }
+
         Spacer(
             modifier = Modifier
-                .height(
-                    WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() +
-                            MaterialTheme.spacing.extraSmall
-                )
+                .height(navigationBarHeight + MaterialTheme.spacing.extraSmall)
         )
     }
 }
