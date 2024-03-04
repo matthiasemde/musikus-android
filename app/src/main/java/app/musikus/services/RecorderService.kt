@@ -13,6 +13,7 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
 import android.app.TaskStackBuilder
+import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.Binder
@@ -187,6 +188,14 @@ class RecorderService : Service() {
         try {
             recorder.delete()
             reset()
+
+            // after resetting the recorder, remove the notification
+            val notificationManager = getSystemService(
+                Context.NOTIFICATION_SERVICE
+            ) as NotificationManager
+
+            notificationManager.cancel(RECORDER_NOTIFICATION_ID)
+
         } catch (e: IllegalRecorderStateException) {
             applicationScope.launch { _exceptionChannel.send(
                 RecorderServiceException.IllegalRecorderState(e.message)
