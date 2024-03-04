@@ -54,6 +54,7 @@ data class PracticeSection(
     val id: Int,
     val libraryItem: LibraryItem,
     val startTimestamp: ZonedDateTime,
+    var pauseDuration: Duration,
     var duration: Duration?
 )
 
@@ -424,7 +425,7 @@ class ActiveSessionViewModel @Inject constructor(
                 sectionCreationAttributes = sessionServiceState.value.sections.map {
                     SectionCreationAttributes(
                         libraryItemId = it.libraryItem.id,
-                        duration = it.duration ?: sessionServiceState.value.currentSectionDuration,
+                        duration = (it.duration ?: sessionServiceState.value.currentSectionDuration) - it.pauseDuration,
                         startTimestamp = it.startTimestamp
                     )
                 }
