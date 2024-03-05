@@ -233,7 +233,7 @@ fun GoalsScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(32.dp),
+                        .padding(MaterialTheme.spacing.extraLarge),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(

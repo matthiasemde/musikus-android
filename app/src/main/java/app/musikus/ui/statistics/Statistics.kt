@@ -183,7 +183,7 @@ fun Statistics(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(MaterialTheme.spacing.large),
+                    .padding(MaterialTheme.spacing.extraLarge),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
