@@ -45,6 +45,7 @@ data class StatisticsContentUiState(
     val practiceDurationCardUiState: StatisticsPracticeDurationCardUiState?,
     val goalCardUiState: StatisticsGoalCardUiState?,
     val ratingsCardUiState: StatisticsRatingsCardUiState?,
+    val showHint: Boolean,
 )
 
 data class StatisticsCurrentMonthUiState(
@@ -303,6 +304,12 @@ class StatisticsViewModel @Inject constructor(
                 practiceDurationCardUiState = practiceDurationCardUiState,
                 goalCardUiState = goalCardUiState,
                 ratingsCardUiState = ratingsCardUiState,
+                showHint = (
+                    currentMonthUiState == null &&
+                    practiceDurationCardUiState == null &&
+                    goalCardUiState == null &&
+                    ratingsCardUiState == null
+                )
             ),
         )
     }.stateIn(
@@ -314,6 +321,7 @@ class StatisticsViewModel @Inject constructor(
                 practiceDurationCardUiState = practiceDurationCardUiState.value,
                 goalCardUiState = goalCardUiState.value,
                 ratingsCardUiState = ratingsCardUiState.value,
+                showHint = true
             ),
         )
     )

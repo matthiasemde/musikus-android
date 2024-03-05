@@ -173,13 +173,8 @@ fun Statistics(
             }
         }
 
-        // If there is no data to show, show hint
-        if (
-            contentUiState.currentMonthUiState == null &&
-            contentUiState.practiceDurationCardUiState == null &&
-            contentUiState.goalCardUiState == null &&
-            contentUiState.ratingsCardUiState == null
-        ) {
+        // Show hint if there is no session data
+        if (contentUiState.showHint) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
