@@ -16,7 +16,6 @@ import android.os.Build
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.core.app.ActivityCompat
-import androidx.core.view.WindowCompat
 import app.musikus.BuildConfig
 import app.musikus.Musikus
 import app.musikus.utils.ExportDatabaseContract
@@ -43,7 +42,6 @@ class MainActivity : PermissionCheckerActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        WindowCompat.setDecorFitsSystemWindows(window, false)
 
         if (BuildConfig.DEBUG) {
 //            launchAppIntroFirstRun()
