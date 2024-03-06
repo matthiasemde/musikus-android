@@ -14,6 +14,8 @@ import android.view.WindowManager
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.dynamicDarkColorScheme
+import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
@@ -21,10 +23,12 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
+import app.musikus.datastore.ColorSchemeSelections
 import app.musikus.datastore.ThemeSelections
 
 private val LightColors = lightColorScheme(
@@ -95,6 +99,7 @@ private val DarkColors = darkColorScheme(
 @Composable
 fun MusikusTheme(
     theme: ThemeSelections,
+    colorScheme: ColorSchemeSelections,
     content: @Composable () -> Unit
 ) {
     val useDarkTheme = when(theme) {
@@ -103,10 +108,21 @@ fun MusikusTheme(
         ThemeSelections.NIGHT -> true
     }
 
-    val colorScheme = if (!useDarkTheme) {
-        LightColors
-    } else {
-        DarkColors
+    val colorSchemeDarkOrLight = when(colorScheme) {
+        ColorSchemeSelections.MUSIKUS -> {
+            if (useDarkTheme) DarkColors else LightColors
+        }
+        ColorSchemeSelections.LEGACY -> {
+            if (useDarkTheme) DarkColors else LightColors
+        }
+        ColorSchemeSelections.DYNAMIC -> {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                val context = LocalContext.current
+                if (useDarkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+            } else {
+                if (useDarkTheme) DarkColors else LightColors
+            }
+        }
     }
 
     // source: https://gist.github.com/Khazbs/1f1f1b5c05f45dbfa465f249b1e20506
@@ -153,7 +169,7 @@ fun MusikusTheme(
     }
 
     MaterialTheme(
-        colorScheme = colorScheme,
+        colorScheme = colorSchemeDarkOrLight,
         content = content
     )
 }

@@ -36,6 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.musikus.datastore.ColorSchemeSelections
 import app.musikus.datastore.ThemeSelections
 import app.musikus.ui.components.TwoLiner
 import app.musikus.ui.components.TwoLinerData
@@ -75,8 +76,13 @@ fun AppearanceScreen(
             ),
             TwoLinerData(
                 firstLine = UiText.DynamicString("Theme"),
-                secondLine = UiText.DynamicString(uiState.currentTheme.label),
+                secondLine = UiText.DynamicString(uiState.themeUiState.currentTheme.label),
                 onClick = { eventHandler(AppearanceUiEvent.ShowThemeDialog) }
+            ),
+            TwoLinerData(
+                firstLine = UiText.DynamicString("Color scheme"),
+                secondLine = UiText.DynamicString(uiState.colorSchemeUiState.currentColorScheme.label),
+                onClick = { eventHandler(AppearanceUiEvent.ShowColorSchemeDialog) }
             ),
         )
 
@@ -87,7 +93,7 @@ fun AppearanceScreen(
         }
     }
 
-    if(uiState.languageDialogShowing) {
+    if(uiState.languageUiState.languageDialogShowing) {
         Dialog(
             onDismissRequest = { eventHandler(AppearanceUiEvent.HideLanguageDialog) }
         ) {
@@ -135,7 +141,7 @@ fun AppearanceScreen(
         }
     }
 
-    if(uiState.themeDialogShowing) {
+    if(uiState.themeUiState.themeDialogShowing) {
         Dialog(
             onDismissRequest = { eventHandler(AppearanceUiEvent.HideThemeDialog) }
         ) {
@@ -164,11 +170,57 @@ fun AppearanceScreen(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         RadioButton(
-                            selected = uiState.currentTheme == selection,
+                            selected = uiState.themeUiState.currentTheme == selection,
                             onClick = { eventHandler(AppearanceUiEvent.ChangeTheme(selection)) }
                         )
                         Spacer(modifier = Modifier.width(MaterialTheme.spacing.small))
                         Text(text = selection.label)
+                    }
+                }
+                Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
+            }
+        }
+    }
+
+    if(uiState.colorSchemeUiState.colorSchemeDialogShowing) {
+        Dialog(
+            onDismissRequest = { eventHandler(AppearanceUiEvent.HideColorSchemeDialog) }
+        ) {
+            Card(
+                shape = MaterialTheme.shapes.extraLarge,
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = MaterialTheme.spacing.medium)
+                        .padding(horizontal = (MaterialTheme.spacing.medium + MaterialTheme.spacing.small)),
+                ) {
+                    Text(
+                        text = "ColorScheme",
+                        style = MaterialTheme.typography.headlineSmall
+                    )
+                }
+                Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
+                for (selection in ColorSchemeSelections.entries) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { eventHandler(AppearanceUiEvent.ChangeColorScheme(selection)) }
+                            .padding(horizontal = MaterialTheme.spacing.medium)
+                        ,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        RadioButton(
+                            selected = uiState.colorSchemeUiState.currentColorScheme == selection,
+                            onClick = { eventHandler(AppearanceUiEvent.ChangeColorScheme(selection)) }
+                        )
+                        Spacer(modifier = Modifier.width(MaterialTheme.spacing.small))
+                        TwoLiner(
+                            data = TwoLinerData(
+                                firstLine = UiText.DynamicString(selection.label),
+                                secondLine = UiText.DynamicString(selection.description)
+                            )
+                        )
                     }
                 }
                 Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))

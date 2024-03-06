@@ -62,10 +62,12 @@ fun MusikusApp(
     // This line ensures, that the app is only drawn when the proper theme is loaded
     // TODO: make sure this is the right way to do it
     val theme = uiState.activeTheme ?: return
+    val colorScheme = uiState.activeColorScheme ?: return
 
 
     MusikusTheme(
-        theme = theme
+        theme = theme,
+        colorScheme = colorScheme
     ) {
 
         NavHost(

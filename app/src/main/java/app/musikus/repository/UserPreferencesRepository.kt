@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2022 Matthias Emde
+ * Copyright (c) 2024 Matthias Emde
  */
 
 package app.musikus.repository
@@ -16,6 +16,7 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import app.musikus.database.daos.LibraryFolder
 import app.musikus.database.daos.LibraryItem
+import app.musikus.datastore.ColorSchemeSelections
 import app.musikus.datastore.ThemeSelections
 import app.musikus.datastore.UserPreferences
 import app.musikus.ui.activesession.metronome.MetronomeSettings
@@ -30,6 +31,7 @@ import kotlinx.coroutines.flow.map
 
 object PreferenceKeys {
     val THEME = stringPreferencesKey("theme")
+    val COLOR_SCHEME = stringPreferencesKey("color_scheme")
     val APPINTRO_DONE = booleanPreferencesKey("appintro_done")
 
     val LIBRARY_FOLDER_SORT_MODE = stringPreferencesKey("library_folder_sort_mode")
@@ -51,6 +53,7 @@ object PreferenceKeys {
 interface UserPreferencesRepository {
 
     val theme: Flow<ThemeSelections>
+    val colorScheme: Flow<ColorSchemeSelections>
 
     val itemSortInfo: Flow<SortInfo<LibraryItem>>
     val folderSortInfo: Flow<SortInfo<LibraryFolder>>
@@ -60,6 +63,7 @@ interface UserPreferencesRepository {
 
     /** Mutators */
     suspend fun updateTheme(theme: ThemeSelections)
+    suspend fun updateColorScheme(colorScheme: ColorSchemeSelections)
 
     suspend fun updateLibraryItemSortInfo(sortInfo: SortInfo<LibraryItem>)
     suspend fun updateLibraryFolderSortInfo(sortInfo: SortInfo<LibraryFolder>)
@@ -78,6 +82,7 @@ class UserPreferencesRepositoryImpl(
     private val userPreferences = dataStore.data.map { preferences ->
         UserPreferences(
             theme = ThemeSelections.valueOrDefault(preferences[PreferenceKeys.THEME]),
+            colorScheme = ColorSchemeSelections.valueOrDefault(preferences[PreferenceKeys.COLOR_SCHEME]),
 
             appIntroDone = preferences[PreferenceKeys.APPINTRO_DONE] ?: false,
 
@@ -102,6 +107,10 @@ class UserPreferencesRepositoryImpl(
 
     override val theme: Flow<ThemeSelections> = userPreferences.map { preferences ->
         preferences.theme
+    }
+
+    override val colorScheme: Flow<ColorSchemeSelections> = userPreferences.map { preferences ->
+        preferences.colorScheme
     }
 
     override val itemSortInfo : Flow<SortInfo<LibraryItem>> =
@@ -136,6 +145,12 @@ class UserPreferencesRepositoryImpl(
     override suspend fun updateTheme(theme: ThemeSelections) {
         dataStore.edit { preferences ->
             preferences[PreferenceKeys.THEME] = theme.name
+        }
+    }
+
+    override suspend fun updateColorScheme(colorScheme: ColorSchemeSelections) {
+        dataStore.edit { preferences ->
+            preferences[PreferenceKeys.COLOR_SCHEME] = colorScheme.name
         }
     }
 

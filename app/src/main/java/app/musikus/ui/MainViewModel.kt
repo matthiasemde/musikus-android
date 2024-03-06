@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2022 Matthias Emde
+ * Copyright (c) 2024 Matthias Emde, Michael Prommersberger
  */
 
 package app.musikus.ui
@@ -19,6 +19,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.musikus.datastore.ColorSchemeSelections
 import app.musikus.datastore.ThemeSelections
 import app.musikus.services.SessionService
 import app.musikus.services.SessionServiceState
@@ -41,12 +42,12 @@ import javax.inject.Inject
 typealias MainUiEventHandler = (MainUiEvent) -> Unit
 
 sealed class MainUiEvent {
-    data class SetTheme(val theme: ThemeSelections): MainUiEvent()
     data class ShowSnackbar(val message: String, val onUndo: (() -> Unit)? = null): MainUiEvent()
 }
 
 data class MainUiState(
     val activeTheme: ThemeSelections?,
+    val activeColorScheme: ColorSchemeSelections?,
     var snackbarHost: SnackbarHostState,
     val isSessionActive: Boolean
 )
@@ -55,7 +56,7 @@ data class MainUiState(
 @HiltViewModel
 class MainViewModel @Inject constructor(
     private val application: Application,
-    private val userPreferencesUseCases: UserPreferencesUseCases,
+    userPreferencesUseCases: UserPreferencesUseCases,
 ) : ViewModel() {
 
 
@@ -68,6 +69,12 @@ class MainViewModel @Inject constructor(
 
     /** Theme */
     private val _activeTheme = userPreferencesUseCases.getTheme().stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = null
+    )
+
+    private val _activeColorScheme = userPreferencesUseCases.getColorScheme().stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = null
@@ -104,11 +111,13 @@ class MainViewModel @Inject constructor(
 
     val uiState = combine(
         _activeTheme,
+        _activeColorScheme,
         _snackbarHost,
         isSessionActive
-    ) { activeTheme, snackbarHost, isSessionActive ->
+    ) { activeTheme, activeColorScheme, snackbarHost, isSessionActive ->
         MainUiState(
             activeTheme = activeTheme,
+            activeColorScheme = activeColorScheme,
             snackbarHost = snackbarHost,
             isSessionActive = isSessionActive
         )
@@ -117,6 +126,7 @@ class MainViewModel @Inject constructor(
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = MainUiState(
             activeTheme = _activeTheme.value,
+            activeColorScheme = _activeColorScheme.value,
             snackbarHost = _snackbarHost.value,
             isSessionActive = isSessionActive.value
         )
@@ -125,9 +135,6 @@ class MainViewModel @Inject constructor(
 
     fun onUiEvent(event: MainUiEvent) {
         when(event) {
-            is MainUiEvent.SetTheme -> {
-                setTheme(event.theme)
-            }
             is MainUiEvent.ShowSnackbar -> {
                 showSnackbar(event.message, event.onUndo)
             }
@@ -156,11 +163,6 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    private fun setTheme(theme: ThemeSelections) {
-        viewModelScope.launch {
-            userPreferencesUseCases.selectTheme(theme)
-        }
-    }
 
     /**
      * Active session service binding
