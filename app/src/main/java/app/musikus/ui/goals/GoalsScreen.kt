@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -41,12 +42,16 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.musikus.R
 import app.musikus.ui.home.HomeUiEvent
 import app.musikus.ui.home.HomeUiEventHandler
 import app.musikus.ui.home.HomeUiState
@@ -223,9 +228,30 @@ fun GoalsScreen(
                 }
             }
 
-            /** Goal Dialog */
+            // Show hint if there are no goals
+            if (contentUiState.showHint) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(MaterialTheme.spacing.extraLarge),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = stringResource(id = R.string.goalsFragmentHint),
+                        style = MaterialTheme.typography.titleMedium,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+
+
+            /**
+             *  ---------------------- Dialogs ----------------------
+             */
+
             val dialogUiState = uiState.dialogUiState
 
+            // Goal Dialog
             val addOrEditDialogUiState = dialogUiState.addOrEditDialogUiState
 
             if (addOrEditDialogUiState != null) {
@@ -237,7 +263,6 @@ fun GoalsScreen(
 
 
             // Delete Goal Dialog
-
             val deleteOrArchiveDialogUiState = dialogUiState.deleteOrArchiveDialogUiState
 
             if (deleteOrArchiveDialogUiState != null) {

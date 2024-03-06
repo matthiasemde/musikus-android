@@ -3,12 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2022 Matthias Emde
- *
- * Parts of this software are licensed under the MIT license
- *
- * Copyright (c) 2022, Javier Carbone, author Michael Prommersberger
- * Additions and modifications, author Matthias Emde
+ * Copyright (c) 2024 Matthias Emde
  */
 
 package app.musikus.ui.sessions
@@ -16,9 +11,11 @@ package app.musikus.ui.sessions
 import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -43,12 +40,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.musikus.R
 import app.musikus.ui.MainUiEvent
 import app.musikus.ui.MainUiEventHandler
 import app.musikus.ui.MainUiState
@@ -87,6 +88,7 @@ fun SessionsScreen(
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
     val sessionsListState = rememberLazyListState()
+
     // The FAB is initially expanded. Once the first visible item is past the first item we
     // collapse the FAB. We use a remembered derived state to minimize unnecessary recompositions.
     val fabExpanded by remember {
@@ -221,7 +223,29 @@ fun SessionsScreen(
                 }
             }
 
-            // Delete Dialog
+
+            // Show hint if there are no sessions
+            if (contentUiState.showHint) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(MaterialTheme.spacing.extraLarge),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = stringResource(id = R.string.sessionsHint),
+                        style = MaterialTheme.typography.titleMedium,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+
+
+            /**
+             *  ---------------------- Dialogs ----------------------
+             */
+
+            // Delete session dialog
             val deleteDialogUiState = uiState.deleteDialogUiState
 
             if(deleteDialogUiState != null) {
