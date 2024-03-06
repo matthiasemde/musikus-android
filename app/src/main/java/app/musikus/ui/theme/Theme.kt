@@ -19,6 +19,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -111,20 +113,42 @@ fun MusikusTheme(
     // and https://stackoverflow.com/questions/65610216/how-to-change-statusbar-color-in-jetpack-compose
     val view = LocalView.current
     if (!view.isInEditMode) {
-        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.Q) {
-            SideEffect {
-                val window = (view.context as Activity).window
+        SideEffect {
+            val window = (view.context as Activity).window
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                window.setDecorFitsSystemWindows(false)
 
                 // background extends behind status and nav bar (even 3 button nav bar)
                 window.setFlags(
                     WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
                     WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
                 )
+            } else {
+                WindowCompat.setDecorFitsSystemWindows(window, false)
 
-                val insets = WindowCompat.getInsetsController(window, view)
-                insets.isAppearanceLightStatusBars = !useDarkTheme
-                insets.isAppearanceLightNavigationBars = !useDarkTheme
+                // status bar icons can adapt to light/dark theme,
+                // so we can make the status bar transparent
+                window.statusBarColor = Color.Transparent.toArgb()
+
+                // navigation bar icons can only adapt to light theme for API >= 26 (O),
+                // otherwise we need to manually set the nav bar color to something dark
+                window.navigationBarColor = if(
+                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.O || useDarkTheme
+                ) {
+                    Color.Transparent.toArgb()
+                } else {
+                    LightColors.inverseSurface.toArgb()
+                }
             }
+
+            // make sure there is no black translucent overlay on the nav bar
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                window.isNavigationBarContrastEnforced = false
+            }
+
+            val insets = WindowCompat.getInsetsController(window, view)
+            insets.isAppearanceLightStatusBars = !useDarkTheme
+            insets.isAppearanceLightNavigationBars = !useDarkTheme // has no effect on API < 26
         }
     }
 
