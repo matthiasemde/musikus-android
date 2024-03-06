@@ -101,7 +101,9 @@ class Musikus : Application() {
     private fun createNotificationChannels() {
         // Create the NotificationChannel, but only on API 26+ because
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val notificationManager: NotificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val notificationManager = getSystemService(
+                Context.NOTIFICATION_SERVICE
+            ) as NotificationManager
 
             val sessionNotificationChannel = NotificationChannel(
                 SESSION_NOTIFICATION_CHANNEL_ID,

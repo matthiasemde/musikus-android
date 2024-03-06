@@ -186,7 +186,7 @@ class RecorderService : Service() {
     private fun deleteRecording() {
         try {
             recorder.delete()
-            reset()
+            reset(keepNotification = false)
         } catch (e: IllegalRecorderStateException) {
             applicationScope.launch { _exceptionChannel.send(
                 RecorderServiceException.IllegalRecorderState(e.message)
@@ -198,7 +198,7 @@ class RecorderService : Service() {
         try {
             recorder.save(recordingName)
             setFinalNotification()
-            reset()
+            reset(keepNotification = true)
         } catch (e: IllegalRecorderStateException) {
             applicationScope.launch { _exceptionChannel.send(
                 RecorderServiceException.IllegalRecorderState(e.message)
@@ -219,10 +219,14 @@ class RecorderService : Service() {
         }
     }
 
-    private fun reset() {
+    private fun reset(keepNotification: Boolean) {
         _recordingDuration.update { 0.seconds }
         _recordingTimer?.cancel()
-        stopForeground(STOP_FOREGROUND_DETACH)
+        stopForeground( if(keepNotification) {
+            STOP_FOREGROUND_DETACH
+        } else {
+            STOP_FOREGROUND_REMOVE
+        })
     }
 
 
