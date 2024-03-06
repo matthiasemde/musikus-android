@@ -9,6 +9,7 @@
 package app.musikus.ui.components
 
 import android.os.Build
+import android.provider.Settings
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -29,6 +30,7 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import app.musikus.ui.theme.spacing
 import app.musikus.utils.UiIcon
@@ -78,18 +80,22 @@ fun DeleteConfirmationBottomSheet(
             )
         }
 
-        // WindowsInsets.navigationBars doesn't work on API level <= 29,
+        // WindowsInsets.navigationBars doesn't work on API level < 30,
         // so we need to add a fixed padding to make sure
         // the bottom sheet is above the navigation bar
-        val navigationBarHeight = if (Build.VERSION.SDK_INT > Build.VERSION_CODES.Q) {
+        val navigationBarHeight = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
         } else {
-            48.dp
+            val content = LocalContext.current.contentResolver
+            if (Settings.Secure.getInt(content, "navigation_mode", 0) == 2) {
+                16.dp // height of the gesture navigation
+            } else {
+                48.dp // height of the 2 or 3-button navigation
+            }
         }
 
         Spacer(
-            modifier = Modifier
-                .height(navigationBarHeight + MaterialTheme.spacing.extraSmall)
+            modifier = Modifier.height(navigationBarHeight + MaterialTheme.spacing.extraSmall)
         )
     }
 }
