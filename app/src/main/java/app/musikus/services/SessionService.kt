@@ -320,7 +320,7 @@ class SessionService : Service() {
     private fun getOngoingPauseDuration() : Duration {
         val lastTimeStampPair = _pausesCurrentSection.value.lastOrNull() ?: return 0.seconds
         if (lastTimeStampPair.second != null) return 0.seconds  // no pause
-        return (timeProvider.now() - lastTimeStampPair.first).inWholeSeconds.seconds
+        return timeProvider.now() - lastTimeStampPair.first
     }
 
     private fun updateNotification() {
