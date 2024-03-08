@@ -212,7 +212,11 @@ fun ActiveSession(
 
 
             if (uiState.isPaused) {
-                PauseDialog(uiState.totalPauseDuration, eventHandler)
+                PauseDialog(
+                    uiState.ongoingPauseDuration,
+                    uiState.totalPauseDuration,
+                    eventHandler
+                )
             }
 
             uiState.addItemDialogUiState?.let { dialogUiState ->
@@ -641,6 +645,7 @@ private fun LibraryCardBody(
 
 @Composable
 private fun PauseDialog(
+    ongoingBreakDuration: Duration,
     totalBreakDuration: Duration,
     eventHandler: ActiveSessionUiEventHandler
 ) {
@@ -666,10 +671,15 @@ private fun PauseDialog(
                         .padding(MaterialTheme.spacing.large),
                     text = "Pause: ${
                         getDurationString(
-                            totalBreakDuration,
+                            ongoingBreakDuration,
                             DurationFormat.HMS_DIGITAL
                         )
-                    }",
+                    } \n(total: ${
+                        getDurationString(
+                            totalBreakDuration, 
+                            DurationFormat.HMS_DIGITAL
+                        )
+                    })",
                     style = MaterialTheme.typography.titleMedium,
                     textAlign = TextAlign.Center
                 )
