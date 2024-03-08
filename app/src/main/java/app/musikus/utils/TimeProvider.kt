@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2024 Matthias Emde
+ * Copyright (c) 2024 Matthias Emde, Michael Prommersberger
  */
 
 package app.musikus.utils
@@ -136,9 +136,17 @@ class TimeProviderImpl : TimeProvider {
 }
 
 /**
- * Operator extension function to get the duration between two ZonedDateTime objects
+ * Operator extension function to get the duration between two ZonedDateTime objects.
  * @param other the earlier ZonedDateTime
  */
 operator fun ZonedDateTime.minus(other: ZonedDateTime): Duration {
     return ChronoUnit.MILLIS.between(other, this).milliseconds
+}
+
+/**
+ * Operator extension function to get a ZonedDateTime object with a duration subtracted.
+ * @param duration the duration to subtract
+ */
+operator fun ZonedDateTime.minus(duration: Duration): ZonedDateTime {
+    return this.minusNanos(duration.inWholeNanoseconds)
 }
