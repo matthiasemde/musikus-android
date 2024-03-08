@@ -674,12 +674,7 @@ private fun PauseDialog(
                             ongoingBreakDuration,
                             DurationFormat.HMS_DIGITAL
                         )
-                    } \n(total: ${
-                        getDurationString(
-                            totalBreakDuration, 
-                            DurationFormat.HMS_DIGITAL
-                        )
-                    })",
+                    }",
                     style = MaterialTheme.typography.titleMedium,
                     textAlign = TextAlign.Center
                 )

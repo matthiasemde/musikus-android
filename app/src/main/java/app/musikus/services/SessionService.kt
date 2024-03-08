@@ -117,7 +117,7 @@ class SessionService : Service() {
     }
 
     /** Global variables */
-    private val timerInterval = 1.seconds
+    private val timerInterval = 50.milliseconds
     private var _timer: java.util.Timer? = null
     private var _sectionIdCounter = 0   // gives us unique ids for all sections
 
@@ -203,7 +203,7 @@ class SessionService : Service() {
         if (_sections.value.isNotEmpty()) {
             val completedSection = _sections.value.last()
             val duration = calculateCurrentSectionDuration(
-                section = _sections.value.lastOrNull(),
+                section = completedSection,
                 now = changeoverTime,
                 pauseTimestamps = _pausesCurrentSection.value
             )
