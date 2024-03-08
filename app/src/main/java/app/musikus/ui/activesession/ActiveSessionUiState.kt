@@ -23,7 +23,8 @@ import kotlin.time.Duration
 data class ActiveSessionUiState(
     val cardUiStates: List<ActiveSessionDraggableCardUiState>,
     val totalSessionDuration: Duration,
-    val totalBreakDuration: Duration,
+    val totalPauseDuration: Duration,
+    val ongoingPauseDuration: Duration,
     val sections: List<ActiveSessionSectionListItemUiState>,
     val isPaused: Boolean,
     val addItemDialogUiState: ActiveSessionAddLibraryItemDialogUiState?,

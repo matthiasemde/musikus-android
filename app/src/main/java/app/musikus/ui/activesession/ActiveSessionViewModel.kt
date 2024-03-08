@@ -54,8 +54,8 @@ data class PracticeSection(
     val id: Int,
     val libraryItem: LibraryItem,
     val startTimestamp: ZonedDateTime,
-    var pauseDuration: Duration,
-    var duration: Duration?
+    var pauseDuration: Duration?,   // set when section is completed
+    var duration: Duration?         // set when section is completed
 )
 
 data class EndDialogData(
@@ -180,10 +180,10 @@ class ActiveSessionViewModel @Inject constructor(
     )
 
 
-    private val totalDurationRoundedDownToNextSecond = sessionServiceState.map { sessionState ->
+    private val totalSessionDuration = sessionServiceState.map { sessionState ->
         sessionState.sections.sumOf {
             (it.duration ?: sessionState.currentSectionDuration).inWholeMilliseconds
-        }.milliseconds.inWholeSeconds.seconds
+        }.milliseconds
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
@@ -306,18 +306,19 @@ class ActiveSessionViewModel @Inject constructor(
     val uiState = combine(
         libraryCardUiState,
         sessionServiceState,
+        totalSessionDuration,
         addLibraryItemDialogUiState,
-        totalDurationRoundedDownToNextSecond,
-        dialogUiState
-    ) { libraryCardUiState, sessionState, addItemDialogUiState, totalDuration, dialogUiState ->
+        dialogUiState,
+    ) { libraryCardUiState, sessionState, sessionDuration, addItemDialogUiState, dialogUiState ->
         ActiveSessionUiState(
             cardUiStates = listOf(
                 libraryCardUiState,
                 _recorderUiState,
                 _metronomeUiState
             ),
-            totalSessionDuration = totalDuration,
-            totalBreakDuration = sessionState.pauseDuration,
+            totalSessionDuration = sessionDuration,
+            totalPauseDuration = sessionState.totalPauseDuration,
+            ongoingPauseDuration = sessionState.ongoingPauseDuration,
             isPaused = sessionState.isPaused,
             addItemDialogUiState = addItemDialogUiState,
             sections = sessionState.sections.reversed().map { section ->
@@ -335,7 +336,8 @@ class ActiveSessionViewModel @Inject constructor(
         initialValue = ActiveSessionUiState(
             cardUiStates = emptyList(),
             totalSessionDuration = 0.milliseconds,
-            totalBreakDuration = sessionServiceState.value.pauseDuration,
+            totalPauseDuration = sessionServiceState.value.totalPauseDuration,
+            ongoingPauseDuration = sessionServiceState.value.ongoingPauseDuration,
             sections = emptyList(),
             isPaused = sessionServiceState.value.isPaused,
             addItemDialogUiState = addLibraryItemDialogUiState.value,
@@ -418,15 +420,15 @@ class ActiveSessionViewModel @Inject constructor(
         viewModelScope.launch {
             sessionUseCases.add(
                 sessionCreationAttributes = SessionCreationAttributes(
-                    breakDuration = sessionServiceState.value.pauseDuration,
+                    breakDuration = sessionServiceState.value.totalPauseDuration,
                     comment = endDialogData.comment,
                     rating = endDialogData.rating
                 ),
-                sectionCreationAttributes = sessionServiceState.value.sections.map {
+                sectionCreationAttributes = sessionServiceState.value.sections.map { section ->
                     SectionCreationAttributes(
-                        libraryItemId = it.libraryItem.id,
-                        duration = (it.duration ?: sessionServiceState.value.currentSectionDuration) - it.pauseDuration,
-                        startTimestamp = it.startTimestamp
+                        libraryItemId = section.libraryItem.id,
+                        duration = section.duration ?: sessionServiceState.value.currentSectionDuration,
+                        startTimestamp = section.startTimestamp
                     )
                 }
             )

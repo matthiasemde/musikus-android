@@ -212,7 +212,7 @@ fun ActiveSession(
 
 
             if (uiState.isPaused) {
-                PauseDialog(uiState.totalBreakDuration, eventHandler)
+                PauseDialog(uiState.totalPauseDuration, eventHandler)
             }
 
             uiState.addItemDialogUiState?.let { dialogUiState ->

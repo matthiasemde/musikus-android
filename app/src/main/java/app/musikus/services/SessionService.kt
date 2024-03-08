@@ -35,12 +35,13 @@ import app.musikus.ui.activesession.PracticeSection
 import app.musikus.utils.DurationFormat
 import app.musikus.utils.TimeProvider
 import app.musikus.utils.getDurationString
+import app.musikus.utils.minus
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import java.time.ZonedDateTime
-import java.time.temporal.ChronoUnit
 import javax.inject.Inject
 import kotlin.concurrent.timer
 import kotlin.time.Duration
@@ -56,10 +57,12 @@ const val BROADCAST_INTENT_FILTER = "activeSessionAction"
  * Encapsulates the state of the current session, is passed to the binding Activity / ViewModel
  */
 data class SessionServiceState(
-    val sections: List<PracticeSection> = emptyList(),
-    val currentSectionDuration: Duration = 0.seconds,
-    val pauseDuration: Duration = 0.seconds,
-    val isPaused: Boolean = false
+    val sections: List<PracticeSection> = emptyList(),      // list of all sections
+    val currentSectionDuration: Duration = 0.seconds,       // duration of the current section WITHOUT pauses
+    val currentSectionPauseDuration: Duration = 0.seconds,  // total duration of pauses in the current section
+    val totalPauseDuration: Duration = 0.seconds,           // total duration of all pauses, including ongoing
+    val ongoingPauseDuration: Duration = 0.seconds,         // duration of the current ongoing pause
+    val isPaused: Boolean = false                           // true if the session is currently paused
 )
 
 /**
@@ -94,27 +97,39 @@ class SessionService : Service() {
         fun getOnEvent(): (SessionServiceEvent) -> Unit = ::onEvent
     }
 
-    /** Own state flow */
+    /** Own state flows */
     private val _sections = MutableStateFlow<List<PracticeSection>>(emptyList())
     private val _isPaused = MutableStateFlow(false)
-    // TODO: replace with timeProvider.now()
     private val _currentTickTime = MutableStateFlow<ZonedDateTime>(ZonedDateTime.now())
-    private val _pauseTimestamp = MutableStateFlow(ZonedDateTime.now())
+    // contains all pause timestamps of the current section
+    private val _pausesCurrentSection = MutableStateFlow<List<Pair<ZonedDateTime, ZonedDateTime?>>>(emptyList())
 
-    /** Derived state flow for non-null section duration access*/
+
+    /** Derived state flows */
     private val sectionDuration = combine(
         _sections,
-        _currentTickTime
-    ) { sections, currentTickTime ->
-        val currentSection = sections.lastOrNull() ?: return@combine 0.seconds
-        calculateSectionDuration(currentSection, currentTickTime)
+        _currentTickTime,
+        _pausesCurrentSection
+    ) { sections, currentTickTime, pauseTimes ->
+        calculateCurrentSectionDuration(
+            section = sections.lastOrNull(),
+            now = currentTickTime,
+            pauseTimestamps = pauseTimes
+        ).first
+    }
+
+    private val sectionPauseDuration = _pausesCurrentSection.map {
+        sumPauseTimestamps(it)
     }
 
     // sub-second addition to the current section duration because of rounding
     private var _subSecondOverflow = 0.seconds
-    private var _timer: java.util.Timer? = null
+
+
+    /** global variables */
     private val timerInterval = 1.seconds
-    private var _sectionIdCounter = 0
+    private var _timer: java.util.Timer? = null
+    private var _sectionIdCounter = 0   // gives us unique ids for all sections
 
     /** Broadcast receiver (currently only for pause action) */
     private val myReceiver: BroadcastReceiver = object : BroadcastReceiver() {
@@ -144,12 +159,21 @@ class SessionService : Service() {
     val serviceState = combine(
         _sections,
         sectionDuration,
-        _isPaused
-    ) { sections, sectionDuration, isPaused ->
+        sectionPauseDuration,
+        _isPaused,
+        _pausesCurrentSection
+    ) { sections, sectionDuration, sectionPauseDuration, isPaused, pausesTimestamps ->
+        val totalPauseDuration = sumPauseTimestamps(pausesTimestamps) +
+            _sections.value.sumOf {
+                (it.pauseDuration ?: 0.seconds).inWholeMilliseconds
+            }.milliseconds
+
         SessionServiceState(
             sections = sections,
             currentSectionDuration = sectionDuration,
-            pauseDuration = sections.sumOf { it.pauseDuration.inWholeMilliseconds }.milliseconds,
+            currentSectionPauseDuration = sectionPauseDuration,
+            ongoingPauseDuration = getOngoingPauseDuration(),
+            totalPauseDuration = totalPauseDuration,
             isPaused = isPaused
         )
     }
@@ -169,38 +193,44 @@ class SessionService : Service() {
 
     private fun newSection(item: LibraryItem) {
         // prevent starting a new section too fast
-        if (_sections.value.lastOrNull()?.let {
-            calculateSectionDuration(it, _currentTickTime.value) < 1.seconds
-        } == true) return
+//        if (_sections.value.lastOrNull()?.let {
+//            calculateSectionDuration(it, _currentTickTime.value) < 1.seconds
+//        } == true) return
         // prevent starting the same section twice in a row
-        if (item == _sections.value.lastOrNull()?.libraryItem) return
+//        if (item == _sections.value.lastOrNull()?.libraryItem) return
 
         // snapshot current time
         val changeoverTime = timeProvider.now()
         startTimer()
 
-        // create new section item
+        // calculate duration fields of the previous section
+        if (_sections.value.isNotEmpty()) {
+            val completedSection = _sections.value.last()
+            val durationInfo = calculateCurrentSectionDuration(
+                section = _sections.value.lastOrNull(),
+                now = changeoverTime,
+                pauseTimestamps = _pausesCurrentSection.value
+            )
+            completedSection.duration = durationInfo.first
+            completedSection.pauseDuration = sumPauseTimestamps(_pausesCurrentSection.value)
+            _subSecondOverflow = durationInfo.second
+
+            _sections.update {
+                it.dropLast(1) + completedSection
+            }
+        }
+
+        // reset tracked pauses
+        _pausesCurrentSection.update { emptyList() }
+
+        // add the new section item
         val newItem = PracticeSection(
             id = _sectionIdCounter++,
             libraryItem = item,
             duration = null,
-            pauseDuration = 0.seconds,
+            pauseDuration = null,
             startTimestamp = changeoverTime
         )
-
-        // update the previous section with the duration
-        if (_sections.value.isNotEmpty()) {
-            val completedSection = _sections.value.last()
-            val duration = ChronoUnit.MILLIS.between(completedSection.startTimestamp, changeoverTime).milliseconds
-            val flooredDuration = duration.inWholeSeconds.seconds  // floor to seconds
-            completedSection.duration = flooredDuration
-            _sections.update {
-                it.dropLast(1) + completedSection
-            }
-            _subSecondOverflow = duration - flooredDuration
-        }
-
-        // add the new section
         _sections.update {
             it + newItem
         }
@@ -229,20 +259,14 @@ class SessionService : Service() {
     }
 
     private fun startPause() {
-        _pauseTimestamp.update { timeProvider.now() }
         _isPaused.update { true }
+        _pausesCurrentSection.update { it + Pair(timeProvider.now(), null) }
     }
 
     private fun stopPause() {
         _isPaused.update { false }
-        val addedPause = ChronoUnit.MILLIS.between(_pauseTimestamp.value, timeProvider.now()).milliseconds
-        val updatedSection = _sections.value.last().let {
-            it.copy(
-                pauseDuration = it.pauseDuration + addedPause
-            )
-        }
-        _sections.update {
-            it.dropLast(1) + updatedSection
+        _pausesCurrentSection.update {
+            it.dropLast(1) + it.last().copy(second = timeProvider.now())
         }
     }
 
@@ -260,14 +284,47 @@ class SessionService : Service() {
         }
     }
 
-    private fun calculateSectionDuration(section: PracticeSection, end: ZonedDateTime) : Duration {
-        val start = section.startTimestamp
-        val duration = ChronoUnit.MILLIS.between(start, end).milliseconds
-        var pausePassed = section.pauseDuration
-        if (_isPaused.value) {
-            pausePassed += ChronoUnit.MILLIS.between(_pauseTimestamp.value, timeProvider.now()).milliseconds
-        }
-        return duration + _subSecondOverflow - pausePassed
+
+    /**
+     * Calculates the duration of the current section.
+     *
+     * The flow "sectionDuration" is fed from this function. But it is also accessed when the value
+     * is needed for calculation (since the Flow does not provide a value directly).
+     *
+     * @param section current PracticeSections object. If it is null, 0.seconds is returned.
+     * @param now Current time
+     * @param pauseTimestamps List of all pause timestamps
+     * @return Pair of the floored duration to seconds and the sub-second overflow time
+     */
+    private fun calculateCurrentSectionDuration(
+        section: PracticeSection?,
+        now: ZonedDateTime,
+        pauseTimestamps: List<Pair<ZonedDateTime, ZonedDateTime?>>
+    ) : Pair<Duration, Duration> {
+        if(section == null) return Pair(0.seconds, 0.seconds)
+
+        val timeDelta = now - section.startTimestamp
+        val practiceDuration = timeDelta - sumPauseTimestamps(pauseTimestamps)
+        val flooredPracticeDuration = practiceDuration.inWholeSeconds.seconds  // floor to seconds
+        val subSecondOverflow = practiceDuration - flooredPracticeDuration
+        return Pair(flooredPracticeDuration, subSecondOverflow)
+    }
+
+    /**
+     * Calculates the duration of the pause which is currently ongoing.
+     */
+    private fun getOngoingPauseDuration() : Duration {
+        val lastTimeStampPair = _pausesCurrentSection.value.lastOrNull() ?: return 0.seconds
+        if (lastTimeStampPair.second != null) return 0.seconds  // no pause
+        return timeProvider.now() - lastTimeStampPair.first
+    }
+
+    private fun sumPauseTimestamps(
+        timestampPairs : List<Pair<ZonedDateTime, ZonedDateTime?>>
+    ) : Duration {
+        return timestampPairs.sumOf {
+            ((it.second ?: timeProvider.now()) - it.first).inWholeMilliseconds
+        }.milliseconds
     }
 
     private fun updateNotification() {
@@ -280,7 +337,14 @@ class SessionService : Service() {
      */
     private fun createNotification() : Notification {
         val totalPracticeDuration = _sections.value.sumOf {
-            (it.duration ?: calculateSectionDuration(it, _currentTickTime.value)).inWholeMilliseconds }.milliseconds
+            val lastSectionDuration = calculateCurrentSectionDuration(
+                section = it,
+                now = _currentTickTime.value,
+                pauseTimestamps = _pausesCurrentSection.value
+            ).first
+            (it.duration ?: lastSectionDuration).inWholeMilliseconds
+        }.milliseconds
+
         val totalPracticeDurationStr =
             getDurationString(totalPracticeDuration, DurationFormat.HMS_DIGITAL)
 
