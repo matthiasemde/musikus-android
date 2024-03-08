@@ -43,20 +43,10 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.time.ZonedDateTime
 import java.util.UUID
 import javax.inject.Inject
-import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
-
-data class PracticeSection(
-    val id: Int,
-    val libraryItem: LibraryItem,
-    val startTimestamp: ZonedDateTime,
-    var pauseDuration: Duration?,   // set when section is completed
-    var duration: Duration?         // set when section is completed
-)
 
 data class EndDialogData(
     val rating: Int,
@@ -182,7 +172,7 @@ class ActiveSessionViewModel @Inject constructor(
 
     private val totalSessionDuration = sessionServiceState.map { sessionState ->
         sessionState.sections.sumOf {
-            (it.duration ?: sessionState.currentSectionDuration).inWholeMilliseconds
+            it.duration.inWholeMilliseconds
         }.milliseconds
     }.stateIn(
         scope = viewModelScope,
@@ -317,7 +307,6 @@ class ActiveSessionViewModel @Inject constructor(
                 _metronomeUiState
             ),
             totalSessionDuration = sessionDuration,
-            totalPauseDuration = sessionState.totalPauseDuration,
             ongoingPauseDuration = sessionState.ongoingPauseDuration,
             isPaused = sessionState.isPaused,
             addItemDialogUiState = addItemDialogUiState,
@@ -325,7 +314,7 @@ class ActiveSessionViewModel @Inject constructor(
                 ActiveSessionSectionListItemUiState(
                     id = section.id,    // also used as id
                     libraryItem = section.libraryItem,
-                    duration = section.duration ?: sessionState.currentSectionDuration
+                    duration = section.duration
                 )
             },
             dialogUiState = dialogUiState
@@ -336,7 +325,6 @@ class ActiveSessionViewModel @Inject constructor(
         initialValue = ActiveSessionUiState(
             cardUiStates = emptyList(),
             totalSessionDuration = 0.milliseconds,
-            totalPauseDuration = sessionServiceState.value.totalPauseDuration,
             ongoingPauseDuration = sessionServiceState.value.ongoingPauseDuration,
             sections = emptyList(),
             isPaused = sessionServiceState.value.isPaused,
@@ -420,14 +408,14 @@ class ActiveSessionViewModel @Inject constructor(
         viewModelScope.launch {
             sessionUseCases.add(
                 sessionCreationAttributes = SessionCreationAttributes(
-                    breakDuration = sessionServiceState.value.totalPauseDuration,
+                    breakDuration = sessionServiceState.value.sections.sumOf { it.pauseDuration.inWholeMilliseconds }.milliseconds,
                     comment = endDialogData.comment,
                     rating = endDialogData.rating
                 ),
                 sectionCreationAttributes = sessionServiceState.value.sections.map { section ->
                     SectionCreationAttributes(
                         libraryItemId = section.libraryItem.id,
-                        duration = section.duration ?: sessionServiceState.value.currentSectionDuration,
+                        duration = section.duration,
                         startTimestamp = section.startTimestamp
                     )
                 }

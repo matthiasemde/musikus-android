@@ -214,7 +214,6 @@ fun ActiveSession(
             if (uiState.isPaused) {
                 PauseDialog(
                     uiState.ongoingPauseDuration,
-                    uiState.totalPauseDuration,
                     eventHandler
                 )
             }
@@ -646,7 +645,6 @@ private fun LibraryCardBody(
 @Composable
 private fun PauseDialog(
     ongoingBreakDuration: Duration,
-    totalBreakDuration: Duration,
     eventHandler: ActiveSessionUiEventHandler
 ) {
     Dialog(
