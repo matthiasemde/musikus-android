@@ -31,7 +31,9 @@ import app.musikus.R
 import app.musikus.SESSION_NOTIFICATION_CHANNEL_ID
 import app.musikus.database.daos.LibraryItem
 import app.musikus.ui.activesession.ActiveSessionActions
+import app.musikus.utils.DurationFormat
 import app.musikus.utils.TimeProvider
+import app.musikus.utils.getDurationString
 import app.musikus.utils.minus
 import app.musikus.utils.plus
 import dagger.hilt.android.AndroidEntryPoint
@@ -117,6 +119,7 @@ class SessionService : Service() {
     /** Broadcast receiver (currently only for pause action) */
     private val myReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
+            Log.d("TAG", "Received Broadcast")
             when (intent.getStringExtra("action")) {
                 ActiveSessionActions.PAUSE.toString() -> togglePause()
             }
@@ -137,14 +140,13 @@ class SessionService : Service() {
     private var _sectionIdCounter = 0   // gives us unique ids for all sections
     private val _sessionState = MutableStateFlow(SessionState())
     private val _clock = MutableStateFlow(false)
-    private val timerInterval = 10.milliseconds
+    private val timerInterval = 50.milliseconds
     private var _timer: java.util.Timer? = null
 
     /**
      *  ---------------------- Interface for Activity / ViewModel ----------------------
      */
 
-//    val viewModelState = _sessionState.map { state ->
     val viewModelState = combine(
         _sessionState,
         _clock
@@ -302,31 +304,25 @@ class SessionService : Service() {
      * Creates a notification object based on current session state
      */
     private fun createNotification() : Notification {
-//        val totalPracticeDuration = _sections.value.sumOf {
-//            val lastSectionDuration = calculateCurrentSectionDuration(
-//                section = it,
-//                now = timeProvider.now(),
-//                pauseTimestamps = _pausesCurrentSection.value
-//            )
-//            (it.duration ?: lastSectionDuration).inWholeMilliseconds
-//        }.milliseconds
-//
-//        val totalPracticeDurationStr =
-//            getDurationString(totalPracticeDuration, DurationFormat.HMS_DIGITAL)
-//
-//        val currentSectionName = _sections.value.lastOrNull()?.libraryItem?.name ?: "No Section"
-//
-//        val title: String
-//        val description: String
-//
-//        if (_sessionInfo.value.isPaused) {
-//            title = "Practicing Paused"
-//            description = "$currentSectionName - Total: $totalPracticeDurationStr"
-//        } else {
-//            title = "Practicing for $totalPracticeDurationStr"
-//            description = currentSectionName
-//        }
-//
+        val totalPracticeDuration = _sessionState.value.completedSections.sumOf {
+            it.duration.inWholeMilliseconds
+        }.milliseconds + getDurationCurrentSection(timeProvider.now())
+        val totalPracticeDurationStr =
+            getDurationString(totalPracticeDuration, DurationFormat.HMS_DIGITAL)
+
+        val currentSectionName = _sessionState.value.currentSectionItem?.name ?: "No Section"
+
+        val title: String
+        val description: String
+
+        if (_sessionState.value.isPaused) {
+            title = "Practicing Paused"
+            description = "$currentSectionName - Total: $totalPracticeDurationStr"
+        } else {
+            title = "Practicing for $totalPracticeDurationStr"
+            description = currentSectionName
+        }
+
         val actionButton1Intent = if(_sessionState.value.isPaused) {
             resumeActionButton
         } else {
@@ -335,8 +331,8 @@ class SessionService : Service() {
         val actionButton2Intent = finishActionButton
 
         return getNotification(
-            title = "tba",
-            description = "tba",
+            title = title,
+            description = description,
             actionButton1 = actionButton1Intent,
             actionButton2 = actionButton2Intent
         )
@@ -345,11 +341,12 @@ class SessionService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-//        startTimer()
+        createPendingIntents()
     }
 
     override fun onBind(intent: Intent?): IBinder {
         // register Broadcast Receiver for Pause Action
+        Log.d("TAG", "onBind")
         ContextCompat.registerReceiver(
             this,
             myReceiver,
@@ -366,7 +363,6 @@ class SessionService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        createPendingIntents()
         val notification = createNotification()
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
@@ -464,7 +460,7 @@ class SessionService : Service() {
     }
 
     private fun stopTimerAndDestroy() {
-//        _timer?.cancel()
+        _timer?.cancel()
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
     }
