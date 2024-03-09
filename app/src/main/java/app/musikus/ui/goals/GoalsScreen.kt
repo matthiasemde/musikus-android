@@ -290,8 +290,7 @@ fun GoalsScreen(
             // Content Scrim for multiFAB
 
             AnimatedVisibility(
-                modifier = Modifier
-                    .zIndex(1f),
+                modifier = Modifier.zIndex(1f),
                 visible = homeUiState.multiFabState == MultiFabState.EXPANDED,
                 enter = fadeIn(),
                 exit = fadeOut()
