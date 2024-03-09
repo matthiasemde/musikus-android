@@ -13,7 +13,6 @@ import android.app.Application
 import android.os.AsyncTask
 import androidx.room.Room
 import androidx.room.withTransaction
-import app.musikus.Musikus
 import app.musikus.database.MusikusDatabase
 import app.musikus.repository.FakeUserPreferencesRepository
 import app.musikus.repository.GoalRepository
@@ -99,13 +98,6 @@ import javax.inject.Singleton
     replaces = [MainModule::class, RepositoriesModule::class, UseCasesModule::class, CoroutinesDispatchersModule::class]
 )
 object TestAppModule {
-
-    @Provides
-    fun providesMusikusApplication(
-        application: Application
-    ): Musikus {
-        return application as Musikus
-    }
 
     @DefaultDispatcher
     @Provides

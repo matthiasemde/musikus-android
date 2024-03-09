@@ -12,12 +12,16 @@
 
 package app.musikus.ui
 
+import android.content.Context
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.compose.setContent
 import androidx.core.app.ActivityCompat
 import app.musikus.BuildConfig
 import app.musikus.Musikus
+import app.musikus.database.MusikusDatabase
 import app.musikus.utils.ExportDatabaseContract
 import app.musikus.utils.ImportDatabaseContract
 import app.musikus.utils.PermissionChecker
@@ -25,13 +29,11 @@ import app.musikus.utils.PermissionCheckerActivity
 import app.musikus.utils.TimeProvider
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
+import javax.inject.Provider
 
 
 @AndroidEntryPoint
 class MainActivity : PermissionCheckerActivity() {
-
-    @Inject
-    lateinit var application: Musikus
 
     @Inject
     override lateinit var permissionChecker: PermissionChecker
@@ -39,6 +41,61 @@ class MainActivity : PermissionCheckerActivity() {
     @Inject
     lateinit var timeProvider: TimeProvider
 
+    @Inject
+    lateinit var databaseProvider: Provider<MusikusDatabase>
+
+    private val database: MusikusDatabase by lazy { databaseProvider.get() }
+
+
+    private fun importDatabaseCallback(context: Context, uri: Uri?) {
+        uri?.let {
+            // close the database to collect all logs
+            database.close()
+
+            val databaseFile = context.getDatabasePath(MusikusDatabase.DATABASE_NAME)
+
+            // delete old database
+            databaseFile.delete()
+
+            // copy new database
+            databaseFile.outputStream().let { outputStream ->
+                context.contentResolver.openInputStream(it)?.let { inputStream ->
+                    inputStream.copyTo(outputStream)
+                    inputStream.close()
+                }
+                outputStream.close()
+
+                Toast.makeText(context, "Backup loaded successfully, restart your app to complete the process.", Toast.LENGTH_LONG).show()
+            }
+        }
+
+        // open database again
+//                openDatabase(context)
+    }
+
+    private fun exportDatabaseCallback(context: Context, uri: Uri?) {
+        uri?.let {
+
+            // close the database to collect all logs
+            database.close()
+
+            val databaseFile = context.getDatabasePath(MusikusDatabase.DATABASE_NAME)
+
+            // copy database
+            context.contentResolver.openOutputStream(it)?.let { outputStream ->
+                databaseFile.inputStream().let { inputStream ->
+                    inputStream.copyTo(outputStream)
+                    inputStream.close()
+                }
+                outputStream.close()
+
+                Toast.makeText(context, "Backup successful", Toast.LENGTH_LONG).show()
+            }
+
+            // open database again
+//                openDatabase(context)
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -49,11 +106,11 @@ class MainActivity : PermissionCheckerActivity() {
 
         Musikus.exportLauncher = registerForActivityResult(
             ExportDatabaseContract()
-        ) { application.exportDatabaseCallback(applicationContext, it) }
+        ) { exportDatabaseCallback(applicationContext, it) }
 
         Musikus.importLauncher = registerForActivityResult(
             ImportDatabaseContract()
-        ) { application.importDatabaseCallback(applicationContext, it) }
+        ) { importDatabaseCallback(applicationContext, it) }
 
         requestRuntimePermissions()
 

@@ -12,16 +12,11 @@ import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
-import android.net.Uri
 import android.os.Build
-import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
-import app.musikus.database.MusikusDatabase
 import dagger.hilt.android.HiltAndroidApp
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
-import javax.inject.Inject
-import javax.inject.Provider
 
 const val METRONOME_NOTIFICATION_CHANNEL_ID = "metronome_notification_channel"
 const val METRONOME_NOTIFICATION_CHANNEL_NAME = "Metronome notification"
@@ -35,62 +30,6 @@ const val RECORDER_NOTIFICATION_CHANNEL_NAME = "Recorder notification"
 
 @HiltAndroidApp
 class Musikus : Application() {
-
-    @Inject
-    lateinit var databaseProvider: Provider<MusikusDatabase>
-
-    private val database: MusikusDatabase by lazy { databaseProvider.get() }
-
-
-    fun importDatabaseCallback(context: Context, uri: Uri?) {
-        uri?.let {
-            // close the database to collect all logs
-            database.close()
-
-            val databaseFile = context.getDatabasePath(MusikusDatabase.DATABASE_NAME)
-
-            // delete old database
-            databaseFile.delete()
-
-            // copy new database
-            databaseFile.outputStream().let { outputStream ->
-                context.contentResolver.openInputStream(it)?.let { inputStream ->
-                    inputStream.copyTo(outputStream)
-                    inputStream.close()
-                }
-                outputStream.close()
-
-                Toast.makeText(context, "Backup loaded successfully, restart your app to complete the process.", Toast.LENGTH_LONG).show()
-            }
-        }
-
-        // open database again
-//                openDatabase(context)
-    }
-
-    fun exportDatabaseCallback(context: Context, uri: Uri?) {
-        uri?.let {
-
-            // close the database to collect all logs
-            database.close()
-
-            val databaseFile = context.getDatabasePath(MusikusDatabase.DATABASE_NAME)
-
-            // copy database
-            context.contentResolver.openOutputStream(it)?.let { outputStream ->
-                databaseFile.inputStream().let { inputStream ->
-                    inputStream.copyTo(outputStream)
-                    inputStream.close()
-                }
-                outputStream.close()
-
-                Toast.makeText(context, "Backup successful", Toast.LENGTH_LONG).show()
-            }
-
-            // open database again
-//                openDatabase(context)
-        }
-    }
 
 
     override fun onCreate() {
