@@ -1,5 +1,6 @@
 name: 'Get AVD Info'
 description: 'Get the AVD info based on its API level.'
+inputs:
   api-level:
     description: 'The API level of the AVD.'
     required: true
