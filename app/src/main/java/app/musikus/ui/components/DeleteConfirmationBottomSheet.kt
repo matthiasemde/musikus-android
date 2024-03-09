@@ -72,7 +72,7 @@ fun DeleteConfirmationBottomSheet(
                 ),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(confirmationIcon.asIcon(), contentDescription = null)
+            Icon(confirmationIcon.asIcon(), contentDescription = confirmationText.asString())
             Spacer(modifier = Modifier.width(MaterialTheme.spacing.extraLarge))
             Text(
                 text = confirmationText.asString(),

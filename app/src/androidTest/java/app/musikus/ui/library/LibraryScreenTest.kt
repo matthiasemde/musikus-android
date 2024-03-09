@@ -125,6 +125,7 @@ class LibraryScreenTest {
         // Remove the folder
         composeRule.onNodeWithText("Test").performTouchInput { longClick() }
         composeRule.onNodeWithContentDescription("Delete").performClick()
+        composeRule.onNodeWithContentDescription("Delete forever (1)").performClick()
 
         // Check if hint is displayed again
         composeRule.onNodeWithText(context.getString(R.string.libraryHint)).assertIsDisplayed()
@@ -141,6 +142,7 @@ class LibraryScreenTest {
         // Remove the item
         composeRule.onNodeWithText("Test").performTouchInput { longClick() }
         composeRule.onNodeWithContentDescription("Delete").performClick()
+        composeRule.onNodeWithContentDescription("Delete forever (1)").performClick()
 
         // Check if hint is displayed again
         composeRule.onNodeWithText(context.getString(R.string.libraryHint)).assertIsDisplayed()

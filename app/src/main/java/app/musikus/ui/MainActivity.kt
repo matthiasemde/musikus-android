@@ -112,7 +112,7 @@ class MainActivity : PermissionCheckerActivity() {
             ImportDatabaseContract()
         ) { importDatabaseCallback(applicationContext, it) }
 
-        requestRuntimePermissions()
+//        requestRuntimePermissions()
 
         setContent {
             MusikusApp(timeProvider)
