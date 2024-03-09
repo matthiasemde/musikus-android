@@ -1,24 +1,40 @@
-name: Android CI
+name: CI
 
 on:
   pull_request:
     branches: [ "main" ]
-
+env:
+    JAVA_VERSION: 17
 jobs:
-  build:
-
+  checks:
+    name: Checks
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
-    - name: set up JDK 17
-      uses: actions/setup-java@v3
+    - uses: actions/checkout@v4
+    - uses: actions/setup-java@v4
       with:
-        java-version: '17'
+        java-version: ${{ env.JAVA_VERSION }}
         distribution: 'temurin'
         cache: gradle
 
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
-    - name: Build with Gradle
-      run: ./gradlew build
+    - name: Check Gradle wrapper
+      uses: gradle/wrapper-validation-action@v2
+
+    - name: Check lint
+      run: ./gradlew lint
+
+  unit-tests:
+    name: Unit tests
+    runs-on: macos-latest
+    steps: 
+    - uses: actions/checkout@v4
+    - uses: actions/setup-java@v4
+      with:
+        java-version: ${{ env.JAVA_VERSION }}
+        distribution: 'temurin'
+        cache: gradle
+    - uses: gradle/setup-gradle@v3
+
+    - name: Unit tests
+      run: ./gradlew test
