@@ -14,17 +14,17 @@
 >
     <path
         android:name="bar_chart_l"
-        android:fillColor="@color/md_purple_A700"
+        android:fillColor="@android:color/black"
         android:pathData="@string/bar_chart_l"
     />
     <path
         android:name="bar_chart_m"
-        android:fillColor="@color/md_purple_A700"
+        android:fillColor="@android:color/black"
         android:pathData="@string/bar_chart_m"
     />
     <path
         android:name="bar_chart_r"
-        android:fillColor="@color/md_purple_A700"
+        android:fillColor="@android:color/black"
         android:pathData="@string/bar_chart_r"
     />
 </vector>

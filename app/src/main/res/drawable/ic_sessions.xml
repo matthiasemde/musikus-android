@@ -12,7 +12,7 @@
     android:viewportHeight="24">
   <path
       android:name="sessions"
-      android:fillColor="@color/md_purple_A700"
+      android:fillColor="@android:color/black"
       android:pathData="@string/ic_sessions"/>
 
   <group
@@ -22,7 +22,7 @@
 
     <path
         android:name="play"
-        android:fillColor="@color/md_purple_A700"
+        android:fillColor="@android:color/black"
         android:pathData="M14,14v6l5.19,-3z"/>
 
   </group>

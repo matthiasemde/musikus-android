@@ -11,7 +11,7 @@
 
     <path
         android:name="stop"
-        android:fillColor="@color/md_purple_A700"
+        android:fillColor="@android:color/black"
         android:pathData="@string/square"/>
 
   </group>
