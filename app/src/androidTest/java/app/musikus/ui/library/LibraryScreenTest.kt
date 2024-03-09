@@ -33,6 +33,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.test.core.app.ApplicationProvider
 import app.musikus.R
+import app.musikus.datastore.ColorSchemeSelections
 import app.musikus.datastore.ThemeSelections
 import app.musikus.ui.MainActivity
 import app.musikus.ui.MainViewModel
@@ -72,7 +73,7 @@ class LibraryScreenTest {
             val viewModel: MainViewModel = hiltViewModel()
 
             val navController = rememberNavController()
-            MusikusTheme(theme = ThemeSelections.DAY) {
+            MusikusTheme(theme = ThemeSelections.DAY, colorScheme = ColorSchemeSelections.DEFAULT) {
 
                 val homeViewModel: HomeViewModel = hiltViewModel()
                 val homeUiState by homeViewModel.uiState.collectAsStateWithLifecycle()
