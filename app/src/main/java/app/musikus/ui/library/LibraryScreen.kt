@@ -127,8 +127,7 @@ fun Library(
 
     Scaffold(
         contentWindowInsets = WindowInsets(bottom = 0.dp), // makes sure FAB is not shifted up
-        modifier = Modifier
-            .nestedScroll(scrollBehavior.nestedScrollConnection),
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         floatingActionButton = {
             val fabUiState = uiState.fabUiState
             if(fabUiState.activeFolder != null) {
