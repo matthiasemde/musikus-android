@@ -3,8 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2023 Matthias Emde
+ * Copyright (c) 2023-2024 Matthias Emde
  */
+@file:Suppress("DEPRECATION")
 
 package app.musikus.di
 
@@ -66,11 +67,13 @@ import app.musikus.usecase.sessions.GetSessionsInTimeframeUseCase
 import app.musikus.usecase.sessions.RestoreSessionsUseCase
 import app.musikus.usecase.sessions.SessionsUseCases
 import app.musikus.usecase.userpreferences.ChangeMetronomeSettingsUseCase
+import app.musikus.usecase.userpreferences.GetColorSchemeUseCase
 import app.musikus.usecase.userpreferences.GetFolderSortInfoUseCase
 import app.musikus.usecase.userpreferences.GetGoalSortInfoUseCase
 import app.musikus.usecase.userpreferences.GetItemSortInfoUseCase
 import app.musikus.usecase.userpreferences.GetMetronomeSettingsUseCase
 import app.musikus.usecase.userpreferences.GetThemeUseCase
+import app.musikus.usecase.userpreferences.SelectColorSchemeUseCase
 import app.musikus.usecase.userpreferences.SelectFolderSortModeUseCase
 import app.musikus.usecase.userpreferences.SelectGoalsSortModeUseCase
 import app.musikus.usecase.userpreferences.SelectItemSortModeUseCase
@@ -156,6 +159,13 @@ object TestAppModule {
             this.timeProvider = timeProvider
             this.idProvider = idProvider
         }
+    }
+
+    @Provides
+    fun providesMusikusDatabase(
+        @Named("test_db") database: MusikusDatabase
+    ): MusikusDatabase {
+        return database
     }
 
     @Provides
@@ -304,11 +314,13 @@ object TestAppModule {
     ): UserPreferencesUseCases {
         return UserPreferencesUseCases(
             getTheme = GetThemeUseCase(userPreferencesRepository),
+            getColorScheme = GetColorSchemeUseCase(userPreferencesRepository),
             getFolderSortInfo = GetFolderSortInfoUseCase(userPreferencesRepository),
             getItemSortInfo = GetItemSortInfoUseCase(userPreferencesRepository),
             getGoalSortInfo = GetGoalSortInfoUseCase(userPreferencesRepository),
             getMetronomeSettings = GetMetronomeSettingsUseCase(userPreferencesRepository),
             selectTheme = SelectThemeUseCase(userPreferencesRepository),
+            selectColorScheme = SelectColorSchemeUseCase(userPreferencesRepository),
             selectFolderSortMode = SelectFolderSortModeUseCase(userPreferencesRepository),
             selectItemSortMode = SelectItemSortModeUseCase(userPreferencesRepository),
             selectGoalSortMode = SelectGoalsSortModeUseCase(userPreferencesRepository),
