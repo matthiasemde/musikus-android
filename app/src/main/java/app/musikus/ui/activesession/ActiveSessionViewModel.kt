@@ -25,7 +25,7 @@ import app.musikus.database.entities.SectionCreationAttributes
 import app.musikus.database.entities.SessionCreationAttributes
 import app.musikus.services.SessionService
 import app.musikus.services.SessionServiceEvent
-import app.musikus.services.SessionServiceState
+import app.musikus.services.SessionViewModelState
 import app.musikus.ui.library.LibraryItemDialogUiEvent
 import app.musikus.ui.library.LibraryItemEditData
 import app.musikus.usecase.library.LibraryUseCases
@@ -97,13 +97,13 @@ class ActiveSessionViewModel @Inject constructor(
      *  --------------------- Session service  ---------------------
      */
 
-    private val sessionServiceStateWrapper = MutableStateFlow<Flow<SessionServiceState>?>(null)
-    private val sessionServiceState = sessionServiceStateWrapper.flatMapLatest {
-        it ?: flowOf(SessionServiceState())
+    private val sessionInfoWrapper = MutableStateFlow<Flow<SessionViewModelState>?>(null)
+    private val sessionInfo = sessionInfoWrapper.flatMapLatest {
+        it ?: flowOf(SessionViewModelState())
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = SessionServiceState()
+        initialValue = SessionViewModelState()
     )
 
     // #############################################    
@@ -117,7 +117,7 @@ class ActiveSessionViewModel @Inject constructor(
             // We've bound to SessionForegroundService, cast the Binder and get SessionService instance
             val binder = service as SessionService.LocalBinder
             sessionEvent = binder.getOnEvent()
-            sessionServiceStateWrapper.update { binder.getServiceState() }
+            sessionInfoWrapper.update { binder.getViewModelState() }
 
             bound = true
         }
@@ -161,7 +161,7 @@ class ActiveSessionViewModel @Inject constructor(
         initialValue = listOf()
     )
 
-    private val currentlyPracticedSection = sessionServiceState.map {
+    private val currentlyPracticedSection = sessionInfo.map {
         it.sections.lastOrNull()
     }.stateIn(
         scope = viewModelScope,
@@ -170,7 +170,7 @@ class ActiveSessionViewModel @Inject constructor(
     )
 
 
-    private val totalSessionDuration = sessionServiceState.map { sessionState ->
+    private val totalSessionDuration = sessionInfo.map { sessionState ->
         sessionState.sections.sumOf {
             it.duration.inWholeMilliseconds
         }.milliseconds
@@ -295,7 +295,7 @@ class ActiveSessionViewModel @Inject constructor(
 
     val uiState = combine(
         libraryCardUiState,
-        sessionServiceState,
+        sessionInfo,
         totalSessionDuration,
         addLibraryItemDialogUiState,
         dialogUiState,
@@ -325,9 +325,9 @@ class ActiveSessionViewModel @Inject constructor(
         initialValue = ActiveSessionUiState(
             cardUiStates = emptyList(),
             totalSessionDuration = 0.milliseconds,
-            ongoingPauseDuration = sessionServiceState.value.ongoingPauseDuration,
+            ongoingPauseDuration = sessionInfo.value.ongoingPauseDuration,
             sections = emptyList(),
-            isPaused = sessionServiceState.value.isPaused,
+            isPaused = sessionInfo.value.isPaused,
             addItemDialogUiState = addLibraryItemDialogUiState.value,
             dialogUiState = dialogUiState.value
         )
@@ -408,15 +408,15 @@ class ActiveSessionViewModel @Inject constructor(
         viewModelScope.launch {
             sessionUseCases.add(
                 sessionCreationAttributes = SessionCreationAttributes(
-                    breakDuration = sessionServiceState.value.sections.sumOf { it.pauseDuration.inWholeMilliseconds }.milliseconds,
+                    breakDuration = sessionInfo.value.sections.sumOf { it.pauseDuration.inWholeMilliseconds }.milliseconds,
                     comment = endDialogData.comment,
                     rating = endDialogData.rating
                 ),
-                sectionCreationAttributes = sessionServiceState.value.sections.map { section ->
+                sectionCreationAttributes = sessionInfo.value.sections.map { section ->
                     SectionCreationAttributes(
                         libraryItemId = section.libraryItem.id,
                         duration = section.duration,
-                        startTimestamp = section.startTimestamp
+                        startTimestamp = sessionInfo.value.sessionStartTime
                     )
                 }
             )

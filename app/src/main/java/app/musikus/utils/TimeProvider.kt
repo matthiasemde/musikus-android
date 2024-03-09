@@ -144,6 +144,14 @@ operator fun ZonedDateTime.minus(other: ZonedDateTime): Duration {
 }
 
 /**
+ * Operator extension function to get a ZonedDateTime object with a duration added..
+ * @param duration the duration to add.
+ */
+operator fun ZonedDateTime.plus(duration: Duration): ZonedDateTime {
+    return this.plusNanos(duration.inWholeNanoseconds)
+}
+
+/**
  * Operator extension function to get a ZonedDateTime object with a duration subtracted.
  * @param duration the duration to subtract
  */
