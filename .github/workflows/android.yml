@@ -34,7 +34,7 @@ jobs:
         java-version: ${{ env.JAVA_VERSION }}
         distribution: 'temurin'
         cache: gradle
-    - uses: gradle/setup-gradle@v3
+    - uses: gradle/actions/setup-gradle@v3
 
     - name: Unit tests
       run: ./gradlew test
