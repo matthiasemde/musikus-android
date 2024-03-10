@@ -1,3 +1,11 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ *
+ * Copyright (c) 2024 Matthias Emde, Michael Prommersberger
+ */
+
 package app.musikus.ui.activesession
 
 import android.app.Application
@@ -21,6 +29,7 @@ import app.musikus.services.SessionServiceState
 import app.musikus.ui.library.LibraryItemDialogUiEvent
 import app.musikus.ui.library.LibraryItemEditData
 import app.musikus.usecase.library.LibraryUseCases
+import app.musikus.usecase.permissions.PermissionsUseCases
 import app.musikus.usecase.sessions.SessionsUseCases
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -58,6 +67,7 @@ data class EndDialogData(
 class ActiveSessionViewModel @Inject constructor(
     private val libraryUseCases: LibraryUseCases,
     private val sessionUseCases: SessionsUseCases,
+    private val permissionsUseCases: PermissionsUseCases,
     private val application: Application
 ): AndroidViewModel(application) {
 
@@ -83,6 +93,8 @@ class ActiveSessionViewModel @Inject constructor(
 
 
     /** stateFlows */
+
+    private val _notificationPermissionsGranted = MutableStateFlow(false)
 
     private val _selectedFolderId = MutableStateFlow<UUID?>(null)
     private val _addLibraryItemData = MutableStateFlow<LibraryItemEditData?>(null)
@@ -124,6 +136,20 @@ class ActiveSessionViewModel @Inject constructor(
     }
 
     init {
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            viewModelScope.launch {
+                val notificationPermissionResult = permissionsUseCases.request(
+                    listOf(android.Manifest.permission.POST_NOTIFICATIONS)
+                )
+                if (notificationPermissionResult.isSuccess) {
+                    _notificationPermissionsGranted.update { true }
+                } else {
+                    // TODO _exceptionChannel.send(ActiveSessionException.NoNotificationPermission)
+                }
+            }
+        }
+
         // try to bind to SessionService
         bindService()
     }
