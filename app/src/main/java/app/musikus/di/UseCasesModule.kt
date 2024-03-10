@@ -12,6 +12,16 @@ import app.musikus.repository.GoalRepository
 import app.musikus.repository.LibraryRepository
 import app.musikus.repository.SessionRepository
 import app.musikus.repository.UserPreferencesRepository
+import app.musikus.usecase.activesession.ActiveSessionRepository
+import app.musikus.usecase.activesession.ActiveSessionUseCases
+import app.musikus.usecase.activesession.DeleteSectionUseCase
+import app.musikus.usecase.activesession.GetCompletedSectionsUseCase
+import app.musikus.usecase.activesession.GetOngoingPauseDurationUseCase
+import app.musikus.usecase.activesession.GetPracticeTimeUseCase
+import app.musikus.usecase.activesession.GetRunningSectionUseCase
+import app.musikus.usecase.activesession.PauseUseCase
+import app.musikus.usecase.activesession.ResumeUseCase
+import app.musikus.usecase.activesession.SelectItemUseCase
 import app.musikus.usecase.goals.AddGoalUseCase
 import app.musikus.usecase.goals.ArchiveGoalsUseCase
 import app.musikus.usecase.goals.CalculateGoalProgressUseCase
@@ -67,6 +77,7 @@ import app.musikus.usecase.userpreferences.SelectGoalsSortModeUseCase
 import app.musikus.usecase.userpreferences.SelectItemSortModeUseCase
 import app.musikus.usecase.userpreferences.SelectThemeUseCase
 import app.musikus.usecase.userpreferences.UserPreferencesUseCases
+import app.musikus.utils.IdProvider
 import app.musikus.utils.TimeProvider
 import dagger.Module
 import dagger.Provides
@@ -178,6 +189,50 @@ object UseCasesModule {
             edit = EditSessionUseCase(sessionRepository),
             delete = DeleteSessionsUseCase(sessionRepository),
             restore = RestoreSessionsUseCase(sessionRepository),
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideActiveSessionUseCases(
+        activeSessionRepository: ActiveSessionRepository,
+        timeProvider: TimeProvider,
+        idProvider: IdProvider
+    ) : ActiveSessionUseCases {
+
+        val getOngoingPauseDurationUseCase = GetOngoingPauseDurationUseCase(
+            activeSessionRepository,
+            timeProvider
+        )
+
+        val resumeUseCase = ResumeUseCase(
+            activeSessionRepository,
+            getOngoingPauseDurationUseCase
+        )
+
+        val getRunningSectionUseCase = GetRunningSectionUseCase(
+            activeSessionRepository,
+            timeProvider
+        )
+
+        return ActiveSessionUseCases(
+            selectItem = SelectItemUseCase(
+                activeSessionRepository = activeSessionRepository,
+                resumeUseCase = resumeUseCase,
+                getRunningSectionUseCase = getRunningSectionUseCase,
+                timeProvider = timeProvider,
+                idProvider = idProvider
+            ),
+            getPracticeTime = GetPracticeTimeUseCase(
+                activeSessionRepository = activeSessionRepository,
+                runningSectionUseCase = getRunningSectionUseCase
+            ),
+            deleteSection = DeleteSectionUseCase(activeSessionRepository),
+            pause = PauseUseCase(activeSessionRepository, timeProvider),
+            resume = resumeUseCase,
+            getRunningSection = getRunningSectionUseCase,
+            getCompletedSections = GetCompletedSectionsUseCase(activeSessionRepository),
+            getOngoingPauseDuration = GetOngoingPauseDurationUseCase(activeSessionRepository, timeProvider),
         )
     }
 

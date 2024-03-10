@@ -5,7 +5,6 @@ data class ActiveSessionUseCases(
     val deleteSection: DeleteSectionUseCase,
     val pause: PauseUseCase,
     val resume: ResumeUseCase,
-
     val getPracticeTime: GetPracticeTimeUseCase,
     val getRunningSection: GetRunningSectionUseCase,
     val getCompletedSections: GetCompletedSectionsUseCase,
