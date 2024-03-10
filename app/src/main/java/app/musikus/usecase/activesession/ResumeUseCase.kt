@@ -20,6 +20,7 @@ class ResumeUseCase(
             state.copy(
                 startTimestampSectionPauseCompensated =
                     state.startTimestampSectionPauseCompensated + currentPauseDuration,
+                currentPauseStartTimestamp = null,
                 isPaused = false
             )
         )

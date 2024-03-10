@@ -25,6 +25,7 @@ data class ActiveSessionUiState(
     val totalSessionDuration: Duration,
     val ongoingPauseDuration: Duration,
     val sections: List<ActiveSessionSectionListItemUiState>,
+    val runningSection: ActiveSessionSectionListItemUiState?,
     val isPaused: Boolean,
     val addItemDialogUiState: ActiveSessionAddLibraryItemDialogUiState?,
     val dialogUiState: ActiveSessionDialogUiState,
@@ -48,7 +49,7 @@ data class ActiveSessionAddLibraryItemDialogUiState(
 ) : LibraryItemDialogUiState
 
 data class ActiveSessionSectionListItemUiState(
-    val id: Int,
+    val id: UUID,
     val libraryItem: LibraryItem,
     val duration: Duration
 )
@@ -108,7 +109,7 @@ sealed class ActiveSessionUiEvent : DraggableCardUiEvent {
     data class SelectFolder(val folderId: UUID?) : ActiveSessionUiEvent()
     data class SelectItem(val item: LibraryItem) : ActiveSessionUiEvent()
 
-    data class DeleteSection(val sectionId: Int) : ActiveSessionUiEvent()
+    data class DeleteSection(val sectionId: UUID) : ActiveSessionUiEvent()
 
 
     data object ShowDiscardSessionDialog : ActiveSessionUiEvent()

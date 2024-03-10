@@ -13,7 +13,7 @@ class GetPracticeTimeUseCase(
         val state = activeSessionRepository.getSessionState().first()
         val runningSection = runningSectionUseCase()
 
-        if (state == null || runningSection == null) return 0.seconds
+        if (state == null) return 0.seconds
 
         // add up all completed section durations
         // add running section duration on top (by using initial value of fold)

@@ -151,7 +151,7 @@ fun ActiveSession(
                         Spacer(modifier = Modifier.weight(1f))
                         PracticeTimer(uiState)
                         Spacer(modifier = Modifier.weight(1f))
-                        CurrentPracticingItem(sections = uiState.sections)
+                        CurrentPracticingItem(item = uiState.runningSection)
                     }
 
                     /** ------------------- Remaining area ------------------- */
@@ -327,22 +327,22 @@ private fun PracticeTimer(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun CurrentPracticingItem(
-    sections: List<ActiveSessionSectionListItemUiState>
+    item: ActiveSessionSectionListItemUiState?
 ) {
     AnimatedVisibility(
-        visible = sections.isNotEmpty(),
+        visible = item != null,
         enter = expandVertically() + fadeIn(animationSpec = keyframes { durationMillis = 200 }),
     ) {
-        val firstSection = sections.first()
         Surface(
             modifier = Modifier.animateContentSize(),
             color = MaterialTheme.colorScheme.tertiaryContainer,
             shape = RoundedCornerShape(50),
             shadowElevation = 1.dp
         ) {
+            if(item == null) return@Surface
 
             AnimatedContent(
-                targetState = firstSection.libraryItem.name,
+                targetState = item.libraryItem.name,
                 label = "currentPracticingItem",
                 transitionSpec = {
                     slideInVertically { -it } togetherWith slideOutVertically { it }
@@ -373,7 +373,7 @@ private fun CurrentPracticingItem(
 
                     Text(
                         text = getDurationString(
-                            firstSection.duration,
+                            item.duration,
                             DurationFormat.HMS_DIGITAL
                         ).toString(),
                         style = MaterialTheme.typography.titleLarge,

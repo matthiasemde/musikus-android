@@ -30,24 +30,23 @@ import androidx.core.net.toUri
 import app.musikus.R
 import app.musikus.SESSION_NOTIFICATION_CHANNEL_ID
 import app.musikus.database.daos.LibraryItem
+import app.musikus.di.ApplicationScope
 import app.musikus.ui.activesession.ActiveSessionActions
-import app.musikus.utils.DurationFormat
+import app.musikus.usecase.activesession.ActiveSessionUseCases
 import app.musikus.utils.TimeProvider
-import app.musikus.utils.getDurationString
-import app.musikus.utils.minus
-import app.musikus.utils.plus
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.ZoneId
 import java.time.ZonedDateTime
+import java.util.UUID
 import javax.inject.Inject
-import kotlin.concurrent.timer
-import kotlin.time.Duration
-import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.Duration.Companion.seconds
 
 val DUMMY_TIME: ZonedDateTime = ZonedDateTime.ofInstant(
     Instant.ofEpochSecond(0), ZoneId.systemDefault())
@@ -57,23 +56,13 @@ const val BROADCAST_INTENT_FILTER = "activeSessionAction"
 
 
 /**
- * Encapsulates the state of the current session, is passed to the binding Activity / ViewModel
- */
-data class SessionViewModelState(
-    val sessionStartTime: ZonedDateTime = DUMMY_TIME,
-    val sections: List<PracticeSection> = emptyList(),
-    val ongoingPauseDuration: Duration = 0.seconds,
-    val isPaused: Boolean = false
-)
-
-/**
  * Exposed interface for events between Service and Activity / ViewModel
  */
 sealed class SessionServiceEvent {
     data object StopTimerAndFinish: SessionServiceEvent()
     data object TogglePause: SessionServiceEvent()
     data class StartNewSection(val item: LibraryItem): SessionServiceEvent()
-    data class DeleteSection(val sectionId: Int): SessionServiceEvent()
+    data class DeleteSection(val sectionId: UUID): SessionServiceEvent()
 }
 
 /**
@@ -86,33 +75,31 @@ data class NotificationActionButtonConfig(
 )
 
 
-data class PracticeSection(
-    val id: Int,
-    val libraryItem: LibraryItem,
-    val pauseDuration: Duration,   // set when section is completed
-    val duration: Duration         // set when section is completed
-)
-
-data class SessionState(
-    val completedSections: List<PracticeSection> = emptyList(),
-    val currentSectionItem: LibraryItem? = null,
-    val startTimestamp: ZonedDateTime = DUMMY_TIME,
-    val startTimestampSection: ZonedDateTime = DUMMY_TIME,
-    val startTimestampSectionPauseCompensated: ZonedDateTime = DUMMY_TIME,
-    val currentPauseStartTimestamp: ZonedDateTime = DUMMY_TIME,
-    val isPaused: Boolean = false,
-)
 
 @AndroidEntryPoint
 class SessionService : Service() {
 
     @Inject
+    @ApplicationScope
+    lateinit var applicationScope: CoroutineScope
+
+    @Inject
     lateinit var timeProvider: TimeProvider
+
+    @Inject
+    lateinit var useCases : ActiveSessionUseCases
+    private val dependenciesInjected = MutableStateFlow(false)
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val completedSections = dependenciesInjected.flatMapLatest {
+        if(!it) flowOf(emptyList())
+        else useCases.getCompletedSections()
+    }
 
     private val binder = LocalBinder()         // interface object for clients that bind
     inner class LocalBinder : Binder() {
         // Return this instance of SessionService so clients can call public methods
-        fun getViewModelState() = viewModelState
+//        fun getViewModelState() = viewModelState
         fun getOnEvent(): (SessionServiceEvent) -> Unit = ::onEvent
     }
 
@@ -137,41 +124,14 @@ class SessionService : Service() {
     private var finishActionButton : NotificationActionButtonConfig? = null
 
     /** private global variables */
-    private var _sectionIdCounter = 0   // gives us unique ids for all sections
-    private val _sessionState = MutableStateFlow(SessionState())
-    private val _clock = MutableStateFlow(false)
-    private val timerInterval = 50.milliseconds
-    private var _timer: java.util.Timer? = null
+//    private val _clock = MutableStateFlow(false)
+//    private val timerInterval = 50.milliseconds
+//    private var _timer: java.util.Timer? = null
 
     /**
      *  ---------------------- Interface for Activity / ViewModel ----------------------
      */
 
-    val viewModelState = combine(
-        _sessionState,
-        _clock
-    ) { state, _ ->
-        val now = timeProvider.now()
-        val ongoingPauseDuration = getOngoingPauseDuration(now)
-        val allSections =
-            if (state.currentSectionItem != null) {
-                state.completedSections +
-                PracticeSection(
-                    id = _sectionIdCounter,
-                    libraryItem = state.currentSectionItem,
-                    duration = getDurationCurrentSection(now),
-                    pauseDuration = getTotalPauseDurationCurrentSection() + ongoingPauseDuration
-                )
-            } else {
-                state.completedSections
-            }
-        SessionViewModelState(
-            sessionStartTime = state.startTimestamp,
-            sections = allSections,
-            ongoingPauseDuration = ongoingPauseDuration,
-            isPaused = state.isPaused,
-        )
-    }
 
     fun onEvent(event: SessionServiceEvent) {
         when(event) {
@@ -186,109 +146,29 @@ class SessionService : Service() {
      * ----------------------------------- private functions ------------------------------------
      */
 
-    private fun startTimer() {
-        if (_timer != null) {
-            return
-        }
-        _timer = timer(
-            name = "Timer",
-            initialDelay = 0,
-            period = timerInterval.inWholeMilliseconds
-        ) {
-            _clock.update { !it }
-            updateNotification()
-        }
-    }
 
-    private fun getDurationCurrentSection(at: ZonedDateTime) : Duration {
-        _sessionState.value.let {
-            if (it.isPaused) {
-                return it.currentPauseStartTimestamp - it.startTimestampSectionPauseCompensated
+
+    fun togglePause() {
+        applicationScope.launch {
+            if (useCases.getPausedState()) {
+                useCases.resume()
+            } else {
+                useCases.pause()
             }
-            return at - it.startTimestampSectionPauseCompensated
-        }
-    }
-
-    private fun getOngoingPauseDuration(at: ZonedDateTime) : Duration {
-        return at - _sessionState.value.currentPauseStartTimestamp
-    }
-
-    private fun getTotalPauseDurationCurrentSection() : Duration {
-        return _sessionState.value.startTimestampSectionPauseCompensated - _sessionState.value.startTimestampSection
-    }
-
-    private fun togglePause() {
-        if (_sessionState.value.isPaused) {
-            stopPause(timeProvider.now())
-        } else {
-            startPause()
         }
         updateNotification()
     }
 
-    private fun startPause() {
-        // set the pause pointer to now
-        _sessionState.update {it.copy(
-            currentPauseStartTimestamp = timeProvider.now(),
-            isPaused = true
-        ) }
-    }
-
-    private fun stopPause(at: ZonedDateTime) {
-        // advance the pause-compensated "start timestamp" of the current section by the length of the pause
-        _sessionState.update {
-            val pauseDuration = at - it.currentPauseStartTimestamp
-            it.copy(
-                startTimestampSectionPauseCompensated = it.startTimestampSectionPauseCompensated + pauseDuration,
-                isPaused = false
-            )
-        }
-    }
 
     private fun newSection(item: LibraryItem) {
-        startTimer()
-        val pressTime = timeProvider.now()
-        val changeOverTime =
-            if (_sessionState.value.currentSectionItem == null) {
-                pressTime
-            } else {
-                _sessionState.value.startTimestampSectionPauseCompensated +
-                        getDurationCurrentSection(pressTime).inWholeSeconds.seconds
-            }
-        // allow new section only after 1sec.
-        if (getDurationCurrentSection(changeOverTime) < 1.seconds) return
-
-        if (_sessionState.value.isPaused) {
-            stopPause(pressTime)
-        }
-
-        _sessionState.update {
-            // store finished section with durations (if not just started first section)
-            val completedSections = if (it.currentSectionItem != null) {
-                it.completedSections + PracticeSection(
-                    id = _sectionIdCounter++,
-                    libraryItem = it.currentSectionItem,
-                    duration = changeOverTime - it.startTimestampSectionPauseCompensated,
-                    pauseDuration = getTotalPauseDurationCurrentSection()
-                )
-            } else emptyList()
-
-            // set the working pointers to current time
-            // store new current section item
-            it.copy(
-                completedSections = completedSections,
-                currentSectionItem = item,
-                startTimestampSection = changeOverTime,
-                startTimestampSectionPauseCompensated = changeOverTime,
-            )
+        applicationScope.launch {
+            useCases.selectItem(item)
         }
     }
 
-    private fun removeSection(sectionId: Int) {
-        _sessionState.update { state ->
-            state.copy(
-                completedSections = state.completedSections.filter { it.id != sectionId }
-            )
+    private fun removeSection(sectionId: UUID) {
+        applicationScope.launch {
+            useCases.deleteSection(sectionId)
         }
     }
 
@@ -296,43 +176,46 @@ class SessionService : Service() {
     /** -------------------------------------------- Service Boilerplate -------------------------*/
 
     private fun updateNotification() {
-        val mNotificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-        mNotificationManager.notify(SESSION_NOTIFICATION_ID, createNotification())
+        applicationScope.launch {
+            val mNotificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+            mNotificationManager.notify(SESSION_NOTIFICATION_ID, createNotification())
+        }
     }
 
     /**
      * Creates a notification object based on current session state
      */
-    private fun createNotification() : Notification {
-        val totalPracticeDuration = _sessionState.value.completedSections.sumOf {
-            it.duration.inWholeMilliseconds
-        }.milliseconds + getDurationCurrentSection(timeProvider.now())
-        val totalPracticeDurationStr =
-            getDurationString(totalPracticeDuration, DurationFormat.HMS_DIGITAL)
+    private suspend fun createNotification() : Notification {
+//        val totalPracticeDuration = _sessionState.value.completedSections.sumOf {
+//            it.duration.inWholeMilliseconds
+//        }.milliseconds + getDurationCurrentSection(timeProvider.now())
+//        val totalPracticeDurationStr =
+//            getDurationString(totalPracticeDuration, DurationFormat.HMS_DIGITAL)
+//
+//        val currentSectionName = _sessionState.value.currentSectionItem?.name ?: "No Section"
+//
+//        val title: String
+//        val description: String
+//
+//        if (_sessionState.value.isPaused) {
+//            title = "Practicing Paused"
+//            description = "$currentSectionName - Total: $totalPracticeDurationStr"
+//        } else {
+//            title = "Practicing for $totalPracticeDurationStr"
+//            description = currentSectionName
+//        }
 
-        val currentSectionName = _sessionState.value.currentSectionItem?.name ?: "No Section"
-
-        val title: String
-        val description: String
-
-        if (_sessionState.value.isPaused) {
-            title = "Practicing Paused"
-            description = "$currentSectionName - Total: $totalPracticeDurationStr"
-        } else {
-            title = "Practicing for $totalPracticeDurationStr"
-            description = currentSectionName
-        }
-
-        val actionButton1Intent = if(_sessionState.value.isPaused) {
+        val actionButton1Intent = if (useCases.getPausedState()) {
             resumeActionButton
         } else {
             pauseActionButton
         }
+
         val actionButton2Intent = finishActionButton
 
         return getNotification(
-            title = title,
-            description = description,
+            title = "tba",
+            description = "tba",
             actionButton1 = actionButton1Intent,
             actionButton2 = actionButton2Intent
         )
@@ -342,6 +225,7 @@ class SessionService : Service() {
     override fun onCreate() {
         super.onCreate()
         createPendingIntents()
+        dependenciesInjected.update { true }
     }
 
     override fun onBind(intent: Intent?): IBinder {
@@ -363,17 +247,19 @@ class SessionService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        val notification = createNotification()
 
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            startForeground(SESSION_NOTIFICATION_ID, notification)
-        } else {
-            ServiceCompat.startForeground(
-                this,
-                SESSION_NOTIFICATION_ID,
-                notification,
-                ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
-            )
+        applicationScope.launch {
+            val notification = createNotification()
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                startForeground(SESSION_NOTIFICATION_ID, notification)
+            } else {
+                ServiceCompat.startForeground(
+                    this@SessionService,
+                    SESSION_NOTIFICATION_ID,
+                    notification,
+                    ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+                )
+            }
         }
 
         return START_NOT_STICKY
@@ -460,7 +346,7 @@ class SessionService : Service() {
     }
 
     private fun stopTimerAndDestroy() {
-        _timer?.cancel()
+//        _timer?.cancel()
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
     }
