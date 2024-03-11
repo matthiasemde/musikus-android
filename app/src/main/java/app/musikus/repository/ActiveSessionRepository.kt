@@ -14,6 +14,9 @@ class ActiveSessionRepositoryImpl : ActiveSessionRepository {
     override suspend fun setSessionState(sessionState: SessionState) {
         this.sessionState.update { sessionState }
     }
-
     override fun getSessionState() = sessionState.asStateFlow()
+
+    override fun reset() {
+        sessionState.update { null }
+    }
 }

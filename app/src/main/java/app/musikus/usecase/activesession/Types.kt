@@ -11,8 +11,9 @@ interface ActiveSessionRepository {
     suspend fun setSessionState(
         sessionState: SessionState
     )
-
     fun getSessionState() : Flow<SessionState?>
+
+    fun reset()
 }
 
 data class PracticeSection(

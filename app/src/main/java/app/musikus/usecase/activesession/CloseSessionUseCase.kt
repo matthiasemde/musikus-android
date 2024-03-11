@@ -9,6 +9,7 @@ import kotlin.time.Duration.Companion.seconds
 class CloseSessionUseCase(
     private val activeSessionRepository: ActiveSessionRepository,
     private val getRunningSectionUseCase: GetRunningSectionUseCase,
+    private val resumeUseCase: ResumeUseCase,
     private val idProvider: IdProvider
 ) {
     suspend operator fun invoke() {
@@ -16,9 +17,7 @@ class CloseSessionUseCase(
             ?: throw IllegalStateException("State is null. Cannot finish session!")
 
         // resume if paused to get correct duration
-        if (state.isPaused) {
-            throw IllegalStateException("Cannot finish session while paused.")
-        }
+        if (state.isPaused) resumeUseCase()
 
         // take time
         val runningSectionTrueDuration = getRunningSectionUseCase().second

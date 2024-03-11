@@ -25,6 +25,7 @@ import app.musikus.usecase.library.LibraryUseCases
 import app.musikus.usecase.permissions.PermissionsUseCases
 import app.musikus.usecase.sessions.SessionsUseCases
 import app.musikus.utils.IdProvider
+import app.musikus.utils.TimeProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -66,6 +67,7 @@ class ActiveSessionViewModel @Inject constructor(
     private val activeSessionUseCases: ActiveSessionUseCases,
     private val application: Application,
     private val idProvider: IdProvider,
+    private val timeProvider: TimeProvider
 ): AndroidViewModel(application) {
 
     /**
@@ -99,12 +101,9 @@ class ActiveSessionViewModel @Inject constructor(
 
     private val _showDiscardSessionDialog = MutableStateFlow(false)
 
-    private val _clock = MutableStateFlow(false)
-
-
     /** Service */
 
-    private var sessionEvent: (SessionServiceEvent) -> Unit = { Log.d("TAG", "not implemented") }
+    private var serviceEvent: (SessionServiceEvent) -> Unit = { Log.d("TAG", "not implemented") }
     private var bound = false
 
     private val connection = object : ServiceConnection {
@@ -112,7 +111,7 @@ class ActiveSessionViewModel @Inject constructor(
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
             // We've bound to SessionForegroundService, cast the Binder and get SessionService instance
             val binder = service as SessionService.LocalBinder
-            sessionEvent = binder.getOnEvent()
+            serviceEvent = binder.getOnEvent()
             bound = true
         }
         override fun onServiceDisconnected(arg0: ComponentName) {
@@ -163,28 +162,38 @@ class ActiveSessionViewModel @Inject constructor(
 
     private val sessionState = combine(
         activeSessionUseCases.getCompletedSections(),
-        _clock
+        timeProvider.clock(100.milliseconds)
     ) { completedSections, _ ->
-        SessionViewModelState(
-            sessionDuration = activeSessionUseCases.getPracticeTime(),
-            sections = completedSections,
-            activeSection = activeSessionUseCases.getRunningSection(),
-            ongoingPauseDuration = activeSessionUseCases.getOngoingPauseDuration(),
-            isPaused = activeSessionUseCases.getPausedState(),
-            startTimestamp = activeSessionUseCases.getStartTime()
-        )
+        try {
+            SessionViewModelState(
+                sessionDuration = activeSessionUseCases.getPracticeTime(),
+                sections = completedSections,
+                activeSection = activeSessionUseCases.getRunningSection(),
+                ongoingPauseDuration = activeSessionUseCases.getOngoingPauseDuration(),
+                isPaused = activeSessionUseCases.getPausedState(),
+                startTimestamp = activeSessionUseCases.getStartTime()
+            )
+        } catch (e: IllegalStateException) {
+            null
+        }
     }
 
     private val libraryCardHeaderUiState = combine(
         foldersWithItems,
-        _selectedFolderId
-    ) { foldersWithItems, selectedFolderId ->
+        _selectedFolderId,
+        activeSessionUseCases.getCompletedSections()    // to update the active folder id when a section is clicked
+    ) { foldersWithItems, selectedFolderId, _ ->
         ActiveSessionDraggableCardHeaderUiState.LibraryCardHeaderUiState(
             folders = listOf(null) + foldersWithItems.map { it.folder },
             selectedFolderId = selectedFolderId,
-            activeFolderId = activeSessionUseCases.getRunningSection().first.let {
-                Nullable(it.libraryFolderId)
-            }
+            activeFolderId =
+                try {
+                    activeSessionUseCases.getRunningSection().first.let {
+                        Nullable(it.libraryFolderId)
+                    }
+                } catch (e: Exception) {
+                    null
+                }
         )
     }.stateIn(
         scope = viewModelScope,
@@ -196,10 +205,18 @@ class ActiveSessionViewModel @Inject constructor(
         )
     )
 
-    private val libraryCardBodyUiState = itemsInSelectedFolder.map {
+    private val libraryCardBodyUiState = combine(
+        itemsInSelectedFolder,
+        activeSessionUseCases.getCompletedSections()    // to update the active folder id when a section is clicked
+    ) { items, _ ->
         ActiveSessionDraggableCardBodyUiState.LibraryCardBodyUiState(
-            items = it,
-            activeItemId = activeSessionUseCases.getRunningSection().first.id
+            items = items,
+            activeItemId =
+                try {
+                    activeSessionUseCases.getRunningSection().first.id
+                } catch (e: Exception) {
+                    null
+                }
         )
     }.stateIn(
         scope = viewModelScope,
@@ -294,22 +311,24 @@ class ActiveSessionViewModel @Inject constructor(
                 _recorderUiState,
                 _metronomeUiState
             ),
-            totalSessionDuration = sessionState.sessionDuration,
-            ongoingPauseDuration = sessionState.ongoingPauseDuration,
-            isPaused = sessionState.isPaused,
+            totalSessionDuration = sessionState?.sessionDuration ?: 0.seconds,
+            ongoingPauseDuration = sessionState?.ongoingPauseDuration ?: 0.seconds,
+            isPaused = sessionState?.isPaused ?: false,
             addItemDialogUiState = addItemDialogUiState,
-            sections = sessionState.sections.reversed().map { section ->
-                ActiveSessionSectionListItemUiState(
+            sections = sessionState?.sections?.reversed()?.map { section ->
+                    ActiveSessionSectionListItemUiState(
                     id = section.id,
                     libraryItem = section.libraryItem,
                     duration = section.duration
                 )
-            },
-            runningSection = ActiveSessionSectionListItemUiState(
-                id = idProvider.generateId(), // doesn't matter, not used
-                libraryItem = sessionState.activeSection.first,
-                duration = sessionState.activeSection.second
-            ),
+            } ?: emptyList(),
+            runningSection = if(sessionState != null) {
+                ActiveSessionSectionListItemUiState(
+                    id = idProvider.generateId(), // doesn't matter, not used
+                    libraryItem = sessionState.activeSection.first,
+                    duration = sessionState.activeSection.second
+                )
+            } else null,
             dialogUiState = dialogUiState
         )
     }.stateIn(
@@ -389,19 +408,30 @@ class ActiveSessionViewModel @Inject constructor(
 
     private fun itemClicked(item: LibraryItem) {
         if (!bound) return
-        sessionEvent(SessionServiceEvent.StartNewSection(item))
+        serviceEvent(SessionServiceEvent.StartNewSection(item))
         startService()
     }
 
     private fun togglePause() {
-        sessionEvent(SessionServiceEvent.TogglePause)
+        serviceEvent(SessionServiceEvent.TogglePause)
     }
 
     private fun stopSession() {
         val endDialogData = _endDialogData.value ?: return
         viewModelScope.launch {
-            activeSessionUseCases.close()
-            val sections = sessionState.first().sections
+            sessionState.first()
+                ?: throw IllegalStateException("State is null. Cannot finish session!")
+
+            activeSessionUseCases.close()   // complete running section
+
+            // make sure to re-fetch state (calling .first()) since close() updated the state
+            val state = sessionState.first()
+                ?: throw IllegalStateException("State is null. Cannot finish session!")
+
+            // ignore empty sections (e.g. when paused and then stopped immediately))
+            val sections = state.sections.filter { it.duration > 0.seconds }
+
+            // store in database
             sessionUseCases.add(
                 sessionCreationAttributes = SessionCreationAttributes(
                     breakDuration = sections.sumOf {
@@ -413,22 +443,24 @@ class ActiveSessionViewModel @Inject constructor(
                     SectionCreationAttributes(
                         libraryItemId = section.libraryItem.id,
                         duration = section.duration,
-                        startTimestamp = sessionState.first().startTimestamp
+                        startTimestamp = state.startTimestamp
                     )
                 }
             )
+            activeSessionUseCases.reset()   // reset the active session state
             _endDialogData.update { null }
-            sessionEvent(SessionServiceEvent.StopTimerAndFinish)
+            serviceEvent(SessionServiceEvent.StopService)
             unbindService()
         }
     }
 
     private fun discardSession() {
-        sessionEvent(SessionServiceEvent.StopTimerAndFinish)
+        activeSessionUseCases.reset()
+        serviceEvent(SessionServiceEvent.StopService)
     }
 
     private fun removeSection(itemId: UUID) {
-        sessionEvent(SessionServiceEvent.DeleteSection(itemId))
+        serviceEvent(SessionServiceEvent.DeleteSection(itemId))
     }
 
     private fun createLibraryItemDialog() {

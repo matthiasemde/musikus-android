@@ -60,14 +60,16 @@ class SelectItemUseCase(
 
         /** starting the first section */
         val changeOverTime = timeProvider.now()
-        SessionState( // create new session state
-            completedSections = emptyList(),
-            currentSectionItem = libraryItem,
-            startTimestamp = changeOverTime,
-            startTimestampSection = changeOverTime,
-            startTimestampSectionPauseCompensated = changeOverTime,
-            currentPauseStartTimestamp = null,
-            isPaused = false
+        activeSessionRepository.setSessionState(
+            SessionState( // create new session state
+                completedSections = emptyList(),
+                currentSectionItem = libraryItem,
+                startTimestamp = changeOverTime,
+                startTimestampSection = changeOverTime,
+                startTimestampSectionPauseCompensated = changeOverTime,
+                currentPauseStartTimestamp = null,
+                isPaused = false
+            )
         )
     }
 }

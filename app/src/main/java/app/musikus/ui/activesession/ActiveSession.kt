@@ -287,26 +287,36 @@ private fun HeaderBar(
             ) {
                 Icon(imageVector = Icons.Default.KeyboardArrowDown, contentDescription = null)
             }
-            IconButton(
-                onClick = { eventHandler(ActiveSessionUiEvent.ShowDiscardSessionDialog) }
+            AnimatedVisibility(
+                visible = uiState.runningSection != null,
+                enter = slideInVertically(),
             ) {
-                Icon(imageVector = Icons.Outlined.Delete, contentDescription = null)
-            }
-            Spacer(modifier = Modifier.width(MaterialTheme.spacing.small))
-            OutlinedButton(
-                enabled = uiState.sections.isNotEmpty(),
-                onClick = { eventHandler(ActiveSessionUiEvent.TogglePause)  }
-            ) {
-                Text(text = "Pause")
+                Row {
+                    IconButton(
+                        onClick = { eventHandler(ActiveSessionUiEvent.ShowDiscardSessionDialog) }
+                    ) {
+                        Icon(imageVector = Icons.Outlined.Delete, contentDescription = null)
+                    }
+                    Spacer(modifier = Modifier.width(MaterialTheme.spacing.small))
+                    OutlinedButton(
+                        onClick = { eventHandler(ActiveSessionUiEvent.TogglePause) }
+                    ) {
+                        Text(text = "Pause")
+                    }
+                }
             }
         }
-        TextButton(
-            enabled = uiState.sections.isNotEmpty(),
-            onClick = {
-                eventHandler(ActiveSessionUiEvent.ShowFinishDialog)
-            }
+        AnimatedVisibility(
+            visible = uiState.runningSection != null,
+            enter = slideInVertically(),
         ) {
-            Text(text = "Save Session")
+            TextButton(
+                onClick = {
+                    eventHandler(ActiveSessionUiEvent.ShowFinishDialog)
+                }
+            ) {
+                Text(text = "Save Session")
+            }
         }
     }
 }
@@ -393,7 +403,7 @@ private fun SectionsList(
     modifier: Modifier = Modifier,
     onSectionDeleted: (ActiveSessionSectionListItemUiState) -> Unit = {}
 ) {
-    if (uiState.sections.isEmpty()) {
+    if (uiState.runningSection == null) {
         Box (modifier = modifier) {
             Text(text = "Select a library item to start practicing")
         }
@@ -412,7 +422,7 @@ private fun SectionsList(
     ) {
 
         items(
-            items = uiState.sections.drop(1),
+            items = uiState.sections,
             key = { sectionElement -> sectionElement.id },
         ) { sectionElement ->
             SectionListElement(

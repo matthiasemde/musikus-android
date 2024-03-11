@@ -12,4 +12,5 @@ data class ActiveSessionUseCases(
     val getPausedState: GetPausedStateUseCase,
     val getStartTime: GetStartTimeUseCase,
     val close: CloseSessionUseCase,
+    val reset: ResetSessionUseCase,
 )

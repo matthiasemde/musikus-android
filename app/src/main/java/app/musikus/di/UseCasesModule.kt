@@ -23,6 +23,7 @@ import app.musikus.usecase.activesession.GetPracticeTimeUseCase
 import app.musikus.usecase.activesession.GetRunningSectionUseCase
 import app.musikus.usecase.activesession.GetStartTimeUseCase
 import app.musikus.usecase.activesession.PauseUseCase
+import app.musikus.usecase.activesession.ResetSessionUseCase
 import app.musikus.usecase.activesession.ResumeUseCase
 import app.musikus.usecase.activesession.SelectItemUseCase
 import app.musikus.usecase.goals.AddGoalUseCase
@@ -231,7 +232,11 @@ object UseCasesModule {
                 runningSectionUseCase = getRunningSectionUseCase
             ),
             deleteSection = DeleteSectionUseCase(activeSessionRepository),
-            pause = PauseUseCase(activeSessionRepository, timeProvider),
+            pause = PauseUseCase(
+                activeSessionRepository = activeSessionRepository,
+                getRunningSectionUseCase = getRunningSectionUseCase,
+                timeProvider = timeProvider
+            ),
             resume = resumeUseCase,
             getRunningSection = getRunningSectionUseCase,
             getCompletedSections = GetCompletedSectionsUseCase(activeSessionRepository),
@@ -240,9 +245,11 @@ object UseCasesModule {
             close = CloseSessionUseCase(
                 activeSessionRepository = activeSessionRepository,
                 getRunningSectionUseCase = getRunningSectionUseCase,
+                resumeUseCase = resumeUseCase,
                 idProvider = idProvider
             ),
-            getStartTime = GetStartTimeUseCase(activeSessionRepository)
+            getStartTime = GetStartTimeUseCase(activeSessionRepository),
+            reset = ResetSessionUseCase(activeSessionRepository)
         )
     }
 
