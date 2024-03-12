@@ -10,6 +10,7 @@ package app.musikus.ui.settings.appearance
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.musikus.datastore.ColorSchemeSelections
 import app.musikus.datastore.ThemeSelections
 import app.musikus.usecase.userpreferences.UserPreferencesUseCases
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -21,11 +22,25 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-data class AppearanceUiState(
+data class AppearanceLanguageUiState(
     val currentLanguage: String,
     val languageDialogShowing: Boolean,
+)
+
+data class AppearanceThemeUiState(
     val currentTheme: ThemeSelections,
     val themeDialogShowing: Boolean,
+)
+
+data class AppearanceColorSchemeUiState(
+    val currentColorScheme: ColorSchemeSelections,
+    val colorSchemeDialogShowing: Boolean,
+)
+
+data class AppearanceUiState(
+    val languageUiState: AppearanceLanguageUiState,
+    val themeUiState: AppearanceThemeUiState,
+    val colorSchemeUiState: AppearanceColorSchemeUiState
 )
 
 sealed class AppearanceUiEvent {
@@ -35,6 +50,9 @@ sealed class AppearanceUiEvent {
     data class ChangeTheme(val theme: ThemeSelections) : AppearanceUiEvent()
     data object ShowThemeDialog : AppearanceUiEvent()
     data object HideThemeDialog : AppearanceUiEvent()
+    data class ChangeColorScheme(val colorScheme: ColorSchemeSelections) : AppearanceUiEvent()
+    data object ShowColorSchemeDialog : AppearanceUiEvent()
+    data object HideColorSchemeDialog : AppearanceUiEvent()
 }
 
 @HiltViewModel
@@ -48,6 +66,7 @@ class AppearanceViewModel @Inject constructor(
 
     private val _languageDialogShowing = MutableStateFlow(false)
     private val _themeDialogShowing = MutableStateFlow(false)
+    private val _colorSchemeDialogShowing = MutableStateFlow(false)
 
 
     /**
@@ -62,30 +81,84 @@ class AppearanceViewModel @Inject constructor(
         initialValue = ThemeSelections.DEFAULT
     )
 
+    private val currentColorScheme = userPreferencesUseCases.getColorScheme().stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = ColorSchemeSelections.DEFAULT
+    )
+
     /**
      * Composing the Ui state
      */
 
-    val uiState = combine(
+    private val languageUiState = combine(
         _languageDialogShowing,
-        _themeDialogShowing,
-        currentLanguage,
-        currentTheme
-    ) { languageDialogShowing, themeDialogShowing, language, theme ->
-        AppearanceUiState(
+        currentLanguage
+    ) { languageDialogShowing, language ->
+        AppearanceLanguageUiState(
             currentLanguage = language,
-            languageDialogShowing = languageDialogShowing,
+            languageDialogShowing = languageDialogShowing
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = AppearanceLanguageUiState(
+            currentLanguage = currentLanguage.value,
+            languageDialogShowing = false
+        )
+    )
+
+    private val themeUiState = combine(
+        _themeDialogShowing,
+        currentTheme
+    ) { themeDialogShowing, theme ->
+        AppearanceThemeUiState(
             currentTheme = theme,
             themeDialogShowing = themeDialogShowing
         )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = AppearanceUiState(
-            currentLanguage = currentLanguage.value,
-            languageDialogShowing = false,
+        initialValue = AppearanceThemeUiState(
             currentTheme = currentTheme.value,
             themeDialogShowing = false
+        )
+    )
+
+    private val colorSchemeUiState = combine(
+        _colorSchemeDialogShowing,
+        currentColorScheme
+    ) { colorSchemeDialogShowing, colorScheme ->
+        AppearanceColorSchemeUiState(
+            currentColorScheme = colorScheme,
+            colorSchemeDialogShowing = colorSchemeDialogShowing
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = AppearanceColorSchemeUiState(
+            currentColorScheme = currentColorScheme.value,
+            colorSchemeDialogShowing = false
+        )
+    )
+
+    val uiState = combine(
+        languageUiState,
+        themeUiState,
+        colorSchemeUiState
+    ) { languageUiState, themeUiState, colorSchemeUiState ->
+        AppearanceUiState(
+            languageUiState = languageUiState,
+            themeUiState = themeUiState,
+            colorSchemeUiState = colorSchemeUiState
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = AppearanceUiState(
+            languageUiState = languageUiState.value,
+            themeUiState = themeUiState.value,
+            colorSchemeUiState = colorSchemeUiState.value
         )
     )
 
@@ -115,6 +188,19 @@ class AppearanceViewModel @Inject constructor(
             }
             is AppearanceUiEvent.HideThemeDialog -> {
                 _themeDialogShowing.update { false }
+            }
+            is AppearanceUiEvent.ChangeColorScheme -> {
+                _colorSchemeDialogShowing.update { false }
+                viewModelScope.launch {
+                    userPreferencesUseCases.selectColorScheme(event.colorScheme)
+                }
+            }
+            is AppearanceUiEvent.ShowColorSchemeDialog -> {
+                _languageDialogShowing.update { false }
+                _colorSchemeDialogShowing.update { true }
+            }
+            is AppearanceUiEvent.HideColorSchemeDialog -> {
+                _colorSchemeDialogShowing.update { false }
             }
         }
     }

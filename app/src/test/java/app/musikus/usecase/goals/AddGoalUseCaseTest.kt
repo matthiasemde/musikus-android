@@ -236,7 +236,7 @@ class AddGoalUseCaseTest {
             )
         }
 
-        assertThat(exception.message).isEqualTo("Start timestamp must be in the past, it is set automatically")
+        assertThat(exception.message).isEqualTo("Start timestamp must not be set, it is set automatically")
     }
 
     @Test
@@ -264,7 +264,7 @@ class AddGoalUseCaseTest {
             )
         }
 
-        assertThat(exception.message).isEqualTo("Library items must be null or empty for non-specific goals")
+        assertThat(exception.message).isEqualTo("Library items must be null or empty for non-specific goals, but was [00000000-0000-0000-0000-000000000001]")
     }
 
     @Test

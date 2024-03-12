@@ -571,40 +571,36 @@ private fun LibraryFolderElement(
             .fillMaxHeight()
             .aspectRatio(1f),
         shape = MaterialTheme.shapes.medium,
+        color = color,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
-        Surface(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .clickable { onClick(folder) },
-            color = color
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+            BadgedBox(
+                modifier = Modifier
+                    .padding(horizontal = MaterialTheme.spacing.small),
+                badge = { if (showBadge) Badge() }
             ) {
-                BadgedBox(
-                    modifier = Modifier
-                        .padding(horizontal = MaterialTheme.spacing.small),
-                    badge = { if (showBadge) Badge() }
-                ) {
-                    Icon(
-                        Icons.Default.Folder,
-                        tint = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f),
-                        contentDescription = null
-                    )
-                }
-                Spacer(modifier = Modifier.height(MaterialTheme.spacing.extraSmall))
-                Text(
-                    text = folder?.name ?: "no folder",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer,
-                    textAlign = TextAlign.Center,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                Icon(
+                    Icons.Default.Folder,
+                    tint = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f),
+                    contentDescription = null
                 )
             }
+            Spacer(modifier = Modifier.height(MaterialTheme.spacing.extraSmall))
+            Text(
+                text = folder?.name ?: "no folder",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                textAlign = TextAlign.Center,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
         }
     }
 }

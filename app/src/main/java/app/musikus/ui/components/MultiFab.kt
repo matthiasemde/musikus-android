@@ -100,8 +100,7 @@ fun MiniFAB(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            modifier = Modifier
-                .padding(end = 20.dp),
+            modifier = Modifier.padding(end = 20.dp),
             text = data.label,
             style = MaterialTheme.typography.titleMedium
         )

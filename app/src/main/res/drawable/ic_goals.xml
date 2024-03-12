@@ -12,6 +12,6 @@
     android:viewportHeight="24">
   <path
       android:name="goals"
-      android:fillColor="@color/md_purple_A700"
+      android:fillColor="@android:color/black"
       android:pathData="@string/ic_goals_kf_1"/>
 </vector>

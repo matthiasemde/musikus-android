@@ -22,7 +22,7 @@
 
     <path
         android:name="pause"
-        android:fillColor="@color/md_purple_A700"
+        android:fillColor="@android:color/black"
         android:pathData="@string/pause"/>
 
   </group>

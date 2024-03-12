@@ -54,7 +54,7 @@ class AddGoalUseCase(
         }
 
         if(descriptionCreationAttributes.type == GoalType.NON_SPECIFIC && !libraryItemIds.isNullOrEmpty()) {
-            throw InvalidGoalDescriptionException("Library items must be null or empty for non-specific goals but was $libraryItemIds")
+            throw InvalidGoalDescriptionException("Library items must be null or empty for non-specific goals, but was $libraryItemIds")
         }
 
         if(descriptionCreationAttributes.type == GoalType.ITEM_SPECIFIC) {

@@ -9,7 +9,7 @@
     android:viewportWidth="55"
     android:viewportHeight="20">
     <path
-        android:strokeColor="@color/md_purple_A700"
+        android:strokeColor="@android:color/black"
         android:strokeWidth="1"
         android:pathData="
             M 5,5

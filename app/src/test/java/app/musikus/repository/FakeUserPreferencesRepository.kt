@@ -3,13 +3,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2023 Matthias Emde
+ * Copyright (c) 2023-2024 Matthias Emde
  */
 
 package app.musikus.repository
 
 import app.musikus.database.daos.LibraryFolder
 import app.musikus.database.daos.LibraryItem
+import app.musikus.datastore.ColorSchemeSelections
 import app.musikus.datastore.ThemeSelections
 import app.musikus.datastore.UserPreferences
 import app.musikus.ui.activesession.metronome.MetronomeSettings
@@ -28,6 +29,7 @@ class FakeUserPreferencesRepository : UserPreferencesRepository {
 
     private val _preferences = MutableStateFlow(UserPreferences(
         theme = ThemeSelections.DEFAULT,
+        colorScheme = ColorSchemeSelections.DEFAULT,
         appIntroDone = false,
         libraryFolderSortMode = LibraryFolderSortMode.DEFAULT,
         libraryFolderSortDirection = SortDirection.DEFAULT,
@@ -40,6 +42,9 @@ class FakeUserPreferencesRepository : UserPreferencesRepository {
     ))
     override val theme: Flow<ThemeSelections>
         get() = _preferences.map { it.theme }
+
+    override val colorScheme: Flow<ColorSchemeSelections>
+        get() = _preferences.map { it.colorScheme }
 
     override val itemSortInfo: Flow<SortInfo<LibraryItem>>
         get() = _preferences.map { preferences ->
@@ -70,6 +75,12 @@ class FakeUserPreferencesRepository : UserPreferencesRepository {
     override suspend fun updateTheme(theme: ThemeSelections) {
         _preferences.update {
             it.copy(theme = theme)
+        }
+    }
+
+    override suspend fun updateColorScheme(colorScheme: ColorSchemeSelections) {
+        _preferences.update {
+            it.copy(colorScheme = colorScheme)
         }
     }
 

@@ -37,13 +37,6 @@ import javax.inject.Singleton
 object MainModule {
 
     @Provides
-    fun providesMusikusApplication(
-        application: Application
-    ): Musikus {
-        return application as Musikus
-    }
-
-    @Provides
     @Singleton
     fun provideTimeProvider(): TimeProvider {
         return TimeProviderImpl()

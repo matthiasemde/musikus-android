@@ -55,11 +55,13 @@ import app.musikus.usecase.sessions.GetSessionsInTimeframeUseCase
 import app.musikus.usecase.sessions.RestoreSessionsUseCase
 import app.musikus.usecase.sessions.SessionsUseCases
 import app.musikus.usecase.userpreferences.ChangeMetronomeSettingsUseCase
+import app.musikus.usecase.userpreferences.GetColorSchemeUseCase
 import app.musikus.usecase.userpreferences.GetFolderSortInfoUseCase
 import app.musikus.usecase.userpreferences.GetGoalSortInfoUseCase
 import app.musikus.usecase.userpreferences.GetItemSortInfoUseCase
 import app.musikus.usecase.userpreferences.GetMetronomeSettingsUseCase
 import app.musikus.usecase.userpreferences.GetThemeUseCase
+import app.musikus.usecase.userpreferences.SelectColorSchemeUseCase
 import app.musikus.usecase.userpreferences.SelectFolderSortModeUseCase
 import app.musikus.usecase.userpreferences.SelectGoalsSortModeUseCase
 import app.musikus.usecase.userpreferences.SelectItemSortModeUseCase
@@ -186,10 +188,12 @@ object UseCasesModule {
     ): UserPreferencesUseCases {
         return UserPreferencesUseCases(
             getTheme = GetThemeUseCase(userPreferencesRepository),
+            getColorScheme = GetColorSchemeUseCase(userPreferencesRepository),
             getItemSortInfo = GetItemSortInfoUseCase(userPreferencesRepository),
             getFolderSortInfo = GetFolderSortInfoUseCase(userPreferencesRepository),
             getGoalSortInfo = GetGoalSortInfoUseCase(userPreferencesRepository),
             selectTheme = SelectThemeUseCase(userPreferencesRepository),
+            selectColorScheme = SelectColorSchemeUseCase(userPreferencesRepository),
             selectItemSortMode = SelectItemSortModeUseCase(userPreferencesRepository),
             selectFolderSortMode = SelectFolderSortModeUseCase(userPreferencesRepository),
             selectGoalSortMode = SelectGoalsSortModeUseCase(userPreferencesRepository),
