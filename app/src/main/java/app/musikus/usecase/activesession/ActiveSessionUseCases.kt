@@ -1,3 +1,12 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ *
+ * Copyright (c) 2024 Michael Prommersberger
+ *
+ */
+
 package app.musikus.usecase.activesession
 
 data class ActiveSessionUseCases(
@@ -11,6 +20,6 @@ data class ActiveSessionUseCases(
     val getOngoingPauseDuration: GetOngoingPauseDurationUseCase,
     val getPausedState: GetPausedStateUseCase,
     val getStartTime: GetStartTimeUseCase,
-    val close: CloseSessionUseCase,
+    val getFinalizedSession: GetFinalizedSessionUseCase,
     val reset: ResetSessionUseCase,
 )

@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2024 Matthias Emde
+ * Copyright (c) 2024 Matthias Emde, Michael Prommersberger
  */
 
 package app.musikus.di
@@ -14,9 +14,9 @@ import app.musikus.repository.SessionRepository
 import app.musikus.repository.UserPreferencesRepository
 import app.musikus.usecase.activesession.ActiveSessionRepository
 import app.musikus.usecase.activesession.ActiveSessionUseCases
-import app.musikus.usecase.activesession.GetFinalizedSessionUseCase
 import app.musikus.usecase.activesession.DeleteSectionUseCase
 import app.musikus.usecase.activesession.GetCompletedSectionsUseCase
+import app.musikus.usecase.activesession.GetFinalizedSessionUseCase
 import app.musikus.usecase.activesession.GetOngoingPauseDurationUseCase
 import app.musikus.usecase.activesession.GetPausedStateUseCase
 import app.musikus.usecase.activesession.GetPracticeTimeUseCase
