@@ -14,7 +14,7 @@ import app.musikus.repository.SessionRepository
 import app.musikus.repository.UserPreferencesRepository
 import app.musikus.usecase.activesession.ActiveSessionRepository
 import app.musikus.usecase.activesession.ActiveSessionUseCases
-import app.musikus.usecase.activesession.CloseSessionUseCase
+import app.musikus.usecase.activesession.GetFinalizedSessionUseCase
 import app.musikus.usecase.activesession.DeleteSectionUseCase
 import app.musikus.usecase.activesession.GetCompletedSectionsUseCase
 import app.musikus.usecase.activesession.GetOngoingPauseDurationUseCase
@@ -242,7 +242,7 @@ object UseCasesModule {
             getCompletedSections = GetCompletedSectionsUseCase(activeSessionRepository),
             getOngoingPauseDuration = GetOngoingPauseDurationUseCase(activeSessionRepository, timeProvider),
             getPausedState = GetPausedStateUseCase(activeSessionRepository),
-            close = CloseSessionUseCase(
+            getFinalizedSession = GetFinalizedSessionUseCase(
                 activeSessionRepository = activeSessionRepository,
                 getRunningSectionUseCase = getRunningSectionUseCase,
                 resumeUseCase = resumeUseCase,

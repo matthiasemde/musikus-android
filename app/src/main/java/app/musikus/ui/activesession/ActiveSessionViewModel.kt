@@ -15,6 +15,7 @@ import app.musikus.database.daos.LibraryItem
 import app.musikus.database.entities.LibraryItemCreationAttributes
 import app.musikus.database.entities.SectionCreationAttributes
 import app.musikus.database.entities.SessionCreationAttributes
+import app.musikus.di.ApplicationScope
 import app.musikus.services.SessionService
 import app.musikus.services.SessionServiceEvent
 import app.musikus.ui.library.LibraryItemDialogUiEvent
@@ -27,11 +28,11 @@ import app.musikus.usecase.sessions.SessionsUseCases
 import app.musikus.utils.IdProvider
 import app.musikus.utils.TimeProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -67,7 +68,8 @@ class ActiveSessionViewModel @Inject constructor(
     private val activeSessionUseCases: ActiveSessionUseCases,
     private val application: Application,
     private val idProvider: IdProvider,
-    private val timeProvider: TimeProvider
+    private val timeProvider: TimeProvider,
+    @ApplicationScope private val applicationScope: CoroutineScope
 ): AndroidViewModel(application) {
 
     /**
@@ -176,7 +178,11 @@ class ActiveSessionViewModel @Inject constructor(
         } catch (e: IllegalStateException) {
             null
         }
-    }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = null
+    )
 
     private val libraryCardHeaderUiState = combine(
         foldersWithItems,
@@ -418,24 +424,18 @@ class ActiveSessionViewModel @Inject constructor(
 
     private fun stopSession() {
         val endDialogData = _endDialogData.value ?: return
-        viewModelScope.launch {
-            sessionState.first()
-                ?: throw IllegalStateException("State is null. Cannot finish session!")
-
-            activeSessionUseCases.close()   // complete running section
-
-            // make sure to re-fetch state (calling .first()) since close() updated the state
-            val state = sessionState.first()
-                ?: throw IllegalStateException("State is null. Cannot finish session!")
+        applicationScope.launch {
+            val savableState = activeSessionUseCases.getFinalizedSession()   // complete running section
 
             // ignore empty sections (e.g. when paused and then stopped immediately))
-            val sections = state.sections.filter { it.duration > 0.seconds }
+            val sections = savableState.completedSections.filter { it.duration > 0.seconds }
 
             // store in database
             sessionUseCases.add(
                 sessionCreationAttributes = SessionCreationAttributes(
                     breakDuration = sections.sumOf {
-                        it.pauseDuration.inWholeMilliseconds }.milliseconds,
+                        it.pauseDuration.inWholeMilliseconds
+                    }.milliseconds,
                     comment = endDialogData.comment,
                     rating = endDialogData.rating
                 ),
@@ -443,7 +443,7 @@ class ActiveSessionViewModel @Inject constructor(
                     SectionCreationAttributes(
                         libraryItemId = section.libraryItem.id,
                         duration = section.duration,
-                        startTimestamp = state.startTimestamp
+                        startTimestamp = savableState.startTimestamp
                     )
                 }
             )
