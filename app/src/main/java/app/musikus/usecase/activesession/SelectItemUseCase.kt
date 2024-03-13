@@ -20,7 +20,7 @@ import kotlin.time.Duration.Companion.seconds
 
 class SelectItemUseCase(
     private val activeSessionRepository: ActiveSessionRepository,
-    private val resumeUseCase: ResumeUseCase,
+    private val resumeUseCase: ResumeActiveSessionUseCase,
     private val getRunningSectionUseCase: GetRunningSectionUseCase,
     private val timeProvider: TimeProvider,
     private val idProvider: IdProvider
@@ -46,8 +46,9 @@ class SelectItemUseCase(
 
             // take time
             val runningSectionTrueDuration = getRunningSectionUseCase().second
-            val changeOverTime = state.startTimestampSectionPauseCompensated + runningSectionTrueDuration.inWholeSeconds.seconds
-            val runningSectionRoundedDuration = getRunningSectionUseCase(at = changeOverTime).second
+            val changeSectionTimestamp = state.startTimestampSectionPauseCompensated + runningSectionTrueDuration.inWholeSeconds.seconds
+            // running section duration calculated until changeSectionTimestamp
+            val runningSectionRoundedDuration = getRunningSectionUseCase(at = changeSectionTimestamp).second
 
             // append finished section to completed sections
             val updatedSections = state.completedSections + PracticeSection(
@@ -61,8 +62,8 @@ class SelectItemUseCase(
                 state.copy(
                     completedSections = updatedSections,
                     currentSectionItem = libraryItem,
-                    startTimestampSection = changeOverTime,
-                    startTimestampSectionPauseCompensated = changeOverTime,
+                    startTimestampSection = changeSectionTimestamp, // new sections starts when the old one ends
+                    startTimestampSectionPauseCompensated = changeSectionTimestamp,
                 )
             )
             return

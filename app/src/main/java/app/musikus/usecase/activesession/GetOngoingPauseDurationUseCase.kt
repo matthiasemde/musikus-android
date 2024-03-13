@@ -22,6 +22,10 @@ class GetOngoingPauseDurationUseCase(
     suspend operator fun invoke() : Duration {
         val state = activeSessionRepository.getSessionState().first() ?: return 0.seconds
         if (state.currentPauseStartTimestamp == null) return 0.seconds
-        return timeProvider.now() - state.currentPauseStartTimestamp
+        val duration = timeProvider.now() - state.currentPauseStartTimestamp
+        if (duration < 0.seconds) {
+            throw IllegalStateException("Duration is negative. This should not happen.")
+        }
+        return duration
     }
 }

@@ -18,7 +18,7 @@ import kotlin.time.Duration.Companion.seconds
 class GetFinalizedSessionUseCase(
     private val activeSessionRepository: ActiveSessionRepository,
     private val getRunningSectionUseCase: GetRunningSectionUseCase,
-    private val resumeUseCase: ResumeUseCase,
+    private val resumeUseCase: ResumeActiveSessionUseCase,
     private val idProvider: IdProvider
 ) {
     suspend operator fun invoke(): SessionState {

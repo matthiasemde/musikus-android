@@ -188,6 +188,7 @@ class SessionService : Service() {
         var title: String
         var description: String
 
+        // TODO: move this logic to use case
         try {
             val totalPracticeDurationStr =
                 getDurationString(useCases.getPracticeTime(), DurationFormat.HMS_DIGITAL)

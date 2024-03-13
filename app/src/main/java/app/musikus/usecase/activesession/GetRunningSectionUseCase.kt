@@ -16,6 +16,7 @@ import app.musikus.utils.minus
 import kotlinx.coroutines.flow.first
 import java.time.ZonedDateTime
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 class GetRunningSectionUseCase (
     private val activeSessionRepository: ActiveSessionRepository,
@@ -34,6 +35,9 @@ class GetRunningSectionUseCase (
             state.currentPauseStartTimestamp - state.startTimestampSectionPauseCompensated
         } else {
             at - state.startTimestampSectionPauseCompensated
+        }
+        if (duration < 0.seconds) {
+            throw IllegalStateException("Duration is negative. This should not happen.")
         }
         return Pair(state.currentSectionItem, duration)
     }

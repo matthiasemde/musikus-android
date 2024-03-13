@@ -19,12 +19,12 @@ import app.musikus.usecase.activesession.GetCompletedSectionsUseCase
 import app.musikus.usecase.activesession.GetFinalizedSessionUseCase
 import app.musikus.usecase.activesession.GetOngoingPauseDurationUseCase
 import app.musikus.usecase.activesession.GetPausedStateUseCase
-import app.musikus.usecase.activesession.GetPracticeTimeUseCase
 import app.musikus.usecase.activesession.GetRunningSectionUseCase
 import app.musikus.usecase.activesession.GetStartTimeUseCase
-import app.musikus.usecase.activesession.PauseUseCase
+import app.musikus.usecase.activesession.GetTotalPracticeTimeUseCase
+import app.musikus.usecase.activesession.PauseActiveSessionUseCase
 import app.musikus.usecase.activesession.ResetSessionUseCase
-import app.musikus.usecase.activesession.ResumeUseCase
+import app.musikus.usecase.activesession.ResumeActiveSessionUseCase
 import app.musikus.usecase.activesession.SelectItemUseCase
 import app.musikus.usecase.goals.AddGoalUseCase
 import app.musikus.usecase.goals.ArchiveGoalsUseCase
@@ -209,7 +209,7 @@ object UseCasesModule {
             timeProvider
         )
 
-        val resumeUseCase = ResumeUseCase(
+        val resumeUseCase = ResumeActiveSessionUseCase(
             activeSessionRepository,
             getOngoingPauseDurationUseCase
         )
@@ -227,12 +227,12 @@ object UseCasesModule {
                 timeProvider = timeProvider,
                 idProvider = idProvider
             ),
-            getPracticeTime = GetPracticeTimeUseCase(
+            getPracticeTime = GetTotalPracticeTimeUseCase(
                 activeSessionRepository = activeSessionRepository,
                 runningSectionUseCase = getRunningSectionUseCase
             ),
             deleteSection = DeleteSectionUseCase(activeSessionRepository),
-            pause = PauseUseCase(
+            pause = PauseActiveSessionUseCase(
                 activeSessionRepository = activeSessionRepository,
                 getRunningSectionUseCase = getRunningSectionUseCase,
                 timeProvider = timeProvider

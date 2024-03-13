@@ -12,7 +12,7 @@ package app.musikus.usecase.activesession
 import app.musikus.utils.plus
 import kotlinx.coroutines.flow.first
 
-class ResumeUseCase(
+class ResumeActiveSessionUseCase(
     private val activeSessionRepository: ActiveSessionRepository,
     private val getOngoingPauseDurationUseCase: GetOngoingPauseDurationUseCase,
 ) {
