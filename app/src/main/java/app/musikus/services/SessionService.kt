@@ -208,14 +208,18 @@ class SessionService : Service() {
         }
 
         val actionButton1Intent =
-            try {
-                if (useCases.getPausedState()) {
-                    resumeActionButton
-                } else {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                try {
+                    if (useCases.getPausedState()) {
+                        resumeActionButton
+                    } else {
+                        pauseActionButton
+                    }
+                } catch (e: IllegalStateException) {
                     pauseActionButton
                 }
-            } catch (e: IllegalStateException) {
-                pauseActionButton
+            } else {
+                null    // TODO: broadcast receiver is broken on Android 14
             }
 
         val actionButton2Intent = finishActionButton
@@ -223,7 +227,7 @@ class SessionService : Service() {
         return getNotification(
             title = title,
             description = description,
-            actionButton1 = actionButton1Intent,
+            actionButton1 = actionButton1Intent,  // TODO: Fix action button (pause/resume)
             actionButton2 = actionButton2Intent
         )
     }
