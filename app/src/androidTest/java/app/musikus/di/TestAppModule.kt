@@ -14,6 +14,7 @@ import android.os.AsyncTask
 import androidx.room.Room
 import androidx.room.withTransaction
 import app.musikus.database.MusikusDatabase
+import app.musikus.repository.ActiveSessionRepositoryImpl
 import app.musikus.repository.FakeUserPreferencesRepository
 import app.musikus.repository.GoalRepository
 import app.musikus.repository.GoalRepositoryImpl
@@ -23,6 +24,20 @@ import app.musikus.repository.RecordingsRepositoryImpl
 import app.musikus.repository.SessionRepository
 import app.musikus.repository.SessionRepositoryImpl
 import app.musikus.repository.UserPreferencesRepository
+import app.musikus.usecase.activesession.ActiveSessionRepository
+import app.musikus.usecase.activesession.ActiveSessionUseCases
+import app.musikus.usecase.activesession.DeleteSectionUseCase
+import app.musikus.usecase.activesession.GetCompletedSectionsUseCase
+import app.musikus.usecase.activesession.GetFinalizedSessionUseCase
+import app.musikus.usecase.activesession.GetOngoingPauseDurationUseCase
+import app.musikus.usecase.activesession.GetPausedStateUseCase
+import app.musikus.usecase.activesession.GetRunningSectionUseCase
+import app.musikus.usecase.activesession.GetStartTimeUseCase
+import app.musikus.usecase.activesession.GetTotalPracticeTimeUseCase
+import app.musikus.usecase.activesession.PauseActiveSessionUseCase
+import app.musikus.usecase.activesession.ResetSessionUseCase
+import app.musikus.usecase.activesession.ResumeActiveSessionUseCase
+import app.musikus.usecase.activesession.SelectItemUseCase
 import app.musikus.usecase.goals.AddGoalUseCase
 import app.musikus.usecase.goals.ArchiveGoalsUseCase
 import app.musikus.usecase.goals.CalculateGoalProgressUseCase
@@ -283,6 +298,68 @@ object TestAppModule {
             restore = RestoreGoalsUseCase(goalRepository),
         )
     }
+
+    @Provides
+    fun provideActiveSessionUseCases(
+        activeSessionRepository: ActiveSessionRepository,
+        timeProvider: TimeProvider,
+        idProvider: IdProvider
+    ) : ActiveSessionUseCases {
+
+        val getOngoingPauseDurationUseCase = GetOngoingPauseDurationUseCase(
+            activeSessionRepository,
+            timeProvider
+        )
+
+        val resumeUseCase = ResumeActiveSessionUseCase(
+            activeSessionRepository,
+            getOngoingPauseDurationUseCase
+        )
+
+        val getRunningSectionUseCase = GetRunningSectionUseCase(
+            activeSessionRepository,
+            timeProvider
+        )
+
+        return ActiveSessionUseCases(
+            selectItem = SelectItemUseCase(
+                activeSessionRepository = activeSessionRepository,
+                resumeUseCase = resumeUseCase,
+                getRunningSectionUseCase = getRunningSectionUseCase,
+                timeProvider = timeProvider,
+                idProvider = idProvider
+            ),
+            getPracticeTime = GetTotalPracticeTimeUseCase(
+                activeSessionRepository = activeSessionRepository,
+                runningSectionUseCase = getRunningSectionUseCase
+            ),
+            deleteSection = DeleteSectionUseCase(activeSessionRepository),
+            pause = PauseActiveSessionUseCase(
+                activeSessionRepository = activeSessionRepository,
+                getRunningSectionUseCase = getRunningSectionUseCase,
+                timeProvider = timeProvider
+            ),
+            resume = resumeUseCase,
+            getRunningSection = getRunningSectionUseCase,
+            getCompletedSections = GetCompletedSectionsUseCase(activeSessionRepository),
+            getOngoingPauseDuration = GetOngoingPauseDurationUseCase(activeSessionRepository, timeProvider),
+            getPausedState = GetPausedStateUseCase(activeSessionRepository),
+            getFinalizedSession = GetFinalizedSessionUseCase(
+                activeSessionRepository = activeSessionRepository,
+                getRunningSectionUseCase = getRunningSectionUseCase,
+                resumeUseCase = resumeUseCase,
+                idProvider = idProvider
+            ),
+            getStartTime = GetStartTimeUseCase(activeSessionRepository),
+            reset = ResetSessionUseCase(activeSessionRepository)
+        )
+    }
+
+    @Provides
+    fun provideActiveSessionRepository() : ActiveSessionRepository {
+        return ActiveSessionRepositoryImpl()
+    }
+
 
     @Provides
     fun provideSessionUseCases(
