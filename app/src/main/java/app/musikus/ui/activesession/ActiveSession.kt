@@ -12,6 +12,7 @@
 package app.musikus.ui.activesession
 
 import android.annotation.SuppressLint
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
@@ -125,6 +126,12 @@ fun ActiveSession(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val eventHandler = viewModel::onUiEvent
+
+    BackHandler {
+        // notify the ViewModel that the back button was pressed
+        eventHandler(ActiveSessionUiEvent.BackPressed)
+        navigateUp()
+    }
 
     Surface(
         color = MaterialTheme.colorScheme.background,

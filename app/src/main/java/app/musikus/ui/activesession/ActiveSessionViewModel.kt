@@ -48,8 +48,10 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.ZonedDateTime
+import java.util.Timer
 import java.util.UUID
 import javax.inject.Inject
+import kotlin.concurrent.timer
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
@@ -79,7 +81,7 @@ class ActiveSessionViewModel @Inject constructor(
     private val idProvider: IdProvider,
     private val timeProvider: TimeProvider,
     @ApplicationScope private val applicationScope: CoroutineScope
-): AndroidViewModel(application) {
+) : AndroidViewModel(application) {
 
     /**
      *  --------------------- Private properties ---------------------
@@ -101,7 +103,6 @@ class ActiveSessionViewModel @Inject constructor(
         bodyUiState = ActiveSessionDraggableCardBodyUiState.MetronomeCardBodyUiState
     )
 
-
     /** stateFlows */
 
     private val _notificationPermissionsGranted = MutableStateFlow(false)
@@ -116,6 +117,9 @@ class ActiveSessionViewModel @Inject constructor(
 
     private var serviceEvent: (SessionServiceEvent) -> Unit = { Log.d("TAG", "not implemented") }
     private var bound = false
+    private var _timer: Timer? = null
+    private var _clock = MutableStateFlow(false)
+
 
     private val connection = object : ServiceConnection {
         /** called by service when we have connection to the service => we have mService reference */
@@ -124,6 +128,7 @@ class ActiveSessionViewModel @Inject constructor(
             val binder = service as SessionService.LocalBinder
             serviceEvent = binder.getOnEvent()
             bound = true
+            startTimer()
         }
         override fun onServiceDisconnected(arg0: ComponentName) {
             bound = false
@@ -173,7 +178,7 @@ class ActiveSessionViewModel @Inject constructor(
 
     private val sessionState = combine(
         activeSessionUseCases.getCompletedSections(),
-        timeProvider.clock(100.milliseconds)
+        _clock
     ) { completedSections, _ ->
         try {
             SessionViewModelState(
@@ -414,12 +419,29 @@ class ActiveSessionViewModel @Inject constructor(
                 _showDiscardSessionDialog.update { false }
             }
             is ActiveSessionUiEvent.DiscardSessionDialogDismissed -> _showDiscardSessionDialog.update { false }
+            is ActiveSessionUiEvent.BackPressed -> {
+                _timer?.cancel()
+                _timer = null
+            }
         }
     }
 
 
 
     /** ---------------------------------- private methods ----------------------------------- */
+
+    private fun startTimer() {
+        if (_timer != null) {
+            return
+        }
+        _timer = timer(
+            name = "Timer",
+            initialDelay = 0,
+            period = 100.milliseconds.inWholeMilliseconds
+        ) {
+            _clock.update { !it }
+        }
+    }
 
     private fun itemClicked(item: LibraryItem) {
         if (!bound) return
@@ -500,6 +522,7 @@ class ActiveSessionViewModel @Inject constructor(
 
     override fun onCleared() {
         unbindService()
+        _timer?.cancel()
         super.onCleared()
     }
 
@@ -509,5 +532,4 @@ class ActiveSessionViewModel @Inject constructor(
             bound = false
         }
     }
-
 }

@@ -8,9 +8,6 @@
 
 package app.musikus.utils
 
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
 import java.time.Instant
 import java.time.ZoneId
 import java.time.ZonedDateTime
@@ -23,8 +20,6 @@ import kotlin.time.Duration.Companion.milliseconds
 
 interface TimeProvider {
     fun now(): ZonedDateTime
-
-    fun clock(period: Duration): Flow<ZonedDateTime>
 
     fun localZoneId(): ZoneId = now().zone
 
@@ -138,15 +133,6 @@ class TimeProviderImpl : TimeProvider {
 
     override fun now(): ZonedDateTime {
         return ZonedDateTime.now()
-    }
-
-    override fun clock(period: Duration): Flow<ZonedDateTime> {
-        return flow {
-            while (true) {
-                emit(now())
-                delay(period)
-            }
-        }
     }
 }
 

@@ -111,6 +111,7 @@ sealed class ActiveSessionUiEvent : DraggableCardUiEvent {
 
     data class DeleteSection(val sectionId: UUID) : ActiveSessionUiEvent()
 
+    data object BackPressed : ActiveSessionUiEvent()
 
     data object ShowDiscardSessionDialog : ActiveSessionUiEvent()
 

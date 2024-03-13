@@ -73,6 +73,8 @@ data class NotificationActionButtonConfig(
 @AndroidEntryPoint
 class SessionService : Service() {
 
+    private val timerInterval = 1000.milliseconds
+
     @Inject
     @ApplicationScope
     lateinit var applicationScope: CoroutineScope
@@ -133,7 +135,7 @@ class SessionService : Service() {
         _timer = timer(
             name = "Timer",
             initialDelay = 0,
-            period = 1000.milliseconds.inWholeMilliseconds
+            period = timerInterval.inWholeMilliseconds
         ) {
             updateNotification()
         }
