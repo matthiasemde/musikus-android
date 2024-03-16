@@ -34,7 +34,6 @@ import app.musikus.usecase.activesession.PracticeSection
 import app.musikus.usecase.library.LibraryUseCases
 import app.musikus.usecase.permissions.PermissionsUseCases
 import app.musikus.usecase.sessions.SessionsUseCases
-import app.musikus.utils.IdProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -77,7 +76,6 @@ class ActiveSessionViewModel @Inject constructor(
     private val permissionsUseCases: PermissionsUseCases,
     private val activeSessionUseCases: ActiveSessionUseCases,
     private val application: Application,
-    private val idProvider: IdProvider,
     @ApplicationScope private val applicationScope: CoroutineScope
 ) : AndroidViewModel(application) {
 
@@ -104,21 +102,21 @@ class ActiveSessionViewModel @Inject constructor(
     /** stateFlows */
 
     private val _notificationPermissionsGranted = MutableStateFlow(false)
-
     private val _selectedFolderId = MutableStateFlow<UUID?>(null)
     private val _addLibraryItemData = MutableStateFlow<LibraryItemEditData?>(null)
     private val _endDialogData = MutableStateFlow<EndDialogData?>(null)
-
     private val _showDiscardSessionDialog = MutableStateFlow(false)
+    private var _clock = MutableStateFlow(false)
 
     /** Service */
 
     private var sessionServiceEventHandler: ((SessionServiceEvent) -> Unit)? = null
     private var bound = false
+
+
+    /** Variables */
+
     private var _timer: Timer? = null
-    private var _clock = MutableStateFlow(false)
-
-
     private val connection = object : ServiceConnection {
         /** called by service when we have connection to the service => we have mService reference */
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
@@ -168,6 +166,18 @@ class ActiveSessionViewModel @Inject constructor(
         initialValue = listOf()
     )
 
+    private val completedSections = activeSessionUseCases.getCompletedSections().stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
+
+    private val runningLibraryItem = activeSessionUseCases.getRunningItem().stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = null
+    )
+
 
     /**
      *  ---------------- Composing the Ui state --------------------
@@ -175,14 +185,16 @@ class ActiveSessionViewModel @Inject constructor(
 
 
     private val sessionState = combine(
-        activeSessionUseCases.getCompletedSections(),
+        completedSections,
+        runningLibraryItem,
         _clock
-    ) { completedSections, _ ->
+    ) { completedSections, runningItem, _ ->
+        if (runningItem == null) return@combine null    // no active session try-catch does the same
         try {
             SessionViewModelState(
-                sessionDuration = activeSessionUseCases.getPracticeTime(),
+                sessionDuration = activeSessionUseCases.getPracticeDuration(),
                 sections = completedSections,
-                activeSection = activeSessionUseCases.getRunningSection(),
+                activeSection = Pair(runningItem, activeSessionUseCases.getRunningItemDuration()),
                 ongoingPauseDuration = activeSessionUseCases.getOngoingPauseDuration(),
                 isPaused = activeSessionUseCases.getPausedState(),
                 startTimestamp = activeSessionUseCases.getStartTime()
@@ -199,19 +211,12 @@ class ActiveSessionViewModel @Inject constructor(
     private val libraryCardHeaderUiState = combine(
         foldersWithItems,
         _selectedFolderId,
-        activeSessionUseCases.getCompletedSections()    // to update the active folder id when a section is clicked
-    ) { foldersWithItems, selectedFolderId, _ ->
+        runningLibraryItem
+    ) { foldersWithItems, selectedFolderId, runningLibraryItem ->
         ActiveSessionDraggableCardHeaderUiState.LibraryCardHeaderUiState(
             folders = listOf(null) + foldersWithItems.map { it.folder },
             selectedFolderId = selectedFolderId,
-            activeFolderId =
-                try {
-                    activeSessionUseCases.getRunningSection().first.let {
-                        Nullable(it.libraryFolderId)
-                    }
-                } catch (e: Exception) {
-                    null
-                }
+            activeFolderId = runningLibraryItem?.let { Nullable(it.libraryFolderId) }
         )
     }.stateIn(
         scope = viewModelScope,
@@ -225,16 +230,11 @@ class ActiveSessionViewModel @Inject constructor(
 
     private val libraryCardBodyUiState = combine(
         itemsInSelectedFolder,
-        activeSessionUseCases.getCompletedSections()    // to update the active folder id when a section is clicked
-    ) { items, _ ->
+        runningLibraryItem
+    ) { items, runningLibraryItem ->
         ActiveSessionDraggableCardBodyUiState.LibraryCardBodyUiState(
             items = items,
-            activeItemId =
-                try {
-                    activeSessionUseCases.getRunningSection().first.id
-                } catch (e: Exception) {
-                    null
-                }
+            activeItemId = runningLibraryItem?.id
         )
     }.stateIn(
         scope = viewModelScope,

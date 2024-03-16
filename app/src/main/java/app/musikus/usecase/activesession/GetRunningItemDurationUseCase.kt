@@ -10,7 +10,6 @@
 package app.musikus.usecase.activesession
 
 
-import app.musikus.database.daos.LibraryItem
 import app.musikus.utils.TimeProvider
 import app.musikus.utils.minus
 import kotlinx.coroutines.flow.first
@@ -18,13 +17,13 @@ import java.time.ZonedDateTime
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
-class GetRunningSectionUseCase (
+class GetRunningItemDurationUseCase (
     private val activeSessionRepository: ActiveSessionRepository,
     private val timeProvider: TimeProvider
 ) {
     suspend operator fun invoke(
         at: ZonedDateTime = timeProvider.now()
-    ) : Pair<LibraryItem, Duration> {
+    ) : Duration {
         val state = activeSessionRepository.getSessionState().first()
             ?: throw IllegalStateException("State is null. Cannot get running section!")
 
@@ -39,6 +38,6 @@ class GetRunningSectionUseCase (
         if (duration < 0.seconds) {
             throw IllegalStateException("Duration is negative. This should not happen.")
         }
-        return Pair(state.currentSectionItem, duration)
+        return duration
     }
 }

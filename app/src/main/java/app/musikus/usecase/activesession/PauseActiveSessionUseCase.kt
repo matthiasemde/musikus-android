@@ -15,7 +15,7 @@ import kotlin.time.Duration.Companion.seconds
 
 class PauseActiveSessionUseCase(
     private val activeSessionRepository: ActiveSessionRepository,
-    private val getRunningSectionUseCase: GetRunningSectionUseCase,
+    private val getRunningItemDurationUseCase: GetRunningItemDurationUseCase,
     private val timeProvider: TimeProvider
 ) {
     suspend operator fun invoke() {
@@ -28,7 +28,7 @@ class PauseActiveSessionUseCase(
 
         // ignore pause if first section is running and less than 1 second has passed
         // (prevents finishing empty session)
-        if (state.completedSections.isEmpty() && getRunningSectionUseCase().second < 1.seconds) return
+        if (state.completedSections.isEmpty() && getRunningItemDurationUseCase() < 1.seconds) return
 
         activeSessionRepository.setSessionState(
             state.copy(

@@ -17,7 +17,7 @@ import kotlin.time.Duration.Companion.seconds
 
 class GetFinalizedSessionUseCase(
     private val activeSessionRepository: ActiveSessionRepository,
-    private val getRunningSectionUseCase: GetRunningSectionUseCase,
+    private val getRunningItemDurationUseCase: GetRunningItemDurationUseCase,
     private val resumeUseCase: ResumeActiveSessionUseCase,
     private val idProvider: IdProvider
 ) {
@@ -29,9 +29,9 @@ class GetFinalizedSessionUseCase(
         if (state.isPaused) resumeUseCase()
 
         // take time
-        val runningSectionTrueDuration = getRunningSectionUseCase().second
+        val runningSectionTrueDuration = getRunningItemDurationUseCase()
         val changeOverTime = state.startTimestampSectionPauseCompensated + runningSectionTrueDuration.inWholeSeconds.seconds
-        val runningSectionRoundedDuration = getRunningSectionUseCase(at = changeOverTime).second
+        val runningSectionRoundedDuration = getRunningItemDurationUseCase(at = changeOverTime)
 
         // append finished section to completed sections
         val updatedSections = state.completedSections + PracticeSection(

@@ -21,7 +21,7 @@ import kotlin.time.Duration.Companion.seconds
 class SelectItemUseCase(
     private val activeSessionRepository: ActiveSessionRepository,
     private val resumeUseCase: ResumeActiveSessionUseCase,
-    private val getRunningSectionUseCase: GetRunningSectionUseCase,
+    private val getRunningItemDurationUseCase: GetRunningItemDurationUseCase,
     private val timeProvider: TimeProvider,
     private val idProvider: IdProvider
 ) {
@@ -36,7 +36,7 @@ class SelectItemUseCase(
             }
 
             // check too fast
-            if (getRunningSectionUseCase().second < 1.seconds) {
+            if (getRunningItemDurationUseCase() < 1.seconds) {
                 throw IllegalStateException("Must wait for at least one second before starting a new section.")
             }
 
@@ -45,10 +45,10 @@ class SelectItemUseCase(
 
 
             // take time
-            val runningSectionTrueDuration = getRunningSectionUseCase().second
+            val runningSectionTrueDuration = getRunningItemDurationUseCase()
             val changeSectionTimestamp = state.startTimestampSectionPauseCompensated + runningSectionTrueDuration.inWholeSeconds.seconds
             // running section duration calculated until changeSectionTimestamp
-            val runningSectionRoundedDuration = getRunningSectionUseCase(at = changeSectionTimestamp).second
+            val runningSectionRoundedDuration = getRunningItemDurationUseCase(at = changeSectionTimestamp)
 
             // append finished section to completed sections
             val updatedSections = state.completedSections + PracticeSection(

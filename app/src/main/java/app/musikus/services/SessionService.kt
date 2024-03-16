@@ -38,6 +38,7 @@ import app.musikus.utils.TimeProvider
 import app.musikus.utils.getDurationString
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.util.Timer
 import java.util.UUID
@@ -191,8 +192,8 @@ class SessionService : Service() {
         // TODO: move this logic to use case
         try {
             val totalPracticeDurationStr =
-                getDurationString(useCases.getPracticeTime(), DurationFormat.HMS_DIGITAL)
-            val currentSectionName = useCases.getRunningSection().first.name
+                getDurationString(useCases.getPracticeDuration(), DurationFormat.HMS_DIGITAL)
+            val currentSectionName = useCases.getRunningItem().first()?.name ?: "No section selected"
 
             if (useCases.getPausedState()) {
                 title = "Practicing Paused"
