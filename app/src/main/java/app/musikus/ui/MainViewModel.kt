@@ -8,12 +8,6 @@
 
 package app.musikus.ui
 
-import android.app.Application
-import android.content.ComponentName
-import android.content.Context
-import android.content.Intent
-import android.content.ServiceConnection
-import android.os.IBinder
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
@@ -21,20 +15,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.musikus.datastore.ColorSchemeSelections
 import app.musikus.datastore.ThemeSelections
-import app.musikus.services.SessionService
-import app.musikus.services.SessionServiceState
 import app.musikus.usecase.userpreferences.UserPreferencesUseCases
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -48,14 +35,12 @@ sealed class MainUiEvent {
 data class MainUiState(
     val activeTheme: ThemeSelections?,
     val activeColorScheme: ColorSchemeSelections?,
-    var snackbarHost: SnackbarHostState,
-    val isSessionActive: Boolean
+    var snackbarHost: SnackbarHostState
 )
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class MainViewModel @Inject constructor(
-    private val application: Application,
     userPreferencesUseCases: UserPreferencesUseCases,
 ) : ViewModel() {
 
@@ -80,30 +65,6 @@ class MainViewModel @Inject constructor(
         initialValue = null
     )
 
-    /**
-     * Imported flows
-     */
-
-    private val activeSessionServiceStateWrapper = MutableStateFlow<StateFlow<SessionServiceState>?>(null)
-    private val activeSessionState = activeSessionServiceStateWrapper.flatMapLatest {
-        it ?: flowOf(null)
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = null
-    )
-
-    /**
-     * Transforming and combining imported and own flows
-     */
-
-    private val isSessionActive = activeSessionState.map { sessionState ->
-        sessionState?.sections?.isNotEmpty() == true
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = false
-    )
 
     /**
      * Composing the ui state
@@ -113,13 +74,11 @@ class MainViewModel @Inject constructor(
         _activeTheme,
         _activeColorScheme,
         _snackbarHost,
-        isSessionActive
-    ) { activeTheme, activeColorScheme, snackbarHost, isSessionActive ->
+    ) { activeTheme, activeColorScheme, snackbarHost ->
         MainUiState(
             activeTheme = activeTheme,
             activeColorScheme = activeColorScheme,
-            snackbarHost = snackbarHost,
-            isSessionActive = isSessionActive
+            snackbarHost = snackbarHost
         )
     }.stateIn(
         scope = viewModelScope,
@@ -127,14 +86,13 @@ class MainViewModel @Inject constructor(
         initialValue = MainUiState(
             activeTheme = _activeTheme.value,
             activeColorScheme = _activeColorScheme.value,
-            snackbarHost = _snackbarHost.value,
-            isSessionActive = isSessionActive.value
+            snackbarHost = _snackbarHost.value
         )
     )
 
 
     fun onUiEvent(event: MainUiEvent) {
-        when(event) {
+        when (event) {
             is MainUiEvent.ShowSnackbar -> {
                 showSnackbar(event.message, event.onUndo)
             }
@@ -149,50 +107,18 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             val result = _snackbarHost.value.showSnackbar(
                 message,
-                actionLabel = if(onUndo != null) "Undo" else null,
+                actionLabel = if (onUndo != null) "Undo" else null,
                 duration = SnackbarDuration.Long
             )
-            when(result) {
+            when (result) {
                 SnackbarResult.ActionPerformed -> {
                     onUndo?.invoke()
                 }
+
                 SnackbarResult.Dismissed -> {
                     // do nothing
                 }
             }
         }
-    }
-
-
-    /**
-     * Active session service binding
-     */
-
-    private val connection = object : ServiceConnection {
-        /** called by service when we have connection to the service => we have mService reference */
-        override fun onServiceConnected(className: ComponentName, service: IBinder) {
-            // We've bound to SessionForegroundService, cast the Binder and get SessionService instance
-            val binder = service as SessionService.LocalBinder
-            activeSessionServiceStateWrapper.update { binder.getSessionStateFlow() }
-        }
-
-        override fun onServiceDisconnected(p0: ComponentName?) {
-        }
-    }
-
-    private fun bindService() {
-        val intent = Intent(application, SessionService::class.java) // Build the intent for the service
-        application.bindService(intent, connection, Context.BIND_AUTO_CREATE)
-    }
-
-    override fun onCleared() {
-        if (activeSessionState.value != null) {
-            application.unbindService(connection)
-        }
-        super.onCleared()
-    }
-
-    init {
-//        bindService()  // TODO: this breaks sessionservice after finishing a session
     }
 }

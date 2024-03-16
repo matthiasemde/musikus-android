@@ -3,7 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2024 Matthias Emde, Michael Prommersberger
+ * Copyright (c) 2024 Michael Prommersberger, Matthias Emde
+ *
  */
 
 package app.musikus.ui.activesession
@@ -15,51 +16,56 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.Build
 import android.os.IBinder
-import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import app.musikus.database.Nullable
+import app.musikus.database.UUIDConverter
 import app.musikus.database.daos.LibraryItem
 import app.musikus.database.entities.LibraryItemCreationAttributes
 import app.musikus.database.entities.SectionCreationAttributes
 import app.musikus.database.entities.SessionCreationAttributes
+import app.musikus.di.ApplicationScope
 import app.musikus.services.SessionService
 import app.musikus.services.SessionServiceEvent
-import app.musikus.services.SessionServiceState
 import app.musikus.ui.library.LibraryItemDialogUiEvent
 import app.musikus.ui.library.LibraryItemEditData
+import app.musikus.usecase.activesession.ActiveSessionUseCases
+import app.musikus.usecase.activesession.PracticeSection
 import app.musikus.usecase.library.LibraryUseCases
 import app.musikus.usecase.permissions.PermissionsUseCases
 import app.musikus.usecase.sessions.SessionsUseCases
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.ZonedDateTime
+import java.util.Timer
 import java.util.UUID
 import javax.inject.Inject
+import kotlin.concurrent.timer
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
-data class PracticeSection(
-    val id: Int,
-    val libraryItem: LibraryItem,
-    val startTimestamp: ZonedDateTime,
-    var duration: Duration?
-)
-
 data class EndDialogData(
     val rating: Int,
     val comment: String
+)
+
+data class SessionViewModelState(
+    val startTimestamp: ZonedDateTime,  // only needed for storing the session in the database
+    val sessionDuration: Duration,
+    val sections: List<PracticeSection>,
+    val activeSection: Pair<LibraryItem, Duration>,
+    val ongoingPauseDuration: Duration,
+    val isPaused: Boolean
 )
 
 @HiltViewModel
@@ -68,8 +74,10 @@ class ActiveSessionViewModel @Inject constructor(
     private val libraryUseCases: LibraryUseCases,
     private val sessionUseCases: SessionsUseCases,
     private val permissionsUseCases: PermissionsUseCases,
-    private val application: Application
-): AndroidViewModel(application) {
+    private val activeSessionUseCases: ActiveSessionUseCases,
+    private val application: Application,
+    @ApplicationScope private val applicationScope: CoroutineScope
+) : AndroidViewModel(application) {
 
     /**
      *  --------------------- Private properties ---------------------
@@ -91,44 +99,32 @@ class ActiveSessionViewModel @Inject constructor(
         bodyUiState = ActiveSessionDraggableCardBodyUiState.MetronomeCardBodyUiState
     )
 
-
     /** stateFlows */
 
     private val _notificationPermissionsGranted = MutableStateFlow(false)
-
     private val _selectedFolderId = MutableStateFlow<UUID?>(null)
     private val _addLibraryItemData = MutableStateFlow<LibraryItemEditData?>(null)
     private val _endDialogData = MutableStateFlow<EndDialogData?>(null)
-
     private val _showDiscardSessionDialog = MutableStateFlow(false)
+    private var _clock = MutableStateFlow(false)
 
-    /**
-     *  --------------------- Session service  ---------------------
-     */
+    /** Service */
 
-    private val sessionServiceStateWrapper = MutableStateFlow<StateFlow<SessionServiceState>?>(null)
-    private val sessionServiceState = sessionServiceStateWrapper.flatMapLatest {
-        it ?: flowOf(SessionServiceState())
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = SessionServiceState()
-    )
-
-    // #############################################    
-
-    private var sessionEvent: (SessionServiceEvent) -> Unit = { Log.d("TAG", "not implemented") }
+    private var sessionServiceEventHandler: ((SessionServiceEvent) -> Unit)? = null
     private var bound = false
 
+
+    /** Variables */
+
+    private var _timer: Timer? = null
     private val connection = object : ServiceConnection {
         /** called by service when we have connection to the service => we have mService reference */
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
             // We've bound to SessionForegroundService, cast the Binder and get SessionService instance
             val binder = service as SessionService.LocalBinder
-            sessionEvent = binder.getOnEvent()
-            sessionServiceStateWrapper.update { binder.getSessionStateFlow() }
-
+            sessionServiceEventHandler = binder.getOnEvent()
             bound = true
+            startTimer()
         }
         override fun onServiceDisconnected(arg0: ComponentName) {
             bound = false
@@ -136,7 +132,6 @@ class ActiveSessionViewModel @Inject constructor(
     }
 
     init {
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             viewModelScope.launch {
                 val notificationPermissionResult = permissionsUseCases.request(
@@ -170,40 +165,57 @@ class ActiveSessionViewModel @Inject constructor(
         initialValue = listOf()
     )
 
-    private val currentlyPracticedSection = sessionServiceState.map {
-        it.sections.lastOrNull()
-    }.stateIn(
+    private val completedSections = activeSessionUseCases.getCompletedSections().stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
+
+    private val runningLibraryItem = activeSessionUseCases.getRunningItem().stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = null
     )
 
 
-    private val totalDurationRoundedDownToNextSecond = sessionServiceState.map { sessionState ->
-        sessionState.sections.sumOf {
-            (it.duration ?: sessionState.currentSectionDuration).inWholeMilliseconds
-        }.milliseconds.inWholeSeconds.seconds
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = 0.seconds
-    )
-
     /**
      *  ---------------- Composing the Ui state --------------------
      */
 
+
+    private val sessionState = combine(
+        completedSections,
+        runningLibraryItem,
+        _clock
+    ) { completedSections, runningItem, _ ->
+        if (runningItem == null) return@combine null    // no active session try-catch does the same
+        try {
+            SessionViewModelState(
+                sessionDuration = activeSessionUseCases.getPracticeDuration(),
+                sections = completedSections,
+                activeSection = Pair(runningItem, activeSessionUseCases.getRunningItemDuration()),
+                ongoingPauseDuration = activeSessionUseCases.getOngoingPauseDuration(),
+                isPaused = activeSessionUseCases.getPausedState(),
+                startTimestamp = activeSessionUseCases.getStartTime()
+            )
+        } catch (e: IllegalStateException) {
+            null
+        }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = null
+    )
+
     private val libraryCardHeaderUiState = combine(
         foldersWithItems,
         _selectedFolderId,
-        currentlyPracticedSection
-    ) { foldersWithItems, selectedFolderId, currentlyPracticedSection ->
+        runningLibraryItem
+    ) { foldersWithItems, selectedFolderId, runningLibraryItem ->
         ActiveSessionDraggableCardHeaderUiState.LibraryCardHeaderUiState(
             folders = listOf(null) + foldersWithItems.map { it.folder },
             selectedFolderId = selectedFolderId,
-            activeFolderId = currentlyPracticedSection?.let {
-                Nullable(it.libraryItem.libraryFolderId)
-            }
+            activeFolderId = runningLibraryItem?.let { Nullable(it.libraryFolderId) }
         )
     }.stateIn(
         scope = viewModelScope,
@@ -217,11 +229,11 @@ class ActiveSessionViewModel @Inject constructor(
 
     private val libraryCardBodyUiState = combine(
         itemsInSelectedFolder,
-        currentlyPracticedSection
-    ) { itemsInSelectedFolder, currentlyPracticedSection ->
+        runningLibraryItem
+    ) { items, runningLibraryItem ->
         ActiveSessionDraggableCardBodyUiState.LibraryCardBodyUiState(
-            items = itemsInSelectedFolder,
-            activeItemId = currentlyPracticedSection?.libraryItem?.id
+            items = items,
+            activeItemId = runningLibraryItem?.id
         )
     }.stateIn(
         scope = viewModelScope,
@@ -302,28 +314,36 @@ class ActiveSessionViewModel @Inject constructor(
     )
 
 
+    /** ############  The final public UI state ############ */
+
     val uiState = combine(
         libraryCardUiState,
-        sessionServiceState,
+        sessionState,
         addLibraryItemDialogUiState,
-        totalDurationRoundedDownToNextSecond,
-        dialogUiState
-    ) { libraryCardUiState, sessionState, addItemDialogUiState, totalDuration, dialogUiState ->
+        dialogUiState,
+    ) { libraryCardUiState, sessionState, addItemDialogUiState, dialogUiState ->
         ActiveSessionUiState(
             cardUiStates = listOf(
                 libraryCardUiState,
                 _recorderUiState,
                 _metronomeUiState
             ),
-            totalSessionDuration = totalDuration,
-            totalBreakDuration = sessionState.pauseDuration,
-            isPaused = sessionState.isPaused,
+            totalSessionDuration = sessionState?.sessionDuration ?: 0.seconds,
+            ongoingPauseDuration = sessionState?.ongoingPauseDuration ?: 0.seconds,
+            isPaused = sessionState?.isPaused ?: false,
             addItemDialogUiState = addItemDialogUiState,
-            sections = sessionState.sections.reversed().map { section ->
-                ActiveSessionSectionListItemUiState(
-                    id = section.id,    // also used as id
+            sections = sessionState?.sections?.reversed()?.map { section ->
+                    ActiveSessionSectionListItemUiState(
+                    id = section.id,
                     libraryItem = section.libraryItem,
-                    duration = section.duration ?: sessionState.currentSectionDuration
+                    duration = section.duration
+                )
+            } ?: emptyList(),
+            runningSection = sessionState?.let {
+                ActiveSessionSectionListItemUiState(
+                    id = UUIDConverter.deadBeef, // doesn't matter, not used
+                    libraryItem = sessionState.activeSection.first,
+                    duration = sessionState.activeSection.second
                 )
             },
             dialogUiState = dialogUiState
@@ -334,9 +354,10 @@ class ActiveSessionViewModel @Inject constructor(
         initialValue = ActiveSessionUiState(
             cardUiStates = emptyList(),
             totalSessionDuration = 0.milliseconds,
-            totalBreakDuration = sessionServiceState.value.pauseDuration,
+            ongoingPauseDuration = 0.seconds,
             sections = emptyList(),
-            isPaused = sessionServiceState.value.isPaused,
+            isPaused = false,
+            runningSection = null,
             addItemDialogUiState = addLibraryItemDialogUiState.value,
             dialogUiState = dialogUiState.value
         )
@@ -395,6 +416,10 @@ class ActiveSessionViewModel @Inject constructor(
                 _showDiscardSessionDialog.update { false }
             }
             is ActiveSessionUiEvent.DiscardSessionDialogDismissed -> _showDiscardSessionDialog.update { false }
+            is ActiveSessionUiEvent.BackPressed -> {
+                _timer?.cancel()
+                _timer = null
+            }
         }
     }
 
@@ -402,45 +427,68 @@ class ActiveSessionViewModel @Inject constructor(
 
     /** ---------------------------------- private methods ----------------------------------- */
 
+    private fun startTimer() {
+        if (_timer != null) {
+            return
+        }
+        _timer = timer(
+            name = "Timer",
+            initialDelay = 0,
+            period = 100.milliseconds.inWholeMilliseconds
+        ) {
+            _clock.update { !it }
+        }
+    }
+
     private fun itemClicked(item: LibraryItem) {
         if (!bound) return
-        sessionEvent(SessionServiceEvent.StartNewSection(item))
+        sessionServiceEventHandler?.invoke(SessionServiceEvent.StartNewSection(item))
         startService()
     }
 
     private fun togglePause() {
-        sessionEvent(SessionServiceEvent.TogglePause)
+        sessionServiceEventHandler?.invoke(SessionServiceEvent.TogglePause)
     }
 
     private fun stopSession() {
         val endDialogData = _endDialogData.value ?: return
-        viewModelScope.launch {
+        applicationScope.launch {
+            val savableState = activeSessionUseCases.getFinalizedSession()   // complete running section
+
+            // ignore empty sections (e.g. when paused and then stopped immediately))
+            val sections = savableState.completedSections.filter { it.duration > 0.seconds }
+
+            // store in database
             sessionUseCases.add(
                 sessionCreationAttributes = SessionCreationAttributes(
-                    breakDuration = sessionServiceState.value.pauseDuration,
+                    breakDuration = sections.fold(0.seconds) { acc, section ->
+                        acc + section.pauseDuration
+                    },
                     comment = endDialogData.comment,
                     rating = endDialogData.rating
                 ),
-                sectionCreationAttributes = sessionServiceState.value.sections.map {
+                sectionCreationAttributes = sections.map { section ->
                     SectionCreationAttributes(
-                        libraryItemId = it.libraryItem.id,
-                        duration = it.duration ?: sessionServiceState.value.currentSectionDuration,
-                        startTimestamp = it.startTimestamp
+                        libraryItemId = section.libraryItem.id,
+                        duration = section.duration,
+                        startTimestamp = savableState.startTimestamp
                     )
                 }
             )
+            activeSessionUseCases.reset()   // reset the active session state
             _endDialogData.update { null }
-            sessionEvent(SessionServiceEvent.StopTimerAndFinish)
+            sessionServiceEventHandler?.invoke(SessionServiceEvent.StopService)
             unbindService()
         }
     }
 
     private fun discardSession() {
-        sessionEvent(SessionServiceEvent.StopTimerAndFinish)
+        activeSessionUseCases.reset()
+        sessionServiceEventHandler?.invoke(SessionServiceEvent.StopService)
     }
 
-    private fun removeSection(itemId: Int) {
-        sessionEvent(SessionServiceEvent.DeleteSection(itemId))
+    private fun removeSection(itemId: UUID) {
+        sessionServiceEventHandler?.invoke(SessionServiceEvent.DeleteSection(itemId))
     }
 
     private fun createLibraryItemDialog() {
@@ -471,6 +519,7 @@ class ActiveSessionViewModel @Inject constructor(
 
     override fun onCleared() {
         unbindService()
+        _timer?.cancel()
         super.onCleared()
     }
 
@@ -480,5 +529,4 @@ class ActiveSessionViewModel @Inject constructor(
             bound = false
         }
     }
-
 }

@@ -24,7 +24,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
@@ -106,26 +105,17 @@ fun SessionsScreen(
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 icon = {
-                    if(mainUiState.isSessionActive) {
-                        Icon(
-                            imageVector = Icons.Default.KeyboardArrowUp,
-                            contentDescription = "resume session"
-                        )
-                    } else {
-                        Icon(
-                            imageVector = Icons.Default.Add,
-                            contentDescription = "new session"
-                        )
-                    }
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "new session"
+                    )
                 },
                 text = {
-                    Text(text = if(mainUiState.isSessionActive) "Resume session" else "Start session")
+                    Text(text = "Start session")
                 },
                 onClick = { navigateTo(Screen.ActiveSession) },
                 expanded = fabExpanded,
-                containerColor =
-                    if (mainUiState.isSessionActive) MaterialTheme.colorScheme.primary
-                    else MaterialTheme.colorScheme.primaryContainer
+                containerColor = MaterialTheme.colorScheme.primaryContainer
             )
         },
         topBar = {

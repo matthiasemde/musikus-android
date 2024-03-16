@@ -1,3 +1,11 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ *
+ * Copyright (c) 2024 Michael Prommersberger
+ */
+
 package app.musikus.services
 
 import android.app.Notification
@@ -22,43 +30,34 @@ import androidx.core.net.toUri
 import app.musikus.R
 import app.musikus.SESSION_NOTIFICATION_CHANNEL_ID
 import app.musikus.database.daos.LibraryItem
+import app.musikus.di.ApplicationScope
 import app.musikus.ui.activesession.ActiveSessionActions
-import app.musikus.ui.activesession.PracticeSection
+import app.musikus.usecase.activesession.ActiveSessionUseCases
 import app.musikus.utils.DurationFormat
 import app.musikus.utils.TimeProvider
 import app.musikus.utils.getDurationString
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import java.util.Timer
+import java.util.UUID
 import javax.inject.Inject
 import kotlin.concurrent.timer
-import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.Duration.Companion.seconds
-
 
 const val SESSION_NOTIFICATION_ID = 42
 const val BROADCAST_INTENT_FILTER = "activeSessionAction"
 
 
 /**
- * Encapsulates the state of the current session, is passed to the binding Activity / ViewModel
- */
-data class SessionServiceState(
-    val sections: List<PracticeSection> = emptyList(),
-    val currentSectionDuration: Duration = 0.seconds,
-    val pauseDuration: Duration = 0.seconds,
-    val isPaused: Boolean = false
-)
-
-/**
  * Exposed interface for events between Service and Activity / ViewModel
  */
 sealed class SessionServiceEvent {
-    data object StopTimerAndFinish: SessionServiceEvent()
+    data object StopService: SessionServiceEvent()
     data object TogglePause: SessionServiceEvent()
     data class StartNewSection(val item: LibraryItem): SessionServiceEvent()
-    data class DeleteSection(val sectionId: Int): SessionServiceEvent()
+    data class DeleteSection(val sectionId: UUID): SessionServiceEvent()
 }
 
 /**
@@ -70,27 +69,33 @@ data class NotificationActionButtonConfig(
     val tapIntent: PendingIntent?
 )
 
+
+
 @AndroidEntryPoint
 class SessionService : Service() {
+
+    private val timerInterval = 1000.milliseconds
+
+    @Inject
+    @ApplicationScope
+    lateinit var applicationScope: CoroutineScope
 
     @Inject
     lateinit var timeProvider: TimeProvider
 
+    @Inject
+    lateinit var useCases : ActiveSessionUseCases
+    private var _timer : Timer? = null
+
     private val binder = LocalBinder()         // interface object for clients that bind
     inner class LocalBinder : Binder() {
-        // Return this instance of SessionService so clients can call public methods
-        fun getSessionStateFlow() = sessionState
         fun getOnEvent(): (SessionServiceEvent) -> Unit = ::onEvent
     }
-
-    private val sessionState = MutableStateFlow(SessionServiceState())  // Session State
-    private var _timer: java.util.Timer? = null
-    private val timerInterval = 1.seconds
-    private var _sectionIdCounter = 0
 
     /** Broadcast receiver (currently only for pause action) */
     private val myReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
+            Log.d("TAG", "Received Broadcast")
             when (intent.getStringExtra("action")) {
                 ActiveSessionActions.PAUSE.toString() -> togglePause()
             }
@@ -107,74 +112,22 @@ class SessionService : Service() {
     private var resumeActionButton : NotificationActionButtonConfig? = null
     private var finishActionButton : NotificationActionButtonConfig? = null
 
-
     /**
      *  ---------------------- Interface for Activity / ViewModel ----------------------
      */
+
     fun onEvent(event: SessionServiceEvent) {
         when(event) {
-            is SessionServiceEvent.StopTimerAndFinish -> stopTimerAndDestroy()
+            is SessionServiceEvent.StopService -> stopService()
             is SessionServiceEvent.TogglePause -> togglePause()
             is SessionServiceEvent.StartNewSection -> newSection(event.item)
             is SessionServiceEvent.DeleteSection -> removeSection(event.sectionId)
         }
     }
 
-
     /**
      * ----------------------------------- private functions ------------------------------------
      */
-
-    private fun newSection(item: LibraryItem) {
-        // prevent starting a new section too fast
-        if (sessionState.value.sections.isNotEmpty() && sessionState.value.currentSectionDuration < 1.seconds) return
-        // prevent starting the same section twice in a row
-        if (item == sessionState.value.sections.lastOrNull()?.libraryItem) return
-
-        startTimer()
-        // end current section and store its duration
-
-        sessionState.update {
-            val finishedSectionDur = it.currentSectionDuration
-            val flooredFinishedDur = finishedSectionDur.inWholeSeconds.seconds  // floor to seconds
-
-            // update last section with tracked duration
-            val updatedLastSection = it.sections.lastOrNull()?.copy(duration = flooredFinishedDur)
-            val newItem = PracticeSection(
-                id = _sectionIdCounter++,
-                libraryItem = item,
-                duration = null,
-                startTimestamp = timeProvider.now()
-            )
-            it.copy(
-                // the remaining part (sub-seconds) will be added to the new section upfront
-                currentSectionDuration =  finishedSectionDur - flooredFinishedDur,
-                sections =
-                    if (updatedLastSection == null) {
-                        listOf(newItem)   // first section started, only add new item
-                    } else {
-                        it.sections.dropLast(1) + updatedLastSection + newItem
-                    }
-            )
-        }
-        updateNotification()
-    }
-
-    private fun removeSection(sectionId: Int) {
-        val updatedSections = sessionState.value.sections.filter { it.id != sectionId }
-        sessionState.update { it.copy(sections = updatedSections) }
-    }
-
-    private fun stopTimerAndDestroy() {
-        _timer?.cancel()
-        stopForeground(STOP_FOREGROUND_REMOVE)
-        stopSelf()
-    }
-
-    private fun togglePause() {
-        sessionState.update { it.copy(isPaused = !it.isPaused) }
-        updateNotification()
-    }
 
     private fun startTimer() {
         if (_timer != null) {
@@ -182,71 +135,113 @@ class SessionService : Service() {
         }
         _timer = timer(
             name = "Timer",
-            initialDelay = timerInterval.inWholeMilliseconds,
+            initialDelay = 0,
             period = timerInterval.inWholeMilliseconds
         ) {
-            if (sessionState.value.isPaused) {
-                sessionState.update { it.copy(
-                    pauseDuration = it.pauseDuration + timerInterval)
-                }
-            } else {
-                sessionState.update { it.copy(
-                    currentSectionDuration = it.currentSectionDuration + timerInterval)
-                }
-            }
             updateNotification()
         }
     }
 
+    private fun togglePause() {
+        applicationScope.launch {
+            if (useCases.getPausedState()) {
+                useCases.resume()
+            } else {
+                useCases.pause()
+            }
+        }
+        updateNotification()
+    }
+
+
+    private fun newSection(item: LibraryItem) {
+        startTimer()
+        applicationScope.launch {
+            try {
+                useCases.selectItem(item)
+            } catch (e: IllegalStateException) {
+                Log.e("TAG", "Cannot start new section: ${e.message}")
+            }
+        }
+        updateNotification()
+    }
+
+    private fun removeSection(sectionId: UUID) {
+        applicationScope.launch {
+            useCases.deleteSection(sectionId)
+        }
+    }
+
+
+    /** -------------------------------------------- Service Boilerplate -------------------------*/
+
     private fun updateNotification() {
-        val mNotificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-        mNotificationManager.notify(SESSION_NOTIFICATION_ID, createNotification())
+        applicationScope.launch {
+            val mNotificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+            mNotificationManager.notify(SESSION_NOTIFICATION_ID, createNotification())
+        }
     }
 
     /**
      * Creates a notification object based on current session state
      */
-    private fun createNotification() : Notification {
-        val totalPracticeDuration = sessionState.value.sections.sumOf {
-            (it.duration ?: sessionState.value.currentSectionDuration).inWholeMilliseconds }.milliseconds
-        val totalPracticeDurationStr =
-            getDurationString(totalPracticeDuration, DurationFormat.HMS_DIGITAL)
+    private suspend fun createNotification() : Notification {
+        var title: String
+        var description: String
 
-        val currentSectionName = sessionState.value.sections.lastOrNull()?.libraryItem?.name ?: "No Section"
+        // TODO: move this logic to use case
+        try {
+            val totalPracticeDurationStr =
+                getDurationString(useCases.getPracticeDuration(), DurationFormat.HMS_DIGITAL)
+            val currentSectionName = useCases.getRunningItem().first()?.name ?: "No section selected"
 
-        val title: String
-        val description: String
-
-        if (sessionState.value.isPaused) {
-            title = "Practicing Paused"
-            description = "$currentSectionName - Total: $totalPracticeDurationStr"
-        } else {
-            title = "Practicing for $totalPracticeDurationStr"
-            description = currentSectionName
+            if (useCases.getPausedState()) {
+                title = "Practicing Paused"
+                description = "$currentSectionName - Total: $totalPracticeDurationStr"
+            } else {
+                title = "Practicing for $totalPracticeDurationStr"
+                description = currentSectionName
+            }
+        } catch (e: IllegalStateException) {
+            Log.d("TAG", "Could not get session info for notification: ${e.message}")
+            title = "Practicing"
+            description = "No section selected"
         }
 
-        val actionButton1Intent = if(sessionState.value.isPaused) {
-            resumeActionButton
-        } else {
-            pauseActionButton
-        }
+        val actionButton1Intent =
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                try {
+                    if (useCases.getPausedState()) {
+                        resumeActionButton
+                    } else {
+                        pauseActionButton
+                    }
+                } catch (e: IllegalStateException) {
+                    pauseActionButton
+                }
+            } else {
+                null    // TODO: broadcast receiver is broken on Android 14
+            }
+
         val actionButton2Intent = finishActionButton
 
         return getNotification(
             title = title,
             description = description,
-            actionButton1 = actionButton1Intent,
+            actionButton1 = actionButton1Intent,  // TODO: Fix action button (pause/resume)
             actionButton2 = actionButton2Intent
         )
     }
 
 
-    /**
-     *  ----------------------------------- Service Boilerplate -----------------------------------
-     */
+    override fun onCreate() {
+        super.onCreate()
+        createPendingIntents()
+    }
 
     override fun onBind(intent: Intent?): IBinder {
         // register Broadcast Receiver for Pause Action
+        Log.d("TAG", "onBind")
         ContextCompat.registerReceiver(
             this,
             myReceiver,
@@ -263,18 +258,19 @@ class SessionService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        createPendingIntents()
-        val notification = createNotification()
 
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            startForeground(SESSION_NOTIFICATION_ID, notification)
-        } else {
-            ServiceCompat.startForeground(
-                this,
-                SESSION_NOTIFICATION_ID,
-                notification,
-                ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
-            )
+        applicationScope.launch {
+            val notification = createNotification()
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                startForeground(SESSION_NOTIFICATION_ID, notification)
+            } else {
+                ServiceCompat.startForeground(
+                    this@SessionService,
+                    SESSION_NOTIFICATION_ID,
+                    notification,
+                    ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+                )
+            }
         }
 
         return START_NOT_STICKY
@@ -322,8 +318,10 @@ class SessionService : Service() {
 
         pendingIntentActionPause = PendingIntent.getBroadcast(
             this,
-            0,
-            Intent(BROADCAST_INTENT_FILTER).also { it.putExtra("action", ActiveSessionActions.PAUSE.toString()) },
+            SESSION_NOTIFICATION_ID,
+            Intent(BROADCAST_INTENT_FILTER).apply {
+                putExtra("action", ActiveSessionActions.PAUSE.toString())
+             },
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
@@ -357,6 +355,12 @@ class SessionService : Service() {
     override fun onDestroy() {
         Log.d("Tag", "onDestroy")
         unregisterReceiver(myReceiver)
+        _timer?.cancel()
         super.onDestroy()
+    }
+
+    private fun stopService() {
+        stopForeground(STOP_FOREGROUND_REMOVE)
+        stopSelf()
     }
 }

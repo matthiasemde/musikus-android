@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2023 Matthias Emde
+ * Copyright (c) 2023-2024 Matthias Emde, Michael Prommersberger
  */
 
 package app.musikus.utils
@@ -12,6 +12,9 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.temporal.ChronoField
+import java.time.temporal.ChronoUnit
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 
 // Good comment from Jon Skeet on this topic: https://stackoverflow.com/a/5622222/20420131
 
@@ -127,7 +130,32 @@ interface TimeProvider {
 }
 
 class TimeProviderImpl : TimeProvider {
+
     override fun now(): ZonedDateTime {
         return ZonedDateTime.now()
     }
+}
+
+/**
+ * Operator extension function to get the duration between two ZonedDateTime objects.
+ * @param other the earlier ZonedDateTime
+ */
+operator fun ZonedDateTime.minus(other: ZonedDateTime): Duration {
+    return ChronoUnit.MILLIS.between(other, this).milliseconds
+}
+
+/**
+ * Operator extension function to get a ZonedDateTime object with a duration added..
+ * @param duration the duration to add.
+ */
+operator fun ZonedDateTime.plus(duration: Duration): ZonedDateTime {
+    return this.plusNanos(duration.inWholeNanoseconds)
+}
+
+/**
+ * Operator extension function to get a ZonedDateTime object with a duration subtracted.
+ * @param duration the duration to subtract
+ */
+operator fun ZonedDateTime.minus(duration: Duration): ZonedDateTime {
+    return this.minusNanos(duration.inWholeNanoseconds)
 }

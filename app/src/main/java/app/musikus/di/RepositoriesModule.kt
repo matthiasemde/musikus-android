@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2024 Matthias Emde
+ * Copyright (c) 2024 Matthias Emde, Michael Prommersberger
  */
 
 package app.musikus.di
@@ -13,6 +13,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.room.withTransaction
 import app.musikus.database.MusikusDatabase
+import app.musikus.repository.ActiveSessionRepositoryImpl
 import app.musikus.repository.GoalRepository
 import app.musikus.repository.GoalRepositoryImpl
 import app.musikus.repository.LibraryRepository
@@ -22,6 +23,7 @@ import app.musikus.repository.SessionRepository
 import app.musikus.repository.SessionRepositoryImpl
 import app.musikus.repository.UserPreferencesRepository
 import app.musikus.repository.UserPreferencesRepositoryImpl
+import app.musikus.usecase.activesession.ActiveSessionRepository
 import app.musikus.usecase.recordings.RecordingsRepository
 import app.musikus.utils.TimeProvider
 import dagger.Module
@@ -92,6 +94,12 @@ object RepositoriesModule {
                 clean()
             }
         }
+    }
+
+    @Provides
+    @Singleton
+    fun provideActiveSessionRepository() : ActiveSessionRepository {
+        return ActiveSessionRepositoryImpl()
     }
 
     @Provides

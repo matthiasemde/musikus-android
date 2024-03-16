@@ -12,6 +12,7 @@
 package app.musikus.ui.activesession
 
 import android.annotation.SuppressLint
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
@@ -126,6 +127,12 @@ fun ActiveSession(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val eventHandler = viewModel::onUiEvent
 
+    BackHandler {
+        // notify the ViewModel that the back button was pressed
+        eventHandler(ActiveSessionUiEvent.BackPressed)
+        navigateUp()
+    }
+
     Surface(
         color = MaterialTheme.colorScheme.background,
     ) {
@@ -151,7 +158,7 @@ fun ActiveSession(
                         Spacer(modifier = Modifier.weight(1f))
                         PracticeTimer(uiState)
                         Spacer(modifier = Modifier.weight(1f))
-                        CurrentPracticingItem(sections = uiState.sections)
+                        CurrentPracticingItem(item = uiState.runningSection)
                     }
 
                     /** ------------------- Remaining area ------------------- */
@@ -212,7 +219,10 @@ fun ActiveSession(
 
 
             if (uiState.isPaused) {
-                PauseDialog(uiState.totalBreakDuration, eventHandler)
+                PauseDialog(
+                    uiState.ongoingPauseDuration,
+                    eventHandler
+                )
             }
 
             uiState.addItemDialogUiState?.let { dialogUiState ->
@@ -284,26 +294,36 @@ private fun HeaderBar(
             ) {
                 Icon(imageVector = Icons.Default.KeyboardArrowDown, contentDescription = null)
             }
-            IconButton(
-                onClick = { eventHandler(ActiveSessionUiEvent.ShowDiscardSessionDialog) }
+            AnimatedVisibility(
+                visible = uiState.runningSection != null,
+                enter = slideInVertically(),
             ) {
-                Icon(imageVector = Icons.Outlined.Delete, contentDescription = null)
-            }
-            Spacer(modifier = Modifier.width(MaterialTheme.spacing.small))
-            OutlinedButton(
-                enabled = uiState.sections.isNotEmpty(),
-                onClick = { eventHandler(ActiveSessionUiEvent.TogglePause)  }
-            ) {
-                Text(text = "Pause")
+                Row {
+                    IconButton(
+                        onClick = { eventHandler(ActiveSessionUiEvent.ShowDiscardSessionDialog) }
+                    ) {
+                        Icon(imageVector = Icons.Outlined.Delete, contentDescription = null)
+                    }
+                    Spacer(modifier = Modifier.width(MaterialTheme.spacing.small))
+                    OutlinedButton(
+                        onClick = { eventHandler(ActiveSessionUiEvent.TogglePause) }
+                    ) {
+                        Text(text = "Pause")
+                    }
+                }
             }
         }
-        TextButton(
-            enabled = uiState.sections.isNotEmpty(),
-            onClick = {
-                eventHandler(ActiveSessionUiEvent.ShowFinishDialog)
-            }
+        AnimatedVisibility(
+            visible = uiState.runningSection != null,
+            enter = slideInVertically(),
         ) {
-            Text(text = "Save Session")
+            TextButton(
+                onClick = {
+                    eventHandler(ActiveSessionUiEvent.ShowFinishDialog)
+                }
+            ) {
+                Text(text = "Save Session")
+            }
         }
     }
 }
@@ -324,22 +344,22 @@ private fun PracticeTimer(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun CurrentPracticingItem(
-    sections: List<ActiveSessionSectionListItemUiState>
+    item: ActiveSessionSectionListItemUiState?
 ) {
     AnimatedVisibility(
-        visible = sections.isNotEmpty(),
+        visible = item != null,
         enter = expandVertically() + fadeIn(animationSpec = keyframes { durationMillis = 200 }),
     ) {
-        val firstSection = sections.first()
         Surface(
             modifier = Modifier.animateContentSize(),
             color = MaterialTheme.colorScheme.tertiaryContainer,
             shape = RoundedCornerShape(50),
             shadowElevation = 1.dp
         ) {
+            if(item == null) return@Surface
 
             AnimatedContent(
-                targetState = firstSection.libraryItem.name,
+                targetState = item.libraryItem.name,
                 label = "currentPracticingItem",
                 transitionSpec = {
                     slideInVertically { -it } togetherWith slideOutVertically { it }
@@ -370,7 +390,7 @@ private fun CurrentPracticingItem(
 
                     Text(
                         text = getDurationString(
-                            firstSection.duration,
+                            item.duration,
                             DurationFormat.HMS_DIGITAL
                         ).toString(),
                         style = MaterialTheme.typography.titleLarge,
@@ -390,7 +410,7 @@ private fun SectionsList(
     modifier: Modifier = Modifier,
     onSectionDeleted: (ActiveSessionSectionListItemUiState) -> Unit = {}
 ) {
-    if (uiState.sections.isEmpty()) {
+    if (uiState.runningSection == null) {
         Box (modifier = modifier) {
             Text(text = "Select a library item to start practicing")
         }
@@ -409,7 +429,7 @@ private fun SectionsList(
     ) {
 
         items(
-            items = uiState.sections.drop(1),
+            items = uiState.sections,
             key = { sectionElement -> sectionElement.id },
         ) { sectionElement ->
             SectionListElement(
@@ -641,7 +661,7 @@ private fun LibraryCardBody(
 
 @Composable
 private fun PauseDialog(
-    totalBreakDuration: Duration,
+    ongoingBreakDuration: Duration,
     eventHandler: ActiveSessionUiEventHandler
 ) {
     Dialog(
@@ -666,7 +686,7 @@ private fun PauseDialog(
                         .padding(MaterialTheme.spacing.large),
                     text = "Pause: ${
                         getDurationString(
-                            totalBreakDuration,
+                            ongoingBreakDuration,
                             DurationFormat.HMS_DIGITAL
                         )
                     }",
