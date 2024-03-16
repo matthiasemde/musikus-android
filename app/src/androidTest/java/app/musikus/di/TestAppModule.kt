@@ -21,7 +21,6 @@ import app.musikus.repository.GoalRepositoryImpl
 import app.musikus.repository.LibraryRepository
 import app.musikus.repository.LibraryRepositoryImpl
 import app.musikus.repository.RecordingsRepositoryImpl
-import app.musikus.repository.SessionRepository
 import app.musikus.repository.SessionRepositoryImpl
 import app.musikus.repository.UserPreferencesRepository
 import app.musikus.usecase.activesession.ActiveSessionRepository
@@ -64,6 +63,7 @@ import app.musikus.usecase.library.DeleteItemsUseCase
 import app.musikus.usecase.library.EditFolderUseCase
 import app.musikus.usecase.library.EditItemUseCase
 import app.musikus.usecase.library.GetAllLibraryItemsUseCase
+import app.musikus.usecase.library.GetLastPracticedDateUseCase
 import app.musikus.usecase.library.GetSortedLibraryFoldersUseCase
 import app.musikus.usecase.library.GetSortedLibraryItemsUseCase
 import app.musikus.usecase.library.LibraryUseCases
@@ -80,6 +80,7 @@ import app.musikus.usecase.sessions.GetSessionByIdUseCase
 import app.musikus.usecase.sessions.GetSessionsForDaysForMonthsUseCase
 import app.musikus.usecase.sessions.GetSessionsInTimeframeUseCase
 import app.musikus.usecase.sessions.RestoreSessionsUseCase
+import app.musikus.usecase.sessions.SessionRepository
 import app.musikus.usecase.sessions.SessionsUseCases
 import app.musikus.usecase.userpreferences.ChangeMetronomeSettingsUseCase
 import app.musikus.usecase.userpreferences.GetColorSchemeUseCase
@@ -221,12 +222,14 @@ object TestAppModule {
     @Provides
     fun provideLibraryUseCases(
         libraryRepository: LibraryRepository,
+        sessionRepository: SessionRepository,
         userPreferencesUseCases: UserPreferencesUseCases
     ): LibraryUseCases {
         return LibraryUseCases(
             getAllItems = GetAllLibraryItemsUseCase(libraryRepository),
             getSortedItems = GetSortedLibraryItemsUseCase(libraryRepository, userPreferencesUseCases.getItemSortInfo),
             getSortedFolders = GetSortedLibraryFoldersUseCase(libraryRepository, userPreferencesUseCases.getFolderSortInfo),
+            getLastPracticedDate = GetLastPracticedDateUseCase(sessionRepository),
             addItem = AddItemUseCase(libraryRepository),
             addFolder = AddFolderUseCase(libraryRepository),
             editItem = EditItemUseCase(libraryRepository),

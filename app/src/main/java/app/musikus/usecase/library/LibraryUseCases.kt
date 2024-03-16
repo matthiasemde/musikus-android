@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2023 Matthias Emde
+ * Copyright (c) 2023-2024 Matthias Emde
  */
 
 package app.musikus.usecase.library
@@ -12,6 +12,7 @@ data class LibraryUseCases(
     val getAllItems: GetAllLibraryItemsUseCase,
     val getSortedItems: GetSortedLibraryItemsUseCase,
     val getSortedFolders: GetSortedLibraryFoldersUseCase,
+    val getLastPracticedDate: GetLastPracticedDateUseCase,
     val addItem: AddItemUseCase,
     val addFolder: AddFolderUseCase,
     val editItem: EditItemUseCase,

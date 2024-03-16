@@ -19,12 +19,12 @@ import app.musikus.repository.GoalRepositoryImpl
 import app.musikus.repository.LibraryRepository
 import app.musikus.repository.LibraryRepositoryImpl
 import app.musikus.repository.RecordingsRepositoryImpl
-import app.musikus.repository.SessionRepository
 import app.musikus.repository.SessionRepositoryImpl
 import app.musikus.repository.UserPreferencesRepository
 import app.musikus.repository.UserPreferencesRepositoryImpl
 import app.musikus.usecase.activesession.ActiveSessionRepository
 import app.musikus.usecase.recordings.RecordingsRepository
+import app.musikus.usecase.sessions.SessionRepository
 import app.musikus.utils.TimeProvider
 import dagger.Module
 import dagger.Provides

@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2023 Matthias Emde
+ * Copyright (c) 2023-2024 Matthias Emde
  */
 
 package app.musikus.ui.library
@@ -14,6 +14,7 @@ import app.musikus.database.daos.LibraryItem
 import app.musikus.ui.components.TopBarUiState
 import app.musikus.utils.SortDirection
 import app.musikus.utils.SortMode
+import java.time.ZonedDateTime
 import java.util.UUID
 
 data class LibraryTopBarUiState(
@@ -48,7 +49,7 @@ data class LibraryItemsSortMenuUiState(
 )
 
 data class LibraryItemsUiState(
-    val items: List<LibraryItem>,
+    val itemsWithLastPracticedDate: List<Pair<LibraryItem, ZonedDateTime?>>,
     val selectedItemIds: Set<UUID>,
 
     val sortMenuUiState: LibraryItemsSortMenuUiState

@@ -638,13 +638,14 @@ private fun LibraryCardBody(
             .fillMaxWidth()
             .fadingEdge(cardScrollState)
     ) {
-        for (item in uiState.items) {
+        for ((item, lastPracticedDate) in uiState.itemsWithLastPracticedDate) {
             LibraryUiItem(
                 modifier = Modifier.padding(
                     vertical = MaterialTheme.spacing.small,
                     horizontal = MaterialTheme.spacing.medium + MaterialTheme.spacing.small,
                 ),
                 item = item,
+                lastPracticedDate = lastPracticedDate,
                 selected = false,
                 onShortClick = {
                     eventHandler(ActiveSessionUiEvent.SelectItem(item))

@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2022 Matthias Emde
+ * Copyright (c) 2022-2024 Matthias Emde
  */
 
 package app.musikus.ui.library
@@ -51,7 +51,7 @@ data class LibraryItemEditData(
     val folderId: UUID?,
 )
 
-
+@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class LibraryViewModel @Inject constructor(
     private val libraryUseCases: LibraryUseCases,
@@ -115,7 +115,6 @@ class LibraryViewModel @Inject constructor(
 
     /** Combining imported and own flows  */
 
-    @OptIn(ExperimentalCoroutinesApi::class)
     private val items = _activeFolder.flatMapLatest { activeFolder ->
         libraryUseCases.getSortedItems(
             folderId = Nullable(activeFolder?.id)
@@ -126,6 +125,13 @@ class LibraryViewModel @Inject constructor(
         initialValue = emptyList()
     )
 
+    private val lastPracticedDates = items.flatMapLatest { items ->
+        libraryUseCases.getLastPracticedDate(items)
+    }.stateIn(
+        scope = viewModelScope,
+        started = WhileSubscribed(5000),
+        initialValue = emptyMap()
+    )
 
     /**
      * Composing the Ui state
@@ -222,13 +228,16 @@ class LibraryViewModel @Inject constructor(
 
     private val itemsUiState = combine(
         items,
+        lastPracticedDates,
         _selectedItemIds,
         itemsSortMenuUiState,
-    ) { items, selectedItems, sortMenuUiState ->
+    ) { items, lastPracticedDates, selectedItems, sortMenuUiState ->
         if(items.isEmpty()) return@combine null
 
         LibraryItemsUiState(
-            items = items,
+            itemsWithLastPracticedDate = items.map { item ->
+                item to lastPracticedDates[item.id]
+            },
             selectedItemIds = selectedItems,
             sortMenuUiState = sortMenuUiState,
         )
