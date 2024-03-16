@@ -132,7 +132,6 @@ class ActiveSessionViewModel @Inject constructor(
     }
 
     init {
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             viewModelScope.launch {
                 val notificationPermissionResult = permissionsUseCases.request(
