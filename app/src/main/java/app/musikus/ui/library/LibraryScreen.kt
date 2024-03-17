@@ -544,7 +544,7 @@ fun LibraryUiItem(
                     },
                 )
                 Text(
-                    text = lastPracticedDate?.let {"last practiced: " +  it.musikusFormat(DateFormat.DAY_MONTH_YEAR) } ?: "never practiced",
+                    text = "last practiced: " +  (lastPracticedDate?.musikusFormat(DateFormat.DAY_MONTH_YEAR) ?: "never"),
                     style = if(compact) MaterialTheme.typography.labelSmall else MaterialTheme.typography.labelMedium,
                     color = colorScheme.onSurface.copy(alpha = 0.6f)
                 )
