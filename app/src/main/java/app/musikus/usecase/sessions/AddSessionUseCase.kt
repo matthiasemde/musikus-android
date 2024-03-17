@@ -13,7 +13,6 @@ import app.musikus.database.daos.InvalidSectionException
 import app.musikus.database.daos.InvalidSessionException
 import app.musikus.database.entities.SectionCreationAttributes
 import app.musikus.database.entities.SessionCreationAttributes
-import app.musikus.repository.SessionRepository
 import app.musikus.usecase.library.GetAllLibraryItemsUseCase
 import kotlinx.coroutines.flow.first
 

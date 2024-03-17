@@ -9,7 +9,6 @@
 package app.musikus.usecase.sessions
 
 import app.musikus.database.SessionWithSectionsWithLibraryItems
-import app.musikus.repository.SessionRepository
 import java.util.UUID
 
 class GetSessionByIdUseCase(

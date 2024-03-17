@@ -159,6 +159,14 @@ class ActiveSessionViewModel @Inject constructor(
         initialValue = listOf()
     )
 
+    private val lastPracticedDates = itemsInSelectedFolder.flatMapLatest { items ->
+        libraryUseCases.getLastPracticedDate(items)
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyMap()
+    )
+
     private val foldersWithItems = libraryUseCases.getSortedFolders().stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
@@ -229,17 +237,20 @@ class ActiveSessionViewModel @Inject constructor(
 
     private val libraryCardBodyUiState = combine(
         itemsInSelectedFolder,
+        lastPracticedDates,
         runningLibraryItem
-    ) { items, runningLibraryItem ->
+    ) { itemsInSelectedFolder, lastPracticedDates, runningLibraryItem ->
         ActiveSessionDraggableCardBodyUiState.LibraryCardBodyUiState(
-            items = items,
+            itemsWithLastPracticedDate = itemsInSelectedFolder.map { item ->
+                item to (lastPracticedDates[item.id])
+            },
             activeItemId = runningLibraryItem?.id
         )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = ActiveSessionDraggableCardBodyUiState.LibraryCardBodyUiState(
-            items = itemsInSelectedFolder.value,
+            itemsWithLastPracticedDate = emptyList(),
             activeItemId = null
         )
     )

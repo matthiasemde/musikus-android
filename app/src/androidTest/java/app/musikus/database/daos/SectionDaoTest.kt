@@ -592,4 +592,36 @@ class SectionDaoTest {
         // Check if the sections were retrieved correctly
         assertThat(sections).isEmpty()
     }
+
+    @Test
+    fun getLatestSection() = runTest {
+
+        val section = sectionDao.getLatestForItems(listOf(UUIDConverter.fromInt(1))).first()
+
+        assertThat(section).containsExactly(
+            Section(
+                id = UUIDConverter.fromInt(4),
+                sessionId = UUIDConverter.fromInt(2),
+                libraryItemId = UUIDConverter.fromInt(1),
+                durationSeconds = 240,
+                startTimestamp = FakeTimeProvider.START_TIME.plus(2.minutes.toJavaDuration()),
+            )
+        )
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 }

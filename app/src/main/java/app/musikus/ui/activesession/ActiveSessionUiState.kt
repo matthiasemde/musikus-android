@@ -15,6 +15,7 @@ import app.musikus.ui.library.DialogMode
 import app.musikus.ui.library.LibraryItemDialogUiEvent
 import app.musikus.ui.library.LibraryItemDialogUiState
 import app.musikus.ui.library.LibraryItemEditData
+import java.time.ZonedDateTime
 import java.util.UUID
 import kotlin.time.Duration
 
@@ -67,7 +68,7 @@ sealed class ActiveSessionDraggableCardHeaderUiState : DraggableCardHeaderUiStat
 
 sealed class ActiveSessionDraggableCardBodyUiState : DraggableCardBodyUiState {
     data class LibraryCardBodyUiState(
-        val items: List<LibraryItem>,
+        val itemsWithLastPracticedDate: List<Pair<LibraryItem, ZonedDateTime?>>,
         val activeItemId: UUID?
     ) : ActiveSessionDraggableCardBodyUiState()
 

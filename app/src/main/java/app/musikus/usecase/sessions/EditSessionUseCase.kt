@@ -1,10 +1,17 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ *
+ * Copyright (c) 2024 Matthias Emde
+ */
+
 package app.musikus.usecase.sessions
 
 import app.musikus.database.daos.InvalidSectionException
 import app.musikus.database.daos.InvalidSessionException
 import app.musikus.database.entities.SectionUpdateAttributes
 import app.musikus.database.entities.SessionUpdateAttributes
-import app.musikus.repository.SessionRepository
 import java.util.UUID
 
 class EditSessionUseCase(

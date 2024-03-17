@@ -3,11 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2022 Matthias Emde
- *
- * Parts of this software are licensed under the MIT license
- *
- * Copyright (c) 2022, Javier Carbone, author Matthias Emde
+ * Copyright (c) 2022-2024 Matthias Emde
  */
 
 package app.musikus.database.daos
@@ -173,6 +169,26 @@ abstract class SectionDao(
             itemIds = itemIds
         )
     }
+
+    @RewriteQueriesToDropUnusedColumns
+    @Query("SELECT * " +
+            "FROM section " +
+            "WHERE section.library_item_id IN (:itemIds) " +    // filter by itemIds
+            "AND section.session_id IN (" +                     // filter non-deleted sessions
+                "SELECT id FROM session " +
+                "WHERE deleted=0 " +
+            ")" +
+            "AND NOT EXISTS (" +                                // filter out all sections that have a later section for the same item
+                "SELECT 1 FROM section AS s " +
+                "WHERE s.library_item_id = section.library_item_id " +
+                "AND s.session_id IN (" +
+                    "SELECT id FROM session " +
+                    "WHERE deleted=0 " +
+                ") " +
+                "AND datetime(SUBSTR(s.start_timestamp, 1, INSTR(s.start_timestamp, '[') - 1)) > datetime(SUBSTR(section.start_timestamp, 1, INSTR(section.start_timestamp, '[') - 1)) " +
+            ")"
+    )
+    abstract fun getLatestForItems(itemIds: List<UUID>): Flow<List<Section>>
 }
 
 class InvalidSectionException(message: String) : Exception(message)

@@ -8,7 +8,6 @@
 
 package app.musikus.usecase.sessions
 
-import app.musikus.repository.SessionRepository
 import app.musikus.utils.specificDay
 import app.musikus.utils.specificMonth
 import kotlinx.coroutines.flow.Flow

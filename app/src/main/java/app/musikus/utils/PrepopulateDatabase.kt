@@ -149,18 +149,20 @@ suspend fun prepopulateDatabase(
         }.forEach { (sessionNum, session) ->
             database.sessionDao.insert(
                 session,
-                (1..(1..5).random()).map { SectionCreationAttributes(
-                    libraryItemId = items.random().id,
-                    startTimestamp = database.timeProvider.now().minus(
-                        (
-                                (sessionNum / 2) * // two sessions per day initially
-                                        24 * 60 * 60 *
-                                        1.02.pow(sessionNum.toDouble()) // exponential growth
-                                ).toLong(),
-                        ChronoUnit.SECONDS
-                    ),
-                    duration = (10..20).random().minutes,
-                )
+                (1..(1..5).random()).map {
+                    val duration = (10..20).random().minutes
+                    SectionCreationAttributes(
+                        libraryItemId = items.random().id,
+                        startTimestamp = database.timeProvider.now().minus(
+                            (
+                                    (sessionNum / 2) * // two sessions per day initially
+                                            24 * 60 * 60 *
+                                            1.02.pow(sessionNum.toDouble()) // exponential growth
+                                    ).toLong() + duration.inWholeSeconds,
+                            ChronoUnit.SECONDS
+                        ),
+                        duration = duration,
+                    )
                 }
             )
             delay(10)

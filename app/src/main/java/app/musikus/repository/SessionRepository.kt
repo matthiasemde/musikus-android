@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2023 Matthias Emde
+ * Copyright (c) 2023-2024 Matthias Emde
  */
 
 package app.musikus.repository
@@ -15,67 +15,17 @@ import app.musikus.database.daos.GoalInstance
 import app.musikus.database.daos.LibraryItem
 import app.musikus.database.daos.Section
 import app.musikus.database.daos.SectionDao
-import app.musikus.database.daos.Session
 import app.musikus.database.daos.SessionDao
 import app.musikus.database.entities.SectionCreationAttributes
 import app.musikus.database.entities.SectionUpdateAttributes
 import app.musikus.database.entities.SessionCreationAttributes
 import app.musikus.database.entities.SessionUpdateAttributes
+import app.musikus.usecase.sessions.SessionRepository
 import app.musikus.utils.TimeProvider
 import app.musikus.utils.Timeframe
 import kotlinx.coroutines.flow.Flow
 import java.time.ZonedDateTime
 import java.util.UUID
-
-interface SessionRepository {
-    val sessions : Flow<List<Session>>
-    val sections : Flow<List<Section>>
-
-    val orderedSessionsWithSectionsWithLibraryItems : Flow<List<SessionWithSectionsWithLibraryItems>>
-    suspend fun getSession(id: UUID) : SessionWithSectionsWithLibraryItems
-
-    fun sessionsInTimeframe (timeframe: Timeframe) : Flow<List<SessionWithSectionsWithLibraryItems>>
-
-    suspend fun sectionsForSession(sessionId: UUID): List<Section>
-
-    suspend fun sectionsForGoal (goal: GoalInstanceWithDescriptionWithLibraryItems) : Flow<List<Section>>
-    suspend fun sectionsForGoal (
-        instance: GoalInstance,
-        description: GoalDescription,
-        libraryItems: List<LibraryItem>
-    ) : Flow<List<Section>>
-
-    /** Mutators */
-    /** Add */
-    suspend fun add(
-        sessionCreationAttributes: SessionCreationAttributes,
-        sectionCreationAttributes: List<SectionCreationAttributes>
-    ) : Pair<UUID, List<UUID>>
-
-    /** Update */
-
-    suspend fun updateSession(
-        id: UUID,
-        sessionUpdateAttributes: SessionUpdateAttributes,
-    )
-
-    suspend fun updateSections(
-        updateData: List<Pair<UUID, SectionUpdateAttributes>>
-    )
-
-    /** Delete / Restore */
-    suspend fun delete(sessionIds: List<UUID>)
-    suspend fun restore(sessionIds: List<UUID>)
-
-    /** Exists */
-    suspend fun existsSession(id: UUID) : Boolean
-
-    /** Clean */
-    suspend fun clean()
-
-    /** Transaction */
-    suspend fun withTransaction(block: suspend () -> Unit)
-}
 
 class SessionRepositoryImpl(
     private val timeProvider: TimeProvider,
@@ -134,6 +84,10 @@ class SessionRepositoryImpl(
         endTimestamp = description.endOfInstanceInLocalTimezone(instance, timeProvider),
         itemIds = libraryItems.map { it.id }.takeIf { it.isNotEmpty() }
     )
+
+    override fun getLastSectionsForItems(items: List<LibraryItem>) : Flow<List<Section>> {
+        return sectionDao.getLatestForItems(items.map { it.id })
+    }
 
     /** Mutators */
     /** Add */

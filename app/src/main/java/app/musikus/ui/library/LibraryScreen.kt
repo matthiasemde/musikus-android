@@ -3,11 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2022 Matthias Emde
- *
- * Parts of this software are licensed under the MIT license
- *
- * Copyright (c) 2022, Javier Carbone, author Matthias Emde
+ * Copyright (c) 2022-2024 Matthias Emde
  */
 
 package app.musikus.ui.library
@@ -91,10 +87,13 @@ import app.musikus.ui.home.HomeUiEventHandler
 import app.musikus.ui.home.HomeUiState
 import app.musikus.ui.theme.libraryItemColors
 import app.musikus.ui.theme.spacing
+import app.musikus.utils.DateFormat
 import app.musikus.utils.LibraryFolderSortMode
 import app.musikus.utils.LibraryItemSortMode
 import app.musikus.utils.UiIcon
 import app.musikus.utils.UiText
+import app.musikus.utils.musikusFormat
+import java.time.ZonedDateTime
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -433,9 +432,9 @@ fun LibraryContent(
                 }
             }
             items(
-                items=itemsUiState.items,
-                key = { item -> item.id }
-            ) { item ->
+                items=itemsUiState.itemsWithLastPracticedDate,
+                key = { (item, _) -> item.id }
+            ) { (item, lastPracticedDate) ->
                 Box(
                     modifier = Modifier.animateItemPlacement()
                 ) {
@@ -445,6 +444,7 @@ fun LibraryContent(
                             horizontal = MaterialTheme.spacing.large
                         ),
                         item = item,
+                        lastPracticedDate = lastPracticedDate,
                         selected = item.id in itemsUiState.selectedItemIds,
                         onShortClick = { eventHandler(LibraryUiEvent.ItemPressed(item, longClick = false)) },
                         onLongClick = { eventHandler(LibraryUiEvent.ItemPressed(item, longClick = true)) }
@@ -503,6 +503,7 @@ fun LibraryFolder(
 fun LibraryUiItem(
     modifier: Modifier = Modifier,
     item: LibraryItem,
+    lastPracticedDate: ZonedDateTime?,
     selected: Boolean,
     onShortClick: () -> Unit,
     onLongClick: () -> Unit,
@@ -543,7 +544,7 @@ fun LibraryUiItem(
                     },
                 )
                 Text(
-                    text = "last practiced: yesterday",
+                    text = "last practiced: " +  (lastPracticedDate?.musikusFormat(DateFormat.DAY_MONTH_YEAR) ?: "never"),
                     style = if(compact) MaterialTheme.typography.labelSmall else MaterialTheme.typography.labelMedium,
                     color = colorScheme.onSurface.copy(alpha = 0.6f)
                 )
