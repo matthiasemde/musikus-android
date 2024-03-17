@@ -173,19 +173,19 @@ abstract class SectionDao(
     @RewriteQueriesToDropUnusedColumns
     @Query("SELECT * " +
             "FROM section " +
-            "WHERE section.library_item_id IN (:itemIds) " +
-            "AND section.session_id IN (" +
-            "SELECT id FROM session " +
-            "WHERE deleted=0 " +
+            "WHERE section.library_item_id IN (:itemIds) " +    // filter by itemIds
+            "AND section.session_id IN (" +                     // filter non-deleted sessions
+                "SELECT id FROM session " +
+                "WHERE deleted=0 " +
             ")" +
-            "AND NOT EXISTS (" +
-            "SELECT 1 FROM section AS s " +
-            "WHERE s.library_item_id = section.library_item_id " +
-            "AND s.session_id IN (" +
-            "SELECT id FROM session " +
-            "WHERE deleted=0 " +
-            ") " +
-            "AND datetime(SUBSTR(s.start_timestamp, 1, INSTR(s.start_timestamp, '[') - 1)) > datetime(SUBSTR(section.start_timestamp, 1, INSTR(section.start_timestamp, '[') - 1)) " +
+            "AND NOT EXISTS (" +                                // filter out all sections that have a later section for the same item
+                "SELECT 1 FROM section AS s " +
+                "WHERE s.library_item_id = section.library_item_id " +
+                "AND s.session_id IN (" +
+                    "SELECT id FROM session " +
+                    "WHERE deleted=0 " +
+                ") " +
+                "AND datetime(SUBSTR(s.start_timestamp, 1, INSTR(s.start_timestamp, '[') - 1)) > datetime(SUBSTR(section.start_timestamp, 1, INSTR(section.start_timestamp, '[') - 1)) " +
             ")"
     )
     abstract fun getLatestForItems(itemIds: List<UUID>): Flow<List<Section>>
