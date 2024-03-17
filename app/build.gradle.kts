@@ -69,6 +69,9 @@ android {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+    reports {
+        html.required = true
+    }
 }
 
 dependencies {
