@@ -29,7 +29,8 @@ data class PracticeSection(
     val id: UUID,
     val libraryItem: LibraryItem,
     val pauseDuration: Duration,   // set when section is completed
-    val duration: Duration         // set when section is completed
+    val duration: Duration,         // set when section is completed
+    val startTimestamp: ZonedDateTime
 )
 
 data class SessionState(

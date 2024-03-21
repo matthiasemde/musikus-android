@@ -482,7 +482,7 @@ class ActiveSessionViewModel @Inject constructor(
                     SectionCreationAttributes(
                         libraryItemId = section.libraryItem.id,
                         duration = section.duration,
-                        startTimestamp = savableState.startTimestamp
+                        startTimestamp = section.startTimestamp
                     )
                 }
             )

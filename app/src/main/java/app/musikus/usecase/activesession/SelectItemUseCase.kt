@@ -55,7 +55,8 @@ class SelectItemUseCase(
                 id = idProvider.generateId(),
                 libraryItem = state.currentSectionItem,
                 pauseDuration = state.startTimestampSectionPauseCompensated - state.startTimestampSection,
-                duration = runningSectionRoundedDuration
+                duration = runningSectionRoundedDuration,
+                startTimestamp = state.startTimestampSection
             )
             // adjust session state
             activeSessionRepository.setSessionState(
