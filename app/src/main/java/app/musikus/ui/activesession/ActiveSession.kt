@@ -219,6 +219,9 @@ fun ActiveSession(
                 )
             }
 
+            /**
+             * --------------------- Dialogs ---------------------
+             */
 
             if (uiState.isPaused) {
                 PauseDialog(
