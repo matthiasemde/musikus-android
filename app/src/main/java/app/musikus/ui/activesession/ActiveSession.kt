@@ -73,7 +73,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -438,7 +440,18 @@ private fun SectionsList(
                 onSectionDeleted = onSectionDeleted
             )
         }
+    }
 
+    // scroll to top when new item is added https://stackoverflow.com/a/77690195
+    LaunchedEffect(key1 = uiState.sections) {
+        snapshotFlow { listState.firstVisibleItemIndex }
+            .collect {
+                // Scroll to the top if a new item is added.
+                // (But only if user is scrolled to the top already.)
+                if (it <= 1) {
+                    listState.animateScrollToItem(0)
+                }
+            }
     }
 }
 
