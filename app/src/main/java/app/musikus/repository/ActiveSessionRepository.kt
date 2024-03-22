@@ -29,4 +29,8 @@ class ActiveSessionRepositoryImpl : ActiveSessionRepository {
     override fun reset() {
         sessionState.update { null }
     }
+
+    override fun isRunning(): Boolean {
+        return sessionState.value != null
+    }
 }

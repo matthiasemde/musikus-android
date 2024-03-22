@@ -18,10 +18,11 @@ import app.musikus.usecase.activesession.GetCompletedSectionsUseCase
 import app.musikus.usecase.activesession.GetFinalizedSessionUseCase
 import app.musikus.usecase.activesession.GetOngoingPauseDurationUseCase
 import app.musikus.usecase.activesession.GetPausedStateUseCase
-import app.musikus.usecase.activesession.GetRunningItemUseCase
 import app.musikus.usecase.activesession.GetRunningItemDurationUseCase
+import app.musikus.usecase.activesession.GetRunningItemUseCase
 import app.musikus.usecase.activesession.GetStartTimeUseCase
 import app.musikus.usecase.activesession.GetTotalPracticeDurationUseCase
+import app.musikus.usecase.activesession.IsSessionRunningUseCase
 import app.musikus.usecase.activesession.PauseActiveSessionUseCase
 import app.musikus.usecase.activesession.ResetSessionUseCase
 import app.musikus.usecase.activesession.ResumeActiveSessionUseCase
@@ -254,7 +255,8 @@ object UseCasesModule {
             ),
             getStartTime = GetStartTimeUseCase(activeSessionRepository),
             reset = ResetSessionUseCase(activeSessionRepository),
-            getRunningItem = GetRunningItemUseCase(activeSessionRepository)
+            getRunningItem = GetRunningItemUseCase(activeSessionRepository),
+            isSessionRunning = IsSessionRunningUseCase(activeSessionRepository)
         )
     }
 
