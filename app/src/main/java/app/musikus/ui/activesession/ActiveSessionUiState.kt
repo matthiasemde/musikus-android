@@ -109,23 +109,15 @@ sealed class ActiveSessionUiEvent : DraggableCardUiEvent {
 
     data class SelectFolder(val folderId: UUID?) : ActiveSessionUiEvent()
     data class SelectItem(val item: LibraryItem) : ActiveSessionUiEvent()
-
     data class DeleteSection(val sectionId: UUID) : ActiveSessionUiEvent()
-
     data object BackPressed : ActiveSessionUiEvent()
-
     data object ShowDiscardSessionDialog : ActiveSessionUiEvent()
-
     data object DiscardSessionDialogConfirmed : ActiveSessionUiEvent()
     data object DiscardSessionDialogDismissed : ActiveSessionUiEvent()
-
     data object TogglePause : ActiveSessionUiEvent()
     data object ShowFinishDialog : ActiveSessionUiEvent()
-
     data object CreateNewLibraryItem : ActiveSessionUiEvent()
-
     data class ItemDialogUiEvent(val dialogEvent: LibraryItemDialogUiEvent) : ActiveSessionUiEvent()
-
     data class EndDialogRatingChanged(val rating: Int) : ActiveSessionUiEvent()
     data class EndDialogCommentChanged(val comment: String) : ActiveSessionUiEvent()
     data object EndDialogDismissed : ActiveSessionUiEvent()

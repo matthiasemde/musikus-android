@@ -29,7 +29,6 @@ import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import app.musikus.R
 import app.musikus.SESSION_NOTIFICATION_CHANNEL_ID
-import app.musikus.database.daos.LibraryItem
 import app.musikus.di.ApplicationScope
 import app.musikus.ui.activesession.ActiveSessionActions
 import app.musikus.usecase.activesession.ActiveSessionUseCases
@@ -41,7 +40,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.util.Timer
-import java.util.UUID
 import javax.inject.Inject
 import kotlin.concurrent.timer
 import kotlin.time.Duration.Companion.milliseconds
@@ -51,13 +49,10 @@ const val BROADCAST_INTENT_FILTER = "activeSessionAction"
 
 
 /**
- * Exposed interface for events between Service and Activity / ViewModel
+ * Actions that can be triggered via intent
  */
-sealed class SessionServiceEvent {
-    data object StopService: SessionServiceEvent()
-    data object TogglePause: SessionServiceEvent()
-    data class StartNewSection(val item: LibraryItem): SessionServiceEvent()
-    data class DeleteSection(val sectionId: UUID): SessionServiceEvent()
+enum class ActiveSessionServiceActions {
+    START, STOP
 }
 
 /**
@@ -69,7 +64,7 @@ data class NotificationActionButtonConfig(
     val tapIntent: PendingIntent?
 )
 
-
+const val LOG_TAG = "SessionService"
 
 @AndroidEntryPoint
 class SessionService : Service() {
@@ -87,15 +82,10 @@ class SessionService : Service() {
     lateinit var useCases : ActiveSessionUseCases
     private var _timer : Timer? = null
 
-    private val binder = LocalBinder()         // interface object for clients that bind
-    inner class LocalBinder : Binder() {
-        fun getOnEvent(): (SessionServiceEvent) -> Unit = ::onEvent
-    }
-
     /** Broadcast receiver (currently only for pause action) */
     private val myReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
-            Log.d("TAG", "Received Broadcast")
+            Log.d(LOG_TAG, "Received Broadcast")
             when (intent.getStringExtra("action")) {
                 ActiveSessionActions.PAUSE.toString() -> togglePause()
             }
@@ -116,14 +106,51 @@ class SessionService : Service() {
      *  ---------------------- Interface for Activity / ViewModel ----------------------
      */
 
-    fun onEvent(event: SessionServiceEvent) {
-        when(event) {
-            is SessionServiceEvent.StopService -> stopService()
-            is SessionServiceEvent.TogglePause -> togglePause()
-            is SessionServiceEvent.StartNewSection -> newSection(event.item)
-            is SessionServiceEvent.DeleteSection -> removeSection(event.sectionId)
-        }
+
+    override fun onCreate() {
+        super.onCreate()
+        Log.d(LOG_TAG, "onCreate")
+        createPendingIntents()
+        ContextCompat.registerReceiver(
+            this,
+            myReceiver,
+            IntentFilter(BROADCAST_INTENT_FILTER),
+            ContextCompat.RECEIVER_NOT_EXPORTED
+        )
     }
+
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        Log.d(LOG_TAG, "onStartCommand")
+
+        when (intent?.action) {
+            ActiveSessionServiceActions.STOP.toString() -> {
+                _timer?.cancel()
+                stopService()
+            }
+            ActiveSessionServiceActions.START.toString() -> {
+                startTimer()
+                applicationScope.launch {
+                    val notification = createNotification()
+                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                        startForeground(SESSION_NOTIFICATION_ID, notification)
+                    } else {
+                        ServiceCompat.startForeground(
+                            this@SessionService,
+                            SESSION_NOTIFICATION_ID,
+                            notification,
+                            ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+                        )
+                    }
+                }
+            }
+            else -> {
+                Log.e(LOG_TAG, "Started SessionService with unknown Intent action")
+            }
+        }
+        return START_NOT_STICKY
+    }
+
 
     /**
      * ----------------------------------- private functions ------------------------------------
@@ -138,6 +165,12 @@ class SessionService : Service() {
             initialDelay = 0,
             period = timerInterval.inWholeMilliseconds
         ) {
+            // terminate service when session is not running
+            if (!useCases.isSessionRunning()) {
+                _timer?.cancel()
+                stopService()
+                return@timer
+            }
             updateNotification()
         }
     }
@@ -154,28 +187,10 @@ class SessionService : Service() {
     }
 
 
-    private fun newSection(item: LibraryItem) {
-        startTimer()
-        applicationScope.launch {
-            try {
-                useCases.selectItem(item)
-            } catch (e: IllegalStateException) {
-                Log.e("TAG", "Cannot start new section: ${e.message}")
-            }
-        }
-        updateNotification()
-    }
-
-    private fun removeSection(sectionId: UUID) {
-        applicationScope.launch {
-            useCases.deleteSection(sectionId)
-        }
-    }
-
-
     /** -------------------------------------------- Service Boilerplate -------------------------*/
 
     private fun updateNotification() {
+        Log.d(LOG_TAG, "updateNotification")
         applicationScope.launch {
             val mNotificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
             mNotificationManager.notify(SESSION_NOTIFICATION_ID, createNotification())
@@ -203,9 +218,11 @@ class SessionService : Service() {
                 description = currentSectionName
             }
         } catch (e: IllegalStateException) {
-            Log.d("TAG", "Could not get session info for notification: ${e.message}")
-            title = "Practicing"
-            description = "No section selected"
+            Log.d(LOG_TAG, "Could not get session info for notification, stopping service: ${e.message}")
+            _timer?.cancel()
+            stopService()
+            title = "Error"
+            description = "Could not get session info"
         }
 
         val actionButton1Intent =
@@ -231,49 +248,6 @@ class SessionService : Service() {
             actionButton1 = actionButton1Intent,  // TODO: Fix action button (pause/resume)
             actionButton2 = actionButton2Intent
         )
-    }
-
-
-    override fun onCreate() {
-        super.onCreate()
-        createPendingIntents()
-    }
-
-    override fun onBind(intent: Intent?): IBinder {
-        // register Broadcast Receiver for Pause Action
-        Log.d("TAG", "onBind")
-        ContextCompat.registerReceiver(
-            this,
-            myReceiver,
-            IntentFilter(BROADCAST_INTENT_FILTER),
-            ContextCompat.RECEIVER_NOT_EXPORTED
-        )
-        return binder
-    }
-
-    override fun onUnbind(intent: Intent): Boolean {
-        // All clients have unbound with unbindService()
-        Log.d("TAG", "onUnbind")
-        return true
-    }
-
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-
-        applicationScope.launch {
-            val notification = createNotification()
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                startForeground(SESSION_NOTIFICATION_ID, notification)
-            } else {
-                ServiceCompat.startForeground(
-                    this@SessionService,
-                    SESSION_NOTIFICATION_ID,
-                    notification,
-                    ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
-                )
-            }
-        }
-
-        return START_NOT_STICKY
     }
 
     private fun getNotification(
@@ -357,6 +331,11 @@ class SessionService : Service() {
         unregisterReceiver(myReceiver)
         _timer?.cancel()
         super.onDestroy()
+    }
+
+    override fun onBind(intent: Intent): IBinder {
+        // This service is not supposed to be bound
+        return Binder()
     }
 
     private fun stopService() {

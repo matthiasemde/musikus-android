@@ -10,12 +10,8 @@
 package app.musikus.ui.activesession
 
 import android.app.Application
-import android.content.ComponentName
-import android.content.Context
-import android.content.Intent
-import android.content.ServiceConnection
 import android.os.Build
-import android.os.IBinder
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import app.musikus.database.Nullable
@@ -25,8 +21,7 @@ import app.musikus.database.entities.LibraryItemCreationAttributes
 import app.musikus.database.entities.SectionCreationAttributes
 import app.musikus.database.entities.SessionCreationAttributes
 import app.musikus.di.ApplicationScope
-import app.musikus.services.SessionService
-import app.musikus.services.SessionServiceEvent
+import app.musikus.services.LOG_TAG
 import app.musikus.ui.library.LibraryItemDialogUiEvent
 import app.musikus.ui.library.LibraryItemEditData
 import app.musikus.usecase.activesession.ActiveSessionUseCases
@@ -108,28 +103,9 @@ class ActiveSessionViewModel @Inject constructor(
     private val _showDiscardSessionDialog = MutableStateFlow(false)
     private var _clock = MutableStateFlow(false)
 
-    /** Service */
-
-    private var sessionServiceEventHandler: ((SessionServiceEvent) -> Unit)? = null
-    private var bound = false
-
-
     /** Variables */
 
     private var _timer: Timer? = null
-    private val connection = object : ServiceConnection {
-        /** called by service when we have connection to the service => we have mService reference */
-        override fun onServiceConnected(className: ComponentName, service: IBinder) {
-            // We've bound to SessionForegroundService, cast the Binder and get SessionService instance
-            val binder = service as SessionService.LocalBinder
-            sessionServiceEventHandler = binder.getOnEvent()
-            bound = true
-            startTimer()
-        }
-        override fun onServiceDisconnected(arg0: ComponentName) {
-            bound = false
-        }
-    }
 
     init {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -144,9 +120,6 @@ class ActiveSessionViewModel @Inject constructor(
                 }
             }
         }
-
-        // try to bind to SessionService
-        bindService()
     }
 
     // ####################### Library #######################
@@ -438,6 +411,10 @@ class ActiveSessionViewModel @Inject constructor(
 
     /** ---------------------------------- private methods ----------------------------------- */
 
+    init {
+        startTimer()
+    }
+
     private fun startTimer() {
         if (_timer != null) {
             return
@@ -452,13 +429,23 @@ class ActiveSessionViewModel @Inject constructor(
     }
 
     private fun itemClicked(item: LibraryItem) {
-        if (!bound) return
-        sessionServiceEventHandler?.invoke(SessionServiceEvent.StartNewSection(item))
-        startService()
+        applicationScope.launch {
+            try {
+                activeSessionUseCases.selectItem(item)
+            } catch (e: IllegalStateException) {
+                Log.e(LOG_TAG, "Cannot start new section: ${e.message}")
+            }
+        }
     }
 
     private fun togglePause() {
-        sessionServiceEventHandler?.invoke(SessionServiceEvent.TogglePause)
+        applicationScope.launch {
+            if (activeSessionUseCases.getPausedState()) {
+                activeSessionUseCases.resume()
+            } else {
+                activeSessionUseCases.pause()
+            }
+        }
     }
 
     private fun stopSession() {
@@ -488,18 +475,17 @@ class ActiveSessionViewModel @Inject constructor(
             )
             activeSessionUseCases.reset()   // reset the active session state
             _endDialogData.update { null }
-            sessionServiceEventHandler?.invoke(SessionServiceEvent.StopService)
-            unbindService()
         }
     }
 
     private fun discardSession() {
         activeSessionUseCases.reset()
-        sessionServiceEventHandler?.invoke(SessionServiceEvent.StopService)
     }
 
     private fun removeSection(itemId: UUID) {
-        sessionServiceEventHandler?.invoke(SessionServiceEvent.DeleteSection(itemId))
+        applicationScope.launch {
+            activeSessionUseCases.deleteSection(itemId)
+        }
     }
 
     private fun createLibraryItemDialog() {
@@ -512,32 +498,9 @@ class ActiveSessionViewModel @Inject constructor(
         }
     }
 
-    // ################################### Service ############################################
-
-    private fun startService() {
-        val intent = Intent(application, SessionService::class.java) // Build the intent for the service
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            application.startForegroundService(intent)
-        } else {
-            application.startService(intent)
-        }
-    }
-
-    private fun bindService() {
-        val intent = Intent(application, SessionService::class.java) // Build the intent for the service
-        application.bindService(intent, connection, Context.BIND_AUTO_CREATE)
-    }
 
     override fun onCleared() {
-        unbindService()
         _timer?.cancel()
         super.onCleared()
-    }
-
-    private fun unbindService() {
-        if (bound) {
-            application.unbindService(connection)
-            bound = false
-        }
     }
 }

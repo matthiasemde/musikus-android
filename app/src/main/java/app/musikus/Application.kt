@@ -47,7 +47,7 @@ class Musikus : Application() {
             val sessionNotificationChannel = NotificationChannel(
                 SESSION_NOTIFICATION_CHANNEL_ID,
                 SESSION_NOTIFICATION_CHANNEL_NAME,
-                NotificationManager.IMPORTANCE_LOW).apply {
+                NotificationManager.IMPORTANCE_HIGH).apply {
                 description = "Notification to keep track of the running session"
             }
 
