@@ -37,6 +37,19 @@ android {
         buildConfigField("String", "COMMIT_HASH", "\"$commitHash\"")
     }
 
+    signingConfigs {
+        try {
+            create("release") {
+                storeFile = file(System.getenv("SIGNING_KEY_STORE_PATH"))
+                storePassword = System.getenv("SIGNING_STORE_PASSWORD")
+                keyAlias = System.getenv("SIGNING_KEY_ALIAS")
+                keyPassword = System.getenv("SIGNING_KEY_PASSWORD")
+            }
+        } catch (e: Exception) {
+            logger.info("No signing config found, using debug config")
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -44,7 +57,11 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-//            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = try {
+                signingConfigs.getByName("release")
+            } catch (e: Exception) {
+                signingConfigs.getByName("debug")
+            }
         }
     }
 

@@ -2,12 +2,76 @@ name: NIGHTLY-RELEASE
 
 on:
   workflow_dispatch
+env:
+  JAVA_VERSION: 17
+  SIGNING_KEY_STORE_PATH: ${{ github.workspace }}/keystore.jks
 jobs:
   release:
     name: Nightly release
     runs-on: ubuntu-latest
 
     steps:
-      - name: Hello there
-        run: echo General Kenobi
+      - uses: actions/checkout@v4
 
+      - name: Check if new version is needed
+        run: |
+          if git tag --points-at HEAD | grep -q nightly-release; then
+           echo "Current nightly is already up to date"
+          else
+            echo "New nightly version needed"
+          fi
+
+      - name: Move nightly tag to HEAD
+        run: |
+          git tag -f nightly-release
+          git push origin :refs/tags/nightly-release
+          git push origin nightly-release 
+
+      - name: Bump version code in build.properties
+        run: |
+          VERSION_CODE=$(grep "versionCode" build.properties | cut -d'=' -f2)
+          NEW_VERSION_CODE=$((VERSION_CODE + 1))
+          sed -i "s/versionCode=$VERSION_CODE/versionCode=$NEW_VERSION_CODE/" build.properties
+
+      - name: Write commit hash to build.properties
+        run: |
+          COMMIT_HASH=$(git rev-parse --short HEAD)
+          sed -i "s/commitHash=.*/commitHash=$COMMIT_HASH/" build.properties
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Decode Keystore
+        env:
+          ENCODED_STRING: ${{ secrets.SIGNING_KEY_STORE_BASE64 }}
+          SIGNING_KEY_STORE_PATH: ${{ env.SIGNING_KEY_STORE_PATH }}
+
+        run: |
+          echo $ENCODED_STRING > keystore-b64.txt
+          base64 -d keystore-b64.txt > $SIGNING_KEY_STORE_PATH
+
+      - name: Build Release apk
+        env:
+          SIGNING_KEY_STORE_PATH: ${{ env.SIGNING_KEY_STORE_PATH }}
+          SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
+          SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
+          SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
+        run: ./gradlew assembleRelease
+
+      - name: Upload Release Build to Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-release-artifact
+          paths: |
+            app/build/outputs/apk/release/
+
+      - name: Create Github Release
+        uses: softprops/action-gh-release@v1
+        with:
+          generate_release_notes: true
+          prerelease: true
+          files: |
+            app/build/outputs/apk/release/app-release.apk
