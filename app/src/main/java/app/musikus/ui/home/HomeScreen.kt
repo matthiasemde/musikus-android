@@ -27,6 +27,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -203,11 +205,17 @@ fun MusikusBottomBar(
                 }
                 NavigationBarItem(
                     icon = {
-                        Image(
-                            painter = if (selected) animatedPainters[activePainter] else painter,
-                            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface),
-                            contentDescription = null
-                        )
+                        BadgedBox(badge = {
+                            if (tab == Screen.HomeTab.Sessions && mainUiState.isSessionRunning) {
+                                Badge()
+                            }
+                        }) {
+                            Image(
+                                painter = if (selected) animatedPainters[activePainter] else painter,
+                                colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface),
+                                contentDescription = null
+                            )
+                        }
                     },
                     label = {
                         Text(

@@ -15,6 +15,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.musikus.datastore.ColorSchemeSelections
 import app.musikus.datastore.ThemeSelections
+import app.musikus.usecase.activesession.ActiveSessionUseCases
 import app.musikus.usecase.userpreferences.UserPreferencesUseCases
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -35,13 +36,15 @@ sealed class MainUiEvent {
 data class MainUiState(
     val activeTheme: ThemeSelections?,
     val activeColorScheme: ColorSchemeSelections?,
-    var snackbarHost: SnackbarHostState
+    var snackbarHost: SnackbarHostState,
+    var isSessionRunning: Boolean
 )
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class MainViewModel @Inject constructor(
     userPreferencesUseCases: UserPreferencesUseCases,
+    activeSessionUseCases: ActiveSessionUseCases
 ) : ViewModel() {
 
 
@@ -65,6 +68,11 @@ class MainViewModel @Inject constructor(
         initialValue = null
     )
 
+    private val runningItem = activeSessionUseCases.getRunningItem().stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = null
+    )
 
     /**
      * Composing the ui state
@@ -74,11 +82,13 @@ class MainViewModel @Inject constructor(
         _activeTheme,
         _activeColorScheme,
         _snackbarHost,
-    ) { activeTheme, activeColorScheme, snackbarHost ->
+        runningItem
+    ) { activeTheme, activeColorScheme, snackbarHost, runningItem ->
         MainUiState(
             activeTheme = activeTheme,
             activeColorScheme = activeColorScheme,
-            snackbarHost = snackbarHost
+            snackbarHost = snackbarHost,
+            isSessionRunning = runningItem != null
         )
     }.stateIn(
         scope = viewModelScope,
@@ -86,7 +96,8 @@ class MainViewModel @Inject constructor(
         initialValue = MainUiState(
             activeTheme = _activeTheme.value,
             activeColorScheme = _activeColorScheme.value,
-            snackbarHost = _snackbarHost.value
+            snackbarHost = _snackbarHost.value,
+            isSessionRunning = runningItem.value != null
         )
     )
 
