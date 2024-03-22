@@ -1,5 +1,12 @@
 @file:Suppress("UnstableApiUsage")
 
+import java.util.Properties
+
+val properties = Properties()
+file("$rootDir/build.properties").inputStream().use { properties.load(it) }
+val setVersionCode = properties["versionCode"] as String
+val commitHash = properties["commitHash"] as String
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -18,7 +25,7 @@ android {
         applicationId = "app.musikus"
         minSdk = 24
         targetSdk = compileSdk
-        versionCode = 3
+        versionCode = setVersionCode.toInt()
         versionName = "0.9.2"
 
         testInstrumentationRunner = "app.musikus.HiltTestRunner"
@@ -26,6 +33,8 @@ android {
         ksp {
             arg("room.schemaLocation", "$projectDir/schemas")
         }
+
+        buildConfigField("String", "COMMIT_HASH", "\"$commitHash\"")
     }
 
     buildTypes {
