@@ -25,7 +25,7 @@ jobs:
         if: env.skip_nightly == 'false'
         run: |
           VERSION_NAME=$(grep "versionName" build.properties | cut -d'=' -f2)
-          VERSION_CODE=date +"%y%V%u00"
+          VERSION_CODE=$(date +"%y%V%u00")
           echo "version_name=${VERSION_NAME}-nightly-${VERSION_CODE}" >> "$GITHUB_ENV"
           echo "version_code=${VERSION_CODE}" >> "$GITHUB_ENV"
 
