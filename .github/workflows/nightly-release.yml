@@ -25,12 +25,14 @@ jobs:
 
       - name: Check if release already exists
         run: |
-          git tag
-          if git tag | grep -q "${{ env.tag_name }}"; then
-            echo "skip_nightly=true" >> "$GITHUB_ENV"
+          echo Hello there
+          if [[ $(git tag | grep "${{ env.tag_name }}") || $(git tag --points-at HEAD | grep nightly) ]]; then
+            echo "skip_nightly=true"
           else
-            echo "skip_nightly=false" >> "$GITHUB_ENV"
+            echo "skip_nightly=false"
           fi
+          echo "skip_nightly=true" >> "$GITHUB_ENV"
+          echo General Kenobi
 
       - name: Add nightly tag to HEAD
         if: env.skip_nightly == 'false'
