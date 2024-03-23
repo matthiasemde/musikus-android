@@ -23,6 +23,8 @@ interface ActiveSessionRepository {
     fun getSessionState() : Flow<SessionState?>
 
     fun reset()
+
+    fun isRunning(): Boolean
 }
 
 data class PracticeSection(
