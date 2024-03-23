@@ -73,7 +73,11 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -217,6 +221,9 @@ fun ActiveSession(
                 )
             }
 
+            /**
+             * --------------------- Dialogs ---------------------
+             */
 
             if (uiState.isPaused) {
                 PauseDialog(
@@ -438,7 +445,15 @@ private fun SectionsList(
                 onSectionDeleted = onSectionDeleted
             )
         }
+    }
 
+    // scroll to top when new item is added
+    var sectionLen by remember { mutableIntStateOf(uiState.sections.size) }
+    LaunchedEffect(key1 = uiState.sections) {
+        if (uiState.sections.size > sectionLen && listState.canScrollBackward) {
+            listState.animateScrollToItem(0)
+        }
+        sectionLen = uiState.sections.size
     }
 }
 

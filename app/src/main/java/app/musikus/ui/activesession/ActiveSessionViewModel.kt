@@ -57,7 +57,7 @@ data class EndDialogData(
 data class SessionViewModelState(
     val startTimestamp: ZonedDateTime,  // only needed for storing the session in the database
     val sessionDuration: Duration,
-    val sections: List<PracticeSection>,
+    val completedSections: List<PracticeSection>,
     val activeSection: Pair<LibraryItem, Duration>,
     val ongoingPauseDuration: Duration,
     val isPaused: Boolean
@@ -173,7 +173,7 @@ class ActiveSessionViewModel @Inject constructor(
         try {
             SessionViewModelState(
                 sessionDuration = activeSessionUseCases.getPracticeDuration(),
-                sections = completedSections,
+                completedSections = completedSections,
                 activeSection = Pair(runningItem, activeSessionUseCases.getRunningItemDuration()),
                 ongoingPauseDuration = activeSessionUseCases.getOngoingPauseDuration(),
                 isPaused = activeSessionUseCases.getPausedState(),
@@ -316,8 +316,8 @@ class ActiveSessionViewModel @Inject constructor(
             ongoingPauseDuration = sessionState?.ongoingPauseDuration ?: 0.seconds,
             isPaused = sessionState?.isPaused ?: false,
             addItemDialogUiState = addItemDialogUiState,
-            sections = sessionState?.sections?.reversed()?.map { section ->
-                    ActiveSessionSectionListItemUiState(
+            sections = sessionState?.completedSections?.reversed()?.map { section ->
+                ActiveSessionSectionListItemUiState(
                     id = section.id,
                     libraryItem = section.libraryItem,
                     duration = section.duration
