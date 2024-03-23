@@ -22,7 +22,7 @@ jobs:
           fi
 
       - name: Determine version code and version name for nightly release
-        if: ${{ ! $skip_nightly }}
+        if: env.skip_nightly == 'false'
         run: |
           VERSION_NAME=$(grep "versionName" build.properties | cut -d'=' -f2)
           VERSION_CODE=date +"%y%V%u00"
@@ -30,14 +30,14 @@ jobs:
           echo "version_code=${VERSION_CODE}" >> "$GITHUB_ENV"
 
       - name: Add nightly tag to HEAD
-        if: $skip_nightly == 'false'
+        if: env.skip_nightly == 'false'
         run: |
           git tag $NIGHTLY_VERSION_NAME
           git push origin :refs/tags/$NIGHTLY_VERSION_NAME
           git push origin $NIGHTLY_VERSION_NAME
 
       - name: Write version name, version code, and commit hash to build.properties
-        if: $skip_nightly == 'false'
+        if: env.skip_nightly == 'false'
         run: |
           COMMIT_HASH=$(git rev-parse --short HEAD)
           sed -i -e "
@@ -47,14 +47,14 @@ jobs:
           " build.properties
 
       - uses: actions/setup-java@v4
-        if: $skip_nightly == 'false'
+        if: env.skip_nightly == 'false'
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: 'temurin'
           cache: gradle
 
       - name: Decode Keystore
-        if: $skip_nightly == 'false'
+        if: env.skip_nightly == 'false'
         env:
           ENCODED_STRING: ${{ secrets.SIGNING_KEY_STORE_BASE64 }}
           SIGNING_KEY_STORE_PATH: ${{ env.SIGNING_KEY_STORE_PATH }}
@@ -63,7 +63,7 @@ jobs:
           base64 -d keystore-b64.txt > $SIGNING_KEY_STORE_PATH
 
       - name: Build Release apk
-        if: $skip_nightly == 'false'
+        if: env.skip_nightly == 'false'
         env:
           SIGNING_KEY_STORE_PATH: ${{ env.SIGNING_KEY_STORE_PATH }}
           SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
@@ -72,7 +72,7 @@ jobs:
         run: ./gradlew assembleRelease
 
       - name: Create Github Release
-        if: $skip_nightly == 'false'
+        if: env.skip_nightly == 'false'
         uses: softprops/action-gh-release@v1
         with:
           generate_release_notes: true
