@@ -22,7 +22,7 @@ jobs:
           fi
 
       - name: Determine version code and version name for nightly release
-        if: ${{ ! skip_nightly }}
+        if: ${{ ! $skip_nightly }}
         run: |
           VERSION_NAME=$(grep "versionName" build.properties | cut -d'=' -f2)
           VERSION_CODE=date +"%y%V%u00"
