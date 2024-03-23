@@ -1,10 +1,12 @@
 @file:Suppress("UnstableApiUsage")
 
+import org.jetbrains.kotlin.gradle.plugin.mpp.pm20.util.archivesName
 import java.util.Properties
 
 val properties = Properties()
 file("$rootDir/build.properties").inputStream().use { properties.load(it) }
-val setVersionCode = properties["versionCode"] as String
+val importedVersionCode = properties["versionCode"] as String
+val importedVersionName = properties["versionName"] as String
 val commitHash = properties["commitHash"] as String
 
 plugins {
@@ -25,8 +27,10 @@ android {
         applicationId = "app.musikus"
         minSdk = 24
         targetSdk = compileSdk
-        versionCode = setVersionCode.toInt()
-        versionName = "0.9.2"
+        versionCode = importedVersionCode.toInt()
+        versionName = importedVersionName
+
+        archivesName = "$applicationId-v$versionName"
 
         testInstrumentationRunner = "app.musikus.HiltTestRunner"
 
@@ -45,8 +49,7 @@ android {
                 keyAlias = System.getenv("SIGNING_KEY_ALIAS")
                 keyPassword = System.getenv("SIGNING_KEY_PASSWORD")
             }
-        } catch (e: Exception) {
-            logger.info("No signing config found, using debug config")
+        } catch (_: Exception) {
         }
     }
 
@@ -57,11 +60,9 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            signingConfig = try {
-                signingConfigs.getByName("release")
-            } catch (e: Exception) {
-                signingConfigs.getByName("debug")
-            }
+            signingConfig = signingConfigs.getByName("release").takeIf {
+                it.isSigningReady
+            } ?: signingConfigs.getByName("debug")
         }
     }
 

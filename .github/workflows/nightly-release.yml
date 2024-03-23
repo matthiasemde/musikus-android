@@ -15,6 +15,7 @@ jobs:
 
       - name: Check if new version is needed
         run: |
+          echo git tag --points-at HEAD 
           if git tag --points-at HEAD | grep -q nightly; then
             echo "skip_nightly=true" >> "$GITHUB_ENV"
           else
@@ -26,7 +27,7 @@ jobs:
         run: |
           VERSION_NAME=$(grep "versionName" build.properties | cut -d'=' -f2)
           VERSION_CODE=$(date +"%y%V%u00")
-          echo "version_name=${VERSION_NAME}-nightly-${VERSION_CODE}" >> "$GITHUB_ENV"
+          echo "version_name=${VERSION_NAME}-nightly${VERSION_CODE}" >> "$GITHUB_ENV"
           echo "version_code=${VERSION_CODE}" >> "$GITHUB_ENV"
 
       - name: Add nightly tag to HEAD
