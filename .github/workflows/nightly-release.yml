@@ -1,7 +1,8 @@
 name: NIGHTLY-RELEASE
 
 on:
-  workflow_dispatch
+  schedule:
+    - cron: '0 4 * * *'
 env:
   JAVA_VERSION: 17
   SIGNING_KEY_STORE_PATH: ${{ github.workspace }}/keystore.jks
