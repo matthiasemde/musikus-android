@@ -55,7 +55,7 @@ jobs:
           distribution: 'temurin'
           cache: gradle
 
-      - name: Decode Keystore
+      - name: Decode keystore
         if: env.skip_nightly == 'false'
         env:
           ENCODED_STRING: ${{ secrets.SIGNING_KEY_STORE_BASE64 }}
@@ -64,7 +64,7 @@ jobs:
           echo $ENCODED_STRING > keystore-b64.txt
           base64 -d keystore-b64.txt > $SIGNING_KEY_STORE_PATH
 
-      - name: Build Release apk
+      - name: Build release apk
         if: env.skip_nightly == 'false'
         env:
           SIGNING_KEY_STORE_PATH: ${{ env.SIGNING_KEY_STORE_PATH }}
@@ -73,12 +73,12 @@ jobs:
           SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
         run: ./gradlew assembleRelease
 
-      - name: Create Github Release
+      - name: Release apk on Github
         if: env.skip_nightly == 'false'
         uses: softprops/action-gh-release@v1
         with:
           generate_release_notes: true
           prerelease: true
-          tag_name: $tag_name
+          tag_name: ${{ env.tag_name }}
           files: |
             app/build/outputs/apk/release/app-release.apk
