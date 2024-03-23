@@ -24,6 +24,12 @@ jobs:
     - name: Check lint
       run: ./gradlew lint
 
+    - name: Upload lint results
+      uses: actions/upload-artifact@v4
+      with:
+        name: lint-results
+        path: app/build/reports/lint-results-debug.html
+
   unit-tests:
     name: Unit tests
     runs-on: macos-latest
@@ -38,6 +44,12 @@ jobs:
 
     - name: Unit tests
       run: ./gradlew test
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      with:
+        name: unit-test-results
+        path: app/build/reports/tests/testDebugUnitTest
 
   instrumentation-tests:
     name: Instrumentation tests
@@ -81,5 +93,10 @@ jobs:
           target: ${{ steps.avd-info.outputs.target }}
           script: ./gradlew connectedCheck
 
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: instrumentation-test-results-${{ matrix.api-level }}
+          path: app/build/reports/androidTests/connected/debug
 
           

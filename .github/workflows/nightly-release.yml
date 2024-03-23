@@ -1,13 +1,87 @@
 name: NIGHTLY-RELEASE
 
 on:
-  workflow_dispatch
+  schedule:
+    - cron: '0 4 * * *'
+env:
+  JAVA_VERSION: 17
+  SIGNING_KEY_STORE_PATH: ${{ github.workspace }}/keystore.jks
 jobs:
   release:
     name: Nightly release
     runs-on: ubuntu-latest
 
     steps:
-      - name: Hello there
-        run: echo General Kenobi
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
+      - name: Determine version code/name and tag name for nightly release
+        run: |
+          VERSION_NAME=$(grep "versionName" build.properties | cut -d'=' -f2)
+          VERSION_CODE=$(date +"%y%V%u00")
+          NIGHTLY_VERSION_NAME="${VERSION_NAME}-nightly${VERSION_CODE}"
+          TAG_NAME=$NIGHTLY_VERSION_NAME
+          echo "version_name=${NIGHTLY_VERSION_NAME}" >> "$GITHUB_ENV"
+          echo "version_code=${VERSION_CODE}" >> "$GITHUB_ENV"
+          echo "tag_name=${TAG_NAME}" >> "$GITHUB_ENV"
+
+      - name: Check if release already exists
+        run: |
+          if [[ $(git tag | grep "${{ env.tag_name }}") || $(git tag --points-at HEAD | grep nightly) ]]; then
+            echo "skip_nightly=true" >> "$GITHUB_ENV"
+          else
+            echo "skip_nightly=false" >> "$GITHUB_ENV"
+          fi
+
+      - name: Add nightly tag to HEAD
+        if: env.skip_nightly == 'false'
+        run: |
+          git tag $tag_name
+          git push origin :refs/tags/$tag_name
+          git push origin $tag_name
+
+      - name: Write version name, version code, and commit hash to build.properties
+        if: env.skip_nightly == 'false'
+        run: |
+          COMMIT_HASH=$(git rev-parse --short HEAD)
+          sed -i -e "
+            s/versionName=.*/versionName=$version_name/
+            s/versionCode=.*/versionCode=$version_code/
+            s/commitHash=.*/commitHash=$COMMIT_HASH/
+          " build.properties
+
+      - uses: actions/setup-java@v4
+        if: env.skip_nightly == 'false'
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Decode keystore
+        if: env.skip_nightly == 'false'
+        env:
+          ENCODED_STRING: ${{ secrets.SIGNING_KEY_STORE_BASE64 }}
+          SIGNING_KEY_STORE_PATH: ${{ env.SIGNING_KEY_STORE_PATH }}
+        run: |
+          echo $ENCODED_STRING > keystore-b64.txt
+          base64 -d keystore-b64.txt > $SIGNING_KEY_STORE_PATH
+
+      - name: Build release apk
+        if: env.skip_nightly == 'false'
+        env:
+          SIGNING_KEY_STORE_PATH: ${{ env.SIGNING_KEY_STORE_PATH }}
+          SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
+          SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
+          SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
+        run: ./gradlew assembleRelease
+
+      - name: Release apk on Github
+        if: env.skip_nightly == 'false'
+        uses: softprops/action-gh-release@v1
+        with:
+          generate_release_notes: true
+          prerelease: true
+          tag_name: ${{ env.tag_name }}
+          files: |
+            app/build/outputs/apk/release/*.apk

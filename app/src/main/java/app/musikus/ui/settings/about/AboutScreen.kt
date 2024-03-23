@@ -82,7 +82,7 @@ fun AboutScreen(
             listOf(
                 TwoLinerData(
                     firstLine = UiText.DynamicString("Version"),
-                    secondLine = UiText.DynamicString(BuildConfig.VERSION_NAME)
+                    secondLine = UiText.DynamicString("${BuildConfig.VERSION_NAME} (${BuildConfig.COMMIT_HASH})")
                 ),
                 TwoLinerData(
                     firstLine = UiText.DynamicString("Licenses"),

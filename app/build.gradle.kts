@@ -1,5 +1,14 @@
 @file:Suppress("UnstableApiUsage")
 
+import org.jetbrains.kotlin.gradle.plugin.mpp.pm20.util.archivesName
+import java.util.Properties
+
+val properties = Properties()
+file("$rootDir/build.properties").inputStream().use { properties.load(it) }
+val importedVersionCode = properties["versionCode"] as String
+val importedVersionName = properties["versionName"] as String
+val commitHash = properties["commitHash"] as String
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -18,13 +27,29 @@ android {
         applicationId = "app.musikus"
         minSdk = 24
         targetSdk = compileSdk
-        versionCode = 3
-        versionName = "0.9.2"
+        versionCode = importedVersionCode.toInt()
+        versionName = importedVersionName
+
+        archivesName = "$applicationId-v$versionName"
 
         testInstrumentationRunner = "app.musikus.HiltTestRunner"
 
         ksp {
             arg("room.schemaLocation", "$projectDir/schemas")
+        }
+
+        buildConfigField("String", "COMMIT_HASH", "\"$commitHash\"")
+    }
+
+    signingConfigs {
+        try {
+            create("release") {
+                storeFile = file(System.getenv("SIGNING_KEY_STORE_PATH"))
+                storePassword = System.getenv("SIGNING_STORE_PASSWORD")
+                keyAlias = System.getenv("SIGNING_KEY_ALIAS")
+                keyPassword = System.getenv("SIGNING_KEY_PASSWORD")
+            }
+        } catch (_: Exception) {
         }
     }
 
@@ -35,7 +60,9 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-//            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("release").takeIf {
+                it.isSigningReady
+            } ?: signingConfigs.getByName("debug")
         }
     }
 
@@ -69,6 +96,9 @@ android {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+    reports {
+        html.required = true
+    }
 }
 
 dependencies {
