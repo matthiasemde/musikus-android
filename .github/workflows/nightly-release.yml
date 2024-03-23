@@ -31,6 +31,7 @@ jobs:
           else
             echo "skip_nightly=false"
           fi
+          git tag
           echo "skip_nightly=true" >> "$GITHUB_ENV"
           echo General Kenobi
 
