@@ -1,0 +1,13 @@
+name: NIGHTLY-RELEASE
+
+on:
+  workflow_dispatch
+jobs:
+  release:
+    name: Nightly release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Hello there
+        run: echo General Kenobi
+
