@@ -12,7 +12,6 @@
 package app.musikus.ui.activesession
 
 import android.annotation.SuppressLint
-import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
@@ -450,7 +449,6 @@ private fun SectionsList(
     LaunchedEffect(key1 = uiState.sections) {
         snapshotFlow { listState.firstVisibleItemIndex }
             .collect {
-                Log.d("ActiveSession", "firstVisibleItemIndex: $it")
                 // Scroll to the top if a new item is added.
                 // (But only if user is scrolled to the top already.)
                 if (it <= 1 && listState.canScrollBackward) {
