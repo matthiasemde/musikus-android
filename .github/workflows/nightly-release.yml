@@ -25,6 +25,7 @@ jobs:
 
       - name: Check if release already exists
         run: |
+          git tag
           if git tag | grep -q "${{ env.tag_name }}"; then
             echo "skip_nightly=true" >> "$GITHUB_ENV"
           else
