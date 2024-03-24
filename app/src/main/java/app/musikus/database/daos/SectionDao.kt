@@ -17,6 +17,7 @@ import app.musikus.database.entities.BaseModelDisplayAttributes
 import app.musikus.database.entities.SectionCreationAttributes
 import app.musikus.database.entities.SectionModel
 import app.musikus.database.entities.SectionUpdateAttributes
+import app.musikus.database.toDatabaseInterpretableString
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import java.time.ZonedDateTime
@@ -127,22 +128,32 @@ abstract class SectionDao(
 
     @RewriteQueriesToDropUnusedColumns
     @Query("SELECT * FROM section " +
-            "WHERE start_timestamp>=:startTimestamp " +
-            "AND start_timestamp<:endTimestamp " +
+            "WHERE datetime(SUBSTR(start_timestamp, 1, INSTR(start_timestamp, '[') - 1))>=datetime(:startTimestamp) " +
+            "AND datetime(SUBSTR(start_timestamp, 1, INSTR(start_timestamp, '[') - 1))<datetime(:endTimestamp) " +
             "AND session_id IN (" +
             "SELECT id FROM session " +
             "WHERE deleted=0 " +
             ")"
     )
-    abstract fun getInTimeframe(
-        startTimestamp: ZonedDateTime,
-        endTimestamp: ZonedDateTime,
+    protected abstract fun directGetInTimeframe(
+        startTimestamp: String,
+        endTimestamp: String,
     ): Flow<List<Section>>
+
+    fun getInTimeframe(
+        startTimestamp: ZonedDateTime,
+        endTimestamp: ZonedDateTime
+    ): Flow<List<Section>> {
+        return directGetInTimeframe(
+            startTimestamp = startTimestamp.toDatabaseInterpretableString(),
+            endTimestamp = endTimestamp.toDatabaseInterpretableString()
+        )
+    }
 
     @RewriteQueriesToDropUnusedColumns
     @Query("SELECT * FROM section " +
-            "WHERE start_timestamp>=:startTimestamp " +
-            "AND start_timestamp<:endTimestamp " +
+            "WHERE datetime(SUBSTR(start_timestamp, 1, INSTR(start_timestamp, '[') - 1))>=datetime(:startTimestamp) " +
+            "AND datetime(SUBSTR(start_timestamp, 1, INSTR(start_timestamp, '[') - 1))<datetime(:endTimestamp) " +
             "AND library_item_id IN (:itemIds) " +
             "AND session_id IN (" +
             "SELECT id FROM session " +
@@ -150,8 +161,8 @@ abstract class SectionDao(
             ")"
     )
     protected abstract fun directGetInTimeframeForItemId(
-        startTimestamp: ZonedDateTime,
-        endTimestamp: ZonedDateTime,
+        startTimestamp: String,
+        endTimestamp: String,
         itemIds: List<UUID>
     ): Flow<List<Section>>
 
@@ -164,8 +175,8 @@ abstract class SectionDao(
         database.libraryItemDao.getAsFlow(itemIds).first()
 
         return directGetInTimeframeForItemId(
-            startTimestamp = startTimestamp,
-            endTimestamp = endTimestamp,
+            startTimestamp = startTimestamp.toDatabaseInterpretableString(),
+            endTimestamp = endTimestamp.toDatabaseInterpretableString(),
             itemIds = itemIds
         )
     }

@@ -105,18 +105,18 @@ suspend fun prepopulateDatabase(
             database.goalDescriptionDao.insert(
                 descriptionCreationAttributes = goalDescriptionCreationAttributes,
                 instanceCreationAttributes = GoalInstanceCreationAttributes(
-                    startTimestamp = database.timeProvider.now().minus(
-                    (
-                        (
-                            if (goalDescriptionCreationAttributes.repeat) 10L
-                            else 1L
-                        ) * goalDescriptionCreationAttributes.periodInPeriodUnits
+                    startTimestamp = database.timeProvider.getStartOfDay(
+                        dayOffset = -1 *
+                            (
+                                if (goalDescriptionCreationAttributes.repeat) 10L
+                                else 1L
+                            ) * goalDescriptionCreationAttributes.periodInPeriodUnits
+                            * when(goalDescriptionCreationAttributes.periodUnit) {
+                                GoalPeriodUnit.DAY -> 1
+                                GoalPeriodUnit.WEEK -> 7
+                                GoalPeriodUnit.MONTH -> 31
+                            }
                     ),
-                    when(goalDescriptionCreationAttributes.periodUnit) {
-                        GoalPeriodUnit.DAY -> ChronoUnit.DAYS
-                        GoalPeriodUnit.WEEK -> ChronoUnit.WEEKS
-                        GoalPeriodUnit.MONTH -> ChronoUnit.MONTHS
-                    }),
                     target =((1..6).random() * 10 + 30).minutes
                 ),
                 libraryItemIds =
