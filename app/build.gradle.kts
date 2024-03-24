@@ -102,7 +102,7 @@ tasks.withType<Test> {
 }
 
 dependencies {
-    val bomVersion = "2024.02.00"
+    val bomVersion = "2024.03.00"
 
     val lifecycleVersion = "2.7.0"
     val roomVersion = "2.6.1"
@@ -110,14 +110,14 @@ dependencies {
     val daggerHiltVersion = "2.49"
     val kotlinCoroutineVersion = "1.7.3"
     val mockkVersion = "1.13.9"
-    val media3Version = "1.2.1"
+    val media3Version = "1.3.0"
 
 
     implementation("androidx.navigation:navigation-runtime-ktx:$navVersion")
     implementation("androidx.legacy:legacy-support-v4:1.0.0")
 
     // https://developer.android.com/jetpack/androidx/releases/compose-kotlin
-    // https://developer.android.com/jetpack/compose/setup#bom-version-mapping
+    // https://developer.android.com/jetpack/compose/bom/bom-mapping
 
     implementation(platform("androidx.compose:compose-bom:$bomVersion"))
 
@@ -161,7 +161,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:$kotlinCoroutineVersion")
 
     //Dagger - Hilt
-    implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
+    implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
     implementation("com.google.dagger:hilt-android:$daggerHiltVersion")
     ksp("com.google.dagger:hilt-compiler:$daggerHiltVersion")
 
@@ -195,7 +195,7 @@ dependencies {
 
     testImplementation("androidx.arch.core:core-testing:2.2.0")
     testImplementation("com.google.truth:truth:1.1.3")
-    debugImplementation("androidx.compose.ui:ui-test-manifest:1.6.1")
+    debugImplementation("androidx.compose.ui:ui-test-manifest:1.6.4")
 
     // Instrumentation tests
     androidTestImplementation("com.google.dagger:hilt-android-testing:$daggerHiltVersion")
@@ -203,7 +203,7 @@ dependencies {
     androidTestImplementation("junit:junit:4.13.2")
     androidTestImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:$kotlinCoroutineVersion")
     androidTestImplementation("androidx.arch.core:core-testing:2.2.0")
-    androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.6.1")
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.6.4")
     androidTestImplementation("androidx.test:core-ktx:1.5.0")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
