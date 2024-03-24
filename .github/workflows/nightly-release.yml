@@ -21,7 +21,7 @@ jobs:
           VERSION_NAME=$(grep "versionName" build.properties | cut -d'=' -f2)
           VERSION_CODE=$(date +"%y%V%u00")
           NIGHTLY_VERSION_NAME="${VERSION_NAME}-nightly${VERSION_CODE}"
-          TAG_NAME=$NIGHTLY_VERSION_NAME
+          TAG_NAME="v${NIGHTLY_VERSION_NAME}"
           echo "version_name=${NIGHTLY_VERSION_NAME}" >> "$GITHUB_ENV"
           echo "version_code=${VERSION_CODE}" >> "$GITHUB_ENV"
           echo "tag_name=${TAG_NAME}" >> "$GITHUB_ENV"
@@ -63,9 +63,7 @@ jobs:
         env:
           ENCODED_STRING: ${{ secrets.SIGNING_KEY_STORE_BASE64 }}
           SIGNING_KEY_STORE_PATH: ${{ env.SIGNING_KEY_STORE_PATH }}
-        run: |
-          echo $ENCODED_STRING > keystore-b64.txt
-          base64 -d keystore-b64.txt > $SIGNING_KEY_STORE_PATH
+        run: echo $ENCODED_STRING | base64 --decode > $SIGNING_KEY_STORE_PATH
 
       - name: Build release apk
         if: env.skip_nightly == 'false'
@@ -78,8 +76,9 @@ jobs:
 
       - name: Release apk on Github
         if: env.skip_nightly == 'false'
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
+          draft: false
           generate_release_notes: true
           prerelease: true
           tag_name: ${{ env.tag_name }}
