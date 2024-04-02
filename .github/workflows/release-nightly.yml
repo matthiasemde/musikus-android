@@ -1,10 +1,13 @@
-name: NIGHTLY-RELEASE
+name: RELEASE-NIGHTLY
 
 on:
+  workflow_dispatch:
   schedule:
-    - cron: '0 4 * * *'
+    - cron: '0 4 * * 1-6'
 env:
   JAVA_VERSION: 17
+  RELEASE_BOT_SIGNING_KEY_PATH: ${{ github.workspace }}/signing_key
+  RELEASE_BOT_SIGNING_PUBLIC_KEY_PATH: ${{ github.workspace }}/signing_key.pub
   SIGNING_KEY_STORE_PATH: ${{ github.workspace }}/keystore.jks
 jobs:
   release:
@@ -26,7 +29,7 @@ jobs:
           echo "version_code=${VERSION_CODE}" >> "$GITHUB_ENV"
           echo "tag_name=${TAG_NAME}" >> "$GITHUB_ENV"
 
-      - name: Check if release already exists
+      - name: Check if release already exists or if HEAD is already a release
         run: |
           if [[ $(git tag | grep "${{ env.tag_name }}") || $(git tag --points-at HEAD | grep nightly) ]]; then
             echo "skip_nightly=true" >> "$GITHUB_ENV"
@@ -34,11 +37,27 @@ jobs:
             echo "skip_nightly=false" >> "$GITHUB_ENV"
           fi
 
+      - name: Decode release bot public and private signing key
+        run: |
+          echo ${{ secrets.RELEASE_BOT_SIGNING_KEY_BASE64  }} | base64 --decode > $RELEASE_BOT_SIGNING_KEY_PATH
+          echo ${{ secrets.RELEASE_BOT_SIGNING_PUBLIC_KEY_BASE64  }} | base64 --decode > $RELEASE_BOT_SIGNING_PUBLIC_KEY_PATH
+          chmod 600 $RELEASE_BOT_SIGNING_KEY_PATH
+
+      - name: Configure git
+        run: |
+          git config user.email "release-bot@musikus.app"
+          git config user.name "Release Bot"
+          git config gpg.format ssh
+          git config user.signingkey $RELEASE_BOT_SIGNING_PUBLIC_KEY_PATH
+          git config commit.gpgsign true
+          git config tag.gpgsign true
+
       - name: Add nightly tag to HEAD
         if: env.skip_nightly == 'false'
         run: |
-          git tag $tag_name
-          git push origin :refs/tags/$tag_name
+          MESSAGES=("Deploying under the cover of darkness! 🌙" "Another nightly release, another mystery solved! 🕵️‍♂️" "While humans sleep, bots release! 🤖" "The night is dark and full of releases! 🌌" "Who's afraid of the big bad bot? New release out! 🐺" "While the world dreams, the bot schemes... another release! 🌜" "Who needs sleep when you can release? 🤖" "I'm a bot, I don't sleep. But I do release! 🚀" "Releasing... because bots don't need beauty sleep! 🌜" "While the world sleeps, the code leaps! New release out! 🌟" "Sleep is for the weak, releasing is for the bot! 🤖" "Another nightly release, another reason to stay up! 🌙" "Who said nothing good happens after 2 a.m.? New release out! 🌌" "The stars are out, and so is the new release! 🌟")
+          INDEX=$(( RANDOM % ${#MESSAGES[@]} ))
+          git tag $tag_name -m "${MESSAGES[$INDEX]}"
           git push origin $tag_name
 
       - name: Write version name, version code, and commit hash to build.properties
@@ -79,7 +98,6 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           draft: false
-          generate_release_notes: true
           prerelease: true
           tag_name: ${{ env.tag_name }}
           files: |
