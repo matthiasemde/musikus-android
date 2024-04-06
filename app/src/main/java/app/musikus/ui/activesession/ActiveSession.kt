@@ -189,30 +189,35 @@ fun ActiveSession(
                     HeaderBar(uiState, eventHandler, navigateUp)
                     Spacer(modifier = Modifier.weight(1f))
 
-                    PracticeTimer(
-                        modifier = Modifier.padding(top = MaterialTheme.spacing.extraLarge),
-                        uiState = uiState
-                    )
-                    Spacer(modifier = Modifier.height(MaterialTheme.spacing.extraLarge))
-                    CurrentPracticingItem(item = uiState.runningSection)
+                    Column(
+                        Modifier.fillMaxWidth().animateContentSize(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        PracticeTimer(
+                            modifier = Modifier.padding(top = MaterialTheme.spacing.extraLarge),
+                            uiState = uiState
+                        )
+                        Spacer(modifier = Modifier.height(MaterialTheme.spacing.extraLarge))
+                        CurrentPracticingItem(item = uiState.runningSection)
 
-                    var paddingHeight = 0.dp
-                    if (showCardMetronome) {
-                        paddingHeight += if (metronomeCardIsExpanded) {
-                            MaterialTheme.dimensions.featureCardExtendedHeight
-                        } else {
-                            MaterialTheme.dimensions.featureCardHeight
+                        var paddingHeight = 0.dp
+                        if (showCardMetronome) {
+                            paddingHeight += if (metronomeCardIsExpanded) {
+                                MaterialTheme.dimensions.featureCardExtendedHeight
+                            } else {
+                                MaterialTheme.dimensions.featureCardHeight
+                            }
                         }
-                    }
-                    if (showCardRecord) paddingHeight += MaterialTheme.dimensions.featureCardHeight
+                        if (showCardRecord) paddingHeight += MaterialTheme.dimensions.featureCardHeight
 
-                    SectionsList(
-                        modifier = Modifier
-                            .padding(bottom = MaterialTheme.dimensions.bottomToolbarHeight),
-                        uiState = uiState,
-                        onSectionDeleted = { eventHandler(ActiveSessionUiEvent.DeleteSection(it.id)) },
-                        bottomContentPadding = paddingHeight
-                    )
+                        SectionsList(
+                            modifier = Modifier
+                                .padding(bottom = MaterialTheme.dimensions.bottomToolbarHeight),
+                            uiState = uiState,
+                            onSectionDeleted = { eventHandler(ActiveSessionUiEvent.DeleteSection(it.id)) },
+                            bottomContentPadding = paddingHeight
+                        )
+                    }
 
                     Spacer(modifier = Modifier.weight(1f))
 
