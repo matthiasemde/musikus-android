@@ -126,6 +126,12 @@ data class Dimensions(
     val bottomButtonsPagerHeight: Dp = 50.dp,
     val cardPeekContentHeight: Dp = cardPeekHeight - cardHandleHeight,
     val cardNormalContentHeight: Dp = cardNormalHeight - cardHandleHeight,
+    /** new feature card properties **/
+    val featureCardHeight: Dp = 95.dp,
+    val featureCardExtendedHeight: Dp = 300.dp,
+    val featureCardMargin: Dp = 16.dp,
+    val featureCardCornerRadius: Dp = 16.dp,
+    val featureCardElevation: Dp = 3.dp,
 )
 
 val LocalSpacing = compositionLocalOf { Spacing() }

@@ -21,6 +21,9 @@ import androidx.compose.animation.core.keyframes
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
@@ -64,6 +67,7 @@ import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -76,7 +80,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -189,6 +195,80 @@ fun ActiveSession(
 
                 }
 
+                var showCardMetronome by rememberSaveable { mutableStateOf(false) }
+                var showCardRecord by rememberSaveable { mutableStateOf(false) }
+
+                Column (
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.BottomCenter)
+                ) {
+
+                    Column (
+                        Modifier
+                            .fillMaxWidth()
+                            .animateContentSize()) {
+
+                        /** ####################### Recorder ####################### */
+
+                        AnimatedVisibility(
+                            visible = showCardRecord,
+                            enter = scaleIn() + fadeIn(),
+                            exit = scaleOut() + fadeOut()
+                        ) {
+                            FeatureCard { RecorderCardHeader() }
+                        }
+
+                    }
+
+                    Column (
+                        Modifier
+                            .fillMaxWidth()
+                            .animateContentSize()) {
+                        /** ####################### Metronome ####################### */
+
+                        AnimatedVisibility(
+                            visible = showCardMetronome,
+                            enter = scaleIn() + fadeIn(),
+                            exit = scaleOut() + fadeOut()
+                        ) {
+                            FeatureCard(
+                                contentComposable = {
+                                    MetronomeCardHeader(onTextClicked = {
+                                        eventHandler(ActiveSessionUiEvent.ToggleMetronomeCardHeight)
+                                    })
+                                },
+                                extendedContentComposable = { MetronomeCardBody() },
+                                isExpanded = uiState.metronomeCardIsExpanded
+                            )
+                        }
+                    }
+
+                    /** ####################### Buttons ####################### */
+
+                    Row (
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = MaterialTheme.spacing.medium),
+                        horizontalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        FeatureToggleButton(
+                            active = showCardMetronome,
+                            text = "Metronome",
+                            onClick = { showCardMetronome = !showCardMetronome }
+                        )
+                         FeatureToggleButton(
+                            active = showCardRecord,
+                            text = "Recorder",
+                            onClick = { showCardRecord = !showCardRecord }
+                        )
+
+                    }
+                }
+
+
+
+                /*
                 /**
                  *
                  *  ------------------- Bottom Draggable Cards Layout -------------------
@@ -219,6 +299,7 @@ fun ActiveSession(
                         else -> 0
                     }
                 )
+                */
             }
 
             /**
@@ -284,6 +365,31 @@ fun ActiveSession(
         eventHandler(ActiveSessionUiEvent.ShowFinishDialog)
     }
 }
+
+
+@Composable
+private fun FeatureToggleButton(
+    modifier: Modifier = Modifier,
+    text: String,
+    active: Boolean,
+    onClick: () -> Unit
+) {
+    if (active) {
+        FilledTonalButton(
+            onClick = onClick,
+        ) {
+            Text(text = text)
+        }
+    } else {
+        OutlinedButton(
+            onClick = onClick,
+        ) {
+            Text(text = text)
+        }
+
+    }
+}
+
 
 @Composable
 private fun HeaderBar(

@@ -102,6 +102,7 @@ class ActiveSessionViewModel @Inject constructor(
     private val _endDialogData = MutableStateFlow<EndDialogData?>(null)
     private val _showDiscardSessionDialog = MutableStateFlow(false)
     private var _clock = MutableStateFlow(false)
+    private val _metronomeCardIsExpanded = MutableStateFlow(false)
 
     /** Variables */
 
@@ -305,7 +306,8 @@ class ActiveSessionViewModel @Inject constructor(
         sessionState,
         addLibraryItemDialogUiState,
         dialogUiState,
-    ) { libraryCardUiState, sessionState, addItemDialogUiState, dialogUiState ->
+        _metronomeCardIsExpanded,
+    ) { libraryCardUiState, sessionState, addItemDialogUiState, dialogUiState, metronomeExpanded ->
         ActiveSessionUiState(
             cardUiStates = listOf(
                 libraryCardUiState,
@@ -330,7 +332,8 @@ class ActiveSessionViewModel @Inject constructor(
                     duration = sessionState.activeSection.second
                 )
             },
-            dialogUiState = dialogUiState
+            dialogUiState = dialogUiState,
+            metronomeCardIsExpanded = metronomeExpanded
         )
     }.stateIn(
         scope = viewModelScope,
@@ -343,7 +346,8 @@ class ActiveSessionViewModel @Inject constructor(
             isPaused = false,
             runningSection = null,
             addItemDialogUiState = addLibraryItemDialogUiState.value,
-            dialogUiState = dialogUiState.value
+            dialogUiState = dialogUiState.value,
+            metronomeCardIsExpanded = _metronomeCardIsExpanded.value
         )
     )
 
@@ -404,6 +408,7 @@ class ActiveSessionViewModel @Inject constructor(
                 _timer?.cancel()
                 _timer = null
             }
+            is ActiveSessionUiEvent.ToggleMetronomeCardHeight -> _metronomeCardIsExpanded.update { !it }
         }
     }
 

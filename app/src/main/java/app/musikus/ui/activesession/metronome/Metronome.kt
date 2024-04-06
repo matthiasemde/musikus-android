@@ -31,6 +31,7 @@ import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.filled.TouchApp
 import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -154,6 +155,10 @@ fun MetronomeCardBody(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val eventHandler = viewModel::onUiEvent
+
+
+    HorizontalDivider(Modifier.padding(horizontal = MaterialTheme.spacing.medium))
+
     Column(
         modifier = modifier
             .fillMaxSize()
