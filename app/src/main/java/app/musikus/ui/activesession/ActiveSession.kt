@@ -55,8 +55,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.KeyboardArrowDown
@@ -67,29 +69,38 @@ import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -114,6 +125,7 @@ import app.musikus.utils.DurationFormat
 import app.musikus.utils.UiIcon
 import app.musikus.utils.UiText
 import app.musikus.utils.getDurationString
+import kotlinx.coroutines.launch
 import kotlin.time.Duration
 
 
@@ -126,6 +138,7 @@ enum class ActiveSessionActions {
     OPEN, PAUSE, FINISH, METRONOME, RECORDER
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun ActiveSession(
@@ -136,6 +149,11 @@ fun ActiveSession(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val eventHandler = viewModel::onUiEvent
+
+    var showCardMetronome by rememberSaveable { mutableStateOf(false) }
+    var metronomeCardIsExpanded by rememberSaveable { mutableStateOf(false) }
+    var showCardRecord by rememberSaveable { mutableStateOf(false) }
+    var showLibrary by rememberSaveable { mutableStateOf(false) }
 
     BackHandler {
         // notify the ViewModel that the back button was pressed
@@ -152,64 +170,94 @@ fun ActiveSession(
                     .windowInsetsPadding(WindowInsets.statusBars)
                     .weight(1f)
             ) {
+
+                Box (
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.BottomCenter)
+                        .height(MaterialTheme.dimensions.bottomToolbarHeight - 50.dp)
+                        .background(MaterialTheme.colorScheme.surfaceContainer)
+                )
+
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = MaterialTheme.spacing.medium)
                 ) {
 
-                    /** ------------------- Area above extended Cards ------------------- */
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier
-                            .weight(1 - CARD_HEIGHT_EXTENDED_FRACTION_OF_SCREEN)
-                            .padding(horizontal = MaterialTheme.spacing.medium)
-                    ) {
-                        HeaderBar(uiState, eventHandler, navigateUp)
-                        Spacer(modifier = Modifier.weight(1f))
-                        PracticeTimer(uiState)
-                        Spacer(modifier = Modifier.weight(1f))
-                        CurrentPracticingItem(item = uiState.runningSection)
-                    }
+                    HeaderBar(uiState, eventHandler, navigateUp)
+                    Spacer(modifier = Modifier.weight(1f))
 
-                    /** ------------------- Remaining area ------------------- */
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier
-                            .weight(CARD_HEIGHT_EXTENDED_FRACTION_OF_SCREEN)
-                            .fillMaxWidth()
-                            .padding(horizontal = MaterialTheme.spacing.medium)
-                    ) {
-                        SectionsList(
-                            modifier = Modifier.weight(1f),
-                            uiState = uiState,
-                            onSectionDeleted = { eventHandler(ActiveSessionUiEvent.DeleteSection(it.id)) }
-                        )
-                        // prevent section list items to hide behind peek'ed Cards
-                        Spacer(
-                            Modifier.height(
-                                MaterialTheme.dimensions.bottomButtonsPagerHeight +
-                                        MaterialTheme.dimensions.cardPeekHeight
-                            )
-                        )
+                    PracticeTimer(
+                        modifier = Modifier.padding(top = MaterialTheme.spacing.extraLarge),
+                        uiState = uiState
+                    )
+                    Spacer(modifier = Modifier.height(MaterialTheme.spacing.extraLarge))
+                    CurrentPracticingItem(item = uiState.runningSection)
+
+                    var paddingHeight = 0.dp
+                    if (showCardMetronome) {
+                        paddingHeight += if (metronomeCardIsExpanded) {
+                            MaterialTheme.dimensions.featureCardExtendedHeight
+                        } else {
+                            MaterialTheme.dimensions.featureCardHeight
+                        }
                     }
+                    if (showCardRecord) paddingHeight += MaterialTheme.dimensions.featureCardHeight
+
+                    SectionsList(
+                        modifier = Modifier
+                            .padding(bottom = MaterialTheme.dimensions.bottomToolbarHeight),
+                        uiState = uiState,
+                        onSectionDeleted = { eventHandler(ActiveSessionUiEvent.DeleteSection(it.id)) },
+                        bottomContentPadding = paddingHeight
+                    )
+
+                    Spacer(modifier = Modifier.weight(1f))
 
                 }
 
-                var showCardMetronome by rememberSaveable { mutableStateOf(false) }
-                var showCardRecord by rememberSaveable { mutableStateOf(false) }
-
-                Column (
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .align(Alignment.BottomCenter)
                 ) {
 
-                    Column (
+                    val fabHidden = showCardRecord && showCardMetronome && metronomeCardIsExpanded
+                    val fabExtended =
+                        !(showCardRecord && showCardMetronome) && !metronomeCardIsExpanded
+
+
+                    AnimatedVisibility(
+                        modifier = Modifier
+                            .animateContentSize()
+                            .align(if (fabExtended) Alignment.CenterHorizontally else Alignment.End)
+                            .padding(MaterialTheme.spacing.large),
+                        visible = !fabHidden,
+                        enter = scaleIn() + fadeIn(),
+                        exit = scaleOut() + fadeOut()
+                    ) {
+                        ExtendedFloatingActionButton(
+                            onClick = { showLibrary = true },
+                            icon = {
+                                Icon(
+                                    imageVector = Icons.Filled.Add,
+                                    contentDescription = "New Library Item"
+                                )
+                            },
+                            text = { Text("New Library Item") },
+                            expanded = fabExtended
+                        )
+                    }
+
+                    /** ####################### Recorder ####################### */
+
+                    Column(
                         Modifier
                             .fillMaxWidth()
-                            .animateContentSize()) {
-
-                        /** ####################### Recorder ####################### */
+                            .animateContentSize()
+                    ) {
 
                         AnimatedVisibility(
                             visible = showCardRecord,
@@ -221,11 +269,13 @@ fun ActiveSession(
 
                     }
 
-                    Column (
+                    /** ####################### Metronome ####################### */
+
+                    Column(
                         Modifier
                             .fillMaxWidth()
-                            .animateContentSize()) {
-                        /** ####################### Metronome ####################### */
+                            .animateContentSize()
+                    ) {
 
                         AnimatedVisibility(
                             visible = showCardMetronome,
@@ -235,18 +285,18 @@ fun ActiveSession(
                             FeatureCard(
                                 contentComposable = {
                                     MetronomeCardHeader(onTextClicked = {
-                                        eventHandler(ActiveSessionUiEvent.ToggleMetronomeCardHeight)
+                                        metronomeCardIsExpanded = !metronomeCardIsExpanded
                                     })
                                 },
                                 extendedContentComposable = { MetronomeCardBody() },
-                                isExpanded = uiState.metronomeCardIsExpanded
+                                isExpanded = metronomeCardIsExpanded
                             )
                         }
                     }
 
                     /** ####################### Buttons ####################### */
 
-                    Row (
+                    Row(
                         Modifier
                             .fillMaxWidth()
                             .padding(bottom = MaterialTheme.spacing.medium),
@@ -255,9 +305,12 @@ fun ActiveSession(
                         FeatureToggleButton(
                             active = showCardMetronome,
                             text = "Metronome",
-                            onClick = { showCardMetronome = !showCardMetronome }
+                            onClick = {
+                                showCardMetronome = !showCardMetronome
+                                metronomeCardIsExpanded = false
+                            }
                         )
-                         FeatureToggleButton(
+                        FeatureToggleButton(
                             active = showCardRecord,
                             text = "Recorder",
                             onClick = { showCardRecord = !showCardRecord }
@@ -266,6 +319,36 @@ fun ActiveSession(
                     }
                 }
 
+                val scope = rememberCoroutineScope()
+                val sheetState = rememberModalBottomSheetState()
+                if (showLibrary) {
+                    ModalBottomSheet(
+                        onDismissRequest = { showLibrary = false },
+                        sheetState = sheetState,
+                    ) {
+                        LibraryCardHeader(
+                            modifier = Modifier.height(MaterialTheme.dimensions.cardPeekHeight),
+                            uiState = uiState.libraryCardUiState.headerUiState,
+                            isCardCollapsed = false,
+                            eventHandler = eventHandler
+                        )
+                        HorizontalDivider(Modifier.padding(horizontal = MaterialTheme.spacing.medium))
+                        LibraryCardBody(
+                            uiState = uiState.libraryCardUiState.bodyUiState,
+                            cardScrollState = rememberScrollState(),
+                            eventHandler = eventHandler,
+                            dismissEvent = {
+                                scope.launch { sheetState.hide() }.invokeOnCompletion {
+                                    if (!sheetState.isVisible) {
+                                        showLibrary = false
+                                    }
+                                }
+
+                            }
+                        )
+                        Spacer(modifier = Modifier.height(400.dp))
+                    }
+                }
 
 
                 /*
@@ -302,54 +385,6 @@ fun ActiveSession(
                 */
             }
 
-            /**
-             * --------------------- Dialogs ---------------------
-             */
-
-            if (uiState.isPaused) {
-                PauseDialog(
-                    uiState.ongoingPauseDuration,
-                    eventHandler
-                )
-            }
-
-            uiState.addItemDialogUiState?.let { dialogUiState ->
-                LibraryItemDialog(
-                    uiState = dialogUiState,
-                    eventHandler = { eventHandler(ActiveSessionUiEvent.ItemDialogUiEvent(it)) },
-                )
-            }
-
-            val dialogUiState = uiState.dialogUiState
-
-            dialogUiState.endDialogUiState?.let { endDialogUiState ->
-                EndSessionDialog(
-                    rating = endDialogUiState.rating,
-                    comment = endDialogUiState.comment,
-                    onRatingChanged = { eventHandler(ActiveSessionUiEvent.EndDialogRatingChanged(it)) },
-                    onCommentChanged = {
-                        eventHandler(ActiveSessionUiEvent.EndDialogCommentChanged(it))
-                    },
-                    onDismiss = { eventHandler(ActiveSessionUiEvent.EndDialogDismissed) },
-                    onConfirm = {
-                        eventHandler(ActiveSessionUiEvent.EndDialogConfirmed)
-                        navigateUp()
-                    }
-                )
-            }
-
-            if (dialogUiState.showDiscardSessionDialog) {
-                DeleteConfirmationBottomSheet(
-                    confirmationIcon = UiIcon.DynamicIcon(Icons.Default.Delete),
-                    confirmationText = UiText.DynamicString("Discard session?"),
-                    onDismiss = { eventHandler(ActiveSessionUiEvent.DiscardSessionDialogDismissed) },
-                    onConfirm = {
-                        eventHandler(ActiveSessionUiEvent.DiscardSessionDialogConfirmed)
-                        navigateUp()
-                    }
-                )
-            }
-
             // Background behind the nav bar
             Box(
                 modifier = Modifier
@@ -359,6 +394,53 @@ fun ActiveSession(
                 Box(Modifier.fillMaxSize()) // necessary for the background to be drawn
             }
         }
+    }
+    /**
+     * --------------------- Dialogs ---------------------
+     */
+
+    if (uiState.isPaused) {
+        PauseDialog(
+            uiState.ongoingPauseDuration,
+            eventHandler
+        )
+    }
+
+    uiState.addItemDialogUiState?.let { dialogUiState ->
+        LibraryItemDialog(
+            uiState = dialogUiState,
+            eventHandler = { eventHandler(ActiveSessionUiEvent.ItemDialogUiEvent(it)) },
+        )
+    }
+
+    val dialogUiState = uiState.dialogUiState
+
+    dialogUiState.endDialogUiState?.let { endDialogUiState ->
+        EndSessionDialog(
+            rating = endDialogUiState.rating,
+            comment = endDialogUiState.comment,
+            onRatingChanged = { eventHandler(ActiveSessionUiEvent.EndDialogRatingChanged(it)) },
+            onCommentChanged = {
+                eventHandler(ActiveSessionUiEvent.EndDialogCommentChanged(it))
+            },
+            onDismiss = { eventHandler(ActiveSessionUiEvent.EndDialogDismissed) },
+            onConfirm = {
+                eventHandler(ActiveSessionUiEvent.EndDialogConfirmed)
+                navigateUp()
+            }
+        )
+    }
+
+    if (dialogUiState.showDiscardSessionDialog) {
+        DeleteConfirmationBottomSheet(
+            confirmationIcon = UiIcon.DynamicIcon(Icons.Default.Delete),
+            confirmationText = UiText.DynamicString("Discard session?"),
+            onDismiss = { eventHandler(ActiveSessionUiEvent.DiscardSessionDialogDismissed) },
+            onConfirm = {
+                eventHandler(ActiveSessionUiEvent.DiscardSessionDialogConfirmed)
+                navigateUp()
+            }
+        )
     }
 
     if (deepLinkArgument == ActiveSessionActions.FINISH.name) {
@@ -444,14 +526,21 @@ private fun HeaderBar(
 
 @Composable
 private fun PracticeTimer(
+    modifier: Modifier = Modifier,
     uiState: ActiveSessionUiState
 ) {
     Text(
-        style = MaterialTheme.typography.displayMedium,
-        text = getDurationString(uiState.totalSessionDuration, DurationFormat.HMS_DIGITAL).toString(),
-        fontWeight = FontWeight.Bold
+        modifier = modifier,
+        style = MaterialTheme.typography.displayLarge,
+        text = getDurationString(uiState.totalSessionDuration, DurationFormat.MS_DIGITAL).toString(),
+        fontWeight = FontWeight.Light,
+        fontSize = 75.sp
     )
-    Text(text = "Practice time")
+    Text(
+        modifier = Modifier.alpha(0.8f),
+        style = MaterialTheme.typography.bodyLarge,
+        text = "Practice time",
+    )
 }
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -495,20 +584,21 @@ private fun CurrentPracticingItem(
                         text = it,
                         style = MaterialTheme.typography.titleLarge,
                         color = MaterialTheme.colorScheme.onTertiaryContainer,
-                        fontWeight = FontWeight.Bold,
-                        maxLines = 1
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1,
                     )
 
                     Spacer(Modifier.width(MaterialTheme.spacing.small))
 
                     Text(
+                        modifier = Modifier.alpha(0.8f),
                         text = getDurationString(
                             item.duration,
-                            DurationFormat.HMS_DIGITAL
+                            DurationFormat.MS_DIGITAL
                         ).toString(),
                         style = MaterialTheme.typography.titleLarge,
                         color = MaterialTheme.colorScheme.onTertiaryContainer,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.SemiBold,
                     )
                 }
             }
@@ -519,8 +609,9 @@ private fun CurrentPracticingItem(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun SectionsList(
-    uiState: ActiveSessionUiState,
     modifier: Modifier = Modifier,
+    uiState: ActiveSessionUiState,
+    bottomContentPadding: Dp = 0.dp,
     onSectionDeleted: (ActiveSessionSectionListItemUiState) -> Unit = {}
 ) {
     if (uiState.runningSection == null) {
@@ -538,7 +629,10 @@ private fun SectionsList(
             .fadingEdge(listState)
             .fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.extraSmall),
-        contentPadding = PaddingValues(vertical = MaterialTheme.spacing.small),
+        contentPadding = PaddingValues(
+            top = MaterialTheme.spacing.small,
+            bottom = bottomContentPadding
+        ),
     ) {
 
         items(
@@ -589,16 +683,18 @@ private fun SectionListElement(
                         modifier = Modifier.weight(1f),
                         text = sectionElement.libraryItem.name,
                         style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = MaterialTheme.colorScheme.onSurface,
                     )
                     Spacer(modifier = Modifier.width(MaterialTheme.spacing.small))
                     Text(
+                        modifier = Modifier.alpha(0.8f),
                         text = getDurationString(
                             sectionElement.duration,
-                            DurationFormat.HMS_DIGITAL
+                            DurationFormat.MS_DIGITAL
                         ).toString(),
                         style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontWeight = FontWeight.Normal
                     )
                 }
             }
@@ -662,7 +758,7 @@ private fun LibraryCardHeader(
     modifier: Modifier = Modifier,
     uiState: ActiveSessionDraggableCardHeaderUiState.LibraryCardHeaderUiState,
     isCardCollapsed: Boolean,
-    eventHandler: DraggableCardUiEventHandler
+    eventHandler: ActiveSessionUiEventHandler
 ) {
     // Header Folder List
     val state = rememberLazyListState()
@@ -681,7 +777,7 @@ private fun LibraryCardHeader(
                 folder = folder,
                 onClick = {
                     eventHandler(ActiveSessionUiEvent.SelectFolder(folder?.id))
-                    if(isCardCollapsed) eventHandler(DraggableCardUiEvent.ResizeCard(DragValueY.Normal))
+//                    if(isCardCollapsed) eventHandler(DraggableCardUiEvent.ResizeCard(DragValueY.Normal))
                 },
                 isSelected = folder?.id == uiState.selectedFolderId && !isCardCollapsed,
                 showBadge = uiState.activeFolderId?.let { it.value == folder?.id} ?: false
@@ -752,7 +848,8 @@ private fun LibraryCardBody(
     modifier: Modifier = Modifier,
     uiState: ActiveSessionDraggableCardBodyUiState.LibraryCardBodyUiState,
     cardScrollState: ScrollState,
-    eventHandler: DraggableCardUiEventHandler
+    eventHandler: ActiveSessionUiEventHandler,
+    dismissEvent: () -> Unit = {}
 ) {
     Column(
         modifier = modifier
@@ -770,10 +867,11 @@ private fun LibraryCardBody(
                 selected = false,
                 onShortClick = {
                     eventHandler(ActiveSessionUiEvent.SelectItem(item))
-                    eventHandler(DraggableCardUiEvent.ResizeCard(DragValueY.Normal))
+                    dismissEvent()
+//                    eventHandler(DraggableCardUiEvent.ResizeCard(DragValueY.Normal))
                 },
                 onLongClick = { },
-                compact = true,
+                compact = false,
                 enabled = uiState.activeItemId != item.id
             )
         }
@@ -809,7 +907,7 @@ private fun PauseDialog(
                     text = "Pause: ${
                         getDurationString(
                             ongoingBreakDuration,
-                            DurationFormat.HMS_DIGITAL
+                            DurationFormat.MS_DIGITAL
                         )
                     }",
                     style = MaterialTheme.typography.titleMedium,

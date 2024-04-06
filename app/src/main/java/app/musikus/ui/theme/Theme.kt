@@ -132,6 +132,7 @@ data class Dimensions(
     val featureCardMargin: Dp = 16.dp,
     val featureCardCornerRadius: Dp = 16.dp,
     val featureCardElevation: Dp = 3.dp,
+    val bottomToolbarHeight: Dp = 150.dp
 )
 
 val LocalSpacing = compositionLocalOf { Spacing() }

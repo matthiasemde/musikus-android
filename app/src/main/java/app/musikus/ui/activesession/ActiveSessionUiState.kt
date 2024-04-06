@@ -30,7 +30,7 @@ data class ActiveSessionUiState(
     val isPaused: Boolean,
     val addItemDialogUiState: ActiveSessionAddLibraryItemDialogUiState?,
     val dialogUiState: ActiveSessionDialogUiState,
-    val metronomeCardIsExpanded: Boolean,
+    val libraryCardUiState: ActiveSessionDraggableCardUiState.LibraryCardUiState
 )
 
 data class ActiveSessionDialogUiState(
@@ -123,8 +123,6 @@ sealed class ActiveSessionUiEvent : DraggableCardUiEvent {
     data class EndDialogCommentChanged(val comment: String) : ActiveSessionUiEvent()
     data object EndDialogDismissed : ActiveSessionUiEvent()
     data object EndDialogConfirmed : ActiveSessionUiEvent()
-
-    data object ToggleMetronomeCardHeight : ActiveSessionUiEvent()
 }
 
 typealias ActiveSessionUiEventHandler = (ActiveSessionUiEvent) -> Unit

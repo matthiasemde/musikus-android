@@ -102,7 +102,6 @@ class ActiveSessionViewModel @Inject constructor(
     private val _endDialogData = MutableStateFlow<EndDialogData?>(null)
     private val _showDiscardSessionDialog = MutableStateFlow(false)
     private var _clock = MutableStateFlow(false)
-    private val _metronomeCardIsExpanded = MutableStateFlow(false)
 
     /** Variables */
 
@@ -306,14 +305,14 @@ class ActiveSessionViewModel @Inject constructor(
         sessionState,
         addLibraryItemDialogUiState,
         dialogUiState,
-        _metronomeCardIsExpanded,
-    ) { libraryCardUiState, sessionState, addItemDialogUiState, dialogUiState, metronomeExpanded ->
+    ) { libraryCardUiState, sessionState, addItemDialogUiState, dialogUiState ->
         ActiveSessionUiState(
             cardUiStates = listOf(
                 libraryCardUiState,
                 _recorderUiState,
                 _metronomeUiState
             ),
+            libraryCardUiState = libraryCardUiState,
             totalSessionDuration = sessionState?.sessionDuration ?: 0.seconds,
             ongoingPauseDuration = sessionState?.ongoingPauseDuration ?: 0.seconds,
             isPaused = sessionState?.isPaused ?: false,
@@ -333,7 +332,6 @@ class ActiveSessionViewModel @Inject constructor(
                 )
             },
             dialogUiState = dialogUiState,
-            metronomeCardIsExpanded = metronomeExpanded
         )
     }.stateIn(
         scope = viewModelScope,
@@ -347,7 +345,7 @@ class ActiveSessionViewModel @Inject constructor(
             runningSection = null,
             addItemDialogUiState = addLibraryItemDialogUiState.value,
             dialogUiState = dialogUiState.value,
-            metronomeCardIsExpanded = _metronomeCardIsExpanded.value
+            libraryCardUiState = libraryCardUiState.value
         )
     )
 
@@ -408,7 +406,6 @@ class ActiveSessionViewModel @Inject constructor(
                 _timer?.cancel()
                 _timer = null
             }
-            is ActiveSessionUiEvent.ToggleMetronomeCardHeight -> _metronomeCardIsExpanded.update { !it }
         }
     }
 
