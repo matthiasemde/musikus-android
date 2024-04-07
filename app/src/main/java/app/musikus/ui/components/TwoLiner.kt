@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
@@ -32,6 +33,7 @@ data class TwoLinerData(
     val icon: UiIcon? = null,
     val firstLine: UiText? = null,
     val secondLine: UiText? = null,
+    val trailingIcon: UiIcon? = null,
     val onClick: (() -> Unit)? = null
 )
 
@@ -52,11 +54,13 @@ fun TwoLiner(
             ),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        // Leading icon
         data.icon?.let {
             Icon(imageVector = it.asIcon(), contentDescription = null)
             Spacer(modifier = Modifier.width(MaterialTheme.spacing.medium))
         }
 
+        // Content
         Column {
             data.firstLine?.let {
                 Text(
@@ -73,6 +77,16 @@ fun TwoLiner(
                     color = LocalContentColor.current.copy(alpha = 0.6f)
                 )
             }
+        }
+
+        // Trailing icon
+        data.trailingIcon?.let {
+            Spacer(
+                modifier = Modifier
+                    .weight(1f)
+                    .widthIn(min = MaterialTheme.spacing.medium)
+            )
+            Icon(imageVector = it.asIcon(), contentDescription = null)
         }
     }
 }
