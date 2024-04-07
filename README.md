@@ -1,26 +1,33 @@
-This project is a fork of [PracticeTime!](https://github.com/PracticeTimeApp/PracticeTime)
+<p style="align: center;">
+  <a href="https://musikus.app" target="_blank" rel="noopener noreferrer">
+    <img style="width: 160; height: 160; border-radius: 25px;" src="./app/src/main/ic_launcher-playstore.png" alt="Musikus logo">
+  </a>
+</p>
 
-# Maintainers
-Matthias Emde <[@matthiasemde](https://github.com/matthiasemde)>
+<h1 style="align: center;">Musikus</h1>
 
-Michael Prommersberger <[@mipro98](https://github.com/mipro98)>
+<p style="align: center;">
+Your personal practice companion
+</p>
 
-# Legal things
+## 🧪 Musikus is in alpha
 
-## Privacy Policy
-Musikus is an Open Source app. This service is provided at no cost and is intended for use as is.
+### Join
+If you want to join our group of testers, write us an email to [alpha@musikus.app](mailto:alpha@musikus.app) using your GMail account and we will add you to the list.
 
-### Information Collection and Use
-Musikus does not collect any personal data, neither does the app use any third-party services that collect personal data. All of your data is stored locally on your device and is not shared with anyone.
+### Feedback
+If you have any feedback, bug reports or feature requests, please fill out [this](https://docs.google.com/forms/d/e/1FAIpQLSfw1rTslL7b3Yp_Lv_E65zketfj7G6h5VzOkVdxjcQZDC5CqA/viewform) form or use the [Issue Tracker](https://github.com/matthiasemde/musikus-android/issues/new).
 
-### Updates
-We will update this privacy policy as needed so that it is current, accurate, and as clear as possible. Your continued use of our Services confirms your acceptance of our updated Privacy Policy
+## 👨‍💻 Contributors
+<a href="https://github.com/matthiasemde/musikus-android/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=matthiasemde/musikus-android" alt="https://github.com/matthiasemde/musikus-android/graphs/contributors"/>
+</a>
 
-### Contact Us
-If you have questions or suggestions about our Privacy Policy please contact us at privacy@musikus.app.
-
-## License
+## 📃 License
 Copyright (c) Matthias Emde
 Copyright (c) Michael Prommersberger
 
 Licensed under the Mozilla Public License, v. 2.0: https://mozilla.org/MPL/2.0/
+
+## 🎼 Other
+This project is a fork / continuation of [PracticeTime!](https://github.com/PracticeTimeApp/PracticeTime)
