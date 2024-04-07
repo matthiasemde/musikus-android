@@ -32,8 +32,7 @@ If you have any feedback, bug reports or feature requests, please fill out [this
 </a>
 
 ## 📃 License
-Copyright (c) Matthias Emde
-
+Copyright (c) Matthias Emde <br/>
 Copyright (c) Michael Prommersberger
 
 Licensed under the Mozilla Public License, v. 2.0: https://mozilla.org/MPL/2.0/
