@@ -15,15 +15,14 @@ import android.annotation.SuppressLint
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.keyframes
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
@@ -46,6 +45,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
@@ -145,7 +145,7 @@ fun ActiveSession(
     viewModel: ActiveSessionViewModel = hiltViewModel(),
     deepLinkArgument: String?,
     navigateUp: () -> Unit,
-    navigateTo: (Screen) -> Unit
+    navigateTo: (Screen) -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val eventHandler = viewModel::onUiEvent
@@ -156,150 +156,90 @@ fun ActiveSession(
     var showLibrary by rememberSaveable { mutableStateOf(false) }
 
     BackHandler {
+        if (showCardRecord || showCardMetronome) {
+            showCardRecord = false
+            showCardMetronome = false
+            return@BackHandler
+        }
+
         // notify the ViewModel that the back button was pressed
         eventHandler(ActiveSessionUiEvent.BackPressed)
         navigateUp()
     }
 
-    Surface(
-        color = MaterialTheme.colorScheme.background,
-    ) {
-        Column {
-            Box(
+    Surface(color = MaterialTheme.colorScheme.background) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .windowInsetsPadding(WindowInsets.statusBars)
+        ) {
+
+            HeaderBar(uiState, eventHandler, navigateUp)
+
+            /** ################################## MAIN UI CONTENT ################################## */
+
+            Column(
                 modifier = Modifier
-                    .windowInsetsPadding(WindowInsets.statusBars)
-                    .weight(1f)
+                    .fillMaxWidth()
+                    .weight(1f),
             ) {
 
-                Box (
+                Spacer(modifier = Modifier.weight(1f))
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .align(Alignment.BottomCenter)
-                        .height(MaterialTheme.dimensions.bottomToolbarHeight - 50.dp)
-                        .background(MaterialTheme.colorScheme.surfaceContainer)
-                )
-
-                Column(
+                        .animateContentSize(),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = MaterialTheme.spacing.medium)
                 ) {
-
-                    HeaderBar(uiState, eventHandler, navigateUp)
-                    Spacer(modifier = Modifier.weight(1f))
-
-                    Column(
-                        Modifier.fillMaxWidth().animateContentSize(),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        PracticeTimer(
-                            modifier = Modifier.padding(top = MaterialTheme.spacing.extraLarge),
-                            uiState = uiState
-                        )
-                        Spacer(modifier = Modifier.height(MaterialTheme.spacing.extraLarge))
-                        CurrentPracticingItem(item = uiState.runningSection)
-
-                        var paddingHeight = 0.dp
-                        if (showCardMetronome) {
-                            paddingHeight += if (metronomeCardIsExpanded) {
-                                MaterialTheme.dimensions.featureCardExtendedHeight
-                            } else {
-                                MaterialTheme.dimensions.featureCardHeight
-                            }
-                        }
-                        if (showCardRecord) paddingHeight += MaterialTheme.dimensions.featureCardHeight
-
-                        SectionsList(
-                            modifier = Modifier
-                                .padding(bottom = MaterialTheme.dimensions.bottomToolbarHeight),
-                            uiState = uiState,
-                            onSectionDeleted = { eventHandler(ActiveSessionUiEvent.DeleteSection(it.id)) },
-                            bottomContentPadding = paddingHeight
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.weight(1f))
-
+                    PracticeTimer(
+                        modifier = Modifier.padding(top = MaterialTheme.spacing.extraLarge),
+                        uiState = uiState
+                    )
+                    Spacer(modifier = Modifier.height(MaterialTheme.spacing.extraLarge))
+                    CurrentPracticingItem(item = uiState.runningSection)
+                    SectionsList(
+                        modifier = Modifier.align(Alignment.CenterHorizontally),
+                        uiState = uiState,
+                        onSectionDeleted = { eventHandler(ActiveSessionUiEvent.DeleteSection(it.id)) },
+                        additionalBottomContentPadding = 28.dp    // padding for the FAB (half of FAB height)
+                    )
                 }
 
-                Column(
+                Spacer(modifier = Modifier.weight(1f))
+            }
+
+            /** ################################## END MAIN UI CONTENT ################################## */
+
+
+            /** ################################## TOOLS CONTENT ################################## */
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.surfaceContainer)
+            ) {
+
+                ExtendedFloatingActionButton(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .align(Alignment.BottomCenter)
-                ) {
-
-                    val fabHidden = showCardRecord && showCardMetronome && metronomeCardIsExpanded
-                    val fabExtended =
-                        !(showCardRecord && showCardMetronome) && !metronomeCardIsExpanded
-
-
-                    AnimatedVisibility(
-                        modifier = Modifier
-                            .animateContentSize()
-                            .align(if (fabExtended) Alignment.CenterHorizontally else Alignment.End)
-                            .padding(MaterialTheme.spacing.large),
-                        visible = !fabHidden,
-                        enter = scaleIn() + fadeIn(),
-                        exit = scaleOut() + fadeOut()
-                    ) {
-                        ExtendedFloatingActionButton(
-                            onClick = { showLibrary = true },
-                            icon = {
-                                Icon(
-                                    imageVector = Icons.Filled.Add,
-                                    contentDescription = "New Library Item"
-                                )
-                            },
-                            text = { Text("New Library Item") },
-                            expanded = fabExtended
+                        .align(Alignment.CenterHorizontally)
+                        .offset(y = (-28).dp),  // offset to center the FAB (FAB height = 56.dp)
+                    onClick = { showLibrary = true },
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Filled.Add,
+                            contentDescription = "New Library Item"
                         )
-                    }
+                    },
+                    text = { Text("New Library Item") },
+                    expanded = true
+                )
 
-                    /** ####################### Recorder ####################### */
-
-                    Column(
-                        Modifier
-                            .fillMaxWidth()
-                            .animateContentSize()
-                    ) {
-
-                        AnimatedVisibility(
-                            visible = showCardRecord,
-                            enter = scaleIn() + fadeIn(),
-                            exit = scaleOut() + fadeOut()
-                        ) {
-                            FeatureCard { RecorderCardHeader() }
-                        }
-
-                    }
-
-                    /** ####################### Metronome ####################### */
-
-                    Column(
-                        Modifier
-                            .fillMaxWidth()
-                            .animateContentSize()
-                    ) {
-
-                        AnimatedVisibility(
-                            visible = showCardMetronome,
-                            enter = scaleIn() + fadeIn(),
-                            exit = scaleOut() + fadeOut()
-                        ) {
-                            FeatureCard(
-                                contentComposable = {
-                                    MetronomeCardHeader(onTextClicked = {
-                                        metronomeCardIsExpanded = !metronomeCardIsExpanded
-                                    })
-                                },
-                                extendedContentComposable = { MetronomeCardBody() },
-                                isExpanded = metronomeCardIsExpanded
-                            )
-                        }
-                    }
-
-                    /** ####################### Buttons ####################### */
+                // extra container needed because of animateContentSize()
+                // if set in parent Column, FAB would be cut off
+                Column (
+                    Modifier
+                        .animateContentSize()
+                        .fillMaxWidth()){
 
                     Row(
                         Modifier
@@ -311,98 +251,223 @@ fun ActiveSession(
                             active = showCardMetronome,
                             text = "Metronome",
                             onClick = {
+                                showCardRecord = false
                                 showCardMetronome = !showCardMetronome
-                                metronomeCardIsExpanded = false
                             }
                         )
                         FeatureToggleButton(
                             active = showCardRecord,
                             text = "Recorder",
-                            onClick = { showCardRecord = !showCardRecord }
-                        )
-
-                    }
-                }
-
-                val scope = rememberCoroutineScope()
-                val sheetState = rememberModalBottomSheetState()
-                if (showLibrary) {
-                    ModalBottomSheet(
-                        onDismissRequest = { showLibrary = false },
-                        sheetState = sheetState,
-                    ) {
-                        LibraryCardHeader(
-                            modifier = Modifier.height(MaterialTheme.dimensions.cardPeekHeight),
-                            uiState = uiState.libraryCardUiState.headerUiState,
-                            isCardCollapsed = false,
-                            eventHandler = eventHandler
-                        )
-                        HorizontalDivider(Modifier.padding(horizontal = MaterialTheme.spacing.medium))
-                        LibraryCardBody(
-                            uiState = uiState.libraryCardUiState.bodyUiState,
-                            cardScrollState = rememberScrollState(),
-                            eventHandler = eventHandler,
-                            dismissEvent = {
-                                scope.launch { sheetState.hide() }.invokeOnCompletion {
-                                    if (!sheetState.isVisible) {
-                                        showLibrary = false
-                                    }
-                                }
-
+                            onClick = {
+                                showCardMetronome = false
+                                showCardRecord = !showCardRecord
                             }
                         )
-                        Spacer(modifier = Modifier.height(400.dp))
                     }
+
+                    HorizontalDivider()
+
+
+                    // -------------------------------- Metronome --------------------------------
+
+                    AnimatedVisibility(
+                        visible = showCardMetronome,
+                        modifier = Modifier.fillMaxWidth(),
+                        enter = slideInHorizontally { fullWidth -> -fullWidth },
+                        exit = ExitTransition.None,
+                    ) {
+                        Column(
+                            Modifier.fillMaxWidth()
+                        ) {
+                            MetronomeCardHeader(
+                                modifier = Modifier.height(MaterialTheme.dimensions.toolsHeaderHeight),
+                                onTextClicked = {
+                                    metronomeCardIsExpanded = !metronomeCardIsExpanded
+                                }
+                            )
+                            MetronomeCardBody(
+                                modifier = Modifier.height(MaterialTheme.dimensions.toolsBodyHeight)
+                            )
+                        }
+                    }
+
+
+                    // -------------------------------- Recorder --------------------------------
+
+                    AnimatedVisibility(
+                        visible = showCardRecord,
+                        modifier = Modifier.fillMaxWidth(),
+                        enter = slideInHorizontally { fullWidth -> fullWidth },
+                        exit = ExitTransition.None,
+                    ) {
+
+                        Column(
+                            Modifier.fillMaxWidth()
+                        ) {
+                            RecorderCardHeader(modifier = Modifier.height(MaterialTheme.dimensions.toolsHeaderHeight))
+                            RecorderCardBody(modifier = Modifier.height(MaterialTheme.dimensions.toolsBodyHeight))
+                        }
+
+                    }
+
+
                 }
 
+                /** ################################## END TOOLS CONTENT ################################## */
 
-                /*
-                /**
-                 *
-                 *  ------------------- Bottom Draggable Cards Layout -------------------
-                 *
-                 */
-                if (uiState.cardUiStates.isEmpty()) return@Box // TODO take another look at this
 
-                DraggableCardsPagerLayout(
-                    cardUiStates = uiState.cardUiStates,
-                    cardHeaderComposable = { headerUiState, cardState, eventHandler ->
-                        ActiveSessionDraggableCardHeader(headerUiState, cardState, eventHandler)
-                    },
-                    cardBodyComposable = { bodyState, cardState, eventHandler ->
-                        ActiveSessionDraggableCardBody(bodyState, cardState, eventHandler)
-                    },
-                    eventHandler = { event ->
-                        when (event) {
-                            is ActiveSessionUiEvent -> eventHandler(event)
-                            // currently event handler can't differentiate between different fabs from
-                            // different cards... sounds like a future me problem
-                            is DraggableCardUiEvent.FabAction -> eventHandler(ActiveSessionUiEvent.CreateNewLibraryItem)
-                            else -> throw IllegalArgumentException("Unknown event: $event")
-                        }
-                    },
-                    initialCardIndex = when (deepLinkArgument) {
-                        ActiveSessionActions.RECORDER.name -> 1
-                        ActiveSessionActions.METRONOME.name -> 2
-                        else -> 0
-                    }
-                )
-                */
-            }
+                // Background behind the nav bar
+                Box(
+                    modifier = Modifier
+                        .background(MaterialTheme.colorScheme.surfaceContainer)
+                        .windowInsetsBottomHeight(WindowInsets.navigationBars),
+                ) {
+                    Box(Modifier.fillMaxSize()) // necessary for the background to be drawn
+                }
 
-            // Background behind the nav bar
-            Box(
-                modifier = Modifier
-                    .background(MaterialTheme.colorScheme.surfaceContainer)
-                    .windowInsetsBottomHeight(WindowInsets.navigationBars),
-            ) {
-                Box(Modifier.fillMaxSize()) // necessary for the background to be drawn
             }
         }
+
     }
+
+
+    /*
+        val fabHidden = showCardRecord && showCardMetronome && metronomeCardIsExpanded
+        val fabExtended =
+            !(showCardRecord && showCardMetronome) && !metronomeCardIsExpanded
+
+
+        AnimatedVisibility(
+            modifier = Modifier
+                .animateContentSize()
+                .align(if (fabExtended) Alignment.CenterHorizontally else Alignment.End)
+                .padding(MaterialTheme.spacing.large),
+            visible = !fabHidden,
+            enter = scaleIn() + fadeIn(),
+            exit = scaleOut() + fadeOut()
+        ) {
+            ExtendedFloatingActionButton(
+                onClick = { showLibrary = true },
+                icon = {
+                    Icon(
+                        imageVector = Icons.Filled.Add,
+                        contentDescription = "New Library Item"
+                    )
+                },
+                text = { Text("New Library Item") },
+                expanded = fabExtended
+            )
+        }
+
+        */
+    /** ####################### Recorder ####################### *//*
+
+
+            Column(
+                Modifier
+                    .fillMaxWidth()
+                    .animateContentSize()
+            ) {
+
+                AnimatedVisibility(
+                    visible = showCardRecord,
+                    enter = scaleIn() + fadeIn(),
+                    exit = scaleOut() + fadeOut()
+                ) {
+                    FeatureCard { RecorderCardHeader() }
+                }
+
+            }
+
+            */
+    /** ####################### Metronome ####################### *//*
+
+
+            Column(
+                Modifier
+                    .fillMaxWidth()
+                    .animateContentSize()
+            ) {
+
+                AnimatedVisibility(
+                    visible = showCardMetronome,
+                    enter = scaleIn() + fadeIn(),
+                    exit = scaleOut() + fadeOut()
+                ) {
+                    FeatureCard(
+                        contentComposable = {
+                            MetronomeCardHeader(onTextClicked = {
+                                metronomeCardIsExpanded = !metronomeCardIsExpanded
+                            })
+                        },
+                        extendedContentComposable = { MetronomeCardBody() },
+                        isExpanded = metronomeCardIsExpanded
+                    )
+                }
+            }
+
+            */
+    /** ####################### Buttons ####################### *//*
+
+
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = MaterialTheme.spacing.medium),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                FeatureToggleButton(
+                    active = showCardMetronome,
+                    text = "Metronome",
+                    onClick = {
+                        showCardMetronome = !showCardMetronome
+                        metronomeCardIsExpanded = false
+                    }
+                )
+                FeatureToggleButton(
+                    active = showCardRecord,
+                    text = "Recorder",
+                    onClick = { showCardRecord = !showCardRecord }
+                )
+
+            }
+        }
+*/
+
     /**
      * --------------------- Dialogs ---------------------
      */
+
+    val scope = rememberCoroutineScope()
+    val sheetState = rememberModalBottomSheetState()
+    if (showLibrary) {
+        ModalBottomSheet(
+            onDismissRequest = { showLibrary = false },
+            sheetState = sheetState,
+        ) {
+            LibraryCardHeader(
+                modifier = Modifier.height(MaterialTheme.dimensions.cardPeekHeight),
+                uiState = uiState.libraryCardUiState.headerUiState,
+                isCardCollapsed = false,
+                eventHandler = eventHandler
+            )
+            HorizontalDivider(Modifier.padding(horizontal = MaterialTheme.spacing.medium))
+            LibraryCardBody(
+                uiState = uiState.libraryCardUiState.bodyUiState,
+                cardScrollState = rememberScrollState(),
+                eventHandler = eventHandler,
+                dismissEvent = {
+                    scope.launch { sheetState.hide() }.invokeOnCompletion {
+                        if (!sheetState.isVisible) {
+                            showLibrary = false
+                        }
+                    }
+
+                }
+            )
+            Spacer(modifier = Modifier.height(400.dp))
+        }
+    }
 
     if (uiState.isPaused) {
         PauseDialog(
@@ -459,7 +524,7 @@ private fun FeatureToggleButton(
     modifier: Modifier = Modifier,
     text: String,
     active: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     if (active) {
         FilledTonalButton(
@@ -482,12 +547,12 @@ private fun FeatureToggleButton(
 private fun HeaderBar(
     uiState: ActiveSessionUiState,
     eventHandler: ActiveSessionUiEventHandler,
-    navigateUp: () -> Unit
+    navigateUp: () -> Unit,
 ) {
-    Row (
+    Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
-    ){
+    ) {
         Row {
             IconButton(
                 onClick = { navigateUp() }
@@ -532,12 +597,15 @@ private fun HeaderBar(
 @Composable
 private fun PracticeTimer(
     modifier: Modifier = Modifier,
-    uiState: ActiveSessionUiState
+    uiState: ActiveSessionUiState,
 ) {
     Text(
         modifier = modifier,
         style = MaterialTheme.typography.displayLarge,
-        text = getDurationString(uiState.totalSessionDuration, DurationFormat.MS_DIGITAL).toString(),
+        text = getDurationString(
+            uiState.totalSessionDuration,
+            DurationFormat.MS_DIGITAL
+        ).toString(),
         fontWeight = FontWeight.Light,
         fontSize = 75.sp
     )
@@ -551,7 +619,7 @@ private fun PracticeTimer(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun CurrentPracticingItem(
-    item: ActiveSessionSectionListItemUiState?
+    item: ActiveSessionSectionListItemUiState?,
 ) {
     AnimatedVisibility(
         visible = item != null,
@@ -563,7 +631,7 @@ private fun CurrentPracticingItem(
             shape = RoundedCornerShape(50),
             shadowElevation = 1.dp
         ) {
-            if(item == null) return@Surface
+            if (item == null) return@Surface
 
             AnimatedContent(
                 targetState = item.libraryItem.name,
@@ -616,11 +684,11 @@ private fun CurrentPracticingItem(
 private fun SectionsList(
     modifier: Modifier = Modifier,
     uiState: ActiveSessionUiState,
-    bottomContentPadding: Dp = 0.dp,
-    onSectionDeleted: (ActiveSessionSectionListItemUiState) -> Unit = {}
+    additionalBottomContentPadding: Dp = 0.dp,
+    onSectionDeleted: (ActiveSessionSectionListItemUiState) -> Unit = {},
 ) {
     if (uiState.runningSection == null) {
-        Box (modifier = modifier) {
+        Box(modifier = modifier) {
             Text(text = "Select a library item to start practicing")
         }
         return
@@ -636,7 +704,7 @@ private fun SectionsList(
         verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.extraSmall),
         contentPadding = PaddingValues(
             top = MaterialTheme.spacing.small,
-            bottom = bottomContentPadding
+            bottom = additionalBottomContentPadding + MaterialTheme.spacing.small
         ),
     ) {
 
@@ -666,9 +734,10 @@ private fun SectionsList(
 private fun SectionListElement(
     modifier: Modifier = Modifier,
     sectionElement: ActiveSessionSectionListItemUiState,
-    onSectionDeleted: (ActiveSessionSectionListItemUiState) -> Unit
+    onSectionDeleted: (ActiveSessionSectionListItemUiState) -> Unit,
 ) {
-    Surface(   // Surface for setting shape + padding of list item
+    Surface(
+        // Surface for setting shape + padding of list item
         modifier = modifier.padding(horizontal = MaterialTheme.spacing.large),  // margin around list
         shape = MaterialTheme.shapes.medium,
     ) {
@@ -713,9 +782,9 @@ private fun SectionListElement(
 private fun ActiveSessionDraggableCardHeader(
     uiState: ActiveSessionDraggableCardHeaderUiState,
     cardState: DraggableCardLocalState,
-    eventHandler: DraggableCardUiEventHandler
+    eventHandler: DraggableCardUiEventHandler,
 ) {
-    when(uiState) {
+    when (uiState) {
         is ActiveSessionDraggableCardHeaderUiState.LibraryCardHeaderUiState -> {
             LibraryCardHeader(
                 uiState = uiState,
@@ -723,9 +792,11 @@ private fun ActiveSessionDraggableCardHeader(
                 eventHandler = eventHandler
             )
         }
+
         is ActiveSessionDraggableCardHeaderUiState.RecorderCardHeaderUiState -> {
             RecorderCardHeader()
         }
+
         is ActiveSessionDraggableCardHeaderUiState.MetronomeCardHeaderUiState -> {
             MetronomeCardHeader(
                 onTextClicked = { eventHandler(DraggableCardUiEvent.ResizeCard(DragValueY.Normal)) }
@@ -739,7 +810,7 @@ private fun ActiveSessionDraggableCardHeader(
 private fun ActiveSessionDraggableCardBody(
     uiState: ActiveSessionDraggableCardBodyUiState,
     cardState: DraggableCardLocalState,
-    eventHandler: DraggableCardUiEventHandler
+    eventHandler: DraggableCardUiEventHandler,
 ) {
     when (uiState) {
         is ActiveSessionDraggableCardBodyUiState.LibraryCardBodyUiState -> {
@@ -749,9 +820,11 @@ private fun ActiveSessionDraggableCardBody(
                 eventHandler = eventHandler,
             )
         }
+
         is ActiveSessionDraggableCardBodyUiState.RecorderCardBodyUiState -> {
             RecorderCardBody()
         }
+
         is ActiveSessionDraggableCardBodyUiState.MetronomeCardBodyUiState -> {
             MetronomeCardBody()
         }
@@ -763,7 +836,7 @@ private fun LibraryCardHeader(
     modifier: Modifier = Modifier,
     uiState: ActiveSessionDraggableCardHeaderUiState.LibraryCardHeaderUiState,
     isCardCollapsed: Boolean,
-    eventHandler: ActiveSessionUiEventHandler
+    eventHandler: ActiveSessionUiEventHandler,
 ) {
     // Header Folder List
     val state = rememberLazyListState()
@@ -785,7 +858,7 @@ private fun LibraryCardHeader(
 //                    if(isCardCollapsed) eventHandler(DraggableCardUiEvent.ResizeCard(DragValueY.Normal))
                 },
                 isSelected = folder?.id == uiState.selectedFolderId && !isCardCollapsed,
-                showBadge = uiState.activeFolderId?.let { it.value == folder?.id} ?: false
+                showBadge = uiState.activeFolderId?.let { it.value == folder?.id } ?: false
             )
         }
     }
@@ -795,11 +868,12 @@ private fun LibraryCardHeader(
 @Composable
 private fun LibraryFolderElement(
     folder: LibraryFolder?,
-    showBadge: Boolean = false ,
+    showBadge: Boolean = false,
     onClick: (LibraryFolder?) -> Unit,
     isSelected: Boolean,
 ) {
-    val color by animateColorAsState(targetValue =
+    val color by animateColorAsState(
+        targetValue =
         if (isSelected) {
             MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.7f)
         } else {
@@ -854,7 +928,7 @@ private fun LibraryCardBody(
     uiState: ActiveSessionDraggableCardBodyUiState.LibraryCardBodyUiState,
     cardScrollState: ScrollState,
     eventHandler: ActiveSessionUiEventHandler,
-    dismissEvent: () -> Unit = {}
+    dismissEvent: () -> Unit = {},
 ) {
     Column(
         modifier = modifier
@@ -887,7 +961,7 @@ private fun LibraryCardBody(
 @Composable
 private fun PauseDialog(
     ongoingBreakDuration: Duration,
-    eventHandler: ActiveSessionUiEventHandler
+    eventHandler: ActiveSessionUiEventHandler,
 ) {
     Dialog(
         properties = DialogProperties(
@@ -937,7 +1011,7 @@ fun EndSessionDialog(
     onRatingChanged: (Int) -> Unit,
     onCommentChanged: (String) -> Unit,
     onDismiss: () -> Unit,
-    onConfirm: () -> Unit
+    onConfirm: () -> Unit,
 ) {
     Dialog(
         onDismissRequest = onDismiss,
