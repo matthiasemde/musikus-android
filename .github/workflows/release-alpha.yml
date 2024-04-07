@@ -43,7 +43,7 @@ jobs:
           branch: main
           fromTag: v${{ env.current_version_name }}
           noNewCommitBehavior: "error"
-          noVersionBumpBehavior: "patch"
+          noVersionBumpBehavior: "error"
 
       - name: Write version name, version code and tag name to env
         run: |
