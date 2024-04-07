@@ -3,7 +3,7 @@
     License, v. 2.0. If a copy of the MPL was not distributed with this
     file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-    Copyright (c) 2022 Matthias Emde
+    Copyright (c) 2022-2024 Matthias Emde
 
     Copyright (c) 2022, Javier Carbone, author Michael Prommersberger
     Additions and modifications, author Matthias Emde
@@ -247,7 +247,7 @@
     <string name="publisher">Publisher</string>
     <string name="legal_text">Javier Carbone (Freelance)\nJakob Felder Weg 36\n55128, Mainz, Germany\npracticetimeapp@gmail.com</string>
     <string name="privacy_policy_title">Privacy policy</string>
-    <string name="privacy_policy">Musikus is an Open Source app. This service is provided at no cost and is intended for use as is.\n\n<b>Information Collection and Use</b>\nMusikus does not collect any personal data, neither does the app use any third-party services that collect personal data. All of your data is stored locally on your device and is not shared with anyone.\n\n<b>Updates</b>\nWe will update this privacy policy as needed so that it is current, accurate, and as clear as possible. Your continued use of our Services confirms your acceptance of our updated Privacy Policy\n\n<b>Contact Us</b>\nIf you have questions or suggestions about our Privacy Policy please contact us at privacy@musikus.app.</string>
+    <string name="url_privacy">https://github.com/matthiasemde/musikus-android/blob/main/PRIVACY.md</string>
     <string name="help_tutorial_title">Tutorial</string>
     <string name="licences_title">Open source licences</string>
     <string name="donations_button_text">Donate 🤍</string>

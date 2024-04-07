@@ -8,6 +8,8 @@
 
 package app.musikus.ui.settings.about
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -15,6 +17,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -31,13 +34,17 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.core.content.ContextCompat
 import app.musikus.BuildConfig
 import app.musikus.R
 import app.musikus.ui.components.TwoLiner
 import app.musikus.ui.components.TwoLinerData
 import app.musikus.ui.theme.spacing
+import app.musikus.utils.UiIcon
 import app.musikus.utils.UiText
 
 
@@ -61,6 +68,8 @@ fun AboutScreen(
             )
         }
     ) { paddingValues ->
+        val privacyPolicyUrl = stringResource(id = R.string.url_privacy)
+        val context = LocalContext.current
 
         var showLicenses by remember { mutableStateOf(false) }
 
@@ -76,7 +85,12 @@ fun AboutScreen(
                 ),
                 TwoLinerData(
                     firstLine = UiText.StringResource(R.string.privacy_policy_title),
-                    secondLine = UiText.StringResource(R.string.privacy_policy),
+                    onClick = {
+                        val openUrlIntent = Intent(Intent.ACTION_VIEW)
+                        openUrlIntent.data = Uri.parse(privacyPolicyUrl)
+                        ContextCompat.startActivity(context, openUrlIntent, null)
+                    },
+                    trailingIcon = UiIcon.DynamicIcon(Icons.AutoMirrored.Filled.OpenInNew)
                 )
             ),
             listOf(
