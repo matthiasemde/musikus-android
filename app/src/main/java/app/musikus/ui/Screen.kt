@@ -92,6 +92,10 @@ sealed class Screen(
         route = "settings",
     )
 
+    data object License : Screen(
+        route = "settings/about/license"
+    )
+
     sealed class SettingsOption(
         subRoute: String,
         override val displayData: DisplayData
