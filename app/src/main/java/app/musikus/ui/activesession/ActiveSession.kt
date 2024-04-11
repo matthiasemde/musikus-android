@@ -15,21 +15,18 @@ import android.annotation.SuppressLint
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.keyframes
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
-import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.ScrollState
-import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -38,23 +35,20 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.windowInsetsBottomHeight
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -64,8 +58,11 @@ import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Headset
+import androidx.compose.material.icons.outlined.Mic
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -75,11 +72,14 @@ import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LeadingIconTab
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
+import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -138,6 +138,12 @@ enum class ActiveSessionActions {
     OPEN, PAUSE, FINISH, METRONOME, RECORDER
 }
 
+data class ToolsTab(
+    val title: String,
+    val icon: @Composable () -> Unit,
+    val content: @Composable () -> Unit
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
@@ -155,6 +161,19 @@ fun ActiveSession(
     var showCardRecord by rememberSaveable { mutableStateOf(false) }
     var showLibrary by rememberSaveable { mutableStateOf(false) }
 
+    val tabs = listOf(
+        ToolsTab(
+            title = "Metronome",
+            icon = { Icon(imageVector = Icons.Outlined.Headset, contentDescription = null) },
+            content = { MetronomeCard() }
+        ),
+        ToolsTab(
+            title = "Recorder",
+            icon = { Icon(imageVector = Icons.Outlined.Mic, contentDescription = null) },
+            content = { RecorderCard() }
+        )
+    )
+
     BackHandler {
         if (showCardRecord || showCardMetronome) {
             showCardRecord = false
@@ -167,29 +186,34 @@ fun ActiveSession(
         navigateUp()
     }
 
-    Surface(color = MaterialTheme.colorScheme.background) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .windowInsetsPadding(WindowInsets.statusBars)
+
+    BottomSheetScaffold(
+        sheetContent = {
+            ToolsLayout(tabs = tabs)
+        },
+        sheetDragHandle = {},
+        sheetPeekHeight = 200.dp
+    ) { paddingValues ->
+
+        Surface(
+            modifier = Modifier.padding(paddingValues),
+            color = MaterialTheme.colorScheme.background
         ) {
-
-            HeaderBar(uiState, eventHandler, navigateUp)
-
-            /** ################################## MAIN UI CONTENT ################################## */
-
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f),
             ) {
 
-                Spacer(modifier = Modifier.weight(1f))
+                HeaderBar(uiState, eventHandler, navigateUp)
+
+                /** ################################## MAIN UI CONTENT ################################## */
+
+                /** ################################## MAIN UI CONTENT ################################## */
+
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .animateContentSize(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
+                        .weight(1f)
                 ) {
                     PracticeTimer(
                         modifier = Modifier.padding(top = MaterialTheme.spacing.extraLarge),
@@ -203,126 +227,22 @@ fun ActiveSession(
                         onSectionDeleted = { eventHandler(ActiveSessionUiEvent.DeleteSection(it.id)) },
                         additionalBottomContentPadding = 28.dp    // padding for the FAB (half of FAB height)
                     )
-                }
 
-                Spacer(modifier = Modifier.weight(1f))
-            }
-
-            /** ################################## END MAIN UI CONTENT ################################## */
-
-
-            /** ################################## TOOLS CONTENT ################################## */
-
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.surfaceContainer)
-            ) {
-
-                ExtendedFloatingActionButton(
-                    modifier = Modifier
-                        .align(Alignment.CenterHorizontally)
-                        .offset(y = (-28).dp),  // offset to center the FAB (FAB height = 56.dp)
-                    onClick = { showLibrary = true },
-                    icon = {
-                        Icon(
-                            imageVector = Icons.Filled.Add,
-                            contentDescription = "New Library Item"
-                        )
-                    },
-                    text = { Text("New Library Item") },
-                    expanded = true
-                )
-
-                // extra container needed because of animateContentSize()
-                // if set in parent Column, FAB would be cut off
-                Column (
-                    Modifier
-                        .animateContentSize()
-                        .fillMaxWidth()){
-
-                    Row(
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = MaterialTheme.spacing.medium),
-                        horizontalArrangement = Arrangement.SpaceEvenly
-                    ) {
-                        FeatureToggleButton(
-                            active = showCardMetronome,
-                            text = "Metronome",
-                            onClick = {
-                                showCardRecord = false
-                                showCardMetronome = !showCardMetronome
-                            }
-                        )
-                        FeatureToggleButton(
-                            active = showCardRecord,
-                            text = "Recorder",
-                            onClick = {
-                                showCardMetronome = false
-                                showCardRecord = !showCardRecord
-                            }
-                        )
-                    }
-
-                    HorizontalDivider()
-
-
-                    // -------------------------------- Metronome --------------------------------
-
-                    AnimatedVisibility(
-                        visible = showCardMetronome,
-                        modifier = Modifier.fillMaxWidth(),
-                        enter = slideInHorizontally { fullWidth -> -fullWidth },
-                        exit = ExitTransition.None,
-                    ) {
-                        Column(
-                            Modifier.fillMaxWidth()
-                        ) {
-                            MetronomeCardHeader(
-                                modifier = Modifier.height(MaterialTheme.dimensions.toolsHeaderHeight),
-                                onTextClicked = {
-                                    metronomeCardIsExpanded = !metronomeCardIsExpanded
-                                }
+                    ExtendedFloatingActionButton(
+                        modifier = Modifier
+                            .align(Alignment.CenterHorizontally)
+                            .offset(y = (-28).dp),  // offset to center the FAB (FAB height = 56.dp)
+                        onClick = { showLibrary = true },
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Filled.Add,
+                                contentDescription = "New Library Item"
                             )
-                            MetronomeCardBody(
-                                modifier = Modifier.height(MaterialTheme.dimensions.toolsBodyHeight)
-                            )
-                        }
-                    }
+                        },
+                        text = { Text("New Library Item") },
+                        expanded = true
+                    )
 
-
-                    // -------------------------------- Recorder --------------------------------
-
-                    AnimatedVisibility(
-                        visible = showCardRecord,
-                        modifier = Modifier.fillMaxWidth(),
-                        enter = slideInHorizontally { fullWidth -> fullWidth },
-                        exit = ExitTransition.None,
-                    ) {
-
-                        Column(
-                            Modifier.fillMaxWidth()
-                        ) {
-                            RecorderCardHeader(modifier = Modifier.height(MaterialTheme.dimensions.toolsHeaderHeight))
-                            RecorderCardBody(modifier = Modifier.height(MaterialTheme.dimensions.toolsBodyHeight))
-                        }
-
-                    }
-
-
-                }
-
-                /** ################################## END TOOLS CONTENT ################################## */
-
-
-                // Background behind the nav bar
-                Box(
-                    modifier = Modifier
-                        .background(MaterialTheme.colorScheme.surfaceContainer)
-                        .windowInsetsBottomHeight(WindowInsets.navigationBars),
-                ) {
-                    Box(Modifier.fillMaxSize()) // necessary for the background to be drawn
                 }
 
             }
@@ -330,109 +250,6 @@ fun ActiveSession(
 
     }
 
-
-    /*
-        val fabHidden = showCardRecord && showCardMetronome && metronomeCardIsExpanded
-        val fabExtended =
-            !(showCardRecord && showCardMetronome) && !metronomeCardIsExpanded
-
-
-        AnimatedVisibility(
-            modifier = Modifier
-                .animateContentSize()
-                .align(if (fabExtended) Alignment.CenterHorizontally else Alignment.End)
-                .padding(MaterialTheme.spacing.large),
-            visible = !fabHidden,
-            enter = scaleIn() + fadeIn(),
-            exit = scaleOut() + fadeOut()
-        ) {
-            ExtendedFloatingActionButton(
-                onClick = { showLibrary = true },
-                icon = {
-                    Icon(
-                        imageVector = Icons.Filled.Add,
-                        contentDescription = "New Library Item"
-                    )
-                },
-                text = { Text("New Library Item") },
-                expanded = fabExtended
-            )
-        }
-
-        */
-    /** ####################### Recorder ####################### *//*
-
-
-            Column(
-                Modifier
-                    .fillMaxWidth()
-                    .animateContentSize()
-            ) {
-
-                AnimatedVisibility(
-                    visible = showCardRecord,
-                    enter = scaleIn() + fadeIn(),
-                    exit = scaleOut() + fadeOut()
-                ) {
-                    FeatureCard { RecorderCardHeader() }
-                }
-
-            }
-
-            */
-    /** ####################### Metronome ####################### *//*
-
-
-            Column(
-                Modifier
-                    .fillMaxWidth()
-                    .animateContentSize()
-            ) {
-
-                AnimatedVisibility(
-                    visible = showCardMetronome,
-                    enter = scaleIn() + fadeIn(),
-                    exit = scaleOut() + fadeOut()
-                ) {
-                    FeatureCard(
-                        contentComposable = {
-                            MetronomeCardHeader(onTextClicked = {
-                                metronomeCardIsExpanded = !metronomeCardIsExpanded
-                            })
-                        },
-                        extendedContentComposable = { MetronomeCardBody() },
-                        isExpanded = metronomeCardIsExpanded
-                    )
-                }
-            }
-
-            */
-    /** ####################### Buttons ####################### *//*
-
-
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = MaterialTheme.spacing.medium),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                FeatureToggleButton(
-                    active = showCardMetronome,
-                    text = "Metronome",
-                    onClick = {
-                        showCardMetronome = !showCardMetronome
-                        metronomeCardIsExpanded = false
-                    }
-                )
-                FeatureToggleButton(
-                    active = showCardRecord,
-                    text = "Recorder",
-                    onClick = { showCardRecord = !showCardRecord }
-                )
-
-            }
-        }
-*/
 
     /**
      * --------------------- Dialogs ---------------------
@@ -518,6 +335,76 @@ fun ActiveSession(
     }
 }
 
+@Composable
+private fun ToolsLayout(
+    tabs: List<ToolsTab>
+) {
+    val pagerState = rememberPagerState(pageCount = { 2 })
+    val scope = rememberCoroutineScope()
+
+    Column {
+        ToolsTabRow(
+            tabs = tabs,
+            activeTabIndex = pagerState.currentPage,
+            onClick = { tabIndex ->
+                scope.launch {
+                    pagerState.animateScrollToPage(tabIndex)
+                }
+            }
+        )
+        HorizontalPager(state = pagerState) { tabIndex ->
+            ToolsCardLayout { tabs[tabIndex].content() }
+        }
+    }
+}
+
+@Composable
+private fun ToolsTabRow(
+    tabs: List<ToolsTab>,
+    activeTabIndex: Int,
+    onClick: (index: Int) -> Unit
+) {
+    TabRow(selectedTabIndex = activeTabIndex) {
+        tabs.forEachIndexed { index, tab ->
+            LeadingIconTab(
+                selected = activeTabIndex == index,
+                text = { Text(tab.title) },
+                onClick = { onClick(index) },
+                icon = tab.icon
+            )
+        }
+    }
+}
+
+@Composable
+private fun ToolsCardLayout(
+    content: @Composable () -> Unit
+) {
+    OutlinedCard(
+        Modifier
+            .fillMaxWidth()
+            .padding(MaterialTheme.spacing.large)
+    ) {
+        content()
+    }
+}
+
+@Composable
+private fun MetronomeCard() {
+    MetronomeCardHeader(
+        modifier = Modifier.height(MaterialTheme.dimensions.toolsHeaderHeight),
+        onTextClicked = { }
+    )
+    MetronomeCardBody(
+        modifier = Modifier.height(MaterialTheme.dimensions.toolsBodyHeight)
+    )
+}
+
+@Composable
+private fun RecorderCard() {
+    RecorderCardHeader(modifier = Modifier.height(MaterialTheme.dimensions.toolsHeaderHeight))
+    RecorderCardBody(modifier = Modifier.height(MaterialTheme.dimensions.toolsBodyHeight))
+}
 
 @Composable
 private fun FeatureToggleButton(
