@@ -98,6 +98,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -196,11 +197,12 @@ fun ActiveSession(
     ) {
         BottomSheetScaffold(
             sheetContent = { ToolsLayout(tabs = tabs) },
-            sheetTonalElevation = 0.dp,
+            sheetContainerColor = Color.Transparent,
+            sheetTonalElevation = 3.dp,
+            sheetShadowElevation = 0.dp,
             sheetShape = RectangleShape,
-            sheetPeekHeight = MaterialTheme.dimensions.toolsHeaderHeight + 69.dp,
+            sheetPeekHeight = MaterialTheme.dimensions.cardPeekHeight + 10.dp,
             sheetDragHandle = { },
-            containerColor = MaterialTheme.colorScheme.surfaceDim,
         ) { paddingValues ->
 
             Box(modifier = Modifier // Box needed for FAB
@@ -358,15 +360,15 @@ private fun ToolsLayout(
     val scope = rememberCoroutineScope()
 
     Column {
-        ToolsTabRow(
-            tabs = tabs,
-            activeTabIndex = pagerState.currentPage,
-            onClick = { tabIndex ->
-                scope.launch {
-                    pagerState.animateScrollToPage(tabIndex)
-                }
-            }
-        )
+//        ToolsTabRow(
+//            tabs = tabs,
+//            activeTabIndex = pagerState.currentPage,
+//            onClick = { tabIndex ->
+//                scope.launch {
+//                    pagerState.animateScrollToPage(tabIndex)
+//                }
+//            }
+//        )
         HorizontalPager(state = pagerState) { tabIndex ->
             ToolsCardLayout { tabs[tabIndex].content() }
         }
