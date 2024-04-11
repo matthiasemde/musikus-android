@@ -35,14 +35,17 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -95,6 +98,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -186,71 +190,82 @@ fun ActiveSession(
         navigateUp()
     }
 
+    Surface(    // makes sure bottom sheet doesn't overlap with navbar
+        modifier = Modifier
+            .windowInsetsPadding(WindowInsets.navigationBars)
+    ) {
+        BottomSheetScaffold(
+            sheetContent = { ToolsLayout(tabs = tabs) },
+            sheetTonalElevation = 0.dp,
+            sheetShape = RectangleShape,
+            sheetPeekHeight = MaterialTheme.dimensions.toolsHeaderHeight + 69.dp,
+            sheetDragHandle = { },
+            containerColor = MaterialTheme.colorScheme.surfaceDim,
+        ) { paddingValues ->
 
-    BottomSheetScaffold(
-        sheetContent = {
-            ToolsLayout(tabs = tabs)
-        },
-        sheetDragHandle = {},
-        sheetPeekHeight = 200.dp
-    ) { paddingValues ->
-
-        Surface(
-            modifier = Modifier.padding(paddingValues),
-            color = MaterialTheme.colorScheme.background
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
+            Box(modifier = Modifier // Box needed for FAB
+                .padding(paddingValues)                         // avoid overlapping bottom sheet
+                .windowInsetsPadding(WindowInsets.statusBars)   // avoid overlapping status bar
             ) {
 
-                HeaderBar(uiState, eventHandler, navigateUp)
+                Column(modifier = Modifier.fillMaxWidth()) {
 
-                /** ################################## MAIN UI CONTENT ################################## */
+                    HeaderBar(uiState, eventHandler, navigateUp)
 
-                /** ################################## MAIN UI CONTENT ################################## */
+                    Spacer(Modifier.weight(1f))
 
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f)
-                ) {
-                    PracticeTimer(
-                        modifier = Modifier.padding(top = MaterialTheme.spacing.extraLarge),
-                        uiState = uiState
-                    )
-                    Spacer(modifier = Modifier.height(MaterialTheme.spacing.extraLarge))
-                    CurrentPracticingItem(item = uiState.runningSection)
-                    SectionsList(
-                        modifier = Modifier.align(Alignment.CenterHorizontally),
-                        uiState = uiState,
-                        onSectionDeleted = { eventHandler(ActiveSessionUiEvent.DeleteSection(it.id)) },
-                        additionalBottomContentPadding = 28.dp    // padding for the FAB (half of FAB height)
-                    )
+                    /** ################################## MAIN UI CONTENT ################################## */
 
-                    ExtendedFloatingActionButton(
+                    /** ################################## MAIN UI CONTENT ################################## */
+
+                    Column(
                         modifier = Modifier
-                            .align(Alignment.CenterHorizontally)
-                            .offset(y = (-28).dp),  // offset to center the FAB (FAB height = 56.dp)
-                        onClick = { showLibrary = true },
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Filled.Add,
-                                contentDescription = "New Library Item"
-                            )
-                        },
-                        text = { Text("New Library Item") },
-                        expanded = true
-                    )
+                            .fillMaxWidth()
+                            .animateContentSize(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        PracticeTimer(
+                            modifier = Modifier.padding(top = MaterialTheme.spacing.extraLarge),
+                            uiState = uiState
+                        )
+                        Spacer(modifier = Modifier.height(MaterialTheme.spacing.extraLarge))
+                        CurrentPracticingItem(item = uiState.runningSection)
+                        SectionsList(
+                            modifier = Modifier.align(Alignment.CenterHorizontally),
+                            uiState = uiState,
+                            onSectionDeleted = {
+                                eventHandler(
+                                    ActiveSessionUiEvent.DeleteSection(
+                                        it.id
+                                    )
+                                )
+                            },
+                            additionalBottomContentPadding = 28.dp    // padding for the FAB (half of FAB height)
+                        )
+                    }
+                    Spacer(Modifier.weight(1f))
 
                 }
 
+                ExtendedFloatingActionButton(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = MaterialTheme.spacing.large),
+//                                .offset(y = (-28).dp)  // offset to center the FAB (FAB height = 56.dp)
+//                            .align(Alignment.CenterHorizontally),
+                    onClick = { showLibrary = true },
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Filled.Add,
+                            contentDescription = "New Library Item"
+                        )
+                    },
+                    text = { Text("New Library Item") },
+                    expanded = true
+                )
             }
         }
-
     }
-
-
     /**
      * --------------------- Dialogs ---------------------
      */
@@ -630,7 +645,7 @@ private fun SectionListElement(
     ) {
         SwipeToDeleteContainer(onDeleted = { onSectionDeleted(sectionElement) }) {
             Surface(    // Surface for setting the Color of the List item
-                color = MaterialTheme.colorScheme.surfaceContainerLow
+//                color = MaterialTheme.colorScheme.surfaceContainerLow
             ) {
                 Row(
                     modifier = Modifier
@@ -643,7 +658,7 @@ private fun SectionListElement(
                     Text(
                         modifier = Modifier.weight(1f),
                         text = sectionElement.libraryItem.name,
-                        style = MaterialTheme.typography.titleMedium,
+                        style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurface,
                     )
                     Spacer(modifier = Modifier.width(MaterialTheme.spacing.small))
