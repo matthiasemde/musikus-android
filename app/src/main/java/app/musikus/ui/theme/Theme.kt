@@ -9,14 +9,19 @@
 package app.musikus.ui.theme
 
 import android.os.Build
+import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -66,6 +71,39 @@ fun MusikusTheme(
                 if (useDarkTheme) DarkColorScheme else LightColorScheme
             }
         }
+    }
+
+    // enable Edge-to-Edge drawing with new API
+    val context = LocalContext.current as ComponentActivity
+    DisposableEffect(key1 = theme) {
+
+        val statusBarColorDarkTheme = android.graphics.Color.TRANSPARENT
+        val statusBarColorLightTheme = android.graphics.Color.TRANSPARENT
+        val statusBarColorLightThemeOldDevices = DarkColorScheme.surface.toArgb()
+
+        val navBarColorDarkTheme = android.graphics.Color.TRANSPARENT
+        val navBarColorLightTheme = android.graphics.Color.TRANSPARENT
+        val navBarColorLightThemeOldDevices = DarkColorScheme.surface.toArgb()
+
+        context.enableEdgeToEdge(
+            statusBarStyle = if (useDarkTheme)
+                SystemBarStyle.dark(
+                    scrim = statusBarColorDarkTheme
+                )
+                else SystemBarStyle.light(
+                    scrim = statusBarColorLightTheme,
+                    darkScrim = statusBarColorLightThemeOldDevices
+                ),
+            navigationBarStyle = if (useDarkTheme)
+                SystemBarStyle.dark(
+                    scrim = navBarColorDarkTheme
+                )
+                else SystemBarStyle.light(
+                    scrim = navBarColorLightTheme,
+                    darkScrim = navBarColorLightThemeOldDevices
+                ),
+        )
+        onDispose {  }
     }
 
     MaterialTheme(
