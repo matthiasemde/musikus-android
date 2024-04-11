@@ -16,6 +16,7 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import app.musikus.Musikus
 import app.musikus.database.MusikusDatabase
 import app.musikus.services.ActiveSessionServiceActions
@@ -60,6 +61,8 @@ class MainActivity : PermissionCheckerActivity() {
             ImportDatabaseContract()
         ) { importDatabaseCallback(applicationContext, it) }
 
+        // enable Edge-to-Edge drawing with new API
+        enableEdgeToEdge()
         setContent {
             MusikusApp(timeProvider)
         }

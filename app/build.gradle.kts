@@ -111,7 +111,9 @@ dependencies {
     val kotlinCoroutineVersion = "1.7.3"
     val mockkVersion = "1.13.9"
     val media3Version = "1.3.0"
+    val activityVersion = "1.8.2"
 
+    implementation("androidx.activity:activity-ktx:$activityVersion")
 
     implementation("androidx.navigation:navigation-runtime-ktx:$navVersion")
     implementation("androidx.legacy:legacy-support-v4:1.0.0")
