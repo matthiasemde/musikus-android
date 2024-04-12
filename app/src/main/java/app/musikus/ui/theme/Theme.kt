@@ -17,7 +17,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.graphics.Color
@@ -75,7 +75,7 @@ fun MusikusTheme(
 
     // enable Edge-to-Edge drawing with new API
     val context = LocalContext.current as ComponentActivity
-    DisposableEffect(key1 = theme) {
+    LaunchedEffect(key1 = theme) {
 
         val statusBarColorDarkTheme = android.graphics.Color.TRANSPARENT
         val statusBarColorLightTheme = android.graphics.Color.TRANSPARENT
@@ -103,7 +103,6 @@ fun MusikusTheme(
                     darkScrim = navBarColorLightThemeOldDevices
                 ),
         )
-        onDispose {  }
     }
 
     MaterialTheme(
