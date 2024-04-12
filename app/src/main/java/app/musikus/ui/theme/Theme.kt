@@ -119,6 +119,7 @@ data class Spacing(
     val extraLarge: Dp = 32.dp,
 )
 
+
 data class Dimensions(
     val cardPeekHeight: Dp = 105.dp,
     val cardNormalHeight: Dp = 300.dp,
@@ -136,6 +137,14 @@ data class Dimensions(
     /** new simple tools concept properties */
     val toolsHeaderHeight: Dp = 95.dp,
     val toolsBodyHeight: Dp = 205.dp,
+    /** finally the new final shit */
+    val toolsCardHeaderHeight: Dp = 95.dp,
+    val toolsSheetTabRowHeight: Dp = 48.dp, // TODO: intrinsic size from Android, may be set explicitly in future?
+
+    // TODO: remove hardcoded 24.dp spacing by directly accessing Spacing.large
+    val toolsSheetPeekHeight: Dp = toolsHeaderHeight + toolsSheetTabRowHeight + 24.dp,
+
+    val fabHeight: Dp = 56.dp   // TODO: remove and try to get it via intrisic defaults
 )
 
 val LocalSpacing = compositionLocalOf { Spacing() }

@@ -24,6 +24,7 @@ import app.musikus.di.ApplicationScope
 import app.musikus.services.LOG_TAG
 import app.musikus.ui.library.LibraryItemDialogUiEvent
 import app.musikus.ui.library.LibraryItemEditData
+import app.musikus.ui.theme.libraryItemColors
 import app.musikus.usecase.activesession.ActiveSessionUseCases
 import app.musikus.usecase.activesession.PracticeSection
 import app.musikus.usecase.library.LibraryUseCases
@@ -321,14 +322,16 @@ class ActiveSessionViewModel @Inject constructor(
                 ActiveSessionSectionListItemUiState(
                     id = section.id,
                     libraryItem = section.libraryItem,
-                    duration = section.duration
+                    duration = section.duration,
+                    color = libraryItemColors[section.libraryItem.colorIndex]
                 )
             } ?: emptyList(),
             runningSection = sessionState?.let {
                 ActiveSessionSectionListItemUiState(
                     id = UUIDConverter.deadBeef, // doesn't matter, not used
                     libraryItem = sessionState.activeSection.first,
-                    duration = sessionState.activeSection.second
+                    duration = sessionState.activeSection.second,
+                    color = libraryItemColors[sessionState.activeSection.first.colorIndex]
                 )
             },
             dialogUiState = dialogUiState,

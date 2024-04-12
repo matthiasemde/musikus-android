@@ -27,7 +27,9 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -43,6 +45,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
@@ -53,6 +56,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -66,6 +70,7 @@ import androidx.compose.material.icons.outlined.Mic
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.BottomSheetScaffold
+import androidx.compose.material3.BottomSheetScaffoldState
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -75,16 +80,18 @@ import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LeadingIconTab
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.ScrollableTabRow
+import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Surface
-import androidx.compose.material3.TabRow
+import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -98,6 +105,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.text.font.FontWeight
@@ -161,6 +169,8 @@ fun ActiveSession(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val eventHandler = viewModel::onUiEvent
 
+    val bottomSheetState = rememberBottomSheetScaffoldState()
+
     var showCardMetronome by rememberSaveable { mutableStateOf(false) }
     var metronomeCardIsExpanded by rememberSaveable { mutableStateOf(false) }
     var showCardRecord by rememberSaveable { mutableStateOf(false) }
@@ -191,23 +201,24 @@ fun ActiveSession(
         navigateUp()
     }
 
-    Surface(    // makes sure bottom sheet doesn't overlap with navbar
-        modifier = Modifier
-            .windowInsetsPadding(WindowInsets.navigationBars)
-    ) {
+    Surface(modifier = Modifier.windowInsetsPadding(WindowInsets.navigationBars)) {
+        // Surface makes sure bottom sheet doesn't overlap with navbar
+
         BottomSheetScaffold(
-            sheetContent = { ToolsLayout(tabs = tabs) },
-            sheetContainerColor = Color.Transparent,
-            sheetTonalElevation = 3.dp,
-            sheetShadowElevation = 0.dp,
+            sheetContent = { ToolsBottomSheetLayout(tabs = tabs, sheetState = bottomSheetState) },
+            sheetContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+            sheetTonalElevation = 0.dp,  // deprecated anyways
+            sheetShadowElevation = 0.dp, // deprecated anyways
+            scaffoldState = bottomSheetState,
             sheetShape = RectangleShape,
-            sheetPeekHeight = MaterialTheme.dimensions.cardPeekHeight + 10.dp,
+            sheetPeekHeight = MaterialTheme.dimensions.toolsSheetPeekHeight,
             sheetDragHandle = { },
         ) { paddingValues ->
 
             Box(modifier = Modifier // Box needed for FAB
-                .padding(paddingValues)                         // avoid overlapping bottom sheet
-                .windowInsetsPadding(WindowInsets.statusBars)   // avoid overlapping status bar
+                .background(MaterialTheme.colorScheme.surface)   // main content background color
+                .padding(paddingValues)                             // avoid overlapping bottom sheet
+                .windowInsetsPadding(WindowInsets.statusBars)       // avoid overlapping status bar
             ) {
 
                 Column(modifier = Modifier.fillMaxWidth()) {
@@ -216,43 +227,77 @@ fun ActiveSession(
 
                     Spacer(Modifier.weight(1f))
 
-                    /** ################################## MAIN UI CONTENT ################################## */
-
-                    /** ################################## MAIN UI CONTENT ################################## */
-
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
                             .animateContentSize(),
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
+
+
                         PracticeTimer(
                             modifier = Modifier.padding(top = MaterialTheme.spacing.extraLarge),
                             uiState = uiState
                         )
                         Spacer(modifier = Modifier.height(MaterialTheme.spacing.extraLarge))
-                        CurrentPracticingItem(item = uiState.runningSection)
-                        SectionsList(
-                            modifier = Modifier.align(Alignment.CenterHorizontally),
-                            uiState = uiState,
-                            onSectionDeleted = {
-                                eventHandler(
-                                    ActiveSessionUiEvent.DeleteSection(
-                                        it.id
-                                    )
+
+
+                        Column (
+                            Modifier
+                                .padding(horizontal = MaterialTheme.spacing.large)
+                                .clip(MaterialTheme.shapes.extraLarge)
+                                .fillMaxWidth()
+                                .background(MaterialTheme.colorScheme.surfaceContainer)
+                                .border(
+                                    width = 1.dp,
+                                    color = uiState.runningSection?.color
+                                        ?: MaterialTheme.colorScheme.onSurfaceVariant,
+                                    shape = MaterialTheme.shapes.extraLarge
+                                ),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            CurrentPracticingItem(item = uiState.runningSection)
+                        }
+
+                        Spacer(modifier = Modifier.height(MaterialTheme.spacing.large))
+
+                        Column (
+                            Modifier
+                                .padding(
+                                    start = MaterialTheme.spacing.large,
+                                    end = MaterialTheme.spacing.large,
+                                    bottom = MaterialTheme.spacing.large
                                 )
-                            },
-                            additionalBottomContentPadding = 28.dp    // padding for the FAB (half of FAB height)
-                        )
+                                .clip(MaterialTheme.shapes.extraLarge)
+                                .fillMaxWidth(),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            SectionsList(
+                                modifier = Modifier
+                                    .align(Alignment.CenterHorizontally),
+                                uiState = uiState,
+                                elementBackgroundColor = MaterialTheme.colorScheme.surfaceContainer,
+                                onSectionDeleted = {
+                                    eventHandler(
+                                        ActiveSessionUiEvent.DeleteSection(
+                                            it.id
+                                        )
+                                    )
+                                }
+                            )
+                        }
+
                     }
                     Spacer(Modifier.weight(1f))
 
                 }
 
+                // TODO: anchor FAB to BottomSheet like here:
+                // https://medium.com/android-bits/android-anchoring-views-to-bottom-sheet-9c9069caf7d4
                 ExtendedFloatingActionButton(
                     modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(bottom = MaterialTheme.spacing.large),
+                        .align(Alignment.BottomEnd)
+                        .padding(MaterialTheme.spacing.large),
 //                                .offset(y = (-28).dp)  // offset to center the FAB (FAB height = 56.dp)
 //                            .align(Alignment.CenterHorizontally),
                     onClick = { showLibrary = true },
@@ -263,7 +308,7 @@ fun ActiveSession(
                         )
                     },
                     text = { Text("New Library Item") },
-                    expanded = true
+                    expanded = false
                 )
             }
         }
@@ -352,25 +397,38 @@ fun ActiveSession(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ToolsLayout(
-    tabs: List<ToolsTab>
+private fun ToolsBottomSheetLayout(
+    tabs: List<ToolsTab>,
+    sheetState: BottomSheetScaffoldState
 ) {
     val pagerState = rememberPagerState(pageCount = { 2 })
     val scope = rememberCoroutineScope()
 
     Column {
-//        ToolsTabRow(
-//            tabs = tabs,
-//            activeTabIndex = pagerState.currentPage,
-//            onClick = { tabIndex ->
-//                scope.launch {
-//                    pagerState.animateScrollToPage(tabIndex)
-//                }
-//            }
-//        )
+        ToolsTabRow(
+            tabs = tabs,
+            activeTabIndex = pagerState.currentPage,
+            onClick = { tabIndex ->
+                scope.launch {
+                    pagerState.animateScrollToPage(tabIndex)
+                }
+                // don't wait for animation to finish
+                scope.launch {
+                    if (tabIndex == pagerState.currentPage) {
+                        if (sheetState.bottomSheetState.currentValue != SheetValue.Expanded)
+                            sheetState.bottomSheetState.expand()
+                        else
+                            sheetState.bottomSheetState.partialExpand()
+                    }
+                }
+            }
+        )
         HorizontalPager(state = pagerState) { tabIndex ->
-            ToolsCardLayout { tabs[tabIndex].content() }
+            ToolsCardLayout {
+                tabs[tabIndex].content()
+            }
         }
     }
 }
@@ -381,13 +439,15 @@ private fun ToolsTabRow(
     activeTabIndex: Int,
     onClick: (index: Int) -> Unit
 ) {
-    TabRow(selectedTabIndex = activeTabIndex) {
+    ScrollableTabRow(   // use ScrollableTabRow to achieve the smaller, left-aligned tab style
+        edgePadding = 0.dp,
+        divider = { },
+        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+        selectedTabIndex = activeTabIndex) {
         tabs.forEachIndexed { index, tab ->
-            LeadingIconTab(
-                selected = activeTabIndex == index,
+            Tab(selected = activeTabIndex == index,
                 text = { Text(tab.title) },
                 onClick = { onClick(index) },
-                icon = tab.icon
             )
         }
     }
@@ -400,7 +460,8 @@ private fun ToolsCardLayout(
     OutlinedCard(
         Modifier
             .fillMaxWidth()
-            .padding(MaterialTheme.spacing.large)
+            .padding(MaterialTheme.spacing.large),
+        colors = CardDefaults.outlinedCardColors().copy(containerColor = Color.Transparent)
     ) {
         content()
     }
@@ -529,55 +590,60 @@ private fun CurrentPracticingItem(
         visible = item != null,
         enter = expandVertically() + fadeIn(animationSpec = keyframes { durationMillis = 200 }),
     ) {
-        Surface(
-            modifier = Modifier.animateContentSize(),
-            color = MaterialTheme.colorScheme.tertiaryContainer,
-            shape = RoundedCornerShape(50),
-            shadowElevation = 1.dp
+
+        if (item == null) return@AnimatedVisibility
+
+        AnimatedContent(
+            targetState = item.libraryItem.name,
+            label = "currentPracticingItem",
+            transitionSpec = {
+                slideInVertically { -it } togetherWith slideOutVertically { it }
+            }
         ) {
-            if (item == null) return@Surface
-
-            AnimatedContent(
-                targetState = item.libraryItem.name,
-                label = "currentPracticingItem",
-                transitionSpec = {
-                    slideInVertically { -it } togetherWith slideOutVertically { it }
-                }
+            Row(
+                modifier = Modifier
+                    .height(64.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Row(
+                // leading space
+                Spacer(modifier = Modifier.width(MaterialTheme.spacing.medium))
+
+//                Box(
+//                    modifier = Modifier
+//                        .padding(vertical = MaterialTheme.spacing.small)
+//                        .size(16.dp)
+//                        .clip(CircleShape)
+//                        .background(item.color),
+//                )
+//
+//                Spacer(modifier = Modifier.width(MaterialTheme.spacing.medium))
+
+                Text(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(
-                            horizontal = MaterialTheme.spacing.large,
-                            vertical = MaterialTheme.spacing.medium
-                        ),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
+                        .weight(1f)
+                        .basicMarquee(),
+                    text = it,
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                )
 
-                    Text(
-                        modifier = Modifier
-                            .weight(1f)
-                            .basicMarquee(),
-                        text = it,
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.onTertiaryContainer,
-                        fontWeight = FontWeight.SemiBold,
-                        maxLines = 1,
-                    )
+                Spacer(Modifier.width(MaterialTheme.spacing.small))
 
-                    Spacer(Modifier.width(MaterialTheme.spacing.small))
+                Text(
+                    text = getDurationString(
+                        item.duration,
+                        DurationFormat.MS_DIGITAL
+                    ).toString(),
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontWeight = FontWeight.SemiBold,
+                )
 
-                    Text(
-                        modifier = Modifier.alpha(0.8f),
-                        text = getDurationString(
-                            item.duration,
-                            DurationFormat.MS_DIGITAL
-                        ).toString(),
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.onTertiaryContainer,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                }
+                // trailing space
+                Spacer(modifier = Modifier.width(MaterialTheme.spacing.medium))
             }
         }
     }
@@ -589,6 +655,7 @@ private fun SectionsList(
     modifier: Modifier = Modifier,
     uiState: ActiveSessionUiState,
     additionalBottomContentPadding: Dp = 0.dp,
+    elementBackgroundColor: Color,
     onSectionDeleted: (ActiveSessionSectionListItemUiState) -> Unit = {},
 ) {
     if (uiState.runningSection == null) {
@@ -603,23 +670,23 @@ private fun SectionsList(
     LazyColumn(
         state = listState,
         modifier = modifier
-            .fadingEdge(listState)
+//            .fadingEdge(listState)    // TODO replace fadingEdge with sharp bottom corners
             .fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.extraSmall),
-        contentPadding = PaddingValues(
-            top = MaterialTheme.spacing.small,
-            bottom = additionalBottomContentPadding + MaterialTheme.spacing.small
-        ),
+//        contentPadding = PaddingValues(
+//            top = MaterialTheme.spacing.small,
+//            bottom = additionalBottomContentPadding + MaterialTheme.spacing.small
+//        ),
     ) {
-
         items(
             items = uiState.sections,
             key = { sectionElement -> sectionElement.id },
         ) { sectionElement ->
             SectionListElement(
                 Modifier.animateItemPlacement(),
-                sectionElement,
-                onSectionDeleted = onSectionDeleted
+                sectionElement = sectionElement,
+                elementBackgroundColor = elementBackgroundColor,
+                onSectionDeleted = onSectionDeleted,
             )
         }
     }
@@ -637,44 +704,51 @@ private fun SectionsList(
 @Composable
 private fun SectionListElement(
     modifier: Modifier = Modifier,
+    elementBackgroundColor: Color,
     sectionElement: ActiveSessionSectionListItemUiState,
     onSectionDeleted: (ActiveSessionSectionListItemUiState) -> Unit,
 ) {
     Surface(
-        // Surface for setting shape + padding of list item
-        modifier = modifier.padding(horizontal = MaterialTheme.spacing.large),  // margin around list
-        shape = MaterialTheme.shapes.medium,
+        // Surface for setting shape of item container
+        modifier = modifier.height(56.dp),
+        color = Color.Transparent   // default would be surface color
     ) {
         SwipeToDeleteContainer(onDeleted = { onSectionDeleted(sectionElement) }) {
-            Surface(    // Surface for setting the Color of the List item
-//                color = MaterialTheme.colorScheme.surfaceContainerLow
+            Row(
+                Modifier
+                    .fillMaxSize()
+                    .background(elementBackgroundColor),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
+                // leading space
+                Spacer(modifier = Modifier.width(MaterialTheme.spacing.medium))
+
+                Box(
                     modifier = Modifier
-                        .padding(
-                            horizontal = MaterialTheme.spacing.medium,
-                            vertical = MaterialTheme.spacing.medium
-                        ),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        modifier = Modifier.weight(1f),
-                        text = sectionElement.libraryItem.name,
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
-                    Spacer(modifier = Modifier.width(MaterialTheme.spacing.small))
-                    Text(
-                        modifier = Modifier.alpha(0.8f),
-                        text = getDurationString(
-                            sectionElement.duration,
-                            DurationFormat.MS_DIGITAL
-                        ).toString(),
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        fontWeight = FontWeight.Normal
-                    )
-                }
+                        .padding(vertical = MaterialTheme.spacing.small)
+                        .size(12.dp)
+                        .clip(CircleShape)
+                        .background(sectionElement.color),
+                )
+                Spacer(modifier = Modifier.width(MaterialTheme.spacing.medium))
+                Text(
+                    modifier = Modifier.weight(1f),
+                    text = sectionElement.libraryItem.name,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                Spacer(modifier = Modifier.width(MaterialTheme.spacing.small))
+                Text(
+                    text = getDurationString(
+                        sectionElement.duration,
+                        DurationFormat.MS_DIGITAL
+                    ).toString(),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontWeight = FontWeight.Normal
+                )
+                // trailing space
+                Spacer(modifier = Modifier.width(MaterialTheme.spacing.medium))
             }
         }
     }

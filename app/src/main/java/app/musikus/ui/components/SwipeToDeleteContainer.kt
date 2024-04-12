@@ -10,7 +10,6 @@ package app.musikus.ui.components
  */
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
@@ -35,7 +34,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import app.musikus.ui.theme.spacing
 import kotlinx.coroutines.delay
 
@@ -94,12 +92,20 @@ fun SwipeToDeleteContainer(
 private fun SwipeToDeleteBackground(
     dismissState: SwipeToDismissBoxState
 ) {
-    val color by animateColorAsState(
-        when (dismissState.targetValue) {
-            SwipeToDismissBoxValue.EndToStart -> MaterialTheme.colorScheme.error
-            else -> Color.Transparent
-        }, label = "swipeDismissAnimation"
-    )
+//    val color by animateColorAsState(
+//        when (dismissState.targetValue) {
+//            SwipeToDismissBoxValue.EndToStart -> MaterialTheme.colorScheme.error
+//            else -> Color.Transparent
+//        }, label = "swipeDismissAnimation"
+//    )
+//    val iconColor by animateColorAsState(
+//        when (dismissState.targetValue) {
+//            SwipeToDismissBoxValue.EndToStart -> MaterialTheme.colorScheme.onError
+//            else -> MaterialTheme.colorScheme.error
+//        }, label = "swipeDismissAnimationIcon"
+//    )
+    val color = MaterialTheme.colorScheme.error
+    val iconColor = MaterialTheme.colorScheme.onError
     Box(
         Modifier
             .fillMaxSize()
@@ -110,7 +116,7 @@ private fun SwipeToDeleteBackground(
         Icon(
             imageVector = Icons.Default.Delete,
             contentDescription = "Delete section",
-            tint = MaterialTheme.colorScheme.onError,
+            tint = iconColor,
         )
     }
 }

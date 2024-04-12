@@ -8,6 +8,7 @@
 
 package app.musikus.ui.activesession
 
+import androidx.compose.ui.graphics.Color
 import app.musikus.database.Nullable
 import app.musikus.database.daos.LibraryFolder
 import app.musikus.database.daos.LibraryItem
@@ -52,6 +53,7 @@ data class ActiveSessionAddLibraryItemDialogUiState(
 
 data class ActiveSessionSectionListItemUiState(
     val id: UUID,
+    val color: Color,
     val libraryItem: LibraryItem,
     val duration: Duration
 )
