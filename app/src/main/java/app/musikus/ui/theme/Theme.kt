@@ -8,24 +8,23 @@
 
 package app.musikus.ui.theme
 
-import android.app.Activity
 import android.os.Build
-import android.view.WindowManager
+import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.ReadOnlyComposable
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.core.view.WindowCompat
 import app.musikus.datastore.ColorSchemeSelections
 import app.musikus.datastore.ThemeSelections
 
@@ -74,47 +73,36 @@ fun MusikusTheme(
         }
     }
 
-    // source: https://gist.github.com/Khazbs/1f1f1b5c05f45dbfa465f249b1e20506
-    // and https://stackoverflow.com/questions/65610216/how-to-change-statusbar-color-in-jetpack-compose
-    val view = LocalView.current
-    if (!view.isInEditMode) {
-        SideEffect {
-            val window = (view.context as Activity).window
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                window.setDecorFitsSystemWindows(false)
+    // enable Edge-to-Edge drawing with new API
+    val context = LocalContext.current as ComponentActivity
+    LaunchedEffect(key1 = theme) {
 
-                // background extends behind status and nav bar (even 3 button nav bar)
-                window.setFlags(
-                    WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
-                    WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
+        val statusBarColorDarkTheme = android.graphics.Color.TRANSPARENT
+        val statusBarColorLightTheme = android.graphics.Color.TRANSPARENT
+        val statusBarColorLightThemeOldDevices = DarkColorScheme.surface.toArgb()
+
+        val navBarColorDarkTheme = android.graphics.Color.TRANSPARENT
+        val navBarColorLightTheme = android.graphics.Color.TRANSPARENT
+        val navBarColorLightThemeOldDevices = DarkColorScheme.surface.toArgb()
+
+        context.enableEdgeToEdge(
+            statusBarStyle = if (useDarkTheme)
+                SystemBarStyle.dark(
+                    scrim = statusBarColorDarkTheme
                 )
-            } else {
-                WindowCompat.setDecorFitsSystemWindows(window, false)
-
-                // status bar icons can adapt to light/dark theme,
-                // so we can make the status bar transparent
-                window.statusBarColor = Color.Transparent.toArgb()
-
-                // navigation bar icons can only adapt to light theme for API >= 26 (O),
-                // otherwise we need to manually set the nav bar color to something dark
-                window.navigationBarColor = if(
-                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.O || useDarkTheme
-                ) {
-                    Color.Transparent.toArgb()
-                } else {
-                    LightColorScheme.inverseSurface.toArgb()
-                }
-            }
-
-            // make sure there is no black translucent overlay on the nav bar
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                window.isNavigationBarContrastEnforced = false
-            }
-
-            val insets = WindowCompat.getInsetsController(window, view)
-            insets.isAppearanceLightStatusBars = !useDarkTheme
-            insets.isAppearanceLightNavigationBars = !useDarkTheme // has no effect on API < 26
-        }
+                else SystemBarStyle.light(
+                    scrim = statusBarColorLightTheme,
+                    darkScrim = statusBarColorLightThemeOldDevices
+                ),
+            navigationBarStyle = if (useDarkTheme)
+                SystemBarStyle.dark(
+                    scrim = navBarColorDarkTheme
+                )
+                else SystemBarStyle.light(
+                    scrim = navBarColorLightTheme,
+                    darkScrim = navBarColorLightThemeOldDevices
+                ),
+        )
     }
 
     MaterialTheme(
