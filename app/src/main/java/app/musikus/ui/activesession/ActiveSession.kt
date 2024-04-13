@@ -21,6 +21,8 @@ import androidx.compose.animation.core.keyframes
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
@@ -205,7 +207,13 @@ fun ActiveSession(
         // Surface makes sure bottom sheet doesn't overlap with navbar
 
         BottomSheetScaffold(
-            sheetContent = { ToolsBottomSheetLayout(tabs = tabs, sheetState = bottomSheetState) },
+            sheetContent = {
+                ToolsBottomSheetLayout(
+                    tabs = tabs,
+                    sheetState = bottomSheetState,
+                    onFabPress = { showLibrary = true }
+                )
+            },
             sheetContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
             sheetTonalElevation = 0.dp,  // deprecated anyways
             sheetShadowElevation = 0.dp, // deprecated anyways
@@ -291,25 +299,6 @@ fun ActiveSession(
                     Spacer(Modifier.weight(1f))
 
                 }
-
-                // TODO: anchor FAB to BottomSheet like here:
-                // https://medium.com/android-bits/android-anchoring-views-to-bottom-sheet-9c9069caf7d4
-                ExtendedFloatingActionButton(
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(MaterialTheme.spacing.large),
-//                                .offset(y = (-28).dp)  // offset to center the FAB (FAB height = 56.dp)
-//                            .align(Alignment.CenterHorizontally),
-                    onClick = { showLibrary = true },
-                    icon = {
-                        Icon(
-                            imageVector = Icons.Filled.Add,
-                            contentDescription = "New Library Item"
-                        )
-                    },
-                    text = { Text("New Library Item") },
-                    expanded = false
-                )
             }
         }
     }
@@ -401,34 +390,67 @@ fun ActiveSession(
 @Composable
 private fun ToolsBottomSheetLayout(
     tabs: List<ToolsTab>,
-    sheetState: BottomSheetScaffoldState
+    sheetState: BottomSheetScaffoldState,
+    onFabPress: () -> Unit
 ) {
     val pagerState = rememberPagerState(pageCount = { 2 })
     val scope = rememberCoroutineScope()
 
-    Column {
-        ToolsTabRow(
-            tabs = tabs,
-            activeTabIndex = pagerState.currentPage,
-            onClick = { tabIndex ->
-                scope.launch {
-                    pagerState.animateScrollToPage(tabIndex)
-                }
-                // don't wait for animation to finish
-                scope.launch {
-                    if (tabIndex == pagerState.currentPage) {
-                        if (sheetState.bottomSheetState.currentValue != SheetValue.Expanded)
-                            sheetState.bottomSheetState.expand()
-                        else
-                            sheetState.bottomSheetState.partialExpand()
+    Box(Modifier.fillMaxWidth()) {
+        Column {
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.surface)
+                    .height(28.dp)
+            )
+
+            Spacer(modifier = Modifier.height(28.dp))
+
+            ToolsTabRow(
+                tabs = tabs,
+                activeTabIndex = pagerState.currentPage,
+                onClick = { tabIndex ->
+                    scope.launch {
+                        pagerState.animateScrollToPage(tabIndex)
+                    }
+                    // don't wait for animation to finish
+                    scope.launch {
+                        if (tabIndex == pagerState.currentPage) {
+                            if (sheetState.bottomSheetState.currentValue != SheetValue.Expanded)
+                                sheetState.bottomSheetState.expand()
+                            else
+                                sheetState.bottomSheetState.partialExpand()
+                        }
                     }
                 }
+            )
+            HorizontalPager(state = pagerState) { tabIndex ->
+                ToolsCardLayout {
+                    tabs[tabIndex].content()
+                }
             }
-        )
-        HorizontalPager(state = pagerState) { tabIndex ->
-            ToolsCardLayout {
-                tabs[tabIndex].content()
-            }
+        }
+
+        // TODO: anchor FAB to BottomSheet like here:
+        // https://medium.com/android-bits/android-anchoring-views-to-bottom-sheet-9c9069caf7d4
+        AnimatedVisibility(
+            modifier = Modifier.align(Alignment.TopCenter),
+            visible = sheetState.bottomSheetState.currentValue == SheetValue.PartiallyExpanded,
+            enter = scaleIn(),
+            exit = scaleOut()
+        ) {
+            ExtendedFloatingActionButton(
+                onClick = onFabPress,
+                icon = {
+                    Icon(
+                        imageVector = Icons.Filled.Add,
+                        contentDescription = "New Library Item"
+                    )
+                },
+                text = { Text("Add item") },
+                expanded = true
+            )
         }
     }
 }
