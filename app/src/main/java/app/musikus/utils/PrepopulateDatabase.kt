@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2023 Matthias Emde
+ * Copyright (c) 2023-2024 Matthias Emde
  */
 
 package app.musikus.utils
@@ -105,8 +105,8 @@ suspend fun prepopulateDatabase(
             database.goalDescriptionDao.insert(
                 descriptionCreationAttributes = goalDescriptionCreationAttributes,
                 instanceCreationAttributes = GoalInstanceCreationAttributes(
-                    startTimestamp = database.timeProvider.getStartOfDay(
-                        dayOffset = -1 *
+                    startTimestamp = database.timeProvider.getStartOfDay().minusDays(
+                        -1 *
                             (
                                 if (goalDescriptionCreationAttributes.repeat) 10L
                                 else 1L

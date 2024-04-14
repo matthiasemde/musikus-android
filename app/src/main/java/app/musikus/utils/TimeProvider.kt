@@ -24,104 +24,75 @@ interface TimeProvider {
     fun localZoneId(): ZoneId = now().zone
 
     /**
-     * Get the Beginning of dayOffset Days from now. dayOffset>0 -> future, dayOffset<0 -> past
+     * Get the beginning of current day.
      */
     fun getStartOfDay(
-        dayOffset: Long = 0,
-        weekOffset: Long = 0,
-        monthOffset: Long = 0,
         dateTime: ZonedDateTime = now()
-    ): ZonedDateTime = dateTime
-        .with(ChronoField.MILLI_OF_DAY, 0)
-        .toLocalDate()
-        .atStartOfDay(dateTime.zone)  // make sure time is 00:00
-        .plusMonths(monthOffset)
-        .plusWeeks(weekOffset)
-        .plusDays(dayOffset)
+    ): ZonedDateTime = dateTime.with(ChronoField.NANO_OF_DAY, 0)
 
     /**
-     * Get the End of dayOffset Days from now. Half-open: Actually get the Start of the Next day
+     * Get the end of day. Half-open: Actually get the start of the next day.
      */
     fun getEndOfDay(
-        dayOffset: Long = 0,
-        weekOffset: Long = 0,
-        monthOffset: Long = 0,
         dateTime: ZonedDateTime = now()
-    ) = getStartOfDay(dayOffset + 1, weekOffset, monthOffset, dateTime)
+    ): ZonedDateTime = getStartOfDay(dateTime).plusDays(1)
 
     /**
-     * get the Beginning of a Day (1=Mo, 7=Sun) of the current week (weekOffset=0) / the weeks before (weekOffset<0)
+     * Get the beginning of a day (1=Mo, 7=Sun) of the current week (datetime).
      */
     fun getStartOfDayOfWeek(
-        dayIndex: Long = 0,
-        weekOffset: Long,
-        dateTime: ZonedDateTime = now()
-    ): ZonedDateTime = dateTime
-        .with(ChronoField.SECOND_OF_DAY, 0)
-        .with(ChronoField.DAY_OF_WEEK , dayIndex )         // ISO 8601, Monday is first day of week.
-        .toLocalDate()
-        .atStartOfDay(dateTime.zone)  // make sure time is 00:00
-        .plusWeeks(weekOffset)
-
-    /**
-     * get the End of a Day (1=Mo, 7=Sun) of the current week (weekOffset=0) / the weeks before (weekOffset<0)
-     */
-    fun getEndOfDayOfWeek(
         dayIndex: Long,
-        weekOffset: Long,
         dateTime: ZonedDateTime = now()
     ): ZonedDateTime {
-        // because of half-open approach we have to get the "start of the _next_ day" instead of the end of the current day
-        // e.g. end of Tuesday = Start of Wednesday, so make dayIndex 2 -> 3
-        var nextDay = dayIndex + 1
-        var weekOffsetAdapted = weekOffset
-        if (dayIndex > 6) {
-            nextDay = (dayIndex + 1) % 7
-            weekOffsetAdapted += 1  // increase weekOffset so that we take the start of the first day of NEXT week as end of day
-        }
-        return getStartOfDayOfWeek(nextDay, weekOffsetAdapted, dateTime)
+        assert(dayIndex in 1..7)
+
+        return dateTime
+            .with(ChronoField.NANO_OF_DAY, 0)
+            .with(ChronoField.DAY_OF_WEEK , dayIndex) // ISO 8601, Monday is first day of week.
     }
 
     /**
-     * gets start date of a Week
+     * Get the end of a day (1=Mo, 7=Sun) of the current week (datetime).
+     * Half-open: Actually get the start of the next day.
      */
-    fun getStartOfWeek(
-        weekOffset: Long = 0,
+    fun getEndOfDayOfWeek(
+        dayIndex: Long,
         dateTime: ZonedDateTime = now()
-    ) = getStartOfDayOfWeek(1, weekOffset, dateTime)
+    ): ZonedDateTime {
+        assert(dayIndex in 1..7)
 
-
+        return getStartOfDayOfWeek(dayIndex, dateTime).plusDays(1)
+    }
 
     /**
-     * gets end date of a Week
+     * Get start date of a week
+     */
+    fun getStartOfWeek(
+        dateTime: ZonedDateTime = now()
+    ) = getStartOfDayOfWeek(1, dateTime)
+
+    /**
+     * Get end date of a week. Half-open: Actually get the start of the next week.
      */
     fun getEndOfWeek(
-        weekOffset: Long = 0,
         dateTime: ZonedDateTime = now()
-    ) = getEndOfDayOfWeek(7, weekOffset, dateTime)
-
+    ): ZonedDateTime = getStartOfWeek(dateTime).plusWeeks(1)
 
     /**
      * Get the start of a month.
-     * monthOffset=0 ->, monthOffset=1 -> next month, monthOffset = -1 -> last month, etc.
      */
     fun getStartOfMonth(
-        monthOffset: Long = 0,
         dateTime: ZonedDateTime = now()
     ): ZonedDateTime = dateTime
-        .with(ChronoField.SECOND_OF_DAY, 0)
-        .with(ChronoField.DAY_OF_MONTH , 1 )    // jump to first day of this month
-        .toLocalDate()
-        .atStartOfDay(dateTime.zone)  // make sure time is 00:00
-        .plusMonths(monthOffset) // add desired number of months from now
+        .with(ChronoField.NANO_OF_DAY, 0)
+        .with(ChronoField.DAY_OF_MONTH , 1 ) // jump to first day of this month
 
     /**
-     * Get the end of a month. Half-open: Actually get the Start of the next month.
+     * Get the end of a month. Half-open: Actually get the start of the next month.
      */
     fun getEndOfMonth(
-        monthOffset: Long = 0,
         dateTime: ZonedDateTime = now()
-    ) = getStartOfMonth(monthOffset + 1, dateTime)
+    ): ZonedDateTime = getStartOfMonth(dateTime).plusMonths(1)
 
     companion object {
         val uninitializedDateTime: ZonedDateTime =

@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2023 Matthias Emde
+ * Copyright (c) 2023-2024 Matthias Emde
  */
 
 package app.musikus.ui.statistics
@@ -89,10 +89,11 @@ class StatisticsViewModel @Inject constructor(
 
     /** Imported flows */
 
+    // Timeframe for the current month, but at least the last week
     private val _timeframe = Pair(
         minOf(
             timeProvider.getStartOfMonth(),
-            timeProvider.getStartOfDay(dayOffset = -7)
+            timeProvider.getStartOfDay().minusWeeks(1)
         ),
         timeProvider.getEndOfMonth(),
     )
@@ -157,13 +158,8 @@ class StatisticsViewModel @Inject constructor(
             return@flatMapLatest flow { emit(null) }
         }
 
-        val lastSevenDays = (0..6).reversed().map { dayOffset ->
-            (getDayIndexOfWeek(dateTime = timeProvider.now()) - dayOffset).let {
-                timeProvider.getStartOfDayOfWeek(
-                    dayIndex = (it-1).mod(7).toLong() + 1,
-                    weekOffset = if (it > 0) 0 else -1
-                )
-            }
+        val lastSevenDays = (0L..6L).reversed().map { dayOffset ->
+            timeProvider.getStartOfDay().minusDays(dayOffset)
         }
 
         val groupedSessions = sessions.filter { session ->
@@ -190,12 +186,12 @@ class StatisticsViewModel @Inject constructor(
             if (_noSessionsForDurationCard) {
                 emit(
                     StatisticsPracticeDurationCardUiState(
-                    lastSevenDayPracticeDuration = lastSevenDayPracticeDuration.map { PracticeDurationPerDay(
-                        day = it.day,
-                        duration = 0.seconds
-                    ) },
-                    totalPracticeDuration = totalPracticeDuration,
-                )
+                        lastSevenDayPracticeDuration = lastSevenDayPracticeDuration.map { PracticeDurationPerDay(
+                            day = it.day,
+                            duration = 0.seconds
+                        ) },
+                        totalPracticeDuration = totalPracticeDuration,
+                    )
                 )
                 delay(350)
                 _noSessionsForDurationCard = false
@@ -242,7 +238,7 @@ class StatisticsViewModel @Inject constructor(
                 successRate = lastFiveGoals.count {
                     it.progress >= it.instance.target
                 } to lastFiveGoals.size,
-                lastGoalsDisplayData = lastFiveGoals.map {
+                lastGoalsDisplayData = lastFiveGoals.reversed().map {
                     GoalCardGoalDisplayData(
                         label = it.instance.startTimestamp.musikusFormat(DateFormat.DAY_AND_MONTH),
                         progress = (
