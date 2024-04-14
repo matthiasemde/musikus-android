@@ -102,15 +102,15 @@ fun getDurationString(
                     }
                 }
 
-                if (minutes > 0) {
+                if (minutes > 0 || duration == 0.seconds) {
                     append("$spaceOrNot$minutes")
                     withStyle(SpanStyle(fontSize = SCALE_FACTOR_FOR_SMALL_TEXT.em)) {
                         append("m")
                     }
                 }
 
-                if(totalHours == 0L && minutes == 0L) {
-                    append("<" + spaceOrNot + "1")
+                if(duration < 1.minutes && duration > 0.seconds) {
+                    append("<${spaceOrNot}1")
                     withStyle(SpanStyle(fontSize = SCALE_FACTOR_FOR_SMALL_TEXT.em)) {
                         append("m")
                     }
@@ -147,15 +147,16 @@ fun getDurationString(
                 append(when {
                     totalHours > 0 -> "%02d:%02d".format(totalHours, minutes)
                     minutes > 0 -> "%d min".format(minutes)
-                    else -> "< 1min"
+                    seconds > 0 -> "< 1min"
+                    else -> "0 min"
                 })
             }
             DurationFormat.PRETTY_APPROX -> {
                 append(when {
                     // if time left is larger than a day, show the number of begun days
-                    days > 1 -> "${days + 1} days"
-                    // if days are zero, but hours is larger than 1 show the number of begun hours
-                    hours > 1 -> "${hours + 1} hours"
+                    days > 0 -> "${days + 1} days"
+                    // if days are zero, but hours is larger than 1, show the number of begun hours
+                    hours > 0 -> "${hours + 1} hours"
                     // else, show the number of begun minutes
                     else -> "${minutes + 1} minutes"
                 })
@@ -164,9 +165,9 @@ fun getDurationString(
             DurationFormat.PRETTY_APPROX_SHORT -> {
                 append(when {
                     // if time left is larger than a day, show the number of begun days
-                    days > 1 -> "${days + 1} days"
-                    // show the number of begun hours
-                    hours > 1 -> "${hours + 1}h"
+                    days > 0 -> "${days + 1} days"
+                    // if days are zero, but hours is larger than 1, show the number of begun hours
+                    hours > 0 -> "${hours + 1}h"
                     // else, show the number of begun minutes
                     else -> "${minutes + 1}m"
                 })
