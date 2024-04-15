@@ -9,7 +9,7 @@ jobs:
 
   checks:
     name: Checks
-    if: ${{ echo "${{ github.event.pull_request.body }}" | grep -E "build\s?:\s?no" }}
+    if: "${{ !contains(github.event.pull_request.body, 'build: no') }}"
     runs-on: ubuntu-latest
 
     steps:
