@@ -24,6 +24,7 @@ jobs:
 
   checks:
     name: Checks
+    needs: parse-pull-request
     if: ${{ needs.parse-pull-request.outputs.skip-ci != 'true' }}
     runs-on: ubuntu-latest
 
