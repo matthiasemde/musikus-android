@@ -6,8 +6,26 @@ on:
 env:
     JAVA_VERSION: 17
 jobs:
+
+  parse-pull-request:
+    name: Parse pull request
+    runs-on: ubuntu-latest
+    outputs:
+      skip-ci: ${{ steps.parse-body.outputs.skip-ci }}
+
+    steps:
+      - name: Parse PR body
+        id: parse-body
+        run: |
+          if (( echo "${{ github.event.pull_request.body }}" | grep -E "build\s?:\s?no" )); then
+            echo Skipping CI
+            echo "skip-ci=true" >> "$GITHUB_OUTPUT"
+          fi
+
   checks:
     name: Checks
+    needs: parse-pull-request
+    if: ${{ needs.parse-pull-request.outputs.skip-ci != 'true' }}
     runs-on: ubuntu-latest
 
     steps:
@@ -32,7 +50,10 @@ jobs:
 
   unit-tests:
     name: Unit tests
+    needs: parse-pull-request
+    if: ${{ needs.parse-pull-request.outputs.skip-ci != 'true' }}
     runs-on: macos-latest
+
     steps: 
     - uses: actions/checkout@v4
     - uses: actions/setup-java@v4
@@ -53,11 +74,15 @@ jobs:
 
   instrumentation-tests:
     name: Instrumentation tests
+    needs: parse-pull-request
+    if: ${{ needs.parse-pull-request.outputs.skip-ci != 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 60
+
     strategy:
       matrix:
         api-level: [34]
+
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
