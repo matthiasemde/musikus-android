@@ -17,14 +17,13 @@ jobs:
       - name: Parse PR body
         id: parse-body
         run: |
-          if (( echo "${{ github.event.pull_request.body }}" | grep -E "build\s?:\s?no" )); then
+          if echo "${{ github.event.pull_request.body }}" | grep -E "build\s?:\s?no" ; then
             echo Skipping CI
             echo "skip-ci=true" >> "$GITHUB_OUTPUT"
           fi
 
   checks:
     name: Checks
-    needs: parse-pull-request
     if: ${{ needs.parse-pull-request.outputs.skip-ci != 'true' }}
     runs-on: ubuntu-latest
 
