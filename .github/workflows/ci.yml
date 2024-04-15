@@ -78,7 +78,7 @@ jobs:
         path: .
 
     - name: Extract build files
-      run: tar -xvf build.tar -C app/build
+      run: mkdir -p app/build && tar -xvf build.tar -C app/build
 
     - name: Show build directory
       run: ls -la app/build
@@ -117,7 +117,7 @@ jobs:
           path: .
 
       - name: Extract build files
-        run: tar -xvf build.tar -C app/build
+        run: mkdir -p app/build && tar -xvf build.tar -C app/build
 
       - name: Show build directory
         run: ls -la app/build
