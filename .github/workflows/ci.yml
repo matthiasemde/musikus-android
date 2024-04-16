@@ -60,7 +60,7 @@ jobs:
   unit-tests:
     name: Unit tests
     needs: build
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
 
     steps: 
     - uses: actions/checkout@v4
@@ -79,9 +79,6 @@ jobs:
     - name: Extract build files
       run: |
         tar -xvf build.tar
-
-    - name: Show build directory
-      run: ls -la app/build
 
     - name: Unit tests
       run: ./gradlew testDebugUnitTest
@@ -119,10 +116,6 @@ jobs:
       - name: Extract build files
         run: |
           tar -xvf build.tar
-          chmod -R 777 app/build .gradle
-        
-      - name: Show build directory
-        run: ls -la app/build
 
       # API 30+ emulators only have x86_64 system images.
       - name: Get AVD info
