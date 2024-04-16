@@ -3,7 +3,7 @@ name: RELEASE-NIGHTLY
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 4 * * 2-7'
+    - cron: '0 4 * * 0,2-6'
 env:
   JAVA_VERSION: 17
   RELEASE_BOT_SIGNING_KEY_PATH: ${{ github.workspace }}/signing_key
