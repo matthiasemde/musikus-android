@@ -9,7 +9,7 @@ jobs:
 
   checks:
     name: Checks
-    if: "${{ !contains(github.event.pull_request.body, 'build: no') }}"
+    if: "${{ !startsWith(github.event.pull_request.title, 'docs:') }}"
     runs-on: ubuntu-latest
 
     steps:
