@@ -247,36 +247,42 @@ fun ActiveSession(
                         .fillMaxSize()
                         .padding(sheetPadding)) {
 
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .animateContentSize(),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        PracticeTimer(
-                            modifier = Modifier.padding(top = MaterialTheme.spacing.extraLarge),
-                            uiState = uiState
-                        )
-                        Spacer(modifier = Modifier.height(MaterialTheme.spacing.large))
-                        CurrentPracticingItem(item = uiState.runningSection)
-                        Spacer(modifier = Modifier.height(MaterialTheme.spacing.large))
-                        SectionsList(
-                            modifier = Modifier
-                                .padding(MaterialTheme.spacing.large)
-                                .align(Alignment.CenterHorizontally),
-                            uiState = uiState,
-                            onSectionDeleted = { section ->
-                                eventHandler(
-                                    ActiveSessionUiEvent.DeleteSection(
-                                        section.id
-                                    )
-                                )
-                            },
-                            additionalBottomContentPadding =
-                                MaterialTheme.spacing.large + 56.dp
-                        )
-                    }
+                    Column(Modifier.fillMaxWidth()) {
+                        Spacer(Modifier.weight(1f))
 
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .animateContentSize(),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+
+                            PracticeTimer(
+                                modifier = Modifier.padding(top = MaterialTheme.spacing.extraLarge),
+                                uiState = uiState
+                            )
+                            Spacer(modifier = Modifier.height(MaterialTheme.spacing.large))
+                            CurrentPracticingItem(item = uiState.runningSection)
+                            Spacer(modifier = Modifier.height(MaterialTheme.spacing.large))
+                            SectionsList(
+                                modifier = Modifier
+                                    .padding(MaterialTheme.spacing.large)
+                                    .align(Alignment.CenterHorizontally),
+                                uiState = uiState,
+                                onSectionDeleted = { section ->
+                                    eventHandler(
+                                        ActiveSessionUiEvent.DeleteSection(
+                                            section.id
+                                        )
+                                    )
+                                },
+                                additionalBottomContentPadding =
+                                MaterialTheme.spacing.large + 56.dp
+                            )
+                        }
+
+                        Spacer(Modifier.weight(1f))
+                    }
                     ExtendedFloatingActionButton(
                         modifier = Modifier
                             .align(Alignment.BottomCenter)
