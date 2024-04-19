@@ -141,8 +141,7 @@ data class Dimensions(
     val toolsCardHeaderHeight: Dp = 95.dp,
     val toolsSheetTabRowHeight: Dp = 48.dp, // TODO: intrinsic size from Android, may be set explicitly in future?
 
-    // TODO: remove hardcoded 24.dp spacing by directly accessing Spacing.large
-    val toolsSheetPeekHeight: Dp = toolsHeaderHeight + toolsSheetTabRowHeight + 24.dp,
+    val toolsSheetPeekHeight: Dp = toolsHeaderHeight + 3.dp + 8.dp * 2,    // 3.dp DragHandle + spacing
 
     val fabHeight: Dp = 56.dp   // TODO: remove and try to get it via intrisic defaults
 )
