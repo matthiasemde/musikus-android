@@ -12,7 +12,6 @@
 package app.musikus.ui.activesession
 
 import android.annotation.SuppressLint
-import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
@@ -26,7 +25,6 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.border
@@ -56,15 +54,14 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Headset
@@ -74,10 +71,7 @@ import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.BottomSheetScaffoldState
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonColors
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
@@ -107,23 +101,21 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.musikus.database.UUIDConverter
@@ -134,23 +126,21 @@ import app.musikus.ui.activesession.metronome.MetronomeCardBody
 import app.musikus.ui.activesession.metronome.MetronomeCardHeader
 import app.musikus.ui.activesession.recorder.RecorderCardBody
 import app.musikus.ui.activesession.recorder.RecorderCardHeader
-import app.musikus.ui.components.DeleteConfirmationBottomSheet
 import app.musikus.ui.components.DialogActions
 import app.musikus.ui.components.DialogHeader
 import app.musikus.ui.components.SwipeToDeleteContainer
 import app.musikus.ui.components.fadingEdge
-import app.musikus.ui.library.LibraryItemDialog
 import app.musikus.ui.library.LibraryUiItem
 import app.musikus.ui.sessions.RatingBar
 import app.musikus.ui.theme.dimensions
+import app.musikus.ui.theme.libraryItemColors
 import app.musikus.ui.theme.spacing
 import app.musikus.utils.DurationFormat
-import app.musikus.utils.UiIcon
-import app.musikus.utils.UiText
+import app.musikus.utils.TimeProvider
 import app.musikus.utils.getDurationString
 import kotlinx.coroutines.launch
 import java.time.ZonedDateTime
-import kotlin.time.Duration
+import java.util.UUID
 import kotlin.time.Duration.Companion.seconds
 
 
@@ -166,7 +156,7 @@ enum class ActiveSessionActions {
 data class ToolsTab(
     val title: String,
     val icon: @Composable () -> Unit,
-    val content: @Composable () -> Unit
+    val content: @Composable () -> Unit,
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -183,11 +173,6 @@ fun ActiveSession(
 
     val bottomSheetState = rememberBottomSheetScaffoldState()
 
-    var showCardMetronome by rememberSaveable { mutableStateOf(false) }
-    var metronomeCardIsExpanded by rememberSaveable { mutableStateOf(false) }
-    var showCardRecord by rememberSaveable { mutableStateOf(false) }
-    var showLibrary by rememberSaveable { mutableStateOf(false) }
-
     val tabs = listOf(
         ToolsTab(
             title = "Metronome",
@@ -201,107 +186,12 @@ fun ActiveSession(
         )
     )
 
-    BackHandler {
-        if (showCardRecord || showCardMetronome) {
-            showCardRecord = false
-            showCardMetronome = false
-            return@BackHandler
-        }
-
-        // notify the ViewModel that the back button was pressed
-        eventHandler(ActiveSessionUiEvent.BackPressed)
-        navigateUp()
-    }
-
-
-
-    Scaffold (
-        topBar = {
-            ActiveSessionTopBar(uiState = uiState, eventHandler = eventHandler, navigateUp =  navigateUp)
-        },
-        bottomBar = {
-            ActiveSessionBottomTabs(tabs = tabs)
-        },
-    ) { paddingValues ->
-
-        Surface(Modifier.padding(paddingValues)) {  // don't overlap with bottomBar
-
-            BottomSheetScaffold(
-                sheetContent = {
-                    ToolsBottomSheet(
-                        tabs = tabs,
-                        sheetState = bottomSheetState,
-                        onFabPress = { showLibrary = true }
-                    )
-                },
-                sheetContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                sheetTonalElevation = 0.dp,  // deprecated anyways
-                sheetShadowElevation = 0.dp, // deprecated anyways
-                scaffoldState = bottomSheetState,
-                sheetPeekHeight = MaterialTheme.dimensions.toolsSheetPeekHeight,
-                sheetDragHandle = { SheetDragHandle() }
-            ) { sheetPadding ->
-
-                Box(
-                    Modifier
-                        .fillMaxSize()
-                        .padding(sheetPadding)) {
-
-                    Column(Modifier.fillMaxWidth()) {
-                        Spacer(Modifier.weight(1f))
-
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .animateContentSize(),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-
-                            PracticeTimer(
-                                modifier = Modifier.padding(top = MaterialTheme.spacing.extraLarge),
-                                uiState = uiState
-                            )
-                            Spacer(modifier = Modifier.height(MaterialTheme.spacing.large))
-                            CurrentPracticingItem(item = uiState.runningSection)
-                            Spacer(modifier = Modifier.height(MaterialTheme.spacing.large))
-                            SectionsList(
-                                modifier = Modifier
-                                    .padding(MaterialTheme.spacing.large)
-                                    .align(Alignment.CenterHorizontally),
-                                uiState = uiState,
-                                onSectionDeleted = { section ->
-                                    eventHandler(
-                                        ActiveSessionUiEvent.DeleteSection(
-                                            section.id
-                                        )
-                                    )
-                                },
-                                additionalBottomContentPadding =
-                                MaterialTheme.spacing.large + 56.dp
-                            )
-                        }
-
-                        Spacer(Modifier.weight(1f))
-                    }
-                    ExtendedFloatingActionButton(
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .padding(MaterialTheme.spacing.large),
-                        onClick = { showLibrary = true },
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Filled.Add,
-                                contentDescription = "New Library Item"
-                            )
-                        },
-                        text = { Text("Add item") },
-                        expanded = true
-                    )
-                }
-            }  // BottomSheetScaffold
-        }   // Surface
-    }   // Scaffold
-
+    MainContentScaffold(
+        uiState = uiState,
+        eventHandler = eventHandler,
+        tabs = tabs,
+        bottomSheetState = bottomSheetState,
+    )
 
     /**
      * --------------------- Dialogs ---------------------
@@ -309,107 +199,85 @@ fun ActiveSession(
 
     val scope = rememberCoroutineScope()
     val sheetState = rememberModalBottomSheetState()
-    if (showLibrary) {
+    if (uiState.newItemSelectorUiState.visible) {
         ModalBottomSheet(
             windowInsets = WindowInsets(top = 0.dp), // makes sure the scrim covers the status bar
-            onDismissRequest = { showLibrary = false },
+            onDismissRequest = { },
             sheetState = sheetState,
         ) {
-            LibraryCardHeader(
-                modifier = Modifier.height(MaterialTheme.dimensions.cardPeekHeight),
-                uiState = uiState.libraryCardUiState.headerUiState,
-                isCardCollapsed = false,
-                eventHandler = eventHandler
-            )
-            HorizontalDivider(Modifier.padding(horizontal = MaterialTheme.spacing.medium))
-            LibraryCardBody(
-                uiState = uiState.libraryCardUiState.bodyUiState,
-                cardScrollState = rememberScrollState(),
-                eventHandler = eventHandler,
-                dismissEvent = {
-                    scope.launch { sheetState.hide() }.invokeOnCompletion {
-                        if (!sheetState.isVisible) {
-                            showLibrary = false
-                        }
-                    }
-
-                }
-            )
-            Spacer(modifier = Modifier.height(400.dp))
+            Text(text = "Coming soon")
+//            LibraryCardHeader(
+//                modifier = Modifier.height(MaterialTheme.dimensions.cardPeekHeight),
+//                uiState = uiState.libraryCardUiState.headerUiState,
+//                isCardCollapsed = false,
+//                eventHandler = eventHandler
+//            )
+//            HorizontalDivider(Modifier.padding(horizontal = MaterialTheme.spacing.medium))
+//            LibraryCardBody(
+//                uiState = uiState.libraryCardUiState.bodyUiState,
+//                cardScrollState = rememberScrollState(),
+//                eventHandler = eventHandler,
+//                dismissEvent = {
+//                    scope.launch { sheetState.hide() }.invokeOnCompletion {
+//                        if (!sheetState.isVisible) {
+//                            showLibrary = false
+//                        }
+//                    }
+//
+//                }
+//            )
+//            Spacer(modifier = Modifier.height(400.dp))
         }
     }
 
-//    if (uiState.isPaused) {
-//        PauseDialog(
-//            uiState.ongoingPauseDuration,
-//            eventHandler
+//    val dialogUiState = uiState.dialogUiState
+//
+//    dialogUiState.endDialogUiState?.let { endDialogUiState ->
+//        EndSessionDialog(
+//            rating = endDialogUiState.rating,
+//            comment = endDialogUiState.comment,
+//            onRatingChanged = { eventHandler(ActiveSessionUiEvent.EndDialogRatingChanged(it)) },
+//            onCommentChanged = {
+//                eventHandler(ActiveSessionUiEvent.EndDialogCommentChanged(it))
+//            },
+//            onDismiss = { eventHandler(ActiveSessionUiEvent.EndDialogDismissed) },
+//            onConfirm = {
+//                eventHandler(ActiveSessionUiEvent.EndDialogConfirmed)
+//                navigateUp()
+//            }
 //        )
 //    }
-
-    uiState.addItemDialogUiState?.let { dialogUiState ->
-        LibraryItemDialog(
-            uiState = dialogUiState,
-            eventHandler = { eventHandler(ActiveSessionUiEvent.ItemDialogUiEvent(it)) },
-        )
-    }
-
-    val dialogUiState = uiState.dialogUiState
-
-    dialogUiState.endDialogUiState?.let { endDialogUiState ->
-        EndSessionDialog(
-            rating = endDialogUiState.rating,
-            comment = endDialogUiState.comment,
-            onRatingChanged = { eventHandler(ActiveSessionUiEvent.EndDialogRatingChanged(it)) },
-            onCommentChanged = {
-                eventHandler(ActiveSessionUiEvent.EndDialogCommentChanged(it))
-            },
-            onDismiss = { eventHandler(ActiveSessionUiEvent.EndDialogDismissed) },
-            onConfirm = {
-                eventHandler(ActiveSessionUiEvent.EndDialogConfirmed)
-                navigateUp()
-            }
-        )
-    }
-
-    if (dialogUiState.showDiscardSessionDialog) {
-        DeleteConfirmationBottomSheet(
-            confirmationIcon = UiIcon.DynamicIcon(Icons.Default.Delete),
-            confirmationText = UiText.DynamicString("Discard session?"),
-            onDismiss = { eventHandler(ActiveSessionUiEvent.DiscardSessionDialogDismissed) },
-            onConfirm = {
-                eventHandler(ActiveSessionUiEvent.DiscardSessionDialogConfirmed)
-                navigateUp()
-            }
-        )
-    }
-
-    if (deepLinkArgument == ActiveSessionActions.FINISH.name) {
-        eventHandler(ActiveSessionUiEvent.ShowFinishDialog)
-    }
+//
+//    if (dialogUiState.showDiscardSessionDialog) {
+//        DeleteConfirmationBottomSheet(
+//            confirmationIcon = UiIcon.DynamicIcon(Icons.Default.Delete),
+//            confirmationText = UiText.DynamicString("Discard session?"),
+//            onDismiss = { eventHandler(ActiveSessionUiEvent.DiscardSessionDialogDismissed) },
+//            onConfirm = {
+//                eventHandler(ActiveSessionUiEvent.DiscardSessionDialogConfirmed)
+//                navigateUp()
+//            }
+//        )
+//    }
+//
+//    if (deepLinkArgument == ActiveSessionActions.FINISH.name) {
+//        eventHandler(ActiveSessionUiEvent.ShowFinishDialog)
+//    }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 private fun ToolsBottomSheet(
     tabs: List<ToolsTab>,
     sheetState: BottomSheetScaffoldState,
-    onFabPress: () -> Unit
 ) {
-    val pagerState = rememberPagerState(pageCount = { 2 })
+    val pagerState = rememberPagerState(pageCount = { ActiveSessionTab.entries.size })
     val scope = rememberCoroutineScope()
 
     Box(Modifier.fillMaxWidth()) {
         Column {
-//            Box(
-//                Modifier
-//                    .fillMaxWidth()
-//                    .background(MaterialTheme.colorScheme.surface)
-//                    .height(28.dp)
-//            )
-//
-//            Spacer(modifier = Modifier.height(28.dp))
 
-            HorizontalPager(state = pagerState) { tabIndex ->
+            HorizontalPager(state = pagerState, userScrollEnabled = false) { tabIndex ->
                 ToolsCardLayout {
                     tabs[tabIndex].content()
                 }
@@ -418,11 +286,187 @@ private fun ToolsBottomSheet(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun MainContentScaffold(
+    uiState: ActiveSessionUiState,
+    tabs: List<ToolsTab>,
+    eventHandler: (ActiveSessionUiEvent) -> Unit = {},
+    bottomSheetState: BottomSheetScaffoldState = rememberBottomSheetScaffoldState(),
+) {
+    Scaffold(
+        topBar = {
+            ActiveSessionTopBar(
+                uiState = uiState.mainContentUiState.topBarUiState
+            )
+        },
+        bottomBar = {
+            ActiveSessionBottomTabs(tabs = tabs)
+        },
+    ) { paddingValues ->
+
+        Surface(Modifier.padding(paddingValues)) {  // don't overlap with bottomBar
+            BottomSheetScaffold(
+                sheetContent = {
+                    ToolsBottomSheet(
+                        tabs = tabs,
+                        sheetState = bottomSheetState,
+                    )
+                },
+                sheetContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                sheetTonalElevation = 0.dp,  // deprecated anyways
+                sheetShadowElevation = 0.dp, // deprecated anyways
+                scaffoldState = bottomSheetState,
+                sheetPeekHeight = MaterialTheme.dimensions.toolsSheetPeekHeight,
+                sheetDragHandle = { SheetDragHandle() },
+                content = { sheetPadding ->
+                    MainContent(
+                        contentPadding = sheetPadding,
+                        uiState = uiState,
+                        eventHandler = eventHandler
+                    )
+                }
+            )
+        }
+    }
+}
+
+data class MainScaffoldPreviewParams(
+    val completedSections: List<CompletedSectionUiState>,
+    val currentItem: ActiveSessionCurrentItemUiState,
+)
+
+class MainScaffoldPreviewProvider : PreviewParameterProvider<MainScaffoldPreviewParams> {
+    override val values: Sequence<MainScaffoldPreviewParams>
+        get() = sequenceOf(
+            MainScaffoldPreviewParams(
+                completedSections = SectionListPreviewProvider().values.first(),
+                currentItem = CurrentItemPreviewProvider().values.first()
+            )
+        )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Preview(showSystemUi = true)
+//@PreviewScreenSizes
+@Composable
+private fun PreviewMainScaffold(
+    @PreviewParameter(
+        MainScaffoldPreviewProvider::class,
+        limit = 1
+    ) params: MainScaffoldPreviewParams,
+) {
+    MainContentScaffold(
+        uiState = ActiveSessionUiState(
+            mainContentUiState = MainContentUiState(
+                topBarUiState = ActiveSessionTopBarUiState(
+                    visible = true,
+                    pauseButtonAppearance = SessionPausedResumedState.RUNNING
+                ),
+                timerUiState = ActiveSessionTimerUiState(
+                    timerText = getDurationString(
+                        (42 * 60 + 24).seconds,
+                        DurationFormat.MS_DIGITAL
+                    ).toString(),
+                    subHeadingText = "Practice Time",
+                    subHeadingAppearance = SessionPausedResumedState.RUNNING
+                ),
+                currentItemUiState = params.currentItem,//CurrentItemPreviewProvider().values.first(),
+                pastSectionsUiState = ActiveSessionCompletedSectionsUiState(
+                    visible = true,
+                    items = params.completedSections
+                ),
+            ),
+        ),
+        tabs = listOf(
+            ToolsTab(
+                title = "Metronome",
+                icon = { Icon(imageVector = Icons.Outlined.Headset, contentDescription = null) },
+                content = { }
+            ),
+            ToolsTab(
+                title = "Recorder",
+                icon = { Icon(imageVector = Icons.Outlined.Mic, contentDescription = null) },
+                content = { }
+            )
+        )
+    )
+}
+
+@Composable
+private fun MainContent(
+    contentPadding: PaddingValues,
+    uiState: ActiveSessionUiState,
+    eventHandler: (ActiveSessionUiEvent) -> Unit = {},
+) {
+    Box(
+        Modifier
+            .fillMaxSize()
+            .padding(contentPadding)
+    ) {
+
+        Column(Modifier.fillMaxWidth()) {
+
+            Spacer(Modifier.weight(1f))
+
+            Column(  // Animated container
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .animateContentSize(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+
+                // Big Timer
+                PracticeTimer(
+                    modifier = Modifier.padding(top = MaterialTheme.spacing.extraLarge),
+                    uiState = uiState.mainContentUiState.timerUiState
+                )
+                Spacer(modifier = Modifier.height(MaterialTheme.spacing.large))
+
+                // Running Item
+                CurrentPracticingItem(item = uiState.mainContentUiState.currentItemUiState)
+                Spacer(modifier = Modifier.height(MaterialTheme.spacing.large))
+
+                // Pas Items
+                SectionsList(
+                    modifier = Modifier
+                        .padding(MaterialTheme.spacing.large)
+                        .align(Alignment.CenterHorizontally),
+                    uiState = uiState.mainContentUiState.pastSectionsUiState,
+                    onSectionDeleted = { section ->
+                    },
+                    additionalBottomContentPadding =
+                    MaterialTheme.spacing.large + 56.dp
+                )
+            }
+
+            Spacer(Modifier.weight(1f))
+        }
+
+        // FAB for new Item
+        ExtendedFloatingActionButton(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(MaterialTheme.spacing.large),
+            onClick = { eventHandler(ActiveSessionUiEvent.ShowNewItemSelector) },
+            icon = {
+                Icon(
+                    imageVector = Icons.Filled.Add,
+                    contentDescription = "New Library Item"
+                )
+            },
+            text = { Text("Add item") },
+            expanded = true
+        )
+    }
+}
+
+
 @Composable
 private fun ToolsTabRow(
     tabs: List<ToolsTab>,
     activeTabIndex: Int,
-    onClick: (index: Int) -> Unit
+    onClick: (index: Int) -> Unit,
 ) {
     TabRow(   // use ScrollableTabRow to achieve the smaller, left-aligned tab style
 //        edgePadding = 0.dp,
@@ -439,19 +483,21 @@ private fun ToolsTabRow(
                 )
             }
         },
-        selectedTabIndex = activeTabIndex) {
-            tabs.forEachIndexed { index, tab ->
-                Tab(selected = activeTabIndex == index,
-                    text = { Text(tab.title) },
-                    onClick = { onClick(index) },
-                )
-            }
+        selectedTabIndex = activeTabIndex
+    ) {
+        tabs.forEachIndexed { index, tab ->
+            Tab(
+                selected = activeTabIndex == index,
+                text = { Text(tab.title) },
+                onClick = { onClick(index) },
+            )
         }
+    }
 }
 
 @Composable
 private fun ToolsCardLayout(
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) {
     Column(
         Modifier
@@ -509,50 +555,49 @@ private fun FeatureToggleButton(
 
 @Composable
 private fun ActiveSessionTopBar(
-    uiState: ActiveSessionUiState,
-    eventHandler: ActiveSessionUiEventHandler,
-    navigateUp: () -> Unit,
+    uiState: ActiveSessionTopBarUiState,
+    onNavigateUp: () -> Unit = {},
+    onDiscard: () -> Unit = {},
+    onTogglePause: () -> Unit = {},
+    onSave: () -> Unit = {},
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.surface)
-            .windowInsetsPadding(WindowInsets.statusBars)
+            .windowInsetsPadding(WindowInsets.statusBars)   // take care of statusbar insets
             .padding(vertical = MaterialTheme.spacing.small),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Row (Modifier.padding(horizontal = MaterialTheme.spacing.medium)) {
+        Row(Modifier.padding(horizontal = MaterialTheme.spacing.medium)) {
             IconButton(
-                onClick = { navigateUp() }
+                onClick = onNavigateUp
             ) {
                 Icon(imageVector = Icons.Default.KeyboardArrowDown, contentDescription = null)
             }
 
             AnimatedVisibility(
-                visible = uiState.runningSection != null,
+                visible = uiState.visible,
                 enter = slideInVertically(),
             ) {
                 Row {
                     IconButton(
-                        onClick = { eventHandler(ActiveSessionUiEvent.ShowDiscardSessionDialog) }
+                        onClick = onDiscard
                     ) {
                         Icon(imageVector = Icons.Outlined.Delete, contentDescription = null)
                     }
 
-                    Column (Modifier.animateContentSize()) {
+                    Column(Modifier.animateContentSize()) {
                         PauseButton(
-                            onClick = { eventHandler(ActiveSessionUiEvent.TogglePause) },
-                            paused = uiState.isPaused,
-                            ongoingBreakDuration = uiState.ongoingPauseDuration
+                            onClick = onTogglePause,
+                            paused = uiState.pauseButtonAppearance == SessionPausedResumedState.PAUSED,
                         )
                     }
 
                     Spacer(modifier = Modifier.weight(1f))
 
                     FilledTonalButton(
-                        onClick = {
-                            eventHandler(ActiveSessionUiEvent.ShowFinishDialog)
-                        }
+                        onClick = onSave
                     ) {
                         Text(text = "Save Session")
                     }
@@ -562,15 +607,27 @@ private fun ActiveSessionTopBar(
     }
 }
 
+@Preview
+@Composable
+private fun PreviewActiveSessionTopBar() {
+    ActiveSessionTopBar(
+        uiState =
+        ActiveSessionTopBarUiState(
+            visible = true,
+            pauseButtonAppearance = SessionPausedResumedState.RUNNING,
+        )
+    )
+}
+
 @Composable
 private fun ActiveSessionBottomTabs(
-    tabs: List<ToolsTab>
+    tabs: List<ToolsTab>,
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-            .windowInsetsPadding(WindowInsets.navigationBars)
+            .windowInsetsPadding(WindowInsets.navigationBars)   // take care of navbar insets
     ) {
         HorizontalDivider()
         val scope = rememberCoroutineScope()
@@ -596,7 +653,6 @@ private fun ActiveSessionBottomTabs(
     }
 }
 
-@Preview
 @Composable
 private fun SheetDragHandle() {
     Surface(
@@ -615,44 +671,85 @@ private fun SheetDragHandle() {
 @Composable
 private fun PracticeTimer(
     modifier: Modifier = Modifier,
-    uiState: ActiveSessionUiState,
+    uiState: ActiveSessionTimerUiState,
+    onResumeTimer: () -> Unit = {},
 ) {
-    Text(
-        modifier = modifier,
-        style = if (!uiState.isPaused) {
-            MaterialTheme.typography.displayLarge
-        } else {
-            MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
-        },
-        text = getDurationString(
-            uiState.totalSessionDuration,
-            DurationFormat.MS_DIGITAL
-        ).toString(),
-        fontWeight = FontWeight.Light,
-        fontSize = 75.sp
-    )
-    Text(
-        style = if (!uiState.isPaused) {
-            MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
-        } else {
-            MaterialTheme.typography.titleMedium.copy(color = MaterialTheme.colorScheme.error)
-        },
-        text = if (!uiState.isPaused) "Practice time" else "Paused",
+    Column(
+        Modifier.animateContentSize(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            modifier = modifier,
+            style = MaterialTheme.typography.displayLarge,
+            text = uiState.timerText,
+            fontWeight = FontWeight.Light,
+            fontSize = 75.sp
+        )
+        when (uiState.subHeadingAppearance) {
+            SessionPausedResumedState.RUNNING ->
+                Text(
+                    style = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurfaceVariant),
+                    text = uiState.subHeadingText,
+                )
+
+            SessionPausedResumedState.PAUSED ->
+                ElevatedButton(
+                    onClick = onResumeTimer,
+                    colors = ButtonDefaults.elevatedButtonColors().copy(
+                        containerColor = MaterialTheme.colorScheme.tertiary,
+                        contentColor = MaterialTheme.colorScheme.onTertiary
+                    )
+                ) {
+                    Icon(imageVector = Icons.Outlined.PlayCircle, contentDescription = null)
+                    Spacer(Modifier.width(MaterialTheme.spacing.small))
+                    Text(text = uiState.subHeadingText)
+                }
+        }
+    }
+}
+
+@Preview(name = "Running Session", showBackground = true)
+@Composable
+private fun PreviewPracticeTimer() {
+    PracticeTimer(
+        uiState = ActiveSessionTimerUiState(
+            timerText = getDurationString(
+                (42 * 60 + 24).seconds,
+                DurationFormat.MS_DIGITAL
+            ).toString(),
+            subHeadingText = "Practice Time",
+            subHeadingAppearance = SessionPausedResumedState.RUNNING
+        )
     )
 }
+
+@Preview(name = "Paused Session", showBackground = true)
+@Composable
+private fun PreviewPracticeTimerPaused() {
+    PracticeTimer(
+        uiState = ActiveSessionTimerUiState(
+            timerText = getDurationString(
+                (42 * 60 + 24).seconds,
+                DurationFormat.MS_DIGITAL
+            ).toString(),
+            subHeadingText = "Practice Time",
+            subHeadingAppearance = SessionPausedResumedState.PAUSED
+        )
+    )
+}
+
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun CurrentPracticingItem(
-    item: ActiveSessionSectionListItemUiState?
+    item: ActiveSessionCurrentItemUiState,
 ) {
 
     AnimatedVisibility(
-        visible = item != null,
+        visible = item.visible,
         enter = expandVertically() + fadeIn(animationSpec = keyframes { durationMillis = 200 }),
     ) {
-        if (item == null) return@AnimatedVisibility
-
+        if (!item.visible) return@AnimatedVisibility
 
         Column(
             Modifier
@@ -662,43 +759,32 @@ private fun CurrentPracticingItem(
                 .background(MaterialTheme.colorScheme.surfaceContainerHigh)
                 .border(
                     width = 1.dp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant, //uiState.runningSection?.color ?: MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = item.color,
                     shape = MaterialTheme.shapes.extraLarge
                 ),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
             AnimatedContent(
-                targetState = item.libraryItem.name,
+                targetState = item.name,
                 label = "currentPracticingItem",
                 transitionSpec = {
                     slideInVertically { -it } togetherWith slideOutVertically { it }
                 }
-            ) {
+            ) { itemName ->
                 Row(
-                    modifier = Modifier
-                        .height(64.dp),
+                    modifier = Modifier.height(64.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     // leading space
                     Spacer(modifier = Modifier.width(MaterialTheme.spacing.medium))
 
-//                Box(
-//                    modifier = Modifier
-//                        .padding(vertical = MaterialTheme.spacing.small)
-//                        .size(16.dp)
-//                        .clip(CircleShape)
-//                        .background(item.color),
-//                )
-//
-//                Spacer(modifier = Modifier.width(MaterialTheme.spacing.medium))
-
                     Text(
                         modifier = Modifier
                             .weight(1f)
                             .basicMarquee(),
-                        text = it,
+                        text = itemName,
                         style = MaterialTheme.typography.titleLarge,
                         color = MaterialTheme.colorScheme.onSurface,
                         fontWeight = FontWeight.SemiBold,
@@ -708,10 +794,7 @@ private fun CurrentPracticingItem(
                     Spacer(Modifier.width(MaterialTheme.spacing.small))
 
                     Text(
-                        text = getDurationString(
-                            item.duration,
-                            DurationFormat.MS_DIGITAL
-                        ).toString(),
+                        text = item.durationText,
                         style = MaterialTheme.typography.titleLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontWeight = FontWeight.SemiBold,
@@ -725,15 +808,35 @@ private fun CurrentPracticingItem(
     }
 }
 
+class CurrentItemPreviewProvider : PreviewParameterProvider<ActiveSessionCurrentItemUiState> {
+    override val values: Sequence<ActiveSessionCurrentItemUiState>
+        get() = sequenceOf(
+            ActiveSessionCurrentItemUiState(
+                visible = true,
+                color = libraryItemColors[0],
+                name = "My current practicing item",
+                durationText = "32:19",
+            )
+        )
+}
+
+@Preview
+@Composable
+private fun PreviewCurrentItem(
+    @PreviewParameter(CurrentItemPreviewProvider::class) item: ActiveSessionCurrentItemUiState,
+) {
+    CurrentPracticingItem(item = item)
+}
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun SectionsList(
     modifier: Modifier = Modifier,
-    uiState: ActiveSessionUiState,
+    uiState: ActiveSessionCompletedSectionsUiState,
     additionalBottomContentPadding: Dp = 0.dp,
-    onSectionDeleted: (ActiveSessionSectionListItemUiState) -> Unit = {},
+    onSectionDeleted: (CompletedSectionUiState) -> Unit = {},
 ) {
-    if (uiState.runningSection == null) {
+    if (!uiState.visible) {
         Box(modifier = modifier) {
             Text(text = "Select a library item to start practicing")
         }
@@ -742,7 +845,7 @@ private fun SectionsList(
 
     val listState = rememberLazyListState()
 
-    Column (modifier) {
+    Column(modifier) {
         Text(
             modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.Start,
@@ -762,14 +865,12 @@ private fun SectionsList(
             )
         ) {
             items(
-                items = uiState.sections,
-                key = { sectionElement -> sectionElement.id },
-            ) { sectionElement ->
+                items = uiState.items,
+                key = { item -> item.id },
+            ) { item ->
                 SectionListElement(
                     modifier = Modifier.animateItemPlacement(),
-                    shape = MaterialTheme.shapes.small,
-                    sectionElement = sectionElement,
-                    elementBackgroundColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    item = item,
                     onSectionDeleted = onSectionDeleted,
                 )
             }
@@ -777,12 +878,12 @@ private fun SectionsList(
     }
 
     // scroll to top when new item is added
-    var sectionLen by remember { mutableIntStateOf(uiState.sections.size) }
-    LaunchedEffect(key1 = uiState.sections) {
-        if (uiState.sections.size > sectionLen && listState.canScrollBackward) {
+    var sectionLen by remember { mutableIntStateOf(uiState.items.size) }
+    LaunchedEffect(key1 = uiState.items) {
+        if (uiState.items.size > sectionLen && listState.canScrollBackward) {
             listState.animateScrollToItem(0)
         }
-        sectionLen = uiState.sections.size
+        sectionLen = uiState.items.size
     }
 }
 
@@ -790,10 +891,8 @@ private fun SectionsList(
 @Composable
 private fun SectionListElement(
     modifier: Modifier = Modifier,
-    elementBackgroundColor: Color,
-    shape: Shape,
-    sectionElement: ActiveSessionSectionListItemUiState,
-    onSectionDeleted: (ActiveSessionSectionListItemUiState) -> Unit,
+    item: CompletedSectionUiState,
+    onSectionDeleted: (CompletedSectionUiState) -> Unit = {},
 ) {
     var deleted by remember { mutableStateOf(false) }
     val dismissState = rememberSwipeToDismissBoxState(
@@ -808,18 +907,18 @@ private fun SectionListElement(
     SwipeToDeleteContainer(
         state = dismissState,
         deleted = deleted,
-        onDeleted = { onSectionDeleted(sectionElement) }
+        onDeleted = { onSectionDeleted(item) }
     ) {
         Surface(
             // Surface for setting shape of item container
             modifier = modifier.height(56.dp),
             color = MaterialTheme.colorScheme.surfaceContainer,
-            shape = shape
+            shape = MaterialTheme.shapes.small
         ) {
             Row(
                 Modifier
                     .fillMaxSize()
-                    .background(elementBackgroundColor),
+                    .background(MaterialTheme.colorScheme.surfaceContainerHigh),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 // leading space
@@ -830,21 +929,18 @@ private fun SectionListElement(
                         .padding(vertical = MaterialTheme.spacing.small)
                         .size(12.dp)
                         .clip(CircleShape)
-                        .background(sectionElement.color),
+                        .background(item.color),
                 )
                 Spacer(modifier = Modifier.width(MaterialTheme.spacing.medium))
                 Text(
                     modifier = Modifier.weight(1f),
-                    text = sectionElement.libraryItem.name,
+                    text = item.name,
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurface,
                 )
                 Spacer(modifier = Modifier.width(MaterialTheme.spacing.small))
                 Text(
-                    text = getDurationString(
-                        sectionElement.duration,
-                        DurationFormat.MS_DIGITAL
-                    ).toString(),
+                    text = item.durationText,
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontWeight = FontWeight.Normal
@@ -857,122 +953,57 @@ private fun SectionListElement(
 }
 
 
-@Composable
-private fun PauseButton( onClick: () -> Unit, paused: Boolean, ongoingBreakDuration: Duration) {
-    if(!paused) {
-        IconButton(
-            onClick = onClick
-        ) {
-            Icon(imageVector = Icons.Filled.Pause, contentDescription = null)
-        }
-    } else {
-        ElevatedButton(
-            onClick = onClick,
-            colors = ButtonColors(
-                containerColor = MaterialTheme.colorScheme.error,
-                contentColor = MaterialTheme.colorScheme.onError,
-                disabledContainerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f),
-                disabledContentColor = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.5f),
+class SectionPreviewProvider : PreviewParameterProvider<CompletedSectionUiState> {
+    override val values: Sequence<CompletedSectionUiState>
+        get() = (0..10).asSequence().map {
+            CompletedSectionUiState(
+                id = UUIDConverter.fromInt(it),
+                name = "Completed Item #${it}",
+                durationText = "12:32",
+                color = libraryItemColors[it % libraryItemColors.size],
             )
-        ) {
-            Icon(imageVector = Icons.Outlined.PlayCircle, contentDescription = null)
-            Spacer(modifier = Modifier.width(MaterialTheme.spacing.small))
-            Text(text = "Pause: ${
-                getDurationString(
-                    ongoingBreakDuration,
-                    DurationFormat.MS_DIGITAL
-                )
-            }",)
         }
-    }
+}
+
+class SectionListPreviewProvider : PreviewParameterProvider<List<CompletedSectionUiState>> {
+    override val values: Sequence<List<CompletedSectionUiState>>
+        get() = sequenceOf(
+            SectionPreviewProvider().values.toList()
+        )
 }
 
 @Preview
 @Composable
-private fun PreviewSectionListElement() {
-    SectionListElement(
-        sectionElement = ActiveSessionSectionListItemUiState(
-            id = UUIDConverter.deadBeef,
-            color = Color.Red,
-            libraryItem = LibraryItem(
-                id = UUIDConverter.fromInt(1),
-                name = "TestItem",
-                colorIndex = 1,
-                libraryFolderId = null,
-                customOrder = null,
-                createdAt = ZonedDateTime.now(),
-                modifiedAt = ZonedDateTime.now()
-            ),
-            duration = 342.seconds
-        ),
-        elementBackgroundColor = MaterialTheme.colorScheme.surface,
-        onSectionDeleted = {},
-        shape = MaterialTheme.shapes.small
-    )
-}
-
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-private fun ActiveSessionDraggableCardHeader(
-    uiState: ActiveSessionDraggableCardHeaderUiState,
-    cardState: DraggableCardLocalState,
-    eventHandler: DraggableCardUiEventHandler,
+private fun PreviewSectionItem(
+    @PreviewParameter(SectionPreviewProvider::class, limit = 1) item: CompletedSectionUiState,
 ) {
-    when (uiState) {
-        is ActiveSessionDraggableCardHeaderUiState.LibraryCardHeaderUiState -> {
-            LibraryCardHeader(
-                uiState = uiState,
-                isCardCollapsed = cardState.yState.currentValue == DragValueY.Collapsed,
-                eventHandler = eventHandler
-            )
-        }
-
-        is ActiveSessionDraggableCardHeaderUiState.RecorderCardHeaderUiState -> {
-            RecorderCardHeader()
-        }
-
-        is ActiveSessionDraggableCardHeaderUiState.MetronomeCardHeaderUiState -> {
-            MetronomeCardHeader(
-                onTextClicked = { eventHandler(DraggableCardUiEvent.ResizeCard(DragValueY.Normal)) }
-            )
-        }
-    }
+    SectionListElement(item = item)
 }
 
 
 @Composable
-private fun ActiveSessionDraggableCardBody(
-    uiState: ActiveSessionDraggableCardBodyUiState,
-    cardState: DraggableCardLocalState,
-    eventHandler: DraggableCardUiEventHandler,
+private fun PauseButton(
+    onClick: () -> Unit,
+    paused: Boolean,
 ) {
-    when (uiState) {
-        is ActiveSessionDraggableCardBodyUiState.LibraryCardBodyUiState -> {
-            LibraryCardBody(
-                uiState = uiState,
-                cardScrollState = cardState.scrollState,
-                eventHandler = eventHandler,
-            )
-        }
-
-        is ActiveSessionDraggableCardBodyUiState.RecorderCardBodyUiState -> {
-            RecorderCardBody()
-        }
-
-        is ActiveSessionDraggableCardBodyUiState.MetronomeCardBodyUiState -> {
-            MetronomeCardBody()
-        }
+    IconButton(
+        onClick = onClick
+    ) {
+        Icon(
+            imageVector = if (!paused) Icons.Filled.Pause else Icons.Filled.PlayArrow,
+            contentDescription = null
+        )
     }
 }
 
 @Composable
-private fun LibraryCardHeader(
+private fun LibraryFoldersRow(
     modifier: Modifier = Modifier,
-    uiState: ActiveSessionDraggableCardHeaderUiState.LibraryCardHeaderUiState,
-    isCardCollapsed: Boolean,
-    eventHandler: ActiveSessionUiEventHandler,
+    folders: List<LibraryFolder>,
+    highlightedFolderId: UUID,
+    folderWithBadge: UUID,
+    onFolderSelected: (LibraryFolder) -> Unit,
 ) {
-    // Header Folder List
     val state = rememberLazyListState()
     LazyRow(
         state = state,
@@ -984,15 +1015,12 @@ private fun LibraryCardHeader(
         contentPadding = PaddingValues(horizontal = MaterialTheme.spacing.medium),
     ) {
 
-        items(uiState.folders) { folder ->
+        items(folders) { folder ->
             LibraryFolderElement(
                 folder = folder,
-                onClick = {
-                    eventHandler(ActiveSessionUiEvent.SelectFolder(folder?.id))
-//                    if(isCardCollapsed) eventHandler(DraggableCardUiEvent.ResizeCard(DragValueY.Normal))
-                },
-                isSelected = folder?.id == uiState.selectedFolderId && !isCardCollapsed,
-                showBadge = uiState.activeFolderId?.let { it.value == folder?.id } ?: false
+                onClick = { onFolderSelected(folder) },
+                isSelected = folder.id == highlightedFolderId,
+                showBadge = folder.id == folderWithBadge
             )
         }
     }
@@ -1056,85 +1084,96 @@ private fun LibraryFolderElement(
 }
 
 
+class FolderPreviewParameterProvider : PreviewParameterProvider<LibraryFolder> {
+    override val values = sequenceOf(
+        LibraryFolder(
+            id = UUIDConverter.fromInt(1),
+            customOrder = null,
+            name = "My Folder",
+            modifiedAt = TimeProvider.uninitializedDateTime,
+            createdAt = TimeProvider.uninitializedDateTime
+        ),
+        LibraryFolder(
+            id = UUIDConverter.fromInt(2),
+            customOrder = null,
+            name = "Another Folder",
+            modifiedAt = TimeProvider.uninitializedDateTime,
+            createdAt = TimeProvider.uninitializedDateTime
+        ),
+    )
+}
+
+class LibraryItemPreviewProvider : PreviewParameterProvider<Sequence<LibraryItem>> {
+    override val values: Sequence<Sequence<LibraryItem>>
+        get() {
+            // return a list of Libraryitems with 20 elements:
+            return sequenceOf(
+                (1..20).asSequence().map {
+                    LibraryItem(
+                        UUIDConverter.fromInt(it),
+                        createdAt = TimeProvider.uninitializedDateTime,
+                        modifiedAt = TimeProvider.uninitializedDateTime,
+                        name = "Library Item #${it}",
+                        colorIndex = 0,
+                        customOrder = null,
+                        libraryFolderId = null
+                    )
+                }
+            )
+        }
+}
+
+@Preview(showBackground = true)
 @Composable
-private fun LibraryCardBody(
-    modifier: Modifier = Modifier,
-    uiState: ActiveSessionDraggableCardBodyUiState.LibraryCardBodyUiState,
-    cardScrollState: ScrollState,
-    eventHandler: ActiveSessionUiEventHandler,
-    dismissEvent: () -> Unit = {},
+private fun PreviewLibraryFolderElement(
+    @PreviewParameter(FolderPreviewParameterProvider::class) folder: LibraryFolder,
 ) {
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .fadingEdge(cardScrollState)
+    LibraryFolderElement(
+        folder = folder,
+        onClick = {},
+        isSelected = false
+    )
+}
+
+
+@Composable
+private fun LibraryItemList(
+    modifier: Modifier = Modifier,
+    items: List<LibraryItem>,
+    onItemClick: (LibraryItem) -> Unit,
+    activeItemId: UUID,
+) {
+    LazyColumn(
+        modifier = modifier.fillMaxWidth()
     ) {
-        for ((item, lastPracticedDate) in uiState.itemsWithLastPracticedDate) {
+        items(items) {
             LibraryUiItem(
                 modifier = Modifier.padding(
                     vertical = MaterialTheme.spacing.small,
                     horizontal = MaterialTheme.spacing.medium + MaterialTheme.spacing.small,
                 ),
-                item = item,
-                lastPracticedDate = lastPracticedDate,
+                item = it,
+                lastPracticedDate = ZonedDateTime.now(),
                 selected = false,
-                onShortClick = {
-                    eventHandler(ActiveSessionUiEvent.SelectItem(item))
-                    dismissEvent()
-//                    eventHandler(DraggableCardUiEvent.ResizeCard(DragValueY.Normal))
-                },
+                onShortClick = { onItemClick(it) },
                 onLongClick = { },
                 compact = false,
-                enabled = uiState.activeItemId != item.id
+                enabled = activeItemId != it.id
             )
         }
     }
 }
 
-
+@Preview(showBackground = true)
 @Composable
-private fun PauseDialog(
-    ongoingBreakDuration: Duration,
-    eventHandler: ActiveSessionUiEventHandler,
+private fun PreviewLibraryItemList(
+    @PreviewParameter(LibraryItemPreviewProvider::class, limit = 1) items: Sequence<LibraryItem>,
 ) {
-    Dialog(
-        properties = DialogProperties(
-            dismissOnBackPress = false,
-            dismissOnClickOutside = false
-        ),
-        onDismissRequest = { }
+    LibraryItemList(
+        items = items.toList(),
+        onItemClick = {},
+        activeItemId = UUIDConverter.fromInt(0)
     )
-    {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Card(
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
-                ),
-                shape = RoundedCornerShape(percent = 50)
-            ) {
-                Text(
-                    modifier = Modifier
-                        .padding(MaterialTheme.spacing.large),
-                    text = "Pause: ${
-                        getDurationString(
-                            ongoingBreakDuration,
-                            DurationFormat.MS_DIGITAL
-                        )
-                    }",
-                    style = MaterialTheme.typography.titleMedium,
-                    textAlign = TextAlign.Center
-                )
-            }
-
-            Spacer(Modifier.height(32.dp))
-
-            Button(onClick = { eventHandler(ActiveSessionUiEvent.TogglePause) }) {
-                Text("Resume")
-            }
-        }
-    }
 }
 
 

@@ -9,20 +9,94 @@
 package app.musikus.ui.activesession
 
 import androidx.compose.ui.graphics.Color
-import app.musikus.database.Nullable
+import app.musikus.database.UUIDConverter
 import app.musikus.database.daos.LibraryFolder
 import app.musikus.database.daos.LibraryItem
-import app.musikus.ui.library.DialogMode
-import app.musikus.ui.library.LibraryItemDialogUiEvent
-import app.musikus.ui.library.LibraryItemDialogUiState
-import app.musikus.ui.library.LibraryItemEditData
-import java.time.ZonedDateTime
 import java.util.UUID
-import kotlin.time.Duration
 
 
+// TODO UIText for all Strings?
 
 data class ActiveSessionUiState(
+    val mainContentUiState: MainContentUiState = MainContentUiState(),
+    val newItemSelectorUiState: NewItemSelectorUiState = NewItemSelectorUiState(),
+    val toolsUiState: ActiveSessionToolsUiState = ActiveSessionToolsUiState(),
+)
+
+data class MainContentUiState(
+    val topBarUiState: ActiveSessionTopBarUiState = ActiveSessionTopBarUiState(),
+    val timerUiState: ActiveSessionTimerUiState = ActiveSessionTimerUiState(),
+    val currentItemUiState: ActiveSessionCurrentItemUiState = ActiveSessionCurrentItemUiState(),
+    val pastSectionsUiState: ActiveSessionCompletedSectionsUiState = ActiveSessionCompletedSectionsUiState(),
+)
+
+enum class SessionPausedResumedState {
+    RUNNING,
+    PAUSED
+}
+
+data class ActiveSessionTopBarUiState(
+    val visible: Boolean = false,
+    val pauseButtonAppearance: SessionPausedResumedState = SessionPausedResumedState.RUNNING,
+)
+
+data class ActiveSessionTimerUiState(
+    val timerText: String = "",
+    val subHeadingAppearance: SessionPausedResumedState = SessionPausedResumedState.RUNNING,
+    val subHeadingText: String = ""
+)
+
+data class ActiveSessionCurrentItemUiState(
+    val visible: Boolean = false,
+    val name: String = "",
+    val color: Color = Color.Transparent,
+    val durationText: String = "",
+)
+
+data class ActiveSessionCompletedSectionsUiState(
+    val visible: Boolean = false,
+    val items: List<CompletedSectionUiState> = emptyList()
+)
+
+data class CompletedSectionUiState(
+    val id: UUID = UUIDConverter.deadBeef,
+    val name: String = "",
+    val durationText: String = "",
+    val color: Color = Color.Transparent,
+)
+
+data class NewItemSelectorUiState(
+    val visible: Boolean = false,
+    val selectedFolderId: UUID? = null,
+    val runningItemFolderId: UUID? = null,
+    val folders: List<LibraryFolder> = emptyList(),
+    val items: List<LibraryItem> = emptyList()
+)
+
+data class ActiveSessionToolsUiState(
+    val activeTab: ActiveSessionTab = ActiveSessionTab.entries[0],
+    val expanded: Boolean = false,
+//    val metronomeState: MetronomeUiState,
+//    val recorderState: RecorderUiState
+)
+
+enum class ActiveSessionTab {
+    METRONOME, RECORDER
+}
+
+sealed class ActiveSessionUiEvent {
+    data object ShowNewItemSelector : ActiveSessionUiEvent()
+    data object TogglePauseState : ActiveSessionUiEvent()
+    data object ShowMetronome : ActiveSessionUiEvent()
+    data object ShowRecorder : ActiveSessionUiEvent()
+    data class SelectFolder(val folderId: UUID?) : ActiveSessionUiEvent()
+    data class SelectItem(val item: LibraryItem) : ActiveSessionUiEvent()
+}
+
+// -------------------------------------------------------------------------------------------------
+/*
+
+data class ActiveSessionUiStateOld(
     val cardUiStates: List<ActiveSessionDraggableCardUiState>,
     val totalSessionDuration: Duration,
     val ongoingPauseDuration: Duration,
@@ -128,3 +202,5 @@ sealed class ActiveSessionUiEvent : DraggableCardUiEvent {
 }
 
 typealias ActiveSessionUiEventHandler = (ActiveSessionUiEvent) -> Unit
+
+*/
