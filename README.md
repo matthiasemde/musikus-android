@@ -13,7 +13,7 @@ Your personal practice companion
 <br/>
 
 <div align="center">
-  <a href="https://github.com/matthiasemde/musikus-android/actions/workflows/ci.yml"><img src="https://github.com/matthiasemde/musikus-android/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI"></a>
+  <a href="https://github.com/matthiasemde/musikus-android/actions/workflows/ci.yml?branch=main"><img src="https://github.com/matthiasemde/musikus-android/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI"></a>
   <a href="https://github.com/matthiasemde/musikus-android/releases/latest"><img src="https://img.shields.io/github/v/release/matthiasemde/musikus-android" alt="release"></a>
   <a href="https://github.com/matthiasemde/musikus-android/releases"><img src="https://img.shields.io/github/v/release/matthiasemde/musikus-android?include_prereleases" alt="nighlty-release"></a>
 </div>
