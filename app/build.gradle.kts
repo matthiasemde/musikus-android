@@ -15,6 +15,7 @@ plugins {
     id("dagger.hilt.android.plugin")
     id("com.google.devtools.ksp")
     id("de.mannodermaus.android-junit5")
+    id("com.jaredsburrows.license")
 }
 
 android {
