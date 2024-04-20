@@ -11,7 +11,6 @@
 
 package app.musikus.ui.activesession
 
-import android.annotation.SuppressLint
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
@@ -53,6 +52,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -64,8 +64,6 @@ import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Headset
-import androidx.compose.material.icons.outlined.Mic
 import androidx.compose.material.icons.outlined.PlayCircle
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
@@ -81,9 +79,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Surface
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Tab
@@ -96,6 +94,7 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -110,28 +109,30 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import androidx.compose.ui.tooling.preview.datasource.LoremIpsum
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.musikus.database.UUIDConverter
 import app.musikus.database.daos.LibraryFolder
 import app.musikus.database.daos.LibraryItem
+import app.musikus.datastore.ColorSchemeSelections
 import app.musikus.ui.Screen
-import app.musikus.ui.activesession.metronome.MetronomeCardBody
-import app.musikus.ui.activesession.metronome.MetronomeCardHeader
-import app.musikus.ui.activesession.recorder.RecorderCardBody
-import app.musikus.ui.activesession.recorder.RecorderCardHeader
+import app.musikus.ui.activesession.metronome.MetronomeUi
+import app.musikus.ui.activesession.recorder.RecorderUi
 import app.musikus.ui.components.DialogActions
 import app.musikus.ui.components.DialogHeader
 import app.musikus.ui.components.SwipeToDeleteContainer
 import app.musikus.ui.components.fadingEdge
 import app.musikus.ui.library.LibraryUiItem
 import app.musikus.ui.sessions.RatingBar
+import app.musikus.ui.theme.MusikusColorSchemeProvider
+import app.musikus.ui.theme.MusikusThemedPreview
 import app.musikus.ui.theme.dimensions
 import app.musikus.ui.theme.libraryItemColors
 import app.musikus.ui.theme.spacing
@@ -155,12 +156,11 @@ enum class ActiveSessionActions {
 
 data class ToolsTab(
     val title: String,
-    val icon: @Composable () -> Unit,
+    val type: ActiveSessionTab,
     val content: @Composable () -> Unit,
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
-@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun ActiveSession(
     viewModel: ActiveSessionViewModel = hiltViewModel(),
@@ -168,25 +168,25 @@ fun ActiveSession(
     navigateUp: () -> Unit,
     navigateTo: (Screen) -> Unit,
 ) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsState()
     val eventHandler = viewModel::onUiEvent
 
     val bottomSheetState = rememberBottomSheetScaffoldState()
 
+    // TODO move to somewhere final
     val tabs = listOf(
         ToolsTab(
+            type = ActiveSessionTab.METRONOME,
             title = "Metronome",
-            icon = { Icon(imageVector = Icons.Outlined.Headset, contentDescription = null) },
-            content = { MetronomeCard() }
+            content = { MetronomeUi() }
         ),
         ToolsTab(
+            type = ActiveSessionTab.RECORDER,
             title = "Recorder",
-            icon = { Icon(imageVector = Icons.Outlined.Mic, contentDescription = null) },
-            content = { RecorderCard() }
-        )
+            content = { RecorderUi() })
     )
 
-    MainContentScaffold(
+    ActiveSessionScreen(
         uiState = uiState,
         eventHandler = eventHandler,
         tabs = tabs,
@@ -202,7 +202,7 @@ fun ActiveSession(
     if (uiState.newItemSelectorUiState.visible) {
         ModalBottomSheet(
             windowInsets = WindowInsets(top = 0.dp), // makes sure the scrim covers the status bar
-            onDismissRequest = { },
+            onDismissRequest = { eventHandler(ActiveSessionUiEvent.ToggleNewItemSelectorVisible) },
             sheetState = sheetState,
         ) {
             Text(text = "Coming soon")
@@ -265,138 +265,64 @@ fun ActiveSession(
 //    }
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
-@Composable
-private fun ToolsBottomSheet(
-    tabs: List<ToolsTab>,
-    sheetState: BottomSheetScaffoldState,
-) {
-    val pagerState = rememberPagerState(pageCount = { ActiveSessionTab.entries.size })
-    val scope = rememberCoroutineScope()
-
-    Box(Modifier.fillMaxWidth()) {
-        Column {
-
-            HorizontalPager(state = pagerState, userScrollEnabled = false) { tabIndex ->
-                ToolsCardLayout {
-                    tabs[tabIndex].content()
-                }
-            }
-        }
-    }
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun MainContentScaffold(
+private fun ActiveSessionScreen(
     uiState: ActiveSessionUiState,
     tabs: List<ToolsTab>,
     eventHandler: (ActiveSessionUiEvent) -> Unit = {},
     bottomSheetState: BottomSheetScaffoldState = rememberBottomSheetScaffoldState(),
+    bottomSheetPagerState: PagerState = rememberPagerState(pageCount = { tabs.size }),
 ) {
     Scaffold(
         topBar = {
             ActiveSessionTopBar(
-                uiState = uiState.mainContentUiState.topBarUiState
+                uiState = uiState.topBarUiState,
+                onDiscard = { eventHandler(ActiveSessionUiEvent.ShowDiscardSessionDialog) },
+                onNavigateUp = { eventHandler(ActiveSessionUiEvent.BackPressed) },
+                onTogglePause = { eventHandler(ActiveSessionUiEvent.TogglePauseState) },
+                onSave = { eventHandler(ActiveSessionUiEvent.ShowFinishDialog) },
             )
         },
         bottomBar = {
-            ActiveSessionBottomTabs(tabs = tabs)
+            ActiveSessionBottomTabs(
+                tabs = tabs,
+                sheetState = bottomSheetState,
+                pagerState = bottomSheetPagerState,
+            )
         },
     ) { paddingValues ->
-
         Surface(Modifier.padding(paddingValues)) {  // don't overlap with bottomBar
-            BottomSheetScaffold(
-                sheetContent = {
-                    ToolsBottomSheet(
-                        tabs = tabs,
-                        sheetState = bottomSheetState,
-                    )
-                },
+
+            BottomSheetScaffold(sheetContent = {
+                ActiveSessionToolsLayout(
+                    tabs = tabs,
+                    sheetState = bottomSheetState,
+                    pagerState = bottomSheetPagerState
+                )
+            },
                 sheetContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                 sheetTonalElevation = 0.dp,  // deprecated anyways
                 sheetShadowElevation = 0.dp, // deprecated anyways
-                scaffoldState = bottomSheetState,
                 sheetPeekHeight = MaterialTheme.dimensions.toolsSheetPeekHeight,
+                scaffoldState = bottomSheetState,
                 sheetDragHandle = { SheetDragHandle() },
                 content = { sheetPadding ->
-                    MainContent(
+                    ActiveSessionMainContent(
                         contentPadding = sheetPadding,
-                        uiState = uiState,
+                        uiState = uiState.mainContentUiState,
                         eventHandler = eventHandler
                     )
-                }
-            )
+                })
         }
     }
 }
 
-data class MainScaffoldPreviewParams(
-    val completedSections: List<CompletedSectionUiState>,
-    val currentItem: ActiveSessionCurrentItemUiState,
-)
-
-class MainScaffoldPreviewProvider : PreviewParameterProvider<MainScaffoldPreviewParams> {
-    override val values: Sequence<MainScaffoldPreviewParams>
-        get() = sequenceOf(
-            MainScaffoldPreviewParams(
-                completedSections = SectionListPreviewProvider().values.first(),
-                currentItem = CurrentItemPreviewProvider().values.first()
-            )
-        )
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Preview(showSystemUi = true)
-//@PreviewScreenSizes
-@Composable
-private fun PreviewMainScaffold(
-    @PreviewParameter(
-        MainScaffoldPreviewProvider::class,
-        limit = 1
-    ) params: MainScaffoldPreviewParams,
-) {
-    MainContentScaffold(
-        uiState = ActiveSessionUiState(
-            mainContentUiState = MainContentUiState(
-                topBarUiState = ActiveSessionTopBarUiState(
-                    visible = true,
-                    pauseButtonAppearance = SessionPausedResumedState.RUNNING
-                ),
-                timerUiState = ActiveSessionTimerUiState(
-                    timerText = getDurationString(
-                        (42 * 60 + 24).seconds,
-                        DurationFormat.MS_DIGITAL
-                    ).toString(),
-                    subHeadingText = "Practice Time",
-                    subHeadingAppearance = SessionPausedResumedState.RUNNING
-                ),
-                currentItemUiState = params.currentItem,//CurrentItemPreviewProvider().values.first(),
-                pastSectionsUiState = ActiveSessionCompletedSectionsUiState(
-                    visible = true,
-                    items = params.completedSections
-                ),
-            ),
-        ),
-        tabs = listOf(
-            ToolsTab(
-                title = "Metronome",
-                icon = { Icon(imageVector = Icons.Outlined.Headset, contentDescription = null) },
-                content = { }
-            ),
-            ToolsTab(
-                title = "Recorder",
-                icon = { Icon(imageVector = Icons.Outlined.Mic, contentDescription = null) },
-                content = { }
-            )
-        )
-    )
-}
 
 @Composable
-private fun MainContent(
+private fun ActiveSessionMainContent(
     contentPadding: PaddingValues,
-    uiState: ActiveSessionUiState,
+    uiState: MainContentUiState,
     eventHandler: (ActiveSessionUiEvent) -> Unit = {},
 ) {
     Box(
@@ -419,24 +345,24 @@ private fun MainContent(
                 // Big Timer
                 PracticeTimer(
                     modifier = Modifier.padding(top = MaterialTheme.spacing.extraLarge),
-                    uiState = uiState.mainContentUiState.timerUiState
+                    uiState = uiState.timerUiState
                 )
                 Spacer(modifier = Modifier.height(MaterialTheme.spacing.large))
 
                 // Running Item
-                CurrentPracticingItem(item = uiState.mainContentUiState.currentItemUiState)
+                CurrentPracticingItem(item = uiState.currentItemUiState)
                 Spacer(modifier = Modifier.height(MaterialTheme.spacing.large))
 
-                // Pas Items
+                // Past Items
                 SectionsList(
                     modifier = Modifier
                         .padding(MaterialTheme.spacing.large)
                         .align(Alignment.CenterHorizontally),
-                    uiState = uiState.mainContentUiState.pastSectionsUiState,
+                    uiState = uiState.pastSectionsUiState,
                     onSectionDeleted = { section ->
+                        eventHandler(ActiveSessionUiEvent.DeleteSection(section.id))
                     },
-                    additionalBottomContentPadding =
-                    MaterialTheme.spacing.large + 56.dp
+                    additionalBottomContentPadding = MaterialTheme.spacing.large + 56.dp    // 56.dp for FAB
                 )
             }
 
@@ -448,11 +374,10 @@ private fun MainContent(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .padding(MaterialTheme.spacing.large),
-            onClick = { eventHandler(ActiveSessionUiEvent.ShowNewItemSelector) },
+            onClick = { eventHandler(ActiveSessionUiEvent.ToggleNewItemSelectorVisible) },
             icon = {
                 Icon(
-                    imageVector = Icons.Filled.Add,
-                    contentDescription = "New Library Item"
+                    imageVector = Icons.Filled.Add, contentDescription = "New Library Item"
                 )
             },
             text = { Text("Add item") },
@@ -462,93 +387,21 @@ private fun MainContent(
 }
 
 
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
-private fun ToolsTabRow(
+private fun ActiveSessionToolsLayout(
     tabs: List<ToolsTab>,
-    activeTabIndex: Int,
-    onClick: (index: Int) -> Unit,
+    sheetState: BottomSheetScaffoldState = rememberBottomSheetScaffoldState(),
+    pagerState: PagerState = rememberPagerState(pageCount = { tabs.size }),
 ) {
-    TabRow(   // use ScrollableTabRow to achieve the smaller, left-aligned tab style
-//        edgePadding = 0.dp,
-        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-        divider = {},
-        indicator = { tabPositions ->
-            if (activeTabIndex < tabPositions.size) {
-                TabRowDefaults.PrimaryIndicator(
-                    Modifier
-                        .tabIndicatorOffset(tabPositions[activeTabIndex])
-                        .offset(y = (-46).dp)
-                        .height(2.dp),
-                    width = 100.dp
-                )
+    val scope = rememberCoroutineScope()
+
+    Box(Modifier.fillMaxWidth()) {
+        Column {
+            HorizontalPager(state = pagerState, userScrollEnabled = false) { tabIndex ->
+                tabs[tabIndex].content()
             }
-        },
-        selectedTabIndex = activeTabIndex
-    ) {
-        tabs.forEachIndexed { index, tab ->
-            Tab(
-                selected = activeTabIndex == index,
-                text = { Text(tab.title) },
-                onClick = { onClick(index) },
-            )
         }
-    }
-}
-
-@Composable
-private fun ToolsCardLayout(
-    content: @Composable () -> Unit,
-) {
-    Column(
-        Modifier
-            .fillMaxWidth()
-            .padding(
-//                start = MaterialTheme.spacing.large,
-//                end = MaterialTheme.spacing.large,
-                bottom = MaterialTheme.spacing.medium,
-            )
-    ) {
-        content()
-    }
-}
-
-@Composable
-private fun MetronomeCard() {
-    MetronomeCardHeader(
-        modifier = Modifier.height(MaterialTheme.dimensions.toolsHeaderHeight),
-        onTextClicked = { }
-    )
-    MetronomeCardBody(
-        modifier = Modifier.height(MaterialTheme.dimensions.toolsBodyHeight)
-    )
-}
-
-@Composable
-private fun RecorderCard() {
-    RecorderCardHeader(modifier = Modifier.height(MaterialTheme.dimensions.toolsHeaderHeight))
-    RecorderCardBody(modifier = Modifier.height(MaterialTheme.dimensions.toolsBodyHeight))
-}
-
-@Composable
-private fun FeatureToggleButton(
-    modifier: Modifier = Modifier,
-    text: String,
-    active: Boolean,
-    onClick: () -> Unit,
-) {
-    if (active) {
-        FilledTonalButton(
-            onClick = onClick,
-        ) {
-            Text(text = text)
-        }
-    } else {
-        OutlinedButton(
-            onClick = onClick,
-        ) {
-            Text(text = text)
-        }
-
     }
 }
 
@@ -607,65 +460,91 @@ private fun ActiveSessionTopBar(
     }
 }
 
-@Preview
-@Composable
-private fun PreviewActiveSessionTopBar() {
-    ActiveSessionTopBar(
-        uiState =
-        ActiveSessionTopBarUiState(
-            visible = true,
-            pauseButtonAppearance = SessionPausedResumedState.RUNNING,
-        )
-    )
-}
 
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 private fun ActiveSessionBottomTabs(
     tabs: List<ToolsTab>,
+    sheetState: BottomSheetScaffoldState = rememberBottomSheetScaffoldState(),
+    pagerState: PagerState = rememberPagerState(pageCount = { tabs.size }),
 ) {
+    val scope = rememberCoroutineScope()
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.surfaceContainerHigh)
             .windowInsetsPadding(WindowInsets.navigationBars)   // take care of navbar insets
     ) {
+
         HorizontalDivider()
-        val scope = rememberCoroutineScope()
 
         ToolsTabRow(
             tabs = tabs,
-            activeTabIndex = 0, //pagerState.currentPage,
+            activeTabIndex = pagerState.currentPage,
             onClick = { tabIndex ->
                 scope.launch {
-                    //                            pagerState.animateScrollToPage(tabIndex)
+                    // toggle expansion if on current page
+                    if (tabIndex == pagerState.currentPage) {
+                        if (sheetState.bottomSheetState.currentValue != SheetValue.Expanded) sheetState.bottomSheetState.expand()
+                        else sheetState.bottomSheetState.partialExpand()
+                    }
+                    pagerState.animateScrollToPage(tabIndex)
                 }
-                // don't wait for animation to finish
-                scope.launch {
-                    //                            if (tabIndex == pagerState.currentPage) {
-                    //                                if (sheetState.bottomSheetState.currentValue != SheetValue.Expanded)
-                    //                                    sheetState.bottomSheetState.expand()
-                    //                                else
-                    //                                    sheetState.bottomSheetState.partialExpand()
-                    //                            }
-                }
+            })
+    }
+}
+
+
+@Composable
+private fun ToolsTabRow(
+    tabs: List<ToolsTab>,
+    activeTabIndex: Int,
+    onClick: (index: Int) -> Unit,
+) {
+    TabRow(
+        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+        divider = {},
+        indicator = { tabPositions ->
+            if (activeTabIndex < tabPositions.size) {
+                TabRowDefaults.PrimaryIndicator(
+                    modifier = Modifier
+                        .tabIndicatorOffset(tabPositions[activeTabIndex])
+                        .offset(y = (-45).dp),
+                    width = 100.dp,
+                    shape = RoundedCornerShape(
+                        topStartPercent = 0,
+                        topEndPercent = 0,
+                        bottomStartPercent = 50,
+                        bottomEndPercent = 50
+                    )
+                )
             }
-        )
+        },
+        selectedTabIndex = activeTabIndex
+    ) {
+        tabs.forEachIndexed { index, tab ->
+            Row {
+                Tab(
+                    selected = activeTabIndex == index,
+                    text = { Text(tab.title) },
+                    onClick = { onClick(index) }
+                )
+            }
+        }
     }
 }
 
 @Composable
 private fun SheetDragHandle() {
-    Surface(
-        color = MaterialTheme.colorScheme.outline,
+    Surface(color = MaterialTheme.colorScheme.outline,
         modifier = Modifier
-            .padding(MaterialTheme.spacing.small)
+            .padding(top = MaterialTheme.spacing.small)
             .size(
-                width = 25.dp,
-                height = 3.dp
+                width = 25.dp, height = 3.dp
             ),
         shape = RoundedCornerShape(50),
-        content = { }
-    )
+        content = { })
 }
 
 @Composable
@@ -675,8 +554,7 @@ private fun PracticeTimer(
     onResumeTimer: () -> Unit = {},
 ) {
     Column(
-        Modifier.animateContentSize(),
-        horizontalAlignment = Alignment.CenterHorizontally
+        Modifier.animateContentSize(), horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
             modifier = modifier,
@@ -686,56 +564,23 @@ private fun PracticeTimer(
             fontSize = 75.sp
         )
         when (uiState.subHeadingAppearance) {
-            SessionPausedResumedState.RUNNING ->
-                Text(
-                    style = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurfaceVariant),
-                    text = uiState.subHeadingText,
-                )
+            SessionPausedResumedState.RUNNING -> Text(
+                style = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurfaceVariant),
+                text = uiState.subHeadingText,
+            )
 
-            SessionPausedResumedState.PAUSED ->
-                ElevatedButton(
-                    onClick = onResumeTimer,
-                    colors = ButtonDefaults.elevatedButtonColors().copy(
-                        containerColor = MaterialTheme.colorScheme.tertiary,
-                        contentColor = MaterialTheme.colorScheme.onTertiary
-                    )
-                ) {
-                    Icon(imageVector = Icons.Outlined.PlayCircle, contentDescription = null)
-                    Spacer(Modifier.width(MaterialTheme.spacing.small))
-                    Text(text = uiState.subHeadingText)
-                }
+            SessionPausedResumedState.PAUSED -> ElevatedButton(
+                onClick = onResumeTimer, colors = ButtonDefaults.elevatedButtonColors().copy(
+                    containerColor = MaterialTheme.colorScheme.tertiary,
+                    contentColor = MaterialTheme.colorScheme.onTertiary
+                )
+            ) {
+                Icon(imageVector = Icons.Outlined.PlayCircle, contentDescription = null)
+                Spacer(Modifier.width(MaterialTheme.spacing.small))
+                Text(text = uiState.subHeadingText)
+            }
         }
     }
-}
-
-@Preview(name = "Running Session", showBackground = true)
-@Composable
-private fun PreviewPracticeTimer() {
-    PracticeTimer(
-        uiState = ActiveSessionTimerUiState(
-            timerText = getDurationString(
-                (42 * 60 + 24).seconds,
-                DurationFormat.MS_DIGITAL
-            ).toString(),
-            subHeadingText = "Practice Time",
-            subHeadingAppearance = SessionPausedResumedState.RUNNING
-        )
-    )
-}
-
-@Preview(name = "Paused Session", showBackground = true)
-@Composable
-private fun PreviewPracticeTimerPaused() {
-    PracticeTimer(
-        uiState = ActiveSessionTimerUiState(
-            timerText = getDurationString(
-                (42 * 60 + 24).seconds,
-                DurationFormat.MS_DIGITAL
-            ).toString(),
-            subHeadingText = "Practice Time",
-            subHeadingAppearance = SessionPausedResumedState.PAUSED
-        )
-    )
 }
 
 
@@ -758,20 +603,15 @@ private fun CurrentPracticingItem(
                 .fillMaxWidth()
                 .background(MaterialTheme.colorScheme.surfaceContainerHigh)
                 .border(
-                    width = 1.dp,
-                    color = item.color,
-                    shape = MaterialTheme.shapes.extraLarge
-                ),
-            horizontalAlignment = Alignment.CenterHorizontally
+                    width = 1.dp, color = item.color, shape = MaterialTheme.shapes.extraLarge
+                ), horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-            AnimatedContent(
-                targetState = item.name,
+            AnimatedContent(targetState = item.name,
                 label = "currentPracticingItem",
                 transitionSpec = {
                     slideInVertically { -it } togetherWith slideOutVertically { it }
-                }
-            ) { itemName ->
+                }) { itemName ->
                 Row(
                     modifier = Modifier.height(64.dp),
                     verticalAlignment = Alignment.CenterVertically,
@@ -808,25 +648,6 @@ private fun CurrentPracticingItem(
     }
 }
 
-class CurrentItemPreviewProvider : PreviewParameterProvider<ActiveSessionCurrentItemUiState> {
-    override val values: Sequence<ActiveSessionCurrentItemUiState>
-        get() = sequenceOf(
-            ActiveSessionCurrentItemUiState(
-                visible = true,
-                color = libraryItemColors[0],
-                name = "My current practicing item",
-                durationText = "32:19",
-            )
-        )
-}
-
-@Preview
-@Composable
-private fun PreviewCurrentItem(
-    @PreviewParameter(CurrentItemPreviewProvider::class) item: ActiveSessionCurrentItemUiState,
-) {
-    CurrentPracticingItem(item = item)
-}
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -895,20 +716,15 @@ private fun SectionListElement(
     onSectionDeleted: (CompletedSectionUiState) -> Unit = {},
 ) {
     var deleted by remember { mutableStateOf(false) }
-    val dismissState = rememberSwipeToDismissBoxState(
-        confirmValueChange = { targetValue ->
-            deleted = targetValue == SwipeToDismissBoxValue.EndToStart
-            deleted
-        },
-        positionalThreshold = with(LocalDensity.current) {
-            { 112.dp.toPx() }
-        }
-    )
-    SwipeToDeleteContainer(
-        state = dismissState,
+    val dismissState = rememberSwipeToDismissBoxState(confirmValueChange = { targetValue ->
+        deleted = targetValue == SwipeToDismissBoxValue.EndToStart
+        deleted
+    }, positionalThreshold = with(LocalDensity.current) {
+        { 112.dp.toPx() }
+    })
+    SwipeToDeleteContainer(state = dismissState,
         deleted = deleted,
-        onDeleted = { onSectionDeleted(item) }
-    ) {
+        onDeleted = { onSectionDeleted(item) }) {
         Surface(
             // Surface for setting shape of item container
             modifier = modifier.height(56.dp),
@@ -950,34 +766,6 @@ private fun SectionListElement(
             }
         }
     }
-}
-
-
-class SectionPreviewProvider : PreviewParameterProvider<CompletedSectionUiState> {
-    override val values: Sequence<CompletedSectionUiState>
-        get() = (0..10).asSequence().map {
-            CompletedSectionUiState(
-                id = UUIDConverter.fromInt(it),
-                name = "Completed Item #${it}",
-                durationText = "12:32",
-                color = libraryItemColors[it % libraryItemColors.size],
-            )
-        }
-}
-
-class SectionListPreviewProvider : PreviewParameterProvider<List<CompletedSectionUiState>> {
-    override val values: Sequence<List<CompletedSectionUiState>>
-        get() = sequenceOf(
-            SectionPreviewProvider().values.toList()
-        )
-}
-
-@Preview
-@Composable
-private fun PreviewSectionItem(
-    @PreviewParameter(SectionPreviewProvider::class, limit = 1) item: CompletedSectionUiState,
-) {
-    SectionListElement(item = item)
 }
 
 
@@ -1035,14 +823,11 @@ private fun LibraryFolderElement(
     isSelected: Boolean,
 ) {
     val color by animateColorAsState(
-        targetValue =
-        if (isSelected) {
+        targetValue = if (isSelected) {
             MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.7f)
         } else {
             MaterialTheme.colorScheme.secondaryContainer.copy(0f)
-        },
-        label = "color",
-        animationSpec = tween(200)
+        }, label = "color", animationSpec = tween(200)
     )
     Surface(
         modifier = Modifier
@@ -1059,11 +844,8 @@ private fun LibraryFolderElement(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            BadgedBox(
-                modifier = Modifier
-                    .padding(horizontal = MaterialTheme.spacing.small),
-                badge = { if (showBadge) Badge() }
-            ) {
+            BadgedBox(modifier = Modifier.padding(horizontal = MaterialTheme.spacing.small),
+                badge = { if (showBadge) Badge() }) {
                 Icon(
                     Icons.Default.Folder,
                     tint = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f),
@@ -1081,58 +863,6 @@ private fun LibraryFolderElement(
             )
         }
     }
-}
-
-
-class FolderPreviewParameterProvider : PreviewParameterProvider<LibraryFolder> {
-    override val values = sequenceOf(
-        LibraryFolder(
-            id = UUIDConverter.fromInt(1),
-            customOrder = null,
-            name = "My Folder",
-            modifiedAt = TimeProvider.uninitializedDateTime,
-            createdAt = TimeProvider.uninitializedDateTime
-        ),
-        LibraryFolder(
-            id = UUIDConverter.fromInt(2),
-            customOrder = null,
-            name = "Another Folder",
-            modifiedAt = TimeProvider.uninitializedDateTime,
-            createdAt = TimeProvider.uninitializedDateTime
-        ),
-    )
-}
-
-class LibraryItemPreviewProvider : PreviewParameterProvider<Sequence<LibraryItem>> {
-    override val values: Sequence<Sequence<LibraryItem>>
-        get() {
-            // return a list of Libraryitems with 20 elements:
-            return sequenceOf(
-                (1..20).asSequence().map {
-                    LibraryItem(
-                        UUIDConverter.fromInt(it),
-                        createdAt = TimeProvider.uninitializedDateTime,
-                        modifiedAt = TimeProvider.uninitializedDateTime,
-                        name = "Library Item #${it}",
-                        colorIndex = 0,
-                        customOrder = null,
-                        libraryFolderId = null
-                    )
-                }
-            )
-        }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun PreviewLibraryFolderElement(
-    @PreviewParameter(FolderPreviewParameterProvider::class) folder: LibraryFolder,
-) {
-    LibraryFolderElement(
-        folder = folder,
-        onClick = {},
-        isSelected = false
-    )
 }
 
 
@@ -1162,18 +892,6 @@ private fun LibraryItemList(
             )
         }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun PreviewLibraryItemList(
-    @PreviewParameter(LibraryItemPreviewProvider::class, limit = 1) items: Sequence<LibraryItem>,
-) {
-    LibraryItemList(
-        items = items.toList(),
-        onItemClick = {},
-        activeItemId = UUIDConverter.fromInt(0)
-    )
 }
 
 
@@ -1226,4 +944,142 @@ fun EndSessionDialog(
             }
         }
     }
+}
+
+
+/**
+ * ########################################### Previews ############################################
+ */
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@PreviewLightDark
+@Composable
+private fun PreviewActiveSessionScreen(
+    @PreviewParameter(MusikusColorSchemeProvider::class) theme: ColorSchemeSelections,
+) {
+    MusikusThemedPreview (theme) {
+        ActiveSessionScreen(
+            uiState = ActiveSessionUiState(
+                topBarUiState = ActiveSessionTopBarUiState(
+                    visible = true, pauseButtonAppearance = SessionPausedResumedState.RUNNING
+                ),
+                mainContentUiState = MainContentUiState(
+                    timerUiState = ActiveSessionTimerUiState(
+                        timerText = getDurationString(
+                            (42 * 60 + 24).seconds, DurationFormat.MS_DIGITAL
+                        ).toString(),
+                        subHeadingText = "Practice Time",
+                        subHeadingAppearance = SessionPausedResumedState.RUNNING
+                    ),
+                    currentItemUiState = dummyRunningItem,
+                    pastSectionsUiState = ActiveSessionCompletedSectionsUiState(
+                        visible = true, items = dummySections.toList()
+                    ),
+                ),
+            ), tabs = listOf(
+                ToolsTab(
+                    type = ActiveSessionTab.METRONOME,
+                    title = "Metronome",
+                    content = { }
+                ),
+                ToolsTab(
+                    type = ActiveSessionTab.RECORDER,
+                    title = "Recorder",
+                    content = { })
+            )
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewCurrentItem() {
+    CurrentPracticingItem(item = dummyRunningItem)
+}
+
+
+@Preview
+@Composable
+private fun PreviewSectionItem() {
+    SectionListElement(item = dummySections.first())
+}
+
+
+//@Preview
+@Composable
+private fun PreviewLibraryFolderElement(
+    @PreviewParameter(FolderPreviewParameterProvider::class) folder: LibraryFolder,
+) {
+    LibraryFolderElement(
+        folder = folder, onClick = {}, isSelected = false
+    )
+}
+
+
+//@Preview
+@Composable
+private fun PreviewLibraryItemList(
+    @PreviewParameter(MusikusColorSchemeProvider::class) theme: ColorSchemeSelections,
+) {
+    MusikusThemedPreview (theme = theme) {
+        LibraryItemList(
+            items = dummyLibraryItems.toList(), onItemClick = {}, activeItemId = UUIDConverter.fromInt(0)
+        )
+    }
+}
+
+
+/** -------------------------------- Preview Parameter Providers -------------------------------- */
+
+
+
+
+private val dummyRunningItem = ActiveSessionCurrentItemUiState(
+    visible = true,
+    color = libraryItemColors[0],
+    name = LoremIpsum(5).values.first(),
+    durationText = "32:19",
+)
+
+
+private val dummySections = (0..10).asSequence().map {
+    CompletedSectionUiState(
+        id = UUIDConverter.fromInt(it),
+        name = "Completed Item #${it}",
+        durationText = "12:32",
+        color = libraryItemColors[it % libraryItemColors.size],
+    )
+}
+
+
+class FolderPreviewParameterProvider : PreviewParameterProvider<LibraryFolder> {
+    override val values = sequenceOf(
+        LibraryFolder(
+            id = UUIDConverter.fromInt(1),
+            customOrder = null,
+            name = "My Folder",
+            modifiedAt = TimeProvider.uninitializedDateTime,
+            createdAt = TimeProvider.uninitializedDateTime
+        ),
+        LibraryFolder(
+            id = UUIDConverter.fromInt(2),
+            customOrder = null,
+            name = "Another Folder",
+            modifiedAt = TimeProvider.uninitializedDateTime,
+            createdAt = TimeProvider.uninitializedDateTime
+        ),
+    )
+}
+
+private val dummyLibraryItems = (1..20).asSequence().map {
+    LibraryItem(
+        UUIDConverter.fromInt(it),
+        createdAt = TimeProvider.uninitializedDateTime,
+        modifiedAt = TimeProvider.uninitializedDateTime,
+        name = "Library Item #${it}",
+        colorIndex = 0,
+        customOrder = null,
+        libraryFolderId = null
+    )
 }

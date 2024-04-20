@@ -45,7 +45,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.Dp
@@ -53,7 +52,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.musikus.datastore.ColorSchemeSelections
-import app.musikus.ui.theme.ColorSchemeProvider
+import app.musikus.ui.theme.MusikusColorSchemeProvider
 import app.musikus.ui.theme.MusikusThemedPreview
 import app.musikus.ui.theme.dimensions
 import app.musikus.ui.theme.spacing
@@ -75,7 +74,7 @@ fun MetronomeUi(
 }
 
 @Composable
-private fun MetronomeLayout(
+fun MetronomeLayout(
     modifier: Modifier = Modifier,
     uiState: MetronomeUiState,
     eventHandler: (MetronomeUiEvent) -> Unit,
@@ -112,21 +111,22 @@ private fun MetronomeLayout(
                 onTapTempo = { eventHandler(MetronomeUiEvent.TabTempo) }
             )
         }
+        
+        Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
     }
 }
 
 
-@Preview(widthDp = 320)
 @PreviewLightDark
 @Composable
 private fun PreviewMetronome(
-    @PreviewParameter(ColorSchemeProvider::class) theme: ColorSchemeSelections,
+    @PreviewParameter(MusikusColorSchemeProvider::class) theme: ColorSchemeSelections,
 ) {
     MusikusThemedPreview (theme) {
         Surface (color = MaterialTheme.colorScheme.surfaceContainerHigh) {
             MetronomeLayout(
                 uiState = MetronomeUiState(
-                    settings = MetronomeSettings.DEFAULT.copy(bpm = 100),
+                    settings = MetronomeSettings.DEFAULT.copy(bpm = 240),
                     tempoDescription = "Allegro",
                     isPlaying = false,
                     sliderValue = 120f,
@@ -182,7 +182,10 @@ private fun MetronomeHeader(
             )
 
             // Bpm
-            Row (Modifier.width(150.dp).padding(MaterialTheme.spacing.small),
+            Row (
+                Modifier
+                    .width(150.dp)
+                    .padding(MaterialTheme.spacing.small),
                 horizontalArrangement = Arrangement.Center){
                 Text(
                     modifier = Modifier
