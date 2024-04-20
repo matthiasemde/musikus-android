@@ -8,10 +8,9 @@
 
 package app.musikus.ui.activesession.metronome
 
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -37,157 +36,244 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Slider
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.musikus.datastore.ColorSchemeSelections
+import app.musikus.ui.theme.ColorSchemeProvider
+import app.musikus.ui.theme.MusikusThemedPreview
+import app.musikus.ui.theme.dimensions
 import app.musikus.ui.theme.spacing
 
+
 @Composable
-fun MetronomeCardHeader(
+fun MetronomeUi(
     modifier: Modifier = Modifier,
     viewModel: MetronomeViewModel = hiltViewModel(),
-    onTextClicked: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val eventHandler = viewModel::onUiEvent
 
-    Row(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(horizontal = MaterialTheme.spacing.large),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
+    MetronomeLayout(
+        modifier = modifier,
+        uiState = uiState,
+        eventHandler = eventHandler
+    )
+}
 
-        val smallIncrementButtonSize = 30.dp
-        val largeIncrementButtonSize = 35.dp
-
-        // -5 Bpm
-        MetronomeIncrementBpmButton(
-            bpmIncrement = -5,
-            size = largeIncrementButtonSize,
-            eventHandler = eventHandler
+@Composable
+private fun MetronomeLayout(
+    modifier: Modifier = Modifier,
+    uiState: MetronomeUiState,
+    eventHandler: (MetronomeUiEvent) -> Unit,
+) {
+    Column (modifier = modifier.padding(horizontal = MaterialTheme.spacing.large)) {
+        MetronomeHeader(
+            modifier = Modifier.height(MaterialTheme.dimensions.toolsHeaderHeight),
+            uiState = uiState,
+            onIncrementBpm = { eventHandler(MetronomeUiEvent.IncrementBpm(it)) },
+            onTogglePlay = { eventHandler(MetronomeUiEvent.ToggleIsPlaying) }
         )
 
-        Spacer(modifier = Modifier.width(MaterialTheme.spacing.small))
+        HorizontalDivider(Modifier.padding(horizontal = MaterialTheme.spacing.medium))
 
-        // -1 Bpm
-        MetronomeIncrementBpmButton(
-            bpmIncrement = -1,
-            size = smallIncrementButtonSize,
-            eventHandler = eventHandler
-        )
-
-        // Bpm
-        Text(
-            modifier = Modifier
-                .width(100.dp)
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null,
-                    onClick = onTextClicked
-                ),
-            text = uiState.settings.bpm.toString(),
-            textAlign = TextAlign.Center,
-            style = MaterialTheme.typography.displayMedium,
-            fontWeight = FontWeight.Bold,
-            overflow = TextOverflow.Clip
-        )
-
-        // +1 Bpm
-        MetronomeIncrementBpmButton(
-            bpmIncrement = 1,
-            size = smallIncrementButtonSize,
-            eventHandler = eventHandler
-        )
-
-        Spacer(modifier = Modifier.width(MaterialTheme.spacing.small))
-
-        // +5 Bpm
-        MetronomeIncrementBpmButton(
-            bpmIncrement = 5,
-            size = largeIncrementButtonSize,
-            eventHandler = eventHandler
-        )
-
-
-        Spacer(modifier = Modifier.weight(1f))
-
-        // Start/Stop Metronome
-        FilledIconButton(
-            modifier = Modifier.size(48.dp),
-            onClick = { eventHandler(MetronomeUiEvent.ToggleIsPlaying) },
-            shape = CircleShape,
+        Column(
+            modifier = modifier
+                .fillMaxWidth()
+                .height(MaterialTheme.dimensions.toolsBodyHeight),
+            verticalArrangement = Arrangement.SpaceEvenly
         ) {
-            Box(Modifier.padding(MaterialTheme.spacing.small)) {
-                if (!uiState.isPlaying) {
-                    Icon(
-                        modifier = Modifier.fillMaxSize(),
-                        imageVector = Icons.Default.PlayArrow,
-                        contentDescription = "Start metronome"
-                    )
-                } else {
-                    Icon(
-                        modifier = Modifier.fillMaxSize(),
-                        imageVector = Icons.Default.Stop,
-                        contentDescription = "Stop metronome"
-                    )
-                }
-            }
-        }
+            MetronomeBody(
+                modifier = Modifier,
+                uiState = uiState,
+                onSliderValueChange = { eventHandler(MetronomeUiEvent.UpdateSliderValue(it)) }
+            )
 
+            /** Beats per bar, Click per beat and Tab tempo */
+            MetronomeExtraSettingsRow(
+                uiState = uiState.settings,
+                onIncrementBeatsPerBar = { eventHandler(MetronomeUiEvent.IncrementBeatsPerBar) },
+                onDecrementBeatsPerBar = { eventHandler(MetronomeUiEvent.DecrementBeatsPerBar) },
+                onIncrementClicksPerBear = { eventHandler(MetronomeUiEvent.IncrementClicksPerBeat) },
+                onDecrementClicksPerBear = { eventHandler(MetronomeUiEvent.DecrementClicksPerBeat) },
+                onTapTempo = { eventHandler(MetronomeUiEvent.TabTempo) }
+            )
+        }
+    }
+}
+
+
+@Preview(widthDp = 320)
+@PreviewLightDark
+@Composable
+private fun PreviewMetronome(
+    @PreviewParameter(ColorSchemeProvider::class) theme: ColorSchemeSelections,
+) {
+    MusikusThemedPreview (theme) {
+        Surface (color = MaterialTheme.colorScheme.surfaceContainerHigh) {
+            MetronomeLayout(
+                uiState = MetronomeUiState(
+                    settings = MetronomeSettings.DEFAULT.copy(bpm = 100),
+                    tempoDescription = "Allegro",
+                    isPlaying = false,
+                    sliderValue = 120f,
+                ),
+                eventHandler = {}
+            )
+        }
     }
 }
 
 @Composable
-fun MetronomeCardBody(
+private fun MetronomeHeader(
     modifier: Modifier = Modifier,
-    viewModel: MetronomeViewModel = hiltViewModel(),
+    uiState: MetronomeUiState,
+    onIncrementBpm: (Int) -> Unit,
+    onTogglePlay: () -> Unit
 ) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val eventHandler = viewModel::onUiEvent
+    val smallWidthThreshold = 300.dp
+
+    BoxWithConstraints {
+        val boxScope = this
+        Row(
+            modifier = modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+
+            val smallIncrementButtonSize = 25.dp
+            val largeIncrementButtonSize = 30.dp
+
+            // don't show 5 bpm increment buttons on small screens
+            if (boxScope.maxWidth > smallWidthThreshold) {
+                // -5 Bpm
+                MetronomeIncrementBpmButton(
+                    bpmIncrement = -5,
+                    size = largeIncrementButtonSize,
+                    onClick = {
+                        onIncrementBpm(it)
+                    }
+                )
+            }
+
+            Spacer(modifier = Modifier.width(MaterialTheme.spacing.small))
 
 
-    HorizontalDivider(Modifier.padding(horizontal = MaterialTheme.spacing.medium))
-
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(horizontal = MaterialTheme.spacing.medium),
-        verticalArrangement = Arrangement.SpaceEvenly
-    ) {
-        Column {
-            /** Tempo Slider */
-            Text(
-                modifier = Modifier.padding(start = MaterialTheme.spacing.medium),
-                text = uiState.tempoDescription,
-                style = MaterialTheme.typography.bodyLarge,
+            // -1 Bpm
+            MetronomeIncrementBpmButton(
+                bpmIncrement = -1,
+                size = smallIncrementButtonSize,
+                onClick = {
+                    onIncrementBpm(it)
+                }
             )
 
-            Slider(
-                value = uiState.sliderValue,
-                valueRange =
-                MetronomeSettings.BPM_RANGE.first.toFloat()..
-                        MetronomeSettings.BPM_RANGE.last.toFloat(),
-                onValueChange = { eventHandler(MetronomeUiEvent.UpdateSliderValue(it)) },
+            // Bpm
+            Row (Modifier.width(150.dp).padding(MaterialTheme.spacing.small),
+                horizontalArrangement = Arrangement.Center){
+                Text(
+                    modifier = Modifier
+                        .alignByBaseline(),
+                    text = uiState.settings.bpm.toString(),
+                    textAlign = TextAlign.Right,
+                    style = MaterialTheme.typography.displayLarge,
+                    fontWeight = FontWeight.Bold,
+                    overflow = TextOverflow.Clip
+                )
+                Spacer(modifier = Modifier.width(MaterialTheme.spacing.extraSmall))
+                Text(
+                    modifier = Modifier.alignByBaseline(),
+                    text = "bpm",
+                    textAlign = TextAlign.Left,
+                    style = MaterialTheme.typography.labelMedium,
+                )
+            }
+
+            // +1 Bpm
+            MetronomeIncrementBpmButton(
+                bpmIncrement = 1,
+                size = smallIncrementButtonSize,
+                onClick = {
+                    onIncrementBpm(it)
+                }
             )
+
+            Spacer(modifier = Modifier.width(MaterialTheme.spacing.small))
+
+            if (boxScope.maxWidth > smallWidthThreshold) {
+                // +5 Bpm
+                MetronomeIncrementBpmButton(
+                    bpmIncrement = 5,
+                    size = largeIncrementButtonSize,
+                    onClick = {
+                        onIncrementBpm(it)
+                    }
+                )
+            }
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            // Start/Stop Metronome
+            FilledIconButton(
+                modifier = Modifier.size(48.dp),
+                onClick = onTogglePlay,
+                shape = CircleShape,
+            ) {
+                Box(Modifier.padding(MaterialTheme.spacing.small)) {
+                    if (!uiState.isPlaying) {
+                        Icon(
+                            modifier = Modifier.fillMaxSize(),
+                            imageVector = Icons.Default.PlayArrow,
+                            contentDescription = "Start metronome"
+                        )
+                    } else {
+                        Icon(
+                            modifier = Modifier.fillMaxSize(),
+                            imageVector = Icons.Default.Stop,
+                            contentDescription = "Stop metronome"
+                        )
+                    }
+                }
+            }
+
         }
-
-        /** Beats per bar, Click per beat and Tab tempo */
-        MetronomeExtraSettingsRow(
-            uiState = uiState,
-            eventHandler = eventHandler
-        )
     }
+}
+
+@Composable
+fun MetronomeBody(
+    modifier: Modifier = Modifier,
+    uiState: MetronomeUiState,
+    onSliderValueChange: (Float) -> Unit
+) {
+
+    /** Tempo Slider */
+    Text(
+        modifier = Modifier,
+        text = uiState.tempoDescription,
+        style = MaterialTheme.typography.bodyLarge,
+    )
+
+    Slider(
+        value = uiState.sliderValue,
+        valueRange =
+        MetronomeSettings.BPM_RANGE.first.toFloat()..
+                MetronomeSettings.BPM_RANGE.last.toFloat(),
+        onValueChange = { onSliderValueChange(it) },
+    )
 }
 
 
@@ -195,25 +281,29 @@ fun MetronomeCardBody(
 fun MetronomeIncrementBpmButton(
     bpmIncrement: Int,
     size: Dp,
-    eventHandler: (MetronomeUiEvent) -> Unit
+    onClick: (Int) -> Unit
 ) {
     OutlinedButton(
-        onClick = { eventHandler(MetronomeUiEvent.IncrementBpm(bpmIncrement)) },
+        onClick = { onClick(bpmIncrement) },
         modifier = Modifier.size(size),
         shape = CircleShape,
         contentPadding = PaddingValues(MaterialTheme.spacing.extraSmall)
     ) {
         Text(
             text = (if(bpmIncrement > 0) "+" else "") + bpmIncrement.toString(),
-            style = MaterialTheme.typography.labelLarge,
+            style = MaterialTheme.typography.labelMedium,
         )
     }
 }
 
 @Composable
 fun MetronomeExtraSettingsRow(
-    uiState: MetronomeUiState,
-    eventHandler: (MetronomeUiEvent) -> Unit
+    uiState: MetronomeSettings,
+    onIncrementBeatsPerBar: () -> Unit,
+    onDecrementBeatsPerBar: () -> Unit,
+    onIncrementClicksPerBear: () -> Unit,
+    onDecrementClicksPerBear: () -> Unit,
+    onTapTempo: () -> Unit,
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -223,23 +313,23 @@ fun MetronomeExtraSettingsRow(
 
         MetronomeExtraSettingsColumn(label = "Beats/bar") {
             MetronomeIncrementer(
-                value = uiState.settings.beatsPerBar,
-                onIncrement = { eventHandler(MetronomeUiEvent.IncrementBeatsPerBar) },
-                onDecrement = { eventHandler(MetronomeUiEvent.DecrementBeatsPerBar) },
+                value = uiState.beatsPerBar,
+                onIncrement = onIncrementBeatsPerBar,
+                onDecrement = onDecrementBeatsPerBar,
             )
         }
 
         MetronomeExtraSettingsColumn(label = "Clicks/beat") {
             MetronomeIncrementer(
-                value = uiState.settings.clicksPerBeat,
-                onIncrement = { eventHandler(MetronomeUiEvent.IncrementClicksPerBeat) },
-                onDecrement = { eventHandler(MetronomeUiEvent.DecrementClicksPerBeat) },
+                value = uiState.clicksPerBeat,
+                onIncrement = onIncrementClicksPerBear,
+                onDecrement = onDecrementClicksPerBear,
             )
         }
 
         MetronomeExtraSettingsColumn(label = "Tab tempo") {
             IconButton(
-                onClick = { eventHandler(MetronomeUiEvent.TabTempo) },
+                onClick = onTapTempo,
                 modifier = Modifier.size(25.dp),
             ) {
                 Icon(

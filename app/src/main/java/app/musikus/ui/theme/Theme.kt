@@ -14,6 +14,7 @@ import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
@@ -23,6 +24,8 @@ import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalInspectionMode
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import app.musikus.datastore.ColorSchemeSelections
@@ -74,40 +77,66 @@ fun MusikusTheme(
     }
 
     // enable Edge-to-Edge drawing with new API
-    val context = LocalContext.current as ComponentActivity
-    LaunchedEffect(key1 = theme) {
+    // skip this block when in LocalInspectionMode (Compose Preview) so that we can use
+    // MusikusTheme{} wrapper also in Compose Previews
+    if (!LocalInspectionMode.current) {
+        val context = LocalContext.current as ComponentActivity
+        LaunchedEffect(key1 = theme) {
 
-        val statusBarColorDarkTheme = android.graphics.Color.TRANSPARENT
-        val statusBarColorLightTheme = android.graphics.Color.TRANSPARENT
-        val statusBarColorLightThemeOldDevices = DarkColorScheme.surface.toArgb()
+            val statusBarColorDarkTheme = android.graphics.Color.TRANSPARENT
+            val statusBarColorLightTheme = android.graphics.Color.TRANSPARENT
+            val statusBarColorLightThemeOldDevices = DarkColorScheme.surface.toArgb()
 
-        val navBarColorDarkTheme = android.graphics.Color.TRANSPARENT
-        val navBarColorLightTheme = android.graphics.Color.TRANSPARENT
-        val navBarColorLightThemeOldDevices = DarkColorScheme.surface.toArgb()
+            val navBarColorDarkTheme = android.graphics.Color.TRANSPARENT
+            val navBarColorLightTheme = android.graphics.Color.TRANSPARENT
+            val navBarColorLightThemeOldDevices = DarkColorScheme.surface.toArgb()
 
-        context.enableEdgeToEdge(
-            statusBarStyle = if (useDarkTheme)
-                SystemBarStyle.dark(
-                    scrim = statusBarColorDarkTheme
-                )
+            context.enableEdgeToEdge(
+                statusBarStyle = if (useDarkTheme)
+                    SystemBarStyle.dark(
+                        scrim = statusBarColorDarkTheme
+                    )
                 else SystemBarStyle.light(
                     scrim = statusBarColorLightTheme,
                     darkScrim = statusBarColorLightThemeOldDevices
                 ),
-            navigationBarStyle = if (useDarkTheme)
-                SystemBarStyle.dark(
-                    scrim = navBarColorDarkTheme
-                )
+                navigationBarStyle = if (useDarkTheme)
+                    SystemBarStyle.dark(
+                        scrim = navBarColorDarkTheme
+                    )
                 else SystemBarStyle.light(
                     scrim = navBarColorLightTheme,
                     darkScrim = navBarColorLightThemeOldDevices
                 ),
-        )
+            )
+        }
     }
-
     MaterialTheme(
         colorScheme = colorSchemeDarkOrLight,
         content = content
+    )
+}
+
+@Composable
+fun MusikusThemedPreview(
+    theme: ColorSchemeSelections = ColorSchemeSelections.DEFAULT,
+    content: @Composable () -> Unit,
+) {
+    MusikusTheme(
+        theme = ThemeSelections.SYSTEM,
+        colorScheme = theme
+    ) {
+        Surface {
+            content()
+        }
+    }
+}
+
+class ColorSchemeProvider : PreviewParameterProvider<ColorSchemeSelections> {
+    override val values = sequenceOf(
+        ColorSchemeSelections.MUSIKUS,
+        ColorSchemeSelections.DYNAMIC,
+        ColorSchemeSelections.LEGACY,
     )
 }
 
@@ -141,7 +170,7 @@ data class Dimensions(
     val toolsCardHeaderHeight: Dp = 95.dp,
     val toolsSheetTabRowHeight: Dp = 48.dp, // TODO: intrinsic size from Android, may be set explicitly in future?
 
-    val toolsSheetPeekHeight: Dp = toolsHeaderHeight + 3.dp + 8.dp * 2,    // 3.dp DragHandle + spacing
+    val toolsSheetPeekHeight: Dp = toolsHeaderHeight + 3.dp + 8.dp,    // 3.dp DragHandle + spacing
 
     val fabHeight: Dp = 56.dp   // TODO: remove and try to get it via intrisic defaults
 )
