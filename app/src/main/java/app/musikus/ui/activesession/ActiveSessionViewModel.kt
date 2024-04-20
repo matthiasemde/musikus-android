@@ -10,11 +10,13 @@
 package app.musikus.ui.activesession
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import app.musikus.ui.theme.libraryItemColors
 import app.musikus.usecase.activesession.ActiveSessionUseCases
 import app.musikus.usecase.activesession.SessionTimerState
+import app.musikus.usecase.library.LibraryUseCases
 import app.musikus.utils.DurationFormat
 import app.musikus.utils.getDurationString
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -26,6 +28,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.Timer
+import java.util.UUID
 import javax.inject.Inject
 import kotlin.concurrent.timer
 import kotlin.time.Duration
@@ -37,8 +40,8 @@ import kotlin.time.Duration.Companion.seconds
 class ActiveSessionViewModel @Inject constructor(
     application: Application,
     private val activeSessionUseCases: ActiveSessionUseCases,
+    private val libraryUseCases: LibraryUseCases
 ) : AndroidViewModel(application) {
-
 
     private var _clock = MutableStateFlow(false)
     private var _timer: Timer? = null
@@ -61,6 +64,12 @@ class ActiveSessionViewModel @Inject constructor(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = SessionTimerState.NOT_STARTED
+    )
+
+    private val libraryFoldersWithItems = libraryUseCases.getSortedFolders().stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
     )
 
     private val practiceDuration: () -> Duration
@@ -89,6 +98,10 @@ class ActiveSessionViewModel @Inject constructor(
             dur
         }
 
+    /** ------------------- Own StateFlows  ------------------------------------------- */
+
+    private val _newItemSelectorVisible = MutableStateFlow(false)
+    private val _selectedFolderId = MutableStateFlow<UUID?>(null)
 
     /** ------------------- Sub UI states  ------------------------------------------- */
 
@@ -159,13 +172,11 @@ class ActiveSessionViewModel @Inject constructor(
     )
 
     private val mainContentUiState = combine(
-        topBarUiState,
         timerUiState,
         currentItemUiState,
         pastSectionsUiState
-    ) { topBarUiState, timerUiState, currentItemUiState, pastSectionsUiState ->
+    ) { timerUiState, currentItemUiState, pastSectionsUiState ->
         MainContentUiState(
-            topBarUiState = topBarUiState,
             timerUiState = timerUiState,
             currentItemUiState = currentItemUiState,
             pastSectionsUiState = pastSectionsUiState,
@@ -176,32 +187,84 @@ class ActiveSessionViewModel @Inject constructor(
         initialValue = MainContentUiState()
     )
 
-    private val newItemSelectorUiState =
+    private val newItemSelectorUiState = combine(
+        _newItemSelectorVisible,
+        _selectedFolderId,
+        runningLibraryItem,
+        libraryFoldersWithItems
+    ) { visible, selectedFolder, runningItem, folders  ->
+        NewItemSelectorUiState(
+            visible = visible,
+            selectedFolderId = selectedFolder,
+            runningItemFolderId = runningItem?.id,
+            foldersWithItems = folders,
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = NewItemSelectorUiState()
+    )
+
+    private val toolsUiState = MutableStateFlow(ActiveSessionToolsUiState())
 
     /** ------------------- Main UI State ------------------------------------------- */
 
     val uiState = combine(
+        topBarUiState,
         mainContentUiState,
         newItemSelectorUiState,
-        bottomSheetUiState,
-    ) { main, newItem, bottom ->
+        toolsUiState,
+    ) { topBar, mainContent, newItem, tools ->
         ActiveSessionUiState(
-            mainContentUiState = main,
+            topBarUiState = topBar,
+            mainContentUiState = mainContent,
             newItemSelectorUiState = newItem,
-            toolsUiState = bottom,
+            toolsUiState = tools
         )
-    }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = ActiveSessionUiState()
+    )
 
     /** ------------------- Event Handler ------------------------------------------- */
 
     fun onUiEvent(event: ActiveSessionUiEvent) {
         when(event) {
-            is ActiveSessionUiEvent.ShowNewItemSelector -> TODO()
-            is ActiveSessionUiEvent.SelectFolder -> TODO()
-            is ActiveSessionUiEvent.SelectItem -> TODO()
-            ActiveSessionUiEvent.ShowMetronome -> TODO()
-            ActiveSessionUiEvent.ShowRecorder -> TODO()
-            ActiveSessionUiEvent.TogglePauseState -> TODO()
+            is ActiveSessionUiEvent.ToggleNewItemSelectorVisible -> {
+                _newItemSelectorVisible.update { !it }
+            }
+            is ActiveSessionUiEvent.SelectFolder -> {
+                _selectedFolderId.update { event.folderId }
+            }
+            is ActiveSessionUiEvent.SelectItem -> {
+                viewModelScope.launch {
+                    activeSessionUseCases.selectItem(event.item)
+                }
+            }
+            is ActiveSessionUiEvent.ShowMetronome -> {}
+            is ActiveSessionUiEvent.ShowRecorder -> {}
+            is ActiveSessionUiEvent.TogglePauseState -> {
+                viewModelScope.launch {
+                    when (sessionTimerState.value) {
+                        SessionTimerState.RUNNING -> activeSessionUseCases.pause()
+                        SessionTimerState.PAUSED -> activeSessionUseCases.resume()
+                        else -> {
+                            Log.d(
+                                "ActiveSessionViewModel",
+                                "TogglePauseState: Timer state = ${sessionTimerState.value}"
+                            )
+                        }
+                    }
+                }
+            }
+            is ActiveSessionUiEvent.BackPressed -> {}
+            is ActiveSessionUiEvent.ShowDiscardSessionDialog -> {}
+            is ActiveSessionUiEvent.ShowFinishDialog -> {}
+            is ActiveSessionUiEvent.DeleteSection -> {
+                viewModelScope.launch {
+                    activeSessionUseCases.deleteSection(event.sectionId)
+                }            }
         }
     }
 

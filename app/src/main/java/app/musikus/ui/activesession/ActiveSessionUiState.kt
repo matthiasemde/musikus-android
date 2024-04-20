@@ -8,32 +8,35 @@
 
 package app.musikus.ui.activesession
 
+import androidx.compose.runtime.Stable
 import androidx.compose.ui.graphics.Color
+import app.musikus.database.LibraryFolderWithItems
 import app.musikus.database.UUIDConverter
-import app.musikus.database.daos.LibraryFolder
 import app.musikus.database.daos.LibraryItem
 import java.util.UUID
 
 
 // TODO UIText for all Strings?
 
+enum class SessionPausedResumedState {
+    RUNNING,
+    PAUSED
+}
+
+/** Main UI State */
 data class ActiveSessionUiState(
+    val topBarUiState: ActiveSessionTopBarUiState = ActiveSessionTopBarUiState(),
     val mainContentUiState: MainContentUiState = MainContentUiState(),
     val newItemSelectorUiState: NewItemSelectorUiState = NewItemSelectorUiState(),
     val toolsUiState: ActiveSessionToolsUiState = ActiveSessionToolsUiState(),
 )
 
+@Stable
 data class MainContentUiState(
-    val topBarUiState: ActiveSessionTopBarUiState = ActiveSessionTopBarUiState(),
     val timerUiState: ActiveSessionTimerUiState = ActiveSessionTimerUiState(),
     val currentItemUiState: ActiveSessionCurrentItemUiState = ActiveSessionCurrentItemUiState(),
     val pastSectionsUiState: ActiveSessionCompletedSectionsUiState = ActiveSessionCompletedSectionsUiState(),
 )
-
-enum class SessionPausedResumedState {
-    RUNNING,
-    PAUSED
-}
 
 data class ActiveSessionTopBarUiState(
     val visible: Boolean = false,
@@ -69,8 +72,7 @@ data class NewItemSelectorUiState(
     val visible: Boolean = false,
     val selectedFolderId: UUID? = null,
     val runningItemFolderId: UUID? = null,
-    val folders: List<LibraryFolder> = emptyList(),
-    val items: List<LibraryItem> = emptyList()
+    val foldersWithItems: List<LibraryFolderWithItems> = emptyList()
 )
 
 data class ActiveSessionToolsUiState(
@@ -85,12 +87,16 @@ enum class ActiveSessionTab {
 }
 
 sealed class ActiveSessionUiEvent {
-    data object ShowNewItemSelector : ActiveSessionUiEvent()
+    data object ToggleNewItemSelectorVisible : ActiveSessionUiEvent()
     data object TogglePauseState : ActiveSessionUiEvent()
     data object ShowMetronome : ActiveSessionUiEvent()
     data object ShowRecorder : ActiveSessionUiEvent()
     data class SelectFolder(val folderId: UUID?) : ActiveSessionUiEvent()
     data class SelectItem(val item: LibraryItem) : ActiveSessionUiEvent()
+    data object ShowFinishDialog : ActiveSessionUiEvent()
+    data object BackPressed : ActiveSessionUiEvent()
+    data object ShowDiscardSessionDialog : ActiveSessionUiEvent()
+    data class DeleteSection(val sectionId: UUID) : ActiveSessionUiEvent()
 }
 
 // -------------------------------------------------------------------------------------------------
