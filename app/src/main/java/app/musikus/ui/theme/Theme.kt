@@ -132,7 +132,7 @@ fun MusikusThemedPreview(
     }
 }
 
-class ColorSchemeProvider : PreviewParameterProvider<ColorSchemeSelections> {
+class MusikusColorSchemeProvider : PreviewParameterProvider<ColorSchemeSelections> {
     override val values = sequenceOf(
         ColorSchemeSelections.MUSIKUS,
         ColorSchemeSelections.DYNAMIC,
