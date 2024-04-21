@@ -23,12 +23,12 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -38,7 +38,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.add
 import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -791,12 +790,15 @@ private fun NewItemSelector(
     var selectedFolder: UUID? by remember { mutableStateOf(uiState.runningItem?.libraryFolderId) }
     Column(modifier.fillMaxWidth()) {
 
+        Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
+
         Row (
             Modifier
                 .fillMaxWidth()
-                .padding(MaterialTheme.spacing.medium),
+                .padding(horizontal = MaterialTheme.spacing.small),
             verticalAlignment = Alignment.CenterVertically,
         ) {
+            Spacer(modifier = Modifier.width(MaterialTheme.spacing.medium))
             Text(
                 text = "Select a library item",
                 style = MaterialTheme.typography.titleMedium,
@@ -810,6 +812,8 @@ private fun NewItemSelector(
             }
         }
 
+        Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
+
         LibraryFoldersRow(
             folders = uiState.foldersWithItems.map { it.folder },
             highlightedFolderId = selectedFolder,
@@ -820,7 +824,7 @@ private fun NewItemSelector(
                 }
             }
         )
-        Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
+        Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
 
         HorizontalDivider(Modifier.padding(horizontal = MaterialTheme.spacing.medium))
 
@@ -849,7 +853,7 @@ private fun LibraryFoldersRow(
     LazyRow(
         state = state,
         modifier = modifier.fadingEdge(state, vertical = false),
-        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small),
+        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small),  // item spacing
         verticalAlignment = Alignment.CenterVertically,
         contentPadding = PaddingValues(
             start = MaterialTheme.spacing.extraLarge,
@@ -888,47 +892,50 @@ private fun LibraryFolderElement(
     onClick: (LibraryFolder?) -> Unit,
     isSelected: Boolean,
 ) {
-    val color by animateColorAsState(
+    val textColor by animateColorAsState(
         targetValue = if (isSelected) {
-            MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.7f)
+            MaterialTheme.colorScheme.primary
         } else {
-            MaterialTheme.colorScheme.secondaryContainer.copy(0f)
+            MaterialTheme.colorScheme.onSurface
         }, label = "color", animationSpec = tween(200)
     )
-    Surface(
-        modifier = Modifier,
-        shape = MaterialTheme.shapes.medium,
-        color = color,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+    val iconColor by animateColorAsState(
+        targetValue = if (isSelected) {
+            MaterialTheme.colorScheme.primary
+        } else {
+            MaterialTheme.colorScheme.onSurfaceVariant
+        }, label = "color", animationSpec = tween(200)
+    )
+
+    val interactionSource = remember { MutableInteractionSource() }
+    Column(
+        modifier = Modifier
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,  // no ripple
+                onClick = { onClick(folder) }
+            )
+            .size(70.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
-        Column(
-            modifier = Modifier
-                .clickable { onClick(folder) }
-                .height(70.dp)
-                .padding(MaterialTheme.spacing.small)
-                .aspectRatio(1.3f),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            BadgedBox(modifier = Modifier.padding(horizontal = MaterialTheme.spacing.small),
-                badge = { if (showBadge) Badge() }) {
-                Icon(
-                    Icons.Default.Folder,
-                    tint = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f),
-                    contentDescription = null
-                )
-            }
-            Spacer(modifier = Modifier.height(MaterialTheme.spacing.extraSmall))
-            Text(
-                modifier = Modifier.basicMarquee(),
-                text = folder?.name ?: "no folder",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSecondaryContainer,
-                textAlign = TextAlign.Center,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+        BadgedBox(modifier = Modifier.padding(horizontal = MaterialTheme.spacing.small),
+            badge = { if (showBadge) Badge() }) {
+            Icon(
+                Icons.Default.Folder,
+                tint = iconColor,
+                contentDescription = null
             )
         }
+        Spacer(modifier = Modifier.height(MaterialTheme.spacing.extraSmall))
+        Text(
+            modifier = Modifier.basicMarquee(),
+            text = folder?.name ?: "no folder",
+            style = MaterialTheme.typography.labelMedium,
+            color = textColor,
+            textAlign = TextAlign.Center,
+            maxLines = 1,
+        )
     }
 }
 
