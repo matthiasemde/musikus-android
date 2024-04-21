@@ -19,6 +19,7 @@ import androidx.compose.animation.core.keyframes
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
@@ -35,7 +36,10 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.add
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -57,6 +61,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Pause
@@ -102,6 +107,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -144,6 +150,7 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.launch
 import java.time.ZonedDateTime
 import java.util.UUID
+import kotlin.random.Random
 import kotlin.time.Duration.Companion.seconds
 
 
@@ -171,7 +178,6 @@ fun ActiveSession(
     navigateTo: (Screen) -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val eventHandler = viewModel::onUiEvent
 
     val bottomSheetState = rememberBottomSheetScaffoldState()
 
@@ -193,19 +199,7 @@ fun ActiveSession(
      * --------------------- Dialogs ---------------------
      */
 
-    val sheetState = rememberModalBottomSheetState()
-    if (uiState.newItemSelectorUiState.visible) {
-        ModalBottomSheet(
-            windowInsets = WindowInsets(top = 0.dp), // makes sure the scrim covers the status bar
-            onDismissRequest = { eventHandler(ActiveSessionUiEvent.ToggleNewItemSelectorVisible) },
-            sheetState = sheetState,
-        ) {
-            NewItemSelector(
-                uiState = uiState.newItemSelectorUiState,
-                onItemSelected = { eventHandler(ActiveSessionUiEvent.SelectItem(it)) }
-            )
-        }
-    }
+
 
 //    val dialogUiState = uiState.dialogUiState
 //
@@ -293,6 +287,33 @@ private fun ActiveSessionScreen(
                 })
         }
     }
+
+    val scope = rememberCoroutineScope()
+
+    // New Item Selector
+    val sheetState = rememberModalBottomSheetState()
+    if (uiState.newItemSelectorUiState.visible) {
+        ModalBottomSheet(
+            modifier = Modifier.fillMaxHeight(),    // avoids jumping height when changing folders
+            windowInsets = WindowInsets(top = 0.dp), // makes sure the scrim covers the status bar
+            onDismissRequest = remember { { eventHandler(ActiveSessionUiEvent.ToggleNewItemSelectorVisible) } },
+            sheetState = sheetState,
+            shape = RectangleShape,
+            dragHandle = {}
+        ) {
+            NewItemSelector(
+                uiState = uiState.newItemSelectorUiState,
+                onItemSelected = remember { { eventHandler(ActiveSessionUiEvent.SelectItem(it)) } },
+                onClose = remember { {
+                    scope.launch {
+                        sheetState.hide()
+                        eventHandler(ActiveSessionUiEvent.ToggleNewItemSelectorVisible)
+                    }
+                } },
+            )
+        }
+    }
+
 }
 
 
@@ -322,18 +343,19 @@ private fun ActiveSessionMainContent(
                 // Big Timer
                 PracticeTimer(
                     modifier = Modifier.padding(top = MaterialTheme.spacing.extraLarge),
-                    uiState = uiState.timerUiState
+                    uiState = uiState.timerUiState,
+                    onResumeTimer = remember { { eventHandler(ActiveSessionUiEvent.TogglePauseState) } },
                 )
                 Spacer(modifier = Modifier.height(MaterialTheme.spacing.large))
 
                 // Running Item
                 CurrentPracticingItem(item = uiState.currentItemUiState)
-                Spacer(modifier = Modifier.height(MaterialTheme.spacing.large))
+                Spacer(modifier = Modifier.height(MaterialTheme.spacing.extraLarge))
 
                 // Past Items
                 SectionsList(
                     modifier = Modifier
-                        .padding(MaterialTheme.spacing.large)
+                        .padding(horizontal = MaterialTheme.spacing.large)
                         .align(Alignment.CenterHorizontally),
                     uiState = uiState.pastSectionsUiState,
                     onSectionDeleted = remember { { section ->
@@ -416,7 +438,11 @@ private fun ActiveSessionTopBar(
                         Icon(imageVector = Icons.Outlined.Delete, contentDescription = null)
                     }
 
-                    Column(Modifier.animateContentSize()) {
+                    AnimatedVisibility(
+                        visible = uiState.pauseButtonAppearance != SessionPausedResumedState.PAUSED,
+                        enter = fadeIn(),
+                        exit = fadeOut(),
+                    ) {
                         PauseButton(
                             onClick = onTogglePause,
                             paused = uiState.pauseButtonAppearance == SessionPausedResumedState.PAUSED,
@@ -484,8 +510,8 @@ private fun ToolsTabRow(
                         .offset(y = (-45).dp), width = 100.dp, shape = RoundedCornerShape(
                         topStartPercent = 0,
                         topEndPercent = 0,
-                        bottomStartPercent = 50,
-                        bottomEndPercent = 50
+                        bottomStartPercent = 100,
+                        bottomEndPercent = 100
                     )
                 )
             }
@@ -561,17 +587,16 @@ private fun CurrentPracticingItem(
     ) {
         if (!item.visible) return@AnimatedVisibility
 
-        Column(
+        Surface(
             Modifier
-                .padding(horizontal = MaterialTheme.spacing.large)
-                .clip(MaterialTheme.shapes.extraLarge)
                 .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                .padding(horizontal = MaterialTheme.spacing.large)
                 .border(
                     width = 1.dp, color = item.color, shape = MaterialTheme.shapes.extraLarge
-                ), horizontalAlignment = Alignment.CenterHorizontally
+                ),
+            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+            shape = MaterialTheme.shapes.extraLarge
         ) {
-
             AnimatedContent(
                 targetState = item.name,
                 label = "currentPracticingItem",
@@ -584,17 +609,17 @@ private fun CurrentPracticingItem(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     // leading space
-                    Spacer(modifier = Modifier.width(MaterialTheme.spacing.medium))
+                    Spacer(modifier = Modifier.width(MaterialTheme.spacing.large))
 
                     Text(
                         modifier = Modifier
-                            .weight(1f)
-                            .basicMarquee(),
+                            .weight(1f),
                         text = itemName,
                         style = MaterialTheme.typography.titleLarge,
                         color = MaterialTheme.colorScheme.onSurface,
                         fontWeight = FontWeight.SemiBold,
                         maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
 
                     Spacer(Modifier.width(MaterialTheme.spacing.small))
@@ -607,7 +632,7 @@ private fun CurrentPracticingItem(
                     )
 
                     // trailing space
-                    Spacer(modifier = Modifier.width(MaterialTheme.spacing.medium))
+                    Spacer(modifier = Modifier.width(MaterialTheme.spacing.large))
                 }
             }
         }
@@ -624,6 +649,7 @@ private fun SectionsList(
     onSectionDeleted: (CompletedSectionUiState) -> Unit = {},
 ) {
     if (!uiState.visible) {
+        // TODO hide when first section started
         Box(modifier = modifier) {
             Text(text = "Select a library item to start practicing")
         }
@@ -705,12 +731,14 @@ private fun SectionListElement(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 // leading space
-                Spacer(modifier = Modifier.width(MaterialTheme.spacing.medium))
+                Spacer(modifier = Modifier.width(MaterialTheme.spacing.large))
 
                 Box(
                     modifier = Modifier
                         .padding(vertical = MaterialTheme.spacing.small)
-                        .size(12.dp)
+                        .width(10.dp)
+                        .height(30.dp)
+                        .clip(RoundedCornerShape(5.dp))
                         .clip(CircleShape)
                         .background(item.color),
                 )
@@ -720,6 +748,8 @@ private fun SectionListElement(
                     text = item.name,
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
                 Spacer(modifier = Modifier.width(MaterialTheme.spacing.small))
                 Text(
@@ -729,7 +759,7 @@ private fun SectionListElement(
                     fontWeight = FontWeight.Normal
                 )
                 // trailing space
-                Spacer(modifier = Modifier.width(MaterialTheme.spacing.medium))
+                Spacer(modifier = Modifier.width(MaterialTheme.spacing.large))
             }
         }
     }
@@ -753,29 +783,58 @@ private fun PauseButton(
 
 @Composable
 private fun NewItemSelector(
+    modifier: Modifier = Modifier,
     uiState: NewItemSelectorUiState,
     onItemSelected: (LibraryItem) -> Unit,
+    onClose: () -> Unit = {},
 ) {
-    var selectedFolder: UUID? by remember { mutableStateOf(null) }
-    LibraryFoldersRow(
-        folders = uiState.foldersWithItems.map { it.folder },
-        highlightedFolderId = selectedFolder,
-        folderWithBadge = uiState.runningItem?.libraryFolderId,
-        onFolderSelected = { folderId ->
-            selectedFolder = folderId
+    var selectedFolder: UUID? by remember { mutableStateOf(uiState.runningItem?.libraryFolderId) }
+    Column(modifier.fillMaxWidth()) {
+
+        Row (
+            Modifier
+                .fillMaxWidth()
+                .padding(MaterialTheme.spacing.medium),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = "Select a library item",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            IconButton(onClick = onClose) {
+                Icon(imageVector = Icons.Default.Close, contentDescription = null)
+            }
         }
-    )
 
-    Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
-    HorizontalDivider(Modifier.padding(horizontal = MaterialTheme.spacing.medium))
+        LibraryFoldersRow(
+            folders = uiState.foldersWithItems.map { it.folder },
+            highlightedFolderId = selectedFolder,
+            folderWithBadge = uiState.runningItem?.libraryFolderId,
+            onFolderSelected = remember {
+                { folderId ->
+                    selectedFolder = folderId
+                }
+            }
+        )
+        Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
 
-    LibraryItemList(
-        items = uiState.foldersWithItems.first().items,//uiState.foldersWithItems.first { it.folder.id == uiState.selectedFolderId }.items,
-        onItemClick = { libraryItem ->
-            onItemSelected(libraryItem)
-        },
-        activeItemId = uiState.runningItem?.id
-    )
+        HorizontalDivider(Modifier.padding(horizontal = MaterialTheme.spacing.medium))
+
+        LibraryItemList(
+            items = uiState.foldersWithItems.firstOrNull {
+                it.folder.id == selectedFolder
+            }?.items?.toImmutableList() ?: persistentListOf(),
+            onItemClick = { libraryItem ->
+                onItemSelected(libraryItem)
+                onClose()
+            },
+            activeItemId = uiState.runningItem?.id
+        )
+    }
 }
 
 @Composable
@@ -784,7 +843,7 @@ private fun LibraryFoldersRow(
     folders: List<LibraryFolder>,
     highlightedFolderId: UUID?,
     folderWithBadge: UUID?,
-    onFolderSelected: (UUID) -> Unit,
+    onFolderSelected: (UUID?) -> Unit,
 ) {
     val state = rememberLazyListState()
     LazyRow(
@@ -797,6 +856,18 @@ private fun LibraryFoldersRow(
             end = MaterialTheme.spacing.medium
         ),
     ) {
+
+        item(
+            key = "noFolder",
+            content = {
+                LibraryFolderElement(
+                    folder = null,
+                    onClick = { onFolderSelected(null) },
+                    isSelected = highlightedFolderId == null,
+                    showBadge = folderWithBadge == null
+                )
+            }
+        )
 
         items(folders) { folder ->
             LibraryFolderElement(
@@ -865,15 +936,15 @@ private fun LibraryFolderElement(
 @Composable
 private fun LibraryItemList(
     modifier: Modifier = Modifier,
-    items: List<LibraryItem>,
+    items: ImmutableList<LibraryItem>,
     onItemClick: (LibraryItem) -> Unit,
     activeItemId: UUID?,
 ) {
     LazyColumn(
         modifier = modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(
-            vertical = MaterialTheme.spacing.medium
-        )
+        contentPadding = WindowInsets(
+            top = MaterialTheme.spacing.medium,
+        ).add(WindowInsets.navigationBars).asPaddingValues()    // don't get covered by navbars
     ) {
         items(items) {
             LibraryUiItem(
@@ -954,7 +1025,6 @@ private fun PreviewActiveSessionScreen(
 ) {
     MusikusThemedPreview(theme) {
 
-
         ActiveSessionScreen(uiState = ActiveSessionUiState(
             topBarUiState = ActiveSessionTopBarUiState(
                 visible = true, pauseButtonAppearance = SessionPausedResumedState.RUNNING
@@ -1011,6 +1081,7 @@ private fun PreviewLibraryRow(
     }
 }
 
+@Preview(showSystemUi = true)
 @PreviewLightDark
 @Composable
 private fun PreviewNewItemSelector(
@@ -1024,14 +1095,15 @@ private fun PreviewNewItemSelector(
                     foldersWithItems = dummyFolders.map {
                         LibraryFolderWithItems(it, dummyLibraryItems.toList())
                     }.toList(),
-                    runningItem = dummyLibraryItems.first()
+                    runningItem = dummyLibraryItems.first().copy(
+                        libraryFolderId = UUIDConverter.fromInt(1)
+                    )
                 ),
-                onItemSelected = { /*TODO*/ }
+                onItemSelected = { }
             )
         }
     }
 }
-
 
 @PreviewLightDark
 @Composable
@@ -1055,7 +1127,7 @@ private fun PreviewLibraryItem(
 private val dummyRunningItem = ActiveSessionCurrentItemUiState(
     visible = true,
     color = libraryItemColors[0],
-    name = LoremIpsum(5).values.first(),
+    name = LoremIpsum(Random.nextInt(4, 10)).values.first(),
     durationText = "32:19",
 )
 
@@ -1063,7 +1135,7 @@ private val dummyRunningItem = ActiveSessionCurrentItemUiState(
 private val dummySections = (0..10).asSequence().map {
     CompletedSectionUiState(
         id = UUIDConverter.fromInt(it),
-        name = "Completed Item #${it}",
+        name = LoremIpsum(Random.nextInt(1, 10)).values.first(),
         durationText = "12:32",
         color = libraryItemColors[it % libraryItemColors.size],
     )
@@ -1073,7 +1145,7 @@ private val dummyFolders = (0..10).asSequence().map {
     LibraryFolder(
         id = UUIDConverter.fromInt(it),
         customOrder = null,
-        name = "My Folder $it with a long name",
+        name = LoremIpsum(Random.nextInt(1, 5)).values.first(),
         modifiedAt = TimeProvider.uninitializedDateTime,
         createdAt = TimeProvider.uninitializedDateTime
     )
@@ -1081,10 +1153,10 @@ private val dummyFolders = (0..10).asSequence().map {
 
 private val dummyLibraryItems = (1..20).asSequence().map {
     LibraryItem(
-        UUIDConverter.fromInt(it),
+        id = UUIDConverter.fromInt(it),
         createdAt = TimeProvider.uninitializedDateTime,
         modifiedAt = TimeProvider.uninitializedDateTime,
-        name = "Library Item #${it} with a very very long name which is impossible to read at once",
+        name = LoremIpsum(Random.nextInt(1, 10)).values.first(),
         colorIndex = it % libraryItemColors.size,
         customOrder = null,
         libraryFolderId = null

@@ -14,17 +14,16 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -499,6 +498,7 @@ fun LibraryFolder(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun LibraryUiItem(
     modifier: Modifier = Modifier,
@@ -507,7 +507,6 @@ fun LibraryUiItem(
     selected: Boolean,
     onShortClick: () -> Unit,
     onLongClick: () -> Unit,
-    compact: Boolean = false,
     enabled: Boolean = true,
 ) {
     Selectable(
@@ -519,34 +518,32 @@ fun LibraryUiItem(
     ) {
         Row(
             modifier = modifier
+                .padding(vertical = 10.dp)
                 .fillMaxWidth()
-                .height(IntrinsicSize.Min)
                 .alpha(if (!enabled) 0.5f else 1f),
         ) {
+            Spacer(modifier = Modifier.width(MaterialTheme.spacing.extraLarge))
             Box(
                 modifier = Modifier
-                    .width(if (compact) 8.dp else 10.dp)
-                    .fillMaxHeight()
+                    .width(10.dp)
+                    .height(40.dp)
                     .clip(RoundedCornerShape(5.dp))
                     .align(Alignment.CenterVertically)
                     .background(libraryItemColors[item.colorIndex])
             )
-            Column(
-                modifier = Modifier
-                    .padding(start = MaterialTheme.spacing.small),
-            ) {
+            Spacer(modifier = Modifier.width(MaterialTheme.spacing.medium))
+            Column {
                 Text(
+                    modifier = Modifier.basicMarquee(),
                     text = item.name,
-                    style = if (compact) {
-                        MaterialTheme.typography.titleSmall
-                    } else {
-                        MaterialTheme.typography.titleMedium
-                    },
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = colorScheme.onSurface,
+                    maxLines = 1,
                 )
                 Text(
                     text = "last practiced: " +  (lastPracticedDate?.musikusFormat(DateFormat.DAY_MONTH_YEAR) ?: "never"),
-                    style = if(compact) MaterialTheme.typography.labelSmall else MaterialTheme.typography.labelMedium,
-                    color = colorScheme.onSurface.copy(alpha = 0.6f)
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = colorScheme.onSurfaceVariant,
                 )
             }
         }
