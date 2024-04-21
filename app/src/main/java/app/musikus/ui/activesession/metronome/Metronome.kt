@@ -45,6 +45,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.Dp
@@ -117,6 +118,7 @@ fun MetronomeLayout(
 }
 
 
+@Preview(widthDp = 370)
 @PreviewLightDark
 @Composable
 private fun PreviewMetronome(
@@ -126,7 +128,7 @@ private fun PreviewMetronome(
         Surface (color = MaterialTheme.colorScheme.surfaceContainerHigh) {
             MetronomeLayout(
                 uiState = MetronomeUiState(
-                    settings = MetronomeSettings.DEFAULT.copy(bpm = 240),
+                    settings = MetronomeSettings.DEFAULT.copy(bpm = 40),
                     tempoDescription = "Allegro",
                     isPlaying = false,
                     sliderValue = 120f,
@@ -144,7 +146,7 @@ private fun MetronomeHeader(
     onIncrementBpm: (Int) -> Unit,
     onTogglePlay: () -> Unit
 ) {
-    val smallWidthThreshold = 300.dp
+    val smallWidthThreshold = 310.dp
 
     BoxWithConstraints {
         val boxScope = this
@@ -184,7 +186,7 @@ private fun MetronomeHeader(
             // Bpm
             Row (
                 Modifier
-                    .width(150.dp)
+                    .width(130.dp)
                     .padding(MaterialTheme.spacing.small),
                 horizontalArrangement = Arrangement.Center){
                 Text(
@@ -192,7 +194,7 @@ private fun MetronomeHeader(
                         .alignByBaseline(),
                     text = uiState.settings.bpm.toString(),
                     textAlign = TextAlign.Right,
-                    style = MaterialTheme.typography.displayLarge,
+                    style = MaterialTheme.typography.displayMedium,
                     fontWeight = FontWeight.Bold,
                     overflow = TextOverflow.Clip
                 )

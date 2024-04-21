@@ -61,14 +61,19 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.musikus.R
+import app.musikus.database.UUIDConverter
 import app.musikus.database.daos.LibraryFolder
 import app.musikus.database.daos.LibraryItem
+import app.musikus.datastore.ColorSchemeSelections
 import app.musikus.ui.MainUiEvent
 import app.musikus.ui.MainUiEventHandler
 import app.musikus.ui.Screen
@@ -84,6 +89,8 @@ import app.musikus.ui.components.SortMenu
 import app.musikus.ui.home.HomeUiEvent
 import app.musikus.ui.home.HomeUiEventHandler
 import app.musikus.ui.home.HomeUiState
+import app.musikus.ui.theme.MusikusColorSchemeProvider
+import app.musikus.ui.theme.MusikusThemedPreview
 import app.musikus.ui.theme.libraryItemColors
 import app.musikus.ui.theme.spacing
 import app.musikus.utils.DateFormat
@@ -505,8 +512,8 @@ fun LibraryUiItem(
     item: LibraryItem,
     lastPracticedDate: ZonedDateTime?,
     selected: Boolean,
-    onShortClick: () -> Unit,
-    onLongClick: () -> Unit,
+    onShortClick: () -> Unit = {},
+    onLongClick: () -> Unit = {},
     enabled: Boolean = true,
 ) {
     Selectable(
@@ -518,15 +525,16 @@ fun LibraryUiItem(
     ) {
         Row(
             modifier = modifier
-                .padding(vertical = 10.dp)
+                .padding(vertical = MaterialTheme.spacing.small)
                 .fillMaxWidth()
                 .alpha(if (!enabled) 0.5f else 1f),
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Spacer(modifier = Modifier.width(MaterialTheme.spacing.extraLarge))
             Box(
                 modifier = Modifier
                     .width(10.dp)
-                    .height(40.dp)
+                    .height(30.dp)
                     .clip(RoundedCornerShape(5.dp))
                     .align(Alignment.CenterVertically)
                     .background(libraryItemColors[item.colorIndex])
@@ -538,14 +546,39 @@ fun LibraryUiItem(
                     text = item.name,
                     style = MaterialTheme.typography.bodyLarge,
                     color = colorScheme.onSurface,
+                    fontWeight = FontWeight.Medium,
                     maxLines = 1,
                 )
                 Text(
                     text = "last practiced: " +  (lastPracticedDate?.musikusFormat(DateFormat.DAY_MONTH_YEAR) ?: "never"),
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = MaterialTheme.typography.bodySmall,
                     color = colorScheme.onSurfaceVariant,
                 )
             }
         }
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun PreviewLibraryItem(
+    @PreviewParameter(MusikusColorSchemeProvider::class) colorScheme: ColorSchemeSelections
+) {
+    MusikusThemedPreview (colorScheme) {
+        LibraryUiItem(
+            item = LibraryItem(
+                id = UUIDConverter.deadBeef,
+                name = "Item 1",
+                colorIndex = 0,
+                createdAt = ZonedDateTime.now(),
+                modifiedAt = ZonedDateTime.now(),
+                libraryFolderId = null,
+                customOrder = null
+            ),
+            lastPracticedDate = ZonedDateTime.now(),
+            selected = false,
+            onShortClick = {},
+            onLongClick = {},
+        )
     }
 }
