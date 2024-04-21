@@ -163,6 +163,9 @@ dependencies {
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:$kotlinCoroutineVersion")
 
+    // Immutable Lists
+    implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.5")
+
     //Dagger - Hilt
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
     implementation("com.google.dagger:hilt-android:$daggerHiltVersion")

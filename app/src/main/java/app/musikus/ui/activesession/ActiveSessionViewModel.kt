@@ -28,19 +28,17 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.Timer
-import java.util.UUID
 import javax.inject.Inject
 import kotlin.concurrent.timer
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.Duration.Companion.seconds
 
 
 @HiltViewModel
 class ActiveSessionViewModel @Inject constructor(
     application: Application,
     private val activeSessionUseCases: ActiveSessionUseCases,
-    private val libraryUseCases: LibraryUseCases
+    libraryUseCases: LibraryUseCases
 ) : AndroidViewModel(application) {
 
     private var _clock = MutableStateFlow(false)
@@ -72,40 +70,14 @@ class ActiveSessionViewModel @Inject constructor(
         initialValue = emptyList()
     )
 
-    private val practiceDuration: () -> Duration
-        get() = {
-            var dur: Duration = 0.seconds
-            viewModelScope.launch {
-                dur = try {
-                    activeSessionUseCases.getPracticeDuration()
-                } catch (e: IllegalStateException) {
-                    0.seconds
-                }
-            }
-            dur
-        }
-
-    private val currentItemDuration: () -> Duration
-        get() = {
-            var dur: Duration = 0.seconds
-            viewModelScope.launch {
-                dur = try {
-                    activeSessionUseCases.getRunningItemDuration()
-                } catch (e: IllegalStateException) {
-                    0.seconds
-                }
-            }
-            dur
-        }
-
     /** ------------------- Own StateFlows  ------------------------------------------- */
 
     private val _newItemSelectorVisible = MutableStateFlow(false)
-    private val _selectedFolderId = MutableStateFlow<UUID?>(null)
 
     /** ------------------- Sub UI states  ------------------------------------------- */
 
     private val topBarUiState = sessionTimerState.map {
+        Log.d("TAG", "sessionTimerState = $it")
         ActiveSessionTopBarUiState(
             visible =  it != SessionTimerState.NOT_STARTED,
             pauseButtonAppearance = if(it == SessionTimerState.PAUSED) {
@@ -125,8 +97,14 @@ class ActiveSessionViewModel @Inject constructor(
         _clock  // should update with clock
     ) { timerState, _ ->
         val pause = timerState == SessionTimerState.PAUSED
+
+        val practiceDuration = try {
+            activeSessionUseCases.getPracticeDuration()
+        } catch (e: IllegalStateException) {
+            Duration.ZERO   // Session not yet started
+        }
         ActiveSessionTimerUiState(
-            timerText = getDurationString(practiceDuration(), DurationFormat.MS_DIGITAL).toString(),
+            timerText = getDurationString(practiceDuration, DurationFormat.MS_DIGITAL).toString(),
             subHeadingAppearance = if(pause) SessionPausedResumedState.PAUSED else SessionPausedResumedState.RUNNING,
             subHeadingText = if (pause) "Paused" else "Practice Time",
         )
@@ -141,10 +119,16 @@ class ActiveSessionViewModel @Inject constructor(
         runningLibraryItem,
         _clock  // should update with clock
     ) { timerState, item, _ ->
+
+        val currentItemDuration = try {
+            activeSessionUseCases.getRunningItemDuration()
+        } catch (e: IllegalStateException) {
+            Duration.ZERO   // Session not yet started
+        }
         ActiveSessionCurrentItemUiState(
             visible = timerState != SessionTimerState.NOT_STARTED,
             name = item?.name ?: "Not started",
-            durationText = getDurationString(currentItemDuration(), DurationFormat.MS_DIGITAL).toString(),
+            durationText = getDurationString(currentItemDuration, DurationFormat.MS_DIGITAL).toString(),
             color = libraryItemColors[item?.colorIndex ?: 0]
         )
     }.stateIn(
@@ -189,14 +173,12 @@ class ActiveSessionViewModel @Inject constructor(
 
     private val newItemSelectorUiState = combine(
         _newItemSelectorVisible,
-        _selectedFolderId,
         runningLibraryItem,
         libraryFoldersWithItems
-    ) { visible, selectedFolder, runningItem, folders  ->
+    ) { visible, runningItem, folders  ->
         NewItemSelectorUiState(
             visible = visible,
-            selectedFolderId = selectedFolder,
-            runningItemFolderId = runningItem?.id,
+            runningItem = runningItem,
             foldersWithItems = folders,
         )
     }.stateIn(
@@ -234,9 +216,6 @@ class ActiveSessionViewModel @Inject constructor(
             is ActiveSessionUiEvent.ToggleNewItemSelectorVisible -> {
                 _newItemSelectorVisible.update { !it }
             }
-            is ActiveSessionUiEvent.SelectFolder -> {
-                _selectedFolderId.update { event.folderId }
-            }
             is ActiveSessionUiEvent.SelectItem -> {
                 viewModelScope.launch {
                     activeSessionUseCases.selectItem(event.item)
@@ -259,7 +238,9 @@ class ActiveSessionViewModel @Inject constructor(
                 }
             }
             is ActiveSessionUiEvent.BackPressed -> {}
-            is ActiveSessionUiEvent.ShowDiscardSessionDialog -> {}
+            is ActiveSessionUiEvent.ShowDiscardSessionDialog -> {
+                Log.d("TAG", "ShowDiscardSessionDialog")
+            }
             is ActiveSessionUiEvent.ShowFinishDialog -> {}
             is ActiveSessionUiEvent.DeleteSection -> {
                 viewModelScope.launch {
