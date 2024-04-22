@@ -2,14 +2,19 @@ name: CI
 
 on:
   pull_request:
+    # Only run on PRs with main as target branch
     branches: [ "main" ]
+    # Triggers when a PR is opened, updated or labeled
+    types: [opened, synchronize, reopened, labeled]
+
 env:
     JAVA_VERSION: 17
-jobs:
 
+jobs:
   checks:
     name: Checks
-    if: "${{ !startsWith(github.event.pull_request.title, 'docs:') }}"
+    # Only run checks if the PR title does not start with 'docs:' and the PR does not have the 'skip-ci' label
+    if: "${{ !startsWith(github.event.pull_request.title, 'docs:') && !contains(github.event.pull_request.label, 'skip-ci') }}"
     runs-on: ubuntu-latest
 
     steps:
@@ -143,5 +148,3 @@ jobs:
         with:
           name: instrumentation-test-results-${{ matrix.api-level }}
           path: app/build/reports/androidTests/connected/debug
-
-          
