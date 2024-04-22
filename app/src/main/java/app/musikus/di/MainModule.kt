@@ -77,8 +77,8 @@ object MainModule {
         idProvider: IdProvider,
     ): MusikusDatabase {
         return MusikusDatabase.buildDatabase(
-            app,
-            databaseProvider,
+            context = app,
+            databaseProvider = databaseProvider,
         ).apply {
             this.timeProvider = timeProvider
             this.idProvider = idProvider

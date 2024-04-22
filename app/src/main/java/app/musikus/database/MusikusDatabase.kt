@@ -15,6 +15,7 @@ package app.musikus.database
 
 import android.app.Application
 import android.content.ContentValues
+import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.util.Log
 import androidx.room.AutoMigration
@@ -96,11 +97,11 @@ abstract class MusikusDatabase : RoomDatabase() {
         const val DATABASE_NAME = "musikus-database"
 
         fun buildDatabase(
-            app: Application,
-            databaseProvider: Provider<MusikusDatabase>,
+            context: Context,
+            databaseProvider: Provider<MusikusDatabase>? = null,
         ) : MusikusDatabase {
             return Room.databaseBuilder(
-                app,
+                context,
                 MusikusDatabase::class.java,
                 DATABASE_NAME
             ).addMigrations(
@@ -111,7 +112,7 @@ abstract class MusikusDatabase : RoomDatabase() {
                 override fun onCreate(db: SupportSQLiteDatabase) {
                     super.onCreate(db)
                     // prepopulate the database if in debug configuration
-                    if (BuildConfig.DEBUG) {
+                    if (BuildConfig.DEBUG && databaseProvider != null) {
                         ioThread { runBlocking {
                             prepopulateDatabase(databaseProvider.get())
                         } }
@@ -383,29 +384,28 @@ abstract class MusikusDatabase : RoomDatabase() {
                  * Here, we fix the issue by setting every boolean column to
                  * 0 which is not explicitly set to 1.
                  */
-                for (tableName in listOf("library_item", "session", "goal_description")) {
+                for (tableName in listOf("library_folder", "library_item", "session", "goal_description")) {
                     val cursor = db.query(SupportSQLiteQueryBuilder.builder(tableName).let {
                         it.columns(
                             when(tableName) {
-                                "library_item" -> arrayOf("id", "deleted")
-                                "session" -> arrayOf("id", "deleted")
                                 "goal_description" -> arrayOf("id", "deleted", "paused")
-                                else -> arrayOf()
+                                else -> arrayOf("id", "deleted")
                             }
                         )
                         it.create()
                     })
                     while (cursor.moveToNext()) {
                         val id = cursor.getBlob(cursor.getColumnIndexOrThrow("id"))
-                        val deleted = cursor.getInt(cursor.getColumnIndexOrThrow("deleted"))
+                        val deleted = cursor.getString(cursor.getColumnIndexOrThrow("deleted"))
+                        Log.d("POST_MIGRATION", "(3 -> 4): Updating $tableName with id ${UUIDConverter().fromByte(id)} to deleted $deleted}")
                         db.update(tableName, SQLiteDatabase.CONFLICT_ROLLBACK, ContentValues().apply {
-                            put("deleted", deleted == 1)
+                            put("deleted", deleted == "1")
                         }, "id=?", arrayOf(id))
 
                         if (tableName == "goal_description") {
-                            val paused = cursor.getInt(cursor.getColumnIndexOrThrow("paused"))
+                            val paused = cursor.getString(cursor.getColumnIndexOrThrow("paused"))
                             db.update(tableName, SQLiteDatabase.CONFLICT_ROLLBACK, ContentValues().apply {
-                                put("paused", paused == 1)
+                                put("paused", paused == "1")
                             }, "id=?", arrayOf(id))
                         }
                     }
