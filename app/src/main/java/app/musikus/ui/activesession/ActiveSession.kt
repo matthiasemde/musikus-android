@@ -67,6 +67,7 @@ import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Folder
 import androidx.compose.material.icons.outlined.PlayCircle
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
@@ -111,8 +112,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.LoremIpsum
 import androidx.compose.ui.unit.Dp
@@ -136,6 +135,12 @@ import app.musikus.ui.components.fadingEdge
 import app.musikus.ui.library.LibraryUiItem
 import app.musikus.ui.sessions.RatingBar
 import app.musikus.ui.theme.MusikusColorSchemeProvider
+import app.musikus.ui.theme.MusikusPreviewElement1
+import app.musikus.ui.theme.MusikusPreviewElement2
+import app.musikus.ui.theme.MusikusPreviewElement3
+import app.musikus.ui.theme.MusikusPreviewElement4
+import app.musikus.ui.theme.MusikusPreviewElement5
+import app.musikus.ui.theme.MusikusPreviewWholeScreen
 import app.musikus.ui.theme.MusikusThemedPreview
 import app.musikus.ui.theme.dimensions
 import app.musikus.ui.theme.libraryItemColors
@@ -168,7 +173,7 @@ data class ToolsTab(
     val content: @Composable () -> Unit,
 )
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun ActiveSession(
     viewModel: ActiveSessionViewModel = hiltViewModel(),
@@ -812,6 +817,7 @@ private fun NewItemSelector(
             }
         }
 
+//        HorizontalDivider()
         Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
 
         LibraryFoldersRow(
@@ -824,9 +830,9 @@ private fun NewItemSelector(
                 }
             }
         )
-        Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
+//        Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
 
-        HorizontalDivider(Modifier.padding(horizontal = MaterialTheme.spacing.medium))
+        HorizontalDivider(Modifier.padding(horizontal = MaterialTheme.spacing.extraSmall))
 
         LibraryItemList(
             items = uiState.foldersWithItems.firstOrNull {
@@ -892,13 +898,12 @@ private fun LibraryFolderElement(
     onClick: (LibraryFolder?) -> Unit,
     isSelected: Boolean,
 ) {
-    val textColor by animateColorAsState(
-        targetValue = if (isSelected) {
-            MaterialTheme.colorScheme.primary
-        } else {
-            MaterialTheme.colorScheme.onSurface
-        }, label = "color", animationSpec = tween(200)
-    )
+    val textColor = if (isSelected) {
+        MaterialTheme.colorScheme.primary
+    } else {
+        MaterialTheme.colorScheme.onSurfaceVariant
+    }
+
     val iconColor by animateColorAsState(
         targetValue = if (isSelected) {
             MaterialTheme.colorScheme.primary
@@ -910,11 +915,8 @@ private fun LibraryFolderElement(
     val interactionSource = remember { MutableInteractionSource() }
     Column(
         modifier = Modifier
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null,  // no ripple
-                onClick = { onClick(folder) }
-            )
+            .clickable(interactionSource = interactionSource, indication = null,  // no ripple
+                onClick = { onClick(folder) })
             .size(70.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
@@ -922,7 +924,7 @@ private fun LibraryFolderElement(
         BadgedBox(modifier = Modifier.padding(horizontal = MaterialTheme.spacing.small),
             badge = { if (showBadge) Badge() }) {
             Icon(
-                Icons.Default.Folder,
+                imageVector = if (isSelected) Icons.Filled.Folder else Icons.Outlined.Folder,
                 tint = iconColor,
                 contentDescription = null
             )
@@ -1025,11 +1027,12 @@ fun EndSessionDialog(
 
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
-@PreviewLightDark
+@MusikusPreviewWholeScreen
 @Composable
 private fun PreviewActiveSessionScreen(
     @PreviewParameter(MusikusColorSchemeProvider::class) theme: ColorSchemeSelections,
 ) {
+
     MusikusThemedPreview(theme) {
 
         ActiveSessionScreen(uiState = ActiveSessionUiState(
@@ -1059,21 +1062,29 @@ private fun PreviewActiveSessionScreen(
     }
 }
 
-@Preview
+@MusikusPreviewElement1
 @Composable
-private fun PreviewCurrentItem() {
-    CurrentPracticingItem(item = dummyRunningItem)
+private fun PreviewCurrentItem(
+    @PreviewParameter(MusikusColorSchemeProvider::class) theme: ColorSchemeSelections,
+) {
+    MusikusThemedPreview(theme) {
+        CurrentPracticingItem(item = dummyRunningItem)
+    }
 }
 
 
-@Preview
+@MusikusPreviewElement2
 @Composable
-private fun PreviewSectionItem() {
-    SectionListElement(item = dummySections.first())
+private fun PreviewSectionItem(
+    @PreviewParameter(MusikusColorSchemeProvider::class) theme: ColorSchemeSelections,
+) {
+    MusikusThemedPreview(theme) {
+        SectionListElement(item = dummySections.first())
+    }
 }
 
 
-@PreviewLightDark
+@MusikusPreviewElement3
 @Composable
 private fun PreviewLibraryRow(
     @PreviewParameter(MusikusColorSchemeProvider::class) theme: ColorSchemeSelections,
@@ -1088,8 +1099,7 @@ private fun PreviewLibraryRow(
     }
 }
 
-@Preview(showSystemUi = true)
-@PreviewLightDark
+@MusikusPreviewElement4
 @Composable
 private fun PreviewNewItemSelector(
     @PreviewParameter(MusikusColorSchemeProvider::class) theme: ColorSchemeSelections,
@@ -1112,7 +1122,7 @@ private fun PreviewNewItemSelector(
     }
 }
 
-@PreviewLightDark
+@MusikusPreviewElement5
 @Composable
 private fun PreviewLibraryItem(
     @PreviewParameter(MusikusColorSchemeProvider::class) theme: ColorSchemeSelections,
