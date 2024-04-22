@@ -14,7 +14,7 @@ jobs:
   checks:
     name: Checks
     # Only run checks if the PR title does not start with 'docs:' and the PR does not have the 'skip-ci' label
-    if: "${{ !startsWith(github.event.pull_request.title, 'docs:') && !contains(github.event.pull_request.label, 'skip-ci') }}"
+    if: "${{ !startsWith(github.event.pull_request.title, 'docs:') && !contains(github.event.pull_request.labels.*.name, 'skip-ci') }}"
     runs-on: ubuntu-latest
 
     steps:
