@@ -166,7 +166,7 @@ private annotation class MusikusPreviewCommonAnnotations
 @MusikusPreviewCommonAnnotations
 @Preview(name = "Light", group = "Whole Screen")
 @Preview(name = "Dark", group = "Whole Screen", uiMode = Configuration.UI_MODE_NIGHT_YES or Configuration.UI_MODE_TYPE_NORMAL)
-@Preview(name = "SmallDevice", group = "Whole Screen",
+@Preview(name = "OldDevice", group = "Whole Screen",
     device = "id:Nexus 5",
     showSystemUi = true
 )

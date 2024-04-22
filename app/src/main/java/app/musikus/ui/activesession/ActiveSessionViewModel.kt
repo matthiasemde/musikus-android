@@ -103,10 +103,14 @@ class ActiveSessionViewModel @Inject constructor(
         } catch (e: IllegalStateException) {
             Duration.ZERO   // Session not yet started
         }
+        val pauseDurStr = getDurationString(
+            activeSessionUseCases.getOngoingPauseDuration(),
+            DurationFormat.MS_DIGITAL
+        )
         ActiveSessionTimerUiState(
             timerText = getDurationString(practiceDuration, DurationFormat.MS_DIGITAL).toString(),
             subHeadingAppearance = if(pause) SessionPausedResumedState.PAUSED else SessionPausedResumedState.RUNNING,
-            subHeadingText = if (pause) "Paused" else "Practice Time",
+            subHeadingText = if (pause) "Paused $pauseDurStr" else "Practice Time",
         )
     }.stateIn(
         scope = viewModelScope,
@@ -140,7 +144,7 @@ class ActiveSessionViewModel @Inject constructor(
     private val pastSectionsUiState = completedSections.map { sections ->
         ActiveSessionCompletedSectionsUiState(
             visible = sections.isNotEmpty(),
-            items = sections.map {
+            items = sections.reversed().map {
                    CompletedSectionUiState(
                        id = it.id,
                        name = it.libraryItem.name,

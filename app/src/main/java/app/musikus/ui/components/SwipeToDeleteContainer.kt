@@ -31,7 +31,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import app.musikus.ui.theme.spacing
 import kotlinx.coroutines.delay
@@ -100,7 +99,7 @@ private fun SwipeToDeleteBackground(
     Box(
         Modifier
             .fillMaxSize()
-            .clip(MaterialTheme.shapes.medium)
+//            .clip(MaterialTheme.shapes.medium)
             .background(color)
             .padding(end = MaterialTheme.spacing.medium),
         contentAlignment = Alignment.CenterEnd

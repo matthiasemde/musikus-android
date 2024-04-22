@@ -46,7 +46,6 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -56,7 +55,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -64,7 +62,6 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Pause
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Folder
@@ -77,7 +74,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -93,6 +89,8 @@ import androidx.compose.material3.TabRow
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberSwipeToDismissBoxState
@@ -186,9 +184,10 @@ fun ActiveSession(
     val bottomSheetState = rememberBottomSheetScaffoldState()
 
     // TODO move to somewhere final
-    val tabs = persistentListOf(ToolsTab(type = ActiveSessionTab.METRONOME,
-        title = "Metronome",
-        content = { MetronomeUi() }),
+    val tabs = persistentListOf(
+        ToolsTab(type = ActiveSessionTab.METRONOME,
+            title = "Metronome",
+            content = { MetronomeUi() }),
         ToolsTab(type = ActiveSessionTab.RECORDER, title = "Recorder", content = { RecorderUi() })
     ).toImmutableList()
 
@@ -202,7 +201,6 @@ fun ActiveSession(
     /**
      * --------------------- Dialogs ---------------------
      */
-
 
 
 //    val dialogUiState = uiState.dialogUiState
@@ -308,12 +306,14 @@ private fun ActiveSessionScreen(
             NewItemSelector(
                 uiState = uiState.newItemSelectorUiState,
                 onItemSelected = remember { { eventHandler(ActiveSessionUiEvent.SelectItem(it)) } },
-                onClose = remember { {
-                    scope.launch {
-                        sheetState.hide()
-                        eventHandler(ActiveSessionUiEvent.ToggleNewItemSelectorVisible)
+                onClose = remember {
+                    {
+                        scope.launch {
+                            sheetState.hide()
+                            eventHandler(ActiveSessionUiEvent.ToggleNewItemSelectorVisible)
+                        }
                     }
-                } },
+                },
             )
         }
     }
@@ -344,33 +344,37 @@ private fun ActiveSessionMainContent(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
 
+                Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
                 // Big Timer
                 PracticeTimer(
-                    modifier = Modifier.padding(top = MaterialTheme.spacing.extraLarge),
                     uiState = uiState.timerUiState,
                     onResumeTimer = remember { { eventHandler(ActiveSessionUiEvent.TogglePauseState) } },
                 )
                 Spacer(modifier = Modifier.height(MaterialTheme.spacing.large))
 
                 // Running Item
-                CurrentPracticingItem(item = uiState.currentItemUiState)
+                CurrentPracticingItem(
+                    modifier = Modifier.padding(horizontal = MaterialTheme.spacing.large),
+                    item = uiState.currentItemUiState
+                )
                 Spacer(modifier = Modifier.height(MaterialTheme.spacing.extraLarge))
 
                 // Past Items
-                SectionsList(
-                    modifier = Modifier
-                        .padding(horizontal = MaterialTheme.spacing.large)
-                        .align(Alignment.CenterHorizontally),
-                    uiState = uiState.pastSectionsUiState,
-                    onSectionDeleted = remember { { section ->
-                        eventHandler(ActiveSessionUiEvent.DeleteSection(section.id))
-                    } },
-                    additionalBottomContentPadding = MaterialTheme.spacing.large + 56.dp    // 56.dp for FAB
-                )
+                if (uiState.pastSectionsUiState.visible) {
+                    SectionsList(
+                        uiState = uiState.pastSectionsUiState,
+                        onSectionDeleted = remember {
+                            { section ->
+                                eventHandler(ActiveSessionUiEvent.DeleteSection(section.id))
+                            }
+                        },
+                        additionalBottomContentPadding = MaterialTheme.spacing.large + 56.dp,    // 56.dp for FAB
+                    )
+                }
             }
-
             Spacer(Modifier.weight(1f))
         }
+
 
         // FAB for new Item
         ExtendedFloatingActionButton(
@@ -407,6 +411,7 @@ private fun ActiveSessionToolsLayout(
 }
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ActiveSessionTopBar(
     uiState: ActiveSessionTopBarUiState,
@@ -415,55 +420,90 @@ private fun ActiveSessionTopBar(
     onTogglePause: () -> Unit = {},
     onSave: () -> Unit = {},
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surface)
-            .windowInsetsPadding(WindowInsets.statusBars)   // take care of statusbar insets
-            .padding(vertical = MaterialTheme.spacing.small),
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Row(Modifier.padding(horizontal = MaterialTheme.spacing.medium)) {
-            IconButton(
-                onClick = onNavigateUp
-            ) {
-                Icon(imageVector = Icons.Default.KeyboardArrowDown, contentDescription = null)
-            }
 
+    TopAppBar(
+        title = { },
+        navigationIcon = {
+            IconButton(
+                onClick = onNavigateUp,
+                content = {
+                    Icon(imageVector = Icons.Default.KeyboardArrowDown, contentDescription = null)
+                }
+            )
+        },
+        actions = {
             AnimatedVisibility(
                 visible = uiState.visible,
                 enter = slideInVertically(),
             ) {
                 Row {
-
-                    IconButton(
-                        onClick = onDiscard
-                    ) {
-                        Icon(imageVector = Icons.Outlined.Delete, contentDescription = null)
-                    }
-
                     AnimatedVisibility(
                         visible = uiState.pauseButtonAppearance != SessionPausedResumedState.PAUSED,
                         enter = fadeIn(),
                         exit = fadeOut(),
                     ) {
-                        PauseButton(
-                            onClick = onTogglePause,
-                            paused = uiState.pauseButtonAppearance == SessionPausedResumedState.PAUSED,
-                        )
+                        PauseButton(onClick = onTogglePause)
                     }
 
-                    Spacer(modifier = Modifier.weight(1f))
+                    IconButton(
+                        onClick = onDiscard,
+                    ) {
+                        Icon(imageVector = Icons.Outlined.Delete, contentDescription = null)
+                    }
 
-                    FilledTonalButton(
+                    TextButton(
                         onClick = onSave
                     ) {
-                        Text(text = "Save Session")
+                        Text(text = "Finish")
                     }
                 }
             }
         }
-    }
+    )
+
+//    Row(
+//        modifier = Modifier
+//            .fillMaxWidth()
+//            .background(MaterialTheme.colorScheme.surface)
+//            .windowInsetsPadding(WindowInsets.statusBars)   // take care of statusbar insets
+//            .padding(MaterialTheme.spacing.small),
+//    ) {
+//        IconButton(
+//            onClick = onNavigateUp
+//        ) {
+//            Icon(imageVector = Icons.Default.KeyboardArrowDown, contentDescription = null)
+//        }
+//
+//        Spacer(modifier = Modifier.weight(1f))
+//
+//        AnimatedVisibility(
+//            visible = uiState.visible,
+//            enter = slideInVertically(),
+//        ) {
+//            Row {
+//
+//                IconButton(
+//                    onClick = onDiscard
+//                ) {
+//                    Icon(imageVector = Icons.Outlined.Delete, contentDescription = null)
+//                }
+//
+//                AnimatedVisibility(
+//                    visible = uiState.pauseButtonAppearance != SessionPausedResumedState.PAUSED,
+//                    enter = fadeIn(),
+//                    exit = fadeOut(),
+//                ) {
+//                    PauseButton(onClick = onTogglePause)
+//                }
+//
+//                TextButton(
+//                    onClick = onSave
+//                ) {
+//                    Text(text = "Save Session")
+//                }
+//            }
+//        }
+//    }
 }
 
 
@@ -504,7 +544,8 @@ private fun ToolsTabRow(
     activeTabIndex: Int,
     onClick: (index: Int) -> Unit,
 ) {
-    TabRow(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+    TabRow(
+        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         divider = {},
         indicator = { tabPositions ->
             if (activeTabIndex < tabPositions.size) {
@@ -551,7 +592,7 @@ private fun PracticeTimer(
     onResumeTimer: () -> Unit = {},
 ) {
     Column(
-        Modifier.animateContentSize(), horizontalAlignment = Alignment.CenterHorizontally
+        modifier.animateContentSize(), horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
             style = MaterialTheme.typography.displayLarge,
@@ -560,29 +601,33 @@ private fun PracticeTimer(
             fontSize = 75.sp
         )
         when (uiState.subHeadingAppearance) {
-            SessionPausedResumedState.RUNNING -> Text(
-                style = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurfaceVariant),
-                text = uiState.subHeadingText,
-            )
-
-            SessionPausedResumedState.PAUSED -> ElevatedButton(
-                onClick = onResumeTimer, colors = ButtonDefaults.elevatedButtonColors().copy(
-                    containerColor = MaterialTheme.colorScheme.tertiary,
-                    contentColor = MaterialTheme.colorScheme.onTertiary
+            SessionPausedResumedState.RUNNING -> {
+                Text(
+                    style = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurfaceVariant),
+                    text = uiState.subHeadingText,
                 )
-            ) {
-                Icon(imageVector = Icons.Outlined.PlayCircle, contentDescription = null)
-                Spacer(Modifier.width(MaterialTheme.spacing.small))
-                Text(text = uiState.subHeadingText)
+            }
+
+            SessionPausedResumedState.PAUSED -> {
+                ElevatedButton(
+                    onClick = onResumeTimer, colors = ButtonDefaults.elevatedButtonColors().copy(
+                        containerColor = MaterialTheme.colorScheme.tertiary,
+                        contentColor = MaterialTheme.colorScheme.onTertiary
+                    )
+                ) {
+                    Icon(imageVector = Icons.Outlined.PlayCircle, contentDescription = null)
+                    Spacer(Modifier.width(MaterialTheme.spacing.small))
+                    Text(text = uiState.subHeadingText)
+                }
             }
         }
     }
 }
 
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun CurrentPracticingItem(
+    modifier: Modifier = Modifier,
     item: ActiveSessionCurrentItemUiState,
 ) {
     AnimatedVisibility(
@@ -592,23 +637,21 @@ private fun CurrentPracticingItem(
         if (!item.visible) return@AnimatedVisibility
 
         Surface(
-            Modifier
+            modifier
                 .fillMaxWidth()
-                .padding(horizontal = MaterialTheme.spacing.large)
-                .border(
-                    width = 1.dp, color = item.color, shape = MaterialTheme.shapes.extraLarge
-                ),
-            color = MaterialTheme.colorScheme.surfaceContainerHigh,
-            shape = MaterialTheme.shapes.extraLarge
+                .border(width = 0.5.dp, color = item.color, shape = MaterialTheme.shapes.large),
+            color = item.color.copy(alpha = 0.2f),
+            shape = MaterialTheme.shapes.large
         ) {
             AnimatedContent(
                 targetState = item.name,
                 label = "currentPracticingItem",
                 transitionSpec = {
                     slideInVertically { -it } togetherWith slideOutVertically { it }
-                }) { itemName ->
+                }
+            ) { itemName ->
                 Row(
-                    modifier = Modifier.height(64.dp),
+                    modifier = Modifier.height(56.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
@@ -631,7 +674,7 @@ private fun CurrentPracticingItem(
                     Text(
                         text = item.durationText,
                         style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = MaterialTheme.colorScheme.onSurface,
                         fontWeight = FontWeight.SemiBold,
                     )
 
@@ -647,36 +690,34 @@ private fun CurrentPracticingItem(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun SectionsList(
-    modifier: Modifier = Modifier,
     uiState: ActiveSessionCompletedSectionsUiState,
     additionalBottomContentPadding: Dp = 0.dp,
     onSectionDeleted: (CompletedSectionUiState) -> Unit = {},
 ) {
-    if (!uiState.visible) {
-        // TODO hide when first section started
-        Box(modifier = modifier) {
-            Text(text = "Select a library item to start practicing")
-        }
-        return
-    }
-
     val listState = rememberLazyListState()
 
-    Column(modifier) {
+    // This column must not have padding to make swipe-to-dismiss work edge2edge
+    Column(modifier = Modifier.fillMaxWidth()) {
         Text(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = MaterialTheme.spacing.large),
             textAlign = TextAlign.Start,
             text = "Already practiced",
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-        Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
+        Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
+
         LazyColumn(
             state = listState,
             modifier = Modifier
-//                .fadingEdge(listState)    // TODO replace fadingEdge with sharp bottom corners
-                .fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.extraSmall),
+                .fadingEdge(listState)
+                .fillMaxWidth()
+                .padding(
+                    horizontal = MaterialTheme.spacing.large    // main padding
+                            + MaterialTheme.spacing.small   // slightly indent the list
+                ),
             contentPadding = PaddingValues(
                 bottom = additionalBottomContentPadding
             )
@@ -684,12 +725,14 @@ private fun SectionsList(
             items(
                 items = uiState.items,
                 key = { item -> item.id },
-            ) { item ->
+            )
+            { item ->
                 SectionListElement(
                     modifier = Modifier.animateItemPlacement(),
                     item = item,
                     onSectionDeleted = onSectionDeleted,
                 )
+                if (item != uiState.items.last()) HorizontalDivider()
             }
         }
     }
@@ -721,30 +764,22 @@ private fun SectionListElement(
     SwipeToDeleteContainer(
         state = dismissState,
         deleted = deleted,
-        onDeleted = { onSectionDeleted(item) }) {
+        onDeleted = { onSectionDeleted(item) }
+    ) {
         Surface(
             // Surface for setting shape of item container
             modifier = modifier.height(56.dp),
-            color = MaterialTheme.colorScheme.surfaceContainer,
-            shape = MaterialTheme.shapes.small
         ) {
             Row(
-                Modifier
-                    .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+                Modifier.fillMaxSize(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // leading space
-                Spacer(modifier = Modifier.width(MaterialTheme.spacing.large))
-
                 Box(
                     modifier = Modifier
-                        .padding(vertical = MaterialTheme.spacing.small)
                         .width(10.dp)
-                        .height(30.dp)
+                        .height(24.dp)
                         .clip(RoundedCornerShape(5.dp))
-                        .clip(CircleShape)
-                        .background(item.color),
+                        .background(item.color.copy(alpha = 0.5f)),
                 )
                 Spacer(modifier = Modifier.width(MaterialTheme.spacing.medium))
                 Text(
@@ -762,8 +797,6 @@ private fun SectionListElement(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontWeight = FontWeight.Normal
                 )
-                // trailing space
-                Spacer(modifier = Modifier.width(MaterialTheme.spacing.large))
             }
         }
     }
@@ -773,13 +806,12 @@ private fun SectionListElement(
 @Composable
 private fun PauseButton(
     onClick: () -> Unit,
-    paused: Boolean,
 ) {
     IconButton(
         onClick = onClick
     ) {
         Icon(
-            imageVector = if (!paused) Icons.Filled.Pause else Icons.Filled.PlayArrow,
+            imageVector = Icons.Filled.Pause,
             contentDescription = null
         )
     }
@@ -797,7 +829,7 @@ private fun NewItemSelector(
 
         Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
 
-        Row (
+        Row(
             Modifier
                 .fillMaxWidth()
                 .padding(horizontal = MaterialTheme.spacing.small),
@@ -817,7 +849,6 @@ private fun NewItemSelector(
             }
         }
 
-//        HorizontalDivider()
         Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
 
         LibraryFoldersRow(
@@ -830,7 +861,6 @@ private fun NewItemSelector(
                 }
             }
         )
-//        Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
 
         HorizontalDivider(Modifier.padding(horizontal = MaterialTheme.spacing.extraSmall))
 
@@ -1035,27 +1065,29 @@ private fun PreviewActiveSessionScreen(
 
     MusikusThemedPreview(theme) {
 
-        ActiveSessionScreen(uiState = ActiveSessionUiState(
-            topBarUiState = ActiveSessionTopBarUiState(
-                visible = true, pauseButtonAppearance = SessionPausedResumedState.RUNNING
-            ),
-            mainContentUiState = MainContentUiState(
-                timerUiState = ActiveSessionTimerUiState(
-                    timerText = getDurationString(
-                        (42 * 60 + 24).seconds, DurationFormat.MS_DIGITAL
-                    ).toString(),
-                    subHeadingText = "Practice Time",
-                    subHeadingAppearance = SessionPausedResumedState.RUNNING
+        ActiveSessionScreen(
+            uiState = ActiveSessionUiState(
+                topBarUiState = ActiveSessionTopBarUiState(
+                    visible = true, pauseButtonAppearance = SessionPausedResumedState.RUNNING
                 ),
-                currentItemUiState = dummyRunningItem,
-                pastSectionsUiState = ActiveSessionCompletedSectionsUiState(
-                    visible = true, items = dummySections.toList()
+                mainContentUiState = MainContentUiState(
+                    timerUiState = ActiveSessionTimerUiState(
+                        timerText = getDurationString(
+                            (42 * 60 + 24).seconds, DurationFormat.MS_DIGITAL
+                        ).toString(),
+                        subHeadingText = "Practice Time",
+                        subHeadingAppearance = SessionPausedResumedState.RUNNING
+                    ),
+                    currentItemUiState = dummyRunningItem,
+                    pastSectionsUiState = ActiveSessionCompletedSectionsUiState(
+                        visible = true, items = dummySections.toList()
+                    ),
                 ),
             ),
-        ),
-            tabs = listOf(ToolsTab(type = ActiveSessionTab.METRONOME,
-                title = "Metronome",
-                content = { }),
+            tabs = listOf(
+                ToolsTab(type = ActiveSessionTab.METRONOME,
+                    title = "Metronome",
+                    content = { }),
                 ToolsTab(type = ActiveSessionTab.RECORDER, title = "Recorder", content = { })
             ).toImmutableList(),
         )
@@ -1143,7 +1175,7 @@ private fun PreviewLibraryItem(
 
 private val dummyRunningItem = ActiveSessionCurrentItemUiState(
     visible = true,
-    color = libraryItemColors[0],
+    color = libraryItemColors[Random.nextInt(libraryItemColors.size)],
     name = LoremIpsum(Random.nextInt(4, 10)).values.first(),
     durationText = "32:19",
 )
