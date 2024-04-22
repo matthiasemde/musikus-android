@@ -192,7 +192,7 @@ fun GoalCard(
                                 modifier = Modifier.padding(horizontal = 16.dp),
                                 text = getDurationString(
                                     animatedProgress.toInt().seconds,
-                                    DurationFormat.HUMAN_PRETTY
+                                    DurationFormat.HM_DIGITAL_OR_MIN_HUMAN
                                 ),
                                 style = MaterialTheme.typography.titleMedium.copy(
                                     color = MaterialTheme.colorScheme.onSurface
@@ -202,7 +202,7 @@ fun GoalCard(
                                 modifier = Modifier.padding(horizontal = 16.dp),
                                 text = getDurationString(
                                     animatedProgressLeft.toInt().seconds,
-                                    DurationFormat.HUMAN_PRETTY
+                                    DurationFormat.HM_DIGITAL_OR_MIN_HUMAN
                                 ),
                                 style = MaterialTheme.typography.titleMedium.copy(
                                     color = MaterialTheme.colorScheme.onSurface

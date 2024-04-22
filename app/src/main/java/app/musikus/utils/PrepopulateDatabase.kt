@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2023 Matthias Emde
+ * Copyright (c) 2023-2024 Matthias Emde
  */
 
 package app.musikus.utils
@@ -102,21 +102,19 @@ suspend fun prepopulateDatabase(
                 periodUnit = GoalPeriodUnit.WEEK,
             ),
         ).forEach { goalDescriptionCreationAttributes ->
+            val offset = (
+                if (goalDescriptionCreationAttributes.repeat) 10L
+                else 1L
+            ) * goalDescriptionCreationAttributes.periodInPeriodUnits
+
             database.goalDescriptionDao.insert(
                 descriptionCreationAttributes = goalDescriptionCreationAttributes,
                 instanceCreationAttributes = GoalInstanceCreationAttributes(
-                    startTimestamp = database.timeProvider.getStartOfDay(
-                        dayOffset = -1 *
-                            (
-                                if (goalDescriptionCreationAttributes.repeat) 10L
-                                else 1L
-                            ) * goalDescriptionCreationAttributes.periodInPeriodUnits
-                            * when(goalDescriptionCreationAttributes.periodUnit) {
-                                GoalPeriodUnit.DAY -> 1
-                                GoalPeriodUnit.WEEK -> 7
-                                GoalPeriodUnit.MONTH -> 31
-                            }
-                    ),
+                    startTimestamp = when(goalDescriptionCreationAttributes.periodUnit) {
+                        GoalPeriodUnit.DAY -> database.timeProvider.getStartOfDay().minusDays(offset)
+                        GoalPeriodUnit.WEEK -> database.timeProvider.getStartOfWeek().minusWeeks(offset)
+                        GoalPeriodUnit.MONTH -> database.timeProvider.getStartOfMonth().minusMonths(offset)
+                    },
                     target =((1..6).random() * 10 + 30).minutes
                 ),
                 libraryItemIds =
