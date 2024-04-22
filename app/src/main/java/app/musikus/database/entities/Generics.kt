@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2023 Matthias Emde
+ * Copyright (c) 2023-2024 Matthias Emde
  */
 
 package app.musikus.database.entities
@@ -94,7 +94,7 @@ abstract class SoftDeleteModelDisplayAttributes
     : TimestampModelDisplayAttributes()
 
 abstract class SoftDeleteModel(
-    @ColumnInfo(name="deleted", defaultValue = "false") var deleted: Boolean = false
+    @ColumnInfo(name="deleted") var deleted: Boolean = false
 ) : TimestampModel(), ISoftDeleteModelCreationAttributes, ISoftDeleteModelUpdateAttributes {
 
     override fun toString(): String {

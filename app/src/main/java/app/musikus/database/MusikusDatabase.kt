@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2024 Matthias Emde
+ * Copyright (c) 2022-2024 Matthias Emde
  *
  * Parts of this software are licensed under the MIT license
  *
@@ -15,13 +15,16 @@ package app.musikus.database
 
 import android.app.Application
 import android.content.ContentValues
+import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.util.Log
+import androidx.room.AutoMigration
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverter
 import androidx.room.TypeConverters
+import androidx.room.migration.AutoMigrationSpec
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import androidx.sqlite.db.SupportSQLiteQueryBuilder
@@ -53,7 +56,7 @@ import java.util.UUID
 import javax.inject.Provider
 
 @Database(
-    version = 3,
+    version = 4,
     entities = [
         SessionModel::class,
         SectionModel::class,
@@ -62,6 +65,13 @@ import javax.inject.Provider
         GoalDescriptionModel::class,
         GoalInstanceModel::class,
         GoalDescriptionLibraryItemCrossRefModel::class,
+    ],
+    autoMigrations = [
+        AutoMigration(
+            from = 3,
+            to = 4,
+            spec = MusikusDatabase.DatabaseMigrationThreeToFour::class
+        ),
     ],
     exportSchema = true,
 )
@@ -87,11 +97,11 @@ abstract class MusikusDatabase : RoomDatabase() {
         const val DATABASE_NAME = "musikus-database"
 
         fun buildDatabase(
-            app: Application,
-            databaseProvider: Provider<MusikusDatabase>,
-        ) =
-            Room.databaseBuilder(
-                app,
+            context: Context,
+            databaseProvider: Provider<MusikusDatabase>? = null,
+        ) : MusikusDatabase {
+            return Room.databaseBuilder(
+                context,
                 MusikusDatabase::class.java,
                 DATABASE_NAME
             ).addMigrations(
@@ -102,13 +112,14 @@ abstract class MusikusDatabase : RoomDatabase() {
                 override fun onCreate(db: SupportSQLiteDatabase) {
                     super.onCreate(db)
                     // prepopulate the database if in debug configuration
-                    if (BuildConfig.DEBUG) {
+                    if (BuildConfig.DEBUG && databaseProvider != null) {
                         ioThread { runBlocking {
                             prepopulateDatabase(databaseProvider.get())
                         } }
                     }
                 }
             }).build()
+        }
     }
 
     object DatabaseMigrationOneToTwo : Migration(1,2) {
@@ -356,6 +367,55 @@ abstract class MusikusDatabase : RoomDatabase() {
             db.execSQL("ALTER TABLE `_new_goal_description_library_item_cross_ref` RENAME TO `goal_description_library_item_cross_ref`")
             db.execSQL("CREATE INDEX IF NOT EXISTS `index_goal_description_library_item_cross_ref_goal_description_id` ON `goal_description_library_item_cross_ref` (`goal_description_id`)")
             db.execSQL("CREATE INDEX IF NOT EXISTS `index_goal_description_library_item_cross_ref_library_item_id` ON `goal_description_library_item_cross_ref` (`library_item_id`)")
+        }
+    }
+
+    class DatabaseMigrationThreeToFour : AutoMigrationSpec {
+        override fun onPostMigrate(db: SupportSQLiteDatabase) {
+            Log.d("POST_MIGRATION", "(3 -> 4): Starting Post Migration...")
+
+            db.beginTransaction()
+
+            try {
+
+                /**
+                 * The previous migration (2 -> 3) introduced a bug where the default value
+                 * for boolean columns was set to the string "false" instead of 0.
+                 * Here, we fix the issue by setting every boolean column to
+                 * 0 which is not explicitly set to 1.
+                 */
+                for (tableName in listOf("library_folder", "library_item", "session", "goal_description")) {
+                    val cursor = db.query(SupportSQLiteQueryBuilder.builder(tableName).let {
+                        it.columns(
+                            when(tableName) {
+                                "goal_description" -> arrayOf("id", "deleted", "paused")
+                                else -> arrayOf("id", "deleted")
+                            }
+                        )
+                        it.create()
+                    })
+                    while (cursor.moveToNext()) {
+                        val id = cursor.getBlob(cursor.getColumnIndexOrThrow("id"))
+                        val deleted = cursor.getString(cursor.getColumnIndexOrThrow("deleted"))
+                        Log.d("POST_MIGRATION", "(3 -> 4): Updating $tableName with id ${UUIDConverter().fromByte(id)} to deleted $deleted}")
+                        db.update(tableName, SQLiteDatabase.CONFLICT_ROLLBACK, ContentValues().apply {
+                            put("deleted", deleted == "1")
+                        }, "id=?", arrayOf(id))
+
+                        if (tableName == "goal_description") {
+                            val paused = cursor.getString(cursor.getColumnIndexOrThrow("paused"))
+                            db.update(tableName, SQLiteDatabase.CONFLICT_ROLLBACK, ContentValues().apply {
+                                put("paused", paused == "1")
+                            }, "id=?", arrayOf(id))
+                        }
+                    }
+                }
+                db.setTransactionSuccessful()
+            } finally {
+                db.endTransaction()
+            }
+
+            Log.d("POST_MIGRATION", "(3 -> 4): Post Migration complete")
         }
     }
 }

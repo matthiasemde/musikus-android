@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2024 Matthias Emde
+ * Copyright (c) 2022-2024 Matthias Emde
  */
 
 package app.musikus.database.entities
@@ -54,9 +54,9 @@ data class LibraryItemUpdateAttributes(
 data class LibraryItemModel(
     @ColumnInfo(name="name") override var name: String,
     @ColumnInfo(name="color_index") override var colorIndex: Int,
-    @ColumnInfo(name="library_folder_id", index = true, defaultValue = "null")
+    @ColumnInfo(name="library_folder_id", index = true)
     override var libraryFolderId: Nullable<UUID>?,
-    @ColumnInfo(name="custom_order", defaultValue = "null") override var customOrder: Nullable<Int>? = null,
+    @ColumnInfo(name="custom_order") override var customOrder: Nullable<Int>? = null,
 ) : SoftDeleteModel(), ILibraryItemCreationAttributes, ILibraryItemUpdateAttributes {
 
     override fun toString(): String {

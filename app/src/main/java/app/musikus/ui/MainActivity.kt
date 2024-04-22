@@ -13,16 +13,17 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Environment
+import android.provider.DocumentsContract
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import app.musikus.Musikus
 import app.musikus.database.MusikusDatabase
 import app.musikus.services.ActiveSessionServiceActions
 import app.musikus.services.SessionService
 import app.musikus.usecase.activesession.ActiveSessionUseCases
-import app.musikus.utils.ExportDatabaseContract
-import app.musikus.utils.ImportDatabaseContract
 import app.musikus.utils.PermissionChecker
 import app.musikus.utils.PermissionCheckerActivity
 import app.musikus.utils.TimeProvider
@@ -138,5 +139,25 @@ class MainActivity : PermissionCheckerActivity() {
         }
 
     }
+}
 
+/**
+ * Contracts for exporting/importing the database
+ */
+
+class ExportDatabaseContract : ActivityResultContracts.CreateDocument("*/*") {
+    override fun createIntent(context: Context, input: String) =
+        super.createIntent(context, input).apply {
+            addCategory(Intent.CATEGORY_OPENABLE)
+            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                putExtra(DocumentsContract.EXTRA_INITIAL_URI, Environment.DIRECTORY_DOWNLOADS)
+            }
+        }
+}
+
+class ImportDatabaseContract : ActivityResultContracts.OpenDocument() {
+    override fun createIntent(context: Context, input: Array<String>) =
+        super.createIntent(context, input).apply {
+
+        }
 }
