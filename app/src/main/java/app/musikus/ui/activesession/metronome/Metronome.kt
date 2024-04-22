@@ -45,7 +45,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.Dp
@@ -80,7 +79,9 @@ fun MetronomeLayout(
     uiState: MetronomeUiState,
     eventHandler: (MetronomeUiEvent) -> Unit,
 ) {
-    Column (modifier = modifier.padding(horizontal = MaterialTheme.spacing.large)) {
+    Column (modifier = modifier
+        .padding(horizontal = MaterialTheme.spacing.large)
+    ) {
         MetronomeHeader(
             modifier = Modifier.height(MaterialTheme.dimensions.toolsHeaderHeight),
             uiState = uiState,
@@ -94,13 +95,17 @@ fun MetronomeLayout(
             modifier = modifier
                 .fillMaxWidth()
                 .height(MaterialTheme.dimensions.toolsBodyHeight),
-            verticalArrangement = Arrangement.SpaceEvenly
         ) {
-            MetronomeBody(
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            MetronomeSlider(
                 modifier = Modifier,
                 uiState = uiState,
                 onSliderValueChange = { eventHandler(MetronomeUiEvent.UpdateSliderValue(it)) }
             )
+
+            Spacer(modifier = Modifier.weight(1f))
 
             /** Beats per bar, Click per beat and Tab tempo */
             MetronomeExtraSettingsRow(
@@ -113,12 +118,11 @@ fun MetronomeLayout(
             )
         }
         
-        Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
+        Spacer(modifier = Modifier.height(MaterialTheme.spacing.large))
     }
 }
 
 
-@Preview(widthDp = 370)
 @PreviewLightDark
 @Composable
 private fun PreviewMetronome(
@@ -259,26 +263,28 @@ private fun MetronomeHeader(
 }
 
 @Composable
-fun MetronomeBody(
+fun MetronomeSlider(
     modifier: Modifier = Modifier,
     uiState: MetronomeUiState,
     onSliderValueChange: (Float) -> Unit
 ) {
+    Column {
+        /** Tempo Slider */
+        Text(
+            modifier = Modifier,
+            text = uiState.tempoDescription,
+            style = MaterialTheme.typography.bodyLarge,
+        )
 
-    /** Tempo Slider */
-    Text(
-        modifier = Modifier,
-        text = uiState.tempoDescription,
-        style = MaterialTheme.typography.bodyLarge,
-    )
 
-    Slider(
-        value = uiState.sliderValue,
-        valueRange =
-        MetronomeSettings.BPM_RANGE.first.toFloat()..
-                MetronomeSettings.BPM_RANGE.last.toFloat(),
-        onValueChange = { onSliderValueChange(it) },
-    )
+        Slider(
+            value = uiState.sliderValue,
+            valueRange =
+            MetronomeSettings.BPM_RANGE.first.toFloat()..
+                    MetronomeSettings.BPM_RANGE.last.toFloat(),
+            onValueChange = { onSliderValueChange(it) },
+        )
+    }
 }
 
 
@@ -313,7 +319,7 @@ fun MetronomeExtraSettingsRow(
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.Top,
-        horizontalArrangement = Arrangement.SpaceAround
+        horizontalArrangement = Arrangement.SpaceBetween
     ) {
 
         MetronomeExtraSettingsColumn(label = "Beats/bar") {
@@ -335,7 +341,7 @@ fun MetronomeExtraSettingsRow(
         MetronomeExtraSettingsColumn(label = "Tab tempo") {
             IconButton(
                 onClick = onTapTempo,
-                modifier = Modifier.size(25.dp),
+//                modifier = Modifier.size(25.dp),
             ) {
                 Icon(
                     imageVector = Icons.Default.TouchApp,
@@ -354,7 +360,7 @@ fun MetronomeExtraSettingsColumn(
     content: @Composable () -> Unit
 ) {
     Column(
-        modifier = modifier,
+        modifier = modifier.height(75.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Top
     ) {
@@ -362,12 +368,16 @@ fun MetronomeExtraSettingsColumn(
             text = label,
             style = MaterialTheme.typography.labelLarge,
         )
-        Spacer(Modifier.height(MaterialTheme.spacing.small))
+
+        Spacer(modifier = Modifier.weight(1f))
+
         Box(
             modifier = Modifier.heightIn(max = 50.dp)
         ) {
             content()
         }
+
+        Spacer(modifier = Modifier.weight(1f))
     }
 }
 
