@@ -446,7 +446,6 @@ fun LibraryContent(
                 ) {
                     LibraryUiItem(
                         modifier = Modifier.padding(
-                            vertical = MaterialTheme.spacing.small,
                             horizontal = MaterialTheme.spacing.large
                         ),
                         item = item,

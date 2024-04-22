@@ -13,6 +13,7 @@ import android.app.Application
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import app.musikus.database.Nullable
 import app.musikus.ui.theme.libraryItemColors
 import app.musikus.usecase.activesession.ActiveSessionUseCases
 import app.musikus.usecase.activesession.SessionTimerState
@@ -65,6 +66,12 @@ class ActiveSessionViewModel @Inject constructor(
     )
 
     private val libraryFoldersWithItems = libraryUseCases.getSortedFolders().stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
+
+    private val rootItems = libraryUseCases.getSortedItems(Nullable(null)).stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = emptyList()
@@ -178,12 +185,14 @@ class ActiveSessionViewModel @Inject constructor(
     private val newItemSelectorUiState = combine(
         _newItemSelectorVisible,
         runningLibraryItem,
-        libraryFoldersWithItems
-    ) { visible, runningItem, folders  ->
+        libraryFoldersWithItems,
+        rootItems
+    ) { visible, runningItem, folders, rootItems ->
         NewItemSelectorUiState(
             visible = visible,
             runningItem = runningItem,
             foldersWithItems = folders,
+            rootItems = rootItems
         )
     }.stateIn(
         scope = viewModelScope,
@@ -249,7 +258,8 @@ class ActiveSessionViewModel @Inject constructor(
             is ActiveSessionUiEvent.DeleteSection -> {
                 viewModelScope.launch {
                     activeSessionUseCases.deleteSection(event.sectionId)
-                }            }
+                }
+            }
         }
     }
 

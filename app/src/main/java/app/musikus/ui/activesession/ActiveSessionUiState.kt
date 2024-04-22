@@ -79,7 +79,8 @@ data class CompletedSectionUiState(
 data class NewItemSelectorUiState(
     val visible: Boolean = false,
     val runningItem: LibraryItem? = null,
-    val foldersWithItems: List<LibraryFolderWithItems> = emptyList()
+    val foldersWithItems: List<LibraryFolderWithItems> = emptyList(),
+    val rootItems: List<LibraryItem> = emptyList()
 )
 
 @Stable

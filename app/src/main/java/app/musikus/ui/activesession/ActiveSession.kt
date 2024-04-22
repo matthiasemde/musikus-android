@@ -27,8 +27,6 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -46,10 +44,10 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
@@ -81,6 +79,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.ScrollableTabRow
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Surface
 import androidx.compose.material3.SwipeToDismissBoxValue
@@ -110,6 +109,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.LoremIpsum
 import androidx.compose.ui.unit.Dp
@@ -185,7 +185,8 @@ fun ActiveSession(
 
     // TODO move to somewhere final
     val tabs = persistentListOf(
-        ToolsTab(type = ActiveSessionTab.METRONOME,
+        ToolsTab(
+            type = ActiveSessionTab.METRONOME,
             title = "Metronome",
             content = { MetronomeUi() }),
         ToolsTab(type = ActiveSessionTab.RECORDER, title = "Recorder", content = { RecorderUi() })
@@ -296,13 +297,14 @@ private fun ActiveSessionScreen(
     val sheetState = rememberModalBottomSheetState()
     if (uiState.newItemSelectorUiState.visible) {
         ModalBottomSheet(
-            modifier = Modifier.fillMaxHeight(),    // avoids jumping height when changing folders
+            modifier = Modifier
+                .windowInsetsPadding(WindowInsets.statusBars)   // take care of statusbar insets
+                .fillMaxHeight(),    // avoid jumping height when changing folders
             windowInsets = WindowInsets(top = 0.dp), // makes sure the scrim covers the status bar
             onDismissRequest = remember { { eventHandler(ActiveSessionUiEvent.ToggleNewItemSelectorVisible) } },
             sheetState = sheetState,
             shape = RectangleShape,
-            dragHandle = {}
-        ) {
+            dragHandle = {}) {
             NewItemSelector(
                 uiState = uiState.newItemSelectorUiState,
                 onItemSelected = remember { { eventHandler(ActiveSessionUiEvent.SelectItem(it)) } },
@@ -421,45 +423,38 @@ private fun ActiveSessionTopBar(
     onSave: () -> Unit = {},
 ) {
 
-    TopAppBar(
-        title = { },
-        navigationIcon = {
-            IconButton(
-                onClick = onNavigateUp,
-                content = {
-                    Icon(imageVector = Icons.Default.KeyboardArrowDown, contentDescription = null)
+    TopAppBar(title = { }, navigationIcon = {
+        IconButton(onClick = onNavigateUp, content = {
+            Icon(imageVector = Icons.Default.KeyboardArrowDown, contentDescription = null)
+        })
+    }, actions = {
+        AnimatedVisibility(
+            visible = uiState.visible,
+            enter = slideInVertically(),
+        ) {
+            Row {
+                AnimatedVisibility(
+                    visible = uiState.pauseButtonAppearance != SessionPausedResumedState.PAUSED,
+                    enter = fadeIn(),
+                    exit = fadeOut(),
+                ) {
+                    PauseButton(onClick = onTogglePause)
                 }
-            )
-        },
-        actions = {
-            AnimatedVisibility(
-                visible = uiState.visible,
-                enter = slideInVertically(),
-            ) {
-                Row {
-                    AnimatedVisibility(
-                        visible = uiState.pauseButtonAppearance != SessionPausedResumedState.PAUSED,
-                        enter = fadeIn(),
-                        exit = fadeOut(),
-                    ) {
-                        PauseButton(onClick = onTogglePause)
-                    }
 
-                    IconButton(
-                        onClick = onDiscard,
-                    ) {
-                        Icon(imageVector = Icons.Outlined.Delete, contentDescription = null)
-                    }
+                IconButton(
+                    onClick = onDiscard,
+                ) {
+                    Icon(imageVector = Icons.Outlined.Delete, contentDescription = null)
+                }
 
-                    TextButton(
-                        onClick = onSave
-                    ) {
-                        Text(text = "Finish")
-                    }
+                TextButton(
+                    onClick = onSave
+                ) {
+                    Text(text = "Finish")
                 }
             }
         }
-    )
+    })
 
 //    Row(
 //        modifier = Modifier
@@ -643,13 +638,11 @@ private fun CurrentPracticingItem(
             color = item.color.copy(alpha = 0.2f),
             shape = MaterialTheme.shapes.large
         ) {
-            AnimatedContent(
-                targetState = item.name,
+            AnimatedContent(targetState = item.name,
                 label = "currentPracticingItem",
                 transitionSpec = {
                     slideInVertically { -it } togetherWith slideOutVertically { it }
-                }
-            ) { itemName ->
+                }) { itemName ->
                 Row(
                     modifier = Modifier.height(56.dp),
                     verticalAlignment = Alignment.CenterVertically,
@@ -659,8 +652,7 @@ private fun CurrentPracticingItem(
                     Spacer(modifier = Modifier.width(MaterialTheme.spacing.large))
 
                     Text(
-                        modifier = Modifier
-                            .weight(1f),
+                        modifier = Modifier.weight(1f),
                         text = itemName,
                         style = MaterialTheme.typography.titleLarge,
                         color = MaterialTheme.colorScheme.onSurface,
@@ -710,29 +702,24 @@ private fun SectionsList(
         Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
 
         LazyColumn(
-            state = listState,
-            modifier = Modifier
+            state = listState, modifier = Modifier
                 .fadingEdge(listState)
                 .fillMaxWidth()
                 .padding(
                     horizontal = MaterialTheme.spacing.large    // main padding
-                            + MaterialTheme.spacing.small   // slightly indent the list
-                ),
-            contentPadding = PaddingValues(
+                ), contentPadding = PaddingValues(
                 bottom = additionalBottomContentPadding
             )
         ) {
             items(
                 items = uiState.items,
                 key = { item -> item.id },
-            )
-            { item ->
+            ) { item ->
                 SectionListElement(
                     modifier = Modifier.animateItemPlacement(),
                     item = item,
                     onSectionDeleted = onSectionDeleted,
                 )
-                if (item != uiState.items.last()) HorizontalDivider()
             }
         }
     }
@@ -761,19 +748,17 @@ private fun SectionListElement(
     }, positionalThreshold = with(LocalDensity.current) {
         { 112.dp.toPx() }
     })
-    SwipeToDeleteContainer(
-        state = dismissState,
+    SwipeToDeleteContainer(state = dismissState,
         deleted = deleted,
-        onDeleted = { onSectionDeleted(item) }
-    ) {
+        onDeleted = { onSectionDeleted(item) }) {
         Surface(
             // Surface for setting shape of item container
-            modifier = modifier.height(56.dp),
+            modifier = modifier.height(50.dp),
         ) {
             Row(
-                Modifier.fillMaxSize(),
-                verticalAlignment = Alignment.CenterVertically
+                Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically
             ) {
+                Spacer(modifier = Modifier.width(MaterialTheme.spacing.small))
                 Box(
                     modifier = Modifier
                         .width(10.dp)
@@ -797,6 +782,7 @@ private fun SectionListElement(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontWeight = FontWeight.Normal
                 )
+                Spacer(modifier = Modifier.width(MaterialTheme.spacing.small))
             }
         }
     }
@@ -811,8 +797,7 @@ private fun PauseButton(
         onClick = onClick
     ) {
         Icon(
-            imageVector = Icons.Filled.Pause,
-            contentDescription = null
+            imageVector = Icons.Filled.Pause, contentDescription = null
         )
     }
 }
@@ -827,8 +812,8 @@ private fun NewItemSelector(
     var selectedFolder: UUID? by remember { mutableStateOf(uiState.runningItem?.libraryFolderId) }
     Column(modifier.fillMaxWidth()) {
 
+        // Header + Close Button
         Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
-
         Row(
             Modifier
                 .fillMaxWidth()
@@ -848,31 +833,39 @@ private fun NewItemSelector(
                 Icon(imageVector = Icons.Default.Close, contentDescription = null)
             }
         }
-
         Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
 
-        LibraryFoldersRow(
-            folders = uiState.foldersWithItems.map { it.folder },
-            highlightedFolderId = selectedFolder,
-            folderWithBadge = uiState.runningItem?.libraryFolderId,
-            onFolderSelected = remember {
-                { folderId ->
-                    selectedFolder = folderId
-                }
-            }
-        )
+        // Folders
+        val folders = remember { uiState.foldersWithItems.map { it.folder }.toImmutableList() }
+        if (folders.isNotEmpty()) {
+            LibraryFoldersRow(folders = folders,
+                highlightedFolderId = selectedFolder,
+                folderWithBadge = uiState.runningItem?.libraryFolderId,
+                onFolderSelected = remember {
+                    { folderId ->
+                        selectedFolder = folderId
+                    }
+                })
+        }
 
-        HorizontalDivider(Modifier.padding(horizontal = MaterialTheme.spacing.extraSmall))
+        // use own divider to avoid padding of default one From TabRow
+        // and also to show it when folders are not shown
+        HorizontalDivider()
 
-        LibraryItemList(
-            items = uiState.foldersWithItems.firstOrNull {
+        val items = remember(selectedFolder) {
+            // all items of the selected folder or root items if not found in folders
+            uiState.foldersWithItems.firstOrNull {
                 it.folder.id == selectedFolder
-            }?.items?.toImmutableList() ?: persistentListOf(),
+            }?.items?.toImmutableList() ?: uiState.rootItems.toImmutableList()
+        }
+
+        // Items
+        LibraryItemList(
+            items = items,
             onItemClick = { libraryItem ->
                 onItemSelected(libraryItem)
                 onClose()
-            },
-            activeItemId = uiState.runningItem?.id
+            }, activeItemId = uiState.runningItem?.id
         )
     }
 }
@@ -880,36 +873,30 @@ private fun NewItemSelector(
 @Composable
 private fun LibraryFoldersRow(
     modifier: Modifier = Modifier,
-    folders: List<LibraryFolder>,
+    folders: ImmutableList<LibraryFolder>,
     highlightedFolderId: UUID?,
     folderWithBadge: UUID?,
     onFolderSelected: (UUID?) -> Unit,
 ) {
-    val state = rememberLazyListState()
-    LazyRow(
-        state = state,
-        modifier = modifier.fadingEdge(state, vertical = false),
-        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small),  // item spacing
-        verticalAlignment = Alignment.CenterVertically,
-        contentPadding = PaddingValues(
-            start = MaterialTheme.spacing.extraLarge,
-            end = MaterialTheme.spacing.medium
-        ),
+    // translate highlightedFolderId to selectedTabIndex
+    // since the first tab is the "no folder" tab, add +1 (note: indexOfFirst returns -1 if not found)
+    val selectedTabIndex = remember(highlightedFolderId) {
+        folders.indexOfFirst { it.id == highlightedFolderId } + 1
+    }
+
+    ScrollableTabRow(
+        modifier = modifier.fillMaxWidth(), selectedTabIndex = selectedTabIndex,
+        divider = { }
     ) {
 
-        item(
-            key = "noFolder",
-            content = {
-                LibraryFolderElement(
-                    folder = null,
-                    onClick = { onFolderSelected(null) },
-                    isSelected = highlightedFolderId == null,
-                    showBadge = folderWithBadge == null
-                )
-            }
+        LibraryFolderElement(
+            folder = null,
+            onClick = { onFolderSelected(null) },
+            isSelected = highlightedFolderId == null,
+            showBadge = folderWithBadge == null
         )
 
-        items(folders) { folder ->
+        folders.forEach { folder ->
             LibraryFolderElement(
                 folder = folder,
                 onClick = { onFolderSelected(folder.id) },
@@ -920,6 +907,30 @@ private fun LibraryFoldersRow(
     }
 }
 
+@Composable
+private fun LibraryTabRowAlt(
+    folders: List<LibraryFolder>,   // TODO immutable
+) {
+    ScrollableTabRow(
+        selectedTabIndex = 0,
+    ) {
+        folders.forEachIndexed { index, libraryFolder ->
+            Tab(selected = index == 0, onClick = { }, content = {
+                LibraryFolderElement(
+                    folder = libraryFolder, onClick = {}, isSelected = false, showBadge = false
+                )
+            })
+        }
+    }
+}
+
+@Preview(group = "Testing")
+@Composable
+private fun LibraryTabRowAltPreview() {
+    MusikusThemedPreview {
+        LibraryTabRowAlt(folders = dummyFolders.take(4).toList())
+    }
+}
 
 @Composable
 private fun LibraryFolderElement(
@@ -942,14 +953,10 @@ private fun LibraryFolderElement(
         }, label = "color", animationSpec = tween(200)
     )
 
-    val interactionSource = remember { MutableInteractionSource() }
-    Column(
-        modifier = Modifier
-            .clickable(interactionSource = interactionSource, indication = null,  // no ripple
-                onClick = { onClick(folder) })
-            .size(70.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+    Tab(
+        modifier = Modifier.size(70.dp),
+        selected = isSelected,
+        onClick = { onClick(folder) },
     ) {
         BadgedBox(modifier = Modifier.padding(horizontal = MaterialTheme.spacing.small),
             badge = { if (showBadge) Badge() }) {
@@ -961,7 +968,9 @@ private fun LibraryFolderElement(
         }
         Spacer(modifier = Modifier.height(MaterialTheme.spacing.extraSmall))
         Text(
-            modifier = Modifier.basicMarquee(),
+            modifier = Modifier
+                .padding(horizontal = MaterialTheme.spacing.small)
+                .basicMarquee(),
             text = folder?.name ?: "no folder",
             style = MaterialTheme.typography.labelMedium,
             color = textColor,
@@ -980,8 +989,7 @@ private fun LibraryItemList(
     activeItemId: UUID?,
 ) {
     LazyColumn(
-        modifier = modifier.fillMaxWidth(),
-        contentPadding = WindowInsets(
+        modifier = modifier.fillMaxWidth(), contentPadding = WindowInsets(
             top = MaterialTheme.spacing.medium,
         ).add(WindowInsets.navigationBars).asPaddingValues()    // don't get covered by navbars
     ) {
@@ -1085,7 +1093,8 @@ private fun PreviewActiveSessionScreen(
                 ),
             ),
             tabs = listOf(
-                ToolsTab(type = ActiveSessionTab.METRONOME,
+                ToolsTab(
+                    type = ActiveSessionTab.METRONOME,
                     title = "Metronome",
                     content = { }),
                 ToolsTab(type = ActiveSessionTab.RECORDER, title = "Recorder", content = { })
@@ -1122,12 +1131,10 @@ private fun PreviewLibraryRow(
     @PreviewParameter(MusikusColorSchemeProvider::class) theme: ColorSchemeSelections,
 ) {
     MusikusThemedPreview(theme = theme) {
-        LibraryFoldersRow(
-            folders = dummyFolders.toList(),
+        LibraryFoldersRow(folders = dummyFolders.toImmutableList(),
             highlightedFolderId = dummyFolders.first().id,
             folderWithBadge = dummyFolders.toList()[2].id,
-            onFolderSelected = {}
-        )
+            onFolderSelected = {})
     }
 }
 
@@ -1142,14 +1149,48 @@ private fun PreviewNewItemSelector(
                 uiState = NewItemSelectorUiState(
                     visible = true,
                     foldersWithItems = dummyFolders.map {
-                        LibraryFolderWithItems(it, dummyLibraryItems.toList())
+                        LibraryFolderWithItems(
+                            it,
+                            dummyLibraryItems.toList()
+                        )
                     }.toList(),
+                    rootItems = dummyLibraryItems.toList(),
                     runningItem = dummyLibraryItems.first().copy(
                         libraryFolderId = UUIDConverter.fromInt(1)
                     )
-                ),
-                onItemSelected = { }
-            )
+                ), onItemSelected = { })
+        }
+    }
+}
+
+@Preview(name = "No Folders", group = "Element 4", showSystemUi = true)
+@Composable
+private fun PreviewNewItemSelectorNoFolders() {
+    MusikusThemedPreview {
+        Column {
+            NewItemSelector(
+                uiState = NewItemSelectorUiState(
+                    visible = true,
+                    foldersWithItems = emptyList(),
+                    runningItem = dummyLibraryItems.first()
+                ), onItemSelected = { })
+        }
+    }
+}
+
+@Preview(name = "No Folders", group = "Element 4", showSystemUi = true)
+@Composable
+private fun PreviewNewItemSelectorOneFolders() {
+    MusikusThemedPreview {
+        Column {
+            NewItemSelector(
+                uiState = NewItemSelectorUiState(
+                    visible = true,
+                    foldersWithItems = dummyFolders.take(1).map {
+                        LibraryFolderWithItems(it, dummyLibraryItems.toList())
+                    }.toList(),
+                    runningItem = dummyLibraryItems.first()
+                ), onItemSelected = { })
         }
     }
 }
@@ -1160,8 +1201,7 @@ private fun PreviewLibraryItem(
     @PreviewParameter(MusikusColorSchemeProvider::class) theme: ColorSchemeSelections,
 ) {
     MusikusThemedPreview(theme = theme) {
-        LibraryUiItem(
-            item = dummyLibraryItems.first(),
+        LibraryUiItem(item = dummyLibraryItems.first(),
             lastPracticedDate = ZonedDateTime.now(),
             selected = false,
             onShortClick = { /*TODO*/ },
