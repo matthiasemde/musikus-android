@@ -5,7 +5,7 @@ on:
     # Only run on PRs with main as target branch
     branches: [ "main" ]
     # Triggers when a PR is opened, updated or labeled
-    types: [opened, synchronize, reopened, labeled]
+    types: [opened, synchronize, reopened, unlabeled]
 
 env:
     JAVA_VERSION: 17
