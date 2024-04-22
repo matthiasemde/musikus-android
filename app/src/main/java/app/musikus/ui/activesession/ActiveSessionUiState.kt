@@ -52,6 +52,7 @@ data class ActiveSessionTimerUiState(
     val subHeadingAppearance: SessionPausedResumedState = SessionPausedResumedState.RUNNING,
     val subHeadingText: String = ""
 )
+
 @Stable
 data class ActiveSessionCurrentItemUiState(
     val visible: Boolean = false,
@@ -59,11 +60,13 @@ data class ActiveSessionCurrentItemUiState(
     val color: Color = Color.Transparent,
     val durationText: String = "",
 )
+
 @Stable
 data class ActiveSessionCompletedSectionsUiState(
     val visible: Boolean = false,
     val items: List<CompletedSectionUiState> = emptyList()
 )
+
 @Stable
 data class CompletedSectionUiState(
     val id: UUID = UUIDConverter.deadBeef,

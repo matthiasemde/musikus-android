@@ -10,39 +10,6 @@ package app.musikus.ui.activesession.recorder
 
 import android.util.Log
 import android.widget.Toast
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Mic
-import androidx.compose.material.icons.filled.MicOff
-import androidx.compose.material.icons.filled.Pause
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Replay5
-import androidx.compose.material3.FilledIconButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedIconButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -51,36 +18,17 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.media3.common.Player
-import androidx.media3.session.MediaController
-import app.musikus.ui.components.DialogActions
 import app.musikus.ui.components.ExceptionHandler
-import app.musikus.ui.components.Waveform
-import app.musikus.ui.components.conditional
-import app.musikus.ui.theme.spacing
-import app.musikus.usecase.recordings.Recording
-import app.musikus.utils.DateFormat
-import app.musikus.utils.DurationFormat
-import app.musikus.utils.RecorderState
-import app.musikus.utils.getDurationString
-import app.musikus.utils.musikusFormat
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 
+
 @Composable
-fun RecorderCardHeader(
+fun RecorderUi(
     modifier: Modifier = Modifier,
     viewModel: RecorderViewModel = hiltViewModel(),
 ) {
@@ -137,6 +85,13 @@ fun RecorderCardHeader(
             delay(100)
         }
     }
+}
+/*
+
+@Composable
+fun RecorderCardHeader(
+    modifier: Modifier = Modifier,
+) {
 
     Box(modifier = modifier.padding(vertical = MaterialTheme.spacing.small)) {
 
@@ -378,7 +333,9 @@ fun RecorderBar(
             modifier = Modifier.size(48.dp),
             onClick = {
                 when (uiState.recorderState) {
-                    RecorderState.UNINITIALIZED -> { /* do nothing */ }
+                    RecorderState.UNINITIALIZED -> { */
+/* do nothing *//*
+ }
                     RecorderState.IDLE -> eventHandler(RecorderUiEvent.StartRecording)
                     RecorderState.RECORDING -> eventHandler(RecorderUiEvent.PauseRecording)
                     RecorderState.PAUSED -> eventHandler(RecorderUiEvent.ResumeRecording)
@@ -515,4 +472,4 @@ fun MediaPlayerBar(
             }
         }
     }
-}
+}*/
