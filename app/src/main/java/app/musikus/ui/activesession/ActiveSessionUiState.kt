@@ -48,7 +48,7 @@ data class ActiveSessionTopBarUiState(
 
 @Stable
 data class ActiveSessionTimerUiState(
-    val timerText: String = "",
+    val timerText: String = "00:00", // Prevents size change animation to trigger when opening the screen
     val subHeadingAppearance: SessionPausedResumedState = SessionPausedResumedState.RUNNING,
     val subHeadingText: String = ""
 )

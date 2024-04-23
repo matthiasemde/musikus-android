@@ -12,7 +12,6 @@
 package app.musikus.ui.activesession
 
 import android.app.Activity
-import android.util.Log
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
@@ -48,6 +47,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -136,6 +136,7 @@ import app.musikus.ui.activesession.recorder.RecorderUi
 import app.musikus.ui.components.DialogActions
 import app.musikus.ui.components.DialogHeader
 import app.musikus.ui.components.SwipeToDeleteContainer
+import app.musikus.ui.components.conditional
 import app.musikus.ui.components.fadingEdge
 import app.musikus.ui.library.LibraryUiItem
 import app.musikus.ui.sessions.RatingBar
@@ -178,6 +179,35 @@ data class ToolsTab(
     val content: @Composable () -> Unit,
 )
 
+data class ScreenSizeClass(
+    val width: WindowWidthSizeClass,
+    val height: WindowHeightSizeClass,
+)
+
+// https://developer.android.com/guide/topics/large-screens/support-different-screen-sizes#window_size_classes
+object ScreenSizeDefaults {
+
+    val Phone = ScreenSizeClass(
+        width = WindowWidthSizeClass.Compact,
+        height = WindowHeightSizeClass.Expanded
+    )
+
+    val PhoneLandscape = ScreenSizeClass(
+        width = WindowWidthSizeClass.Expanded,
+        height = WindowHeightSizeClass.Compact
+    )
+
+    val Foldable = ScreenSizeClass(
+        width = WindowWidthSizeClass.Medium,
+        height = WindowHeightSizeClass.Medium
+    )
+
+    val LargeTablet = ScreenSizeClass(
+        width = WindowWidthSizeClass.Expanded,
+        height = WindowHeightSizeClass.Expanded
+    )
+}
+
 @OptIn(
     ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class,
     ExperimentalMaterial3WindowSizeClassApi::class
@@ -208,8 +238,10 @@ fun ActiveSession(
         eventHandler = viewModel::onUiEvent,
         tabs = tabs,
         bottomSheetState = bottomSheetState,
-        windowWidthSizeClass = windowsSizeClass.widthSizeClass,
-        windowHeightSizeClass = windowsSizeClass.heightSizeClass,
+        sizeClass = ScreenSizeClass(
+            windowsSizeClass.widthSizeClass,
+            windowsSizeClass.heightSizeClass
+        )
     )
 
     /**
@@ -260,11 +292,16 @@ private fun ActiveSessionScreen(
     eventHandler: (ActiveSessionUiEvent) -> Unit = {},
     bottomSheetState: BottomSheetScaffoldState = rememberBottomSheetScaffoldState(),
     bottomSheetPagerState: PagerState = rememberPagerState(pageCount = { tabs.size }),
-    windowWidthSizeClass: WindowWidthSizeClass = WindowWidthSizeClass.Compact,      // phone portrait
-    windowHeightSizeClass: WindowHeightSizeClass = WindowHeightSizeClass.Expanded,  // phone portrait
+    sizeClass: ScreenSizeClass = ScreenSizeClass(
+        WindowWidthSizeClass.Compact,
+        WindowHeightSizeClass.Expanded
+    )
 ) {
-    Log.d("ActiveSessionScreen", "windowWidthSizeClass: $windowWidthSizeClass, windowHeightSizeClass: $windowHeightSizeClass")
-    Scaffold(
+
+    // Custom Scaffold for our elements which adapts to available window sizes
+    ActiveSessionAdaptiveScaffold(
+        screenSizeClass = sizeClass,
+        bottomSheetState = bottomSheetState,
         topBar = {
             ActiveSessionTopBar(
                 uiState = uiState.topBarUiState,
@@ -279,35 +316,25 @@ private fun ActiveSessionScreen(
                 tabs = tabs,
                 sheetState = bottomSheetState,
                 pagerState = bottomSheetPagerState,
+                screenSizeClass = sizeClass,
             )
         },
-    ) { paddingValues ->
-        Surface(Modifier.padding(paddingValues)) {  // don't overlap with bottomBar
-
-            if (windowHeightSizeClass != WindowHeightSizeClass.Compact) {
-                BottomSheetScaffold(sheetContent = {
-                    ActiveSessionToolsLayout(
-                        tabs = tabs,
-                        sheetState = bottomSheetState,
-                        pagerState = bottomSheetPagerState
-                    )
-                },
-                    sheetContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                    sheetTonalElevation = 0.dp,  // deprecated anyways
-                    sheetShadowElevation = 0.dp, // deprecated anyways
-                    sheetPeekHeight = MaterialTheme.dimensions.toolsSheetPeekHeight,
-                    scaffoldState = bottomSheetState,
-                    sheetDragHandle = { SheetDragHandle() },
-                    content = { sheetPadding ->
-                        ActiveSessionMainContent(
-                            contentPadding = sheetPadding,
-                            uiState = uiState.mainContentUiState,
-                            eventHandler = eventHandler
-                        )
-                    })
-            }
+        mainContent = { padding ->
+            ActiveSessionMainContent(
+                contentPadding = padding,
+                uiState = uiState.mainContentUiState,
+                eventHandler = eventHandler,
+                screenSizeClass = sizeClass
+            )
+        },
+        toolsContent = {
+            ActiveSessionToolsLayout(
+                tabs = tabs,
+                sheetState = bottomSheetState,
+                pagerState = bottomSheetPagerState
+            )
         }
-    }
+    )
 
     val scope = rememberCoroutineScope()
 
@@ -339,21 +366,131 @@ private fun ActiveSessionScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ActiveSessionAdaptiveScaffold(
+    modifier: Modifier = Modifier,
+    screenSizeClass: ScreenSizeClass,
+    topBar: @Composable () -> Unit,
+    bottomBar: @Composable () -> Unit,
+    mainContent: @Composable (PaddingValues) -> Unit,
+    toolsContent: @Composable () -> Unit,
+    bottomSheetState: BottomSheetScaffoldState = rememberBottomSheetScaffoldState()
+) {
+    if (screenSizeClass.height == WindowHeightSizeClass.Compact) {
+
+        /** Landscape / small height. Use two columns with main content left, bottom sheet right. */
+
+        Scaffold(   // Scaffold needed for topBar
+            topBar = topBar,
+        ) {
+            Row(
+                modifier = modifier
+                    .padding(it)
+                    .fillMaxSize()
+            ) {
+                Column(     // left column
+                    Modifier
+                        .weight(1.2f)
+                        .fillMaxSize()
+                ) {
+                    mainContent(PaddingValues(0.dp))
+                }
+
+                Spacer(modifier = Modifier.width(MaterialTheme.spacing.small))
+
+                Column(     // right column
+                    Modifier
+                        .weight(1f)
+                        .fillMaxSize(),
+                    verticalArrangement = Arrangement.Bottom
+                ) {
+                    Scaffold(   // Scaffold needed for bottomBar
+                        bottomBar = bottomBar,
+                        content = { paddingValues ->
+                            Surface( // don't overlap with bottomBar
+                                Modifier.padding(bottom = paddingValues.calculateBottomPadding())
+                            ) {
+                                ToolsBottomSheetScaffold(
+                                    bottomSheetState = bottomSheetState,
+                                    sheetContent = {
+                                        toolsContent()
+                                    },
+                                    mainContent = { /* mainContent is in other column */ },
+                                )
+                            }
+                        }
+                    )
+                }
+            }
+        }
+    } else {
+
+        /** Portrait. Use normal scaffold with bottom sheet */
+
+        Scaffold(
+            topBar = topBar,
+            bottomBar = bottomBar,
+            content = { paddingValues ->
+                Surface(Modifier.padding(paddingValues)) {  // don't overlap with bottomBar
+                    ToolsBottomSheetScaffold(
+                        bottomSheetState = bottomSheetState,
+                        sheetContent = {
+                            toolsContent()
+                        },
+                        mainContent = { sheetPadding ->
+                            mainContent(sheetPadding)
+                        },
+                    )
+                }
+            }
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ToolsBottomSheetScaffold(
+    sheetContent: @Composable () -> Unit,
+    mainContent: @Composable (PaddingValues) -> Unit,
+    bottomSheetState: BottomSheetScaffoldState = rememberBottomSheetScaffoldState()
+) {
+    BottomSheetScaffold(
+        sheetContent = { sheetContent() },
+        sheetContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+        sheetTonalElevation = 0.dp,  // deprecated anyways
+        sheetShadowElevation = 0.dp, // deprecated anyways
+        sheetPeekHeight = MaterialTheme.dimensions.toolsSheetPeekHeight,
+        scaffoldState = bottomSheetState,
+        sheetDragHandle = { SheetDragHandle() },
+        content = { sheetPadding ->
+            mainContent(sheetPadding)
+        }
+    )
+}
+
 @Composable
 private fun ActiveSessionMainContent(
+    modifier: Modifier = Modifier,
+    screenSizeClass: ScreenSizeClass = ScreenSizeDefaults.Phone,
     contentPadding: PaddingValues,
     uiState: MainContentUiState,
     eventHandler: (ActiveSessionUiEvent) -> Unit = {},
 ) {
+    val limitedHeight = screenSizeClass.height == WindowHeightSizeClass.Compact
     Box(
-        Modifier
+        modifier
             .fillMaxSize()
             .padding(contentPadding)
     ) {
 
-        Column(Modifier.fillMaxWidth()) {
+        Column(Modifier
+            .widthIn(min = 0.dp, max = 600.dp) // limit width for large screens
+            .fillMaxWidth()
+            .align(Alignment.TopCenter)
+        ) {
 
-            Spacer(Modifier.weight(1f))
+            if (!limitedHeight) Spacer(Modifier.weight(1f))
 
             Column(  // Animated container
                 modifier = Modifier
@@ -362,20 +499,31 @@ private fun ActiveSessionMainContent(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
 
-                Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
+                if (!limitedHeight) Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
+
                 // Big Timer
                 PracticeTimer(
                     uiState = uiState.timerUiState,
+                    screenSizeClass = screenSizeClass,
                     onResumeTimer = remember { { eventHandler(ActiveSessionUiEvent.TogglePauseState) } },
                 )
-                Spacer(modifier = Modifier.height(MaterialTheme.spacing.large))
+
+                if (limitedHeight)
+                    Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
+                else
+                    Spacer(modifier = Modifier.height(MaterialTheme.spacing.large))
 
                 // Running Item
                 CurrentPracticingItem(
                     modifier = Modifier.padding(horizontal = MaterialTheme.spacing.large),
+                    screenSizeClass = screenSizeClass,
                     item = uiState.currentItemUiState
                 )
-                Spacer(modifier = Modifier.height(MaterialTheme.spacing.extraLarge))
+
+                if (limitedHeight)
+                    Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
+                else
+                    Spacer(modifier = Modifier.height(MaterialTheme.spacing.extraLarge))
 
                 // Past Items
                 if (uiState.pastSectionsUiState.visible) {
@@ -415,11 +563,12 @@ private fun ActiveSessionMainContent(
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 private fun ActiveSessionToolsLayout(
+    modifier: Modifier = Modifier,
     tabs: ImmutableList<ToolsTab>,
-    sheetState: BottomSheetScaffoldState = rememberBottomSheetScaffoldState(),
+    sheetState: BottomSheetScaffoldState = rememberBottomSheetScaffoldState(), // TODO remove?
     pagerState: PagerState = rememberPagerState(pageCount = { tabs.size }),
 ) {
-    Box(Modifier.fillMaxWidth()) {
+    Box(modifier.fillMaxWidth()) {
         Column {
             HorizontalPager(state = pagerState, userScrollEnabled = false) { tabIndex ->
                 tabs[tabIndex].content()
@@ -438,83 +587,42 @@ private fun ActiveSessionTopBar(
     onTogglePause: () -> Unit = {},
     onSave: () -> Unit = {},
 ) {
+    TopAppBar(
+        title = { },
+        navigationIcon = {
+            IconButton(onClick = onNavigateUp, content = {
+                Icon(imageVector = Icons.Default.KeyboardArrowDown, contentDescription = null)
+            })
+        },
+        actions = {
+            AnimatedVisibility(
+                visible = uiState.visible,
+                enter = slideInVertically(),
+            ) {
+                Row {
+                    AnimatedVisibility(
+                        visible = uiState.pauseButtonAppearance != SessionPausedResumedState.PAUSED,
+                        enter = fadeIn(),
+                        exit = fadeOut(),
+                    ) {
+                        PauseButton(onClick = onTogglePause)
+                    }
 
-    TopAppBar(title = { }, navigationIcon = {
-        IconButton(onClick = onNavigateUp, content = {
-            Icon(imageVector = Icons.Default.KeyboardArrowDown, contentDescription = null)
-        })
-    }, actions = {
-        AnimatedVisibility(
-            visible = uiState.visible,
-            enter = slideInVertically(),
-        ) {
-            Row {
-                AnimatedVisibility(
-                    visible = uiState.pauseButtonAppearance != SessionPausedResumedState.PAUSED,
-                    enter = fadeIn(),
-                    exit = fadeOut(),
-                ) {
-                    PauseButton(onClick = onTogglePause)
-                }
+                    IconButton(
+                        onClick = onDiscard,
+                    ) {
+                        Icon(imageVector = Icons.Outlined.Delete, contentDescription = null)
+                    }
 
-                IconButton(
-                    onClick = onDiscard,
-                ) {
-                    Icon(imageVector = Icons.Outlined.Delete, contentDescription = null)
-                }
-
-                TextButton(
-                    onClick = onSave
-                ) {
-                    Text(text = "Finish")
+                    TextButton(
+                        onClick = onSave
+                    ) {
+                        Text(text = "Finish")
+                    }
                 }
             }
         }
-    })
-
-//    Row(
-//        modifier = Modifier
-//            .fillMaxWidth()
-//            .background(MaterialTheme.colorScheme.surface)
-//            .windowInsetsPadding(WindowInsets.statusBars)   // take care of statusbar insets
-//            .padding(MaterialTheme.spacing.small),
-//    ) {
-//        IconButton(
-//            onClick = onNavigateUp
-//        ) {
-//            Icon(imageVector = Icons.Default.KeyboardArrowDown, contentDescription = null)
-//        }
-//
-//        Spacer(modifier = Modifier.weight(1f))
-//
-//        AnimatedVisibility(
-//            visible = uiState.visible,
-//            enter = slideInVertically(),
-//        ) {
-//            Row {
-//
-//                IconButton(
-//                    onClick = onDiscard
-//                ) {
-//                    Icon(imageVector = Icons.Outlined.Delete, contentDescription = null)
-//                }
-//
-//                AnimatedVisibility(
-//                    visible = uiState.pauseButtonAppearance != SessionPausedResumedState.PAUSED,
-//                    enter = fadeIn(),
-//                    exit = fadeOut(),
-//                ) {
-//                    PauseButton(onClick = onTogglePause)
-//                }
-//
-//                TextButton(
-//                    onClick = onSave
-//                ) {
-//                    Text(text = "Save Session")
-//                }
-//            }
-//        }
-//    }
+    )
 }
 
 
@@ -524,15 +632,18 @@ private fun ActiveSessionBottomTabs(
     tabs: ImmutableList<ToolsTab>,
     sheetState: BottomSheetScaffoldState = rememberBottomSheetScaffoldState(),
     pagerState: PagerState = rememberPagerState(pageCount = { tabs.size }),
+    screenSizeClass: ScreenSizeClass = ScreenSizeDefaults.Phone,
 ) {
     val scope = rememberCoroutineScope()
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-            .windowInsetsPadding(WindowInsets.navigationBars)   // take care of navbar insets
+        modifier = Modifier.fillMaxWidth()
+            .conditional(screenSizeClass.height != WindowHeightSizeClass.Compact) {
+                // take care of navbar insets
+                // (Workaround): but not on landscape mode / compact height because it will add
+                // unnecessary padding on API < 34 (try different navigation bar modes).
+                windowInsetsPadding(WindowInsets.navigationBars)
+            }
     ) {
-
         HorizontalDivider()
 
         ToolsTabRow(tabs = tabs, activeTabIndex = pagerState.currentPage, onClick = { tabIndex ->
@@ -601,6 +712,7 @@ private fun PracticeTimer(
     modifier: Modifier = Modifier,
     uiState: ActiveSessionTimerUiState,
     onResumeTimer: () -> Unit = {},
+    screenSizeClass: ScreenSizeClass = ScreenSizeDefaults.Phone,
 ) {
     Column(
         modifier.animateContentSize(), horizontalAlignment = Alignment.CenterHorizontally
@@ -609,7 +721,7 @@ private fun PracticeTimer(
             style = MaterialTheme.typography.displayLarge,
             text = uiState.timerText,
             fontWeight = FontWeight.Light,
-            fontSize = 75.sp
+            fontSize = if (screenSizeClass.height == WindowHeightSizeClass.Compact) 60.sp else 75.sp
         )
         when (uiState.subHeadingAppearance) {
             SessionPausedResumedState.RUNNING -> {
@@ -639,6 +751,7 @@ private fun PracticeTimer(
 @Composable
 private fun CurrentPracticingItem(
     modifier: Modifier = Modifier,
+    screenSizeClass: ScreenSizeClass = ScreenSizeDefaults.Phone,
     item: ActiveSessionCurrentItemUiState,
 ) {
     AnimatedVisibility(
@@ -646,6 +759,8 @@ private fun CurrentPracticingItem(
         enter = expandVertically() + fadeIn(animationSpec = keyframes { durationMillis = 200 }),
     ) {
         if (!item.visible) return@AnimatedVisibility
+
+        val limitedHeight = screenSizeClass.height == WindowHeightSizeClass.Compact
 
         Surface(
             modifier
@@ -660,17 +775,21 @@ private fun CurrentPracticingItem(
                     slideInVertically { -it } togetherWith slideOutVertically { it }
                 }) { itemName ->
                 Row(
-                    modifier = Modifier.height(56.dp),
+                    modifier = Modifier.height(if (limitedHeight) 42.dp else 56.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     // leading space
                     Spacer(modifier = Modifier.width(MaterialTheme.spacing.large))
 
+                    val textStyle =
+                        if (limitedHeight) MaterialTheme.typography.titleMedium
+                        else MaterialTheme.typography.titleLarge
+
                     Text(
                         modifier = Modifier.weight(1f),
                         text = itemName,
-                        style = MaterialTheme.typography.titleLarge,
+                        style = textStyle,
                         color = MaterialTheme.colorScheme.onSurface,
                         fontWeight = FontWeight.SemiBold,
                         maxLines = 1,
@@ -681,7 +800,7 @@ private fun CurrentPracticingItem(
 
                     Text(
                         text = item.durationText,
-                        style = MaterialTheme.typography.titleLarge,
+                        style = textStyle,
                         color = MaterialTheme.colorScheme.onSurface,
                         fontWeight = FontWeight.SemiBold,
                     )
@@ -1090,6 +1209,7 @@ private fun PreviewActiveSessionScreen(
     MusikusThemedPreview(theme) {
 
         ActiveSessionScreen(
+            sizeClass = ScreenSizeDefaults.Phone,
             uiState = ActiveSessionUiState(
                 topBarUiState = ActiveSessionTopBarUiState(
                     visible = true, pauseButtonAppearance = SessionPausedResumedState.RUNNING

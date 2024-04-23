@@ -170,7 +170,8 @@ private annotation class MusikusPreviewCommonAnnotations
     device = "id:Nexus 5",
     showSystemUi = true
 )
-@Preview(name = "Rotated", group = "Whole Screen", device = "spec:parent=pixel_5,orientation=landscape")
+@Preview(name = "Rotated", group = "Whole Screen",
+    device = "spec:parent=Nexus 6,orientation=landscape", showSystemUi = true)
 annotation class MusikusPreviewWholeScreen
 
 @MusikusPreviewCommonAnnotations
