@@ -394,7 +394,8 @@ private fun ActiveSessionAdaptiveScaffold(
 
         /** Landscape / small height. Use two columns with main content left, bottom sheet right. */
 
-        Scaffold(   // Scaffold needed for topBar
+        Scaffold(
+            // Scaffold needed for topBar
             topBar = topBar,
         ) {
             Row(
@@ -499,10 +500,11 @@ private fun ActiveSessionMainContent(
             .padding(contentPadding)
     ) {
 
-        Column(Modifier
-            .widthIn(min = 0.dp, max = 600.dp) // limit width for large screens
-            .fillMaxWidth()
-            .align(Alignment.TopCenter)
+        Column(
+            Modifier
+                .widthIn(min = 0.dp, max = 600.dp) // limit width for large screens
+                .fillMaxWidth()
+                .align(Alignment.TopCenter)
         ) {
 
             if (!limitedHeight) Spacer(Modifier.weight(1f))
@@ -651,7 +653,8 @@ private fun ActiveSessionBottomTabs(
 ) {
     val scope = rememberCoroutineScope()
     Column(
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
             .background(MaterialTheme.colorScheme.surfaceContainerHigh)
             .conditional(screenSizeClass.height != WindowHeightSizeClass.Compact) {
                 // take care of navbar insets
@@ -858,9 +861,8 @@ private fun SectionsList(
                 .fillMaxWidth()
                 .padding(
                     horizontal = MaterialTheme.spacing.large    // main padding
-                ), contentPadding = PaddingValues(
-                bottom = additionalBottomContentPadding
-            )
+                ),
+            contentPadding = PaddingValues(bottom = additionalBottomContentPadding)
         ) {
             items(
                 items = uiState.items,
@@ -999,7 +1001,7 @@ private fun NewItemSelector(
                 })
         }
 
-        // use own divider to avoid padding of default one From TabRow
+        // use own divider to avoid padding of default one from TabRow
         // and also to show it when folders are not shown
         HorizontalDivider()
 
