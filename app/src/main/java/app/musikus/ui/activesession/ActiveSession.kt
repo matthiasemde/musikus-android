@@ -11,6 +11,8 @@
 
 package app.musikus.ui.activesession
 
+import android.app.Activity
+import android.util.Log
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
@@ -93,6 +95,10 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberSwipeToDismissBoxState
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.WindowHeightSizeClass
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
+import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -105,6 +111,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -171,7 +178,10 @@ data class ToolsTab(
     val content: @Composable () -> Unit,
 )
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(
+    ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class,
+    ExperimentalMaterial3WindowSizeClassApi::class
+)
 @Composable
 fun ActiveSession(
     viewModel: ActiveSessionViewModel = hiltViewModel(),
@@ -180,6 +190,7 @@ fun ActiveSession(
     navigateTo: (Screen) -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val windowsSizeClass = calculateWindowSizeClass(activity = LocalContext.current as Activity)
 
     val bottomSheetState = rememberBottomSheetScaffoldState()
 
@@ -197,6 +208,8 @@ fun ActiveSession(
         eventHandler = viewModel::onUiEvent,
         tabs = tabs,
         bottomSheetState = bottomSheetState,
+        windowWidthSizeClass = windowsSizeClass.widthSizeClass,
+        windowHeightSizeClass = windowsSizeClass.heightSizeClass,
     )
 
     /**
@@ -247,7 +260,10 @@ private fun ActiveSessionScreen(
     eventHandler: (ActiveSessionUiEvent) -> Unit = {},
     bottomSheetState: BottomSheetScaffoldState = rememberBottomSheetScaffoldState(),
     bottomSheetPagerState: PagerState = rememberPagerState(pageCount = { tabs.size }),
+    windowWidthSizeClass: WindowWidthSizeClass = WindowWidthSizeClass.Compact,      // phone portrait
+    windowHeightSizeClass: WindowHeightSizeClass = WindowHeightSizeClass.Expanded,  // phone portrait
 ) {
+    Log.d("ActiveSessionScreen", "windowWidthSizeClass: $windowWidthSizeClass, windowHeightSizeClass: $windowHeightSizeClass")
     Scaffold(
         topBar = {
             ActiveSessionTopBar(
@@ -268,26 +284,28 @@ private fun ActiveSessionScreen(
     ) { paddingValues ->
         Surface(Modifier.padding(paddingValues)) {  // don't overlap with bottomBar
 
-            BottomSheetScaffold(sheetContent = {
-                ActiveSessionToolsLayout(
-                    tabs = tabs,
-                    sheetState = bottomSheetState,
-                    pagerState = bottomSheetPagerState
-                )
-            },
-                sheetContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                sheetTonalElevation = 0.dp,  // deprecated anyways
-                sheetShadowElevation = 0.dp, // deprecated anyways
-                sheetPeekHeight = MaterialTheme.dimensions.toolsSheetPeekHeight,
-                scaffoldState = bottomSheetState,
-                sheetDragHandle = { SheetDragHandle() },
-                content = { sheetPadding ->
-                    ActiveSessionMainContent(
-                        contentPadding = sheetPadding,
-                        uiState = uiState.mainContentUiState,
-                        eventHandler = eventHandler
+            if (windowHeightSizeClass != WindowHeightSizeClass.Compact) {
+                BottomSheetScaffold(sheetContent = {
+                    ActiveSessionToolsLayout(
+                        tabs = tabs,
+                        sheetState = bottomSheetState,
+                        pagerState = bottomSheetPagerState
                     )
-                })
+                },
+                    sheetContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    sheetTonalElevation = 0.dp,  // deprecated anyways
+                    sheetShadowElevation = 0.dp, // deprecated anyways
+                    sheetPeekHeight = MaterialTheme.dimensions.toolsSheetPeekHeight,
+                    scaffoldState = bottomSheetState,
+                    sheetDragHandle = { SheetDragHandle() },
+                    content = { sheetPadding ->
+                        ActiveSessionMainContent(
+                            contentPadding = sheetPadding,
+                            uiState = uiState.mainContentUiState,
+                            eventHandler = eventHandler
+                        )
+                    })
+            }
         }
     }
 
@@ -319,9 +337,7 @@ private fun ActiveSessionScreen(
             )
         }
     }
-
 }
-
 
 @Composable
 private fun ActiveSessionMainContent(
