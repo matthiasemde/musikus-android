@@ -224,6 +224,10 @@ fun ActiveSession(
 
     val bottomSheetState = rememberBottomSheetScaffoldState()
 
+    // TODO re-initialize bottomSheetState on configuration change
+    // there is a bug where the bottom sheet will become fully collapsable after the screen has been
+    // rotated. This can be fixed by re-initializing the bottomSheetState on configuration change.
+
     // TODO move to somewhere final
     val tabs = persistentListOf(
         ToolsTab(
@@ -349,7 +353,8 @@ private fun ActiveSessionScreen(
             onDismissRequest = remember { { eventHandler(ActiveSessionUiEvent.ToggleNewItemSelectorVisible) } },
             sheetState = sheetState,
             shape = RectangleShape,
-            dragHandle = {}) {
+            dragHandle = {}
+        ) {
             NewItemSelector(
                 uiState = uiState.newItemSelectorUiState,
                 onItemSelected = remember { { eventHandler(ActiveSessionUiEvent.SelectItem(it)) } },
@@ -366,6 +371,14 @@ private fun ActiveSessionScreen(
     }
 }
 
+
+/**
+ * Window-size adaptive layout for the ActiveSession screen.
+ *
+ * The screen is divided into two columns in landscape mode or small height.
+ * The main content is on the left, the tools are on the right.
+ *
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ActiveSessionAdaptiveScaffold(
@@ -477,7 +490,9 @@ private fun ActiveSessionMainContent(
     uiState: MainContentUiState,
     eventHandler: (ActiveSessionUiEvent) -> Unit = {},
 ) {
+    // condense UI a bit if there is limited space
     val limitedHeight = screenSizeClass.height == WindowHeightSizeClass.Compact
+
     Box(
         modifier
             .fillMaxSize()
@@ -554,7 +569,7 @@ private fun ActiveSessionMainContent(
                 )
             },
             text = { Text("Add item") },
-            expanded = true
+            expanded = true,
         )
     }
 }
