@@ -637,6 +637,7 @@ private fun ActiveSessionBottomTabs(
     val scope = rememberCoroutineScope()
     Column(
         modifier = Modifier.fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
             .conditional(screenSizeClass.height != WindowHeightSizeClass.Compact) {
                 // take care of navbar insets
                 // (Workaround): but not on landscape mode / compact height because it will add
