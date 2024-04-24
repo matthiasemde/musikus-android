@@ -24,6 +24,13 @@ enum class SessionPausedResumedState {
     PAUSED
 }
 
+/** Specific one-time events triggering some UI action in ActiveSession */
+@Stable
+data class ActiveSessionEventStates (
+    val sessionSaved: Boolean = false,
+    val sessionDiscarded: Boolean = false,
+)
+
 @Stable
 /** Main UI State */
 data class ActiveSessionUiState(
@@ -38,6 +45,7 @@ data class MainContentUiState(
     val timerUiState: ActiveSessionTimerUiState = ActiveSessionTimerUiState(),
     val currentItemUiState: ActiveSessionCurrentItemUiState = ActiveSessionCurrentItemUiState(),
     val pastSectionsUiState: ActiveSessionCompletedSectionsUiState = ActiveSessionCompletedSectionsUiState(),
+    val endDialogUiState: ActiveSessionEndDialogUiState = ActiveSessionEndDialogUiState()
 )
 
 @Stable
@@ -68,6 +76,12 @@ data class ActiveSessionCompletedSectionsUiState(
 )
 
 @Stable
+data class ActiveSessionEndDialogUiState(
+    val rating: Int = 5,
+    val comment: String = "",
+)
+
+@Stable
 data class CompletedSectionUiState(
     val id: UUID = UUIDConverter.deadBeef,
     val name: String = "",
@@ -77,7 +91,6 @@ data class CompletedSectionUiState(
 
 @Stable
 data class NewItemSelectorUiState(
-    val visible: Boolean = false,
     val runningItem: LibraryItem? = null,
     val foldersWithItems: List<LibraryFolderWithItems> = emptyList(),
     val rootItems: List<LibraryItem> = emptyList()
@@ -96,15 +109,20 @@ enum class ActiveSessionTab {
 }
 
 sealed class ActiveSessionUiEvent {
-    data object ToggleNewItemSelectorVisible : ActiveSessionUiEvent()
     data object TogglePauseState : ActiveSessionUiEvent()
     data object ShowMetronome : ActiveSessionUiEvent()
     data object ShowRecorder : ActiveSessionUiEvent()
     data class SelectItem(val item: LibraryItem) : ActiveSessionUiEvent()
-    data object ShowFinishDialog : ActiveSessionUiEvent()
     data object BackPressed : ActiveSessionUiEvent()
-    data object ShowDiscardSessionDialog : ActiveSessionUiEvent()
     data class DeleteSection(val sectionId: UUID) : ActiveSessionUiEvent()
+    data class EndDialogUiEvent(val dialogEvent: ActiveSessionEndDialogUiEvent) : ActiveSessionUiEvent()
+    data object DiscardSessionDialogConfirmed : ActiveSessionUiEvent()
+}
+
+sealed class ActiveSessionEndDialogUiEvent {
+    data class RatingChanged(val rating: Int) : ActiveSessionEndDialogUiEvent()
+    data class CommentChanged(val comment: String) : ActiveSessionEndDialogUiEvent()
+    data object Confirmed : ActiveSessionEndDialogUiEvent()
 }
 
 // -------------------------------------------------------------------------------------------------

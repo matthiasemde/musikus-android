@@ -60,6 +60,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Pause
@@ -83,6 +84,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ScrollableTabRow
+import androidx.compose.material3.SheetState
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Surface
 import androidx.compose.material3.SwipeToDismissBoxValue
@@ -102,11 +104,13 @@ import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -139,6 +143,7 @@ import app.musikus.datastore.ColorSchemeSelections
 import app.musikus.ui.Screen
 import app.musikus.ui.activesession.metronome.MetronomeUi
 import app.musikus.ui.activesession.recorder.RecorderUi
+import app.musikus.ui.components.DeleteConfirmationBottomSheet
 import app.musikus.ui.components.DialogActions
 import app.musikus.ui.components.DialogHeader
 import app.musikus.ui.components.SwipeToDeleteContainer
@@ -152,6 +157,7 @@ import app.musikus.ui.theme.MusikusPreviewElement2
 import app.musikus.ui.theme.MusikusPreviewElement3
 import app.musikus.ui.theme.MusikusPreviewElement4
 import app.musikus.ui.theme.MusikusPreviewElement5
+import app.musikus.ui.theme.MusikusPreviewElement6
 import app.musikus.ui.theme.MusikusPreviewWholeScreen
 import app.musikus.ui.theme.MusikusThemedPreview
 import app.musikus.ui.theme.dimensions
@@ -159,6 +165,8 @@ import app.musikus.ui.theme.libraryItemColors
 import app.musikus.ui.theme.spacing
 import app.musikus.utils.DurationFormat
 import app.musikus.utils.TimeProvider
+import app.musikus.utils.UiIcon
+import app.musikus.utils.UiText
 import app.musikus.utils.getDurationString
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -227,6 +235,8 @@ fun ActiveSession(
     navigateTo: (Screen) -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val eventStates by viewModel.eventStates.collectAsStateWithLifecycle()
+    val eventHandler = viewModel::onUiEvent
     val windowsSizeClass = calculateWindowSizeClass(activity = LocalContext.current as Activity)
 
     val bottomSheetState = rememberBottomSheetScaffoldState()
@@ -234,6 +244,23 @@ fun ActiveSession(
     // TODO re-initialize bottomSheetState on configuration change
     // there is a bug where the bottom sheet will become fully collapsable after the screen has been
     // rotated. This can be fixed by re-initializing the bottomSheetState on configuration change.
+
+
+    // successfully saved callback
+    LaunchedEffect(eventStates.sessionSaved) {
+        if (eventStates.sessionSaved) {
+            // potentially show some goals progress or success message etc. in the future..
+            navigateUp()
+        }
+    }
+
+    // session discarded callback
+    LaunchedEffect(eventStates.sessionDiscarded) {
+        if (eventStates.sessionDiscarded) {
+            navigateUp()
+        }
+    }
+
 
     // TODO move to somewhere final
     val tabs = persistentListOf(
@@ -243,24 +270,51 @@ fun ActiveSession(
             content = { MetronomeUi() }),
         ToolsTab(type = ActiveSessionTab.RECORDER, title = "Recorder", content = { RecorderUi() })
     ).toImmutableList()
+    // state for Tabs
+    val bottomSheetPagerState = rememberPagerState(pageCount = { tabs.size })
 
     ActiveSessionScreen(
         uiState = uiState,
-        eventHandler = viewModel::onUiEvent,
+        eventHandler = eventHandler,
+        navigateUp = navigateUp,
         tabs = tabs,
         bottomSheetState = bottomSheetState,
+        bottomSheetPagerState = bottomSheetPagerState,
         sizeClass = ScreenSizeClass(
             windowsSizeClass.widthSizeClass,
             windowsSizeClass.heightSizeClass
         )
     )
 
-    /**
-     * --------------------- Dialogs ---------------------
-     */
+
+    /** Handle deep link Arguments */
+
+    val scope = rememberCoroutineScope()
+    LaunchedEffect(deepLinkArgument) {
+        when (deepLinkArgument) {
+            ActiveSessionActions.METRONOME.name -> {
+                // switch to metronome tab
+                scope.launch {
+                    bottomSheetPagerState.animateScrollToPage(
+                        tabs.indexOfFirst { it.type == ActiveSessionTab.METRONOME }
+                    )
+                }
+                // expand bottom sheet
+                scope.launch {
+                    bottomSheetState.bottomSheetState.expand()
+                }
+            }
+
+            ActiveSessionActions.FINISH.name -> {
+//                scope.launch {
+//                    eventHandler(ActiveSessionUiEvent.ShowFinishDialog)
+//                }
+            }
+        }
+    }
 
 
-//    val dialogUiState = uiState.dialogUiState
+
 //
 //    dialogUiState.endDialogUiState?.let { endDialogUiState ->
 //        EndSessionDialog(
@@ -301,6 +355,7 @@ private fun ActiveSessionScreen(
     uiState: ActiveSessionUiState,
     tabs: ImmutableList<ToolsTab>,
     eventHandler: (ActiveSessionUiEvent) -> Unit = {},
+    navigateUp: () -> Unit = {},
     bottomSheetState: BottomSheetScaffoldState = rememberBottomSheetScaffoldState(),
     bottomSheetPagerState: PagerState = rememberPagerState(pageCount = { tabs.size }),
     sizeClass: ScreenSizeClass = ScreenSizeClass(
@@ -308,6 +363,9 @@ private fun ActiveSessionScreen(
         WindowHeightSizeClass.Expanded
     )
 ) {
+    val newItemSelectorVisible = rememberSaveable { mutableStateOf(false) }
+    var finishDialogVisible by rememberSaveable { mutableStateOf(false) }
+    var discardDialogVisible by rememberSaveable { mutableStateOf(false) }
 
     // Custom Scaffold for our elements which adapts to available window sizes
     ActiveSessionAdaptiveScaffold(
@@ -316,10 +374,10 @@ private fun ActiveSessionScreen(
         topBar = {
             ActiveSessionTopBar(
                 uiState = uiState.topBarUiState,
-                onDiscard = remember { { eventHandler(ActiveSessionUiEvent.ShowDiscardSessionDialog) } },
-                onNavigateUp = remember { { eventHandler(ActiveSessionUiEvent.BackPressed) } },
+                onDiscard = remember { { discardDialogVisible = true } },
+                onNavigateUp = remember { { navigateUp() } },
                 onTogglePause = remember { { eventHandler(ActiveSessionUiEvent.TogglePauseState) } },
-                onSave = remember { { eventHandler(ActiveSessionUiEvent.ShowFinishDialog) } },
+                onSave = remember { { finishDialogVisible = true } },
             )
         },
         bottomBar = {
@@ -335,6 +393,7 @@ private fun ActiveSessionScreen(
                 contentPadding = padding,
                 uiState = uiState.mainContentUiState,
                 eventHandler = eventHandler,
+                newItemSelectorVisible = newItemSelectorVisible,
                 screenSizeClass = sizeClass
             )
         },
@@ -347,34 +406,65 @@ private fun ActiveSessionScreen(
         }
     )
 
-    val scope = rememberCoroutineScope()
 
-    // New Item Selector
+    /**
+     * --------------------- Dialogs ---------------------
+     */
+
+
+    /** New Item Selector */
     val sheetState = rememberModalBottomSheetState()
-    if (uiState.newItemSelectorUiState.visible) {
-        ModalBottomSheet(
-            modifier = Modifier
-                .windowInsetsPadding(WindowInsets.statusBars)   // take care of statusbar insets
-                .fillMaxHeight(),    // avoid jumping height when changing folders
-            windowInsets = WindowInsets(top = 0.dp), // makes sure the scrim covers the status bar
-            onDismissRequest = remember { { eventHandler(ActiveSessionUiEvent.ToggleNewItemSelectorVisible) } },
+    if (newItemSelectorVisible.value) {
+        NewItemSelectorBottomSheet(
+            uiState = uiState.newItemSelectorUiState,
             sheetState = sheetState,
-            shape = RectangleShape,
-            dragHandle = {}
-        ) {
-            NewItemSelector(
-                uiState = uiState.newItemSelectorUiState,
-                onItemSelected = remember { { eventHandler(ActiveSessionUiEvent.SelectItem(it)) } },
-                onClose = remember {
-                    {
-                        scope.launch {
-                            sheetState.hide()
-                            eventHandler(ActiveSessionUiEvent.ToggleNewItemSelectorVisible)
-                        }
-                    }
-                },
-            )
-        }
+            onItemSelected = remember { { item ->
+                eventHandler(ActiveSessionUiEvent.SelectItem(item))
+            } },
+            onDismissed = remember { {
+                newItemSelectorVisible.value = false
+            } }
+        )
+    }
+
+    /** End Session Dialog */
+    val dialogUiState = uiState.mainContentUiState.endDialogUiState
+    if (finishDialogVisible) {
+        val dialogEvent = ActiveSessionUiEvent::EndDialogUiEvent
+
+        EndSessionDialog(
+            rating = dialogUiState.rating,
+            comment = dialogUiState.comment,
+            onDismiss = { finishDialogVisible = false },
+            onRatingChanged = {
+                eventHandler(
+                    dialogEvent(ActiveSessionEndDialogUiEvent.RatingChanged(it))
+                )
+            },
+            onCommentChanged = {
+                eventHandler(
+                    dialogEvent(ActiveSessionEndDialogUiEvent.CommentChanged(it))
+                )
+            },
+            onConfirm = {
+                eventHandler(
+                    dialogEvent(ActiveSessionEndDialogUiEvent.Confirmed)
+                )
+            }
+        )
+    }
+
+    /** Discard Session Dialog */
+    if (discardDialogVisible) {
+        DeleteConfirmationBottomSheet(
+            confirmationIcon = UiIcon.DynamicIcon(Icons.Default.Delete),
+            confirmationText = UiText.DynamicString("Discard session?"),
+            onDismiss = { discardDialogVisible = false },
+            onConfirm = {
+                eventHandler(ActiveSessionUiEvent.DiscardSessionDialogConfirmed)
+                navigateUp()
+            }
+        )
     }
 }
 
@@ -492,6 +582,7 @@ private fun ToolsBottomSheetScaffold(
     )
 }
 
+
 @Composable
 private fun ActiveSessionMainContent(
     modifier: Modifier = Modifier,
@@ -499,6 +590,7 @@ private fun ActiveSessionMainContent(
     contentPadding: PaddingValues,
     uiState: MainContentUiState,
     eventHandler: (ActiveSessionUiEvent) -> Unit = {},
+    newItemSelectorVisible: MutableState<Boolean> = mutableStateOf(false)
 ) {
     // condense UI a bit if there is limited space
     val limitedHeight = screenSizeClass.height == WindowHeightSizeClass.Compact
@@ -584,8 +676,8 @@ private fun ActiveSessionMainContent(
                             }
                         },
                         additionalBottomContentPadding =
-                            // 56.dp for FAB, landscape FAB is hidden, so no content padding needed
-                            MaterialTheme.spacing.large + if (!limitedHeight) 56.dp else 0.dp,
+                        // 56.dp for FAB, landscape FAB is hidden, so no content padding needed
+                        MaterialTheme.spacing.large + if (!limitedHeight) 56.dp else 0.dp,
                     )
                 }
             }
@@ -595,12 +687,44 @@ private fun ActiveSessionMainContent(
         AddSectionFAB(
             isVisible = addSectionFABVisible || !limitedHeight,    // only hide FAB in landscape layout
             modifier = Modifier.align(Alignment.BottomCenter),
-            onClick = remember { { eventHandler(ActiveSessionUiEvent.ToggleNewItemSelectorVisible) } }
+            onClick = remember { { newItemSelectorVisible.value = true } }
         )
 
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun NewItemSelectorBottomSheet(
+    sheetState: SheetState = rememberModalBottomSheetState(),
+    uiState: NewItemSelectorUiState = remember { NewItemSelectorUiState() },
+    onItemSelected: (LibraryItem) -> Unit = {},
+    onDismissed: () -> Unit = {},
+) {
+    val scope = rememberCoroutineScope()
+
+    ModalBottomSheet(
+        modifier = Modifier
+            .windowInsetsPadding(WindowInsets.statusBars)   // take care of statusbar insets
+            .fillMaxHeight(),    // avoid jumping height when changing folders
+        windowInsets = WindowInsets(top = 0.dp), // makes sure the scrim covers the status bar
+        onDismissRequest = remember { onDismissed },
+        sheetState = sheetState,
+        shape = RectangleShape,
+        dragHandle = {}
+    ) {
+        NewItemSelector(
+            uiState = uiState,
+            onItemSelected = onItemSelected,
+            onClose = remember { {
+                scope.launch {
+                    sheetState.hide()
+                    onDismissed()
+                }
+            } },
+        )
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -1115,30 +1239,6 @@ private fun LibraryFoldersRow(
     }
 }
 
-@Composable
-private fun LibraryTabRowAlt(
-    folders: List<LibraryFolder>,   // TODO immutable
-) {
-    ScrollableTabRow(
-        selectedTabIndex = 0,
-    ) {
-        folders.forEachIndexed { index, libraryFolder ->
-            Tab(selected = index == 0, onClick = { }, content = {
-                LibraryFolderElement(
-                    folder = libraryFolder, onClick = {}, isSelected = false, showBadge = false
-                )
-            })
-        }
-    }
-}
-
-@Preview(group = "Testing")
-@Composable
-private fun LibraryTabRowAltPreview() {
-    MusikusThemedPreview {
-        LibraryTabRowAlt(folders = dummyFolders.take(4).toList())
-    }
-}
 
 @Composable
 private fun LibraryFolderElement(
@@ -1219,23 +1319,26 @@ private fun LibraryItemList(
 fun EndSessionDialog(
     rating: Int,
     comment: String,
-    onRatingChanged: (Int) -> Unit,
-    onCommentChanged: (String) -> Unit,
-    onDismiss: () -> Unit,
-    onConfirm: () -> Unit,
+    onRatingChanged: (Int) -> Unit = { _ -> },
+    onCommentChanged: (String) -> Unit = { _ -> },
+    onDismiss: () -> Unit = {},
+    onConfirm: () -> Unit = {},
 ) {
     Dialog(
         onDismissRequest = onDismiss,
     ) {
         Surface(
             shape = MaterialTheme.shapes.extraLarge,
-            color = MaterialTheme.colorScheme.surfaceContainer
+            color = MaterialTheme.colorScheme.surfaceContainerHigh
         ) {
             Column {
                 DialogHeader(title = "Finish session")
+
                 Column(Modifier.padding(horizontal = MaterialTheme.spacing.medium)) {
-                    Text(text = "Rate you session: ")
+
+                    Text(text = "Rate your session: ")
                     Spacer(Modifier.height(MaterialTheme.spacing.small))
+
                     Row(
                         horizontalArrangement = Arrangement.Center,
                         modifier = Modifier.fillMaxWidth()
@@ -1245,10 +1348,10 @@ fun EndSessionDialog(
                             rating = rating,
                             total = 5,
                             size = 36.dp,
-                            onRatingChanged = onRatingChanged
+                            onRatingChanged = onRatingChanged,
                         )
                     }
-                    Spacer(Modifier.height(MaterialTheme.spacing.medium))
+                    Spacer(Modifier.height(MaterialTheme.spacing.large))
                     OutlinedTextField(
                         value = comment,
                         placeholder = { Text("Comment (optional)") },
@@ -1356,7 +1459,6 @@ private fun PreviewNewItemSelector(
         Column {
             NewItemSelector(
                 uiState = NewItemSelectorUiState(
-                    visible = true,
                     foldersWithItems = dummyFolders.map {
                         LibraryFolderWithItems(
                             it,
@@ -1379,7 +1481,6 @@ private fun PreviewNewItemSelectorNoFolders() {
         Column {
             NewItemSelector(
                 uiState = NewItemSelectorUiState(
-                    visible = true,
                     foldersWithItems = emptyList(),
                     runningItem = dummyLibraryItems.first()
                 ), onItemSelected = { })
@@ -1394,7 +1495,6 @@ private fun PreviewNewItemSelectorOneFolders() {
         Column {
             NewItemSelector(
                 uiState = NewItemSelectorUiState(
-                    visible = true,
                     foldersWithItems = dummyFolders.take(1).map {
                         LibraryFolderWithItems(it, dummyLibraryItems.toList())
                     }.toList(),
@@ -1415,6 +1515,19 @@ private fun PreviewLibraryItem(
             selected = false,
             onShortClick = { /*TODO*/ },
             onLongClick = { /*TODO*/ })
+    }
+}
+
+@MusikusPreviewElement6
+@Composable
+private fun PreviewEndSessionDialog(
+    @PreviewParameter(MusikusColorSchemeProvider::class) theme: ColorSchemeSelections,
+) {
+    MusikusThemedPreview(theme = theme) {
+        EndSessionDialog(
+            rating = 3,
+            comment = "This was a great session",
+        )
     }
 }
 
