@@ -28,6 +28,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -176,22 +177,31 @@ class ActiveSessionViewModel @Inject constructor(
     )
 
 
-    private val mainContentUiState = combine(
-        timerUiState,
-        currentItemUiState,
-        pastSectionsUiState,
-        _endDialogUiState
-    ) { timerUiState, currentItemUiState, pastSectionsUiState, endDialog ->
+//    private val mainContentUiState = combine(
+//        timerUiState,
+//        currentItemUiState,
+//        pastSectionsUiState,
+//        _endDialogUiState
+//    ) { timerUiState, currentItemUiState, pastSectionsUiState, endDialog ->
+//        MainContentUiState(
+//            timerUiState = timerUiState,
+//            currentItemUiState = currentItemUiState,
+//            pastSectionsUiState = pastSectionsUiState,
+//            endDialogUiState = endDialog
+//        )
+//    }.stateIn(
+//        scope = viewModelScope,
+//        started = SharingStarted.WhileSubscribed(5000),
+//        initialValue = MainContentUiState()
+//    )
+
+    private val mainContentUiState = MutableStateFlow(
         MainContentUiState(
             timerUiState = timerUiState,
             currentItemUiState = currentItemUiState,
             pastSectionsUiState = pastSectionsUiState,
-            endDialogUiState = endDialog
+            endDialogUiState = _endDialogUiState
         )
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = MainContentUiState()
     )
 
     private val newItemSelectorUiState = combine(
@@ -215,23 +225,32 @@ class ActiveSessionViewModel @Inject constructor(
 
     /** ------------------- Main UI State ------------------------------------------- */
 
-    val uiState = combine(
-        topBarUiState,
-        mainContentUiState,
-        newItemSelectorUiState,
-        toolsUiState,
-    ) { topBar, mainContent, newItem, tools ->
+//    val uiState = combine(
+//        topBarUiState,
+//        mainContentUiState,
+//        newItemSelectorUiState,
+//        toolsUiState,
+//    ) { topBar, mainContent, newItem, tools ->
+//        ActiveSessionUiState(
+//            topBarUiState = topBar,
+//            mainContentUiState = mainContent,
+//            newItemSelectorUiState = newItem,
+//            toolsUiState = tools
+//        )
+//    }.stateIn(
+//        scope = viewModelScope,
+//        started = SharingStarted.WhileSubscribed(5000),
+//        initialValue = ActiveSessionUiState()
+//    )
+
+    val uiState = MutableStateFlow(
         ActiveSessionUiState(
-            topBarUiState = topBar,
-            mainContentUiState = mainContent,
-            newItemSelectorUiState = newItem,
-            toolsUiState = tools
+            topBarUiState = topBarUiState,
+            mainContentUiState = mainContentUiState,
+            newItemSelectorUiState = newItemSelectorUiState,
+            toolsUiState = toolsUiState
         )
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = ActiveSessionUiState()
-    )
+    ).asStateFlow()
 
     val eventStates = MutableStateFlow(ActiveSessionEventStates())
 

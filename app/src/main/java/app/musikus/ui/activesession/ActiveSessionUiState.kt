@@ -13,6 +13,8 @@ import androidx.compose.ui.graphics.Color
 import app.musikus.database.LibraryFolderWithItems
 import app.musikus.database.UUIDConverter
 import app.musikus.database.daos.LibraryItem
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import java.util.UUID
 
 
@@ -34,18 +36,18 @@ data class ActiveSessionEventStates (
 @Stable
 /** Main UI State */
 data class ActiveSessionUiState(
-    val topBarUiState: ActiveSessionTopBarUiState = ActiveSessionTopBarUiState(),
-    val mainContentUiState: MainContentUiState = MainContentUiState(),
-    val newItemSelectorUiState: NewItemSelectorUiState = NewItemSelectorUiState(),
-    val toolsUiState: ActiveSessionToolsUiState = ActiveSessionToolsUiState(),
+    val topBarUiState: StateFlow<ActiveSessionTopBarUiState> = MutableStateFlow(ActiveSessionTopBarUiState()),
+    val mainContentUiState: StateFlow<MainContentUiState> = MutableStateFlow(MainContentUiState()),
+    val newItemSelectorUiState: StateFlow<NewItemSelectorUiState> = MutableStateFlow(NewItemSelectorUiState()),
+    val toolsUiState: StateFlow<ActiveSessionToolsUiState> = MutableStateFlow(ActiveSessionToolsUiState()),
 )
 
 @Stable
 data class MainContentUiState(
-    val timerUiState: ActiveSessionTimerUiState = ActiveSessionTimerUiState(),
-    val currentItemUiState: ActiveSessionCurrentItemUiState = ActiveSessionCurrentItemUiState(),
-    val pastSectionsUiState: ActiveSessionCompletedSectionsUiState = ActiveSessionCompletedSectionsUiState(),
-    val endDialogUiState: ActiveSessionEndDialogUiState = ActiveSessionEndDialogUiState()
+    val timerUiState: StateFlow<ActiveSessionTimerUiState> = MutableStateFlow(ActiveSessionTimerUiState()),
+    val currentItemUiState: StateFlow<ActiveSessionCurrentItemUiState> = MutableStateFlow(ActiveSessionCurrentItemUiState()),
+    val pastSectionsUiState: StateFlow<ActiveSessionCompletedSectionsUiState> = MutableStateFlow(ActiveSessionCompletedSectionsUiState()),
+    val endDialogUiState: StateFlow<ActiveSessionEndDialogUiState> = MutableStateFlow(ActiveSessionEndDialogUiState())
 )
 
 @Stable

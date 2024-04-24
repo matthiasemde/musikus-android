@@ -105,6 +105,8 @@ import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.State
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -126,7 +128,6 @@ import androidx.compose.ui.platform.rememberNestedScrollInteropConnection
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.LoremIpsum
 import androidx.compose.ui.unit.Dp
@@ -135,7 +136,6 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import app.musikus.database.LibraryFolderWithItems
 import app.musikus.database.UUIDConverter
 import app.musikus.database.daos.LibraryFolder
 import app.musikus.database.daos.LibraryItem
@@ -152,22 +152,17 @@ import app.musikus.ui.components.fadingEdge
 import app.musikus.ui.library.LibraryUiItem
 import app.musikus.ui.sessions.RatingBar
 import app.musikus.ui.theme.MusikusColorSchemeProvider
-import app.musikus.ui.theme.MusikusPreviewElement1
 import app.musikus.ui.theme.MusikusPreviewElement2
 import app.musikus.ui.theme.MusikusPreviewElement3
-import app.musikus.ui.theme.MusikusPreviewElement4
 import app.musikus.ui.theme.MusikusPreviewElement5
 import app.musikus.ui.theme.MusikusPreviewElement6
-import app.musikus.ui.theme.MusikusPreviewWholeScreen
 import app.musikus.ui.theme.MusikusThemedPreview
 import app.musikus.ui.theme.dimensions
 import app.musikus.ui.theme.libraryItemColors
 import app.musikus.ui.theme.spacing
-import app.musikus.utils.DurationFormat
 import app.musikus.utils.TimeProvider
 import app.musikus.utils.UiIcon
 import app.musikus.utils.UiText
-import app.musikus.utils.getDurationString
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -175,7 +170,6 @@ import kotlinx.coroutines.launch
 import java.time.ZonedDateTime
 import java.util.UUID
 import kotlin.random.Random
-import kotlin.time.Duration.Companion.seconds
 
 
 const val CARD_HEIGHT_EXTENDED_FRACTION_OF_SCREEN = 0.7f
@@ -234,7 +228,8 @@ fun ActiveSession(
     navigateUp: () -> Unit,
     navigateTo: (Screen) -> Unit,
 ) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val uiState = viewModel.uiState.collectAsStateWithLifecycle()
+
     val eventStates by viewModel.eventStates.collectAsStateWithLifecycle()
     val eventHandler = viewModel::onUiEvent
     val windowsSizeClass = calculateWindowSizeClass(activity = LocalContext.current as Activity)
@@ -352,7 +347,7 @@ fun ActiveSession(
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 private fun ActiveSessionScreen(
-    uiState: ActiveSessionUiState,
+    uiState: State<ActiveSessionUiState>,
     tabs: ImmutableList<ToolsTab>,
     eventHandler: (ActiveSessionUiEvent) -> Unit = {},
     navigateUp: () -> Unit = {},
@@ -373,7 +368,7 @@ private fun ActiveSessionScreen(
         bottomSheetState = bottomSheetState,
         topBar = {
             ActiveSessionTopBar(
-                uiState = uiState.topBarUiState,
+                uiState = uiState.value.topBarUiState.collectAsState(),
                 onDiscard = remember { { discardDialogVisible = true } },
                 onNavigateUp = remember { { navigateUp() } },
                 onTogglePause = remember { { eventHandler(ActiveSessionUiEvent.TogglePauseState) } },
@@ -391,7 +386,7 @@ private fun ActiveSessionScreen(
         mainContent = { padding ->
             ActiveSessionMainContent(
                 contentPadding = padding,
-                uiState = uiState.mainContentUiState,
+                uiState = uiState.value.mainContentUiState.collectAsState(),
                 eventHandler = eventHandler,
                 newItemSelectorVisible = newItemSelectorVisible,
                 screenSizeClass = sizeClass
@@ -416,7 +411,7 @@ private fun ActiveSessionScreen(
     val sheetState = rememberModalBottomSheetState()
     if (newItemSelectorVisible.value) {
         NewItemSelectorBottomSheet(
-            uiState = uiState.newItemSelectorUiState,
+            uiState = uiState.value.newItemSelectorUiState.collectAsState(),
             sheetState = sheetState,
             onItemSelected = remember { { item ->
                 eventHandler(ActiveSessionUiEvent.SelectItem(item))
@@ -428,13 +423,14 @@ private fun ActiveSessionScreen(
     }
 
     /** End Session Dialog */
-    val dialogUiState = uiState.mainContentUiState.endDialogUiState
+    val dialogUiState = uiState.value.mainContentUiState.collectAsState()
+    val endDialog = dialogUiState.value.endDialogUiState.collectAsState()
     if (finishDialogVisible) {
         val dialogEvent = ActiveSessionUiEvent::EndDialogUiEvent
 
         EndSessionDialog(
-            rating = dialogUiState.rating,
-            comment = dialogUiState.comment,
+            rating = endDialog.value.rating,
+            comment = endDialog.value.comment,
             onDismiss = { finishDialogVisible = false },
             onRatingChanged = {
                 eventHandler(
@@ -588,7 +584,7 @@ private fun ActiveSessionMainContent(
     modifier: Modifier = Modifier,
     screenSizeClass: ScreenSizeClass = ScreenSizeDefaults.Phone,
     contentPadding: PaddingValues,
-    uiState: MainContentUiState,
+    uiState: State<MainContentUiState>,
     eventHandler: (ActiveSessionUiEvent) -> Unit = {},
     newItemSelectorVisible: MutableState<Boolean> = mutableStateOf(false)
 ) {
@@ -642,7 +638,7 @@ private fun ActiveSessionMainContent(
 
                 // Big Timer
                 PracticeTimer(
-                    uiState = uiState.timerUiState,
+                    uiState = uiState.value.timerUiState.collectAsState(),
                     screenSizeClass = screenSizeClass,
                     onResumeTimer = remember { { eventHandler(ActiveSessionUiEvent.TogglePauseState) } },
                 )
@@ -656,7 +652,7 @@ private fun ActiveSessionMainContent(
                 CurrentPracticingItem(
                     modifier = Modifier.padding(horizontal = MaterialTheme.spacing.large),
                     screenSizeClass = screenSizeClass,
-                    item = uiState.currentItemUiState
+                    itemState = uiState.value.currentItemUiState.collectAsState(),
                 )
 
                 if (limitedHeight)
@@ -665,9 +661,10 @@ private fun ActiveSessionMainContent(
                     Spacer(modifier = Modifier.height(MaterialTheme.spacing.extraLarge))
 
                 // Past Items
-                if (uiState.pastSectionsUiState.visible) {
+                val pastItemsState = uiState.value.pastSectionsUiState.collectAsState()
+                if (pastItemsState.value.visible) {
                     SectionsList(
-                        uiState = uiState.pastSectionsUiState,
+                        uiState = pastItemsState,
                         nestedScrollConnection = nestedScrollConnection,    // for hiding the FAB
                         listState = sectionsListState,
                         onSectionDeleted = remember {
@@ -696,8 +693,8 @@ private fun ActiveSessionMainContent(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun NewItemSelectorBottomSheet(
+    uiState: State<NewItemSelectorUiState>,
     sheetState: SheetState = rememberModalBottomSheetState(),
-    uiState: NewItemSelectorUiState = remember { NewItemSelectorUiState() },
     onItemSelected: (LibraryItem) -> Unit = {},
     onDismissed: () -> Unit = {},
 ) {
@@ -747,7 +744,7 @@ private fun ActiveSessionToolsLayout(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ActiveSessionTopBar(
-    uiState: ActiveSessionTopBarUiState,
+    uiState: State<ActiveSessionTopBarUiState>,
     onNavigateUp: () -> Unit = {},
     onDiscard: () -> Unit = {},
     onTogglePause: () -> Unit = {},
@@ -762,12 +759,12 @@ private fun ActiveSessionTopBar(
         },
         actions = {
             AnimatedVisibility(
-                visible = uiState.visible,
+                visible = uiState.value.visible,
                 enter = slideInVertically(),
             ) {
                 Row {
                     AnimatedVisibility(
-                        visible = uiState.pauseButtonAppearance != SessionPausedResumedState.PAUSED,
+                        visible = uiState.value.pauseButtonAppearance != SessionPausedResumedState.PAUSED,
                         enter = fadeIn(),
                         exit = fadeOut(),
                     ) {
@@ -891,8 +888,8 @@ private fun SheetDragHandle() {
 
 @Composable
 private fun PracticeTimer(
+    uiState: State<ActiveSessionTimerUiState>,
     modifier: Modifier = Modifier,
-    uiState: ActiveSessionTimerUiState,
     onResumeTimer: () -> Unit = {},
     screenSizeClass: ScreenSizeClass = ScreenSizeDefaults.Phone,
 ) {
@@ -901,15 +898,15 @@ private fun PracticeTimer(
     ) {
         Text(
             style = MaterialTheme.typography.displayLarge,
-            text = uiState.timerText,
+            text = uiState.value.timerText,
             fontWeight = FontWeight.Light,
             fontSize = if (screenSizeClass.height == WindowHeightSizeClass.Compact) 60.sp else 75.sp
         )
-        when (uiState.subHeadingAppearance) {
+        when (uiState.value.subHeadingAppearance) {
             SessionPausedResumedState.RUNNING -> {
                 Text(
                     style = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurfaceVariant),
-                    text = uiState.subHeadingText,
+                    text = uiState.value.subHeadingText,
                 )
             }
 
@@ -922,7 +919,7 @@ private fun PracticeTimer(
                 ) {
                     Icon(imageVector = Icons.Outlined.PlayCircle, contentDescription = null)
                     Spacer(Modifier.width(MaterialTheme.spacing.small))
-                    Text(text = uiState.subHeadingText)
+                    Text(text = uiState.value.subHeadingText)
                 }
             }
         }
@@ -934,8 +931,10 @@ private fun PracticeTimer(
 private fun CurrentPracticingItem(
     modifier: Modifier = Modifier,
     screenSizeClass: ScreenSizeClass = ScreenSizeDefaults.Phone,
-    item: ActiveSessionCurrentItemUiState,
+    itemState: State<ActiveSessionCurrentItemUiState>,
 ) {
+    val item by itemState
+
     AnimatedVisibility(
         visible = item.visible,
         enter = expandVertically() + fadeIn(animationSpec = keyframes { durationMillis = 200 }),
@@ -999,13 +998,13 @@ private fun CurrentPracticingItem(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun SectionsList(
-    uiState: ActiveSessionCompletedSectionsUiState,
+    uiState: State<ActiveSessionCompletedSectionsUiState>,
     additionalBottomContentPadding: Dp = 0.dp,
     onSectionDeleted: (CompletedSectionUiState) -> Unit = {},
     nestedScrollConnection: NestedScrollConnection = rememberNestedScrollInteropConnection(),
     listState: LazyListState = rememberLazyListState()
 ) {
-
+    val uiState by uiState
     // This column must not have padding to make swipe-to-dismiss work edge2edge
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
@@ -1136,12 +1135,12 @@ private fun AddSectionFAB(
 
 @Composable
 private fun NewItemSelector(
+    uiState: State<NewItemSelectorUiState>,
     modifier: Modifier = Modifier,
-    uiState: NewItemSelectorUiState,
     onItemSelected: (LibraryItem) -> Unit,
     onClose: () -> Unit = {},
 ) {
-    var selectedFolder: UUID? by remember { mutableStateOf(uiState.runningItem?.libraryFolderId) }
+    var selectedFolder: UUID? by remember { mutableStateOf(uiState.value.runningItem?.libraryFolderId) }
     Column(modifier.fillMaxWidth()) {
 
         // Header + Close Button
@@ -1168,11 +1167,11 @@ private fun NewItemSelector(
         Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
 
         // Folders
-        val folders = remember { uiState.foldersWithItems.map { it.folder }.toImmutableList() }
+        val folders = remember { uiState.value.foldersWithItems.map { it.folder }.toImmutableList() }
         if (folders.isNotEmpty()) {
             LibraryFoldersRow(folders = folders,
                 highlightedFolderId = selectedFolder,
-                folderWithBadge = uiState.runningItem?.libraryFolderId,
+                folderWithBadge = uiState.value.runningItem?.libraryFolderId,
                 onFolderSelected = remember {
                     { folderId ->
                         selectedFolder = folderId
@@ -1186,9 +1185,9 @@ private fun NewItemSelector(
 
         val items = remember(selectedFolder) {
             // all items of the selected folder or root items if not found in folders
-            uiState.foldersWithItems.firstOrNull {
+            uiState.value.foldersWithItems.firstOrNull {
                 it.folder.id == selectedFolder
-            }?.items?.toImmutableList() ?: uiState.rootItems.toImmutableList()
+            }?.items?.toImmutableList() ?: uiState.value.rootItems.toImmutableList()
         }
 
         // Items
@@ -1197,7 +1196,7 @@ private fun NewItemSelector(
             onItemClick = { libraryItem ->
                 onItemSelected(libraryItem)
                 onClose()
-            }, activeItemId = uiState.runningItem?.id
+            }, activeItemId = uiState.value.runningItem?.id
         )
     }
 }
@@ -1374,56 +1373,59 @@ fun EndSessionDialog(
  * ########################################### Previews ############################################
  */
 
+//
+//@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+//@MusikusPreviewWholeScreen
+//@Composable
+//private fun PreviewActiveSessionScreen(
+//    @PreviewParameter(MusikusColorSchemeProvider::class) theme: ColorSchemeSelections,
+//) {
+//
+//    MusikusThemedPreview(theme) {
+//
+//        ActiveSessionScreen(
+//            sizeClass = ScreenSizeDefaults.Phone,
+//            uiState = remember {
+//                mutableStateOf(
+//                    ActiveSessionUiState(
+//                        topBarUiState = ActiveSessionTopBarUiState(
+//                            visible = true, pauseButtonAppearance = SessionPausedResumedState.RUNNING
+//                        ),
+//                        mainContentUiState = MainContentUiState(
+//                            timerUiState = ActiveSessionTimerUiState(
+//                                timerText = getDurationString(
+//                                    (42 * 60 + 24).seconds, DurationFormat.MS_DIGITAL
+//                                ).toString(),
+//                                subHeadingText = "Practice Time",
+//                                subHeadingAppearance = SessionPausedResumedState.RUNNING
+//                            ),
+//                            currentItemUiState = dummyRunningItem,
+//                            pastSectionsUiState = ActiveSessionCompletedSectionsUiState(
+//                                visible = true, items = dummySections.toList()
+//                            ),
+//                        )),
+//                )
+//            },
+//            tabs = listOf(
+//                ToolsTab(
+//                    type = ActiveSessionTab.METRONOME,
+//                    title = "Metronome",
+//                    content = { }),
+//                ToolsTab(type = ActiveSessionTab.RECORDER, title = "Recorder", content = { })
+//            ).toImmutableList(),
+//        )
+//    }
+//}
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
-@MusikusPreviewWholeScreen
-@Composable
-private fun PreviewActiveSessionScreen(
-    @PreviewParameter(MusikusColorSchemeProvider::class) theme: ColorSchemeSelections,
-) {
-
-    MusikusThemedPreview(theme) {
-
-        ActiveSessionScreen(
-            sizeClass = ScreenSizeDefaults.Phone,
-            uiState = ActiveSessionUiState(
-                topBarUiState = ActiveSessionTopBarUiState(
-                    visible = true, pauseButtonAppearance = SessionPausedResumedState.RUNNING
-                ),
-                mainContentUiState = MainContentUiState(
-                    timerUiState = ActiveSessionTimerUiState(
-                        timerText = getDurationString(
-                            (42 * 60 + 24).seconds, DurationFormat.MS_DIGITAL
-                        ).toString(),
-                        subHeadingText = "Practice Time",
-                        subHeadingAppearance = SessionPausedResumedState.RUNNING
-                    ),
-                    currentItemUiState = dummyRunningItem,
-                    pastSectionsUiState = ActiveSessionCompletedSectionsUiState(
-                        visible = true, items = dummySections.toList()
-                    ),
-                ),
-            ),
-            tabs = listOf(
-                ToolsTab(
-                    type = ActiveSessionTab.METRONOME,
-                    title = "Metronome",
-                    content = { }),
-                ToolsTab(type = ActiveSessionTab.RECORDER, title = "Recorder", content = { })
-            ).toImmutableList(),
-        )
-    }
-}
-
-@MusikusPreviewElement1
-@Composable
-private fun PreviewCurrentItem(
-    @PreviewParameter(MusikusColorSchemeProvider::class) theme: ColorSchemeSelections,
-) {
-    MusikusThemedPreview(theme) {
-        CurrentPracticingItem(item = dummyRunningItem)
-    }
-}
+//@MusikusPreviewElement1
+//@Composable
+//private fun PreviewCurrentItem(
+//    @PreviewParameter(MusikusColorSchemeProvider::class) theme: ColorSchemeSelections,
+//) {
+//    MusikusThemedPreview(theme) {
+//        CurrentPracticingItem(itemState = dummyRunningItem)
+//    }
+//}
 
 
 @MusikusPreviewElement2
@@ -1449,60 +1451,60 @@ private fun PreviewLibraryRow(
             onFolderSelected = {})
     }
 }
-
-@MusikusPreviewElement4
-@Composable
-private fun PreviewNewItemSelector(
-    @PreviewParameter(MusikusColorSchemeProvider::class) theme: ColorSchemeSelections,
-) {
-    MusikusThemedPreview(theme) {
-        Column {
-            NewItemSelector(
-                uiState = NewItemSelectorUiState(
-                    foldersWithItems = dummyFolders.map {
-                        LibraryFolderWithItems(
-                            it,
-                            dummyLibraryItems.toList()
-                        )
-                    }.toList(),
-                    rootItems = dummyLibraryItems.toList(),
-                    runningItem = dummyLibraryItems.first().copy(
-                        libraryFolderId = UUIDConverter.fromInt(1)
-                    )
-                ), onItemSelected = { })
-        }
-    }
-}
-
-@Preview(name = "No Folders", group = "Element 4", showSystemUi = true)
-@Composable
-private fun PreviewNewItemSelectorNoFolders() {
-    MusikusThemedPreview {
-        Column {
-            NewItemSelector(
-                uiState = NewItemSelectorUiState(
-                    foldersWithItems = emptyList(),
-                    runningItem = dummyLibraryItems.first()
-                ), onItemSelected = { })
-        }
-    }
-}
-
-@Preview(name = "No Folders", group = "Element 4", showSystemUi = true)
-@Composable
-private fun PreviewNewItemSelectorOneFolders() {
-    MusikusThemedPreview {
-        Column {
-            NewItemSelector(
-                uiState = NewItemSelectorUiState(
-                    foldersWithItems = dummyFolders.take(1).map {
-                        LibraryFolderWithItems(it, dummyLibraryItems.toList())
-                    }.toList(),
-                    runningItem = dummyLibraryItems.first()
-                ), onItemSelected = { })
-        }
-    }
-}
+//
+//@MusikusPreviewElement4
+//@Composable
+//private fun PreviewNewItemSelector(
+//    @PreviewParameter(MusikusColorSchemeProvider::class) theme: ColorSchemeSelections,
+//) {
+//    MusikusThemedPreview(theme) {
+//        Column {
+//            NewItemSelector(
+//                uiState = NewItemSelectorUiState(
+//                    foldersWithItems = dummyFolders.map {
+//                        LibraryFolderWithItems(
+//                            it,
+//                            dummyLibraryItems.toList()
+//                        )
+//                    }.toList(),
+//                    rootItems = dummyLibraryItems.toList(),
+//                    runningItem = dummyLibraryItems.first().copy(
+//                        libraryFolderId = UUIDConverter.fromInt(1)
+//                    )
+//                ), onItemSelected = { })
+//        }
+//    }
+//}
+//
+//@Preview(name = "No Folders", group = "Element 4", showSystemUi = true)
+//@Composable
+//private fun PreviewNewItemSelectorNoFolders() {
+//    MusikusThemedPreview {
+//        Column {
+//            NewItemSelector(
+//                uiState = NewItemSelectorUiState(
+//                    foldersWithItems = emptyList(),
+//                    runningItem = dummyLibraryItems.first()
+//                ), onItemSelected = { })
+//        }
+//    }
+//}
+//
+//@Preview(name = "No Folders", group = "Element 4", showSystemUi = true)
+//@Composable
+//private fun PreviewNewItemSelectorOneFolders() {
+//    MusikusThemedPreview {
+//        Column {
+//            NewItemSelector(
+//                uiState = NewItemSelectorUiState(
+//                    foldersWithItems = dummyFolders.take(1).map {
+//                        LibraryFolderWithItems(it, dummyLibraryItems.toList())
+//                    }.toList(),
+//                    runningItem = dummyLibraryItems.first()
+//                ), onItemSelected = { })
+//        }
+//    }
+//}
 
 @MusikusPreviewElement5
 @Composable
