@@ -177,24 +177,6 @@ class ActiveSessionViewModel @Inject constructor(
     )
 
 
-//    private val mainContentUiState = combine(
-//        timerUiState,
-//        currentItemUiState,
-//        pastSectionsUiState,
-//        _endDialogUiState
-//    ) { timerUiState, currentItemUiState, pastSectionsUiState, endDialog ->
-//        MainContentUiState(
-//            timerUiState = timerUiState,
-//            currentItemUiState = currentItemUiState,
-//            pastSectionsUiState = pastSectionsUiState,
-//            endDialogUiState = endDialog
-//        )
-//    }.stateIn(
-//        scope = viewModelScope,
-//        started = SharingStarted.WhileSubscribed(5000),
-//        initialValue = MainContentUiState()
-//    )
-
     private val mainContentUiState = MutableStateFlow(
         MainContentUiState(
             timerUiState = timerUiState,
@@ -225,23 +207,6 @@ class ActiveSessionViewModel @Inject constructor(
 
     /** ------------------- Main UI State ------------------------------------------- */
 
-//    val uiState = combine(
-//        topBarUiState,
-//        mainContentUiState,
-//        newItemSelectorUiState,
-//        toolsUiState,
-//    ) { topBar, mainContent, newItem, tools ->
-//        ActiveSessionUiState(
-//            topBarUiState = topBar,
-//            mainContentUiState = mainContent,
-//            newItemSelectorUiState = newItem,
-//            toolsUiState = tools
-//        )
-//    }.stateIn(
-//        scope = viewModelScope,
-//        started = SharingStarted.WhileSubscribed(5000),
-//        initialValue = ActiveSessionUiState()
-//    )
 
     val uiState = MutableStateFlow(
         ActiveSessionUiState(
@@ -252,7 +217,8 @@ class ActiveSessionViewModel @Inject constructor(
         )
     ).asStateFlow()
 
-    val eventStates = MutableStateFlow(ActiveSessionEventStates())
+    private val _eventStates = MutableStateFlow(ActiveSessionEventStates())
+    val eventStates = _eventStates.asStateFlow()
 
     /** ------------------- Event Handler ------------------------------------------- */
 
@@ -291,7 +257,7 @@ class ActiveSessionViewModel @Inject constructor(
 
             ActiveSessionUiEvent.DiscardSessionDialogConfirmed -> {
                 activeSessionUseCases.reset()
-                eventStates.update { it.copy(sessionDiscarded = true) }
+                _eventStates.update { it.copy(sessionDiscarded = true) }
             }
         }
     }
@@ -355,7 +321,7 @@ class ActiveSessionViewModel @Inject constructor(
                 }
             )
             activeSessionUseCases.reset()   // reset the active session state
-            eventStates.update { it.copy(sessionSaved = true) }
+            _eventStates.update { it.copy(sessionSaved = true) }
         }
     }
 }

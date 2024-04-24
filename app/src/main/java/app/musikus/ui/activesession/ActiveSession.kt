@@ -128,6 +128,7 @@ import androidx.compose.ui.platform.rememberNestedScrollInteropConnection
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.LoremIpsum
 import androidx.compose.ui.unit.Dp
@@ -136,6 +137,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.musikus.database.LibraryFolderWithItems
 import app.musikus.database.UUIDConverter
 import app.musikus.database.daos.LibraryFolder
 import app.musikus.database.daos.LibraryItem
@@ -152,24 +154,31 @@ import app.musikus.ui.components.fadingEdge
 import app.musikus.ui.library.LibraryUiItem
 import app.musikus.ui.sessions.RatingBar
 import app.musikus.ui.theme.MusikusColorSchemeProvider
+import app.musikus.ui.theme.MusikusPreviewElement1
 import app.musikus.ui.theme.MusikusPreviewElement2
 import app.musikus.ui.theme.MusikusPreviewElement3
+import app.musikus.ui.theme.MusikusPreviewElement4
 import app.musikus.ui.theme.MusikusPreviewElement5
 import app.musikus.ui.theme.MusikusPreviewElement6
+import app.musikus.ui.theme.MusikusPreviewWholeScreen
 import app.musikus.ui.theme.MusikusThemedPreview
 import app.musikus.ui.theme.dimensions
 import app.musikus.ui.theme.libraryItemColors
 import app.musikus.ui.theme.spacing
+import app.musikus.utils.DurationFormat
 import app.musikus.utils.TimeProvider
 import app.musikus.utils.UiIcon
 import app.musikus.utils.UiText
+import app.musikus.utils.getDurationString
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import java.time.ZonedDateTime
 import java.util.UUID
 import kotlin.random.Random
+import kotlin.time.Duration.Companion.seconds
 
 
 const val CARD_HEIGHT_EXTENDED_FRACTION_OF_SCREEN = 0.7f
@@ -309,7 +318,6 @@ fun ActiveSession(
     }
 
 
-
 //
 //    dialogUiState.endDialogUiState?.let { endDialogUiState ->
 //        EndSessionDialog(
@@ -409,16 +417,21 @@ private fun ActiveSessionScreen(
 
     /** New Item Selector */
     val sheetState = rememberModalBottomSheetState()
+    val newItemSelectorState = uiState.value.newItemSelectorUiState.collectAsState()
     if (newItemSelectorVisible.value) {
         NewItemSelectorBottomSheet(
-            uiState = uiState.value.newItemSelectorUiState.collectAsState(),
+            uiState = newItemSelectorState,
             sheetState = sheetState,
-            onItemSelected = remember { { item ->
-                eventHandler(ActiveSessionUiEvent.SelectItem(item))
-            } },
-            onDismissed = remember { {
-                newItemSelectorVisible.value = false
-            } }
+            onItemSelected = remember {
+                { item ->
+                    eventHandler(ActiveSessionUiEvent.SelectItem(item))
+                }
+            },
+            onDismissed = remember {
+                {
+                    newItemSelectorVisible.value = false
+                }
+            }
         )
     }
 
@@ -713,12 +726,14 @@ private fun NewItemSelectorBottomSheet(
         NewItemSelector(
             uiState = uiState,
             onItemSelected = onItemSelected,
-            onClose = remember { {
-                scope.launch {
-                    sheetState.hide()
-                    onDismissed()
+            onClose = remember {
+                {
+                    scope.launch {
+                        sheetState.hide()
+                        onDismissed()
+                    }
                 }
-            } },
+            },
         )
     }
 }
@@ -1167,10 +1182,13 @@ private fun NewItemSelector(
         Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
 
         // Folders
-        val folders = remember { uiState.value.foldersWithItems.map { it.folder }.toImmutableList() }
+        val folders =
+            remember { uiState.value.foldersWithItems.map { it.folder }.toImmutableList() }
         if (folders.isNotEmpty()) {
-            LibraryFoldersRow(folders = folders,
+            LibraryFoldersRow(
+                folders = folders,
                 highlightedFolderId = selectedFolder,
+                showBadge = uiState.value.runningItem != null,
                 folderWithBadge = uiState.value.runningItem?.libraryFolderId,
                 onFolderSelected = remember {
                     { folderId ->
@@ -1205,6 +1223,7 @@ private fun NewItemSelector(
 private fun LibraryFoldersRow(
     modifier: Modifier = Modifier,
     folders: ImmutableList<LibraryFolder>,
+    showBadge: Boolean = true,
     highlightedFolderId: UUID?,
     folderWithBadge: UUID?,
     onFolderSelected: (UUID?) -> Unit,
@@ -1224,7 +1243,7 @@ private fun LibraryFoldersRow(
             folder = null,
             onClick = { onFolderSelected(null) },
             isSelected = highlightedFolderId == null,
-            showBadge = folderWithBadge == null
+            showBadge = showBadge && folderWithBadge == null
         )
 
         folders.forEach { folder ->
@@ -1232,7 +1251,7 @@ private fun LibraryFoldersRow(
                 folder = folder,
                 onClick = { onFolderSelected(folder.id) },
                 isSelected = folder.id == highlightedFolderId,
-                showBadge = folder.id == folderWithBadge
+                showBadge = showBadge && folder.id == folderWithBadge
             )
         }
     }
@@ -1373,59 +1392,89 @@ fun EndSessionDialog(
  * ########################################### Previews ############################################
  */
 
-//
-//@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
-//@MusikusPreviewWholeScreen
-//@Composable
-//private fun PreviewActiveSessionScreen(
-//    @PreviewParameter(MusikusColorSchemeProvider::class) theme: ColorSchemeSelections,
-//) {
-//
-//    MusikusThemedPreview(theme) {
-//
-//        ActiveSessionScreen(
-//            sizeClass = ScreenSizeDefaults.Phone,
-//            uiState = remember {
-//                mutableStateOf(
-//                    ActiveSessionUiState(
-//                        topBarUiState = ActiveSessionTopBarUiState(
-//                            visible = true, pauseButtonAppearance = SessionPausedResumedState.RUNNING
-//                        ),
-//                        mainContentUiState = MainContentUiState(
-//                            timerUiState = ActiveSessionTimerUiState(
-//                                timerText = getDurationString(
-//                                    (42 * 60 + 24).seconds, DurationFormat.MS_DIGITAL
-//                                ).toString(),
-//                                subHeadingText = "Practice Time",
-//                                subHeadingAppearance = SessionPausedResumedState.RUNNING
-//                            ),
-//                            currentItemUiState = dummyRunningItem,
-//                            pastSectionsUiState = ActiveSessionCompletedSectionsUiState(
-//                                visible = true, items = dummySections.toList()
-//                            ),
-//                        )),
-//                )
-//            },
-//            tabs = listOf(
-//                ToolsTab(
-//                    type = ActiveSessionTab.METRONOME,
-//                    title = "Metronome",
-//                    content = { }),
-//                ToolsTab(type = ActiveSessionTab.RECORDER, title = "Recorder", content = { })
-//            ).toImmutableList(),
-//        )
-//    }
-//}
 
-//@MusikusPreviewElement1
-//@Composable
-//private fun PreviewCurrentItem(
-//    @PreviewParameter(MusikusColorSchemeProvider::class) theme: ColorSchemeSelections,
-//) {
-//    MusikusThemedPreview(theme) {
-//        CurrentPracticingItem(itemState = dummyRunningItem)
-//    }
-//}
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@MusikusPreviewWholeScreen
+@Composable
+private fun PreviewActiveSessionScreen(
+    @PreviewParameter(MusikusColorSchemeProvider::class) theme: ColorSchemeSelections,
+) {
+
+    MusikusThemedPreview(theme) {
+
+        ActiveSessionScreen(
+            sizeClass = ScreenSizeDefaults.Phone,
+            uiState = remember {
+                mutableStateOf(
+                    ActiveSessionUiState(
+                        topBarUiState = MutableStateFlow(
+                            ActiveSessionTopBarUiState(
+                                visible = true,
+                                pauseButtonAppearance = SessionPausedResumedState.RUNNING
+                            )
+                        ),
+                        mainContentUiState = MutableStateFlow(
+                            MainContentUiState(
+                                timerUiState = MutableStateFlow(
+                                    ActiveSessionTimerUiState(
+                                        timerText = getDurationString(
+                                            (42 * 60 + 24).seconds, DurationFormat.MS_DIGITAL
+                                        ).toString(),
+                                        subHeadingText = "Practice Time",
+                                        subHeadingAppearance = SessionPausedResumedState.RUNNING
+                                    )
+                                ),
+                                currentItemUiState = MutableStateFlow(dummyRunningItem),
+                                pastSectionsUiState = MutableStateFlow(
+                                    ActiveSessionCompletedSectionsUiState(
+                                        visible = true, items = dummySections.toList()
+                                    )
+                                ),
+                            )
+                        ),
+                        toolsUiState = MutableStateFlow(
+                            ActiveSessionToolsUiState(
+                                expanded = true,
+                                activeTab = ActiveSessionTab.METRONOME,
+                            )
+                        ),
+                        newItemSelectorUiState = MutableStateFlow(
+                            NewItemSelectorUiState(
+                                rootItems = dummyLibraryItems.toList(),
+                                foldersWithItems = dummyFolders.map {
+                                    LibraryFolderWithItems(
+                                        it,
+                                        dummyLibraryItems.toList()
+                                    )
+                                }.toList(),
+                                runningItem = dummyLibraryItems.first().copy(
+                                    libraryFolderId = UUIDConverter.fromInt(1)
+                                )
+                            )
+                        ),
+                    )
+                )
+            },
+            tabs = listOf(
+                ToolsTab(
+                    type = ActiveSessionTab.METRONOME,
+                    title = "Metronome",
+                    content = { }),
+                ToolsTab(type = ActiveSessionTab.RECORDER, title = "Recorder", content = { })
+            ).toImmutableList(),
+        )
+    }
+}
+
+@MusikusPreviewElement1
+@Composable
+private fun PreviewCurrentItem(
+    @PreviewParameter(MusikusColorSchemeProvider::class) theme: ColorSchemeSelections,
+) {
+    MusikusThemedPreview(theme) {
+        CurrentPracticingItem(itemState = mutableStateOf(dummyRunningItem))
+    }
+}
 
 
 @MusikusPreviewElement2
@@ -1451,60 +1500,68 @@ private fun PreviewLibraryRow(
             onFolderSelected = {})
     }
 }
-//
-//@MusikusPreviewElement4
-//@Composable
-//private fun PreviewNewItemSelector(
-//    @PreviewParameter(MusikusColorSchemeProvider::class) theme: ColorSchemeSelections,
-//) {
-//    MusikusThemedPreview(theme) {
-//        Column {
-//            NewItemSelector(
-//                uiState = NewItemSelectorUiState(
-//                    foldersWithItems = dummyFolders.map {
-//                        LibraryFolderWithItems(
-//                            it,
-//                            dummyLibraryItems.toList()
-//                        )
-//                    }.toList(),
-//                    rootItems = dummyLibraryItems.toList(),
-//                    runningItem = dummyLibraryItems.first().copy(
-//                        libraryFolderId = UUIDConverter.fromInt(1)
-//                    )
-//                ), onItemSelected = { })
-//        }
-//    }
-//}
-//
-//@Preview(name = "No Folders", group = "Element 4", showSystemUi = true)
-//@Composable
-//private fun PreviewNewItemSelectorNoFolders() {
-//    MusikusThemedPreview {
-//        Column {
-//            NewItemSelector(
-//                uiState = NewItemSelectorUiState(
-//                    foldersWithItems = emptyList(),
-//                    runningItem = dummyLibraryItems.first()
-//                ), onItemSelected = { })
-//        }
-//    }
-//}
-//
-//@Preview(name = "No Folders", group = "Element 4", showSystemUi = true)
-//@Composable
-//private fun PreviewNewItemSelectorOneFolders() {
-//    MusikusThemedPreview {
-//        Column {
-//            NewItemSelector(
-//                uiState = NewItemSelectorUiState(
-//                    foldersWithItems = dummyFolders.take(1).map {
-//                        LibraryFolderWithItems(it, dummyLibraryItems.toList())
-//                    }.toList(),
-//                    runningItem = dummyLibraryItems.first()
-//                ), onItemSelected = { })
-//        }
-//    }
-//}
+
+@MusikusPreviewElement4
+@Composable
+private fun PreviewNewItemSelector(
+    @PreviewParameter(MusikusColorSchemeProvider::class) theme: ColorSchemeSelections,
+) {
+    MusikusThemedPreview(theme) {
+        Column {
+            NewItemSelector(
+                uiState = mutableStateOf(
+                    NewItemSelectorUiState(
+                        foldersWithItems = dummyFolders.map {
+                            LibraryFolderWithItems(
+                                it,
+                                dummyLibraryItems.toList()
+                            )
+                        }.toList(),
+                        rootItems = dummyLibraryItems.toList(),
+                        runningItem = dummyLibraryItems.first().copy(
+                            libraryFolderId = UUIDConverter.fromInt(1)
+                        )
+                    )
+                ), onItemSelected = { })
+        }
+    }
+}
+
+@Preview(name = "No Folders", group = "Element 4", showSystemUi = true)
+@Composable
+private fun PreviewNewItemSelectorNoFolders() {
+    MusikusThemedPreview {
+        Column {
+            NewItemSelector(
+                uiState = mutableStateOf(
+                    NewItemSelectorUiState(
+                        foldersWithItems = emptyList(),
+                        runningItem = dummyLibraryItems.first()
+                    )
+                ),
+                onItemSelected = { })
+        }
+    }
+}
+
+@Preview(name = "No Folders", group = "Element 4", showSystemUi = true)
+@Composable
+private fun PreviewNewItemSelectorOneFolders() {
+    MusikusThemedPreview {
+        Column {
+            NewItemSelector(
+                uiState = mutableStateOf(
+                    NewItemSelectorUiState(
+                        foldersWithItems = dummyFolders.take(1).map {
+                            LibraryFolderWithItems(it, dummyLibraryItems.toList())
+                        }.toList(),
+                        runningItem = dummyLibraryItems.first()
+                    )
+                ),
+                onItemSelected = { })
+        }
+    }
+}
 
 @MusikusPreviewElement5
 @Composable
