@@ -1472,7 +1472,10 @@ private fun PreviewCurrentItem(
     @PreviewParameter(MusikusColorSchemeProvider::class) theme: ColorSchemeSelections,
 ) {
     MusikusThemedPreview(theme) {
-        CurrentPracticingItem(itemState = mutableStateOf(dummyRunningItem))
+        CurrentPracticingItem(
+            itemState = remember {
+                mutableStateOf(dummyRunningItem)
+            })
     }
 }
 
@@ -1509,20 +1512,23 @@ private fun PreviewNewItemSelector(
     MusikusThemedPreview(theme) {
         Column {
             NewItemSelector(
-                uiState = mutableStateOf(
-                    NewItemSelectorUiState(
-                        foldersWithItems = dummyFolders.map {
-                            LibraryFolderWithItems(
-                                it,
-                                dummyLibraryItems.toList()
+                uiState = remember {
+                    mutableStateOf(
+                        NewItemSelectorUiState(
+                            foldersWithItems = dummyFolders.map {
+                                LibraryFolderWithItems(
+                                    it,
+                                    dummyLibraryItems.toList()
+                                )
+                            }.toList(),
+                            rootItems = dummyLibraryItems.toList(),
+                            runningItem = dummyLibraryItems.first().copy(
+                                libraryFolderId = UUIDConverter.fromInt(1)
                             )
-                        }.toList(),
-                        rootItems = dummyLibraryItems.toList(),
-                        runningItem = dummyLibraryItems.first().copy(
-                            libraryFolderId = UUIDConverter.fromInt(1)
                         )
                     )
-                ), onItemSelected = { })
+                },
+                onItemSelected = { })
         }
     }
 }
@@ -1533,12 +1539,14 @@ private fun PreviewNewItemSelectorNoFolders() {
     MusikusThemedPreview {
         Column {
             NewItemSelector(
-                uiState = mutableStateOf(
-                    NewItemSelectorUiState(
-                        foldersWithItems = emptyList(),
-                        runningItem = dummyLibraryItems.first()
+                uiState = remember {
+                    mutableStateOf(
+                        NewItemSelectorUiState(
+                            foldersWithItems = emptyList(),
+                            runningItem = dummyLibraryItems.first()
+                        )
                     )
-                ),
+                },
                 onItemSelected = { })
         }
     }
@@ -1550,14 +1558,16 @@ private fun PreviewNewItemSelectorOneFolders() {
     MusikusThemedPreview {
         Column {
             NewItemSelector(
-                uiState = mutableStateOf(
-                    NewItemSelectorUiState(
-                        foldersWithItems = dummyFolders.take(1).map {
-                            LibraryFolderWithItems(it, dummyLibraryItems.toList())
-                        }.toList(),
-                        runningItem = dummyLibraryItems.first()
+                uiState = remember {
+                    mutableStateOf(
+                        NewItemSelectorUiState(
+                            foldersWithItems = dummyFolders.take(1).map {
+                                LibraryFolderWithItems(it, dummyLibraryItems.toList())
+                            }.toList(),
+                            runningItem = dummyLibraryItems.first()
+                        )
                     )
-                ),
+                },
                 onItemSelected = { })
         }
     }
