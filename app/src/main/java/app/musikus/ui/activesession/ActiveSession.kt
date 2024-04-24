@@ -50,6 +50,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
@@ -110,9 +111,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.rememberNestedScrollInteropConnection
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -185,6 +191,7 @@ data class ScreenSizeClass(
 )
 
 // https://developer.android.com/guide/topics/large-screens/support-different-screen-sizes#window_size_classes
+// used for Previews only, always compare WindowWidthSizeClass and WindowHeightSizeClass separately
 object ScreenSizeDefaults {
 
     val Phone = ScreenSizeClass(
@@ -396,10 +403,11 @@ private fun ActiveSessionAdaptiveScaffold(
 
         Scaffold(
             // Scaffold needed for topBar
+            modifier = modifier,
             topBar = topBar,
         ) {
             Row(
-                modifier = modifier
+                modifier = Modifier
                     .padding(it)
                     .fillMaxSize()
             ) {
@@ -443,6 +451,7 @@ private fun ActiveSessionAdaptiveScaffold(
         /** Portrait. Use normal scaffold with bottom sheet */
 
         Scaffold(
+            modifier = modifier,
             topBar = topBar,
             bottomBar = bottomBar,
             content = { paddingValues ->
@@ -493,6 +502,27 @@ private fun ActiveSessionMainContent(
 ) {
     // condense UI a bit if there is limited space
     val limitedHeight = screenSizeClass.height == WindowHeightSizeClass.Compact
+
+    var addSectionFABVisible by remember { mutableStateOf(true) }
+    val sectionsListState = rememberLazyListState()
+    // Nested scroll for control FAB
+    val nestedScrollConnection = remember {
+        object : NestedScrollConnection {
+            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                // Hide FAB when user scrolls and there are actually enough elements to scroll
+                if (available.y < -1 && sectionsListState.canScrollForward) {
+                    addSectionFABVisible = false
+                }
+
+                // Show FAB
+                if (available.y > 1) {
+                    addSectionFABVisible = true
+                }
+
+                return Offset.Zero
+            }
+        }
+    }
 
     Box(
         modifier
@@ -546,33 +576,28 @@ private fun ActiveSessionMainContent(
                 if (uiState.pastSectionsUiState.visible) {
                     SectionsList(
                         uiState = uiState.pastSectionsUiState,
+                        nestedScrollConnection = nestedScrollConnection,    // for hiding the FAB
+                        listState = sectionsListState,
                         onSectionDeleted = remember {
                             { section ->
                                 eventHandler(ActiveSessionUiEvent.DeleteSection(section.id))
                             }
                         },
-                        additionalBottomContentPadding = MaterialTheme.spacing.large + 56.dp,    // 56.dp for FAB
+                        additionalBottomContentPadding =
+                            // 56.dp for FAB, landscape FAB is hidden, so no content padding needed
+                            MaterialTheme.spacing.large + if (!limitedHeight) 56.dp else 0.dp,
                     )
                 }
             }
             Spacer(Modifier.weight(1f))
         }
 
-
-        // FAB for new Item
-        ExtendedFloatingActionButton(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(MaterialTheme.spacing.large),
-            onClick = remember { { eventHandler(ActiveSessionUiEvent.ToggleNewItemSelectorVisible) } },
-            icon = {
-                Icon(
-                    imageVector = Icons.Filled.Add, contentDescription = "New Library Item"
-                )
-            },
-            text = { Text("Add item") },
-            expanded = true,
+        AddSectionFAB(
+            isVisible = addSectionFABVisible || !limitedHeight,    // only hide FAB in landscape layout
+            modifier = Modifier.align(Alignment.BottomCenter),
+            onClick = remember { { eventHandler(ActiveSessionUiEvent.ToggleNewItemSelectorVisible) } }
         )
+
     }
 }
 
@@ -640,6 +665,20 @@ private fun ActiveSessionTopBar(
             }
         }
     )
+}
+
+
+@Composable
+private fun PauseButton(
+    onClick: () -> Unit,
+) {
+    IconButton(
+        onClick = onClick
+    ) {
+        Icon(
+            imageVector = Icons.Filled.Pause, contentDescription = null
+        )
+    }
 }
 
 
@@ -839,8 +878,9 @@ private fun SectionsList(
     uiState: ActiveSessionCompletedSectionsUiState,
     additionalBottomContentPadding: Dp = 0.dp,
     onSectionDeleted: (CompletedSectionUiState) -> Unit = {},
+    nestedScrollConnection: NestedScrollConnection = rememberNestedScrollInteropConnection(),
+    listState: LazyListState = rememberLazyListState()
 ) {
-    val listState = rememberLazyListState()
 
     // This column must not have padding to make swipe-to-dismiss work edge2edge
     Column(modifier = Modifier.fillMaxWidth()) {
@@ -856,9 +896,11 @@ private fun SectionsList(
         Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
 
         LazyColumn(
-            state = listState, modifier = Modifier
+            state = listState,
+            modifier = Modifier
                 .fadingEdge(listState)
                 .fillMaxWidth()
+                .nestedScroll(nestedScrollConnection)
                 .padding(
                     horizontal = MaterialTheme.spacing.large    // main padding
                 ),
@@ -899,7 +941,7 @@ private fun SectionListElement(
         deleted = targetValue == SwipeToDismissBoxValue.EndToStart
         deleted
     }, positionalThreshold = with(LocalDensity.current) {
-        { 112.dp.toPx() }
+        { 100.dp.toPx() }
     })
     SwipeToDeleteContainer(state = dismissState,
         deleted = deleted,
@@ -907,6 +949,7 @@ private fun SectionListElement(
         Surface(
             // Surface for setting shape of item container
             modifier = modifier.height(50.dp),
+            shape = MaterialTheme.shapes.medium,
         ) {
             Row(
                 Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically
@@ -941,16 +984,28 @@ private fun SectionListElement(
     }
 }
 
-
 @Composable
-private fun PauseButton(
+private fun AddSectionFAB(
+    modifier: Modifier = Modifier,
+    isVisible: Boolean = true,
     onClick: () -> Unit,
 ) {
-    IconButton(
-        onClick = onClick
+    AnimatedVisibility(
+        visible = isVisible,
+        modifier = modifier.padding(MaterialTheme.spacing.large),
+        enter = slideInVertically(initialOffsetY = { it * 2 }),
+        exit = slideOutVertically(targetOffsetY = { it * 2 }),
     ) {
-        Icon(
-            imageVector = Icons.Filled.Pause, contentDescription = null
+        // FAB for new Item
+        ExtendedFloatingActionButton(
+            onClick = onClick,
+            icon = {
+                Icon(
+                    imageVector = Icons.Filled.Add, contentDescription = "New Library Item"
+                )
+            },
+            text = { Text("Add item") },
+            expanded = true,
         )
     }
 }
