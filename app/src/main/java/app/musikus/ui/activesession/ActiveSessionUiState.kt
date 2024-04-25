@@ -15,6 +15,7 @@ import app.musikus.database.UUIDConverter
 import app.musikus.database.daos.LibraryItem
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import java.time.ZonedDateTime
 import java.util.UUID
 
 
@@ -95,6 +96,7 @@ data class CompletedSectionUiState(
 data class NewItemSelectorUiState(
     val runningItem: LibraryItem? = null,
     val foldersWithItems: List<LibraryFolderWithItems> = emptyList(),
+    val lastPracticedDates: Map<UUID, ZonedDateTime?> = emptyMap(),
     val rootItems: List<LibraryItem> = emptyList()
 )
 
@@ -112,8 +114,6 @@ enum class ActiveSessionTab {
 
 sealed class ActiveSessionUiEvent {
     data object TogglePauseState : ActiveSessionUiEvent()
-    data object ShowMetronome : ActiveSessionUiEvent()
-    data object ShowRecorder : ActiveSessionUiEvent()
     data class SelectItem(val item: LibraryItem) : ActiveSessionUiEvent()
     data object BackPressed : ActiveSessionUiEvent()
     data class DeleteSection(val sectionId: UUID) : ActiveSessionUiEvent()

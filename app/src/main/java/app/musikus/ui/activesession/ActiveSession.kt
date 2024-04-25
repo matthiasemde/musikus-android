@@ -86,6 +86,10 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ScrollableTabRow
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.SheetValue
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Surface
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Tab
@@ -171,8 +175,10 @@ import app.musikus.utils.UiIcon
 import app.musikus.utils.UiText
 import app.musikus.utils.getDurationString
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.collections.immutable.toImmutableMap
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import java.time.ZonedDateTime
@@ -316,40 +322,6 @@ fun ActiveSession(
             }
         }
     }
-
-
-//
-//    dialogUiState.endDialogUiState?.let { endDialogUiState ->
-//        EndSessionDialog(
-//            rating = endDialogUiState.rating,
-//            comment = endDialogUiState.comment,
-//            onRatingChanged = { eventHandler(ActiveSessionUiEvent.EndDialogRatingChanged(it)) },
-//            onCommentChanged = {
-//                eventHandler(ActiveSessionUiEvent.EndDialogCommentChanged(it))
-//            },
-//            onDismiss = { eventHandler(ActiveSessionUiEvent.EndDialogDismissed) },
-//            onConfirm = {
-//                eventHandler(ActiveSessionUiEvent.EndDialogConfirmed)
-//                navigateUp()
-//            }
-//        )
-//    }
-//
-//    if (dialogUiState.showDiscardSessionDialog) {
-//        DeleteConfirmationBottomSheet(
-//            confirmationIcon = UiIcon.DynamicIcon(Icons.Default.Delete),
-//            confirmationText = UiText.DynamicString("Discard session?"),
-//            onDismiss = { eventHandler(ActiveSessionUiEvent.DiscardSessionDialogDismissed) },
-//            onConfirm = {
-//                eventHandler(ActiveSessionUiEvent.DiscardSessionDialogConfirmed)
-//                navigateUp()
-//            }
-//        )
-//    }
-//
-//    if (deepLinkArgument == ActiveSessionActions.FINISH.name) {
-//        eventHandler(ActiveSessionUiEvent.ShowFinishDialog)
-//    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
@@ -369,10 +341,12 @@ private fun ActiveSessionScreen(
     val newItemSelectorVisible = rememberSaveable { mutableStateOf(false) }
     var finishDialogVisible by rememberSaveable { mutableStateOf(false) }
     var discardDialogVisible by rememberSaveable { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
 
     // Custom Scaffold for our elements which adapts to available window sizes
     ActiveSessionAdaptiveScaffold(
         screenSizeClass = sizeClass,
+        snackbarHostState = snackbarHostState,
         bottomSheetState = bottomSheetState,
         topBar = {
             ActiveSessionTopBar(
@@ -395,6 +369,7 @@ private fun ActiveSessionScreen(
             ActiveSessionMainContent(
                 contentPadding = padding,
                 uiState = uiState.value.mainContentUiState.collectAsState(),
+                snackbarHostState = snackbarHostState,
                 eventHandler = eventHandler,
                 newItemSelectorVisible = newItemSelectorVisible,
                 screenSizeClass = sizeClass
@@ -494,7 +469,8 @@ private fun ActiveSessionAdaptiveScaffold(
     bottomBar: @Composable () -> Unit,
     mainContent: @Composable (PaddingValues) -> Unit,
     toolsContent: @Composable () -> Unit,
-    bottomSheetState: BottomSheetScaffoldState = rememberBottomSheetScaffoldState()
+    bottomSheetState: BottomSheetScaffoldState = rememberBottomSheetScaffoldState(),
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
     if (screenSizeClass.height == WindowHeightSizeClass.Compact) {
 
@@ -504,6 +480,7 @@ private fun ActiveSessionAdaptiveScaffold(
             // Scaffold needed for topBar
             modifier = modifier,
             topBar = topBar,
+            snackbarHost = { SnackbarHost(snackbarHostState) }
         ) {
             Row(
                 modifier = Modifier
@@ -553,6 +530,7 @@ private fun ActiveSessionAdaptiveScaffold(
             modifier = modifier,
             topBar = topBar,
             bottomBar = bottomBar,
+            snackbarHost = { SnackbarHost(snackbarHostState) },
             content = { paddingValues ->
                 Surface(Modifier.padding(paddingValues)) {  // don't overlap with bottomBar
                     ToolsBottomSheetScaffold(
@@ -598,6 +576,7 @@ private fun ActiveSessionMainContent(
     screenSizeClass: ScreenSizeClass = ScreenSizeDefaults.Phone,
     contentPadding: PaddingValues,
     uiState: State<MainContentUiState>,
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     eventHandler: (ActiveSessionUiEvent) -> Unit = {},
     newItemSelectorVisible: MutableState<Boolean> = mutableStateOf(false)
 ) {
@@ -680,6 +659,7 @@ private fun ActiveSessionMainContent(
                         uiState = pastItemsState,
                         nestedScrollConnection = nestedScrollConnection,    // for hiding the FAB
                         listState = sectionsListState,
+                        snackbarHostState = snackbarHostState,
                         onSectionDeleted = remember {
                             { section ->
                                 eventHandler(ActiveSessionUiEvent.DeleteSection(section.id))
@@ -1017,9 +997,10 @@ private fun SectionsList(
     additionalBottomContentPadding: Dp = 0.dp,
     onSectionDeleted: (CompletedSectionUiState) -> Unit = {},
     nestedScrollConnection: NestedScrollConnection = rememberNestedScrollInteropConnection(),
-    listState: LazyListState = rememberLazyListState()
+    listState: LazyListState = rememberLazyListState(),
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
-    val uiState by uiState
+    val uiStateValue by uiState
     // This column must not have padding to make swipe-to-dismiss work edge2edge
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
@@ -1045,12 +1026,13 @@ private fun SectionsList(
             contentPadding = PaddingValues(bottom = additionalBottomContentPadding)
         ) {
             items(
-                items = uiState.items,
+                items = uiStateValue.items,
                 key = { item -> item.id },
             ) { item ->
                 SectionListElement(
                     modifier = Modifier.animateItemPlacement(),
                     item = item,
+                    snackbarHostState = snackbarHostState,
                     onSectionDeleted = onSectionDeleted,
                 )
             }
@@ -1058,12 +1040,12 @@ private fun SectionsList(
     }
 
     // scroll to top when new item is added
-    var sectionLen by remember { mutableIntStateOf(uiState.items.size) }
-    LaunchedEffect(key1 = uiState.items) {
-        if (uiState.items.size > sectionLen && listState.canScrollBackward) {
+    var sectionLen by remember { mutableIntStateOf(uiStateValue.items.size) }
+    LaunchedEffect(key1 = uiStateValue.items) {
+        if (uiStateValue.items.size > sectionLen && listState.canScrollBackward) {
             listState.animateScrollToItem(0)
         }
-        sectionLen = uiState.items.size
+        sectionLen = uiStateValue.items.size
     }
 }
 
@@ -1072,18 +1054,44 @@ private fun SectionsList(
 private fun SectionListElement(
     modifier: Modifier = Modifier,
     item: CompletedSectionUiState,
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     onSectionDeleted: (CompletedSectionUiState) -> Unit = {},
 ) {
+    val scope = rememberCoroutineScope()
     var deleted by remember { mutableStateOf(false) }
-    val dismissState = rememberSwipeToDismissBoxState(confirmValueChange = { targetValue ->
-        deleted = targetValue == SwipeToDismissBoxValue.EndToStart
-        deleted
-    }, positionalThreshold = with(LocalDensity.current) {
-        { 100.dp.toPx() }
-    })
-    SwipeToDeleteContainer(state = dismissState,
+    val dismissState = rememberSwipeToDismissBoxState(
+        confirmValueChange = { targetValue ->
+            deleted = targetValue == SwipeToDismissBoxValue.EndToStart
+            true// don't set to deleted or item will not be dismissable again after restore
+        },
+        positionalThreshold = with(LocalDensity.current) {
+            { 100.dp.toPx() }
+        }
+    )
+    SwipeToDeleteContainer(
+        state = dismissState,
         deleted = deleted,
-        onDeleted = { onSectionDeleted(item) }) {
+        onDeleted = {
+            scope.launch {
+                // TODO handle deletion when user leaves screen before timeout
+                val result = snackbarHostState.showSnackbar(
+                    message = "Section deleted",
+                    actionLabel = "Undo",
+                    withDismissAction = true,
+                    duration = SnackbarDuration.Short,
+                )
+                when(result) {
+                    SnackbarResult.ActionPerformed -> {
+                        deleted = false
+                        dismissState.reset()
+                    }
+                    SnackbarResult.Dismissed -> {
+                        onSectionDeleted(item)
+                    }
+                }
+            }
+        }
+    ) {
         Surface(
             // Surface for setting shape of item container
             modifier = modifier.height(50.dp),
@@ -1211,6 +1219,8 @@ private fun NewItemSelector(
         // Items
         LibraryItemList(
             items = items,
+            // TODO update last practiced Dates for items during session
+            lastPracticedDates = uiState.value.lastPracticedDates.toImmutableMap(),
             onItemClick = { libraryItem ->
                 onItemSelected(libraryItem)
                 onClose()
@@ -1311,6 +1321,7 @@ private fun LibraryFolderElement(
 private fun LibraryItemList(
     modifier: Modifier = Modifier,
     items: ImmutableList<LibraryItem>,
+    lastPracticedDates: ImmutableMap<UUID, ZonedDateTime?>,
     onItemClick: (LibraryItem) -> Unit,
     activeItemId: UUID?,
 ) {
@@ -1322,7 +1333,7 @@ private fun LibraryItemList(
         items(items) {
             LibraryUiItem(
                 item = it,
-                lastPracticedDate = ZonedDateTime.now(),
+                lastPracticedDate = lastPracticedDates.filterKeys { key -> key == it.id }.values.firstOrNull(),
                 selected = false,
                 onShortClick = { onItemClick(it) },
                 onLongClick = { },

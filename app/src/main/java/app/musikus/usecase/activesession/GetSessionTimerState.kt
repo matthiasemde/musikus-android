@@ -16,18 +16,15 @@ enum class SessionTimerState {
     NOT_STARTED,
     RUNNING,
     PAUSED,
-    FINISHED
 }
 
 class GetSessionTimerState (
     private val activeSessionRepository: ActiveSessionRepository,
 ) {
     operator fun invoke() : Flow<SessionTimerState> {
-//        if (!activeSessionRepository.isRunning()) return flow { SessionTimerState.NOT_STARTED }
 
         return activeSessionRepository.getSessionState().map { state ->
             if (state == null) {
-//                throw IllegalStateException("State is null although session is running.")
                 return@map SessionTimerState.NOT_STARTED
             }
             if (state.isPaused)

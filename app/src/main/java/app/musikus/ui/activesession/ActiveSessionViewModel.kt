@@ -26,10 +26,13 @@ import app.musikus.utils.DurationFormat
 import app.musikus.utils.getDurationString
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -86,9 +89,25 @@ class ActiveSessionViewModel @Inject constructor(
         initialValue = emptyList()
     )
 
+    private val allLibraryItems = combine(
+        libraryFoldersWithItems,
+        rootItems
+    ) { folders, rootItems ->
+        folders.flatMap { it.items } + rootItems
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val lastPracticedDates = allLibraryItems.flatMapLatest {
+        libraryUseCases.getLastPracticedDate(it)
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyMap()
+    )
+
+
     /** ------------------- Own StateFlows  ------------------------------------------- */
 
-    private val _newItemSelectorVisible = MutableStateFlow(false)
     private val _endDialogUiState = MutableStateFlow(ActiveSessionEndDialogUiState())
 
 
@@ -187,14 +206,15 @@ class ActiveSessionViewModel @Inject constructor(
     )
 
     private val newItemSelectorUiState = combine(
-        _newItemSelectorVisible,
         runningLibraryItem,
         libraryFoldersWithItems,
+        lastPracticedDates,
         rootItems
-    ) { visible, runningItem, folders, rootItems ->
+    ) { runningItem, folders, lastPracticedDates, rootItems ->
         NewItemSelectorUiState(
             runningItem = runningItem,
             foldersWithItems = folders,
+            lastPracticedDates = lastPracticedDates,
             rootItems = rootItems
         )
     }.stateIn(
@@ -226,11 +246,21 @@ class ActiveSessionViewModel @Inject constructor(
         when(event) {
             is ActiveSessionUiEvent.SelectItem -> {
                 viewModelScope.launch {
+                    // resume session if paused
+                    if (sessionTimerState.value == SessionTimerState.PAUSED) {
+                        activeSessionUseCases.resume()
+                    }
+
+                    // wait until the current item has been running for at least 1 second
+                    if (sessionTimerState.value != SessionTimerState.NOT_STARTED
+                        && activeSessionUseCases.getRunningItemDuration() < 1.seconds)
+                    {
+                        delay(1000)
+                    }
+
                     activeSessionUseCases.selectItem(event.item)
                 }
             }
-            is ActiveSessionUiEvent.ShowMetronome -> {}
-            is ActiveSessionUiEvent.ShowRecorder -> {}
             is ActiveSessionUiEvent.TogglePauseState -> {
                 viewModelScope.launch {
                     when (sessionTimerState.value) {
@@ -248,6 +278,9 @@ class ActiveSessionViewModel @Inject constructor(
             is ActiveSessionUiEvent.BackPressed -> {}
             is ActiveSessionUiEvent.DeleteSection -> {
                 viewModelScope.launch {
+                    if (sessionTimerState.value == SessionTimerState.PAUSED) {
+                        activeSessionUseCases.resume()
+                    }
                     activeSessionUseCases.deleteSection(event.sectionId)
                 }
             }
