@@ -63,6 +63,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Delete
@@ -73,6 +74,8 @@ import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.BottomSheetScaffoldState
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
@@ -108,7 +111,6 @@ import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -116,7 +118,6 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -244,9 +245,9 @@ fun ActiveSession(
     navigateTo: (Screen) -> Unit,
 ) {
     val uiState = viewModel.uiState.collectAsStateWithLifecycle()
-
     val eventStates by viewModel.eventStates.collectAsStateWithLifecycle()
     val eventHandler = viewModel::onUiEvent
+
     val windowsSizeClass = calculateWindowSizeClass(activity = LocalContext.current as Activity)
 
     val bottomSheetState = rememberBottomSheetScaffoldState()
@@ -254,7 +255,6 @@ fun ActiveSession(
     // TODO re-initialize bottomSheetState on configuration change
     // there is a bug where the bottom sheet will become fully collapsable after the screen has been
     // rotated. This can be fixed by re-initializing the bottomSheetState on configuration change.
-
 
     // successfully saved callback
     LaunchedEffect(eventStates.sessionSaved) {
@@ -316,9 +316,7 @@ fun ActiveSession(
             }
 
             ActiveSessionActions.FINISH.name -> {
-//                scope.launch {
-//                    eventHandler(ActiveSessionUiEvent.ShowFinishDialog)
-//                }
+                eventHandler(ActiveSessionUiEvent.ToggleFinishDialog)
             }
         }
     }
@@ -338,9 +336,8 @@ private fun ActiveSessionScreen(
         WindowHeightSizeClass.Expanded
     )
 ) {
-    val newItemSelectorVisible = rememberSaveable { mutableStateOf(false) }
-    var finishDialogVisible by rememberSaveable { mutableStateOf(false) }
-    var discardDialogVisible by rememberSaveable { mutableStateOf(false) }
+    val dialogVisibilities by uiState.value.dialogVisibilities.collectAsState()
+
     val snackbarHostState = remember { SnackbarHostState() }
 
     // Custom Scaffold for our elements which adapts to available window sizes
@@ -351,10 +348,10 @@ private fun ActiveSessionScreen(
         topBar = {
             ActiveSessionTopBar(
                 uiState = uiState.value.topBarUiState.collectAsState(),
-                onDiscard = remember { { discardDialogVisible = true } },
+                onDiscard = remember { { eventHandler(ActiveSessionUiEvent.ToggleDiscardDialog) } },
                 onNavigateUp = remember { { navigateUp() } },
                 onTogglePause = remember { { eventHandler(ActiveSessionUiEvent.TogglePauseState) } },
-                onSave = remember { { finishDialogVisible = true } },
+                onSave = remember { { eventHandler(ActiveSessionUiEvent.ToggleFinishDialog) } },
             )
         },
         bottomBar = {
@@ -371,7 +368,6 @@ private fun ActiveSessionScreen(
                 uiState = uiState.value.mainContentUiState.collectAsState(),
                 snackbarHostState = snackbarHostState,
                 eventHandler = eventHandler,
-                newItemSelectorVisible = newItemSelectorVisible,
                 screenSizeClass = sizeClass
             )
         },
@@ -393,7 +389,7 @@ private fun ActiveSessionScreen(
     /** New Item Selector */
     val sheetState = rememberModalBottomSheetState()
     val newItemSelectorState = uiState.value.newItemSelectorUiState.collectAsState()
-    if (newItemSelectorVisible.value) {
+    if (dialogVisibilities.newItemSelectorVisible) {
         NewItemSelectorBottomSheet(
             uiState = newItemSelectorState,
             sheetState = sheetState,
@@ -402,9 +398,19 @@ private fun ActiveSessionScreen(
                     eventHandler(ActiveSessionUiEvent.SelectItem(item))
                 }
             },
+            onNewItem = remember {
+                {
+                    eventHandler(ActiveSessionUiEvent.ToggleCreateItemDialog)
+                }
+            },
+            onNewFolder = remember {
+                {
+                    eventHandler(ActiveSessionUiEvent.ToggleCreateFolderDialog)
+                }
+            },
             onDismissed = remember {
                 {
-                    newItemSelectorVisible.value = false
+                    eventHandler(ActiveSessionUiEvent.ToggleNewItemSelector)
                 }
             }
         )
@@ -413,13 +419,13 @@ private fun ActiveSessionScreen(
     /** End Session Dialog */
     val dialogUiState = uiState.value.mainContentUiState.collectAsState()
     val endDialog = dialogUiState.value.endDialogUiState.collectAsState()
-    if (finishDialogVisible) {
+    if (dialogVisibilities.finishDialogVisible) {
         val dialogEvent = ActiveSessionUiEvent::EndDialogUiEvent
 
         EndSessionDialog(
             rating = endDialog.value.rating,
             comment = endDialog.value.comment,
-            onDismiss = { finishDialogVisible = false },
+            onDismiss = { eventHandler(ActiveSessionUiEvent.ToggleFinishDialog) },
             onRatingChanged = {
                 eventHandler(
                     dialogEvent(ActiveSessionEndDialogUiEvent.RatingChanged(it))
@@ -439,11 +445,11 @@ private fun ActiveSessionScreen(
     }
 
     /** Discard Session Dialog */
-    if (discardDialogVisible) {
+    if (dialogVisibilities.discardDialogVisible) {
         DeleteConfirmationBottomSheet(
             confirmationIcon = UiIcon.DynamicIcon(Icons.Default.Delete),
             confirmationText = UiText.DynamicString("Discard session?"),
-            onDismiss = { discardDialogVisible = false },
+            onDismiss = { eventHandler(ActiveSessionUiEvent.ToggleDiscardDialog) },
             onConfirm = {
                 eventHandler(ActiveSessionUiEvent.DiscardSessionDialogConfirmed)
                 navigateUp()
@@ -578,7 +584,6 @@ private fun ActiveSessionMainContent(
     uiState: State<MainContentUiState>,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     eventHandler: (ActiveSessionUiEvent) -> Unit = {},
-    newItemSelectorVisible: MutableState<Boolean> = mutableStateOf(false)
 ) {
     // condense UI a bit if there is limited space
     val limitedHeight = screenSizeClass.height == WindowHeightSizeClass.Compact
@@ -677,7 +682,7 @@ private fun ActiveSessionMainContent(
         AddSectionFAB(
             isVisible = addSectionFABVisible || !limitedHeight,    // only hide FAB in landscape layout
             modifier = Modifier.align(Alignment.BottomCenter),
-            onClick = remember { { newItemSelectorVisible.value = true } }
+            onClick = remember { { eventHandler(ActiveSessionUiEvent.ToggleNewItemSelector) } }
         )
 
     }
@@ -689,6 +694,8 @@ private fun NewItemSelectorBottomSheet(
     uiState: State<NewItemSelectorUiState>,
     sheetState: SheetState = rememberModalBottomSheetState(),
     onItemSelected: (LibraryItem) -> Unit = {},
+    onNewItem: () -> Unit = {},
+    onNewFolder: () -> Unit = {},
     onDismissed: () -> Unit = {},
 ) {
     val scope = rememberCoroutineScope()
@@ -706,6 +713,8 @@ private fun NewItemSelectorBottomSheet(
         NewItemSelector(
             uiState = uiState,
             onItemSelected = onItemSelected,
+            onNewItem = onNewItem,
+            onNewFolder = onNewFolder,
             onClose = remember {
                 {
                     scope.launch {
@@ -1161,9 +1170,13 @@ private fun NewItemSelector(
     uiState: State<NewItemSelectorUiState>,
     modifier: Modifier = Modifier,
     onItemSelected: (LibraryItem) -> Unit,
+    onNewItem: () -> Unit = {},
+    onNewFolder: () -> Unit = {},
     onClose: () -> Unit = {},
 ) {
     var selectedFolder: UUID? by remember { mutableStateOf(uiState.value.runningItem?.libraryFolderId) }
+    var createMenuShown by remember { mutableStateOf(false) }
+
     Column(modifier.fillMaxWidth()) {
 
         // Header + Close Button
@@ -1182,6 +1195,29 @@ private fun NewItemSelector(
             )
 
             Spacer(modifier = Modifier.weight(1f))
+
+            IconButton(
+                onClick = { createMenuShown = true },
+                modifier = Modifier.padding(horizontal = MaterialTheme.spacing.small)
+            ) {
+                Icon(imageVector = Icons.Default.MoreVert, contentDescription = null)
+
+                DropdownMenu(
+                    expanded = createMenuShown,
+                    onDismissRequest = { createMenuShown = false },
+                    modifier = Modifier.background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                ) {
+
+                    DropdownMenuItem(
+                        onClick = onNewItem,
+                        text = { Text(text = "Create Item") }
+                    )
+                    DropdownMenuItem(
+                        onClick = onNewFolder,
+                        text = { Text(text = "Create Folder") }
+                    )
+                }
+            }
 
             IconButton(onClick = onClose) {
                 Icon(imageVector = Icons.Default.Close, contentDescription = null)

@@ -16,6 +16,7 @@ enum class SessionTimerState {
     NOT_STARTED,
     RUNNING,
     PAUSED,
+    UNKNOWN
 }
 
 class GetSessionTimerState (

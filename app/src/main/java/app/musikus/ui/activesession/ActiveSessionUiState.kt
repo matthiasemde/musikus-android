@@ -41,6 +41,15 @@ data class ActiveSessionUiState(
     val mainContentUiState: StateFlow<MainContentUiState> = MutableStateFlow(MainContentUiState()),
     val newItemSelectorUiState: StateFlow<NewItemSelectorUiState> = MutableStateFlow(NewItemSelectorUiState()),
     val toolsUiState: StateFlow<ActiveSessionToolsUiState> = MutableStateFlow(ActiveSessionToolsUiState()),
+    val dialogVisibilities: StateFlow<DialogVisibilities> = MutableStateFlow(DialogVisibilities()),
+)
+
+data class DialogVisibilities(
+    val newItemSelectorVisible: Boolean = false,
+    val finishDialogVisible: Boolean = false,
+    val discardDialogVisible: Boolean = false,
+    val createItemDialogVisible: Boolean = false,
+    val createFolderDialogVisible: Boolean = false,
 )
 
 @Stable
@@ -119,6 +128,12 @@ sealed class ActiveSessionUiEvent {
     data class DeleteSection(val sectionId: UUID) : ActiveSessionUiEvent()
     data class EndDialogUiEvent(val dialogEvent: ActiveSessionEndDialogUiEvent) : ActiveSessionUiEvent()
     data object DiscardSessionDialogConfirmed : ActiveSessionUiEvent()
+    data object ToggleNewItemSelector: ActiveSessionUiEvent()
+    data object ToggleFinishDialog : ActiveSessionUiEvent()
+    data object ToggleDiscardDialog : ActiveSessionUiEvent()
+    data object ToggleCreateItemDialog: ActiveSessionUiEvent()
+    data object ToggleCreateFolderDialog: ActiveSessionUiEvent()
+
 }
 
 sealed class ActiveSessionEndDialogUiEvent {

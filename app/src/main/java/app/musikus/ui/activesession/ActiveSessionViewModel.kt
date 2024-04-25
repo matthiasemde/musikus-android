@@ -26,6 +26,7 @@ import app.musikus.utils.DurationFormat
 import app.musikus.utils.getDurationString
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -37,6 +38,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import java.util.Timer
 import javax.inject.Inject
 import kotlin.concurrent.timer
@@ -74,7 +76,7 @@ class ActiveSessionViewModel @Inject constructor(
     private val sessionTimerState = activeSessionUseCases.getTimerState().stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = SessionTimerState.NOT_STARTED
+        initialValue = SessionTimerState.UNKNOWN
     )
 
     private val libraryFoldersWithItems = libraryUseCases.getSortedFolders().stateIn(
@@ -109,6 +111,11 @@ class ActiveSessionViewModel @Inject constructor(
     /** ------------------- Own StateFlows  ------------------------------------------- */
 
     private val _endDialogUiState = MutableStateFlow(ActiveSessionEndDialogUiState())
+    private val _endDialogVisible = MutableStateFlow(false)
+    private val _discardDialogVisible = MutableStateFlow(false)
+    private val _newItemSelectorVisible = MutableStateFlow(false)
+    private val _createFolderDialogVisible = MutableStateFlow(false)
+    private val _createItemDialogVisible = MutableStateFlow(false)
 
 
     /** ------------------- Sub UI states  ------------------------------------------- */
@@ -223,6 +230,22 @@ class ActiveSessionViewModel @Inject constructor(
         initialValue = NewItemSelectorUiState()
     )
 
+    private val dialogVisibilities = combine(
+        _endDialogVisible,
+        _discardDialogVisible,
+        _newItemSelectorVisible
+    ) { end, discard, newItem->
+        DialogVisibilities(
+            finishDialogVisible = end,
+            discardDialogVisible = discard,
+            newItemSelectorVisible = newItem
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = DialogVisibilities()
+    )
+
     private val toolsUiState = MutableStateFlow(ActiveSessionToolsUiState())
 
     /** ------------------- Main UI State ------------------------------------------- */
@@ -233,7 +256,8 @@ class ActiveSessionViewModel @Inject constructor(
             topBarUiState = topBarUiState,
             mainContentUiState = mainContentUiState,
             newItemSelectorUiState = newItemSelectorUiState,
-            toolsUiState = toolsUiState
+            toolsUiState = toolsUiState,
+            dialogVisibilities = dialogVisibilities
         )
     ).asStateFlow()
 
@@ -292,6 +316,12 @@ class ActiveSessionViewModel @Inject constructor(
                 activeSessionUseCases.reset()
                 _eventStates.update { it.copy(sessionDiscarded = true) }
             }
+
+            ActiveSessionUiEvent.ToggleDiscardDialog -> _discardDialogVisible.value = !_discardDialogVisible.value
+            ActiveSessionUiEvent.ToggleFinishDialog -> _endDialogVisible.value = !_endDialogVisible.value
+            ActiveSessionUiEvent.ToggleNewItemSelector -> _newItemSelectorVisible.value = !_newItemSelectorVisible.value
+            ActiveSessionUiEvent.ToggleCreateFolderDialog -> _createFolderDialogVisible.value = !_createFolderDialogVisible.value
+            ActiveSessionUiEvent.ToggleCreateItemDialog -> _createItemDialogVisible.value = !_createItemDialogVisible.value
         }
     }
 
@@ -313,6 +343,21 @@ class ActiveSessionViewModel @Inject constructor(
 
     init {
         startTimer()
+
+        // Show item selector on startup
+        runBlocking (context = Dispatchers.IO) {
+            viewModelScope.launch {
+                // wait until session data has initialized
+                while (sessionTimerState.value == SessionTimerState.UNKNOWN) {
+                    delay(100)
+                }
+                if (sessionTimerState.value == SessionTimerState.NOT_STARTED) {
+                    viewModelScope.launch {
+                        _newItemSelectorVisible.update { true }
+                    }
+                }
+            }
+        }
     }
 
     private fun startTimer() {
