@@ -16,6 +16,7 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.keyframes
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
@@ -37,6 +38,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.add
 import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -104,6 +107,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.rememberStandardBottomSheetState
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowHeightSizeClass
@@ -113,6 +117,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -137,6 +142,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.LoremIpsum
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -250,7 +256,11 @@ fun ActiveSession(
 
     val windowsSizeClass = calculateWindowSizeClass(activity = LocalContext.current as Activity)
 
-    val bottomSheetState = rememberBottomSheetScaffoldState()
+    val bottomSheetState = rememberBottomSheetScaffoldState(
+        bottomSheetState = rememberStandardBottomSheetState(
+            skipHiddenState = false,
+        )
+    )
 
     // TODO re-initialize bottomSheetState on configuration change
     // there is a bug where the bottom sheet will become fully collapsable after the screen has been
@@ -474,7 +484,7 @@ private fun ActiveSessionAdaptiveScaffold(
     screenSizeClass: ScreenSizeClass,
     topBar: @Composable () -> Unit,
     bottomBar: @Composable () -> Unit,
-    mainContent: @Composable (PaddingValues) -> Unit,
+    mainContent: @Composable (State<PaddingValues>) -> Unit,
     toolsContent: @Composable () -> Unit,
     bottomSheetState: BottomSheetScaffoldState = rememberBottomSheetScaffoldState(),
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
@@ -499,7 +509,7 @@ private fun ActiveSessionAdaptiveScaffold(
                         .weight(1.2f)
                         .fillMaxSize()
                 ) {
-                    mainContent(PaddingValues(0.dp))
+                    mainContent(remember { mutableStateOf(PaddingValues(0.dp)) })
                 }
 
                 Spacer(modifier = Modifier.width(MaterialTheme.spacing.small))
@@ -559,7 +569,7 @@ private fun ActiveSessionAdaptiveScaffold(
 @Composable
 private fun ToolsBottomSheetScaffold(
     sheetContent: @Composable () -> Unit,
-    mainContent: @Composable (PaddingValues) -> Unit,
+    mainContent: @Composable (State<PaddingValues>) -> Unit,
     bottomSheetState: BottomSheetScaffoldState = rememberBottomSheetScaffoldState()
 ) {
     BottomSheetScaffold(
@@ -571,7 +581,23 @@ private fun ToolsBottomSheetScaffold(
         scaffoldState = bottomSheetState,
         sheetDragHandle = { SheetDragHandle() },
         content = { sheetPadding ->
-            mainContent(sheetPadding)
+            // sheet
+            val bottomPadding = animateDpAsState(
+                if (bottomSheetState.bottomSheetState.currentValue != SheetValue.Hidden) {
+                    sheetPadding.calculateBottomPadding()
+                } else {
+                    0.dp
+                }, label = ""
+            )
+            val paddingValues = remember { derivedStateOf {
+                PaddingValues(
+                    top = sheetPadding.calculateTopPadding(),
+                    // TODO maybe get native LayoutDirection?
+                    start = sheetPadding.calculateStartPadding(layoutDirection = LayoutDirection.Ltr),
+                    end = sheetPadding.calculateEndPadding(layoutDirection = LayoutDirection.Ltr),
+                    bottom = bottomPadding.value
+                )}}
+            mainContent(paddingValues)
         }
     )
 }
@@ -581,7 +607,7 @@ private fun ToolsBottomSheetScaffold(
 private fun ActiveSessionMainContent(
     modifier: Modifier = Modifier,
     screenSizeClass: ScreenSizeClass = ScreenSizeDefaults.Phone,
-    contentPadding: PaddingValues,
+    contentPadding: State<PaddingValues>,
     uiState: State<ActiveSessionContentUiState>,
     sessionState: State<ActiveSessionState>,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
@@ -614,7 +640,7 @@ private fun ActiveSessionMainContent(
     Box(
         modifier
             .fillMaxSize()
-            .padding(contentPadding)
+            .padding(contentPadding.value)
     ) {
 
         Column(
@@ -832,16 +858,34 @@ private fun ActiveSessionBottomTabs(
     ) {
         HorizontalDivider()
 
-        ToolsTabRow(tabs = tabs, activeTabIndex = pagerState.currentPage, onClick = { tabIndex ->
-            scope.launch {
-                // toggle expansion if on current page
-                if (tabIndex == pagerState.currentPage) {
-                    if (sheetState.bottomSheetState.currentValue != SheetValue.Expanded) sheetState.bottomSheetState.expand()
-                    else sheetState.bottomSheetState.partialExpand()
+        ToolsTabRow(
+            tabs = tabs,
+            activeTabIndex = pagerState.currentPage,
+            showIndicator = sheetState.bottomSheetState.currentValue != SheetValue.Hidden,
+            onClick = { tabIndex ->
+                scope.launch {
+                    val currentPage = pagerState.currentPage
+
+                    // peek sheet when hidden
+                    if (sheetState.bottomSheetState.currentValue == SheetValue.Hidden) {
+                        pagerState.scrollToPage(tabIndex)    // switch to page (if necessary, no animation)
+                        sheetState.bottomSheetState.partialExpand()
+                    } else {
+                        if (tabIndex == currentPage) {
+                            // if on current page, toggle sheet
+                            when (sheetState.bottomSheetState.currentValue) {
+                                SheetValue.PartiallyExpanded -> sheetState.bottomSheetState.expand()
+                                SheetValue.Expanded -> sheetState.bottomSheetState.hide()
+                                SheetValue.Hidden -> { /* case should never occur */
+                                }
+                            }
+                        } else {
+                            // if on other page, switch to page (with animation
+                            pagerState.animateScrollToPage(tabIndex)
+                        }
+                    }
                 }
-                pagerState.animateScrollToPage(tabIndex)
-            }
-        })
+            })
     }
 }
 
@@ -849,6 +893,7 @@ private fun ActiveSessionBottomTabs(
 @Composable
 private fun ToolsTabRow(
     tabs: ImmutableList<ToolsTab>,
+    showIndicator: Boolean,
     activeTabIndex: Int,
     onClick: (index: Int) -> Unit,
 ) {
@@ -857,16 +902,22 @@ private fun ToolsTabRow(
         divider = {},
         indicator = { tabPositions ->
             if (activeTabIndex < tabPositions.size) {
-                TabRowDefaults.PrimaryIndicator(
-                    modifier = Modifier
-                        .tabIndicatorOffset(tabPositions[activeTabIndex])
-                        .offset(y = (-45).dp), width = 100.dp, shape = RoundedCornerShape(
-                        topStartPercent = 0,
-                        topEndPercent = 0,
-                        bottomStartPercent = 100,
-                        bottomEndPercent = 100
+                AnimatedVisibility(
+                    visible = showIndicator,
+                    enter = slideInVertically { -it } + fadeIn(),
+                    exit = slideOutVertically { -it } + fadeOut(),
+                ) {
+                    TabRowDefaults.PrimaryIndicator(
+                        modifier = Modifier
+                            .tabIndicatorOffset(tabPositions[activeTabIndex])
+                            .offset(y = (-45).dp), width = 100.dp, shape = RoundedCornerShape(
+                            topStartPercent = 0,
+                            topEndPercent = 0,
+                            bottomStartPercent = 100,
+                            bottomEndPercent = 100
+                        )
                     )
-                )
+                }
             }
         },
         selectedTabIndex = activeTabIndex
