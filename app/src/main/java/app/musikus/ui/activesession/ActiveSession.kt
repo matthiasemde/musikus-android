@@ -74,6 +74,7 @@ import androidx.compose.material.icons.outlined.Folder
 import androidx.compose.material.icons.outlined.PlayCircle
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.BottomSheetScaffoldState
 import androidx.compose.material3.ButtonDefaults
@@ -845,47 +846,51 @@ private fun ActiveSessionBottomTabs(
     screenSizeClass: ScreenSizeClass = ScreenSizeDefaults.Phone,
 ) {
     val scope = rememberCoroutineScope()
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-            .conditional(screenSizeClass.height != WindowHeightSizeClass.Compact) {
-                // take care of navbar insets
-                // (Workaround): but not on landscape mode / compact height because it will add
-                // unnecessary padding on API < 34 (try different navigation bar modes).
-                windowInsetsPadding(WindowInsets.navigationBars)
-            }
-    ) {
-        HorizontalDivider()
+    Box(modifier = Modifier.fillMaxWidth()) {// full-width container to center tabs column
+        Column(
+            modifier = Modifier
+                .align(Alignment.Center)
+                .widthIn(min = 0.dp, max = BottomSheetDefaults.SheetMaxWidth) // limit width for large screens
+                .background(MaterialTheme.colorScheme.surfaceContainerHigh) // bg for WindowInsets
+                .conditional(screenSizeClass.height != WindowHeightSizeClass.Compact) {
+                    // take care of navbar insets
+                    // (Workaround): but not on landscape mode / compact height because it will add
+                    // unnecessary padding on API < 34 (try different navigation bar modes).
+                    windowInsetsPadding(WindowInsets.navigationBars)
+                },
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            HorizontalDivider()
 
-        ToolsTabRow(
-            tabs = tabs,
-            activeTabIndex = pagerState.currentPage,
-            showIndicator = sheetState.bottomSheetState.currentValue != SheetValue.Hidden,
-            onClick = { tabIndex ->
-                scope.launch {
-                    val currentPage = pagerState.currentPage
+            ToolsTabRow(
+                tabs = tabs,
+                activeTabIndex = pagerState.currentPage,
+                showIndicator = sheetState.bottomSheetState.currentValue != SheetValue.Hidden,
+                onClick = { tabIndex ->
+                    scope.launch {
+                        val currentPage = pagerState.currentPage
 
-                    // peek sheet when hidden
-                    if (sheetState.bottomSheetState.currentValue == SheetValue.Hidden) {
-                        pagerState.scrollToPage(tabIndex)    // switch to page (if necessary, no animation)
-                        sheetState.bottomSheetState.partialExpand()
-                    } else {
-                        if (tabIndex == currentPage) {
-                            // if on current page, toggle sheet
-                            when (sheetState.bottomSheetState.currentValue) {
-                                SheetValue.PartiallyExpanded -> sheetState.bottomSheetState.expand()
-                                SheetValue.Expanded -> sheetState.bottomSheetState.hide()
-                                SheetValue.Hidden -> { /* case should never occur */
-                                }
-                            }
+                        // peek sheet when hidden
+                        if (sheetState.bottomSheetState.currentValue == SheetValue.Hidden) {
+                            pagerState.scrollToPage(tabIndex)    // switch to page (if necessary, no animation)
+                            sheetState.bottomSheetState.partialExpand()
                         } else {
-                            // if on other page, switch to page (with animation
-                            pagerState.animateScrollToPage(tabIndex)
+                            if (tabIndex == currentPage) {
+                                // if on current page, toggle sheet
+                                when (sheetState.bottomSheetState.currentValue) {
+                                    SheetValue.PartiallyExpanded -> sheetState.bottomSheetState.expand()
+                                    SheetValue.Expanded -> sheetState.bottomSheetState.hide()
+                                    SheetValue.Hidden -> { /* case should never occur */
+                                    }
+                                }
+                            } else {
+                                // if on other page, switch to page (with animation
+                                pagerState.animateScrollToPage(tabIndex)
+                            }
                         }
                     }
-                }
-            })
+                })
+        }
     }
 }
 
