@@ -26,7 +26,6 @@ import app.musikus.utils.DurationFormat
 import app.musikus.utils.getDurationString
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -39,7 +38,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import java.util.Timer
 import javax.inject.Inject
 import kotlin.concurrent.timer
@@ -333,7 +331,8 @@ class ActiveSessionViewModel @Inject constructor(
     init {
         startTimer()
 
-        // Show item selector on startup
+        /** Show item selector on startup */
+        /*
         runBlocking (context = Dispatchers.IO) {
             viewModelScope.launch {
                 // wait until session data has initialized
@@ -347,6 +346,7 @@ class ActiveSessionViewModel @Inject constructor(
                 }
             }
         }
+        */
     }
 
     private fun startTimer() {

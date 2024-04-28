@@ -682,6 +682,7 @@ private fun ActiveSessionMainContent(
 
         AddSectionFAB(
             isVisible = addSectionFABVisible || !limitedHeight,    // only hide FAB in landscape layout
+            sessionState = sessionState,
             modifier = Modifier.align(Alignment.BottomCenter),
             onClick = remember { { eventHandler(ActiveSessionUiEvent.ToggleNewItemSelector) } }
         )
@@ -922,6 +923,7 @@ private fun PracticeTimer(
                     Text(text = uiState.value.subHeadingText)
                 }
             }
+
             else -> {
                 Text(
                     style = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurfaceVariant),
@@ -1146,6 +1148,7 @@ private fun SectionListElement(
 
 @Composable
 private fun AddSectionFAB(
+    sessionState: State<ActiveSessionState>,
     modifier: Modifier = Modifier,
     isVisible: Boolean = true,
     onClick: () -> Unit,
@@ -1164,7 +1167,15 @@ private fun AddSectionFAB(
                     imageVector = Icons.Filled.Add, contentDescription = "New Library Item"
                 )
             },
-            text = { Text("Next Item") },
+            text = {
+                Text(
+                    if (sessionState.value == ActiveSessionState.NOT_STARTED) {
+                        "Start practicing"
+                    } else {
+                        "Next Item"
+                    }
+                )
+            },
             expanded = true,
         )
     }
