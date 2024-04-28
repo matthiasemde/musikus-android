@@ -347,7 +347,7 @@ private fun ActiveSessionScreen(
         bottomSheetState = bottomSheetState,
         topBar = {
             ActiveSessionTopBar(
-                uiState = uiState.value.topBarUiState.collectAsState(),
+                sessionState = uiState.value.sessionState.collectAsState(),
                 onDiscard = remember { { eventHandler(ActiveSessionUiEvent.ToggleDiscardDialog) } },
                 onNavigateUp = remember { { navigateUp() } },
                 onTogglePause = remember { { eventHandler(ActiveSessionUiEvent.TogglePauseState) } },
@@ -366,6 +366,7 @@ private fun ActiveSessionScreen(
             ActiveSessionMainContent(
                 contentPadding = padding,
                 uiState = uiState.value.mainContentUiState.collectAsState(),
+                sessionState = uiState.value.sessionState.collectAsState(),
                 snackbarHostState = snackbarHostState,
                 eventHandler = eventHandler,
                 screenSizeClass = sizeClass
@@ -581,7 +582,8 @@ private fun ActiveSessionMainContent(
     modifier: Modifier = Modifier,
     screenSizeClass: ScreenSizeClass = ScreenSizeDefaults.Phone,
     contentPadding: PaddingValues,
-    uiState: State<MainContentUiState>,
+    uiState: State<ActiveSessionContentUiState>,
+    sessionState: State<ActiveSessionState>,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     eventHandler: (ActiveSessionUiEvent) -> Unit = {},
 ) {
@@ -634,6 +636,7 @@ private fun ActiveSessionMainContent(
                 // Big Timer
                 PracticeTimer(
                     uiState = uiState.value.timerUiState.collectAsState(),
+                    sessionState = sessionState,
                     screenSizeClass = screenSizeClass,
                     onResumeTimer = remember { { eventHandler(ActiveSessionUiEvent.TogglePauseState) } },
                 )
@@ -647,7 +650,7 @@ private fun ActiveSessionMainContent(
                 CurrentPracticingItem(
                     modifier = Modifier.padding(horizontal = MaterialTheme.spacing.large),
                     screenSizeClass = screenSizeClass,
-                    itemState = uiState.value.currentItemUiState.collectAsState(),
+                    uiState = uiState.value.currentItemUiState.collectAsState(),
                 )
 
                 if (limitedHeight)
@@ -657,7 +660,7 @@ private fun ActiveSessionMainContent(
 
                 // Past Items
                 val pastItemsState = uiState.value.pastSectionsUiState.collectAsState()
-                if (pastItemsState.value.visible) {
+                if (pastItemsState.value != null) {
                     SectionsList(
                         uiState = pastItemsState,
                         nestedScrollConnection = nestedScrollConnection,    // for hiding the FAB
@@ -746,7 +749,7 @@ private fun ActiveSessionToolsLayout(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ActiveSessionTopBar(
-    uiState: State<ActiveSessionTopBarUiState>,
+    sessionState: State<ActiveSessionState>,
     onNavigateUp: () -> Unit = {},
     onDiscard: () -> Unit = {},
     onTogglePause: () -> Unit = {},
@@ -761,12 +764,13 @@ private fun ActiveSessionTopBar(
         },
         actions = {
             AnimatedVisibility(
-                visible = uiState.value.visible,
+                visible = sessionState.value == ActiveSessionState.RUNNING
+                        || sessionState.value == ActiveSessionState.PAUSED,
                 enter = slideInVertically(),
             ) {
                 Row {
                     AnimatedVisibility(
-                        visible = uiState.value.pauseButtonAppearance != SessionPausedResumedState.PAUSED,
+                        visible = sessionState.value == ActiveSessionState.RUNNING,
                         enter = fadeIn(),
                         exit = fadeOut(),
                     ) {
@@ -891,6 +895,7 @@ private fun SheetDragHandle() {
 @Composable
 private fun PracticeTimer(
     uiState: State<ActiveSessionTimerUiState>,
+    sessionState: State<ActiveSessionState>,
     modifier: Modifier = Modifier,
     onResumeTimer: () -> Unit = {},
     screenSizeClass: ScreenSizeClass = ScreenSizeDefaults.Phone,
@@ -904,15 +909,8 @@ private fun PracticeTimer(
             fontWeight = FontWeight.Light,
             fontSize = if (screenSizeClass.height == WindowHeightSizeClass.Compact) 60.sp else 75.sp
         )
-        when (uiState.value.subHeadingAppearance) {
-            SessionPausedResumedState.RUNNING -> {
-                Text(
-                    style = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurfaceVariant),
-                    text = uiState.value.subHeadingText,
-                )
-            }
-
-            SessionPausedResumedState.PAUSED -> {
+        when (sessionState.value) {
+            ActiveSessionState.PAUSED -> {
                 ElevatedButton(
                     onClick = onResumeTimer, colors = ButtonDefaults.elevatedButtonColors().copy(
                         containerColor = MaterialTheme.colorScheme.tertiary,
@@ -924,6 +922,13 @@ private fun PracticeTimer(
                     Text(text = uiState.value.subHeadingText)
                 }
             }
+            else -> {
+                Text(
+                    style = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurfaceVariant),
+                    text = uiState.value.subHeadingText,
+                )
+            }
+
         }
     }
 }
@@ -931,17 +936,17 @@ private fun PracticeTimer(
 
 @Composable
 private fun CurrentPracticingItem(
+    uiState: State<ActiveSessionCurrentItemUiState?>,
     modifier: Modifier = Modifier,
     screenSizeClass: ScreenSizeClass = ScreenSizeDefaults.Phone,
-    itemState: State<ActiveSessionCurrentItemUiState>,
 ) {
-    val item by itemState
+    val item = uiState.value
 
     AnimatedVisibility(
-        visible = item.visible,
+        visible = item != null,
         enter = expandVertically() + fadeIn(animationSpec = keyframes { durationMillis = 200 }),
     ) {
-        if (!item.visible) return@AnimatedVisibility
+        if (item == null) return@AnimatedVisibility
 
         val limitedHeight = screenSizeClass.height == WindowHeightSizeClass.Compact
 
@@ -1000,14 +1005,15 @@ private fun CurrentPracticingItem(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun SectionsList(
-    uiState: State<ActiveSessionCompletedSectionsUiState>,
+    uiState: State<ActiveSessionCompletedSectionsUiState?>,
     additionalBottomContentPadding: Dp = 0.dp,
     onSectionDeleted: (CompletedSectionUiState) -> Unit = {},
     nestedScrollConnection: NestedScrollConnection = rememberNestedScrollInteropConnection(),
     listState: LazyListState = rememberLazyListState(),
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
-    val uiStateValue by uiState
+    val listUiState = uiState.value ?: return
+
     // This column must not have padding to make swipe-to-dismiss work edge2edge
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
@@ -1033,7 +1039,7 @@ private fun SectionsList(
             contentPadding = PaddingValues(bottom = additionalBottomContentPadding)
         ) {
             items(
-                items = uiStateValue.items,
+                items = listUiState.items,
                 key = { item -> item.id },
             ) { item ->
                 SectionListElement(
@@ -1047,12 +1053,12 @@ private fun SectionsList(
     }
 
     // scroll to top when new item is added
-    var sectionLen by remember { mutableIntStateOf(uiStateValue.items.size) }
-    LaunchedEffect(key1 = uiStateValue.items) {
-        if (uiStateValue.items.size > sectionLen && listState.canScrollBackward) {
+    var sectionLen by remember { mutableIntStateOf(listUiState.items.size) }
+    LaunchedEffect(key1 = listUiState.items) {
+        if (listUiState.items.size > sectionLen && listState.canScrollBackward) {
             listState.animateScrollToItem(0)
         }
-        sectionLen = uiStateValue.items.size
+        sectionLen = listUiState.items.size
     }
 }
 
@@ -1087,11 +1093,12 @@ private fun SectionListElement(
                     withDismissAction = true,
                     duration = SnackbarDuration.Short,
                 )
-                when(result) {
+                when (result) {
                     SnackbarResult.ActionPerformed -> {
                         deleted = false
                         dismissState.reset()
                     }
+
                     SnackbarResult.Dismissed -> {
                         onSectionDeleted(item)
                     }
@@ -1157,7 +1164,7 @@ private fun AddSectionFAB(
                     imageVector = Icons.Filled.Add, contentDescription = "New Library Item"
                 )
             },
-            text = { Text("Add item") },
+            text = { Text("Next Item") },
             expanded = true,
         )
     }
@@ -1452,27 +1459,21 @@ private fun PreviewActiveSessionScreen(
             uiState = remember {
                 mutableStateOf(
                     ActiveSessionUiState(
-                        topBarUiState = MutableStateFlow(
-                            ActiveSessionTopBarUiState(
-                                visible = true,
-                                pauseButtonAppearance = SessionPausedResumedState.RUNNING
-                            )
-                        ),
+                        sessionState = MutableStateFlow(ActiveSessionState.RUNNING),
                         mainContentUiState = MutableStateFlow(
-                            MainContentUiState(
+                            ActiveSessionContentUiState(
                                 timerUiState = MutableStateFlow(
                                     ActiveSessionTimerUiState(
                                         timerText = getDurationString(
                                             (42 * 60 + 24).seconds, DurationFormat.MS_DIGITAL
                                         ).toString(),
                                         subHeadingText = "Practice Time",
-                                        subHeadingAppearance = SessionPausedResumedState.RUNNING
                                     )
                                 ),
                                 currentItemUiState = MutableStateFlow(dummyRunningItem),
                                 pastSectionsUiState = MutableStateFlow(
                                     ActiveSessionCompletedSectionsUiState(
-                                        visible = true, items = dummySections.toList()
+                                        items = dummySections.toList()
                                     )
                                 ),
                             )
@@ -1518,7 +1519,7 @@ private fun PreviewCurrentItem(
 ) {
     MusikusThemedPreview(theme) {
         CurrentPracticingItem(
-            itemState = remember {
+            uiState = remember {
                 mutableStateOf(dummyRunningItem)
             })
     }
@@ -1650,7 +1651,6 @@ private fun PreviewEndSessionDialog(
 
 
 private val dummyRunningItem = ActiveSessionCurrentItemUiState(
-    visible = true,
     color = libraryItemColors[Random.nextInt(libraryItemColors.size)],
     name = LoremIpsum(Random.nextInt(4, 10)).values.first(),
     durationText = "32:19",

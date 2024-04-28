@@ -31,6 +31,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
@@ -73,10 +74,19 @@ class ActiveSessionViewModel @Inject constructor(
         initialValue = null
     )
 
-    private val sessionTimerState = activeSessionUseCases.getTimerState().stateIn(
+    // TODO: this is actually a 1:1 mapping still, maybe think about either re-using state
+    //       from useCase or extend UI State functionality
+    private val sessionState = activeSessionUseCases.getTimerState().map { state ->
+        when(state) {
+            SessionTimerState.NOT_STARTED -> ActiveSessionState.NOT_STARTED
+            SessionTimerState.RUNNING -> ActiveSessionState.RUNNING
+            SessionTimerState.PAUSED -> ActiveSessionState.PAUSED
+            SessionTimerState.UNKNOWN -> ActiveSessionState.UNKNOWN // TODO evaluate what to do
+        }
+    }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = SessionTimerState.UNKNOWN
+        initialValue = ActiveSessionState.UNKNOWN
     )
 
     private val libraryFoldersWithItems = libraryUseCases.getSortedFolders().stateIn(
@@ -108,38 +118,19 @@ class ActiveSessionViewModel @Inject constructor(
     )
 
 
-    /** ------------------- Own StateFlows  ------------------------------------------- */
+    /** ------------------- Own StateFlow UI states  ------------------------------------------- */
 
     private val _endDialogUiState = MutableStateFlow(ActiveSessionEndDialogUiState())
-    private val _endDialogVisible = MutableStateFlow(false)
-    private val _discardDialogVisible = MutableStateFlow(false)
-    private val _newItemSelectorVisible = MutableStateFlow(false)
-    private val _createFolderDialogVisible = MutableStateFlow(false)
-    private val _createItemDialogVisible = MutableStateFlow(false)
+    private val _dialogVisibilities = MutableStateFlow(ActiveSessionDialogsUiState())
 
 
     /** ------------------- Sub UI states  ------------------------------------------- */
 
-    private val topBarUiState = sessionTimerState.map {
-        ActiveSessionTopBarUiState(
-            visible =  it != SessionTimerState.NOT_STARTED,
-            pauseButtonAppearance = if(it == SessionTimerState.PAUSED) {
-                SessionPausedResumedState.PAUSED
-            } else {
-                SessionPausedResumedState.RUNNING
-            }
-        )
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = ActiveSessionTopBarUiState()
-    )
-
     private val timerUiState = combine(
-        sessionTimerState,
+        sessionState,
         _clock  // should update with clock
     ) { timerState, _ ->
-        val pause = timerState == SessionTimerState.PAUSED
+        val pause = timerState == ActiveSessionState.PAUSED
 
         val practiceDuration = try {
             activeSessionUseCases.getPracticeDuration()
@@ -152,7 +143,6 @@ class ActiveSessionViewModel @Inject constructor(
         )
         ActiveSessionTimerUiState(
             timerText = getDurationString(practiceDuration, DurationFormat.MS_DIGITAL).toString(),
-            subHeadingAppearance = if(pause) SessionPausedResumedState.PAUSED else SessionPausedResumedState.RUNNING,
             subHeadingText = if (pause) "Paused $pauseDurStr" else "Practice Time",
         )
     }.stateIn(
@@ -161,19 +151,22 @@ class ActiveSessionViewModel @Inject constructor(
         initialValue = ActiveSessionTimerUiState()
     )
 
-    private val currentItemUiState = combine(
-        sessionTimerState,
+    private val currentItemUiState: StateFlow<ActiveSessionCurrentItemUiState?> = combine(
+        sessionState,
         runningLibraryItem,
         _clock  // should update with clock
-    ) { timerState, item, _ ->
+    ) { sessionState, item, _ ->
+        if (sessionState == ActiveSessionState.NOT_STARTED) {
+            return@combine null
+        }
 
         val currentItemDuration = try {
             activeSessionUseCases.getRunningItemDuration()
         } catch (e: IllegalStateException) {
             Duration.ZERO   // Session not yet started
         }
+
         ActiveSessionCurrentItemUiState(
-            visible = timerState != SessionTimerState.NOT_STARTED,
             name = item?.name ?: "Not started",
             durationText = getDurationString(currentItemDuration, DurationFormat.MS_DIGITAL).toString(),
             color = libraryItemColors[item?.colorIndex ?: 0]
@@ -181,30 +174,32 @@ class ActiveSessionViewModel @Inject constructor(
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = ActiveSessionCurrentItemUiState()
+        initialValue = null
     )
 
-    private val pastSectionsUiState = completedSections.map { sections ->
+    private val pastSectionsUiState  = completedSections.map {sections ->
+        if (sections.isEmpty()) {
+            return@map null
+        }
         ActiveSessionCompletedSectionsUiState(
-            visible = sections.isNotEmpty(),
             items = sections.reversed().map {
-                   CompletedSectionUiState(
-                       id = it.id,
-                       name = it.libraryItem.name,
-                       color = libraryItemColors[it.libraryItem.colorIndex],
-                       durationText = getDurationString(it.duration, DurationFormat.MS_DIGITAL).toString()
-                   )
-            },
+               CompletedSectionUiState(
+                   id = it.id,
+                   name = it.libraryItem.name,
+                   color = libraryItemColors[it.libraryItem.colorIndex],
+                   durationText = getDurationString(it.duration, DurationFormat.MS_DIGITAL).toString()
+               )
+            }
         )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = ActiveSessionCompletedSectionsUiState()
+        initialValue = null
     )
 
 
     private val mainContentUiState = MutableStateFlow(
-        MainContentUiState(
+        ActiveSessionContentUiState(
             timerUiState = timerUiState,
             currentItemUiState = currentItemUiState,
             pastSectionsUiState = pastSectionsUiState,
@@ -230,34 +225,18 @@ class ActiveSessionViewModel @Inject constructor(
         initialValue = NewItemSelectorUiState()
     )
 
-    private val dialogVisibilities = combine(
-        _endDialogVisible,
-        _discardDialogVisible,
-        _newItemSelectorVisible
-    ) { end, discard, newItem->
-        DialogVisibilities(
-            finishDialogVisible = end,
-            discardDialogVisible = discard,
-            newItemSelectorVisible = newItem
-        )
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = DialogVisibilities()
-    )
-
-    private val toolsUiState = MutableStateFlow(ActiveSessionToolsUiState())
+    private val _toolsUiState = MutableStateFlow(ActiveSessionToolsUiState())
 
     /** ------------------- Main UI State ------------------------------------------- */
 
 
     val uiState = MutableStateFlow(
         ActiveSessionUiState(
-            topBarUiState = topBarUiState,
+            sessionState = sessionState,
+            dialogVisibilities = _dialogVisibilities,
             mainContentUiState = mainContentUiState,
             newItemSelectorUiState = newItemSelectorUiState,
-            toolsUiState = toolsUiState,
-            dialogVisibilities = dialogVisibilities
+            toolsUiState = _toolsUiState,
         )
     ).asStateFlow()
 
@@ -271,12 +250,12 @@ class ActiveSessionViewModel @Inject constructor(
             is ActiveSessionUiEvent.SelectItem -> {
                 viewModelScope.launch {
                     // resume session if paused
-                    if (sessionTimerState.value == SessionTimerState.PAUSED) {
+                    if (sessionState.value == ActiveSessionState.PAUSED) {
                         activeSessionUseCases.resume()
                     }
 
                     // wait until the current item has been running for at least 1 second
-                    if (sessionTimerState.value != SessionTimerState.NOT_STARTED
+                    if (sessionState.value != ActiveSessionState.NOT_STARTED
                         && activeSessionUseCases.getRunningItemDuration() < 1.seconds)
                     {
                         delay(1000)
@@ -287,13 +266,13 @@ class ActiveSessionViewModel @Inject constructor(
             }
             is ActiveSessionUiEvent.TogglePauseState -> {
                 viewModelScope.launch {
-                    when (sessionTimerState.value) {
-                        SessionTimerState.RUNNING -> activeSessionUseCases.pause()
-                        SessionTimerState.PAUSED -> activeSessionUseCases.resume()
+                    when (sessionState.value) {
+                        ActiveSessionState.RUNNING -> activeSessionUseCases.pause()
+                        ActiveSessionState.PAUSED -> activeSessionUseCases.resume()
                         else -> {
                             Log.d(
                                 "ActiveSessionViewModel",
-                                "TogglePauseState: Timer state = ${sessionTimerState.value}"
+                                "TogglePauseState: Timer state = ${sessionState.value}"
                             )
                         }
                     }
@@ -302,7 +281,7 @@ class ActiveSessionViewModel @Inject constructor(
             is ActiveSessionUiEvent.BackPressed -> {}
             is ActiveSessionUiEvent.DeleteSection -> {
                 viewModelScope.launch {
-                    if (sessionTimerState.value == SessionTimerState.PAUSED) {
+                    if (sessionState.value == ActiveSessionState.PAUSED) {
                         activeSessionUseCases.resume()
                     }
                     activeSessionUseCases.deleteSection(event.sectionId)
@@ -317,11 +296,21 @@ class ActiveSessionViewModel @Inject constructor(
                 _eventStates.update { it.copy(sessionDiscarded = true) }
             }
 
-            ActiveSessionUiEvent.ToggleDiscardDialog -> _discardDialogVisible.value = !_discardDialogVisible.value
-            ActiveSessionUiEvent.ToggleFinishDialog -> _endDialogVisible.value = !_endDialogVisible.value
-            ActiveSessionUiEvent.ToggleNewItemSelector -> _newItemSelectorVisible.value = !_newItemSelectorVisible.value
-            ActiveSessionUiEvent.ToggleCreateFolderDialog -> _createFolderDialogVisible.value = !_createFolderDialogVisible.value
-            ActiveSessionUiEvent.ToggleCreateItemDialog -> _createItemDialogVisible.value = !_createItemDialogVisible.value
+            ActiveSessionUiEvent.ToggleDiscardDialog -> _dialogVisibilities.update {
+                it.copy(discardDialogVisible = !it.discardDialogVisible)
+            }
+            ActiveSessionUiEvent.ToggleFinishDialog -> _dialogVisibilities.update {
+                it.copy(finishDialogVisible = !it.finishDialogVisible)
+            }
+            ActiveSessionUiEvent.ToggleNewItemSelector -> _dialogVisibilities.update {
+                it.copy(newItemSelectorVisible = !it.newItemSelectorVisible)
+            }
+            ActiveSessionUiEvent.ToggleCreateFolderDialog -> _dialogVisibilities.update {
+                it.copy(createFolderDialogVisible = !it.createFolderDialogVisible)
+            }
+            ActiveSessionUiEvent.ToggleCreateItemDialog -> _dialogVisibilities.update {
+                it.copy(createItemDialogVisible = !it.createItemDialogVisible)
+            }
         }
     }
 
@@ -348,12 +337,12 @@ class ActiveSessionViewModel @Inject constructor(
         runBlocking (context = Dispatchers.IO) {
             viewModelScope.launch {
                 // wait until session data has initialized
-                while (sessionTimerState.value == SessionTimerState.UNKNOWN) {
+                while (sessionState.value == ActiveSessionState.UNKNOWN) {
                     delay(100)
                 }
-                if (sessionTimerState.value == SessionTimerState.NOT_STARTED) {
+                if (sessionState.value == ActiveSessionState.NOT_STARTED) {
                     viewModelScope.launch {
-                        _newItemSelectorVisible.update { true }
+                        _dialogVisibilities.update { it.copy(newItemSelectorVisible = true) }
                     }
                 }
             }

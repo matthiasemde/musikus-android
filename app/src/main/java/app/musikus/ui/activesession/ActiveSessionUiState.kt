@@ -22,9 +22,11 @@ import java.util.UUID
 // TODO UIText for all Strings?
 
 @Stable
-enum class SessionPausedResumedState {
+enum class ActiveSessionState {
+    NOT_STARTED,
     RUNNING,
-    PAUSED
+    PAUSED,
+    UNKNOWN
 }
 
 /** Specific one-time events triggering some UI action in ActiveSession */
@@ -37,14 +39,14 @@ data class ActiveSessionEventStates (
 @Stable
 /** Main UI State */
 data class ActiveSessionUiState(
-    val topBarUiState: StateFlow<ActiveSessionTopBarUiState> = MutableStateFlow(ActiveSessionTopBarUiState()),
-    val mainContentUiState: StateFlow<MainContentUiState> = MutableStateFlow(MainContentUiState()),
+    val sessionState: StateFlow<ActiveSessionState> = MutableStateFlow(ActiveSessionState.NOT_STARTED),
+    val mainContentUiState: StateFlow<ActiveSessionContentUiState> = MutableStateFlow(ActiveSessionContentUiState()),
     val newItemSelectorUiState: StateFlow<NewItemSelectorUiState> = MutableStateFlow(NewItemSelectorUiState()),
     val toolsUiState: StateFlow<ActiveSessionToolsUiState> = MutableStateFlow(ActiveSessionToolsUiState()),
-    val dialogVisibilities: StateFlow<DialogVisibilities> = MutableStateFlow(DialogVisibilities()),
+    val dialogVisibilities: StateFlow<ActiveSessionDialogsUiState> = MutableStateFlow(ActiveSessionDialogsUiState()),
 )
 
-data class DialogVisibilities(
+data class ActiveSessionDialogsUiState(
     val newItemSelectorVisible: Boolean = false,
     val finishDialogVisible: Boolean = false,
     val discardDialogVisible: Boolean = false,
@@ -53,29 +55,25 @@ data class DialogVisibilities(
 )
 
 @Stable
-data class MainContentUiState(
+data class ActiveSessionContentUiState(
+    /**
+     * Nullable() States indicate visibility of the UI element.
+     * Use Nullable because State<Class?> cannot be smart-casted in Composables
+     */
     val timerUiState: StateFlow<ActiveSessionTimerUiState> = MutableStateFlow(ActiveSessionTimerUiState()),
-    val currentItemUiState: StateFlow<ActiveSessionCurrentItemUiState> = MutableStateFlow(ActiveSessionCurrentItemUiState()),
-    val pastSectionsUiState: StateFlow<ActiveSessionCompletedSectionsUiState> = MutableStateFlow(ActiveSessionCompletedSectionsUiState()),
+    val currentItemUiState: StateFlow<ActiveSessionCurrentItemUiState?> = MutableStateFlow(null),
+    val pastSectionsUiState: StateFlow<ActiveSessionCompletedSectionsUiState?> = MutableStateFlow(null),
     val endDialogUiState: StateFlow<ActiveSessionEndDialogUiState> = MutableStateFlow(ActiveSessionEndDialogUiState())
-)
-
-@Stable
-data class ActiveSessionTopBarUiState(
-    val visible: Boolean = false,
-    val pauseButtonAppearance: SessionPausedResumedState = SessionPausedResumedState.RUNNING,
 )
 
 @Stable
 data class ActiveSessionTimerUiState(
     val timerText: String = "00:00", // Prevents size change animation to trigger when opening the screen
-    val subHeadingAppearance: SessionPausedResumedState = SessionPausedResumedState.RUNNING,
     val subHeadingText: String = ""
 )
 
 @Stable
 data class ActiveSessionCurrentItemUiState(
-    val visible: Boolean = false,
     val name: String = "",
     val color: Color = Color.Transparent,
     val durationText: String = "",
@@ -83,14 +81,7 @@ data class ActiveSessionCurrentItemUiState(
 
 @Stable
 data class ActiveSessionCompletedSectionsUiState(
-    val visible: Boolean = false,
     val items: List<CompletedSectionUiState> = emptyList()
-)
-
-@Stable
-data class ActiveSessionEndDialogUiState(
-    val rating: Int = 5,
-    val comment: String = "",
 )
 
 @Stable
@@ -99,6 +90,12 @@ data class CompletedSectionUiState(
     val name: String = "",
     val durationText: String = "",
     val color: Color = Color.Transparent,
+)
+
+@Stable
+data class ActiveSessionEndDialogUiState(
+    val rating: Int = 3,
+    val comment: String = "",
 )
 
 @Stable
@@ -111,14 +108,15 @@ data class NewItemSelectorUiState(
 
 @Stable
 data class ActiveSessionToolsUiState(
-    val activeTab: ActiveSessionTab = ActiveSessionTab.entries[0],
+    /** state is still unused */
+    val activeTab: ActiveSessionTab = ActiveSessionTab.DEFAULT,
     val expanded: Boolean = false,
 //    val metronomeState: MetronomeUiState,
 //    val recorderState: RecorderUiState
 )
 
 enum class ActiveSessionTab {
-    METRONOME, RECORDER
+    METRONOME, RECORDER, DEFAULT
 }
 
 sealed class ActiveSessionUiEvent {
