@@ -631,8 +631,6 @@ private fun ActiveSessionMainContent(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
 
-                if (!limitedHeight) Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
-
                 // Big Timer
                 PracticeTimer(
                     uiState = uiState.value.timerUiState.collectAsState(),
