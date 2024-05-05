@@ -3,17 +3,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2022-2024 Matthias Emde
- *
- * Parts of this software are licensed under the MIT license
- *
- * Copyright (c) 2022, Javier Carbone, author Matthias Emde
- * Additions and modifications, author Michael Prommersberger
+ * Copyright (c) 2022-2024 Matthias Emde, Michael Prommersberger
  */
 
 package app.musikus.database
 
-import android.app.Application
 import android.content.ContentValues
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
@@ -47,6 +41,9 @@ import app.musikus.utils.IdProvider
 import app.musikus.utils.TimeProvider
 import app.musikus.utils.prepopulateDatabase
 import kotlinx.coroutines.runBlocking
+import java.io.File
+import java.io.InputStream
+import java.io.OutputStream
 import java.nio.ByteBuffer
 import java.time.Instant
 import java.time.ZoneId
@@ -92,6 +89,36 @@ abstract class MusikusDatabase : RoomDatabase() {
 
     lateinit var timeProvider: TimeProvider
     lateinit var idProvider: IdProvider
+    lateinit var databaseFile: File
+
+
+    /**
+     *  ---------------- Datbase Export/Import ----------------
+     */
+
+    fun export(outputStream: OutputStream) {
+        // close the database to collect all logs
+        close()
+        // copy database file to output stream
+        databaseFile.inputStream().let { inputStream ->
+            inputStream.copyTo(outputStream)
+            inputStream.close()
+        }
+        outputStream.close()
+    }
+
+    fun import(inputStream: InputStream) {
+        // close the database to collect all logs
+        close()
+        // delete old database
+        databaseFile.delete()
+        // copy new database from input stream
+        databaseFile.outputStream().let { outputStream ->
+            inputStream.copyTo(outputStream)
+            inputStream.close()
+            outputStream.close()
+        }
+    }
 
     companion object {
         const val DATABASE_NAME = "musikus-database"

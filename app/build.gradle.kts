@@ -47,7 +47,8 @@ android {
                 keyAlias = System.getenv("SIGNING_KEY_ALIAS")
                 keyPassword = System.getenv("SIGNING_KEY_PASSWORD")
             }
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            logger.warn("No signing configuration found, using debug key (message: ${e.message})")
         }
     }
 

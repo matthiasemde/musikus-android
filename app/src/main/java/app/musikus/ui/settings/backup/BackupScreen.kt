@@ -30,8 +30,9 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import app.musikus.Musikus
+import app.musikus.ui.MainActivity
 import app.musikus.ui.theme.spacing
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -67,11 +68,13 @@ fun BackupScreen(
 
             Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
 
+            val activity: MainActivity = LocalContext.current as MainActivity
+
             Button(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = MaterialTheme.spacing.extraLarge),
-                onClick = { Musikus.exportDatabase() },
+                onClick = { activity.exportDatabase() },
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -91,7 +94,7 @@ fun BackupScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = MaterialTheme.spacing.extraLarge),
-                onClick = { Musikus.importDatabase() },
+                onClick = { activity.importDatabase() },
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,

@@ -10,7 +10,6 @@ package app.musikus.ui
 
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
@@ -18,8 +17,8 @@ import android.provider.DocumentsContract
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.setContent
+import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
-import app.musikus.Musikus
 import app.musikus.database.MusikusDatabase
 import app.musikus.services.ActiveSessionServiceActions
 import app.musikus.services.SessionService
@@ -49,66 +48,19 @@ class MainActivity : PermissionCheckerActivity() {
 
     private val database: MusikusDatabase by lazy { databaseProvider.get() }
 
+    private lateinit var exportLauncher: ActivityResultLauncher<String>
+    private lateinit var importLauncher: ActivityResultLauncher<Array<String>>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        Musikus.exportLauncher = registerForActivityResult(
-            ExportDatabaseContract()
-        ) { exportDatabaseCallback(applicationContext, it) }
-
-        Musikus.importLauncher = registerForActivityResult(
-            ImportDatabaseContract()
-        ) { importDatabaseCallback(applicationContext, it) }
+        initializeExportImportLaunchers()
 
         setContent {
             MusikusApp(timeProvider)
         }
     }
 
-    private fun importDatabaseCallback(context: Context, uri: Uri?) {
-        uri?.let {
-            // close the database to collect all logs
-            database.close()
-            val databaseFile = context.getDatabasePath(MusikusDatabase.DATABASE_NAME)
-            // delete old database
-            databaseFile.delete()
-            // copy new database
-            databaseFile.outputStream().let { outputStream ->
-                context.contentResolver.openInputStream(it)?.let { inputStream ->
-                    inputStream.copyTo(outputStream)
-                    inputStream.close()
-                }
-                outputStream.close()
-                Toast.makeText(context, "Backup loaded successfully, restart your app to complete the process.", Toast.LENGTH_LONG).show()
-            }
-        }
-
-        // open database again
-//                openDatabase(context)
-    }
-
-    private fun exportDatabaseCallback(context: Context, uri: Uri?) {
-        uri?.let {
-
-            // close the database to collect all logs
-            database.close()
-            val databaseFile = context.getDatabasePath(MusikusDatabase.DATABASE_NAME)
-            // copy database
-            context.contentResolver.openOutputStream(it)?.let { outputStream ->
-                databaseFile.inputStream().let { inputStream ->
-                    inputStream.copyTo(outputStream)
-                    inputStream.close()
-                }
-                outputStream.close()
-
-                Toast.makeText(context, "Backup successful", Toast.LENGTH_LONG).show()
-            }
-
-            // open database again
-//                openDatabase(context)
-        }
-    }
 
     override fun onResume() {
         super.onResume()
@@ -139,13 +91,75 @@ class MainActivity : PermissionCheckerActivity() {
         }
 
     }
+
+    private fun initializeExportImportLaunchers() {
+
+        exportLauncher = registerForActivityResult(
+            ExportDatabaseContract("*/*")
+        ) {
+            if (it == null) {
+                Toast.makeText(this, "No file selected", Toast.LENGTH_SHORT).show()
+                return@registerForActivityResult
+            }
+
+            contentResolver.openOutputStream(it)?.let { outputStream ->
+                database.export(outputStream)
+            }
+
+            Toast.makeText(this, "Backup successful", Toast.LENGTH_LONG).show()
+
+            triggerRestart()
+        }
+
+        importLauncher = registerForActivityResult(
+            ImportDatabaseContract()
+        ) {
+            if (it == null) {
+                Toast.makeText(this, "No file selected", Toast.LENGTH_SHORT).show()
+                return@registerForActivityResult
+            }
+
+            contentResolver.openInputStream(it)?.let { inputStream ->
+                database.import(inputStream)
+            }
+
+            Toast.makeText(
+                this,
+                "Backup loaded successfully",
+                Toast.LENGTH_LONG
+            ).show()
+
+            triggerRestart()
+        }
+    }
+
+    fun exportDatabase() {
+        exportLauncher.launch("musikus_backup")
+    }
+
+    fun importDatabase() {
+        importLauncher.launch(arrayOf("*/*"))
+    }
+
+    // source: https://gist.github.com/easterapps/7127ce0749cfce2edf083e55b6eecec5
+    private fun triggerRestart() {
+        val intent = Intent(this, MainActivity::class.java).apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+
+        startActivity(intent)
+        finish()
+        kotlin.system.exitProcess(0)
+    }
 }
 
 /**
  * Contracts for exporting/importing the database
  */
 
-class ExportDatabaseContract : ActivityResultContracts.CreateDocument("*/*") {
+private class ExportDatabaseContract(
+    mimeType: String
+) : ActivityResultContracts.CreateDocument(mimeType) {
     override fun createIntent(context: Context, input: String) =
         super.createIntent(context, input).apply {
             addCategory(Intent.CATEGORY_OPENABLE)
@@ -155,9 +169,13 @@ class ExportDatabaseContract : ActivityResultContracts.CreateDocument("*/*") {
         }
 }
 
-class ImportDatabaseContract : ActivityResultContracts.OpenDocument() {
+private class ImportDatabaseContract : ActivityResultContracts.OpenDocument() {
     override fun createIntent(context: Context, input: Array<String>) =
         super.createIntent(context, input).apply {
-
+            type = "application/octet-stream"
+            addCategory(Intent.CATEGORY_OPENABLE)
+            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                putExtra(DocumentsContract.EXTRA_INITIAL_URI, Environment.DIRECTORY_DOWNLOADS)
+            }
         }
 }
