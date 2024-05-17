@@ -113,6 +113,7 @@ fun MusikusTheme(
             )
         }
     }
+
     MaterialTheme(
         colorScheme = colorSchemeDarkOrLight,
         content = content
