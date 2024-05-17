@@ -48,7 +48,6 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
@@ -399,7 +398,7 @@ private fun ActiveSessionScreen(
 
 
     /** New Item Selector */
-    val sheetState = rememberModalBottomSheetState()
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val newItemSelectorState = uiState.value.newItemSelectorUiState.collectAsState()
     if (dialogVisibilities.newItemSelectorVisible) {
         NewItemSelectorBottomSheet(
@@ -731,13 +730,12 @@ private fun NewItemSelectorBottomSheet(
 
     ModalBottomSheet(
         modifier = Modifier
-            .windowInsetsPadding(WindowInsets.statusBars)   // take care of statusbar insets
-            .fillMaxHeight(),    // avoid jumping height when changing folders
+            .fillMaxHeight(0.6f),    // avoid jumping height when changing folders
         windowInsets = WindowInsets(top = 0.dp), // makes sure the scrim covers the status bar
         onDismissRequest = remember { onDismissed },
         sheetState = sheetState,
         shape = RectangleShape,
-        dragHandle = {}
+        dragHandle = {},
     ) {
         NewItemSelector(
             uiState = uiState,
@@ -1434,8 +1432,9 @@ private fun LibraryItemList(
     activeItemId: UUID?,
 ) {
     LazyColumn(
-        modifier = modifier.fillMaxWidth(), contentPadding = WindowInsets(
-            top = MaterialTheme.spacing.medium,
+        modifier = modifier.fillMaxWidth(),
+        contentPadding = WindowInsets(
+            top = MaterialTheme.spacing.small,
         ).add(WindowInsets.navigationBars).asPaddingValues()    // don't get covered by navbars
     ) {
         items(items) {
