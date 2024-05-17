@@ -589,14 +589,17 @@ private fun ToolsBottomSheetScaffold(
                     0.dp
                 }, label = ""
             )
-            val paddingValues = remember { derivedStateOf {
-                PaddingValues(
-                    top = sheetPadding.calculateTopPadding(),
-                    // TODO maybe get native LayoutDirection?
-                    start = sheetPadding.calculateStartPadding(layoutDirection = LayoutDirection.Ltr),
-                    end = sheetPadding.calculateEndPadding(layoutDirection = LayoutDirection.Ltr),
-                    bottom = bottomPadding.value
-                )}}
+            val paddingValues = remember {
+                derivedStateOf {
+                    PaddingValues(
+                        top = sheetPadding.calculateTopPadding(),
+                        // TODO maybe get native LayoutDirection?
+                        start = sheetPadding.calculateStartPadding(layoutDirection = LayoutDirection.Ltr),
+                        end = sheetPadding.calculateEndPadding(layoutDirection = LayoutDirection.Ltr),
+                        bottom = bottomPadding.value
+                    )
+                }
+            }
             mainContent(paddingValues)
         }
     )
@@ -848,7 +851,10 @@ private fun ActiveSessionBottomTabs(
         Column(
             modifier = Modifier
                 .align(Alignment.Center)
-                .widthIn(min = 0.dp, max = BottomSheetDefaults.SheetMaxWidth) // limit width for large screens
+                .widthIn(
+                    min = 0.dp,
+                    max = BottomSheetDefaults.SheetMaxWidth
+                ) // limit width for large screens
                 .background(MaterialTheme.colorScheme.surfaceContainerHigh) // bg for WindowInsets
                 .conditional(screenSizeClass.height != WindowHeightSizeClass.Compact) {
                     // take care of navbar insets
@@ -1176,7 +1182,7 @@ private fun SectionListElement(
                         .width(10.dp)
                         .height(24.dp)
                         .clip(RoundedCornerShape(5.dp))
-                        .background(item.color.copy(alpha = 0.5f)),
+                        .background(item.color.copy(alpha = 0.6f)),
                 )
                 Spacer(modifier = Modifier.width(MaterialTheme.spacing.medium))
                 Text(
