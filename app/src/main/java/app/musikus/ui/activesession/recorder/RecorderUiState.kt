@@ -1,6 +1,15 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ *
+ * Copyright (c) 2024 Matthias Emde, Michael Prommersberger
+ */
+
 package app.musikus.ui.activesession.recorder
 
 import android.net.Uri
+import androidx.media3.common.MediaItem
 import app.musikus.services.RecorderServiceException
 import app.musikus.utils.DurationString
 import app.musikus.utils.RecorderState
@@ -17,6 +26,8 @@ data class RecordingListItemUiState(
     val title: String,
     val date: String,
     val duration: String,
+    val mediaItem: MediaItem?,  // nullable to be mockable in Previews
+    val contentUri: Uri?,
 )
 
 data class RecorderDialogUiState(

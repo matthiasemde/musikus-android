@@ -215,11 +215,13 @@ class RecorderViewModel @Inject constructor(
                 DurationFormat.HMSC_DIGITAL
             ),
             recordings = recordings.map {
-                                        RecordingListItemUiState(
-                                            title = it.title,
-                                            date = it.date.toString(),
-                                            duration = it.duration.toString()
-                                        )
+                RecordingListItemUiState(
+                    title = it.title,
+                    date = it.date.toString(),
+                    duration = it.duration.toString(),
+                    mediaItem = it.mediaItem,
+                    contentUri = it.contentUri
+                )
             },
             currentRawRecording = currentRawRecording,
             dialogUiState = dialogUiState
@@ -237,10 +239,12 @@ class RecorderViewModel @Inject constructor(
     )
 
 
+    // TODO split out subfunctions
     fun onUiEvent(event: RecorderUiEvent) {
         when(event) {
             is RecorderUiEvent.StartRecording -> {
                 viewModelScope.launch {
+                    // Microphone permission
                     val recordingPermissionResult = permissionsUseCases.request(
                         listOf(Manifest.permission.RECORD_AUDIO)
                     )
@@ -249,6 +253,7 @@ class RecorderViewModel @Inject constructor(
                         return@launch
                     }
 
+                    // Under API 29, we need WRITE_EXTERNAL_STORAGE
                     if(Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
                         val writeExternalStoragePermissionResult = permissionsUseCases.request(
                             listOf(Manifest.permission.WRITE_EXTERNAL_STORAGE)

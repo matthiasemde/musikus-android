@@ -3,11 +3,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2024 Matthias Emde
+ * Copyright (c) 2024 Matthias Emde, Michael Prommersberger
  */
 
 package app.musikus.ui.activesession.recorder
 
+import android.net.Uri
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.animation.AnimatedContent
@@ -35,11 +36,13 @@ import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Replay5
 import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedIconButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -56,16 +59,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.LoremIpsum
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.media3.common.MediaItem
+import androidx.media3.common.Player
+import androidx.media3.session.MediaController
 import app.musikus.datastore.ColorSchemeSelections
+import app.musikus.ui.components.DialogActions
 import app.musikus.ui.components.ExceptionHandler
 import app.musikus.ui.components.Waveform
 import app.musikus.ui.theme.MusikusColorSchemeProvider
+import app.musikus.ui.theme.MusikusPreviewElement1
+import app.musikus.ui.theme.MusikusPreviewElement2
+import app.musikus.ui.theme.MusikusPreviewWholeScreen
 import app.musikus.ui.theme.MusikusThemedPreview
 import app.musikus.ui.theme.dimensions
 import app.musikus.ui.theme.spacing
@@ -127,52 +137,71 @@ fun RecorderUi(
         }
     }
 
-    var currentPosition by remember { mutableLongStateOf(0) }
+    // in milliseconds
+    var currentPlaybackPosition by remember { mutableLongStateOf(0) }
 
     LaunchedEffect(key1 = playerState?.currentMediaItem) {
         while (playerState?.currentMediaItem != null && isActive) {
-            currentPosition = playerState?.player?.currentPosition ?: 0
+            currentPlaybackPosition = playerState?.player?.currentPosition ?: 0
             delay(100)
         }
     }
+
+    RecorderLayout(
+        uiState = uiState,
+        mediaController = mediaController,
+        playerState = playerState,
+        currentPlaybackPosition = currentPlaybackPosition,
+        eventHandler = eventHandler,
+    )
 }
 
 @Composable
 fun RecorderLayout(
     modifier: Modifier = Modifier,
     uiState: RecorderUiState,
-    eventHandler: RecorderUiEventHandler
+    playerState: PlayerState? = null,
+    currentPlaybackPosition: Long,
+    eventHandler: RecorderUiEventHandler,
+    mediaController: MediaController? = null,
 ) {
 
     Column(modifier = modifier.fillMaxWidth()) {
-
-        RecorderCardHeader(
-            modifier = Modifier.height(MaterialTheme.dimensions.toolsHeaderHeight),
-            uiState = uiState,
-            eventHandler = eventHandler,
-            playerState = null
-        )
-
-        RecordingsList(
-            recordingsList = uiState.recordings.toImmutableList()
-        )
-    }
-
-}
-
-
-@Composable
-private fun RecorderCardHeader(
-    modifier: Modifier = Modifier,
-    uiState: RecorderUiState,
-    playerState: PlayerState?,
-    eventHandler: RecorderUiEventHandler
-) {
-    Box(modifier = modifier.padding(vertical = MaterialTheme.spacing.small)) {
         RecorderToolbar(
+            modifier = Modifier.height(MaterialTheme.dimensions.toolsHeaderHeight),
             uiState = uiState,
             playerState = playerState,
             eventHandler = eventHandler
+        )
+
+        HorizontalDivider(Modifier.padding(horizontal = MaterialTheme.spacing.medium))
+        Spacer(Modifier.height(MaterialTheme.spacing.medium))
+
+        RecordingsList(
+            recordingsList = uiState.recordings.toImmutableList(),
+            mediaController = mediaController,
+            playerState = playerState,
+            loadRecording = { eventHandler(RecorderUiEvent.LoadRecording(it)) },
+            currentPlaybackPosition = currentPlaybackPosition
+        )
+    }
+
+    /** Dialogs */
+
+    val dialogUiState = uiState.dialogUiState
+
+    if (dialogUiState.showDeleteRecordingDialog) {
+        DialogDeleteRecording(
+            onDismiss = { eventHandler(RecorderUiEvent.DeleteRecordingDialogDismissed) },
+            onConfirm = { eventHandler(RecorderUiEvent.DeleteRecordingDialogConfirmed) }
+        )
+    }
+    val saveDialogUiState = dialogUiState.saveRecordingDialogUiState
+    saveDialogUiState?.let {
+        DialogSaveRecording(
+            uiState = saveDialogUiState,
+            onDismiss = { eventHandler(RecorderUiEvent.SaveRecordingDialogDismissed) },
+            onConfirm = { eventHandler(RecorderUiEvent.SaveRecordingDialogConfirmed) },
         )
     }
 }
@@ -185,9 +214,13 @@ fun RecorderToolbar(
     playerState: PlayerState?,
     eventHandler: RecorderUiEventHandler
 ) {
+    val showDeleteAndSave =
+        uiState.recorderState != RecorderState.IDLE
+                && uiState.recorderState != RecorderState.UNINITIALIZED
+
     Row(
         modifier
-            .fillMaxSize()
+            .fillMaxWidth()
             .padding(horizontal = MaterialTheme.spacing.large),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -200,11 +233,7 @@ fun RecorderToolbar(
 
         Spacer(modifier = Modifier.weight(1f))
 
-        // Delete & Save Buttons
-        val showDeleteAndSave =
-            uiState.recorderState != RecorderState.IDLE &&
-                    uiState.recorderState != RecorderState.UNINITIALIZED
-
+        // Delete button
         AnimatedVisibility(showDeleteAndSave) {
             Row {
                 TextButton(onClick = { eventHandler(RecorderUiEvent.DeleteRecording) }) {
@@ -214,8 +243,7 @@ fun RecorderToolbar(
             }
         }
 
-
-        // Play / Pause / Stop Button
+        // Play / Pause / Stop button
         FilledIconButton(
             modifier = Modifier.size(48.dp),
             onClick = {
@@ -270,6 +298,7 @@ fun RecorderToolbar(
             }
         }
 
+        // Save button
         AnimatedVisibility(showDeleteAndSave) {
             Row {
                 Spacer(modifier = Modifier.width(MaterialTheme.spacing.extraSmall))
@@ -285,13 +314,26 @@ fun RecorderToolbar(
 @Composable
 private fun RecordingsList(
     modifier: Modifier = Modifier,
-    recordingsList: ImmutableList<RecordingListItemUiState>
+    recordingsList: ImmutableList<RecordingListItemUiState>,
+    mediaController: MediaController?,
+    playerState: PlayerState?,
+    currentPlaybackPosition: Long,
+    loadRecording: (Uri) -> Unit
 ) {
 
+    // TODO LazyList?
     Column(modifier = modifier.fillMaxSize()) {
-
-        for (recording in  recordingsList) {
-            RecordingListItem(Modifier.height(56.dp), uiState = recording)
+        for (recording in recordingsList) {
+            RecordingListItem(
+                Modifier.height(56.dp),
+                uiState = recording,
+                mediaController = mediaController,
+                playerState = playerState,
+                currentPlaybackPosition = currentPlaybackPosition,
+                onLoadRecording = {
+                    if (recording.contentUri != null) (loadRecording(recording.contentUri))
+                }
+            )
         }
 
         Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
@@ -299,13 +341,15 @@ private fun RecordingsList(
 }
 
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun RecordingListItem(
     modifier: Modifier = Modifier,
-    uiState: RecordingListItemUiState
+    uiState: RecordingListItemUiState,
+    mediaController: MediaController?,
+    playerState: PlayerState?,
+    currentPlaybackPosition: Long,
+    onLoadRecording: (MediaItem) -> Unit,
 ) {
-
     Row(
         modifier = modifier
             .padding(vertical = MaterialTheme.spacing.small)
@@ -316,29 +360,44 @@ private fun RecordingListItem(
         Spacer(modifier = Modifier.width(MaterialTheme.spacing.medium))
 
         OutlinedIconButton(
-            onClick = {},
-        ) {
-            Icon(
-                imageVector = Icons.Default.PlayArrow,
-                contentDescription = null,
+            onClick = {
+                if (mediaController == null || uiState.mediaItem == null) return@OutlinedIconButton
+                handleMediaControllerPlayback(
+                    mediaController = mediaController,
+                    mediaItem = uiState.mediaItem,
+                    onSetMediaItem = { onLoadRecording(uiState.mediaItem) }
+                )
+            },
+            colors = IconButtonDefaults.iconButtonColors().copy(
+                contentColor = MaterialTheme.colorScheme.onSurfaceVariant
             )
+        ) {
+            // rather annoyingly, mediaController.seekTo() causes the player to pause
+            // for a split second which toggles the icon back and forth
+            // TODO fix with animation
+            if (playerState?.isPlaying == true) {
+                Icon(Icons.Default.Pause, contentDescription = null)
+            } else {
+                Icon(Icons.Default.PlayArrow, contentDescription = null)
+            }
         }
 
         Spacer(modifier = Modifier.width(MaterialTheme.spacing.medium))
 
         AnimatedContent(
-            false,
+            uiState.mediaItem,
             modifier = Modifier.weight(1f),
             label = "recorder-header-content-animation"
-        ) { waveformVisible ->
-            if (waveformVisible) {
+        ) { mediaItem ->
+            if (mediaItem != null && playerState != null && mediaController != null && playerState.isPlaying) {
                 RecordingItemWaveformUi(
-                    playerState = null,
+                    playerState = playerState,
                     rawRecording = null,
-                    onSetCurrentPosition = {},
-                    currentPosition = 50L,
-                    totalDuration = 120F
-                )
+                    mediaController = mediaController,
+                    onSetCurrentPosition = {
+//                        currentPlaybackPosition = it
+                    },
+                    currentPosition = currentPlaybackPosition)
             } else {
                 RecordingItemDescription(
                     title = uiState.title,
@@ -352,6 +411,23 @@ private fun RecordingListItem(
 }
 
 
+private fun handleMediaControllerPlayback(
+    mediaController: MediaController,
+    mediaItem: MediaItem,
+    onSetMediaItem: () -> Unit,
+) {
+    mediaController.run {
+        if (isCommandAvailable(Player.COMMAND_STOP)) stop()
+        if (isCommandAvailable(Player.COMMAND_CHANGE_MEDIA_ITEMS)) clearMediaItems()
+        if (isCommandAvailable(Player.COMMAND_SET_MEDIA_ITEM)) {
+            setMediaItem(mediaItem)
+            onSetMediaItem()
+        }
+        if (isCommandAvailable(Player.COMMAND_PREPARE)) prepare()
+        if (isCommandAvailable(Player.COMMAND_PLAY_PAUSE)) play()
+    }
+}
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun RecordingItemDescription(
@@ -360,10 +436,11 @@ private fun RecordingItemDescription(
     date: String,
     duration: String
 ) {
-    Row(modifier = modifier,
+    Row(
+        modifier = modifier,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Column (Modifier.weight(1f)){
+        Column(Modifier.weight(1f)) {
             Text(
                 modifier = Modifier.basicMarquee(),
                 text = title,
@@ -389,14 +466,13 @@ private fun RecordingItemDescription(
 }
 
 
-
 @Composable
 private fun RecordingItemWaveformUi(
     modifier: Modifier = Modifier,
-    playerState: PlayerState?,
+    playerState: PlayerState,
     rawRecording: ShortArray?,
     currentPosition: Long,
-    totalDuration: Float,
+    mediaController: MediaController,
     onSetCurrentPosition: (Long) -> Unit = {}
 ) {
 
@@ -414,40 +490,113 @@ private fun RecordingItemWaveformUi(
                 var wasPlayerPlayingPreDrag = remember { false }
                 Waveform(
                     rawRecording = rawRecording,
-                    playBackMarker = currentPosition.toFloat() / totalDuration,
+                    playBackMarker = currentPosition.toFloat() / playerState.player.duration,
                     onDragStart = {
-
+                        wasPlayerPlayingPreDrag = playerState.isPlaying
+                        mediaController.pause()
                     },
                     onDragEnd = {
+                        if (wasPlayerPlayingPreDrag) mediaController.play()
                     },
                     onDrag = { position ->
-
+                        onSetCurrentPosition((position * playerState.player.duration).toLong())
+                        mediaController.seekToRelativePosition(position)
                     },
                     onClick = { position ->
-
+                        onSetCurrentPosition((position * playerState.player.duration).toLong())
+                        mediaController.seekToRelativePosition(position)
                     }
                 )
             }
             Text(
-                text = "00:05",
+                text = "TODO time!!",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
 
         IconButton(
-            onClick = {}
+            onClick = {
+                mediaController.seekTo(mediaController.currentPosition - 5000)
+            }
         ) {
             Icon(Icons.Default.Replay5, contentDescription = null)
         }
 
-        IconButton(onClick = {  }) {
+        IconButton(onClick = { mediaController.clearMediaItems() }) {
             Icon(Icons.Default.Close, contentDescription = "Close player")
         }
     }
 }
 
 
+@Composable
+private fun DialogSaveRecording(
+    uiState: SaveRecordingDialogUiState,
+    onDismiss: () -> Unit = {},
+    onConfirm: () -> Unit = {},
+    recordingNameChanged: (String) -> Unit = {}
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            color = MaterialTheme.colorScheme.surface,
+            shape = MaterialTheme.shapes.extraLarge
+        ) {
+            Column {
+                Text(
+                    modifier = Modifier
+                        .padding(horizontal = MaterialTheme.spacing.large)
+                        .padding(vertical = MaterialTheme.spacing.medium),
+                    text = "Save recording as:",
+                    style = MaterialTheme.typography.titleLarge,
+                )
+                OutlinedTextField(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = MaterialTheme.spacing.medium),
+                    value = uiState.recordingName,
+                    label = { Text(text = "Recording name") },
+                    onValueChange = { recordingNameChanged(it) },
+                )
+                DialogActions(
+                    confirmButtonText = "Save",
+                    onDismissHandler = onDismiss,
+                    onConfirmHandler = onConfirm,
+                    confirmButtonEnabled = uiState.recordingName.isNotEmpty()
+                )
+            }
+        }
+
+    }
+}
+
+@Composable
+private fun DialogDeleteRecording(
+    onDismiss: () -> Unit = {},
+    onConfirm: () -> Unit = {}
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            color = MaterialTheme.colorScheme.surface,
+            shape = MaterialTheme.shapes.extraLarge
+        ) {
+            Column {
+                Text(
+                    modifier = Modifier
+                        .padding(horizontal = MaterialTheme.spacing.large)
+                        .padding(top = MaterialTheme.spacing.medium),
+                    style = MaterialTheme.typography.titleLarge,
+                    text = "Delete recording?",
+                )
+                DialogActions(
+                    confirmButtonText = "Delete",
+                    onDismissHandler = onDismiss,
+                    onConfirmHandler = onConfirm
+                )
+            }
+        }
+    }
+}
 
 /*
 
@@ -840,7 +989,7 @@ fun MediaPlayerBar(
 
 
 
-@PreviewLightDark
+@MusikusPreviewWholeScreen
 @Composable
 private fun PreviewRecorder(
     @PreviewParameter(MusikusColorSchemeProvider::class) theme: ColorSchemeSelections,
@@ -859,9 +1008,34 @@ private fun PreviewRecorder(
                         saveRecordingDialogUiState = null
                     )
                 ),
-                eventHandler = { }
+                eventHandler = { },
+                currentPlaybackPosition = 200L
             )
         }
+    }
+}
+
+@MusikusPreviewElement1
+@Composable
+private fun PreviewDialogDismiss(
+    @PreviewParameter(MusikusColorSchemeProvider::class) theme: ColorSchemeSelections
+) {
+    MusikusThemedPreview(theme) {
+        DialogDeleteRecording()
+    }
+}
+
+@MusikusPreviewElement2
+@Composable
+private fun PreviewDialogSave(
+    @PreviewParameter(MusikusColorSchemeProvider::class) theme: ColorSchemeSelections
+) {
+    MusikusThemedPreview(theme) {
+        DialogSaveRecording(
+            uiState = SaveRecordingDialogUiState(
+                recordingName = "My Recording",
+            )
+        )
     }
 }
 
@@ -869,6 +1043,8 @@ private val dummyRecordings = (0..10).asSequence().map {
     RecordingListItemUiState(
         title = LoremIpsum(Random.nextInt(1, 5)).values.first(),
         date = "23.12.2024",
-        duration = "02:34"
+        duration = "02:34",
+        mediaItem = null,
+        contentUri = null,
     )
 }
