@@ -2,16 +2,21 @@ package app.musikus.ui.activesession.recorder
 
 import android.net.Uri
 import app.musikus.services.RecorderServiceException
-import app.musikus.usecase.recordings.Recording
 import app.musikus.utils.DurationString
 import app.musikus.utils.RecorderState
 
 data class RecorderUiState(
     val recorderState: RecorderState,
     val recordingDuration: DurationString,
-    val recordings: List<Recording>,
+    val recordings: List<RecordingListItemUiState>,
     val currentRawRecording: ShortArray?,
     val dialogUiState: RecorderDialogUiState
+)
+
+data class RecordingListItemUiState(
+    val title: String,
+    val date: String,
+    val duration: String,
 )
 
 data class RecorderDialogUiState(

@@ -287,8 +287,13 @@ fun ActiveSession(
         ToolsTab(
             type = ActiveSessionTab.METRONOME,
             title = "Metronome",
-            content = { MetronomeUi() }),
-        ToolsTab(type = ActiveSessionTab.RECORDER, title = "Recorder", content = { RecorderUi() })
+            content = { MetronomeUi() }
+        ),
+        ToolsTab(
+            type = ActiveSessionTab.RECORDER,
+            title = "Recorder",
+            content = { RecorderUi() }
+        )
     ).toImmutableList()
     // state for Tabs
     val bottomSheetPagerState = rememberPagerState(pageCount = { tabs.size })

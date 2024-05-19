@@ -214,7 +214,13 @@ class RecorderViewModel @Inject constructor(
                 (serviceState?.recordingDuration ?: 0.seconds),
                 DurationFormat.HMSC_DIGITAL
             ),
-            recordings = recordings,
+            recordings = recordings.map {
+                                        RecordingListItemUiState(
+                                            title = it.title,
+                                            date = it.date.toString(),
+                                            duration = it.duration.toString()
+                                        )
+            },
             currentRawRecording = currentRawRecording,
             dialogUiState = dialogUiState
         )

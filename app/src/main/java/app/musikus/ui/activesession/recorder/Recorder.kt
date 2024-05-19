@@ -10,12 +10,39 @@ package app.musikus.ui.activesession.recorder
 
 import android.util.Log
 import android.widget.Toast
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.basicMarquee
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.MicOff
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Replay5
+import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedIconButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -27,12 +54,27 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.datasource.LoremIpsum
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.musikus.datastore.ColorSchemeSelections
 import app.musikus.ui.components.ExceptionHandler
+import app.musikus.ui.components.Waveform
+import app.musikus.ui.theme.MusikusColorSchemeProvider
+import app.musikus.ui.theme.MusikusThemedPreview
 import app.musikus.ui.theme.dimensions
+import app.musikus.ui.theme.spacing
+import app.musikus.utils.RecorderState
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
+import kotlin.random.Random
 
 
 @Composable
@@ -41,20 +83,10 @@ fun RecorderUi(
     viewModel: RecorderViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val exceptionChannel = viewModel.exceptionChannel
     val eventHandler = viewModel::onUiEvent
+    val exceptionChannel = viewModel.exceptionChannel
 
     val context = LocalContext.current
-
-    Column (Modifier.fillMaxWidth()) {
-        Box (Modifier.fillMaxWidth().height(MaterialTheme.dimensions.toolsHeaderHeight)){
-            Text(modifier = Modifier.align(Alignment.Center), text = "Recorder Header")
-        }
-        Box (Modifier.fillMaxWidth().height(MaterialTheme.dimensions.toolsBodyHeight)){
-            Text(modifier = Modifier.align(Alignment.Center), text = "Recorder Body")
-        }
-
-    }
 
     /**
      * Exception handling
@@ -64,7 +96,7 @@ fun RecorderUi(
         exceptionHandler = { exception ->
             Toast.makeText(context, exception.message, Toast.LENGTH_SHORT).show()
         },
-        onUnhandledException = { throw(it) }
+        onUnhandledException = { throw (it) }
     )
 
 
@@ -98,16 +130,329 @@ fun RecorderUi(
     var currentPosition by remember { mutableLongStateOf(0) }
 
     LaunchedEffect(key1 = playerState?.currentMediaItem) {
-        while(playerState?.currentMediaItem != null && isActive) {
+        while (playerState?.currentMediaItem != null && isActive) {
             currentPosition = playerState?.player?.currentPosition ?: 0
             delay(100)
         }
     }
 }
+
+@Composable
+fun RecorderLayout(
+    modifier: Modifier = Modifier,
+    uiState: RecorderUiState,
+    eventHandler: RecorderUiEventHandler
+) {
+
+    Column(modifier = modifier.fillMaxWidth()) {
+
+        RecorderCardHeader(
+            modifier = Modifier.height(MaterialTheme.dimensions.toolsHeaderHeight),
+            uiState = uiState,
+            eventHandler = eventHandler,
+            playerState = null
+        )
+
+        RecordingsList(
+            recordingsList = uiState.recordings.toImmutableList()
+        )
+    }
+
+}
+
+
+@Composable
+private fun RecorderCardHeader(
+    modifier: Modifier = Modifier,
+    uiState: RecorderUiState,
+    playerState: PlayerState?,
+    eventHandler: RecorderUiEventHandler
+) {
+    Box(modifier = modifier.padding(vertical = MaterialTheme.spacing.small)) {
+        RecorderToolbar(
+            uiState = uiState,
+            playerState = playerState,
+            eventHandler = eventHandler
+        )
+    }
+}
+
+
+@Composable
+fun RecorderToolbar(
+    modifier: Modifier = Modifier,
+    uiState: RecorderUiState,
+    playerState: PlayerState?,
+    eventHandler: RecorderUiEventHandler
+) {
+    Row(
+        modifier
+            .fillMaxSize()
+            .padding(horizontal = MaterialTheme.spacing.large),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+
+        // Duration
+        Text(
+            text = uiState.recordingDuration,
+            style = MaterialTheme.typography.headlineMedium,
+        )
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        // Delete & Save Buttons
+        val showDeleteAndSave =
+            uiState.recorderState != RecorderState.IDLE &&
+                    uiState.recorderState != RecorderState.UNINITIALIZED
+
+        AnimatedVisibility(showDeleteAndSave) {
+            Row {
+                TextButton(onClick = { eventHandler(RecorderUiEvent.DeleteRecording) }) {
+                    Text(text = "Delete")
+                }
+                Spacer(modifier = Modifier.width(MaterialTheme.spacing.extraSmall))
+            }
+        }
+
+
+        // Play / Pause / Stop Button
+        FilledIconButton(
+            modifier = Modifier.size(48.dp),
+            onClick = {
+                when (uiState.recorderState) {
+                    RecorderState.UNINITIALIZED -> {}
+                    RecorderState.IDLE -> eventHandler(RecorderUiEvent.StartRecording)
+                    RecorderState.RECORDING -> eventHandler(RecorderUiEvent.PauseRecording)
+                    RecorderState.PAUSED -> eventHandler(RecorderUiEvent.ResumeRecording)
+                }
+            },
+            shape = CircleShape,
+            enabled = playerState?.isPlaying != true,
+            colors = IconButtonDefaults.filledIconButtonColors(
+                containerColor = MaterialTheme.colorScheme.error,
+                contentColor = MaterialTheme.colorScheme.onError
+            ),
+        ) {
+            Box(Modifier.padding(MaterialTheme.spacing.small)) {
+                when (uiState.recorderState) {
+                    RecorderState.UNINITIALIZED -> {
+                        Icon(
+                            modifier = Modifier.fillMaxSize(),
+                            imageVector = Icons.Default.MicOff,
+                            contentDescription = "Microphone not available"
+                        )
+                    }
+
+                    RecorderState.IDLE -> {
+                        Icon(
+                            modifier = Modifier.fillMaxSize(),
+                            imageVector = Icons.Default.Mic,
+                            contentDescription = "Start recording"
+                        )
+                    }
+
+                    RecorderState.RECORDING -> {
+                        Icon(
+                            modifier = Modifier.fillMaxSize(),
+                            imageVector = Icons.Default.Pause,
+                            contentDescription = "Pause recording"
+                        )
+                    }
+
+                    RecorderState.PAUSED -> {
+                        Icon(
+                            modifier = Modifier.fillMaxSize(),
+                            imageVector = Icons.Default.PlayArrow,
+                            contentDescription = "Resume recording"
+                        )
+                    }
+                }
+            }
+        }
+
+        AnimatedVisibility(showDeleteAndSave) {
+            Row {
+                Spacer(modifier = Modifier.width(MaterialTheme.spacing.extraSmall))
+                TextButton(onClick = { eventHandler(RecorderUiEvent.SaveRecording) }) {
+                    Text(text = "Save")
+                }
+            }
+        }
+    }
+}
+
+
+@Composable
+private fun RecordingsList(
+    modifier: Modifier = Modifier,
+    recordingsList: ImmutableList<RecordingListItemUiState>
+) {
+
+    Column(modifier = modifier.fillMaxSize()) {
+
+        for (recording in  recordingsList) {
+            RecordingListItem(Modifier.height(56.dp), uiState = recording)
+        }
+
+        Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
+    }
+}
+
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun RecordingListItem(
+    modifier: Modifier = Modifier,
+    uiState: RecordingListItemUiState
+) {
+
+    Row(
+        modifier = modifier
+            .padding(vertical = MaterialTheme.spacing.small)
+            .fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Spacer(modifier = Modifier.width(MaterialTheme.spacing.medium))
+
+        OutlinedIconButton(
+            onClick = {},
+        ) {
+            Icon(
+                imageVector = Icons.Default.PlayArrow,
+                contentDescription = null,
+            )
+        }
+
+        Spacer(modifier = Modifier.width(MaterialTheme.spacing.medium))
+
+        AnimatedContent(
+            false,
+            modifier = Modifier.weight(1f),
+            label = "recorder-header-content-animation"
+        ) { waveformVisible ->
+            if (waveformVisible) {
+                RecordingItemWaveformUi(
+                    playerState = null,
+                    rawRecording = null,
+                    onSetCurrentPosition = {},
+                    currentPosition = 50L,
+                    totalDuration = 120F
+                )
+            } else {
+                RecordingItemDescription(
+                    title = uiState.title,
+                    date = uiState.date,
+                    duration = uiState.duration
+                )
+            }
+        }
+        Spacer(Modifier.width(MaterialTheme.spacing.medium))
+    }
+}
+
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun RecordingItemDescription(
+    modifier: Modifier = Modifier,
+    title: String,
+    date: String,
+    duration: String
+) {
+    Row(modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column (Modifier.weight(1f)){
+            Text(
+                modifier = Modifier.basicMarquee(),
+                text = title,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                fontWeight = FontWeight.Medium,
+                maxLines = 1,
+            )
+            Text(
+                modifier = Modifier.basicMarquee(),
+                text = date,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+            )
+        }
+        Spacer(Modifier.width(MaterialTheme.spacing.small))
+        Text(
+            text = duration,
+            style = MaterialTheme.typography.bodyMedium
+        )
+    }
+}
+
+
+
+@Composable
+private fun RecordingItemWaveformUi(
+    modifier: Modifier = Modifier,
+    playerState: PlayerState?,
+    rawRecording: ShortArray?,
+    currentPosition: Long,
+    totalDuration: Float,
+    onSetCurrentPosition: (Long) -> Unit = {}
+) {
+
+    Row(
+        modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxHeight()
+                .weight(1f)
+        ) {
+            Box(Modifier.weight(1f)) {
+                var wasPlayerPlayingPreDrag = remember { false }
+                Waveform(
+                    rawRecording = rawRecording,
+                    playBackMarker = currentPosition.toFloat() / totalDuration,
+                    onDragStart = {
+
+                    },
+                    onDragEnd = {
+                    },
+                    onDrag = { position ->
+
+                    },
+                    onClick = { position ->
+
+                    }
+                )
+            }
+            Text(
+                text = "00:05",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+
+        IconButton(
+            onClick = {}
+        ) {
+            Icon(Icons.Default.Replay5, contentDescription = null)
+        }
+
+        IconButton(onClick = {  }) {
+            Icon(Icons.Default.Close, contentDescription = "Close player")
+        }
+    }
+}
+
+
+
 /*
 
 @Composable
-fun RecorderCardHeader(
+fun RecorderCardHeaderOld(
     modifier: Modifier = Modifier,
 ) {
 
@@ -237,7 +582,8 @@ fun RecorderCardBody(
             ),
             text = buildAnnotatedString {
                 append("Location: ")
-                withStyle(SpanStyle(fontStyle = FontStyle.Italic)
+                withStyle(
+                    SpanStyle(fontStyle = FontStyle.Italic)
                 ) {
                     append("Music/Musikus")
                 }
@@ -491,3 +837,38 @@ fun MediaPlayerBar(
         }
     }
 }*/
+
+
+
+@PreviewLightDark
+@Composable
+private fun PreviewRecorder(
+    @PreviewParameter(MusikusColorSchemeProvider::class) theme: ColorSchemeSelections,
+) {
+
+    MusikusThemedPreview(theme) {
+        Surface(color = MaterialTheme.colorScheme.surfaceContainerHigh) {
+            RecorderLayout(
+                uiState = RecorderUiState(
+                    recorderState = RecorderState.RECORDING,
+                    recordingDuration = AnnotatedString("00:00"),
+                    recordings = dummyRecordings.toList(),
+                    currentRawRecording = null,
+                    dialogUiState = RecorderDialogUiState(
+                        showDeleteRecordingDialog = false,
+                        saveRecordingDialogUiState = null
+                    )
+                ),
+                eventHandler = { }
+            )
+        }
+    }
+}
+
+private val dummyRecordings = (0..10).asSequence().map {
+    RecordingListItemUiState(
+        title = LoremIpsum(Random.nextInt(1, 5)).values.first(),
+        date = "23.12.2024",
+        duration = "02:34"
+    )
+}
