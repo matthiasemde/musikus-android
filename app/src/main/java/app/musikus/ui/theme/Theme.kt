@@ -132,22 +132,9 @@ data class Dimensions(
     val bottomButtonsPagerHeight: Dp = 50.dp,
     val cardPeekContentHeight: Dp = cardPeekHeight - cardHandleHeight,
     val cardNormalContentHeight: Dp = cardNormalHeight - cardHandleHeight,
-    /** new feature card properties **/
-    val featureCardHeight: Dp = 95.dp,
-    val featureCardExtendedHeight: Dp = 300.dp,
-    val featureCardMargin: Dp = 16.dp,
-    val featureCardCornerRadius: Dp = 16.dp,
-    val featureCardElevation: Dp = 3.dp,
-    val bottomToolbarHeight: Dp = 150.dp,
-    /** new simple tools concept properties */
     val toolsHeaderHeight: Dp = 95.dp,
     val toolsBodyHeight: Dp = 205.dp,
-    /** finally the new final shit */
-    val toolsCardHeaderHeight: Dp = 95.dp,
-    val toolsSheetTabRowHeight: Dp = 48.dp, // TODO: intrinsic size from Android, may be set explicitly in future?
-
     val toolsSheetPeekHeight: Dp = toolsHeaderHeight + 3.dp + 8.dp,    // 3.dp DragHandle + spacing
-
     val fabHeight: Dp = 56.dp   // TODO: remove and try to get it via intrisic defaults
 )
 
