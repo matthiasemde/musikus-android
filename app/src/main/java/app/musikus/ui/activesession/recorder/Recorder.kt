@@ -539,6 +539,7 @@ private fun WaveformMediaPlayer(
                     },
                     onDragEnd = {
                         if (wasPlayerPlayingPreDrag) onPlay()
+                        // TODO auto-resume does not work currently
                     },
                     onDrag = onSetCurrentRelativePosition,
                     onClick = onSetCurrentRelativePosition,
