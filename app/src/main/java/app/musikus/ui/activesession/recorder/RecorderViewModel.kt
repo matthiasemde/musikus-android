@@ -218,8 +218,8 @@ class RecorderViewModel @Inject constructor(
             recordings = recordings.map {
                 RecordingListItemUiState(
                     title = it.title,
-                    date = it.date.toString(),
-                    duration = it.duration.toString(),
+                    date = it.date.musikusFormat(DateFormat.DAY_MONTH_YEAR),
+                    duration = getDurationString(it.duration, DurationFormat.MS_DIGITAL).toString(),
                     mediaItem = it.mediaItem,
                     contentUri = it.contentUri,
                     showPlayerUi = it.contentUri == currentUri

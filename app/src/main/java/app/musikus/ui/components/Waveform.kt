@@ -35,7 +35,7 @@ import kotlin.math.sqrt
 @Composable
 fun Waveform(
     modifier: Modifier = Modifier,
-    rawRecording: ShortArray?,
+    rawMediaData: ShortArray?,
     playBackMarker : Float,
     onDragStart: () -> Unit,
     onDragEnd: () -> Unit,
@@ -55,9 +55,9 @@ fun Waveform(
         (0 until numberOfBars).map { Animatable(minProportionalBarHeight) }
     }
 
-    LaunchedEffect(key1 = rawRecording) {
+    LaunchedEffect(key1 = rawMediaData) {
 
-        if (rawRecording == null || rawRecording.isEmpty()) {
+        if (rawMediaData == null || rawMediaData.isEmpty()) {
             barHeightAnimatables.forEachIndexed { i, animatable -> launch {
                 animatable.animateTo(
                     targetValue = 0f,
@@ -69,11 +69,11 @@ fun Waveform(
 
         withContext(Dispatchers.Default) {
 
-            val numberOfSamplesPerBar = rawRecording.size.floorDiv(numberOfBars - 1)
+            val numberOfSamplesPerBar = rawMediaData.size.floorDiv(numberOfBars - 1)
 
             // Calculate the loudness of the recording as RMS
-            val squaredSamples = IntArray(rawRecording.size) { i ->
-                rawRecording[i] * rawRecording[i]
+            val squaredSamples = IntArray(rawMediaData.size) { i ->
+                rawMediaData[i] * rawMediaData[i]
             }
 
             val rms = DoubleArray(numberOfBars) { i ->
@@ -81,7 +81,7 @@ fun Waveform(
                 val end = if (i < numberOfBars - 1) {
                     (i + 1) * numberOfSamplesPerBar
                 } else {
-                    rawRecording.size
+                    rawMediaData.size
                 }
                 sqrt(
                     squaredSamples

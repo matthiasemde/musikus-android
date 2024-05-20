@@ -48,7 +48,7 @@ sealed class RecorderUiEvent {
     data object ResumeRecording : RecorderUiEvent()
     data object DeleteRecording : RecorderUiEvent()
     data object SaveRecording : RecorderUiEvent()
-    data class LoadRecording(val contentUri: Uri) : RecorderUiEvent()
+    data class LoadRecording(val contentUri: Uri?) : RecorderUiEvent()
 
     data class RecordingNameChanged(val recordingName: String) : RecorderUiEvent()
     data object SaveRecordingDialogDismissed : RecorderUiEvent()

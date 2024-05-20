@@ -76,11 +76,14 @@ import app.musikus.ui.theme.MusikusPreviewElement2
 import app.musikus.ui.theme.MusikusThemedPreview
 import app.musikus.ui.theme.dimensions
 import app.musikus.ui.theme.spacing
+import app.musikus.utils.DurationFormat
 import app.musikus.utils.RecorderState
+import app.musikus.utils.getDurationString
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
+import kotlin.time.Duration.Companion.milliseconds
 
 
 @Composable
@@ -150,6 +153,10 @@ fun RecorderUi(
         eventHandler = eventHandler,
         mediaController = mediaController,
         playerState = playerState,
+        currentPlaybackPosition = currentPlaybackPosition,
+        onSetCurrentPosition = {
+            currentPlaybackPosition = it
+        }
     )
 }
 
@@ -159,6 +166,8 @@ fun RecorderLayout(
     uiState: RecorderUiState,
     eventHandler: RecorderUiEventHandler,
     mediaController: MediaController?,
+    currentPlaybackPosition: Long,
+    onSetCurrentPosition: (Long) -> Unit,
     playerState: PlayerState?,
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
@@ -179,6 +188,9 @@ fun RecorderLayout(
                 // hook to notify the ViewModel which mediaItem was newly selected
                 eventHandler(RecorderUiEvent.LoadRecording(contentUri))
             },
+            onSetCurrentPosition = onSetCurrentPosition,
+            currentPosition = currentPlaybackPosition,
+            currentRawRecording = uiState.currentPlaybackRawMedia
         )
     }
 
@@ -309,8 +321,11 @@ private fun RecordingsList(
     modifier: Modifier = Modifier,
     recordingsList: ImmutableList<RecordingListItemUiState>,
     mediaController: MediaController?,
+    currentPosition: Long,
+    currentRawRecording: ShortArray?,
+    onSetCurrentPosition: (Long) -> Unit,
     playerState: PlayerState?,
-    onNewMediaSelected: (Uri) -> Unit
+    onNewMediaSelected: (Uri?) -> Unit
 ) {
     // TODO LazyList?
     Column(modifier = modifier.fillMaxSize()) {
@@ -333,7 +348,14 @@ private fun RecordingsList(
                 },
                 onPausePressed = { mediaController?.pause() },
                 onResumePressed = { mediaController?.play() },
+                playerState = playerState,
+                mediaController = mediaController,
+                currentPlaybackPosition = currentPosition,
+                onSetCurrentPosition = onSetCurrentPosition,
+                onClearPlayback = { onNewMediaSelected(null) },
+                currentRawRecording = currentRawRecording
             )
+            Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
         }
 
         Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
@@ -345,15 +367,19 @@ private fun RecordingsList(
 private fun RecordingListItem(
     modifier: Modifier = Modifier,
     uiState: RecordingListItemUiState,
+    currentRawRecording: ShortArray?,
     isPlaying: Boolean,
+    playerState: PlayerState?,  // TODO remove?
+    mediaController: MediaController?, // TODO remove?
+    currentPlaybackPosition: Long,
+    onSetCurrentPosition: (Long) -> Unit,
     onStartPlayingPressed: () -> Unit,
     onPausePressed: () -> Unit,
     onResumePressed: () -> Unit,
+    onClearPlayback: () -> Unit,
 ) {
     Row(
-        modifier = modifier
-            .padding(vertical = MaterialTheme.spacing.small)
-            .fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(), // Don't use padding here it will cut the Waveform
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
@@ -389,17 +415,25 @@ private fun RecordingListItem(
         ) { isPlaying ->
 
             if (isPlaying) {
+                if (playerState == null || mediaController == null) { return@AnimatedContent }
                 // Player
-                Text("...Media Player...")
-//                WaveformMediaPlayer(
-//                    playerState = playerState,
-//                    rawRecording = null,
-//                    mediaController = mediaController,
-//                    onSetCurrentPosition = {
-////                        currentPlaybackPosition = it
-//                    },
-//                    currentPosition = currentPlaybackPosition
-//                )
+                WaveformMediaPlayer(
+                    rawMediaData = currentRawRecording,
+                    currentPositionMs = currentPlaybackPosition,
+                    totalDurationMs = playerState.player.duration,
+                    isPlaying = playerState.isPlaying,
+                    onSetCurrentRelativePosition = { position ->
+                        onSetCurrentPosition((position * playerState.player.duration).toLong())
+                        mediaController.seekToRelativePosition(position)
+                    },
+                    onSeekToPositionMs = mediaController::seekTo,
+                    onPause = mediaController::pause,
+                    onPlay = mediaController::play,
+                    onClear = {
+                        mediaController.clearMediaItems()
+                        onClearPlayback()
+                    }
+                )
             } else {
                 // Item description
                 RecordingItemDescription(
@@ -473,11 +507,15 @@ private fun RecordingItemDescription(
 @Composable
 private fun WaveformMediaPlayer(
     modifier: Modifier = Modifier,
-    playerState: PlayerState,
-    rawRecording: ShortArray?,
-    currentPosition: Long,
-    mediaController: MediaController,
-    onSetCurrentPosition: (Long) -> Unit = {}
+    rawMediaData: ShortArray?,
+    currentPositionMs: Long,
+    totalDurationMs: Long,
+    isPlaying: Boolean,
+    onPause: () -> Unit,
+    onPlay: () -> Unit,
+    onSetCurrentRelativePosition: (Float) -> Unit,
+    onSeekToPositionMs: (Long) -> Unit,
+    onClear: () -> Unit,
 ) {
 
     Row(
@@ -493,41 +531,35 @@ private fun WaveformMediaPlayer(
             Box(Modifier.weight(1f)) {
                 var wasPlayerPlayingPreDrag = remember { false }
                 Waveform(
-                    rawRecording = rawRecording,
-                    playBackMarker = currentPosition.toFloat() / playerState.player.duration,
+                    rawMediaData = rawMediaData,
+                    playBackMarker = currentPositionMs.toFloat() / totalDurationMs.toFloat(),
                     onDragStart = {
-                        wasPlayerPlayingPreDrag = playerState.isPlaying
-                        mediaController.pause()
+                        wasPlayerPlayingPreDrag = isPlaying
+                        onPause()
                     },
                     onDragEnd = {
-                        if (wasPlayerPlayingPreDrag) mediaController.play()
+                        if (wasPlayerPlayingPreDrag) onPlay()
                     },
-                    onDrag = { position ->
-                        onSetCurrentPosition((position * playerState.player.duration).toLong())
-                        mediaController.seekToRelativePosition(position)
-                    },
-                    onClick = { position ->
-                        onSetCurrentPosition((position * playerState.player.duration).toLong())
-                        mediaController.seekToRelativePosition(position)
-                    }
+                    onDrag = onSetCurrentRelativePosition,
+                    onClick = onSetCurrentRelativePosition,
                 )
             }
             Text(
-                text = "TODO time!!",
-                style = MaterialTheme.typography.bodyMedium,
+                text = getDurationString(currentPositionMs.milliseconds, DurationFormat.MS_DIGITAL),
+                style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
 
         IconButton(
             onClick = {
-                mediaController.seekTo(mediaController.currentPosition - 5000)
+                onSeekToPositionMs(currentPositionMs - 5000)
             }
         ) {
             Icon(Icons.Default.Replay5, contentDescription = null)
         }
 
-        IconButton(onClick = { mediaController.clearMediaItems() }) {
+        IconButton(onClick = onClear) {
             Icon(Icons.Default.Close, contentDescription = "Close player")
         }
     }
