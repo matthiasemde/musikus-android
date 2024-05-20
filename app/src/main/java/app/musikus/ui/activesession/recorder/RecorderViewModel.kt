@@ -206,8 +206,9 @@ class RecorderViewModel @Inject constructor(
         recorderServiceState,
         recordings,
         currentRawRecording,
+        _currentRecordingUri,   // TODO check if combine cycle b.c. rawRec. depends on _curr.R.Uri
         dialogUiState
-    ) { serviceState, recordings, currentRawRecording, dialogUiState ->
+    ) { serviceState, recordings, currentRawRecording, currentUri, dialogUiState ->
         RecorderUiState(
             recorderState = serviceState?.recorderState ?: RecorderState.UNINITIALIZED,
             recordingDuration = getDurationString(
@@ -220,10 +221,11 @@ class RecorderViewModel @Inject constructor(
                     date = it.date.toString(),
                     duration = it.duration.toString(),
                     mediaItem = it.mediaItem,
-                    contentUri = it.contentUri
+                    contentUri = it.contentUri,
+                    showPlayerUi = it.contentUri == currentUri
                 )
             },
-            currentRawRecording = currentRawRecording,
+            currentPlaybackRawMedia = currentRawRecording,
             dialogUiState = dialogUiState
         )
     }.stateIn(
@@ -233,7 +235,7 @@ class RecorderViewModel @Inject constructor(
             recorderState = RecorderState.UNINITIALIZED,
             recordingDuration = AnnotatedString(""),
             recordings = emptyList(),
-            currentRawRecording = null,
+            currentPlaybackRawMedia = null,
             dialogUiState = dialogUiState.value
         )
     )

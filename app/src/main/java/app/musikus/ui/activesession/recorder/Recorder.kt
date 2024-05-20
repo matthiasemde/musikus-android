@@ -57,10 +57,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewParameter
-import androidx.compose.ui.tooling.preview.datasource.LoremIpsum
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -75,7 +73,6 @@ import app.musikus.ui.components.Waveform
 import app.musikus.ui.theme.MusikusColorSchemeProvider
 import app.musikus.ui.theme.MusikusPreviewElement1
 import app.musikus.ui.theme.MusikusPreviewElement2
-import app.musikus.ui.theme.MusikusPreviewWholeScreen
 import app.musikus.ui.theme.MusikusThemedPreview
 import app.musikus.ui.theme.dimensions
 import app.musikus.ui.theme.spacing
@@ -84,7 +81,6 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
-import kotlin.random.Random
 
 
 @Composable
@@ -111,16 +107,16 @@ fun RecorderUi(
 
 
     /**
-     * MediaController
+     * MediaController, managed via Compose State
      */
-
+    // TODO maybe remove by because of recomopositions??
     val mediaController by rememberManagedMediaController()
 
     // Remember the player state
+    // TODO why dedicated playerstate and not always derive from mediacontroller?
     var playerState: PlayerState? by remember {
         mutableStateOf(mediaController?.state())
     }
-
     // Update the player state when the MediaController changes
     DisposableEffect(key1 = mediaController) {
         mediaController?.run {
@@ -131,6 +127,7 @@ fun RecorderUi(
         }
     }
 
+    // show possible Media Player error
     LaunchedEffect(key1 = playerState?.playerError) {
         playerState?.playerError?.let { exception ->
             Log.e("Recorder", "Player error: $exception")
@@ -140,6 +137,7 @@ fun RecorderUi(
     // in milliseconds
     var currentPlaybackPosition by remember { mutableLongStateOf(0) }
 
+    // TODO what is this why necessary???
     LaunchedEffect(key1 = playerState?.currentMediaItem) {
         while (playerState?.currentMediaItem != null && isActive) {
             currentPlaybackPosition = playerState?.player?.currentPosition ?: 0
@@ -149,10 +147,9 @@ fun RecorderUi(
 
     RecorderLayout(
         uiState = uiState,
+        eventHandler = eventHandler,
         mediaController = mediaController,
         playerState = playerState,
-        currentPlaybackPosition = currentPlaybackPosition,
-        eventHandler = eventHandler,
     )
 }
 
@@ -160,17 +157,14 @@ fun RecorderUi(
 fun RecorderLayout(
     modifier: Modifier = Modifier,
     uiState: RecorderUiState,
-    playerState: PlayerState? = null,
-    currentPlaybackPosition: Long,
     eventHandler: RecorderUiEventHandler,
-    mediaController: MediaController? = null,
+    mediaController: MediaController?,
+    playerState: PlayerState?,
 ) {
-
     Column(modifier = modifier.fillMaxWidth()) {
         RecorderToolbar(
             modifier = Modifier.height(MaterialTheme.dimensions.toolsHeaderHeight),
             uiState = uiState,
-            playerState = playerState,
             eventHandler = eventHandler
         )
 
@@ -181,8 +175,10 @@ fun RecorderLayout(
             recordingsList = uiState.recordings.toImmutableList(),
             mediaController = mediaController,
             playerState = playerState,
-            loadRecording = { eventHandler(RecorderUiEvent.LoadRecording(it)) },
-            currentPlaybackPosition = currentPlaybackPosition
+            onNewMediaSelected = { contentUri ->
+                // hook to notify the ViewModel which mediaItem was newly selected
+                eventHandler(RecorderUiEvent.LoadRecording(contentUri))
+            },
         )
     }
 
@@ -211,12 +207,10 @@ fun RecorderLayout(
 fun RecorderToolbar(
     modifier: Modifier = Modifier,
     uiState: RecorderUiState,
-    playerState: PlayerState?,
     eventHandler: RecorderUiEventHandler
 ) {
     val showDeleteAndSave =
-        uiState.recorderState != RecorderState.IDLE
-                && uiState.recorderState != RecorderState.UNINITIALIZED
+        uiState.recorderState !in listOf(RecorderState.IDLE, RecorderState.UNINITIALIZED)
 
     Row(
         modifier
@@ -255,7 +249,6 @@ fun RecorderToolbar(
                 }
             },
             shape = CircleShape,
-            enabled = playerState?.isPlaying != true,
             colors = IconButtonDefaults.filledIconButtonColors(
                 containerColor = MaterialTheme.colorScheme.error,
                 contentColor = MaterialTheme.colorScheme.onError
@@ -317,22 +310,29 @@ private fun RecordingsList(
     recordingsList: ImmutableList<RecordingListItemUiState>,
     mediaController: MediaController?,
     playerState: PlayerState?,
-    currentPlaybackPosition: Long,
-    loadRecording: (Uri) -> Unit
+    onNewMediaSelected: (Uri) -> Unit
 ) {
-
     // TODO LazyList?
     Column(modifier = modifier.fillMaxSize()) {
         for (recording in recordingsList) {
             RecordingListItem(
                 Modifier.height(56.dp),
                 uiState = recording,
-                mediaController = mediaController,
-                playerState = playerState,
-                currentPlaybackPosition = currentPlaybackPosition,
-                onLoadRecording = {
-                    if (recording.contentUri != null) (loadRecording(recording.contentUri))
-                }
+                isPlaying = ( // TODO lambda better for recompositions???
+                        mediaController != null &&
+                        playerState?.isPlaying == true &&
+                        mediaController.isCommandAvailable(Player.COMMAND_GET_CURRENT_MEDIA_ITEM) &&
+                        mediaController.currentMediaItem == recording.mediaItem),
+                onStartPlayingPressed = {
+                    if (mediaController == null) return@RecordingListItem
+                    loadAndPlayNewMediaItem(
+                        mediaController = mediaController,
+                        mediaItem = recording.mediaItem,
+                        onSetMediaItem = { onNewMediaSelected(recording.contentUri) }
+                    )
+                },
+                onPausePressed = { mediaController?.pause() },
+                onResumePressed = { mediaController?.play() },
             )
         }
 
@@ -345,10 +345,10 @@ private fun RecordingsList(
 private fun RecordingListItem(
     modifier: Modifier = Modifier,
     uiState: RecordingListItemUiState,
-    mediaController: MediaController?,
-    playerState: PlayerState?,
-    currentPlaybackPosition: Long,
-    onLoadRecording: (MediaItem) -> Unit,
+    isPlaying: Boolean,
+    onStartPlayingPressed: () -> Unit,
+    onPausePressed: () -> Unit,
+    onResumePressed: () -> Unit,
 ) {
     Row(
         modifier = modifier
@@ -359,14 +359,12 @@ private fun RecordingListItem(
     ) {
         Spacer(modifier = Modifier.width(MaterialTheme.spacing.medium))
 
+        // Play / Pause Button
         OutlinedIconButton(
             onClick = {
-                if (mediaController == null || uiState.mediaItem == null) return@OutlinedIconButton
-                handleMediaControllerPlayback(
-                    mediaController = mediaController,
-                    mediaItem = uiState.mediaItem,
-                    onSetMediaItem = { onLoadRecording(uiState.mediaItem) }
-                )
+                if (isPlaying) onPausePressed()
+                else if (uiState.showPlayerUi) onResumePressed()
+                else onStartPlayingPressed()
             },
             colors = IconButtonDefaults.iconButtonColors().copy(
                 contentColor = MaterialTheme.colorScheme.onSurfaceVariant
@@ -375,7 +373,7 @@ private fun RecordingListItem(
             // rather annoyingly, mediaController.seekTo() causes the player to pause
             // for a split second which toggles the icon back and forth
             // TODO fix with animation
-            if (playerState?.isPlaying == true) {
+            if (isPlaying) {
                 Icon(Icons.Default.Pause, contentDescription = null)
             } else {
                 Icon(Icons.Default.PlayArrow, contentDescription = null)
@@ -385,20 +383,25 @@ private fun RecordingListItem(
         Spacer(modifier = Modifier.width(MaterialTheme.spacing.medium))
 
         AnimatedContent(
-            uiState.mediaItem,
+            uiState.showPlayerUi,
             modifier = Modifier.weight(1f),
             label = "recorder-header-content-animation"
-        ) { mediaItem ->
-            if (mediaItem != null && playerState != null && mediaController != null && playerState.isPlaying) {
-                RecordingItemWaveformUi(
-                    playerState = playerState,
-                    rawRecording = null,
-                    mediaController = mediaController,
-                    onSetCurrentPosition = {
-//                        currentPlaybackPosition = it
-                    },
-                    currentPosition = currentPlaybackPosition)
+        ) { isPlaying ->
+
+            if (isPlaying) {
+                // Player
+                Text("...Media Player...")
+//                WaveformMediaPlayer(
+//                    playerState = playerState,
+//                    rawRecording = null,
+//                    mediaController = mediaController,
+//                    onSetCurrentPosition = {
+////                        currentPlaybackPosition = it
+//                    },
+//                    currentPosition = currentPlaybackPosition
+//                )
             } else {
+                // Item description
                 RecordingItemDescription(
                     title = uiState.title,
                     date = uiState.date,
@@ -411,11 +414,12 @@ private fun RecordingListItem(
 }
 
 
-private fun handleMediaControllerPlayback(
+private fun loadAndPlayNewMediaItem(
     mediaController: MediaController,
     mediaItem: MediaItem,
     onSetMediaItem: () -> Unit,
 ) {
+    // routine for stopping, clearing old item, loading and playing new item
     mediaController.run {
         if (isCommandAvailable(Player.COMMAND_STOP)) stop()
         if (isCommandAvailable(Player.COMMAND_CHANGE_MEDIA_ITEMS)) clearMediaItems()
@@ -467,7 +471,7 @@ private fun RecordingItemDescription(
 
 
 @Composable
-private fun RecordingItemWaveformUi(
+private fun WaveformMediaPlayer(
     modifier: Modifier = Modifier,
     playerState: PlayerState,
     rawRecording: ShortArray?,
@@ -988,32 +992,32 @@ fun MediaPlayerBar(
 }*/
 
 
-
-@MusikusPreviewWholeScreen
-@Composable
-private fun PreviewRecorder(
-    @PreviewParameter(MusikusColorSchemeProvider::class) theme: ColorSchemeSelections,
-) {
-
-    MusikusThemedPreview(theme) {
-        Surface(color = MaterialTheme.colorScheme.surfaceContainerHigh) {
-            RecorderLayout(
-                uiState = RecorderUiState(
-                    recorderState = RecorderState.RECORDING,
-                    recordingDuration = AnnotatedString("00:00"),
-                    recordings = dummyRecordings.toList(),
-                    currentRawRecording = null,
-                    dialogUiState = RecorderDialogUiState(
-                        showDeleteRecordingDialog = false,
-                        saveRecordingDialogUiState = null
-                    )
-                ),
-                eventHandler = { },
-                currentPlaybackPosition = 200L
-            )
-        }
-    }
-}
+//@MusikusPreviewWholeScreen
+//@Composable
+//private fun PreviewRecorder(
+//    @PreviewParameter(MusikusColorSchemeProvider::class) theme: ColorSchemeSelections,
+//) {
+//
+//    MusikusThemedPreview(theme) {
+//        Surface(color = MaterialTheme.colorScheme.surfaceContainerHigh) {
+//            RecorderLayout(
+//                uiState = RecorderUiState(
+//                    recorderState = RecorderState.RECORDING,
+//                    recordingDuration = AnnotatedString("00:00"),
+//                    recordings = dummyRecordings.toList(),
+//                    currentPlaybackRawMedia = null,
+//                    dialogUiState = RecorderDialogUiState(
+//                        showDeleteRecordingDialog = false,
+//                        saveRecordingDialogUiState = null
+//                    )
+//                ),
+//                eventHandler = { },
+//                mediaController = rememberManagedMediaController(),
+//                playerState = remember { remember }
+//            )
+//        }
+//    }
+//}
 
 @MusikusPreviewElement1
 @Composable
@@ -1039,12 +1043,13 @@ private fun PreviewDialogSave(
     }
 }
 
-private val dummyRecordings = (0..10).asSequence().map {
-    RecordingListItemUiState(
-        title = LoremIpsum(Random.nextInt(1, 5)).values.first(),
-        date = "23.12.2024",
-        duration = "02:34",
-        mediaItem = null,
-        contentUri = null,
-    )
-}
+//private val dummyRecordings = (0..10).asSequence().map {
+//    RecordingListItemUiState(
+//        title = LoremIpsum(Random.nextInt(1, 5)).values.first(),
+//        date = "23.12.2024",
+//        duration = "02:34",
+//        mediaItem = null,
+//        contentUri = null,
+//        showPlayerUi = false,
+//    )
+//}

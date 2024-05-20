@@ -18,7 +18,7 @@ data class RecorderUiState(
     val recorderState: RecorderState,
     val recordingDuration: DurationString,
     val recordings: List<RecordingListItemUiState>,
-    val currentRawRecording: ShortArray?,
+    val currentPlaybackRawMedia: ShortArray?,   // currently played media file as raw array
     val dialogUiState: RecorderDialogUiState
 )
 
@@ -26,8 +26,9 @@ data class RecordingListItemUiState(
     val title: String,
     val date: String,
     val duration: String,
-    val mediaItem: MediaItem?,  // nullable to be mockable in Previews
-    val contentUri: Uri?,
+    val showPlayerUi: Boolean,
+    val mediaItem: MediaItem,
+    val contentUri: Uri,
 )
 
 data class RecorderDialogUiState(
