@@ -43,6 +43,7 @@ import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -90,6 +91,7 @@ import kotlin.time.Duration.Companion.milliseconds
 fun RecorderUi(
     modifier: Modifier = Modifier,
     viewModel: RecorderViewModel = hiltViewModel(),
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val eventHandler = viewModel::onUiEvent
@@ -156,7 +158,8 @@ fun RecorderUi(
         currentPlaybackPosition = currentPlaybackPosition,
         onSetCurrentPosition = {
             currentPlaybackPosition = it
-        }
+        },
+        snackbarHostState = snackbarHostState,
     )
 }
 
@@ -169,6 +172,7 @@ fun RecorderLayout(
     currentPlaybackPosition: Long,
     onSetCurrentPosition: (Long) -> Unit,
     playerState: PlayerState?,
+    snackbarHostState: SnackbarHostState
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
         RecorderToolbar(
@@ -190,7 +194,8 @@ fun RecorderLayout(
             },
             onSetCurrentPosition = onSetCurrentPosition,
             currentPosition = currentPlaybackPosition,
-            currentRawRecording = uiState.currentPlaybackRawMedia
+            currentRawRecording = uiState.currentPlaybackRawMedia,
+            snackbarHostState = snackbarHostState
         )
     }
 
@@ -325,13 +330,14 @@ private fun RecordingsList(
     currentRawRecording: ShortArray?,
     onSetCurrentPosition: (Long) -> Unit,
     playerState: PlayerState?,
-    onNewMediaSelected: (Uri?) -> Unit
+    onNewMediaSelected: (Uri?) -> Unit,
+    snackbarHostState: SnackbarHostState
 ) {
     // TODO LazyList?
-    Column(modifier = modifier.fillMaxSize()) {
+    Column(modifier = modifier.fillMaxSize().padding(horizontal = MaterialTheme.spacing.medium)) {
         for (recording in recordingsList) {
             RecordingListItem(
-                Modifier.height(56.dp),
+                modifier = Modifier.height(56.dp),
                 uiState = recording,
                 isPlaying = ( // TODO lambda better for recompositions???
                         mediaController != null &&
@@ -348,12 +354,14 @@ private fun RecordingsList(
                 },
                 onPausePressed = { mediaController?.pause() },
                 onResumePressed = { mediaController?.play() },
+                onRecordingDeleted = { /* TODO not implemented */ },
                 playerState = playerState,
                 mediaController = mediaController,
                 currentPlaybackPosition = currentPosition,
                 onSetCurrentPosition = onSetCurrentPosition,
                 onClearPlayback = { onNewMediaSelected(null) },
-                currentRawRecording = currentRawRecording
+                currentRawRecording = currentRawRecording,
+                snackbarHostState = snackbarHostState
             )
             Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
         }
@@ -371,79 +379,127 @@ private fun RecordingListItem(
     isPlaying: Boolean,
     playerState: PlayerState?,  // TODO remove?
     mediaController: MediaController?, // TODO remove?
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     currentPlaybackPosition: Long,
     onSetCurrentPosition: (Long) -> Unit,
     onStartPlayingPressed: () -> Unit,
     onPausePressed: () -> Unit,
     onResumePressed: () -> Unit,
     onClearPlayback: () -> Unit,
+    onRecordingDeleted: (Uri) -> Unit,
 ) {
-    Row(
-        modifier = modifier.fillMaxWidth(), // Don't use padding here it will cut the Waveform
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Spacer(modifier = Modifier.width(MaterialTheme.spacing.medium))
+    /*
+    ~~~ This implements Swipe-to-delete for recordings in the UI ~~~
+        However, the actual deletion of the recording is not implemented yet, so this is commented out
+        TODO uncomment when deleting recordings is implemented
 
-        // Play / Pause Button
-        OutlinedIconButton(
-            onClick = {
-                if (isPlaying) onPausePressed()
-                else if (uiState.showPlayerUi) onResumePressed()
-                else onStartPlayingPressed()
-            },
-            colors = IconButtonDefaults.iconButtonColors().copy(
-                contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        ) {
-            // rather annoyingly, mediaController.seekTo() causes the player to pause
-            // for a split second which toggles the icon back and forth
-            // TODO fix with animation
-            if (isPlaying) {
-                Icon(Icons.Default.Pause, contentDescription = null)
-            } else {
-                Icon(Icons.Default.PlayArrow, contentDescription = null)
-            }
+    val scope = rememberCoroutineScope()
+    var deleted by remember { mutableStateOf(false) }
+    val dismissState = rememberSwipeToDismissBoxState(
+        confirmValueChange = { targetValue ->
+            deleted = targetValue == SwipeToDismissBoxValue.EndToStart
+            true// don't set to deleted or item will not be dismissable again after restore
+        },
+        positionalThreshold = with(LocalDensity.current) {
+            { 100.dp.toPx() }
         }
-
-        Spacer(modifier = Modifier.width(MaterialTheme.spacing.medium))
-
-        AnimatedContent(
-            uiState.showPlayerUi,
-            modifier = Modifier.weight(1f),
-            label = "recorder-header-content-animation"
-        ) { isPlaying ->
-
-            if (isPlaying) {
-                if (playerState == null || mediaController == null) { return@AnimatedContent }
-                // Player
-                WaveformMediaPlayer(
-                    rawMediaData = currentRawRecording,
-                    currentPositionMs = currentPlaybackPosition,
-                    totalDurationMs = playerState.player.duration,
-                    isPlaying = playerState.isPlaying,
-                    onSetCurrentRelativePosition = { position ->
-                        onSetCurrentPosition((position * playerState.player.duration).toLong())
-                        mediaController.seekToRelativePosition(position)
-                    },
-                    onSeekToPositionMs = mediaController::seekTo,
-                    onPause = mediaController::pause,
-                    onPlay = mediaController::play,
-                    onClear = {
-                        mediaController.clearMediaItems()
-                        onClearPlayback()
+    )
+    SwipeToDeleteContainer(
+        state = dismissState,
+        deleted = deleted,
+        onDeleted = {
+            scope.launch {
+                // TODO handle deletion when user leaves screen before timeout
+                val result = snackbarHostState.showSnackbar(
+                    message = "Recording deleted",
+                    actionLabel = "Undo",
+                    withDismissAction = true,
+                    duration = SnackbarDuration.Short,
+                )
+                when (result) {
+                    SnackbarResult.ActionPerformed -> {
+                        deleted = false
+                        dismissState.reset()
                     }
-                )
-            } else {
-                // Item description
-                RecordingItemDescription(
-                    title = uiState.title,
-                    date = uiState.date,
-                    duration = uiState.duration
-                )
+                    SnackbarResult.Dismissed -> {
+                        onRecordingDeleted(uiState.contentUri)
+                    }
+                }
             }
         }
-        Spacer(Modifier.width(MaterialTheme.spacing.medium))
+    ) {
+    */
+
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.medium,
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+    ) {
+        Row( // Don't use vertical padding here it will cut the Waveform
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            // Play / Pause Button
+            OutlinedIconButton(
+                onClick = {
+                    if (isPlaying) onPausePressed()
+                    else if (uiState.showPlayerUi) onResumePressed()
+                    else onStartPlayingPressed()
+                },
+                colors = IconButtonDefaults.iconButtonColors().copy(
+                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            ) {
+                // rather annoyingly, mediaController.seekTo() causes the player to pause
+                // for a split second which toggles the icon back and forth
+                // TODO fix with animation
+                if (isPlaying) {
+                    Icon(Icons.Default.Pause, contentDescription = null)
+                } else {
+                    Icon(Icons.Default.PlayArrow, contentDescription = null)
+                }
+            }
+
+            Spacer(modifier = Modifier.width(MaterialTheme.spacing.medium))
+
+            AnimatedContent(
+                uiState.showPlayerUi,
+                modifier = Modifier.weight(1f),
+                label = "recorder-header-content-animation"
+            ) { isPlaying ->
+
+                if (isPlaying) {
+                    if (playerState == null || mediaController == null) {
+                        return@AnimatedContent
+                    }
+                    // Player
+                    WaveformMediaPlayer(
+                        rawMediaData = currentRawRecording,
+                        currentPositionMs = currentPlaybackPosition,
+                        totalDurationMs = playerState.player.duration,
+                        isPlaying = playerState.isPlaying,
+                        onSetCurrentRelativePosition = { position ->
+                            onSetCurrentPosition((position * playerState.player.duration).toLong())
+                            mediaController.seekToRelativePosition(position)
+                        },
+                        onSeekToPositionMs = mediaController::seekTo,
+                        onPause = mediaController::pause,
+                        onPlay = mediaController::play,
+                        onClear = {
+                            mediaController.clearMediaItems()
+                            onClearPlayback()
+                        }
+                    )
+                } else {
+                    // Item description
+                    RecordingItemDescription(
+                        title = uiState.title,
+                        date = uiState.date,
+                        duration = uiState.duration
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -498,8 +554,11 @@ private fun RecordingItemDescription(
         Spacer(Modifier.width(MaterialTheme.spacing.small))
         Text(
             text = duration,
-            style = MaterialTheme.typography.bodyMedium
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodyMedium,
+            maxLines = 1,
         )
+        Spacer(Modifier.width(MaterialTheme.spacing.small))
     }
 }
 

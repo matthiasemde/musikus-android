@@ -256,6 +256,8 @@ fun ActiveSession(
 
     val windowsSizeClass = calculateWindowSizeClass(activity = LocalContext.current as Activity)
 
+    val snackbarHostState = remember { SnackbarHostState() }
+
     val bottomSheetState = rememberBottomSheetScaffoldState(
         bottomSheetState = rememberStandardBottomSheetState(
             skipHiddenState = false,
@@ -292,7 +294,7 @@ fun ActiveSession(
         ToolsTab(
             type = ActiveSessionTab.RECORDER,
             title = "Recorder",
-            content = { RecorderUi() }
+            content = { RecorderUi(snackbarHostState = snackbarHostState) }
         )
     ).toImmutableList()
     // state for Tabs
@@ -305,6 +307,7 @@ fun ActiveSession(
         tabs = tabs,
         bottomSheetState = bottomSheetState,
         bottomSheetPagerState = bottomSheetPagerState,
+        snackbarHostState = snackbarHostState,
         sizeClass = ScreenSizeClass(
             windowsSizeClass.widthSizeClass,
             windowsSizeClass.heightSizeClass
@@ -349,11 +352,10 @@ private fun ActiveSessionScreen(
     sizeClass: ScreenSizeClass = ScreenSizeClass(
         WindowWidthSizeClass.Compact,
         WindowHeightSizeClass.Expanded
-    )
+    ),
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
     val dialogVisibilities by uiState.value.dialogVisibilities.collectAsState()
-
-    val snackbarHostState = remember { SnackbarHostState() }
 
     // Custom Scaffold for our elements which adapts to available window sizes
     ActiveSessionAdaptiveScaffold(
@@ -1145,7 +1147,7 @@ private fun SectionListElement(
             true// don't set to deleted or item will not be dismissable again after restore
         },
         positionalThreshold = with(LocalDensity.current) {
-            { 100.dp.toPx() }
+            { 100.dp.toPx() } // TODO remove hardcode?
         }
     )
     SwipeToDeleteContainer(
