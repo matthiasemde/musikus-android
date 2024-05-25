@@ -18,8 +18,10 @@ import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -27,6 +29,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -35,6 +39,7 @@ import androidx.compose.material.icons.filled.MicOff
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Replay5
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -174,7 +179,9 @@ fun RecorderLayout(
     playerState: PlayerState?,
     snackbarHostState: SnackbarHostState
 ) {
-    Column(modifier = modifier.fillMaxWidth()) {
+    Column(modifier = modifier
+        .fillMaxWidth()
+        .padding(horizontal = MaterialTheme.spacing.large)) {
         RecorderToolbar(
             modifier = Modifier.height(MaterialTheme.dimensions.toolsHeaderHeight),
             uiState = uiState,
@@ -182,9 +189,9 @@ fun RecorderLayout(
         )
 
         HorizontalDivider(Modifier.padding(horizontal = MaterialTheme.spacing.medium))
-        Spacer(Modifier.height(MaterialTheme.spacing.medium))
 
         RecordingsList(
+            modifier = Modifier.defaultMinSize(minHeight = MaterialTheme.dimensions.toolsBodyHeight),
             recordingsList = uiState.recordings.toImmutableList(),
             mediaController = mediaController,
             playerState = playerState,
@@ -230,9 +237,7 @@ fun RecorderToolbar(
         uiState.recorderState !in listOf(RecorderState.IDLE, RecorderState.UNINITIALIZED)
 
     Row(
-        modifier
-            .fillMaxWidth()
-            .padding(horizontal = MaterialTheme.spacing.large),
+        modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
     ) {
 
@@ -333,17 +338,33 @@ private fun RecordingsList(
     onNewMediaSelected: (Uri?) -> Unit,
     snackbarHostState: SnackbarHostState
 ) {
+    if (recordingsList.isEmpty()) {
+        Column (modifier = modifier) {
+            Spacer(Modifier.height(MaterialTheme.spacing.medium))
+            Text(
+                "No Recordings",
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        return
+    }
+
     // TODO LazyList?
-    Column(modifier = modifier.fillMaxSize().padding(horizontal = MaterialTheme.spacing.medium)) {
-        for (recording in recordingsList) {
+    LazyColumn(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small),
+        contentPadding = PaddingValues(vertical = MaterialTheme.spacing.medium)
+    ) {
+        items(recordingsList) { recording ->
             RecordingListItem(
                 modifier = Modifier.height(56.dp),
                 uiState = recording,
                 isPlaying = ( // TODO lambda better for recompositions???
                         mediaController != null &&
-                        playerState?.isPlaying == true &&
-                        mediaController.isCommandAvailable(Player.COMMAND_GET_CURRENT_MEDIA_ITEM) &&
-                        mediaController.currentMediaItem == recording.mediaItem),
+                                playerState?.isPlaying == true &&
+                                mediaController.isCommandAvailable(Player.COMMAND_GET_CURRENT_MEDIA_ITEM) &&
+                                mediaController.currentMediaItem == recording.mediaItem),
                 onStartPlayingPressed = {
                     if (mediaController == null) return@RecordingListItem
                     loadAndPlayNewMediaItem(
@@ -363,14 +384,12 @@ private fun RecordingsList(
                 currentRawRecording = currentRawRecording,
                 snackbarHostState = snackbarHostState
             )
-            Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
         }
-
-        Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
     }
 }
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun RecordingListItem(
     modifier: Modifier = Modifier,
@@ -421,6 +440,7 @@ private fun RecordingListItem(
                         deleted = false
                         dismissState.reset()
                     }
+
                     SnackbarResult.Dismissed -> {
                         onRecordingDeleted(uiState.contentUri)
                     }
@@ -429,77 +449,77 @@ private fun RecordingListItem(
         }
     ) {
     */
-
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.medium,
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
-    ) {
-        Row( // Don't use vertical padding here it will cut the Waveform
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+        Surface(
+            modifier = modifier.fillMaxWidth(),
+            shape = MaterialTheme.shapes.medium,
+            color = MaterialTheme.colorScheme.surfaceContainerHigh,
         ) {
-            // Play / Pause Button
-            OutlinedIconButton(
-                onClick = {
-                    if (isPlaying) onPausePressed()
-                    else if (uiState.showPlayerUi) onResumePressed()
-                    else onStartPlayingPressed()
-                },
-                colors = IconButtonDefaults.iconButtonColors().copy(
-                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+            Row( // Don't use vertical padding here it will cut the Waveform
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                // rather annoyingly, mediaController.seekTo() causes the player to pause
-                // for a split second which toggles the icon back and forth
-                // TODO fix with animation
-                if (isPlaying) {
-                    Icon(Icons.Default.Pause, contentDescription = null)
-                } else {
-                    Icon(Icons.Default.PlayArrow, contentDescription = null)
-                }
-            }
-
-            Spacer(modifier = Modifier.width(MaterialTheme.spacing.medium))
-
-            AnimatedContent(
-                uiState.showPlayerUi,
-                modifier = Modifier.weight(1f),
-                label = "recorder-header-content-animation"
-            ) { isPlaying ->
-
-                if (isPlaying) {
-                    if (playerState == null || mediaController == null) {
-                        return@AnimatedContent
+                // Play / Pause Button
+                OutlinedIconButton(
+                    onClick = {
+                        if (isPlaying) onPausePressed()
+                        else if (uiState.showPlayerUi) onResumePressed()
+                        else onStartPlayingPressed()
+                    },
+                    colors = IconButtonDefaults.iconButtonColors().copy(
+                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                ) {
+                    // rather annoyingly, mediaController.seekTo() causes the player to pause
+                    // for a split second which toggles the icon back and forth
+                    // TODO fix with animation
+                    if (isPlaying) {
+                        Icon(Icons.Default.Pause, contentDescription = null)
+                    } else {
+                        Icon(Icons.Default.PlayArrow, contentDescription = null)
                     }
-                    // Player
-                    WaveformMediaPlayer(
-                        rawMediaData = currentRawRecording,
-                        currentPositionMs = currentPlaybackPosition,
-                        totalDurationMs = playerState.player.duration,
-                        isPlaying = playerState.isPlaying,
-                        onSetCurrentRelativePosition = { position ->
-                            onSetCurrentPosition((position * playerState.player.duration).toLong())
-                            mediaController.seekToRelativePosition(position)
-                        },
-                        onSeekToPositionMs = mediaController::seekTo,
-                        onPause = mediaController::pause,
-                        onPlay = mediaController::play,
-                        onClear = {
-                            mediaController.clearMediaItems()
-                            onClearPlayback()
+                }
+
+                Spacer(modifier = Modifier.width(MaterialTheme.spacing.medium))
+
+                AnimatedContent(
+                    uiState.showPlayerUi,
+                    modifier = Modifier.weight(1f),
+                    label = "recorder-header-content-animation"
+                ) { isPlaying ->
+
+                    if (isPlaying) {
+                        if (playerState == null || mediaController == null) {
+                            return@AnimatedContent
                         }
-                    )
-                } else {
-                    // Item description
-                    RecordingItemDescription(
-                        title = uiState.title,
-                        date = uiState.date,
-                        duration = uiState.duration
-                    )
+                        // Player
+                        WaveformMediaPlayer(
+                            rawMediaData = currentRawRecording,
+                            currentPositionMs = currentPlaybackPosition,
+                            totalDurationMs = playerState.player.duration,
+                            isPlaying = playerState.isPlaying,
+                            onSetCurrentRelativePosition = { position ->
+                                onSetCurrentPosition((position * playerState.player.duration).toLong())
+                                mediaController.seekToRelativePosition(position)
+                            },
+                            onSeekToPositionMs = mediaController::seekTo,
+                            onPause = mediaController::pause,
+                            onPlay = mediaController::play,
+                            onClear = {
+                                mediaController.clearMediaItems()
+                                onClearPlayback()
+                            }
+                        )
+                    } else {
+                        // Item description
+                        RecordingItemDescription(
+                            title = uiState.title,
+                            date = uiState.date,
+                            duration = uiState.duration
+                        )
+                    }
                 }
             }
-        }
+//        } swipe-to-delete
     }
 }
 

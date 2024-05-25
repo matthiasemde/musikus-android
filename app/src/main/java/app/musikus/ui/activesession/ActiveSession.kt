@@ -592,7 +592,11 @@ private fun ToolsBottomSheetScaffold(
     bottomSheetState: BottomSheetScaffoldState = rememberBottomSheetScaffoldState()
 ) {
     BottomSheetScaffold(
-        sheetContent = { sheetContent() },
+        sheetContent = {
+            Column(modifier = Modifier.animateContentSize()){
+                sheetContent()
+            }
+        },
         sheetContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         sheetTonalElevation = 0.dp,  // deprecated anyways
         sheetShadowElevation = 0.dp, // deprecated anyways
@@ -786,7 +790,7 @@ private fun ActiveSessionToolsLayout(
 ) {
     Box(modifier.fillMaxWidth()) {
         Column {
-            HorizontalPager(state = pagerState, userScrollEnabled = true) { tabIndex ->
+            HorizontalPager(state = pagerState, userScrollEnabled = false) { tabIndex ->
                 tabs[tabIndex].content()
             }
         }
@@ -908,7 +912,7 @@ private fun ActiveSessionBottomTabs(
                                 }
                             } else {
                                 // if on other page, switch to page (with animation
-                                pagerState.animateScrollToPage(tabIndex)
+                                pagerState.scrollToPage(tabIndex)
                             }
                         }
                     }
