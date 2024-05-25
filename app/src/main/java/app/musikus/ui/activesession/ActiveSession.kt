@@ -66,7 +66,6 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Mic
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Delete
@@ -78,8 +77,6 @@ import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.BottomSheetScaffoldState
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
@@ -262,6 +259,8 @@ fun ActiveSession(
     val uiState = viewModel.uiState.collectAsStateWithLifecycle()
     val eventHandler = viewModel::onUiEvent
 
+    val scope = rememberCoroutineScope()
+
     val windowsSizeClass = calculateWindowSizeClass(activity = LocalContext.current as Activity)
 
     val snackbarHostState = remember { SnackbarHostState() }
@@ -269,6 +268,7 @@ fun ActiveSession(
     val bottomSheetState = rememberBottomSheetScaffoldState(
         bottomSheetState = rememberStandardBottomSheetState(
             skipHiddenState = false,
+            // initialValue = SheetValue.Hidden does not work here unfortunately
         )
     )
 
@@ -276,6 +276,11 @@ fun ActiveSession(
         when (event) {
             is NavigationEvent.NavigateUp -> {
                 navigateUp()
+            }
+            is NavigationEvent.HideTools -> {
+                scope.launch {
+                    bottomSheetState.bottomSheetState.hide()
+                }
             }
         }
     }
@@ -312,10 +317,7 @@ fun ActiveSession(
         )
     )
 
-
     /** Handle deep link Arguments */
-
-    val scope = rememberCoroutineScope()
     LaunchedEffect(deepLinkArgument) {
         when (deepLinkArgument) {
             ActiveSessionActions.METRONOME.name -> {
@@ -604,7 +606,7 @@ private fun ToolsBottomSheetScaffold(
         scaffoldState = bottomSheetState,
         sheetDragHandle = { SheetDragHandle() },
         content = { sheetPadding ->
-            // sheet
+            // sheetPadding does not work when Hidden, so manually force 0dp padding
             val bottomPadding = animateDpAsState(
                 if (bottomSheetState.bottomSheetState.currentValue != SheetValue.Hidden) {
                     sheetPadding.calculateBottomPadding()
@@ -1297,6 +1299,7 @@ private fun NewItemSelector(
 
             Spacer(modifier = Modifier.weight(1f))
 
+            /* TODO implement Creating Folders + Items
             IconButton(
                 onClick = { createMenuShown = true },
                 modifier = Modifier.padding(horizontal = MaterialTheme.spacing.small)
@@ -1319,6 +1322,7 @@ private fun NewItemSelector(
                     )
                 }
             }
+            */
 
             IconButton(onClick = onClose) {
                 Icon(imageVector = Icons.Default.Close, contentDescription = null)
