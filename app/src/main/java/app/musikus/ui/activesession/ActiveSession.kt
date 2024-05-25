@@ -65,6 +65,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.Star
@@ -151,6 +152,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
+import app.musikus.R
 import app.musikus.database.LibraryFolderWithItems
 import app.musikus.database.UUIDConverter
 import app.musikus.database.daos.LibraryFolder
@@ -211,6 +213,7 @@ enum class ActiveSessionActions {
 
 data class ToolsTab(
     val title: String,
+    val icon: UiIcon,
     val type: ActiveSessionTab,
     val content: @Composable () -> Unit,
 )
@@ -269,8 +272,8 @@ fun ActiveSession(
         )
     )
 
-    ObserveAsEvents(viewModel.navigationEventsChannelFlow) {event ->
-        when(event) {
+    ObserveAsEvents(viewModel.navigationEventsChannelFlow) { event ->
+        when (event) {
             is NavigationEvent.NavigateUp -> {
                 navigateUp()
             }
@@ -282,11 +285,13 @@ fun ActiveSession(
         ToolsTab(
             type = ActiveSessionTab.METRONOME,
             title = "Metronome",
+            icon = UiIcon.IconResource(R.drawable.ic_metronome),
             content = { MetronomeUi() }
         ),
         ToolsTab(
             type = ActiveSessionTab.RECORDER,
             title = "Recorder",
+            icon = UiIcon.DynamicIcon(Icons.Default.Mic),
             content = { RecorderUi(snackbarHostState = snackbarHostState) }
         )
     ).toImmutableList()
@@ -933,7 +938,7 @@ private fun ToolsTabRow(
                     TabRowDefaults.PrimaryIndicator(
                         modifier = Modifier
                             .tabIndicatorOffset(tabPositions[activeTabIndex])
-                            .offset(y = (-45).dp), width = 100.dp, shape = RoundedCornerShape(
+                            .offset(y = (-69).dp), width = 100.dp, shape = RoundedCornerShape(
                             topStartPercent = 0,
                             topEndPercent = 0,
                             bottomStartPercent = 100,
@@ -949,6 +954,7 @@ private fun ToolsTabRow(
             Row {
                 Tab(selected = activeTabIndex == index,
                     text = { Text(tab.title) },
+                    icon = { Icon(imageVector = tab.icon.asIcon(), contentDescription = null) },
                     onClick = { onClick(index) })
             }
         }
@@ -1592,8 +1598,13 @@ private fun PreviewActiveSessionScreen(
                 ToolsTab(
                     type = ActiveSessionTab.METRONOME,
                     title = "Metronome",
+                    icon = UiIcon.IconResource(R.drawable.ic_metronome),
                     content = { }),
-                ToolsTab(type = ActiveSessionTab.RECORDER, title = "Recorder", content = { })
+                ToolsTab(
+                    type = ActiveSessionTab.RECORDER,
+                    title = "Recorder",
+                    icon = UiIcon.DynamicIcon(Icons.Default.Mic),
+                    content = { })
             ).toImmutableList(),
         )
     }
