@@ -27,6 +27,7 @@ import app.musikus.utils.getDurationString
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -35,6 +36,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -238,8 +240,8 @@ class ActiveSessionViewModel @Inject constructor(
         )
     ).asStateFlow()
 
-    private val _eventStates = MutableStateFlow(ActiveSessionEventStates())
-    val eventStates = _eventStates.asStateFlow()
+    private val navigationChannel = Channel<NavigationEvent>()
+    val navigationEventsChannelFlow = navigationChannel.receiveAsFlow()
 
     /** ------------------- Event Handler ------------------------------------------- */
 
@@ -291,7 +293,9 @@ class ActiveSessionViewModel @Inject constructor(
 
             ActiveSessionUiEvent.DiscardSessionDialogConfirmed -> {
                 activeSessionUseCases.reset()
-                _eventStates.update { it.copy(sessionDiscarded = true) }
+                viewModelScope.launch {
+                    navigationChannel.send(NavigationEvent.NavigateUp)
+                }
             }
 
             ActiveSessionUiEvent.ToggleDiscardDialog -> _dialogVisibilities.update {
@@ -388,7 +392,13 @@ class ActiveSessionViewModel @Inject constructor(
                 }
             )
             activeSessionUseCases.reset()   // reset the active session state
-            _eventStates.update { it.copy(sessionSaved = true) }
+            viewModelScope.launch {
+                navigationChannel.send(NavigationEvent.NavigateUp)
+            }
         }
     }
+}
+
+sealed interface NavigationEvent {
+    object NavigateUp: NavigationEvent
 }

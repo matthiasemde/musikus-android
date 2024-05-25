@@ -19,8 +19,6 @@ import java.time.ZonedDateTime
 import java.util.UUID
 
 
-// TODO UIText for all Strings?
-
 @Stable
 enum class ActiveSessionState {
     NOT_STARTED,
@@ -28,13 +26,6 @@ enum class ActiveSessionState {
     PAUSED,
     UNKNOWN
 }
-
-/** Specific one-time events triggering some UI action in ActiveSession */
-@Stable
-data class ActiveSessionEventStates (
-    val sessionSaved: Boolean = false,
-    val sessionDiscarded: Boolean = false,
-)
 
 @Stable
 /** Main UI State */

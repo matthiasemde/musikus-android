@@ -134,6 +134,7 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.rememberNestedScrollInteropConnection
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -147,7 +148,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import app.musikus.database.LibraryFolderWithItems
 import app.musikus.database.UUIDConverter
 import app.musikus.database.daos.LibraryFolder
@@ -186,8 +189,11 @@ import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toImmutableMap
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.time.ZonedDateTime
 import java.util.UUID
 import kotlin.random.Random
@@ -251,7 +257,6 @@ fun ActiveSession(
     navigateTo: (Screen) -> Unit,
 ) {
     val uiState = viewModel.uiState.collectAsStateWithLifecycle()
-    val eventStates by viewModel.eventStates.collectAsStateWithLifecycle()
     val eventHandler = viewModel::onUiEvent
 
     val windowsSizeClass = calculateWindowSizeClass(activity = LocalContext.current as Activity)
@@ -264,25 +269,13 @@ fun ActiveSession(
         )
     )
 
-    // TODO re-initialize bottomSheetState on configuration change
-    // there is a bug where the bottom sheet will become fully collapsable after the screen has been
-    // rotated. This can be fixed by re-initializing the bottomSheetState on configuration change.
-
-    // successfully saved callback
-    LaunchedEffect(eventStates.sessionSaved) {
-        if (eventStates.sessionSaved) {
-            // potentially show some goals progress or success message etc. in the future..
-            navigateUp()
+    ObserveAsEvents(viewModel.navigationEventsChannelFlow) {event ->
+        when(event) {
+            is NavigationEvent.NavigateUp -> {
+                navigateUp()
+            }
         }
     }
-
-    // session discarded callback
-    LaunchedEffect(eventStates.sessionDiscarded) {
-        if (eventStates.sessionDiscarded) {
-            navigateUp()
-        }
-    }
-
 
     // TODO move to somewhere final
     val tabs = persistentListOf(
@@ -340,6 +333,19 @@ fun ActiveSession(
     }
 }
 
+
+@Composable
+private fun <T> ObserveAsEvents(flow: Flow<T>, onEvent: (T) -> Unit) {
+    val lifecycleOwner = LocalLifecycleOwner.current
+    LaunchedEffect(flow, lifecycleOwner.lifecycle) {
+        lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            withContext(Dispatchers.Main.immediate) {
+                flow.collect(onEvent)
+            }
+        }
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 private fun ActiveSessionScreen(
@@ -356,6 +362,7 @@ private fun ActiveSessionScreen(
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
     val dialogVisibilities by uiState.value.dialogVisibilities.collectAsState()
+    // TODO collect all states here
 
     // Custom Scaffold for our elements which adapts to available window sizes
     ActiveSessionAdaptiveScaffold(
@@ -774,7 +781,7 @@ private fun ActiveSessionToolsLayout(
 ) {
     Box(modifier.fillMaxWidth()) {
         Column {
-            HorizontalPager(state = pagerState, userScrollEnabled = false) { tabIndex ->
+            HorizontalPager(state = pagerState, userScrollEnabled = true) { tabIndex ->
                 tabs[tabIndex].content()
             }
         }
@@ -1154,6 +1161,7 @@ private fun SectionListElement(
         state = dismissState,
         deleted = deleted,
         onDeleted = {
+            // TODO: re-use maineventhandler::ShowSnackbar
             scope.launch {
                 // TODO handle deletion when user leaves screen before timeout
                 val result = snackbarHostState.showSnackbar(
