@@ -40,6 +40,7 @@ import app.musikus.database.entities.SessionModel
 import app.musikus.utils.IdProvider
 import app.musikus.utils.TimeProvider
 import app.musikus.utils.prepopulateDatabase
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import java.io.File
 import java.io.InputStream
@@ -51,6 +52,8 @@ import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
 import javax.inject.Provider
+
+const val MIME_TYPE_DATABASE = "application/octet-stream"
 
 @Database(
     version = 4,
@@ -90,7 +93,26 @@ abstract class MusikusDatabase : RoomDatabase() {
     lateinit var timeProvider: TimeProvider
     lateinit var idProvider: IdProvider
     lateinit var databaseFile: File
+    lateinit var databaseBackupFile: File
 
+    suspend fun validate(): Boolean {
+        return try {
+            val isDatabaseEmpty = listOf(
+                libraryItemDao.getAllAsFlow().first(),
+                libraryFolderDao.getAllAsFlow().first(),
+                goalDescriptionDao.getAllAsFlow().first(),
+                goalInstanceDao.getAllAsFlow().first(),
+                sessionDao.getAllAsFlow().first(),
+                sectionDao.getAllAsFlow().first()
+            ).all {
+                it.isEmpty()
+            }
+            !isDatabaseEmpty
+        } catch (e: Exception) {
+            Log.e("PTDatabase", "Validation failed:  ${e.javaClass.simpleName}: ${e.message}")
+            false
+        }
+    }
 
     /**
      *  ---------------- Datbase Export/Import ----------------
@@ -110,24 +132,32 @@ abstract class MusikusDatabase : RoomDatabase() {
     fun import(inputStream: InputStream) {
         // close the database to collect all logs
         close()
+
+        // create a backup of the original database
+        databaseFile.copyTo(databaseBackupFile, overwrite = true)
+
         // delete old database
         databaseFile.delete()
+
         // copy new database from input stream
-        databaseFile.outputStream().let { outputStream ->
-            inputStream.copyTo(outputStream)
-            inputStream.close()
-            outputStream.close()
-        }
+        inputStream.copyTo(databaseFile.outputStream())
     }
 
     companion object {
         const val DATABASE_NAME = "musikus-database"
+        const val DATABASE_BACKUP_NAME = "musikus-database.bkp"
 
         fun buildDatabase(
             context: Context,
             databaseProvider: Provider<MusikusDatabase>? = null,
         ) : MusikusDatabase {
-            return Room.databaseBuilder(
+            val databaseFile = context.getDatabasePath(DATABASE_NAME)
+            val databaseBackupFile = context.getDatabasePath(DATABASE_BACKUP_NAME)
+
+            // If a backup file exists, it must be because we are in the process of importing a database
+            val importInProgress = databaseBackupFile.exists()
+
+            var db = Room.databaseBuilder(
                 context,
                 MusikusDatabase::class.java,
                 DATABASE_NAME
@@ -138,14 +168,38 @@ abstract class MusikusDatabase : RoomDatabase() {
                 // prepopulate the database after onCreate was called
                 override fun onCreate(db: SupportSQLiteDatabase) {
                     super.onCreate(db)
-                    // prepopulate the database if in debug configuration
-                    if (BuildConfig.DEBUG && databaseProvider != null) {
-                        ioThread { runBlocking {
-                            prepopulateDatabase(databaseProvider.get())
-                        } }
+                    // prepopulate the database if in debug configuration and not in import mode
+                    if (BuildConfig.DEBUG && !importInProgress) {
+                        if (databaseProvider != null) {
+                            ioThread { runBlocking {
+                                prepopulateDatabase(databaseProvider.get())
+                            } }
+                        }
                     }
                 }
             }).build()
+
+            if (importInProgress) {
+                Log.d("DATABASE_IMPORT", "Importing database")
+                ioThread { runBlocking {
+                    if (db.validate()) {
+                        Log.d("DATABASE_IMPORT", "Validated")
+                        databaseBackupFile.delete()
+                    } else {
+                        Log.d("DATABASE_IMPORT", "Validation failed")
+                        db.close()
+                        Log.d("DATABASE_IMPORT", "Database closed")
+                        databaseBackupFile.copyTo(databaseFile, overwrite = true)
+                        Log.d("DATABASE_IMPORT", "Backup restored")
+                        databaseBackupFile.delete()
+                        Log.d("DATABASE_IMPORT", "Backup deleted")
+                        db = buildDatabase(context)
+                        Log.d("DATABASE_IMPORT", "Database rebuilt")
+                    }
+                } }
+            }
+
+            return db
         }
     }
 
