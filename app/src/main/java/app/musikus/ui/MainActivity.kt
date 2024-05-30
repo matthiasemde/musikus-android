@@ -19,6 +19,7 @@ import android.widget.Toast
 import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import app.musikus.database.MIME_TYPE_DATABASE
 import app.musikus.database.MusikusDatabase
 import app.musikus.services.ActiveSessionServiceActions
 import app.musikus.services.SessionService
@@ -28,7 +29,6 @@ import app.musikus.utils.PermissionCheckerActivity
 import app.musikus.utils.TimeProvider
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
-import javax.inject.Provider
 
 
 @AndroidEntryPoint
@@ -41,12 +41,10 @@ class MainActivity : PermissionCheckerActivity() {
     lateinit var timeProvider: TimeProvider
 
     @Inject
-    lateinit var databaseProvider: Provider<MusikusDatabase>
-
-    @Inject
     lateinit var activeSessionUseCases: ActiveSessionUseCases
 
-    private val database: MusikusDatabase by lazy { databaseProvider.get() }
+    @Inject
+    lateinit var database: MusikusDatabase
 
     private lateinit var exportLauncher: ActivityResultLauncher<String>
     private lateinit var importLauncher: ActivityResultLauncher<Array<String>>
@@ -95,14 +93,14 @@ class MainActivity : PermissionCheckerActivity() {
     private fun initializeExportImportLaunchers() {
 
         exportLauncher = registerForActivityResult(
-            ExportDatabaseContract("*/*")
-        ) {
-            if (it == null) {
+            ExportDatabaseContract()
+        ) { uri ->
+            if (uri == null) {
                 Toast.makeText(this, "No file selected", Toast.LENGTH_SHORT).show()
                 return@registerForActivityResult
             }
 
-            contentResolver.openOutputStream(it)?.let { outputStream ->
+            contentResolver.openOutputStream(uri)?.let { outputStream ->
                 database.export(outputStream)
             }
 
@@ -113,19 +111,19 @@ class MainActivity : PermissionCheckerActivity() {
 
         importLauncher = registerForActivityResult(
             ImportDatabaseContract()
-        ) {
-            if (it == null) {
+        ) { uri ->
+            if (uri == null) {
                 Toast.makeText(this, "No file selected", Toast.LENGTH_SHORT).show()
                 return@registerForActivityResult
             }
 
-            contentResolver.openInputStream(it)?.let { inputStream ->
+            contentResolver.openInputStream(uri)?.let { inputStream ->
                 database.import(inputStream)
             }
 
             Toast.makeText(
                 this,
-                "Backup loaded successfully",
+                "Backup loaded. Restarting...",
                 Toast.LENGTH_LONG
             ).show()
 
@@ -138,7 +136,12 @@ class MainActivity : PermissionCheckerActivity() {
     }
 
     fun importDatabase() {
-        importLauncher.launch(arrayOf("*/*"))
+        importLauncher.launch(arrayOf(
+            MIME_TYPE_DATABASE,
+            "application/vnd.sqlite3",
+            "application/x-sqlite3",
+            "*/*"
+        ))
     }
 
     // source: https://gist.github.com/easterapps/7127ce0749cfce2edf083e55b6eecec5
@@ -157,9 +160,7 @@ class MainActivity : PermissionCheckerActivity() {
  * Contracts for exporting/importing the database
  */
 
-private class ExportDatabaseContract(
-    mimeType: String
-) : ActivityResultContracts.CreateDocument(mimeType) {
+private class ExportDatabaseContract : ActivityResultContracts.CreateDocument(MIME_TYPE_DATABASE) {
     override fun createIntent(context: Context, input: String) =
         super.createIntent(context, input).apply {
             addCategory(Intent.CATEGORY_OPENABLE)
@@ -172,7 +173,7 @@ private class ExportDatabaseContract(
 private class ImportDatabaseContract : ActivityResultContracts.OpenDocument() {
     override fun createIntent(context: Context, input: Array<String>) =
         super.createIntent(context, input).apply {
-            type = "application/octet-stream"
+            type = MIME_TYPE_DATABASE
             addCategory(Intent.CATEGORY_OPENABLE)
             if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 putExtra(DocumentsContract.EXTRA_INITIAL_URI, Environment.DIRECTORY_DOWNLOADS)
