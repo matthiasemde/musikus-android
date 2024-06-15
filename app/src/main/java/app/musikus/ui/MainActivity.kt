@@ -19,6 +19,7 @@ import android.widget.Toast
 import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.lifecycle.lifecycleScope
 import app.musikus.database.MIME_TYPE_DATABASE
 import app.musikus.database.MusikusDatabase
 import app.musikus.services.ActiveSessionServiceActions
@@ -28,8 +29,11 @@ import app.musikus.utils.PermissionChecker
 import app.musikus.utils.PermissionCheckerActivity
 import app.musikus.utils.TimeProvider
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
+import java.io.File
 import javax.inject.Inject
 
+const val DATABASE_IMPORT_BACKUP_FILE = "database_import_backup.tmp"
 
 @AndroidEntryPoint
 class MainActivity : PermissionCheckerActivity() {
@@ -102,10 +106,12 @@ class MainActivity : PermissionCheckerActivity() {
 
             contentResolver.openOutputStream(uri)?.let { outputStream ->
                 database.export(outputStream)
+                outputStream.close()
             }
 
             Toast.makeText(this, "Backup successful", Toast.LENGTH_LONG).show()
 
+            // Restart the app to allow dagger hilt to reopen the database
             triggerRestart()
         }
 
@@ -117,17 +123,47 @@ class MainActivity : PermissionCheckerActivity() {
                 return@registerForActivityResult
             }
 
+            // Create a backup of the current database before loading the new one
+            val backupFile = File(filesDir, DATABASE_IMPORT_BACKUP_FILE)
+            database.databaseFile.copyTo(backupFile, overwrite = true)
+
+            // Load the new database
             contentResolver.openInputStream(uri)?.let { inputStream ->
                 database.import(inputStream)
+                inputStream.close()
             }
 
-            Toast.makeText(
-                this,
-                "Backup loaded. Restarting...",
-                Toast.LENGTH_LONG
-            ).show()
+            // Open the new database locally to check if the import was successful
+            val database = MusikusDatabase.buildDatabase(context = this).apply {
+                databaseFile = getDatabasePath(MusikusDatabase.DATABASE_NAME)
+            }
 
-            triggerRestart()
+            // Perform and handle the validation in a coroutine
+            lifecycleScope.launch {
+                if (database.validate()) {
+                    backupFile.delete()
+
+                    Toast.makeText(
+                        this@MainActivity,
+                        "Backup loaded. Restarting...",
+                        Toast.LENGTH_LONG
+                    ).show()
+                } else {
+                    // If the import was invalid, restore the backup
+                    database.close()
+                    backupFile.copyTo(database.databaseFile, overwrite = true)
+                    backupFile.delete()
+
+                    Toast.makeText(
+                        this@MainActivity,
+                        "Invalid backup file. Aborting...",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+
+                // Restart the app to allow dagger hilt to load the new database
+                triggerRestart()
+            }
         }
     }
 
@@ -140,7 +176,6 @@ class MainActivity : PermissionCheckerActivity() {
             MIME_TYPE_DATABASE,
             "application/vnd.sqlite3",
             "application/x-sqlite3",
-            "*/*"
         ))
     }
 
