@@ -126,9 +126,6 @@ abstract class MusikusDatabase : RoomDatabase() {
     }
 
     fun import(inputStream: InputStream) {
-        // close the database to collect all logs
-        close()
-
         // delete old database
         databaseFile.delete()
 
