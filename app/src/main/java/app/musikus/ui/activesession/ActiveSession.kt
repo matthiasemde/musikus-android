@@ -197,9 +197,6 @@ import java.util.UUID
 import kotlin.random.Random
 import kotlin.time.Duration.Companion.seconds
 
-
-const val CARD_HEIGHT_EXTENDED_FRACTION_OF_SCREEN = 0.7f
-
 /**
  * Actions that can be triggered by the Notification
  */
@@ -219,31 +216,6 @@ data class ScreenSizeClass(
     val height: WindowHeightSizeClass,
 )
 
-// https://developer.android.com/guide/topics/large-screens/support-different-screen-sizes#window_size_classes
-// used for Previews only, always compare WindowWidthSizeClass and WindowHeightSizeClass separately
-object ScreenSizeDefaults {
-
-    val Phone = ScreenSizeClass(
-        width = WindowWidthSizeClass.Compact,
-        height = WindowHeightSizeClass.Expanded
-    )
-
-    val PhoneLandscape = ScreenSizeClass(
-        width = WindowWidthSizeClass.Expanded,
-        height = WindowHeightSizeClass.Compact
-    )
-
-    val Foldable = ScreenSizeClass(
-        width = WindowWidthSizeClass.Medium,
-        height = WindowHeightSizeClass.Medium
-    )
-
-    val LargeTablet = ScreenSizeClass(
-        width = WindowWidthSizeClass.Expanded,
-        height = WindowHeightSizeClass.Expanded
-    )
-}
-
 @OptIn(
     ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class,
     ExperimentalMaterial3WindowSizeClassApi::class
@@ -261,7 +233,7 @@ fun ActiveSession(
     val windowsSizeClass = calculateWindowSizeClass(activity = LocalContext.current as Activity)
 
     val snackbarHostState = remember { SnackbarHostState() }
-    val bottomSheetState = rememberBottomSheetScaffoldState(
+    val bottomSheetScaffoldState = rememberBottomSheetScaffoldState(
         bottomSheetState = rememberStandardBottomSheetState(
             skipHiddenState = false,
             // initialValue = SheetValue.Hidden does not work here unfortunately
@@ -290,10 +262,9 @@ fun ActiveSession(
             is NavigationEvent.NavigateUp -> {
                 navigateUp()
             }
-
             is NavigationEvent.HideTools -> {
                 scope.launch {
-                    bottomSheetState.bottomSheetState.hide()
+                    bottomSheetScaffoldState.bottomSheetState.hide()
                 }
             }
         }
@@ -303,7 +274,7 @@ fun ActiveSession(
         eventHandler = eventHandler,
         navigateUp = navigateUp,
         tabs = tabs,
-        bottomSheetState = bottomSheetState,
+        bottomSheetScaffoldState = bottomSheetScaffoldState,
         bottomSheetPagerState = bottomSheetPagerState,
         snackbarHostState = snackbarHostState,
         sizeClass = ScreenSizeClass(
@@ -324,7 +295,7 @@ fun ActiveSession(
                 }
                 // expand bottom sheet
                 scope.launch {
-                    bottomSheetState.bottomSheetState.expand()
+                    bottomSheetScaffoldState.bottomSheetState.expand()
                 }
             }
 
@@ -355,7 +326,7 @@ private fun ActiveSessionScreen(
     tabs: ImmutableList<ToolsTab>,
     eventHandler: (ActiveSessionUiEvent) -> Unit,
     navigateUp: () -> Unit,
-    bottomSheetState: BottomSheetScaffoldState,
+    bottomSheetScaffoldState: BottomSheetScaffoldState,
     bottomSheetPagerState: PagerState,
     sizeClass: ScreenSizeClass,
     snackbarHostState: SnackbarHostState,
@@ -364,7 +335,7 @@ private fun ActiveSessionScreen(
     ActiveSessionAdaptiveScaffold(
         screenSizeClass = sizeClass,
         snackbarHostState = snackbarHostState,
-        bottomSheetState = bottomSheetState,
+        bottomSheetScaffoldState = bottomSheetScaffoldState,
         topBar = {
             ActiveSessionTopBar(
                 sessionState = uiState.value.sessionState.collectAsState(),
@@ -377,7 +348,7 @@ private fun ActiveSessionScreen(
         bottomBar = {
             ActiveSessionBottomTabs(
                 tabs = tabs,
-                sheetState = bottomSheetState,
+                sheetState = bottomSheetScaffoldState,
                 pagerState = bottomSheetPagerState,
                 screenSizeClass = sizeClass,
             )
@@ -483,7 +454,7 @@ private fun ActiveSessionAdaptiveScaffold(
     bottomBar: @Composable () -> Unit,
     mainContent: @Composable (State<PaddingValues>) -> Unit,
     toolsContent: @Composable () -> Unit,
-    bottomSheetState: BottomSheetScaffoldState,
+    bottomSheetScaffoldState: BottomSheetScaffoldState,
     snackbarHostState: SnackbarHostState,
 ) {
     if (screenSizeClass.height == WindowHeightSizeClass.Compact) {
@@ -524,7 +495,7 @@ private fun ActiveSessionAdaptiveScaffold(
                                 Modifier.padding(bottom = paddingValues.calculateBottomPadding())
                             ) {
                                 ToolsBottomSheetScaffold(
-                                    bottomSheetState = bottomSheetState,
+                                    bottomSheetScaffoldState = bottomSheetScaffoldState,
                                     sheetContent = {
                                         toolsContent()
                                     },
@@ -548,7 +519,7 @@ private fun ActiveSessionAdaptiveScaffold(
             content = { paddingValues ->
                 Surface(Modifier.padding(paddingValues)) {  // don't overlap with bottomBar
                     ToolsBottomSheetScaffold(
-                        bottomSheetState = bottomSheetState,
+                        bottomSheetScaffoldState = bottomSheetScaffoldState,
                         sheetContent = {
                             toolsContent()
                         },
@@ -567,7 +538,7 @@ private fun ActiveSessionAdaptiveScaffold(
 private fun ToolsBottomSheetScaffold(
     sheetContent: @Composable () -> Unit,
     mainContent: @Composable (State<PaddingValues>) -> Unit,
-    bottomSheetState: BottomSheetScaffoldState,
+    bottomSheetScaffoldState: BottomSheetScaffoldState,
 ) {
     BottomSheetScaffold(
         sheetContent = {
@@ -579,16 +550,17 @@ private fun ToolsBottomSheetScaffold(
         sheetTonalElevation = 0.dp,  // deprecated anyways
         sheetShadowElevation = 0.dp, // deprecated anyways
         sheetPeekHeight = MaterialTheme.dimensions.toolsSheetPeekHeight,
-        scaffoldState = bottomSheetState,
+        scaffoldState = bottomSheetScaffoldState,
         sheetDragHandle = { SheetDragHandle() },
         content = { sheetPadding ->
             // sheetPadding does not work when Hidden, so manually force 0dp padding
             val bottomPadding = animateDpAsState(
-                if (bottomSheetState.bottomSheetState.currentValue != SheetValue.Hidden) {
+                if (bottomSheetScaffoldState.bottomSheetState.currentValue != SheetValue.Hidden) {
                     sheetPadding.calculateBottomPadding()
                 } else {
                     0.dp
-                }, label = ""
+                },
+                label = ""
             )
             val paddingValues = remember {
                 derivedStateOf {
@@ -1578,7 +1550,7 @@ private fun PreviewActiveSessionScreen(
             ).toImmutableList(),
             eventHandler = {},
             navigateUp = {},
-            bottomSheetState = rememberBottomSheetScaffoldState(),
+            bottomSheetScaffoldState = rememberBottomSheetScaffoldState(),
             bottomSheetPagerState = rememberPagerState(pageCount = { 2 }),
             snackbarHostState = remember { SnackbarHostState() }
         )
@@ -1731,6 +1703,30 @@ private fun PreviewEndSessionDialog(
 
 /** -------------------------------- Preview Parameter Providers -------------------------------- */
 
+// https://developer.android.com/guide/topics/large-screens/support-different-screen-sizes#window_size_classes
+// used for Previews only, always compare WindowWidthSizeClass and WindowHeightSizeClass separately
+object ScreenSizeDefaults {
+
+    val Phone = ScreenSizeClass(
+        width = WindowWidthSizeClass.Compact,
+        height = WindowHeightSizeClass.Expanded
+    )
+
+    val PhoneLandscape = ScreenSizeClass(
+        width = WindowWidthSizeClass.Expanded,
+        height = WindowHeightSizeClass.Compact
+    )
+
+    val Foldable = ScreenSizeClass(
+        width = WindowWidthSizeClass.Medium,
+        height = WindowHeightSizeClass.Medium
+    )
+
+    val LargeTablet = ScreenSizeClass(
+        width = WindowWidthSizeClass.Expanded,
+        height = WindowHeightSizeClass.Expanded
+    )
+}
 
 private val dummyRunningItem = ActiveSessionCurrentItemUiState(
     color = libraryItemColors[Random.nextInt(libraryItemColors.size)],

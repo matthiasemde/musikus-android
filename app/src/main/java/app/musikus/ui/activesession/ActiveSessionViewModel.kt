@@ -20,7 +20,7 @@ import app.musikus.database.entities.SessionCreationAttributes
 import app.musikus.di.ApplicationScope
 import app.musikus.ui.theme.libraryItemColors
 import app.musikus.usecase.activesession.ActiveSessionUseCases
-import app.musikus.usecase.activesession.SessionTimerState
+import app.musikus.usecase.activesession.SessionStatus
 import app.musikus.usecase.library.LibraryUseCases
 import app.musikus.usecase.sessions.SessionsUseCases
 import app.musikus.utils.DurationFormat
@@ -78,14 +78,11 @@ class ActiveSessionViewModel @Inject constructor(
         initialValue = null
     )
 
-    // TODO: this is actually a 1:1 mapping still, maybe think about either re-using state
-    //       from useCase or extend UI State functionality
     private val sessionState = activeSessionUseCases.getTimerState().map { state ->
         when (state) {
-            SessionTimerState.NOT_STARTED -> ActiveSessionState.NOT_STARTED
-            SessionTimerState.RUNNING -> ActiveSessionState.RUNNING
-            SessionTimerState.PAUSED -> ActiveSessionState.PAUSED
-            SessionTimerState.UNKNOWN -> ActiveSessionState.UNKNOWN // TODO evaluate what to do
+            SessionStatus.NOT_STARTED -> ActiveSessionState.NOT_STARTED
+            SessionStatus.RUNNING -> ActiveSessionState.RUNNING
+            SessionStatus.PAUSED -> ActiveSessionState.PAUSED
         }
     }.stateIn(
         scope = viewModelScope,

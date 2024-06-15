@@ -12,26 +12,25 @@ package app.musikus.usecase.activesession
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-enum class SessionTimerState {
+enum class SessionStatus {
     NOT_STARTED,
     RUNNING,
-    PAUSED,
-    UNKNOWN
+    PAUSED
 }
 
-class GetSessionTimerState (
+class GetSessionStatus (
     private val activeSessionRepository: ActiveSessionRepository,
 ) {
-    operator fun invoke() : Flow<SessionTimerState> {
+    operator fun invoke() : Flow<SessionStatus> {
 
         return activeSessionRepository.getSessionState().map { state ->
             if (state == null) {
-                return@map SessionTimerState.NOT_STARTED
+                return@map SessionStatus.NOT_STARTED
             }
             if (state.isPaused)
-                return@map SessionTimerState.PAUSED
+                return@map SessionStatus.PAUSED
 
-            SessionTimerState.RUNNING
+            SessionStatus.RUNNING
         }
     }
 }
