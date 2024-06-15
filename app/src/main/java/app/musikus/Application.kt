@@ -13,7 +13,6 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.os.Build
-import androidx.activity.result.ActivityResultLauncher
 import dagger.hilt.android.HiltAndroidApp
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -83,13 +82,8 @@ class Musikus : Application() {
             IO_EXECUTOR.execute(f)
         }
 
-        var exportLauncher: ActivityResultLauncher<String>? = null
-        var importLauncher: ActivityResultLauncher<Array<String>>? = null
-
         var noSessionsYet = true
         var serviceIsRunning = false
-
-        const val USER_PREFERENCES_NAME = "user_preferences"
 
         fun getRandomQuote(context: Context) : CharSequence {
             return context.resources.getTextArray(R.array.quotes).random()
@@ -97,16 +91,6 @@ class Musikus : Application() {
 
         fun dp(context: Context, dp: Int): Float {
             return context.resources.displayMetrics.density * dp
-        }
-
-
-        fun importDatabase() {
-            importLauncher?.launch(arrayOf("*/*"))
-        }
-
-
-        fun exportDatabase() {
-            exportLauncher?.launch("musikus_backup")
         }
     }
 }

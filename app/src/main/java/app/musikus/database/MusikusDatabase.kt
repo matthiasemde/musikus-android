@@ -3,25 +3,22 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2024 Matthias Emde
- *
- * Parts of this software are licensed under the MIT license
- *
- * Copyright (c) 2022, Javier Carbone, author Matthias Emde
- * Additions and modifications, author Michael Prommersberger
+ * Copyright (c) 2022-2024 Matthias Emde, Michael Prommersberger
  */
 
 package app.musikus.database
 
-import android.app.Application
 import android.content.ContentValues
+import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.util.Log
+import androidx.room.AutoMigration
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverter
 import androidx.room.TypeConverters
+import androidx.room.migration.AutoMigrationSpec
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import androidx.sqlite.db.SupportSQLiteQueryBuilder
@@ -43,7 +40,11 @@ import app.musikus.database.entities.SessionModel
 import app.musikus.utils.IdProvider
 import app.musikus.utils.TimeProvider
 import app.musikus.utils.prepopulateDatabase
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import java.io.File
+import java.io.InputStream
+import java.io.OutputStream
 import java.nio.ByteBuffer
 import java.time.Instant
 import java.time.ZoneId
@@ -52,8 +53,10 @@ import java.time.format.DateTimeFormatter
 import java.util.UUID
 import javax.inject.Provider
 
+const val MIME_TYPE_DATABASE = "application/octet-stream"
+
 @Database(
-    version = 3,
+    version = 4,
     entities = [
         SessionModel::class,
         SectionModel::class,
@@ -62,6 +65,13 @@ import javax.inject.Provider
         GoalDescriptionModel::class,
         GoalInstanceModel::class,
         GoalDescriptionLibraryItemCrossRefModel::class,
+    ],
+    autoMigrations = [
+        AutoMigration(
+            from = 3,
+            to = 4,
+            spec = MusikusDatabase.DatabaseMigrationThreeToFour::class
+        ),
     ],
     exportSchema = true,
 )
@@ -82,16 +92,56 @@ abstract class MusikusDatabase : RoomDatabase() {
 
     lateinit var timeProvider: TimeProvider
     lateinit var idProvider: IdProvider
+    lateinit var databaseFile: File
+
+    suspend fun validate(): Boolean {
+        return try {
+            val isDatabaseEmpty = listOf(
+                libraryItemDao.getAllAsFlow().first(),
+                libraryFolderDao.getAllAsFlow().first(),
+                goalDescriptionDao.getAllAsFlow().first(),
+                goalInstanceDao.getAllAsFlow().first(),
+                sessionDao.getAllAsFlow().first(),
+                sectionDao.getAllAsFlow().first()
+            ).all {
+                it.isEmpty()
+            }
+            !isDatabaseEmpty
+        } catch (e: Exception) {
+            Log.e("Database", "Validation failed:  ${e.javaClass.simpleName}: ${e.message}")
+            false
+        }
+    }
+
+    /**
+     *  ---------------- Datbase Export/Import ----------------
+     */
+
+    fun export(outputStream: OutputStream) {
+        // close the database to collect all logs
+        close()
+
+        // copy database file to output stream
+        databaseFile.inputStream().copyTo(outputStream)
+    }
+
+    fun import(inputStream: InputStream) {
+        // delete old database
+        databaseFile.delete()
+
+        // copy new database from input stream
+        inputStream.copyTo(databaseFile.outputStream())
+    }
 
     companion object {
         const val DATABASE_NAME = "musikus-database"
 
         fun buildDatabase(
-            app: Application,
-            databaseProvider: Provider<MusikusDatabase>,
-        ) =
-            Room.databaseBuilder(
-                app,
+            context: Context,
+            databaseProvider: Provider<MusikusDatabase>? = null,
+        ) : MusikusDatabase {
+            return Room.databaseBuilder(
+                context,
                 MusikusDatabase::class.java,
                 DATABASE_NAME
             ).addMigrations(
@@ -101,14 +151,17 @@ abstract class MusikusDatabase : RoomDatabase() {
                 // prepopulate the database after onCreate was called
                 override fun onCreate(db: SupportSQLiteDatabase) {
                     super.onCreate(db)
-                    // prepopulate the database if in debug configuration
+                    // prepopulate the database if in debug configuration and not in import mode
                     if (BuildConfig.DEBUG) {
-                        ioThread { runBlocking {
-                            prepopulateDatabase(databaseProvider.get())
-                        } }
+                        if (databaseProvider != null) {
+                            ioThread { runBlocking {
+                                prepopulateDatabase(databaseProvider.get())
+                            } }
+                        }
                     }
                 }
             }).build()
+        }
     }
 
     object DatabaseMigrationOneToTwo : Migration(1,2) {
@@ -356,6 +409,55 @@ abstract class MusikusDatabase : RoomDatabase() {
             db.execSQL("ALTER TABLE `_new_goal_description_library_item_cross_ref` RENAME TO `goal_description_library_item_cross_ref`")
             db.execSQL("CREATE INDEX IF NOT EXISTS `index_goal_description_library_item_cross_ref_goal_description_id` ON `goal_description_library_item_cross_ref` (`goal_description_id`)")
             db.execSQL("CREATE INDEX IF NOT EXISTS `index_goal_description_library_item_cross_ref_library_item_id` ON `goal_description_library_item_cross_ref` (`library_item_id`)")
+        }
+    }
+
+    class DatabaseMigrationThreeToFour : AutoMigrationSpec {
+        override fun onPostMigrate(db: SupportSQLiteDatabase) {
+            Log.d("POST_MIGRATION", "(3 -> 4): Starting Post Migration...")
+
+            db.beginTransaction()
+
+            try {
+
+                /**
+                 * The previous migration (2 -> 3) introduced a bug where the default value
+                 * for boolean columns was set to the string "false" instead of 0.
+                 * Here, we fix the issue by setting every boolean column to
+                 * 0 which is not explicitly set to 1.
+                 */
+                for (tableName in listOf("library_folder", "library_item", "session", "goal_description")) {
+                    val cursor = db.query(SupportSQLiteQueryBuilder.builder(tableName).let {
+                        it.columns(
+                            when(tableName) {
+                                "goal_description" -> arrayOf("id", "deleted", "paused")
+                                else -> arrayOf("id", "deleted")
+                            }
+                        )
+                        it.create()
+                    })
+                    while (cursor.moveToNext()) {
+                        val id = cursor.getBlob(cursor.getColumnIndexOrThrow("id"))
+                        val deleted = cursor.getString(cursor.getColumnIndexOrThrow("deleted"))
+                        Log.d("POST_MIGRATION", "(3 -> 4): Updating $tableName with id ${UUIDConverter().fromByte(id)} to deleted $deleted}")
+                        db.update(tableName, SQLiteDatabase.CONFLICT_ROLLBACK, ContentValues().apply {
+                            put("deleted", deleted == "1")
+                        }, "id=?", arrayOf(id))
+
+                        if (tableName == "goal_description") {
+                            val paused = cursor.getString(cursor.getColumnIndexOrThrow("paused"))
+                            db.update(tableName, SQLiteDatabase.CONFLICT_ROLLBACK, ContentValues().apply {
+                                put("paused", paused == "1")
+                            }, "id=?", arrayOf(id))
+                        }
+                    }
+                }
+                db.setTransactionSuccessful()
+            } finally {
+                db.endTransaction()
+            }
+
+            Log.d("POST_MIGRATION", "(3 -> 4): Post Migration complete")
         }
     }
 }

@@ -16,6 +16,7 @@ plugins {
     id("com.google.devtools.ksp")
     id("de.mannodermaus.android-junit5")
     id("com.jaredsburrows.license")
+    id("androidx.room")
 }
 
 android {
@@ -35,10 +36,6 @@ android {
 
         testInstrumentationRunner = "app.musikus.HiltTestRunner"
 
-        ksp {
-            arg("room.schemaLocation", "$projectDir/schemas")
-        }
-
         buildConfigField("String", "COMMIT_HASH", "\"$commitHash\"")
     }
 
@@ -50,7 +47,8 @@ android {
                 keyAlias = System.getenv("SIGNING_KEY_ALIAS")
                 keyPassword = System.getenv("SIGNING_KEY_PASSWORD")
             }
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            logger.warn("No signing configuration found, using debug key (message: ${e.message})")
         }
     }
 
@@ -81,6 +79,11 @@ android {
         }
     }
 
+    sourceSets {
+        // Adds exported schema location as test app assets.
+        getByName("androidTest").assets.srcDir("$projectDir/schemas")
+    }
+
     kotlinOptions {
         jvmTarget = javaVersion.toString()
     }
@@ -93,6 +96,10 @@ android {
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.5"
     }
+}
+
+room {
+    schemaDirectory("$projectDir/schemas")
 }
 
 tasks.withType<Test> {
@@ -212,5 +219,6 @@ dependencies {
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test:runner:1.5.2")
     androidTestImplementation("com.google.truth:truth:1.1.3")
+    androidTestImplementation("android.arch.persistence.room:testing:1.1.1")
 
 }
