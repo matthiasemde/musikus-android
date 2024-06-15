@@ -103,7 +103,7 @@ tasks.withType<Test> {
 }
 
 dependencies {
-    val bomVersion = "2024.03.00"
+    val bomVersion = "2024.04.01"
 
     val lifecycleVersion = "2.7.0"
     val roomVersion = "2.6.1"
@@ -112,7 +112,7 @@ dependencies {
     val kotlinCoroutineVersion = "1.7.3"
     val mockkVersion = "1.13.9"
     val media3Version = "1.3.0"
-    val activityVersion = "1.8.2"
+    val activityVersion = "1.9.0"
 
     implementation("androidx.activity:activity-ktx:$activityVersion")
 
@@ -162,6 +162,9 @@ dependencies {
 
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:$kotlinCoroutineVersion")
+
+    // Immutable Lists
+    implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.5")
 
     //Dagger - Hilt
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")

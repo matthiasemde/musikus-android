@@ -16,7 +16,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.tooling.preview.PreviewParameter
 import app.musikus.R
+import app.musikus.datastore.ColorSchemeSelections
+import app.musikus.ui.theme.MusikusColorSchemeProvider
+import app.musikus.ui.theme.MusikusPreviewElement1
+import app.musikus.ui.theme.MusikusThemedPreview
 import app.musikus.ui.theme.spacing
 
 @Composable
@@ -54,5 +59,18 @@ fun DialogActions(
         ) {
             Text(text = confirmButtonText)
         }
+    }
+}
+
+@MusikusPreviewElement1
+@Composable
+private fun PreviewDialogActions(
+    @PreviewParameter(MusikusColorSchemeProvider::class) theme: ColorSchemeSelections
+) {
+    MusikusThemedPreview(theme = theme) {
+        DialogActions(
+            onDismissHandler = {},
+            onConfirmHandler = {}
+        )
     }
 }

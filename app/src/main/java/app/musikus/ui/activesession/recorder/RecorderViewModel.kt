@@ -206,16 +206,26 @@ class RecorderViewModel @Inject constructor(
         recorderServiceState,
         recordings,
         currentRawRecording,
+        _currentRecordingUri,   // TODO check if combine cycle b.c. rawRec. depends on _curr.R.Uri
         dialogUiState
-    ) { serviceState, recordings, currentRawRecording, dialogUiState ->
+    ) { serviceState, recordings, currentRawRecording, currentUri, dialogUiState ->
         RecorderUiState(
             recorderState = serviceState?.recorderState ?: RecorderState.UNINITIALIZED,
             recordingDuration = getDurationString(
                 (serviceState?.recordingDuration ?: 0.seconds),
-                DurationFormat.HMSC_DIGITAL
+                DurationFormat.MSC_DIGITAL
             ),
-            recordings = recordings,
-            currentRawRecording = currentRawRecording,
+            recordings = recordings.map {
+                RecordingListItemUiState(
+                    title = it.title,
+                    date = it.date.musikusFormat(DateFormat.DAY_MONTH_YEAR),
+                    duration = getDurationString(it.duration, DurationFormat.MS_DIGITAL).toString(),
+                    mediaItem = it.mediaItem,
+                    contentUri = it.contentUri,
+                    showPlayerUi = it.contentUri == currentUri
+                )
+            },
+            currentPlaybackRawMedia = currentRawRecording,
             dialogUiState = dialogUiState
         )
     }.stateIn(
@@ -225,16 +235,18 @@ class RecorderViewModel @Inject constructor(
             recorderState = RecorderState.UNINITIALIZED,
             recordingDuration = AnnotatedString(""),
             recordings = emptyList(),
-            currentRawRecording = null,
+            currentPlaybackRawMedia = null,
             dialogUiState = dialogUiState.value
         )
     )
 
 
+    // TODO split out subfunctions
     fun onUiEvent(event: RecorderUiEvent) {
         when(event) {
             is RecorderUiEvent.StartRecording -> {
                 viewModelScope.launch {
+                    // Microphone permission
                     val recordingPermissionResult = permissionsUseCases.request(
                         listOf(Manifest.permission.RECORD_AUDIO)
                     )
@@ -243,6 +255,7 @@ class RecorderViewModel @Inject constructor(
                         return@launch
                     }
 
+                    // Under API 29, we need WRITE_EXTERNAL_STORAGE
                     if(Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
                         val writeExternalStoragePermissionResult = permissionsUseCases.request(
                             listOf(Manifest.permission.WRITE_EXTERNAL_STORAGE)

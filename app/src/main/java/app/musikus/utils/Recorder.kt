@@ -189,6 +189,7 @@ class Recorder(
         }
     }
 
+    // TODO check hardware compatibility with settings of MediaRecorder
     private fun initializeMediaRecorder(outputFile: FileDescriptor) {
         mediaRecorder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             MediaRecorder(context)

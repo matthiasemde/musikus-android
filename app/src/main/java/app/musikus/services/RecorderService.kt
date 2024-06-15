@@ -206,6 +206,7 @@ class RecorderService : Service() {
         }
     }
 
+    // TODO check if timer drifts over long durations
     private fun startTimer() {
         _recordingTimer = timer(
             name = "recording_timer",
