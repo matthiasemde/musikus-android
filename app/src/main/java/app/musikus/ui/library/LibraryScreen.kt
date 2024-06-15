@@ -445,9 +445,6 @@ fun LibraryContent(
                     modifier = Modifier.animateItemPlacement()
                 ) {
                     LibraryUiItem(
-                        modifier = Modifier.padding(
-                            horizontal = MaterialTheme.spacing.large
-                        ),
                         item = item,
                         lastPracticedDate = lastPracticedDate,
                         selected = item.id in itemsUiState.selectedItemIds,
