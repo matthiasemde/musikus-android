@@ -319,7 +319,11 @@ class ActiveSessionViewModel @Inject constructor(
         when (event) {
             is ActiveSessionEndDialogUiEvent.CommentChanged -> _endDialogComment.update { event.comment }
             is ActiveSessionEndDialogUiEvent.RatingChanged -> _endDialogRating.update { event.rating }
-            ActiveSessionEndDialogUiEvent.Confirmed -> applicationScope.launch { stopSession() }
+            ActiveSessionEndDialogUiEvent.Confirmed -> applicationScope.launch {
+                // launch stopSession in applicationScope because it is a long running operation and
+                // may outlive the ViewModel because it gets destroyed.
+                stopSession()
+            }
         }
     }
 
