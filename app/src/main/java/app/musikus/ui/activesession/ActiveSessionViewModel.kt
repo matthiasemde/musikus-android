@@ -78,7 +78,7 @@ class ActiveSessionViewModel @Inject constructor(
         initialValue = null
     )
 
-    private val sessionState = activeSessionUseCases.getTimerState().map { state ->
+    private val sessionState = activeSessionUseCases.getSessionStatus().map { state ->
         when (state) {
             SessionStatus.NOT_STARTED -> ActiveSessionState.NOT_STARTED
             SessionStatus.RUNNING -> ActiveSessionState.RUNNING

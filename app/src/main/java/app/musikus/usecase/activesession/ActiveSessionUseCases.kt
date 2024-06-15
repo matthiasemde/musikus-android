@@ -24,5 +24,5 @@ data class ActiveSessionUseCases(
     val getFinalizedSession: GetFinalizedSessionUseCase,
     val reset: ResetSessionUseCase,
     val isSessionRunning: IsSessionRunningUseCase,
-    val getTimerState: GetSessionStatus,
+    val getSessionStatus: GetSessionStatusUseCase,
 )

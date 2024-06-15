@@ -18,7 +18,7 @@ enum class SessionStatus {
     PAUSED
 }
 
-class GetSessionStatus (
+class GetSessionStatusUseCase (
     private val activeSessionRepository: ActiveSessionRepository,
 ) {
     operator fun invoke() : Flow<SessionStatus> {
