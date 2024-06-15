@@ -93,7 +93,6 @@ abstract class MusikusDatabase : RoomDatabase() {
     lateinit var timeProvider: TimeProvider
     lateinit var idProvider: IdProvider
     lateinit var databaseFile: File
-    lateinit var databaseBackupFile: File
 
     suspend fun validate(): Boolean {
         return try {
@@ -109,7 +108,7 @@ abstract class MusikusDatabase : RoomDatabase() {
             }
             !isDatabaseEmpty
         } catch (e: Exception) {
-            Log.e("PTDatabase", "Validation failed:  ${e.javaClass.simpleName}: ${e.message}")
+            Log.e("Database", "Validation failed:  ${e.javaClass.simpleName}: ${e.message}")
             false
         }
     }
@@ -121,20 +120,14 @@ abstract class MusikusDatabase : RoomDatabase() {
     fun export(outputStream: OutputStream) {
         // close the database to collect all logs
         close()
+
         // copy database file to output stream
-        databaseFile.inputStream().let { inputStream ->
-            inputStream.copyTo(outputStream)
-            inputStream.close()
-        }
-        outputStream.close()
+        databaseFile.inputStream().copyTo(outputStream)
     }
 
     fun import(inputStream: InputStream) {
         // close the database to collect all logs
         close()
-
-        // create a backup of the original database
-        databaseFile.copyTo(databaseBackupFile, overwrite = true)
 
         // delete old database
         databaseFile.delete()
@@ -145,19 +138,12 @@ abstract class MusikusDatabase : RoomDatabase() {
 
     companion object {
         const val DATABASE_NAME = "musikus-database"
-        const val DATABASE_BACKUP_NAME = "musikus-database.bkp"
 
         fun buildDatabase(
             context: Context,
             databaseProvider: Provider<MusikusDatabase>? = null,
         ) : MusikusDatabase {
-            val databaseFile = context.getDatabasePath(DATABASE_NAME)
-            val databaseBackupFile = context.getDatabasePath(DATABASE_BACKUP_NAME)
-
-            // If a backup file exists, it must be because we are in the process of importing a database
-            val importInProgress = databaseBackupFile.exists()
-
-            var db = Room.databaseBuilder(
+            return Room.databaseBuilder(
                 context,
                 MusikusDatabase::class.java,
                 DATABASE_NAME
@@ -169,7 +155,7 @@ abstract class MusikusDatabase : RoomDatabase() {
                 override fun onCreate(db: SupportSQLiteDatabase) {
                     super.onCreate(db)
                     // prepopulate the database if in debug configuration and not in import mode
-                    if (BuildConfig.DEBUG && !importInProgress) {
+                    if (BuildConfig.DEBUG) {
                         if (databaseProvider != null) {
                             ioThread { runBlocking {
                                 prepopulateDatabase(databaseProvider.get())
@@ -178,28 +164,6 @@ abstract class MusikusDatabase : RoomDatabase() {
                     }
                 }
             }).build()
-
-            if (importInProgress) {
-                Log.d("DATABASE_IMPORT", "Importing database")
-                ioThread { runBlocking {
-                    if (db.validate()) {
-                        Log.d("DATABASE_IMPORT", "Validated")
-                        databaseBackupFile.delete()
-                    } else {
-                        Log.d("DATABASE_IMPORT", "Validation failed")
-                        db.close()
-                        Log.d("DATABASE_IMPORT", "Database closed")
-                        databaseBackupFile.copyTo(databaseFile, overwrite = true)
-                        Log.d("DATABASE_IMPORT", "Backup restored")
-                        databaseBackupFile.delete()
-                        Log.d("DATABASE_IMPORT", "Backup deleted")
-                        db = buildDatabase(context)
-                        Log.d("DATABASE_IMPORT", "Database rebuilt")
-                    }
-                } }
-            }
-
-            return db
         }
     }
 

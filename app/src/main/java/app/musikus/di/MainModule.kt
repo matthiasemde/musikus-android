@@ -28,7 +28,6 @@ import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
 import javax.inject.Provider
 import javax.inject.Singleton
 
@@ -84,7 +83,6 @@ object MainModule {
             this.timeProvider = timeProvider
             this.idProvider = idProvider
             this.databaseFile = app.getDatabasePath(MusikusDatabase.DATABASE_NAME)
-            this.databaseBackupFile = app.getDatabasePath(MusikusDatabase.DATABASE_BACKUP_NAME)
         }
     }
 }
