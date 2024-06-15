@@ -11,9 +11,7 @@ package app.musikus.ui.activesession
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.graphics.Color
 import app.musikus.database.LibraryFolderWithItems
-import app.musikus.database.UUIDConverter
 import app.musikus.database.daos.LibraryItem
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import java.time.ZonedDateTime
 import java.util.UUID
@@ -24,87 +22,77 @@ enum class ActiveSessionState {
     NOT_STARTED,
     RUNNING,
     PAUSED,
-    UNKNOWN
+    UNKNOWN,
 }
 
 @Stable
 /** Main UI State */
 data class ActiveSessionUiState(
-    val sessionState: StateFlow<ActiveSessionState> = MutableStateFlow(ActiveSessionState.NOT_STARTED),
-    val mainContentUiState: StateFlow<ActiveSessionContentUiState> = MutableStateFlow(ActiveSessionContentUiState()),
-    val newItemSelectorUiState: StateFlow<NewItemSelectorUiState> = MutableStateFlow(NewItemSelectorUiState()),
-    val toolsUiState: StateFlow<ActiveSessionToolsUiState> = MutableStateFlow(ActiveSessionToolsUiState()),
-    val dialogVisibilities: StateFlow<ActiveSessionDialogsUiState> = MutableStateFlow(ActiveSessionDialogsUiState()),
+    val sessionState: StateFlow<ActiveSessionState>,
+    val mainContentUiState: StateFlow<ActiveSessionContentUiState>,
+    val newItemSelectorUiState: StateFlow<NewItemSelectorUiState?>,
+    val dialogUiState: StateFlow<ActiveSessionDialogsUiState>,
 )
 
+@Stable
 data class ActiveSessionDialogsUiState(
-    val newItemSelectorVisible: Boolean = false,
-    val finishDialogVisible: Boolean = false,
-    val discardDialogVisible: Boolean = false,
-    val createItemDialogVisible: Boolean = false,
-    val createFolderDialogVisible: Boolean = false,
+    val endDialogUiState: ActiveSessionEndDialogUiState?,
+    val discardDialogVisible: Boolean,
 )
 
 @Stable
 data class ActiveSessionContentUiState(
-    /**
-     * Nullable() States indicate visibility of the UI element.
-     * Use Nullable because State<Class?> cannot be smart-casted in Composables
-     */
-    val timerUiState: StateFlow<ActiveSessionTimerUiState> = MutableStateFlow(ActiveSessionTimerUiState()),
-    val currentItemUiState: StateFlow<ActiveSessionCurrentItemUiState?> = MutableStateFlow(null),
-    val pastSectionsUiState: StateFlow<ActiveSessionCompletedSectionsUiState?> = MutableStateFlow(null),
-    val endDialogUiState: StateFlow<ActiveSessionEndDialogUiState> = MutableStateFlow(ActiveSessionEndDialogUiState())
+    val timerUiState: StateFlow<ActiveSessionTimerUiState>,
+    val currentItemUiState: StateFlow<ActiveSessionCurrentItemUiState?>,
+    val pastSectionsUiState: StateFlow<ActiveSessionCompletedSectionsUiState?>,
 )
 
 @Stable
 data class ActiveSessionTimerUiState(
-    val timerText: String = "00:00", // Prevents size change animation to trigger when opening the screen
-    val subHeadingText: String = ""
+    val timerText: String,
+    val subHeadingText: String,
 )
 
 @Stable
 data class ActiveSessionCurrentItemUiState(
-    val name: String = "",
-    val color: Color = Color.Transparent,
-    val durationText: String = "",
+    val name: String,
+    val color: Color,
+    val durationText: String,
 )
 
 @Stable
 data class ActiveSessionCompletedSectionsUiState(
-    val items: List<CompletedSectionUiState> = emptyList()
+    val items: List<CompletedSectionUiState>
 )
 
 @Stable
 data class CompletedSectionUiState(
-    val id: UUID = UUIDConverter.deadBeef,
-    val name: String = "",
-    val durationText: String = "",
-    val color: Color = Color.Transparent,
+    val id: UUID,
+    val name: String,
+    val durationText: String,
+    val color: Color,
 )
 
 @Stable
 data class ActiveSessionEndDialogUiState(
-    val rating: Int = 3,
-    val comment: String = "",
+    val rating: Int,
+    val comment: String,
 )
 
 @Stable
 data class NewItemSelectorUiState(
-    val runningItem: LibraryItem? = null,
-    val foldersWithItems: List<LibraryFolderWithItems> = emptyList(),
-    val lastPracticedDates: Map<UUID, ZonedDateTime?> = emptyMap(),
-    val rootItems: List<LibraryItem> = emptyList()
+    val runningItem: LibraryItem?,
+    val foldersWithItems: List<LibraryFolderWithItems>,
+    val lastPracticedDates: Map<UUID, ZonedDateTime?>,
+    val rootItems: List<LibraryItem>,
 )
 
-@Stable
-data class ActiveSessionToolsUiState(
-    /** state is still unused */
-    val activeTab: ActiveSessionTab = ActiveSessionTab.DEFAULT,
-    val expanded: Boolean = false,
-//    val metronomeState: MetronomeUiState,
-//    val recorderState: RecorderUiState
-)
+//@Stable
+//data class ActiveSessionToolsUiState(
+//    /** state is still unused */
+//    val activeTab: ActiveSessionTab,
+//    val expanded: Boolean,
+//)
 
 enum class ActiveSessionTab {
     METRONOME, RECORDER, DEFAULT
@@ -120,8 +108,6 @@ sealed class ActiveSessionUiEvent {
     data object ToggleNewItemSelector: ActiveSessionUiEvent()
     data object ToggleFinishDialog : ActiveSessionUiEvent()
     data object ToggleDiscardDialog : ActiveSessionUiEvent()
-    data object ToggleCreateItemDialog: ActiveSessionUiEvent()
-    data object ToggleCreateFolderDialog: ActiveSessionUiEvent()
 
 }
 

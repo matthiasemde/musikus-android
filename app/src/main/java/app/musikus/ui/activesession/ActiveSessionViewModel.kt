@@ -14,6 +14,7 @@ import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import app.musikus.database.Nullable
+import app.musikus.database.daos.LibraryItem
 import app.musikus.database.entities.SectionCreationAttributes
 import app.musikus.database.entities.SessionCreationAttributes
 import app.musikus.di.ApplicationScope
@@ -43,6 +44,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.util.Timer
+import java.util.UUID
 import javax.inject.Inject
 import kotlin.concurrent.timer
 import kotlin.time.Duration
@@ -62,7 +64,7 @@ class ActiveSessionViewModel @Inject constructor(
     private var _clock = MutableStateFlow(false)
     private var _timer: Timer? = null
 
-    /** ------------------- Proxies for useCases ------------------------------------------- */
+    /** ---------- Proxies for Flows from UseCases, turned into StateFlows  -------------------- */
 
     private val completedSections = activeSessionUseCases.getCompletedSections().stateIn(
         scope = viewModelScope,
@@ -119,12 +121,13 @@ class ActiveSessionViewModel @Inject constructor(
         initialValue = emptyMap()
     )
 
+    /** ------------------- Own StateFlow UI state ------------------------------------------- */
 
-    /** ------------------- Own StateFlow UI states  ------------------------------------------- */
-
-    private val _endDialogUiState = MutableStateFlow(ActiveSessionEndDialogUiState())
-    private val _dialogVisibilities = MutableStateFlow(ActiveSessionDialogsUiState())
-
+    private val _endDialogComment = MutableStateFlow("")
+    private val _endDialogRating = MutableStateFlow(3)
+    private val _endDialogVisible = MutableStateFlow(false)
+    private val _discardDialogVisible = MutableStateFlow(false)
+    private val _newItemSelectorVisible = MutableStateFlow(false)
 
     /** ------------------- Sub UI states  ------------------------------------------- */
 
@@ -144,30 +147,35 @@ class ActiveSessionViewModel @Inject constructor(
             DurationFormat.MS_DIGITAL
         )
         ActiveSessionTimerUiState(
-            timerText = getDurationString(practiceDuration, DurationFormat.MS_DIGITAL).toString(),
+            timerText = getFormattedTimerText(practiceDuration),
             subHeadingText = if (pause) "Paused $pauseDurStr" else "Practice Time",
         )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = ActiveSessionTimerUiState()
+        initialValue = ActiveSessionTimerUiState(
+            timerText = getFormattedTimerText(Duration.ZERO),
+            subHeadingText = "Practice Time"
+        )
     )
+
+    private fun getFormattedTimerText(duration: Duration) = getDurationString(
+        duration,
+        DurationFormat.MS_DIGITAL
+    ).toString()
 
     private val currentItemUiState: StateFlow<ActiveSessionCurrentItemUiState?> = combine(
         sessionState,
         runningLibraryItem,
         _clock  // should update with clock
     ) { sessionState, item, _ ->
-        if (sessionState == ActiveSessionState.NOT_STARTED) {
-            return@combine null
-        }
+        if (sessionState == ActiveSessionState.NOT_STARTED) return@combine null
 
         val currentItemDuration = try {
             activeSessionUseCases.getRunningItemDuration()
         } catch (e: IllegalStateException) {
             Duration.ZERO   // Session not yet started
         }
-
         ActiveSessionCurrentItemUiState(
             name = item?.name ?: "Not started",
             durationText = getDurationString(
@@ -206,21 +214,14 @@ class ActiveSessionViewModel @Inject constructor(
     )
 
 
-    private val mainContentUiState = MutableStateFlow(
-        ActiveSessionContentUiState(
-            timerUiState = timerUiState,
-            currentItemUiState = currentItemUiState,
-            pastSectionsUiState = pastSectionsUiState,
-            endDialogUiState = _endDialogUiState
-        )
-    )
-
     private val newItemSelectorUiState = combine(
+        _newItemSelectorVisible,
         runningLibraryItem,
         libraryFoldersWithItems,
         lastPracticedDates,
-        rootItems
-    ) { runningItem, folders, lastPracticedDates, rootItems ->
+        rootItems,
+    ) { visible, runningItem, folders, lastPracticedDates, rootItems ->
+        if (!visible) return@combine null
         NewItemSelectorUiState(
             runningItem = runningItem,
             foldersWithItems = folders,
@@ -230,141 +231,138 @@ class ActiveSessionViewModel @Inject constructor(
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = NewItemSelectorUiState()
+        initialValue = null
     )
 
-    private val _toolsUiState = MutableStateFlow(ActiveSessionToolsUiState())
+    private val _endDialogUiState = combine(
+        _endDialogVisible,
+        _endDialogComment,
+        _endDialogRating
+    ) { visible, comment, rating ->
+        if (!visible) return@combine null
+        ActiveSessionEndDialogUiState(
+            comment = comment,
+            rating = rating
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = null
+    )
 
-    /** ------------------- Main UI State ------------------------------------------- */
-
+    private val dialogsUiStates = combine(
+        _endDialogUiState,
+        _discardDialogVisible
+    ) { endDialog, discardDialogVisible ->
+        ActiveSessionDialogsUiState(
+            endDialogUiState = endDialog,
+            discardDialogVisible = discardDialogVisible
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = ActiveSessionDialogsUiState(
+            endDialogUiState = _endDialogUiState.value,
+            discardDialogVisible = _discardDialogVisible.value
+        )
+    )
 
     val uiState = MutableStateFlow(
         ActiveSessionUiState(
             sessionState = sessionState,
-            dialogVisibilities = _dialogVisibilities,
-            mainContentUiState = mainContentUiState,
+            mainContentUiState = MutableStateFlow(
+                ActiveSessionContentUiState(
+                    timerUiState = timerUiState,
+                    currentItemUiState = currentItemUiState,
+                    pastSectionsUiState = pastSectionsUiState,
+                )
+            ),
             newItemSelectorUiState = newItemSelectorUiState,
-            toolsUiState = _toolsUiState,
+            dialogUiState = dialogsUiStates
         )
     ).asStateFlow()
 
     private val navigationChannel = Channel<NavigationEvent>()
     val navigationEventsChannelFlow = navigationChannel.receiveAsFlow()
 
-    /** ------------------- Event Handler ------------------------------------------- */
-
-    fun onUiEvent(event: ActiveSessionUiEvent) {
-        when (event) {
-            is ActiveSessionUiEvent.SelectItem -> {
-                viewModelScope.launch {
-                    // resume session if paused
-                    if (sessionState.value == ActiveSessionState.PAUSED) {
-                        activeSessionUseCases.resume()
-                    }
-
-                    // wait until the current item has been running for at least 1 second
-                    if (sessionState.value != ActiveSessionState.NOT_STARTED
-                        && activeSessionUseCases.getRunningItemDuration() < 1.seconds
-                    ) {
-                        delay(1000)
-                    }
-
-                    activeSessionUseCases.selectItem(event.item)
-                }
-            }
-
-            is ActiveSessionUiEvent.TogglePauseState -> {
-                viewModelScope.launch {
-                    when (sessionState.value) {
-                        ActiveSessionState.RUNNING -> activeSessionUseCases.pause()
-                        ActiveSessionState.PAUSED -> activeSessionUseCases.resume()
-                        else -> {
-                            Log.d(
-                                "ActiveSessionViewModel",
-                                "TogglePauseState: Timer state = ${sessionState.value}"
-                            )
-                        }
-                    }
-                }
-            }
-
-            is ActiveSessionUiEvent.BackPressed -> {}
-            is ActiveSessionUiEvent.DeleteSection -> {
-                viewModelScope.launch {
-                    if (sessionState.value == ActiveSessionState.PAUSED) {
-                        activeSessionUseCases.resume()
-                    }
-                    activeSessionUseCases.deleteSection(event.sectionId)
-                }
-            }
-
-            is ActiveSessionUiEvent.EndDialogUiEvent -> {
-                onEndDialogUiEvent(event.dialogEvent)
-            }
-
-            ActiveSessionUiEvent.DiscardSessionDialogConfirmed -> {
-                activeSessionUseCases.reset()
-                viewModelScope.launch {
-                    navigationChannel.send(NavigationEvent.NavigateUp)
-                }
-            }
-
-            ActiveSessionUiEvent.ToggleDiscardDialog -> _dialogVisibilities.update {
-                it.copy(discardDialogVisible = !it.discardDialogVisible)
-            }
-
-            ActiveSessionUiEvent.ToggleFinishDialog -> _dialogVisibilities.update {
-                it.copy(finishDialogVisible = !it.finishDialogVisible)
-            }
-
-            ActiveSessionUiEvent.ToggleNewItemSelector -> _dialogVisibilities.update {
-                it.copy(newItemSelectorVisible = !it.newItemSelectorVisible)
-            }
-
-            ActiveSessionUiEvent.ToggleCreateFolderDialog -> _dialogVisibilities.update {
-                it.copy(createFolderDialogVisible = !it.createFolderDialogVisible)
-            }
-
-            ActiveSessionUiEvent.ToggleCreateItemDialog -> _dialogVisibilities.update {
-                it.copy(createItemDialogVisible = !it.createItemDialogVisible)
-            }
-        }
-    }
-
-    private fun onEndDialogUiEvent(event: ActiveSessionEndDialogUiEvent) {
-        when (event) {
-            is ActiveSessionEndDialogUiEvent.CommentChanged -> {
-                _endDialogUiState.update { it.copy(comment = event.comment) }
-            }
-
-            ActiveSessionEndDialogUiEvent.Confirmed -> {
-                stopSession()
-            }
-
-            is ActiveSessionEndDialogUiEvent.RatingChanged -> {
-                _endDialogUiState.update { it.copy(rating = event.rating) }
-            }
-        }
-    }
-
-    /** ---------------------------------- private methods ----------------------------------- */
 
     init {
         startTimer()
-
         /** Hide the Tools Bottom Sheet on Startup */
-        runBlocking (context = Dispatchers.IO) {
+        runBlocking(context = Dispatchers.IO) {
             viewModelScope.launch {
                 // wait until session data has initialized
                 while (sessionState.value == ActiveSessionState.UNKNOWN) {
                     delay(100)
                 }
-
                 // TODO: do not always hide but only on session start and when it was originally hidden
                 viewModelScope.launch {
                     navigationChannel.send(NavigationEvent.HideTools)
                 }
 
+            }
+        }
+    }
+
+    fun onUiEvent(event: ActiveSessionUiEvent) {
+        when (event) {
+            is ActiveSessionUiEvent.SelectItem -> viewModelScope.launch { selectItem(event.item) }
+            is ActiveSessionUiEvent.TogglePauseState -> viewModelScope.launch { togglePauseState() }
+            is ActiveSessionUiEvent.DeleteSection -> viewModelScope.launch { deleteSection(event.sectionId) }
+            is ActiveSessionUiEvent.EndDialogUiEvent -> onEndDialogUiEvent(event.dialogEvent)
+            is ActiveSessionUiEvent.BackPressed -> { /* TODO */ }
+            ActiveSessionUiEvent.DiscardSessionDialogConfirmed -> discardSession()
+            ActiveSessionUiEvent.ToggleDiscardDialog -> _discardDialogVisible.update { !it }
+            ActiveSessionUiEvent.ToggleFinishDialog -> _endDialogVisible.update { !it }
+            ActiveSessionUiEvent.ToggleNewItemSelector -> _newItemSelectorVisible.update { !it }
+        }
+    }
+
+    private fun onEndDialogUiEvent(event: ActiveSessionEndDialogUiEvent) {
+        when (event) {
+            is ActiveSessionEndDialogUiEvent.CommentChanged -> _endDialogComment.update { event.comment }
+            is ActiveSessionEndDialogUiEvent.RatingChanged -> _endDialogRating.update { event.rating }
+            ActiveSessionEndDialogUiEvent.Confirmed -> applicationScope.launch { stopSession() }
+        }
+    }
+
+    private suspend fun selectItem(item: LibraryItem) {
+        // resume session if paused
+        if (sessionState.value == ActiveSessionState.PAUSED) {
+            activeSessionUseCases.resume()
+        }
+        // wait until the current item has been running for at least 1 second
+        if (sessionState.value != ActiveSessionState.NOT_STARTED
+            && activeSessionUseCases.getRunningItemDuration() < 1.seconds
+        ) {
+            delay(1000)
+        }
+        activeSessionUseCases.selectItem(item)
+    }
+
+    private suspend fun deleteSection(sectionId: UUID) {
+        if (sessionState.value == ActiveSessionState.PAUSED) {
+            activeSessionUseCases.resume()
+        }
+        activeSessionUseCases.deleteSection(sectionId)
+    }
+
+    private fun discardSession() {
+        activeSessionUseCases.reset()
+        viewModelScope.launch {
+            navigationChannel.send(NavigationEvent.NavigateUp)
+        }
+    }
+
+    private suspend fun togglePauseState() {
+        when (sessionState.value) {
+            ActiveSessionState.RUNNING -> activeSessionUseCases.pause()
+            ActiveSessionState.PAUSED -> activeSessionUseCases.resume()
+            else -> {
+                Log.d(
+                    "ActiveSessionViewModel",
+                    "TogglePauseState: Timer state = ${sessionState.value}"
+                )
             }
         }
     }
@@ -382,36 +380,32 @@ class ActiveSessionViewModel @Inject constructor(
         }
     }
 
-    private fun stopSession() {
-        applicationScope.launch {
-            val savableState =
-                activeSessionUseCases.getFinalizedSession()   // complete running section
-
-            // ignore empty sections (e.g. when paused and then stopped immediately))
-            val sections = savableState.completedSections.filter { it.duration > 0.seconds }
-
-            // store in database
-            sessionUseCases.add(
-                sessionCreationAttributes = SessionCreationAttributes(
-                    // add up all pause durations
-                    breakDuration = sections.fold(0.seconds) { acc, section ->
-                        acc + section.pauseDuration
-                    },
-                    comment = _endDialogUiState.value.comment,
-                    rating = _endDialogUiState.value.rating
-                ),
-                sectionCreationAttributes = sections.map { section ->
-                    SectionCreationAttributes(
-                        libraryItemId = section.libraryItem.id,
-                        duration = section.duration,
-                        startTimestamp = section.startTimestamp
-                    )
-                }
-            )
-            activeSessionUseCases.reset()   // reset the active session state
-            viewModelScope.launch {
-                navigationChannel.send(NavigationEvent.NavigateUp)
+    private suspend fun stopSession() {
+        // complete running section
+        val savableState = activeSessionUseCases.getFinalizedSession()
+        // ignore empty sections (e.g. when paused and then stopped immediately))
+        val sections = savableState.completedSections.filter { it.duration > 0.seconds }
+        // store in database
+        sessionUseCases.add(
+            sessionCreationAttributes = SessionCreationAttributes(
+                // add up all pause durations
+                breakDuration = sections.fold(0.seconds) { acc, section ->
+                    acc + section.pauseDuration
+                },
+                comment = _endDialogComment.value,
+                rating = _endDialogRating.value
+            ),
+            sectionCreationAttributes = sections.map { section ->
+                SectionCreationAttributes(
+                    libraryItemId = section.libraryItem.id,
+                    duration = section.duration,
+                    startTimestamp = section.startTimestamp
+                )
             }
+        )
+        activeSessionUseCases.reset()   // reset the active session state
+        viewModelScope.launch {
+            navigationChannel.send(NavigationEvent.NavigateUp)
         }
     }
 }

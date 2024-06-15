@@ -133,7 +133,6 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLifecycleOwner
-import androidx.compose.ui.platform.rememberNestedScrollInteropConnection
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -258,33 +257,16 @@ fun ActiveSession(
 ) {
     val uiState = viewModel.uiState.collectAsStateWithLifecycle()
     val eventHandler = viewModel::onUiEvent
-
     val scope = rememberCoroutineScope()
-
     val windowsSizeClass = calculateWindowSizeClass(activity = LocalContext.current as Activity)
 
     val snackbarHostState = remember { SnackbarHostState() }
-
     val bottomSheetState = rememberBottomSheetScaffoldState(
         bottomSheetState = rememberStandardBottomSheetState(
             skipHiddenState = false,
             // initialValue = SheetValue.Hidden does not work here unfortunately
         )
     )
-
-    ObserveAsEvents(viewModel.navigationEventsChannelFlow) { event ->
-        when (event) {
-            is NavigationEvent.NavigateUp -> {
-                navigateUp()
-            }
-            is NavigationEvent.HideTools -> {
-                scope.launch {
-                    bottomSheetState.bottomSheetState.hide()
-                }
-            }
-        }
-    }
-
     // TODO move to somewhere final
     val tabs = persistentListOf(
         ToolsTab(
@@ -303,6 +285,19 @@ fun ActiveSession(
     // state for Tabs
     val bottomSheetPagerState = rememberPagerState(pageCount = { tabs.size })
 
+    ObserveAsEvents(viewModel.navigationEventsChannelFlow) { event ->
+        when (event) {
+            is NavigationEvent.NavigateUp -> {
+                navigateUp()
+            }
+
+            is NavigationEvent.HideTools -> {
+                scope.launch {
+                    bottomSheetState.bottomSheetState.hide()
+                }
+            }
+        }
+    }
     ActiveSessionScreen(
         uiState = uiState,
         eventHandler = eventHandler,
@@ -358,19 +353,13 @@ private fun <T> ObserveAsEvents(flow: Flow<T>, onEvent: (T) -> Unit) {
 private fun ActiveSessionScreen(
     uiState: State<ActiveSessionUiState>,
     tabs: ImmutableList<ToolsTab>,
-    eventHandler: (ActiveSessionUiEvent) -> Unit = {},
-    navigateUp: () -> Unit = {},
-    bottomSheetState: BottomSheetScaffoldState = rememberBottomSheetScaffoldState(),
-    bottomSheetPagerState: PagerState = rememberPagerState(pageCount = { tabs.size }),
-    sizeClass: ScreenSizeClass = ScreenSizeClass(
-        WindowWidthSizeClass.Compact,
-        WindowHeightSizeClass.Expanded
-    ),
-    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
+    eventHandler: (ActiveSessionUiEvent) -> Unit,
+    navigateUp: () -> Unit,
+    bottomSheetState: BottomSheetScaffoldState,
+    bottomSheetPagerState: PagerState,
+    sizeClass: ScreenSizeClass,
+    snackbarHostState: SnackbarHostState,
 ) {
-    val dialogVisibilities by uiState.value.dialogVisibilities.collectAsState()
-    // TODO collect all states here
-
     // Custom Scaffold for our elements which adapts to available window sizes
     ActiveSessionAdaptiveScaffold(
         screenSizeClass = sizeClass,
@@ -406,22 +395,20 @@ private fun ActiveSessionScreen(
         toolsContent = {
             ActiveSessionToolsLayout(
                 tabs = tabs,
-                sheetState = bottomSheetState,
                 pagerState = bottomSheetPagerState
             )
         }
     )
 
-
     /**
      * --------------------- Dialogs ---------------------
      */
 
-
     /** New Item Selector */
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val newItemSelectorState = uiState.value.newItemSelectorUiState.collectAsState()
-    if (dialogVisibilities.newItemSelectorVisible) {
+
+    if (newItemSelectorState.value != null) {
         NewItemSelectorBottomSheet(
             uiState = newItemSelectorState,
             sheetState = sheetState,
@@ -430,33 +417,22 @@ private fun ActiveSessionScreen(
                     eventHandler(ActiveSessionUiEvent.SelectItem(item))
                 }
             },
-            onNewItem = remember {
-                {
-                    eventHandler(ActiveSessionUiEvent.ToggleCreateItemDialog)
-                }
-            },
-            onNewFolder = remember {
-                {
-                    eventHandler(ActiveSessionUiEvent.ToggleCreateFolderDialog)
-                }
-            },
-            onDismissed = remember {
-                {
-                    eventHandler(ActiveSessionUiEvent.ToggleNewItemSelector)
-                }
-            }
+            onNewItem = remember { { } },
+            onNewFolder = remember { { } },
+            onDismissed = remember { { eventHandler(ActiveSessionUiEvent.ToggleNewItemSelector) } }
         )
     }
 
+
     /** End Session Dialog */
-    val dialogUiState = uiState.value.mainContentUiState.collectAsState()
-    val endDialog = dialogUiState.value.endDialogUiState.collectAsState()
-    if (dialogVisibilities.finishDialogVisible) {
+    val dialogUiState = uiState.value.dialogUiState.collectAsState()
+    val endDialogUiState = dialogUiState.value.endDialogUiState
+    if (endDialogUiState != null) {
         val dialogEvent = ActiveSessionUiEvent::EndDialogUiEvent
 
         EndSessionDialog(
-            rating = endDialog.value.rating,
-            comment = endDialog.value.comment,
+            rating = endDialogUiState.rating,
+            comment = endDialogUiState.comment,
             onDismiss = { eventHandler(ActiveSessionUiEvent.ToggleFinishDialog) },
             onRatingChanged = {
                 eventHandler(
@@ -477,7 +453,7 @@ private fun ActiveSessionScreen(
     }
 
     /** Discard Session Dialog */
-    if (dialogVisibilities.discardDialogVisible) {
+    if (dialogUiState.value.discardDialogVisible) {
         DeleteConfirmationBottomSheet(
             confirmationIcon = UiIcon.DynamicIcon(Icons.Default.Delete),
             confirmationText = UiText.DynamicString("Discard session?"),
@@ -507,8 +483,8 @@ private fun ActiveSessionAdaptiveScaffold(
     bottomBar: @Composable () -> Unit,
     mainContent: @Composable (State<PaddingValues>) -> Unit,
     toolsContent: @Composable () -> Unit,
-    bottomSheetState: BottomSheetScaffoldState = rememberBottomSheetScaffoldState(),
-    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
+    bottomSheetState: BottomSheetScaffoldState,
+    snackbarHostState: SnackbarHostState,
 ) {
     if (screenSizeClass.height == WindowHeightSizeClass.Compact) {
 
@@ -591,11 +567,11 @@ private fun ActiveSessionAdaptiveScaffold(
 private fun ToolsBottomSheetScaffold(
     sheetContent: @Composable () -> Unit,
     mainContent: @Composable (State<PaddingValues>) -> Unit,
-    bottomSheetState: BottomSheetScaffoldState = rememberBottomSheetScaffoldState()
+    bottomSheetState: BottomSheetScaffoldState,
 ) {
     BottomSheetScaffold(
         sheetContent = {
-            Column(modifier = Modifier.animateContentSize()){
+            Column(modifier = Modifier.animateContentSize()) {
                 sheetContent()
             }
         },
@@ -634,12 +610,12 @@ private fun ToolsBottomSheetScaffold(
 @Composable
 private fun ActiveSessionMainContent(
     modifier: Modifier = Modifier,
-    screenSizeClass: ScreenSizeClass = ScreenSizeDefaults.Phone,
+    screenSizeClass: ScreenSizeClass,
     contentPadding: State<PaddingValues>,
     uiState: State<ActiveSessionContentUiState>,
     sessionState: State<ActiveSessionState>,
-    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
-    eventHandler: (ActiveSessionUiEvent) -> Unit = {},
+    snackbarHostState: SnackbarHostState,
+    eventHandler: (ActiveSessionUiEvent) -> Unit,
 ) {
     // condense UI a bit if there is limited space
     val limitedHeight = screenSizeClass.height == WindowHeightSizeClass.Compact
@@ -747,15 +723,14 @@ private fun ActiveSessionMainContent(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun NewItemSelectorBottomSheet(
-    uiState: State<NewItemSelectorUiState>,
-    sheetState: SheetState = rememberModalBottomSheetState(),
-    onItemSelected: (LibraryItem) -> Unit = {},
-    onNewItem: () -> Unit = {},
-    onNewFolder: () -> Unit = {},
-    onDismissed: () -> Unit = {},
+    uiState: State<NewItemSelectorUiState?>,
+    sheetState: SheetState,
+    onItemSelected: (LibraryItem) -> Unit,
+    onNewItem: () -> Unit,
+    onNewFolder: () -> Unit,
+    onDismissed: () -> Unit,
 ) {
     val scope = rememberCoroutineScope()
-
     ModalBottomSheet(
         modifier = Modifier
             .fillMaxHeight(0.6f),    // avoid jumping height when changing folders
@@ -782,13 +757,12 @@ private fun NewItemSelectorBottomSheet(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun ActiveSessionToolsLayout(
     modifier: Modifier = Modifier,
     tabs: ImmutableList<ToolsTab>,
-    sheetState: BottomSheetScaffoldState = rememberBottomSheetScaffoldState(), // TODO remove?
-    pagerState: PagerState = rememberPagerState(pageCount = { tabs.size }),
+    pagerState: PagerState,
 ) {
     Box(modifier.fillMaxWidth()) {
         Column {
@@ -804,10 +778,10 @@ private fun ActiveSessionToolsLayout(
 @Composable
 private fun ActiveSessionTopBar(
     sessionState: State<ActiveSessionState>,
-    onNavigateUp: () -> Unit = {},
-    onDiscard: () -> Unit = {},
-    onTogglePause: () -> Unit = {},
-    onSave: () -> Unit = {},
+    onDiscard: () -> Unit,
+    onNavigateUp: () -> Unit,
+    onTogglePause: () -> Unit,
+    onSave: () -> Unit,
 ) {
     TopAppBar(
         title = { },
@@ -867,9 +841,9 @@ private fun PauseButton(
 @Composable
 private fun ActiveSessionBottomTabs(
     tabs: ImmutableList<ToolsTab>,
-    sheetState: BottomSheetScaffoldState = rememberBottomSheetScaffoldState(),
-    pagerState: PagerState = rememberPagerState(pageCount = { tabs.size }),
-    screenSizeClass: ScreenSizeClass = ScreenSizeDefaults.Phone,
+    sheetState: BottomSheetScaffoldState,
+    pagerState: PagerState,
+    screenSizeClass: ScreenSizeClass,
 ) {
     val scope = rememberCoroutineScope()
     Box(modifier = Modifier.fillMaxWidth()) {// full-width container to center tabs column
@@ -984,8 +958,8 @@ private fun PracticeTimer(
     uiState: State<ActiveSessionTimerUiState>,
     sessionState: State<ActiveSessionState>,
     modifier: Modifier = Modifier,
-    onResumeTimer: () -> Unit = {},
-    screenSizeClass: ScreenSizeClass = ScreenSizeDefaults.Phone,
+    onResumeTimer: () -> Unit,
+    screenSizeClass: ScreenSizeClass,
 ) {
     Column(
         modifier.animateContentSize(), horizontalAlignment = Alignment.CenterHorizontally
@@ -1026,7 +1000,7 @@ private fun PracticeTimer(
 private fun CurrentPracticingItem(
     uiState: State<ActiveSessionCurrentItemUiState?>,
     modifier: Modifier = Modifier,
-    screenSizeClass: ScreenSizeClass = ScreenSizeDefaults.Phone,
+    screenSizeClass: ScreenSizeClass,
 ) {
     val item = uiState.value
 
@@ -1094,11 +1068,11 @@ private fun CurrentPracticingItem(
 @Composable
 private fun SectionsList(
     uiState: State<ActiveSessionCompletedSectionsUiState?>,
+    onSectionDeleted: (CompletedSectionUiState) -> Unit,
+    nestedScrollConnection: NestedScrollConnection,
+    listState: LazyListState,
+    snackbarHostState: SnackbarHostState,
     additionalBottomContentPadding: Dp = 0.dp,
-    onSectionDeleted: (CompletedSectionUiState) -> Unit = {},
-    nestedScrollConnection: NestedScrollConnection = rememberNestedScrollInteropConnection(),
-    listState: LazyListState = rememberLazyListState(),
-    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
 ) {
     val listUiState = uiState.value ?: return
 
@@ -1270,14 +1244,16 @@ private fun AddSectionFAB(
 
 @Composable
 private fun NewItemSelector(
-    uiState: State<NewItemSelectorUiState>,
+    uiState: State<NewItemSelectorUiState?>,
     modifier: Modifier = Modifier,
     onItemSelected: (LibraryItem) -> Unit,
     onNewItem: () -> Unit = {},
     onNewFolder: () -> Unit = {},
     onClose: () -> Unit = {},
 ) {
-    var selectedFolder: UUID? by remember { mutableStateOf(uiState.value.runningItem?.libraryFolderId) }
+    val _uiState = uiState.value ?: return  // unpacking & null check
+
+    var selectedFolder: UUID? by remember { mutableStateOf(_uiState.runningItem?.libraryFolderId) }
     var createMenuShown by remember { mutableStateOf(false) }
 
     Column(modifier.fillMaxWidth()) {
@@ -1332,13 +1308,13 @@ private fun NewItemSelector(
 
         // Folders
         val folders =
-            remember { uiState.value.foldersWithItems.map { it.folder }.toImmutableList() }
+            remember { _uiState.foldersWithItems.map { it.folder }.toImmutableList() }
         if (folders.isNotEmpty()) {
             LibraryFoldersRow(
                 folders = folders,
                 highlightedFolderId = selectedFolder,
-                showBadge = uiState.value.runningItem != null,
-                folderWithBadge = uiState.value.runningItem?.libraryFolderId,
+                showBadge = _uiState.runningItem != null,
+                folderWithBadge = _uiState.runningItem?.libraryFolderId,
                 onFolderSelected = remember {
                     { folderId ->
                         selectedFolder = folderId
@@ -1352,20 +1328,20 @@ private fun NewItemSelector(
 
         val items = remember(selectedFolder) {
             // all items of the selected folder or root items if not found in folders
-            uiState.value.foldersWithItems.firstOrNull {
+            _uiState.foldersWithItems.firstOrNull {
                 it.folder.id == selectedFolder
-            }?.items?.toImmutableList() ?: uiState.value.rootItems.toImmutableList()
+            }?.items?.toImmutableList() ?: _uiState.rootItems.toImmutableList()
         }
 
         // Items
         LibraryItemList(
             items = items,
             // TODO update last practiced Dates for items during session
-            lastPracticedDates = uiState.value.lastPracticedDates.toImmutableMap(),
+            lastPracticedDates = _uiState.lastPracticedDates.toImmutableMap(),
             onItemClick = { libraryItem ->
                 onItemSelected(libraryItem)
                 onClose()
-            }, activeItemId = uiState.value.runningItem?.id
+            }, activeItemId = _uiState.runningItem?.id
         )
     }
 }
@@ -1412,9 +1388,9 @@ private fun LibraryFoldersRow(
 @Composable
 private fun LibraryFolderElement(
     folder: LibraryFolder?,
-    showBadge: Boolean = false,
     onClick: (LibraryFolder?) -> Unit,
     isSelected: Boolean,
+    showBadge: Boolean = false,
 ) {
     val textColor = if (isSelected) {
         MaterialTheme.colorScheme.primary
@@ -1490,10 +1466,10 @@ private fun LibraryItemList(
 fun EndSessionDialog(
     rating: Int,
     comment: String,
-    onRatingChanged: (Int) -> Unit = { _ -> },
-    onCommentChanged: (String) -> Unit = { _ -> },
-    onDismiss: () -> Unit = {},
-    onConfirm: () -> Unit = {},
+    onRatingChanged: (Int) -> Unit,
+    onCommentChanged: (String) -> Unit,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit,
 ) {
     Dialog(
         onDismissRequest = onDismiss,
@@ -1553,52 +1529,38 @@ private fun PreviewActiveSessionScreen(
     @PreviewParameter(MusikusColorSchemeProvider::class) theme: ColorSchemeSelections,
 ) {
 
-    MusikusThemedPreview(theme) {
+    val mainContent = ActiveSessionContentUiState(
+        timerUiState = MutableStateFlow(
+            ActiveSessionTimerUiState(
+                timerText = getDurationString(
+                    (42 * 60 + 24).seconds, DurationFormat.MS_DIGITAL
+                ).toString(),
+                subHeadingText = "Practice Time",
+            )
+        ),
+        currentItemUiState = MutableStateFlow(dummyRunningItem),
+        pastSectionsUiState = MutableStateFlow(
+            ActiveSessionCompletedSectionsUiState(
+                items = dummySections.toList()
+            )
+        ),
+    )
 
+    val dialogs = ActiveSessionDialogsUiState(
+        endDialogUiState = null,
+        discardDialogVisible = false
+    )
+
+    MusikusThemedPreview(theme) {
         ActiveSessionScreen(
             sizeClass = ScreenSizeDefaults.Phone,
             uiState = remember {
                 mutableStateOf(
                     ActiveSessionUiState(
                         sessionState = MutableStateFlow(ActiveSessionState.RUNNING),
-                        mainContentUiState = MutableStateFlow(
-                            ActiveSessionContentUiState(
-                                timerUiState = MutableStateFlow(
-                                    ActiveSessionTimerUiState(
-                                        timerText = getDurationString(
-                                            (42 * 60 + 24).seconds, DurationFormat.MS_DIGITAL
-                                        ).toString(),
-                                        subHeadingText = "Practice Time",
-                                    )
-                                ),
-                                currentItemUiState = MutableStateFlow(dummyRunningItem),
-                                pastSectionsUiState = MutableStateFlow(
-                                    ActiveSessionCompletedSectionsUiState(
-                                        items = dummySections.toList()
-                                    )
-                                ),
-                            )
-                        ),
-                        toolsUiState = MutableStateFlow(
-                            ActiveSessionToolsUiState(
-                                expanded = true,
-                                activeTab = ActiveSessionTab.METRONOME,
-                            )
-                        ),
-                        newItemSelectorUiState = MutableStateFlow(
-                            NewItemSelectorUiState(
-                                rootItems = dummyLibraryItems.toList(),
-                                foldersWithItems = dummyFolders.map {
-                                    LibraryFolderWithItems(
-                                        it,
-                                        dummyLibraryItems.toList()
-                                    )
-                                }.toList(),
-                                runningItem = dummyLibraryItems.first().copy(
-                                    libraryFolderId = UUIDConverter.fromInt(1)
-                                )
-                            )
-                        ),
+                        mainContentUiState = MutableStateFlow(mainContent),
+                        newItemSelectorUiState = MutableStateFlow(null),
+                        dialogUiState = MutableStateFlow(dialogs)
                     )
                 )
             },
@@ -1614,6 +1576,11 @@ private fun PreviewActiveSessionScreen(
                     icon = UiIcon.DynamicIcon(Icons.Default.Mic),
                     content = { })
             ).toImmutableList(),
+            eventHandler = {},
+            navigateUp = {},
+            bottomSheetState = rememberBottomSheetScaffoldState(),
+            bottomSheetPagerState = rememberPagerState(pageCount = { 2 }),
+            snackbarHostState = remember { SnackbarHostState() }
         )
     }
 }
@@ -1625,9 +1592,9 @@ private fun PreviewCurrentItem(
 ) {
     MusikusThemedPreview(theme) {
         CurrentPracticingItem(
-            uiState = remember {
-                mutableStateOf(dummyRunningItem)
-            })
+            uiState = remember { mutableStateOf(dummyRunningItem) },
+            screenSizeClass = ScreenSizeDefaults.Phone
+        )
     }
 }
 
@@ -1676,7 +1643,8 @@ private fun PreviewNewItemSelector(
                             rootItems = dummyLibraryItems.toList(),
                             runningItem = dummyLibraryItems.first().copy(
                                 libraryFolderId = UUIDConverter.fromInt(1)
-                            )
+                            ),
+                            lastPracticedDates = emptyMap(),
                         )
                     )
                 },
@@ -1695,7 +1663,9 @@ private fun PreviewNewItemSelectorNoFolders() {
                     mutableStateOf(
                         NewItemSelectorUiState(
                             foldersWithItems = emptyList(),
-                            runningItem = dummyLibraryItems.first()
+                            rootItems = dummyLibraryItems.toList(),
+                            runningItem = dummyLibraryItems.first(),
+                            lastPracticedDates = emptyMap(),
                         )
                     )
                 },
@@ -1704,9 +1674,9 @@ private fun PreviewNewItemSelectorNoFolders() {
     }
 }
 
-@Preview(name = "No Folders", group = "Element 4", showSystemUi = true)
+@Preview(name = "One Folder", group = "Element 4", showSystemUi = true)
 @Composable
-private fun PreviewNewItemSelectorOneFolders() {
+private fun PreviewNewItemSelectorOneFolder() {
     MusikusThemedPreview {
         Column {
             NewItemSelector(
@@ -1716,7 +1686,9 @@ private fun PreviewNewItemSelectorOneFolders() {
                             foldersWithItems = dummyFolders.take(1).map {
                                 LibraryFolderWithItems(it, dummyLibraryItems.toList())
                             }.toList(),
-                            runningItem = dummyLibraryItems.first()
+                            runningItem = dummyLibraryItems.first(),
+                            rootItems = dummyLibraryItems.toList(),
+                            lastPracticedDates = emptyMap(),
                         )
                     )
                 },
@@ -1747,7 +1719,11 @@ private fun PreviewEndSessionDialog(
     MusikusThemedPreview(theme = theme) {
         EndSessionDialog(
             rating = 3,
-            comment = "This was a great session",
+            comment = "This is a comment for my session for the Previews. :)",
+            onConfirm = {},
+            onDismiss = {},
+            onRatingChanged = {},
+            onCommentChanged = {}
         )
     }
 }
