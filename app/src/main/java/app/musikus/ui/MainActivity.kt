@@ -123,46 +123,55 @@ class MainActivity : PermissionCheckerActivity() {
                 return@registerForActivityResult
             }
 
+            // Close the database to collect all logs
+            database.close()
+
             // Create a backup of the current database before loading the new one
             val backupFile = File(filesDir, DATABASE_IMPORT_BACKUP_FILE)
             database.databaseFile.copyTo(backupFile, overwrite = true)
 
-            // Load the new database
-            contentResolver.openInputStream(uri)?.let { inputStream ->
-                database.import(inputStream)
-                inputStream.close()
-            }
+            var message = "Error loading backup. Aborting..."
 
-            // Open the new database locally to check if the import was successful
-            val database = MusikusDatabase.buildDatabase(context = this).apply {
-                databaseFile = getDatabasePath(MusikusDatabase.DATABASE_NAME)
-            }
-
-            // Perform and handle the validation in a coroutine
             lifecycleScope.launch {
-                if (database.validate()) {
-                    backupFile.delete()
+                try {
+                    // Load the new database
+                    contentResolver.openInputStream(uri)?.let { inputStream ->
+                        database.import(inputStream)
+                        inputStream.close()
+                    }
 
-                    Toast.makeText(
-                        this@MainActivity,
-                        "Backup loaded. Restarting...",
-                        Toast.LENGTH_LONG
-                    ).show()
-                } else {
-                    // If the import was invalid, restore the backup
-                    database.close()
+                    // Open the new database locally to check if the import was successful
+                    val newDatabase = MusikusDatabase.buildDatabase(context = this@MainActivity)
+
+                    val isNewDatabaseValid = newDatabase.validate()
+
+                    newDatabase.close()
+
+                    if (isNewDatabaseValid) {
+                        message = "Backup successfully loaded"
+                    } else {
+                        // If the import was invalid, throw an error to restore the backup
+                        message = "Invalid database. Restoring backup..."
+                        throw Exception("Invalid database")
+                    }
+                } catch (e: Exception) {
+                    // If an error occurred, restore the backup
+                    Log.d("MainActivity", "Error loading backup: ${e.message}")
                     backupFile.copyTo(database.databaseFile, overwrite = true)
+                } finally {
+                    // Finally, delete the backup file
                     backupFile.delete()
 
+                    // Show a toast containing either the success or error message
                     Toast.makeText(
                         this@MainActivity,
-                        "Invalid backup file. Aborting...",
+                        message,
                         Toast.LENGTH_LONG
                     ).show()
-                }
 
-                // Restart the app to allow dagger hilt to load the new database
-                triggerRestart()
+                    // Restart the app to allow dagger hilt to load the new database
+                    triggerRestart()
+                }
             }
         }
     }
