@@ -9,11 +9,13 @@
 package app.musikus.ui.activesession.recorder
 
 import android.net.Uri
+import androidx.compose.runtime.Stable
 import androidx.media3.common.MediaItem
 import app.musikus.services.RecorderServiceException
 import app.musikus.utils.DurationString
 import app.musikus.utils.RecorderState
 
+@Stable
 data class RecorderUiState(
     val recorderState: RecorderState,
     val recordingDuration: DurationString,
@@ -22,6 +24,7 @@ data class RecorderUiState(
     val dialogUiState: RecorderDialogUiState
 )
 
+@Stable
 data class RecordingListItemUiState(
     val title: String,
     val date: String,
@@ -31,11 +34,13 @@ data class RecordingListItemUiState(
     val contentUri: Uri,
 )
 
+@Stable
 data class RecorderDialogUiState(
     val showDeleteRecordingDialog: Boolean,
     val saveRecordingDialogUiState: SaveRecordingDialogUiState?
 )
 
+@Stable
 data class SaveRecordingDialogUiState(
     val recordingName: String
 )

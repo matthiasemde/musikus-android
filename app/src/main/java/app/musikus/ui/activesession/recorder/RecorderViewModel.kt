@@ -213,7 +213,7 @@ class RecorderViewModel @Inject constructor(
             recorderState = serviceState?.recorderState ?: RecorderState.UNINITIALIZED,
             recordingDuration = getDurationString(
                 (serviceState?.recordingDuration ?: 0.seconds),
-                DurationFormat.HMSC_DIGITAL
+                DurationFormat.MSC_DIGITAL
             ),
             recordings = recordings.map {
                 RecordingListItemUiState(
