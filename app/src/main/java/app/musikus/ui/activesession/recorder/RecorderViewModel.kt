@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2024 Matthias Emde
+ * Copyright (c) 2024 Matthias Emde, Michael Prommersberger
  */
 
 package app.musikus.ui.activesession.recorder
@@ -27,6 +27,7 @@ import app.musikus.usecase.permissions.PermissionsUseCases
 import app.musikus.usecase.recordings.RecordingsUseCases
 import app.musikus.utils.DateFormat
 import app.musikus.utils.DurationFormat
+import app.musikus.utils.PermissionChecker
 import app.musikus.utils.RecorderState
 import app.musikus.utils.TimeProvider
 import app.musikus.utils.getDurationString
@@ -110,7 +111,11 @@ class RecorderViewModel @Inject constructor(
     private fun bindRecorderService() {
         // Bind the recorder service
         val recorderServiceBindIntent = Intent(application, RecorderService::class.java)
-        application.bindService(recorderServiceBindIntent, recorderServiceConnection, Context.BIND_AUTO_CREATE)
+        application.bindService(
+            recorderServiceBindIntent,
+            recorderServiceConnection,
+            Context.BIND_AUTO_CREATE
+        )
     }
 
     override fun onCleared() {
@@ -243,36 +248,8 @@ class RecorderViewModel @Inject constructor(
 
     // TODO split out subfunctions
     fun onUiEvent(event: RecorderUiEvent) {
-        when(event) {
-            is RecorderUiEvent.StartRecording -> {
-                viewModelScope.launch {
-                    // Microphone permission
-                    val recordingPermissionResult = permissionsUseCases.request(
-                        listOf(Manifest.permission.RECORD_AUDIO)
-                    )
-                    if(recordingPermissionResult.isFailure) {
-                        _exceptionChannel.send(RecorderException.NoMicrophonePermission)
-                        return@launch
-                    }
-
-                    // Under API 29, we need WRITE_EXTERNAL_STORAGE
-                    if(Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
-                        val writeExternalStoragePermissionResult = permissionsUseCases.request(
-                            listOf(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                        )
-
-                        if (writeExternalStoragePermissionResult.isFailure) {
-                            _exceptionChannel.send(RecorderException.NoStoragePermission)
-                            return@launch
-                        }
-                    }
-                    startRecorderService()
-                    recorderServiceEventHandler?.invoke(RecorderServiceEvent.StartRecording)
-                        ?: viewModelScope.launch {
-                            _exceptionChannel.send(RecorderException.ServiceNotFound)
-                        }
-                }
-            }
+        when (event) {
+            is RecorderUiEvent.StartRecording -> { viewModelScope.launch { startRecording() } }
             is RecorderUiEvent.PauseRecording -> pauseRecording()
             is RecorderUiEvent.ResumeRecording -> {
                 recorderServiceEventHandler?.invoke(RecorderServiceEvent.ResumeRecording)
@@ -281,7 +258,7 @@ class RecorderViewModel @Inject constructor(
                     }
             }
             is RecorderUiEvent.DeleteRecording -> {
-                if(recorderServiceState.value?.recorderState == RecorderState.RECORDING) {
+                if (recorderServiceState.value?.recorderState == RecorderState.RECORDING) {
                     pauseRecording()
                 }
                 _showDeleteRecordingDialog.update { true }
@@ -294,13 +271,16 @@ class RecorderViewModel @Inject constructor(
                         _exceptionChannel.send(RecorderException.ServiceNotFound)
                     }
             }
-
             is RecorderUiEvent.SaveRecording -> {
-                if(recorderServiceState.value?.recorderState == RecorderState.RECORDING) {
+                if (recorderServiceState.value?.recorderState == RecorderState.RECORDING) {
                     pauseRecording()
                 }
                 _showSaveRecordingDialog.update { true }
-                _recordingName.update { "Musikus_${timeProvider.now().musikusFormat(DateFormat.RECORDING)}" }
+                _recordingName.update {
+                    "Musikus_${
+                        timeProvider.now().musikusFormat(DateFormat.RECORDING)
+                    }"
+                }
             }
             is RecorderUiEvent.SaveRecordingDialogConfirmed -> {
                 _showSaveRecordingDialog.update { false }
@@ -312,7 +292,6 @@ class RecorderViewModel @Inject constructor(
             }
             is RecorderUiEvent.RecordingNameChanged -> _recordingName.update { event.recordingName }
             is RecorderUiEvent.SaveRecordingDialogDismissed -> _showSaveRecordingDialog.update { false }
-
             is RecorderUiEvent.LoadRecording -> _currentRecordingUri.update { event.contentUri }
         }
     }
@@ -321,8 +300,46 @@ class RecorderViewModel @Inject constructor(
 
 
     /**
-    *  --------------- Private methods ---------------
-    */
+     *  --------------- Private methods ---------------
+     */
+
+    private suspend fun checkAndRequestPermissions(): Boolean {
+        var permissionList = listOf(Manifest.permission.RECORD_AUDIO)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            permissionList = permissionList.plus(Manifest.permission.POST_NOTIFICATIONS)
+        }
+        // Under API 29, we need WRITE_EXTERNAL_STORAGE
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            permissionList = permissionList.plus(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+        }
+        val permissionsRequestResult = permissionsUseCases.request(
+            permissionList
+        ).exceptionOrNull()
+
+        if (permissionsRequestResult is PermissionChecker.PermissionsDeniedException) {
+            if (permissionsRequestResult.permissions.contains(Manifest.permission.RECORD_AUDIO)) {
+                _exceptionChannel.send(RecorderException.NoMicrophonePermission)
+            }
+            if (permissionsRequestResult.permissions.contains(Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+                _exceptionChannel.send(RecorderException.NoStoragePermission)
+            }
+            if (permissionsRequestResult.permissions.contains(Manifest.permission.POST_NOTIFICATIONS)) {
+                _exceptionChannel.send(RecorderException.NoNotificationPermission)
+            }
+            return false
+        }
+        return true
+    }
+
+
+    private suspend fun startRecording() {
+        if (!checkAndRequestPermissions()) {
+            return
+        }
+        startRecorderService()
+        recorderServiceEventHandler?.invoke(RecorderServiceEvent.StartRecording)
+            ?: _exceptionChannel.send(RecorderException.ServiceNotFound)
+    }
 
     private fun pauseRecording() {
         recorderServiceEventHandler?.invoke(RecorderServiceEvent.PauseRecording)

@@ -264,7 +264,7 @@ fun RecorderToolbar(
             AnimatedVisibility(showDeleteAndSave) {
                 Row {
                     TextButton(onClick = { eventHandler(RecorderUiEvent.DeleteRecording) }) {
-                        Text(text = "Delete",)
+                        Text(text = "Delete")
                     }
                 }
             }

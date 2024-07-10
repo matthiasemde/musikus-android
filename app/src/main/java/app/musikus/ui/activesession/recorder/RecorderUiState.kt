@@ -68,6 +68,7 @@ typealias RecorderUiEventHandler = (event: RecorderUiEvent) -> Unit
 sealed class RecorderException(message: String) : Exception(message) {
     data object NoMicrophonePermission : RecorderException("Microphone permission required")
     data object NoStoragePermission : RecorderException("Storage permission required")
+    data object NoNotificationPermission: RecorderException("Notification permission required")
 
     data object CouldNotLoadRecording : RecorderException("Could not load recording")
 
