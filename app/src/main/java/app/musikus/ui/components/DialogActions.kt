@@ -57,7 +57,7 @@ fun DialogActions(
             onClick = onConfirmHandler,
             enabled = confirmButtonEnabled
         ) {
-            Text(text = confirmButtonText)
+            Text(text = confirmButtonText, softWrap = false)
         }
     }
 }
