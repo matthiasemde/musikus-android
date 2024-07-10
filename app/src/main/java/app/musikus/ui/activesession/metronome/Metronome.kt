@@ -8,6 +8,7 @@
 
 package app.musikus.ui.activesession.metronome
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -42,6 +43,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -52,6 +54,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.musikus.datastore.ColorSchemeSelections
+import app.musikus.ui.components.ExceptionHandler
 import app.musikus.ui.theme.MusikusColorSchemeProvider
 import app.musikus.ui.theme.MusikusThemedPreview
 import app.musikus.ui.theme.dimensions
@@ -65,6 +68,19 @@ fun MetronomeUi(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val eventHandler = viewModel::onUiEvent
+    val exceptionChannel = viewModel.exceptionChannel
+    val context = LocalContext.current
+
+    /**
+     * Exception handling
+     */
+    ExceptionHandler<MetronomeException>(
+        exceptionChannel,
+        exceptionHandler = { exception ->
+            Toast.makeText(context, exception.message, Toast.LENGTH_SHORT).show()
+        },
+        onUnhandledException = { throw (it) }
+    )
 
     MetronomeLayout(
         modifier = modifier,
