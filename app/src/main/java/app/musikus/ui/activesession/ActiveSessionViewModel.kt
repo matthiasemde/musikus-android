@@ -298,10 +298,12 @@ class ActiveSessionViewModel @Inject constructor(
                 while (sessionState.value == ActiveSessionState.UNKNOWN) {
                     delay(100)
                 }
-                // TODO: do not always hide but only on session start and when it was originally hidden
-                viewModelScope.launch {
-                    navigationChannel.send(NavigationEvent.HideTools)
-                }
+                // TODO: hide tools tab but only on session start and when it was originally hidden
+                //  also take into account whether recording is in progress or metronome is running
+                //  and open the respective tab in case
+//                viewModelScope.launch {
+//                    navigationChannel.send(NavigationEvent.HideTools)
+//                }
 
             }
         }
