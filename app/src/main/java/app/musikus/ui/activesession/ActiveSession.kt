@@ -313,6 +313,18 @@ fun ActiveSession(
                     bottomSheetScaffoldState.bottomSheetState.expand()
                 }
             }
+            ActiveSessionActions.RECORDER.name -> {
+                // switch to metronome tab
+                scope.launch {
+                    bottomSheetPagerState.animateScrollToPage(
+                        tabs.indexOfFirst { it.type == ActiveSessionTab.RECORDER }
+                    )
+                }
+                // expand bottom sheet
+                scope.launch {
+                    bottomSheetScaffoldState.bottomSheetState.expand()
+                }
+            }
 
             ActiveSessionActions.FINISH.name -> {
                 eventHandler(ActiveSessionUiEvent.ToggleFinishDialog)
