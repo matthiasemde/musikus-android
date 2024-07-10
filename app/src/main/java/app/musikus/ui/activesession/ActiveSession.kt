@@ -12,6 +12,7 @@
 package app.musikus.ui.activesession
 
 import android.app.Activity
+import android.widget.Toast
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
@@ -160,6 +161,7 @@ import app.musikus.ui.activesession.recorder.RecorderUi
 import app.musikus.ui.components.DeleteConfirmationBottomSheet
 import app.musikus.ui.components.DialogActions
 import app.musikus.ui.components.DialogHeader
+import app.musikus.ui.components.ExceptionHandler
 import app.musikus.ui.components.SwipeToDeleteContainer
 import app.musikus.ui.components.conditional
 import app.musikus.ui.components.fadingEdge
@@ -269,6 +271,19 @@ fun ActiveSession(
             }
         }
     }
+
+    /**
+     * Exception handling
+     */
+    val context = LocalContext.current
+    ExceptionHandler<ActiveSessionException>(
+        viewModel.exceptionChannel,
+        exceptionHandler = { exception ->
+            Toast.makeText(context, exception.message, Toast.LENGTH_SHORT).show()
+        },
+        onUnhandledException = { throw (it) }
+    )
+
     ActiveSessionScreen(
         uiState = uiState,
         eventHandler = eventHandler,

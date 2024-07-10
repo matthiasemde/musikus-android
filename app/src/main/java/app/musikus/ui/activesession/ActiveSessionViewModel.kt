@@ -10,6 +10,7 @@
 package app.musikus.ui.activesession
 
 import android.app.Application
+import android.os.Build
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -22,8 +23,10 @@ import app.musikus.ui.theme.libraryItemColors
 import app.musikus.usecase.activesession.ActiveSessionUseCases
 import app.musikus.usecase.activesession.SessionStatus
 import app.musikus.usecase.library.LibraryUseCases
+import app.musikus.usecase.permissions.PermissionsUseCases
 import app.musikus.usecase.sessions.SessionsUseCases
 import app.musikus.utils.DurationFormat
+import app.musikus.utils.PermissionChecker
 import app.musikus.utils.getDurationString
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
@@ -58,6 +61,7 @@ class ActiveSessionViewModel @Inject constructor(
     libraryUseCases: LibraryUseCases,
     private val activeSessionUseCases: ActiveSessionUseCases,
     private val sessionUseCases: SessionsUseCases,
+    private val permissionsUseCases: PermissionsUseCases,
     @ApplicationScope private val applicationScope: CoroutineScope
 ) : AndroidViewModel(application) {
 
@@ -125,6 +129,8 @@ class ActiveSessionViewModel @Inject constructor(
     private val _endDialogVisible = MutableStateFlow(false)
     private val _discardDialogVisible = MutableStateFlow(false)
     private val _newItemSelectorVisible = MutableStateFlow(false)
+    private val _exceptionChannel = Channel<ActiveSessionException>()
+    val exceptionChannel = _exceptionChannel.receiveAsFlow()
 
     /** ------------------- Sub UI states  ------------------------------------------- */
 
@@ -311,7 +317,13 @@ class ActiveSessionViewModel @Inject constructor(
             ActiveSessionUiEvent.DiscardSessionDialogConfirmed -> discardSession()
             ActiveSessionUiEvent.ToggleDiscardDialog -> _discardDialogVisible.update { !it }
             ActiveSessionUiEvent.ToggleFinishDialog -> _endDialogVisible.update { !it }
-            ActiveSessionUiEvent.ToggleNewItemSelector -> _newItemSelectorVisible.update { !it }
+            ActiveSessionUiEvent.ToggleNewItemSelector -> viewModelScope.launch {
+                if (!hasNotificationPermission()) {
+                    _exceptionChannel.send(ActiveSessionException.NoNotificationPermission)
+                    return@launch
+                }
+                _newItemSelectorVisible.update { !it }
+            }
         }
     }
 
@@ -325,6 +337,17 @@ class ActiveSessionViewModel @Inject constructor(
                 stopSession()
             }
         }
+    }
+
+    private suspend fun hasNotificationPermission(): Boolean {
+        // Only check for POST_NOTIFICATIONS permission on Android 12 and above
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            return true
+        }
+        val result = permissionsUseCases.request(
+            listOf(android.Manifest.permission.POST_NOTIFICATIONS)
+        ).exceptionOrNull()
+        return result !is PermissionChecker.PermissionsDeniedException
     }
 
     private suspend fun selectItem(item: LibraryItem) {

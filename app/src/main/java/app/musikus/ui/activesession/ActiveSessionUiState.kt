@@ -116,3 +116,7 @@ sealed class ActiveSessionEndDialogUiEvent {
     data class CommentChanged(val comment: String) : ActiveSessionEndDialogUiEvent()
     data object Confirmed : ActiveSessionEndDialogUiEvent()
 }
+
+sealed class ActiveSessionException(message: String) : Exception(message) {
+    data object NoNotificationPermission: ActiveSessionException("Notification permission required")
+}
