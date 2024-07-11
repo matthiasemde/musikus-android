@@ -15,6 +15,7 @@ import app.musikus.database.entities.LibraryFolderCreationAttributes
 import app.musikus.database.entities.LibraryFolderUpdateAttributes
 import app.musikus.database.entities.LibraryItemCreationAttributes
 import app.musikus.database.entities.LibraryItemUpdateAttributes
+import app.musikus.library.data.LibraryRepository
 import app.musikus.utils.IdProvider
 import app.musikus.utils.TimeProvider
 import kotlinx.coroutines.flow.flowOf

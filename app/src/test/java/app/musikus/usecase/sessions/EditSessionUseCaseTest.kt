@@ -15,6 +15,7 @@ import app.musikus.database.entities.SessionCreationAttributes
 import app.musikus.database.entities.SessionUpdateAttributes
 import app.musikus.repository.FakeLibraryRepository
 import app.musikus.repository.FakeSessionRepository
+import app.musikus.sessionslist.domain.usecase.EditSessionUseCase
 import app.musikus.utils.FakeIdProvider
 import app.musikus.utils.FakeTimeProvider
 import com.google.common.truth.Truth.assertThat

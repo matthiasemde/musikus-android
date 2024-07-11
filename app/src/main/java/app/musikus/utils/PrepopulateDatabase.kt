@@ -19,10 +19,10 @@ import app.musikus.database.entities.LibraryFolderCreationAttributes
 import app.musikus.database.entities.LibraryItemCreationAttributes
 import app.musikus.database.entities.SectionCreationAttributes
 import app.musikus.database.entities.SessionCreationAttributes
-import app.musikus.repository.GoalRepositoryImpl
-import app.musikus.usecase.goals.ArchiveGoalsUseCase
-import app.musikus.usecase.goals.CleanFutureGoalInstancesUseCase
-import app.musikus.usecase.goals.UpdateGoalsUseCase
+import app.musikus.goals.data.GoalRepositoryImpl
+import app.musikus.goals.domain.usecase.ArchiveGoalsUseCase
+import app.musikus.goals.domain.usecase.CleanFutureGoalInstancesUseCase
+import app.musikus.goals.domain.usecase.UpdateGoalsUseCase
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import java.time.temporal.ChronoUnit

@@ -14,6 +14,9 @@ import app.musikus.database.entities.GoalDescriptionUpdateAttributes
 import app.musikus.database.entities.GoalInstanceCreationAttributes
 import app.musikus.database.entities.GoalPeriodUnit
 import app.musikus.database.entities.GoalType
+import app.musikus.goals.domain.usecase.CleanFutureGoalInstancesUseCase
+import app.musikus.goals.domain.usecase.PauseGoalsUseCase
+import app.musikus.goals.domain.usecase.UnpauseGoalsUseCase
 import app.musikus.repository.FakeGoalRepository
 import app.musikus.repository.FakeLibraryRepository
 import app.musikus.utils.FakeIdProvider

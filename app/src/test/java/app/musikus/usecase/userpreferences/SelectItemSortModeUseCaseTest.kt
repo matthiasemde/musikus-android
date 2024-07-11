@@ -9,6 +9,7 @@
 package app.musikus.usecase.userpreferences
 
 import app.musikus.repository.FakeUserPreferencesRepository
+import app.musikus.settings.domain.usecase.SelectItemSortModeUseCase
 import app.musikus.utils.LibraryItemSortMode
 import app.musikus.utils.SortDirection
 import app.musikus.utils.SortInfo

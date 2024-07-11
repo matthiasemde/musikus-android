@@ -17,6 +17,7 @@
 package app.musikus.usecase.userpreferences
 
 import app.musikus.repository.FakeUserPreferencesRepository
+import app.musikus.settings.domain.usecase.SelectFolderSortModeUseCase
 import app.musikus.utils.LibraryFolderSortMode
 import app.musikus.utils.SortDirection
 import app.musikus.utils.SortInfo

@@ -11,6 +11,7 @@ import app.musikus.database.entities.GoalDescriptionCreationAttributes
 import app.musikus.database.entities.GoalDescriptionUpdateAttributes
 import app.musikus.database.entities.GoalInstanceCreationAttributes
 import app.musikus.database.entities.GoalInstanceUpdateAttributes
+import app.musikus.goals.data.GoalRepository
 import app.musikus.utils.IdProvider
 import app.musikus.utils.TimeProvider
 import kotlinx.coroutines.flow.Flow

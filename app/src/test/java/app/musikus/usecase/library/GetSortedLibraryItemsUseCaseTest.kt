@@ -14,9 +14,10 @@ import app.musikus.database.daos.LibraryItem
 import app.musikus.database.entities.LibraryFolderCreationAttributes
 import app.musikus.database.entities.LibraryItemCreationAttributes
 import app.musikus.database.entities.LibraryItemUpdateAttributes
+import app.musikus.library.domain.usecase.GetSortedLibraryItemsUseCase
 import app.musikus.repository.FakeLibraryRepository
 import app.musikus.repository.FakeUserPreferencesRepository
-import app.musikus.usecase.userpreferences.GetItemSortInfoUseCase
+import app.musikus.settings.domain.usecase.GetItemSortInfoUseCase
 import app.musikus.utils.FakeIdProvider
 import app.musikus.utils.FakeTimeProvider
 import app.musikus.utils.LibraryItemSortMode

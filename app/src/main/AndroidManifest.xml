@@ -40,7 +40,7 @@
     >
 
         <service
-            android:name=".services.SessionService"
+            android:name=".activesession.presentation.SessionService"
             android:foregroundServiceType="specialUse"
             android:exported="false">
             <property
@@ -51,19 +51,19 @@
                     as well as show an accompanying notification." />
         </service>
         <service
-            android:name=".services.MetronomeService"
+            android:name=".metronome.presentation.MetronomeService"
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="mediaPlayback"
         />
         <service
-            android:name=".services.RecorderService"
+            android:name=".recorder.presentation.RecorderService"
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="microphone"
         />
         <service
-            android:name=".services.RecordingPlaybackService"
+            android:name=".recorder.presentation.RecordingPlaybackService"
             android:exported="true"
             android:foregroundServiceType="mediaPlayback"
             tools:ignore="ExportedService">
@@ -73,7 +73,7 @@
         </service>
 
         <activity
-            android:name=".ui.MainActivity"
+            android:name=".core.presentation.MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

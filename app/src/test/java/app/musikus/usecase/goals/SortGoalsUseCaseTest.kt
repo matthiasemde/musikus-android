@@ -15,9 +15,10 @@ import app.musikus.database.daos.GoalInstance
 import app.musikus.database.entities.GoalPeriodUnit
 import app.musikus.database.entities.GoalProgressType
 import app.musikus.database.entities.GoalType
+import app.musikus.goals.domain.usecase.SortGoalsUseCase
 import app.musikus.repository.FakeUserPreferencesRepository
-import app.musikus.repository.UserPreferencesRepository
-import app.musikus.usecase.userpreferences.GetGoalSortInfoUseCase
+import app.musikus.settings.data.UserPreferencesRepository
+import app.musikus.settings.domain.usecase.GetGoalSortInfoUseCase
 import app.musikus.utils.FakeTimeProvider
 import app.musikus.utils.GoalsSortMode
 import app.musikus.utils.SortDirection

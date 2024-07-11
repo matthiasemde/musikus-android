@@ -10,9 +10,10 @@ package app.musikus.repository
 
 import app.musikus.database.daos.LibraryFolder
 import app.musikus.database.daos.LibraryItem
-import app.musikus.datastore.ColorSchemeSelections
-import app.musikus.datastore.ThemeSelections
-import app.musikus.datastore.UserPreferences
+import app.musikus.settings.data.UserPreferencesRepository
+import app.musikus.settings.domain.ColorSchemeSelections
+import app.musikus.settings.domain.ThemeSelections
+import app.musikus.settings.domain.UserPreferences
 import app.musikus.ui.activesession.metronome.MetronomeSettings
 import app.musikus.utils.GoalSortInfo
 import app.musikus.utils.GoalsSortMode
@@ -27,7 +28,8 @@ import kotlinx.coroutines.flow.update
 
 class FakeUserPreferencesRepository : UserPreferencesRepository {
 
-    private val _preferences = MutableStateFlow(UserPreferences(
+    private val _preferences = MutableStateFlow(
+        UserPreferences(
         theme = ThemeSelections.DEFAULT,
         colorScheme = ColorSchemeSelections.DEFAULT,
         appIntroDone = false,
@@ -39,7 +41,8 @@ class FakeUserPreferencesRepository : UserPreferencesRepository {
         goalsSortDirection = SortDirection.DEFAULT,
         showPausedGoals = true,
         metronomeSettings = MetronomeSettings.DEFAULT
-    ))
+    )
+    )
     override val theme: Flow<ThemeSelections>
         get() = _preferences.map { it.theme }
 

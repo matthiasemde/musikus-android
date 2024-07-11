@@ -17,6 +17,7 @@ import app.musikus.repository.FakeLibraryRepository
 import app.musikus.utils.FakeIdProvider
 import app.musikus.utils.FakeTimeProvider
 import app.musikus.database.UUIDConverter
+import app.musikus.library.domain.usecase.AddItemUseCase
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking

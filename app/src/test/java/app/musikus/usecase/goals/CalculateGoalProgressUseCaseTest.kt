@@ -10,10 +10,11 @@ import app.musikus.database.entities.GoalType
 import app.musikus.database.entities.LibraryItemCreationAttributes
 import app.musikus.database.entities.SectionCreationAttributes
 import app.musikus.database.entities.SessionCreationAttributes
+import app.musikus.goals.domain.usecase.CalculateGoalProgressUseCase
 import app.musikus.repository.FakeGoalRepository
 import app.musikus.repository.FakeLibraryRepository
 import app.musikus.repository.FakeSessionRepository
-import app.musikus.usecase.sessions.GetSessionsInTimeframeUseCase
+import app.musikus.sessionslist.domain.usecase.GetSessionsInTimeframeUseCase
 import app.musikus.utils.FakeIdProvider
 import app.musikus.utils.FakeTimeProvider
 import com.google.common.truth.Truth.assertThat

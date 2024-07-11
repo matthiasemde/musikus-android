@@ -22,9 +22,14 @@ import app.musikus.database.entities.GoalProgressType
 import app.musikus.database.entities.GoalType
 import app.musikus.database.entities.InvalidGoalDescriptionException
 import app.musikus.database.entities.InvalidGoalInstanceException
+import app.musikus.goals.domain.usecase.AddGoalUseCase
+import app.musikus.goals.domain.usecase.ArchiveGoalsUseCase
+import app.musikus.goals.domain.usecase.CleanFutureGoalInstancesUseCase
+import app.musikus.goals.domain.usecase.EditGoalUseCase
+import app.musikus.goals.domain.usecase.UpdateGoalsUseCase
 import app.musikus.repository.FakeGoalRepository
 import app.musikus.repository.FakeLibraryRepository
-import app.musikus.usecase.library.GetAllLibraryItemsUseCase
+import app.musikus.library.domain.usecase.GetAllLibraryItemsUseCase
 import app.musikus.utils.FakeIdProvider
 import app.musikus.utils.FakeTimeProvider
 import com.google.common.truth.Truth.assertThat

@@ -20,7 +20,7 @@ import app.musikus.database.entities.SectionCreationAttributes
 import app.musikus.database.entities.SectionUpdateAttributes
 import app.musikus.database.entities.SessionCreationAttributes
 import app.musikus.database.entities.SessionUpdateAttributes
-import app.musikus.usecase.sessions.SessionRepository
+import app.musikus.sessionslist.domain.SessionRepository
 import app.musikus.utils.FakeIdProvider
 import app.musikus.utils.TimeProvider
 import app.musikus.utils.Timeframe

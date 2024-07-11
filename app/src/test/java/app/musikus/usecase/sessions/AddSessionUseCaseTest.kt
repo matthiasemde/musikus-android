@@ -22,7 +22,8 @@ import app.musikus.database.entities.SectionCreationAttributes
 import app.musikus.database.entities.SessionCreationAttributes
 import app.musikus.repository.FakeLibraryRepository
 import app.musikus.repository.FakeSessionRepository
-import app.musikus.usecase.library.GetAllLibraryItemsUseCase
+import app.musikus.library.domain.usecase.GetAllLibraryItemsUseCase
+import app.musikus.sessionslist.domain.usecase.AddSessionUseCase
 import app.musikus.utils.FakeIdProvider
 import app.musikus.utils.FakeTimeProvider
 import com.google.common.truth.Truth.assertThat

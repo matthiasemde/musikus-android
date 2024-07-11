@@ -20,7 +20,8 @@ import app.musikus.utils.LibraryFolderSortMode
 import app.musikus.utils.SortDirection
 import app.musikus.utils.SortInfo
 import app.musikus.database.UUIDConverter
-import app.musikus.usecase.userpreferences.GetFolderSortInfoUseCase
+import app.musikus.library.domain.usecase.GetSortedLibraryFoldersUseCase
+import app.musikus.settings.domain.usecase.GetFolderSortInfoUseCase
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
