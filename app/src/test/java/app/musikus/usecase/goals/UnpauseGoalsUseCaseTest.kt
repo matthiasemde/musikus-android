@@ -8,12 +8,12 @@
 
 package app.musikus.usecase.goals
 
-import app.musikus.database.UUIDConverter
-import app.musikus.database.entities.GoalDescriptionCreationAttributes
-import app.musikus.database.entities.GoalDescriptionUpdateAttributes
-import app.musikus.database.entities.GoalInstanceCreationAttributes
-import app.musikus.database.entities.GoalPeriodUnit
-import app.musikus.database.entities.GoalType
+import app.musikus.core.data.UUIDConverter
+import app.musikus.goals.data.entities.GoalDescriptionCreationAttributes
+import app.musikus.goals.data.entities.GoalDescriptionUpdateAttributes
+import app.musikus.goals.data.entities.GoalInstanceCreationAttributes
+import app.musikus.goals.data.entities.GoalPeriodUnit
+import app.musikus.goals.data.entities.GoalType
 import app.musikus.goals.domain.usecase.CleanFutureGoalInstancesUseCase
 import app.musikus.goals.domain.usecase.PauseGoalsUseCase
 import app.musikus.goals.domain.usecase.UnpauseGoalsUseCase

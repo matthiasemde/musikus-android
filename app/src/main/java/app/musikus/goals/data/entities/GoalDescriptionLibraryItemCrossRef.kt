@@ -6,11 +6,12 @@
  * Copyright (c) 2024 Matthias Emde
  */
 
-package app.musikus.database.entities
+package app.musikus.goals.data.entities
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
+import app.musikus.library.data.entities.LibraryItemModel
 import java.util.UUID
 
 @Entity(

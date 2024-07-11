@@ -8,14 +8,14 @@
 
 package app.musikus.library.data
 
-import app.musikus.database.LibraryFolderWithItems
-import app.musikus.database.daos.LibraryFolderDao
-import app.musikus.database.daos.LibraryItem
-import app.musikus.database.daos.LibraryItemDao
-import app.musikus.database.entities.LibraryFolderCreationAttributes
-import app.musikus.database.entities.LibraryFolderUpdateAttributes
-import app.musikus.database.entities.LibraryItemCreationAttributes
-import app.musikus.database.entities.LibraryItemUpdateAttributes
+import app.musikus.core.data.LibraryFolderWithItems
+import app.musikus.library.data.daos.LibraryFolderDao
+import app.musikus.library.data.daos.LibraryItem
+import app.musikus.library.data.daos.LibraryItemDao
+import app.musikus.library.data.entities.LibraryFolderCreationAttributes
+import app.musikus.library.data.entities.LibraryFolderUpdateAttributes
+import app.musikus.library.data.entities.LibraryItemCreationAttributes
+import app.musikus.library.data.entities.LibraryItemUpdateAttributes
 import kotlinx.coroutines.flow.Flow
 import java.util.UUID
 

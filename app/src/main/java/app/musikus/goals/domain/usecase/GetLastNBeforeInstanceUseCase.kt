@@ -1,8 +1,8 @@
 package app.musikus.goals.domain.usecase
 
-import app.musikus.database.GoalDescriptionWithInstancesAndLibraryItems
-import app.musikus.database.GoalDescriptionWithLibraryItems
-import app.musikus.database.daos.GoalInstance
+import app.musikus.core.data.GoalDescriptionWithInstancesAndLibraryItems
+import app.musikus.core.data.GoalDescriptionWithLibraryItems
+import app.musikus.goals.data.daos.GoalInstance
 import app.musikus.goals.data.GoalRepository
 import app.musikus.goals.domain.GoalDescriptionWithInstancesWithProgressAndLibraryItems
 import kotlinx.coroutines.flow.Flow
@@ -37,11 +37,13 @@ class GetLastNBeforeInstanceUseCase(
         }
 
         return calculateProgress(
-            listOf(GoalDescriptionWithInstancesAndLibraryItems(
+            listOf(
+                GoalDescriptionWithInstancesAndLibraryItems(
                 description = goalDescriptionWithLibraryItems.description,
                 instances = instances,
                 libraryItems = goalDescriptionWithLibraryItems.libraryItems
-            ))
+            )
+            )
         ).map { it.single() }.map { progress ->
             GoalDescriptionWithInstancesWithProgressAndLibraryItems(
                 description = goalDescriptionWithLibraryItems.description,

@@ -8,18 +8,18 @@
 
 package app.musikus.repository
 
-import app.musikus.database.GoalInstanceWithDescriptionWithLibraryItems
-import app.musikus.database.SectionWithLibraryItem
-import app.musikus.database.SessionWithSectionsWithLibraryItems
-import app.musikus.database.daos.GoalDescription
-import app.musikus.database.daos.GoalInstance
-import app.musikus.database.daos.LibraryItem
-import app.musikus.database.daos.Section
-import app.musikus.database.daos.Session
-import app.musikus.database.entities.SectionCreationAttributes
-import app.musikus.database.entities.SectionUpdateAttributes
-import app.musikus.database.entities.SessionCreationAttributes
-import app.musikus.database.entities.SessionUpdateAttributes
+import app.musikus.core.data.GoalInstanceWithDescriptionWithLibraryItems
+import app.musikus.core.data.SectionWithLibraryItem
+import app.musikus.core.data.SessionWithSectionsWithLibraryItems
+import app.musikus.goals.data.daos.GoalDescription
+import app.musikus.goals.data.daos.GoalInstance
+import app.musikus.library.data.daos.LibraryItem
+import app.musikus.sessionslist.data.daos.Section
+import app.musikus.sessionslist.data.daos.Session
+import app.musikus.sessionslist.data.entities.SectionCreationAttributes
+import app.musikus.sessionslist.data.entities.SectionUpdateAttributes
+import app.musikus.sessionslist.data.entities.SessionCreationAttributes
+import app.musikus.sessionslist.data.entities.SessionUpdateAttributes
 import app.musikus.sessionslist.domain.SessionRepository
 import app.musikus.utils.FakeIdProvider
 import app.musikus.utils.TimeProvider

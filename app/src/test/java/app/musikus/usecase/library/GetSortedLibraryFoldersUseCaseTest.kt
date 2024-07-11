@@ -8,10 +8,10 @@
 
 package app.musikus.usecase.library
 
-import app.musikus.database.LibraryFolderWithItems
-import app.musikus.database.daos.LibraryFolder
-import app.musikus.database.entities.LibraryFolderCreationAttributes
-import app.musikus.database.entities.LibraryFolderUpdateAttributes
+import app.musikus.core.data.LibraryFolderWithItems
+import app.musikus.library.data.daos.LibraryFolder
+import app.musikus.library.data.entities.LibraryFolderCreationAttributes
+import app.musikus.library.data.entities.LibraryFolderUpdateAttributes
 import app.musikus.repository.FakeLibraryRepository
 import app.musikus.repository.FakeUserPreferencesRepository
 import app.musikus.utils.FakeIdProvider
@@ -19,7 +19,7 @@ import app.musikus.utils.FakeTimeProvider
 import app.musikus.utils.LibraryFolderSortMode
 import app.musikus.utils.SortDirection
 import app.musikus.utils.SortInfo
-import app.musikus.database.UUIDConverter
+import app.musikus.core.data.UUIDConverter
 import app.musikus.library.domain.usecase.GetSortedLibraryFoldersUseCase
 import app.musikus.settings.domain.usecase.GetFolderSortInfoUseCase
 import com.google.common.truth.Truth.assertThat

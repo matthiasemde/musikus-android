@@ -8,7 +8,7 @@
 
 package app.musikus.library.domain.usecase
 
-import app.musikus.database.daos.LibraryItem
+import app.musikus.library.data.daos.LibraryItem
 import app.musikus.sessionslist.domain.SessionRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map

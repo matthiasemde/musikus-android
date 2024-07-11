@@ -8,7 +8,7 @@
 
 package app.musikus.sessionslist.domain.usecase
 
-import app.musikus.database.SessionWithSectionsWithLibraryItems
+import app.musikus.core.data.SessionWithSectionsWithLibraryItems
 import app.musikus.sessionslist.domain.SessionRepository
 import java.util.UUID
 

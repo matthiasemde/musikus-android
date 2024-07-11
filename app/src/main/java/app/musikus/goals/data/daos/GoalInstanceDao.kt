@@ -10,21 +10,22 @@
  * Copyright (c) 2022, Javier Carbone, author Matthias Emde
  */
 
-package app.musikus.database.daos
+package app.musikus.goals.data.daos
 
 import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.RewriteQueriesToDropUnusedColumns
 import androidx.room.Transaction
-import app.musikus.database.GoalInstanceWithDescription
-import app.musikus.database.GoalInstanceWithDescriptionWithLibraryItems
-import app.musikus.database.MusikusDatabase
-import app.musikus.database.entities.GoalInstanceCreationAttributes
-import app.musikus.database.entities.GoalInstanceModel
-import app.musikus.database.entities.GoalInstanceUpdateAttributes
-import app.musikus.database.entities.TimestampModelDisplayAttributes
-import app.musikus.database.toDatabaseInterpretableString
+import app.musikus.core.data.daos.TimestampDao
+import app.musikus.core.data.GoalInstanceWithDescription
+import app.musikus.core.data.GoalInstanceWithDescriptionWithLibraryItems
+import app.musikus.core.data.MusikusDatabase
+import app.musikus.goals.data.entities.GoalInstanceCreationAttributes
+import app.musikus.goals.data.entities.GoalInstanceModel
+import app.musikus.goals.data.entities.GoalInstanceUpdateAttributes
+import app.musikus.core.data.entities.TimestampModelDisplayAttributes
+import app.musikus.core.data.toDatabaseInterpretableString
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import java.time.ZonedDateTime

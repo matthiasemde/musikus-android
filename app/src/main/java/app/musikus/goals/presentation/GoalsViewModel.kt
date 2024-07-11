@@ -10,12 +10,12 @@ package app.musikus.goals.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import app.musikus.database.daos.LibraryItem
-import app.musikus.database.entities.GoalDescriptionCreationAttributes
-import app.musikus.database.entities.GoalInstanceCreationAttributes
-import app.musikus.database.entities.GoalInstanceUpdateAttributes
-import app.musikus.database.entities.GoalPeriodUnit
-import app.musikus.database.entities.GoalType
+import app.musikus.library.data.daos.LibraryItem
+import app.musikus.goals.data.entities.GoalDescriptionCreationAttributes
+import app.musikus.goals.data.entities.GoalInstanceCreationAttributes
+import app.musikus.goals.data.entities.GoalInstanceUpdateAttributes
+import app.musikus.goals.data.entities.GoalPeriodUnit
+import app.musikus.goals.data.entities.GoalType
 import app.musikus.library.presentation.DialogMode
 import app.musikus.goals.domain.GoalInstanceWithProgressAndDescriptionWithLibraryItems
 import app.musikus.goals.domain.usecase.GoalsUseCases

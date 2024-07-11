@@ -8,13 +8,13 @@
 
 package app.musikus.utils
 
-import app.musikus.database.GoalDescriptionWithInstancesAndLibraryItems
-import app.musikus.database.GoalInstanceWithDescriptionWithLibraryItems
-import app.musikus.database.LibraryFolderWithItems
-import app.musikus.database.daos.GoalDescription
-import app.musikus.database.daos.GoalInstance
-import app.musikus.database.daos.LibraryFolder
-import app.musikus.database.daos.LibraryItem
+import app.musikus.core.data.GoalDescriptionWithInstancesAndLibraryItems
+import app.musikus.core.data.GoalInstanceWithDescriptionWithLibraryItems
+import app.musikus.core.data.LibraryFolderWithItems
+import app.musikus.goals.data.daos.GoalDescription
+import app.musikus.goals.data.daos.GoalInstance
+import app.musikus.library.data.daos.LibraryFolder
+import app.musikus.library.data.daos.LibraryItem
 
 data class SortInfo<T>(
     val mode: SortMode<T>,

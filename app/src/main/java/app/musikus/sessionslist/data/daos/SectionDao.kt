@@ -6,18 +6,19 @@
  * Copyright (c) 2022-2024 Matthias Emde
  */
 
-package app.musikus.database.daos
+package app.musikus.sessionslist.data.daos
 
 import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.RewriteQueriesToDropUnusedColumns
-import app.musikus.database.MusikusDatabase
-import app.musikus.database.entities.BaseModelDisplayAttributes
-import app.musikus.database.entities.SectionCreationAttributes
-import app.musikus.database.entities.SectionModel
-import app.musikus.database.entities.SectionUpdateAttributes
-import app.musikus.database.toDatabaseInterpretableString
+import app.musikus.core.data.MusikusDatabase
+import app.musikus.core.data.daos.BaseDao
+import app.musikus.core.data.entities.BaseModelDisplayAttributes
+import app.musikus.core.data.toDatabaseInterpretableString
+import app.musikus.sessionslist.data.entities.SectionCreationAttributes
+import app.musikus.sessionslist.data.entities.SectionModel
+import app.musikus.sessionslist.data.entities.SectionUpdateAttributes
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import java.time.ZonedDateTime

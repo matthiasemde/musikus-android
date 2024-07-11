@@ -1,6 +1,6 @@
 package app.musikus.utils
 
-import app.musikus.database.UUIDConverter
+import app.musikus.core.data.UUIDConverter
 import java.util.UUID
 
 class FakeIdProvider : IdProvider {

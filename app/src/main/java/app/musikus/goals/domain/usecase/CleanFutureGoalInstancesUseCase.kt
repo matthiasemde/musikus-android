@@ -8,9 +8,9 @@
 
 package app.musikus.goals.domain.usecase
 
-import app.musikus.database.Nullable
-import app.musikus.database.daos.GoalInstance
-import app.musikus.database.entities.GoalInstanceUpdateAttributes
+import app.musikus.core.data.Nullable
+import app.musikus.goals.data.daos.GoalInstance
+import app.musikus.goals.data.entities.GoalInstanceUpdateAttributes
 import app.musikus.goals.data.GoalRepository
 import app.musikus.utils.TimeProvider
 

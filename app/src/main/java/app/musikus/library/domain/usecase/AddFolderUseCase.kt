@@ -8,8 +8,8 @@
 
 package app.musikus.library.domain.usecase
 
-import app.musikus.database.daos.InvalidLibraryFolderException
-import app.musikus.database.entities.LibraryFolderCreationAttributes
+import app.musikus.library.data.daos.InvalidLibraryFolderException
+import app.musikus.library.data.entities.LibraryFolderCreationAttributes
 import app.musikus.library.data.LibraryRepository
 
 class AddFolderUseCase(

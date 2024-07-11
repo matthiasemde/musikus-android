@@ -8,20 +8,20 @@
 
 package app.musikus.usecase.goals
 
-import app.musikus.database.GoalDescriptionWithLibraryItems
-import app.musikus.database.Nullable
-import app.musikus.database.UUIDConverter
-import app.musikus.database.daos.GoalDescription
-import app.musikus.database.daos.GoalInstance
-import app.musikus.database.entities.GoalDescriptionCreationAttributes
-import app.musikus.database.entities.GoalDescriptionUpdateAttributes
-import app.musikus.database.entities.GoalInstanceCreationAttributes
-import app.musikus.database.entities.GoalPeriodUnit
-import app.musikus.database.entities.GoalProgressType
-import app.musikus.database.entities.GoalType
-import app.musikus.database.entities.LibraryItemCreationAttributes
-import app.musikus.database.entities.SectionCreationAttributes
-import app.musikus.database.entities.SessionCreationAttributes
+import app.musikus.core.data.GoalDescriptionWithLibraryItems
+import app.musikus.core.data.Nullable
+import app.musikus.core.data.UUIDConverter
+import app.musikus.goals.data.daos.GoalDescription
+import app.musikus.goals.data.daos.GoalInstance
+import app.musikus.goals.data.entities.GoalDescriptionCreationAttributes
+import app.musikus.goals.data.entities.GoalDescriptionUpdateAttributes
+import app.musikus.goals.data.entities.GoalInstanceCreationAttributes
+import app.musikus.goals.data.entities.GoalPeriodUnit
+import app.musikus.goals.data.entities.GoalProgressType
+import app.musikus.goals.data.entities.GoalType
+import app.musikus.library.data.entities.LibraryItemCreationAttributes
+import app.musikus.sessionslist.data.entities.SectionCreationAttributes
+import app.musikus.sessionslist.data.entities.SessionCreationAttributes
 import app.musikus.goals.domain.GoalInstanceWithProgressAndDescriptionWithLibraryItems
 import app.musikus.goals.domain.usecase.CalculateGoalProgressUseCase
 import app.musikus.goals.domain.usecase.GetCurrentGoalsUseCase

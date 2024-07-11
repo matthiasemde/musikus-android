@@ -10,22 +10,22 @@
  * Copyright (c) 2022, Javier Carbone, author Matthias Emde
  */
 
-package app.musikus.database
+package app.musikus.core.data
 
 import androidx.room.Embedded
 import androidx.room.Junction
 import androidx.room.Relation
-import app.musikus.database.daos.GoalDescription
-import app.musikus.database.daos.GoalInstance
-import app.musikus.database.daos.LibraryFolder
-import app.musikus.database.daos.LibraryItem
-import app.musikus.database.daos.Section
-import app.musikus.database.daos.Session
-import app.musikus.database.entities.GoalDescriptionLibraryItemCrossRefModel
-import app.musikus.database.entities.GoalDescriptionModel
-import app.musikus.database.entities.GoalInstanceModel
-import app.musikus.database.entities.LibraryItemModel
-import app.musikus.database.entities.SectionModel
+import app.musikus.goals.data.daos.GoalDescription
+import app.musikus.goals.data.daos.GoalInstance
+import app.musikus.goals.data.entities.GoalDescriptionLibraryItemCrossRefModel
+import app.musikus.goals.data.entities.GoalDescriptionModel
+import app.musikus.goals.data.entities.GoalInstanceModel
+import app.musikus.library.data.daos.LibraryFolder
+import app.musikus.library.data.daos.LibraryItem
+import app.musikus.library.data.entities.LibraryItemModel
+import app.musikus.sessionslist.data.daos.Section
+import app.musikus.sessionslist.data.daos.Session
+import app.musikus.sessionslist.data.entities.SectionModel
 import app.musikus.utils.TimeProvider
 
 

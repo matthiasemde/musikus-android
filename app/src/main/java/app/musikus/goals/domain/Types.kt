@@ -1,9 +1,9 @@
 package app.musikus.goals.domain
 
-import app.musikus.database.GoalDescriptionWithLibraryItems
-import app.musikus.database.daos.GoalDescription
-import app.musikus.database.daos.GoalInstance
-import app.musikus.database.daos.LibraryItem
+import app.musikus.core.data.GoalDescriptionWithLibraryItems
+import app.musikus.goals.data.daos.GoalDescription
+import app.musikus.goals.data.daos.GoalInstance
+import app.musikus.library.data.daos.LibraryItem
 import app.musikus.utils.TimeProvider
 import app.musikus.utils.UiText
 import kotlin.time.Duration

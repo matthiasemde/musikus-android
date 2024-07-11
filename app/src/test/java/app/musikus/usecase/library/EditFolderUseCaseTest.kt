@@ -8,14 +8,14 @@
 
 package app.musikus.usecase.library
 
-import app.musikus.database.daos.InvalidLibraryFolderException
-import app.musikus.database.daos.LibraryFolder
-import app.musikus.database.entities.LibraryFolderCreationAttributes
-import app.musikus.database.entities.LibraryFolderUpdateAttributes
+import app.musikus.library.data.daos.InvalidLibraryFolderException
+import app.musikus.library.data.daos.LibraryFolder
+import app.musikus.library.data.entities.LibraryFolderCreationAttributes
+import app.musikus.library.data.entities.LibraryFolderUpdateAttributes
 import app.musikus.repository.FakeLibraryRepository
 import app.musikus.utils.FakeIdProvider
 import app.musikus.utils.FakeTimeProvider
-import app.musikus.database.UUIDConverter
+import app.musikus.core.data.UUIDConverter
 import app.musikus.library.domain.usecase.EditFolderUseCase
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.flow.first
@@ -89,12 +89,14 @@ class EditFolderUseCaseTest {
 
         val updatedFolder = fakeLibraryRepository.folders.first().first().folder
 
-        assertThat(updatedFolder).isEqualTo(LibraryFolder(
+        assertThat(updatedFolder).isEqualTo(
+            LibraryFolder(
             id = UUIDConverter.fromInt(1),
             createdAt = FakeTimeProvider.START_TIME,
             modifiedAt = FakeTimeProvider.START_TIME,
             name = "NewName",
             customOrder = null
-        ))
+        )
+        )
     }
 }

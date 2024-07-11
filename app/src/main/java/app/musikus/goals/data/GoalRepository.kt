@@ -9,15 +9,15 @@
 package app.musikus.goals.data
 
 import androidx.room.withTransaction
-import app.musikus.database.GoalDescriptionWithInstancesAndLibraryItems
-import app.musikus.database.GoalInstanceWithDescription
-import app.musikus.database.GoalInstanceWithDescriptionWithLibraryItems
-import app.musikus.database.MusikusDatabase
-import app.musikus.database.daos.GoalInstance
-import app.musikus.database.entities.GoalDescriptionCreationAttributes
-import app.musikus.database.entities.GoalDescriptionUpdateAttributes
-import app.musikus.database.entities.GoalInstanceCreationAttributes
-import app.musikus.database.entities.GoalInstanceUpdateAttributes
+import app.musikus.core.data.GoalDescriptionWithInstancesAndLibraryItems
+import app.musikus.core.data.GoalInstanceWithDescription
+import app.musikus.core.data.GoalInstanceWithDescriptionWithLibraryItems
+import app.musikus.core.data.MusikusDatabase
+import app.musikus.goals.data.daos.GoalInstance
+import app.musikus.goals.data.entities.GoalDescriptionCreationAttributes
+import app.musikus.goals.data.entities.GoalDescriptionUpdateAttributes
+import app.musikus.goals.data.entities.GoalInstanceCreationAttributes
+import app.musikus.goals.data.entities.GoalInstanceUpdateAttributes
 import kotlinx.coroutines.flow.Flow
 import java.util.UUID
 

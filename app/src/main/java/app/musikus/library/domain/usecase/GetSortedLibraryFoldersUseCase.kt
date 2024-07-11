@@ -8,7 +8,7 @@
 
 package app.musikus.library.domain.usecase
 
-import app.musikus.database.LibraryFolderWithItems
+import app.musikus.core.data.LibraryFolderWithItems
 import app.musikus.library.data.LibraryRepository
 import app.musikus.settings.domain.usecase.GetFolderSortInfoUseCase
 import app.musikus.utils.LibraryFolderSortMode

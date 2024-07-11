@@ -10,13 +10,18 @@
  * Copyright (c) 2022, Javier Carbone, author Matthias Emde
  */
 
-package app.musikus.database.entities
+package app.musikus.sessionslist.data.entities
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Ignore
-import app.musikus.database.UUIDConverter
+import app.musikus.core.data.entities.BaseModel
+import app.musikus.core.data.entities.BaseModelCreationAttributes
+import app.musikus.core.data.entities.BaseModelUpdateAttributes
+import app.musikus.core.data.entities.IBaseModelCreationAttributes
+import app.musikus.core.data.entities.IBaseModelUpdateAttributes
+import app.musikus.core.data.UUIDConverter
 import java.time.ZonedDateTime
 import java.util.UUID
 import kotlin.time.Duration

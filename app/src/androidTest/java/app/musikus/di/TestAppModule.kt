@@ -13,7 +13,7 @@ import android.app.Application
 import android.os.AsyncTask
 import androidx.room.Room
 import androidx.room.withTransaction
-import app.musikus.database.MusikusDatabase
+import app.musikus.core.data.MusikusDatabase
 import app.musikus.activesession.data.ActiveSessionRepositoryImpl
 import app.musikus.repository.FakeUserPreferencesRepository
 import app.musikus.goals.data.GoalRepository

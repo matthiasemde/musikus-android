@@ -11,7 +11,7 @@
  * Additions and modifications, author Michael Prommersberger
  */
 
-package app.musikus.database
+package app.musikus.core.data
 
 import android.app.Application
 import android.content.ContentValues
@@ -26,20 +26,20 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import androidx.sqlite.db.SupportSQLiteQueryBuilder
 import app.musikus.BuildConfig
-import app.musikus.Musikus.Companion.ioThread
-import app.musikus.database.daos.GoalDescriptionDao
-import app.musikus.database.daos.GoalInstanceDao
-import app.musikus.database.daos.LibraryFolderDao
-import app.musikus.database.daos.LibraryItemDao
-import app.musikus.database.daos.SectionDao
-import app.musikus.database.daos.SessionDao
-import app.musikus.database.entities.GoalDescriptionLibraryItemCrossRefModel
-import app.musikus.database.entities.GoalDescriptionModel
-import app.musikus.database.entities.GoalInstanceModel
-import app.musikus.database.entities.LibraryFolderModel
-import app.musikus.database.entities.LibraryItemModel
-import app.musikus.database.entities.SectionModel
-import app.musikus.database.entities.SessionModel
+import app.musikus.core.presentation.Musikus.Companion.ioThread
+import app.musikus.goals.data.daos.GoalDescriptionDao
+import app.musikus.goals.data.daos.GoalInstanceDao
+import app.musikus.goals.data.entities.GoalDescriptionLibraryItemCrossRefModel
+import app.musikus.goals.data.entities.GoalDescriptionModel
+import app.musikus.goals.data.entities.GoalInstanceModel
+import app.musikus.library.data.daos.LibraryFolderDao
+import app.musikus.library.data.daos.LibraryItemDao
+import app.musikus.library.data.entities.LibraryFolderModel
+import app.musikus.library.data.entities.LibraryItemModel
+import app.musikus.sessionslist.data.daos.SectionDao
+import app.musikus.sessionslist.data.daos.SessionDao
+import app.musikus.sessionslist.data.entities.SectionModel
+import app.musikus.sessionslist.data.entities.SessionModel
 import app.musikus.utils.IdProvider
 import app.musikus.utils.TimeProvider
 import app.musikus.utils.prepopulateDatabase
@@ -437,4 +437,3 @@ abstract class NullableConverter<T> {
 class NullableUUIDConverter : NullableConverter<UUID>()
 class NullableIntConverter : NullableConverter<Int>()
 class NullableZonedDateTimeConverter : NullableConverter<ZonedDateTime>()
-

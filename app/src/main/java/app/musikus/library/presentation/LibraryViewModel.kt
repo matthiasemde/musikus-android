@@ -10,13 +10,13 @@ package app.musikus.library.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import app.musikus.database.Nullable
-import app.musikus.database.daos.LibraryFolder
-import app.musikus.database.daos.LibraryItem
-import app.musikus.database.entities.LibraryFolderCreationAttributes
-import app.musikus.database.entities.LibraryFolderUpdateAttributes
-import app.musikus.database.entities.LibraryItemCreationAttributes
-import app.musikus.database.entities.LibraryItemUpdateAttributes
+import app.musikus.core.data.Nullable
+import app.musikus.library.data.daos.LibraryFolder
+import app.musikus.library.data.daos.LibraryItem
+import app.musikus.library.data.entities.LibraryFolderCreationAttributes
+import app.musikus.library.data.entities.LibraryFolderUpdateAttributes
+import app.musikus.library.data.entities.LibraryItemCreationAttributes
+import app.musikus.library.data.entities.LibraryItemUpdateAttributes
 import app.musikus.library.domain.usecase.LibraryUseCases
 import app.musikus.settings.domain.usecase.UserPreferencesUseCases
 import app.musikus.utils.LibraryFolderSortMode

@@ -8,8 +8,8 @@
 
 package app.musikus.repository
 
-import app.musikus.database.daos.LibraryFolder
-import app.musikus.database.daos.LibraryItem
+import app.musikus.library.data.daos.LibraryFolder
+import app.musikus.library.data.daos.LibraryItem
 import app.musikus.settings.data.UserPreferencesRepository
 import app.musikus.settings.domain.ColorSchemeSelections
 import app.musikus.settings.domain.ThemeSelections

@@ -12,7 +12,7 @@ import android.app.Application
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.room.withTransaction
-import app.musikus.database.MusikusDatabase
+import app.musikus.core.data.MusikusDatabase
 import app.musikus.activesession.data.ActiveSessionRepositoryImpl
 import app.musikus.goals.data.GoalRepository
 import app.musikus.goals.data.GoalRepositoryImpl

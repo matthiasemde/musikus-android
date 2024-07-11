@@ -10,7 +10,7 @@
 package app.musikus.activesession.domain.usecase
 
 
-import app.musikus.database.daos.LibraryItem
+import app.musikus.library.data.daos.LibraryItem
 import app.musikus.activesession.domain.ActiveSessionRepository
 import app.musikus.activesession.domain.PracticeSection
 import app.musikus.activesession.domain.SessionState

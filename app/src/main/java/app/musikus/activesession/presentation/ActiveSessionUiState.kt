@@ -10,8 +10,8 @@ package app.musikus.activesession.presentation
 
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.graphics.Color
-import app.musikus.database.LibraryFolderWithItems
-import app.musikus.database.daos.LibraryItem
+import app.musikus.core.data.LibraryFolderWithItems
+import app.musikus.library.data.daos.LibraryItem
 import kotlinx.coroutines.flow.StateFlow
 import java.time.ZonedDateTime
 import java.util.UUID

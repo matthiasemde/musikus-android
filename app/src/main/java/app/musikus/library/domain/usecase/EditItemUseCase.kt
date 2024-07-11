@@ -8,8 +8,8 @@
 
 package app.musikus.library.domain.usecase
 
-import app.musikus.database.entities.InvalidLibraryItemException
-import app.musikus.database.entities.LibraryItemUpdateAttributes
+import app.musikus.library.data.entities.InvalidLibraryItemException
+import app.musikus.library.data.entities.LibraryItemUpdateAttributes
 import app.musikus.library.data.LibraryRepository
 import java.util.UUID
 

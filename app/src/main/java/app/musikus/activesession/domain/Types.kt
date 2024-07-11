@@ -9,7 +9,7 @@
 
 package app.musikus.activesession.domain
 
-import app.musikus.database.daos.LibraryItem
+import app.musikus.library.data.daos.LibraryItem
 import kotlinx.coroutines.flow.Flow
 import java.time.ZonedDateTime
 import java.util.UUID

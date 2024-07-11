@@ -158,10 +158,10 @@ import app.musikus.core.presentation.components.ExceptionHandler
 import app.musikus.core.presentation.components.SwipeToDeleteContainer
 import app.musikus.core.presentation.components.conditional
 import app.musikus.core.presentation.components.fadingEdge
-import app.musikus.database.LibraryFolderWithItems
-import app.musikus.database.UUIDConverter
-import app.musikus.database.daos.LibraryFolder
-import app.musikus.database.daos.LibraryItem
+import app.musikus.core.data.LibraryFolderWithItems
+import app.musikus.core.data.UUIDConverter
+import app.musikus.library.data.daos.LibraryFolder
+import app.musikus.library.data.daos.LibraryItem
 import app.musikus.library.presentation.LibraryUiItem
 import app.musikus.sessionslist.presentation.RatingBar
 import app.musikus.settings.domain.ColorSchemeSelections

@@ -10,14 +10,16 @@ package app.musikus.database.daos
 
 import android.database.sqlite.SQLiteConstraintException
 import androidx.test.filters.SmallTest
-import app.musikus.database.MusikusDatabase
-import app.musikus.database.Nullable
-import app.musikus.database.UUIDConverter
-import app.musikus.database.entities.LibraryFolderCreationAttributes
-import app.musikus.database.entities.LibraryItemCreationAttributes
-import app.musikus.database.entities.LibraryItemUpdateAttributes
-import app.musikus.database.entities.SectionCreationAttributes
-import app.musikus.database.entities.SessionCreationAttributes
+import app.musikus.core.data.MusikusDatabase
+import app.musikus.core.data.Nullable
+import app.musikus.core.data.UUIDConverter
+import app.musikus.library.data.entities.LibraryFolderCreationAttributes
+import app.musikus.library.data.entities.LibraryItemCreationAttributes
+import app.musikus.library.data.entities.LibraryItemUpdateAttributes
+import app.musikus.sessionslist.data.entities.SectionCreationAttributes
+import app.musikus.sessionslist.data.entities.SessionCreationAttributes
+import app.musikus.library.data.daos.LibraryItem
+import app.musikus.library.data.daos.LibraryItemDao
 import app.musikus.utils.FakeTimeProvider
 import com.google.common.truth.Truth.assertThat
 import dagger.hilt.android.testing.HiltAndroidRule
@@ -132,11 +134,13 @@ class LibraryItemDaoTest {
     fun insertItemWithInvalidFolderId_throwsException() = runTest {
         val exception = assertThrows(SQLiteConstraintException::class.java) {
             runBlocking {
-                libraryItemDao.insert(LibraryItemCreationAttributes(
+                libraryItemDao.insert(
+                    LibraryItemCreationAttributes(
                     name = "TestItem",
                     colorIndex = 0,
                     libraryFolderId = Nullable(UUIDConverter.fromInt(0)),
-                ))
+                )
+                )
             }
         }
 
@@ -249,11 +253,13 @@ class LibraryItemDaoTest {
     @Test
     fun updateItemWithInvalidFolderId_throwsException() = runTest {
         // Insert items
-        libraryItemDao.insert(LibraryItemCreationAttributes(
+        libraryItemDao.insert(
+            LibraryItemCreationAttributes(
             name = "TestItem1",
             colorIndex = 0,
             libraryFolderId = Nullable(null)
-        ))
+        )
+        )
 
         val exception = assertThrows(SQLiteConstraintException::class.java) {
             runBlocking {
@@ -532,11 +538,13 @@ class LibraryItemDaoTest {
                 rating = 0,
                 comment = "",
             ),
-            listOf(SectionCreationAttributes(
+            listOf(
+                SectionCreationAttributes(
                 libraryItemId = UUIDConverter.fromInt(2),
                 startTimestamp = FakeTimeProvider.START_TIME,
                 duration = 1.seconds,
-            ))
+            )
+            )
         )
 
         libraryItemDao.delete(listOf(

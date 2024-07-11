@@ -10,7 +10,7 @@
  * Copyright (c) 2022, Javier Carbone, author Matthias Emde
  */
 
-package app.musikus.database.daos
+package app.musikus.goals.data.daos
 
 import androidx.room.ColumnInfo
 import androidx.room.Dao
@@ -20,17 +20,19 @@ import androidx.room.Query
 import androidx.room.RewriteQueriesToDropUnusedColumns
 import androidx.room.Transaction
 import app.musikus.R
-import app.musikus.database.GoalDescriptionWithInstancesAndLibraryItems
-import app.musikus.database.MusikusDatabase
-import app.musikus.database.entities.GoalDescriptionCreationAttributes
-import app.musikus.database.entities.GoalDescriptionLibraryItemCrossRefModel
-import app.musikus.database.entities.GoalDescriptionModel
-import app.musikus.database.entities.GoalDescriptionUpdateAttributes
-import app.musikus.database.entities.GoalInstanceCreationAttributes
-import app.musikus.database.entities.GoalPeriodUnit
-import app.musikus.database.entities.GoalProgressType
-import app.musikus.database.entities.GoalType
-import app.musikus.database.entities.SoftDeleteModelDisplayAttributes
+import app.musikus.core.data.daos.SoftDeleteDao
+import app.musikus.core.data.GoalDescriptionWithInstancesAndLibraryItems
+import app.musikus.core.data.MusikusDatabase
+import app.musikus.goals.data.entities.GoalDescriptionCreationAttributes
+import app.musikus.goals.data.entities.GoalDescriptionLibraryItemCrossRefModel
+import app.musikus.goals.data.entities.GoalDescriptionModel
+import app.musikus.goals.data.entities.GoalDescriptionUpdateAttributes
+import app.musikus.goals.data.entities.GoalInstanceCreationAttributes
+import app.musikus.goals.data.entities.GoalPeriodUnit
+import app.musikus.goals.data.entities.GoalProgressType
+import app.musikus.goals.data.entities.GoalType
+import app.musikus.core.data.entities.SoftDeleteModelDisplayAttributes
+import app.musikus.library.data.daos.LibraryItem
 import app.musikus.utils.DurationFormat
 import app.musikus.utils.getDurationString
 import app.musikus.utils.TimeProvider
@@ -229,4 +231,3 @@ abstract class GoalDescriptionDao(
     abstract fun getAllWithInstancesAndLibraryItems()
     : Flow<List<GoalDescriptionWithInstancesAndLibraryItems>>
 }
-

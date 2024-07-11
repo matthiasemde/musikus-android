@@ -15,8 +15,8 @@ import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.preferencesDataStoreFile
-import app.musikus.Musikus
-import app.musikus.database.MusikusDatabase
+import app.musikus.core.presentation.Musikus
+import app.musikus.core.data.MusikusDatabase
 import app.musikus.utils.IdProvider
 import app.musikus.utils.IdProviderImpl
 import app.musikus.utils.TimeProvider

@@ -45,7 +45,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import app.musikus.R
-import app.musikus.database.SessionWithSectionsWithLibraryItems
+import app.musikus.core.data.SessionWithSectionsWithLibraryItems
 import app.musikus.utils.DurationFormat
 import app.musikus.utils.getDurationString
 import app.musikus.core.presentation.theme.libraryItemColors

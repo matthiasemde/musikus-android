@@ -89,9 +89,9 @@ import app.musikus.core.presentation.theme.MusikusColorSchemeProvider
 import app.musikus.core.presentation.theme.MusikusThemedPreview
 import app.musikus.core.presentation.theme.libraryItemColors
 import app.musikus.core.presentation.theme.spacing
-import app.musikus.database.UUIDConverter
-import app.musikus.database.daos.LibraryFolder
-import app.musikus.database.daos.LibraryItem
+import app.musikus.core.data.UUIDConverter
+import app.musikus.library.data.daos.LibraryFolder
+import app.musikus.library.data.daos.LibraryItem
 import app.musikus.settings.domain.ColorSchemeSelections
 import app.musikus.utils.DateFormat
 import app.musikus.utils.LibraryFolderSortMode

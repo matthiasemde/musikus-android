@@ -6,11 +6,11 @@
  * Copyright (c) 2023 Matthias Emde
  */
 
-package app.musikus.database.entities
+package app.musikus.core.data.entities
 
 import androidx.room.ColumnInfo
 import androidx.room.PrimaryKey
-import app.musikus.database.UUIDConverter
+import app.musikus.core.data.UUIDConverter
 import java.time.ZonedDateTime
 import java.util.UUID
 

@@ -2,7 +2,7 @@ package app.musikus.sessionslist.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import app.musikus.database.SectionWithLibraryItem
+import app.musikus.core.data.SectionWithLibraryItem
 import app.musikus.sessionslist.domain.usecase.SessionsUseCases
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow

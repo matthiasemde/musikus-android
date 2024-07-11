@@ -20,7 +20,7 @@ import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import androidx.core.net.toUri
-import app.musikus.METRONOME_NOTIFICATION_CHANNEL_ID
+import app.musikus.core.presentation.METRONOME_NOTIFICATION_CHANNEL_ID
 import app.musikus.R
 import app.musikus.di.ApplicationScope
 import app.musikus.di.IoScope

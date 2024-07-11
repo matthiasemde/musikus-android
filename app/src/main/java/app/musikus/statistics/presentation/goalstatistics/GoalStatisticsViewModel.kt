@@ -11,8 +11,8 @@ package app.musikus.statistics.presentation.goalstatistics
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import app.musikus.database.GoalDescriptionWithLibraryItems
-import app.musikus.database.entities.GoalType
+import app.musikus.core.data.GoalDescriptionWithLibraryItems
+import app.musikus.goals.data.entities.GoalType
 import app.musikus.core.presentation.theme.libraryItemColors
 import app.musikus.goals.domain.usecase.GoalsUseCases
 import app.musikus.utils.DateFormat

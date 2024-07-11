@@ -1,10 +1,10 @@
 package app.musikus.goals.domain.usecase
 
-import app.musikus.database.GoalDescriptionWithInstancesAndLibraryItems
-import app.musikus.database.GoalInstanceWithDescriptionWithLibraryItems
-import app.musikus.database.daos.GoalDescription
-import app.musikus.database.daos.GoalInstance
-import app.musikus.database.entities.GoalType
+import app.musikus.core.data.GoalDescriptionWithInstancesAndLibraryItems
+import app.musikus.core.data.GoalInstanceWithDescriptionWithLibraryItems
+import app.musikus.goals.data.daos.GoalDescription
+import app.musikus.goals.data.daos.GoalInstance
+import app.musikus.goals.data.entities.GoalType
 import app.musikus.sessionslist.domain.usecase.GetSessionsInTimeframeUseCase
 import app.musikus.utils.TimeProvider
 import kotlinx.coroutines.flow.Flow

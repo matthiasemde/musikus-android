@@ -10,7 +10,7 @@ package app.musikus.sessionslist.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import app.musikus.database.SessionWithSectionsWithLibraryItems
+import app.musikus.core.data.SessionWithSectionsWithLibraryItems
 import app.musikus.sessionslist.domain.usecase.SessionsUseCases
 import app.musikus.utils.DurationFormat
 import app.musikus.utils.DurationString

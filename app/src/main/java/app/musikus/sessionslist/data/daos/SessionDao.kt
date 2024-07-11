@@ -10,21 +10,22 @@
  * Copyright (c) 2022, Javier Carbone, author Matthias Emde
  */
 
-package app.musikus.database.daos
+package app.musikus.sessionslist.data.daos
 
 import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.RewriteQueriesToDropUnusedColumns
 import androidx.room.Transaction
-import app.musikus.database.MusikusDatabase
-import app.musikus.database.SessionWithSectionsWithLibraryItems
-import app.musikus.database.entities.SectionCreationAttributes
-import app.musikus.database.entities.SessionCreationAttributes
-import app.musikus.database.entities.SessionModel
-import app.musikus.database.entities.SessionUpdateAttributes
-import app.musikus.database.entities.SoftDeleteModelDisplayAttributes
-import app.musikus.database.toDatabaseInterpretableString
+import app.musikus.core.data.daos.SoftDeleteDao
+import app.musikus.core.data.MusikusDatabase
+import app.musikus.core.data.SessionWithSectionsWithLibraryItems
+import app.musikus.sessionslist.data.entities.SectionCreationAttributes
+import app.musikus.sessionslist.data.entities.SessionCreationAttributes
+import app.musikus.sessionslist.data.entities.SessionModel
+import app.musikus.sessionslist.data.entities.SessionUpdateAttributes
+import app.musikus.core.data.entities.SoftDeleteModelDisplayAttributes
+import app.musikus.core.data.toDatabaseInterpretableString
 import app.musikus.utils.Timeframe
 import kotlinx.coroutines.flow.Flow
 import java.time.ZonedDateTime

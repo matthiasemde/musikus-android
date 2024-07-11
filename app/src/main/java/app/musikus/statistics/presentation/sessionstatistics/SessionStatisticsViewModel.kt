@@ -10,9 +10,9 @@ package app.musikus.statistics.presentation.sessionstatistics
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import app.musikus.database.SectionWithLibraryItem
-import app.musikus.database.SessionWithSectionsWithLibraryItems
-import app.musikus.database.daos.LibraryItem
+import app.musikus.core.data.SectionWithLibraryItem
+import app.musikus.core.data.SessionWithSectionsWithLibraryItems
+import app.musikus.library.data.daos.LibraryItem
 import app.musikus.utils.DurationFormat
 import app.musikus.utils.getDurationString
 import app.musikus.sessionslist.domain.usecase.SessionsUseCases

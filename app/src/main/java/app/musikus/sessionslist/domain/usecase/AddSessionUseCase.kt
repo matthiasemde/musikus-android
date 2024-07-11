@@ -8,11 +8,11 @@
 
 package app.musikus.sessionslist.domain.usecase
 
-import app.musikus.database.UUIDConverter
-import app.musikus.database.daos.InvalidSectionException
-import app.musikus.database.daos.InvalidSessionException
-import app.musikus.database.entities.SectionCreationAttributes
-import app.musikus.database.entities.SessionCreationAttributes
+import app.musikus.core.data.UUIDConverter
+import app.musikus.sessionslist.data.daos.InvalidSectionException
+import app.musikus.sessionslist.data.daos.InvalidSessionException
+import app.musikus.sessionslist.data.entities.SectionCreationAttributes
+import app.musikus.sessionslist.data.entities.SessionCreationAttributes
 import app.musikus.library.domain.usecase.GetAllLibraryItemsUseCase
 import app.musikus.sessionslist.domain.SessionRepository
 import kotlinx.coroutines.flow.first

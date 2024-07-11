@@ -31,7 +31,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import app.musikus.Musikus
+import app.musikus.core.presentation.Musikus
 import app.musikus.core.presentation.theme.spacing
 
 @OptIn(ExperimentalMaterial3Api::class)

@@ -8,8 +8,8 @@
 
 package app.musikus.library.domain.usecase
 
-import app.musikus.database.Nullable
-import app.musikus.database.daos.LibraryItem
+import app.musikus.core.data.Nullable
+import app.musikus.library.data.daos.LibraryItem
 import app.musikus.library.data.LibraryRepository
 import app.musikus.settings.domain.usecase.GetItemSortInfoUseCase
 import app.musikus.utils.LibraryItemSortMode

@@ -8,8 +8,8 @@
 
 package app.musikus.library.domain.usecase
 
-import app.musikus.database.entities.InvalidLibraryItemException
-import app.musikus.database.entities.LibraryItemCreationAttributes
+import app.musikus.library.data.entities.InvalidLibraryItemException
+import app.musikus.library.data.entities.LibraryItemCreationAttributes
 import app.musikus.library.data.LibraryRepository
 
 class AddItemUseCase(

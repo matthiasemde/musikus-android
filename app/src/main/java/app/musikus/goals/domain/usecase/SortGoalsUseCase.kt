@@ -8,8 +8,8 @@
 
 package app.musikus.goals.domain.usecase
 
-import app.musikus.database.GoalDescriptionWithInstancesAndLibraryItems
-import app.musikus.database.GoalInstanceWithDescriptionWithLibraryItems
+import app.musikus.core.data.GoalDescriptionWithInstancesAndLibraryItems
+import app.musikus.core.data.GoalInstanceWithDescriptionWithLibraryItems
 import app.musikus.settings.domain.usecase.GetGoalSortInfoUseCase
 import app.musikus.utils.GoalsSortMode
 import app.musikus.utils.sorted

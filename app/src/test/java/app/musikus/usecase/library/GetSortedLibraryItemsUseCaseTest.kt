@@ -8,12 +8,12 @@
 
 package app.musikus.usecase.library
 
-import app.musikus.database.Nullable
-import app.musikus.database.UUIDConverter
-import app.musikus.database.daos.LibraryItem
-import app.musikus.database.entities.LibraryFolderCreationAttributes
-import app.musikus.database.entities.LibraryItemCreationAttributes
-import app.musikus.database.entities.LibraryItemUpdateAttributes
+import app.musikus.core.data.Nullable
+import app.musikus.core.data.UUIDConverter
+import app.musikus.library.data.daos.LibraryItem
+import app.musikus.library.data.entities.LibraryFolderCreationAttributes
+import app.musikus.library.data.entities.LibraryItemCreationAttributes
+import app.musikus.library.data.entities.LibraryItemUpdateAttributes
 import app.musikus.library.domain.usecase.GetSortedLibraryItemsUseCase
 import app.musikus.repository.FakeLibraryRepository
 import app.musikus.repository.FakeUserPreferencesRepository

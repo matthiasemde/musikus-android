@@ -1,11 +1,16 @@
-package app.musikus.database.entities
+package app.musikus.goals.data.entities
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Ignore
-import app.musikus.database.Nullable
-import app.musikus.database.UUIDConverter
+import app.musikus.core.data.entities.ITimestampModelCreationAttributes
+import app.musikus.core.data.entities.ITimestampModelUpdateAttributes
+import app.musikus.core.data.entities.TimestampModel
+import app.musikus.core.data.entities.TimestampModelCreationAttributes
+import app.musikus.core.data.entities.TimestampModelUpdateAttributes
+import app.musikus.core.data.Nullable
+import app.musikus.core.data.UUIDConverter
 import app.musikus.utils.TimeProvider
 import java.time.ZonedDateTime
 import java.util.UUID

@@ -8,7 +8,7 @@
 
 package app.musikus.goals.domain.usecase
 
-import app.musikus.database.GoalDescriptionWithInstancesAndLibraryItems
+import app.musikus.core.data.GoalDescriptionWithInstancesAndLibraryItems
 import app.musikus.goals.data.GoalRepository
 import kotlinx.coroutines.flow.Flow
 

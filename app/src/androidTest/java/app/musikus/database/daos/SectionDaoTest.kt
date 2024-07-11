@@ -9,13 +9,15 @@
 package app.musikus.database.daos
 
 import androidx.test.filters.SmallTest
-import app.musikus.database.MusikusDatabase
-import app.musikus.database.Nullable
-import app.musikus.database.UUIDConverter
-import app.musikus.database.entities.LibraryItemCreationAttributes
-import app.musikus.database.entities.SectionCreationAttributes
-import app.musikus.database.entities.SectionUpdateAttributes
-import app.musikus.database.entities.SessionCreationAttributes
+import app.musikus.core.data.MusikusDatabase
+import app.musikus.core.data.Nullable
+import app.musikus.core.data.UUIDConverter
+import app.musikus.library.data.entities.LibraryItemCreationAttributes
+import app.musikus.sessionslist.data.entities.SectionCreationAttributes
+import app.musikus.sessionslist.data.entities.SectionUpdateAttributes
+import app.musikus.sessionslist.data.entities.SessionCreationAttributes
+import app.musikus.sessionslist.data.daos.Section
+import app.musikus.sessionslist.data.daos.SectionDao
 import app.musikus.utils.FakeTimeProvider
 import com.google.common.truth.Truth.assertThat
 import dagger.hilt.android.testing.HiltAndroidRule
@@ -132,12 +134,14 @@ class SectionDaoTest {
     fun insertSection_throwsNotImplementedError() = runTest {
         val exception = assertThrows(NotImplementedError::class.java) {
             runBlocking {
-                sectionDao.insert(SectionCreationAttributes(
+                sectionDao.insert(
+                    SectionCreationAttributes(
                     sessionId = UUIDConverter.fromInt(2),
                     libraryItemId = UUIDConverter.fromInt(1),
                     duration = 10.minutes,
                     startTimestamp = FakeTimeProvider.START_TIME
-                ))
+                )
+                )
             }
         }
 

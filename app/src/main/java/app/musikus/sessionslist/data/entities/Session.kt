@@ -7,11 +7,16 @@
  */
 
 
-package app.musikus.database.entities
+package app.musikus.sessionslist.data.entities
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Ignore
+import app.musikus.core.data.entities.ISoftDeleteModelCreationAttributes
+import app.musikus.core.data.entities.ISoftDeleteModelUpdateAttributes
+import app.musikus.core.data.entities.SoftDeleteModel
+import app.musikus.core.data.entities.SoftDeleteModelCreationAttributes
+import app.musikus.core.data.entities.SoftDeleteModelUpdateAttributes
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 

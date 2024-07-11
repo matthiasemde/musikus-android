@@ -9,13 +9,16 @@
 package app.musikus.database.daos
 
 import androidx.test.filters.SmallTest
-import app.musikus.database.LibraryFolderWithItems
-import app.musikus.database.MusikusDatabase
-import app.musikus.database.Nullable
-import app.musikus.database.UUIDConverter
-import app.musikus.database.entities.LibraryFolderCreationAttributes
-import app.musikus.database.entities.LibraryFolderUpdateAttributes
-import app.musikus.database.entities.LibraryItemCreationAttributes
+import app.musikus.core.data.LibraryFolderWithItems
+import app.musikus.core.data.MusikusDatabase
+import app.musikus.core.data.Nullable
+import app.musikus.core.data.UUIDConverter
+import app.musikus.library.data.entities.LibraryFolderCreationAttributes
+import app.musikus.library.data.entities.LibraryFolderUpdateAttributes
+import app.musikus.library.data.entities.LibraryItemCreationAttributes
+import app.musikus.library.data.daos.LibraryFolder
+import app.musikus.library.data.daos.LibraryFolderDao
+import app.musikus.library.data.daos.LibraryItem
 import app.musikus.utils.FakeTimeProvider
 import com.google.common.truth.Truth.assertThat
 import dagger.hilt.android.testing.HiltAndroidRule

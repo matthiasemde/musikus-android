@@ -10,19 +10,20 @@
  * Copyright (c) 2022, Javier Carbone, author Matthias Emde
  */
 
-package app.musikus.database.daos
+package app.musikus.library.data.daos
 
 import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.sqlite.db.SimpleSQLiteQuery
-import app.musikus.database.MusikusDatabase
-import app.musikus.database.entities.LibraryItemCreationAttributes
-import app.musikus.database.entities.LibraryItemModel
-import app.musikus.database.entities.LibraryItemUpdateAttributes
-import app.musikus.database.entities.SoftDeleteModelDisplayAttributes
-import app.musikus.database.toDatabaseInterpretableString
+import app.musikus.core.data.daos.SoftDeleteDao
+import app.musikus.core.data.MusikusDatabase
+import app.musikus.library.data.entities.LibraryItemCreationAttributes
+import app.musikus.library.data.entities.LibraryItemModel
+import app.musikus.library.data.entities.LibraryItemUpdateAttributes
+import app.musikus.core.data.entities.SoftDeleteModelDisplayAttributes
+import app.musikus.core.data.toDatabaseInterpretableString
 import kotlinx.coroutines.flow.Flow
 import java.time.ZonedDateTime
 import java.util.UUID

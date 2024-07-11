@@ -8,7 +8,7 @@
 
 package app.musikus.goals.presentation
 
-import app.musikus.database.daos.LibraryItem
+import app.musikus.library.data.daos.LibraryItem
 import app.musikus.ui.components.TopBarUiState
 import app.musikus.library.presentation.DialogMode
 import app.musikus.goals.domain.GoalInstanceWithProgressAndDescriptionWithLibraryItems

@@ -10,7 +10,7 @@
  * Copyright (c) 2022, Javier Carbone, author Matthias Emde
  */
 
-package app.musikus.database.daos
+package app.musikus.core.data.daos
 
 import androidx.room.Delete
 import androidx.room.Insert
@@ -21,22 +21,22 @@ import androidx.room.Update
 import androidx.room.withTransaction
 import androidx.sqlite.db.SimpleSQLiteQuery
 import androidx.sqlite.db.SupportSQLiteQuery
-import app.musikus.Musikus.Companion.ioThread
-import app.musikus.database.MusikusDatabase
-import app.musikus.database.UUIDConverter
-import app.musikus.database.entities.BaseModel
-import app.musikus.database.entities.BaseModelCreationAttributes
-import app.musikus.database.entities.BaseModelDisplayAttributes
-import app.musikus.database.entities.BaseModelUpdateAttributes
-import app.musikus.database.entities.SoftDeleteModel
-import app.musikus.database.entities.SoftDeleteModelCreationAttributes
-import app.musikus.database.entities.SoftDeleteModelDisplayAttributes
-import app.musikus.database.entities.SoftDeleteModelUpdateAttributes
-import app.musikus.database.entities.TimestampModel
-import app.musikus.database.entities.TimestampModelCreationAttributes
-import app.musikus.database.entities.TimestampModelDisplayAttributes
-import app.musikus.database.entities.TimestampModelUpdateAttributes
-import app.musikus.database.toDatabaseInterpretableString
+import app.musikus.core.presentation.Musikus.Companion.ioThread
+import app.musikus.core.data.MusikusDatabase
+import app.musikus.core.data.UUIDConverter
+import app.musikus.core.data.entities.BaseModel
+import app.musikus.core.data.entities.BaseModelCreationAttributes
+import app.musikus.core.data.entities.BaseModelDisplayAttributes
+import app.musikus.core.data.entities.BaseModelUpdateAttributes
+import app.musikus.core.data.entities.SoftDeleteModel
+import app.musikus.core.data.entities.SoftDeleteModelCreationAttributes
+import app.musikus.core.data.entities.SoftDeleteModelDisplayAttributes
+import app.musikus.core.data.entities.SoftDeleteModelUpdateAttributes
+import app.musikus.core.data.entities.TimestampModel
+import app.musikus.core.data.entities.TimestampModelCreationAttributes
+import app.musikus.core.data.entities.TimestampModelDisplayAttributes
+import app.musikus.core.data.entities.TimestampModelUpdateAttributes
+import app.musikus.core.data.toDatabaseInterpretableString
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.flow

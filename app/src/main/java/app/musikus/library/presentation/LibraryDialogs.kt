@@ -41,7 +41,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import app.musikus.R
-import app.musikus.database.daos.LibraryFolder
+import app.musikus.library.data.daos.LibraryFolder
 import app.musikus.ui.components.DialogActions
 import app.musikus.ui.components.DialogHeader
 import app.musikus.ui.components.SelectionSpinner

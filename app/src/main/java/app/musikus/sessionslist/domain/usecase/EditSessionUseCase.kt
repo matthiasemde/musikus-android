@@ -8,10 +8,10 @@
 
 package app.musikus.sessionslist.domain.usecase
 
-import app.musikus.database.daos.InvalidSectionException
-import app.musikus.database.daos.InvalidSessionException
-import app.musikus.database.entities.SectionUpdateAttributes
-import app.musikus.database.entities.SessionUpdateAttributes
+import app.musikus.sessionslist.data.daos.InvalidSectionException
+import app.musikus.sessionslist.data.daos.InvalidSessionException
+import app.musikus.sessionslist.data.entities.SectionUpdateAttributes
+import app.musikus.sessionslist.data.entities.SessionUpdateAttributes
 import app.musikus.sessionslist.domain.SessionRepository
 import java.util.UUID
 

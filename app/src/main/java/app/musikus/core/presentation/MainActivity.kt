@@ -16,8 +16,7 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.setContent
-import app.musikus.Musikus
-import app.musikus.database.MusikusDatabase
+import app.musikus.core.data.MusikusDatabase
 import app.musikus.activesession.presentation.ActiveSessionServiceActions
 import app.musikus.activesession.presentation.SessionService
 import app.musikus.activesession.domain.usecase.ActiveSessionUseCases

@@ -10,15 +10,19 @@ package app.musikus.database.daos
 
 import android.database.sqlite.SQLiteConstraintException
 import androidx.test.filters.SmallTest
-import app.musikus.database.MusikusDatabase
-import app.musikus.database.Nullable
-import app.musikus.database.SectionWithLibraryItem
-import app.musikus.database.SessionWithSectionsWithLibraryItems
-import app.musikus.database.UUIDConverter
-import app.musikus.database.entities.LibraryItemCreationAttributes
-import app.musikus.database.entities.SectionCreationAttributes
-import app.musikus.database.entities.SessionCreationAttributes
-import app.musikus.database.entities.SessionUpdateAttributes
+import app.musikus.core.data.MusikusDatabase
+import app.musikus.core.data.Nullable
+import app.musikus.core.data.SectionWithLibraryItem
+import app.musikus.core.data.SessionWithSectionsWithLibraryItems
+import app.musikus.core.data.UUIDConverter
+import app.musikus.library.data.entities.LibraryItemCreationAttributes
+import app.musikus.sessionslist.data.entities.SectionCreationAttributes
+import app.musikus.sessionslist.data.entities.SessionCreationAttributes
+import app.musikus.sessionslist.data.entities.SessionUpdateAttributes
+import app.musikus.library.data.daos.LibraryItem
+import app.musikus.sessionslist.data.daos.Section
+import app.musikus.sessionslist.data.daos.Session
+import app.musikus.sessionslist.data.daos.SessionDao
 import app.musikus.utils.FakeTimeProvider
 import com.google.common.truth.Truth.assertThat
 import dagger.hilt.android.testing.HiltAndroidRule
@@ -97,11 +101,13 @@ class SessionDaoTest {
     fun insertSessions_throwsNotImplementedError() = runTest {
         val exception = assertThrows(NotImplementedError::class.java) {
             runBlocking {
-                sessionDao.insert(listOf(SessionCreationAttributes(
+                sessionDao.insert(listOf(
+                    SessionCreationAttributes(
                     breakDuration = 10.seconds,
                     rating = 3,
                     comment = "Test comment"
-                )))
+                )
+                ))
             }
         }
 
@@ -114,11 +120,13 @@ class SessionDaoTest {
     fun insertSession_throwsNotImplementedError() = runTest {
         val exception = assertThrows(NotImplementedError::class.java) {
             runBlocking {
-                sessionDao.insert(SessionCreationAttributes(
+                sessionDao.insert(
+                    SessionCreationAttributes(
                     breakDuration = 10.seconds,
                     rating = 3,
                     comment = "Test comment"
-                ))
+                )
+                )
             }
         }
 

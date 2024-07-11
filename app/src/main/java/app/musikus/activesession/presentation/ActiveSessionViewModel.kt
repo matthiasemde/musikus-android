@@ -14,10 +14,10 @@ import android.os.Build
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import app.musikus.database.Nullable
-import app.musikus.database.daos.LibraryItem
-import app.musikus.database.entities.SectionCreationAttributes
-import app.musikus.database.entities.SessionCreationAttributes
+import app.musikus.core.data.Nullable
+import app.musikus.library.data.daos.LibraryItem
+import app.musikus.sessionslist.data.entities.SectionCreationAttributes
+import app.musikus.sessionslist.data.entities.SessionCreationAttributes
 import app.musikus.di.ApplicationScope
 import app.musikus.core.presentation.theme.libraryItemColors
 import app.musikus.activesession.domain.usecase.ActiveSessionUseCases

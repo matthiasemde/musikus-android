@@ -6,7 +6,7 @@
  * Copyright (c) 2024 Matthias Emde, Michael Prommersberger
  */
 
-package app.musikus
+package app.musikus.core.presentation
 
 import android.app.Application
 import android.app.NotificationChannel
@@ -14,6 +14,7 @@ import android.app.NotificationManager
 import android.content.Context
 import android.os.Build
 import androidx.activity.result.ActivityResultLauncher
+import app.musikus.R
 import dagger.hilt.android.HiltAndroidApp
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors

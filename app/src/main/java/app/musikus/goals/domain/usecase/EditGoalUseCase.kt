@@ -8,10 +8,10 @@
 
 package app.musikus.goals.domain.usecase
 
-import app.musikus.database.entities.GoalDescriptionUpdateAttributes
-import app.musikus.database.entities.GoalInstanceUpdateAttributes
-import app.musikus.database.entities.InvalidGoalDescriptionException
-import app.musikus.database.entities.InvalidGoalInstanceException
+import app.musikus.goals.data.entities.GoalDescriptionUpdateAttributes
+import app.musikus.goals.data.entities.GoalInstanceUpdateAttributes
+import app.musikus.goals.data.entities.InvalidGoalDescriptionException
+import app.musikus.goals.data.entities.InvalidGoalInstanceException
 import app.musikus.goals.data.GoalRepository
 import java.lang.IllegalStateException
 import java.util.UUID

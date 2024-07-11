@@ -1,15 +1,15 @@
 package app.musikus.usecase.sessions
 
-import app.musikus.database.Nullable
-import app.musikus.database.SectionWithLibraryItem
-import app.musikus.database.SessionWithSectionsWithLibraryItems
-import app.musikus.database.UUIDConverter
-import app.musikus.database.daos.LibraryItem
-import app.musikus.database.daos.Section
-import app.musikus.database.daos.Session
-import app.musikus.database.entities.LibraryItemCreationAttributes
-import app.musikus.database.entities.SectionCreationAttributes
-import app.musikus.database.entities.SessionCreationAttributes
+import app.musikus.core.data.Nullable
+import app.musikus.core.data.SectionWithLibraryItem
+import app.musikus.core.data.SessionWithSectionsWithLibraryItems
+import app.musikus.core.data.UUIDConverter
+import app.musikus.library.data.daos.LibraryItem
+import app.musikus.sessionslist.data.daos.Section
+import app.musikus.sessionslist.data.daos.Session
+import app.musikus.library.data.entities.LibraryItemCreationAttributes
+import app.musikus.sessionslist.data.entities.SectionCreationAttributes
+import app.musikus.sessionslist.data.entities.SessionCreationAttributes
 import app.musikus.repository.FakeLibraryRepository
 import app.musikus.repository.FakeSessionRepository
 import app.musikus.sessionslist.domain.SessionsForDay
@@ -55,11 +55,13 @@ class GetSessionsForDaysForMonthsUseCaseTest {
         )
 
         runBlocking {
-            fakeLibraryRepository.addItem(LibraryItemCreationAttributes(
+            fakeLibraryRepository.addItem(
+                LibraryItemCreationAttributes(
                 name = "Test item 1",
                 colorIndex = 5,
                 libraryFolderId = Nullable(null)
-            ))
+            )
+            )
         }
     }
 
@@ -152,7 +154,7 @@ class GetSessionsForDaysForMonthsUseCaseTest {
             customOrder = null
         )
 
-        val expectedSession : (Int) -> Session  = { id ->
+        val expectedSession : (Int) -> Session = { id ->
             Session(
                 id = UUIDConverter.fromInt(id),
                 createdAt = FakeTimeProvider.START_TIME,

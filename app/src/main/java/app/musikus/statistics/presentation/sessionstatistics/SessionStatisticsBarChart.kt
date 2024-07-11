@@ -34,7 +34,7 @@ import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
-import app.musikus.database.daos.LibraryItem
+import app.musikus.library.data.daos.LibraryItem
 import app.musikus.utils.DurationFormat
 import app.musikus.utils.getDurationString
 import app.musikus.core.presentation.theme.libraryItemColors

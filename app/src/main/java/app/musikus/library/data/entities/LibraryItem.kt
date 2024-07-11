@@ -6,12 +6,17 @@
  * Copyright (c) 2024 Matthias Emde
  */
 
-package app.musikus.database.entities
+package app.musikus.library.data.entities
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
-import app.musikus.database.Nullable
+import app.musikus.core.data.entities.ISoftDeleteModelCreationAttributes
+import app.musikus.core.data.entities.ISoftDeleteModelUpdateAttributes
+import app.musikus.core.data.entities.SoftDeleteModel
+import app.musikus.core.data.entities.SoftDeleteModelCreationAttributes
+import app.musikus.core.data.entities.SoftDeleteModelUpdateAttributes
+import app.musikus.core.data.Nullable
 import java.util.UUID
 
 private interface ILibraryItemCreationAttributes : ISoftDeleteModelCreationAttributes {
