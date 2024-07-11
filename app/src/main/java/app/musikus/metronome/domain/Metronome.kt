@@ -16,7 +16,7 @@ import android.media.AudioTrack
 import androidx.annotation.RawRes
 import app.musikus.R
 import app.musikus.core.di.ApplicationScope
-import app.musikus.ui.activesession.metronome.MetronomeSettings
+import app.musikus.metronome.presentation.MetronomeSettings
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.isActive

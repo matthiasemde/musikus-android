@@ -8,8 +8,8 @@
 
 package app.musikus.settings.domain.usecase
 
+import app.musikus.metronome.presentation.MetronomeSettings
 import app.musikus.settings.data.UserPreferencesRepository
-import app.musikus.ui.activesession.metronome.MetronomeSettings
 
 class ChangeMetronomeSettingsUseCase(
     private val userPreferencesRepository: UserPreferencesRepository

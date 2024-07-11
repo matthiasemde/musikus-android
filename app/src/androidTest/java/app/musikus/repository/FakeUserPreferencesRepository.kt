@@ -14,13 +14,13 @@ import app.musikus.settings.data.UserPreferencesRepository
 import app.musikus.settings.domain.ColorSchemeSelections
 import app.musikus.settings.domain.ThemeSelections
 import app.musikus.settings.domain.UserPreferences
-import app.musikus.ui.activesession.metronome.MetronomeSettings
 import app.musikus.core.domain.GoalSortInfo
 import app.musikus.core.domain.GoalsSortMode
 import app.musikus.core.domain.LibraryFolderSortMode
 import app.musikus.core.domain.LibraryItemSortMode
 import app.musikus.core.domain.SortDirection
 import app.musikus.core.domain.SortInfo
+import app.musikus.metronome.presentation.MetronomeSettings
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map

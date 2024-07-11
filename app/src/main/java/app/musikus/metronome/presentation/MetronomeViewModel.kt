@@ -6,7 +6,7 @@
  * Copyright (c) 2024 Matthias Emde
  */
 
-package app.musikus.ui.activesession.metronome
+package app.musikus.metronome.presentation
 
 import android.app.Application
 import android.content.ComponentName
@@ -17,9 +17,6 @@ import android.os.Build
 import android.os.IBinder
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import app.musikus.metronome.presentation.MetronomeService
-import app.musikus.metronome.presentation.MetronomeServiceEvent
-import app.musikus.metronome.presentation.MetronomeServiceState
 import app.musikus.permissions.domain.PermissionChecker
 import app.musikus.permissions.domain.usecase.PermissionsUseCases
 import app.musikus.settings.domain.usecase.UserPreferencesUseCases

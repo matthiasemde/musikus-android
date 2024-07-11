@@ -32,7 +32,6 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object UserPreferencesUseCasesModule {
 
-
     @Provides
     @Singleton
     fun provideUserPreferencesUseCases(

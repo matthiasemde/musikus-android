@@ -22,10 +22,10 @@ import app.musikus.core.domain.SortDirection
 import app.musikus.core.domain.SortInfo
 import app.musikus.library.data.daos.LibraryFolder
 import app.musikus.library.data.daos.LibraryItem
+import app.musikus.metronome.presentation.MetronomeSettings
 import app.musikus.settings.domain.ColorSchemeSelections
 import app.musikus.settings.domain.ThemeSelections
 import app.musikus.settings.domain.UserPreferences
-import app.musikus.ui.activesession.metronome.MetronomeSettings
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 

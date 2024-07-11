@@ -13,6 +13,5 @@ import app.musikus.settings.data.UserPreferencesRepository
 class GetMetronomeSettingsUseCase(
     private val userPreferencesRepository: UserPreferencesRepository
 ) {
-
     operator fun invoke() = userPreferencesRepository.metronomeSettings
 }

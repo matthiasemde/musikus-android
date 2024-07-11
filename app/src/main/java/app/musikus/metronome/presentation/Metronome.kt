@@ -6,7 +6,7 @@
  * Copyright (c) 2024 Matthias Emde
  */
 
-package app.musikus.ui.activesession.metronome
+package app.musikus.metronome.presentation
 
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement

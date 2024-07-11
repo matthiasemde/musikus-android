@@ -8,11 +8,11 @@
 
 package app.musikus.settings.domain
 
-import app.musikus.ui.activesession.metronome.MetronomeSettings
 import app.musikus.core.domain.GoalsSortMode
 import app.musikus.core.domain.LibraryFolderSortMode
 import app.musikus.core.domain.LibraryItemSortMode
 import app.musikus.core.domain.SortDirection
+import app.musikus.metronome.presentation.MetronomeSettings
 
 interface EnumWithLabel {
     val label: String
