@@ -6,7 +6,7 @@
  * Copyright (c) 2023 Matthias Emde
  */
 
-package app.musikus.ui.library
+package app.musikus.library.presentation
 
 import android.content.Context
 import androidx.activity.compose.setContent
@@ -33,19 +33,18 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.test.core.app.ApplicationProvider
 import app.musikus.R
-import app.musikus.settings.domain.ColorSchemeSelections
-import app.musikus.settings.domain.ThemeSelections
-import app.musikus.core.presentation.MainActivity
-import app.musikus.core.presentation.MainViewModel
-import app.musikus.core.presentation.Screen
-import app.musikus.library.presentation.Library
-import app.musikus.core.presentation.HomeViewModel
-import app.musikus.core.presentation.theme.MusikusTheme
-import app.musikus.utils.FakeTimeProvider
 import app.musikus.core.domain.LibraryFolderSortMode
 import app.musikus.core.domain.LibraryItemSortMode
 import app.musikus.core.domain.SortMode
+import app.musikus.core.presentation.HomeViewModel
+import app.musikus.core.presentation.MainActivity
+import app.musikus.core.presentation.MainViewModel
+import app.musikus.core.presentation.Screen
+import app.musikus.core.presentation.theme.MusikusTheme
 import app.musikus.core.presentation.utils.TestTags
+import app.musikus.settings.domain.ColorSchemeSelections
+import app.musikus.settings.domain.ThemeSelections
+import app.musikus.core.domain.FakeTimeProvider
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import org.junit.Before

@@ -6,7 +6,7 @@
  * Copyright (c) 2023 Matthias Emde
  */
 
-package app.musikus.database.daos
+package app.musikus.goals.data.daos
 
 import androidx.test.filters.SmallTest
 import app.musikus.core.data.GoalDescriptionWithLibraryItems
@@ -22,10 +22,7 @@ import app.musikus.goals.data.entities.GoalInstanceUpdateAttributes
 import app.musikus.goals.data.entities.GoalPeriodUnit
 import app.musikus.goals.data.entities.GoalProgressType
 import app.musikus.goals.data.entities.GoalType
-import app.musikus.goals.data.daos.GoalDescription
-import app.musikus.goals.data.daos.GoalInstance
-import app.musikus.goals.data.daos.GoalInstanceDao
-import app.musikus.utils.FakeTimeProvider
+import app.musikus.core.domain.FakeTimeProvider
 import com.google.common.truth.Truth.assertThat
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
