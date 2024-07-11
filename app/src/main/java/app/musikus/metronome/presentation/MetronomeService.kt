@@ -22,8 +22,8 @@ import androidx.core.app.ServiceCompat
 import androidx.core.net.toUri
 import app.musikus.core.presentation.METRONOME_NOTIFICATION_CHANNEL_ID
 import app.musikus.R
-import app.musikus.di.ApplicationScope
-import app.musikus.di.IoScope
+import app.musikus.core.di.ApplicationScope
+import app.musikus.core.di.IoScope
 import app.musikus.activesession.presentation.ActiveSessionActions
 import app.musikus.settings.domain.usecase.UserPreferencesUseCases
 import app.musikus.metronome.domain.Metronome

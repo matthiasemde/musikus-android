@@ -23,7 +23,7 @@ import androidx.core.app.ServiceCompat
 import androidx.core.net.toUri
 import app.musikus.R
 import app.musikus.core.presentation.RECORDER_NOTIFICATION_CHANNEL_ID
-import app.musikus.di.ApplicationScope
+import app.musikus.core.di.ApplicationScope
 import app.musikus.activesession.presentation.ActiveSessionActions
 import app.musikus.core.presentation.utils.DurationFormat
 import app.musikus.recorder.domain.IllegalRecorderStateException

@@ -40,6 +40,11 @@ import app.musikus.activesession.domain.usecase.PauseActiveSessionUseCase
 import app.musikus.activesession.domain.usecase.ResetSessionUseCase
 import app.musikus.activesession.domain.usecase.ResumeActiveSessionUseCase
 import app.musikus.activesession.domain.usecase.SelectItemUseCase
+import app.musikus.core.di.CoroutinesDispatchersModule
+import app.musikus.core.di.DefaultDispatcher
+import app.musikus.core.di.IoDispatcher
+import app.musikus.core.di.IoScope
+import app.musikus.core.di.MainModule
 import app.musikus.goals.domain.usecase.AddGoalUseCase
 import app.musikus.goals.domain.usecase.ArchiveGoalsUseCase
 import app.musikus.goals.domain.usecase.CalculateGoalProgressUseCase

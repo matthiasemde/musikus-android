@@ -18,7 +18,7 @@ import app.musikus.core.data.Nullable
 import app.musikus.library.data.daos.LibraryItem
 import app.musikus.sessionslist.data.entities.SectionCreationAttributes
 import app.musikus.sessionslist.data.entities.SessionCreationAttributes
-import app.musikus.di.ApplicationScope
+import app.musikus.core.di.ApplicationScope
 import app.musikus.core.presentation.theme.libraryItemColors
 import app.musikus.activesession.domain.usecase.ActiveSessionUseCases
 import app.musikus.activesession.domain.usecase.SessionStatus

@@ -6,7 +6,7 @@
  * Copyright (c) 2024 Matthias Emde
  */
 
-package app.musikus.di
+package app.musikus.core.di
 
 import android.app.Application
 import androidx.datastore.core.DataStore
@@ -15,12 +15,12 @@ import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.preferencesDataStoreFile
-import app.musikus.core.presentation.Musikus
 import app.musikus.core.data.MusikusDatabase
 import app.musikus.core.domain.IdProvider
 import app.musikus.core.domain.IdProviderImpl
 import app.musikus.core.domain.TimeProvider
 import app.musikus.core.domain.TimeProviderImpl
+import app.musikus.core.presentation.Musikus
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

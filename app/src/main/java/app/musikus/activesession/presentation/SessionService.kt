@@ -29,7 +29,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import app.musikus.R
 import app.musikus.core.presentation.SESSION_NOTIFICATION_CHANNEL_ID
-import app.musikus.di.ApplicationScope
+import app.musikus.core.di.ApplicationScope
 import app.musikus.activesession.domain.usecase.ActiveSessionUseCases
 import app.musikus.core.presentation.utils.DurationFormat
 import app.musikus.core.domain.TimeProvider

@@ -1,4 +1,4 @@
-package app.musikus.di
+package app.musikus.core.di
 
 import javax.inject.Qualifier
 

@@ -20,7 +20,7 @@ import android.os.Build
 import android.provider.MediaStore
 import android.util.Log
 import androidx.media3.common.MediaItem
-import app.musikus.di.IoScope
+import app.musikus.core.di.IoScope
 import app.musikus.recorder.domain.Recording
 import app.musikus.recorder.domain.RecordingsRepository
 import kotlinx.coroutines.CoroutineScope
