@@ -11,8 +11,8 @@ package app.musikus.sessionslist.di
 import androidx.room.withTransaction
 import app.musikus.core.data.MusikusDatabase
 import app.musikus.core.domain.TimeProvider
+import app.musikus.sessionslist.data.SessionRepository
 import app.musikus.sessionslist.data.SessionRepositoryImpl
-import app.musikus.sessionslist.domain.SessionRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.components.SingletonComponent

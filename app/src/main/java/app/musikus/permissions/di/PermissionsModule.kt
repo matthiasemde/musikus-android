@@ -10,9 +10,9 @@ package app.musikus.permissions.di
 
 import android.app.Application
 import app.musikus.core.di.ApplicationScope
+import app.musikus.permissions.data.PermissionRepository
 import app.musikus.permissions.data.PermissionRepositoryImpl
 import app.musikus.permissions.domain.PermissionChecker
-import app.musikus.permissions.domain.PermissionRepository
 import app.musikus.permissions.domain.usecase.PermissionsUseCases
 import app.musikus.permissions.domain.usecase.RequestPermissionsUseCase
 import dagger.Module

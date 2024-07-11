@@ -10,8 +10,8 @@ package app.musikus.recorder.di
 
 import android.app.Application
 import app.musikus.core.di.IoScope
+import app.musikus.recorder.data.RecordingsRepository
 import app.musikus.recorder.data.RecordingsRepositoryImpl
-import app.musikus.recorder.domain.RecordingsRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.components.SingletonComponent

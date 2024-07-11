@@ -62,7 +62,6 @@ object MainModule {
         )
     }
 
-
     /**
      * Dependency injection for the database
      * @param app Application

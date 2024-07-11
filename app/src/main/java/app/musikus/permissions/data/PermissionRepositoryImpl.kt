@@ -8,7 +8,6 @@
 
 package app.musikus.permissions.data
 
-import app.musikus.permissions.domain.PermissionRepository
 import app.musikus.permissions.domain.PermissionChecker
 
 class PermissionRepositoryImpl(

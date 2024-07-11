@@ -6,8 +6,7 @@
  * Copyright (c) 2024 Matthias Emde
  */
 
-package app.musikus.permissions.domain
-
+package app.musikus.permissions.data
 
 interface PermissionRepository {
     suspend fun requestPermissions(permissions: List<String>): Result<Unit>

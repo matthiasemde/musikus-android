@@ -8,7 +8,7 @@
 
 package app.musikus.permissions.domain.usecase
 
-import app.musikus.permissions.domain.PermissionRepository
+import app.musikus.permissions.data.PermissionRepository
 
 class RequestPermissionsUseCase(
     private val permissionRepository: PermissionRepository

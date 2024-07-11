@@ -10,7 +10,6 @@ package app.musikus.recorder.domain
 
 import android.net.Uri
 import androidx.media3.common.MediaItem
-import kotlinx.coroutines.flow.Flow
 import java.time.ZonedDateTime
 import kotlin.time.Duration
 
@@ -21,9 +20,3 @@ data class Recording(
     val date: ZonedDateTime,
     val contentUri: Uri
 )
-
-interface RecordingsRepository {
-    val recordings: Flow<List<Recording>>
-
-    suspend fun getRawRecording(contentUri: Uri): Result<ShortArray>
-}

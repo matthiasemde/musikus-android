@@ -8,7 +8,8 @@
 
 package app.musikus.recorder.domain.usecase
 
-import app.musikus.recorder.domain.RecordingsRepository
+import app.musikus.recorder.data.RecordingsRepository
+
 
 class GetRecordingsUseCase(
     private val recordingsRepository: RecordingsRepository

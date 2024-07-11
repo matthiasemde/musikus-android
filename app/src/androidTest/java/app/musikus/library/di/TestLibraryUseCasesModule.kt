@@ -22,7 +22,7 @@ import app.musikus.library.domain.usecase.GetSortedLibraryItemsUseCase
 import app.musikus.library.domain.usecase.LibraryUseCases
 import app.musikus.library.domain.usecase.RestoreFoldersUseCase
 import app.musikus.library.domain.usecase.RestoreItemsUseCase
-import app.musikus.sessionslist.domain.SessionRepository
+import app.musikus.sessionslist.data.SessionRepository
 import app.musikus.settings.domain.usecase.UserPreferencesUseCases
 import dagger.Module
 import dagger.Provides

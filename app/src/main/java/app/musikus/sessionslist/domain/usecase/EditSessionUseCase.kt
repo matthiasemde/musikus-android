@@ -8,11 +8,11 @@
 
 package app.musikus.sessionslist.domain.usecase
 
+import app.musikus.sessionslist.data.SessionRepository
 import app.musikus.sessionslist.data.daos.InvalidSectionException
 import app.musikus.sessionslist.data.daos.InvalidSessionException
 import app.musikus.sessionslist.data.entities.SectionUpdateAttributes
 import app.musikus.sessionslist.data.entities.SessionUpdateAttributes
-import app.musikus.sessionslist.domain.SessionRepository
 import java.util.UUID
 
 class EditSessionUseCase(

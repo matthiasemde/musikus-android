@@ -8,7 +8,7 @@
 
 package app.musikus.recorder.di
 
-import app.musikus.recorder.domain.RecordingsRepository
+import app.musikus.recorder.data.RecordingsRepository
 import app.musikus.recorder.domain.usecase.GetRawRecordingUseCase
 import app.musikus.recorder.domain.usecase.GetRecordingsUseCase
 import app.musikus.recorder.domain.usecase.RecordingsUseCases

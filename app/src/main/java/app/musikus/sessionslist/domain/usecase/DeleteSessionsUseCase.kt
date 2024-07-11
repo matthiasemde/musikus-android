@@ -8,7 +8,7 @@
 
 package app.musikus.sessionslist.domain.usecase
 
-import app.musikus.sessionslist.domain.SessionRepository
+import app.musikus.sessionslist.data.SessionRepository
 import java.util.UUID
 
 class DeleteSessionsUseCase(

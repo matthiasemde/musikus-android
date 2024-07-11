@@ -9,7 +9,7 @@
 package app.musikus.recorder.domain.usecase
 
 import android.net.Uri
-import app.musikus.recorder.domain.RecordingsRepository
+import app.musikus.recorder.data.RecordingsRepository
 
 class GetRawRecordingUseCase(
     private val recordingsRepository: RecordingsRepository

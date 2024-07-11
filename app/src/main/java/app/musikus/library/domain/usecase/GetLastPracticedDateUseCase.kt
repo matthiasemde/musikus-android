@@ -9,7 +9,7 @@
 package app.musikus.library.domain.usecase
 
 import app.musikus.library.data.daos.LibraryItem
-import app.musikus.sessionslist.domain.SessionRepository
+import app.musikus.sessionslist.data.SessionRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.time.ZonedDateTime
