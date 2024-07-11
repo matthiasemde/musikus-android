@@ -12,9 +12,9 @@ package app.musikus.activesession.domain.usecase
 import app.musikus.activesession.domain.ActiveSessionRepository
 import app.musikus.activesession.domain.PracticeSection
 import app.musikus.activesession.domain.SessionState
-import app.musikus.utils.IdProvider
-import app.musikus.utils.minus
-import app.musikus.utils.plus
+import app.musikus.core.domain.IdProvider
+import app.musikus.core.domain.minus
+import app.musikus.core.domain.plus
 import kotlinx.coroutines.flow.first
 import kotlin.time.Duration.Companion.seconds
 

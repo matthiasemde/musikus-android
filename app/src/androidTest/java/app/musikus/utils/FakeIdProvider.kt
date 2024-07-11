@@ -1,5 +1,6 @@
 package app.musikus.utils
 
+import app.musikus.core.domain.IdProvider
 import java.util.UUID
 
 class FakeIdProvider : IdProvider {

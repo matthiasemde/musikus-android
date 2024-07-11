@@ -16,8 +16,8 @@ import app.musikus.library.data.entities.LibraryFolderUpdateAttributes
 import app.musikus.library.data.entities.LibraryItemCreationAttributes
 import app.musikus.library.data.entities.LibraryItemUpdateAttributes
 import app.musikus.library.data.LibraryRepository
-import app.musikus.utils.IdProvider
-import app.musikus.utils.TimeProvider
+import app.musikus.core.domain.IdProvider
+import app.musikus.core.domain.TimeProvider
 import kotlinx.coroutines.flow.flowOf
 import java.util.UUID
 

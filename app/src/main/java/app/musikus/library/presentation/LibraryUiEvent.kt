@@ -10,8 +10,8 @@ package app.musikus.library.presentation
 
 import app.musikus.library.data.daos.LibraryFolder
 import app.musikus.library.data.daos.LibraryItem
-import app.musikus.utils.LibraryFolderSortMode
-import app.musikus.utils.LibraryItemSortMode
+import app.musikus.core.domain.LibraryFolderSortMode
+import app.musikus.core.domain.LibraryItemSortMode
 
 typealias LibraryUiEventHandler = (LibraryUiEvent) -> Unit
 

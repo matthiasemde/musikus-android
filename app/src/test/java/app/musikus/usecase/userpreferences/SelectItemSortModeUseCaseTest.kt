@@ -10,9 +10,9 @@ package app.musikus.usecase.userpreferences
 
 import app.musikus.repository.FakeUserPreferencesRepository
 import app.musikus.settings.domain.usecase.SelectItemSortModeUseCase
-import app.musikus.utils.LibraryItemSortMode
-import app.musikus.utils.SortDirection
-import app.musikus.utils.SortInfo
+import app.musikus.core.domain.LibraryItemSortMode
+import app.musikus.core.domain.SortDirection
+import app.musikus.core.domain.SortInfo
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -50,10 +50,12 @@ class SelectItemSortModeUseCaseTest {
             // Assert that the sort mode was updated with Default sort direction
             val sortInfo = fakeUserPreferencesRepository.itemSortInfo.first()
             assertThat(sortInfo)
-                .isEqualTo(SortInfo(
+                .isEqualTo(
+                    SortInfo(
                     mode = LibraryItemSortMode.NAME,
                     direction = SortDirection.DEFAULT,
-                ))
+                )
+                )
         }
     }
 
@@ -76,10 +78,12 @@ class SelectItemSortModeUseCaseTest {
             // Assert that the sort mode was updated with inverted sort direction
             val sortInfo = fakeUserPreferencesRepository.itemSortInfo.first()
             assertThat(sortInfo)
-                .isEqualTo(SortInfo(
+                .isEqualTo(
+                    SortInfo(
                     mode = LibraryItemSortMode.DATE_ADDED,
                     direction = SortDirection.ASCENDING,
-                ))
+                )
+                )
         }
     }
 }

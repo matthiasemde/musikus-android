@@ -9,9 +9,9 @@
 package app.musikus.settings.domain.usecase
 
 import app.musikus.settings.data.UserPreferencesRepository
-import app.musikus.utils.GoalsSortMode
-import app.musikus.utils.SortDirection
-import app.musikus.utils.SortInfo
+import app.musikus.core.domain.GoalsSortMode
+import app.musikus.core.domain.SortDirection
+import app.musikus.core.domain.SortInfo
 import kotlinx.coroutines.flow.first
 
 class SelectGoalsSortModeUseCase(
@@ -27,9 +27,11 @@ class SelectGoalsSortModeUseCase(
             ))
             return
         }
-        userPreferencesRepository.updateGoalSortInfo(SortInfo(
+        userPreferencesRepository.updateGoalSortInfo(
+            SortInfo(
             mode = sortMode,
             direction = SortDirection.DEFAULT
-        ))
+        )
+        )
     }
 }

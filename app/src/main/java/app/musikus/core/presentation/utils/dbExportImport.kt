@@ -6,7 +6,7 @@
  * Copyright (c) 2022 Matthias Emde
  */
 
-package app.musikus.utils
+package app.musikus.core.presentation.utils
 
 import android.content.Context
 import android.content.Intent

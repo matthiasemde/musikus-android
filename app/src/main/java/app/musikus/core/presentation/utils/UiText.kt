@@ -6,7 +6,7 @@
  * Copyright (c) 2023 Matthias Emde
  */
 
-package app.musikus.utils
+package app.musikus.core.presentation.utils
 
 import androidx.annotation.PluralsRes
 import androidx.annotation.StringRes

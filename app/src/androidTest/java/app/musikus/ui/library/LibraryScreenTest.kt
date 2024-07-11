@@ -42,10 +42,10 @@ import app.musikus.library.presentation.Library
 import app.musikus.core.presentation.HomeViewModel
 import app.musikus.core.presentation.theme.MusikusTheme
 import app.musikus.utils.FakeTimeProvider
-import app.musikus.utils.LibraryFolderSortMode
-import app.musikus.utils.LibraryItemSortMode
-import app.musikus.utils.SortMode
-import app.musikus.utils.TestTags
+import app.musikus.core.domain.LibraryFolderSortMode
+import app.musikus.core.domain.LibraryItemSortMode
+import app.musikus.core.domain.SortMode
+import app.musikus.core.presentation.utils.TestTags
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import org.junit.Before

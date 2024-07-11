@@ -20,12 +20,12 @@ import app.musikus.settings.domain.ColorSchemeSelections
 import app.musikus.settings.domain.ThemeSelections
 import app.musikus.settings.domain.UserPreferences
 import app.musikus.ui.activesession.metronome.MetronomeSettings
-import app.musikus.utils.GoalSortInfo
-import app.musikus.utils.GoalsSortMode
-import app.musikus.utils.LibraryFolderSortMode
-import app.musikus.utils.LibraryItemSortMode
-import app.musikus.utils.SortDirection
-import app.musikus.utils.SortInfo
+import app.musikus.core.domain.GoalSortInfo
+import app.musikus.core.domain.GoalsSortMode
+import app.musikus.core.domain.LibraryFolderSortMode
+import app.musikus.core.domain.LibraryItemSortMode
+import app.musikus.core.domain.SortDirection
+import app.musikus.core.domain.SortInfo
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 

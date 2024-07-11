@@ -10,7 +10,7 @@ package app.musikus.sessionslist.domain.usecase
 
 import app.musikus.core.data.SessionWithSectionsWithLibraryItems
 import app.musikus.sessionslist.domain.SessionRepository
-import app.musikus.utils.Timeframe
+import app.musikus.core.domain.Timeframe
 import kotlinx.coroutines.flow.Flow
 
 class GetSessionsInTimeframeUseCase(

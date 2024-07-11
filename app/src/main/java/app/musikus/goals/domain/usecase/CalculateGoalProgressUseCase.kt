@@ -6,7 +6,7 @@ import app.musikus.goals.data.daos.GoalDescription
 import app.musikus.goals.data.daos.GoalInstance
 import app.musikus.goals.data.entities.GoalType
 import app.musikus.sessionslist.domain.usecase.GetSessionsInTimeframeUseCase
-import app.musikus.utils.TimeProvider
+import app.musikus.core.domain.TimeProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOf

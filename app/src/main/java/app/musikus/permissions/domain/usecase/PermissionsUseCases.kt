@@ -6,9 +6,8 @@
  * Copyright (c) 2024 Matthias Emde
  */
 
-package app.musikus.core.domain.usecase.permissions
+package app.musikus.permissions.domain.usecase
 
-
-interface PermissionRepository {
-    suspend fun requestPermissions(permissions: List<String>): Result<Unit>
-}
+data class PermissionsUseCases(
+    val request: RequestPermissionsUseCase
+)

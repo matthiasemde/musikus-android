@@ -12,8 +12,8 @@ import app.musikus.core.data.LibraryFolderWithItems
 import app.musikus.library.data.daos.LibraryFolder
 import app.musikus.library.data.daos.LibraryItem
 import app.musikus.ui.components.TopBarUiState
-import app.musikus.utils.SortDirection
-import app.musikus.utils.SortMode
+import app.musikus.core.domain.SortDirection
+import app.musikus.core.domain.SortMode
 import java.time.ZonedDateTime
 import java.util.UUID
 

@@ -20,9 +20,9 @@ import app.musikus.repository.FakeUserPreferencesRepository
 import app.musikus.settings.domain.usecase.GetItemSortInfoUseCase
 import app.musikus.utils.FakeIdProvider
 import app.musikus.utils.FakeTimeProvider
-import app.musikus.utils.LibraryItemSortMode
-import app.musikus.utils.SortDirection
-import app.musikus.utils.SortInfo
+import app.musikus.core.domain.LibraryItemSortMode
+import app.musikus.core.domain.SortDirection
+import app.musikus.core.domain.SortInfo
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeEach

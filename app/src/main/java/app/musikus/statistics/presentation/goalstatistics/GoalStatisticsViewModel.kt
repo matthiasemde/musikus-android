@@ -15,10 +15,10 @@ import app.musikus.core.data.GoalDescriptionWithLibraryItems
 import app.musikus.goals.data.entities.GoalType
 import app.musikus.core.presentation.theme.libraryItemColors
 import app.musikus.goals.domain.usecase.GoalsUseCases
-import app.musikus.utils.DateFormat
-import app.musikus.utils.Timeframe
-import app.musikus.utils.UiText
-import app.musikus.utils.musikusFormat
+import app.musikus.core.domain.DateFormat
+import app.musikus.core.domain.Timeframe
+import app.musikus.core.presentation.utils.UiText
+import app.musikus.core.domain.musikusFormat
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow

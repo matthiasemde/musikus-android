@@ -33,8 +33,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import app.musikus.core.presentation.theme.spacing
-import app.musikus.utils.UiIcon
-import app.musikus.utils.UiText
+import app.musikus.core.presentation.utils.UiIcon
+import app.musikus.core.presentation.utils.UiText
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

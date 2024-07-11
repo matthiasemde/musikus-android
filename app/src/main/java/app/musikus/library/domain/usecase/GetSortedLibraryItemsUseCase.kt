@@ -12,8 +12,8 @@ import app.musikus.core.data.Nullable
 import app.musikus.library.data.daos.LibraryItem
 import app.musikus.library.data.LibraryRepository
 import app.musikus.settings.domain.usecase.GetItemSortInfoUseCase
-import app.musikus.utils.LibraryItemSortMode
-import app.musikus.utils.sorted
+import app.musikus.core.domain.LibraryItemSortMode
+import app.musikus.core.domain.sorted
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map

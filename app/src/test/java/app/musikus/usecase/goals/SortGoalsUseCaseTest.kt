@@ -20,9 +20,9 @@ import app.musikus.repository.FakeUserPreferencesRepository
 import app.musikus.settings.data.UserPreferencesRepository
 import app.musikus.settings.domain.usecase.GetGoalSortInfoUseCase
 import app.musikus.utils.FakeTimeProvider
-import app.musikus.utils.GoalsSortMode
-import app.musikus.utils.SortDirection
-import app.musikus.utils.SortInfo
+import app.musikus.core.domain.GoalsSortMode
+import app.musikus.core.domain.SortDirection
+import app.musikus.core.domain.SortInfo
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf

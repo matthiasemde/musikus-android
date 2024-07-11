@@ -6,7 +6,7 @@
  * Copyright (c) 2024 Matthias Emde, Michael Prommersberger
  */
 
-package app.musikus.core.presentation.components
+package app.musikus.permissions.presentation
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
@@ -17,6 +17,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.window.Dialog
+import app.musikus.core.presentation.components.DialogActions
+import app.musikus.core.presentation.components.DialogHeader
 import app.musikus.settings.domain.ColorSchemeSelections
 import app.musikus.core.presentation.theme.MusikusColorSchemeProvider
 import app.musikus.core.presentation.theme.MusikusPreviewElement1

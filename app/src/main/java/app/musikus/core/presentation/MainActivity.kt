@@ -20,11 +20,11 @@ import app.musikus.core.data.MusikusDatabase
 import app.musikus.activesession.presentation.ActiveSessionServiceActions
 import app.musikus.activesession.presentation.SessionService
 import app.musikus.activesession.domain.usecase.ActiveSessionUseCases
-import app.musikus.utils.ExportDatabaseContract
-import app.musikus.utils.ImportDatabaseContract
-import app.musikus.utils.PermissionChecker
-import app.musikus.utils.PermissionCheckerActivity
-import app.musikus.utils.TimeProvider
+import app.musikus.core.presentation.utils.ExportDatabaseContract
+import app.musikus.core.presentation.utils.ImportDatabaseContract
+import app.musikus.permissions.domain.PermissionChecker
+import app.musikus.permissions.domain.PermissionCheckerActivity
+import app.musikus.core.domain.TimeProvider
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import javax.inject.Provider

@@ -21,9 +21,9 @@ import app.musikus.goals.domain.GoalInstanceWithProgressAndDescriptionWithLibrar
 import app.musikus.goals.domain.usecase.GoalsUseCases
 import app.musikus.library.domain.usecase.LibraryUseCases
 import app.musikus.settings.domain.usecase.UserPreferencesUseCases
-import app.musikus.utils.GoalsSortMode
-import app.musikus.utils.SortDirection
-import app.musikus.utils.SortInfo
+import app.musikus.core.domain.GoalsSortMode
+import app.musikus.core.domain.SortDirection
+import app.musikus.core.domain.SortInfo
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted

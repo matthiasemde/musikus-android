@@ -6,23 +6,21 @@
  * Copyright (c) 2023 Matthias Emde
  */
 
-package app.musikus.utils
+package app.musikus.core.data
 
 import android.util.Log
-import app.musikus.core.data.MusikusDatabase
-import app.musikus.core.data.Nullable
+import app.musikus.goals.data.GoalRepositoryImpl
 import app.musikus.goals.data.entities.GoalDescriptionCreationAttributes
 import app.musikus.goals.data.entities.GoalInstanceCreationAttributes
 import app.musikus.goals.data.entities.GoalPeriodUnit
 import app.musikus.goals.data.entities.GoalType
+import app.musikus.goals.domain.usecase.ArchiveGoalsUseCase
+import app.musikus.goals.domain.usecase.CleanFutureGoalInstancesUseCase
+import app.musikus.goals.domain.usecase.UpdateGoalsUseCase
 import app.musikus.library.data.entities.LibraryFolderCreationAttributes
 import app.musikus.library.data.entities.LibraryItemCreationAttributes
 import app.musikus.sessionslist.data.entities.SectionCreationAttributes
 import app.musikus.sessionslist.data.entities.SessionCreationAttributes
-import app.musikus.goals.data.GoalRepositoryImpl
-import app.musikus.goals.domain.usecase.ArchiveGoalsUseCase
-import app.musikus.goals.domain.usecase.CleanFutureGoalInstancesUseCase
-import app.musikus.goals.domain.usecase.UpdateGoalsUseCase
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import java.time.temporal.ChronoUnit

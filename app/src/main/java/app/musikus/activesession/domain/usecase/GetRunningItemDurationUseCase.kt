@@ -11,8 +11,8 @@ package app.musikus.activesession.domain.usecase
 
 
 import app.musikus.activesession.domain.ActiveSessionRepository
-import app.musikus.utils.TimeProvider
-import app.musikus.utils.minus
+import app.musikus.core.domain.TimeProvider
+import app.musikus.core.domain.minus
 import kotlinx.coroutines.flow.first
 import java.time.ZonedDateTime
 import kotlin.time.Duration

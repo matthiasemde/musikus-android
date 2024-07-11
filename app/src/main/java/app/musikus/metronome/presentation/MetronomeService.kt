@@ -26,7 +26,7 @@ import app.musikus.di.ApplicationScope
 import app.musikus.di.IoScope
 import app.musikus.activesession.presentation.ActiveSessionActions
 import app.musikus.settings.domain.usecase.UserPreferencesUseCases
-import app.musikus.utils.Metronome
+import app.musikus.metronome.domain.Metronome
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job

@@ -4,8 +4,8 @@ import app.musikus.core.data.GoalDescriptionWithLibraryItems
 import app.musikus.goals.data.daos.GoalDescription
 import app.musikus.goals.data.daos.GoalInstance
 import app.musikus.library.data.daos.LibraryItem
-import app.musikus.utils.TimeProvider
-import app.musikus.utils.UiText
+import app.musikus.core.domain.TimeProvider
+import app.musikus.core.presentation.utils.UiText
 import kotlin.time.Duration
 
 data class GoalDescriptionWithInstancesWithProgressAndLibraryItems(

@@ -25,8 +25,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import app.musikus.core.presentation.theme.spacing
-import app.musikus.utils.UiIcon
-import app.musikus.utils.UiText
+import app.musikus.core.presentation.utils.UiIcon
+import app.musikus.core.presentation.utils.UiText
 
 
 data class TwoLinerData(

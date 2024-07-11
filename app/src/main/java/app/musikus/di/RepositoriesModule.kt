@@ -25,7 +25,7 @@ import app.musikus.settings.data.UserPreferencesRepositoryImpl
 import app.musikus.activesession.domain.ActiveSessionRepository
 import app.musikus.recorder.domain.RecordingsRepository
 import app.musikus.sessionslist.domain.SessionRepository
-import app.musikus.utils.TimeProvider
+import app.musikus.core.domain.TimeProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

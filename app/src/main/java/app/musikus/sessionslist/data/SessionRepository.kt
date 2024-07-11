@@ -21,8 +21,8 @@ import app.musikus.sessionslist.data.entities.SectionUpdateAttributes
 import app.musikus.sessionslist.data.entities.SessionCreationAttributes
 import app.musikus.sessionslist.data.entities.SessionUpdateAttributes
 import app.musikus.sessionslist.domain.SessionRepository
-import app.musikus.utils.TimeProvider
-import app.musikus.utils.Timeframe
+import app.musikus.core.domain.TimeProvider
+import app.musikus.core.domain.Timeframe
 import kotlinx.coroutines.flow.Flow
 import java.time.ZonedDateTime
 import java.util.UUID

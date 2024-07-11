@@ -85,9 +85,9 @@ import app.musikus.core.presentation.theme.MusikusPreviewElement3
 import app.musikus.core.presentation.theme.MusikusThemedPreview
 import app.musikus.core.presentation.theme.dimensions
 import app.musikus.core.presentation.theme.spacing
-import app.musikus.utils.DurationFormat
-import app.musikus.utils.RecorderState
-import app.musikus.utils.getDurationString
+import app.musikus.core.presentation.utils.DurationFormat
+import app.musikus.recorder.domain.RecorderState
+import app.musikus.core.presentation.utils.getDurationString
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.delay

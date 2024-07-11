@@ -46,11 +46,11 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import app.musikus.R
 import app.musikus.core.data.SessionWithSectionsWithLibraryItems
-import app.musikus.utils.DurationFormat
-import app.musikus.utils.getDurationString
+import app.musikus.core.presentation.utils.DurationFormat
+import app.musikus.core.presentation.utils.getDurationString
 import app.musikus.core.presentation.theme.libraryItemColors
-import app.musikus.utils.DateFormat
-import app.musikus.utils.musikusFormat
+import app.musikus.core.domain.DateFormat
+import app.musikus.core.domain.musikusFormat
 import kotlin.time.Duration.Companion.seconds
 
 @Composable

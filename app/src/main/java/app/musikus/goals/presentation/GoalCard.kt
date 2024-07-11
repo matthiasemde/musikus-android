@@ -46,12 +46,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.musikus.R
 import app.musikus.goals.data.entities.GoalType
-import app.musikus.utils.DurationFormat
-import app.musikus.utils.getDurationString
+import app.musikus.core.presentation.utils.DurationFormat
+import app.musikus.core.presentation.utils.getDurationString
 import app.musikus.core.presentation.theme.libraryItemColors
 import app.musikus.goals.domain.GoalInstanceWithProgressAndDescriptionWithLibraryItems
-import app.musikus.utils.TimeProvider
-import app.musikus.utils.asAnnotatedString
+import app.musikus.core.domain.TimeProvider
+import app.musikus.core.presentation.utils.asAnnotatedString
 import java.time.temporal.ChronoUnit
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds

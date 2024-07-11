@@ -6,7 +6,9 @@
  * Copyright (c) 2024 Matthias Emde
  */
 
-package app.musikus.core.domain.usecase.permissions
+package app.musikus.permissions.domain.usecase
+
+import app.musikus.permissions.domain.PermissionRepository
 
 class RequestPermissionsUseCase(
     private val permissionRepository: PermissionRepository

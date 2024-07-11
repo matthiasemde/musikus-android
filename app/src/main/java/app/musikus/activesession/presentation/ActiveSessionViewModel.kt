@@ -23,11 +23,11 @@ import app.musikus.core.presentation.theme.libraryItemColors
 import app.musikus.activesession.domain.usecase.ActiveSessionUseCases
 import app.musikus.activesession.domain.usecase.SessionStatus
 import app.musikus.library.domain.usecase.LibraryUseCases
-import app.musikus.core.domain.usecase.permissions.PermissionsUseCases
+import app.musikus.permissions.domain.usecase.PermissionsUseCases
 import app.musikus.sessionslist.domain.usecase.SessionsUseCases
-import app.musikus.utils.DurationFormat
-import app.musikus.utils.PermissionChecker
-import app.musikus.utils.getDurationString
+import app.musikus.core.presentation.utils.DurationFormat
+import app.musikus.permissions.domain.PermissionChecker
+import app.musikus.core.presentation.utils.getDurationString
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

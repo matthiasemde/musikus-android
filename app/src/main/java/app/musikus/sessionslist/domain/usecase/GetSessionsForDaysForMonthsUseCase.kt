@@ -11,8 +11,8 @@ package app.musikus.sessionslist.domain.usecase
 import app.musikus.sessionslist.domain.SessionRepository
 import app.musikus.sessionslist.domain.SessionsForDay
 import app.musikus.sessionslist.domain.SessionsForDaysForMonth
-import app.musikus.utils.specificDay
-import app.musikus.utils.specificMonth
+import app.musikus.core.domain.specificDay
+import app.musikus.core.domain.specificMonth
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlin.time.Duration.Companion.seconds

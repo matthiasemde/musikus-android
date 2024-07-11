@@ -16,9 +16,9 @@ import app.musikus.repository.FakeLibraryRepository
 import app.musikus.repository.FakeUserPreferencesRepository
 import app.musikus.utils.FakeIdProvider
 import app.musikus.utils.FakeTimeProvider
-import app.musikus.utils.LibraryFolderSortMode
-import app.musikus.utils.SortDirection
-import app.musikus.utils.SortInfo
+import app.musikus.core.domain.LibraryFolderSortMode
+import app.musikus.core.domain.SortDirection
+import app.musikus.core.domain.SortInfo
 import app.musikus.core.data.UUIDConverter
 import app.musikus.library.domain.usecase.GetSortedLibraryFoldersUseCase
 import app.musikus.settings.domain.usecase.GetFolderSortInfoUseCase

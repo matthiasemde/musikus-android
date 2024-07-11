@@ -47,7 +47,7 @@ import app.musikus.ui.components.DialogHeader
 import app.musikus.ui.components.SelectionSpinner
 import app.musikus.ui.components.UUIDSelectionSpinnerOption
 import app.musikus.core.presentation.theme.libraryItemColors
-import app.musikus.utils.TestTags
+import app.musikus.core.presentation.utils.TestTags
 import java.util.UUID
 
 

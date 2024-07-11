@@ -9,11 +9,11 @@
 package app.musikus.di
 
 import android.app.Application
-import app.musikus.core.data.PermissionRepositoryImpl
-import app.musikus.core.domain.usecase.permissions.PermissionRepository
-import app.musikus.core.domain.usecase.permissions.PermissionsUseCases
-import app.musikus.core.domain.usecase.permissions.RequestPermissionsUseCase
-import app.musikus.utils.PermissionChecker
+import app.musikus.permissions.data.PermissionRepositoryImpl
+import app.musikus.permissions.domain.PermissionRepository
+import app.musikus.permissions.domain.usecase.PermissionsUseCases
+import app.musikus.permissions.domain.usecase.RequestPermissionsUseCase
+import app.musikus.permissions.domain.PermissionChecker
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

@@ -26,8 +26,8 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
-import app.musikus.utils.SortDirection
-import app.musikus.utils.SortMode
+import app.musikus.core.domain.SortDirection
+import app.musikus.core.domain.SortMode
 
 @Composable
 fun <T : SortMode<*>> SortMenu(

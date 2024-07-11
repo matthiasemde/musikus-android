@@ -17,7 +17,7 @@ import app.musikus.goals.data.entities.InvalidGoalDescriptionException
 import app.musikus.goals.data.entities.InvalidGoalInstanceException
 import app.musikus.goals.data.GoalRepository
 import app.musikus.library.domain.usecase.GetAllLibraryItemsUseCase
-import app.musikus.utils.TimeProvider
+import app.musikus.core.domain.TimeProvider
 import kotlinx.coroutines.flow.first
 import java.util.UUID
 

@@ -31,9 +31,9 @@ import app.musikus.R
 import app.musikus.core.presentation.SESSION_NOTIFICATION_CHANNEL_ID
 import app.musikus.di.ApplicationScope
 import app.musikus.activesession.domain.usecase.ActiveSessionUseCases
-import app.musikus.utils.DurationFormat
-import app.musikus.utils.TimeProvider
-import app.musikus.utils.getDurationString
+import app.musikus.core.presentation.utils.DurationFormat
+import app.musikus.core.domain.TimeProvider
+import app.musikus.core.presentation.utils.getDurationString
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.first

@@ -11,8 +11,8 @@ package app.musikus.library.domain.usecase
 import app.musikus.core.data.LibraryFolderWithItems
 import app.musikus.library.data.LibraryRepository
 import app.musikus.settings.domain.usecase.GetFolderSortInfoUseCase
-import app.musikus.utils.LibraryFolderSortMode
-import app.musikus.utils.sorted
+import app.musikus.core.domain.LibraryFolderSortMode
+import app.musikus.core.domain.sorted
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 

@@ -26,7 +26,7 @@ import app.musikus.library.data.entities.LibraryItemModel
 import app.musikus.sessionslist.data.daos.Section
 import app.musikus.sessionslist.data.daos.Session
 import app.musikus.sessionslist.data.entities.SectionModel
-import app.musikus.utils.TimeProvider
+import app.musikus.core.domain.TimeProvider
 
 
 data class SectionWithLibraryItem(
@@ -179,6 +179,7 @@ data class GoalDescriptionWithInstancesAndLibraryItems(
     val subtitle by lazy { latestInstance.let { description.subtitle(it) } }
 
     val startTime by lazy { instances.minOf { it.startTimestamp } }
+    dx
 
     fun endTime(timeProvider: TimeProvider) = instances.maxOf {
         description.endOfInstanceInLocalTimezone(it, timeProvider)

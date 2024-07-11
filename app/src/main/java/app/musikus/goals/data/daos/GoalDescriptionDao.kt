@@ -33,11 +33,11 @@ import app.musikus.goals.data.entities.GoalProgressType
 import app.musikus.goals.data.entities.GoalType
 import app.musikus.core.data.entities.SoftDeleteModelDisplayAttributes
 import app.musikus.library.data.daos.LibraryItem
-import app.musikus.utils.DurationFormat
-import app.musikus.utils.getDurationString
-import app.musikus.utils.TimeProvider
-import app.musikus.utils.UiText
-import app.musikus.utils.inLocalTimezone
+import app.musikus.core.presentation.utils.DurationFormat
+import app.musikus.core.presentation.utils.getDurationString
+import app.musikus.core.domain.TimeProvider
+import app.musikus.core.presentation.utils.UiText
+import app.musikus.core.domain.inLocalTimezone
 import kotlinx.coroutines.flow.Flow
 import java.time.ZonedDateTime
 import java.util.UUID

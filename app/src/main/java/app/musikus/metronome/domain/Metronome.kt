@@ -6,7 +6,7 @@
  * Copyright (c) 2024 Matthias Emde
  */
 
-package app.musikus.utils
+package app.musikus.metronome.domain
 
 import android.content.Context
 import android.media.AudioAttributes

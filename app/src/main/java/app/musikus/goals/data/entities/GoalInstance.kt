@@ -11,7 +11,7 @@ import app.musikus.core.data.entities.TimestampModelCreationAttributes
 import app.musikus.core.data.entities.TimestampModelUpdateAttributes
 import app.musikus.core.data.Nullable
 import app.musikus.core.data.UUIDConverter
-import app.musikus.utils.TimeProvider
+import app.musikus.core.domain.TimeProvider
 import java.time.ZonedDateTime
 import java.util.UUID
 import kotlin.time.Duration

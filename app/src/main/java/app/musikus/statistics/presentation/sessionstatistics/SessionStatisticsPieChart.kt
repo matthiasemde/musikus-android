@@ -30,7 +30,7 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import app.musikus.library.data.daos.LibraryItem
 import app.musikus.core.presentation.theme.libraryItemColors
-import app.musikus.utils.sorted
+import app.musikus.core.domain.sorted
 import kotlinx.coroutines.launch
 import kotlin.math.cos
 import kotlin.math.sin

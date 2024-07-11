@@ -179,11 +179,11 @@ import app.musikus.core.presentation.theme.MusikusThemedPreview
 import app.musikus.core.presentation.theme.dimensions
 import app.musikus.core.presentation.theme.libraryItemColors
 import app.musikus.core.presentation.theme.spacing
-import app.musikus.utils.DurationFormat
-import app.musikus.utils.TimeProvider
-import app.musikus.utils.UiIcon
-import app.musikus.utils.UiText
-import app.musikus.utils.getDurationString
+import app.musikus.core.presentation.utils.DurationFormat
+import app.musikus.core.domain.TimeProvider
+import app.musikus.core.presentation.utils.UiIcon
+import app.musikus.core.presentation.utils.UiText
+import app.musikus.core.presentation.utils.getDurationString
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.persistentListOf

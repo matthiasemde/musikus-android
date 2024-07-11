@@ -6,7 +6,7 @@
  * Copyright (c) 2023-2024 Matthias Emde, Michael Prommersberger
  */
 
-package app.musikus.utils
+package app.musikus.core.domain
 
 import java.time.Instant
 import java.time.ZoneId

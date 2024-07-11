@@ -49,7 +49,7 @@ import app.musikus.ui.components.ToggleButtonOption
 import app.musikus.ui.components.UUIDSelectionSpinnerOption
 import app.musikus.library.presentation.DialogMode
 import app.musikus.core.presentation.theme.spacing
-import app.musikus.utils.TestTags
+import app.musikus.core.presentation.utils.TestTags
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 

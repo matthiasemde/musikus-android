@@ -85,8 +85,8 @@ import app.musikus.settings.domain.usecase.SelectGoalsSortModeUseCase
 import app.musikus.settings.domain.usecase.SelectItemSortModeUseCase
 import app.musikus.settings.domain.usecase.SelectThemeUseCase
 import app.musikus.settings.domain.usecase.UserPreferencesUseCases
-import app.musikus.utils.IdProvider
-import app.musikus.utils.TimeProvider
+import app.musikus.core.domain.IdProvider
+import app.musikus.core.domain.TimeProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

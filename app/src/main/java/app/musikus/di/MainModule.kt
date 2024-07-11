@@ -17,10 +17,10 @@ import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.preferencesDataStoreFile
 import app.musikus.core.presentation.Musikus
 import app.musikus.core.data.MusikusDatabase
-import app.musikus.utils.IdProvider
-import app.musikus.utils.IdProviderImpl
-import app.musikus.utils.TimeProvider
-import app.musikus.utils.TimeProviderImpl
+import app.musikus.core.domain.IdProvider
+import app.musikus.core.domain.IdProviderImpl
+import app.musikus.core.domain.TimeProvider
+import app.musikus.core.domain.TimeProviderImpl
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

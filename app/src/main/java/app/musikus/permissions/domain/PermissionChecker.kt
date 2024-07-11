@@ -10,7 +10,7 @@
  * https://medium.com/@vuert/handling-android-permissions-in-repository-9c062b4ea85e
  */
 
-package app.musikus.utils
+package app.musikus.permissions.domain
 
 import android.content.Context
 import android.content.pm.PackageManager

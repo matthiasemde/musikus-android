@@ -26,7 +26,7 @@ import app.musikus.sessionslist.data.entities.SessionModel
 import app.musikus.sessionslist.data.entities.SessionUpdateAttributes
 import app.musikus.core.data.entities.SoftDeleteModelDisplayAttributes
 import app.musikus.core.data.toDatabaseInterpretableString
-import app.musikus.utils.Timeframe
+import app.musikus.core.domain.Timeframe
 import kotlinx.coroutines.flow.Flow
 import java.time.ZonedDateTime
 import java.util.UUID

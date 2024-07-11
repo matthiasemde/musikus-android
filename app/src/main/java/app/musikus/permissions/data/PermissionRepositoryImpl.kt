@@ -6,10 +6,10 @@
  * Copyright (c) 2024 Matthias Emde
  */
 
-package app.musikus.core.data
+package app.musikus.permissions.data
 
-import app.musikus.core.domain.usecase.permissions.PermissionRepository
-import app.musikus.utils.PermissionChecker
+import app.musikus.permissions.domain.PermissionRepository
+import app.musikus.permissions.domain.PermissionChecker
 
 class PermissionRepositoryImpl(
     private val permissionChecker: PermissionChecker

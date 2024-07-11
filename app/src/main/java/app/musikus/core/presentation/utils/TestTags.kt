@@ -10,7 +10,7 @@
  * Copyright (c) 2022, Javier Carbone, author Matthias Emde
  */
 
-package app.musikus.utils
+package app.musikus.core.presentation.utils
 
 object TestTags {
     const val FOLDER_DIALOG_NAME_INPUT = "FOLDER_DIALOG_NAME_INPUT"

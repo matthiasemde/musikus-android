@@ -40,9 +40,8 @@ import app.musikus.sessionslist.data.daos.SectionDao
 import app.musikus.sessionslist.data.daos.SessionDao
 import app.musikus.sessionslist.data.entities.SectionModel
 import app.musikus.sessionslist.data.entities.SessionModel
-import app.musikus.utils.IdProvider
-import app.musikus.utils.TimeProvider
-import app.musikus.utils.prepopulateDatabase
+import app.musikus.core.domain.IdProvider
+import app.musikus.core.domain.TimeProvider
 import kotlinx.coroutines.runBlocking
 import java.nio.ByteBuffer
 import java.time.Instant

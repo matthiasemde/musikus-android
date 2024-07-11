@@ -1,4 +1,4 @@
-package app.musikus.utils
+package app.musikus.core.domain
 
 import java.util.UUID
 
