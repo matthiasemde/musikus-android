@@ -33,8 +33,8 @@ import androidx.core.content.ContextCompat
 import app.musikus.BuildConfig
 import app.musikus.R
 import app.musikus.core.presentation.Screen
-import app.musikus.ui.components.TwoLiner
-import app.musikus.ui.components.TwoLinerData
+import app.musikus.core.presentation.components.TwoLiner
+import app.musikus.core.presentation.components.TwoLinerData
 import app.musikus.core.presentation.theme.spacing
 import app.musikus.core.presentation.utils.UiIcon
 import app.musikus.core.presentation.utils.UiText
@@ -65,10 +65,12 @@ fun AboutScreen(
         val context = LocalContext.current
 
         val aboutScreenItems = listOf(
-            listOf(TwoLinerData(
+            listOf(
+                TwoLinerData(
                 firstLine = UiText.StringResource(R.string.development_title),
                 secondLine = UiText.StringResource(R.string.development_text)
-            )),
+            )
+            ),
             listOf(
                 TwoLinerData(
                     firstLine = UiText.DynamicString("Publisher"),

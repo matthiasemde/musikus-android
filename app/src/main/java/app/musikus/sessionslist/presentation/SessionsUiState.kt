@@ -8,7 +8,7 @@
 
 package app.musikus.sessionslist.presentation
 
-import app.musikus.ui.components.TopBarUiState
+import app.musikus.core.presentation.components.TopBarUiState
 import java.util.UUID
 
 data class SessionsTopBarUiState(

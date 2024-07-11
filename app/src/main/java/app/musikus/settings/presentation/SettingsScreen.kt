@@ -33,9 +33,10 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import app.musikus.core.presentation.Screen
-import app.musikus.ui.components.TwoLiner
-import app.musikus.ui.components.TwoLinerData
+import app.musikus.core.presentation.components.TwoLiner
+import app.musikus.core.presentation.components.TwoLinerData
 import app.musikus.core.presentation.navigateTo
+import app.musikus.core.presentation.theme.spacing
 import app.musikus.settings.presentation.about.AboutScreen
 import app.musikus.settings.presentation.about.LicenseScreen
 import app.musikus.settings.presentation.appearance.AppearanceScreen
@@ -43,7 +44,6 @@ import app.musikus.settings.presentation.backup.BackupScreen
 import app.musikus.settings.presentation.donate.DonateScreen
 import app.musikus.settings.presentation.export.ExportScreen
 import app.musikus.settings.presentation.help.HelpScreen
-import app.musikus.core.presentation.theme.spacing
 
 fun NavGraphBuilder.addSettingsNavigationGraph(navController: NavController) {
     composable(Screen.Settings.route) {

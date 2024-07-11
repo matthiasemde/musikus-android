@@ -74,10 +74,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.session.MediaController
+import app.musikus.core.presentation.components.DialogActions
+import app.musikus.core.presentation.components.ExceptionHandler
+import app.musikus.core.presentation.components.Waveform
 import app.musikus.settings.domain.ColorSchemeSelections
-import app.musikus.ui.components.DialogActions
-import app.musikus.ui.components.ExceptionHandler
-import app.musikus.ui.components.Waveform
 import app.musikus.core.presentation.theme.MusikusColorSchemeProvider
 import app.musikus.core.presentation.theme.MusikusPreviewElement1
 import app.musikus.core.presentation.theme.MusikusPreviewElement2

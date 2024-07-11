@@ -52,11 +52,11 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.musikus.R
-import app.musikus.ui.components.conditional
-import app.musikus.ui.components.simpleVerticalScrollbar
-import app.musikus.statistics.presentation.sessionstatistics.TimeframeSelectionHeader
+import app.musikus.core.presentation.components.conditional
+import app.musikus.core.presentation.components.simpleVerticalScrollbar
 import app.musikus.core.presentation.theme.spacing
 import app.musikus.core.presentation.utils.asAnnotatedString
+import app.musikus.statistics.presentation.sessionstatistics.TimeframeSelectionHeader
 import java.util.UUID
 
 

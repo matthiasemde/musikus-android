@@ -41,13 +41,13 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import app.musikus.R
-import app.musikus.library.data.daos.LibraryFolder
-import app.musikus.ui.components.DialogActions
-import app.musikus.ui.components.DialogHeader
-import app.musikus.ui.components.SelectionSpinner
-import app.musikus.ui.components.UUIDSelectionSpinnerOption
+import app.musikus.core.presentation.components.DialogActions
+import app.musikus.core.presentation.components.DialogHeader
+import app.musikus.core.presentation.components.SelectionSpinner
+import app.musikus.core.presentation.components.UUIDSelectionSpinnerOption
 import app.musikus.core.presentation.theme.libraryItemColors
 import app.musikus.core.presentation.utils.TestTags
+import app.musikus.library.data.daos.LibraryFolder
 import java.util.UUID
 
 

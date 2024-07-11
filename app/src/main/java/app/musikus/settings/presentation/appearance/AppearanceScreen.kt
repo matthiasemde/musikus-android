@@ -36,10 +36,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.musikus.core.presentation.components.TwoLiner
+import app.musikus.core.presentation.components.TwoLinerData
 import app.musikus.settings.domain.ColorSchemeSelections
 import app.musikus.settings.domain.ThemeSelections
-import app.musikus.ui.components.TwoLiner
-import app.musikus.ui.components.TwoLinerData
 import app.musikus.core.presentation.theme.spacing
 import app.musikus.core.presentation.utils.UiText
 

@@ -20,9 +20,9 @@ import androidx.lifecycle.viewModelScope
 import app.musikus.metronome.presentation.MetronomeService
 import app.musikus.metronome.presentation.MetronomeServiceEvent
 import app.musikus.metronome.presentation.MetronomeServiceState
+import app.musikus.permissions.domain.PermissionChecker
 import app.musikus.permissions.domain.usecase.PermissionsUseCases
 import app.musikus.settings.domain.usecase.UserPreferencesUseCases
-import app.musikus.permissions.domain.PermissionChecker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
@@ -229,6 +229,7 @@ class MetronomeViewModel @Inject constructor(
             is MetronomeUiEvent.DecrementClicksPerBeat -> incrementClicksPerBeat(-1)
 
             is MetronomeUiEvent.TabTempo -> tabTempo()
+            else -> {}
         }
     }
 
