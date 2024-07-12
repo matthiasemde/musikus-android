@@ -31,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -44,12 +45,16 @@ import app.musikus.core.presentation.components.NumberInput
 import app.musikus.core.presentation.components.SelectionSpinner
 import app.musikus.core.presentation.components.ToggleButtonOption
 import app.musikus.core.presentation.components.UUIDSelectionSpinnerOption
-import app.musikus.library.data.daos.LibraryItem
-import app.musikus.goals.data.entities.GoalPeriodUnit
-import app.musikus.goals.data.entities.GoalType
-import app.musikus.library.presentation.DialogMode
+import app.musikus.core.presentation.theme.MusikusColorSchemeProvider
+import app.musikus.core.presentation.theme.MusikusPreviewElement1
+import app.musikus.core.presentation.theme.MusikusThemedPreview
 import app.musikus.core.presentation.theme.spacing
 import app.musikus.core.presentation.utils.TestTags
+import app.musikus.goals.data.entities.GoalPeriodUnit
+import app.musikus.goals.data.entities.GoalType
+import app.musikus.library.data.daos.LibraryItem
+import app.musikus.library.presentation.DialogMode
+import app.musikus.settings.domain.ColorSchemeSelections
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -232,6 +237,31 @@ fun PeriodInput(
                 onPeriodUnitChanged(GoalPeriodUnit.entries[(selection as IntSelectionSpinnerOption?)?.id ?: 0])
                 onPeriodUnitSelectorExpandedChanged(false)
             }
+        )
+    }
+}
+
+
+@MusikusPreviewElement1
+@Composable
+private fun PreviewGoalDialog(
+    @PreviewParameter(MusikusColorSchemeProvider::class) theme: ColorSchemeSelections,
+) {
+    MusikusThemedPreview(theme = theme) {
+        GoalDialog(
+            uiState = GoalsAddOrEditDialogUiState(
+                mode = DialogMode.ADD,
+                libraryItems = emptyList(),
+                goalToEditId = null,
+                dialogData = GoalDialogData(
+                    target = 10.seconds,
+                    periodInPeriodUnits = 1,
+                    periodUnit = GoalPeriodUnit.DAY,
+                    goalType = GoalType.NON_SPECIFIC,
+                    selectedLibraryItems = emptyList()
+                ),
+            ),
+            eventHandler = { }
         )
     }
 }
