@@ -50,6 +50,9 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.BaselineShift
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.sp
+import app.musikus.core.presentation.theme.MusikusPreviewElement1
+import app.musikus.core.presentation.theme.MusikusThemedPreview
 
 @Composable
 fun NumberInput(
@@ -149,5 +152,24 @@ fun NumberInput(
                 color = Color.Transparent,
             ) {}
         }
+    }
+}
+
+@MusikusPreviewElement1
+@Composable
+private fun NumberInputPreview() {
+    MusikusThemedPreview() {
+        NumberInput(
+            value = "42",
+            onValueChange = {},
+            textSize = 40.sp,
+            showLeadingZero = true,
+            minValue = 0,
+            maxValue = 99,
+            imeAction = ImeAction.Done,
+            label = { modifier ->
+                Text(modifier = modifier, text = "h", style = MaterialTheme.typography.labelLarge)
+            }
+        )
     }
 }

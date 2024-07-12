@@ -19,8 +19,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import app.musikus.core.presentation.theme.MusikusColorSchemeProvider
+import app.musikus.core.presentation.theme.MusikusPreviewElement1
+import app.musikus.core.presentation.theme.MusikusThemedPreview
+import app.musikus.settings.domain.ColorSchemeSelections
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
@@ -71,6 +76,20 @@ fun DurationInput(
             label = { modifier ->
                 Text(modifier = modifier, text = "m", style = MaterialTheme.typography.labelLarge)
             }
+        )
+    }
+}
+
+
+@MusikusPreviewElement1
+@Composable
+private fun DurationInputPreview(
+    @PreviewParameter(MusikusColorSchemeProvider::class) theme: ColorSchemeSelections,
+) {
+    MusikusThemedPreview(theme = theme) {
+        DurationInput(
+            value = 2.hours + 30.minutes,
+            onValueChanged = {}
         )
     }
 }
