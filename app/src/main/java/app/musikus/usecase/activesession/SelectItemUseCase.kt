@@ -20,7 +20,6 @@ import kotlin.time.Duration.Companion.seconds
 
 class SelectItemUseCase(
     private val activeSessionRepository: ActiveSessionRepository,
-    private val resumeUseCase: ResumeActiveSessionUseCase,
     private val getRunningItemDurationUseCase: GetRunningItemDurationUseCase,
     private val timeProvider: TimeProvider,
     private val idProvider: IdProvider
@@ -40,9 +39,8 @@ class SelectItemUseCase(
                 throw IllegalStateException("Must wait for at least one second before starting a new section.")
             }
 
-            // resume if paused
-            if (state.isPaused) resumeUseCase()
-
+            // only start new item when not paused
+            if (state.isPaused) throw IllegalStateException("You must resume before selecting a new item.")
 
             // take time
             val runningSectionTrueDuration = getRunningItemDurationUseCase()
