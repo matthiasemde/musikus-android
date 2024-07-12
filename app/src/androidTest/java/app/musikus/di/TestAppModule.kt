@@ -30,8 +30,9 @@ import app.musikus.usecase.activesession.GetCompletedSectionsUseCase
 import app.musikus.usecase.activesession.GetFinalizedSessionUseCase
 import app.musikus.usecase.activesession.GetOngoingPauseDurationUseCase
 import app.musikus.usecase.activesession.GetPausedStateUseCase
-import app.musikus.usecase.activesession.GetRunningItemUseCase
 import app.musikus.usecase.activesession.GetRunningItemDurationUseCase
+import app.musikus.usecase.activesession.GetRunningItemUseCase
+import app.musikus.usecase.activesession.GetSessionStatusUseCase
 import app.musikus.usecase.activesession.GetStartTimeUseCase
 import app.musikus.usecase.activesession.GetTotalPracticeDurationUseCase
 import app.musikus.usecase.activesession.IsSessionRunningUseCase
@@ -329,7 +330,6 @@ object TestAppModule {
         return ActiveSessionUseCases(
             selectItem = SelectItemUseCase(
                 activeSessionRepository = activeSessionRepository,
-                resumeUseCase = resumeUseCase,
                 getRunningItemDurationUseCase = getRunningItemDurationUseCase,
                 timeProvider = timeProvider,
                 idProvider = idProvider
@@ -352,13 +352,14 @@ object TestAppModule {
             getFinalizedSession = GetFinalizedSessionUseCase(
                 activeSessionRepository = activeSessionRepository,
                 getRunningItemDurationUseCase = getRunningItemDurationUseCase,
-                resumeUseCase = resumeUseCase,
-                idProvider = idProvider
+                idProvider = idProvider,
+                getOngoingPauseDurationUseCase = getOngoingPauseDurationUseCase
             ),
             getStartTime = GetStartTimeUseCase(activeSessionRepository),
             reset = ResetSessionUseCase(activeSessionRepository),
             getRunningItem = GetRunningItemUseCase(activeSessionRepository),
-            isSessionRunning = IsSessionRunningUseCase(activeSessionRepository)
+            isSessionRunning = IsSessionRunningUseCase(activeSessionRepository),
+            getSessionStatus = GetSessionStatusUseCase(activeSessionRepository)
         )
     }
 

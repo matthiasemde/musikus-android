@@ -18,26 +18,22 @@ import kotlin.time.Duration.Companion.seconds
 class GetFinalizedSessionUseCase(
     private val activeSessionRepository: ActiveSessionRepository,
     private val getRunningItemDurationUseCase: GetRunningItemDurationUseCase,
-    private val resumeUseCase: ResumeActiveSessionUseCase,
+    private val getOngoingPauseDurationUseCase: GetOngoingPauseDurationUseCase,
     private val idProvider: IdProvider
 ) {
     suspend operator fun invoke(): SessionState {
         val state = activeSessionRepository.getSessionState().first()
             ?: throw IllegalStateException("State is null. Cannot finish session!")
 
-        // resume if paused to get correct duration
-        if (state.isPaused) resumeUseCase()
-
         // take time
-        val runningSectionTrueDuration = getRunningItemDurationUseCase()
-        val changeOverTime = state.startTimestampSectionPauseCompensated + runningSectionTrueDuration.inWholeSeconds.seconds
-        val runningSectionRoundedDuration = getRunningItemDurationUseCase(at = changeOverTime)
+        val runningSectionRoundedDuration = getRunningItemDurationUseCase().inWholeSeconds.seconds
+        val ongoingPauseDuration = getOngoingPauseDurationUseCase()
 
         // append finished section to completed sections
         val updatedSections = state.completedSections + PracticeSection(
             id = idProvider.generateId(),
             libraryItem = state.currentSectionItem,
-            pauseDuration = state.startTimestampSectionPauseCompensated - state.startTimestampSection,
+            pauseDuration = (state.startTimestampSectionPauseCompensated + ongoingPauseDuration) - state.startTimestampSection,
             duration = runningSectionRoundedDuration,
             startTimestamp = state.startTimestampSection
         )

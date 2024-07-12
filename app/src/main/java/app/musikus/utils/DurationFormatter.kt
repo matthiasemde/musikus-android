@@ -43,7 +43,10 @@ enum class DurationFormat {
     HM_DIGITAL_OR_MIN_HUMAN,
 
     /** Fixed format HH:MM:SS:CC (C = Centi seconds) */
-    HMSC_DIGITAL;
+    HMSC_DIGITAL,
+
+    /** Fixed format MM:SS:CC (C = Centi seconds) */
+    MSC_DIGITAL,
 }
 
 /** The scaling factor of 'h' an 'm' in time strings for smaller text. */
@@ -121,6 +124,16 @@ fun getDurationString(
                 append("%02d:%02d:%02d".format(
                     totalHours,
                     minutes,
+                    seconds,
+                ))
+                withStyle(SpanStyle(fontSize = 0.5.em)) {
+                    append("%02d".format(milliseconds / 10))
+                }
+            }
+
+            DurationFormat.MSC_DIGITAL -> {
+                append("%02d:%02d".format(
+                    totalMinutes,
                     seconds,
                 ))
                 withStyle(SpanStyle(fontSize = 0.5.em)) {

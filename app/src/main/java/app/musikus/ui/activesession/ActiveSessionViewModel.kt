@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2024 Michael Prommersberger, Matthias Emde
+ * Copyright (c) 2024 Michael Prommersberger
  *
  */
 
@@ -11,36 +11,40 @@ package app.musikus.ui.activesession
 
 import android.app.Application
 import android.os.Build
-import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import app.musikus.database.Nullable
-import app.musikus.database.UUIDConverter
 import app.musikus.database.daos.LibraryItem
-import app.musikus.database.entities.LibraryItemCreationAttributes
 import app.musikus.database.entities.SectionCreationAttributes
 import app.musikus.database.entities.SessionCreationAttributes
 import app.musikus.di.ApplicationScope
-import app.musikus.services.LOG_TAG
-import app.musikus.ui.library.LibraryItemDialogUiEvent
-import app.musikus.ui.library.LibraryItemEditData
+import app.musikus.ui.theme.libraryItemColors
 import app.musikus.usecase.activesession.ActiveSessionUseCases
-import app.musikus.usecase.activesession.PracticeSection
+import app.musikus.usecase.activesession.SessionStatus
 import app.musikus.usecase.library.LibraryUseCases
 import app.musikus.usecase.permissions.PermissionsUseCases
 import app.musikus.usecase.sessions.SessionsUseCases
+import app.musikus.utils.DurationFormat
+import app.musikus.utils.PermissionChecker
+import app.musikus.utils.getDurationString
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.time.ZonedDateTime
+import kotlinx.coroutines.runBlocking
 import java.util.Timer
 import java.util.UUID
 import javax.inject.Inject
@@ -49,102 +53,21 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
-data class EndDialogData(
-    val rating: Int,
-    val comment: String
-)
-
-data class SessionViewModelState(
-    val startTimestamp: ZonedDateTime,  // only needed for storing the session in the database
-    val sessionDuration: Duration,
-    val completedSections: List<PracticeSection>,
-    val activeSection: Pair<LibraryItem, Duration>,
-    val ongoingPauseDuration: Duration,
-    val isPaused: Boolean
-)
 
 @HiltViewModel
-@OptIn(ExperimentalCoroutinesApi::class)
 class ActiveSessionViewModel @Inject constructor(
-    private val libraryUseCases: LibraryUseCases,
+    application: Application,
+    libraryUseCases: LibraryUseCases,
+    private val activeSessionUseCases: ActiveSessionUseCases,
     private val sessionUseCases: SessionsUseCases,
     private val permissionsUseCases: PermissionsUseCases,
-    private val activeSessionUseCases: ActiveSessionUseCases,
-    private val application: Application,
     @ApplicationScope private val applicationScope: CoroutineScope
 ) : AndroidViewModel(application) {
 
-    /**
-     *  --------------------- Private properties ---------------------
-     */
-
-    private val _recorderUiState = ActiveSessionDraggableCardUiState.RecorderCardUiState(
-        title = "Recorder",
-        isExpandable = true,
-        hasFab = false,
-        headerUiState = ActiveSessionDraggableCardHeaderUiState.RecorderCardHeaderUiState,
-        bodyUiState = ActiveSessionDraggableCardBodyUiState.RecorderCardBodyUiState
-    )
-
-    private val _metronomeUiState = ActiveSessionDraggableCardUiState.MetronomeCardUiState(
-        title = "Metronome",
-        isExpandable = false,
-        hasFab = false,
-        headerUiState = ActiveSessionDraggableCardHeaderUiState.MetronomeCardHeaderUiState,
-        bodyUiState = ActiveSessionDraggableCardBodyUiState.MetronomeCardBodyUiState
-    )
-
-    /** stateFlows */
-
-    private val _notificationPermissionsGranted = MutableStateFlow(false)
-    private val _selectedFolderId = MutableStateFlow<UUID?>(null)
-    private val _addLibraryItemData = MutableStateFlow<LibraryItemEditData?>(null)
-    private val _endDialogData = MutableStateFlow<EndDialogData?>(null)
-    private val _showDiscardSessionDialog = MutableStateFlow(false)
     private var _clock = MutableStateFlow(false)
-
-    /** Variables */
-
     private var _timer: Timer? = null
 
-    init {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            viewModelScope.launch {
-                val notificationPermissionResult = permissionsUseCases.request(
-                    listOf(android.Manifest.permission.POST_NOTIFICATIONS)
-                )
-                if (notificationPermissionResult.isSuccess) {
-                    _notificationPermissionsGranted.update { true }
-                } else {
-                    // TODO _exceptionChannel.send(ActiveSessionException.NoNotificationPermission)
-                }
-            }
-        }
-    }
-
-    // ####################### Library #######################
-
-    private val itemsInSelectedFolder = _selectedFolderId.flatMapLatest { selectedFolderId ->
-        libraryUseCases.getSortedItems(Nullable(selectedFolderId))
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = listOf()
-    )
-
-    private val lastPracticedDates = itemsInSelectedFolder.flatMapLatest { items ->
-        libraryUseCases.getLastPracticedDate(items)
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = emptyMap()
-    )
-
-    private val foldersWithItems = libraryUseCases.getSortedFolders().stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = listOf()
-    )
+    /** ---------- Proxies for Flows from UseCases, turned into StateFlows  -------------------- */
 
     private val completedSections = activeSessionUseCases.getCompletedSections().stateIn(
         scope = viewModelScope,
@@ -158,261 +81,310 @@ class ActiveSessionViewModel @Inject constructor(
         initialValue = null
     )
 
-
-    /**
-     *  ---------------- Composing the Ui state --------------------
-     */
-
-
-    private val sessionState = combine(
-        completedSections,
-        runningLibraryItem,
-        _clock
-    ) { completedSections, runningItem, _ ->
-        if (runningItem == null) return@combine null    // no active session try-catch does the same
-        try {
-            SessionViewModelState(
-                sessionDuration = activeSessionUseCases.getPracticeDuration(),
-                completedSections = completedSections,
-                activeSection = Pair(runningItem, activeSessionUseCases.getRunningItemDuration()),
-                ongoingPauseDuration = activeSessionUseCases.getOngoingPauseDuration(),
-                isPaused = activeSessionUseCases.getPausedState(),
-                startTimestamp = activeSessionUseCases.getStartTime()
-            )
-        } catch (e: IllegalStateException) {
-            null
+    private val sessionState = activeSessionUseCases.getSessionStatus().map { state ->
+        when (state) {
+            SessionStatus.NOT_STARTED -> ActiveSessionState.NOT_STARTED
+            SessionStatus.RUNNING -> ActiveSessionState.RUNNING
+            SessionStatus.PAUSED -> ActiveSessionState.PAUSED
         }
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = null
+        initialValue = ActiveSessionState.UNKNOWN
     )
 
-    private val libraryCardHeaderUiState = combine(
-        foldersWithItems,
-        _selectedFolderId,
-        runningLibraryItem
-    ) { foldersWithItems, selectedFolderId, runningLibraryItem ->
-        ActiveSessionDraggableCardHeaderUiState.LibraryCardHeaderUiState(
-            folders = listOf(null) + foldersWithItems.map { it.folder },
-            selectedFolderId = selectedFolderId,
-            activeFolderId = runningLibraryItem?.let { Nullable(it.libraryFolderId) }
-        )
+    private val libraryFoldersWithItems = libraryUseCases.getSortedFolders().stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
+
+    private val rootItems = libraryUseCases.getSortedItems(Nullable(null)).stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
+
+    private val allLibraryItems = combine(
+        libraryFoldersWithItems,
+        rootItems
+    ) { folders, rootItems ->
+        folders.flatMap { it.items } + rootItems
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val lastPracticedDates = allLibraryItems.flatMapLatest {
+        libraryUseCases.getLastPracticedDate(it)
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = ActiveSessionDraggableCardHeaderUiState.LibraryCardHeaderUiState(
-            folders = emptyList(),
-            selectedFolderId = null,
-            activeFolderId = null
-        )
+        initialValue = emptyMap()
     )
 
-    private val libraryCardBodyUiState = combine(
-        itemsInSelectedFolder,
-        lastPracticedDates,
-        runningLibraryItem
-    ) { itemsInSelectedFolder, lastPracticedDates, runningLibraryItem ->
-        ActiveSessionDraggableCardBodyUiState.LibraryCardBodyUiState(
-            itemsWithLastPracticedDate = itemsInSelectedFolder.map { item ->
-                item to (lastPracticedDates[item.id])
-            },
-            activeItemId = runningLibraryItem?.id
-        )
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = ActiveSessionDraggableCardBodyUiState.LibraryCardBodyUiState(
-            itemsWithLastPracticedDate = emptyList(),
-            activeItemId = null
-        )
-    )
+    /** ------------------- Own StateFlow UI state ------------------------------------------- */
 
-    private val libraryCardUiState = combine(
-        libraryCardHeaderUiState,
-        libraryCardBodyUiState,
-    ) { headUiState, bodyUiState ->
-        ActiveSessionDraggableCardUiState.LibraryCardUiState(
-            title = "Library",
-            isExpandable = true,
-            hasFab = true,
-            headerUiState = headUiState,
-            bodyUiState = bodyUiState
-        )
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = ActiveSessionDraggableCardUiState.LibraryCardUiState(
-            title = "Library",
-            isExpandable = true,
-            hasFab = true,
-            headerUiState = libraryCardHeaderUiState.value,
-            bodyUiState = libraryCardBodyUiState.value
-        )
-    )
+    private val _endDialogComment = MutableStateFlow("")
+    private val _endDialogRating = MutableStateFlow(3)
+    private val _endDialogVisible = MutableStateFlow(false)
+    private val _discardDialogVisible = MutableStateFlow(false)
+    private val _newItemSelectorVisible = MutableStateFlow(false)
+    private val _exceptionChannel = Channel<ActiveSessionException>()
+    val exceptionChannel = _exceptionChannel.receiveAsFlow()
 
-    private val addLibraryItemDialogUiState = combine(
-        foldersWithItems,
-        _addLibraryItemData
-    ) { foldersWithItems, itemData ->
-        if(itemData == null) return@combine null
+    /** ------------------- Sub UI states  ------------------------------------------- */
 
-        ActiveSessionAddLibraryItemDialogUiState(
-            folders = foldersWithItems.map { it.folder },
-            itemData = itemData,
-            isConfirmButtonEnabled = itemData.name.isNotBlank()
-        )
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = null
-    )
-
-    private val endSessionDialogUiState = _endDialogData.map { endDialogData ->
-        if(endDialogData == null) return@map null
-        ActiveSessionEndDialogUiState(
-            rating = endDialogData.rating,
-            comment = endDialogData.comment
-        )
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = null
-    )
-
-    private val dialogUiState = combine(
-        _showDiscardSessionDialog,
-        endSessionDialogUiState
-    ) { showDiscardSessionDialog, endDialogUiState ->
-        ActiveSessionDialogUiState(
-            showDiscardSessionDialog = showDiscardSessionDialog,
-            endDialogUiState = endDialogUiState
-        )
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = ActiveSessionDialogUiState(
-            showDiscardSessionDialog = _showDiscardSessionDialog.value,
-            endDialogUiState = endSessionDialogUiState.value
-        )
-    )
-
-
-    /** ############  The final public UI state ############ */
-
-    val uiState = combine(
-        libraryCardUiState,
+    private val timerUiState = combine(
         sessionState,
-        addLibraryItemDialogUiState,
-        dialogUiState,
-    ) { libraryCardUiState, sessionState, addItemDialogUiState, dialogUiState ->
-        ActiveSessionUiState(
-            cardUiStates = listOf(
-                libraryCardUiState,
-                _recorderUiState,
-                _metronomeUiState
-            ),
-            totalSessionDuration = sessionState?.sessionDuration ?: 0.seconds,
-            ongoingPauseDuration = sessionState?.ongoingPauseDuration ?: 0.seconds,
-            isPaused = sessionState?.isPaused ?: false,
-            addItemDialogUiState = addItemDialogUiState,
-            sections = sessionState?.completedSections?.reversed()?.map { section ->
-                ActiveSessionSectionListItemUiState(
-                    id = section.id,
-                    libraryItem = section.libraryItem,
-                    duration = section.duration
-                )
-            } ?: emptyList(),
-            runningSection = sessionState?.let {
-                ActiveSessionSectionListItemUiState(
-                    id = UUIDConverter.deadBeef, // doesn't matter, not used
-                    libraryItem = sessionState.activeSection.first,
-                    duration = sessionState.activeSection.second
-                )
-            },
-            dialogUiState = dialogUiState
+        _clock  // should update with clock
+    ) { timerState, _ ->
+        val pause = timerState == ActiveSessionState.PAUSED
+
+        val practiceDuration = try {
+            activeSessionUseCases.getPracticeDuration()
+        } catch (e: IllegalStateException) {
+            Duration.ZERO   // Session not yet started
+        }
+        val pauseDurStr = getDurationString(
+            activeSessionUseCases.getOngoingPauseDuration(),
+            DurationFormat.MS_DIGITAL
+        )
+        ActiveSessionTimerUiState(
+            timerText = getFormattedTimerText(practiceDuration),
+            subHeadingText = if (pause) "Paused $pauseDurStr" else "Practice Time",
         )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = ActiveSessionUiState(
-            cardUiStates = emptyList(),
-            totalSessionDuration = 0.milliseconds,
-            ongoingPauseDuration = 0.seconds,
-            sections = emptyList(),
-            isPaused = false,
-            runningSection = null,
-            addItemDialogUiState = addLibraryItemDialogUiState.value,
-            dialogUiState = dialogUiState.value
+        initialValue = ActiveSessionTimerUiState(
+            timerText = getFormattedTimerText(Duration.ZERO),
+            subHeadingText = "Practice Time"
         )
     )
 
+    private fun getFormattedTimerText(duration: Duration) = getDurationString(
+        duration,
+        DurationFormat.MS_DIGITAL
+    ).toString()
 
-    /** UI Event handler */
+    private val currentItemUiState: StateFlow<ActiveSessionCurrentItemUiState?> = combine(
+        sessionState,
+        runningLibraryItem,
+        _clock  // should update with clock
+    ) { sessionState, item, _ ->
+        if (sessionState == ActiveSessionState.NOT_STARTED) return@combine null
 
-    fun onUiEvent(event: ActiveSessionUiEvent) {
-        when (event) {
-            is ActiveSessionUiEvent.SelectFolder -> _selectedFolderId.update { event.folderId }
-            is ActiveSessionUiEvent.SelectItem -> itemClicked(event.item)
-            is ActiveSessionUiEvent.TogglePause -> togglePause()
-            is ActiveSessionUiEvent.ShowFinishDialog -> _endDialogData.update { EndDialogData(
-                rating = 3,
-                comment = ""
-            ) }
-            is ActiveSessionUiEvent.DeleteSection -> removeSection(event.sectionId)
-            is ActiveSessionUiEvent.CreateNewLibraryItem -> createLibraryItemDialog()
-            is ActiveSessionUiEvent.ItemDialogUiEvent -> {
-                when(val dialogEvent = event.dialogEvent) {
-                    is LibraryItemDialogUiEvent.NameChanged ->
-                        _addLibraryItemData.update { it?.copy(name = dialogEvent.name) }
-                    is LibraryItemDialogUiEvent.ColorIndexChanged ->
-                        _addLibraryItemData.update { it?.copy(colorIndex = dialogEvent.colorIndex) }
-                    is LibraryItemDialogUiEvent.FolderIdChanged ->
-                        _addLibraryItemData.update { it?.copy(folderId = dialogEvent.folderId) }
-                    is LibraryItemDialogUiEvent.Confirmed ->
-                        viewModelScope.launch {
-                            _addLibraryItemData.value?.let { itemData ->
-                                libraryUseCases.addItem(
-                                    LibraryItemCreationAttributes(
-                                        name = itemData.name,
-                                        colorIndex = itemData.colorIndex,
-                                        libraryFolderId = Nullable(itemData.folderId)
-                                    )
-                                )
-                                _selectedFolderId.update { itemData.folderId }
-                            }
-                            _addLibraryItemData.update { null }
-                        }
-                    is LibraryItemDialogUiEvent.Dismissed -> _addLibraryItemData.update { null }
+        val currentItemDuration = try {
+            activeSessionUseCases.getRunningItemDuration()
+        } catch (e: IllegalStateException) {
+            Duration.ZERO   // Session not yet started
+        }
+        ActiveSessionCurrentItemUiState(
+            name = item?.name ?: "Not started",
+            durationText = getDurationString(
+                currentItemDuration,
+                DurationFormat.MS_DIGITAL
+            ).toString(),
+            color = libraryItemColors[item?.colorIndex ?: 0]
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = null
+    )
+
+    private val pastSectionsUiState = completedSections.map { sections ->
+        if (sections.isEmpty()) {
+            return@map null
+        }
+        ActiveSessionCompletedSectionsUiState(
+            items = sections.reversed().map {
+                CompletedSectionUiState(
+                    id = it.id,
+                    name = it.libraryItem.name,
+                    color = libraryItemColors[it.libraryItem.colorIndex],
+                    durationText = getDurationString(
+                        it.duration,
+                        DurationFormat.MS_DIGITAL
+                    ).toString()
+                )
+            }
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = null
+    )
+
+
+    private val newItemSelectorUiState = combine(
+        _newItemSelectorVisible,
+        runningLibraryItem,
+        libraryFoldersWithItems,
+        lastPracticedDates,
+        rootItems,
+    ) { visible, runningItem, folders, lastPracticedDates, rootItems ->
+        if (!visible) return@combine null
+        NewItemSelectorUiState(
+            runningItem = runningItem,
+            foldersWithItems = folders,
+            lastPracticedDates = lastPracticedDates,
+            rootItems = rootItems
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = null
+    )
+
+    private val _endDialogUiState = combine(
+        _endDialogVisible,
+        _endDialogComment,
+        _endDialogRating
+    ) { visible, comment, rating ->
+        if (!visible) return@combine null
+        ActiveSessionEndDialogUiState(
+            comment = comment,
+            rating = rating
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = null
+    )
+
+    private val dialogsUiStates = combine(
+        _endDialogUiState,
+        _discardDialogVisible
+    ) { endDialog, discardDialogVisible ->
+        ActiveSessionDialogsUiState(
+            endDialogUiState = endDialog,
+            discardDialogVisible = discardDialogVisible
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = ActiveSessionDialogsUiState(
+            endDialogUiState = _endDialogUiState.value,
+            discardDialogVisible = _discardDialogVisible.value
+        )
+    )
+
+    val uiState = MutableStateFlow(
+        ActiveSessionUiState(
+            sessionState = sessionState,
+            mainContentUiState = MutableStateFlow(
+                ActiveSessionContentUiState(
+                    timerUiState = timerUiState,
+                    currentItemUiState = currentItemUiState,
+                    pastSectionsUiState = pastSectionsUiState,
+                )
+            ),
+            newItemSelectorUiState = newItemSelectorUiState,
+            dialogUiState = dialogsUiStates
+        )
+    ).asStateFlow()
+
+    private val navigationChannel = Channel<NavigationEvent>()
+    val navigationEventsChannelFlow = navigationChannel.receiveAsFlow()
+
+
+    init {
+        startTimer()
+        /** Hide the Tools Bottom Sheet on Startup */
+        runBlocking(context = Dispatchers.IO) {
+            viewModelScope.launch {
+                // wait until session data has initialized
+                while (sessionState.value == ActiveSessionState.UNKNOWN) {
+                    delay(100)
                 }
-            }
-            is ActiveSessionUiEvent.EndDialogRatingChanged -> _endDialogData.update {
-                it?.copy(rating = event.rating)
-            }
-            is ActiveSessionUiEvent.EndDialogCommentChanged -> _endDialogData.update {
-                it?.copy(comment = event.comment)
-            }
-            is ActiveSessionUiEvent.EndDialogDismissed -> _endDialogData.update { null }
-            is ActiveSessionUiEvent.EndDialogConfirmed -> stopSession()
-            is ActiveSessionUiEvent.ShowDiscardSessionDialog -> _showDiscardSessionDialog.update { true }
-            is ActiveSessionUiEvent.DiscardSessionDialogConfirmed -> {
-                discardSession()
-                _showDiscardSessionDialog.update { false }
-            }
-            is ActiveSessionUiEvent.DiscardSessionDialogDismissed -> _showDiscardSessionDialog.update { false }
-            is ActiveSessionUiEvent.BackPressed -> {
-                _timer?.cancel()
-                _timer = null
+                // TODO: hide tools tab but only on session start and when it was originally hidden
+                //  also take into account whether recording is in progress or metronome is running
+                //  and open the respective tab in case
+//                viewModelScope.launch {
+//                    navigationChannel.send(NavigationEvent.HideTools)
+//                }
+
             }
         }
     }
 
+    fun onUiEvent(event: ActiveSessionUiEvent) {
+        when (event) {
+            is ActiveSessionUiEvent.SelectItem -> viewModelScope.launch { selectItem(event.item) }
+            is ActiveSessionUiEvent.TogglePauseState -> viewModelScope.launch { togglePauseState() }
+            is ActiveSessionUiEvent.DeleteSection -> viewModelScope.launch { deleteSection(event.sectionId) }
+            is ActiveSessionUiEvent.EndDialogUiEvent -> onEndDialogUiEvent(event.dialogEvent)
+            is ActiveSessionUiEvent.BackPressed -> { /* TODO */ }
+            ActiveSessionUiEvent.DiscardSessionDialogConfirmed -> discardSession()
+            ActiveSessionUiEvent.ToggleDiscardDialog -> _discardDialogVisible.update { !it }
+            ActiveSessionUiEvent.ToggleFinishDialog -> _endDialogVisible.update { !it }
+            ActiveSessionUiEvent.ToggleNewItemSelector -> viewModelScope.launch {
+                if (!hasNotificationPermission()) {
+                    _exceptionChannel.send(ActiveSessionException.NoNotificationPermission)
+                    return@launch
+                }
+                _newItemSelectorVisible.update { !it }
+            }
+        }
+    }
 
+    private fun onEndDialogUiEvent(event: ActiveSessionEndDialogUiEvent) {
+        when (event) {
+            is ActiveSessionEndDialogUiEvent.CommentChanged -> _endDialogComment.update { event.comment }
+            is ActiveSessionEndDialogUiEvent.RatingChanged -> _endDialogRating.update { event.rating }
+            ActiveSessionEndDialogUiEvent.Confirmed -> applicationScope.launch {
+                // launch stopSession in applicationScope because it is a long running operation and
+                // may outlive the ViewModel because it gets destroyed.
+                stopSession()
+            }
+        }
+    }
 
-    /** ---------------------------------- private methods ----------------------------------- */
+    private suspend fun hasNotificationPermission(): Boolean {
+        // Only check for POST_NOTIFICATIONS permission on Android 12 and above
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            return true
+        }
+        val result = permissionsUseCases.request(
+            listOf(android.Manifest.permission.POST_NOTIFICATIONS)
+        ).exceptionOrNull()
+        return result !is PermissionChecker.PermissionsDeniedException
+    }
 
-    init {
-        startTimer()
+    private suspend fun selectItem(item: LibraryItem) {
+        // resume session if paused
+        if (sessionState.value == ActiveSessionState.PAUSED) {
+            activeSessionUseCases.resume()
+        }
+        // wait until the current item has been running for at least 1 second
+        if (sessionState.value != ActiveSessionState.NOT_STARTED
+            && activeSessionUseCases.getRunningItemDuration() < 1.seconds
+        ) {
+            delay(1000)
+        }
+        activeSessionUseCases.selectItem(item)
+    }
+
+    private suspend fun deleteSection(sectionId: UUID) {
+        if (sessionState.value == ActiveSessionState.PAUSED) {
+            activeSessionUseCases.resume()
+        }
+        activeSessionUseCases.deleteSection(sectionId)
+    }
+
+    private fun discardSession() {
+        activeSessionUseCases.reset()
+        viewModelScope.launch {
+            navigationChannel.send(NavigationEvent.NavigateUp)
+        }
+    }
+
+    private suspend fun togglePauseState() {
+        when (sessionState.value) {
+            ActiveSessionState.RUNNING -> activeSessionUseCases.pause()
+            ActiveSessionState.PAUSED -> activeSessionUseCases.resume()
+            else -> {}
+        }
     }
 
     private fun startTimer() {
@@ -428,79 +400,37 @@ class ActiveSessionViewModel @Inject constructor(
         }
     }
 
-    private fun itemClicked(item: LibraryItem) {
-        applicationScope.launch {
-            try {
-                activeSessionUseCases.selectItem(item)
-            } catch (e: IllegalStateException) {
-                Log.e(LOG_TAG, "Cannot start new section: ${e.message}")
+    private suspend fun stopSession() {
+        // complete running section
+        val savableState = activeSessionUseCases.getFinalizedSession()
+        // ignore empty sections (e.g. when paused and then stopped immediately))
+        val sections = savableState.completedSections.filter { it.duration > 0.seconds }
+        // store in database
+        sessionUseCases.add(
+            sessionCreationAttributes = SessionCreationAttributes(
+                // add up all pause durations
+                breakDuration = sections.fold(0.seconds) { acc, section ->
+                    acc + section.pauseDuration
+                },
+                comment = _endDialogComment.value,
+                rating = _endDialogRating.value
+            ),
+            sectionCreationAttributes = sections.map { section ->
+                SectionCreationAttributes(
+                    libraryItemId = section.libraryItem.id,
+                    duration = section.duration,
+                    startTimestamp = section.startTimestamp
+                )
             }
+        )
+        activeSessionUseCases.reset()   // reset the active session state
+        viewModelScope.launch {
+            navigationChannel.send(NavigationEvent.NavigateUp)
         }
     }
+}
 
-    private fun togglePause() {
-        applicationScope.launch {
-            if (activeSessionUseCases.getPausedState()) {
-                activeSessionUseCases.resume()
-            } else {
-                activeSessionUseCases.pause()
-            }
-        }
-    }
-
-    private fun stopSession() {
-        val endDialogData = _endDialogData.value ?: return
-        applicationScope.launch {
-            val savableState = activeSessionUseCases.getFinalizedSession()   // complete running section
-
-            // ignore empty sections (e.g. when paused and then stopped immediately))
-            val sections = savableState.completedSections.filter { it.duration > 0.seconds }
-
-            // store in database
-            sessionUseCases.add(
-                sessionCreationAttributes = SessionCreationAttributes(
-                    breakDuration = sections.fold(0.seconds) { acc, section ->
-                        acc + section.pauseDuration
-                    },
-                    comment = endDialogData.comment,
-                    rating = endDialogData.rating
-                ),
-                sectionCreationAttributes = sections.map { section ->
-                    SectionCreationAttributes(
-                        libraryItemId = section.libraryItem.id,
-                        duration = section.duration,
-                        startTimestamp = section.startTimestamp
-                    )
-                }
-            )
-            activeSessionUseCases.reset()   // reset the active session state
-            _endDialogData.update { null }
-        }
-    }
-
-    private fun discardSession() {
-        activeSessionUseCases.reset()
-    }
-
-    private fun removeSection(itemId: UUID) {
-        applicationScope.launch {
-            activeSessionUseCases.deleteSection(itemId)
-        }
-    }
-
-    private fun createLibraryItemDialog() {
-        _addLibraryItemData.update {
-            LibraryItemEditData(
-                name = "",
-                colorIndex = (Math.random() * 10).toInt(),
-                folderId = _selectedFolderId.value
-            )
-        }
-    }
-
-
-    override fun onCleared() {
-        _timer?.cancel()
-        super.onCleared()
-    }
+sealed interface NavigationEvent {
+    object NavigateUp : NavigationEvent
+    object HideTools : NavigationEvent
 }

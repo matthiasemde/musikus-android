@@ -14,17 +14,16 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -62,14 +61,19 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.musikus.R
+import app.musikus.database.UUIDConverter
 import app.musikus.database.daos.LibraryFolder
 import app.musikus.database.daos.LibraryItem
+import app.musikus.datastore.ColorSchemeSelections
 import app.musikus.ui.MainUiEvent
 import app.musikus.ui.MainUiEventHandler
 import app.musikus.ui.Screen
@@ -85,6 +89,8 @@ import app.musikus.ui.components.SortMenu
 import app.musikus.ui.home.HomeUiEvent
 import app.musikus.ui.home.HomeUiEventHandler
 import app.musikus.ui.home.HomeUiState
+import app.musikus.ui.theme.MusikusColorSchemeProvider
+import app.musikus.ui.theme.MusikusThemedPreview
 import app.musikus.ui.theme.libraryItemColors
 import app.musikus.ui.theme.spacing
 import app.musikus.utils.DateFormat
@@ -439,10 +445,6 @@ fun LibraryContent(
                     modifier = Modifier.animateItemPlacement()
                 ) {
                     LibraryUiItem(
-                        modifier = Modifier.padding(
-                            vertical = MaterialTheme.spacing.small,
-                            horizontal = MaterialTheme.spacing.large
-                        ),
                         item = item,
                         lastPracticedDate = lastPracticedDate,
                         selected = item.id in itemsUiState.selectedItemIds,
@@ -499,15 +501,15 @@ fun LibraryFolder(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun LibraryUiItem(
     modifier: Modifier = Modifier,
     item: LibraryItem,
     lastPracticedDate: ZonedDateTime?,
     selected: Boolean,
-    onShortClick: () -> Unit,
-    onLongClick: () -> Unit,
-    compact: Boolean = false,
+    onShortClick: () -> Unit = {},
+    onLongClick: () -> Unit = {},
     enabled: Boolean = true,
 ) {
     Selectable(
@@ -519,36 +521,60 @@ fun LibraryUiItem(
     ) {
         Row(
             modifier = modifier
+                .padding(vertical = MaterialTheme.spacing.small)
                 .fillMaxWidth()
-                .height(IntrinsicSize.Min)
                 .alpha(if (!enabled) 0.5f else 1f),
+            verticalAlignment = Alignment.CenterVertically
         ) {
+            Spacer(modifier = Modifier.width(MaterialTheme.spacing.extraLarge))
             Box(
                 modifier = Modifier
-                    .width(if (compact) 8.dp else 10.dp)
-                    .fillMaxHeight()
+                    .width(10.dp)
+                    .height(30.dp)
                     .clip(RoundedCornerShape(5.dp))
                     .align(Alignment.CenterVertically)
                     .background(libraryItemColors[item.colorIndex])
             )
-            Column(
-                modifier = Modifier
-                    .padding(start = MaterialTheme.spacing.small),
-            ) {
+            Spacer(modifier = Modifier.width(MaterialTheme.spacing.medium))
+            Column {
                 Text(
+                    modifier = Modifier.basicMarquee(),
                     text = item.name,
-                    style = if (compact) {
-                        MaterialTheme.typography.titleSmall
-                    } else {
-                        MaterialTheme.typography.titleMedium
-                    },
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = colorScheme.onSurface,
+                    fontWeight = FontWeight.Medium,
+                    maxLines = 1,
                 )
                 Text(
                     text = "last practiced: " +  (lastPracticedDate?.musikusFormat(DateFormat.DAY_MONTH_YEAR) ?: "never"),
-                    style = if(compact) MaterialTheme.typography.labelSmall else MaterialTheme.typography.labelMedium,
-                    color = colorScheme.onSurface.copy(alpha = 0.6f)
+                    style = MaterialTheme.typography.bodySmall,
+                    color = colorScheme.onSurfaceVariant,
                 )
             }
         }
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun PreviewLibraryItem(
+    @PreviewParameter(MusikusColorSchemeProvider::class) colorScheme: ColorSchemeSelections
+) {
+    MusikusThemedPreview (colorScheme) {
+        LibraryUiItem(
+            item = LibraryItem(
+                id = UUIDConverter.deadBeef,
+                name = "Item 1",
+                colorIndex = 0,
+                createdAt = ZonedDateTime.now(),
+                modifiedAt = ZonedDateTime.now(),
+                libraryFolderId = null,
+                customOrder = null
+            ),
+            lastPracticedDate = ZonedDateTime.now(),
+            selected = false,
+            onShortClick = {},
+            onLongClick = {},
+        )
     }
 }

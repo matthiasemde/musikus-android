@@ -20,15 +20,19 @@ import androidx.lifecycle.viewModelScope
 import app.musikus.services.MetronomeService
 import app.musikus.services.MetronomeServiceEvent
 import app.musikus.services.MetronomeServiceState
+import app.musikus.usecase.permissions.PermissionsUseCases
 import app.musikus.usecase.userpreferences.UserPreferencesUseCases
+import app.musikus.utils.PermissionChecker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -79,6 +83,7 @@ sealed class MetronomeUiEvent {
 @HiltViewModel
 class MetronomeViewModel @Inject constructor(
     private val userPreferencesUseCases: UserPreferencesUseCases,
+    private val permissionsUseCases: PermissionsUseCases,
     private val application: Application
 ) : AndroidViewModel(application) {
 
@@ -149,6 +154,8 @@ class MetronomeViewModel @Inject constructor(
 
     /** Own flows */
     private val _sliderValue = MutableStateFlow(metronomeSettings.value.bpm.toFloat())
+    private val _exceptionChannel = Channel<MetronomeException>()
+    val exceptionChannel = _exceptionChannel.receiveAsFlow()
 
     /** Composing the Ui state */
 
@@ -198,12 +205,18 @@ class MetronomeViewModel @Inject constructor(
     fun onUiEvent(event: MetronomeUiEvent) {
         when (event) {
             is MetronomeUiEvent.ToggleIsPlaying -> {
-                if (serviceState.value?.isPlaying != true) {
-                    startService()
+                viewModelScope.launch {
+                    if (serviceState.value?.isPlaying != true) {
+                        if (!checkPermissions()) {
+                            _exceptionChannel.send(MetronomeException.NoNotificationPermission)
+                            return@launch
+                        }
+                        startService()
+                    }
+                    serviceEventHandler?.invoke(
+                        MetronomeServiceEvent.TogglePlaying
+                    )
                 }
-                serviceEventHandler?.invoke(
-                    MetronomeServiceEvent.TogglePlaying
-                )
             }
             is MetronomeUiEvent.UpdateSliderValue -> updateSliderValue(event.value)
             is MetronomeUiEvent.IncrementBpm -> changeBpm(
@@ -217,6 +230,17 @@ class MetronomeViewModel @Inject constructor(
 
             is MetronomeUiEvent.TabTempo -> tabTempo()
         }
+    }
+
+    private suspend fun checkPermissions(): Boolean {
+        // Only check for POST_NOTIFICATIONS permission on Android 12 and above
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            return true
+        }
+        val result = permissionsUseCases.request(
+            listOf(android.Manifest.permission.POST_NOTIFICATIONS)
+        ).exceptionOrNull()
+        return result !is PermissionChecker.PermissionsDeniedException
     }
 
     private fun updateSliderValue(value: Float) {
@@ -279,4 +303,8 @@ class MetronomeViewModel @Inject constructor(
 
         lastTab = now
     }
+}
+
+sealed class MetronomeException(message: String) : Exception(message) {
+    object NoNotificationPermission : MetronomeException("Notification permission required")
 }

@@ -1,5 +1,3 @@
-package app.musikus.ui.components
-
 /*
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,6 +6,8 @@ package app.musikus.ui.components
  * Copyright (c) 2024 Michael Prommersberger
  *
  */
+
+package app.musikus.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
@@ -26,16 +26,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxState
 import androidx.compose.material3.SwipeToDismissBoxValue
-import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.clip
 import app.musikus.ui.theme.spacing
 import kotlinx.coroutines.delay
 
@@ -49,17 +45,11 @@ import kotlinx.coroutines.delay
 @Composable
 fun SwipeToDeleteContainer(
     onDeleted: () -> Unit,
+    state: SwipeToDismissBoxState,
+    deleted: Boolean,
     animationDuration: Int = 500,
     content: @Composable () -> Unit,
 ) {
-    var deleted by remember { mutableStateOf(false) }
-    val dismissState = rememberSwipeToDismissBoxState(
-        confirmValueChange = { targetValue ->
-            deleted = targetValue == SwipeToDismissBoxValue.EndToStart
-            deleted
-        }
-    )
-
     AnimatedVisibility(
         visible = !deleted,
         exit = shrinkVertically(
@@ -68,11 +58,11 @@ fun SwipeToDeleteContainer(
         ) + fadeOut()
     ) {
         SwipeToDismissBox(
-            state = dismissState,
+            state = state,
             enableDismissFromEndToStart = true,     // <-<-<-
             enableDismissFromStartToEnd = false,    // ->->-> (deactivate)
             backgroundContent = {
-                SwipeToDeleteBackground(dismissState = dismissState)
+                SwipeToDeleteBackground(dismissState = state)
             }
         ) {
             content()
@@ -81,7 +71,7 @@ fun SwipeToDeleteContainer(
 
     // actually delete the element from the list (business logic)
     LaunchedEffect(key1 = deleted){
-        if (dismissState.targetValue == SwipeToDismissBoxValue.EndToStart) {
+        if (state.targetValue == SwipeToDismissBoxValue.EndToStart) {
             delay(animationDuration.toLong())
             onDeleted()
         }
@@ -95,14 +85,23 @@ private fun SwipeToDeleteBackground(
     dismissState: SwipeToDismissBoxState
 ) {
     val color by animateColorAsState(
-        when (dismissState.targetValue) {
+        targetValue = when (dismissState.targetValue) {
             SwipeToDismissBoxValue.EndToStart -> MaterialTheme.colorScheme.error
-            else -> Color.Transparent
-        }, label = "swipeDismissAnimation"
+            else -> MaterialTheme.colorScheme.surfaceContainer
+        },
+        label = "swipeDismissAnimation",
+    )
+    val iconColor by animateColorAsState(
+        targetValue = when (dismissState.targetValue) {
+            SwipeToDismissBoxValue.EndToStart -> MaterialTheme.colorScheme.onError
+            else -> MaterialTheme.colorScheme.error
+        },
+        label = "swipeDismissAnimationIcon"
     )
     Box(
         Modifier
             .fillMaxSize()
+            .clip(MaterialTheme.shapes.medium)
             .background(color)
             .padding(end = MaterialTheme.spacing.medium),
         contentAlignment = Alignment.CenterEnd
@@ -110,7 +109,7 @@ private fun SwipeToDeleteBackground(
         Icon(
             imageVector = Icons.Default.Delete,
             contentDescription = "Delete section",
-            tint = MaterialTheme.colorScheme.onError,
+            tint = iconColor,
         )
     }
 }

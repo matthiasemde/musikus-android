@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2024 Matthias Emde
+ * Copyright (c) 2024 Matthias Emde, Michael Prommersberger
  */
 
 package app.musikus.ui.theme
@@ -23,6 +23,7 @@ import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import app.musikus.datastore.ColorSchemeSelections
@@ -74,35 +75,39 @@ fun MusikusTheme(
     }
 
     // enable Edge-to-Edge drawing with new API
-    val context = LocalContext.current as ComponentActivity
-    LaunchedEffect(key1 = theme) {
+    // skip this block when in LocalInspectionMode (Compose Preview) so that we can use
+    // MusikusTheme{} wrapper also in Compose Previews
+    if (!LocalInspectionMode.current) {
+        val context = LocalContext.current as ComponentActivity
+        LaunchedEffect(key1 = theme) {
 
-        val statusBarColorDarkTheme = android.graphics.Color.TRANSPARENT
-        val statusBarColorLightTheme = android.graphics.Color.TRANSPARENT
-        val statusBarColorLightThemeOldDevices = DarkColorScheme.surface.toArgb()
+            val statusBarColorDarkTheme = android.graphics.Color.TRANSPARENT
+            val statusBarColorLightTheme = android.graphics.Color.TRANSPARENT
+            val statusBarColorLightThemeOldDevices = DarkColorScheme.surface.toArgb()
 
-        val navBarColorDarkTheme = android.graphics.Color.TRANSPARENT
-        val navBarColorLightTheme = android.graphics.Color.TRANSPARENT
-        val navBarColorLightThemeOldDevices = DarkColorScheme.surface.toArgb()
+            val navBarColorDarkTheme = android.graphics.Color.TRANSPARENT
+            val navBarColorLightTheme = android.graphics.Color.TRANSPARENT
+            val navBarColorLightThemeOldDevices = DarkColorScheme.surface.toArgb()
 
-        context.enableEdgeToEdge(
-            statusBarStyle = if (useDarkTheme)
-                SystemBarStyle.dark(
-                    scrim = statusBarColorDarkTheme
-                )
+            context.enableEdgeToEdge(
+                statusBarStyle = if (useDarkTheme)
+                    SystemBarStyle.dark(
+                        scrim = statusBarColorDarkTheme
+                    )
                 else SystemBarStyle.light(
                     scrim = statusBarColorLightTheme,
                     darkScrim = statusBarColorLightThemeOldDevices
                 ),
-            navigationBarStyle = if (useDarkTheme)
-                SystemBarStyle.dark(
-                    scrim = navBarColorDarkTheme
-                )
+                navigationBarStyle = if (useDarkTheme)
+                    SystemBarStyle.dark(
+                        scrim = navBarColorDarkTheme
+                    )
                 else SystemBarStyle.light(
                     scrim = navBarColorLightTheme,
                     darkScrim = navBarColorLightThemeOldDevices
                 ),
-        )
+            )
+        }
     }
 
     MaterialTheme(
@@ -119,6 +124,7 @@ data class Spacing(
     val extraLarge: Dp = 32.dp,
 )
 
+
 data class Dimensions(
     val cardPeekHeight: Dp = 105.dp,
     val cardNormalHeight: Dp = 300.dp,
@@ -126,6 +132,10 @@ data class Dimensions(
     val bottomButtonsPagerHeight: Dp = 50.dp,
     val cardPeekContentHeight: Dp = cardPeekHeight - cardHandleHeight,
     val cardNormalContentHeight: Dp = cardNormalHeight - cardHandleHeight,
+    val toolsHeaderHeight: Dp = 95.dp,
+    val toolsBodyHeight: Dp = 205.dp,
+    val toolsSheetPeekHeight: Dp = toolsHeaderHeight + 3.dp + 8.dp,    // 3.dp DragHandle + spacing
+    val fabHeight: Dp = 56.dp   // TODO: remove and try to get it via intrisic defaults
 )
 
 val LocalSpacing = compositionLocalOf { Spacing() }

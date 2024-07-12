@@ -6,6 +6,10 @@
  * Copyright (c) 2024 Matthias Emde
  */
 
+/**
+ * https://medium.com/@vuert/handling-android-permissions-in-repository-9c062b4ea85e
+ */
+
 package app.musikus.utils
 
 import android.content.Context

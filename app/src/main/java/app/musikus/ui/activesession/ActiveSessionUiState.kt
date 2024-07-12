@@ -3,125 +3,120 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2024 Matthias Emde
+ * Copyright (c) 2024 Matthias Emde, Michael Prommersberger
  */
 
 package app.musikus.ui.activesession
 
-import app.musikus.database.Nullable
-import app.musikus.database.daos.LibraryFolder
+import androidx.compose.runtime.Stable
+import androidx.compose.ui.graphics.Color
+import app.musikus.database.LibraryFolderWithItems
 import app.musikus.database.daos.LibraryItem
-import app.musikus.ui.library.DialogMode
-import app.musikus.ui.library.LibraryItemDialogUiEvent
-import app.musikus.ui.library.LibraryItemDialogUiState
-import app.musikus.ui.library.LibraryItemEditData
+import kotlinx.coroutines.flow.StateFlow
 import java.time.ZonedDateTime
 import java.util.UUID
-import kotlin.time.Duration
 
 
+@Stable
+enum class ActiveSessionState {
+    NOT_STARTED,
+    RUNNING,
+    PAUSED,
+    UNKNOWN,
+}
 
+@Stable
+/** Main UI State */
 data class ActiveSessionUiState(
-    val cardUiStates: List<ActiveSessionDraggableCardUiState>,
-    val totalSessionDuration: Duration,
-    val ongoingPauseDuration: Duration,
-    val sections: List<ActiveSessionSectionListItemUiState>,
-    val runningSection: ActiveSessionSectionListItemUiState?,
-    val isPaused: Boolean,
-    val addItemDialogUiState: ActiveSessionAddLibraryItemDialogUiState?,
-    val dialogUiState: ActiveSessionDialogUiState,
+    val sessionState: StateFlow<ActiveSessionState>,
+    val mainContentUiState: StateFlow<ActiveSessionContentUiState>,
+    val newItemSelectorUiState: StateFlow<NewItemSelectorUiState?>,
+    val dialogUiState: StateFlow<ActiveSessionDialogsUiState>,
 )
 
-data class ActiveSessionDialogUiState(
-    val showDiscardSessionDialog: Boolean,
+@Stable
+data class ActiveSessionDialogsUiState(
     val endDialogUiState: ActiveSessionEndDialogUiState?,
+    val discardDialogVisible: Boolean,
 )
 
+@Stable
+data class ActiveSessionContentUiState(
+    val timerUiState: StateFlow<ActiveSessionTimerUiState>,
+    val currentItemUiState: StateFlow<ActiveSessionCurrentItemUiState?>,
+    val pastSectionsUiState: StateFlow<ActiveSessionCompletedSectionsUiState?>,
+)
+
+@Stable
+data class ActiveSessionTimerUiState(
+    val timerText: String,
+    val subHeadingText: String,
+)
+
+@Stable
+data class ActiveSessionCurrentItemUiState(
+    val name: String,
+    val color: Color,
+    val durationText: String,
+)
+
+@Stable
+data class ActiveSessionCompletedSectionsUiState(
+    val items: List<CompletedSectionUiState>
+)
+
+@Stable
+data class CompletedSectionUiState(
+    val id: UUID,
+    val name: String,
+    val durationText: String,
+    val color: Color,
+)
+
+@Stable
 data class ActiveSessionEndDialogUiState(
     val rating: Int,
     val comment: String,
 )
 
-data class ActiveSessionAddLibraryItemDialogUiState(
-    override val folders: List<LibraryFolder>,
-    override val itemData: LibraryItemEditData,
-    override val isConfirmButtonEnabled: Boolean,
-    override val mode: DialogMode = DialogMode.ADD,
-) : LibraryItemDialogUiState
-
-data class ActiveSessionSectionListItemUiState(
-    val id: UUID,
-    val libraryItem: LibraryItem,
-    val duration: Duration
+@Stable
+data class NewItemSelectorUiState(
+    val runningItem: LibraryItem?,
+    val foldersWithItems: List<LibraryFolderWithItems>,
+    val lastPracticedDates: Map<UUID, ZonedDateTime?>,
+    val rootItems: List<LibraryItem>,
 )
 
-sealed class ActiveSessionDraggableCardHeaderUiState : DraggableCardHeaderUiState {
-    data class LibraryCardHeaderUiState(
-        val folders: List<LibraryFolder?>,
-        val selectedFolderId: UUID?,
-        val activeFolderId: Nullable<UUID>?, // null = no active folder, Nullable(null) = root folder
-    ) : ActiveSessionDraggableCardHeaderUiState()
+//@Stable
+//data class ActiveSessionToolsUiState(
+//    /** state is still unused */
+//    val activeTab: ActiveSessionTab,
+//    val expanded: Boolean,
+//)
 
-    data object RecorderCardHeaderUiState : ActiveSessionDraggableCardHeaderUiState()
-    data object MetronomeCardHeaderUiState : ActiveSessionDraggableCardHeaderUiState()
+enum class ActiveSessionTab {
+    METRONOME, RECORDER, DEFAULT
 }
 
-sealed class ActiveSessionDraggableCardBodyUiState : DraggableCardBodyUiState {
-    data class LibraryCardBodyUiState(
-        val itemsWithLastPracticedDate: List<Pair<LibraryItem, ZonedDateTime?>>,
-        val activeItemId: UUID?
-    ) : ActiveSessionDraggableCardBodyUiState()
-
-    data object RecorderCardBodyUiState : ActiveSessionDraggableCardBodyUiState()
-    data object MetronomeCardBodyUiState : ActiveSessionDraggableCardBodyUiState()
-}
-
-sealed class ActiveSessionDraggableCardUiState : DraggableCardUiState<
-        ActiveSessionDraggableCardHeaderUiState,
-        ActiveSessionDraggableCardBodyUiState
-> {
-    data class LibraryCardUiState(
-        override val headerUiState: ActiveSessionDraggableCardHeaderUiState.LibraryCardHeaderUiState,
-        override val bodyUiState: ActiveSessionDraggableCardBodyUiState.LibraryCardBodyUiState,
-        override val title: String,
-        override val isExpandable: Boolean,
-        override val hasFab: Boolean,
-    ) : ActiveSessionDraggableCardUiState()
-
-    data class RecorderCardUiState(
-        override val headerUiState: ActiveSessionDraggableCardHeaderUiState.RecorderCardHeaderUiState,
-        override val bodyUiState: ActiveSessionDraggableCardBodyUiState.RecorderCardBodyUiState,
-        override val title: String,
-        override val isExpandable: Boolean,
-        override val hasFab: Boolean,
-    ) : ActiveSessionDraggableCardUiState()
-
-    data class MetronomeCardUiState(
-        override val headerUiState: ActiveSessionDraggableCardHeaderUiState.MetronomeCardHeaderUiState,
-        override val bodyUiState: ActiveSessionDraggableCardBodyUiState.MetronomeCardBodyUiState,
-        override val title: String,
-        override val isExpandable: Boolean,
-        override val hasFab: Boolean,
-    ) : ActiveSessionDraggableCardUiState()
-}
-
-sealed class ActiveSessionUiEvent : DraggableCardUiEvent {
-
-    data class SelectFolder(val folderId: UUID?) : ActiveSessionUiEvent()
+sealed class ActiveSessionUiEvent {
+    data object TogglePauseState : ActiveSessionUiEvent()
     data class SelectItem(val item: LibraryItem) : ActiveSessionUiEvent()
-    data class DeleteSection(val sectionId: UUID) : ActiveSessionUiEvent()
     data object BackPressed : ActiveSessionUiEvent()
-    data object ShowDiscardSessionDialog : ActiveSessionUiEvent()
+    data class DeleteSection(val sectionId: UUID) : ActiveSessionUiEvent()
+    data class EndDialogUiEvent(val dialogEvent: ActiveSessionEndDialogUiEvent) : ActiveSessionUiEvent()
     data object DiscardSessionDialogConfirmed : ActiveSessionUiEvent()
-    data object DiscardSessionDialogDismissed : ActiveSessionUiEvent()
-    data object TogglePause : ActiveSessionUiEvent()
-    data object ShowFinishDialog : ActiveSessionUiEvent()
-    data object CreateNewLibraryItem : ActiveSessionUiEvent()
-    data class ItemDialogUiEvent(val dialogEvent: LibraryItemDialogUiEvent) : ActiveSessionUiEvent()
-    data class EndDialogRatingChanged(val rating: Int) : ActiveSessionUiEvent()
-    data class EndDialogCommentChanged(val comment: String) : ActiveSessionUiEvent()
-    data object EndDialogDismissed : ActiveSessionUiEvent()
-    data object EndDialogConfirmed : ActiveSessionUiEvent()
+    data object ToggleNewItemSelector: ActiveSessionUiEvent()
+    data object ToggleFinishDialog : ActiveSessionUiEvent()
+    data object ToggleDiscardDialog : ActiveSessionUiEvent()
+
 }
 
-typealias ActiveSessionUiEventHandler = (ActiveSessionUiEvent) -> Unit
+sealed class ActiveSessionEndDialogUiEvent {
+    data class RatingChanged(val rating: Int) : ActiveSessionEndDialogUiEvent()
+    data class CommentChanged(val comment: String) : ActiveSessionEndDialogUiEvent()
+    data object Confirmed : ActiveSessionEndDialogUiEvent()
+}
+
+sealed class ActiveSessionException(message: String) : Exception(message) {
+    data object NoNotificationPermission: ActiveSessionException("Notification permission required")
+}
