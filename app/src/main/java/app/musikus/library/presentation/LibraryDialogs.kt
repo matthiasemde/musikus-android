@@ -148,7 +148,6 @@ fun LibraryItemDialog(
                         modifier = Modifier
                             .padding(top = 16.dp)
                             .padding(horizontal = 24.dp),
-                        expanded = folderSelectorExpanded,
                         label = { Text(text = "Folder") },
                         leadingIcon = {
                             Icon(
@@ -158,7 +157,7 @@ fun LibraryItemDialog(
                             )
                         },
                         options = uiState.folders.map { folder -> UUIDSelectionSpinnerOption(folder.id, folder.name) },
-                        selected = UUIDSelectionSpinnerOption(
+                        selectedOption = UUIDSelectionSpinnerOption(
                             id = uiState.itemData.folderId,
                             name = uiState.folders.firstOrNull {
                                 it.id == uiState.itemData.folderId
@@ -166,7 +165,6 @@ fun LibraryItemDialog(
                         specialOption = UUIDSelectionSpinnerOption(null, "No folder"),
                         semanticDescription = "Select folder",
                         dropdownTestTag = TestTags.ITEM_DIALOG_FOLDER_SELECTOR_DROPDOWN,
-                        onExpandedChange = { folderSelectorExpanded = it },
                         onSelectedChange = {
                             eventHandler(LibraryItemDialogUiEvent.FolderIdChanged((it as UUIDSelectionSpinnerOption).id))
                             folderSelectorExpanded = false

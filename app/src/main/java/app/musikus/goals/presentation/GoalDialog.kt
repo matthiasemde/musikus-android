@@ -33,7 +33,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import app.musikus.R
 import app.musikus.core.presentation.components.DialogActions
@@ -42,9 +41,11 @@ import app.musikus.core.presentation.components.DurationInput
 import app.musikus.core.presentation.components.IntSelectionSpinnerOption
 import app.musikus.core.presentation.components.MyToggleButton
 import app.musikus.core.presentation.components.NumberInput
+import app.musikus.core.presentation.components.NumberInputState
 import app.musikus.core.presentation.components.SelectionSpinner
 import app.musikus.core.presentation.components.ToggleButtonOption
 import app.musikus.core.presentation.components.UUIDSelectionSpinnerOption
+import app.musikus.core.presentation.components.rememberNumberInputState
 import app.musikus.core.presentation.theme.MusikusColorSchemeProvider
 import app.musikus.core.presentation.theme.MusikusPreviewElement1
 import app.musikus.core.presentation.theme.MusikusThemedPreview
@@ -56,6 +57,7 @@ import app.musikus.library.data.daos.LibraryItem
 import app.musikus.library.presentation.DialogMode
 import app.musikus.settings.domain.ColorSchemeSelections
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.seconds
 
 typealias GoalDialogEventHandler = (GoalDialogUiEvent) -> Unit
@@ -65,7 +67,9 @@ sealed class GoalDialogUiEvent {
     data class PeriodChanged(val period: Int) : GoalDialogUiEvent()
     data class PeriodUnitChanged(val periodUnit: GoalPeriodUnit) : GoalDialogUiEvent()
     data class GoalTypeChanged(val goalType: GoalType) : GoalDialogUiEvent()
-    data class LibraryItemsSelected(val selectedLibraryItems: List<LibraryItem>) : GoalDialogUiEvent()
+    data class LibraryItemsSelected(val selectedLibraryItems: List<LibraryItem>) :
+        GoalDialogUiEvent()
+
     data object Confirm : GoalDialogUiEvent()
     data object Dismiss : GoalDialogUiEvent()
 }
@@ -83,12 +87,24 @@ fun GoalDialog(
     var libraryItemsSelectorExpanded by remember { mutableStateOf(false) }
     var periodUnitSelectorExpanded by remember { mutableStateOf(false) }
 
-
-    /**
-     * Composing the Dialog
-     */
-
     val dialogData = uiState.dialogData
+
+    val hoursState = rememberNumberInputState(
+        initialValue = dialogData.target.inWholeHours.toInt(),
+        minValue = 0,
+        maxValue = 99
+    )
+    val minutesState = rememberNumberInputState(
+        initialValue = (dialogData.target - dialogData.target.inWholeHours.hours).inWholeMinutes.toInt(),
+        minValue = 0,
+        maxValue = 59
+    )
+
+    val periodInputState = rememberNumberInputState(
+        initialValue = dialogData.periodInPeriodUnits,
+        minValue = 0,
+        maxValue = 99
+    )
 
     val isEditMode = uiState.mode == DialogMode.EDIT
 
@@ -103,39 +119,31 @@ fun GoalDialog(
         ) {
             DialogHeader(
                 title = stringResource(
-                    id = if(isEditMode) R.string.goalDialogTitleEdit else R.string.addGoalDialogTitle
+                    id = if (isEditMode) R.string.goalDialogTitleEdit else R.string.addGoalDialogTitle
                 )
             )
 
             var confirmButtonEnabled = true
             DurationInput(
-                value = dialogData.target,
-                onValueChanged = { eventHandler(GoalDialogUiEvent.TargetChanged(it)) }
+                modifier = Modifier.padding(top = MaterialTheme.spacing.medium),
+                hoursState = hoursState,
+                minutesState = minutesState,
             )
             confirmButtonEnabled = confirmButtonEnabled && dialogData.target > 0.seconds
 
-            if(!isEditMode) {
+            if (!isEditMode) {
                 Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
                 PeriodInput(
-                    periodInPeriodUnits = dialogData.periodInPeriodUnits,
-                    periodUnit = dialogData.periodUnit,
-                    periodUnitSelectorExpanded = periodUnitSelectorExpanded,
-                    onPeriodChanged = { eventHandler(GoalDialogUiEvent.PeriodChanged(it)) },
-                    onPeriodUnitChanged = {
-                        eventHandler(GoalDialogUiEvent.PeriodUnitChanged(it))
-                        periodUnitSelectorExpanded = false
-                    },
-                    onPeriodUnitSelectorExpandedChanged = {
-                        periodUnitSelectorExpanded = it
-                        libraryItemsSelectorExpanded = false
-                    }
+                    periodNumberInputState = periodInputState,
+                    periodOptions = GoalPeriodUnit.entries.toList(),
+                    initialSelection = dialogData.periodUnit,
+                    onPeriodChanged = { eventHandler(GoalDialogUiEvent.PeriodChanged(it ?: 0)) },
+                    onPeriodUnitChanged = { eventHandler(GoalDialogUiEvent.PeriodUnitChanged(it)) },
                 )
                 confirmButtonEnabled = confirmButtonEnabled && dialogData.periodInPeriodUnits > 0
 
                 Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
-
                 HorizontalDivider(Modifier.padding(horizontal = MaterialTheme.spacing.large))
-
                 Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
 
                 MyToggleButton(
@@ -159,20 +167,15 @@ fun GoalDialog(
 
                     if (libraryItems.isNotEmpty()) {
                         SelectionSpinner(
-                            expanded = libraryItemsSelectorExpanded,
                             placeholder = { Text(text = "Select a library item") },
                             options = libraryItems.map {
                                 UUIDSelectionSpinnerOption(it.id, it.name)
                             },
-                            selected = dialogData.selectedLibraryItems.firstOrNull()?.let {
+                            selectedOption = dialogData.selectedLibraryItems.firstOrNull()?.let {
                                 UUIDSelectionSpinnerOption(it.id, it.name)
                             },
                             semanticDescription = "Select library item",
                             dropdownTestTag = TestTags.GOAL_DIALOG_ITEM_SELECTOR_DROPDOWN,
-                            onExpandedChange = {
-                                libraryItemsSelectorExpanded = it
-                                periodUnitSelectorExpanded = false
-                            },
                             onSelectedChange = { selection ->
                                 eventHandler(GoalDialogUiEvent.LibraryItemsSelected(libraryItems.filter {
                                     it.id == (selection as UUIDSelectionSpinnerOption).id
@@ -186,9 +189,9 @@ fun GoalDialog(
                 }
 
                 confirmButtonEnabled = confirmButtonEnabled && (
-                    dialogData.goalType == GoalType.NON_SPECIFIC ||
-                    dialogData.selectedLibraryItems.isNotEmpty()
-                )
+                        dialogData.goalType == GoalType.NON_SPECIFIC ||
+                                dialogData.selectedLibraryItems.isNotEmpty()
+                        )
             }
 
             DialogActions(
@@ -203,13 +206,14 @@ fun GoalDialog(
 
 @Composable
 fun PeriodInput(
-    periodInPeriodUnits: Int,
-    periodUnit: GoalPeriodUnit,
-    periodUnitSelectorExpanded: Boolean,
-    onPeriodChanged: (Int) -> Unit,
+    periodNumberInputState: NumberInputState,
+    periodOptions: List<GoalPeriodUnit>,
+    initialSelection: GoalPeriodUnit,
+    onPeriodChanged: (Int?) -> Unit,
     onPeriodUnitChanged: (GoalPeriodUnit) -> Unit,
-    onPeriodUnitSelectorExpandedChanged: (Boolean) -> Unit,
 ) {
+    var selectedPeriod by remember { mutableStateOf(initialSelection) }
+
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.Center,
@@ -218,24 +222,28 @@ fun PeriodInput(
         Text(text = "in")
         Spacer(modifier = Modifier.width(8.dp))
         NumberInput(
-            value = periodInPeriodUnits.toString(),
-            onValueChange = { onPeriodChanged(it.toIntOrNull() ?: 0) },
-            textSize = 20.sp,
-            maxValue = 99,
+            state = periodNumberInputState,
             imeAction = ImeAction.Next,
+            textStyle = MaterialTheme.typography.titleLarge,
+            padStart = false,
+            onValueChanged = onPeriodChanged,
         )
         Spacer(modifier = Modifier.width(8.dp))
+
         SelectionSpinner(
             modifier = Modifier.width(130.dp),
-            expanded = periodUnitSelectorExpanded,
-            options = GoalPeriodUnit.entries.map { IntSelectionSpinnerOption(it.ordinal, it.toString()) },
-            selected = IntSelectionSpinnerOption(periodUnit.ordinal, periodUnit.toString()),
+            options = periodOptions.map {
+                IntSelectionSpinnerOption(
+                    it.ordinal, // id is the ordinal of the GoalPeriodUnit
+                    it.toString()
+                )
+            },
+            selectedOption = IntSelectionSpinnerOption(selectedPeriod.ordinal, selectedPeriod.toString()),
             semanticDescription = "Select period unit",
             dropdownTestTag = TestTags.GOAL_DIALOG_PERIOD_UNIT_SELECTOR_DROPDOWN,
-            onExpandedChange = onPeriodUnitSelectorExpandedChanged,
             onSelectedChange = { selection ->
-                onPeriodUnitChanged(GoalPeriodUnit.entries[(selection as IntSelectionSpinnerOption?)?.id ?: 0])
-                onPeriodUnitSelectorExpandedChanged(false)
+                selectedPeriod = GoalPeriodUnit.entries[(selection as IntSelectionSpinnerOption?)?.id ?: 0]
+                onPeriodUnitChanged(selectedPeriod)
             }
         )
     }
