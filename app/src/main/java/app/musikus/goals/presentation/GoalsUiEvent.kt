@@ -45,8 +45,8 @@ sealed class GoalsUiEvent {
 }
 
 sealed class GoalDialogUiEvent {
-    data class HourTargetChanged(val hours: Int?) : GoalDialogUiEvent()
-    data class MinuteTargetChanged(val minutes: Int?) : GoalDialogUiEvent()
+    data class HourTargetChanged(val hours: Int) : GoalDialogUiEvent()
+    data class MinuteTargetChanged(val minutes: Int) : GoalDialogUiEvent()
     data class PeriodChanged(val period: Int) : GoalDialogUiEvent()
     data class PeriodUnitChanged(val periodUnit: GoalPeriodUnit) : GoalDialogUiEvent()
     data class GoalTypeChanged(val goalType: GoalType) : GoalDialogUiEvent()

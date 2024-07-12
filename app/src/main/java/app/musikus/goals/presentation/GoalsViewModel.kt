@@ -41,9 +41,10 @@ import kotlin.time.Duration.Companion.seconds
 
 
 data class GoalDialogData(
-    val targetHours: Int? = null,
-    val targetMinutes: Int? = null,
-    val periodInPeriodUnits: Int? = null,
+    val targetHours: Int = 0,
+    val targetMinutes: Int = 0,
+    val periodInPeriodUnits: Int = 0,
+    val target: Duration = 0.seconds,
     val periodUnit: GoalPeriodUnit = GoalPeriodUnit.DEFAULT,
     val goalType: GoalType = GoalType.DEFAULT,
     val oneShot: Boolean = false,
@@ -412,11 +413,11 @@ class GoalsViewModel @Inject constructor(
         }
     }
 
-    private fun onHoursChanged(hours: Int?) {
+    private fun onHoursChanged(hours: Int) {
         _dialogData.update { it?.copy(targetHours = hours) }
     }
 
-    private fun onMinutesChanged(minutes: Int?) {
+    private fun onMinutesChanged(minutes: Int) {
         _dialogData.update { it?.copy(targetMinutes = minutes) }
     }
 

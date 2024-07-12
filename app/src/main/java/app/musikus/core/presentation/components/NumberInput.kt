@@ -49,6 +49,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.BaselineShift
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.TextUnit
@@ -163,7 +164,10 @@ class NumberInputState (
             require(initialValue in minValue..maxValue) { "initialValue not in allowed range" }
         }
     }
-    var currentValue = mutableStateOf(initialValue)
+    val currentValue = mutableStateOf(TextFieldValue(initialValue?.toString() ?: ""))
+
+    val numericValue: Int
+        get() = currentValue.value.text.toIntOrNull() ?: minValue
 
     companion object {
         /**
@@ -179,7 +183,7 @@ class NumberInputState (
             },
             restore = {
                 NumberInputState(
-                    initialValue = it[0] as Int?,
+                    initialValue = (it[0] as TextFieldValue).text.toIntOrNull(),
                     minValue = it[1] as Int,
                     maxValue = it[2] as Int
                 )
@@ -227,11 +231,6 @@ fun NumberInput(
         MaterialTheme.colorScheme.primaryContainer
     }
     val maxLength = state.maxValue.toString().length
-    val displayValue = if (focused || !padStart) {
-        state.currentValue.value?.toString() ?: ""
-    } else {
-        (state.currentValue.value?.toString() ?: "").padStart(maxLength, '0')
-    }
 
     Row {
         BasicTextField(
@@ -241,13 +240,35 @@ fun NumberInput(
                 .height(IntrinsicSize.Min)
                 .padding(MaterialTheme.spacing.extraSmall)
                 .focusRequester(focusRequester)
-                .onFocusChanged { focused = it.isFocused },
-            value = displayValue,
+                .onFocusChanged {
+                    if(it.isFocused) {
+                        state.currentValue.value = state.currentValue.value.copy(
+                            text = state.currentValue.value.text.trimStart('0')
+                        )
+                    } else {
+                        if (state.currentValue.value.text.isEmpty())
+                            state.currentValue.value = TextFieldValue(state.minValue.toString())
+                        if(padStart)
+                            state.currentValue.value = state.currentValue.value.copy(
+                                state.currentValue.value.text.padStart(maxLength, '0')
+                            )
+                    }
+                    focused = it.isFocused
+                },
+            value = state.currentValue.value,
             textStyle = textStyle.copy(color = MaterialTheme.colorScheme.onSurface),
             onValueChange = { newValue ->
-                val number = newValue.toIntOrNull()
-                if (number in state.minValue..state.maxValue || number == null) {
-                    state.currentValue.value = number
+                var newValueOnlyNumbers = newValue.text.filter { it.isDigit() }
+                if (newValueOnlyNumbers.length > maxLength) {
+                    if(newValue.selection.collapsed && newValue.selection.start == 0) {
+                        newValueOnlyNumbers = newValueOnlyNumbers.take(1)
+                    } else {
+                        return@BasicTextField
+                    }
+                }
+                val number = newValueOnlyNumbers.toIntOrNull() ?: state.minValue
+                if (number in state.minValue..state.maxValue) {
+                    state.currentValue.value = newValue.copy(newValueOnlyNumbers)
                     onValueChanged(number)
                 }
             },
