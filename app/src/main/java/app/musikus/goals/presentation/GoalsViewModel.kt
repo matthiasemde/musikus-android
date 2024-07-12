@@ -10,20 +10,20 @@ package app.musikus.goals.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import app.musikus.library.data.daos.LibraryItem
+import app.musikus.core.domain.GoalsSortMode
+import app.musikus.core.domain.SortDirection
+import app.musikus.core.domain.SortInfo
 import app.musikus.goals.data.entities.GoalDescriptionCreationAttributes
 import app.musikus.goals.data.entities.GoalInstanceCreationAttributes
 import app.musikus.goals.data.entities.GoalInstanceUpdateAttributes
 import app.musikus.goals.data.entities.GoalPeriodUnit
 import app.musikus.goals.data.entities.GoalType
-import app.musikus.library.presentation.DialogMode
 import app.musikus.goals.domain.GoalInstanceWithProgressAndDescriptionWithLibraryItems
 import app.musikus.goals.domain.usecase.GoalsUseCases
+import app.musikus.library.data.daos.LibraryItem
 import app.musikus.library.domain.usecase.LibraryUseCases
+import app.musikus.library.presentation.DialogMode
 import app.musikus.settings.domain.usecase.UserPreferencesUseCases
-import app.musikus.core.domain.GoalsSortMode
-import app.musikus.core.domain.SortDirection
-import app.musikus.core.domain.SortInfo
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -35,12 +35,15 @@ import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 
 data class GoalDialogData(
-    val target: Duration = 0.seconds,
-    val periodInPeriodUnits: Int = 1,
+    val targetHours: Int? = null,
+    val targetMinutes: Int? = null,
+    val periodInPeriodUnits: Int? = null,
     val periodUnit: GoalPeriodUnit = GoalPeriodUnit.DEFAULT,
     val goalType: GoalType = GoalType.DEFAULT,
     val oneShot: Boolean = false,
@@ -299,7 +302,8 @@ class GoalsViewModel @Inject constructor(
 
             is GoalsUiEvent.DialogUiEvent -> {
                 when(event.dialogEvent) {
-                    is GoalDialogUiEvent.TargetChanged -> onTargetChanged(event.dialogEvent.target)
+                    is GoalDialogUiEvent.HourTargetChanged -> onHoursChanged(event.dialogEvent.hours)
+                    is GoalDialogUiEvent.MinuteTargetChanged -> onMinutesChanged(event.dialogEvent.minutes)
                     is GoalDialogUiEvent.PeriodChanged -> onPeriodChanged(event.dialogEvent.period)
                     is GoalDialogUiEvent.PeriodUnitChanged -> onPeriodUnitChanged(event.dialogEvent.periodUnit)
                     is GoalDialogUiEvent.GoalTypeChanged -> onGoalTypeChanged(event.dialogEvent.goalType)
@@ -408,8 +412,12 @@ class GoalsViewModel @Inject constructor(
         }
     }
 
-    private fun onTargetChanged(target: Duration) {
-        _dialogData.update { it?.copy(target = target) }
+    private fun onHoursChanged(hours: Int?) {
+        _dialogData.update { it?.copy(targetHours = hours) }
+    }
+
+    private fun onMinutesChanged(minutes: Int?) {
+        _dialogData.update { it?.copy(targetMinutes = minutes) }
     }
 
     private fun onPeriodChanged(period: Int) {
@@ -440,7 +448,7 @@ class GoalsViewModel @Inject constructor(
                 goalsUseCases.edit(
                     descriptionId = goalToEditId,
                     instanceUpdateAttributes = GoalInstanceUpdateAttributes(
-                        target = dialogData.target,
+                        target = dialogData.targetHours.hours + dialogData.targetMinutes.minutes,
                     ),
                 )
             } ?: goalsUseCases.add(

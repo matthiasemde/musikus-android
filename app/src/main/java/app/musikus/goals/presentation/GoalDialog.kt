@@ -53,27 +53,10 @@ import app.musikus.core.presentation.theme.spacing
 import app.musikus.core.presentation.utils.TestTags
 import app.musikus.goals.data.entities.GoalPeriodUnit
 import app.musikus.goals.data.entities.GoalType
-import app.musikus.library.data.daos.LibraryItem
 import app.musikus.library.presentation.DialogMode
 import app.musikus.settings.domain.ColorSchemeSelections
-import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.seconds
-
-typealias GoalDialogEventHandler = (GoalDialogUiEvent) -> Unit
-
-sealed class GoalDialogUiEvent {
-    data class TargetChanged(val target: Duration) : GoalDialogUiEvent()
-    data class PeriodChanged(val period: Int) : GoalDialogUiEvent()
-    data class PeriodUnitChanged(val periodUnit: GoalPeriodUnit) : GoalDialogUiEvent()
-    data class GoalTypeChanged(val goalType: GoalType) : GoalDialogUiEvent()
-    data class LibraryItemsSelected(val selectedLibraryItems: List<LibraryItem>) :
-        GoalDialogUiEvent()
-
-    data object Confirm : GoalDialogUiEvent()
-    data object Dismiss : GoalDialogUiEvent()
-}
-
 
 @Composable
 fun GoalDialog(
@@ -128,6 +111,8 @@ fun GoalDialog(
                 modifier = Modifier.padding(top = MaterialTheme.spacing.medium),
                 hoursState = hoursState,
                 minutesState = minutesState,
+                onHoursChanged = { eventHandler(GoalDialogUiEvent.HourTargetChanged(it)) },
+                onMinutesChanged = { eventHandler(GoalDialogUiEvent.MinuteTargetChanged(it)) },
             )
             confirmButtonEnabled = confirmButtonEnabled && dialogData.target > 0.seconds
 
