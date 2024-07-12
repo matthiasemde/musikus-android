@@ -8,8 +8,8 @@
 
 package app.musikus.activesession.di
 
+import app.musikus.activesession.data.ActiveSessionRepository
 import app.musikus.activesession.data.ActiveSessionRepositoryImpl
-import app.musikus.activesession.domain.ActiveSessionRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

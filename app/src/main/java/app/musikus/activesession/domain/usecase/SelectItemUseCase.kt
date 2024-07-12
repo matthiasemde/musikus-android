@@ -10,14 +10,14 @@
 package app.musikus.activesession.domain.usecase
 
 
-import app.musikus.library.data.daos.LibraryItem
-import app.musikus.activesession.domain.ActiveSessionRepository
+import app.musikus.activesession.data.ActiveSessionRepository
 import app.musikus.activesession.domain.PracticeSection
 import app.musikus.activesession.domain.SessionState
 import app.musikus.core.domain.IdProvider
 import app.musikus.core.domain.TimeProvider
 import app.musikus.core.domain.minus
 import app.musikus.core.domain.plus
+import app.musikus.library.data.daos.LibraryItem
 import kotlinx.coroutines.flow.first
 import kotlin.time.Duration.Companion.seconds
 

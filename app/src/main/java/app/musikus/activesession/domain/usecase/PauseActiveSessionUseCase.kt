@@ -9,7 +9,7 @@
 
 package app.musikus.activesession.domain.usecase
 
-import app.musikus.activesession.domain.ActiveSessionRepository
+import app.musikus.activesession.data.ActiveSessionRepository
 import app.musikus.core.domain.TimeProvider
 import kotlinx.coroutines.flow.first
 import kotlin.time.Duration.Companion.seconds

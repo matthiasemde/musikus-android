@@ -8,7 +8,7 @@
 
 package app.musikus.activesession.di
 
-import app.musikus.activesession.domain.ActiveSessionRepository
+import app.musikus.activesession.data.ActiveSessionRepository
 import app.musikus.activesession.domain.usecase.ActiveSessionUseCases
 import app.musikus.activesession.domain.usecase.DeleteSectionUseCase
 import app.musikus.activesession.domain.usecase.GetCompletedSectionsUseCase

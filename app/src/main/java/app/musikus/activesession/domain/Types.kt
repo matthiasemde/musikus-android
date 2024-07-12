@@ -10,22 +10,9 @@
 package app.musikus.activesession.domain
 
 import app.musikus.library.data.daos.LibraryItem
-import kotlinx.coroutines.flow.Flow
 import java.time.ZonedDateTime
 import java.util.UUID
 import kotlin.time.Duration
-
-
-interface ActiveSessionRepository {
-    suspend fun setSessionState(
-        sessionState: SessionState
-    )
-    fun getSessionState() : Flow<SessionState?>
-
-    fun reset()
-
-    fun isRunning(): Boolean
-}
 
 data class PracticeSection(
     val id: UUID,

@@ -7,30 +7,19 @@
  *
  */
 
-
 package app.musikus.activesession.data
 
-import app.musikus.activesession.domain.ActiveSessionRepository
 import app.musikus.activesession.domain.SessionState
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.Flow
 
 
-class ActiveSessionRepositoryImpl : ActiveSessionRepository {
+interface ActiveSessionRepository {
+    suspend fun setSessionState(
+        sessionState: SessionState
+    )
+    fun getSessionState() : Flow<SessionState?>
 
-    private val sessionState = MutableStateFlow<SessionState?>(null)
+    fun reset()
 
-    override suspend fun setSessionState(sessionState: SessionState) {
-        this.sessionState.update { sessionState }
-    }
-    override fun getSessionState() = sessionState.asStateFlow()
-
-    override fun reset() {
-        sessionState.update { null }
-    }
-
-    override fun isRunning(): Boolean {
-        return sessionState.value != null
-    }
+    fun isRunning(): Boolean
 }

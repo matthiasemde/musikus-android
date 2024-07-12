@@ -9,7 +9,8 @@
 
 package app.musikus.activesession.domain.usecase
 
-import app.musikus.activesession.domain.ActiveSessionRepository
+import app.musikus.activesession.data.ActiveSessionRepository
+
 
 class ResetSessionUseCase(
     private val activeSessionRepository: ActiveSessionRepository
