@@ -330,7 +330,6 @@ object TestAppModule {
         return ActiveSessionUseCases(
             selectItem = SelectItemUseCase(
                 activeSessionRepository = activeSessionRepository,
-                resumeUseCase = resumeUseCase,
                 getRunningItemDurationUseCase = getRunningItemDurationUseCase,
                 timeProvider = timeProvider,
                 idProvider = idProvider
@@ -353,8 +352,8 @@ object TestAppModule {
             getFinalizedSession = GetFinalizedSessionUseCase(
                 activeSessionRepository = activeSessionRepository,
                 getRunningItemDurationUseCase = getRunningItemDurationUseCase,
-                resumeUseCase = resumeUseCase,
-                idProvider = idProvider
+                idProvider = idProvider,
+                getOngoingPauseDurationUseCase = getOngoingPauseDurationUseCase
             ),
             getStartTime = GetStartTimeUseCase(activeSessionRepository),
             reset = ResetSessionUseCase(activeSessionRepository),
