@@ -11,7 +11,6 @@ package app.musikus.ui.activesession
 
 import android.app.Application
 import android.os.Build
-import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import app.musikus.database.Nullable
@@ -384,12 +383,7 @@ class ActiveSessionViewModel @Inject constructor(
         when (sessionState.value) {
             ActiveSessionState.RUNNING -> activeSessionUseCases.pause()
             ActiveSessionState.PAUSED -> activeSessionUseCases.resume()
-            else -> {
-                Log.d(
-                    "ActiveSessionViewModel",
-                    "TogglePauseState: Timer state = ${sessionState.value}"
-                )
-            }
+            else -> {}
         }
     }
 
