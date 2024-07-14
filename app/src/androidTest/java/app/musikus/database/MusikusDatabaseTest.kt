@@ -14,6 +14,8 @@ import androidx.room.testing.MigrationTestHelper
 import androidx.sqlite.db.SupportSQLiteDatabase
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import app.musikus.core.data.MusikusDatabase
+import app.musikus.core.data.UUIDConverter
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -98,7 +100,8 @@ class MusikusDatabaseTest {
                 """.trimIndent(),
                 bindArgs = arrayOf(
                     uuidConverter.toByte(UUIDConverter.fromInt(0)), TEST_TIME, TEST_TIME, "false", "item1", 0, null, null,
-                    uuidConverter.toByte(UUIDConverter.fromInt(1)), TEST_TIME, TEST_TIME, 1, "item2", 1, uuidConverter.toByte(UUIDConverter.fromInt(1)), null,
+                    uuidConverter.toByte(UUIDConverter.fromInt(1)), TEST_TIME, TEST_TIME, 1, "item2", 1, uuidConverter.toByte(
+                        UUIDConverter.fromInt(1)), null,
                 )
             )
             execSQL(
@@ -240,7 +243,8 @@ class MusikusDatabaseTest {
             assertThat(it.getString(deletedIndex)).isEqualTo("1")
             assertThat(it.getString(nameIndex)).isEqualTo("item2")
             assertThat(it.getInt(colorIndexIndex)).isEqualTo(1)
-            assertThat(it.getBlobOrNull(libraryFolderIdIndex)).isEqualTo(uuidConverter.toByte(UUIDConverter.fromInt(1)))
+            assertThat(it.getBlobOrNull(libraryFolderIdIndex)).isEqualTo(uuidConverter.toByte(
+                UUIDConverter.fromInt(1)))
             assertThat(it.getStringOrNull(customOrderIndex)).isEqualTo(null)
         }
 

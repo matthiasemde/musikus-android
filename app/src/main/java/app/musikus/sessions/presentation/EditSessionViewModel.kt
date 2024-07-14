@@ -2,8 +2,8 @@ package app.musikus.sessions.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import app.musikus.database.SectionWithLibraryItem
-import app.musikus.usecase.sessions.SessionsUseCases
+import app.musikus.core.data.SectionWithLibraryItem
+import app.musikus.sessions.domain.usecase.SessionsUseCases
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted.Companion.WhileSubscribed

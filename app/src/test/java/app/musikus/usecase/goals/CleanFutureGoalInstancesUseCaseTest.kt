@@ -8,18 +8,22 @@
 
 package app.musikus.usecase.goals
 
-import app.musikus.database.GoalDescriptionWithInstancesAndLibraryItems
-import app.musikus.database.UUIDConverter
-import app.musikus.database.daos.GoalDescription
-import app.musikus.database.daos.GoalInstance
-import app.musikus.database.entities.GoalDescriptionCreationAttributes
-import app.musikus.database.entities.GoalInstanceCreationAttributes
-import app.musikus.database.entities.GoalPeriodUnit
-import app.musikus.database.entities.GoalProgressType
-import app.musikus.database.entities.GoalType
+import app.musikus.core.data.GoalDescriptionWithInstancesAndLibraryItems
+import app.musikus.core.data.UUIDConverter
+import app.musikus.goals.data.daos.GoalDescription
+import app.musikus.goals.data.daos.GoalInstance
+import app.musikus.goals.data.entities.GoalDescriptionCreationAttributes
+import app.musikus.goals.data.entities.GoalInstanceCreationAttributes
+import app.musikus.goals.data.entities.GoalPeriodUnit
+import app.musikus.goals.data.entities.GoalProgressType
+import app.musikus.goals.data.entities.GoalType
+import app.musikus.goals.domain.usecase.AddGoalUseCase
+import app.musikus.goals.domain.usecase.ArchiveGoalsUseCase
+import app.musikus.goals.domain.usecase.CleanFutureGoalInstancesUseCase
+import app.musikus.goals.domain.usecase.UpdateGoalsUseCase
 import app.musikus.repository.FakeGoalRepository
 import app.musikus.repository.FakeLibraryRepository
-import app.musikus.usecase.library.GetAllLibraryItemsUseCase
+import app.musikus.library.domain.usecase.GetAllLibraryItemsUseCase
 import app.musikus.utils.FakeIdProvider
 import app.musikus.utils.FakeTimeProvider
 import com.google.common.truth.Truth.assertThat

@@ -44,7 +44,7 @@ import app.musikus.sessions.presentation.EditSession
 import app.musikus.settings.presentation.addSettingsNavigationGraph
 import app.musikus.statistics.presentation.addStatisticsNavigationGraph
 import app.musikus.core.presentation.theme.MusikusTheme
-import app.musikus.utils.TimeProvider
+import app.musikus.core.domain.TimeProvider
 import java.util.UUID
 
 const val DEEP_LINK_KEY = "argument"

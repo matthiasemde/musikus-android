@@ -68,10 +68,10 @@ import app.musikus.core.presentation.components.MultiFabState
 import app.musikus.core.presentation.components.Selectable
 import app.musikus.core.presentation.components.SortMenu
 import app.musikus.core.presentation.theme.spacing
-import app.musikus.utils.GoalsSortMode
-import app.musikus.utils.TimeProvider
-import app.musikus.utils.UiIcon
-import app.musikus.utils.UiText
+import app.musikus.core.domain.GoalsSortMode
+import app.musikus.core.domain.TimeProvider
+import app.musikus.core.presentation.utils.UiIcon
+import app.musikus.core.presentation.utils.UiText
 
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)

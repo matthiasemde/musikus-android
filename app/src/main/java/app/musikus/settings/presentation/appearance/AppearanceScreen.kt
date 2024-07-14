@@ -38,10 +38,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.musikus.core.presentation.components.TwoLiner
 import app.musikus.core.presentation.components.TwoLinerData
-import app.musikus.datastore.ColorSchemeSelections
-import app.musikus.datastore.ThemeSelections
+import app.musikus.settings.domain.ColorSchemeSelections
+import app.musikus.settings.domain.ThemeSelections
 import app.musikus.core.presentation.theme.spacing
-import app.musikus.utils.UiText
+import app.musikus.core.presentation.utils.UiText
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

@@ -8,22 +8,22 @@
 
 package app.musikus.repository
 
-import app.musikus.database.GoalInstanceWithDescriptionWithLibraryItems
-import app.musikus.database.SectionWithLibraryItem
-import app.musikus.database.SessionWithSectionsWithLibraryItems
-import app.musikus.database.daos.GoalDescription
-import app.musikus.database.daos.GoalInstance
-import app.musikus.database.daos.LibraryItem
-import app.musikus.database.daos.Section
-import app.musikus.database.daos.Session
-import app.musikus.database.entities.SectionCreationAttributes
-import app.musikus.database.entities.SectionUpdateAttributes
-import app.musikus.database.entities.SessionCreationAttributes
-import app.musikus.database.entities.SessionUpdateAttributes
-import app.musikus.usecase.sessions.SessionRepository
+import app.musikus.core.data.GoalInstanceWithDescriptionWithLibraryItems
+import app.musikus.core.data.SectionWithLibraryItem
+import app.musikus.core.data.SessionWithSectionsWithLibraryItems
+import app.musikus.goals.data.daos.GoalDescription
+import app.musikus.goals.data.daos.GoalInstance
+import app.musikus.library.data.daos.LibraryItem
+import app.musikus.sessions.data.daos.Section
+import app.musikus.sessions.data.daos.Session
+import app.musikus.sessions.data.entities.SectionCreationAttributes
+import app.musikus.sessions.data.entities.SectionUpdateAttributes
+import app.musikus.sessions.data.entities.SessionCreationAttributes
+import app.musikus.sessions.data.entities.SessionUpdateAttributes
+import app.musikus.sessions.domain.SessionRepository
 import app.musikus.utils.FakeIdProvider
-import app.musikus.utils.TimeProvider
-import app.musikus.utils.Timeframe
+import app.musikus.core.domain.TimeProvider
+import app.musikus.core.domain.Timeframe
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf

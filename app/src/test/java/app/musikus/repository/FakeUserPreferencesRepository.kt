@@ -8,18 +8,19 @@
 
 package app.musikus.repository
 
-import app.musikus.database.daos.LibraryFolder
-import app.musikus.database.daos.LibraryItem
-import app.musikus.datastore.ColorSchemeSelections
-import app.musikus.datastore.ThemeSelections
-import app.musikus.datastore.UserPreferences
+import app.musikus.library.data.daos.LibraryFolder
+import app.musikus.library.data.daos.LibraryItem
+import app.musikus.settings.domain.ColorSchemeSelections
+import app.musikus.settings.domain.ThemeSelections
+import app.musikus.settings.domain.UserPreferences
 import app.musikus.metronome.presentation.MetronomeSettings
-import app.musikus.utils.GoalSortInfo
-import app.musikus.utils.GoalsSortMode
-import app.musikus.utils.LibraryFolderSortMode
-import app.musikus.utils.LibraryItemSortMode
-import app.musikus.utils.SortDirection
-import app.musikus.utils.SortInfo
+import app.musikus.core.domain.GoalSortInfo
+import app.musikus.core.domain.GoalsSortMode
+import app.musikus.core.domain.LibraryFolderSortMode
+import app.musikus.core.domain.LibraryItemSortMode
+import app.musikus.core.domain.SortDirection
+import app.musikus.core.domain.SortInfo
+import app.musikus.settings.data.UserPreferencesRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
@@ -27,7 +28,8 @@ import kotlinx.coroutines.flow.update
 
 class FakeUserPreferencesRepository : UserPreferencesRepository {
 
-    private val _preferences = MutableStateFlow(UserPreferences(
+    private val _preferences = MutableStateFlow(
+        UserPreferences(
         theme = ThemeSelections.DEFAULT,
         colorScheme = ColorSchemeSelections.DEFAULT,
         appIntroDone = false,
@@ -39,7 +41,8 @@ class FakeUserPreferencesRepository : UserPreferencesRepository {
         goalsSortDirection = SortDirection.DEFAULT,
         showPausedGoals = true,
         metronomeSettings = MetronomeSettings.DEFAULT
-    ))
+    )
+    )
     override val theme: Flow<ThemeSelections>
         get() = _preferences.map { it.theme }
 

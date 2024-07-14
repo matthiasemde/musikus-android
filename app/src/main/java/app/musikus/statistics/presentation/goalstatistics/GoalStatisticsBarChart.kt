@@ -39,8 +39,8 @@ import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import app.musikus.R
-import app.musikus.utils.DurationFormat
-import app.musikus.utils.getDurationString
+import app.musikus.core.presentation.utils.DurationFormat
+import app.musikus.core.presentation.utils.getDurationString
 import app.musikus.statistics.presentation.sessionstatistics.ScaleLineData
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch

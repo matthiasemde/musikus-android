@@ -8,21 +8,22 @@
 
 package app.musikus.usecase.sessions
 
-import app.musikus.database.Nullable
-import app.musikus.database.SectionWithLibraryItem
-import app.musikus.database.SessionWithSectionsWithLibraryItems
-import app.musikus.database.UUIDConverter
-import app.musikus.database.daos.InvalidSectionException
-import app.musikus.database.daos.InvalidSessionException
-import app.musikus.database.daos.LibraryItem
-import app.musikus.database.daos.Section
-import app.musikus.database.daos.Session
-import app.musikus.database.entities.LibraryItemCreationAttributes
-import app.musikus.database.entities.SectionCreationAttributes
-import app.musikus.database.entities.SessionCreationAttributes
+import app.musikus.core.data.Nullable
+import app.musikus.core.data.SectionWithLibraryItem
+import app.musikus.core.data.SessionWithSectionsWithLibraryItems
+import app.musikus.core.data.UUIDConverter
+import app.musikus.sessions.data.daos.InvalidSectionException
+import app.musikus.sessions.data.daos.InvalidSessionException
+import app.musikus.library.data.daos.LibraryItem
+import app.musikus.sessions.data.daos.Section
+import app.musikus.sessions.data.daos.Session
+import app.musikus.library.data.entities.LibraryItemCreationAttributes
+import app.musikus.sessions.data.entities.SectionCreationAttributes
+import app.musikus.sessions.data.entities.SessionCreationAttributes
 import app.musikus.repository.FakeLibraryRepository
 import app.musikus.repository.FakeSessionRepository
-import app.musikus.usecase.library.GetAllLibraryItemsUseCase
+import app.musikus.library.domain.usecase.GetAllLibraryItemsUseCase
+import app.musikus.sessions.domain.usecase.AddSessionUseCase
 import app.musikus.utils.FakeIdProvider
 import app.musikus.utils.FakeTimeProvider
 import com.google.common.truth.Truth.assertThat

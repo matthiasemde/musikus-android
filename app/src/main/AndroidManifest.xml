@@ -8,7 +8,7 @@
 
     Parts of this software are licensed under the MIT license
 
-    Copyright (c) 2022, Javier Carbone, author Michael Prommersberger
+    Copyright (c) 2022-2024, Javier Carbone, author Michael Prommersberger
     Additions and modifications, author Matthias Emde
 -->
 <manifest
@@ -30,7 +30,7 @@
     <uses-permission android:name="android.permission.VIBRATE" />
 
     <application
-        android:name="app.musikus.Musikus"
+        android:name="app.musikus.core.presentation.Musikus"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -40,7 +40,7 @@
     >
 
         <service
-            android:name=".services.SessionService"
+            android:name=".activesession.presentation.SessionService"
             android:foregroundServiceType="specialUse"
             android:exported="false">
             <property
@@ -51,19 +51,19 @@
                     as well as show an accompanying notification." />
         </service>
         <service
-            android:name=".services.MetronomeService"
+            android:name=".metronome.presentation.MetronomeService"
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="mediaPlayback"
         />
         <service
-            android:name=".services.RecorderService"
+            android:name=".recorder.presentation.RecorderService"
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="microphone"
         />
         <service
-            android:name=".services.RecordingPlaybackService"
+            android:name=".recorder.presentation.RecordingPlaybackService"
             android:exported="true"
             android:foregroundServiceType="mediaPlayback"
             tools:ignore="ExportedService">

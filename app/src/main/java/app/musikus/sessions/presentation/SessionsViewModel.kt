@@ -10,11 +10,11 @@ package app.musikus.sessions.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import app.musikus.database.SessionWithSectionsWithLibraryItems
-import app.musikus.usecase.sessions.SessionsUseCases
-import app.musikus.utils.DurationFormat
-import app.musikus.utils.DurationString
-import app.musikus.utils.getDurationString
+import app.musikus.core.data.SessionWithSectionsWithLibraryItems
+import app.musikus.sessions.domain.usecase.SessionsUseCases
+import app.musikus.core.presentation.utils.DurationFormat
+import app.musikus.core.presentation.utils.DurationString
+import app.musikus.core.presentation.utils.getDurationString
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted

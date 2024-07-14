@@ -36,8 +36,8 @@ import app.musikus.core.presentation.Screen
 import app.musikus.core.presentation.components.TwoLiner
 import app.musikus.core.presentation.components.TwoLinerData
 import app.musikus.core.presentation.theme.spacing
-import app.musikus.utils.UiIcon
-import app.musikus.utils.UiText
+import app.musikus.core.presentation.utils.UiIcon
+import app.musikus.core.presentation.utils.UiText
 
 
 @OptIn(ExperimentalMaterial3Api::class)

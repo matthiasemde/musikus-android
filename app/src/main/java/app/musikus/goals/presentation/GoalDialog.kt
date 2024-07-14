@@ -44,12 +44,12 @@ import app.musikus.core.presentation.components.NumberInput
 import app.musikus.core.presentation.components.SelectionSpinner
 import app.musikus.core.presentation.components.ToggleButtonOption
 import app.musikus.core.presentation.components.UUIDSelectionSpinnerOption
-import app.musikus.database.daos.LibraryItem
-import app.musikus.database.entities.GoalPeriodUnit
-import app.musikus.database.entities.GoalType
+import app.musikus.library.data.daos.LibraryItem
+import app.musikus.goals.data.entities.GoalPeriodUnit
+import app.musikus.goals.data.entities.GoalType
 import app.musikus.library.presentation.DialogMode
 import app.musikus.core.presentation.theme.spacing
-import app.musikus.utils.TestTags
+import app.musikus.core.presentation.utils.TestTags
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 

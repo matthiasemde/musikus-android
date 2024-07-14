@@ -15,8 +15,8 @@ import androidx.compose.material.icons.outlined.CloudUpload
 import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.Info
 import app.musikus.R
-import app.musikus.utils.UiIcon
-import app.musikus.utils.UiText
+import app.musikus.core.presentation.utils.UiIcon
+import app.musikus.core.presentation.utils.UiText
 
 sealed class Screen(
     val route: String,

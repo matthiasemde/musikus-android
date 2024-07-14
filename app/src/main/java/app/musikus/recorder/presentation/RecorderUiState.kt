@@ -11,9 +11,7 @@ package app.musikus.recorder.presentation
 import android.net.Uri
 import androidx.compose.runtime.Stable
 import androidx.media3.common.MediaItem
-import app.musikus.services.RecorderServiceException
-import app.musikus.utils.DurationString
-import app.musikus.utils.RecorderState
+import app.musikus.core.presentation.utils.DurationString
 
 @Stable
 data class RecorderUiState(

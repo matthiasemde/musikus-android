@@ -13,10 +13,10 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import app.musikus.datastore.ColorSchemeSelections
-import app.musikus.datastore.ThemeSelections
-import app.musikus.usecase.activesession.ActiveSessionUseCases
-import app.musikus.usecase.userpreferences.UserPreferencesUseCases
+import app.musikus.settings.domain.ColorSchemeSelections
+import app.musikus.settings.domain.ThemeSelections
+import app.musikus.activesession.domain.usecase.ActiveSessionUseCases
+import app.musikus.settings.domain.usecase.UserPreferencesUseCases
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow

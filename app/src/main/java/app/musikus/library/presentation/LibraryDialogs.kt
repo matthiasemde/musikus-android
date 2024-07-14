@@ -45,9 +45,9 @@ import app.musikus.core.presentation.components.DialogActions
 import app.musikus.core.presentation.components.DialogHeader
 import app.musikus.core.presentation.components.SelectionSpinner
 import app.musikus.core.presentation.components.UUIDSelectionSpinnerOption
-import app.musikus.database.daos.LibraryFolder
+import app.musikus.library.data.daos.LibraryFolder
 import app.musikus.core.presentation.theme.libraryItemColors
-import app.musikus.utils.TestTags
+import app.musikus.core.presentation.utils.TestTags
 import java.util.UUID
 
 

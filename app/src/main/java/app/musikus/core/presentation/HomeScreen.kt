@@ -54,7 +54,7 @@ import app.musikus.goals.presentation.GoalsScreen
 import app.musikus.library.presentation.Library
 import app.musikus.sessions.presentation.SessionsScreen
 import app.musikus.statistics.presentation.Statistics
-import app.musikus.utils.TimeProvider
+import app.musikus.core.domain.TimeProvider
 
 
 @Composable

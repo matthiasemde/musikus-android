@@ -56,7 +56,7 @@ import app.musikus.core.presentation.components.conditional
 import app.musikus.core.presentation.components.simpleVerticalScrollbar
 import app.musikus.core.presentation.theme.spacing
 import app.musikus.statistics.presentation.sessionstatistics.TimeframeSelectionHeader
-import app.musikus.utils.asAnnotatedString
+import app.musikus.core.presentation.utils.asAnnotatedString
 import java.util.UUID
 
 

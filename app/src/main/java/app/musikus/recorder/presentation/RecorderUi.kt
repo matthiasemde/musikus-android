@@ -77,7 +77,7 @@ import androidx.media3.session.MediaController
 import app.musikus.core.presentation.components.DialogActions
 import app.musikus.core.presentation.components.ExceptionHandler
 import app.musikus.core.presentation.components.Waveform
-import app.musikus.datastore.ColorSchemeSelections
+import app.musikus.settings.domain.ColorSchemeSelections
 import app.musikus.core.presentation.theme.MusikusColorSchemeProvider
 import app.musikus.core.presentation.theme.MusikusPreviewElement1
 import app.musikus.core.presentation.theme.MusikusPreviewElement2
@@ -85,9 +85,8 @@ import app.musikus.core.presentation.theme.MusikusPreviewElement3
 import app.musikus.core.presentation.theme.MusikusThemedPreview
 import app.musikus.core.presentation.theme.dimensions
 import app.musikus.core.presentation.theme.spacing
-import app.musikus.utils.DurationFormat
-import app.musikus.utils.RecorderState
-import app.musikus.utils.getDurationString
+import app.musikus.core.presentation.utils.DurationFormat
+import app.musikus.core.presentation.utils.getDurationString
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.delay

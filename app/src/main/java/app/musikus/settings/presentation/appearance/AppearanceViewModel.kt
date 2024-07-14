@@ -10,9 +10,9 @@ package app.musikus.settings.presentation.appearance
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import app.musikus.datastore.ColorSchemeSelections
-import app.musikus.datastore.ThemeSelections
-import app.musikus.usecase.userpreferences.UserPreferencesUseCases
+import app.musikus.settings.domain.ColorSchemeSelections
+import app.musikus.settings.domain.ThemeSelections
+import app.musikus.settings.domain.usecase.UserPreferencesUseCases
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted

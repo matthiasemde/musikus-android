@@ -8,15 +8,16 @@
 
 package app.musikus.usecase.library
 
-import app.musikus.database.Nullable
-import app.musikus.database.daos.LibraryItem
-import app.musikus.database.entities.InvalidLibraryItemException
-import app.musikus.database.entities.LibraryFolderCreationAttributes
-import app.musikus.database.entities.LibraryItemCreationAttributes
+import app.musikus.core.data.Nullable
+import app.musikus.library.data.daos.LibraryItem
+import app.musikus.library.data.entities.InvalidLibraryItemException
+import app.musikus.library.data.entities.LibraryFolderCreationAttributes
+import app.musikus.library.data.entities.LibraryItemCreationAttributes
 import app.musikus.repository.FakeLibraryRepository
 import app.musikus.utils.FakeIdProvider
 import app.musikus.utils.FakeTimeProvider
-import app.musikus.database.UUIDConverter
+import app.musikus.core.data.UUIDConverter
+import app.musikus.library.domain.usecase.AddItemUseCase
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -98,7 +99,8 @@ class AddItemUseCaseTest {
 
         val addedItem = fakeLibraryRepository.items.first().first()
 
-        assertThat(addedItem).isEqualTo(LibraryItem(
+        assertThat(addedItem).isEqualTo(
+            LibraryItem(
             id = UUIDConverter.fromInt(2), // id 1 is already used by the folder
             createdAt = FakeTimeProvider.START_TIME,
             modifiedAt = FakeTimeProvider.START_TIME,
@@ -106,7 +108,8 @@ class AddItemUseCaseTest {
             colorIndex = validItemCreationAttributes.colorIndex,
             customOrder = null,
             libraryFolderId = null,
-        ))
+        )
+        )
     }
 
     @Test

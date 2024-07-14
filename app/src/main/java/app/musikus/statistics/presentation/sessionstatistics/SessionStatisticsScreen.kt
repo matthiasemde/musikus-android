@@ -59,11 +59,11 @@ import app.musikus.core.presentation.components.conditional
 import app.musikus.core.presentation.components.simpleVerticalScrollbar
 import app.musikus.core.presentation.theme.libraryItemColors
 import app.musikus.core.presentation.theme.spacing
-import app.musikus.database.daos.LibraryItem
-import app.musikus.utils.DurationFormat
-import app.musikus.utils.Timeframe
-import app.musikus.utils.getDurationString
-import app.musikus.utils.musikusFormat
+import app.musikus.library.data.daos.LibraryItem
+import app.musikus.core.presentation.utils.DurationFormat
+import app.musikus.core.domain.Timeframe
+import app.musikus.core.presentation.utils.getDurationString
+import app.musikus.core.domain.musikusFormat
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

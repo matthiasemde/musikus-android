@@ -9,19 +9,22 @@
 package app.musikus.database.daos
 
 import androidx.test.filters.SmallTest
-import app.musikus.database.GoalDescriptionWithLibraryItems
-import app.musikus.database.GoalInstanceWithDescription
-import app.musikus.database.GoalInstanceWithDescriptionWithLibraryItems
-import app.musikus.database.MusikusDatabase
-import app.musikus.database.Nullable
-import app.musikus.database.UUIDConverter
-import app.musikus.database.entities.GoalDescriptionCreationAttributes
-import app.musikus.database.entities.GoalDescriptionUpdateAttributes
-import app.musikus.database.entities.GoalInstanceCreationAttributes
-import app.musikus.database.entities.GoalInstanceUpdateAttributes
-import app.musikus.database.entities.GoalPeriodUnit
-import app.musikus.database.entities.GoalProgressType
-import app.musikus.database.entities.GoalType
+import app.musikus.core.data.GoalDescriptionWithLibraryItems
+import app.musikus.core.data.GoalInstanceWithDescription
+import app.musikus.core.data.GoalInstanceWithDescriptionWithLibraryItems
+import app.musikus.core.data.MusikusDatabase
+import app.musikus.core.data.Nullable
+import app.musikus.core.data.UUIDConverter
+import app.musikus.goals.data.entities.GoalDescriptionCreationAttributes
+import app.musikus.goals.data.entities.GoalDescriptionUpdateAttributes
+import app.musikus.goals.data.entities.GoalInstanceCreationAttributes
+import app.musikus.goals.data.entities.GoalInstanceUpdateAttributes
+import app.musikus.goals.data.entities.GoalPeriodUnit
+import app.musikus.goals.data.entities.GoalProgressType
+import app.musikus.goals.data.entities.GoalType
+import app.musikus.goals.data.daos.GoalDescription
+import app.musikus.goals.data.daos.GoalInstance
+import app.musikus.goals.data.daos.GoalInstanceDao
 import app.musikus.utils.FakeTimeProvider
 import com.google.common.truth.Truth.assertThat
 import dagger.hilt.android.testing.HiltAndroidRule
@@ -88,12 +91,14 @@ class GoalInstanceDaoTest {
                     )
                 )
 
-                goalInstanceDao.insert(GoalInstanceCreationAttributes(
+                goalInstanceDao.insert(
+                    GoalInstanceCreationAttributes(
                     descriptionId = UUIDConverter.fromInt(1),
                     previousInstanceId = UUIDConverter.fromInt(2),
                     startTimestamp = fakeTimeProvider.now(),
                     target = 35.minutes
-                ))
+                )
+                )
             }
         }
     }
@@ -169,12 +174,14 @@ class GoalInstanceDaoTest {
         )
 
         // Insert a new instance
-        val instanceId = goalInstanceDao.insert(GoalInstanceCreationAttributes(
+        val instanceId = goalInstanceDao.insert(
+            GoalInstanceCreationAttributes(
             descriptionId = UUIDConverter.fromInt(1),
             previousInstanceId = UUIDConverter.fromInt(3),
             startTimestamp = fakeTimeProvider.now(),
             target = 40.minutes
-        ))
+        )
+        )
 
         // Check if the correct id was returned
         assertThat(instanceId).isEqualTo(UUIDConverter.fromInt(4))
@@ -220,11 +227,13 @@ class GoalInstanceDaoTest {
     fun insertInstanceForNonExistentGoal_throwsException() = runTest {
         val exception = assertThrows(IllegalArgumentException::class.java) {
             runBlocking {
-                goalInstanceDao.insert(GoalInstanceCreationAttributes(
+                goalInstanceDao.insert(
+                    GoalInstanceCreationAttributes(
                     descriptionId = UUIDConverter.fromInt(0),
                     startTimestamp = fakeTimeProvider.now(),
                     target = 40.minutes
-                ))
+                )
+                )
             }
         }
 
@@ -240,11 +249,13 @@ class GoalInstanceDaoTest {
 
         val exception = assertThrows(IllegalArgumentException::class.java) {
             runBlocking {
-                goalInstanceDao.insert(GoalInstanceCreationAttributes(
+                goalInstanceDao.insert(
+                    GoalInstanceCreationAttributes(
                     descriptionId = UUIDConverter.fromInt(1),
                     startTimestamp = fakeTimeProvider.now(),
                     target = 40.minutes
-                ))
+                )
+                )
             }
         }
 
@@ -263,11 +274,13 @@ class GoalInstanceDaoTest {
 
         val exception = assertThrows(IllegalArgumentException::class.java) {
             runBlocking {
-                goalInstanceDao.insert(GoalInstanceCreationAttributes(
+                goalInstanceDao.insert(
+                    GoalInstanceCreationAttributes(
                     descriptionId = UUIDConverter.fromInt(1),
                     startTimestamp = fakeTimeProvider.now(),
                     target = 40.minutes
-                ))
+                )
+                )
             }
         }
 
@@ -280,11 +293,13 @@ class GoalInstanceDaoTest {
     fun insertInstanceWithNullPreviousInstanceId_throwsException() = runTest {
         val exception = assertThrows(IllegalArgumentException::class.java) {
             runBlocking {
-                goalInstanceDao.insert(GoalInstanceCreationAttributes(
+                goalInstanceDao.insert(
+                    GoalInstanceCreationAttributes(
                     descriptionId = UUIDConverter.fromInt(1),
                     startTimestamp = fakeTimeProvider.now(),
                     target = 40.minutes
-                ))
+                )
+                )
             }
         }
 
@@ -297,12 +312,14 @@ class GoalInstanceDaoTest {
     fun insertInstanceWithDuplicatePreviousInstanceId_throwsException() = runTest {
         val exception = assertThrows(IllegalArgumentException::class.java) {
             runBlocking {
-                goalInstanceDao.insert(GoalInstanceCreationAttributes(
+                goalInstanceDao.insert(
+                    GoalInstanceCreationAttributes(
                     descriptionId = UUIDConverter.fromInt(1),
                     previousInstanceId = UUIDConverter.fromInt(2),
                     startTimestamp = fakeTimeProvider.now(),
                     target = 40.minutes
-                ))
+                )
+                )
             }
         }
 
@@ -316,12 +333,14 @@ class GoalInstanceDaoTest {
     fun insertInstanceWithNonExistentPreviousInstanceId_throwsException() = runTest {
         val exception = assertThrows(IllegalArgumentException::class.java) {
             runBlocking {
-                goalInstanceDao.insert(GoalInstanceCreationAttributes(
+                goalInstanceDao.insert(
+                    GoalInstanceCreationAttributes(
                     descriptionId = UUIDConverter.fromInt(1),
                     previousInstanceId = UUIDConverter.fromInt(0),
                     startTimestamp = fakeTimeProvider.now(),
                     target = 40.minutes
-                ))
+                )
+                )
             }
         }
 
@@ -334,12 +353,14 @@ class GoalInstanceDaoTest {
     fun insertInstanceWithoutUpdatingPreviousInstance_throwsException() = runTest {
         val exception = assertThrows(IllegalArgumentException::class.java) {
             runBlocking {
-                goalInstanceDao.insert(GoalInstanceCreationAttributes(
+                goalInstanceDao.insert(
+                    GoalInstanceCreationAttributes(
                     descriptionId = UUIDConverter.fromInt(1),
                     previousInstanceId = UUIDConverter.fromInt(3),
                     startTimestamp = fakeTimeProvider.now(),
                     target = 40.minutes
-                ))
+                )
+                )
             }
         }
 
@@ -360,12 +381,14 @@ class GoalInstanceDaoTest {
 
         val exception = assertThrows(IllegalArgumentException::class.java) {
             runBlocking {
-                goalInstanceDao.insert(GoalInstanceCreationAttributes(
+                goalInstanceDao.insert(
+                    GoalInstanceCreationAttributes(
                     descriptionId = UUIDConverter.fromInt(1),
                     previousInstanceId = UUIDConverter.fromInt(3),
                     startTimestamp = fakeTimeProvider.now().minus(1.days.toJavaDuration()),
                     target = 40.minutes
-                ))
+                )
+                )
             }
         }
 
@@ -678,12 +701,14 @@ class GoalInstanceDaoTest {
                 )
             )
 
-            goalInstanceDao.insert(GoalInstanceCreationAttributes(
+            goalInstanceDao.insert(
+                GoalInstanceCreationAttributes(
                 descriptionId = UUIDConverter.fromInt(1),
                 previousInstanceId = UUIDConverter.fromInt(3 + index),
                 startTimestamp = fakeTimeProvider.now(),
                 target = (40 + 5*index).minutes
-            ))
+            )
+            )
         }
 
         // Get the instances

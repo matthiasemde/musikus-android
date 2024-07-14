@@ -17,12 +17,9 @@ import android.os.Build
 import android.os.IBinder
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import app.musikus.services.MetronomeService
-import app.musikus.services.MetronomeServiceEvent
-import app.musikus.services.MetronomeServiceState
-import app.musikus.usecase.permissions.PermissionsUseCases
-import app.musikus.usecase.userpreferences.UserPreferencesUseCases
-import app.musikus.utils.PermissionChecker
+import app.musikus.permissions.domain.usecase.PermissionsUseCases
+import app.musikus.settings.domain.usecase.UserPreferencesUseCases
+import app.musikus.permissions.domain.PermissionChecker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel

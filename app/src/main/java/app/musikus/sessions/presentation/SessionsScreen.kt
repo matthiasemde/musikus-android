@@ -63,9 +63,9 @@ import app.musikus.core.presentation.components.DeleteConfirmationBottomSheet
 import app.musikus.core.presentation.components.MainMenu
 import app.musikus.core.presentation.components.Selectable
 import app.musikus.core.presentation.theme.spacing
-import app.musikus.utils.DurationString
-import app.musikus.utils.UiIcon
-import app.musikus.utils.UiText
+import app.musikus.core.presentation.utils.DurationString
+import app.musikus.core.presentation.utils.UiIcon
+import app.musikus.core.presentation.utils.UiText
 import java.util.UUID
 
 @OptIn(

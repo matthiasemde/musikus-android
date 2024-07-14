@@ -9,9 +9,10 @@
 package app.musikus.usecase.userpreferences
 
 import app.musikus.repository.FakeUserPreferencesRepository
-import app.musikus.utils.GoalsSortMode
-import app.musikus.utils.SortDirection
-import app.musikus.utils.SortInfo
+import app.musikus.core.domain.GoalsSortMode
+import app.musikus.core.domain.SortDirection
+import app.musikus.core.domain.SortInfo
+import app.musikus.settings.domain.usecase.SelectGoalsSortModeUseCase
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
@@ -49,10 +50,12 @@ class SelectGoalsSortModeUseCaseTest {
         // Assert that the sort mode was updated with Default sort direction
         val sortInfo = fakeUserPreferencesRepository.goalSortInfo.first()
         assertThat(sortInfo)
-            .isEqualTo(SortInfo(
+            .isEqualTo(
+                SortInfo(
                 mode = GoalsSortMode.TARGET,
                 direction = SortDirection.DEFAULT,
-            ))
+            )
+            )
     }
 
     @Test
@@ -73,9 +76,11 @@ class SelectGoalsSortModeUseCaseTest {
         // Assert that the sort mode was updated with inverted sort direction
         val sortInfo = fakeUserPreferencesRepository.goalSortInfo.first()
         assertThat(sortInfo)
-            .isEqualTo(SortInfo(
+            .isEqualTo(
+                SortInfo(
                 mode = GoalsSortMode.DATE_ADDED,
                 direction = SortDirection.ASCENDING,
-            ))
+            )
+            )
     }
 }

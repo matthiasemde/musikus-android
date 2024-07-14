@@ -8,20 +8,21 @@
 
 package app.musikus.usecase.goals
 
-import app.musikus.database.GoalDescriptionWithInstancesAndLibraryItems
-import app.musikus.database.UUIDConverter
-import app.musikus.database.daos.GoalDescription
-import app.musikus.database.daos.GoalInstance
-import app.musikus.database.entities.GoalPeriodUnit
-import app.musikus.database.entities.GoalProgressType
-import app.musikus.database.entities.GoalType
+import app.musikus.core.data.GoalDescriptionWithInstancesAndLibraryItems
+import app.musikus.core.data.UUIDConverter
+import app.musikus.goals.data.daos.GoalDescription
+import app.musikus.goals.data.daos.GoalInstance
+import app.musikus.goals.data.entities.GoalPeriodUnit
+import app.musikus.goals.data.entities.GoalProgressType
+import app.musikus.goals.data.entities.GoalType
 import app.musikus.repository.FakeUserPreferencesRepository
-import app.musikus.repository.UserPreferencesRepository
-import app.musikus.usecase.userpreferences.GetGoalSortInfoUseCase
+import app.musikus.settings.data.UserPreferencesRepository
+import app.musikus.settings.domain.usecase.GetGoalSortInfoUseCase
 import app.musikus.utils.FakeTimeProvider
-import app.musikus.utils.GoalsSortMode
-import app.musikus.utils.SortDirection
-import app.musikus.utils.SortInfo
+import app.musikus.core.domain.GoalsSortMode
+import app.musikus.core.domain.SortDirection
+import app.musikus.core.domain.SortInfo
+import app.musikus.goals.domain.usecase.SortGoalsUseCase
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf

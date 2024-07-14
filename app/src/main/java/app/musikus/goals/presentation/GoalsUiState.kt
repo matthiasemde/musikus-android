@@ -9,11 +9,11 @@
 package app.musikus.goals.presentation
 
 import app.musikus.core.presentation.components.TopBarUiState
-import app.musikus.database.daos.LibraryItem
+import app.musikus.library.data.daos.LibraryItem
 import app.musikus.library.presentation.DialogMode
-import app.musikus.usecase.goals.GoalInstanceWithProgressAndDescriptionWithLibraryItems
-import app.musikus.utils.GoalsSortMode
-import app.musikus.utils.SortDirection
+import app.musikus.goals.domain.GoalInstanceWithProgressAndDescriptionWithLibraryItems
+import app.musikus.core.domain.GoalsSortMode
+import app.musikus.core.domain.SortDirection
 import java.util.UUID
 
 data class GoalsSortMenuUiState(

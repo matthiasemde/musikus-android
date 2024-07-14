@@ -8,15 +8,16 @@
 
 package app.musikus.repository
 
-import app.musikus.database.LibraryFolderWithItems
-import app.musikus.database.daos.LibraryFolder
-import app.musikus.database.daos.LibraryItem
-import app.musikus.database.entities.LibraryFolderCreationAttributes
-import app.musikus.database.entities.LibraryFolderUpdateAttributes
-import app.musikus.database.entities.LibraryItemCreationAttributes
-import app.musikus.database.entities.LibraryItemUpdateAttributes
-import app.musikus.utils.IdProvider
-import app.musikus.utils.TimeProvider
+import app.musikus.core.data.LibraryFolderWithItems
+import app.musikus.library.data.daos.LibraryFolder
+import app.musikus.library.data.daos.LibraryItem
+import app.musikus.library.data.entities.LibraryFolderCreationAttributes
+import app.musikus.library.data.entities.LibraryFolderUpdateAttributes
+import app.musikus.library.data.entities.LibraryItemCreationAttributes
+import app.musikus.library.data.entities.LibraryItemUpdateAttributes
+import app.musikus.core.domain.IdProvider
+import app.musikus.core.domain.TimeProvider
+import app.musikus.library.data.LibraryRepository
 import kotlinx.coroutines.flow.flowOf
 import java.util.UUID
 
@@ -40,7 +41,8 @@ class FakeLibraryRepository(
         })
 
     override suspend fun addFolder(creationAttributes: LibraryFolderCreationAttributes) {
-        _folders.add(LibraryFolderWithItems(
+        _folders.add(
+            LibraryFolderWithItems(
             folder = LibraryFolder(
                 id = idProvider.generateId(),
                 createdAt = timeProvider.now(),
@@ -49,11 +51,13 @@ class FakeLibraryRepository(
                 customOrder = null
             ),
             items = emptyList()
-        ))
+        )
+        )
     }
 
     override suspend fun addItem(creationAttributes: LibraryItemCreationAttributes) {
-        _items.add(LibraryItem(
+        _items.add(
+            LibraryItem(
             id = idProvider.generateId(),
             createdAt = timeProvider.now(),
             modifiedAt = timeProvider.now(),
@@ -61,7 +65,8 @@ class FakeLibraryRepository(
             libraryFolderId = creationAttributes.libraryFolderId.value,
             colorIndex = creationAttributes.colorIndex,
             customOrder = null
-        ))
+        )
+        )
     }
 
     override suspend fun editFolder(id: UUID, updateAttributes: LibraryFolderUpdateAttributes) {
