@@ -150,13 +150,11 @@ class MainActivity : PermissionCheckerActivity() {
                     if (isNewDatabaseValid) {
                         message = "Backup successfully loaded"
                     } else {
-                        // If the import was invalid, throw an error to restore the backup
-                        message = "Invalid database. Restoring backup..."
                         throw Exception("Invalid database")
                     }
                 } catch (e: Exception) {
                     // If an error occurred, restore the backup
-                    Log.d("MainActivity", "Error loading backup: ${e.message}")
+                    Log.e("MainActivity", "Error loading backup: ${e.message}")
                     backupFile.copyTo(database.databaseFile, overwrite = true)
                 } finally {
                     // Finally, delete the backup file
