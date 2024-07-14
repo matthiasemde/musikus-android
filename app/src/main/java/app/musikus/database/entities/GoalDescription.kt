@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2024 Matthias Emde
+ * Copyright (c) 2022-2024 Matthias Emde
  */
 
 package app.musikus.database.entities
@@ -92,9 +92,9 @@ data class GoalDescriptionModel (
     @ColumnInfo(name="period_unit") override val periodUnit: GoalPeriodUnit,
     @ColumnInfo(name="progress_type")
     override val progressType: GoalProgressType = GoalProgressType.TIME,
-    @ColumnInfo(name="paused", defaultValue = "false") override var paused: Boolean = false,
+    @ColumnInfo(name="paused") override var paused: Boolean = false,
     @ColumnInfo(name="archived") override var archived: Boolean = false,
-    @ColumnInfo(name="custom_order", defaultValue = "null") override var customOrder: Nullable<Int>? = null,
+    @ColumnInfo(name="custom_order") override var customOrder: Nullable<Int>? = null,
 ) : SoftDeleteModel(), IGoalDescriptionCreationAttributes, IGoalDescriptionUpdateAttributes
 
 class InvalidGoalDescriptionException(message: String) : Exception(message)

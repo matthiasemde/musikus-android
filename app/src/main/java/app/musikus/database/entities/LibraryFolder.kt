@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2024 Matthias Emde
+ * Copyright (c) 2022-2024 Matthias Emde
  */
 
 package app.musikus.database.entities
@@ -33,5 +33,5 @@ data class LibraryFolderUpdateAttributes(
 @Entity(tableName = "library_folder")
 data class LibraryFolderModel (
     @ColumnInfo(name="name") override var name: String,
-    @ColumnInfo(name="custom_order", defaultValue = "null") override var customOrder: Nullable<Int>? = null,
+    @ColumnInfo(name="custom_order") override var customOrder: Nullable<Int>? = null,
 ) : SoftDeleteModel(), ILibraryFolderCreationAttributes, ILibraryFolderUpdateAttributes
