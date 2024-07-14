@@ -3,10 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2023 Matthias Emde
+ * Copyright (c) 2023-2024 Matthias Emde
  */
 
-package app.musikus.repository
+package app.musikus.settings.data
 
 import app.musikus.core.domain.GoalSortInfo
 import app.musikus.core.domain.GoalsSortMode
