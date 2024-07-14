@@ -6,7 +6,7 @@
  * Copyright (c) 2024 Matthias Emde
  */
 
-package app.musikus.database
+package app.musikus.core.data
 
 import androidx.core.database.getBlobOrNull
 import androidx.core.database.getStringOrNull
@@ -100,8 +100,7 @@ class MusikusDatabaseTest {
                 """.trimIndent(),
                 bindArgs = arrayOf(
                     uuidConverter.toByte(UUIDConverter.fromInt(0)), TEST_TIME, TEST_TIME, "false", "item1", 0, null, null,
-                    uuidConverter.toByte(UUIDConverter.fromInt(1)), TEST_TIME, TEST_TIME, 1, "item2", 1, uuidConverter.toByte(
-                        UUIDConverter.fromInt(1)), null,
+                    uuidConverter.toByte(UUIDConverter.fromInt(1)), TEST_TIME, TEST_TIME, 1, "item2", 1, uuidConverter.toByte(UUIDConverter.fromInt(1)), null,
                 )
             )
             execSQL(
@@ -243,8 +242,7 @@ class MusikusDatabaseTest {
             assertThat(it.getString(deletedIndex)).isEqualTo("1")
             assertThat(it.getString(nameIndex)).isEqualTo("item2")
             assertThat(it.getInt(colorIndexIndex)).isEqualTo(1)
-            assertThat(it.getBlobOrNull(libraryFolderIdIndex)).isEqualTo(uuidConverter.toByte(
-                UUIDConverter.fromInt(1)))
+            assertThat(it.getBlobOrNull(libraryFolderIdIndex)).isEqualTo(uuidConverter.toByte(UUIDConverter.fromInt(1)))
             assertThat(it.getStringOrNull(customOrderIndex)).isEqualTo(null)
         }
 

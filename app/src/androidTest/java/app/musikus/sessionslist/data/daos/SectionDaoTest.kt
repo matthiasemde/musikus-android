@@ -6,19 +6,19 @@
  * Copyright (c) 2023 Matthias Emde
  */
 
-package app.musikus.database.daos
+package app.musikus.sessionslist.data.daos
 
 import androidx.test.filters.SmallTest
 import app.musikus.core.data.MusikusDatabase
 import app.musikus.core.data.Nullable
 import app.musikus.core.data.UUIDConverter
 import app.musikus.library.data.entities.LibraryItemCreationAttributes
+import app.musikus.core.domain.FakeTimeProvider
+import app.musikus.sessions.data.daos.Section
+import app.musikus.sessions.data.daos.SectionDao
 import app.musikus.sessions.data.entities.SectionCreationAttributes
 import app.musikus.sessions.data.entities.SectionUpdateAttributes
 import app.musikus.sessions.data.entities.SessionCreationAttributes
-import app.musikus.sessions.data.daos.Section
-import app.musikus.sessions.data.daos.SectionDao
-import app.musikus.utils.FakeTimeProvider
 import com.google.common.truth.Truth.assertThat
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
