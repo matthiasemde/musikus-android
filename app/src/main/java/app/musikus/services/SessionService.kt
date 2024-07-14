@@ -30,7 +30,7 @@ import androidx.core.net.toUri
 import app.musikus.R
 import app.musikus.SESSION_NOTIFICATION_CHANNEL_ID
 import app.musikus.di.ApplicationScope
-import app.musikus.ui.activesession.ActiveSessionActions
+import app.musikus.activesession.presentation.ActiveSessionActions
 import app.musikus.usecase.activesession.ActiveSessionUseCases
 import app.musikus.utils.DurationFormat
 import app.musikus.utils.TimeProvider

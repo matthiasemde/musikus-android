@@ -9,7 +9,7 @@
 package app.musikus.usecase.userpreferences
 
 import app.musikus.repository.UserPreferencesRepository
-import app.musikus.ui.activesession.metronome.MetronomeSettings
+import app.musikus.metronome.presentation.MetronomeSettings
 
 class ChangeMetronomeSettingsUseCase(
     private val userPreferencesRepository: UserPreferencesRepository

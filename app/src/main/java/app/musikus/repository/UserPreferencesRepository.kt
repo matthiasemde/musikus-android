@@ -19,7 +19,7 @@ import app.musikus.database.daos.LibraryItem
 import app.musikus.datastore.ColorSchemeSelections
 import app.musikus.datastore.ThemeSelections
 import app.musikus.datastore.UserPreferences
-import app.musikus.ui.activesession.metronome.MetronomeSettings
+import app.musikus.metronome.presentation.MetronomeSettings
 import app.musikus.utils.GoalSortInfo
 import app.musikus.utils.GoalsSortMode
 import app.musikus.utils.LibraryFolderSortMode

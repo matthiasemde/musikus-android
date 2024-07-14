@@ -8,7 +8,7 @@
 
 package app.musikus.datastore
 
-import app.musikus.ui.activesession.metronome.MetronomeSettings
+import app.musikus.metronome.presentation.MetronomeSettings
 import app.musikus.utils.GoalsSortMode
 import app.musikus.utils.LibraryFolderSortMode
 import app.musikus.utils.LibraryItemSortMode

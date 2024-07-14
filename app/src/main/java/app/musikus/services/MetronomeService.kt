@@ -24,7 +24,7 @@ import app.musikus.METRONOME_NOTIFICATION_CHANNEL_ID
 import app.musikus.R
 import app.musikus.di.ApplicationScope
 import app.musikus.di.IoScope
-import app.musikus.ui.activesession.ActiveSessionActions
+import app.musikus.activesession.presentation.ActiveSessionActions
 import app.musikus.usecase.userpreferences.UserPreferencesUseCases
 import app.musikus.utils.Metronome
 import dagger.hilt.android.AndroidEntryPoint

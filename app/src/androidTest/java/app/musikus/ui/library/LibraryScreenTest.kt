@@ -35,11 +35,11 @@ import androidx.test.core.app.ApplicationProvider
 import app.musikus.R
 import app.musikus.datastore.ColorSchemeSelections
 import app.musikus.datastore.ThemeSelections
-import app.musikus.ui.MainActivity
-import app.musikus.ui.MainViewModel
-import app.musikus.ui.Screen
-import app.musikus.ui.home.HomeViewModel
-import app.musikus.ui.theme.MusikusTheme
+import app.musikus.core.presentation.MainActivity
+import app.musikus.core.presentation.MainViewModel
+import app.musikus.core.presentation.Screen
+import app.musikus.core.presentation.HomeViewModel
+import app.musikus.core.presentation.theme.MusikusTheme
 import app.musikus.utils.FakeTimeProvider
 import app.musikus.utils.LibraryFolderSortMode
 import app.musikus.utils.LibraryItemSortMode
