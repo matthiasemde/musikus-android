@@ -10,7 +10,6 @@ package app.musikus.ui
 
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
@@ -18,8 +17,10 @@ import android.provider.DocumentsContract
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.setContent
+import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
-import app.musikus.Musikus
+import androidx.lifecycle.lifecycleScope
+import app.musikus.database.MIME_TYPE_DATABASE
 import app.musikus.database.MusikusDatabase
 import app.musikus.services.ActiveSessionServiceActions
 import app.musikus.services.SessionService
@@ -28,9 +29,11 @@ import app.musikus.utils.PermissionChecker
 import app.musikus.utils.PermissionCheckerActivity
 import app.musikus.utils.TimeProvider
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
+import java.io.File
 import javax.inject.Inject
-import javax.inject.Provider
 
+const val DATABASE_IMPORT_BACKUP_FILE = "database_import_backup.tmp"
 
 @AndroidEntryPoint
 class MainActivity : PermissionCheckerActivity() {
@@ -42,73 +45,24 @@ class MainActivity : PermissionCheckerActivity() {
     lateinit var timeProvider: TimeProvider
 
     @Inject
-    lateinit var databaseProvider: Provider<MusikusDatabase>
-
-    @Inject
     lateinit var activeSessionUseCases: ActiveSessionUseCases
 
-    private val database: MusikusDatabase by lazy { databaseProvider.get() }
+    @Inject
+    lateinit var database: MusikusDatabase
 
+    private lateinit var exportLauncher: ActivityResultLauncher<String>
+    private lateinit var importLauncher: ActivityResultLauncher<Array<String>>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        Musikus.exportLauncher = registerForActivityResult(
-            ExportDatabaseContract()
-        ) { exportDatabaseCallback(applicationContext, it) }
-
-        Musikus.importLauncher = registerForActivityResult(
-            ImportDatabaseContract()
-        ) { importDatabaseCallback(applicationContext, it) }
+        initializeExportImportLaunchers()
 
         setContent {
             MusikusApp(timeProvider)
         }
     }
 
-    private fun importDatabaseCallback(context: Context, uri: Uri?) {
-        uri?.let {
-            // close the database to collect all logs
-            database.close()
-            val databaseFile = context.getDatabasePath(MusikusDatabase.DATABASE_NAME)
-            // delete old database
-            databaseFile.delete()
-            // copy new database
-            databaseFile.outputStream().let { outputStream ->
-                context.contentResolver.openInputStream(it)?.let { inputStream ->
-                    inputStream.copyTo(outputStream)
-                    inputStream.close()
-                }
-                outputStream.close()
-                Toast.makeText(context, "Backup loaded successfully, restart your app to complete the process.", Toast.LENGTH_LONG).show()
-            }
-        }
-
-        // open database again
-//                openDatabase(context)
-    }
-
-    private fun exportDatabaseCallback(context: Context, uri: Uri?) {
-        uri?.let {
-
-            // close the database to collect all logs
-            database.close()
-            val databaseFile = context.getDatabasePath(MusikusDatabase.DATABASE_NAME)
-            // copy database
-            context.contentResolver.openOutputStream(it)?.let { outputStream ->
-                databaseFile.inputStream().let { inputStream ->
-                    inputStream.copyTo(outputStream)
-                    inputStream.close()
-                }
-                outputStream.close()
-
-                Toast.makeText(context, "Backup successful", Toast.LENGTH_LONG).show()
-            }
-
-            // open database again
-//                openDatabase(context)
-        }
-    }
 
     override fun onResume() {
         super.onResume()
@@ -139,13 +93,116 @@ class MainActivity : PermissionCheckerActivity() {
         }
 
     }
+
+    private fun initializeExportImportLaunchers() {
+
+        exportLauncher = registerForActivityResult(
+            ExportDatabaseContract()
+        ) { uri ->
+            if (uri == null) {
+                Toast.makeText(this, "No file selected", Toast.LENGTH_SHORT).show()
+                return@registerForActivityResult
+            }
+
+            contentResolver.openOutputStream(uri)?.let { outputStream ->
+                database.export(outputStream)
+                outputStream.close()
+            }
+
+            Toast.makeText(this, "Backup successful", Toast.LENGTH_LONG).show()
+
+            // Restart the app to allow dagger hilt to reopen the database
+            triggerRestart()
+        }
+
+        importLauncher = registerForActivityResult(
+            ImportDatabaseContract()
+        ) { uri ->
+            if (uri == null) {
+                Toast.makeText(this, "No file selected", Toast.LENGTH_SHORT).show()
+                return@registerForActivityResult
+            }
+
+            // Close the database to collect all logs
+            database.close()
+
+            // Create a backup of the current database before loading the new one
+            val backupFile = File(filesDir, DATABASE_IMPORT_BACKUP_FILE)
+            database.databaseFile.copyTo(backupFile, overwrite = true)
+
+            var message = "Error loading backup. Aborting..."
+
+            lifecycleScope.launch {
+                try {
+                    // Load the new database
+                    contentResolver.openInputStream(uri)?.let { inputStream ->
+                        database.import(inputStream)
+                        inputStream.close()
+                    }
+
+                    // Open the new database locally to check if the import was successful
+                    val newDatabase = MusikusDatabase.buildDatabase(context = this@MainActivity)
+
+                    val isNewDatabaseValid = newDatabase.validate()
+
+                    newDatabase.close()
+
+                    if (isNewDatabaseValid) {
+                        message = "Backup successfully loaded"
+                    } else {
+                        throw Exception("Invalid database")
+                    }
+                } catch (e: Exception) {
+                    // If an error occurred, restore the backup
+                    Log.e("MainActivity", "Error loading backup: ${e.message}")
+                    backupFile.copyTo(database.databaseFile, overwrite = true)
+                } finally {
+                    // Finally, delete the backup file
+                    backupFile.delete()
+
+                    // Show a toast containing either the success or error message
+                    Toast.makeText(
+                        this@MainActivity,
+                        message,
+                        Toast.LENGTH_LONG
+                    ).show()
+
+                    // Restart the app to allow dagger hilt to load the new database
+                    triggerRestart()
+                }
+            }
+        }
+    }
+
+    fun exportDatabase() {
+        exportLauncher.launch("musikus_backup")
+    }
+
+    fun importDatabase() {
+        importLauncher.launch(arrayOf(
+            MIME_TYPE_DATABASE,
+            "application/vnd.sqlite3",
+            "application/x-sqlite3",
+        ))
+    }
+
+    // source: https://gist.github.com/easterapps/7127ce0749cfce2edf083e55b6eecec5
+    private fun triggerRestart() {
+        val intent = Intent(this, MainActivity::class.java).apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+
+        startActivity(intent)
+        finish()
+        kotlin.system.exitProcess(0)
+    }
 }
 
 /**
  * Contracts for exporting/importing the database
  */
 
-class ExportDatabaseContract : ActivityResultContracts.CreateDocument("*/*") {
+private class ExportDatabaseContract : ActivityResultContracts.CreateDocument(MIME_TYPE_DATABASE) {
     override fun createIntent(context: Context, input: String) =
         super.createIntent(context, input).apply {
             addCategory(Intent.CATEGORY_OPENABLE)
@@ -155,9 +212,13 @@ class ExportDatabaseContract : ActivityResultContracts.CreateDocument("*/*") {
         }
 }
 
-class ImportDatabaseContract : ActivityResultContracts.OpenDocument() {
+private class ImportDatabaseContract : ActivityResultContracts.OpenDocument() {
     override fun createIntent(context: Context, input: Array<String>) =
         super.createIntent(context, input).apply {
-
+            type = MIME_TYPE_DATABASE
+            addCategory(Intent.CATEGORY_OPENABLE)
+            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                putExtra(DocumentsContract.EXTRA_INITIAL_URI, Environment.DIRECTORY_DOWNLOADS)
+            }
         }
 }

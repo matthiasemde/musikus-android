@@ -14,6 +14,8 @@ import app.musikus.utils.LibraryFolderSortMode
 import app.musikus.utils.LibraryItemSortMode
 import app.musikus.utils.SortDirection
 
+const val USER_PREFERENCES_NAME = "user_preferences"
+
 interface EnumWithLabel {
     val label: String
 }

@@ -15,8 +15,8 @@ import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.preferencesDataStoreFile
-import app.musikus.Musikus
 import app.musikus.database.MusikusDatabase
+import app.musikus.datastore.USER_PREFERENCES_NAME
 import app.musikus.utils.IdProvider
 import app.musikus.utils.IdProviderImpl
 import app.musikus.utils.TimeProvider
@@ -58,7 +58,7 @@ object MainModule {
                 emptyPreferences()
             },
             scope = CoroutineScope(IO + SupervisorJob()),
-            produceFile = { app.preferencesDataStoreFile(Musikus.USER_PREFERENCES_NAME) }
+            produceFile = { app.preferencesDataStoreFile(USER_PREFERENCES_NAME) }
         )
     }
 
@@ -82,6 +82,7 @@ object MainModule {
         ).apply {
             this.timeProvider = timeProvider
             this.idProvider = idProvider
+            this.databaseFile = app.getDatabasePath(MusikusDatabase.DATABASE_NAME)
         }
     }
 }
