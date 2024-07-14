@@ -10,7 +10,7 @@ package app.musikus.library.domain.usecase
 
 import app.musikus.library.data.entities.InvalidLibraryItemException
 import app.musikus.library.data.entities.LibraryItemUpdateAttributes
-import app.musikus.library.data.LibraryRepository
+import app.musikus.library.domain.LibraryRepository
 import java.util.UUID
 
 class EditItemUseCase(

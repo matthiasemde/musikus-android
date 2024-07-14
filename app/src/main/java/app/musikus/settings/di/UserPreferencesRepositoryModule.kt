@@ -10,8 +10,8 @@ package app.musikus.settings.di
 
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
-import app.musikus.settings.data.UserPreferencesRepository
 import app.musikus.settings.data.UserPreferencesRepositoryImpl
+import app.musikus.settings.domain.UserPreferencesRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

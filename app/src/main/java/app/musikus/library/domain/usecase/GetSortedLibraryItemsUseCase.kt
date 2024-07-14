@@ -10,7 +10,7 @@ package app.musikus.library.domain.usecase
 
 import app.musikus.core.data.Nullable
 import app.musikus.library.data.daos.LibraryItem
-import app.musikus.library.data.LibraryRepository
+import app.musikus.library.domain.LibraryRepository
 import app.musikus.settings.domain.usecase.GetItemSortInfoUseCase
 import app.musikus.core.domain.LibraryItemSortMode
 import app.musikus.core.domain.sorted

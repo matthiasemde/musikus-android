@@ -10,7 +10,7 @@ package app.musikus.library.domain.usecase
 
 import app.musikus.library.data.daos.InvalidLibraryFolderException
 import app.musikus.library.data.entities.LibraryFolderCreationAttributes
-import app.musikus.library.data.LibraryRepository
+import app.musikus.library.domain.LibraryRepository
 
 class AddFolderUseCase(
     private val libraryRepository: LibraryRepository

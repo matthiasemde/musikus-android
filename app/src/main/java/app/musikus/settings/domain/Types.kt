@@ -8,11 +8,16 @@
 
 package app.musikus.settings.domain
 
-import app.musikus.metronome.presentation.MetronomeSettings
+import app.musikus.core.domain.GoalSortInfo
 import app.musikus.core.domain.GoalsSortMode
 import app.musikus.core.domain.LibraryFolderSortMode
 import app.musikus.core.domain.LibraryItemSortMode
 import app.musikus.core.domain.SortDirection
+import app.musikus.core.domain.SortInfo
+import app.musikus.library.data.daos.LibraryFolder
+import app.musikus.library.data.daos.LibraryItem
+import app.musikus.metronome.presentation.MetronomeSettings
+import kotlinx.coroutines.flow.Flow
 
 const val USER_PREFERENCES_NAME = "user_preferences"
 
@@ -72,7 +77,6 @@ enum class ColorSchemeSelections : EnumWithLabel, EnumWithDescription {
 }
 
 
-
 data class UserPreferences (
     val theme: ThemeSelections,
     val colorScheme: ColorSchemeSelections,
@@ -95,3 +99,30 @@ data class UserPreferences (
     // Metronome
     val metronomeSettings: MetronomeSettings
 )
+
+
+interface UserPreferencesRepository {
+
+    val theme: Flow<ThemeSelections>
+    val colorScheme: Flow<ColorSchemeSelections>
+
+    val itemSortInfo: Flow<SortInfo<LibraryItem>>
+    val folderSortInfo: Flow<SortInfo<LibraryFolder>>
+    val goalSortInfo: Flow<GoalSortInfo>
+
+    val metronomeSettings: Flow<MetronomeSettings>
+
+    /** Mutators */
+    suspend fun updateTheme(theme: ThemeSelections)
+    suspend fun updateColorScheme(colorScheme: ColorSchemeSelections)
+
+    suspend fun updateLibraryItemSortInfo(sortInfo: SortInfo<LibraryItem>)
+    suspend fun updateLibraryFolderSortInfo(sortInfo: SortInfo<LibraryFolder>)
+
+    suspend fun updateGoalSortInfo(sortInfo: GoalSortInfo)
+    suspend fun updateShowPausedGoals(value: Boolean)
+
+    suspend fun updateAppIntroDone(value: Boolean)
+
+    suspend fun updateMetronomeSettings(settings: MetronomeSettings)
+}

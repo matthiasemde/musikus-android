@@ -3,7 +3,7 @@ package app.musikus.goals.domain.usecase
 import app.musikus.core.data.GoalDescriptionWithInstancesAndLibraryItems
 import app.musikus.core.data.GoalDescriptionWithLibraryItems
 import app.musikus.goals.data.daos.GoalInstance
-import app.musikus.goals.data.GoalRepository
+import app.musikus.goals.domain.GoalRepository
 import app.musikus.goals.domain.GoalDescriptionWithInstancesWithProgressAndLibraryItems
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first

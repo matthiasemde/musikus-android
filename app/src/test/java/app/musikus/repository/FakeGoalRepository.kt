@@ -13,7 +13,7 @@ import app.musikus.goals.data.entities.GoalInstanceCreationAttributes
 import app.musikus.goals.data.entities.GoalInstanceUpdateAttributes
 import app.musikus.core.domain.IdProvider
 import app.musikus.core.domain.TimeProvider
-import app.musikus.goals.data.GoalRepository
+import app.musikus.goals.domain.GoalRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf

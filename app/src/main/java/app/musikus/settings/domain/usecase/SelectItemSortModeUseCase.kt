@@ -8,7 +8,7 @@
 
 package app.musikus.settings.domain.usecase
 
-import app.musikus.settings.data.UserPreferencesRepository
+import app.musikus.settings.domain.UserPreferencesRepository
 import app.musikus.core.domain.LibraryItemSortMode
 import app.musikus.core.domain.SortDirection
 import app.musikus.core.domain.SortInfo

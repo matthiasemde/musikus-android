@@ -10,8 +10,8 @@ package app.musikus.library.di
 
 import app.musikus.core.data.MusikusDatabase
 import app.musikus.core.di.IoScope
-import app.musikus.library.data.LibraryRepository
 import app.musikus.library.data.LibraryRepositoryImpl
+import app.musikus.library.domain.LibraryRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

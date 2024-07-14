@@ -8,7 +8,7 @@
 
 package app.musikus.goals.domain.usecase
 
-import app.musikus.goals.data.GoalRepository
+import app.musikus.goals.domain.GoalRepository
 import java.util.UUID
 
 class DeleteGoalsUseCase(

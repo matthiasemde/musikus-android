@@ -21,13 +21,13 @@ import app.musikus.core.di.IoDispatcher
 import app.musikus.core.di.IoScope
 import app.musikus.core.di.MainModule
 import app.musikus.repository.FakeUserPreferencesRepository
-import app.musikus.goals.data.GoalRepository
+import app.musikus.goals.domain.GoalRepository
 import app.musikus.goals.data.GoalRepositoryImpl
-import app.musikus.library.data.LibraryRepository
+import app.musikus.library.domain.LibraryRepository
 import app.musikus.library.data.LibraryRepositoryImpl
 import app.musikus.recorder.data.RecordingsRepositoryImpl
 import app.musikus.sessions.data.SessionRepositoryImpl
-import app.musikus.settings.data.UserPreferencesRepository
+import app.musikus.settings.domain.UserPreferencesRepository
 import app.musikus.activesession.domain.ActiveSessionRepository
 import app.musikus.activesession.domain.usecase.ActiveSessionUseCases
 import app.musikus.activesession.domain.usecase.DeleteSectionUseCase

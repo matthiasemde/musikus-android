@@ -14,18 +14,19 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
-import app.musikus.library.data.daos.LibraryFolder
-import app.musikus.library.data.daos.LibraryItem
-import app.musikus.settings.domain.ColorSchemeSelections
-import app.musikus.settings.domain.ThemeSelections
-import app.musikus.settings.domain.UserPreferences
-import app.musikus.metronome.presentation.MetronomeSettings
 import app.musikus.core.domain.GoalSortInfo
 import app.musikus.core.domain.GoalsSortMode
 import app.musikus.core.domain.LibraryFolderSortMode
 import app.musikus.core.domain.LibraryItemSortMode
 import app.musikus.core.domain.SortDirection
 import app.musikus.core.domain.SortInfo
+import app.musikus.library.data.daos.LibraryFolder
+import app.musikus.library.data.daos.LibraryItem
+import app.musikus.metronome.presentation.MetronomeSettings
+import app.musikus.settings.domain.ColorSchemeSelections
+import app.musikus.settings.domain.ThemeSelections
+import app.musikus.settings.domain.UserPreferences
+import app.musikus.settings.domain.UserPreferencesRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -48,32 +49,6 @@ object PreferenceKeys {
     val METRONOME_BPM = intPreferencesKey("metronome_bpm")
     val METRONOME_BEATS_PER_BAR = intPreferencesKey("metronome_beats_per_bar")
     val METRONOME_CLICKS_PER_BEAT = intPreferencesKey("metronome_clicks_per_beat")
-}
-
-interface UserPreferencesRepository {
-
-    val theme: Flow<ThemeSelections>
-    val colorScheme: Flow<ColorSchemeSelections>
-
-    val itemSortInfo: Flow<SortInfo<LibraryItem>>
-    val folderSortInfo: Flow<SortInfo<LibraryFolder>>
-    val goalSortInfo: Flow<GoalSortInfo>
-
-    val metronomeSettings: Flow<MetronomeSettings>
-
-    /** Mutators */
-    suspend fun updateTheme(theme: ThemeSelections)
-    suspend fun updateColorScheme(colorScheme: ColorSchemeSelections)
-
-    suspend fun updateLibraryItemSortInfo(sortInfo: SortInfo<LibraryItem>)
-    suspend fun updateLibraryFolderSortInfo(sortInfo: SortInfo<LibraryFolder>)
-
-    suspend fun updateGoalSortInfo(sortInfo: GoalSortInfo)
-    suspend fun updateShowPausedGoals(value: Boolean)
-
-    suspend fun updateAppIntroDone(value: Boolean)
-
-    suspend fun updateMetronomeSettings(settings: MetronomeSettings)
 }
 
 class UserPreferencesRepositoryImpl(

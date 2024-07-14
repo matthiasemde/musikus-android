@@ -9,7 +9,7 @@
 package app.musikus.settings.domain.usecase
 
 import app.musikus.settings.domain.ColorSchemeSelections
-import app.musikus.settings.data.UserPreferencesRepository
+import app.musikus.settings.domain.UserPreferencesRepository
 
 class SelectColorSchemeUseCase(
     private val userPreferencesRepository: UserPreferencesRepository

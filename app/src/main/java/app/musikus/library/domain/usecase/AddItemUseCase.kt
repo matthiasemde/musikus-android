@@ -10,7 +10,7 @@ package app.musikus.library.domain.usecase
 
 import app.musikus.library.data.entities.InvalidLibraryItemException
 import app.musikus.library.data.entities.LibraryItemCreationAttributes
-import app.musikus.library.data.LibraryRepository
+import app.musikus.library.domain.LibraryRepository
 
 class AddItemUseCase(
     private val libraryRepository: LibraryRepository

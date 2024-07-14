@@ -8,7 +8,7 @@
 
 package app.musikus.library.di
 
-import app.musikus.library.data.LibraryRepository
+import app.musikus.library.domain.LibraryRepository
 import app.musikus.library.domain.usecase.AddFolderUseCase
 import app.musikus.library.domain.usecase.AddItemUseCase
 import app.musikus.library.domain.usecase.DeleteFoldersUseCase

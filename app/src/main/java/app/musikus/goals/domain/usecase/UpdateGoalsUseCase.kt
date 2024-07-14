@@ -12,7 +12,7 @@ import app.musikus.core.data.GoalInstanceWithDescription
 import app.musikus.core.data.Nullable
 import app.musikus.goals.data.entities.GoalInstanceCreationAttributes
 import app.musikus.goals.data.entities.GoalInstanceUpdateAttributes
-import app.musikus.goals.data.GoalRepository
+import app.musikus.goals.domain.GoalRepository
 import app.musikus.core.domain.TimeProvider
 
 class UpdateGoalsUseCase(

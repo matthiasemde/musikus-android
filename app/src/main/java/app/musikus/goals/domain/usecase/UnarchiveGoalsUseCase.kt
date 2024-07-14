@@ -3,7 +3,7 @@ package app.musikus.goals.domain.usecase
 import app.musikus.goals.data.entities.GoalDescriptionUpdateAttributes
 import app.musikus.goals.data.entities.GoalInstanceCreationAttributes
 import app.musikus.goals.data.entities.GoalPeriodUnit
-import app.musikus.goals.data.GoalRepository
+import app.musikus.goals.domain.GoalRepository
 import app.musikus.core.domain.TimeProvider
 import kotlinx.coroutines.flow.first
 import java.util.UUID

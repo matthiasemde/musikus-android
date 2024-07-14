@@ -1,6 +1,6 @@
 package app.musikus.library.domain.usecase
 
-import app.musikus.library.data.LibraryRepository
+import app.musikus.library.domain.LibraryRepository
 
 class GetAllLibraryItemsUseCase(
     private val libraryRepository: LibraryRepository,

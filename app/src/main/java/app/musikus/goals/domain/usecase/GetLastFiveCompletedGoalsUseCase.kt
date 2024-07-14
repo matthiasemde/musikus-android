@@ -1,6 +1,6 @@
 package app.musikus.goals.domain.usecase
 
-import app.musikus.goals.data.GoalRepository
+import app.musikus.goals.domain.GoalRepository
 import app.musikus.goals.domain.GoalInstanceWithProgressAndDescriptionWithLibraryItems
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow

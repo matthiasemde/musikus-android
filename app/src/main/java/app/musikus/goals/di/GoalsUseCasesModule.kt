@@ -9,7 +9,7 @@
 package app.musikus.goals.di
 
 import app.musikus.core.domain.TimeProvider
-import app.musikus.goals.data.GoalRepository
+import app.musikus.goals.domain.GoalRepository
 import app.musikus.goals.domain.usecase.AddGoalUseCase
 import app.musikus.goals.domain.usecase.ArchiveGoalsUseCase
 import app.musikus.goals.domain.usecase.CalculateGoalProgressUseCase

@@ -20,7 +20,7 @@ import app.musikus.core.domain.LibraryFolderSortMode
 import app.musikus.core.domain.LibraryItemSortMode
 import app.musikus.core.domain.SortDirection
 import app.musikus.core.domain.SortInfo
-import app.musikus.settings.data.UserPreferencesRepository
+import app.musikus.settings.domain.UserPreferencesRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map

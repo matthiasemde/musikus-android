@@ -8,8 +8,7 @@
 
 package app.musikus.settings.domain.usecase
 
-import app.musikus.settings.data.UserPreferencesRepository
-
+import app.musikus.settings.domain.UserPreferencesRepository
 class GetThemeUseCase(
     private val userPreferencesRepository: UserPreferencesRepository
 ) {

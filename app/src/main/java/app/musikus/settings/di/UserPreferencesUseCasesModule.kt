@@ -8,7 +8,7 @@
 
 package app.musikus.settings.di
 
-import app.musikus.settings.data.UserPreferencesRepository
+import app.musikus.settings.domain.UserPreferencesRepository
 import app.musikus.settings.domain.usecase.ChangeMetronomeSettingsUseCase
 import app.musikus.settings.domain.usecase.GetColorSchemeUseCase
 import app.musikus.settings.domain.usecase.GetFolderSortInfoUseCase
