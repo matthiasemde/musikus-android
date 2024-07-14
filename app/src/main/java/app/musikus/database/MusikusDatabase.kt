@@ -151,13 +151,11 @@ abstract class MusikusDatabase : RoomDatabase() {
                 // prepopulate the database after onCreate was called
                 override fun onCreate(db: SupportSQLiteDatabase) {
                     super.onCreate(db)
-                    // prepopulate the database if in debug configuration and not in import mode
-                    if (BuildConfig.DEBUG) {
-                        if (databaseProvider != null) {
-                            ioThread { runBlocking {
-                                prepopulateDatabase(databaseProvider.get())
-                            } }
-                        }
+                    // prepopulate the database if in debug configuration
+                    if (BuildConfig.DEBUG && databaseProvider != null) {
+                        ioThread { runBlocking {
+                            prepopulateDatabase(databaseProvider.get())
+                        } }
                     }
                 }
             }).build()
