@@ -6,7 +6,7 @@
  * Copyright (c) 2024 Matthias Emde, Michael Prommersberger
  */
 
-package app.musikus.sessionslist.di
+package app.musikus.sessions.di
 
 import app.musikus.library.domain.usecase.LibraryUseCases
 import app.musikus.sessions.domain.SessionRepository

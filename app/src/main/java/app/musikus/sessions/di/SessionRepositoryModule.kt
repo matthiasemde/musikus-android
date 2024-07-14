@@ -6,7 +6,7 @@
  * Copyright (c) 2024 Matthias Emde, Michael Prommersberger
  */
 
-package app.musikus.sessionslist.di
+package app.musikus.sessions.di
 
 import androidx.room.withTransaction
 import app.musikus.core.data.MusikusDatabase
