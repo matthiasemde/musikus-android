@@ -5,9 +5,6 @@ on:
     types: [opened]
   release:
     types: [published]
-  push:
-    branches:
-      - feature/new-github-action
 
 jobs:
   notify-discord:
@@ -28,12 +25,4 @@ jobs:
           curl -H "Content-Type: application/json" \
           -X POST \
           -d "{\"content\": \"🎉 **New Release**: [${{ github.event.release.name }}](${{ github.event.release.html_url }})\n\n📦 **Version**: ${{ github.event.release.tag_name }}\n\n📝 **Description**: ${{ github.event.release.body }}\"}" \
-          ${{ secrets.DISCORD_WEBHOOK_URL }}
-
-      - name: Send Discord notification for Push
-        if: github.event_name == 'push'
-        run: |
-          curl -H "Content-Type: application/json" \
-          -X POST \
-          -d "{\"content\": \"Code pushed to feature branch: ${{ github.sha }}\"}" \
           ${{ secrets.DISCORD_WEBHOOK_URL }}
