@@ -1,0 +1,39 @@
+name: Discord Webhook
+
+on:
+  pull_request:
+    types: [opened]
+  release:
+    types: [published]
+  push:
+    branches:
+      - feature/new-github-action
+
+jobs:
+  notify-discord:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Send Discord notification for PR
+        if: github.event_name == 'pull_request'
+        run: |
+          curl -H "Content-Type: application/json" \
+          -X POST \
+          -d "{\"content\": \"📣 **New Pull Request**: [${{ github.event.pull_request.title }}](${{ github.event.pull_request.html_url }})\n\n📝 **Description**: ${{ github.event.pull_request.body }}\n\n🚀 **Branch**: ${{ github.event.pull_request.head.ref }}\"}" \
+          ${{ secrets.DISCORD_WEBHOOK_URL }}
+
+      - name: Send Discord notification for Release
+        if: github.event_name == 'release'
+        run: |
+          curl -H "Content-Type: application/json" \
+          -X POST \
+          -d "{\"content\": \"🎉 **New Release**: [${{ github.event.release.name }}](${{ github.event.release.html_url }})\n\n📦 **Version**: ${{ github.event.release.tag_name }}\n\n📝 **Description**: ${{ github.event.release.body }}\"}" \
+          ${{ secrets.DISCORD_WEBHOOK_URL }}
+
+      - name: Send Discord notification for Push
+        if: github.event_name == 'push'
+        run: |
+          curl -H "Content-Type: application/json" \
+          -X POST \
+          -d "{\"content\": \"Code pushed to feature branch: ${{ github.sha }}\"}" \
+          ${{ secrets.DISCORD_WEBHOOK_URL }}
