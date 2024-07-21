@@ -291,9 +291,10 @@ fun Library(
                         eventHandler(LibraryUiEvent.DeleteDialogConfirmed)
                         mainEventHandler(
                             MainUiEvent.ShowSnackbar(
-                            message = "Deleted",
-                            onUndo = { eventHandler(LibraryUiEvent.RestoreButtonPressed) }
-                        ))
+                                message = "Deleted",
+                                onUndo = { eventHandler(LibraryUiEvent.RestoreButtonPressed) }
+                            )
+                        )
                     }
                 )
             }
