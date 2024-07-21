@@ -1,0 +1,57 @@
+<!--
+    This Source Code Form is subject to the terms of the Mozilla Public
+    License, v. 2.0. If a copy of the MPL was not distributed with this
+    file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+    Copyright (c) 2024 Matthias Emde
+-->
+<resources>
+
+    <!-- ActiveSession -->
+    <string name="active_session_toolbar_metronome">Metronome</string>
+    <string name="active_session_toolbar_recorder">Recorder</string>
+    <string name="active_session_discard_session_dialog_confirm">Discard session? All progress will be lost!</string>
+
+    <!-- ActiveSessionTopBar -->
+    <string name="active_session_top_bar_save">Finish</string>
+
+    <!-- ActiveSessionTimer -->
+    <string name="active_session_timer_subheading">Practice Time</string>
+    <string name="active_session_timer_subheading_paused">Paused %1$s</string>
+
+    <!-- SectionList -->
+    <string name="active_session_section_list_title">Already practiced</string>
+
+    <!-- SectionListElement -->
+    <string name="active_session_sections_list_element_deleted">Section deleted</string>
+    <string name="active_session_sections_list_element_undo_delete">Section deleted</string>
+
+    <!-- AddSectionFAB -->
+    <string name="active_session_add_section_fab_before_session">Start practicing</string>
+    <string name="active_session_add_section_fab_during_session">Next item</string>
+
+    <!-- NewItemSelector -->
+    <string name="active_session_new_item_selector_title">Select a library item</string>
+    <string name="active_session_new_item_selector_create_item">Create item</string>
+    <string name="active_session_new_item_selector_create_folder">Create folder</string>
+
+    <!-- LibraryFolderElement -->
+    <string name="active_session_library_folder_element_default">no folder</string>
+
+    <!-- EndSessionDialog -->
+    <string name="active_session_end_session_dialog_title">Finish session</string>
+    <string name="active_session_end_session_dialog_rating">Rate your session:</string>
+    <string name="active_session_end_session_dialog_comment">Comment (optional)</string>
+    <string name="active_session_end_session_dialog_dismiss">Keep Practicing</string>
+    <string name="active_session_end_session_dialog_confirm">Save</string>
+
+    <!-- ActiveSessionService -->
+    <string name="active_session_service_notification_title">Practicing for %1$s</string>
+    <string name="active_session_service_notification_title_paused">Practicing Paused</string>
+    <string name="active_session_service_notification_description_paused">%1$s - Total: %2$s</string>
+
+    <string name="active_session_service_notification_action_pause">Pause</string>
+    <string name="active_session_service_notification_action_resume">Resume</string>
+    <string name="active_session_service_notification_action_finish">Finish</string>
+
+</resources>

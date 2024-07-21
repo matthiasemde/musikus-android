@@ -28,11 +28,11 @@ import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import app.musikus.R
-import app.musikus.core.presentation.SESSION_NOTIFICATION_CHANNEL_ID
-import app.musikus.core.di.ApplicationScope
 import app.musikus.activesession.domain.usecase.ActiveSessionUseCases
-import app.musikus.core.presentation.utils.DurationFormat
+import app.musikus.core.di.ApplicationScope
 import app.musikus.core.domain.TimeProvider
+import app.musikus.core.presentation.SESSION_NOTIFICATION_CHANNEL_ID
+import app.musikus.core.presentation.utils.DurationFormat
 import app.musikus.core.presentation.utils.getDurationString
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
@@ -207,13 +207,18 @@ class SessionService : Service() {
         try {
             val totalPracticeDurationStr =
                 getDurationString(useCases.getPracticeDuration(), DurationFormat.HMS_DIGITAL)
-            val currentSectionName = useCases.getRunningItem().first()?.name ?: "No section selected"
+
+            val currentSectionName = useCases.getRunningItem().first()!!.name
 
             if (useCases.getPausedState()) {
-                title = "Practicing Paused"
-                description = "$currentSectionName - Total: $totalPracticeDurationStr"
+                title = getString(R.string.active_session_service_notification_title_paused)
+                description = getString(
+                    R.string.active_session_service_notification_description_paused,
+                    currentSectionName,
+                    totalPracticeDurationStr
+                )
             } else {
-                title = "Practicing for $totalPracticeDurationStr"
+                title = getString(R.string.active_session_service_notification_title, totalPracticeDurationStr)
                 description = currentSectionName
             }
         } catch (e: IllegalStateException) {
@@ -253,7 +258,8 @@ class SessionService : Service() {
         title: String,
         description: String,
         actionButton1: NotificationActionButtonConfig?,
-        actionButton2: NotificationActionButtonConfig?): Notification {
+        actionButton2: NotificationActionButtonConfig?
+    ): Notification {
 
         val icon = R.drawable.ic_launcher_foreground
 
@@ -307,19 +313,19 @@ class SessionService : Service() {
 
         pauseActionButton = NotificationActionButtonConfig(
             icon = R.drawable.ic_pause,
-            text = "Pause",
+            text = getString(R.string.active_session_service_notification_action_pause),
             tapIntent = pendingIntentActionPause
         )
 
         resumeActionButton = NotificationActionButtonConfig(
             icon = R.drawable.ic_play,
-            text = "Resume",
+            text = getString(R.string.active_session_service_notification_action_resume),
             tapIntent = pendingIntentActionPause
         )
 
         finishActionButton = NotificationActionButtonConfig(
             icon = R.drawable.ic_stop,
-            text = "Finish",
+            text = getString(R.string.active_session_service_notification_action_finish),
             tapIntent = pendingIntentActionFinish
         )
 

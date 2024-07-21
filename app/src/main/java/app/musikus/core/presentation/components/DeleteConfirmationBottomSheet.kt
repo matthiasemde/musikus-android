@@ -30,11 +30,29 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import app.musikus.core.presentation.theme.spacing
 import app.musikus.core.presentation.utils.UiIcon
 import app.musikus.core.presentation.utils.UiText
+
+@Composable
+fun DeleteConfirmationBottomSheet(
+    explanation: UiText? = null,
+    confirmationIcon: ImageVector,
+    confirmationText: String,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit
+) {
+    DeleteConfirmationBottomSheet(
+        explanation = explanation,
+        confirmationIcon = UiIcon.DynamicIcon(confirmationIcon),
+        confirmationText = UiText.DynamicString(confirmationText),
+        onDismiss = onDismiss,
+        onConfirm = onConfirm
+    )
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

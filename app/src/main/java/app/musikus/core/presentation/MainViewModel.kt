@@ -8,14 +8,13 @@
 
 package app.musikus.core.presentation
 
-import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarResult
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.musikus.activesession.domain.usecase.ActiveSessionUseCases
+import app.musikus.core.presentation.components.showSnackbar
 import app.musikus.settings.domain.ColorSchemeSelections
 import app.musikus.settings.domain.ThemeSelections
-import app.musikus.activesession.domain.usecase.ActiveSessionUseCases
 import app.musikus.settings.domain.usecase.UserPreferencesUseCases
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -23,7 +22,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 
@@ -105,30 +103,12 @@ class MainViewModel @Inject constructor(
     fun onUiEvent(event: MainUiEvent) {
         when (event) {
             is MainUiEvent.ShowSnackbar -> {
-                showSnackbar(event.message, event.onUndo)
-            }
-        }
-    }
-
-    /**
-     * Private state mutators
-     */
-
-    private fun showSnackbar(message: String, onUndo: (() -> Unit)? = null) {
-        viewModelScope.launch {
-            val result = _snackbarHost.value.showSnackbar(
-                message,
-                actionLabel = if (onUndo != null) "Undo" else null,
-                duration = SnackbarDuration.Long
-            )
-            when (result) {
-                SnackbarResult.ActionPerformed -> {
-                    onUndo?.invoke()
-                }
-
-                SnackbarResult.Dismissed -> {
-                    // do nothing
-                }
+                showSnackbar(
+                    viewModelScope,
+                    _snackbarHost.value,
+                    event.message,
+                    event.onUndo
+                )
             }
         }
     }
