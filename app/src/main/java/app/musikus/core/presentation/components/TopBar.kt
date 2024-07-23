@@ -3,17 +3,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2022 Matthias Emde
+ * Copyright (c) 2022-2024 Matthias Emde
  *
- * Parts of this software are licensed under the MIT license
- *
- * Copyright (c) 2022, Javier Carbone, author Matthias Emde
- * Additions and modifications, author Michael Prommersberger
  */
 
 package app.musikus.core.presentation.components
 
+import app.musikus.core.presentation.utils.UiText
+
 interface TopBarUiState {
-    val title: String
+    val title: UiText
     val showBackButton: Boolean
 }

@@ -9,7 +9,29 @@
     Additions and modifications, author Matthias Emde
 -->
 <resources>
-    <string name="app_name">Musikus</string>
+
+    <!-- Time -->
+    <string name="core_time_left">%1$s left</string>
+
+    <!-- Misc -->
+    <string name="core_kebab_menu_description">More</string>
+    <string name="core_back_button_description">Back</string>
+    <string name="core_edit_button_description">Edit</string>
+    <string name="core_delete_button_description">Delete</string>
+    <string name="core_archive_button_description">Archive</string>
+
+    <!-- Components -->
+    <!-- SortMenu -->
+    <string name="components_sort_menu_content_description">Select sort mode and direction for %1$s</string>
+    <string name="components_sort_menu_dropdown_content_description">List of sort modes for %1$s</string>
+    <string name="components_sort_menu_title">Sort by</string>
+
+    <!-- ActionBar -->
+    <string name="components_action_bar_title">%1$d items selected</string>
+
+    <!-- ############################################################# -->
+
+    <string name="app_name" translatable="false">Musikus</string>
     <string name="sessionSummaryComment">Comment</string>
     <string name="sessionSummaryPracticeTime">Practice time</string>
     <string name="sessionSummaryBreakTime">Break time</string>
@@ -43,8 +65,6 @@
     <string name="show_month">Show month</string>
     <string name="progressUpdateContinue">Continue</string>
     <string name="progressUpdateSkip">Skip animation</string>
-    <string name="addGoalDialogTitle">Create a new goal</string>
-    <string name="goalDialogTitleEdit">Edit goal target</string>
     <string name="goalDialogOkEdit">Edit</string>
     <string name="goalDialogTarget">Target:</string>
     <string name="goalDialogCatSelectHint">Select an item</string>
@@ -107,7 +127,6 @@
     <string name="deleteLibraryItemFailSnackbar">Item could not be deleted, because it is associated with at least one goal</string>
     <string name="deleteLibraryItemsFailSnackbar">Some items could not be deleted, because they are associated with at least one goal</string>
     <string name="deleteDialogConfirm">Delete</string>
-    <string name="time_left">%1$s left</string>
     <plurals name="time_period_day">
         <item quantity="one">in one day</item>
         <item quantity="other">in %d days</item>
@@ -126,7 +145,6 @@
     <string name="item_removed">Section removed from session</string>
     <string name="undo">undo</string>
     <string name="progressUpdateTitle">Goal progress</string>
-    <string name="goalsFragmentHint">Create some goals to get started on tracking your progress.</string>
     <string name="libraryHint">Create library items for any piece, scale or other exercise you want to practice.</string>
     <string name="sessionsHint">Press the \"+\" button to start your first practice session.</string>
     <string name="statisticsHint">Complete a session to see your statistics here.</string>
@@ -141,7 +159,7 @@
     <string name="fullscreen_session_date_label">Date &amp; Time</string>
     <string name="fullscreen_session_date">%s at %s</string>
     <string name="fullscreen_session_time_label">Your session time</string>
-    <string name="goal_description_achieved">Goal achieved!</string>
+
     <string name="days">days</string>
     <string name="weeks">weeks</string>
     <string name="months">months</string>

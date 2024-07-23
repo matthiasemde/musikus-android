@@ -14,11 +14,12 @@ import app.musikus.library.data.daos.LibraryFolder
 import app.musikus.library.data.daos.LibraryItem
 import app.musikus.core.domain.SortDirection
 import app.musikus.core.domain.SortMode
+import app.musikus.core.presentation.utils.UiText
 import java.time.ZonedDateTime
 import java.util.UUID
 
 data class LibraryTopBarUiState(
-    override val title: String,
+    override val title: UiText,
     override val showBackButton: Boolean,
 ) : TopBarUiState
 

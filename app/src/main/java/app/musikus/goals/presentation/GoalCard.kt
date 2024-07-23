@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2022 Matthias Emde
+ * Copyright (c) 2022-2024 Matthias Emde
  */
 
 package app.musikus.goals.presentation
@@ -94,8 +94,8 @@ fun GoalCard(
                             imageVector =
                                 if(description.repeat) Icons.Rounded.Repeat
                                 else Icons.Filled.LocalFireDepartment,
-                            contentDescription = if(description.repeat)
-                                "Regular goal" else "One shot goal",
+                            contentDescription = stringResource(id = if(description.repeat)
+                                R.string.goals_repeating else R.string.goals_non_repeating),
                             tint = libraryItemColor ?: MaterialTheme.colorScheme.primary
                         )
 
@@ -135,7 +135,7 @@ fun GoalCard(
                             modifier = Modifier.padding(8.dp),
                             maxLines = 1,
                             text= stringResource(
-                                R.string.time_left,
+                                R.string.core_time_left,
                                 getDurationString(remainingTime, DurationFormat.PRETTY_APPROX)
                             )
                         )
@@ -161,7 +161,7 @@ fun GoalCard(
                         dampingRatio = Spring.DampingRatioNoBouncy,
                         stiffness = Spring.StiffnessHigh / goal.instance.targetSeconds
                     ),
-                    label = "animated goal progress"
+                    label = "animatedGoalProgress"
                 )
 
                 val animatedProgressLeft = targetSeconds - animatedProgress
@@ -221,7 +221,7 @@ fun GoalCard(
                             Text(
                                 modifier = Modifier.fillMaxWidth(),
                                 textAlign = TextAlign.Center,
-                                text = stringResource(id = R.string.goal_description_achieved),
+                                text = stringResource(id = R.string.goals_goal_card_achieved),
                                 style = MaterialTheme.typography.titleLarge.copy(
                                     color = MaterialTheme.colorScheme.onSurface,
                                     fontWeight = FontWeight.Bold
@@ -237,14 +237,13 @@ fun GoalCard(
                         .size(72.dp)
                         .align(Alignment.Center),
                     imageVector = Icons.Default.Pause,
-                    contentDescription = "Paused Goal",
+                    contentDescription = "",
                     tint = MaterialTheme.colorScheme.onSurface
                 )
                 Box(
                     modifier = Modifier
                         .matchParentSize()
                         .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.2f))
-
                 )
             }
         }
