@@ -131,7 +131,7 @@ fun SessionsScreen(
         topBar = {
             val topBarUiState = uiState.topBarUiState
             LargeTopAppBar(
-                title = { Text(text = topBarUiState.title) },
+                title = { Text(text = topBarUiState.title.asString()) },
                 scrollBehavior = scrollBehavior,
                 actions = {
                     IconButton(onClick = { homeEventHandler(HomeUiEvent.ShowMainMenu) } ) {

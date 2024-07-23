@@ -14,6 +14,7 @@ import app.musikus.library.presentation.DialogMode
 import app.musikus.goals.domain.GoalInstanceWithProgressAndDescriptionWithLibraryItems
 import app.musikus.core.domain.GoalsSortMode
 import app.musikus.core.domain.SortDirection
+import app.musikus.core.presentation.utils.UiText
 import java.util.UUID
 
 data class GoalsSortMenuUiState(
@@ -24,7 +25,7 @@ data class GoalsSortMenuUiState(
 )
 
 data class GoalsTopBarUiState(
-    override val title: String,
+    override val title: UiText,
     override val showBackButton: Boolean,
     val sortMenuUiState: GoalsSortMenuUiState,
 ) : TopBarUiState

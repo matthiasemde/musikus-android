@@ -1,0 +1,60 @@
+<!--
+    This Source Code Form is subject to the terms of the Mozilla Public
+    License, v. 2.0. If a copy of the MPL was not distributed with this
+    file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+    Copyright (c) 2024 Matthias Emde
+-->
+<resources>
+    <!-- Goals -->
+    <string name="goals_title">Goals</string>
+
+    <string name="goals_repeating">Regular goal</string>
+    <string name="goals_non_repeating">One shot goal</string>
+
+    <string name="goals_goal_type_non_specific">All items</string>
+    <string name="goals_goal_type_item_specific">Specific item</string>
+
+    <string name="goals_goal_progress_type_time">Time</string>
+    <string name="goals_goal_progress_type_session_count">Sessions</string>
+
+    <string name="goals_goal_period_unit_day">Day</string>
+    <string name="goals_goal_period_unit_week">Week</string>
+    <string name="goals_goal_period_unit_month">Month</string>
+
+
+    <!-- GoalsScreen -->
+    <string name="goals_screen_top_bar_sort_menu_item_description">goals</string>
+    <string name="goals_screen_multi_fab_description">Add goal</string>
+    <string name="goals_screen_hint">Create some goals to get started on tracking your progress.</string>
+
+    <plurals name="goals_screen_delete_goal_dialog_explanation">
+        <item quantity="one">Delete goal? It will be erased from your statistics and cannot be restored. If you want to keep your statistics, consider archiving the goal instead.</item>
+        <item quantity="other">Delete goals? They will be erased from your statistics and cannot be restored. If you want to keep your statistics, consider archiving the goals instead.</item>
+    </plurals>
+    <plurals name="goals_screen_archive_goal_dialog_explanation">
+        <item quantity="one">Archive goal? It will remain in your statistics but progress towards it will no longer be tracked.</item>
+        <item quantity="other">Archive goals? They will remain in your statistics but progress towards them will no longer be tracked.</item>
+    </plurals>
+    <string name="goals_screen_delete_goal_dialog_confirm">Delete forever (%1$s)</string>
+    <string name="goals_screen_archive_goal_dialog_confirm">Archive forever (%1$s)</string>
+    <string name="goals_screen_goals_deleted">Deleted</string>
+    <string name="goals_screen_goals_archived">Archived</string>
+
+    <!-- GoalCard -->
+    <string name="goals_goal_card_achieved">Goal achieved!</string>
+
+    <!-- GoalDialog -->
+    <string name="goals_goal_dialog_title">Create a new goal</string>
+    <string name="goals_goal_dialog_title_edit">Edit goal target</string>
+    <string name="goals_goal_dialog_item_selector_placeholder">Select a library item</string>
+    <string name="goals_goal_dialog_item_selector_description">Select library item</string>
+    <string name="goals_goal_dialog_item_selector_no_items">No items in your library.</string>
+    <string name="goals_goal_dialog_confirm">Create</string>
+    <string name="goals_goal_dialog_confirm_edit">Edit</string>
+
+    <!-- PeriodInput -->
+    <string name="goals_goal_dialog_period_input_prefix">in</string>
+    <string name="goals_goal_dialog_period_input_description">Select period unit</string>
+
+</resources>

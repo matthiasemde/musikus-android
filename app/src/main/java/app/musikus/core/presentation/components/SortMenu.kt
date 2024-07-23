@@ -22,10 +22,12 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
+import app.musikus.R
 import app.musikus.core.domain.SortDirection
 import app.musikus.core.domain.SortMode
 
@@ -40,9 +42,11 @@ fun <T : SortMode<*>> SortMenu(
     onShowMenuChanged: (Boolean) -> Unit,
     onSelectionHandler: (T) -> Unit
 ) {
+    val mainContentDescription = stringResource(id = R.string.components_sort_menu_content_description, sortItemDescription)
+    val dropdownContentDescription = stringResource(id = R.string.components_sort_menu_dropdown_content_description, sortItemDescription)
     TextButton(
         modifier = modifier.semantics {
-            contentDescription = "Select sort mode and direction for $sortItemDescription"
+            contentDescription = mainContentDescription
         },
         onClick = { onShowMenuChanged(!show) })
     {
@@ -62,7 +66,7 @@ fun <T : SortMode<*>> SortMenu(
         )
         DropdownMenu(
             modifier = Modifier.semantics {
-                contentDescription = "List of sort modes for $sortItemDescription"
+                contentDescription = dropdownContentDescription
             },
             offset = DpOffset((-10).dp, 10.dp),
             expanded = show,
@@ -71,7 +75,7 @@ fun <T : SortMode<*>> SortMenu(
             // Menu Header
             Text(
                 modifier = Modifier.padding(12.dp),
-                text = "Sort by",
+                text = stringResource(id = R.string.components_sort_menu_title),
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
             )

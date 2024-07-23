@@ -181,7 +181,7 @@ fun Library(
             val topBarUiState = uiState.topBarUiState
             LargeTopAppBar(
                 scrollBehavior = scrollBehavior,
-                title = { Text(text = topBarUiState.title) },
+                title = { Text(text = topBarUiState.title.asString()) },
                 navigationIcon = {
                     if(topBarUiState.showBackButton) {
                         IconButton(onClick = { eventHandler(LibraryUiEvent.BackButtonPressed) }) {
