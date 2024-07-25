@@ -29,17 +29,17 @@
     <string name="goals_screen_hint">Create some goals to get started on tracking your progress.</string>
 
     <plurals name="goals_screen_delete_goal_dialog_explanation">
-        <item quantity="one">Delete goal? It will be erased from your statistics and cannot be restored. If you want to keep your statistics, consider archiving the goal instead.</item>
-        <item quantity="other">Delete goals? They will be erased from your statistics and cannot be restored. If you want to keep your statistics, consider archiving the goals instead.</item>
+        <item quantity="one">Delete %1$d goal? It will be erased from your statistics and cannot be restored. If you want to keep your statistics, consider archiving the goal instead.</item>
+        <item quantity="other">Delete %1$d goals? They will be erased from your statistics and cannot be restored. If you want to keep your statistics, consider archiving the goals instead.</item>
     </plurals>
     <plurals name="goals_screen_archive_goal_dialog_explanation">
-        <item quantity="one">Archive goal? It will remain in your statistics but progress towards it will no longer be tracked.</item>
-        <item quantity="other">Archive goals? They will remain in your statistics but progress towards them will no longer be tracked.</item>
+        <item quantity="one">Archive %1$d goal? It will remain in your statistics but progress towards it will no longer be tracked.</item>
+        <item quantity="other">Archive %1$d goals? They will remain in your statistics but progress towards them will no longer be tracked.</item>
     </plurals>
     <string name="goals_screen_delete_goal_dialog_confirm">Delete forever (%1$s)</string>
     <string name="goals_screen_archive_goal_dialog_confirm">Archive forever (%1$s)</string>
-    <string name="goals_screen_goals_deleted">Deleted</string>
-    <string name="goals_screen_goals_archived">Archived</string>
+    <string name="goals_screen_goals_snackbar_deleted">Deleted</string>
+    <string name="goals_screen_goals_snackbar_archived">Archived</string>
 
     <!-- GoalCard -->
     <string name="goals_goal_card_achieved">Goal achieved!</string>

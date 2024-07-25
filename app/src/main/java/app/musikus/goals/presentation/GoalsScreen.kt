@@ -279,10 +279,10 @@ fun GoalsScreen(
             val deleteOrArchiveDialogUiState = dialogUiState.deleteOrArchiveDialogUiState
 
             if (deleteOrArchiveDialogUiState != null) {
-                val message = stringResource(
+                val snackbarMessage = stringResource(
                     id = if (deleteOrArchiveDialogUiState.isArchiveAction)
-                        R.string.goals_screen_goals_archived else
-                        R.string.goals_screen_goals_deleted
+                        R.string.goals_screen_goals_snackbar_archived else
+                        R.string.goals_screen_goals_snackbar_deleted
                 )
 
                 DeleteConfirmationBottomSheet(
@@ -292,7 +292,8 @@ fun GoalsScreen(
                                 R.plurals.goals_screen_archive_goal_dialog_explanation
                             else
                                 R.plurals.goals_screen_delete_goal_dialog_explanation,
-                        quantity = deleteOrArchiveDialogUiState.numberOfSelections
+                        quantity = deleteOrArchiveDialogUiState.numberOfSelections,
+                        deleteOrArchiveDialogUiState.numberOfSelections
                     ),
                     confirmationIcon = UiIcon.DynamicIcon(
                         if(deleteOrArchiveDialogUiState.isArchiveAction) Icons.Rounded.Archive
@@ -309,7 +310,7 @@ fun GoalsScreen(
                         eventHandler(GoalsUiEvent.DeleteOrArchiveDialogConfirmed)
                         mainEventHandler(
                             MainUiEvent.ShowSnackbar(
-                            message = message,
+                            message = snackbarMessage,
                             onUndo = { eventHandler(GoalsUiEvent.UndoButtonPressed) }
                         ))
                     }

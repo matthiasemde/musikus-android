@@ -26,6 +26,9 @@
     <string name="components_sort_menu_dropdown_content_description">List of sort modes for %1$s</string>
     <string name="components_sort_menu_title">Sort by</string>
 
+    <!-- TopBar -->
+    <string name="components_top_bar_back_description">Back</string>
+
     <!-- ActionBar -->
     <string name="components_action_bar_title">%1$d items selected</string>
 
@@ -48,8 +51,6 @@
     <string name="navigationGoalsTitle">Goals</string>
     <string name="navigationSessionsTitle">Sessions</string>
     <string name="navigationStatisticsTitle">Statistics</string>
-    <string name="addLibraryItemDialogTitle">Add new Item</string>
-    <string name="addLibraryItemDialogTitleEdit">Edit Item</string>
     <string name="addLibraryItemDialogNameHint">Item name</string>
     <string name="addLibraryItemAlertOk">Add</string>
     <string name="addLibraryItemAlertOkEdit">Edit</string>
@@ -145,7 +146,7 @@
     <string name="item_removed">Section removed from session</string>
     <string name="undo">undo</string>
     <string name="progressUpdateTitle">Goal progress</string>
-    <string name="libraryHint">Create library items for any piece, scale or other exercise you want to practice.</string>
+    <string name="libraryHint"></string>
     <string name="sessionsHint">Press the \"+\" button to start your first practice session.</string>
     <string name="statisticsHint">Complete a session to see your statistics here.</string>
     <string name="new_session_fab">Start a new session</string>
