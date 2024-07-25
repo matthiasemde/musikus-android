@@ -119,7 +119,10 @@ fun Statistics(
                     IconButton(onClick = {
                         homeEventHandler(HomeUiEvent.ShowMainMenu)
                     }) {
-                        Icon(Icons.Default.MoreVert, contentDescription = "more")
+                        Icon(
+                            imageVector = Icons.Default.MoreVert,
+                            contentDescription = stringResource(id = R.string.core_kebab_menu_description)
+                        )
                         MainMenu (
                             show = homeUiState.showMainMenu,
                             onDismiss = { homeEventHandler(HomeUiEvent.HideMainMenu) },
