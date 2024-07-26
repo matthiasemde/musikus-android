@@ -1,0 +1,42 @@
+<!--
+    This Source Code Form is subject to the terms of the Mozilla Public
+    License, v. 2.0. If a copy of the MPL was not distributed with this
+    file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+    Copyright (c) 2024 Matthias Emde
+-->
+<resources>
+
+    <!-- MetronomeService -->
+    <string name="metronome_service_notification_title">Metronome</string>
+    <string name="metronome_service_notification_description">Metronome is running</string>
+
+    <!-- MetronomeTempoOptions -->
+    <string name="metronome_tempo_grave" translatable="false">Grave</string>
+    <string name="metronome_tempo_largo" translatable="false">Largo</string>
+    <string name="metronome_tempo_lento" translatable="false">Lento</string>
+    <string name="metronome_tempo_adagio" translatable="false">Adagio</string>
+    <string name="metronome_tempo_andante" translatable="false">Andante</string>
+    <string name="metronome_tempo_andante_moderato" translatable="false">Andante moderato</string>
+    <string name="metronome_tempo_moderato" translatable="false">Moderato</string>
+    <string name="metronome_tempo_allegro_moderato" translatable="false">Allegretto moderato</string>
+    <string name="metronome_tempo_allegro" translatable="false">Allegro</string>
+    <string name="metronome_tempo_vivace" translatable="false">Vivace</string>
+    <string name="metronome_tempo_presto" translatable="false">Presto</string>
+    <string name="metronome_tempo_prestissimo" translatable="false">Prestissimo</string>
+
+    <!-- MetronomeHeader -->
+    <string name="metronome_header_bpm" translatable="false">bpm</string>
+    <string name="metronome_header_start_description">Start metronome</string>
+    <string name="metronome_header_stop_description">Stop metronome</string>
+
+    <!-- MetronomeExtraSettingsRow -->
+    <string name="metronome_extra_settings_beats_per_bar">Beats/bar</string>
+    <string name="metronome_extra_settings_clicks_per_beat">Clicks/beat</string>
+    <string name="metronome_extra_settings_tap_tempo">Tap tempo</string>
+
+    <!-- MetronomeIncrementer -->
+    <string name="metronome_incrementer_decrement">Decrement</string>
+    <string name="metronome_incrementer_increment">Increment</string>
+
+</resources>
