@@ -13,10 +13,10 @@
 package app.musikus.core.presentation.components
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -44,6 +44,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -51,6 +52,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.BaselineShift
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
@@ -242,13 +244,13 @@ fun NumberInput(
                 .focusRequester(focusRequester)
                 .onFocusChanged {
                     if(it.isFocused) {
+                        // trim leading zeros when editing, if any
                         state.currentValue.value = state.currentValue.value.copy(
                             text = state.currentValue.value.text.trimStart('0')
                         )
-                    } else {
-                        if (state.currentValue.value.text.isEmpty())
-                            state.currentValue.value = TextFieldValue(state.minValue.toString())
-                        if(padStart)
+                    } else { // focus is lost
+                        if(padStart && state.currentValue.value.text.isNotEmpty())
+                            // pad with leading zeros if needed
                             state.currentValue.value = state.currentValue.value.copy(
                                 state.currentValue.value.text.padStart(maxLength, '0')
                             )
@@ -256,16 +258,33 @@ fun NumberInput(
                     focused = it.isFocused
                 },
             value = state.currentValue.value,
-            textStyle = textStyle.copy(color = MaterialTheme.colorScheme.onSurface),
+            textStyle = textStyle.copy(color = MaterialTheme.colorScheme.onSurface, textAlign = TextAlign.Center),
+            cursorBrush = SolidColor(MaterialTheme.colorScheme.onSurfaceVariant),
             onValueChange = { newValue ->
+                /**
+                 * Remember that entering a TextField triggers onValueChange if the cursor
+                 * position changed from the last time the field was focused!
+                 * */
+
+                // prevent leading zeros, also prevents breaking trimStart on focus change because
+                // of the cursor position change
+                if (newValue.text.startsWith("0") && newValue.text.length > 1) {
+                    return@BasicTextField
+                }
+
+                // If the box is full and the user enters a number at the beginning,
+                // we overwrite all the text with the new number
                 var newValueOnlyNumbers = newValue.text.filter { it.isDigit() }
                 if (newValueOnlyNumbers.length > maxLength) {
-                    if(newValue.selection.collapsed && newValue.selection.start == 0) {
+                    // collapsed means cursor is just a vertical line (=no selection)
+                    if(newValue.selection.collapsed && newValue.selection.start == 1) {
                         newValueOnlyNumbers = newValueOnlyNumbers.take(1)
                     } else {
                         return@BasicTextField
                     }
                 }
+
+                // check if the number is in the allowed range
                 val number = newValueOnlyNumbers.toIntOrNull() ?: state.minValue
                 if (number in state.minValue..state.maxValue) {
                     state.currentValue.value = newValue.copy(newValueOnlyNumbers)
@@ -288,12 +307,21 @@ fun NumberInput(
                     contentColor = MaterialTheme.colorScheme.onSurface,
                 ) {
                     Box(Modifier.padding(MaterialTheme.spacing.small)) {
-                        Row(horizontalArrangement = Arrangement.Center){
-                            innerTextField()
+                        innerTextField()
+                        if (!focused && state.currentValue.value.text.isEmpty()) {
+                            // show placeholder when textField is not empty so signal user that
+                            // minValue is used
+                            Text(
+                                modifier = Modifier.fillMaxWidth(),
+                                textAlign = TextAlign.Center,
+                                text = if (padStart) state.minValue.toString().padStart(maxLength, '0') else state.minValue.toString(),
+                                style = textStyle,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
                         }
-                        // placeholder preserves width
+                        // invisible TextField preserves width when the input is empty
                         Text(
-                            text = if (padStart) "9".padStart(maxLength, '9') else "9",
+                            text = state.maxValue.toString(),
                             style = textStyle,
                             color = Color.Transparent
                         )

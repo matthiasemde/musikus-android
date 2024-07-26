@@ -208,7 +208,7 @@ fun PeriodInput(
         Spacer(modifier = Modifier.width(8.dp))
         NumberInput(
             state = periodNumberInputState,
-            imeAction = ImeAction.Next,
+            imeAction = ImeAction.Done,
             textStyle = MaterialTheme.typography.titleLarge,
             padStart = false,
             onValueChanged = onPeriodChanged,
