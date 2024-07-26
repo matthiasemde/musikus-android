@@ -10,12 +10,12 @@ package app.musikus.goals.data.entities
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
+import app.musikus.core.data.Nullable
 import app.musikus.core.data.entities.ISoftDeleteModelCreationAttributes
 import app.musikus.core.data.entities.ISoftDeleteModelUpdateAttributes
 import app.musikus.core.data.entities.SoftDeleteModel
 import app.musikus.core.data.entities.SoftDeleteModelCreationAttributes
 import app.musikus.core.data.entities.SoftDeleteModelUpdateAttributes
-import app.musikus.core.data.Nullable
 
 // shows, whether a goal will count all sections
 // or only the one from specific libraryItems
@@ -53,9 +53,9 @@ enum class GoalPeriodUnit {
     }
 
     override fun toString() = when (this) {
-        DAY -> "Day"
-        WEEK -> "Week"
-        MONTH -> "Month"
+        DAY -> "Days"
+        WEEK -> "Weeks"
+        MONTH -> "Months"
     }
 }
 
