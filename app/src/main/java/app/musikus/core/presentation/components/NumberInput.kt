@@ -157,19 +157,18 @@ fun NumberInputOld(
 @Stable
 class NumberInputState (
     initialValue: Int? = null,
-    val minValue: Int,
     val maxValue: Int,
 ) {
     init {
-        require(maxValue > minValue) { "maxValue must be larger than minValue" }
+        require(maxValue > 0) { "maxValue must be larger than zero" }
         if (initialValue != null) {
-            require(initialValue in minValue..maxValue) { "initialValue not in allowed range" }
+            require(initialValue in 0..maxValue) { "initialValue not in allowed range" }
         }
     }
     val currentValue = mutableStateOf(TextFieldValue(initialValue?.toString() ?: ""))
 
     val numericValue: Int
-        get() = currentValue.value.text.toIntOrNull() ?: minValue
+        get() = currentValue.value.text.toIntOrNull() ?: 0
 
     companion object {
         /**
@@ -179,14 +178,12 @@ class NumberInputState (
             save = {
                 listOf(
                     it.currentValue.value,
-                    it.minValue,
                     it.maxValue
                 )
             },
             restore = {
                 NumberInputState(
                     initialValue = (it[0] as TextFieldValue).text.toIntOrNull(),
-                    minValue = it[1] as Int,
                     maxValue = it[2] as Int
                 )
             }
@@ -197,14 +194,12 @@ class NumberInputState (
 @Composable
 fun rememberNumberInputState(
     initialValue: Int? = null,
-    minValue: Int = 0,
     maxValue: Int = 99,
 ): NumberInputState = rememberSaveable(
     saver = NumberInputState.Saver()
 ) {
     NumberInputState(
         initialValue = initialValue,
-        minValue = minValue,
         maxValue = maxValue,
     )
 }
@@ -243,34 +238,16 @@ fun NumberInput(
                 .padding(MaterialTheme.spacing.extraSmall)
                 .focusRequester(focusRequester)
                 .onFocusChanged {
-                    if(it.isFocused) {
-                        // trim leading zeros when editing, if any
-                        state.currentValue.value = state.currentValue.value.copy(
-                            text = state.currentValue.value.text.trimStart('0')
-                        )
-                    } else { // focus is lost
-                        if(padStart && state.currentValue.value.text.isNotEmpty())
-                            // pad with leading zeros if needed
-                            state.currentValue.value = state.currentValue.value.copy(
-                                state.currentValue.value.text.padStart(maxLength, '0')
-                            )
-                    }
                     focused = it.isFocused
                 },
             value = state.currentValue.value,
-            textStyle = textStyle.copy(color = MaterialTheme.colorScheme.onSurface, textAlign = TextAlign.Center),
+            textStyle = textStyle.copy(color = MaterialTheme.colorScheme.onSurface, textAlign = if(focused) TextAlign.Center else TextAlign.Right),
             cursorBrush = SolidColor(MaterialTheme.colorScheme.onSurfaceVariant),
             onValueChange = { newValue ->
                 /**
                  * Remember that entering a TextField triggers onValueChange if the cursor
                  * position changed from the last time the field was focused!
                  * */
-
-                // prevent leading zeros, also prevents breaking trimStart on focus change because
-                // of the cursor position change
-                if (newValue.text.startsWith("0") && newValue.text.length > 1) {
-                    return@BasicTextField
-                }
 
                 // If the box is full and the user enters a number at the beginning,
                 // we overwrite all the text with the new number
@@ -285,10 +262,11 @@ fun NumberInput(
                 }
 
                 // check if the number is in the allowed range
-                val number = newValueOnlyNumbers.toIntOrNull() ?: state.minValue
-                if (number in state.minValue..state.maxValue) {
+                val number = newValueOnlyNumbers.toIntOrNull() ?: 0
+                if (number <= state.maxValue) {
                     state.currentValue.value = newValue.copy(newValueOnlyNumbers)
                     onValueChanged(number)
+                    println("onValueChanged: $number")
                 }
             },
             keyboardOptions = KeyboardOptions(
@@ -308,23 +286,24 @@ fun NumberInput(
                 ) {
                     Box(Modifier.padding(MaterialTheme.spacing.small)) {
                         innerTextField()
-                        if (!focused && state.currentValue.value.text.isEmpty()) {
-                            // show placeholder when textField is not empty so signal user that
-                            // minValue is used
+                        if (!focused && (padStart || state.currentValue.value.text.isEmpty())) {
+                            // pad with leading zeros if needed
                             Text(
                                 modifier = Modifier.fillMaxWidth(),
-                                textAlign = TextAlign.Center,
-                                text = if (padStart) state.minValue.toString().padStart(maxLength, '0') else state.minValue.toString(),
+                                textAlign = TextAlign.Left,
+                                text = "0".repeat(state.maxValue.toString().length - state.currentValue.value.text.length),
                                 style = textStyle,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                         }
                         // invisible TextField preserves width when the input is empty
-                        Text(
-                            text = state.maxValue.toString(),
-                            style = textStyle,
-                            color = Color.Transparent
-                        )
+                        if (padStart) {
+                            Text(
+                                text = state.maxValue.toString(),
+                                style = textStyle,
+                                color = Color.Transparent
+                            )
+                        }
                     }
                 }
             }
@@ -343,7 +322,7 @@ private fun NumberInputPreview(
 ) {
     MusikusThemedPreview(theme) {
         NumberInput(
-            state = rememberNumberInputState(initialValue = 0, minValue = 0, maxValue = 99),
+            state = rememberNumberInputState(initialValue = 0, maxValue = 99),
             imeAction = ImeAction.Done,
             label = { modifier ->
                 Text(modifier = modifier, text = "h", style = MaterialTheme.typography.labelLarge)

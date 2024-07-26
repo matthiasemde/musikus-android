@@ -74,18 +74,15 @@ fun GoalDialog(
 
     val hoursState = rememberNumberInputState(
         initialValue = dialogData.target.inWholeHours.toInt(),
-        minValue = 0,
         maxValue = 99
     )
     val minutesState = rememberNumberInputState(
         initialValue = (dialogData.target - dialogData.target.inWholeHours.hours).inWholeMinutes.toInt(),
-        minValue = 0,
         maxValue = 59
     )
 
     val periodInputState = rememberNumberInputState(
         initialValue = dialogData.periodInPeriodUnits,
-        minValue = 0,
         maxValue = 99
     )
 
@@ -111,8 +108,8 @@ fun GoalDialog(
                 modifier = Modifier.padding(top = MaterialTheme.spacing.medium),
                 hoursState = hoursState,
                 minutesState = minutesState,
-                onHoursChanged = { eventHandler(GoalDialogUiEvent.HourTargetChanged(it)) },
-                onMinutesChanged = { eventHandler(GoalDialogUiEvent.MinuteTargetChanged(it)) },
+//                onHoursChanged = { eventHandler(GoalDialogUiEvent.HourTargetChanged(it)) },
+//                onMinutesChanged = { eventHandler(GoalDialogUiEvent.MinuteTargetChanged(it)) },
             )
             confirmButtonEnabled = confirmButtonEnabled && dialogData.target > 0.seconds
 
