@@ -15,8 +15,10 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.window.Dialog
+import app.musikus.R
 import app.musikus.core.presentation.components.DialogActions
 import app.musikus.core.presentation.components.DialogHeader
 import app.musikus.core.presentation.theme.MusikusColorSchemeProvider
@@ -41,14 +43,17 @@ fun PermissionDialog(
             color = MaterialTheme.colorScheme.surfaceContainerHigh
         ) {
             Column {
-                DialogHeader("Permission required")
+                DialogHeader(stringResource(id = R.string.permission_dialog_title))
                 Column(Modifier.padding(horizontal = MaterialTheme.spacing.medium)) {
                     Text(text = description)
                     DialogActions(
                         onDismissHandler = onDismiss,
                         onConfirmHandler = if (isPermanentlyDeclined) onGoToAppSettingsClick else onOkClick,
-                        confirmButtonText = if (isPermanentlyDeclined) "Go to App Settings" else "Ok",
-                        dismissButtonText = "Cancel",
+                        confirmButtonText = stringResource(id = if (isPermanentlyDeclined)
+                            R.string.permission_dialog_confirm_permanently_declined else
+                            android.R.string.ok
+                        ),
+                        dismissButtonText = stringResource(id = android.R.string.cancel),
                     )
                 }
             }

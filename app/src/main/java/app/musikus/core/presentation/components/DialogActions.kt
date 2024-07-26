@@ -28,8 +28,8 @@ import app.musikus.core.presentation.theme.spacing
 fun DialogActions(
     onDismissHandler: () -> Unit,
     onConfirmHandler: () -> Unit,
-    confirmButtonText: String = stringResource(id = R.string.dialogConfirm),
-    dismissButtonText: String = stringResource(id = R.string.dialogDismiss),
+    confirmButtonText: String = stringResource(id = android.R.string.ok),
+    dismissButtonText: String = stringResource(id = android.R.string.cancel),
     confirmButtonEnabled: Boolean = true,
 ) {
     Row(
