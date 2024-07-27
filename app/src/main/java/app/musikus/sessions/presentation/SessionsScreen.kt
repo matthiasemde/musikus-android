@@ -109,17 +109,20 @@ fun SessionsScreen(
                     if(mainUiState.isSessionRunning) {
                         Icon(
                             imageVector = Icons.Default.KeyboardArrowUp,
-                            contentDescription = "resume session"
+                            contentDescription = stringResource(id = R.string.sessions_screen_fab_resume)
                         )
                     } else {
                         Icon(
                             imageVector = Icons.Default.Add,
-                            contentDescription = "new session"
+                            contentDescription = stringResource(id = R.string.sessions_screen_fab)
                         )
                     }
                 },
                 text = {
-                    Text(text = if(mainUiState.isSessionRunning) "Resume session" else "Start session")
+                    Text(text = stringResource(id = if(mainUiState.isSessionRunning)
+                        R.string.sessions_screen_fab_resume else
+                        R.string.sessions_screen_fab
+                    ))
                 },
                 onClick = { navigateTo(Screen.ActiveSession) },
                 expanded = fabExpanded,
@@ -162,7 +165,7 @@ fun SessionsScreen(
                     numSelectedItems = actionModeUiState.numberOfSelections,
                     onDismissHandler = { eventHandler(SessionsUiEvent.ClearActionMode) },
                     onEditHandler = {
-                        Toast.makeText(context, "Coming soon", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, context.getString(R.string.core_coming_soon), Toast.LENGTH_SHORT).show()
                         eventHandler(SessionsUiEvent.EditButtonPressed(onSessionEdit)) // TODO
                     },
                     onDeleteHandler = { eventHandler(SessionsUiEvent.DeleteButtonPressed) }
@@ -246,7 +249,7 @@ fun SessionsScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = stringResource(id = R.string.sessionsHint),
+                        text = stringResource(id = R.string.sessions_screen_hint),
                         style = MaterialTheme.typography.titleMedium,
                         textAlign = TextAlign.Center
                     )
@@ -262,16 +265,25 @@ fun SessionsScreen(
             val deleteDialogUiState = uiState.deleteDialogUiState
 
             if(deleteDialogUiState != null) {
+                val snackbarMessage = stringResource(id = R.string.sessions_screen_snackbar_deleted)
+
                 DeleteConfirmationBottomSheet(
-                    explanation = UiText.DynamicString("Delete sessions? Any progress you made towards your goals during these sessions will be lost."),
-                    confirmationText = UiText.DynamicString("Delete forever (${deleteDialogUiState.numberOfSelections})"),
+                    explanation = UiText.PluralResource(
+                        resId = R.plurals.sessions_screen_delete_session_dialog_explanation,
+                        quantity = deleteDialogUiState.numberOfSelections,
+                        deleteDialogUiState.numberOfSelections
+                    ),
+                    confirmationText = UiText.StringResource(
+                        resId = R.string.sessions_screen_delete_session_dialog_confirm,
+                        deleteDialogUiState.numberOfSelections
+                    ),
                     confirmationIcon = UiIcon.DynamicIcon(Icons.Default.Delete),
                     onDismiss = { eventHandler(SessionsUiEvent.DeleteDialogDismissed) },
                     onConfirm = {
                         eventHandler(SessionsUiEvent.DeleteDialogConfirmed)
                         mainEventHandler(
                             MainUiEvent.ShowSnackbar(
-                            message = "Deleted ${deleteDialogUiState.numberOfSelections} sessions",
+                            message = snackbarMessage,
                             onUndo = { eventHandler(SessionsUiEvent.UndoButtonPressed) }
                         ))
                     }

@@ -38,8 +38,8 @@
     </plurals>
     <string name="goals_screen_delete_goal_dialog_confirm">Delete forever (%1$s)</string>
     <string name="goals_screen_archive_goal_dialog_confirm">Archive forever (%1$s)</string>
-    <string name="goals_screen_goals_snackbar_deleted">Deleted</string>
-    <string name="goals_screen_goals_snackbar_archived">Archived</string>
+    <string name="goals_screen_snackbar_deleted">Deleted</string>
+    <string name="goals_screen_snackbar_archived">Archived</string>
 
     <!-- GoalCard -->
     <string name="goals_goal_card_achieved">Goal achieved!</string>

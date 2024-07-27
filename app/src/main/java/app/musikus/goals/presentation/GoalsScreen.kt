@@ -281,8 +281,8 @@ fun GoalsScreen(
             if (deleteOrArchiveDialogUiState != null) {
                 val snackbarMessage = stringResource(
                     id = if (deleteOrArchiveDialogUiState.isArchiveAction)
-                        R.string.goals_screen_goals_snackbar_archived else
-                        R.string.goals_screen_goals_snackbar_deleted
+                        R.string.goals_screen_snackbar_archived else
+                        R.string.goals_screen_snackbar_deleted
                 )
 
                 DeleteConfirmationBottomSheet(
