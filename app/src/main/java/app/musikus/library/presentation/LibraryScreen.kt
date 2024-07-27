@@ -249,7 +249,7 @@ fun Library(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = stringResource(id = R.string.library_hint),
+                        text = stringResource(id = R.string.library_screen_hint),
                         style = MaterialTheme.typography.titleMedium,
                         textAlign = TextAlign.Center
                     )

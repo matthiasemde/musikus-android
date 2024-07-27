@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2022 Matthias Emde
+ * Copyright (c) 2022-2024 Matthias Emde
  */
 
 package app.musikus.sessions.presentation
@@ -143,14 +143,14 @@ fun SessionCard(
                     modifier = Modifier
                         .width(0.dp)
                         .weight(4f),
-                    text = stringResource(id = R.string.sessionSummaryPracticeTime),
+                    text = stringResource(id = R.string.sessions_session_card_practice_time),
                     style = MaterialTheme.typography.bodyLarge
                 )
                 Text(
                     modifier = Modifier
                         .width(0.dp)
                         .weight(2f),
-                    text = stringResource(id = R.string.sessionSummaryBreakTime),
+                    text = stringResource(id = R.string.sessions_session_card_break_time),
                     style = MaterialTheme.typography.bodyLarge
                 )
             }
@@ -197,7 +197,7 @@ fun SessionCard(
             HorizontalDivider()
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = stringResource(id = R.string.sessionSummaryComment),
+                    text = stringResource(id = R.string.sessions_session_card_comment),
                     style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)
                 )
                 Spacer(modifier = Modifier.height(4.dp))
