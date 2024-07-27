@@ -160,7 +160,7 @@ class RecorderViewModel @Inject constructor(
 
             emit(currentRawRecording?.let {
                 recordingsUseCases.getRawRecording(it).getOrElse {
-                    _exceptionChannel.send(RecorderException.CouldNotLoadRecording)
+                    _exceptionChannel.send(RecorderException.CouldNotLoadRecording(application))
                     null
                 }
             })
@@ -250,7 +250,7 @@ class RecorderViewModel @Inject constructor(
             is RecorderUiEvent.ResumeRecording -> {
                 recorderServiceEventHandler?.invoke(RecorderServiceEvent.ResumeRecording)
                     ?: viewModelScope.launch {
-                        _exceptionChannel.send(RecorderException.ServiceNotFound)
+                        _exceptionChannel.send(RecorderException.ServiceNotFound(application))
                     }
             }
             is RecorderUiEvent.DeleteRecording -> {
@@ -264,7 +264,7 @@ class RecorderViewModel @Inject constructor(
                 _showDeleteRecordingDialog.update { false }
                 recorderServiceEventHandler?.invoke(RecorderServiceEvent.DeleteRecording)
                     ?: viewModelScope.launch {
-                        _exceptionChannel.send(RecorderException.ServiceNotFound)
+                        _exceptionChannel.send(RecorderException.ServiceNotFound(application))
                     }
             }
             is RecorderUiEvent.SaveRecording -> {
@@ -283,7 +283,7 @@ class RecorderViewModel @Inject constructor(
                 recorderServiceEventHandler?.invoke(
                     RecorderServiceEvent.SaveRecording(_recordingName.value)
                 ) ?: viewModelScope.launch {
-                    _exceptionChannel.send(RecorderException.ServiceNotFound)
+                    _exceptionChannel.send(RecorderException.ServiceNotFound(application))
                 }
             }
             is RecorderUiEvent.RecordingNameChanged -> _recordingName.update { event.recordingName }
@@ -314,13 +314,13 @@ class RecorderViewModel @Inject constructor(
 
         if (permissionsRequestResult is PermissionChecker.PermissionsDeniedException) {
             if (permissionsRequestResult.permissions.contains(Manifest.permission.RECORD_AUDIO)) {
-                _exceptionChannel.send(RecorderException.NoMicrophonePermission)
+                _exceptionChannel.send(RecorderException.NoMicrophonePermission(application))
             }
             if (permissionsRequestResult.permissions.contains(Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
-                _exceptionChannel.send(RecorderException.NoStoragePermission)
+                _exceptionChannel.send(RecorderException.NoStoragePermission(application))
             }
             if (permissionsRequestResult.permissions.contains(Manifest.permission.POST_NOTIFICATIONS)) {
-                _exceptionChannel.send(RecorderException.NoNotificationPermission)
+                _exceptionChannel.send(RecorderException.NoNotificationPermission(application))
             }
             return false
         }
@@ -334,13 +334,13 @@ class RecorderViewModel @Inject constructor(
         }
         startRecorderService()
         recorderServiceEventHandler?.invoke(RecorderServiceEvent.StartRecording)
-            ?: _exceptionChannel.send(RecorderException.ServiceNotFound)
+            ?: _exceptionChannel.send(RecorderException.ServiceNotFound(application))
     }
 
     private fun pauseRecording() {
         recorderServiceEventHandler?.invoke(RecorderServiceEvent.PauseRecording)
             ?: viewModelScope.launch {
-                _exceptionChannel.send(RecorderException.ServiceNotFound)
+                _exceptionChannel.send(RecorderException.ServiceNotFound(application))
             }
     }
 
@@ -354,7 +354,7 @@ class RecorderViewModel @Inject constructor(
                 if (storagePermissionResult.isSuccess) {
                     _readPermissionsGranted.update { true }
                 } else {
-                    _exceptionChannel.send(RecorderException.NoStoragePermission)
+                    _exceptionChannel.send(RecorderException.NoStoragePermission(application))
                 }
             }
         }

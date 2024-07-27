@@ -281,14 +281,18 @@ class RecorderService : Service() {
     }
 
     private fun setFinalNotification() {
-        val notification: Notification = getBasicNotification("Recording finished", "click to open", false)
+        val notification: Notification = getBasicNotification(
+            title = getString(R.string.recorder_service_final_notification_title),
+            text = getString(R.string.recorder_service_final_notification_text),
+            persistent = false
+        )
         val mNotificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         mNotificationManager.notify(RECORDER_NOTIFICATION_ID, notification)
     }
 
     private fun getNotification(duration: Duration) : Notification {
         return getBasicNotification(
-            title = getString(R.string.recording_notification_settings_description),
+            title = getString(R.string.recorder_service_notification_title),
             text = getDurationString(duration, DurationFormat.HMS_DIGITAL)
         )
     }
