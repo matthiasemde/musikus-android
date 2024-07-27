@@ -15,6 +15,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
+import app.musikus.R
 import app.musikus.core.domain.TimeProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
@@ -40,11 +41,15 @@ class Recorder(
     @Throws(IllegalRecorderStateException::class)
     fun start() {
         if (state.value == RecorderState.RECORDING) {
-            throw IllegalRecorderStateException("Tried to start recorder while it is already recording")
+            throw IllegalRecorderStateException(
+                context.getString(R.string.recorder_illegal_state_exception_start_while_recording)
+            )
         }
 
         if (state.value == RecorderState.PAUSED) {
-            throw IllegalRecorderStateException("Tried to start recorder while it is paused")
+            throw IllegalRecorderStateException(
+                context.getString(R.string.recorder_illegal_state_exception_start_while_paused)
+            )
         }
 
         val startTime = timeProvider.now()
@@ -81,28 +86,38 @@ class Recorder(
             context.contentResolver.openFileDescriptor(uri, "w")?.use {
                 initializeMediaRecorder(it.fileDescriptor)
             }
-        } ?: throw IllegalRecorderStateException("Couldn't create MediaStore entry")
+        } ?: throw RecorderException.MediaStoreInsertFailed(context)
 
         mediaRecorder?.start()
-            ?: throw IllegalRecorderStateException("Tried to start recording without initializing mediaRecorder")
+            ?: throw IllegalRecorderStateException(
+                context.getString(R.string.recorder_illegal_state_exception_start_while_uninitialized)
+            )
         state.update { RecorderState.RECORDING }
     }
 
     @Throws(IllegalRecorderStateException::class)
     fun pause() {
         if(state.value != RecorderState.RECORDING) {
-            throw IllegalRecorderStateException("Recorder is not recording")
+            throw IllegalRecorderStateException(
+                context.getString(R.string.recorder_illegal_state_exception_pause_while_not_recording)
+            )
         }
-        mediaRecorder?.pause() ?: throw  IllegalRecorderStateException("Tried to pause recording without initializing mediaRecorder")
+        mediaRecorder?.pause() ?: throw  IllegalRecorderStateException(
+            context.getString(R.string.recorder_illegal_state_exception_pause_while_uninitialized)
+        )
         state.update { RecorderState.PAUSED }
     }
 
     @Throws(IllegalRecorderStateException::class)
     fun resume() {
         if(state.value != RecorderState.PAUSED) {
-            throw IllegalRecorderStateException("Recorder is not paused")
+            throw IllegalRecorderStateException(
+                context.getString(R.string.recorder_illegal_state_exception_resume_while_not_paused)
+            )
         }
-        mediaRecorder?.resume() ?: throw  IllegalRecorderStateException("Tried to resume recording without initializing mediaRecorder")
+        mediaRecorder?.resume() ?: throw  IllegalRecorderStateException(
+            context.getString(R.string.recorder_illegal_state_exception_resume_while_uninitialized)
+        )
         state.update { RecorderState.RECORDING }
     }
 
@@ -110,12 +125,16 @@ class Recorder(
     @Throws(IllegalRecorderStateException::class)
     fun delete() {
         if(state.value != RecorderState.PAUSED) {
-            throw IllegalRecorderStateException("Can only save recording from paused state")
+            throw IllegalRecorderStateException(
+                context.getString(R.string.recorder_illegal_state_exception_delete_while_not_paused)
+            )
         }
         mediaRecorder?.apply {
             stop()
             release()
-        } ?: throw  IllegalRecorderStateException("Tried to stop recording without initializing mediaRecorder")
+        } ?: throw  IllegalRecorderStateException(
+            context.getString(R.string.recorder_illegal_state_exception_delete_while_uninitialized)
+        )
         recordingUri?.let {
             context.contentResolver.delete(it, null, null)
         }
@@ -126,17 +145,21 @@ class Recorder(
     @Throws(IllegalRecorderStateException::class)
     fun save(recordingName: String) {
         if(state.value != RecorderState.PAUSED) {
-            throw IllegalRecorderStateException("Can only save recording from paused state")
+            throw IllegalRecorderStateException(
+                context.getString(R.string.recorder_illegal_state_exception_save_while_not_paused)
+            )
         }
 
         if(recordingName.isBlank()) {
-            throw IllegalRecorderStateException("Recording name is blank")
+            throw RecorderException.SaveWithEmptyName(context)
         }
 
         mediaRecorder?.apply {
             stop()
             release()
-        } ?: throw  IllegalRecorderStateException("Tried to stop recording without initializing mediaRecorder")
+        } ?: throw  IllegalRecorderStateException(
+            context.getString(R.string.recorder_illegal_state_exception_save_while_uninitialized)
+        )
 
         // finally update the recordings content values to mark it as no longer pending
         ContentValues().apply {
@@ -146,7 +169,7 @@ class Recorder(
             put(MediaStore.MediaColumns.DISPLAY_NAME, recordingName)
             put(MediaStore.MediaColumns.TITLE, recordingName)
             context.contentResolver.update(
-                recordingUri ?: throw IllegalRecorderStateException("Recording URI is null"),
+                recordingUri ?: throw RecorderException.MediaStoreUpdateFailed(context),
                 this,
                 null,
                 null
@@ -170,7 +193,7 @@ class Recorder(
         return ContentValues().apply {
 
             put(MediaStore.Audio.Media.MIME_TYPE, "audio/mp4")
-            put(MediaStore.Audio.Media.ALBUM, "Musikus")
+            put(MediaStore.Audio.Media.ALBUM, context.getString(R.string.recorder_content_values_album))
             put(MediaStore.Audio.Media.DATE_ADDED, time.toString())
             put(MediaStore.Audio.Media.DATE_MODIFIED, time.toString())
             put(MediaStore.Audio.Media.IS_MUSIC, 1)
@@ -181,7 +204,7 @@ class Recorder(
             }
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                put(MediaStore.Audio.Media.GENRE, "Recording")
+                put(MediaStore.Audio.Media.GENRE, context.getString(R.string.recorder_content_values_genre))
             }
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
