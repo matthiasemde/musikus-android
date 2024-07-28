@@ -1,0 +1,60 @@
+<!--
+    This Source Code Form is subject to the terms of the Mozilla Public
+    License, v. 2.0. If a copy of the MPL was not distributed with this
+    file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+    Copyright (c) 2024 Matthias Emde
+-->
+<resources>
+
+    <!-- Statistics -->
+    <string name="statistics_title">Statistics</string>
+    <string name="statistics_hint">Complete a session to see your statistics here.</string>
+
+    <string name="statistics_seek_backwards_description">Seek backwards</string>
+    <string name="statistics_seek_forwards_description">Seek forwards</string>
+
+    <!-- StatisticsScreen -->
+
+    <!-- StatisticsCurrentMonth -->
+    <string name="statistics_screen_current_month_title">In %1$s</string>
+    <string name="statistics_screen_current_month_total">Total duration</string>
+    <string name="statistics_screen_current_month_per_session">Per session</string>
+    <string name="statistics_screen_current_month_break_per_hour">Break per hour</string>
+    <string name="statistics_screen_current_month_rating">Average rating</string>
+
+    <!-- StatisticsSessionsCard -->
+    <string name="statistics_screen_sessions_card_title">Sessions</string>
+    <string name="statistics_screen_sessions_card_subtitle">Last 7 days</string>
+    <string name="statistics_screen_sessions_card_total_duration">Total</string>
+    <string name="statistics_screen_sessions_card_description">More session statistics</string>
+
+    <!-- StatisticsGoalsCard -->
+    <string name="statistics_screen_goals_card_title">Your Goals</string>
+    <string name="statistics_screen_goals_card_subtitle">Last 5 expired goals</string>
+    <string name="statistics_screen_goals_card_achieved_goals">Achieved</string>
+    <string name="statistics_screen_goals_card_description">More goal statistics</string>
+
+    <!-- StatisticsRatingsCard -->
+    <string name="statistics_screen_ratings_card_title">Ratings</string>
+    <string name="statistics_screen_ratings_card_subtitle">Your session ratings</string>
+
+
+    <!-- SessionStatisticsScreen -->
+    <string name="statistics_session_statistics_title">Session History</string>
+    <string name="statistics_session_statistics_total_duration">Total %1$s</string>
+
+    <string name="statistics_session_statistics_tab_days">Days</string>
+    <string name="statistics_session_statistics_tab_weeks">Weeks</string>
+    <string name="statistics_session_statistics_tab_months">Months</string>
+
+    <string name="statistics_session_statistics_chart_type_pie">Pie chart</string>
+    <string name="statistics_session_statistics_chart_type_bar">Bar chart</string>
+
+
+    <!-- GoalStatisticsScreen -->
+    <string name="statistics_goal_statistics_title">Goal History</string>
+    <string name="statistics_goal_statistics_achieved_goals">%1$d out of %2$d</string>
+
+
+</resources>

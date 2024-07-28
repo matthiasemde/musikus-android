@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2023 Matthias Emde
+ * Copyright (c) 2023-2024 Matthias Emde
  */
 
 package app.musikus.statistics.presentation.goalstatistics
@@ -55,8 +55,8 @@ import app.musikus.R
 import app.musikus.core.presentation.components.conditional
 import app.musikus.core.presentation.components.simpleVerticalScrollbar
 import app.musikus.core.presentation.theme.spacing
-import app.musikus.statistics.presentation.sessionstatistics.TimeframeSelectionHeader
 import app.musikus.core.presentation.utils.asAnnotatedString
+import app.musikus.statistics.presentation.sessionstatistics.TimeframeSelectionHeader
 import java.util.UUID
 
 
@@ -71,10 +71,13 @@ fun GoalStatistics(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(text = stringResource(id = R.string.goal_statistics)) },
+                title = { Text(text = stringResource(id = R.string.statistics_goal_statistics_title)) },
                 navigationIcon = {
                     IconButton(onClick = navigateUp) {
-                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+                            contentDescription = stringResource(R.string.components_top_bar_back_description)
+                        )
                     }
                 },
             )
@@ -86,7 +89,11 @@ fun GoalStatistics(
                     contentUiState.headerUiState?.let { TimeframeSelectionHeader(
                         timeframe = it.timeframe,
                         subtitle = it.successRate?.let { (succeeded, total) ->
-                            "$succeeded out of $total"
+                            stringResource(
+                                id = R.string.statistics_goal_statistics_achieved_goals,
+                                succeeded,
+                                total
+                            )
                         } ?: "",
                         seekBackwardEnabled = it.seekBackwardEnabled,
                         seekForwardEnabled = it.seekForwardEnabled,
@@ -212,7 +219,7 @@ fun GoalStatisticsGoalSelector(
                             targetValue = goalInfo.successRate?.let { (successful, total) ->
                                 (successful.toFloat() / total).coerceAtMost(1f)
                             } ?: 0f,
-                            label = "",
+                            label = "animate-success-rate",
                             animationSpec = tween(1500)
                         )
                         LinearProgressIndicator(
