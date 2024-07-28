@@ -29,15 +29,17 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
+import app.musikus.R
 import app.musikus.core.presentation.Screen
 import app.musikus.core.presentation.components.TwoLiner
 import app.musikus.core.presentation.components.TwoLinerData
 import app.musikus.core.presentation.navigateTo
 import app.musikus.settings.presentation.about.AboutScreen
-import app.musikus.settings.presentation.about.LicenseScreen
+import app.musikus.settings.presentation.about.LicensesScreen
 import app.musikus.settings.presentation.appearance.AppearanceScreen
 import app.musikus.settings.presentation.backup.BackupScreen
 import app.musikus.settings.presentation.donate.DonateScreen
@@ -74,7 +76,7 @@ fun NavGraphBuilder.addSettingsNavigationGraph(navController: NavController) {
         )
     }
     composable(Screen.License.route) {
-        LicenseScreen(navigateUp = { navController.navigateUp() })
+        LicensesScreen(navigateUp = { navController.navigateUp() })
     }
 }
 
@@ -124,12 +126,12 @@ fun SettingsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Settings") },
+                title = { Text(stringResource(R.string.settings_title)) },
                 navigationIcon = {
                     IconButton(onClick = navigateUp) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = stringResource(R.string.core_back_button_description),
                         )
                     }
                 }
@@ -159,7 +161,7 @@ fun SettingsScreen(
                 horizontalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = "Made with ❤️ in Munich",
+                    text = stringResource(R.string.settings_footer),
                     style = MaterialTheme.typography.bodyMedium,
                     color = LocalContentColor.current.copy(alpha = 0.8f)
                 )

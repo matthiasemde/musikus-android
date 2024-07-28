@@ -30,9 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.capitalize
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.intl.Locale
 import app.musikus.R
 import app.musikus.core.presentation.theme.spacing
 
@@ -47,12 +45,12 @@ fun HelpScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(id = R.string.help_title)) },
+                title = { Text(stringResource(R.string.settings_help_title)) },
                 navigationIcon = {
                     IconButton(onClick = navigateUp) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = stringResource(R.string.components_top_bar_back_description),
                         )
                     }
                 }
@@ -67,13 +65,13 @@ fun HelpScreen(
             ) {
                 Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
                 Text(
-                    text = stringResource(id = R.string.help_tips_title),
+                    text = stringResource(R.string.settings_help_tips_title),
                     fontWeight = FontWeight.Bold
                 )
                 Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
-                Text(stringResource(id = R.string.help_tips_text))
+                Text(stringResource(R.string.settings_help_tips_text))
                 Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
-                for (bulletPoint in stringArrayResource(id = R.array.array_help_tips_text_bulletlist)) {
+                for (bulletPoint in stringArrayResource(R.array.settings_help_tips_bulletlist)) {
                     Text(text = "\u2022\t" + bulletPoint)
                     Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
                 }
@@ -83,7 +81,7 @@ fun HelpScreen(
                 modifier = Modifier.padding(horizontal = MaterialTheme.spacing.large)
             ) {
                 Text(
-                    text = stringResource(id = R.string.help_tutorial_title),
+                    text = stringResource(R.string.settings_help_tutorial_title),
                     fontWeight = FontWeight.Bold
                 )
                 Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
@@ -93,10 +91,10 @@ fun HelpScreen(
                         .padding(horizontal = MaterialTheme.spacing.extraLarge),
                     onClick = {
                         /* TODO restart intro */
-                        Toast.makeText(context, "Coming soon", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, context.getString(R.string.core_coming_soon), Toast.LENGTH_SHORT).show()
                     }
                 ) {
-                    Text(stringResource(id = R.string.help_replay_intro).capitalize(Locale.current))
+                    Text(stringResource(R.string.settings_help_tutorial_replay_intro))
                 }
             }
         }
