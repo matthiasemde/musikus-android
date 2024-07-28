@@ -35,7 +35,6 @@ import androidx.compose.ui.unit.em
 import androidx.core.content.ContextCompat.startActivity
 import app.musikus.R
 import app.musikus.core.presentation.theme.spacing
-import java.util.Locale
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -43,18 +42,17 @@ import java.util.Locale
 fun DonateScreen(
     navigateUp: () -> Unit
 ) {
-    val donateUrl = stringResource(id = R.string.url_donate)
     val context = LocalContext.current
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(id = R.string.donations_title)) },
+                title = { Text(stringResource(R.string.settings_donate_title)) },
                 navigationIcon = {
                     IconButton(onClick = navigateUp) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = stringResource(R.string.components_top_bar_back_description),
                         )
                     }
                 }
@@ -67,11 +65,11 @@ fun DonateScreen(
                 .padding(horizontal = MaterialTheme.spacing.extraLarge)
         ) {
             Text(
-                text = stringResource(id = R.string.donations_text),
+                text = stringResource(R.string.settings_donate_text),
                 lineHeight = 1.6.em,
             )
             Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
-            for (bulletPoint in stringArrayResource(id = R.array.array_donations_text_bulletlist)) {
+            for (bulletPoint in stringArrayResource(R.array.settings_donate_bulletlist)) {
                 Text(text = "\u2022\t" + bulletPoint)
                 Spacer(modifier = Modifier.height(MaterialTheme.spacing.extraSmall))
             }
@@ -82,12 +80,12 @@ fun DonateScreen(
                 modifier = Modifier.fillMaxWidth(),
                 onClick = {
                     val openUrlIntent = Intent(Intent.ACTION_VIEW)
-                    openUrlIntent.data = Uri.parse(donateUrl)
+                    openUrlIntent.data = Uri.parse(context.getString(R.string.settings_donate_url))
                     startActivity(context, openUrlIntent, null)
                 }
             ) {
                 Text(
-                    text = stringResource(id = R.string.donations_button_text).uppercase(Locale.ROOT),
+                    text = stringResource(R.string.settings_donate_button_text),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )

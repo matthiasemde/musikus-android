@@ -31,7 +31,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import app.musikus.R
 import app.musikus.core.presentation.MainActivity
 import app.musikus.core.presentation.theme.spacing
 
@@ -43,12 +45,12 @@ fun BackupScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Backup and Restore") },
+                title = { Text(stringResource(R.string.settings_backup_title)) },
                 navigationIcon = {
                     IconButton(onClick = navigateUp) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = stringResource(R.string.components_top_bar_back_description),
                         )
                     }
                 }
@@ -61,9 +63,7 @@ fun BackupScreen(
                 .padding(horizontal = MaterialTheme.spacing.large),
         ) {
             Text(
-                text =
-                    "In this menu you can backup and restore your data to a file " +
-                    "for backing up or transferring it to another device.",
+                text = stringResource(R.string.settings_backup_text),
             )
 
             Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
@@ -82,7 +82,7 @@ fun BackupScreen(
                     Icon(Icons.Default.CloudUpload, contentDescription = null)
                     Spacer(modifier = Modifier.width(MaterialTheme.spacing.small))
                     Text(
-                        text = "Create backup",
+                        text = stringResource(R.string.settings_backup_create_backup),
                         style = MaterialTheme.typography.titleMedium
                     )
                 }
@@ -102,7 +102,7 @@ fun BackupScreen(
                     Icon(Icons.Default.CloudDownload, contentDescription = null)
                     Spacer(modifier = Modifier.width(MaterialTheme.spacing.small))
                     Text(
-                        text = "Load backup",
+                        text = stringResource(R.string.settings_backup_restore_backup),
                         style = MaterialTheme.typography.titleMedium
                     )
                 }
@@ -111,9 +111,10 @@ fun BackupScreen(
             Spacer(modifier = Modifier.height(MaterialTheme.spacing.extraSmall))
 
             Text(
-                text = "*Note: Loading a backup will overwrite your current data.",
+                text = stringResource(R.string.settings_backup_footnote),
                 style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.Bold            )
+                fontWeight = FontWeight.Bold
+            )
         }
     }
 }

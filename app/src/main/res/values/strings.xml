@@ -35,6 +35,12 @@
     <!-- ActionBar -->
     <string name="components_action_bar_title">%1$d items selected</string>
 
+    <!-- BottomBar -->
+    <string name="components_bottom_bar_items_sessions">Sessions</string>
+    <string name="components_bottom_bar_items_goals">Goals</string>
+    <string name="components_bottom_bar_items_statistics">Statistics</string>
+    <string name="components_bottom_bar_items_library">Library</string>
+
     <!-- ############################################################# -->
 
     <string name="app_name" translatable="false">Musikus</string>
@@ -231,28 +237,13 @@
     <string name="intro_text_sessions">Summaries of your practice sessions as well as insightful statistics help you to stay on top of your practice habits.</string>
     <string name="intro_text_sessions_2">Press here to start your first session!</string>
     <string name="intro_text_done">Not now</string>
-    <string name="help_replay_intro">Replay app introduction</string>
     <string name="hint_add_new_section">Choose another item to add it to your session</string>
     <string name="hint_delete_section">You can swipe left on an entry to remove it from your session.</string>
     <string name="filename_shared_preferences">app.musikus.preferences</string>
 
-    <string name="help_title">Help</string>
-    <string name="help_tips_title">Tips and tricks</string>
-    <string name="help_tips_text">Have you tried…</string>
-    <string-array name="array_help_tips_text_bulletlist">
-        <item>Swiping sections during an active session to delete them</item>
-        <item>Long-clicking on sessions, goals or library items to select and delete them?</item>
-    </string-array>
 
-    <string name="donations_title">Support us!</string>
-    <string name="donations_text">If you are enjoying the app and would like to support us, we would be very thankful for a small donation.\n\nThis will help us in developing awesome new features like:</string>
     <string name="app_info">App info</string>
-    <string-array name="array_donations_text_bulletlist">
-        <item>Sharable sessions</item>
-        <item>Integrated tuner</item>
-        <item>Special layout for tablets</item>
-        <item>And many more!</item>
-    </string-array>
+
 
     <string name="recorder_permissions_toast">You have denied necessary permissions for the recorder. To\u00A0enable\u00A0go\u00A0to\u00A0Settings\u00A0>\u00A0Permissions.</string>
 
@@ -263,19 +254,14 @@
     <string name="legal_project_hint">This project has been financed by the German music promotion program “Neustart Kultur“ by the GVL (Gesellschaft zur Verwertung von Leistungsschutzrechten mbH)</string>
     <string name="publisher">Publisher</string>
     <string name="legal_text">Javier Carbone (Freelance)\nJakob Felder Weg 36\n55128, Mainz, Germany\npracticetimeapp@gmail.com</string>
-    <string name="privacy_policy_title">Privacy policy</string>
-    <string name="url_privacy">https://github.com/matthiasemde/musikus-android/blob/main/PRIVACY.md</string>
-    <string name="help_tutorial_title">Tutorial</string>
     <string name="licences_title">Open source licences</string>
-    <string name="donations_button_text">Donate 🤍</string>
     <string name="about_app_title">About the app</string>
     <string name="concept_title">Concept</string>
     <string name="concept_text">Javier Carbone</string>
-    <string name="development_title">Design &amp; Development</string>
-    <string name="development_text">Matthias Emde\nMichael Prommersberger</string>
+    <string name="development_title"></string>
+    <string name="development_text"></string>
     <string name="about_appicon_title">App Icon</string>
     <string name="about_appicon_text">Alejandra Contreras Westermeyer</string>
-    <string name="url_donate">https://ko-fi.com/musikusapp</string>
 
     <string name="lib1_name">MPAndroidChart</string>
     <string name="lib1_author">By Philipp Jahoda</string>
@@ -284,7 +270,6 @@
     <string name="lib2_name">AppIntro</string>
     <string name="lib2_author">By AppIntro Developers</string>
     <string name="lib2_link">https://github.com/AppIntro/AppIntro</string>
-    <string name="export_csv_dialog_text">Export all your Sessions to a CSV file. This file can be opened with spreadsheet programs like LibreOffice Calc or Microsoft Excel.</string>
-    <string name="export_csv_dialog_note">*Note: This will <u>not</u> export your Goals and Library items! This file cannot be imported. For Backups, use the \"Backup and Restore\" function.</string>
+    <string name="export_csv_dialog_note"><![CDATA[*Note: This will <u>not</u> export your Goals and Library items! This file cannot be imported. For Backups, use the \"Backup and Restore\" function.]]></string>
 
 </resources>

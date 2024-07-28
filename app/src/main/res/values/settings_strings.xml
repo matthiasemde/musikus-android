@@ -1,0 +1,113 @@
+<!--
+    This Source Code Form is subject to the terms of the Mozilla Public
+    License, v. 2.0. If a copy of the MPL was not distributed with this
+    file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+    Copyright (c) 2024 Matthias Emde
+-->
+<resources>
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_items_about">About the app</string>
+    <string name="settings_items_appearance">Appearance</string>
+    <string name="settings_items_backup">Backup &amp; Restore</string>
+    <string name="settings_items_export">Export session data</string>
+    <string name="settings_items_help">Help</string>
+    <string name="settings_items_donate">Support us!</string>
+
+    <string name="settings_footer" translatable="false">Made with ❤️ in Munich</string>
+
+
+    <!-- About -->
+    <string name="settings_about_title">About</string>
+
+    <string name="settings_about_developers_first_line">Design &amp; Development</string>
+    <string name="settings_about_developers_second_line">Matthias Emde\nMichael Prommersberger</string>
+
+    <string name="settings_about_publisher_first_line">Publisher</string>
+    <string name="settings_about_publisher_second_line">Matthias Emde\nConnollystraße 25\n80809 Munich, Germany\ncontact@musikus.app</string>
+
+    <string name="settings_about_privacy_policy_first_line">Privacy policy</string>
+    <string name="settings_about_privacy_policy_url" translatable="false">https://github.com/matthiasemde/musikus-android/blob/main/PRIVACY.md</string>
+
+    <string name="settings_about_version_first_line">Version</string>
+
+    <string name="settings_about_licenses_first_line">Licenses</string>
+
+    <string name="settings_about_copyright_second_line">Copyright 2024 Matthias Emde, Michael Prommersberger\nLicensed under the Mozilla Public License Version 2.0</string>
+
+    <!-- License -->
+    <string name="settings_licenses_title">Licenses</string>
+
+
+    <!-- Appearance -->
+    <string name="settings_appearance_title">Appearance</string>
+
+    <string name="settings_appearance_language_first_line">Language</string>
+
+    <string name="settings_appearance_theme_first_line">Theme</string>
+
+    <string name="settings_appearance_color_scheme_first_line">Color scheme</string>
+
+    <!-- LanguageDialog -->
+    <string name="settings_appearance_language_dialog_title">Language</string>
+    <string name="settings_appearance_language_dialog_text"><![CDATA[More languages are coming soon! If you want to help in translating the app into your native language, please contact us at <i>contribute@musikus.app</i>]]></string>
+    <string name="settings_appearance_language_dialog_confirm">Awesome!</string>
+
+    <!-- ThemeDialog -->
+    <string name="settings_appearance_theme_dialog_title">Theme</string>
+
+    <string name="settings_appearance_theme_options_system">System default</string>
+    <string name="settings_appearance_theme_options_day">Light</string>
+    <string name="settings_appearance_theme_options_night">Dark</string>
+
+    <!-- ColorSchemeDialog -->
+    <string name="settings_appearance_color_scheme_dialog_title">Color scheme</string>
+
+    <string name="settings_appearance_color_scheme_options_musikus_title">Musikus</string>
+    <string name="settings_appearance_color_scheme_options_musikus_text">A fresh new look.</string>
+    <string name="settings_appearance_color_scheme_options_legacy_title">PracticeTime</string>
+    <string name="settings_appearance_color_scheme_options_legacy_text">Reminds you of an old friend.</string>
+    <string name="settings_appearance_color_scheme_options_dynamic_title">Dynamic</string>
+    <string name="settings_appearance_color_scheme_options_dynamic_text">The color scheme follows your system theme. If it looks bad, it\'s on you.</string>
+
+
+    <!-- Backup -->
+    <string name="settings_backup_title">Backup and restore</string>
+    <string name="settings_backup_text">In this menu you can backup and restore your data to a file for backing up or transferring it to another device</string>
+    <string name="settings_backup_create_backup">Create backup</string>
+    <string name="settings_backup_restore_backup">Restore backup</string>
+    <string name="settings_backup_footnote">*Note: Loading a backup will overwrite your current data.</string>
+
+
+    <!-- Donate -->
+    <string name="settings_donate_title">Support us!</string>
+    <string name="settings_donate_text">If you are enjoying the app and would like to support us, we would be very thankful for a small donation.\nThis will help us in developing awesome new features like:</string>
+    <string-array name="settings_donate_bulletlist">
+        <item>Sharable sessions</item>
+        <item>Integrated tuner</item>
+        <item>And many more!</item>
+    </string-array>
+    <string name="settings_donate_button_text">DONATE 🤍</string>
+    <string name="settings_donate_url">https://ko-fi.com/musikusapp</string>
+
+
+    <!-- Export -->
+    <string name="settings_export_title">Export session data</string>
+    <string name="settings_export_text">Export all your Sessions to a CSV file. This file can be opened with spreadsheet programs like LibreOffice Calc or Microsoft Excel.</string>
+    <string name="settings_export_button_text">Export sessions</string>
+    <string name="settings_export_footnote"><![CDATA[*Note: This will <u>not</u> export your Goals and Library items! This file cannot be imported. For Backups, use the \"Backup and Restore\" function.]]></string>
+
+
+    <!-- Help -->
+    <string name="settings_help_title">Help</string>
+    <string name="settings_help_tips_title">Tips and tricks</string>
+    <string name="settings_help_tips_text">Have you tried…</string>
+    <string-array name="settings_help_tips_bulletlist">
+        <item>Swiping sections during an active session to delete them</item>
+        <item>Long-clicking on sessions, goals or library items to select and delete them?</item>
+    </string-array>
+    <string name="settings_help_tutorial_title">Tutorial</string>
+    <string name="settings_help_tutorial_replay_intro">Replay app introduction</string>
+
+</resources>

@@ -34,7 +34,7 @@ sealed class Screen(
         data object Sessions : HomeTab(
             subRoute = "sessions",
             displayData = DisplayData(
-                title = UiText.StringResource(R.string.navigationSessionsTitle),
+                title = UiText.StringResource(R.string.components_bottom_bar_items_sessions),
                 icon = UiIcon.IconResource(R.drawable.ic_sessions),
                 animatedIcon = R.drawable.avd_sessions,
             )
@@ -43,7 +43,7 @@ sealed class Screen(
         data object Goals : HomeTab(
             subRoute = "goals",
             displayData = DisplayData(
-                title = UiText.StringResource(R.string.navigationGoalsTitle),
+                title = UiText.StringResource(R.string.components_bottom_bar_items_goals),
                 icon = UiIcon.IconResource(R.drawable.ic_goals),
                 animatedIcon = R.drawable.avd_goals
             )
@@ -52,7 +52,7 @@ sealed class Screen(
         data object Statistics : HomeTab(
             subRoute = "statistics",
             displayData = DisplayData(
-                title = UiText.StringResource(R.string.navigationStatisticsTitle),
+                title = UiText.StringResource(R.string.components_bottom_bar_items_statistics),
                 icon = UiIcon.IconResource(R.drawable.ic_bar_chart),
                 animatedIcon = R.drawable.avd_bar_chart
             )
@@ -61,7 +61,7 @@ sealed class Screen(
         data object Library : HomeTab(
             subRoute = "library",
             displayData = DisplayData(
-                title = UiText.StringResource(R.string.navigationLibraryTitle),
+                title = UiText.StringResource(R.string.components_bottom_bar_items_library),
                 icon = UiIcon.IconResource(R.drawable.ic_library),
                 animatedIcon = R.drawable.avd_library
             )
@@ -103,7 +103,7 @@ sealed class Screen(
         data object About : SettingsOption(
             subRoute = "about",
             displayData = DisplayData(
-                title = UiText.StringResource(R.string.about_app_title),
+                title = UiText.StringResource(R.string.settings_items_about),
                 icon = UiIcon.DynamicIcon(Icons.Outlined.Info),
             )
         )
@@ -111,7 +111,7 @@ sealed class Screen(
         data object Help : SettingsOption(
             subRoute = "help",
             displayData = DisplayData(
-                title = UiText.StringResource(R.string.help_title),
+                title = UiText.StringResource(R.string.settings_items_help),
                 icon = UiIcon.DynamicIcon(Icons.AutoMirrored.Outlined.Help),
             )
         )
@@ -119,7 +119,7 @@ sealed class Screen(
         data object Backup : SettingsOption(
             subRoute = "backup",
             displayData = DisplayData(
-                title = UiText.StringResource(R.string.backup_title),
+                title = UiText.StringResource(R.string.settings_items_backup),
                 icon = UiIcon.DynamicIcon(Icons.Outlined.CloudUpload),
             )
         )
@@ -127,7 +127,7 @@ sealed class Screen(
         data object Export : SettingsOption(
             subRoute = "export",
             displayData = DisplayData(
-                title = UiText.DynamicString("Export session data"),
+                title = UiText.StringResource(R.string.settings_items_export),
                 icon = UiIcon.IconResource(R.drawable.ic_export),
             )
         )
@@ -135,7 +135,7 @@ sealed class Screen(
         data object Donate : SettingsOption(
             subRoute = "donate",
             displayData = DisplayData(
-                title = UiText.StringResource(R.string.donations_title),
+                title = UiText.StringResource(R.string.settings_items_donate),
                 icon = UiIcon.DynamicIcon(Icons.Outlined.Favorite),
             )
         )
@@ -143,7 +143,7 @@ sealed class Screen(
         data object Appearance : SettingsOption(
             subRoute = "appearance",
             displayData = DisplayData(
-                title = UiText.StringResource(R.string.appearance_title),
+                title = UiText.StringResource(R.string.settings_items_appearance),
                 icon = UiIcon.IconResource(R.drawable.ic_appearance),
             )
         )
