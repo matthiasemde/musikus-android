@@ -8,15 +8,16 @@
 
 package app.musikus.statistics.presentation.sessionstatistics
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.PieChart
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.musikus.R
+import app.musikus.core.EnumWithIcon
+import app.musikus.core.EnumWithLabel
 import app.musikus.core.data.SectionWithLibraryItem
 import app.musikus.core.data.SessionWithSectionsWithLibraryItems
-import app.musikus.library.data.daos.LibraryItem
-import app.musikus.core.presentation.utils.DurationFormat
-import app.musikus.core.presentation.utils.getDurationString
-import app.musikus.sessions.domain.usecase.SessionsUseCases
-import app.musikus.settings.domain.usecase.UserPreferencesUseCases
 import app.musikus.core.domain.DateFormat
 import app.musikus.core.domain.LibraryItemSortMode
 import app.musikus.core.domain.SortDirection
@@ -28,6 +29,13 @@ import app.musikus.core.domain.sorted
 import app.musikus.core.domain.specificDay
 import app.musikus.core.domain.specificMonth
 import app.musikus.core.domain.specificWeek
+import app.musikus.core.presentation.utils.DurationFormat
+import app.musikus.core.presentation.utils.UiIcon
+import app.musikus.core.presentation.utils.UiText
+import app.musikus.core.presentation.utils.getDurationString
+import app.musikus.library.data.daos.LibraryItem
+import app.musikus.sessions.domain.usecase.SessionsUseCases
+import app.musikus.settings.domain.usecase.UserPreferencesUseCases
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
@@ -48,19 +56,38 @@ import kotlin.time.Duration.Companion.seconds
  * Ui state data classes
  */
 
-enum class SessionStatisticsTab {
-    DAYS,
-    WEEKS,
-    MONTHS;
+enum class SessionStatisticsTab : EnumWithLabel {
+    DAYS {
+        override val label = UiText.StringResource(R.string.statistics_session_statistics_tab_days)
+    },
+    WEEKS {
+        override val label = UiText.StringResource(R.string.statistics_session_statistics_tab_weeks)
+    },
+    MONTHS {
+        override val label = UiText.StringResource(R.string.statistics_session_statistics_tab_months)
+    };
 
     companion object {
         val DEFAULT = DAYS
     }
 }
 
-enum class SessionStatisticsChartType {
-    PIE,
-    BAR;
+enum class SessionStatisticsChartType : EnumWithLabel, EnumWithIcon {
+    PIE {
+        override val label = UiText.StringResource(R.string.statistics_session_statistics_chart_type_pie)
+        override val icon = UiIcon.DynamicIcon(Icons.Default.PieChart)
+    },
+    BAR {
+        override val label = UiText.StringResource(R.string.statistics_session_statistics_chart_type_bar)
+        override val icon = UiIcon.DynamicIcon(Icons.Default.BarChart)
+    };
+
+    fun invert(): SessionStatisticsChartType {
+        return when(this) {
+            PIE -> BAR
+            BAR -> PIE
+        }
+    }
 
     companion object {
         val DEFAULT = BAR

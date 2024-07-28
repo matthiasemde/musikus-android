@@ -9,6 +9,8 @@
 package app.musikus.settings.domain
 
 import app.musikus.R
+import app.musikus.core.EnumWithDescription
+import app.musikus.core.EnumWithLabel
 import app.musikus.core.domain.GoalSortInfo
 import app.musikus.core.domain.GoalsSortMode
 import app.musikus.core.domain.LibraryFolderSortMode
@@ -22,14 +24,6 @@ import app.musikus.metronome.presentation.MetronomeSettings
 import kotlinx.coroutines.flow.Flow
 
 const val USER_PREFERENCES_NAME = "user_preferences"
-
-interface EnumWithLabel {
-    val label: UiText
-}
-
-interface EnumWithDescription {
-    val description: UiText
-}
 
 enum class ThemeSelections : EnumWithLabel {
     SYSTEM {
