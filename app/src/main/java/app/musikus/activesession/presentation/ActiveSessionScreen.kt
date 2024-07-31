@@ -4,7 +4,6 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
  * Copyright (c) 2024 Michael Prommersberger, Matthias Emde
- *
  */
 
 @file:OptIn(ExperimentalFoundationApi::class)
@@ -1132,6 +1131,7 @@ private fun SectionListElement(
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     onSectionDeleted: (CompletedSectionUiState) -> Unit = {},
 ) {
+    val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var deleted by remember { mutableStateOf(false) }
     val dismissState = rememberSwipeToDismissBoxState(
@@ -1144,17 +1144,16 @@ private fun SectionListElement(
         }
     )
 
-    val message = stringResource(id = R.string.active_session_sections_list_element_deleted)
-
     SwipeToDeleteContainer(
         state = dismissState,
         deleted = deleted,
         onDeleted = {
             onSectionDeleted(item)
             showSnackbar(
+                context = context,
                 scope = scope,
                 hostState = snackbarHostState,
-                message = message,
+                message = context.getString(R.string.active_session_sections_list_element_deleted),
                 onUndo = {
                    TODO("Fix this using soft delete of sections in repository")
                 }

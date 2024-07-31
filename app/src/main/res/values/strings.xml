@@ -16,11 +16,6 @@
     <!-- Misc -->
     <string name="core_kebab_menu_description">More</string>
 
-    <string name="core_back_button_description">Back</string>
-    <string name="core_edit_button_description">Edit</string>
-    <string name="core_delete_button_description">Delete</string>
-    <string name="core_archive_button_description">Archive</string>
-
     <string name="core_coming_soon" translatable="false">Coming soon</string>
 
     <!-- Special characters -->
@@ -29,6 +24,10 @@
 
 
     <!-- Components -->
+
+    <!-- MainMenu -->
+    <string name="components_main_menu">Settings</string>
+
     <!-- SortMenu -->
     <string name="components_sort_menu_content_description">Select sort mode and direction for %1$s</string>
     <string name="components_sort_menu_dropdown_content_description">List of sort modes for %1$s</string>
@@ -39,12 +38,19 @@
 
     <!-- ActionBar -->
     <string name="components_action_bar_title">%1$d items selected</string>
+    <string name="components_action_bar_back_button_description">Back</string>
+    <string name="components_action_bar_edit_button_description">Edit</string>
+    <string name="components_action_bar_delete_button_description">Delete</string>
+    <string name="components_action_bar_archive_button_description">Archive</string>
 
     <!-- BottomBar -->
     <string name="components_bottom_bar_items_sessions">Sessions</string>
     <string name="components_bottom_bar_items_goals">Goals</string>
     <string name="components_bottom_bar_items_statistics">Statistics</string>
     <string name="components_bottom_bar_items_library">Library</string>
+
+    <!-- Snackbar -->
+    <string name="components_snackbar_undo">Undo</string>
 
     <!-- ############################################################# -->
 

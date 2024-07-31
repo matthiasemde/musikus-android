@@ -45,7 +45,7 @@ fun ActionBar(
             IconButton(onClick = onDismissHandler) {
                 Icon(
                     imageVector = Icons.Default.Close,
-                    contentDescription = stringResource(id = R.string.core_back_button_description)
+                    contentDescription = stringResource(id = R.string.components_action_bar_back_button_description)
                 )
             }
         },
@@ -55,14 +55,14 @@ fun ActionBar(
                 IconButton(onClick = onEditHandler) {
                     Icon(
                         imageVector = Icons.Rounded.Edit,
-                        contentDescription = stringResource(id = R.string.core_edit_button_description)
+                        contentDescription = stringResource(id = R.string.components_action_bar_edit_button_description)
                     )
                 }
             }
             IconButton(onClick = onDeleteHandler) {
                 Icon(
                     imageVector = Icons.Rounded.Delete,
-                    contentDescription = stringResource(id = R.string.core_delete_button_description)
+                    contentDescription = stringResource(id = R.string.components_action_bar_delete_button_description)
                 )
             }
         }

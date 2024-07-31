@@ -3,17 +3,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2023 Matthias Emde
+ * Copyright (c) 2023-2024 Matthias Emde
  */
 
 package app.musikus.repository
 
-import app.musikus.core.domain.GoalSortInfo
-import app.musikus.core.domain.GoalsSortMode
-import app.musikus.core.domain.LibraryFolderSortMode
-import app.musikus.core.domain.LibraryItemSortMode
 import app.musikus.core.domain.SortDirection
 import app.musikus.core.domain.SortInfo
+import app.musikus.goals.data.GoalSortInfo
+import app.musikus.goals.data.GoalsSortMode
+import app.musikus.library.data.LibraryFolderSortMode
+import app.musikus.library.data.LibraryItemSortMode
 import app.musikus.library.data.daos.LibraryFolder
 import app.musikus.library.data.daos.LibraryItem
 import app.musikus.metronome.presentation.MetronomeSettings

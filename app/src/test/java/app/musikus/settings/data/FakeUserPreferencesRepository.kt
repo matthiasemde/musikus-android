@@ -8,12 +8,12 @@
 
 package app.musikus.settings.data
 
-import app.musikus.core.domain.GoalSortInfo
-import app.musikus.core.domain.GoalsSortMode
-import app.musikus.core.domain.LibraryFolderSortMode
-import app.musikus.core.domain.LibraryItemSortMode
 import app.musikus.core.domain.SortDirection
 import app.musikus.core.domain.SortInfo
+import app.musikus.goals.data.GoalSortInfo
+import app.musikus.goals.data.GoalsSortMode
+import app.musikus.library.data.LibraryFolderSortMode
+import app.musikus.library.data.LibraryItemSortMode
 import app.musikus.library.data.daos.LibraryFolder
 import app.musikus.library.data.daos.LibraryItem
 import app.musikus.metronome.presentation.MetronomeSettings

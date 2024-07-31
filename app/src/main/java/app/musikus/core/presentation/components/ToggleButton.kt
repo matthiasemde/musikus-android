@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2022 Matthias Emde
+ * Copyright (c) 2022-2024 Matthias Emde
  */
 
 package app.musikus.core.presentation.components
@@ -16,14 +16,15 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import app.musikus.core.presentation.utils.UiText
 
 data class ToggleButtonOption(
     val id: Int,
-    val name: String
+    val name: UiText
 )
 
 @Composable
-fun MyToggleButton(
+fun ToggleButton(
     modifier: Modifier = Modifier,
     options: List<ToggleButtonOption>,
     selected: ToggleButtonOption,
@@ -54,7 +55,7 @@ fun MyToggleButton(
                 onClick = { onSelectedChanged(option) }
 
             ) {
-                Text(text = option.name)
+                Text(text = option.name.asString())
             }
         }
     }

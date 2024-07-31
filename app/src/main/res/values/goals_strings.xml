@@ -22,6 +22,9 @@
     <string name="goals_goal_period_unit_week">Week</string>
     <string name="goals_goal_period_unit_month">Month</string>
 
+    <string name="goals_goal_sort_mode_date_added">Date added</string>
+    <string name="goals_goal_sort_mode_target">Target</string>
+    <string name="goals_goal_sort_mode_period">Period</string>
 
     <!-- GoalsScreen -->
     <string name="goals_screen_top_bar_sort_menu_item_description">goals</string>

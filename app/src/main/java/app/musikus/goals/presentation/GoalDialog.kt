@@ -4,7 +4,6 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
  * Copyright (c) 2022-2024 Matthias Emde
- *
  */
 
 package app.musikus.goals.presentation
@@ -39,7 +38,7 @@ import app.musikus.core.presentation.components.DialogActions
 import app.musikus.core.presentation.components.DialogHeader
 import app.musikus.core.presentation.components.DurationInput
 import app.musikus.core.presentation.components.IntSelectionSpinnerOption
-import app.musikus.core.presentation.components.MyToggleButton
+import app.musikus.core.presentation.components.ToggleButton
 import app.musikus.core.presentation.components.NumberInput
 import app.musikus.core.presentation.components.SelectionSpinner
 import app.musikus.core.presentation.components.ToggleButtonOption
@@ -136,14 +135,14 @@ fun GoalDialog(
 
                 Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
 
-                MyToggleButton(
+                ToggleButton(
                     modifier = Modifier.padding(horizontal = MaterialTheme.spacing.large),
                     options = GoalType.entries.map {
-                        ToggleButtonOption(it.ordinal, it.toUiText().asString())
+                        ToggleButtonOption(it.ordinal, it.toUiText())
                     },
                     selected = ToggleButtonOption(
                         dialogData.goalType.ordinal,
-                        dialogData.goalType.toUiText().asString()
+                        dialogData.goalType.toUiText()
                     ),
                     onSelectedChanged = { option ->
                         eventHandler(GoalDialogUiEvent.GoalTypeChanged(GoalType.entries[option.id]))

@@ -8,8 +8,9 @@
 
 package app.musikus.core.presentation
 
+import android.app.Application
 import androidx.compose.material3.SnackbarHostState
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import app.musikus.activesession.domain.usecase.ActiveSessionUseCases
 import app.musikus.core.presentation.components.showSnackbar
@@ -17,7 +18,6 @@ import app.musikus.settings.domain.ColorSchemeSelections
 import app.musikus.settings.domain.ThemeSelections
 import app.musikus.settings.domain.usecase.UserPreferencesUseCases
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
@@ -38,12 +38,12 @@ data class MainUiState(
     var isSessionRunning: Boolean
 )
 
-@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class MainViewModel @Inject constructor(
+    private val application: Application,
     userPreferencesUseCases: UserPreferencesUseCases,
     activeSessionUseCases: ActiveSessionUseCases
-) : ViewModel() {
+) : AndroidViewModel(application) {
 
 
     /**
@@ -104,10 +104,11 @@ class MainViewModel @Inject constructor(
         when (event) {
             is MainUiEvent.ShowSnackbar -> {
                 showSnackbar(
-                    viewModelScope,
-                    _snackbarHost.value,
-                    event.message,
-                    event.onUndo
+                    context = application,
+                    scope = viewModelScope,
+                    hostState = _snackbarHost.value,
+                    message = event.message,
+                    onUndo = event.onUndo
                 )
             }
         }
