@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# Get the list of staged files
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM)
+
+# Run the Python script to check the license headers
+python .github/hooks/check_license_header.py "$STAGED_FILES"
+
+# Capture the exit code
+RESULT=$?
+
+# Exit with the captured exit code
+exit $RESULT
