@@ -22,6 +22,19 @@
     <string name="goals_goal_period_unit_week">Week</string>
     <string name="goals_goal_period_unit_month">Month</string>
 
+    <plurals name="goals_goal_subtitle_day">
+        <item quantity="one">in one day</item>
+        <item quantity="other">in %d days</item>
+    </plurals>
+    <plurals name="goals_goal_subtitle_week">
+        <item quantity="one">in one week</item>
+        <item quantity="other">in %d weeks</item>
+    </plurals>
+    <plurals name="goals_goal_subtitle_month">
+        <item quantity="one">in one month</item>
+        <item quantity="other">in %d months</item>
+    </plurals>
+
     <string name="goals_goal_sort_mode_date_added">Date added</string>
     <string name="goals_goal_sort_mode_target">Target</string>
     <string name="goals_goal_sort_mode_period">Period</string>
