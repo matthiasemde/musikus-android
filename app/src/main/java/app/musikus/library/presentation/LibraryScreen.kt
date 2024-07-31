@@ -95,11 +95,11 @@ import app.musikus.library.data.daos.LibraryFolder
 import app.musikus.library.data.daos.LibraryItem
 import app.musikus.settings.domain.ColorSchemeSelections
 import app.musikus.core.domain.DateFormat
-import app.musikus.core.domain.LibraryFolderSortMode
-import app.musikus.core.domain.LibraryItemSortMode
 import app.musikus.core.presentation.utils.UiIcon
 import app.musikus.core.presentation.utils.UiText
 import app.musikus.core.domain.musikusFormat
+import app.musikus.library.data.LibraryFolderSortMode
+import app.musikus.library.data.LibraryItemSortMode
 import java.time.ZonedDateTime
 
 @OptIn(ExperimentalMaterial3Api::class)

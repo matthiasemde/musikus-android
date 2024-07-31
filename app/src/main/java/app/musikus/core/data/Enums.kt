@@ -6,7 +6,7 @@
  * Copyright (c) 2024 Matthias Emde
  */
 
-package app.musikus.core
+package app.musikus.core.data
 
 import app.musikus.core.presentation.utils.UiIcon
 import app.musikus.core.presentation.utils.UiText

@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2022 Matthias Emde
+ * Copyright (c) 2022-2024 Matthias Emde
  */
 
 package app.musikus.core.presentation.components
@@ -53,7 +53,7 @@ fun <T : SortMode<*>> SortMenu(
         Text(
             modifier = Modifier.padding(end = 8.dp),
             color = MaterialTheme.colorScheme.onSurface,
-            text = currentSortMode.label
+            text = currentSortMode.label.asString()
         )
         Icon(
             modifier = Modifier.size(20.dp),
@@ -97,7 +97,7 @@ fun <T : SortMode<*>> SortMenu(
                 DropdownMenuItem(
                     text = {
                         Text(
-                            text = sortMode.label,
+                            text = sortMode.label.asString(),
                             color = if (selected) MaterialTheme.colorScheme.primary
                             else Color.Unspecified
                         )

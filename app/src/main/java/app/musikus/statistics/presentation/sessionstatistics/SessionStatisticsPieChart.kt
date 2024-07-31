@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2023 Matthias Emde
+ * Copyright (c) 2023-2024 Matthias Emde
  */
 
 package app.musikus.statistics.presentation.sessionstatistics
@@ -30,7 +30,7 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import app.musikus.library.data.daos.LibraryItem
 import app.musikus.core.presentation.theme.libraryItemColors
-import app.musikus.core.domain.sorted
+import app.musikus.library.data.sorted
 import kotlinx.coroutines.launch
 import kotlin.math.cos
 import kotlin.math.sin

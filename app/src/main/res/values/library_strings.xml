@@ -6,6 +6,7 @@
     Copyright (c) 2024 Matthias Emde
 -->
 <resources>
+
     <!-- Library -->
     <string name="library_title">Library</string>
 
@@ -18,6 +19,15 @@
         <item quantity="one">folder</item>
         <item quantity="other">folders</item>
     </plurals>
+
+    <string name="library_item_sort_mode_date_added">Date added</string>
+    <string name="library_item_sort_mode_last_modified">Last modified</string>
+    <string name="library_item_sort_mode_name">Name</string>
+    <string name="library_item_sort_mode_color">Color</string>
+
+    <string name="library_folder_sort_mode_date_added">Date added</string>
+    <string name="library_folder_sort_mode_last_modified">Last modified</string>
+    <string name="library_folder_sort_mode_name">Name</string>
 
     <!-- LibraryFolderDialog -->
     <string name="library_folder_dialog_title">Create folder</string>
@@ -40,8 +50,8 @@
     <!-- LibraryScreen -->
     <string name="library_screen_fab_description">Add item</string>
     <string name="library_screen_multi_fab_description">Add folder or item</string>
-    <string name="library_screen_multi_fab_item_description">Item</string>
-    <string name="library_screen_multi_fab_folder_description">Folder</string>
+    <string name="library_screen_multi_fab_item_description">Add item</string>
+    <string name="library_screen_multi_fab_folder_description">Add folder</string>
     <string name="library_screen_hint">Create library items for any piece, scale or other exercise you want to practice.</string>
 
     <plurals name="library_screen_deletion_dialog_explanation">

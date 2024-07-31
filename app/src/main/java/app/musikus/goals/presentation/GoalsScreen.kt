@@ -68,10 +68,10 @@ import app.musikus.core.presentation.components.MultiFabState
 import app.musikus.core.presentation.components.Selectable
 import app.musikus.core.presentation.components.SortMenu
 import app.musikus.core.presentation.theme.spacing
-import app.musikus.core.domain.GoalsSortMode
 import app.musikus.core.domain.TimeProvider
 import app.musikus.core.presentation.utils.UiIcon
 import app.musikus.core.presentation.utils.UiText
+import app.musikus.goals.data.GoalsSortMode
 
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
@@ -187,7 +187,7 @@ fun GoalsScreen(
                         IconButton(onClick = { eventHandler(GoalsUiEvent.ArchiveButtonPressed) }) {
                             Icon(
                                 imageVector = Icons.Rounded.Archive,
-                                contentDescription = stringResource(id = R.string.core_archive_button_description),
+                                contentDescription = stringResource(id = R.string.components_action_bar_archive_button_description),
                             )
                         }
                     },

@@ -9,15 +9,15 @@
 package app.musikus.settings.domain
 
 import app.musikus.R
-import app.musikus.core.EnumWithDescription
-import app.musikus.core.EnumWithLabel
-import app.musikus.core.domain.GoalSortInfo
-import app.musikus.core.domain.GoalsSortMode
-import app.musikus.core.domain.LibraryFolderSortMode
-import app.musikus.core.domain.LibraryItemSortMode
+import app.musikus.core.data.EnumWithDescription
+import app.musikus.core.data.EnumWithLabel
 import app.musikus.core.domain.SortDirection
 import app.musikus.core.domain.SortInfo
 import app.musikus.core.presentation.utils.UiText
+import app.musikus.goals.data.GoalSortInfo
+import app.musikus.goals.data.GoalsSortMode
+import app.musikus.library.data.LibraryFolderSortMode
+import app.musikus.library.data.LibraryItemSortMode
 import app.musikus.library.data.daos.LibraryFolder
 import app.musikus.library.data.daos.LibraryItem
 import app.musikus.metronome.presentation.MetronomeSettings

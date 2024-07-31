@@ -131,7 +131,7 @@ fun SettingsScreen(
                     IconButton(onClick = navigateUp) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.core_back_button_description),
+                            contentDescription = stringResource(R.string.components_top_bar_back_description),
                         )
                     }
                 }

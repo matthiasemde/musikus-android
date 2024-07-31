@@ -1127,7 +1127,6 @@ private fun SectionList(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SectionListElement(
     modifier: Modifier = Modifier,
@@ -1148,17 +1147,16 @@ private fun SectionListElement(
         }
     )
 
-    val message = stringResource(id = R.string.active_session_sections_list_element_deleted)
-
     SwipeToDeleteContainer(
         state = dismissState,
         deleted = deleted,
         onDeleted = {
             onSectionDeleted(item)
             showSnackbar(
+                context = context,
                 scope = scope,
                 hostState = snackbarHostState,
-                message = message,
+                message = context.getString(R.string.active_session_sections_list_element_deleted),
                 onUndo = {
                    TODO("Fix this using soft delete of sections in repository")
                 }
