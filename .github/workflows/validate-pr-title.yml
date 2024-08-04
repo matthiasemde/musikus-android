@@ -2,20 +2,22 @@ name: VALIDATE-PR-TITLE
 
 on:
   pull_request:
+    # Only run on PRs with main as target branch
+    branches: [ "main" ]
     types: [ opened, edited, reopened ]
 
 jobs:
   validate-pr-title:
+    name: Validate PR title
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Validate PR title
         id: validate_title
         env:
-          GH_TOKEN: ${{ secrets.PAT }}
+          GH_TOKEN: ${{ secrets.RELEASE_BOT_PAT }}
         run: |
           PR_TITLE="${{ github.event.pull_request.title }}"
           echo "PR Title: $PR_TITLE"
