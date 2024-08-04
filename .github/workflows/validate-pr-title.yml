@@ -11,6 +11,8 @@ jobs:
     steps:
       - name: Validate PR title
         id: validate_title
+        env:
+          GH_TOKEN: ${{ secrets.PAT }}
         run: |
           PR_TITLE="${{ github.event.pull_request.title }}"
           echo "PR Title: $PR_TITLE"
