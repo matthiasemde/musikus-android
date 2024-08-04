@@ -3,7 +3,7 @@ import sys
 from pathlib import Path
 import datetime
 
-current_year = datetime.datetime.now().year
+current_year = str(datetime.datetime.now().year)
 
 # Define the license header patterns
 xml_license_pattern = re.compile(r'<!--\n'
@@ -11,16 +11,22 @@ xml_license_pattern = re.compile(r'<!--\n'
                                  r'    License, v. 2.0. If a copy of the MPL was not distributed with this\n'
                                  r'    file, You can obtain one at https://mozilla.org/MPL/2.0/.\n'
                                  r'\n'
-                                 r'    Copyright \(c\) \d{current_year}(-\d{current_year})? ([A-Za-z]+ [A-Za-z]+)(, [A-Za-z]+ [A-Za-z]+)*\n'
-                                 r'-->\n'
-                                 r'\n')
+                                 r'    Copyright \(c\) (' + current_year + r'|\d{4}-' + current_year + r') ([A-Za-z]+ [A-Za-z]+)(, [A-Za-z]+ [A-Za-z]+)*\n'
+                                 r'-->\n')
 
 kt_license_pattern = re.compile(r'/\*\n'
                                 r' \* This Source Code Form is subject to the terms of the Mozilla Public\n'
                                 r' \* License, v. 2.0. If a copy of the MPL was not distributed with this\n'
                                 r' \* file, You can obtain one at https://mozilla.org/MPL/2.0/.\n'
                                 r' \*\n'
-                                r' \* Copyright \(c\) \d{current_year}(-\d{current_year})? ([A-Za-z]+ [A-Za-z]+)(, [A-Za-z]+ [A-Za-z]+)*\n'
+                                r' \* Copyright \(c\) (' + current_year + r'|\d{4}-' + current_year + r') ([A-Za-z]+ [A-Za-z]+)(, [A-Za-z]+ [A-Za-z]+)*\n'
+                                r'('
+                                r' \*\n'
+                                r' \* Parts of this software are licensed under the MIT license\n'
+                                r' \*\n'
+                                r' \* Copyright \(c\) \d{4}, Javier Carbone, author ([A-Za-z]+ [A-Za-z]+)\n'
+                                r'( \* Additions and modifications, author ([A-Za-z]+ [A-Za-z]+)\n)?'
+                                r')?'
                                 r' \*/\n'
                                 r'\n')
 
