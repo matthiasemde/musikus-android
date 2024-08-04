@@ -3,31 +3,31 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2023 Matthias Emde
+ * Copyright (c) 2023-2024 Matthias Emde
  */
 
 package app.musikus.library.domain.usecase
 
 import app.musikus.core.data.Nullable
 import app.musikus.core.data.UUIDConverter
+import app.musikus.core.domain.FakeIdProvider
+import app.musikus.core.domain.FakeTimeProvider
+import app.musikus.core.domain.SortDirection
+import app.musikus.core.domain.SortInfo
+import app.musikus.library.data.FakeLibraryRepository
+import app.musikus.library.data.LibraryItemSortMode
 import app.musikus.library.data.daos.LibraryItem
 import app.musikus.library.data.entities.LibraryFolderCreationAttributes
 import app.musikus.library.data.entities.LibraryItemCreationAttributes
 import app.musikus.library.data.entities.LibraryItemUpdateAttributes
-import app.musikus.library.data.FakeLibraryRepository
 import app.musikus.settings.data.FakeUserPreferencesRepository
 import app.musikus.settings.domain.usecase.GetItemSortInfoUseCase
-import app.musikus.core.domain.FakeIdProvider
-import app.musikus.core.domain.FakeTimeProvider
-import app.musikus.core.domain.LibraryItemSortMode
-import app.musikus.core.domain.SortDirection
-import app.musikus.core.domain.SortInfo
+import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import com.google.common.truth.Truth.assertThat
-import kotlinx.coroutines.test.runTest
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
 
