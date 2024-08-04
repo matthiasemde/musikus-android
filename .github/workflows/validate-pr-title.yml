@@ -1,4 +1,4 @@
-name: Validate PR Title
+name: VALIDATE-PR-TITLE
 
 on:
   pull_request:
@@ -9,6 +9,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
       - name: Validate PR title
         id: validate_title
         env:
