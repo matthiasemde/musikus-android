@@ -22,7 +22,7 @@ jobs:
           PR_TITLE="${{ github.event.pull_request.title }}"
           echo "PR Title: $PR_TITLE"
           if [[ ! "$PR_TITLE" =~ ^(feat|fix|docs|style|refactor|perf|test|chore|build|ci|revert)(\([a-zA-Z0-9_\-]+\))?:\ [a-z].* ]]; then
-            echo "PR title does not conform to the conventional commit pattern" > title_error.txt
+            echo "PR title does not conform to the [conventional commit](https://www.conventionalcommits.org/) pattern." > title_error.txt
             gh pr comment ${{ github.event.pull_request.number }} --body-file title_error.txt
             exit 1
           fi
