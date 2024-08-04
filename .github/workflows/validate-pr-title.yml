@@ -1,0 +1,25 @@
+name: Validate PR Title
+
+on:
+  pull_request:
+    types: [ opened, edited, reopened ]
+
+jobs:
+  validate-pr-title:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Validate PR title
+        id: validate_title
+        run: |
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          echo "PR Title: $PR_TITLE"
+          if [[ ! "$PR_TITLE" =~ ^(feat|fix|docs|style|refactor|perf|test|chore|build|ci|revert)(\([a-zA-Z0-9_\-]+\))?:\ [a-z].* ]]; then
+            echo "PR title does not conform to the conventional commit pattern" > title_error.txt
+            gh pr comment ${{ github.event.pull_request.number }} --body-file title_error.txt
+            exit 1
+          fi
+
+      - name: PR title is valid
+        if: success()
+        run: echo "PR title conforms to the conventional commit pattern"
