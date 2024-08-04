@@ -30,7 +30,7 @@ If you have any feedback, bug reports or feature requests, please fill out [this
 
 We're happy to invite all music and coding enthusiasts to our Discord server! This is your space to collaborate, share insights, and help shape the future of Musikus. 🚀
 
-[Join the Musikus Discord Server](https://discord.gg/ZVCg5gr3bE)
+[Join the Musikus Discord Server](https://discord.gg/CNbvGmbS7d)
 
 Whether you're looking to contribute code, discuss features, or just want to chat about music or code, our Discord server is the perfect place to be. See you there! 👋
 

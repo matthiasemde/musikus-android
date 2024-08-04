@@ -1,4 +1,4 @@
-name: Discord Webhook
+name: DISCORD-WEBHOOK
 
 on:
   pull_request:
@@ -8,6 +8,7 @@ on:
 
 jobs:
   notify-discord:
+    name: Notify Discord
     runs-on: ubuntu-latest
 
     steps:
