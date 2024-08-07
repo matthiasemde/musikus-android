@@ -1,0 +1,32 @@
+name: VALIDATE-PR-TITLE
+
+on:
+  pull_request:
+    # Only run on PRs with main as target branch
+    branches: [ "main" ]
+    types: [ opened, edited, reopened ]
+
+jobs:
+  validate-pr-title:
+    name: Validate PR title
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate PR title
+        id: validate_title
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_BOT_PAT }}
+        run: |
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          echo "PR Title: $PR_TITLE"
+          if [[ ! "$PR_TITLE" =~ ^(feat|fix|docs|style|refactor|perf|test|chore|build|ci|revert)(\([a-zA-Z0-9_\-]+\))?:\ [a-z].* ]]; then
+            echo "PR title does not conform to the [conventional commit](https://www.conventionalcommits.org/) pattern." > title_error.txt
+            gh pr comment ${{ github.event.pull_request.number }} --body-file title_error.txt
+            exit 1
+          fi
+
+      - name: PR title is valid
+        if: success()
+        run: echo "PR title conforms to the conventional commit pattern"
