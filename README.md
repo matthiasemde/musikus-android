@@ -20,11 +20,19 @@ Your personal practice companion
 
 ## 🧪 Musikus is in alpha
 
-### Join
+### Become a tester
 If you want to join our group of testers, write us an email to [alpha@musikus.app](mailto:alpha@musikus.app) using your Gmail-account and we will add you to the list.
 
 ### Feedback
 If you have any feedback, bug reports or feature requests, please fill out [this](https://docs.google.com/forms/d/e/1FAIpQLSfw1rTslL7b3Yp_Lv_E65zketfj7G6h5VzOkVdxjcQZDC5CqA/viewform) form or use the [Issue Tracker](https://github.com/matthiasemde/musikus-android/issues/new).
+
+## 🤝 Join Our Community on Discord
+
+We're happy to invite all music and coding enthusiasts to our Discord server! This is your space to collaborate, share insights, and help shape the future of Musikus. 🚀
+
+[Join the Musikus Discord Server](https://discord.gg/CNbvGmbS7d)
+
+Whether you're looking to contribute code, discuss features, or just want to chat about music or code, our Discord server is the perfect place to be. See you there! 👋
 
 ## 👨‍💻 Contributors
 <a href="https://github.com/matthiasemde/musikus-android/graphs/contributors">
