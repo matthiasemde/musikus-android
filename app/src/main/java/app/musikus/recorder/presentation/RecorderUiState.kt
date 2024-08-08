@@ -8,9 +8,11 @@
 
 package app.musikus.recorder.presentation
 
+import android.content.Context
 import android.net.Uri
 import androidx.compose.runtime.Stable
 import androidx.media3.common.MediaItem
+import app.musikus.R
 import app.musikus.core.presentation.utils.DurationString
 
 @Stable
@@ -64,12 +66,16 @@ sealed class RecorderUiEvent {
 typealias RecorderUiEventHandler = (event: RecorderUiEvent) -> Unit
 
 sealed class RecorderException(message: String) : Exception(message) {
-    data object NoMicrophonePermission : RecorderException("Microphone permission required")
-    data object NoStoragePermission : RecorderException("Storage permission required")
-    data object NoNotificationPermission: RecorderException("Notification permission required")
+    class NoMicrophonePermission(context: Context) : RecorderException(context.getString(R.string.recorder_exception_no_microphone_permission))
+    class NoStoragePermission(context: Context) : RecorderException(context.getString(R.string.recorder_exception_no_storage_permission))
+    class NoNotificationPermission(context: Context) : RecorderException(context.getString(R.string.recorder_exception_no_notification_permission))
 
-    data object CouldNotLoadRecording : RecorderException("Could not load recording")
+    class CouldNotLoadRecording(context: Context) : RecorderException(context.getString(R.string.recorder_exception_no_could_not_load))
 
-    data object ServiceNotFound : RecorderException("Cannot find recorder service")
+    class MediaStoreInsertFailed(context: Context) : RecorderException(context.getString(R.string.recorder_exception_media_store_failed_insert))
+    class MediaStoreUpdateFailed(context: Context) : RecorderException(context.getString(R.string.recorder_exception_media_store_failed_update))
+    class SaveWithEmptyName(context: Context) : RecorderException(context.getString(R.string.recorder_exception_save_with_empty_name))
+
+    class ServiceNotFound(context: Context) : RecorderException(context.getString(R.string.recorder_exception_no_service_not_found))
     data class ServiceException(val exception: RecorderServiceException) : RecorderException(exception.message)
 }

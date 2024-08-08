@@ -108,7 +108,7 @@ private fun SwipeToDeleteBackground(
     ) {
         Icon(
             imageVector = Icons.Default.Delete,
-            contentDescription = "Delete section",
+            contentDescription = null, // not needed since the icon can never be selected
             tint = iconColor,
         )
     }

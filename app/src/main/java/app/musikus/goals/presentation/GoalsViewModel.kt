@@ -3,13 +3,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2022 Matthias Emde
+ * Copyright (c) 2022-2024 Matthias Emde
  */
 
 package app.musikus.goals.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.musikus.R
 import app.musikus.library.data.daos.LibraryItem
 import app.musikus.goals.data.entities.GoalDescriptionCreationAttributes
 import app.musikus.goals.data.entities.GoalInstanceCreationAttributes
@@ -21,9 +22,10 @@ import app.musikus.goals.domain.GoalInstanceWithProgressAndDescriptionWithLibrar
 import app.musikus.goals.domain.usecase.GoalsUseCases
 import app.musikus.library.domain.usecase.LibraryUseCases
 import app.musikus.settings.domain.usecase.UserPreferencesUseCases
-import app.musikus.core.domain.GoalsSortMode
 import app.musikus.core.domain.SortDirection
 import app.musikus.core.domain.SortInfo
+import app.musikus.core.presentation.utils.UiText
+import app.musikus.goals.data.GoalsSortMode
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -125,7 +127,7 @@ class GoalsViewModel @Inject constructor(
 
     private val topBarUiState = sortMenuUiState.map { sortMenuUiState ->
         GoalsTopBarUiState(
-            title = "Goals",
+            title = UiText.StringResource(R.string.goals_title),
             showBackButton = false,
             sortMenuUiState = sortMenuUiState,
         )
@@ -133,7 +135,7 @@ class GoalsViewModel @Inject constructor(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = GoalsTopBarUiState(
-            title = "Goals",
+            title = UiText.StringResource(R.string.goals_title),
             showBackButton = false,
             sortMenuUiState = sortMenuUiState.value,
         )

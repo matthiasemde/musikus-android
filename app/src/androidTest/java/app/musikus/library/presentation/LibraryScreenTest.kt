@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2023 Matthias Emde
+ * Copyright (c) 2023-2024 Matthias Emde
  */
 
 package app.musikus.library.presentation
@@ -33,9 +33,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.test.core.app.ApplicationProvider
 import app.musikus.R
-import app.musikus.core.domain.LibraryFolderSortMode
-import app.musikus.core.domain.LibraryItemSortMode
-import app.musikus.core.domain.SortMode
+import app.musikus.core.domain.FakeTimeProvider
 import app.musikus.core.presentation.HomeViewModel
 import app.musikus.core.presentation.MainActivity
 import app.musikus.core.presentation.MainViewModel
@@ -44,7 +42,6 @@ import app.musikus.core.presentation.theme.MusikusTheme
 import app.musikus.core.presentation.utils.TestTags
 import app.musikus.settings.domain.ColorSchemeSelections
 import app.musikus.settings.domain.ThemeSelections
-import app.musikus.core.domain.FakeTimeProvider
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import org.junit.Before
@@ -97,13 +94,13 @@ class LibraryScreenTest {
 
     @Test
     fun clickFab_multiFabMenuIsShown() {
-        composeRule.onNodeWithContentDescription("Folder").assertDoesNotExist()
-        composeRule.onNodeWithContentDescription("Item").assertDoesNotExist()
+        composeRule.onNodeWithContentDescription("Add folder").assertDoesNotExist()
+        composeRule.onNodeWithContentDescription("Add item").assertDoesNotExist()
 
-        composeRule.onNodeWithContentDescription("Add").performClick()
+        composeRule.onNodeWithContentDescription("Add folder or item").performClick()
 
-        composeRule.onNodeWithContentDescription("Folder").assertIsDisplayed()
-        composeRule.onNodeWithContentDescription("Item").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Add folder").assertIsDisplayed()
+        composeRule.onNodeWithContentDescription("Add item").assertIsDisplayed()
     }
 
     @Test
@@ -111,16 +108,16 @@ class LibraryScreenTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
 
         // Check if hint is displayed initially
-        composeRule.onNodeWithText(context.getString(R.string.libraryHint)).assertIsDisplayed()
+        composeRule.onNodeWithText(context.getString(R.string.library_screen_hint)).assertIsDisplayed()
 
         // Add a folder
-        composeRule.onNodeWithContentDescription("Add").performClick()
-        composeRule.onNodeWithContentDescription("Folder").performClick()
+        composeRule.onNodeWithContentDescription("Add folder or item").performClick()
+        composeRule.onNodeWithContentDescription("Add folder").performClick()
         composeRule.onNodeWithTag(TestTags.FOLDER_DIALOG_NAME_INPUT).performTextInput("Test")
         composeRule.onNodeWithContentDescription("Create").performClick()
 
         // Check if hint is not displayed anymore
-        composeRule.onNodeWithText(context.getString(R.string.libraryHint)).assertDoesNotExist()
+        composeRule.onNodeWithText(context.getString(R.string.library_screen_hint)).assertDoesNotExist()
 
         // Remove the folder
         composeRule.onNodeWithText("Test").performTouchInput { longClick() }
@@ -128,16 +125,16 @@ class LibraryScreenTest {
         composeRule.onNodeWithContentDescription("Delete forever (1)").performClick()
 
         // Check if hint is displayed again
-        composeRule.onNodeWithText(context.getString(R.string.libraryHint)).assertIsDisplayed()
+        composeRule.onNodeWithText(context.getString(R.string.library_screen_hint)).assertIsDisplayed()
 
         // Add an item
-        composeRule.onNodeWithContentDescription("Add").performClick()
-        composeRule.onNodeWithContentDescription("Item").performClick()
+        composeRule.onNodeWithContentDescription("Add folder or item").performClick()
+        composeRule.onNodeWithContentDescription("Add item").performClick()
         composeRule.onNodeWithTag(TestTags.ITEM_DIALOG_NAME_INPUT).performTextInput("Test")
         composeRule.onNodeWithContentDescription("Create").performClick()
 
         // Check if hint is not displayed anymore
-        composeRule.onNodeWithText(context.getString(R.string.libraryHint)).assertDoesNotExist()
+        composeRule.onNodeWithText(context.getString(R.string.library_screen_hint)).assertDoesNotExist()
 
         // Remove the item
         composeRule.onNodeWithText("Test").performTouchInput { longClick() }
@@ -145,21 +142,21 @@ class LibraryScreenTest {
         composeRule.onNodeWithContentDescription("Delete forever (1)").performClick()
 
         // Check if hint is displayed again
-        composeRule.onNodeWithText(context.getString(R.string.libraryHint)).assertIsDisplayed()
+        composeRule.onNodeWithText(context.getString(R.string.library_screen_hint)).assertIsDisplayed()
     }
 
     @Test
     fun addItemToFolderFromInsideAndOutside() {
 
         // Add a folder
-        composeRule.onNodeWithContentDescription("Add").performClick()
-        composeRule.onNodeWithContentDescription("Folder").performClick()
+        composeRule.onNodeWithContentDescription("Add folder or item").performClick()
+        composeRule.onNodeWithContentDescription("Add folder").performClick()
         composeRule.onNodeWithTag(TestTags.FOLDER_DIALOG_NAME_INPUT).performTextInput("TestFolder")
         composeRule.onNodeWithContentDescription("Create").performClick()
 
         // Add an item from outside the folder
-        composeRule.onNodeWithContentDescription("Add").performClick()
-        composeRule.onNodeWithContentDescription("Item").performClick()
+        composeRule.onNodeWithContentDescription("Add folder or item").performClick()
+        composeRule.onNodeWithContentDescription("Add item").performClick()
         composeRule.onNodeWithTag(TestTags.ITEM_DIALOG_NAME_INPUT).performTextInput("TestItem1")
         composeRule.onNodeWithContentDescription("Select folder").performClick()
 
@@ -185,18 +182,16 @@ class LibraryScreenTest {
         composeRule.onNodeWithText("TestItem2").assertIsDisplayed()
     }
 
-    private fun clickSortMode(sortMode: SortMode<*>) {
-        val sortModeType = when(sortMode) {
-            is LibraryItemSortMode -> "items"
-            is LibraryFolderSortMode -> "folders"
-            else -> throw Exception("Unknown sort mode type")
-        }
+    private fun clickSortMode(
+        sortModeType: String,
+        sortMode: String
+    ) {
         composeRule.onNodeWithContentDescription("Select sort mode and direction for $sortModeType").performClick()
         // Select name as sorting mode
         composeRule.onNode(
             matcher = hasAnyAncestor(hasContentDescription("List of sort modes for $sortModeType"))
                     and
-                    hasText(sortMode.label)
+                    hasText(sortMode)
         ).performClick()
     }
 
@@ -210,8 +205,8 @@ class LibraryScreenTest {
         )
 
         namesAndColors.forEach { (name, color) ->
-            composeRule.onNodeWithContentDescription("Add").performClick()
-            composeRule.onNodeWithContentDescription("Item").performClick()
+            composeRule.onNodeWithContentDescription("Add folder or item").performClick()
+            composeRule.onNodeWithContentDescription("Add item").performClick()
             composeRule.onNodeWithTag(TestTags.ITEM_DIALOG_NAME_INPUT).performTextInput(name)
             composeRule.onNodeWithContentDescription("Color $color").performClick()
             composeRule.onNodeWithContentDescription("Create").performClick()
@@ -229,7 +224,7 @@ class LibraryScreenTest {
         }
 
         // Change sorting mode to name descending
-        clickSortMode(LibraryItemSortMode.NAME)
+        clickSortMode("items", "Name")
 
         // Check if items are displayed in correct order
         itemNodes = composeRule.onAllNodes(hasText("TestItem", substring = true))
@@ -241,7 +236,7 @@ class LibraryScreenTest {
         }
 
         // Change sorting mode to name ascending
-        clickSortMode(LibraryItemSortMode.NAME)
+        clickSortMode("items", "Name")
 
         // Check if items are displayed in correct order
         itemNodes = composeRule.onAllNodes(hasText("TestItem", substring = true))
@@ -262,8 +257,8 @@ class LibraryScreenTest {
         )
 
         names.forEach { name ->
-            composeRule.onNodeWithContentDescription("Add").performClick()
-            composeRule.onNodeWithContentDescription("Folder").performClick()
+            composeRule.onNodeWithContentDescription("Add folder or item").performClick()
+            composeRule.onNodeWithContentDescription("Add folder").performClick()
             composeRule.onNodeWithTag(TestTags.FOLDER_DIALOG_NAME_INPUT).performTextInput(name)
             composeRule.onNodeWithContentDescription("Create").performClick()
 
@@ -280,7 +275,7 @@ class LibraryScreenTest {
         }
 
         // Change sorting mode to name descending
-        clickSortMode(LibraryFolderSortMode.NAME)
+        clickSortMode("folders", "Name")
 
         // Check if items are displayed in correct order
         itemNodes = composeRule.onAllNodes(hasText("TestFolder", substring = true))
@@ -292,7 +287,7 @@ class LibraryScreenTest {
         }
 
         // Change sorting mode to name ascending
-        clickSortMode(LibraryFolderSortMode.NAME)
+        clickSortMode("folders", "Name")
 
         // Check if items are displayed in correct order
         itemNodes = composeRule.onAllNodes(hasText("TestFolder", substring = true))

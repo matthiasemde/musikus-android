@@ -49,38 +49,37 @@ fun AboutScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("About") },
+                title = { Text(stringResource(R.string.settings_about_title)) },
                 navigationIcon = {
                     IconButton(onClick = navigateUp) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = stringResource(R.string.components_top_bar_back_description),
                         )
                     }
                 }
             )
         }
     ) { paddingValues ->
-        val privacyPolicyUrl = stringResource(id = R.string.url_privacy)
         val context = LocalContext.current
 
         val aboutScreenItems = listOf(
             listOf(
                 TwoLinerData(
-                firstLine = UiText.StringResource(R.string.development_title),
-                secondLine = UiText.StringResource(R.string.development_text)
-            )
+                    firstLine = UiText.StringResource(R.string.settings_about_developers_first_line),
+                    secondLine = UiText.StringResource(R.string.settings_about_developers_second_line)
+                )
             ),
             listOf(
                 TwoLinerData(
-                    firstLine = UiText.DynamicString("Publisher"),
-                    secondLine = UiText.DynamicString("Matthias Emde\nConnollystraße 25\n80809 Munich, Germany\ncontact@musikus.app"),
+                    firstLine = UiText.StringResource(R.string.settings_about_publisher_first_line),
+                    secondLine = UiText.StringResource(R.string.settings_about_publisher_second_line),
                 ),
                 TwoLinerData(
-                    firstLine = UiText.StringResource(R.string.privacy_policy_title),
+                    firstLine = UiText.StringResource(R.string.settings_about_privacy_policy_first_line),
                     onClick = {
                         val openUrlIntent = Intent(Intent.ACTION_VIEW)
-                        openUrlIntent.data = Uri.parse(privacyPolicyUrl)
+                        openUrlIntent.data = Uri.parse(context.getString(R.string.settings_about_privacy_policy_url))
                         ContextCompat.startActivity(context, openUrlIntent, null)
                     },
                     trailingIcon = UiIcon.DynamicIcon(Icons.AutoMirrored.Filled.OpenInNew)
@@ -88,18 +87,15 @@ fun AboutScreen(
             ),
             listOf(
                 TwoLinerData(
-                    firstLine = UiText.DynamicString("Version"),
+                    firstLine = UiText.StringResource(R.string.settings_about_version_first_line),
                     secondLine = UiText.DynamicString("${BuildConfig.VERSION_NAME} (${BuildConfig.COMMIT_HASH})")
                 ),
                 TwoLinerData(
-                    firstLine = UiText.DynamicString("Licenses"),
+                    firstLine = UiText.StringResource(R.string.settings_about_licenses_first_line),
                     onClick = { navigateTo(Screen.License) }
                 ),
                 TwoLinerData(
-                    secondLine = UiText.DynamicString(
-                        "Copyright Matthias Emde, Michael Prommersberger\n" +
-                        "Licensed under the Mozilla Public License Version 2.0"
-                    )
+                    secondLine = UiText.StringResource(R.string.settings_about_copyright_second_line)
                 )
             ),
         )

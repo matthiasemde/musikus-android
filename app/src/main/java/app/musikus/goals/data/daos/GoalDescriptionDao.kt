@@ -73,7 +73,7 @@ data class GoalDescription(
     fun title(item: LibraryItem? = null) =
         item?.let {
             UiText.DynamicString(item.name)
-        } ?: UiText.StringResource(R.string.goal_name_non_specific)
+        } ?: UiText.StringResource(R.string.goals_goal_type_non_specific)
 
     fun subtitle(instance: GoalInstance) = listOf(
         UiText.DynamicAnnotatedString(
@@ -81,9 +81,9 @@ data class GoalDescription(
         ),
         UiText.PluralResource(
             resId = when(periodUnit) {
-                GoalPeriodUnit.DAY ->R.plurals.time_period_day
-                GoalPeriodUnit.WEEK -> R.plurals.time_period_week
-                GoalPeriodUnit.MONTH -> R.plurals.time_period_month
+                GoalPeriodUnit.DAY -> R.plurals.goals_goal_subtitle_day
+                GoalPeriodUnit.WEEK -> R.plurals.goals_goal_subtitle_week
+                GoalPeriodUnit.MONTH -> R.plurals.goals_goal_subtitle_month
             },
             quantity = periodInPeriodUnits,
             periodInPeriodUnits // argument used in the format string

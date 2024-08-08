@@ -21,11 +21,12 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import app.musikus.core.presentation.utils.UiText
 import java.util.*
 
-sealed class SelectionSpinnerOption(val name: String)
-class UUIDSelectionSpinnerOption(val id: UUID?, name: String) : SelectionSpinnerOption(name)
-class IntSelectionSpinnerOption(val id: Int?, name: String) : SelectionSpinnerOption(name)
+sealed class SelectionSpinnerOption(val name: UiText)
+class UUIDSelectionSpinnerOption(val id: UUID?, name: UiText) : SelectionSpinnerOption(name)
+class IntSelectionSpinnerOption(val id: Int?, name: UiText) : SelectionSpinnerOption(name)
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -60,7 +61,7 @@ fun SelectionSpinner(
                 readOnly = true,
                 modifier = Modifier
                     .menuAnchor(),
-                value = selected?.name ?: "", // if no option is selected, show nothing
+                value = selected?.name?.asString() ?: "", // if no option is selected, show nothing
                 onValueChange = {},
                 label = label,
                 placeholder = placeholder,
@@ -98,7 +99,7 @@ fun SelectionSpinner(
                                 modifier = Modifier
                                     .conditional(scrollBarShowing) { padding(end = 12.dp) }
                                     .height(singleDropdownItemHeight - 2.dp),
-                                text = { Text(text = it.name) },
+                                text = { Text(text = it.name.asString()) },
                                 onClick = { onSelectedChange(it) }
                             )
                             HorizontalDivider(
@@ -113,7 +114,7 @@ fun SelectionSpinner(
                                 .conditional(scrollBarShowing) { padding(end = 12.dp) }
                                 .height(singleDropdownItemHeight),
                             onClick = { onSelectedChange(option) },
-                            text = { Text(text = option.name) }
+                            text = { Text(text = option.name.asString()) }
                         )
                     }
                 }

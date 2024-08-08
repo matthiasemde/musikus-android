@@ -33,15 +33,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.musikus.R
 import app.musikus.core.presentation.components.TwoLiner
 import app.musikus.core.presentation.components.TwoLinerData
-import app.musikus.settings.domain.ColorSchemeSelections
-import app.musikus.settings.domain.ThemeSelections
 import app.musikus.core.presentation.theme.spacing
 import app.musikus.core.presentation.utils.UiText
+import app.musikus.core.presentation.utils.htmlResource
+import app.musikus.settings.domain.ColorSchemeSelections
+import app.musikus.settings.domain.ThemeSelections
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,12 +58,12 @@ fun AppearanceScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Appearance") },
+                title = { Text(stringResource(R.string.settings_appearance_title)) },
                 navigationIcon = {
                     IconButton(onClick = navigateUp) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = stringResource(R.string.components_top_bar_back_description),
                         )
                     }
                 }
@@ -70,18 +73,18 @@ fun AppearanceScreen(
 
         val appearanceMenuItems = listOf(
             TwoLinerData(
-                firstLine = UiText.DynamicString("Language"),
-                secondLine = UiText.DynamicString("System default"),
+                firstLine = UiText.StringResource(R.string.settings_appearance_language_first_line),
+                secondLine = UiText.DynamicString(uiState.languageUiState.currentLanguage),
                 onClick = { eventHandler(AppearanceUiEvent.ShowLanguageDialog) }
             ),
             TwoLinerData(
-                firstLine = UiText.DynamicString("Theme"),
-                secondLine = UiText.DynamicString(uiState.themeUiState.currentTheme.label),
+                firstLine = UiText.StringResource(R.string.settings_appearance_theme_first_line),
+                secondLine = uiState.themeUiState.currentTheme.label,
                 onClick = { eventHandler(AppearanceUiEvent.ShowThemeDialog) }
             ),
             TwoLinerData(
-                firstLine = UiText.DynamicString("Color scheme"),
-                secondLine = UiText.DynamicString(uiState.colorSchemeUiState.currentColorScheme.label),
+                firstLine = UiText.StringResource(R.string.settings_appearance_color_scheme_first_line),
+                secondLine = uiState.colorSchemeUiState.currentColorScheme.label,
                 onClick = { eventHandler(AppearanceUiEvent.ShowColorSchemeDialog) }
             ),
         )
@@ -107,17 +110,14 @@ fun AppearanceScreen(
                         .padding(horizontal = (MaterialTheme.spacing.medium + MaterialTheme.spacing.small)),
                 ) {
                     Text(
-                        text = "Language",
+                        text = stringResource(R.string.settings_appearance_language_dialog_title),
                         style = MaterialTheme.typography.titleLarge
                     )
                 }
                 Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
                 Text(
                     modifier = Modifier.padding(horizontal = MaterialTheme.spacing.medium),
-                    text =
-                        "More languages are coming soon! " +
-                        "If you want to help in translating the app into your native language, " +
-                        "please contact us at contribute@musikus.app",
+                    text = htmlResource(R.string.settings_appearance_language_dialog_text),
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
@@ -134,7 +134,7 @@ fun AppearanceScreen(
                     Button(
                         onClick = { eventHandler(AppearanceUiEvent.HideLanguageDialog) }
                     ) {
-                        Text (text = "Awesome!")
+                        Text (text = stringResource(R.string.settings_appearance_language_dialog_confirm))
                     }
                 }
             }
@@ -155,7 +155,7 @@ fun AppearanceScreen(
                         .padding(horizontal = (MaterialTheme.spacing.medium + MaterialTheme.spacing.small)),
                 ) {
                     Text(
-                        text = "Theme",
+                        text = stringResource(R.string.settings_appearance_theme_dialog_title),
                         style = MaterialTheme.typography.headlineSmall
                     )
                 }
@@ -174,7 +174,7 @@ fun AppearanceScreen(
                             onClick = { eventHandler(AppearanceUiEvent.ChangeTheme(selection)) }
                         )
                         Spacer(modifier = Modifier.width(MaterialTheme.spacing.small))
-                        Text(text = selection.label)
+                        Text(text = selection.label.asString())
                     }
                 }
                 Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
@@ -196,7 +196,7 @@ fun AppearanceScreen(
                         .padding(horizontal = (MaterialTheme.spacing.medium + MaterialTheme.spacing.small)),
                 ) {
                     Text(
-                        text = "ColorScheme",
+                        text = stringResource(R.string.settings_appearance_color_scheme_dialog_title),
                         style = MaterialTheme.typography.headlineSmall
                     )
                 }
@@ -217,8 +217,8 @@ fun AppearanceScreen(
                         Spacer(modifier = Modifier.width(MaterialTheme.spacing.small))
                         TwoLiner(
                             data = TwoLinerData(
-                                firstLine = UiText.DynamicString(selection.label),
-                                secondLine = UiText.DynamicString(selection.description)
+                                firstLine = UiText.DynamicString(selection.label.asString()),
+                                secondLine = UiText.DynamicString(selection.description.asString())
                             )
                         )
                     }

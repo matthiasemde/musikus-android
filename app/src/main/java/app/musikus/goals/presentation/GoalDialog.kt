@@ -3,8 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2022 Matthias Emde
- *
+ * Copyright (c) 2022-2024 Matthias Emde
  */
 
 package app.musikus.goals.presentation
@@ -39,7 +38,7 @@ import app.musikus.core.presentation.components.DialogActions
 import app.musikus.core.presentation.components.DialogHeader
 import app.musikus.core.presentation.components.DurationInput
 import app.musikus.core.presentation.components.IntSelectionSpinnerOption
-import app.musikus.core.presentation.components.MyToggleButton
+import app.musikus.core.presentation.components.ToggleButton
 import app.musikus.core.presentation.components.NumberInput
 import app.musikus.core.presentation.components.SelectionSpinner
 import app.musikus.core.presentation.components.ToggleButtonOption
@@ -50,6 +49,7 @@ import app.musikus.goals.data.entities.GoalType
 import app.musikus.library.presentation.DialogMode
 import app.musikus.core.presentation.theme.spacing
 import app.musikus.core.presentation.utils.TestTags
+import app.musikus.core.presentation.utils.UiText
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -98,7 +98,9 @@ fun GoalDialog(
         ) {
             DialogHeader(
                 title = stringResource(
-                    id = if(isEditMode) R.string.goalDialogTitleEdit else R.string.addGoalDialogTitle
+                    id =
+                        if(isEditMode) R.string.goals_goal_dialog_title_edit
+                        else R.string.goals_goal_dialog_title
                 )
             )
 
@@ -133,14 +135,14 @@ fun GoalDialog(
 
                 Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
 
-                MyToggleButton(
+                ToggleButton(
                     modifier = Modifier.padding(horizontal = MaterialTheme.spacing.large),
                     options = GoalType.entries.map {
-                        ToggleButtonOption(it.ordinal, it.toString())
+                        ToggleButtonOption(it.ordinal, it.toUiText())
                     },
                     selected = ToggleButtonOption(
                         dialogData.goalType.ordinal,
-                        dialogData.goalType.toString()
+                        dialogData.goalType.toUiText()
                     ),
                     onSelectedChanged = { option ->
                         eventHandler(GoalDialogUiEvent.GoalTypeChanged(GoalType.entries[option.id]))
@@ -155,14 +157,18 @@ fun GoalDialog(
                     if (libraryItems.isNotEmpty()) {
                         SelectionSpinner(
                             expanded = libraryItemsSelectorExpanded,
-                            placeholder = { Text(text = "Select a library item") },
+                            placeholder = {
+                                Text(text = stringResource(
+                                    id = R.string.goals_goal_dialog_item_selector_placeholder
+                                ))
+                            },
                             options = libraryItems.map {
-                                UUIDSelectionSpinnerOption(it.id, it.name)
+                                UUIDSelectionSpinnerOption(it.id, UiText.DynamicString(it.name))
                             },
                             selected = dialogData.selectedLibraryItems.firstOrNull()?.let {
-                                UUIDSelectionSpinnerOption(it.id, it.name)
+                                UUIDSelectionSpinnerOption(it.id, UiText.DynamicString(it.name))
                             },
-                            semanticDescription = "Select library item",
+                            semanticDescription = stringResource(id = R.string.goals_goal_dialog_item_selector_description),
                             dropdownTestTag = TestTags.GOAL_DIALOG_ITEM_SELECTOR_DROPDOWN,
                             onExpandedChange = {
                                 libraryItemsSelectorExpanded = it
@@ -176,7 +182,7 @@ fun GoalDialog(
                             }
                         )
                     } else {
-                        Text(text = "No items in your library.")
+                        Text(text = stringResource(id = R.string.goals_goal_dialog_item_selector_no_items))
                     }
                 }
 
@@ -190,7 +196,10 @@ fun GoalDialog(
                 onConfirmHandler = { eventHandler(GoalDialogUiEvent.Confirm) },
                 onDismissHandler = { eventHandler(GoalDialogUiEvent.Dismiss) },
                 confirmButtonEnabled = confirmButtonEnabled,
-                confirmButtonText = if (isEditMode) "Edit" else "Create"
+                confirmButtonText = stringResource( id =
+                    if (isEditMode) R.string.goals_goal_dialog_confirm_edit
+                    else R.string.goals_goal_dialog_confirm
+                )
             )
         }
     }
@@ -210,7 +219,7 @@ fun PeriodInput(
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(text = "in")
+        Text(text = stringResource(id = R.string.goals_goal_dialog_period_input_prefix))
         Spacer(modifier = Modifier.width(8.dp))
         NumberInput(
             value = periodInPeriodUnits.toString(),
@@ -223,9 +232,9 @@ fun PeriodInput(
         SelectionSpinner(
             modifier = Modifier.width(130.dp),
             expanded = periodUnitSelectorExpanded,
-            options = GoalPeriodUnit.entries.map { IntSelectionSpinnerOption(it.ordinal, it.toString()) },
-            selected = IntSelectionSpinnerOption(periodUnit.ordinal, periodUnit.toString()),
-            semanticDescription = "Select period unit",
+            options = GoalPeriodUnit.entries.map { IntSelectionSpinnerOption(it.ordinal, it.toUiText()) },
+            selected = IntSelectionSpinnerOption(periodUnit.ordinal, periodUnit.toUiText()),
+            semanticDescription = stringResource(id = R.string.goals_goal_dialog_period_input_description),
             dropdownTestTag = TestTags.GOAL_DIALOG_PERIOD_UNIT_SELECTOR_DROPDOWN,
             onExpandedChange = onPeriodUnitSelectorExpandedChanged,
             onSelectedChange = { selection ->

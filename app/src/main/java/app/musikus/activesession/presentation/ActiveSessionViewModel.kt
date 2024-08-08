@@ -13,6 +13,7 @@ import android.app.Application
 import android.os.Build
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import app.musikus.R
 import app.musikus.core.data.Nullable
 import app.musikus.library.data.daos.LibraryItem
 import app.musikus.sessions.data.entities.SectionCreationAttributes
@@ -25,6 +26,7 @@ import app.musikus.library.domain.usecase.LibraryUseCases
 import app.musikus.permissions.domain.usecase.PermissionsUseCases
 import app.musikus.sessions.domain.usecase.SessionsUseCases
 import app.musikus.core.presentation.utils.DurationFormat
+import app.musikus.core.presentation.utils.UiText
 import app.musikus.permissions.domain.PermissionChecker
 import app.musikus.core.presentation.utils.getDurationString
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -150,14 +152,16 @@ class ActiveSessionViewModel @Inject constructor(
         )
         ActiveSessionTimerUiState(
             timerText = getFormattedTimerText(practiceDuration),
-            subHeadingText = if (pause) "Paused $pauseDurStr" else "Practice Time",
+            subHeadingText =
+                if (pause) UiText.StringResource(R.string.active_session_timer_subheading_paused, pauseDurStr)
+                else UiText.StringResource(R.string.active_session_timer_subheading),
         )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = ActiveSessionTimerUiState(
             timerText = getFormattedTimerText(Duration.ZERO),
-            subHeadingText = "Practice Time"
+            subHeadingText = UiText.StringResource(R.string.active_session_timer_subheading)
         )
     )
 
@@ -171,7 +175,7 @@ class ActiveSessionViewModel @Inject constructor(
         runningLibraryItem,
         _clock  // should update with clock
     ) { sessionState, item, _ ->
-        if (sessionState == ActiveSessionState.NOT_STARTED) return@combine null
+        if (sessionState == ActiveSessionState.NOT_STARTED || item == null) return@combine null
 
         val currentItemDuration = try {
             activeSessionUseCases.getRunningItemDuration()
@@ -179,12 +183,12 @@ class ActiveSessionViewModel @Inject constructor(
             Duration.ZERO   // Session not yet started
         }
         ActiveSessionCurrentItemUiState(
-            name = item?.name ?: "Not started",
+            name = item.name,
             durationText = getDurationString(
                 currentItemDuration,
                 DurationFormat.MS_DIGITAL
             ).toString(),
-            color = libraryItemColors[item?.colorIndex ?: 0]
+            color = libraryItemColors[item.colorIndex]
         )
     }.stateIn(
         scope = viewModelScope,

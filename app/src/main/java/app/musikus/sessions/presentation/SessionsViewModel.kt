@@ -10,10 +10,12 @@ package app.musikus.sessions.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.musikus.R
 import app.musikus.core.data.SessionWithSectionsWithLibraryItems
 import app.musikus.sessions.domain.usecase.SessionsUseCases
 import app.musikus.core.presentation.utils.DurationFormat
 import app.musikus.core.presentation.utils.DurationString
+import app.musikus.core.presentation.utils.UiText
 import app.musikus.core.presentation.utils.getDurationString
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -114,7 +116,7 @@ class SessionsViewModel @Inject constructor(
     /** Composing the Ui state */
     private val topBarUiState = MutableStateFlow(
         SessionsTopBarUiState(
-            title = "Sessions",
+            title = UiText.StringResource(R.string.sessions_title),
             showBackButton = false,
         )
     )

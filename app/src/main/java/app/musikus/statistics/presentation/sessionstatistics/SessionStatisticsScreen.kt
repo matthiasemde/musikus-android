@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2023 Matthias Emde
+ * Copyright (c) 2023-2024 Matthias Emde
  */
 
 package app.musikus.statistics.presentation.sessionstatistics
@@ -30,8 +30,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
-import androidx.compose.material.icons.filled.BarChart
-import androidx.compose.material.icons.filled.PieChart
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -55,15 +53,15 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.musikus.R
+import app.musikus.core.domain.Timeframe
+import app.musikus.core.domain.musikusFormat
 import app.musikus.core.presentation.components.conditional
 import app.musikus.core.presentation.components.simpleVerticalScrollbar
 import app.musikus.core.presentation.theme.libraryItemColors
 import app.musikus.core.presentation.theme.spacing
-import app.musikus.library.data.daos.LibraryItem
 import app.musikus.core.presentation.utils.DurationFormat
-import app.musikus.core.domain.Timeframe
 import app.musikus.core.presentation.utils.getDurationString
-import app.musikus.core.domain.musikusFormat
+import app.musikus.library.data.daos.LibraryItem
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -78,10 +76,13 @@ fun SessionStatistics(
         topBar = {
             val topBarUiState = uiState.topBarUiState
             TopAppBar(
-                title = { Text(text = stringResource(id = R.string.session_statistics)) },
+                title = { Text(text = stringResource(id = R.string.statistics_session_statistics_title)) },
                 navigationIcon = {
                     IconButton(onClick = navigateUp) {
-                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+                            contentDescription = stringResource(id = R.string.components_top_bar_back_description)
+                        )
                     }
                 },
                 actions = {
@@ -93,11 +94,8 @@ fun SessionStatistics(
                             label = "statistics-chart-icon-animation"
                         ) { chartType ->
                             Icon(
-                                imageVector = when (chartType) {
-                                    SessionStatisticsChartType.PIE -> Icons.Default.BarChart
-                                    SessionStatisticsChartType.BAR -> Icons.Default.PieChart
-                                },
-                                contentDescription = null
+                                imageVector = chartType.invert().icon.asIcon(),
+                                contentDescription = chartType.invert().label.asString()
                             )
                         }
                     }
@@ -115,15 +113,7 @@ fun SessionStatistics(
                             Tab(
                                 selected = tab == contentUiState.selectedTab,
                                 onClick = { viewModel.onTabSelected(tab) },
-                                text = {
-                                    Text(
-                                        text = when (tab) {
-                                            SessionStatisticsTab.DAYS -> stringResource(id = R.string.days)
-                                            SessionStatisticsTab.WEEKS -> stringResource(id = R.string.weeks)
-                                            SessionStatisticsTab.MONTHS -> stringResource(id = R.string.months)
-                                        }.replaceFirstChar { it.uppercase() }
-                                    )
-                                }
+                                text = { Text(text = tab.label.asString()) }
                             )
                         }
                     }
@@ -160,7 +150,10 @@ fun SessionStatisticsHeader(
     seekBackwards: () -> Unit = {}
 ) = TimeframeSelectionHeader(
     timeframe = uiState.timeframe,
-    subtitle = "Total " + getDurationString(uiState.totalPracticeDuration, DurationFormat.HUMAN_PRETTY),
+    subtitle = stringResource(
+        id = R.string.statistics_session_statistics_total_duration,
+        getDurationString(uiState.totalPracticeDuration, DurationFormat.HUMAN_PRETTY)
+    ),
     seekBackwardEnabled = uiState.seekBackwardEnabled,
     seekForwardEnabled = uiState.seekForwardEnabled,
     seekForwards = seekForwards,
@@ -254,7 +247,7 @@ fun TimeframeSelectionHeader(
             Icon(
                 modifier = Modifier.size(32.dp),
                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                contentDescription = "Back"
+                contentDescription = stringResource(id = R.string.statistics_seek_backwards_description)
             )
         }
         Column(
@@ -279,7 +272,7 @@ fun TimeframeSelectionHeader(
             Icon(
                 modifier = Modifier.size(32.dp),
                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                contentDescription = "Forward"
+                contentDescription = stringResource(id = R.string.statistics_seek_forwards_description)
             )
         }
     }

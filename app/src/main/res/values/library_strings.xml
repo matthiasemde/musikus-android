@@ -1,0 +1,79 @@
+<!--
+    This Source Code Form is subject to the terms of the Mozilla Public
+    License, v. 2.0. If a copy of the MPL was not distributed with this
+    file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+    Copyright (c) 2024 Matthias Emde
+-->
+<resources>
+
+    <!-- Library -->
+    <string name="library_title">Library</string>
+
+    <plurals name="library_item">
+        <item quantity="one">item</item>
+        <item quantity="other">items</item>
+    </plurals>
+
+    <plurals name="library_folder">
+        <item quantity="one">folder</item>
+        <item quantity="other">folders</item>
+    </plurals>
+
+    <string name="library_item_sort_mode_date_added">Date added</string>
+    <string name="library_item_sort_mode_last_modified">Last modified</string>
+    <string name="library_item_sort_mode_name">Name</string>
+    <string name="library_item_sort_mode_color">Color</string>
+
+    <string name="library_folder_sort_mode_date_added">Date added</string>
+    <string name="library_folder_sort_mode_last_modified">Last modified</string>
+    <string name="library_folder_sort_mode_name">Name</string>
+
+    <!-- LibraryFolderDialog -->
+    <string name="library_folder_dialog_title">Create folder</string>
+    <string name="library_folder_dialog_title_edit">Edit folder</string>
+    <string name="library_folder_dialog_name_label">Folder name</string>
+    <string name="library_folder_dialog_confirm">Create</string>
+    <string name="library_folder_dialog_confirm_edit">Edit</string>
+
+    <!-- LibraryItemDialog -->
+    <string name="library_item_dialog_title">Add new Item</string>
+    <string name="library_item_dialog_title_edit">Edit Item</string>
+    <string name="library_item_dialog_name_label">Item name</string>
+    <string name="library_item_dialog_folder_selector_label">Folder</string>
+    <string name="library_item_dialog_folder_selector_no_folder">No folder</string>
+    <string name="library_item_dialog_folder_selector_description">Select folder</string>
+    <string name="library_item_dialog_color_selector_description">Color %1$d</string>
+    <string name="library_item_dialog_confirm">Create</string>
+    <string name="library_item_dialog_confirm_edit">Edit</string>
+
+    <!-- LibraryScreen -->
+    <string name="library_screen_fab_description">Add item</string>
+    <string name="library_screen_multi_fab_description">Add folder or item</string>
+    <string name="library_screen_multi_fab_item_description">Add item</string>
+    <string name="library_screen_multi_fab_folder_description">Add folder</string>
+    <string name="library_screen_hint">Create library items for any piece, scale or other exercise you want to practice.</string>
+
+    <plurals name="library_screen_deletion_dialog_explanation">
+        <item quantity="one">Delete %1$d %2$s? It will remain in your statistics, but you will no longer be able to practice them.</item>
+        <item quantity="other">Delete %1$d %2$s? They will remain in your statistics, but you will no longer be able to practice them.</item>
+    </plurals>
+    <string name="library_screen_deletion_dialog_explanation_both">
+        Delete %1$d %2$s and %3$d %4$s? They will remain in your statistics, but you will no longer be able to practice them.
+    </string>
+    <string name="library_screen_deletion_dialog_confirm">Delete forever (%1$s)</string>
+    <string name="library_screen_snackbar_deleted">Deleted</string>
+
+    <!-- LibraryContent -->
+    <string name="library_content_folders_title">Folders</string>
+    <string name="library_content_folders_sort_menu_description">folders</string>
+    <string name="library_content_folders_sub_title">%1$d items</string>
+
+    <string name="library_content_items_title">Items</string>
+    <string name="library_content_items_sort_menu_description">items</string>
+    <string name="library_content_items_last_practiced">last practiced: %1$s</string>
+    <string name="library_content_items_last_practiced_never">never</string>
+
+
+
+</resources>

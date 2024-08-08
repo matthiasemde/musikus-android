@@ -10,6 +10,7 @@ package app.musikus.library.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.musikus.R
 import app.musikus.core.data.Nullable
 import app.musikus.library.data.daos.LibraryFolder
 import app.musikus.library.data.daos.LibraryItem
@@ -19,10 +20,11 @@ import app.musikus.library.data.entities.LibraryItemCreationAttributes
 import app.musikus.library.data.entities.LibraryItemUpdateAttributes
 import app.musikus.library.domain.usecase.LibraryUseCases
 import app.musikus.settings.domain.usecase.UserPreferencesUseCases
-import app.musikus.core.domain.LibraryFolderSortMode
-import app.musikus.core.domain.LibraryItemSortMode
 import app.musikus.core.domain.SortDirection
 import app.musikus.core.domain.SortInfo
+import app.musikus.core.presentation.utils.UiText
+import app.musikus.library.data.LibraryFolderSortMode
+import app.musikus.library.data.LibraryItemSortMode
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -137,7 +139,7 @@ class LibraryViewModel @Inject constructor(
      * Composing the Ui state
      */
     private val topBarUiState = _activeFolder.map { activeFolder ->
-        val title = activeFolder?.name ?: "Library"
+        val title = activeFolder?.name?.let { UiText.DynamicString(it) } ?: UiText.StringResource(R.string.library_title)
         val showBackButton = activeFolder != null
 
         LibraryTopBarUiState(
@@ -148,7 +150,7 @@ class LibraryViewModel @Inject constructor(
         scope = viewModelScope,
         started = WhileSubscribed(5000),
         initialValue = LibraryTopBarUiState(
-            title = "Library",
+            title = UiText.StringResource(R.string.library_title),
             showBackButton = false,
         )
     )

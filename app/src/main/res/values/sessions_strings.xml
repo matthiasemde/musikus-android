@@ -1,0 +1,30 @@
+<!--
+    This Source Code Form is subject to the terms of the Mozilla Public
+    License, v. 2.0. If a copy of the MPL was not distributed with this
+    file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+    Copyright (c) 2024 Matthias Emde
+-->
+<resources>
+    <!-- Sessions -->
+    <string name="sessions_title">Sessions</string>
+
+    <!-- SessionsScreen -->
+    <string name="sessions_screen_hint">Press \"Start session\" to start your first practice session.</string>
+
+    <string name="sessions_screen_fab">Start session</string>
+    <string name="sessions_screen_fab_resume">Resume session</string>
+
+    <plurals name="sessions_screen_delete_session_dialog_explanation">
+        <item quantity="one">Delete %1$d session? Any progress made during this session will be lost.</item>
+        <item quantity="other">Delete %1$d sessions? Any progress made during these sessions will be lost.</item>
+    </plurals>
+    <string name="sessions_screen_delete_session_dialog_confirm">Delete forever (%1$s)</string>
+    <string name="sessions_screen_snackbar_deleted">Deleted</string>
+
+    <!-- SessionCard -->
+    <string name="sessions_session_card_practice_time">Practice time</string>
+    <string name="sessions_session_card_break_time">Break time</string>
+    <string name="sessions_session_card_comment">Comment</string>
+
+</resources>

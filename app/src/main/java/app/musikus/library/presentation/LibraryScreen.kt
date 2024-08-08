@@ -60,6 +60,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -94,11 +95,11 @@ import app.musikus.library.data.daos.LibraryFolder
 import app.musikus.library.data.daos.LibraryItem
 import app.musikus.settings.domain.ColorSchemeSelections
 import app.musikus.core.domain.DateFormat
-import app.musikus.core.domain.LibraryFolderSortMode
-import app.musikus.core.domain.LibraryItemSortMode
 import app.musikus.core.presentation.utils.UiIcon
 import app.musikus.core.presentation.utils.UiText
 import app.musikus.core.domain.musikusFormat
+import app.musikus.library.data.LibraryFolderSortMode
+import app.musikus.library.data.LibraryItemSortMode
 import java.time.ZonedDateTime
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -142,7 +143,7 @@ fun Library(
                         homeEventHandler(HomeUiEvent.CollapseMultiFab)
                     },
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = "Add item")
+                    Icon(Icons.Default.Add, contentDescription = stringResource(id = R.string.library_screen_fab_description))
                 }
             } else {
                 MultiFAB(
@@ -155,14 +156,14 @@ fun Library(
                             homeEventHandler(HomeUiEvent.CollapseMultiFab)
                         }
                     },
-                    contentDescription = "Add",
+                    contentDescription = stringResource(id = R.string.library_screen_multi_fab_description),
                     miniFABs = listOf(
                         MiniFABData(
                             onClick = {
                                 eventHandler(LibraryUiEvent.AddItemButtonPressed)
                                 homeEventHandler(HomeUiEvent.CollapseMultiFab)
                             },
-                            label = "Item",
+                            label = stringResource(id = R.string.library_screen_multi_fab_item_description),
                             icon = Icons.Rounded.MusicNote
                         ),
                         MiniFABData(
@@ -170,7 +171,7 @@ fun Library(
                                 eventHandler(LibraryUiEvent.AddFolderButtonPressed)
                                 homeEventHandler(HomeUiEvent.CollapseMultiFab)
                             },
-                            label = "Folder",
+                            label = stringResource(id = R.string.library_screen_multi_fab_folder_description),
                             icon = Icons.Rounded.Folder
                         )
                     )
@@ -181,11 +182,16 @@ fun Library(
             val topBarUiState = uiState.topBarUiState
             LargeTopAppBar(
                 scrollBehavior = scrollBehavior,
-                title = { Text(text = topBarUiState.title) },
+                title = { Text(text = topBarUiState.title.asString()) },
                 navigationIcon = {
                     if(topBarUiState.showBackButton) {
                         IconButton(onClick = { eventHandler(LibraryUiEvent.BackButtonPressed) }) {
-                            Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+                                contentDescription = stringResource(
+                                    id = R.string.components_top_bar_back_description
+                                )
+                            )
                         }
                     }
                 },
@@ -193,7 +199,10 @@ fun Library(
                     IconButton(onClick = {
                         homeEventHandler(HomeUiEvent.ShowMainMenu)
                     }) {
-                        Icon(Icons.Default.MoreVert, contentDescription = "more")
+                        Icon(
+                            imageVector = Icons.Default.MoreVert,
+                            contentDescription = stringResource(id = R.string.core_kebab_menu_description)
+                        )
                         MainMenu (
                             show = homeUiState.showMainMenu,
                             onDismiss = { homeEventHandler(HomeUiEvent.HideMainMenu) },
@@ -240,7 +249,7 @@ fun Library(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = stringResource(id = R.string.libraryHint),
+                        text = stringResource(id = R.string.library_screen_hint),
                         style = MaterialTheme.typography.titleMedium,
                         textAlign = TextAlign.Center
                     )
@@ -269,6 +278,7 @@ fun Library(
             val deleteDialogUiState = dialogUiState.deleteDialogUiState
 
             if (deleteDialogUiState != null) {
+                val snackbarMessage = stringResource(id = R.string.library_screen_snackbar_deleted)
 
                 val foldersSelected = deleteDialogUiState.numberOfSelectedFolders > 0
                 val itemsSelected = deleteDialogUiState.numberOfSelectedItems > 0
@@ -277,23 +287,41 @@ fun Library(
                     deleteDialogUiState.numberOfSelectedFolders + deleteDialogUiState.numberOfSelectedItems
 
                 DeleteConfirmationBottomSheet(
-                    explanation = UiText.DynamicString(
-                        "Delete " +
-                                (if (foldersSelected) "folders" else "") +
-                                (if (foldersSelected && itemsSelected) " and " else "") +
-                                (if (itemsSelected) "items" else "") +
-                                "? They will remain in your statistics, but you will no longer be able to practice them."
-                    ),
+                    explanation = 
+                        if (foldersSelected && itemsSelected) {
+                            UiText.StringResource(
+                                R.string.library_screen_deletion_dialog_explanation_both,
+                                deleteDialogUiState.numberOfSelectedFolders,
+                                pluralStringResource(id = R.plurals.library_folder, deleteDialogUiState.numberOfSelectedFolders),
+                                deleteDialogUiState.numberOfSelectedItems,
+                                pluralStringResource(id = R.plurals.library_item, deleteDialogUiState.numberOfSelectedItems)
+                            )
+                        } else {
+                            UiText.PluralResource(
+                                R.plurals.library_screen_deletion_dialog_explanation,
+                                totalSelections,
+                                totalSelections,
+                                if (foldersSelected) {
+                                        pluralStringResource(id = R.plurals.library_folder, deleteDialogUiState.numberOfSelectedFolders)
+                                } else {
+                                        pluralStringResource(id = R.plurals.library_item, deleteDialogUiState.numberOfSelectedItems)
+                                }
+                            )
+                        },
                     confirmationIcon = UiIcon.DynamicIcon(Icons.Default.Delete),
-                    confirmationText = UiText.DynamicString("Delete forever ($totalSelections)"),
+                    confirmationText = UiText.StringResource(
+                        R.string.library_screen_deletion_dialog_confirm,
+                        totalSelections
+                    ),
                     onDismiss = { eventHandler(LibraryUiEvent.DeleteDialogDismissed) },
                     onConfirm = {
                         eventHandler(LibraryUiEvent.DeleteDialogConfirmed)
                         mainEventHandler(
                             MainUiEvent.ShowSnackbar(
-                            message = "Deleted",
-                            onUndo = { eventHandler(LibraryUiEvent.RestoreButtonPressed) }
-                        ))
+                                message = snackbarMessage,
+                                onUndo = { eventHandler(LibraryUiEvent.RestoreButtonPressed) }
+                            )
+                        )
                     }
                 )
             }
@@ -352,7 +380,7 @@ fun LibraryContent(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Folders",
+                        text = stringResource(id = R.string.library_content_folders_title),
                         style = MaterialTheme.typography.titleLarge
                     )
                     val sortMenuUiState = foldersUiState.sortMenuUiState
@@ -361,7 +389,7 @@ fun LibraryContent(
                         sortModes = LibraryFolderSortMode.entries,
                         currentSortMode = sortMenuUiState.mode,
                         currentSortDirection = sortMenuUiState.direction,
-                        sortItemDescription = "folders",
+                        sortItemDescription = stringResource(id = R.string.library_content_folders_sort_menu_description),
                         onShowMenuChanged = { eventHandler(LibraryUiEvent.FolderSortMenuPressed) },
                         onSelectionHandler = {
                             eventHandler(LibraryUiEvent.FolderSortModeSelected(it as LibraryFolderSortMode))
@@ -421,7 +449,7 @@ fun LibraryContent(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Items",
+                        text = stringResource(id = R.string.library_content_items_title),
                         style = MaterialTheme.typography.titleLarge
                     )
                     val sortMenuUiState = itemsUiState.sortMenuUiState
@@ -430,7 +458,7 @@ fun LibraryContent(
                         sortModes = LibraryItemSortMode.entries,
                         currentSortMode = sortMenuUiState.mode,
                         currentSortDirection = sortMenuUiState.direction,
-                        sortItemDescription = "items",
+                        sortItemDescription = stringResource(id = R.string.library_content_items_sort_menu_description),
                         onShowMenuChanged = { eventHandler(LibraryUiEvent.ItemSortMenuPressed) },
                         onSelectionHandler = {
                             eventHandler(LibraryUiEvent.ItemSortModeSelected(it as LibraryItemSortMode))
@@ -492,7 +520,7 @@ fun LibraryFolder(
                 )
                 Text(
                     modifier = Modifier.padding(top = 4.dp),
-                    text = "$numItems items",
+                    text = stringResource(id = R.string.library_content_folders_sub_title, numItems),
                     style = MaterialTheme.typography.labelMedium,
                     color = colorScheme.onSurface.copy(alpha = 0.8f),
                     textAlign = TextAlign.Center,
@@ -547,7 +575,12 @@ fun LibraryUiItem(
                     maxLines = 1,
                 )
                 Text(
-                    text = "last practiced: " +  (lastPracticedDate?.musikusFormat(DateFormat.DAY_MONTH_YEAR) ?: "never"),
+                    text = stringResource(
+                        id = R.string.library_content_items_last_practiced,
+                        lastPracticedDate?.musikusFormat(DateFormat.DAY_MONTH_YEAR) ?: stringResource(
+                            id = R.string.library_content_items_last_practiced_never
+                        )
+                    ),
                     style = MaterialTheme.typography.bodySmall,
                     color = colorScheme.onSurfaceVariant,
                 )
