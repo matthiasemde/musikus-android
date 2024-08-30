@@ -59,6 +59,7 @@
 
     <!-- GoalCard -->
     <string name="goals_goal_card_achieved">Goal achieved!</string>
+    <string name="goals_goal_card_expired">Goal expired</string>
 
     <!-- GoalDialog -->
     <string name="goals_goal_dialog_title">Create a new goal</string>
