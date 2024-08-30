@@ -27,7 +27,10 @@ class GoalRepositoryImpl(
     private val instanceDao = database.goalInstanceDao
     private val descriptionDao = database.goalDescriptionDao
 
-    override val currentGoals = instanceDao.getCurrent()
+    // Using a getter here is important because we want a new flow to be created, every time
+    // currentGoals is read. This ensures that the timestamp used by getCurrent() is up to date.
+    override val currentGoals
+        get() = instanceDao.getCurrent()
     override val allGoals = descriptionDao.getAllWithInstancesAndLibraryItems()
     override val lastFiveCompletedGoals = instanceDao.getLastNCompleted(5)
 
