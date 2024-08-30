@@ -12,6 +12,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.musikus.core.domain.SortDirection
 import app.musikus.core.domain.SortInfo
+import app.musikus.core.domain.TimeProvider
+import app.musikus.core.domain.specificDay
 import app.musikus.goals.data.GoalsSortMode
 import app.musikus.goals.data.entities.GoalDescriptionCreationAttributes
 import app.musikus.goals.data.entities.GoalInstanceCreationAttributes
@@ -24,10 +26,15 @@ import app.musikus.library.data.daos.LibraryItem
 import app.musikus.library.domain.usecase.LibraryUseCases
 import app.musikus.library.presentation.DialogMode
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -49,15 +56,42 @@ data class GoalDialogData(
 class GoalsViewModel @Inject constructor(
     private val goalsUseCases: GoalsUseCases,
     libraryUseCases: LibraryUseCases,
+    timeProvider: TimeProvider,
 ) : ViewModel() {
 
     private var _goalIdsCache: Set<UUID> = emptySet()
 
+    private val _minuteClock = Channel<Unit>()
     init {
         viewModelScope.launch {
-            goalsUseCases.update()
+            while (true) {
+                _minuteClock.send(Unit)
+
+                var durationUntilNextFullMinute = 60.seconds - timeProvider.now().second.seconds
+                println("Duration until next full minute: $durationUntilNextFullMinute")
+                while (durationUntilNextFullMinute > 0.seconds) {
+                    println("time left: $durationUntilNextFullMinute")
+                    delay(1.seconds)
+                    durationUntilNextFullMinute -= 1.seconds
+                }
+            }
         }
     }
+
+    private var _currentSpecificDay: Int? = null
+    private val _dayClock = _minuteClock.receiveAsFlow().map {
+        println("Current specific day: $_currentSpecificDay, now: ${timeProvider.now().specificDay}")
+        if (_currentSpecificDay?.let { it != timeProvider.now().specificDay } != false) {
+            println("New day, updating goals")
+            goalsUseCases.update()
+            _currentSpecificDay = timeProvider.now().specificDay
+        }
+        _currentSpecificDay
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = null
+    )
 
     /** Imported flows */
 
@@ -70,7 +104,11 @@ class GoalsViewModel @Inject constructor(
         )
     )
 
-    private val currentGoals = goalsUseCases.getCurrent(excludePaused = false).stateIn(
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val currentGoals = _dayClock.flatMapLatest {
+        println("Getting current goals")
+        goalsUseCases.getCurrent(excludePaused = false)
+    }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = emptyList()
@@ -149,9 +187,10 @@ class GoalsViewModel @Inject constructor(
     )
 
     private val contentUiState = combine(
+        _minuteClock.receiveAsFlow(),
         currentGoals,
         _selectedGoalIds,
-    ) { currentGoals, selectedGoals ->
+    ) { _, currentGoals, selectedGoals ->
         GoalsContentUiState(
             currentGoals = currentGoals,
             selectedGoalIds = selectedGoals,

@@ -283,7 +283,10 @@ abstract class GoalInstanceDao(
         now: String = database.timeProvider.now().toDatabaseInterpretableString()
     ): Flow<List<GoalInstanceWithDescriptionWithLibraryItems>>
 
-    fun getCurrent() = directGetCurrent()
+    fun getCurrent(): Flow<List<GoalInstanceWithDescriptionWithLibraryItems>> {
+        println("getCurrent ${database.timeProvider.now()}")
+        return directGetCurrent()
+    }
 
     @Transaction
     @RewriteQueriesToDropUnusedColumns
