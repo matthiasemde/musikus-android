@@ -150,7 +150,7 @@ jobs:
           path: app/build/reports/androidTests/connected/debug
 
   final-check:
-    name: Final Check
+    name: CI checks passed
     needs: [ checks, build, unit-tests, instrumentation-tests ]
     runs-on: ubuntu-latest
 
