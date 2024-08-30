@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2022 Matthias Emde
+ * Copyright (c) 2022-2024 Matthias Emde
  */
 
 package app.musikus.goals.presentation
@@ -45,13 +45,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.musikus.R
-import app.musikus.goals.data.entities.GoalType
-import app.musikus.core.presentation.utils.DurationFormat
-import app.musikus.core.presentation.utils.getDurationString
-import app.musikus.core.presentation.theme.libraryItemColors
-import app.musikus.goals.domain.GoalInstanceWithProgressAndDescriptionWithLibraryItems
 import app.musikus.core.domain.TimeProvider
+import app.musikus.core.presentation.theme.libraryItemColors
+import app.musikus.core.presentation.utils.DurationFormat
 import app.musikus.core.presentation.utils.asAnnotatedString
+import app.musikus.core.presentation.utils.getDurationString
+import app.musikus.goals.data.entities.GoalType
+import app.musikus.goals.domain.GoalInstanceWithProgressAndDescriptionWithLibraryItems
 import java.time.temporal.ChronoUnit
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -134,10 +134,10 @@ fun GoalCard(
                         Text(
                             modifier = Modifier.padding(8.dp),
                             maxLines = 1,
-                            text= stringResource(
+                            text = if (remainingTime.isPositive()) stringResource(
                                 R.string.time_left,
                                 getDurationString(remainingTime, DurationFormat.PRETTY_APPROX)
-                            )
+                            ) else stringResource(R.string.time_over),
                         )
                     }
                 }

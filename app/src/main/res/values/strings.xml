@@ -108,6 +108,7 @@
     <string name="deleteLibraryItemsFailSnackbar">Some items could not be deleted, because they are associated with at least one goal</string>
     <string name="deleteDialogConfirm">Delete</string>
     <string name="time_left">%1$s left</string>
+    <string name="time_over">Expired</string>
     <plurals name="time_period_day">
         <item quantity="one">in one day</item>
         <item quantity="other">in %d days</item>
