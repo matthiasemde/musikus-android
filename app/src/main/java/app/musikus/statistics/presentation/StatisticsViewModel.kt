@@ -33,6 +33,17 @@ import javax.inject.Inject
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
+data class PracticeDurationPerDay(
+    val day: String = "",
+    val duration: Duration = 0.seconds,
+)
+
+data class GoalCardGoalDisplayData(
+    val label: String = "",
+    val progress: Float = 0.0f,
+    val color: Color? = null
+)
+
 /**
  * Ui state data classes
  */
@@ -41,8 +52,8 @@ data class StatisticsUiState(
 )
 data class StatisticsContentUiState(
     val currentMonthUiState: StatisticsCurrentMonthUiState?,
-    val practiceDurationCardUiState: StatisticsPracticeDurationCardUiState?,
-    val goalCardUiState: StatisticsGoalCardUiState?,
+    val practiceDurationCardUiState: StatisticsSessionsCardUiState?,
+    val goalCardUiState: StatisticsGoalsCardUiState?,
     val ratingsCardUiState: StatisticsRatingsCardUiState?,
     val showHint: Boolean,
 )
@@ -54,23 +65,12 @@ data class StatisticsCurrentMonthUiState(
     val averageRatingPerSession: Float,
 )
 
-data class StatisticsPracticeDurationCardUiState(
+data class StatisticsSessionsCardUiState(
     val lastSevenDayPracticeDuration: List<PracticeDurationPerDay>,
     val totalPracticeDuration: Duration,
 )
 
-data class PracticeDurationPerDay(
-    val day: String,
-    val duration: Duration,
-)
-
-data class GoalCardGoalDisplayData(
-    val label: String,
-    val progress: Float,
-    val color: Color?
-)
-
-data class StatisticsGoalCardUiState(
+data class StatisticsGoalsCardUiState(
     val successRate: Pair<Int, Int>?,
     val lastGoalsDisplayData: List<GoalCardGoalDisplayData>,
 )
@@ -88,16 +88,7 @@ class StatisticsViewModel @Inject constructor(
 
     /** Imported flows */
 
-    // Timeframe for the current month, but at least the last week
-    private val _timeframe = Pair(
-        minOf(
-            timeProvider.getStartOfMonth(),
-            timeProvider.getStartOfDay().minusWeeks(1)
-        ),
-        timeProvider.getEndOfMonth(),
-    )
-
-    private val sessions = sessionsUseCases.getInTimeframe(_timeframe).stateIn(
+    private val sessions = sessionsUseCases.getAll().stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = emptyList(),
@@ -114,12 +105,18 @@ class StatisticsViewModel @Inject constructor(
      */
 
     private val currentMonthUiState = sessions.map { sessions ->
-        if (sessions.isEmpty()) return@map null
+        // If there are no sessions return null
+        if (sessions.isEmpty()) {
+            return@map null
+        }
 
+        // Filter for sessions of the current month
         val currentSpecificMonth = timeProvider.now().specificMonth
         val currentMonthSessions = sessions.filter { session ->
             session.startTimestamp.specificMonth == currentSpecificMonth
         }
+
+        // Calculate the statistics
         val totalPracticeDuration = currentMonthSessions.sumOf { (_, sections) ->
             sections.sumOf { (section, _) -> section.duration.inWholeSeconds }
         }.seconds
@@ -139,6 +136,7 @@ class StatisticsViewModel @Inject constructor(
             }
         }
 
+        // Return the UI state
         StatisticsCurrentMonthUiState(
             totalPracticeDuration = totalPracticeDuration,
             averageDurationPerSession = averageDurationPerSession,
@@ -151,25 +149,32 @@ class StatisticsViewModel @Inject constructor(
         initialValue = null
     )
 
-    private var _noSessionsForDurationCard = true
+    private var _noSessionsCard = true
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    private val practiceDurationCardUiState = sessions.flatMapLatest { sessions ->
+    private val sessionsCardUiState = sessions.flatMapLatest { sessions ->
+        // If there are no sessions return (no sessions card)
         if (sessions.isEmpty()) {
-            _noSessionsForRatingCard = true
+            _noSessionsCard = true
             return@flatMapLatest flow { emit(null) }
         }
 
+        // Compute timestamps for the last seven days
         val lastSevenDays = (0L..6L).reversed().map { dayOffset ->
             timeProvider.getStartOfDay().minusDays(dayOffset)
         }
 
-        val groupedSessions = sessions.filter { session ->
+        // Filter sessions for the last seven days
+        val sessionsInLastSevenDays = sessions.filter { session ->
             session.startTimestamp > lastSevenDays.first()
-        }.groupBy { session ->
+        }
+
+        // Group sessions by day of the week
+        val groupedSessions = sessionsInLastSevenDays.groupBy { session ->
             getDayIndexOfWeek(session.startTimestamp)
         }
 
+        // Compute the practice duration per day
         val lastSevenDayPracticeDuration = lastSevenDays.map { day ->
             val dayIndex = getDayIndexOfWeek(day)
             PracticeDurationPerDay(
@@ -182,28 +187,31 @@ class StatisticsViewModel @Inject constructor(
             )
         }
 
+        // Compute the total practice duration for the last seven days
         val totalPracticeDuration = lastSevenDayPracticeDuration.sumOf {
             it.duration.inWholeSeconds
         }.seconds
 
+        // Return the UI state as a flow
         flow {
-            if (_noSessionsForDurationCard) {
+            // If there was no sessions card before (i.e. the first time the screen is rendered),
+            // show a placeholder card with zero durations for a short duration, before showing
+            // the actual data. This triggers the card animation.
+            if (_noSessionsCard) {
+                // Emit the empty placeholder card
                 emit(
-                    StatisticsPracticeDurationCardUiState(
-                        lastSevenDayPracticeDuration = lastSevenDayPracticeDuration.map {
-                            PracticeDurationPerDay(
-                                day = it.day,
-                                duration = 0.seconds
-                            )
-                        },
+                    StatisticsSessionsCardUiState(
+                        lastSevenDayPracticeDuration = lastSevenDays.map { PracticeDurationPerDay() },
                         totalPracticeDuration = totalPracticeDuration,
                     )
                 )
                 delay(350)
-                _noSessionsForDurationCard = false
+                _noSessionsCard = false
             }
+
+            // Emit the actual data
             emit(
-                StatisticsPracticeDurationCardUiState(
+                StatisticsSessionsCardUiState(
                     lastSevenDayPracticeDuration = lastSevenDayPracticeDuration,
                     totalPracticeDuration = totalPracticeDuration,
                 )
@@ -215,50 +223,54 @@ class StatisticsViewModel @Inject constructor(
         initialValue = null
     )
 
-    private var _noSessionsForGoalCard = true
+    private var _noGoalsCard = true
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    private val goalCardUiState = lastFiveCompletedGoals.flatMapLatest { lastFiveGoals ->
+    private val goalsCardUiState = lastFiveCompletedGoals.flatMapLatest { lastFiveGoals ->
+        // If there are no goals return (no goals card)
         if (lastFiveGoals.isEmpty()) {
-            _noSessionsForGoalCard = true
+            _noGoalsCard = true
             return@flatMapLatest flow { emit(null) }
         }
 
-        flow {
-            if (_noSessionsForGoalCard) {
-                emit(
-                    StatisticsGoalCardUiState(
-                        successRate = null,
-                        lastGoalsDisplayData = lastFiveGoals.map {
-                            GoalCardGoalDisplayData(
-                                label = "",
-                                progress = 0f,
-                                color = null
-                            )
-                        }
-                    )
-                )
-                delay(350)
-                _noSessionsForGoalCard = false
-            }
-            emit(
-                StatisticsGoalCardUiState(
-                    successRate = lastFiveGoals.count {
-                        it.progress >= it.instance.target
-                    } to lastFiveGoals.size,
-                    lastGoalsDisplayData = lastFiveGoals.reversed().map {
-                        GoalCardGoalDisplayData(
-                            label = it.instance.startTimestamp.musikusFormat(DateFormat.DAY_AND_MONTH),
-                            progress = (
-                                it.progress.inWholeSeconds.toFloat() / it.instance.target.inWholeSeconds
-                                ).coerceAtMost(1f),
-                            color = it.description.libraryItems.firstOrNull()?.let { item ->
-                                libraryItemColors[item.colorIndex]
-                            }
-                        )
-                    }
-                )
+        // Compute the goal statistics
+        val successRate = lastFiveGoals.count {
+            it.progress >= it.instance.target
+        } to lastFiveGoals.size
+
+        val lastGoalsDisplayData = lastFiveGoals.reversed().map {
+            GoalCardGoalDisplayData(
+                label = it.instance.startTimestamp.musikusFormat(DateFormat.DAY_AND_MONTH),
+                progress = (
+                        it.progress.inWholeSeconds.toFloat() / it.instance.target.inWholeSeconds
+                        ).coerceAtMost(1f),
+                color = it.description.libraryItems.firstOrNull()?.let { item ->
+                    libraryItemColors[item.colorIndex]
+                }
             )
+        }
+
+        // Return the UI state as a flow
+        flow {
+            // If there was no goals card before (i.e. the first time the screen is rendered),
+            // show a placeholder card with zero progress for a short duration, before showing
+            // the actual data. This triggers the card animation.
+            if (_noGoalsCard) {
+                // Emit the empty placeholder
+                emit(StatisticsGoalsCardUiState(
+                    successRate = null,
+                    lastGoalsDisplayData = lastFiveGoals.map { GoalCardGoalDisplayData() }
+                ))
+                delay(350)
+                _noGoalsCard = false
+            }
+
+            // Emit the actual data
+            emit(
+                StatisticsGoalsCardUiState(
+                    successRate = successRate,
+                    lastGoalsDisplayData = lastGoalsDisplayData
+            ))
         }
     }.stateIn(
         scope = viewModelScope,
@@ -266,15 +278,17 @@ class StatisticsViewModel @Inject constructor(
         initialValue = null
     )
 
-    private var _noSessionsForRatingCard = true
+    private var _noRatingsCard = true
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private val ratingsCardUiState = sessions.flatMapLatest { sessions ->
+        // If there are no ratings return (no ratings card)
         if (sessions.isEmpty()) {
-            _noSessionsForRatingCard = true
+            _noRatingsCard = true
             return@flatMapLatest flow { emit(null) }
         }
 
+        // Map the ratings to the number of ratings from one to five
         val numOfRatingsFromOneToFive = sessions.groupBy { (session, _) ->
             session.rating
         }.let { ratingToSessions ->
@@ -283,12 +297,19 @@ class StatisticsViewModel @Inject constructor(
             }
         }
 
+        // Return the UI state as a flow
         flow {
-            if (_noSessionsForRatingCard) {
+            // If there was no ratings card before (i.e. the first time the screen is rendered),
+            // show a placeholder card with no ratings for a short duration, before showing
+            // the actual data. This triggers the card animation.
+            if (_noRatingsCard) {
+                // Emit the empty placeholder
                 emit(StatisticsRatingsCardUiState((1..5).map { 0 }))
                 delay(350)
-                _noSessionsForRatingCard = false
+                _noRatingsCard = false
             }
+
+            // Emit the actual data
             emit(StatisticsRatingsCardUiState(numOfRatingsFromOneToFive))
         }
     }.stateIn(
@@ -299,8 +320,8 @@ class StatisticsViewModel @Inject constructor(
 
     val uiState = combine(
         currentMonthUiState,
-        practiceDurationCardUiState,
-        goalCardUiState,
+        sessionsCardUiState,
+        goalsCardUiState,
         ratingsCardUiState,
     ) { currentMonthUiState, practiceDurationCardUiState, goalCardUiState, ratingsCardUiState ->
         StatisticsUiState(
@@ -323,8 +344,8 @@ class StatisticsViewModel @Inject constructor(
         initialValue = StatisticsUiState(
             contentUiState = StatisticsContentUiState(
                 currentMonthUiState = currentMonthUiState.value,
-                practiceDurationCardUiState = practiceDurationCardUiState.value,
-                goalCardUiState = goalCardUiState.value,
+                practiceDurationCardUiState = sessionsCardUiState.value,
+                goalCardUiState = goalsCardUiState.value,
                 ratingsCardUiState = ratingsCardUiState.value,
                 showHint = true
             ),

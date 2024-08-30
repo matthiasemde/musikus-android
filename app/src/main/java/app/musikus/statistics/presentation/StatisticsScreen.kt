@@ -264,7 +264,7 @@ fun StatisticsCurrentMonth(
 
 @Composable
 fun StatisticsSessionsCard(
-    uiState: StatisticsPracticeDurationCardUiState,
+    uiState: StatisticsSessionsCardUiState,
     navigateToSessionStatistics: () -> Unit,
 ) {
     ElevatedCard(
@@ -396,7 +396,7 @@ fun StatisticsSessionsCard(
 
 @Composable
 fun StatisticsGoalsCard(
-    uiState: StatisticsGoalCardUiState,
+    uiState: StatisticsGoalsCardUiState,
     navigateToGoalStatistics: () -> Unit,
 ) {
     ElevatedCard(
