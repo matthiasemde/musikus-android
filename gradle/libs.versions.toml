@@ -28,12 +28,12 @@ ksp = "2.0.0-1.0.21"
 license-report = "0.9.7"
 media3 = "1.4.1"
 # @keep
-minSdk = "21"
+minSdk = "24"
 mockk = "1.13.9"
 room = "2.6.1"
 room-testing = "1.1.1"
 # @keep
-targetSdk = "33"
+targetSdk = "34"
 google-truth = "1.1.3"
 ui-test = "1.6.8"
 
