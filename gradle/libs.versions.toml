@@ -22,9 +22,9 @@ hilt = "2.49"
 jdk-desugar = "2.1.1"
 junit = "4.13.2"
 junit-jupiter = "5.10.0"
-kotlin = "1.9.20"
+kotlin = "2.0.0"
 kotlinx-collections-immutable = "0.3.5"
-ksp = "1.9.20-1.0.14"
+ksp = "2.0.0-1.0.21"
 license-report = "0.9.7"
 media3 = "1.4.1"
 # @keep
@@ -98,6 +98,7 @@ google-truth = { module = "com.google.truth:truth", version.ref = "google-truth"
 android-application = { id = "com.android.application", version.ref = "android-gradle-plugin" }
 android-junit5 = { id = "de.mannodermaus.android-junit5", version.ref = "android-junit5" }
 androidx-room = { id = "androidx.room", version.ref = "room" }
+compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
