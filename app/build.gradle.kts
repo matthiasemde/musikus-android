@@ -10,25 +10,25 @@ val importedVersionName = properties["versionName"] as String
 val commitHash = properties["commitHash"] as String
 
 plugins {
-    id("com.android.application")
-    id("org.jetbrains.kotlin.android")
-    id("dagger.hilt.android.plugin")
-    id("com.google.devtools.ksp")
-    id("de.mannodermaus.android-junit5")
-    id("com.jaredsburrows.license")
-    id("androidx.room")
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.android.junit5)
+    alias(libs.plugins.androidx.room)
+    alias(libs.plugins.hilt)
+    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.license.report)
 }
 
 android {
     val javaVersion = JavaVersion.VERSION_17
 
     namespace = "app.musikus"
-    compileSdk = 34
+    compileSdk = libs.versions.compileSdk.get().toInt()
 
     defaultConfig {
         applicationId = "app.musikus"
-        minSdk = 24
-        targetSdk = compileSdk
+        minSdk = libs.versions.minSdk.get().toInt()
+        targetSdk = libs.versions.targetSdk.get().toInt()
         versionCode = importedVersionCode.toInt()
         versionName = importedVersionName
 
@@ -110,118 +110,107 @@ tasks.withType<Test> {
 }
 
 dependencies {
-    val bomVersion = "2024.08.00"
-
-    val lifecycleVersion = "2.8.4"
-    val roomVersion = "2.6.1"
-    val navVersion = "2.7.7"
-    val daggerHiltVersion = "2.49"
-    val kotlinCoroutineVersion = "1.7.3"
-    val mockkVersion = "1.13.9"
-    val media3Version = "1.4.1"
-    val activityVersion = "1.9.1"
-
-    implementation("androidx.activity:activity-ktx:$activityVersion")
-
-    implementation("androidx.navigation:navigation-runtime-ktx:$navVersion")
-    implementation("androidx.legacy:legacy-support-v4:1.0.0")
-
+    // BOM
     // https://developer.android.com/jetpack/androidx/releases/compose-kotlin
     // https://developer.android.com/jetpack/compose/bom/bom-mapping
+    implementation(platform(libs.androidx.compose.bom))
 
-    implementation(platform("androidx.compose:compose-bom:$bomVersion"))
+    // Core
+    implementation(libs.androidx.core.ktx)
+
+    implementation(libs.androidx.activity.ktx)
+
+    implementation(libs.androidx.navigation.runtime.ktx)
+    implementation(libs.androidx.legacy.support.v4)
 
     // Compose
     // Animation
-    implementation("androidx.compose.animation:animation")
-    implementation("androidx.compose.animation:animation-core")
-    implementation("androidx.compose.animation:animation-graphics")
+    implementation(libs.androidx.compose.animation)
+    implementation(libs.androidx.compose.animation.core)
+    implementation(libs.androidx.compose.animation.graphics)
 
     //Foundation
-    implementation("androidx.compose.foundation:foundation")
-    implementation("androidx.compose.foundation:foundation-layout")
+    implementation(libs.androidx.compose.foundation)
+    implementation(libs.androidx.compose.foundation.layout)
 
     // Material
-    implementation("androidx.compose.material3:material3")
-    implementation("androidx.compose.material3:material3-window-size-class")
-    implementation("androidx.compose.material:material-icons-core")
-    implementation("androidx.compose.material:material-icons-extended")
+    implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.compose.material3.windowsizeclass)
+    implementation(libs.androidx.compose.material.icons.core)
+    implementation(libs.androidx.compose.material.icons.extended)
 
     // Runtime
-    implementation("androidx.compose.runtime:runtime")
-    implementation("androidx.compose.runtime:runtime-livedata")
+    implementation(libs.androidx.compose.runtime)
+    implementation(libs.androidx.compose.runtime.livedata)
 
     // UI
-    implementation("androidx.compose.ui:ui")
-    implementation("androidx.compose.ui:ui-tooling-preview")
-    debugImplementation("androidx.compose.ui:ui-tooling")
+    implementation(libs.androidx.compose.ui)
+    implementation(libs.androidx.compose.ui.tooling.preview)
+    debugImplementation(libs.androidx.compose.ui.tooling)
 
     // Lifecycle
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:$lifecycleVersion")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycleVersion")
-    implementation("androidx.lifecycle:lifecycle-runtime-compose:$lifecycleVersion")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:$lifecycleVersion")
+    implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.lifecycle.viewmodel.ktx)
+    implementation(libs.androidx.lifecycle.runtime.compose)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
 
     // Room
-    implementation("androidx.room:room-runtime:$roomVersion")
-    implementation("androidx.room:room-ktx:$roomVersion")
-    ksp("androidx.room:room-compiler:$roomVersion")
+    ksp(libs.androidx.room.compiler)
+    implementation(libs.androidx.room.ktx)
+    implementation(libs.androidx.room.runtime)
 
     // Coroutines
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:$kotlinCoroutineVersion")
+    implementation(libs.kotlinx.coroutines.android)
 
     // Immutable Lists
-    implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.5")
+    implementation(libs.kotlinx.collections.immutable)
 
     //Dagger - Hilt
-    implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
-    implementation("com.google.dagger:hilt-android:$daggerHiltVersion")
-    ksp("com.google.dagger:hilt-compiler:$daggerHiltVersion")
+    implementation(libs.androidx.hilt.navigation.compose)
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
 
     // Data store
-    implementation("androidx.datastore:datastore-preferences:1.1.1")
-
-    implementation("androidx.core:core-ktx:1.13.1")
+    implementation(libs.androidx.datastore.preferences)
 
     // Backport java.Time to SDK < 23
-    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.1")
+    coreLibraryDesugaring(libs.core.jdk.desugaring)
 
     // Media Playback
     // For media playback using ExoPlayer
-    implementation("androidx.media3:media3-exoplayer:$media3Version")
+    implementation(libs.androidx.media3.exoplayer)
     // For exposing and controlling media sessions
-    implementation("androidx.media3:media3-session:$media3Version")
+    implementation(libs.androidx.media3.session)
 
     // Testing
-    androidTestImplementation(platform("androidx.compose:compose-bom:$bomVersion"))
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:$kotlinCoroutineVersion")
-    testImplementation("io.mockk:mockk:$mockkVersion")
-    testImplementation("io.mockk:mockk-agent:$mockkVersion")
-    androidTestImplementation("io.mockk:mockk-android:$mockkVersion")
-    androidTestImplementation("io.mockk:mockk-agent:$mockkVersion")
+    androidTestImplementation(platform(libs.androidx.compose.bom))
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.mockk)
+    testImplementation(libs.mockk.agent)
+    androidTestImplementation(libs.mockk.android)
+    androidTestImplementation(libs.mockk.agent)
 
-    // Local unit tests
-    testImplementation("androidx.test:core:1.6.1")
+    // Unit tests
+    testImplementation(libs.androidx.test.core)
 
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.0")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.0")
+    testImplementation(libs.junit.jupiter.api)
+    testRuntimeOnly(libs.junit.jupiter.engine)
 
-    testImplementation("androidx.arch.core:core-testing:2.2.0")
-    testImplementation("com.google.truth:truth:1.1.3")
-    debugImplementation("androidx.compose.ui:ui-test-manifest:1.6.8")
+    testImplementation(libs.androidx.core.testing)
+    testImplementation(libs.google.truth)
+    debugImplementation(libs.androidx.compose.ui.test.manifest)
 
     // Instrumentation tests
-    androidTestImplementation("com.google.dagger:hilt-android-testing:$daggerHiltVersion")
-    kspAndroidTest("com.google.dagger:hilt-android-compiler:$daggerHiltVersion")
-    androidTestImplementation("junit:junit:4.13.2")
-    androidTestImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:$kotlinCoroutineVersion")
-    androidTestImplementation("androidx.arch.core:core-testing:2.2.0")
-    androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.6.8")
-    androidTestImplementation("androidx.test:core-ktx:1.6.1")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
-    androidTestImplementation("androidx.test.ext:junit:1.2.1")
-    androidTestImplementation("androidx.test:runner:1.6.2")
-    androidTestImplementation("com.google.truth:truth:1.1.3")
-    androidTestImplementation("android.arch.persistence.room:testing:1.1.1")
-
+    androidTestImplementation(libs.hilt.android.testing)
+    kspAndroidTest(libs.hilt.android.compiler)
+    androidTestImplementation(libs.junit)
+    androidTestImplementation(libs.kotlinx.coroutines.test)
+    androidTestImplementation(libs.androidx.core.testing)
+    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
+    androidTestImplementation(libs.androidx.test.core.ktx)
+    androidTestImplementation(libs.androidx.test.espresso.core)
+    androidTestImplementation(libs.androidx.test.ext.junit)
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.google.truth)
+    androidTestImplementation(libs.android.arch.persistence.room.testing)
 }
