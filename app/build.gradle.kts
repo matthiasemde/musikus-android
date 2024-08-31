@@ -105,6 +105,21 @@ tasks.withType<Test> {
     }
 }
 
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+    compilerOptions {
+        if (project.findProperty("composeCompilerReports") == "true") {
+            val reportPath =
+                "${project.layout.buildDirectory.asFile.get().absolutePath}/reports/composeCompiler"
+            freeCompilerArgs.addAll(
+                "-P",
+                "plugin:androidx.compose.compiler.plugins.kotlin:reportsDestination=$reportPath",
+                "-P",
+                "plugin:androidx.compose.compiler.plugins.kotlin:metricsDestination=$reportPath"
+            )
+        }
+    }
+}
+
 dependencies {
     // BOM
     // https://developer.android.com/jetpack/androidx/releases/compose-kotlin
