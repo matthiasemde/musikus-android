@@ -17,6 +17,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.ksp)
     alias(libs.plugins.license.report)
+    alias(libs.plugins.detekt)
 }
 
 android {
@@ -98,6 +99,22 @@ room {
     schemaDirectory("$projectDir/schemas")
 }
 
+detekt {
+    // Version of detekt that will be used. When unspecified the latest detekt
+    // version found will be used. Override to stay on the same version.
+    toolVersion = "1.23.6"
+
+    // Point to your custom config defining rules to run, overwriting default behavior
+    config.setFrom("$projectDir/config/detekt.yml")
+
+    // Applies the config files on top of detekt's default config file. `false` by default.
+    buildUponDefaultConfig = true
+
+    // Specify the base path for file paths in the formatted reports.
+    // If not set, all file paths reported will be absolute file path.
+    basePath = "${projectDir.absolutePath}/build/reports/detekt"
+}
+
 tasks.withType<Test> {
     useJUnitPlatform()
     reports {
@@ -121,6 +138,8 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach 
 }
 
 dependencies {
+    detektPlugins(libs.detekt.formatting)
+
     // BOM
     // https://developer.android.com/jetpack/androidx/releases/compose-kotlin
     // https://developer.android.com/jetpack/compose/bom/bom-mapping
