@@ -8,11 +8,24 @@
 
 package app.musikus.core.presentation.components
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalTextInputService
@@ -21,7 +34,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import java.util.*
+import java.util.UUID
 
 sealed class SelectionSpinnerOption(val name: String)
 class UUIDSelectionSpinnerOption(val id: UUID?, name: String) : SelectionSpinnerOption(name)
@@ -32,35 +45,35 @@ class IntSelectionSpinnerOption(val id: Int?, name: String) : SelectionSpinnerOp
 @Composable
 fun SelectionSpinner(
     modifier: Modifier = Modifier,
-    expanded: Boolean,
+    options: List<SelectionSpinnerOption>,
+    selectedOption: SelectionSpinnerOption?,
     label: @Composable (() -> Unit)? = null,
     placeholder: @Composable (() -> Unit)? = null,
     leadingIcon: @Composable (() -> Unit)? = null,
-    options: List<SelectionSpinnerOption>,
-    selected: SelectionSpinnerOption?,
     specialOption: SelectionSpinnerOption? = null,
     semanticDescription: String,
     dropdownTestTag: String,
-    onExpandedChange: (Boolean) -> Unit,
     onSelectedChange: (SelectionSpinnerOption) -> Unit
 ) {
-    if(selected == null && (label == null && placeholder == null) ) {
+    if(selectedOption == null && (label == null && placeholder == null) ) {
         throw IllegalArgumentException("SelectionSpinner needs either a label or a placeholder if no option is selected")
     }
+
+    var expanded by remember { mutableStateOf(false) }
 
     ExposedDropdownMenuBox(
         modifier = modifier.semantics {
             contentDescription = semanticDescription
         },
         expanded = expanded,
-        onExpandedChange = onExpandedChange
+        onExpandedChange = { expanded = !expanded },
     ) {
         CompositionLocalProvider(LocalTextInputService provides null) {
             OutlinedTextField(
                 readOnly = true,
                 modifier = Modifier
                     .menuAnchor(),
-                value = selected?.name ?: "", // if no option is selected, show nothing
+                value = selectedOption?.name ?: "", // if no option is selected, show nothing
                 onValueChange = {},
                 label = label,
                 placeholder = placeholder,
@@ -73,7 +86,7 @@ fun SelectionSpinner(
             ExposedDropdownMenu(
                 modifier = Modifier.testTag(dropdownTestTag),
                 expanded = expanded,
-                onDismissRequest = { onExpandedChange(false) },
+                onDismissRequest = { expanded = false },
             ) {
 
                 val scrollState = rememberScrollState()
@@ -99,7 +112,10 @@ fun SelectionSpinner(
                                     .conditional(scrollBarShowing) { padding(end = 12.dp) }
                                     .height(singleDropdownItemHeight - 2.dp),
                                 text = { Text(text = it.name) },
-                                onClick = { onSelectedChange(it) }
+                                onClick = {
+                                    onSelectedChange(it)
+                                    expanded = false
+                                }
                             )
                             HorizontalDivider(
                                 Modifier
@@ -112,7 +128,10 @@ fun SelectionSpinner(
                             modifier = Modifier
                                 .conditional(scrollBarShowing) { padding(end = 12.dp) }
                                 .height(singleDropdownItemHeight),
-                            onClick = { onSelectedChange(option) },
+                            onClick = {
+                                onSelectedChange(option)
+                                expanded = false
+                            },
                             text = { Text(text = option.name) }
                         )
                     }
