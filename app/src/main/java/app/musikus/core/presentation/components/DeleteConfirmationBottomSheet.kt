@@ -49,7 +49,7 @@ fun DeleteConfirmationBottomSheet(
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     ModalBottomSheet(
-        windowInsets = WindowInsets(top = 0.dp), // makes sure the scrim covers the status bar
+        contentWindowInsets = { WindowInsets(top = 0.dp) }, // makes sure the scrim covers the status bar
         onDismissRequest = onDismiss,
         sheetState = sheetState,
     ) {
