@@ -733,7 +733,7 @@ private fun NewItemSelectorBottomSheet(
     ModalBottomSheet(
         modifier = Modifier
             .fillMaxHeight(0.6f),    // avoid jumping height when changing folders
-        windowInsets = WindowInsets(top = 0.dp), // makes sure the scrim covers the status bar
+        contentWindowInsets = { WindowInsets(top = 0.dp) }, // makes sure the scrim covers the status bar
         onDismissRequest = remember { onDismissed },
         sheetState = sheetState,
         shape = RectangleShape,
