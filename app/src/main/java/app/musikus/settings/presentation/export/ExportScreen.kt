@@ -28,11 +28,10 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.capitalize
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.intl.Locale
 import app.musikus.R
 import app.musikus.core.presentation.theme.spacing
+import app.musikus.core.presentation.utils.htmlResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,12 +42,12 @@ fun ExportScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Export session data") },
+                title = { Text(stringResource(R.string.settings_export_title)) },
                 navigationIcon = {
                     IconButton(onClick = navigateUp) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = stringResource(R.string.components_top_bar_back_description),
                         )
                     }
                 }
@@ -62,7 +61,7 @@ fun ExportScreen(
         ) {
             Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
             Text(
-                text = stringResource(id = R.string.export_csv_dialog_text)
+                text = stringResource(id = R.string.settings_export_text)
             )
             Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
             Button(
@@ -73,10 +72,10 @@ fun ExportScreen(
             ) {
                 Icon(imageVector = Icons.Default.Download, contentDescription = null)
                 Spacer(modifier = Modifier.width(MaterialTheme.spacing.medium))
-                Text("Export sessions".capitalize(Locale.current))
+                Text(stringResource(R.string.settings_export_button_text))
             }
             Text(
-                text = stringResource(id = R.string.export_csv_dialog_note),
+                text = htmlResource(R.string.settings_export_footnote),
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.Bold
             )

@@ -8,10 +8,10 @@
 
 package app.musikus.settings.domain.usecase
 
-import app.musikus.settings.data.FakeUserPreferencesRepository
-import app.musikus.core.domain.GoalsSortMode
 import app.musikus.core.domain.SortDirection
 import app.musikus.core.domain.SortInfo
+import app.musikus.goals.data.GoalsSortMode
+import app.musikus.settings.data.FakeUserPreferencesRepository
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest

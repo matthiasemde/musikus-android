@@ -3,16 +3,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2023 Matthias Emde
+ * Copyright (c) 2023-2024 Matthias Emde
  */
 
 package app.musikus.goals.domain.usecase
 
 import app.musikus.core.data.GoalDescriptionWithInstancesAndLibraryItems
 import app.musikus.core.data.GoalInstanceWithDescriptionWithLibraryItems
+import app.musikus.goals.data.GoalsSortMode
+import app.musikus.goals.data.sorted
 import app.musikus.settings.domain.usecase.GetGoalSortInfoUseCase
-import app.musikus.core.domain.GoalsSortMode
-import app.musikus.core.domain.sorted
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 

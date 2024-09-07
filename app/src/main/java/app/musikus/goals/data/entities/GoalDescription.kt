@@ -10,12 +10,14 @@ package app.musikus.goals.data.entities
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
+import app.musikus.R
 import app.musikus.core.data.entities.ISoftDeleteModelCreationAttributes
 import app.musikus.core.data.entities.ISoftDeleteModelUpdateAttributes
 import app.musikus.core.data.entities.SoftDeleteModel
 import app.musikus.core.data.entities.SoftDeleteModelCreationAttributes
 import app.musikus.core.data.entities.SoftDeleteModelUpdateAttributes
 import app.musikus.core.data.Nullable
+import app.musikus.core.presentation.utils.UiText
 
 // shows, whether a goal will count all sections
 // or only the one from specific libraryItems
@@ -25,9 +27,9 @@ enum class GoalType {
     companion object {
         val DEFAULT = NON_SPECIFIC
     }
-    override fun toString() = when (this) {
-        NON_SPECIFIC -> "All items"
-        ITEM_SPECIFIC -> "Specific item"
+    fun toUiText() = when (this) {
+        NON_SPECIFIC -> UiText.StringResource(R.string.goals_goal_type_non_specific)
+        ITEM_SPECIFIC -> UiText.StringResource(R.string.goals_goal_type_item_specific)
     }
 }
 
@@ -39,9 +41,9 @@ enum class GoalProgressType {
     companion object {
         val DEFAULT = TIME
     }
-    override fun toString() = when (this) {
-        TIME -> "Time"
-        SESSION_COUNT -> "Sessions"
+    fun toUiText() = when (this) {
+        TIME -> UiText.StringResource(R.string.goals_goal_progress_type_time)
+        SESSION_COUNT -> UiText.StringResource(R.string.goals_goal_progress_type_session_count)
     }
 }
 
@@ -52,10 +54,10 @@ enum class GoalPeriodUnit {
         val DEFAULT = DAY
     }
 
-    override fun toString() = when (this) {
-        DAY -> "Day"
-        WEEK -> "Week"
-        MONTH -> "Month"
+    fun toUiText() = when (this) {
+        DAY -> UiText.StringResource(R.string.goals_goal_period_unit_day)
+        WEEK -> UiText.StringResource(R.string.goals_goal_period_unit_week)
+        MONTH -> UiText.StringResource(R.string.goals_goal_period_unit_month)
     }
 }
 

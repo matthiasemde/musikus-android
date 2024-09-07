@@ -68,10 +68,10 @@ import app.musikus.core.presentation.components.MultiFabState
 import app.musikus.core.presentation.components.Selectable
 import app.musikus.core.presentation.components.SortMenu
 import app.musikus.core.presentation.theme.spacing
-import app.musikus.core.domain.GoalsSortMode
 import app.musikus.core.domain.TimeProvider
 import app.musikus.core.presentation.utils.UiIcon
 import app.musikus.core.presentation.utils.UiText
+import app.musikus.goals.data.GoalsSortMode
 
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
@@ -113,14 +113,14 @@ fun GoalsScreen(
                         homeEventHandler(HomeUiEvent.CollapseMultiFab)
                     }
                 },
-                contentDescription = "Add",
+                contentDescription = stringResource(id = R.string.goals_screen_multi_fab_description),
                 miniFABs = listOf(
                     MiniFABData(
                         onClick = {
                             eventHandler(GoalsUiEvent.AddGoalButtonPressed(oneShot = true))
                             homeEventHandler(HomeUiEvent.CollapseMultiFab)
                         },
-                        label = "One shot goal",
+                        label = stringResource(id = R.string.goals_non_repeating),
                         icon = Icons.Filled.LocalFireDepartment,
                     ),
                     MiniFABData(
@@ -128,7 +128,7 @@ fun GoalsScreen(
                             eventHandler(GoalsUiEvent.AddGoalButtonPressed(oneShot = false))
                             homeEventHandler(HomeUiEvent.CollapseMultiFab)
                         },
-                        label = "Regular goal",
+                        label = stringResource(id = R.string.goals_repeating),
                         icon = Icons.Rounded.Repeat,
                     )
                 )
@@ -138,7 +138,7 @@ fun GoalsScreen(
             // TODO find a way to re-use Composable in every screen
             val topBarUiState = uiState.topBarUiState
             LargeTopAppBar(
-                title = { Text(text = topBarUiState.title) },
+                title = { Text(text = topBarUiState.title.asString()) },
                 scrollBehavior = scrollBehavior,
                 actions = {
                     val sortMenuUiState = topBarUiState.sortMenuUiState
@@ -147,7 +147,7 @@ fun GoalsScreen(
                         sortModes = GoalsSortMode.entries,
                         currentSortMode = sortMenuUiState.mode,
                         currentSortDirection = sortMenuUiState.direction,
-                        sortItemDescription = "goals",
+                        sortItemDescription = stringResource(id = R.string.goals_screen_top_bar_sort_menu_item_description),
                         onShowMenuChanged = { eventHandler(GoalsUiEvent.GoalSortMenuPressed) },
                         onSelectionHandler = { eventHandler(GoalsUiEvent.GoalSortModeSelected(it)) }
                     )
@@ -155,7 +155,10 @@ fun GoalsScreen(
                         IconButton(onClick = {
                             homeEventHandler(HomeUiEvent.ShowMainMenu)
                         }) {
-                            Icon(Icons.Default.MoreVert, contentDescription = "more")
+                            Icon(
+                                imageVector = Icons.Default.MoreVert,
+                                contentDescription = stringResource(id = R.string.core_kebab_menu_description)
+                            )
                         }
                         MainMenu(
                             show = homeUiState.showMainMenu,
@@ -184,7 +187,7 @@ fun GoalsScreen(
                         IconButton(onClick = { eventHandler(GoalsUiEvent.ArchiveButtonPressed) }) {
                             Icon(
                                 imageVector = Icons.Rounded.Archive,
-                                contentDescription = "Archive",
+                                contentDescription = stringResource(id = R.string.components_action_bar_archive_button_description),
                             )
                         }
                     },
@@ -247,7 +250,7 @@ fun GoalsScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = stringResource(id = R.string.goalsFragmentHint),
+                        text = stringResource(id = R.string.goals_screen_hint),
                         style = MaterialTheme.typography.titleMedium,
                         textAlign = TextAlign.Center
                     )
@@ -276,22 +279,38 @@ fun GoalsScreen(
             val deleteOrArchiveDialogUiState = dialogUiState.deleteOrArchiveDialogUiState
 
             if (deleteOrArchiveDialogUiState != null) {
+                val snackbarMessage = stringResource(
+                    id = if (deleteOrArchiveDialogUiState.isArchiveAction)
+                        R.string.goals_screen_snackbar_archived else
+                        R.string.goals_screen_snackbar_deleted
+                )
+
                 DeleteConfirmationBottomSheet(
-                    explanation = UiText.DynamicString(
-                        if(deleteOrArchiveDialogUiState.isArchiveAction) {
-                            "Archive goals? They will remain in your statistics but progress towards them will no longer be tracked."
-                        } else {
-                            "Delete goals? They will be erased from your statistics and cannot be restored. If you want to keep your statistics, consider archiving them instead."
-                        }
+                    explanation = UiText.PluralResource(
+                        resId =
+                            if(deleteOrArchiveDialogUiState.isArchiveAction)
+                                R.plurals.goals_screen_archive_goal_dialog_explanation
+                            else
+                                R.plurals.goals_screen_delete_goal_dialog_explanation,
+                        quantity = deleteOrArchiveDialogUiState.numberOfSelections,
+                        deleteOrArchiveDialogUiState.numberOfSelections
                     ),
-                    confirmationIcon = UiIcon.DynamicIcon(if(deleteOrArchiveDialogUiState.isArchiveAction) Icons.Rounded.Archive else Icons.Rounded.Delete),
-                    confirmationText = UiText.DynamicString("${if(deleteOrArchiveDialogUiState.isArchiveAction) "Archive" else "Delete"} forever (${deleteOrArchiveDialogUiState.numberOfSelections})"),
+                    confirmationIcon = UiIcon.DynamicIcon(
+                        if(deleteOrArchiveDialogUiState.isArchiveAction) Icons.Rounded.Archive
+                        else Icons.Rounded.Delete
+                    ),
+                    confirmationText = UiText.StringResource(
+                        resId = if(deleteOrArchiveDialogUiState.isArchiveAction)
+                            R.string.goals_screen_archive_goal_dialog_confirm else
+                            R.string.goals_screen_delete_goal_dialog_confirm,
+                        deleteOrArchiveDialogUiState.numberOfSelections
+                    ),
                     onDismiss = { eventHandler(GoalsUiEvent.DeleteOrArchiveDialogDismissed) },
                     onConfirm = {
                         eventHandler(GoalsUiEvent.DeleteOrArchiveDialogConfirmed)
                         mainEventHandler(
                             MainUiEvent.ShowSnackbar(
-                            message = if (deleteOrArchiveDialogUiState.isArchiveAction) "Archived" else "Deleted",
+                            message = snackbarMessage,
                             onUndo = { eventHandler(GoalsUiEvent.UndoButtonPressed) }
                         ))
                     }
@@ -299,7 +318,6 @@ fun GoalsScreen(
             }
 
             // Content Scrim for multiFAB
-
             AnimatedVisibility(
                 modifier = Modifier.zIndex(1f),
                 visible = homeUiState.multiFabState == MultiFabState.EXPANDED,

@@ -1,3 +1,11 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ *
+ * Copyright (c) 2024 Matthias Emde
+ */
+
 package app.musikus.core.presentation.components
 
 import androidx.compose.foundation.layout.Arrangement
@@ -28,8 +36,8 @@ import app.musikus.core.presentation.theme.spacing
 fun DialogActions(
     onDismissHandler: () -> Unit,
     onConfirmHandler: () -> Unit,
-    confirmButtonText: String = stringResource(id = R.string.dialogConfirm),
-    dismissButtonText: String = stringResource(id = R.string.dialogDismiss),
+    confirmButtonText: String = stringResource(id = android.R.string.ok),
+    dismissButtonText: String = stringResource(id = android.R.string.cancel),
     confirmButtonEnabled: Boolean = true,
 ) {
     Row(

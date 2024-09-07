@@ -17,6 +17,8 @@ import android.os.Build
 import android.os.IBinder
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import app.musikus.R
+import app.musikus.core.presentation.utils.UiText
 import app.musikus.permissions.domain.usecase.PermissionsUseCases
 import app.musikus.settings.domain.usecase.UserPreferencesUseCases
 import app.musikus.permissions.domain.PermissionChecker
@@ -59,7 +61,7 @@ data class MetronomeSettings(
 data class MetronomeUiState(
     val settings: MetronomeSettings,
     val sliderValue: Float,
-    val tempoDescription: String,
+    val tempoDescription: UiText,
     val isPlaying: Boolean,
 )
 
@@ -142,6 +144,21 @@ class MetronomeViewModel @Inject constructor(
 
     /** ------------------ Main ViewModel --------------------- */
 
+    private fun tempoToUiText(tempo: Int) = UiText.StringResource(resId = when(tempo) {
+        in 20 until 40 -> R.string.metronome_tempo_grave
+        in 40 until 55 -> R.string.metronome_tempo_largo
+        in 55 until 66 -> R.string.metronome_tempo_lento
+        in 66 until 76 -> R.string.metronome_tempo_adagio
+        in 76 until 92 -> R.string.metronome_tempo_andante
+        in 92 until 108 -> R.string.metronome_tempo_andante_moderato
+        in 108 until 116 -> R.string.metronome_tempo_moderato
+        in 116 until 120 -> R.string.metronome_tempo_allegro_moderato
+        in 120 until 156 -> R.string.metronome_tempo_allegro
+        in 156 until 172 -> R.string.metronome_tempo_vivace
+        in 172 until 200 -> R.string.metronome_tempo_presto
+        else -> R.string.metronome_tempo_prestissimo
+    })
+
     /** Imported flows */
     private val metronomeSettings = userPreferencesUseCases.getMetronomeSettings().stateIn(
         scope = viewModelScope,
@@ -161,24 +178,9 @@ class MetronomeViewModel @Inject constructor(
         serviceState,
         _sliderValue
     ) { settings, serviceState, sliderValue ->
-        val tempoDescription = when(settings.bpm) {
-            in 20 until 40 -> "Grave"
-            in 40 until 55 -> "Largo"
-            in 55 until 66 -> "Lento"
-            in 66 until 76 -> "Adagio"
-            in 76 until 92 -> "Andante"
-            in 92 until 108 -> "Andante moderato"
-            in 108 until 116 -> "Moderato"
-            in 116 until 120 -> "Allegro moderato"
-            in 120 until 156 -> "Allegro"
-            in 156 until 172 -> "Vivace"
-            in 172 until 200 -> "Presto"
-            else -> "Prestissimo"
-        }
-
         MetronomeUiState(
             settings = settings,
-            tempoDescription = tempoDescription,
+            tempoDescription = tempoToUiText(settings.bpm),
             isPlaying = serviceState?.isPlaying ?: false,
             sliderValue = if(sliderValue.toInt() != settings.bpm) {
                 settings.bpm.toFloat()
@@ -191,7 +193,7 @@ class MetronomeViewModel @Inject constructor(
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = MetronomeUiState(
             settings = metronomeSettings.value,
-            tempoDescription = "Allegro",
+            tempoDescription = tempoToUiText(metronomeSettings.value.bpm),
             isPlaying = serviceState.value?.isPlaying ?: false,
             sliderValue = _sliderValue.value
         )

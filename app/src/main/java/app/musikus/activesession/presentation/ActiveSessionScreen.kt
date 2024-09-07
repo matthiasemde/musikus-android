@@ -4,7 +4,6 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
  * Copyright (c) 2024 Michael Prommersberger, Matthias Emde
- *
  */
 
 @file:OptIn(ExperimentalFoundationApi::class)
@@ -91,10 +90,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ScrollableTabRow
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.SheetValue
-import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Surface
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Tab
@@ -134,6 +131,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -152,9 +150,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import app.musikus.R
 import app.musikus.core.data.LibraryFolderWithItems
 import app.musikus.core.data.UUIDConverter
-import app.musikus.library.data.daos.LibraryFolder
-import app.musikus.library.data.daos.LibraryItem
-import app.musikus.settings.domain.ColorSchemeSelections
+import app.musikus.core.domain.TimeProvider
 import app.musikus.core.presentation.Screen
 import app.musikus.core.presentation.components.DeleteConfirmationBottomSheet
 import app.musikus.core.presentation.components.DialogActions
@@ -163,7 +159,7 @@ import app.musikus.core.presentation.components.ExceptionHandler
 import app.musikus.core.presentation.components.SwipeToDeleteContainer
 import app.musikus.core.presentation.components.conditional
 import app.musikus.core.presentation.components.fadingEdge
-import app.musikus.sessions.presentation.RatingBar
+import app.musikus.core.presentation.components.showSnackbar
 import app.musikus.core.presentation.theme.MusikusColorSchemeProvider
 import app.musikus.core.presentation.theme.MusikusPreviewElement1
 import app.musikus.core.presentation.theme.MusikusPreviewElement2
@@ -176,19 +172,23 @@ import app.musikus.core.presentation.theme.MusikusThemedPreview
 import app.musikus.core.presentation.theme.dimensions
 import app.musikus.core.presentation.theme.libraryItemColors
 import app.musikus.core.presentation.theme.spacing
-import app.musikus.library.presentation.LibraryUiItem
-import app.musikus.metronome.presentation.MetronomeUi
-import app.musikus.recorder.presentation.RecorderUi
 import app.musikus.core.presentation.utils.DurationFormat
-import app.musikus.core.domain.TimeProvider
 import app.musikus.core.presentation.utils.UiIcon
 import app.musikus.core.presentation.utils.UiText
 import app.musikus.core.presentation.utils.getDurationString
+import app.musikus.library.data.daos.LibraryFolder
+import app.musikus.library.data.daos.LibraryItem
+import app.musikus.library.presentation.LibraryUiItem
+import app.musikus.metronome.presentation.MetronomeUi
+import app.musikus.recorder.presentation.RecorderUi
+import app.musikus.sessions.presentation.RatingBar
+import app.musikus.settings.domain.ColorSchemeSelections
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toImmutableMap
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -245,13 +245,13 @@ fun ActiveSession(
     val tabs = persistentListOf(
         ToolsTab(
             type = ActiveSessionTab.METRONOME,
-            title = "Metronome",
+            title = stringResource(id = R.string.active_session_toolbar_metronome),
             icon = UiIcon.IconResource(R.drawable.ic_metronome),
             content = { MetronomeUi() }
         ),
         ToolsTab(
             type = ActiveSessionTab.RECORDER,
-            title = "Recorder",
+            title = stringResource(id = R.string.active_session_toolbar_recorder),
             icon = UiIcon.DynamicIcon(Icons.Default.Mic),
             content = { RecorderUi(snackbarHostState = snackbarHostState) }
         )
@@ -453,8 +453,8 @@ private fun ActiveSessionScreen(
     /** Discard Session Dialog */
     if (dialogUiState.value.discardDialogVisible) {
         DeleteConfirmationBottomSheet(
-            confirmationIcon = UiIcon.DynamicIcon(Icons.Default.Delete),
-            confirmationText = UiText.DynamicString("Discard session?"),
+            confirmationIcon = Icons.Default.Delete,
+            confirmationText = stringResource(id = R.string.active_session_discard_session_dialog_confirm),
             onDismiss = { eventHandler(ActiveSessionUiEvent.ToggleDiscardDialog) },
             onConfirm = {
                 eventHandler(ActiveSessionUiEvent.DiscardSessionDialogConfirmed)
@@ -587,7 +587,7 @@ private fun ToolsBottomSheetScaffold(
                 } else {
                     0.dp
                 },
-                label = ""
+                label = "animatedBottomPadding"
             )
             val paddingValues = remember {
                 derivedStateOf {
@@ -690,8 +690,9 @@ private fun ActiveSessionMainContent(
                 // Past Items
                 val pastItemsState = uiState.value.pastSectionsUiState.collectAsState()
                 if (pastItemsState.value != null) {
-                    SectionsList(
+                    SectionList(
                         uiState = pastItemsState,
+                        scope = rememberCoroutineScope(),
                         nestedScrollConnection = nestedScrollConnection,    // for hiding the FAB
                         listState = sectionsListState,
                         snackbarHostState = snackbarHostState,
@@ -813,7 +814,7 @@ private fun ActiveSessionTopBar(
                     TextButton(
                         onClick = onSave
                     ) {
-                        Text(text = "Finish")
+                        Text(text = stringResource(id = R.string.active_session_top_bar_save))
                     }
                 }
             }
@@ -891,7 +892,8 @@ private fun ActiveSessionBottomTabs(
                             }
                         }
                     }
-                })
+                }
+            )
         }
     }
 }
@@ -979,14 +981,14 @@ private fun PracticeTimer(
                 ) {
                     Icon(imageVector = Icons.Outlined.PlayCircle, contentDescription = null)
                     Spacer(Modifier.width(MaterialTheme.spacing.small))
-                    Text(text = uiState.value.subHeadingText)
+                    Text(text = uiState.value.subHeadingText.asString())
                 }
             }
 
             else -> {
                 Text(
                     style = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurfaceVariant),
-                    text = uiState.value.subHeadingText,
+                    text = uiState.value.subHeadingText.asString(),
                 )
             }
 
@@ -1065,8 +1067,9 @@ private fun CurrentPracticingItem(
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun SectionsList(
+private fun SectionList(
     uiState: State<ActiveSessionCompletedSectionsUiState?>,
+    scope :CoroutineScope,
     onSectionDeleted: (CompletedSectionUiState) -> Unit,
     nestedScrollConnection: NestedScrollConnection,
     listState: LazyListState,
@@ -1082,7 +1085,7 @@ private fun SectionsList(
                 .fillMaxWidth()
                 .padding(horizontal = MaterialTheme.spacing.large),
             textAlign = TextAlign.Start,
-            text = "Already practiced",
+            text = stringResource(id = R.string.active_session_section_list_title),
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -1105,6 +1108,7 @@ private fun SectionsList(
             ) { item ->
                 SectionListElement(
                     modifier = Modifier.animateItemPlacement(),
+                    scope = scope,
                     item = item,
                     snackbarHostState = snackbarHostState,
                     onSectionDeleted = onSectionDeleted,
@@ -1123,49 +1127,40 @@ private fun SectionsList(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SectionListElement(
     modifier: Modifier = Modifier,
+    scope: CoroutineScope,
     item: CompletedSectionUiState,
-    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
+    snackbarHostState: SnackbarHostState,
     onSectionDeleted: (CompletedSectionUiState) -> Unit = {},
 ) {
-    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
     var deleted by remember { mutableStateOf(false) }
     val dismissState = rememberSwipeToDismissBoxState(
         confirmValueChange = { targetValue ->
             deleted = targetValue == SwipeToDismissBoxValue.EndToStart
-            true// don't set to deleted or item will not be dismissable again after restore
+            true // don't set to deleted or item will not be dismissible again after restore
         },
         positionalThreshold = with(LocalDensity.current) {
             { 100.dp.toPx() } // TODO remove hardcode?
         }
     )
+
     SwipeToDeleteContainer(
         state = dismissState,
         deleted = deleted,
         onDeleted = {
-            // TODO: re-use maineventhandler::ShowSnackbar
-            scope.launch {
-                // TODO handle deletion when user leaves screen before timeout
-                val result = snackbarHostState.showSnackbar(
-                    message = "Section deleted",
-                    actionLabel = "Undo",
-                    withDismissAction = true,
-                    duration = SnackbarDuration.Short,
-                )
-                when (result) {
-                    SnackbarResult.ActionPerformed -> {
-                        deleted = false
-                        dismissState.reset()
-                    }
-
-                    SnackbarResult.Dismissed -> {
-                        onSectionDeleted(item)
-                    }
+            onSectionDeleted(item)
+            showSnackbar(
+                context = context,
+                scope = scope,
+                hostState = snackbarHostState,
+                message = context.getString(R.string.active_session_sections_list_element_deleted),
+                onUndo = {
+                   TODO("Fix this using soft delete of sections in repository")
                 }
-            }
+            )
         }
     ) {
         Surface(
@@ -1206,6 +1201,7 @@ private fun SectionListElement(
     }
 }
 
+// FAB for new Item
 @Composable
 private fun AddSectionFAB(
     sessionState: State<ActiveSessionState>,
@@ -1219,23 +1215,17 @@ private fun AddSectionFAB(
         enter = slideInVertically(initialOffsetY = { it * 2 }),
         exit = slideOutVertically(targetOffsetY = { it * 2 }),
     ) {
-        // FAB for new Item
+        val message = stringResource(
+            id =
+                if (sessionState.value == ActiveSessionState.NOT_STARTED)
+                    R.string.active_session_add_section_fab_before_session
+                else
+                    R.string.active_session_add_section_fab_during_session
+        )
         ExtendedFloatingActionButton(
             onClick = onClick,
-            icon = {
-                Icon(
-                    imageVector = Icons.Filled.Add, contentDescription = "New Library Item"
-                )
-            },
-            text = {
-                Text(
-                    if (sessionState.value == ActiveSessionState.NOT_STARTED) {
-                        "Start practicing"
-                    } else {
-                        "Next Item"
-                    }
-                )
-            },
+            icon = { Icon(imageVector = Icons.Filled.Add, contentDescription = message) },
+            text = { Text(text = message) },
             expanded = true,
         )
     }
@@ -1267,7 +1257,7 @@ private fun NewItemSelector(
         ) {
             Spacer(modifier = Modifier.width(MaterialTheme.spacing.medium))
             Text(
-                text = "Select a library item",
+                text = stringResource(id = R.string.active_session_new_item_selector_title),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -1289,11 +1279,11 @@ private fun NewItemSelector(
 
                     DropdownMenuItem(
                         onClick = onNewItem,
-                        text = { Text(text = "Create Item") }
+                        text = { Text(text = stringResource(id = R.string.active_session_new_item_selector_create_item) }
                     )
                     DropdownMenuItem(
                         onClick = onNewFolder,
-                        text = { Text(text = "Create Folder") }
+                        text = { Text(text = stringResource(id = R.string.active_session_new_item_selector_create_folder) }
                     )
                 }
             }
@@ -1318,7 +1308,8 @@ private fun NewItemSelector(
                     { folderId ->
                         selectedFolder = folderId
                     }
-                })
+                }
+            )
         }
 
         // use own divider to avoid padding of default one from TabRow
@@ -1423,7 +1414,7 @@ private fun LibraryFolderElement(
             modifier = Modifier
                 .padding(horizontal = MaterialTheme.spacing.small)
                 .basicMarquee(),
-            text = folder?.name ?: "no folder",
+            text = folder?.name ?: stringResource(id = R.string.active_session_library_folder_element_default),
             style = MaterialTheme.typography.labelMedium,
             color = textColor,
             textAlign = TextAlign.Center,
@@ -1445,7 +1436,7 @@ private fun LibraryItemList(
         modifier = modifier.fillMaxWidth(),
         contentPadding = WindowInsets(
             top = MaterialTheme.spacing.small,
-        ).add(WindowInsets.navigationBars).asPaddingValues()    // don't get covered by navbars
+        ).add(WindowInsets.navigationBars).asPaddingValues() // don't get covered by navbars
     ) {
         items(items) {
             LibraryUiItem(
@@ -1478,11 +1469,11 @@ fun EndSessionDialog(
             color = MaterialTheme.colorScheme.surfaceContainerHigh
         ) {
             Column {
-                DialogHeader(title = "Finish session")
+                DialogHeader(title = stringResource(id = R.string.active_session_end_session_dialog_title))
 
                 Column(Modifier.padding(horizontal = MaterialTheme.spacing.medium)) {
 
-                    Text(text = "Rate your session: ")
+                    Text(text = stringResource(id = R.string.active_session_end_session_dialog_rating))
                     Spacer(Modifier.height(MaterialTheme.spacing.small))
 
                     Row(
@@ -1500,13 +1491,13 @@ fun EndSessionDialog(
                     Spacer(Modifier.height(MaterialTheme.spacing.large))
                     OutlinedTextField(
                         value = comment,
-                        placeholder = { Text("Comment (optional)") },
+                        placeholder = { Text(text = stringResource(id = R.string.active_session_end_session_dialog_comment)) },
                         onValueChange = onCommentChanged
                     )
                 }
                 DialogActions(
-                    dismissButtonText = "Keep Practicing",
-                    confirmButtonText = "Save",
+                    dismissButtonText = stringResource(id = R.string.active_session_end_session_dialog_dismiss),
+                    confirmButtonText = stringResource(id = R.string.active_session_end_session_dialog_confirm),
                     onDismissHandler = onDismiss,
                     onConfirmHandler = onConfirm
                 )
@@ -1534,7 +1525,7 @@ private fun PreviewActiveSessionScreen(
                 timerText = getDurationString(
                     (42 * 60 + 24).seconds, DurationFormat.MS_DIGITAL
                 ).toString(),
-                subHeadingText = "Practice Time",
+                subHeadingText = UiText.StringResource(R.string.active_session_timer_subheading),
             )
         ),
         currentItemUiState = MutableStateFlow(dummyRunningItem),
@@ -1566,12 +1557,12 @@ private fun PreviewActiveSessionScreen(
             tabs = listOf(
                 ToolsTab(
                     type = ActiveSessionTab.METRONOME,
-                    title = "Metronome",
+                    title = stringResource(id = R.string.active_session_toolbar_metronome),
                     icon = UiIcon.IconResource(R.drawable.ic_metronome),
                     content = { }),
                 ToolsTab(
                     type = ActiveSessionTab.RECORDER,
-                    title = "Recorder",
+                    title = stringResource(id = R.string.active_session_toolbar_recorder),
                     icon = UiIcon.DynamicIcon(Icons.Default.Mic),
                     content = { })
             ).toImmutableList(),
@@ -1604,7 +1595,11 @@ private fun PreviewSectionItem(
     @PreviewParameter(MusikusColorSchemeProvider::class) theme: ColorSchemeSelections,
 ) {
     MusikusThemedPreview(theme) {
-        SectionListElement(item = dummySections.first())
+        SectionListElement(
+            item = dummySections.first(),
+            snackbarHostState = remember { SnackbarHostState() },
+            scope = rememberCoroutineScope()
+        )
     }
 }
 

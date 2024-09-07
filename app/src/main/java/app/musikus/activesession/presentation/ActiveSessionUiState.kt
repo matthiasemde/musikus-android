@@ -11,6 +11,7 @@ package app.musikus.activesession.presentation
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.graphics.Color
 import app.musikus.core.data.LibraryFolderWithItems
+import app.musikus.core.presentation.utils.UiText
 import app.musikus.library.data.daos.LibraryItem
 import kotlinx.coroutines.flow.StateFlow
 import java.time.ZonedDateTime
@@ -50,7 +51,7 @@ data class ActiveSessionContentUiState(
 @Stable
 data class ActiveSessionTimerUiState(
     val timerText: String,
-    val subHeadingText: String,
+    val subHeadingText: UiText,
 )
 
 @Stable

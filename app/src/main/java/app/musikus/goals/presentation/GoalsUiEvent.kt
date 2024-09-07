@@ -8,8 +8,8 @@
 
 package app.musikus.goals.presentation
 
+import app.musikus.goals.data.GoalsSortMode
 import app.musikus.goals.domain.GoalInstanceWithProgressAndDescriptionWithLibraryItems
-import app.musikus.core.domain.GoalsSortMode
 
 typealias GoalsUiEventHandler = (GoalsUiEvent) -> Unit
 

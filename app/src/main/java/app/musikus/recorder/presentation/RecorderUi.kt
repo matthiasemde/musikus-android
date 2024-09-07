@@ -64,6 +64,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -74,6 +75,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.session.MediaController
+import app.musikus.R
 import app.musikus.core.presentation.components.DialogActions
 import app.musikus.core.presentation.components.ExceptionHandler
 import app.musikus.core.presentation.components.Waveform
@@ -263,7 +265,7 @@ fun RecorderToolbar(
             AnimatedVisibility(showDeleteAndSave) {
                 Row {
                     TextButton(onClick = { eventHandler(RecorderUiEvent.DeleteRecording) }) {
-                        Text(text = "Delete")
+                        Text(text = stringResource(id = R.string.recorder_toolbar_delete))
                     }
                 }
             }
@@ -290,7 +292,7 @@ fun RecorderToolbar(
                             Icon(
                                 modifier = Modifier.fillMaxSize(),
                                 imageVector = Icons.Default.MicOff,
-                                contentDescription = "Microphone not available"
+                                contentDescription = stringResource(id = R.string.recorder_toolbar_main_button_uninitialized_description)
                             )
                         }
 
@@ -298,7 +300,7 @@ fun RecorderToolbar(
                             Icon(
                                 modifier = Modifier.fillMaxSize(),
                                 imageVector = Icons.Default.Mic,
-                                contentDescription = "Start recording"
+                                contentDescription = stringResource(id = R.string.recorder_toolbar_main_button_idle_description)
                             )
                         }
 
@@ -306,7 +308,7 @@ fun RecorderToolbar(
                             Icon(
                                 modifier = Modifier.fillMaxSize(),
                                 imageVector = Icons.Default.Pause,
-                                contentDescription = "Pause recording"
+                                contentDescription = stringResource(id = R.string.recorder_toolbar_main_button_recording_description)
                             )
                         }
 
@@ -314,7 +316,7 @@ fun RecorderToolbar(
                             Icon(
                                 modifier = Modifier.fillMaxSize(),
                                 imageVector = Icons.Default.PlayArrow,
-                                contentDescription = "Resume recording"
+                                contentDescription = stringResource(id = R.string.recorder_toolbar_main_button_paused_description)
                             )
                         }
                     }
@@ -325,7 +327,7 @@ fun RecorderToolbar(
             AnimatedVisibility(showDeleteAndSave) {
                 Row {
                     TextButton(onClick = { eventHandler(RecorderUiEvent.SaveRecording) }) {
-                        Text(text = "Save")
+                        Text(text = stringResource(id = R.string.recorder_toolbar_save))
                     }
                 }
             }
@@ -350,7 +352,7 @@ private fun RecordingsList(
         Column(modifier = modifier) {
             Spacer(Modifier.height(MaterialTheme.spacing.medium))
             Text(
-                "No Recordings",
+                text = stringResource(id = R.string.recorder_recordings_list_empty),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -646,7 +648,7 @@ private fun WaveformMediaPlayer(
         }
 
         IconButton(onClick = onClear) {
-            Icon(Icons.Default.Close, contentDescription = "Close player")
+            Icon(Icons.Default.Close, contentDescription = stringResource(id = R.string.recorder_media_player_close_description))
         }
     }
 }
@@ -669,7 +671,7 @@ private fun DialogSaveRecording(
                     modifier = Modifier
                         .padding(horizontal = MaterialTheme.spacing.large)
                         .padding(vertical = MaterialTheme.spacing.medium),
-                    text = "Save recording as:",
+                    text = stringResource(id = R.string.recorder_save_recording_dialog),
                     style = MaterialTheme.typography.titleLarge,
                 )
                 OutlinedTextField(
@@ -677,11 +679,11 @@ private fun DialogSaveRecording(
                         .fillMaxWidth()
                         .padding(horizontal = MaterialTheme.spacing.medium),
                     value = uiState.recordingName,
-                    label = { Text(text = "Recording name") },
+                    label = { Text(text = stringResource(id = R.string.recorder_save_recording_dialog_name_label)) },
                     onValueChange = { recordingNameChanged(it) },
                 )
                 DialogActions(
-                    confirmButtonText = "Save",
+                    confirmButtonText = stringResource(id = R.string.recorder_save_recording_dialog_confirm),
                     onDismissHandler = onDismiss,
                     onConfirmHandler = onConfirm,
                     confirmButtonEnabled = uiState.recordingName.isNotEmpty()
@@ -708,10 +710,10 @@ private fun DialogDeleteRecording(
                         .padding(horizontal = MaterialTheme.spacing.large)
                         .padding(top = MaterialTheme.spacing.medium),
                     style = MaterialTheme.typography.titleLarge,
-                    text = "Delete recording?",
+                    text = stringResource(id = R.string.recorder_delete_recording_dialog),
                 )
                 DialogActions(
-                    confirmButtonText = "Delete",
+                    confirmButtonText = stringResource(id = R.string.recorder_delete_recording_dialog_confirm),
                     onDismissHandler = onDismiss,
                     onConfirmHandler = onConfirm
                 )

@@ -69,6 +69,9 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import app.musikus.R
+import app.musikus.core.domain.DateFormat
+import app.musikus.core.domain.TimeProvider
+import app.musikus.core.domain.musikusFormat
 import app.musikus.core.presentation.HomeUiEvent
 import app.musikus.core.presentation.HomeUiEventHandler
 import app.musikus.core.presentation.HomeUiState
@@ -77,13 +80,11 @@ import app.musikus.core.presentation.components.CommonMenuSelections
 import app.musikus.core.presentation.components.MainMenu
 import app.musikus.core.presentation.theme.libraryItemColors
 import app.musikus.core.presentation.theme.spacing
+import app.musikus.core.presentation.utils.DurationFormat
+import app.musikus.core.presentation.utils.UiText
+import app.musikus.core.presentation.utils.getDurationString
 import app.musikus.statistics.presentation.goalstatistics.GoalStatistics
 import app.musikus.statistics.presentation.sessionstatistics.SessionStatistics
-import app.musikus.core.domain.DateFormat
-import app.musikus.core.presentation.utils.DurationFormat
-import app.musikus.core.domain.TimeProvider
-import app.musikus.core.presentation.utils.getDurationString
-import app.musikus.core.domain.musikusFormat
 
 fun NavGraphBuilder.addStatisticsNavigationGraph(
     navController: NavController,
@@ -113,13 +114,16 @@ fun Statistics(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             LargeTopAppBar(
-                title = { Text(text = "Statistics") },
+                title = { Text(text = stringResource(R.string.statistics_title)) },
                 scrollBehavior = scrollBehavior,
                 actions = {
                     IconButton(onClick = {
                         homeEventHandler(HomeUiEvent.ShowMainMenu)
                     }) {
-                        Icon(Icons.Default.MoreVert, contentDescription = "more")
+                        Icon(
+                            imageVector = Icons.Default.MoreVert,
+                            contentDescription = stringResource(R.string.core_kebab_menu_description)
+                        )
                         MainMenu (
                             show = homeUiState.showMainMenu,
                             onDismiss = { homeEventHandler(HomeUiEvent.HideMainMenu) },
@@ -158,12 +162,12 @@ fun Statistics(
             }
             contentUiState.practiceDurationCardUiState?.let {
                 item {
-                    StatisticsPracticeDurationCard(it) { navigateTo(Screen.SessionStatistics) }
+                    StatisticsSessionsCard(it) { navigateTo(Screen.SessionStatistics) }
                 }
             }
             contentUiState.goalCardUiState?.let {
                 item {
-                    StatisticsGoalCard(it) { navigateTo(Screen.GoalStatistics) }
+                    StatisticsGoalsCard(it) { navigateTo(Screen.GoalStatistics) }
                 }
             }
             contentUiState.ratingsCardUiState?.let {
@@ -182,7 +186,7 @@ fun Statistics(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = stringResource(id = R.string.statisticsHint),
+                    text = stringResource(R.string.statistics_hint),
                     style = MaterialTheme.typography.titleMedium,
                     textAlign = TextAlign.Center
                 )
@@ -203,25 +207,42 @@ fun StatisticsCurrentMonth(
     )
 
     val currentMonthStats = listOf(
-        "Total duration" to getDurationString(
-            uiState.totalPracticeDuration,
-            DurationFormat.HUMAN_PRETTY_SHORT
+        Pair(
+            UiText.StringResource(R.string.statistics_screen_current_month_total),
+            getDurationString(
+                uiState.totalPracticeDuration,
+                DurationFormat.HUMAN_PRETTY_SHORT
+            )
         ),
-        "Per session" to AnnotatedString(stringResource(R.string.average_sign) + " ") + getDurationString(
-            uiState.averageDurationPerSession,
-            DurationFormat.HUMAN_PRETTY_SHORT
+        Pair(
+            UiText.StringResource(R.string.statistics_screen_current_month_per_session),
+            AnnotatedString(stringResource(R.string.core_average_sign) + " ") + getDurationString(
+                uiState.averageDurationPerSession,
+                DurationFormat.HUMAN_PRETTY_SHORT
+            )
         ),
-        "Break per hour" to getDurationString(
-            uiState.breakDurationPerHour,
-            DurationFormat.HUMAN_PRETTY_SHORT
+        Pair(
+            UiText.StringResource(R.string.statistics_screen_current_month_per_session),
+            getDurationString(
+                uiState.breakDurationPerHour,
+                DurationFormat.HUMAN_PRETTY_SHORT
+            )
         ),
-        "Average rating" to AnnotatedString(stringResource(R.string.average_sign) + " %.1f".format(
-            uiState.averageRatingPerSession
-        )),
+        Pair(
+            UiText.StringResource(R.string.statistics_screen_current_month_per_session),
+            AnnotatedString(stringResource(R.string.core_average_sign) + " %.1f".format(
+                uiState.averageRatingPerSession
+            ))
+        )
     )
 
     Column {
-        Text(text = "In " + timeProvider.now().musikusFormat(DateFormat.MONTH))
+        Text(
+            text = stringResource(
+                id = R.string.statistics_screen_current_month_title,
+                timeProvider.now().musikusFormat(DateFormat.MONTH)
+            )
+        )
         Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -229,12 +250,11 @@ fun StatisticsCurrentMonth(
         ) {
             currentMonthStats.forEach {(label, stat) ->
                Column(
-                   modifier = Modifier
-                       .weight(1f),
+                   modifier = Modifier.weight(1f),
                    horizontalAlignment = CenterHorizontally,
                ) {
                    Text(text = stat, style = statsTextStyle)
-                   Text(text = label, style = labelTextStyle)
+                   Text(text = label.asString(), style = labelTextStyle)
                }
             }
         }
@@ -242,13 +262,12 @@ fun StatisticsCurrentMonth(
 }
 
 @Composable
-fun StatisticsPracticeDurationCard(
+fun StatisticsSessionsCard(
     uiState: StatisticsPracticeDurationCardUiState,
     navigateToSessionStatistics: () -> Unit,
 ) {
     ElevatedCard(
-        modifier = Modifier
-            .fillMaxWidth()
+        modifier = Modifier.fillMaxWidth()
     ) {
         Column(modifier = Modifier
             .fillMaxWidth()
@@ -261,16 +280,16 @@ fun StatisticsPracticeDurationCard(
                 verticalAlignment = CenterVertically,
             ) {
                 Text(
-                    text = "Practice Time",
+                    text = stringResource(R.string.statistics_screen_sessions_card_title),
                     style = MaterialTheme.typography.titleLarge,
                 )
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                    contentDescription = "more",
+                    contentDescription = stringResource(R.string.statistics_screen_sessions_card_description),
                 )
             }
             Text(
-                text = "Last 7 days",
+                text = stringResource(R.string.statistics_screen_sessions_card_subtitle),
                 style = MaterialTheme.typography.labelLarge.copy(
                     color = MaterialTheme.colorScheme.onSurface.copy(
                         alpha = 0.7f
@@ -294,7 +313,7 @@ fun StatisticsPracticeDurationCard(
                         ),
                     )
                     Text(
-                        text = "Total",
+                        text = stringResource(R.string.statistics_screen_sessions_card_total_duration),
                         style = MaterialTheme.typography.labelLarge.copy(
                             color = MaterialTheme.colorScheme.onSurface.copy(
                                 alpha = 0.7f
@@ -371,7 +390,7 @@ fun StatisticsPracticeDurationCard(
 }
 
 @Composable
-fun StatisticsGoalCard(
+fun StatisticsGoalsCard(
     uiState: StatisticsGoalCardUiState,
     navigateToGoalStatistics: () -> Unit,
 ) {
@@ -390,17 +409,17 @@ fun StatisticsGoalCard(
                 verticalAlignment = CenterVertically,
             ) {
                 Text(
-                    text = "Your Goals",
+                    text = stringResource(R.string.statistics_screen_goals_card_title),
                     style = MaterialTheme.typography.titleLarge,
                 )
                 Icon(
                     //                modifier = Modifier.fillMaxHeight(),
                     imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                    contentDescription = "more",
+                    contentDescription = stringResource(R.string.statistics_screen_sessions_card_description),
                 )
             }
             Text(
-                text = "Last 5 expired goals",
+                text = stringResource(R.string.statistics_screen_sessions_card_subtitle),
                 style = MaterialTheme.typography.labelLarge.copy(
                     color = MaterialTheme.colorScheme.onSurface.copy(
                         alpha = 0.7f
@@ -415,16 +434,13 @@ fun StatisticsGoalCard(
                 uiState.successRate?.let { (successful, total) ->
                     Column {
                         Text(
-                            text = "" +
-                                    "$successful" +
-                                    "/" +
-                                    "$total",
+                            text = "$successful/$total",
                             style = MaterialTheme.typography.titleMedium.copy(
                                 color = MaterialTheme.colorScheme.primary,
                             ),
                         )
                         Text(
-                            text = "Achieved",
+                            text = stringResource(R.string.statistics_screen_goals_card_achieved_goals),
                             style = MaterialTheme.typography.labelLarge.copy(
                                 color = MaterialTheme.colorScheme.onSurface.copy(
                                     alpha = 0.7f
@@ -496,11 +512,11 @@ fun StatisticsRatingsCard(
             .padding(MaterialTheme.spacing.medium)
         ) {
             Text(
-                text = "Ratings",
+                text = stringResource(R.string.statistics_screen_ratings_card_title),
                 style = MaterialTheme.typography.titleLarge,
             )
             Text(
-                text = "Your session ratings",
+                text = stringResource(R.string.statistics_screen_ratings_card_subtitle),
                 style = MaterialTheme.typography.labelLarge.copy(
                     color = MaterialTheme.colorScheme.onSurface.copy(
                         alpha = 0.7f
@@ -512,7 +528,7 @@ fun StatisticsRatingsCard(
             val labelTextStyle = MaterialTheme.typography.labelSmall.copy(
                 color = MaterialTheme.colorScheme.onSurface,
             )
-            val starCharacter = stringResource(R.string.star_sign)
+            val starCharacter = stringResource(R.string.core_star_sign)
             val textMeasurer = rememberTextMeasurer()
             val numOfRatingsToAngleFactor = uiState.numOfRatingsFromOneToFive
                 .sum()

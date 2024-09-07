@@ -12,8 +12,16 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Edit
-import androidx.compose.material3.*
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
+import app.musikus.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -26,7 +34,7 @@ fun ActionBar(
     onDeleteHandler: () -> Unit
 ) {
     TopAppBar(
-        title = { Text(text = "$numSelectedItems selected") },
+        title = { Text(text = stringResource(id = R.string.components_action_bar_title, numSelectedItems)) },
         colors = TopAppBarDefaults.largeTopAppBarColors(
             containerColor = MaterialTheme.colorScheme.primaryContainer,
             navigationIconContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -37,7 +45,7 @@ fun ActionBar(
             IconButton(onClick = onDismissHandler) {
                 Icon(
                     imageVector = Icons.Default.Close,
-                    contentDescription = "Back",
+                    contentDescription = stringResource(id = R.string.components_action_bar_back_button_description)
                 )
             }
         },
@@ -47,14 +55,14 @@ fun ActionBar(
                 IconButton(onClick = onEditHandler) {
                     Icon(
                         imageVector = Icons.Rounded.Edit,
-                        contentDescription = "Edit",
+                        contentDescription = stringResource(id = R.string.components_action_bar_edit_button_description)
                     )
                 }
             }
             IconButton(onClick = onDeleteHandler) {
                 Icon(
                     imageVector = Icons.Rounded.Delete,
-                    contentDescription = "Delete",
+                    contentDescription = stringResource(id = R.string.components_action_bar_delete_button_description)
                 )
             }
         }

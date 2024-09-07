@@ -44,6 +44,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -53,12 +54,14 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.musikus.R
 import app.musikus.core.presentation.components.ExceptionHandler
 import app.musikus.settings.domain.ColorSchemeSelections
 import app.musikus.core.presentation.theme.MusikusColorSchemeProvider
 import app.musikus.core.presentation.theme.MusikusThemedPreview
 import app.musikus.core.presentation.theme.dimensions
 import app.musikus.core.presentation.theme.spacing
+import app.musikus.core.presentation.utils.UiText
 
 
 @Composable
@@ -149,7 +152,7 @@ private fun PreviewMetronome(
             MetronomeLayout(
                 uiState = MetronomeUiState(
                     settings = MetronomeSettings.DEFAULT.copy(bpm = 40),
-                    tempoDescription = "Allegro",
+                    tempoDescription = UiText.StringResource(resId = R.string.metronome_tempo_largo),
                     isPlaying = false,
                     sliderValue = 120f,
                 ),
@@ -221,7 +224,7 @@ private fun MetronomeHeader(
                 Spacer(modifier = Modifier.width(MaterialTheme.spacing.extraSmall))
                 Text(
                     modifier = Modifier.alignByBaseline(),
-                    text = "bpm",
+                    text = stringResource(id = R.string.metronome_header_bpm),
                     textAlign = TextAlign.Left,
                     style = MaterialTheme.typography.labelMedium,
                 )
@@ -262,13 +265,13 @@ private fun MetronomeHeader(
                         Icon(
                             modifier = Modifier.fillMaxSize(),
                             imageVector = Icons.Default.PlayArrow,
-                            contentDescription = "Start metronome"
+                            contentDescription = stringResource(id = R.string.metronome_header_start_description)
                         )
                     } else {
                         Icon(
                             modifier = Modifier.fillMaxSize(),
                             imageVector = Icons.Default.Stop,
-                            contentDescription = "Stop metronome"
+                            contentDescription = stringResource(id = R.string.metronome_header_stop_description)
                         )
                     }
                 }
@@ -288,10 +291,9 @@ fun MetronomeSlider(
         /** Tempo Slider */
         Text(
             modifier = Modifier,
-            text = uiState.tempoDescription,
+            text = uiState.tempoDescription.asString(),
             style = MaterialTheme.typography.bodyLarge,
         )
-
 
         Slider(
             value = uiState.sliderValue,
@@ -338,7 +340,7 @@ fun MetronomeExtraSettingsRow(
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
 
-        MetronomeExtraSettingsColumn(label = "Beats/bar") {
+        MetronomeExtraSettingsColumn(label = stringResource(id = R.string.metronome_extra_settings_beats_per_bar)) {
             MetronomeIncrementer(
                 value = uiState.beatsPerBar,
                 onIncrement = onIncrementBeatsPerBar,
@@ -346,7 +348,7 @@ fun MetronomeExtraSettingsRow(
             )
         }
 
-        MetronomeExtraSettingsColumn(label = "Clicks/beat") {
+        MetronomeExtraSettingsColumn(label = stringResource(id = R.string.metronome_extra_settings_clicks_per_beat)) {
             MetronomeIncrementer(
                 value = uiState.clicksPerBeat,
                 onIncrement = onIncrementClicksPerBear,
@@ -354,14 +356,14 @@ fun MetronomeExtraSettingsRow(
             )
         }
 
-        MetronomeExtraSettingsColumn(label = "Tab tempo") {
+        MetronomeExtraSettingsColumn(label = stringResource(id = R.string.metronome_extra_settings_tap_tempo)) {
             IconButton(
                 onClick = onTapTempo,
 //                modifier = Modifier.size(25.dp),
             ) {
                 Icon(
                     imageVector = Icons.Default.TouchApp,
-                    contentDescription = "Tab tempo"
+                    contentDescription = stringResource(id = R.string.metronome_extra_settings_tap_tempo)
                 )
             }
 
@@ -414,7 +416,7 @@ fun MetronomeIncrementer(
         ) {
             Icon(
                 imageVector = Icons.Default.Remove,
-                contentDescription = "Decrement"
+                contentDescription = stringResource(id = R.string.metronome_incrementer_decrement)
             )
         }
         Text(
@@ -432,7 +434,7 @@ fun MetronomeIncrementer(
         ) {
             Icon(
                 imageVector = Icons.Default.Add,
-                contentDescription = "Decrement"
+                contentDescription = stringResource(id = R.string.metronome_incrementer_increment)
             )
         }
     }

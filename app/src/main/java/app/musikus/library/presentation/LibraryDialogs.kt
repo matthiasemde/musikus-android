@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2022 Matthias Emde
+ * Copyright (c) 2022-2024 Matthias Emde
  */
 
 package app.musikus.library.presentation
@@ -48,6 +48,7 @@ import app.musikus.core.presentation.components.UUIDSelectionSpinnerOption
 import app.musikus.library.data.daos.LibraryFolder
 import app.musikus.core.presentation.theme.libraryItemColors
 import app.musikus.core.presentation.utils.TestTags
+import app.musikus.core.presentation.utils.UiText
 import java.util.UUID
 
 
@@ -62,10 +63,11 @@ fun LibraryFolderDialog(
                 .clip(MaterialTheme.shapes.extraLarge)
                 .background(MaterialTheme.colorScheme.surface)
         ) {
-            DialogHeader(title = when(uiState.mode) {
-                    DialogMode.ADD -> "Create folder"
-                    DialogMode.EDIT -> "Edit folder"
-                },
+            DialogHeader(
+                title = stringResource(id = when (uiState.mode) {
+                    DialogMode.ADD -> R.string.library_folder_dialog_title
+                    DialogMode.EDIT ->R.string.library_folder_dialog_title_edit
+                }),
             )
             Column {
                 OutlinedTextField(
@@ -74,14 +76,14 @@ fun LibraryFolderDialog(
                         .testTag(TestTags.FOLDER_DIALOG_NAME_INPUT),
                     value = uiState.folderData.name,
                     onValueChange = { eventHandler(LibraryUiEvent.FolderDialogNameChanged(it)) },
-                    label = { Text(text = "Folder name") },
+                    label = { Text(text = stringResource(id = R.string.library_folder_dialog_name_label)) },
                     singleLine = true,
                 )
                 DialogActions(
-                    confirmButtonText = when(uiState.mode) {
-                        DialogMode.ADD -> "Create"
-                        DialogMode.EDIT -> "Edit"
-                    },
+                    confirmButtonText = stringResource(id = when(uiState.mode) {
+                        DialogMode.ADD -> R.string.library_folder_dialog_confirm
+                        DialogMode.EDIT -> R.string.library_folder_dialog_confirm_edit
+                    }),
                     onDismissHandler = { eventHandler(LibraryUiEvent.FolderDialogDismissed) },
                     onConfirmHandler = { eventHandler(LibraryUiEvent.FolderDialogConfirmed) },
                     confirmButtonEnabled = uiState.folderData.name.isNotEmpty()
@@ -123,8 +125,8 @@ fun LibraryItemDialog(
                 .background(MaterialTheme.colorScheme.surface)
         ) {
             DialogHeader(title = when(uiState.mode) {
-                DialogMode.ADD -> stringResource(id = R.string.addLibraryItemDialogTitle)
-                DialogMode.EDIT -> stringResource(id = R.string.addLibraryItemDialogTitleEdit)
+                DialogMode.ADD -> stringResource(id = R.string.library_item_dialog_title)
+                DialogMode.EDIT -> stringResource(id = R.string.library_item_dialog_title_edit)
             })
             Column {
                 OutlinedTextField(
@@ -136,11 +138,11 @@ fun LibraryItemDialog(
                     leadingIcon = {
                         Icon(
                             imageVector = Icons.Default.MusicNote,
-                            contentDescription = "Item name",
+                            contentDescription = stringResource(id = R.string.library_item_dialog_name_label),
                             tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                         )
                     },
-                    label = { Text(text = "Item name") },
+                    label = { Text(text = stringResource(id = R.string.library_item_dialog_name_label)) },
                     singleLine = true,
                 )
                 if(uiState.folders.isNotEmpty()) {
@@ -149,22 +151,27 @@ fun LibraryItemDialog(
                             .padding(top = 16.dp)
                             .padding(horizontal = 24.dp),
                         expanded = folderSelectorExpanded,
-                        label = { Text(text = "Folder") },
+                        label = { Text(text = stringResource(id = R.string.library_item_dialog_folder_selector_label)) },
                         leadingIcon = {
                             Icon(
                                 imageVector = Icons.Default.Folder,
-                                contentDescription = "Folder",
+                                contentDescription = stringResource(id = R.string.library_item_dialog_folder_selector_label),
                                 tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                             )
                         },
-                        options = uiState.folders.map { folder -> UUIDSelectionSpinnerOption(folder.id, folder.name) },
+                        options = uiState.folders.map { folder ->
+                            UUIDSelectionSpinnerOption(folder.id, UiText.DynamicString(folder.name))
+                        },
                         selected = UUIDSelectionSpinnerOption(
                             id = uiState.itemData.folderId,
                             name = uiState.folders.firstOrNull {
                                 it.id == uiState.itemData.folderId
-                            }?.name ?: "No folder" ),
-                        specialOption = UUIDSelectionSpinnerOption(null, "No folder"),
-                        semanticDescription = "Select folder",
+                            }?.name?.let { UiText.DynamicString(it) } ?: UiText.StringResource(R.string.library_item_dialog_folder_selector_no_folder) ),
+                        specialOption = UUIDSelectionSpinnerOption(
+                            null,
+                            UiText.StringResource(R.string.library_item_dialog_folder_selector_no_folder)
+                        ),
+                        semanticDescription = stringResource(id = R.string.library_item_dialog_folder_selector_description),
                         dropdownTestTag = TestTags.ITEM_DIALOG_FOLDER_SELECTOR_DROPDOWN,
                         onExpandedChange = { folderSelectorExpanded = it },
                         onSelectedChange = {
@@ -189,7 +196,7 @@ fun LibraryItemDialog(
                                 ColorSelectRadioButton(
                                     color = libraryItemColors[index],
                                     selected = uiState.itemData.colorIndex == index,
-                                    colorDescription = "Color ${index+1}",
+                                    colorDescription = stringResource(id = R.string.library_item_dialog_color_selector_description, (index + 1)),
                                     onClick = { eventHandler(LibraryItemDialogUiEvent.ColorIndexChanged(index)) }
                                 )
                             }
@@ -199,8 +206,8 @@ fun LibraryItemDialog(
             }
             DialogActions(
                 confirmButtonText = when(uiState.mode) {
-                    DialogMode.ADD -> "Create"
-                    DialogMode.EDIT -> "Edit"
+                    DialogMode.ADD -> stringResource(id = R.string.library_item_dialog_confirm)
+                    DialogMode.EDIT -> stringResource(id = R.string.library_item_dialog_confirm_edit)
                 },
                 confirmButtonEnabled = uiState.isConfirmButtonEnabled,
                 onDismissHandler = { eventHandler(LibraryItemDialogUiEvent.Dismissed) },

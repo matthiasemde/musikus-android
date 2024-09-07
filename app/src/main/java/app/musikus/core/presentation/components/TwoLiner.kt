@@ -24,6 +24,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.em
 import app.musikus.core.presentation.theme.spacing
 import app.musikus.core.presentation.utils.UiIcon
 import app.musikus.core.presentation.utils.UiText
@@ -74,7 +75,8 @@ fun TwoLiner(
                     text = it.asString(),
                     style = LocalTextStyle.current,
                     fontSize = LocalTextStyle.current.fontSize * 0.9f,
-                    color = LocalContentColor.current.copy(alpha = 0.6f)
+                    color = LocalContentColor.current.copy(alpha = 0.6f),
+                    lineHeight = 1.2.em
                 )
             }
         }
@@ -86,7 +88,10 @@ fun TwoLiner(
                     .weight(1f)
                     .widthIn(min = MaterialTheme.spacing.medium)
             )
-            Icon(imageVector = it.asIcon(), contentDescription = null)
+            Icon(
+                imageVector = it.asIcon(),
+                contentDescription = data.firstLine?.asString() ?: data.secondLine?.asString()
+            )
         }
     }
 }

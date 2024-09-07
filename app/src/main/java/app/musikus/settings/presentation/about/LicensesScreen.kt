@@ -26,13 +26,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import app.musikus.R
 import app.musikus.core.presentation.theme.spacing
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LicenseScreen(
+fun LicensesScreen(
     navigateUp: () -> Unit
 ) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
@@ -42,12 +43,12 @@ fun LicenseScreen(
         topBar = {
             TopAppBar(
                 scrollBehavior = scrollBehavior,
-                title = { Text("Licenses") },
+                title = { Text(stringResource(R.string.settings_licenses_title)) },
                 navigationIcon = {
                     IconButton(onClick = navigateUp) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = stringResource(R.string.components_top_bar_back_description),
                         )
                     }
                 }

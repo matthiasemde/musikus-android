@@ -8,12 +8,16 @@
 
 package app.musikus.settings.domain
 
-import app.musikus.core.domain.GoalSortInfo
-import app.musikus.core.domain.GoalsSortMode
-import app.musikus.core.domain.LibraryFolderSortMode
-import app.musikus.core.domain.LibraryItemSortMode
+import app.musikus.R
+import app.musikus.core.data.EnumWithDescription
+import app.musikus.core.data.EnumWithLabel
 import app.musikus.core.domain.SortDirection
 import app.musikus.core.domain.SortInfo
+import app.musikus.core.presentation.utils.UiText
+import app.musikus.goals.data.GoalSortInfo
+import app.musikus.goals.data.GoalsSortMode
+import app.musikus.library.data.LibraryFolderSortMode
+import app.musikus.library.data.LibraryItemSortMode
 import app.musikus.library.data.daos.LibraryFolder
 import app.musikus.library.data.daos.LibraryItem
 import app.musikus.metronome.presentation.MetronomeSettings
@@ -21,23 +25,15 @@ import kotlinx.coroutines.flow.Flow
 
 const val USER_PREFERENCES_NAME = "user_preferences"
 
-interface EnumWithLabel {
-    val label: String
-}
-
-interface EnumWithDescription {
-    val description: String
-}
-
 enum class ThemeSelections : EnumWithLabel {
     SYSTEM {
-       override val label = "System default"
+       override val label = UiText.StringResource(R.string.settings_appearance_theme_options_system)
     },
     DAY {
-        override val label = "Light"
+        override val label = UiText.StringResource(R.string.settings_appearance_theme_options_day)
     },
     NIGHT {
-        override val label = "Dark"
+        override val label = UiText.StringResource(R.string.settings_appearance_theme_options_night)
     };
 
     companion object {
@@ -53,16 +49,16 @@ enum class ThemeSelections : EnumWithLabel {
 
 enum class ColorSchemeSelections : EnumWithLabel, EnumWithDescription {
     MUSIKUS {
-        override val label = "Musikus"
-        override val description = "A fresh new look"
+        override val label = UiText.StringResource(R.string.settings_appearance_color_scheme_options_musikus_title)
+        override val description = UiText.StringResource(R.string.settings_appearance_color_scheme_options_musikus_text)
     },
     LEGACY {
-        override val label = "PracticeTime"
-        override val description = "Reminds you of an old friend"
+        override val label = UiText.StringResource(R.string.settings_appearance_color_scheme_options_legacy_title)
+        override val description = UiText.StringResource(R.string.settings_appearance_color_scheme_options_legacy_text)
     },
     DYNAMIC {
-        override val label = "Dynamic"
-        override val description = "The color scheme follows your system theme. If it looks bad, it's on you"
+        override val label = UiText.StringResource(R.string.settings_appearance_color_scheme_options_dynamic_title)
+        override val description = UiText.StringResource(R.string.settings_appearance_color_scheme_options_dynamic_text)
     };
 
     companion object {

@@ -143,7 +143,10 @@ class MetronomeService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         createPendingIntent()
-        val notification = getNotification("Metronome", "Metronome is running")
+        val notification = getNotification(
+            title = getString(R.string.metronome_service_notification_title),
+            description = getString(R.string.metronome_service_notification_description)
+        )
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             startForeground(METRONOME_NOTIFICATION_ID, notification)
