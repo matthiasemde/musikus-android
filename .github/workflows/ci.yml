@@ -148,3 +148,12 @@ jobs:
         with:
           name: instrumentation-test-results-${{ matrix.api-level }}
           path: app/build/reports/androidTests/connected/debug
+
+  final-check:
+    name: CI checks passed
+    needs: [ checks, build, unit-tests, instrumentation-tests ]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: All stages passed
+        run: echo "All stages passed successfully! 🎉"
