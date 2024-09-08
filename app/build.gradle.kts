@@ -1,6 +1,7 @@
 @file:Suppress("UnstableApiUsage")
 
 import java.util.Properties
+import java.util.Scanner
 
 val properties = Properties()
 file("$rootDir/build.properties").inputStream().use { properties.load(it) }
@@ -148,6 +149,42 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach 
     }
 }
 
+tasks.register("setupMusikus") {
+    group = "setup"
+    description = "Sets up the Musikus project with pre-commit hooks, copyright header, and IDE settings."
+
+    doFirst {
+        gradle.startParameter.consoleOutput = ConsoleOutput.Plain
+    }
+
+    doLast {
+        println("Setting up Musikus project...")
+
+        // Step 1: Execute the existing bash script to install the pre-commit hook
+        if (System.getProperty("os.name").lowercase().contains("win")) {
+            exec {
+                workingDir = file("../.github/hooks")
+                commandLine("cmd", "/c", "setup_hooks.bat")
+            }
+        } else {
+            exec {
+                commandLine("bash", ".github/hooks/setup_hooks.sh")
+            }
+        }
+        println("Pre-commit hook installed.")
+
+        // Step 2: Query and store a name for the copyright header
+        val scanner = Scanner(System.`in`)
+        print("Enter your name for the copyright header: ")
+        System.out.flush() // Needed to ensure the prompt is displayed
+        val name = scanner.nextLine()
+        require(!name.isNullOrBlank()) { "Name must not be empty." }
+        val propertiesFile = file("$rootDir/musikus.properties")
+        propertiesFile.writeText("copyrightName=$name")
+        println("Name stored for copyright header: $name")
+    }
+}
+
 dependencies {
     detektPlugins(libs.detekt.formatting)
 
@@ -170,7 +207,7 @@ dependencies {
     implementation(libs.androidx.compose.animation.core)
     implementation(libs.androidx.compose.animation.graphics)
 
-    //Foundation
+    // Foundation
     implementation(libs.androidx.compose.foundation)
     implementation(libs.androidx.compose.foundation.layout)
 
@@ -206,7 +243,7 @@ dependencies {
     // Immutable Lists
     implementation(libs.kotlinx.collections.immutable)
 
-    //Dagger - Hilt
+    // Dagger - Hilt
     implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
