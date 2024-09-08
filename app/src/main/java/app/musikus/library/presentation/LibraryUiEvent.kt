@@ -15,7 +15,7 @@ import app.musikus.library.data.daos.LibraryItem
 
 typealias LibraryUiEventHandler = (LibraryUiEvent) -> Unit
 
-sealed class LibraryUiEvent  {
+sealed class LibraryUiEvent {
 
     data object BackButtonPressed : LibraryUiEvent()
     data class FolderPressed(val folder: LibraryFolder, val longClick: Boolean) : LibraryUiEvent()

@@ -69,7 +69,6 @@ fun SessionStatistics(
     viewModel: SessionStatisticsViewModel = hiltViewModel(),
     navigateUp: () -> Unit
 ) {
-
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     Scaffold(
@@ -160,9 +159,6 @@ fun SessionStatisticsHeader(
     seekBackwards = seekBackwards
 )
 
-
-
-
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun SessionStatisticsLibraryItemSelector(
@@ -172,17 +168,19 @@ fun SessionStatisticsLibraryItemSelector(
     val scrollState = rememberLazyListState()
     val showScrollbar = scrollState.canScrollBackward || scrollState.canScrollForward
     LazyColumn(
-        modifier = Modifier.conditional(showScrollbar) { simpleVerticalScrollbar(
-            scrollState,
-            width = 5.dp,
-            verticalPadding = MaterialTheme.spacing.extraSmall
-        ) },
+        modifier = Modifier.conditional(showScrollbar) {
+            simpleVerticalScrollbar(
+                scrollState,
+                width = 5.dp,
+                verticalPadding = MaterialTheme.spacing.extraSmall
+            )
+        },
         state = scrollState,
     ) {
         items(
             items = libraryItemsWithSelectionAndDuration,
             key = { (item) -> item.id }
-        ) {(item, checked, duration) ->
+        ) { (item, checked, duration) ->
             Row(
                 modifier = Modifier
                     .animateItemPlacement()
@@ -212,8 +210,11 @@ fun SessionStatisticsLibraryItemSelector(
                 )
                 val spacerWidth = animateDpAsState(
                     targetValue =
-                        if(showScrollbar) MaterialTheme.spacing.large
-                        else MaterialTheme.spacing.medium,
+                    if (showScrollbar) {
+                        MaterialTheme.spacing.large
+                    } else {
+                        MaterialTheme.spacing.medium
+                    },
                     label = "animatedSpacerWidth"
                 ).value
                 Spacer(

@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2022 Matthias Emde
+ * Copyright (c) 2022-2024 Matthias Emde
  *
  * Parts of this software are licensed under the MIT license
  *
@@ -16,12 +16,12 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Ignore
+import app.musikus.core.data.UUIDConverter
 import app.musikus.core.data.entities.BaseModel
 import app.musikus.core.data.entities.BaseModelCreationAttributes
 import app.musikus.core.data.entities.BaseModelUpdateAttributes
 import app.musikus.core.data.entities.IBaseModelCreationAttributes
 import app.musikus.core.data.entities.IBaseModelUpdateAttributes
-import app.musikus.core.data.UUIDConverter
 import app.musikus.library.data.entities.LibraryItemModel
 import java.time.ZonedDateTime
 import java.util.UUID
@@ -67,11 +67,11 @@ data class SectionUpdateAttributes(
         )
     ]
 )
-data class SectionModel (
-    @ColumnInfo(name="session_id", index = true) override var sessionId: UUID,
-    @ColumnInfo(name="library_item_id", index = true) override var libraryItemId: UUID,
-    @ColumnInfo(name="duration_seconds") var durationSeconds: Int,
-    @ColumnInfo(name="start_timestamp") override var startTimestamp: ZonedDateTime,
+data class SectionModel(
+    @ColumnInfo(name = "session_id", index = true) override var sessionId: UUID,
+    @ColumnInfo(name = "library_item_id", index = true) override var libraryItemId: UUID,
+    @ColumnInfo(name = "duration_seconds") var durationSeconds: Int,
+    @ColumnInfo(name = "start_timestamp") override var startTimestamp: ZonedDateTime,
 ) : BaseModel(), ISectionCreationAttributes, ISectionUpdateAttributes {
 
     @get:Ignore

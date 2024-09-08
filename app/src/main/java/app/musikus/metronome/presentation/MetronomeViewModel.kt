@@ -19,9 +19,9 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import app.musikus.R
 import app.musikus.core.presentation.utils.UiText
+import app.musikus.permissions.domain.PermissionChecker
 import app.musikus.permissions.domain.usecase.PermissionsUseCases
 import app.musikus.settings.domain.usecase.UserPreferencesUseCases
-import app.musikus.permissions.domain.PermissionChecker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
@@ -144,20 +144,22 @@ class MetronomeViewModel @Inject constructor(
 
     /** ------------------ Main ViewModel --------------------- */
 
-    private fun tempoToUiText(tempo: Int) = UiText.StringResource(resId = when(tempo) {
-        in 20 until 40 -> R.string.metronome_tempo_grave
-        in 40 until 55 -> R.string.metronome_tempo_largo
-        in 55 until 66 -> R.string.metronome_tempo_lento
-        in 66 until 76 -> R.string.metronome_tempo_adagio
-        in 76 until 92 -> R.string.metronome_tempo_andante
-        in 92 until 108 -> R.string.metronome_tempo_andante_moderato
-        in 108 until 116 -> R.string.metronome_tempo_moderato
-        in 116 until 120 -> R.string.metronome_tempo_allegro_moderato
-        in 120 until 156 -> R.string.metronome_tempo_allegro
-        in 156 until 172 -> R.string.metronome_tempo_vivace
-        in 172 until 200 -> R.string.metronome_tempo_presto
-        else -> R.string.metronome_tempo_prestissimo
-    })
+    private fun tempoToUiText(tempo: Int) = UiText.StringResource(
+        resId = when (tempo) {
+            in 20 until 40 -> R.string.metronome_tempo_grave
+            in 40 until 55 -> R.string.metronome_tempo_largo
+            in 55 until 66 -> R.string.metronome_tempo_lento
+            in 66 until 76 -> R.string.metronome_tempo_adagio
+            in 76 until 92 -> R.string.metronome_tempo_andante
+            in 92 until 108 -> R.string.metronome_tempo_andante_moderato
+            in 108 until 116 -> R.string.metronome_tempo_moderato
+            in 116 until 120 -> R.string.metronome_tempo_allegro_moderato
+            in 120 until 156 -> R.string.metronome_tempo_allegro
+            in 156 until 172 -> R.string.metronome_tempo_vivace
+            in 172 until 200 -> R.string.metronome_tempo_presto
+            else -> R.string.metronome_tempo_prestissimo
+        }
+    )
 
     /** Imported flows */
     private val metronomeSettings = userPreferencesUseCases.getMetronomeSettings().stateIn(
@@ -182,7 +184,7 @@ class MetronomeViewModel @Inject constructor(
             settings = settings,
             tempoDescription = tempoToUiText(settings.bpm),
             isPlaying = serviceState?.isPlaying ?: false,
-            sliderValue = if(sliderValue.toInt() != settings.bpm) {
+            sliderValue = if (sliderValue.toInt() != settings.bpm) {
                 settings.bpm.toFloat()
             } else {
                 sliderValue
@@ -244,7 +246,7 @@ class MetronomeViewModel @Inject constructor(
 
     private fun updateSliderValue(value: Float) {
         _sliderValue.update { value }
-        if(value.toInt() != metronomeSettings.value.bpm) {
+        if (value.toInt() != metronomeSettings.value.bpm) {
             changeBpm(value.toInt())
         }
     }
@@ -265,7 +267,7 @@ class MetronomeViewModel @Inject constructor(
                 metronomeSettings.value.copy(
                     beatsPerBar = (
                         metronomeSettings.value.beatsPerBar + increment
-                    ).coerceIn(MetronomeSettings.BEATS_PER_BAR_RANGE)
+                        ).coerceIn(MetronomeSettings.BEATS_PER_BAR_RANGE)
                 )
             )
         }
@@ -277,7 +279,7 @@ class MetronomeViewModel @Inject constructor(
                 metronomeSettings.value.copy(
                     clicksPerBeat = (
                         metronomeSettings.value.clicksPerBeat + increment
-                    ).coerceIn(MetronomeSettings.CLICKS_PER_BEAT_RANGE)
+                        ).coerceIn(MetronomeSettings.CLICKS_PER_BEAT_RANGE)
                 )
             )
         }
@@ -290,7 +292,7 @@ class MetronomeViewModel @Inject constructor(
 
         val now = System.currentTimeMillis()
         val bpmSinceLastTab = 1.minutes.inWholeMilliseconds.toFloat() / (now - lastTab)
-        val alpha = when(abs(currentBpm - bpmSinceLastTab)) {
+        val alpha = when (abs(currentBpm - bpmSinceLastTab)) {
             in 0f..10f -> 0.1f
             in 10f..20f -> 0.2f
             in 20f..50f -> 0.3f

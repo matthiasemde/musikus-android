@@ -38,7 +38,6 @@ import app.musikus.core.presentation.utils.htmlResource
 fun ExportScreen(
     navigateUp: () -> Unit
 ) {
-
     Scaffold(
         topBar = {
             TopAppBar(

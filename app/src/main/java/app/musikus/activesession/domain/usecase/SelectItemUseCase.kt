@@ -3,21 +3,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2024 Michael Prommersberger
- *
+ * Copyright (c) 2024 Michael Prommersberger, Matthias Emde
  */
 
 package app.musikus.activesession.domain.usecase
 
-
-import app.musikus.library.data.daos.LibraryItem
+import app.musikus.activesession.domain.ActiveSessionRepository
+import app.musikus.activesession.domain.PracticeSection
+import app.musikus.activesession.domain.SessionState
 import app.musikus.core.domain.IdProvider
 import app.musikus.core.domain.TimeProvider
 import app.musikus.core.domain.minus
 import app.musikus.core.domain.plus
-import app.musikus.activesession.domain.ActiveSessionRepository
-import app.musikus.activesession.domain.PracticeSection
-import app.musikus.activesession.domain.SessionState
+import app.musikus.library.data.daos.LibraryItem
 import kotlinx.coroutines.flow.first
 import kotlin.time.Duration.Companion.seconds
 
@@ -30,8 +28,8 @@ class SelectItemUseCase(
     suspend operator fun invoke(libraryItem: LibraryItem) {
         val state = activeSessionRepository.getSessionState().first()
 
-
-        if (state != null) {  /** another section is already running */
+        if (state != null) {
+            /** another section is already running */
             // check same item
             if (state.currentSectionItem == libraryItem) {
                 throw IllegalStateException("Must not select the same library item which is already running.")
@@ -69,7 +67,7 @@ class SelectItemUseCase(
                 )
             )
             return
-       }
+        }
 
         /** starting the first section */
         val changeOverTime = timeProvider.now()

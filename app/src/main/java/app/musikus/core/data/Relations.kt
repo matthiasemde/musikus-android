@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2022 Matthias Emde
+ * Copyright (c) 2022-2024 Matthias Emde
  *
  * Parts of this software are licensed under the MIT license
  *
@@ -15,19 +15,18 @@ package app.musikus.core.data
 import androidx.room.Embedded
 import androidx.room.Junction
 import androidx.room.Relation
+import app.musikus.core.domain.TimeProvider
 import app.musikus.goals.data.daos.GoalDescription
 import app.musikus.goals.data.daos.GoalInstance
-import app.musikus.library.data.daos.LibraryFolder
-import app.musikus.library.data.daos.LibraryItem
-import app.musikus.sessions.data.daos.Section
-import app.musikus.sessions.data.daos.Session
 import app.musikus.goals.data.entities.GoalDescriptionLibraryItemCrossRefModel
 import app.musikus.goals.data.entities.GoalDescriptionModel
 import app.musikus.goals.data.entities.GoalInstanceModel
+import app.musikus.library.data.daos.LibraryFolder
+import app.musikus.library.data.daos.LibraryItem
 import app.musikus.library.data.entities.LibraryItemModel
+import app.musikus.sessions.data.daos.Section
+import app.musikus.sessions.data.daos.Session
 import app.musikus.sessions.data.entities.SectionModel
-import app.musikus.core.domain.TimeProvider
-
 
 data class SectionWithLibraryItem(
     @Embedded val section: Section,
@@ -70,7 +69,6 @@ data class GoalDescriptionWithLibraryItems(
     val title by lazy { description.title(libraryItems.firstOrNull()) }
 
     fun subtitle(instance: GoalInstance) = description.subtitle(instance)
-
 
     fun endOfInstanceInLocalTimezone(instance: GoalInstance, timeProvider: TimeProvider) =
         description.endOfInstanceInLocalTimezone(instance, timeProvider)
@@ -172,8 +170,8 @@ data class GoalDescriptionWithInstancesAndLibraryItems(
     val title by lazy { description.title(libraryItems.firstOrNull()) }
 
     val latestInstance by lazy {
-        instances.singleOrNull { it.endTimestamp == null } ?:
-        instances.maxWith(compareBy { it.startTimestamp })
+        instances.singleOrNull { it.endTimestamp == null }
+            ?: instances.maxWith(compareBy { it.startTimestamp })
     }
 
     val subtitle by lazy { latestInstance.let { description.subtitle(it) } }
@@ -184,10 +182,12 @@ data class GoalDescriptionWithInstancesAndLibraryItems(
         description.endOfInstanceInLocalTimezone(it, timeProvider)
     }
 
-    val goalDescriptionWithLibraryItems by lazy { GoalDescriptionWithLibraryItems(
-        description = description,
-        libraryItems = libraryItems
-    ) }
+    val goalDescriptionWithLibraryItems by lazy {
+        GoalDescriptionWithLibraryItems(
+            description = description,
+            libraryItems = libraryItems
+        )
+    }
 }
 
 data class GoalInstanceWithDescriptionWithLibraryItems(

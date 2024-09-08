@@ -24,7 +24,6 @@ class EditSessionUseCase(
         sessionUpdateAttributes: SessionUpdateAttributes,
         sectionUpdateData: List<Pair<UUID, SectionUpdateAttributes>>
     ) {
-
         if (!sessionRepository.existsSession(id)) {
             throw IllegalArgumentException("Session with id $id does not exist")
         }
@@ -41,7 +40,9 @@ class EditSessionUseCase(
 
         val sectionIdsNotInSession = sectionUpdateData.unzip().first.filter { sectionId -> sectionId !in sectionIdsForSession }
         if (sectionIdsNotInSession.isNotEmpty()) {
-            throw IllegalArgumentException("Section(s) with id(s) $sectionIdsNotInSession are not in session with id $id")
+            throw IllegalArgumentException(
+                "Section(s) with id(s) $sectionIdsNotInSession are not in session with id $id"
+            )
         }
 
         if (sectionUpdateData.unzip().second.any { it.duration != null && it.duration.inWholeSeconds <= 0 }) {

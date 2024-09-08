@@ -54,7 +54,6 @@ const val SCALE_FACTOR_FOR_SMALL_TEXT = 0.8f
 
 typealias DurationString = AnnotatedString
 
-
 /**
  * Get the formatted string for a duration of seconds, e.g. "1h 32m"
  *
@@ -72,7 +71,7 @@ typealias DurationString = AnnotatedString
 fun getDurationString(
     duration: Duration,
     format: DurationFormat,
-) : DurationString {
+): DurationString {
     val days = duration.inWholeDays
     var remainingDuration = duration - days.days
 
@@ -92,7 +91,7 @@ fun getDurationString(
     return buildAnnotatedString {
         when (format) {
             DurationFormat.HUMAN_PRETTY, DurationFormat.HUMAN_PRETTY_SHORT -> {
-                val spaceOrNot = when(format) {
+                val spaceOrNot = when (format) {
                     DurationFormat.HUMAN_PRETTY -> " "
                     DurationFormat.HUMAN_PRETTY_SHORT -> ""
                     else -> ""
@@ -112,7 +111,7 @@ fun getDurationString(
                     }
                 }
 
-                if(duration < 1.minutes && duration > 0.seconds) {
+                if (duration < 1.minutes && duration > 0.seconds) {
                     append("<${spaceOrNot}1")
                     withStyle(SpanStyle(fontSize = SCALE_FACTOR_FOR_SMALL_TEXT.em)) {
                         append("m")
@@ -121,69 +120,83 @@ fun getDurationString(
             }
 
             DurationFormat.HMSC_DIGITAL -> {
-                append("%02d:%02d:%02d".format(
-                    totalHours,
-                    minutes,
-                    seconds,
-                ))
+                append(
+                    "%02d:%02d:%02d".format(
+                        totalHours,
+                        minutes,
+                        seconds,
+                    )
+                )
                 withStyle(SpanStyle(fontSize = 0.5.em)) {
                     append("%02d".format(milliseconds / 10))
                 }
             }
 
             DurationFormat.MSC_DIGITAL -> {
-                append("%02d:%02d".format(
-                    totalMinutes,
-                    seconds,
-                ))
+                append(
+                    "%02d:%02d".format(
+                        totalMinutes,
+                        seconds,
+                    )
+                )
                 withStyle(SpanStyle(fontSize = 0.5.em)) {
                     append("%02d".format(milliseconds / 10))
                 }
             }
 
             DurationFormat.HMS_DIGITAL -> {
-                append("%02d:%02d:%02d".format(
-                    totalHours,
-                    minutes,
-                    seconds,
-                ))
+                append(
+                    "%02d:%02d:%02d".format(
+                        totalHours,
+                        minutes,
+                        seconds,
+                    )
+                )
             }
 
             DurationFormat.MS_DIGITAL -> {
-                append("%02d:%02d".format(
-                    totalMinutes,
-                    seconds,
-                ))
+                append(
+                    "%02d:%02d".format(
+                        totalMinutes,
+                        seconds,
+                    )
+                )
             }
 
             DurationFormat.HM_DIGITAL_OR_MIN_HUMAN -> {
-                append(when {
-                    totalHours > 0 -> "%02d:%02d".format(totalHours, minutes)
-                    minutes > 0 -> "%d min".format(minutes)
-                    seconds > 0 -> "< 1min"
-                    else -> "0 min"
-                })
+                append(
+                    when {
+                        totalHours > 0 -> "%02d:%02d".format(totalHours, minutes)
+                        minutes > 0 -> "%d min".format(minutes)
+                        seconds > 0 -> "< 1min"
+                        else -> "0 min"
+                    }
+                )
             }
             DurationFormat.PRETTY_APPROX -> {
-                append(when {
-                    // if time left is larger than a day, show the number of begun days
-                    days > 0 -> "${days + 1} days"
-                    // if days are zero, but hours is larger than 1, show the number of begun hours
-                    hours > 0 -> "${hours + 1} hours"
-                    // else, show the number of begun minutes
-                    else -> "${minutes + 1} minutes"
-                })
+                append(
+                    when {
+                        // if time left is larger than a day, show the number of begun days
+                        days > 0 -> "${days + 1} days"
+                        // if days are zero, but hours is larger than 1, show the number of begun hours
+                        hours > 0 -> "${hours + 1} hours"
+                        // else, show the number of begun minutes
+                        else -> "${minutes + 1} minutes"
+                    }
+                )
             }
 
             DurationFormat.PRETTY_APPROX_SHORT -> {
-                append(when {
-                    // if time left is larger than a day, show the number of begun days
-                    days > 0 -> "${days + 1} days"
-                    // if days are zero, but hours is larger than 1, show the number of begun hours
-                    hours > 0 -> "${hours + 1}h"
-                    // else, show the number of begun minutes
-                    else -> "${minutes + 1}m"
-                })
+                append(
+                    when {
+                        // if time left is larger than a day, show the number of begun days
+                        days > 0 -> "${days + 1} days"
+                        // if days are zero, but hours is larger than 1, show the number of begun hours
+                        hours > 0 -> "${hours + 1}h"
+                        // else, show the number of begun minutes
+                        else -> "${minutes + 1}m"
+                    }
+                )
             }
         }
     }

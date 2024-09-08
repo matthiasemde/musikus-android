@@ -49,9 +49,12 @@ fun PermissionDialog(
                     DialogActions(
                         onDismissHandler = onDismiss,
                         onConfirmHandler = if (isPermanentlyDeclined) onGoToAppSettingsClick else onOkClick,
-                        confirmButtonText = stringResource(id = if (isPermanentlyDeclined)
-                            R.string.permission_dialog_confirm_permanently_declined else
-                            android.R.string.ok
+                        confirmButtonText = stringResource(
+                            id = if (isPermanentlyDeclined) {
+                                R.string.permission_dialog_confirm_permanently_declined
+                            } else {
+                                android.R.string.ok
+                            }
                         ),
                         dismissButtonText = stringResource(id = android.R.string.cancel),
                     )

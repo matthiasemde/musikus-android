@@ -45,13 +45,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.musikus.R
-import app.musikus.goals.data.entities.GoalType
-import app.musikus.core.presentation.utils.DurationFormat
-import app.musikus.core.presentation.utils.getDurationString
-import app.musikus.core.presentation.theme.libraryItemColors
-import app.musikus.goals.domain.GoalInstanceWithProgressAndDescriptionWithLibraryItems
 import app.musikus.core.domain.TimeProvider
+import app.musikus.core.presentation.theme.libraryItemColors
+import app.musikus.core.presentation.utils.DurationFormat
 import app.musikus.core.presentation.utils.asAnnotatedString
+import app.musikus.core.presentation.utils.getDurationString
+import app.musikus.goals.data.entities.GoalType
+import app.musikus.goals.domain.GoalInstanceWithProgressAndDescriptionWithLibraryItems
 import java.time.temporal.ChronoUnit
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -63,17 +63,19 @@ fun GoalCard(
     progressOffset: Duration = 0.seconds,
     timeProvider: TimeProvider
 ) {
-
     val descriptionWithLibraryItems = goal.description
     val (description, libraryItems) = descriptionWithLibraryItems
     val progress = goal.progress
 
-    val libraryItemColor = if(description.type == GoalType.ITEM_SPECIFIC) {
+    val libraryItemColor = if (description.type == GoalType.ITEM_SPECIFIC) {
         libraryItemColors[libraryItems.first().colorIndex]
-    } else null
+    } else {
+        null
+    }
 
-    ElevatedCard(modifier = modifier
-        .blur(if (description.paused) 1.5.dp else 0.dp)
+    ElevatedCard(
+        modifier = modifier
+            .blur(if (description.paused) 1.5.dp else 0.dp)
     ) {
         Box {
             Column(modifier = Modifier.padding(16.dp)) {
@@ -86,21 +88,28 @@ fun GoalCard(
 //                        modifier = Modifier
 //                            .height(IntrinsicSize.Min)
 //                    ) {
-                        /** Goal Type */
-                        Icon(
-                            modifier = Modifier
-                                .padding(horizontal = 8.dp)
-                                .size(24.dp),
-                            imageVector =
-                                if(description.repeat) Icons.Rounded.Repeat
-                                else Icons.Filled.LocalFireDepartment,
-                            contentDescription = stringResource(id = if(description.repeat)
-                                R.string.goals_repeating else R.string.goals_non_repeating),
-                            tint = libraryItemColor ?: MaterialTheme.colorScheme.primary
-                        )
+                    /** Goal Type */
+                    Icon(
+                        modifier = Modifier
+                            .padding(horizontal = 8.dp)
+                            .size(24.dp),
+                        imageVector =
+                        if (description.repeat) {
+                            Icons.Rounded.Repeat
+                        } else {
+                            Icons.Filled.LocalFireDepartment
+                        },
+                        contentDescription = stringResource(
+                            id = if (description.repeat) {
+                                R.string.goals_repeating
+                            } else {
+                                R.string.goals_non_repeating
+                            }
+                        ),
+                        tint = libraryItemColor ?: MaterialTheme.colorScheme.primary
+                    )
 
-
-                        /** Color indicator */
+                    /** Color indicator */
 //                        libraryItemColor?.let {
 //                            Box(
 //                                modifier = Modifier
@@ -112,11 +121,11 @@ fun GoalCard(
 //                            )
 //                        }
 
-                        /** Goal Title */
-                        Text(
-                            modifier = Modifier.weight(1f),
-                            text = goal.title.asAnnotatedString()
-                        )
+                    /** Goal Title */
+                    Text(
+                        modifier = Modifier.weight(1f),
+                        text = goal.title.asAnnotatedString()
+                    )
 //                    }
 
                     /** remaining time */
@@ -134,7 +143,7 @@ fun GoalCard(
                         Text(
                             modifier = Modifier.padding(8.dp),
                             maxLines = 1,
-                            text= stringResource(
+                            text = stringResource(
                                 R.string.core_time_left,
                                 getDurationString(remainingTime, DurationFormat.PRETTY_APPROX)
                             )
@@ -182,12 +191,11 @@ fun GoalCard(
                     )
                     Row(
                         modifier = Modifier
-                            .matchParentSize()
-                        ,
+                            .matchParentSize(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        if(animatedProgressPercent < 1f) {
+                        if (animatedProgressPercent < 1f) {
                             Text(
                                 modifier = Modifier.padding(horizontal = 16.dp),
                                 text = getDurationString(
@@ -231,7 +239,7 @@ fun GoalCard(
                     }
                 }
             }
-            if(description.paused) {
+            if (description.paused) {
                 Icon(
                     modifier = Modifier
                         .size(72.dp)

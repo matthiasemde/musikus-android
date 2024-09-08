@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2023 Matthias Emde
+ * Copyright (c) 2023-2024 Matthias Emde
  */
 
 package app.musikus.statistics.presentation.goalstatistics
@@ -82,13 +82,13 @@ fun GoalStatisticsBarChart(
         mutableMapOf<
             Duration,
             Pair<
-                    ScaleLineData,
+                ScaleLineData,
                 Pair<
                     Animatable<Color, AnimationVector4D>,
                     Animatable<Color, AnimationVector4D>
+                    >
                 >
-            >
-        >()
+            >()
     }
 
     val chartMaxDuration = remember(uiState.data) {
@@ -168,11 +168,14 @@ fun GoalStatisticsBarChart(
             .plus(uiState.target)
             .onEach { scaleLineDuration ->
                 val targetOpacity =
-                    if (newScaleLines.containsKey(scaleLineDuration)) 1f
-                    else 0f
+                    if (newScaleLines.containsKey(scaleLineDuration)) {
+                        1f
+                    } else {
+                        0f
+                    }
 
-                val (scaleLine, pair) = scaleLines[scaleLineDuration] ?:
-                    newScaleLines[scaleLineDuration]?.let { newScaleLine ->
+                val (scaleLine, pair) = scaleLines[scaleLineDuration]
+                    ?: newScaleLines[scaleLineDuration]?.let { newScaleLine ->
                         Pair(
                             newScaleLine,
                             Pair(
@@ -195,7 +198,8 @@ fun GoalStatisticsBarChart(
                         targetValue = lineColor.copy(alpha = targetOpacity),
                         animationSpec = tween(
                             delayMillis = 250,
-                            durationMillis = 250),
+                            durationMillis = 250
+                        ),
                     )
                 }
 
@@ -204,7 +208,8 @@ fun GoalStatisticsBarChart(
                         targetValue = labelColor.copy(alpha = targetOpacity),
                         animationSpec = tween(
                             delayMillis = 250,
-                            durationMillis = 250),
+                            durationMillis = 250
+                        ),
                     )
                 }
 
@@ -235,10 +240,10 @@ fun GoalStatisticsBarChart(
 
     val labelsWithAnimatedDurations = remember(uiState.data) {
         scope.launch {
-            if(uiState.redraw) delay(400)
+            if (uiState.redraw) delay(400)
             barColor.value = uiState.uniqueColor ?: primaryColor
         }
-        uiState.data.zip(bars).onEach {(pair, bar) ->
+        uiState.data.zip(bars).onEach { (pair, bar) ->
             val (_, duration) = pair
 
             scope.launch {
@@ -250,7 +255,7 @@ fun GoalStatisticsBarChart(
                 }
                 bar.animateTo(
                     duration.inWholeSeconds.toFloat(),
-                    animationSpec = tween(durationMillis = if(uiState.redraw) 400 else 750)
+                    animationSpec = tween(durationMillis = if (uiState.redraw) 400 else 750)
                 )
             }
         }.map { (pair, bar) ->
@@ -261,10 +266,14 @@ fun GoalStatisticsBarChart(
 
     val animatedCheckmarkAlphas = labelsWithAnimatedDurations.mapIndexed { barIndex, (_, animatedDuration) ->
         animateFloatAsState(
-            targetValue = if(
+            targetValue = if (
                 uiState.data[barIndex].second >= uiState.target &&
                 animatedDuration.value >= uiState.data[barIndex].second.inWholeSeconds.toFloat() * 0.8
-            ) 1f else 0f,
+            ) {
+                1f
+            } else {
+                0f
+            },
             animationSpec = tween(durationMillis = 200),
             label = "bar-chart-check-mark-animation-$barIndex"
         )
@@ -299,7 +308,7 @@ fun GoalStatisticsBarChart(
         scaleLinesWithAnimatedColor.forEach { scaleLineData ->
             val lineHeight =
                 (size.height - yZero) -
-                (yMax * (scaleLineData.duration.inWholeSeconds.toFloat() / animatedMaxDuration))
+                    (yMax * (scaleLineData.duration.inWholeSeconds.toFloat() / animatedMaxDuration))
             drawLine(
                 color = scaleLineData.lineColor,
                 start = Offset(
@@ -325,108 +334,109 @@ fun GoalStatisticsBarChart(
         labelsWithAnimatedDurations
             .zip(animatedCheckmarkAlphas)
             .forEachIndexed { barIndex, (pair, animatedCheckmarkAlpha) ->
-            val (measuredLabel, animatedDuration) = pair
-            val leftEdge =
-                paddingLeft.toPx() +
+                val (measuredLabel, animatedDuration) = pair
+                val leftEdge =
+                    paddingLeft.toPx() +
                         spacingInPx / 2 +
                         barIndex * (columnThicknessInPx + spacingInPx)
-            val rightEdge = leftEdge + columnThicknessInPx
+                val rightEdge = leftEdge + columnThicknessInPx
 
-            val animatedBarHeight =
-                if (animatedMaxDuration == 0f) 0f
-                else (animatedDuration.value / animatedMaxDuration) * yMax
+                val animatedBarHeight =
+                    if (animatedMaxDuration == 0f) {
+                        0f
+                    } else {
+                        (animatedDuration.value / animatedMaxDuration) * yMax
+                    }
 
-            val bottomEdge = size.height - (yZero + columnYOffset)
-            val topEdge = bottomEdge - animatedBarHeight
+                val bottomEdge = size.height - (yZero + columnYOffset)
+                val topEdge = bottomEdge - animatedBarHeight
 
-
-            // draw the label and the x axis tick
-            drawText(
-                textLayoutResult = measuredLabel,
-                topLeft = Offset(
-                    x = leftEdge + columnThicknessInPx / 2 - measuredLabel.size.width / 2,
-                    y = size.height - yZero + 12.dp.toPx()
+                // draw the label and the x axis tick
+                drawText(
+                    textLayoutResult = measuredLabel,
+                    topLeft = Offset(
+                        x = leftEdge + columnThicknessInPx / 2 - measuredLabel.size.width / 2,
+                        y = size.height - yZero + 12.dp.toPx()
+                    )
                 )
-            )
 
-            drawLine(
-                color = onSurfaceColorLowerContrast,
-                start = Offset(
-                    x = leftEdge + columnThicknessInPx / 2,
-                    y = size.height - yZero
-                ),
-                end = Offset(
-                    x = leftEdge + columnThicknessInPx / 2,
-                    y = size.height - yZero + 5.dp.toPx()
-                ),
-                strokeWidth = 2.dp.toPx(),
-            )
-
-            // draw the bar
-            drawRect(
-                color = barColor.value,
-                topLeft = Offset(
-                    x = leftEdge,
-                    y = topEdge
-                ),
-                size = Size(
-                    width = columnThickness.toPx(),
-                    height = animatedBarHeight
+                drawLine(
+                    color = onSurfaceColorLowerContrast,
+                    start = Offset(
+                        x = leftEdge + columnThicknessInPx / 2,
+                        y = size.height - yZero
+                    ),
+                    end = Offset(
+                        x = leftEdge + columnThicknessInPx / 2,
+                        y = size.height - yZero + 5.dp.toPx()
+                    ),
+                    strokeWidth = 2.dp.toPx(),
                 )
-            )
 
-            // draw the check mark if goal is completed
-            if (animatedCheckmarkAlpha.value > 0f) {
-                translate(
-                    left = leftEdge + columnThicknessInPx / 2 - checkMarkSizeInPx.width / 2,
-                    top = topEdge + checkMarkSizeInPx.height / 2 - 10.dp.toPx()
-                ) {
-                    with(checkMarkPainter) {
-                        draw(
-                            size = checkMarkSizeInPx,
-                            alpha = animatedCheckmarkAlpha.value,
-                            colorFilter = ColorFilter.tint(onPrimaryColor)
-                        )
+                // draw the bar
+                drawRect(
+                    color = barColor.value,
+                    topLeft = Offset(
+                        x = leftEdge,
+                        y = topEdge
+                    ),
+                    size = Size(
+                        width = columnThickness.toPx(),
+                        height = animatedBarHeight
+                    )
+                )
+
+                // draw the check mark if goal is completed
+                if (animatedCheckmarkAlpha.value > 0f) {
+                    translate(
+                        left = leftEdge + columnThicknessInPx / 2 - checkMarkSizeInPx.width / 2,
+                        top = topEdge + checkMarkSizeInPx.height / 2 - 10.dp.toPx()
+                    ) {
+                        with(checkMarkPainter) {
+                            draw(
+                                size = checkMarkSizeInPx,
+                                alpha = animatedCheckmarkAlpha.value,
+                                colorFilter = ColorFilter.tint(onPrimaryColor)
+                            )
+                        }
                     }
                 }
-            }
 
-            // clip shape for rounded corners
-            if (animatedBarHeight > 0f) {
-                drawPath(
-                    color = surfaceColor,
-                    path = Path().apply {
-                        moveTo(leftEdge - 1, topEdge - 1)
-                        arcTo(
-                            rect = Rect(
-                                left = leftEdge - 1,
-                                top = topEdge - 1,
-                                right = leftEdge + 8.dp.toPx() + 1,
-                                bottom = topEdge + 8.dp.toPx() + 1,
-                            ),
-                            startAngleDegrees = 180f,
-                            sweepAngleDegrees = 90f,
-                            forceMoveTo = false
-                        )
-                        arcTo(
-                            rect = Rect(
-                                left = rightEdge - 8.dp.toPx() - 1,
-                                top = topEdge - 1,
-                                right = rightEdge + 1,
-                                bottom = topEdge + 8.dp.toPx() + 1,
-                            ),
-                            startAngleDegrees = 270f,
-                            sweepAngleDegrees = 90f,
-                            forceMoveTo = false
-                        )
-                        lineTo(rightEdge + 1, topEdge - 1)
-                        close()
-                    },
-                    style = Fill
-                )
+                // clip shape for rounded corners
+                if (animatedBarHeight > 0f) {
+                    drawPath(
+                        color = surfaceColor,
+                        path = Path().apply {
+                            moveTo(leftEdge - 1, topEdge - 1)
+                            arcTo(
+                                rect = Rect(
+                                    left = leftEdge - 1,
+                                    top = topEdge - 1,
+                                    right = leftEdge + 8.dp.toPx() + 1,
+                                    bottom = topEdge + 8.dp.toPx() + 1,
+                                ),
+                                startAngleDegrees = 180f,
+                                sweepAngleDegrees = 90f,
+                                forceMoveTo = false
+                            )
+                            arcTo(
+                                rect = Rect(
+                                    left = rightEdge - 8.dp.toPx() - 1,
+                                    top = topEdge - 1,
+                                    right = rightEdge + 1,
+                                    bottom = topEdge + 8.dp.toPx() + 1,
+                                ),
+                                startAngleDegrees = 270f,
+                                sweepAngleDegrees = 90f,
+                                forceMoveTo = false
+                            )
+                            lineTo(rightEdge + 1, topEdge - 1)
+                            close()
+                        },
+                        style = Fill
+                    )
+                }
             }
-
-        }
         drawLine(
             color = onSurfaceColorLowerContrast,
             start = Offset(

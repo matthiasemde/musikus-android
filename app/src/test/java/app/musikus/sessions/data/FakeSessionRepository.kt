@@ -11,13 +11,13 @@ package app.musikus.sessions.data
 import app.musikus.core.data.GoalInstanceWithDescriptionWithLibraryItems
 import app.musikus.core.data.SectionWithLibraryItem
 import app.musikus.core.data.SessionWithSectionsWithLibraryItems
-import app.musikus.goals.data.daos.GoalDescription
-import app.musikus.goals.data.daos.GoalInstance
-import app.musikus.library.data.daos.LibraryItem
 import app.musikus.core.domain.FakeIdProvider
 import app.musikus.core.domain.TimeProvider
 import app.musikus.core.domain.Timeframe
+import app.musikus.goals.data.daos.GoalDescription
+import app.musikus.goals.data.daos.GoalInstance
 import app.musikus.library.data.FakeLibraryRepository
+import app.musikus.library.data.daos.LibraryItem
 import app.musikus.sessions.data.daos.Section
 import app.musikus.sessions.data.daos.Session
 import app.musikus.sessions.data.entities.SectionCreationAttributes
@@ -50,10 +50,12 @@ class FakeSessionRepository(
     }
 
     override fun sessionsInTimeframe(timeframe: Timeframe): Flow<List<SessionWithSectionsWithLibraryItems>> {
-        return flowOf(_sessions.filter { session ->
-            session.startTimestamp >= timeframe.first &&
-            session.startTimestamp < timeframe.second
-        })
+        return flowOf(
+            _sessions.filter { session ->
+                session.startTimestamp >= timeframe.first &&
+                    session.startTimestamp < timeframe.second
+            }
+        )
     }
 
     override suspend fun sectionsForSession(sessionId: UUID): List<Section> {
@@ -98,19 +100,19 @@ class FakeSessionRepository(
                 sections = sectionCreationAttributes
                     .zip(sectionIds)
                     .map { (sectionCreationAttributes, id) ->
-                    SectionWithLibraryItem(
-                        section = Section(
-                            id = id,
-                            startTimestamp = sectionCreationAttributes.startTimestamp,
-                            durationSeconds = sectionCreationAttributes.duration.inWholeSeconds,
-                            libraryItemId = sectionCreationAttributes.libraryItemId,
-                            sessionId = sessionId
-                        ),
-                        libraryItem = libraryItems.first {
-                            it.id == sectionCreationAttributes.libraryItemId
-                        }
-                    )
-                },
+                        SectionWithLibraryItem(
+                            section = Section(
+                                id = id,
+                                startTimestamp = sectionCreationAttributes.startTimestamp,
+                                durationSeconds = sectionCreationAttributes.duration.inWholeSeconds,
+                                libraryItemId = sectionCreationAttributes.libraryItemId,
+                                sessionId = sessionId
+                            ),
+                            libraryItem = libraryItems.first {
+                                it.id == sectionCreationAttributes.libraryItemId
+                            }
+                        )
+                    },
             )
         )
 
@@ -147,7 +149,6 @@ class FakeSessionRepository(
                                 durationSeconds = it.second.duration?.inWholeSeconds ?: oldSection.section.durationSeconds,
                             )
                         )
-
                     } ?: oldSection
                 }
             )
@@ -173,5 +174,4 @@ class FakeSessionRepository(
     override suspend fun withTransaction(block: suspend () -> Unit) {
         block()
     }
-
 }

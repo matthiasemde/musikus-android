@@ -17,7 +17,6 @@ import app.musikus.library.data.entities.LibraryItemUpdateAttributes
 import kotlinx.coroutines.flow.Flow
 import java.util.UUID
 
-
 interface LibraryRepository {
     val items: Flow<List<LibraryItem>>
     val folders: Flow<List<LibraryFolderWithItems>>

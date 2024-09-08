@@ -15,7 +15,7 @@ class DeleteGoalsUseCase(
     private val goalRepository: GoalRepository
 ) {
 
-    suspend operator fun invoke(ids : List<UUID>) {
+    suspend operator fun invoke(ids: List<UUID>) {
         goalRepository.delete(ids)
     }
 }

@@ -8,7 +8,6 @@
 
 package app.musikus.core.domain
 
-
 import com.google.common.truth.Truth.assertThat
 import io.mockk.spyk
 import io.mockk.verify
@@ -54,7 +53,6 @@ class TimeProviderTest {
         assertThat(duration).isEqualTo(50.milliseconds)
     }
 
-
     /** -------------- Get start/end of day -------------------- */
     @Test
     fun `Get start of day`() {
@@ -83,7 +81,6 @@ class TimeProviderTest {
         )
         assertThat(endOfDay).isEqualTo(ZonedDateTime.parse("1968-12-25T00:00:00Z[UTC]"))
     }
-
 
     /** ----------- Get start/end of day of week ---------------- */
 
@@ -115,7 +112,6 @@ class TimeProviderTest {
         assertThat(endOfDayOfWeek).isEqualTo(ZonedDateTime.parse("1961-05-08T00:00:00Z[UTC]"))
     }
 
-
     /** -------------- Get start/end of week -------------------- */
     @Test
     fun `Get start of week`() {
@@ -123,7 +119,7 @@ class TimeProviderTest {
 
         timeProviderSpy.getStartOfWeek(dateTime = dateTime)
 
-        verify (exactly = 1) { timeProviderSpy.getStartOfDayOfWeek(1, dateTime) }
+        verify(exactly = 1) { timeProviderSpy.getStartOfDayOfWeek(1, dateTime) }
     }
 
     @Test
@@ -133,7 +129,6 @@ class TimeProviderTest {
         )
         assertThat(endOfWeek).isEqualTo(ZonedDateTime.parse("1961-07-24T00:00:00Z[UTC]"))
     }
-
 
     /** -------------- Get start/end of month ------------------- */
     @Test

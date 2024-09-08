@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2023 Matthias Emde
+ * Copyright (c) 2023-2024 Matthias Emde
  */
 
 package app.musikus.core.presentation.components
@@ -15,10 +15,10 @@ import androidx.compose.ui.Modifier
 
 @Composable
 fun Modifier.conditional(
-    condition : Boolean,
+    condition: Boolean,
     alternativeModifier: @Composable Modifier.() -> Modifier = { this },
-    modifier : @Composable Modifier.() -> Modifier,
-) : Modifier {
+    modifier: @Composable Modifier.() -> Modifier,
+): Modifier {
     return if (condition) {
         then(modifier(Modifier))
     } else {

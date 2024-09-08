@@ -1,7 +1,18 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ *
+ * Copyright (c) 2024 Matthias Emde
+ */
+
 package app.musikus.goals.domain.usecase
 
 import app.musikus.core.data.GoalDescriptionWithInstancesAndLibraryItems
 import app.musikus.core.data.UUIDConverter
+import app.musikus.core.domain.FakeIdProvider
+import app.musikus.core.domain.FakeTimeProvider
+import app.musikus.goals.data.FakeGoalRepository
 import app.musikus.goals.data.daos.GoalDescription
 import app.musikus.goals.data.daos.GoalInstance
 import app.musikus.goals.data.entities.GoalDescriptionCreationAttributes
@@ -10,10 +21,7 @@ import app.musikus.goals.data.entities.GoalInstanceCreationAttributes
 import app.musikus.goals.data.entities.GoalPeriodUnit
 import app.musikus.goals.data.entities.GoalProgressType
 import app.musikus.goals.data.entities.GoalType
-import app.musikus.goals.data.FakeGoalRepository
 import app.musikus.library.data.FakeLibraryRepository
-import app.musikus.core.domain.FakeIdProvider
-import app.musikus.core.domain.FakeTimeProvider
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -110,9 +118,11 @@ class UnarchiveGoalsUseCaseTest {
 
     @Test
     fun `Unarchive paused goal during first instance, instance is not changed`() = runTest {
-        fakeGoalRepository.updateGoalDescriptions(listOf(
-            UUIDConverter.fromInt(1) to GoalDescriptionUpdateAttributes(paused = true)
-        ))
+        fakeGoalRepository.updateGoalDescriptions(
+            listOf(
+                UUIDConverter.fromInt(1) to GoalDescriptionUpdateAttributes(paused = true)
+            )
+        )
 
         archiveGoalsUseCase(listOf(UUIDConverter.fromInt(1)))
 
@@ -154,9 +164,11 @@ class UnarchiveGoalsUseCaseTest {
 
     @Test
     fun `Unarchive paused goal in the future, new instance is created`() = runTest {
-        fakeGoalRepository.updateGoalDescriptions(listOf(
-            UUIDConverter.fromInt(1) to GoalDescriptionUpdateAttributes(paused = true)
-        ))
+        fakeGoalRepository.updateGoalDescriptions(
+            listOf(
+                UUIDConverter.fromInt(1) to GoalDescriptionUpdateAttributes(paused = true)
+            )
+        )
 
         archiveGoalsUseCase(listOf(UUIDConverter.fromInt(1)))
 
@@ -254,7 +266,6 @@ class UnarchiveGoalsUseCaseTest {
         )
     }
 
-
     @Test
     fun `Unarchive goal with active instance, goal is unarchived`() = runTest {
         archiveGoalsUseCase(listOf(UUIDConverter.fromInt(1)))
@@ -327,6 +338,4 @@ class UnarchiveGoalsUseCaseTest {
             )
         )
     }
-
-
 }

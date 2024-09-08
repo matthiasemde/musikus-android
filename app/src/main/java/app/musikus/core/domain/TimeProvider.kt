@@ -48,7 +48,7 @@ interface TimeProvider {
 
         return dateTime
             .with(ChronoField.NANO_OF_DAY, 0)
-            .with(ChronoField.DAY_OF_WEEK , dayIndex) // ISO 8601, Monday is first day of week.
+            .with(ChronoField.DAY_OF_WEEK, dayIndex) // ISO 8601, Monday is first day of week.
     }
 
     /**
@@ -85,7 +85,7 @@ interface TimeProvider {
         dateTime: ZonedDateTime = now()
     ): ZonedDateTime = dateTime
         .with(ChronoField.NANO_OF_DAY, 0)
-        .with(ChronoField.DAY_OF_MONTH , 1 ) // jump to first day of this month
+        .with(ChronoField.DAY_OF_MONTH, 1) // jump to first day of this month
 
     /**
      * Get the end of a month. Half-open: Actually get the start of the next month.

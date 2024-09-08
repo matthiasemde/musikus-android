@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2022 Matthias Emde
+ * Copyright (c) 2022-2024 Matthias Emde
  */
 
 package app.musikus.core.presentation.components
@@ -67,7 +67,7 @@ fun MultiFAB(
                     MiniFAB(
                         modifier = Modifier
                             .padding(8.dp)
-                            .padding(bottom = (if (i+1 == miniFABs.size) 16 else 0).dp),
+                            .padding(bottom = (if (i + 1 == miniFABs.size) 16 else 0).dp),
                         data = miniFAB
                     )
                 }
@@ -76,8 +76,11 @@ fun MultiFAB(
         FloatingActionButton(
             onClick = {
                 onStateChange(
-                    if(state == MultiFabState.EXPANDED) MultiFabState.COLLAPSED
-                    else MultiFabState.EXPANDED
+                    if (state == MultiFabState.EXPANDED) {
+                        MultiFabState.COLLAPSED
+                    } else {
+                        MultiFabState.EXPANDED
+                    }
                 )
             },
         ) {

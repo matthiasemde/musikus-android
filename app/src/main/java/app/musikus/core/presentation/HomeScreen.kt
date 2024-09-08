@@ -49,13 +49,12 @@ import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import app.musikus.core.domain.TimeProvider
 import app.musikus.core.presentation.components.MultiFabState
 import app.musikus.goals.presentation.GoalsScreen
 import app.musikus.library.presentation.Library
 import app.musikus.sessions.presentation.SessionsScreen
 import app.musikus.statistics.presentation.Statistics
-import app.musikus.core.domain.TimeProvider
-
 
 @Composable
 fun HomeScreen(
@@ -66,19 +65,18 @@ fun HomeScreen(
     navController: NavController,
     timeProvider: TimeProvider,
 ) {
-
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val eventHandler: HomeUiEventHandler = viewModel::onUiEvent
 
     SideEffect {
-        if(initialTab != null && initialTab != uiState.currentTab) {
+        if (initialTab != null && initialTab != uiState.currentTab) {
             eventHandler(HomeUiEvent.TabSelected(initialTab))
         }
     }
 
     BackHandler(
         enabled =
-            navController.previousBackStackEntry == null &&
+        navController.previousBackStackEntry == null &&
             uiState.currentTab != Screen.HomeTab.defaultTab,
         onBack = { eventHandler(HomeUiEvent.TabSelected(Screen.HomeTab.defaultTab)) }
     )
@@ -113,14 +111,14 @@ fun HomeScreen(
                         ANIMATION_BASE_DURATION / 2
                     )
                 ) togetherWith
-                slideOutVertically(
-                    animationSpec = tween(ANIMATION_BASE_DURATION),
-                    targetOffsetY = { fullHeight -> (fullHeight / 10) }
-                ) + fadeOut(animationSpec = tween(ANIMATION_BASE_DURATION / 2))
+                    slideOutVertically(
+                        animationSpec = tween(ANIMATION_BASE_DURATION),
+                        targetOffsetY = { fullHeight -> (fullHeight / 10) }
+                    ) + fadeOut(animationSpec = tween(ANIMATION_BASE_DURATION / 2))
             },
             label = "homeTabContent"
         ) { currentTab ->
-            when(currentTab) {
+            when (currentTab) {
                 is Screen.HomeTab.Sessions -> {
                     SessionsScreen(
                         mainUiState = mainUiState,
@@ -149,7 +147,7 @@ fun HomeScreen(
                     )
                 }
                 is Screen.HomeTab.Library -> {
-                    Library (
+                    Library(
                         mainEventHandler = mainEventHandler,
                         homeUiState = uiState,
                         homeEventHandler = eventHandler,
@@ -169,8 +167,6 @@ fun HomeScreen(
     }
 }
 
-
-
 @OptIn(ExperimentalAnimationGraphicsApi::class)
 @Composable
 fun MusikusBottomBar(
@@ -180,7 +176,6 @@ fun MusikusBottomBar(
     currentTab: Screen.HomeTab,
     onTabSelected: (Screen.HomeTab) -> Unit,
 ) {
-
     Box {
         NavigationBar {
             Screen.HomeTab.allTabs.forEach { tab ->

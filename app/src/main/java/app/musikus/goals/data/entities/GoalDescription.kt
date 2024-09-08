@@ -11,12 +11,12 @@ package app.musikus.goals.data.entities
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import app.musikus.R
+import app.musikus.core.data.Nullable
 import app.musikus.core.data.entities.ISoftDeleteModelCreationAttributes
 import app.musikus.core.data.entities.ISoftDeleteModelUpdateAttributes
 import app.musikus.core.data.entities.SoftDeleteModel
 import app.musikus.core.data.entities.SoftDeleteModelCreationAttributes
 import app.musikus.core.data.entities.SoftDeleteModelUpdateAttributes
-import app.musikus.core.data.Nullable
 import app.musikus.core.presentation.utils.UiText
 
 // shows, whether a goal will count all sections
@@ -89,19 +89,17 @@ data class GoalDescriptionUpdateAttributes(
     override val customOrder: Nullable<Int>? = null,
 ) : SoftDeleteModelUpdateAttributes(), IGoalDescriptionUpdateAttributes
 
-
-
 @Entity(tableName = "goal_description")
-data class GoalDescriptionModel (
-    @ColumnInfo(name="type") override val type: GoalType,
-    @ColumnInfo(name="repeat") override val repeat: Boolean,
-    @ColumnInfo(name="period_in_period_units") override val periodInPeriodUnits: Int,
-    @ColumnInfo(name="period_unit") override val periodUnit: GoalPeriodUnit,
-    @ColumnInfo(name="progress_type")
+data class GoalDescriptionModel(
+    @ColumnInfo(name = "type") override val type: GoalType,
+    @ColumnInfo(name = "repeat") override val repeat: Boolean,
+    @ColumnInfo(name = "period_in_period_units") override val periodInPeriodUnits: Int,
+    @ColumnInfo(name = "period_unit") override val periodUnit: GoalPeriodUnit,
+    @ColumnInfo(name = "progress_type")
     override val progressType: GoalProgressType = GoalProgressType.TIME,
-    @ColumnInfo(name="paused") override var paused: Boolean = false,
-    @ColumnInfo(name="archived") override var archived: Boolean = false,
-    @ColumnInfo(name="custom_order") override var customOrder: Nullable<Int>? = null,
+    @ColumnInfo(name = "paused") override var paused: Boolean = false,
+    @ColumnInfo(name = "archived") override var archived: Boolean = false,
+    @ColumnInfo(name = "custom_order") override var customOrder: Nullable<Int>? = null,
 ) : SoftDeleteModel(), IGoalDescriptionCreationAttributes, IGoalDescriptionUpdateAttributes
 
 class InvalidGoalDescriptionException(message: String) : Exception(message)

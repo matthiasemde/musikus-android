@@ -3,8 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2024 Michael Prommersberger
- *
+ * Copyright (c) 2024 Michael Prommersberger, Matthias Emde
  */
 
 package app.musikus.activesession.domain
@@ -15,12 +14,11 @@ import java.time.ZonedDateTime
 import java.util.UUID
 import kotlin.time.Duration
 
-
 interface ActiveSessionRepository {
     suspend fun setSessionState(
         sessionState: SessionState
     )
-    fun getSessionState() : Flow<SessionState?>
+    fun getSessionState(): Flow<SessionState?>
 
     fun reset()
 
@@ -30,8 +28,8 @@ interface ActiveSessionRepository {
 data class PracticeSection(
     val id: UUID,
     val libraryItem: LibraryItem,
-    val pauseDuration: Duration,   // set when section is completed
-    val duration: Duration,         // set when section is completed
+    val pauseDuration: Duration, // set when section is completed
+    val duration: Duration, // set when section is completed
     val startTimestamp: ZonedDateTime
 )
 

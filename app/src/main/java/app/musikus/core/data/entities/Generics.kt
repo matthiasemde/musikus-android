@@ -26,7 +26,7 @@ abstract class BaseModelDisplayAttributes {
 
     override fun toString(): String {
         return "\nPretty print of ${this.javaClass.simpleName} entity:\n" +
-                "\tid:\t\t\t\t\t\t$id\n"
+            "\tid:\t\t\t\t\t\t$id\n"
     }
 }
 
@@ -38,7 +38,7 @@ abstract class BaseModel(
 
     override fun toString(): String {
         return "\nPretty print of ${this.javaClass.simpleName} entity:\n" +
-                "\tid:\t\t\t\t\t$id\n"
+            "\tid:\t\t\t\t\t$id\n"
     }
 }
 
@@ -49,11 +49,11 @@ abstract class BaseModel(
 interface ITimestampModelCreationAttributes : IBaseModelCreationAttributes
 interface ITimestampModelUpdateAttributes : IBaseModelUpdateAttributes
 
-abstract class TimestampModelCreationAttributes
-    : BaseModelCreationAttributes(), ITimestampModelCreationAttributes
+abstract class TimestampModelCreationAttributes :
+    BaseModelCreationAttributes(), ITimestampModelCreationAttributes
 
-abstract class TimestampModelUpdateAttributes
-    : BaseModelUpdateAttributes(), ITimestampModelUpdateAttributes
+abstract class TimestampModelUpdateAttributes :
+    BaseModelUpdateAttributes(), ITimestampModelUpdateAttributes
 
 abstract class TimestampModelDisplayAttributes : BaseModelDisplayAttributes() {
     abstract val createdAt: ZonedDateTime
@@ -61,19 +61,19 @@ abstract class TimestampModelDisplayAttributes : BaseModelDisplayAttributes() {
 
     override fun toString(): String {
         return super.toString() +
-                "\tcreated at:\t\t\t\t${createdAt}\n" +
-                "\tmodified_at:\t\t\t${modifiedAt}\n"
+            "\tcreated at:\t\t\t\t${createdAt}\n" +
+            "\tmodified_at:\t\t\t${modifiedAt}\n"
     }
 }
 abstract class TimestampModel(
-    @ColumnInfo(name="created_at") var createdAt: ZonedDateTime = ZonedDateTime.parse("1970-01-01T00:00:00.000Z"),
-    @ColumnInfo(name="modified_at") var modifiedAt: ZonedDateTime = ZonedDateTime.parse("1970-01-01T00:00:00.000Z")
+    @ColumnInfo(name = "created_at") var createdAt: ZonedDateTime = ZonedDateTime.parse("1970-01-01T00:00:00.000Z"),
+    @ColumnInfo(name = "modified_at") var modifiedAt: ZonedDateTime = ZonedDateTime.parse("1970-01-01T00:00:00.000Z")
 ) : BaseModel(), ITimestampModelCreationAttributes, ITimestampModelUpdateAttributes {
 
     override fun toString(): String {
         return super.toString() +
-                "\tcreated at:\t\t\t$createdAt\n" +
-                "\tmodified_at:\t\t$modifiedAt\n"
+            "\tcreated at:\t\t\t$createdAt\n" +
+            "\tmodified_at:\t\t$modifiedAt\n"
     }
 }
 
@@ -84,21 +84,21 @@ abstract class TimestampModel(
 interface ISoftDeleteModelCreationAttributes : ITimestampModelCreationAttributes
 interface ISoftDeleteModelUpdateAttributes : ITimestampModelUpdateAttributes
 
-abstract class SoftDeleteModelCreationAttributes
-    : TimestampModelCreationAttributes(), ISoftDeleteModelCreationAttributes
+abstract class SoftDeleteModelCreationAttributes :
+    TimestampModelCreationAttributes(), ISoftDeleteModelCreationAttributes
 
-abstract class SoftDeleteModelUpdateAttributes
-    : TimestampModelUpdateAttributes(), ISoftDeleteModelUpdateAttributes
+abstract class SoftDeleteModelUpdateAttributes :
+    TimestampModelUpdateAttributes(), ISoftDeleteModelUpdateAttributes
 
-abstract class SoftDeleteModelDisplayAttributes
-    : TimestampModelDisplayAttributes()
+abstract class SoftDeleteModelDisplayAttributes :
+    TimestampModelDisplayAttributes()
 
 abstract class SoftDeleteModel(
-    @ColumnInfo(name="deleted") var deleted: Boolean = false
+    @ColumnInfo(name = "deleted") var deleted: Boolean = false
 ) : TimestampModel(), ISoftDeleteModelCreationAttributes, ISoftDeleteModelUpdateAttributes {
 
     override fun toString(): String {
         return super.toString() +
-                "\tdeleted: ${deleted}\n"
+            "\tdeleted: ${deleted}\n"
     }
 }

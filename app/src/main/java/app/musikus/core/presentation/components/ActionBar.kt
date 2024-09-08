@@ -51,7 +51,7 @@ fun ActionBar(
         },
         actions = {
             uniqueActions()
-            if(editActionEnabled()) {
+            if (editActionEnabled()) {
                 IconButton(onClick = onEditHandler) {
                     Icon(
                         imageVector = Icons.Rounded.Edit,

@@ -11,21 +11,21 @@ package app.musikus.goals.presentation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.musikus.R
-import app.musikus.library.data.daos.LibraryItem
+import app.musikus.core.domain.SortDirection
+import app.musikus.core.domain.SortInfo
+import app.musikus.core.presentation.utils.UiText
+import app.musikus.goals.data.GoalsSortMode
 import app.musikus.goals.data.entities.GoalDescriptionCreationAttributes
 import app.musikus.goals.data.entities.GoalInstanceCreationAttributes
 import app.musikus.goals.data.entities.GoalInstanceUpdateAttributes
 import app.musikus.goals.data.entities.GoalPeriodUnit
 import app.musikus.goals.data.entities.GoalType
-import app.musikus.library.presentation.DialogMode
 import app.musikus.goals.domain.GoalInstanceWithProgressAndDescriptionWithLibraryItems
 import app.musikus.goals.domain.usecase.GoalsUseCases
+import app.musikus.library.data.daos.LibraryItem
 import app.musikus.library.domain.usecase.LibraryUseCases
+import app.musikus.library.presentation.DialogMode
 import app.musikus.settings.domain.usecase.UserPreferencesUseCases
-import app.musikus.core.domain.SortDirection
-import app.musikus.core.domain.SortInfo
-import app.musikus.core.presentation.utils.UiText
-import app.musikus.goals.data.GoalsSortMode
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -38,7 +38,6 @@ import java.util.UUID
 import javax.inject.Inject
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
-
 
 data class GoalDialogData(
     val target: Duration = 0.seconds,
@@ -182,7 +181,7 @@ class GoalsViewModel @Inject constructor(
         items,
     ) { dialogData, goalToEditId, items ->
         // if data == null, the ui state should be null ergo we don't show the dialog
-        if(dialogData == null) return@combine null
+        if (dialogData == null) return@combine null
 
         GoalsAddOrEditDialogUiState(
             mode = if (goalToEditId == null) DialogMode.ADD else DialogMode.EDIT,
@@ -258,7 +257,7 @@ class GoalsViewModel @Inject constructor(
      */
 
     fun onUiEvent(event: GoalsUiEvent) {
-        when(event) {
+        when (event) {
             is GoalsUiEvent.BackButtonPressed -> clearActionMode()
 
             is GoalsUiEvent.GoalPressed -> onGoalClicked(event.goal, event.longClick)
@@ -280,14 +279,14 @@ class GoalsViewModel @Inject constructor(
             }
             is GoalsUiEvent.DeleteOrArchiveDialogConfirmed -> {
                 _showDeleteOrArchiveDialog.update { false }
-                if(_deleteOrArchiveDialogIsArchiveAction.value) {
+                if (_deleteOrArchiveDialogIsArchiveAction.value) {
                     onArchiveAction()
                 } else {
                     onDeleteAction()
                 }
             }
             is GoalsUiEvent.UndoButtonPressed -> {
-                if(_deleteOrArchiveDialogIsArchiveAction.value) {
+                if (_deleteOrArchiveDialogIsArchiveAction.value) {
                     onUndoArchiveAction()
                 } else {
                     onRestoreAction()
@@ -300,12 +299,14 @@ class GoalsViewModel @Inject constructor(
             is GoalsUiEvent.ClearActionMode -> clearActionMode()
 
             is GoalsUiEvent.DialogUiEvent -> {
-                when(event.dialogEvent) {
+                when (event.dialogEvent) {
                     is GoalDialogUiEvent.TargetChanged -> onTargetChanged(event.dialogEvent.target)
                     is GoalDialogUiEvent.PeriodChanged -> onPeriodChanged(event.dialogEvent.period)
                     is GoalDialogUiEvent.PeriodUnitChanged -> onPeriodUnitChanged(event.dialogEvent.periodUnit)
                     is GoalDialogUiEvent.GoalTypeChanged -> onGoalTypeChanged(event.dialogEvent.goalType)
-                    is GoalDialogUiEvent.LibraryItemsSelected -> onLibraryItemsChanged(event.dialogEvent.selectedLibraryItems)
+                    is GoalDialogUiEvent.LibraryItemsSelected -> onLibraryItemsChanged(
+                        event.dialogEvent.selectedLibraryItems
+                    )
                     is GoalDialogUiEvent.Confirm -> onDialogConfirm()
                     is GoalDialogUiEvent.Dismiss -> clearDialog()
                 }
@@ -377,7 +378,7 @@ class GoalsViewModel @Inject constructor(
     }
 
     private fun clearActionMode() {
-        _selectedGoalIds.update{ emptySet() }
+        _selectedGoalIds.update { emptySet() }
     }
 
     private fun onGoalClicked(
@@ -392,8 +393,8 @@ class GoalsViewModel @Inject constructor(
         }
 
         // Short Click
-        if(!actionModeUiState.value.isActionMode) {
-            if(!goal.description.description.paused) {
+        if (!actionModeUiState.value.isActionMode) {
+            if (!goal.description.description.paused) {
                 _goalToEditId.update { descriptionId }
                 _dialogData.update {
                     GoalDialogData(
@@ -402,7 +403,7 @@ class GoalsViewModel @Inject constructor(
                 }
             }
         } else {
-            if(descriptionId in _selectedGoalIds.value) {
+            if (descriptionId in _selectedGoalIds.value) {
                 _selectedGoalIds.update { it - descriptionId }
             } else {
                 _selectedGoalIds.update { it + descriptionId }
@@ -457,7 +458,9 @@ class GoalsViewModel @Inject constructor(
                 ),
                 libraryItemIds = if (dialogData.goalType == GoalType.ITEM_SPECIFIC) {
                     dialogData.selectedLibraryItems.map { it.id }
-                } else emptyList()
+                } else {
+                    emptyList()
+                }
             )
             clearDialog()
         }

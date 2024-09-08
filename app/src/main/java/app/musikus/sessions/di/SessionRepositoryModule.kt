@@ -22,7 +22,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import javax.inject.Singleton
 
-
 @Module
 @InstallIn(SingletonComponent::class)
 object SessionRepositoryModule {

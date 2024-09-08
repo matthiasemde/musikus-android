@@ -13,7 +13,7 @@ import app.musikus.permissions.domain.PermissionRepository
 class RequestPermissionsUseCase(
     private val permissionRepository: PermissionRepository
 ) {
-    suspend operator fun invoke(permissions: List<String>) : Result<Unit> {
+    suspend operator fun invoke(permissions: List<String>): Result<Unit> {
         return permissionRepository.requestPermissions(permissions)
     }
 }

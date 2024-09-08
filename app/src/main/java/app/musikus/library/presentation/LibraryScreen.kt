@@ -71,6 +71,9 @@ import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.musikus.R
+import app.musikus.core.data.UUIDConverter
+import app.musikus.core.domain.DateFormat
+import app.musikus.core.domain.musikusFormat
 import app.musikus.core.presentation.HomeUiEvent
 import app.musikus.core.presentation.HomeUiEventHandler
 import app.musikus.core.presentation.HomeUiState
@@ -90,16 +93,13 @@ import app.musikus.core.presentation.theme.MusikusColorSchemeProvider
 import app.musikus.core.presentation.theme.MusikusThemedPreview
 import app.musikus.core.presentation.theme.libraryItemColors
 import app.musikus.core.presentation.theme.spacing
-import app.musikus.core.data.UUIDConverter
+import app.musikus.core.presentation.utils.UiIcon
+import app.musikus.core.presentation.utils.UiText
+import app.musikus.library.data.LibraryFolderSortMode
+import app.musikus.library.data.LibraryItemSortMode
 import app.musikus.library.data.daos.LibraryFolder
 import app.musikus.library.data.daos.LibraryItem
 import app.musikus.settings.domain.ColorSchemeSelections
-import app.musikus.core.domain.DateFormat
-import app.musikus.core.presentation.utils.UiIcon
-import app.musikus.core.presentation.utils.UiText
-import app.musikus.core.domain.musikusFormat
-import app.musikus.library.data.LibraryFolderSortMode
-import app.musikus.library.data.LibraryItemSortMode
 import java.time.ZonedDateTime
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -136,20 +136,23 @@ fun Library(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         floatingActionButton = {
             val fabUiState = uiState.fabUiState
-            if(fabUiState.activeFolder != null) {
+            if (fabUiState.activeFolder != null) {
                 FloatingActionButton(
                     onClick = {
                         eventHandler(LibraryUiEvent.AddItemButtonPressed)
                         homeEventHandler(HomeUiEvent.CollapseMultiFab)
                     },
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = stringResource(id = R.string.library_screen_fab_description))
+                    Icon(
+                        Icons.Default.Add,
+                        contentDescription = stringResource(id = R.string.library_screen_fab_description)
+                    )
                 }
             } else {
                 MultiFAB(
                     state = homeUiState.multiFabState,
                     onStateChange = { newState ->
-                        if(newState == MultiFabState.EXPANDED) {
+                        if (newState == MultiFabState.EXPANDED) {
                             homeEventHandler(HomeUiEvent.ExpandMultiFab)
                             eventHandler(LibraryUiEvent.ClearActionMode)
                         } else {
@@ -184,7 +187,7 @@ fun Library(
                 scrollBehavior = scrollBehavior,
                 title = { Text(text = topBarUiState.title.asString()) },
                 navigationIcon = {
-                    if(topBarUiState.showBackButton) {
+                    if (topBarUiState.showBackButton) {
                         IconButton(onClick = { eventHandler(LibraryUiEvent.BackButtonPressed) }) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
@@ -203,7 +206,7 @@ fun Library(
                             imageVector = Icons.Default.MoreVert,
                             contentDescription = stringResource(id = R.string.core_kebab_menu_description)
                         )
-                        MainMenu (
+                        MainMenu(
                             show = homeUiState.showMainMenu,
                             onDismiss = { homeEventHandler(HomeUiEvent.HideMainMenu) },
                             onSelection = { commonSelection ->
@@ -220,7 +223,7 @@ fun Library(
 
             // Action bar
             val actionModeUiState = uiState.actionModeUiState
-            if(actionModeUiState.isActionMode) {
+            if (actionModeUiState.isActionMode) {
                 ActionBar(
                     numSelectedItems = actionModeUiState.numberOfSelections,
                     onDismissHandler = { eventHandler(LibraryUiEvent.ClearActionMode) },
@@ -261,14 +264,14 @@ fun Library(
             val folderDialogUiState = dialogUiState.folderDialogUiState
             val itemDialogUiState = dialogUiState.itemDialogUiState
 
-            if(folderDialogUiState != null) {
+            if (folderDialogUiState != null) {
                 LibraryFolderDialog(
                     uiState = folderDialogUiState,
                     eventHandler = eventHandler
                 )
             }
 
-            if(itemDialogUiState != null) {
+            if (itemDialogUiState != null) {
                 LibraryItemDialog(
                     uiState = itemDialogUiState,
                     eventHandler = { eventHandler(LibraryUiEvent.ItemDialogUiEvent(it)) }
@@ -287,27 +290,39 @@ fun Library(
                     deleteDialogUiState.numberOfSelectedFolders + deleteDialogUiState.numberOfSelectedItems
 
                 DeleteConfirmationBottomSheet(
-                    explanation = 
-                        if (foldersSelected && itemsSelected) {
-                            UiText.StringResource(
-                                R.string.library_screen_deletion_dialog_explanation_both,
-                                deleteDialogUiState.numberOfSelectedFolders,
-                                pluralStringResource(id = R.plurals.library_folder, deleteDialogUiState.numberOfSelectedFolders),
-                                deleteDialogUiState.numberOfSelectedItems,
-                                pluralStringResource(id = R.plurals.library_item, deleteDialogUiState.numberOfSelectedItems)
+                    explanation =
+                    if (foldersSelected && itemsSelected) {
+                        UiText.StringResource(
+                            R.string.library_screen_deletion_dialog_explanation_both,
+                            deleteDialogUiState.numberOfSelectedFolders,
+                            pluralStringResource(
+                                id = R.plurals.library_folder,
+                                deleteDialogUiState.numberOfSelectedFolders
+                            ),
+                            deleteDialogUiState.numberOfSelectedItems,
+                            pluralStringResource(
+                                id = R.plurals.library_item,
+                                deleteDialogUiState.numberOfSelectedItems
                             )
-                        } else {
-                            UiText.PluralResource(
-                                R.plurals.library_screen_deletion_dialog_explanation,
-                                totalSelections,
-                                totalSelections,
-                                if (foldersSelected) {
-                                        pluralStringResource(id = R.plurals.library_folder, deleteDialogUiState.numberOfSelectedFolders)
-                                } else {
-                                        pluralStringResource(id = R.plurals.library_item, deleteDialogUiState.numberOfSelectedItems)
-                                }
-                            )
-                        },
+                        )
+                    } else {
+                        UiText.PluralResource(
+                            R.plurals.library_screen_deletion_dialog_explanation,
+                            totalSelections,
+                            totalSelections,
+                            if (foldersSelected) {
+                                pluralStringResource(
+                                    id = R.plurals.library_folder,
+                                    deleteDialogUiState.numberOfSelectedFolders
+                                )
+                            } else {
+                                pluralStringResource(
+                                    id = R.plurals.library_item,
+                                    deleteDialogUiState.numberOfSelectedItems
+                                )
+                            }
+                        )
+                    },
                     confirmationIcon = UiIcon.DynamicIcon(Icons.Default.Delete),
                     confirmationText = UiText.StringResource(
                         R.string.library_screen_deletion_dialog_confirm,
@@ -367,7 +382,7 @@ fun LibraryContent(
         val itemsUiState = contentUiState.itemsUiState
 
         /** Folders */
-        if(foldersUiState != null) {
+        if (foldersUiState != null) {
             item {
                 Row(
                     modifier = Modifier
@@ -389,7 +404,9 @@ fun LibraryContent(
                         sortModes = LibraryFolderSortMode.entries,
                         currentSortMode = sortMenuUiState.mode,
                         currentSortDirection = sortMenuUiState.direction,
-                        sortItemDescription = stringResource(id = R.string.library_content_folders_sort_menu_description),
+                        sortItemDescription = stringResource(
+                            id = R.string.library_content_folders_sort_menu_description
+                        ),
                         onShowMenuChanged = { eventHandler(LibraryUiEvent.FolderSortMenuPressed) },
                         onSelectionHandler = {
                             eventHandler(LibraryUiEvent.FolderSortModeSelected(it as LibraryFolderSortMode))
@@ -436,7 +453,7 @@ fun LibraryContent(
         }
 
         /** Items */
-        if(itemsUiState != null) {
+        if (itemsUiState != null) {
             item {
                 Row(
                     modifier = Modifier
@@ -467,7 +484,7 @@ fun LibraryContent(
                 }
             }
             items(
-                items=itemsUiState.itemsWithLastPracticedDate,
+                items = itemsUiState.itemsWithLastPracticedDate,
                 key = { (item, _) -> item.id }
             ) { (item, lastPracticedDate) ->
                 Box(
@@ -594,7 +611,7 @@ fun LibraryUiItem(
 private fun PreviewLibraryItem(
     @PreviewParameter(MusikusColorSchemeProvider::class) colorScheme: ColorSchemeSelections
 ) {
-    MusikusThemedPreview (colorScheme) {
+    MusikusThemedPreview(colorScheme) {
         LibraryUiItem(
             item = LibraryItem(
                 id = UUIDConverter.deadBeef,

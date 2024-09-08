@@ -65,10 +65,10 @@ enum class GoalsSortMode : SortMode<Pair<GoalDescription, GoalInstance>> {
 fun List<GoalInstanceWithDescriptionWithLibraryItems>.sorted(
     mode: GoalsSortMode,
     direction: SortDirection
-) : List<GoalInstanceWithDescriptionWithLibraryItems> = this.sortedWith(
-    when(direction) {
+): List<GoalInstanceWithDescriptionWithLibraryItems> = this.sortedWith(
+    when (direction) {
         SortDirection.ASCENDING ->
-            compareBy (mode.comparator) { it.description.description to it.instance}
+            compareBy(mode.comparator) { it.description.description to it.instance }
         SortDirection.DESCENDING ->
             compareByDescending(mode.comparator) { it.description.description to it.instance }
     }
@@ -78,10 +78,10 @@ fun List<GoalInstanceWithDescriptionWithLibraryItems>.sorted(
 fun List<GoalDescriptionWithInstancesAndLibraryItems>.sorted(
     mode: GoalsSortMode,
     direction: SortDirection
-) : List<GoalDescriptionWithInstancesAndLibraryItems> = this.sortedWith(
-    when(direction) {
+): List<GoalDescriptionWithInstancesAndLibraryItems> = this.sortedWith(
+    when (direction) {
         SortDirection.ASCENDING ->
-            compareBy (mode.comparator) { it.description to it.latestInstance }
+            compareBy(mode.comparator) { it.description to it.latestInstance }
         SortDirection.DESCENDING ->
             compareByDescending(mode.comparator) { it.description to it.latestInstance }
     }

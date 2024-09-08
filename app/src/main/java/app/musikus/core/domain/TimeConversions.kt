@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2022 Matthias Emde
+ * Copyright (c) 2022-2024 Matthias Emde
  *
  * Parts of this software are licensed under the MIT license
  *
@@ -60,7 +60,7 @@ enum class DateFormat {
     RECORDING;
 
     companion object {
-        fun formatString(format: DateFormat) = when(format) {
+        fun formatString(format: DateFormat) = when (format) {
             TIME_OF_DAY -> "k:mm"
             DAY_MONTH_YEAR -> "dd.MM.yyyy"
             DAY_OF_MONTH_PADDED -> "dd"
@@ -77,46 +77,58 @@ enum class DateFormat {
     }
 }
 
-fun ZonedDateTime.musikusFormat(format: DateFormat) : String =
+fun ZonedDateTime.musikusFormat(format: DateFormat): String =
     this.format(
         DateTimeFormatter.ofPattern(
-            (DateFormat.formatString(format) + if (
-                format == DateFormat.TIME_OF_DAY &&
-                this.offset != ZonedDateTime.now().offset
-            ) "z" else "")
+            (
+                DateFormat.formatString(format) + if (
+                    format == DateFormat.TIME_OF_DAY &&
+                    this.offset != ZonedDateTime.now().offset
+                ) {
+                    "z"
+                } else {
+                    ""
+                }
+                )
         )
     )
 
-fun ZonedDateTime.musikusFormat(formatList: List<DateFormat>) : String =
+fun ZonedDateTime.musikusFormat(formatList: List<DateFormat>): String =
     formatList.joinToString(" ") { this.musikusFormat(it) }
 
-fun Timeframe.musikusFormat() : String {
+fun Timeframe.musikusFormat(): String {
     val (start, end) = this
 
     val yearDifference = end.year - start.year
     val monthDifference = end.specificMonth - start.specificMonth
 
     val dateFormat =
-        if (monthDifference > 3)
-            if(yearDifference > 0) listOf(DateFormat.MONTH, DateFormat.YEAR_SHORT)
-            else listOf(DateFormat.MONTH)
-        else
-            if(yearDifference > 0) listOf(DateFormat.DAY_MONTH_YEAR)
-            else listOf(DateFormat.DAY_AND_MONTH)
+        if (monthDifference > 3) {
+            if (yearDifference > 0) {
+                listOf(DateFormat.MONTH, DateFormat.YEAR_SHORT)
+            } else {
+                listOf(DateFormat.MONTH)
+            }
+        } else {
+            if (yearDifference > 0) {
+                listOf(DateFormat.DAY_MONTH_YEAR)
+            } else {
+                listOf(DateFormat.DAY_AND_MONTH)
+            }
+        }
 
     return start.musikusFormat(dateFormat) + " - " + end.musikusFormat(dateFormat)
 }
 
-
 /**
  * Copies the time from the original timezone to the local timezone without adjusting it
-  */
+ */
 fun ZonedDateTime.inLocalTimezone(timeProvider: TimeProvider): ZonedDateTime =
     this.toLocalDateTime().atZone(timeProvider.localZoneId())
 
 /**
  * returns the weekDay of today from index 1=Mo until 7=Sun
-  */
+ */
 
 fun getDayIndexOfWeek(
     dateTime: ZonedDateTime
@@ -136,11 +148,10 @@ val ZonedDateTime.specificMonth
 
 val ZonedDateTime.specificWeek
     get() = this
-        .with(ChronoField.DAY_OF_WEEK , 1)         // ISO 8601, Monday is first day of week.
-        .let { date->
+        .with(ChronoField.DAY_OF_WEEK, 1) // ISO 8601, Monday is first day of week.
+        .let { date ->
             date.dayOfYear + date.year * 366
         }
-
 
 /**
  * Get specificDay index (Non reversible hash bucket)

@@ -11,12 +11,12 @@ package app.musikus.library.data.entities
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
+import app.musikus.core.data.Nullable
 import app.musikus.core.data.entities.ISoftDeleteModelCreationAttributes
 import app.musikus.core.data.entities.ISoftDeleteModelUpdateAttributes
 import app.musikus.core.data.entities.SoftDeleteModel
 import app.musikus.core.data.entities.SoftDeleteModelCreationAttributes
 import app.musikus.core.data.entities.SoftDeleteModelUpdateAttributes
-import app.musikus.core.data.Nullable
 import java.util.UUID
 
 private interface ILibraryItemCreationAttributes : ISoftDeleteModelCreationAttributes {
@@ -57,11 +57,11 @@ data class LibraryItemUpdateAttributes(
     ]
 )
 data class LibraryItemModel(
-    @ColumnInfo(name="name") override var name: String,
-    @ColumnInfo(name="color_index") override var colorIndex: Int,
-    @ColumnInfo(name="library_folder_id", index = true)
+    @ColumnInfo(name = "name") override var name: String,
+    @ColumnInfo(name = "color_index") override var colorIndex: Int,
+    @ColumnInfo(name = "library_folder_id", index = true)
     override var libraryFolderId: Nullable<UUID>?,
-    @ColumnInfo(name="custom_order") override var customOrder: Nullable<Int>? = null,
+    @ColumnInfo(name = "custom_order") override var customOrder: Nullable<Int>? = null,
 ) : SoftDeleteModel(), ILibraryItemCreationAttributes, ILibraryItemUpdateAttributes {
 
     override fun toString(): String {
@@ -73,4 +73,4 @@ data class LibraryItemModel(
     }
 }
 
-class InvalidLibraryItemException(message: String): Exception(message)
+class InvalidLibraryItemException(message: String) : Exception(message)

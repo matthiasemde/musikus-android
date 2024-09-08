@@ -32,7 +32,7 @@ import java.util.UUID
         )
     ]
 )
-data class GoalDescriptionLibraryItemCrossRefModel (
+data class GoalDescriptionLibraryItemCrossRefModel(
     @ColumnInfo(name = "goal_description_id", index = true) val goalDescriptionId: UUID,
     @ColumnInfo(name = "library_item_id", index = true) val libraryItemId: UUID,
 )

@@ -25,18 +25,20 @@ class UnpauseGoalsUseCase(
         val goals = goalRepository.allGoals.first().filter { it.description.id in uniqueGoalDescriptionIds }
 
         val missingGoalIds = uniqueGoalDescriptionIds - goals.map { it.description.id }.toSet()
-        if(missingGoalIds.isNotEmpty()) {
+        if (missingGoalIds.isNotEmpty()) {
             throw IllegalArgumentException("Could not find goal(s) with descriptionId: $missingGoalIds")
         }
 
         val archivedGoals = goals.filter { it.description.archived }
-        if(archivedGoals.isNotEmpty()) {
+        if (archivedGoals.isNotEmpty()) {
             throw IllegalArgumentException("Cannot unpause archived goals: ${archivedGoals.map { it.description.id }}")
         }
 
         val nonPausedGoals = goals.filter { !it.description.paused }
-        if(nonPausedGoals.isNotEmpty()) {
-            throw IllegalArgumentException("Cannot unpause goals that aren't paused: ${nonPausedGoals.map { it.description.id }}")
+        if (nonPausedGoals.isNotEmpty()) {
+            throw IllegalArgumentException(
+                "Cannot unpause goals that aren't paused: ${nonPausedGoals.map { it.description.id }}"
+            )
         }
 
         goalRepository.updateGoalDescriptions(

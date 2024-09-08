@@ -46,11 +46,11 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import app.musikus.R
 import app.musikus.core.data.SessionWithSectionsWithLibraryItems
-import app.musikus.core.presentation.utils.DurationFormat
-import app.musikus.core.presentation.utils.getDurationString
-import app.musikus.core.presentation.theme.libraryItemColors
 import app.musikus.core.domain.DateFormat
 import app.musikus.core.domain.musikusFormat
+import app.musikus.core.presentation.theme.libraryItemColors
+import app.musikus.core.presentation.utils.DurationFormat
+import app.musikus.core.presentation.utils.getDurationString
 import kotlin.time.Duration.Companion.seconds
 
 @Composable
@@ -64,7 +64,7 @@ fun RatingBar(
     onRatingChanged: (Int) -> Unit = {}
 ) {
     Row(modifier) {
-        for(i in 1..total) {
+        for (i in 1..total) {
             Icon(
                 modifier = Modifier
                     .size(size)
@@ -73,14 +73,16 @@ fun RatingBar(
                         indication = null
                     ) { onRatingChanged(i) },
                 imageVector = image,
-                tint = if (i <= rating) color else
-                    MaterialTheme.colorScheme.onSurfaceVariant,
+                tint = if (i <= rating) {
+                    color
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                },
                 contentDescription = null
             )
         }
     }
 }
-
 
 @Composable
 fun SessionCard(

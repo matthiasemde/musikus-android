@@ -79,7 +79,6 @@ import app.musikus.R
 import app.musikus.core.presentation.components.DialogActions
 import app.musikus.core.presentation.components.ExceptionHandler
 import app.musikus.core.presentation.components.Waveform
-import app.musikus.settings.domain.ColorSchemeSelections
 import app.musikus.core.presentation.theme.MusikusColorSchemeProvider
 import app.musikus.core.presentation.theme.MusikusPreviewElement1
 import app.musikus.core.presentation.theme.MusikusPreviewElement2
@@ -89,13 +88,13 @@ import app.musikus.core.presentation.theme.dimensions
 import app.musikus.core.presentation.theme.spacing
 import app.musikus.core.presentation.utils.DurationFormat
 import app.musikus.core.presentation.utils.getDurationString
+import app.musikus.settings.domain.ColorSchemeSelections
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
-
 
 @Composable
 fun RecorderUi(
@@ -232,7 +231,6 @@ fun RecorderLayout(
     }
 }
 
-
 @Composable
 fun RecorderToolbar(
     modifier: Modifier = Modifier,
@@ -292,7 +290,9 @@ fun RecorderToolbar(
                             Icon(
                                 modifier = Modifier.fillMaxSize(),
                                 imageVector = Icons.Default.MicOff,
-                                contentDescription = stringResource(id = R.string.recorder_toolbar_main_button_uninitialized_description)
+                                contentDescription = stringResource(
+                                    id = R.string.recorder_toolbar_main_button_uninitialized_description
+                                )
                             )
                         }
 
@@ -300,7 +300,9 @@ fun RecorderToolbar(
                             Icon(
                                 modifier = Modifier.fillMaxSize(),
                                 imageVector = Icons.Default.Mic,
-                                contentDescription = stringResource(id = R.string.recorder_toolbar_main_button_idle_description)
+                                contentDescription = stringResource(
+                                    id = R.string.recorder_toolbar_main_button_idle_description
+                                )
                             )
                         }
 
@@ -308,7 +310,9 @@ fun RecorderToolbar(
                             Icon(
                                 modifier = Modifier.fillMaxSize(),
                                 imageVector = Icons.Default.Pause,
-                                contentDescription = stringResource(id = R.string.recorder_toolbar_main_button_recording_description)
+                                contentDescription = stringResource(
+                                    id = R.string.recorder_toolbar_main_button_recording_description
+                                )
                             )
                         }
 
@@ -316,7 +320,9 @@ fun RecorderToolbar(
                             Icon(
                                 modifier = Modifier.fillMaxSize(),
                                 imageVector = Icons.Default.PlayArrow,
-                                contentDescription = stringResource(id = R.string.recorder_toolbar_main_button_paused_description)
+                                contentDescription = stringResource(
+                                    id = R.string.recorder_toolbar_main_button_paused_description
+                                )
                             )
                         }
                     }
@@ -334,7 +340,6 @@ fun RecorderToolbar(
         }
     }
 }
-
 
 @Composable
 private fun RecordingsList(
@@ -369,10 +374,11 @@ private fun RecordingsList(
                 modifier = Modifier.height(56.dp),
                 uiState = recording,
                 isPlaying = ( // TODO lambda better for recompositions???
-                        mediaController != null &&
-                                playerState?.isPlaying == true &&
-                                mediaController.isCommandAvailable(Player.COMMAND_GET_CURRENT_MEDIA_ITEM) &&
-                                mediaController.currentMediaItem == recording.mediaItem),
+                    mediaController != null &&
+                        playerState?.isPlaying == true &&
+                        mediaController.isCommandAvailable(Player.COMMAND_GET_CURRENT_MEDIA_ITEM) &&
+                        mediaController.currentMediaItem == recording.mediaItem
+                    ),
                 onStartPlayingPressed = {
                     if (mediaController == null) return@RecordingListItem
                     loadAndPlayNewMediaItem(
@@ -396,7 +402,6 @@ private fun RecordingsList(
     }
 }
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun RecordingListItem(
@@ -404,7 +409,7 @@ private fun RecordingListItem(
     uiState: RecordingListItemUiState,
     currentRawRecording: ShortArray?,
     isPlaying: Boolean,
-    playerState: PlayerState?,  // TODO remove?
+    playerState: PlayerState?, // TODO remove?
     mediaController: MediaController?, // TODO remove?
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     currentPlaybackPosition: Long,
@@ -456,7 +461,7 @@ private fun RecordingListItem(
             }
         }
     ) {
-    */
+     */
     Surface(
         modifier = modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.medium,
@@ -469,9 +474,13 @@ private fun RecordingListItem(
             // Play / Pause Button
             OutlinedIconButton(
                 onClick = {
-                    if (isPlaying) onPausePressed()
-                    else if (uiState.showPlayerUi) onResumePressed()
-                    else onStartPlayingPressed()
+                    if (isPlaying) {
+                        onPausePressed()
+                    } else if (uiState.showPlayerUi) {
+                        onResumePressed()
+                    } else {
+                        onStartPlayingPressed()
+                    }
                 },
                 colors = IconButtonDefaults.iconButtonColors().copy(
                     contentColor = MaterialTheme.colorScheme.onSurfaceVariant
@@ -531,7 +540,6 @@ private fun RecordingListItem(
     }
 }
 
-
 private fun loadAndPlayNewMediaItem(
     mediaController: MediaController,
     mediaItem: MediaItem,
@@ -590,7 +598,6 @@ private fun RecordingItemDescription(
     }
 }
 
-
 @Composable
 private fun WaveformMediaPlayer(
     modifier: Modifier = Modifier,
@@ -604,7 +611,6 @@ private fun WaveformMediaPlayer(
     onSeekToPositionMs: (Long) -> Unit,
     onClear: () -> Unit,
 ) {
-
     Row(
         modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
@@ -648,11 +654,13 @@ private fun WaveformMediaPlayer(
         }
 
         IconButton(onClick = onClear) {
-            Icon(Icons.Default.Close, contentDescription = stringResource(id = R.string.recorder_media_player_close_description))
+            Icon(
+                Icons.Default.Close,
+                contentDescription = stringResource(id = R.string.recorder_media_player_close_description)
+            )
         }
     }
 }
-
 
 @Composable
 private fun DialogSaveRecording(
@@ -690,7 +698,6 @@ private fun DialogSaveRecording(
                 )
             }
         }
-
     }
 }
 
@@ -777,7 +784,7 @@ private fun PreviewDialogSave(
     }
 }
 
-//private val dummyRecordings = (0..10).asSequence().map {
+// private val dummyRecordings = (0..10).asSequence().map {
 //    RecordingListItemUiState(
 //        title = LoremIpsum(Random.nextInt(1, 5)).values.first(),
 //        date = "23.12.2024",
@@ -786,4 +793,4 @@ private fun PreviewDialogSave(
 //        contentUri = null,
 //        showPlayerUi = false,
 //    )
-//}
+// }

@@ -30,18 +30,18 @@ class FakeUserPreferencesRepository : UserPreferencesRepository {
 
     private val _preferences = MutableStateFlow(
         UserPreferences(
-        theme = ThemeSelections.DEFAULT,
-        colorScheme = ColorSchemeSelections.DEFAULT,
-        appIntroDone = false,
-        libraryFolderSortMode = LibraryFolderSortMode.DEFAULT,
-        libraryFolderSortDirection = SortDirection.DEFAULT,
-        libraryItemSortMode = LibraryItemSortMode.DEFAULT,
-        libraryItemSortDirection = SortDirection.DEFAULT,
-        goalsSortMode = GoalsSortMode.DEFAULT,
-        goalsSortDirection = SortDirection.DEFAULT,
-        showPausedGoals = true,
-        metronomeSettings = MetronomeSettings.DEFAULT
-    )
+            theme = ThemeSelections.DEFAULT,
+            colorScheme = ColorSchemeSelections.DEFAULT,
+            appIntroDone = false,
+            libraryFolderSortMode = LibraryFolderSortMode.DEFAULT,
+            libraryFolderSortDirection = SortDirection.DEFAULT,
+            libraryItemSortMode = LibraryItemSortMode.DEFAULT,
+            libraryItemSortDirection = SortDirection.DEFAULT,
+            goalsSortMode = GoalsSortMode.DEFAULT,
+            goalsSortDirection = SortDirection.DEFAULT,
+            showPausedGoals = true,
+            metronomeSettings = MetronomeSettings.DEFAULT
+        )
     )
     override val theme: Flow<ThemeSelections>
         get() = _preferences.map { it.theme }

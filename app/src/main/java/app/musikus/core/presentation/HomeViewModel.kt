@@ -29,15 +29,14 @@ typealias HomeUiEventHandler = (HomeUiEvent) -> Unit
 
 sealed class HomeUiEvent {
     data class TabSelected(val tab: Screen.HomeTab) : HomeUiEvent()
-    data object ShowMainMenu: HomeUiEvent()
-    data object HideMainMenu: HomeUiEvent()
-    data object ExpandMultiFab: HomeUiEvent()
-    data object CollapseMultiFab: HomeUiEvent()
+    data object ShowMainMenu : HomeUiEvent()
+    data object HideMainMenu : HomeUiEvent()
+    data object ExpandMultiFab : HomeUiEvent()
+    data object CollapseMultiFab : HomeUiEvent()
 }
 
 @HiltViewModel
-class HomeViewModel @Inject constructor(
-) : ViewModel() {
+class HomeViewModel @Inject constructor() : ViewModel() {
 
     /**
      * Own state flows
@@ -77,7 +76,7 @@ class HomeViewModel @Inject constructor(
     )
 
     fun onUiEvent(event: HomeUiEvent) {
-        when(event) {
+        when (event) {
             is HomeUiEvent.TabSelected -> {
                 _currentTab.update { event.tab }
             }

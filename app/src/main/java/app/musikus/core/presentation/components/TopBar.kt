@@ -4,7 +4,6 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
  * Copyright (c) 2022-2024 Matthias Emde
- *
  */
 
 package app.musikus.core.presentation.components

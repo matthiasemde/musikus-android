@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2023 Matthias Emde
+ * Copyright (c) 2023-2024 Matthias Emde
  */
 
 package app.musikus.statistics.presentation.goalstatistics
@@ -12,13 +12,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.musikus.core.data.GoalDescriptionWithLibraryItems
-import app.musikus.goals.data.entities.GoalType
-import app.musikus.core.presentation.theme.libraryItemColors
-import app.musikus.goals.domain.usecase.GoalsUseCases
 import app.musikus.core.domain.DateFormat
 import app.musikus.core.domain.Timeframe
-import app.musikus.core.presentation.utils.UiText
 import app.musikus.core.domain.musikusFormat
+import app.musikus.core.presentation.theme.libraryItemColors
+import app.musikus.core.presentation.utils.UiText
+import app.musikus.goals.data.entities.GoalType
+import app.musikus.goals.domain.usecase.GoalsUseCases
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -125,7 +125,6 @@ class GoalStatisticsViewModel @Inject constructor(
         initialValue = emptyList()
     )
 
-
     /** Combining imported and own state flows */
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -163,7 +162,6 @@ class GoalStatisticsViewModel @Inject constructor(
                 n = 7
             )
         }
-
     }.flatMapLatest { it ?: flowOf(null) }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
@@ -187,7 +185,6 @@ class GoalStatisticsViewModel @Inject constructor(
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = null
     )
-
 
     private val sortedGoalInfo = combine(
         allGoals,
@@ -232,10 +229,10 @@ class GoalStatisticsViewModel @Inject constructor(
         // in case there are less than 7 instances, pad the list with nulls
         val paddedInstances =
             (0 until 7 - instancesWithProgress.size).map { null } +
-            instancesWithProgress
+                instancesWithProgress
 
         // map the instances to a list of pairs of date and progress
-        val barData = paddedInstances.map barData@ { instanceWithProgress ->
+        val barData = paddedInstances.map barData@{ instanceWithProgress ->
             val (instance, progress) = instanceWithProgress ?: return@barData "" to 0.seconds
             Pair(
                 instance.startTimestamp.musikusFormat(DateFormat.DAY_AND_MONTH),
@@ -248,9 +245,11 @@ class GoalStatisticsViewModel @Inject constructor(
                 .maxBy { (instance, _) -> instance.startTimestamp }
                 .let { (instance, _) -> instance.target },
             data = barData,
-            uniqueColor = if(goalWithProgress.description.type == GoalType.ITEM_SPECIFIC) {
+            uniqueColor = if (goalWithProgress.description.type == GoalType.ITEM_SPECIFIC) {
                 libraryItemColors[goalWithProgress.libraryItems.first().colorIndex]
-            } else null,
+            } else {
+                null
+            },
             redraw = _redraw.also { _redraw = false }
         )
     }.stateIn(
@@ -267,7 +266,7 @@ class GoalStatisticsViewModel @Inject constructor(
         GoalStatisticsHeaderUiState(
             seekBackwardEnabled = instances.first().previousInstanceId != null,
             seekForwardEnabled =
-                instances.last().endTimestamp != null &&
+            instances.last().endTimestamp != null &&
                 goalWithProgress.description.archived.not(),
             timeframe = instances.first().startTimestamp to
                 instances.last().startTimestamp,

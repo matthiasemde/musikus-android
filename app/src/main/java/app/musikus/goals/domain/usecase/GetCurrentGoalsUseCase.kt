@@ -8,8 +8,8 @@
 
 package app.musikus.goals.domain.usecase
 
-import app.musikus.goals.domain.GoalRepository
 import app.musikus.goals.domain.GoalInstanceWithProgressAndDescriptionWithLibraryItems
+import app.musikus.goals.domain.GoalRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
@@ -24,7 +24,7 @@ class GetCurrentGoalsUseCase(
     @OptIn(ExperimentalCoroutinesApi::class)
     operator fun invoke(
         excludePaused: Boolean
-    ) : Flow<List<GoalInstanceWithProgressAndDescriptionWithLibraryItems>> {
+    ): Flow<List<GoalInstanceWithProgressAndDescriptionWithLibraryItems>> {
         return sortGoals(goalRepository.currentGoals).map { goals ->
             if (excludePaused) {
                 goals.filter { !it.description.description.paused }

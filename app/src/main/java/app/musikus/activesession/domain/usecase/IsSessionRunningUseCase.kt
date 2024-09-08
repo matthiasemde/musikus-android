@@ -3,8 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2024 Michael Prommersberger
- *
+ * Copyright (c) 2024 Michael Prommersberger, Matthias Emde
  */
 
 package app.musikus.activesession.domain.usecase
@@ -14,7 +13,7 @@ import app.musikus.activesession.domain.ActiveSessionRepository
 class IsSessionRunningUseCase(
     private val activeSessionRepository: ActiveSessionRepository
 ) {
-    operator fun invoke() : Boolean {
+    operator fun invoke(): Boolean {
         return activeSessionRepository.isRunning()
     }
 }

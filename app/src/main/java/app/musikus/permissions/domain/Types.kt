@@ -8,7 +8,6 @@
 
 package app.musikus.permissions.domain
 
-
 interface PermissionRepository {
     suspend fun requestPermissions(permissions: List<String>): Result<Unit>
 }

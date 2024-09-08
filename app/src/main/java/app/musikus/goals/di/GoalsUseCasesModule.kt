@@ -37,7 +37,6 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
-
 @Module
 @InstallIn(SingletonComponent::class)
 object GoalsUseCasesModule {
@@ -51,7 +50,6 @@ object GoalsUseCasesModule {
         userPreferencesUseCases: UserPreferencesUseCases,
         timeProvider: TimeProvider
     ): GoalsUseCases {
-
         val sortGoalsUseCase = SortGoalsUseCase(userPreferencesUseCases.getGoalSortInfo)
         val cleanFutureGoalInstancesUseCase = CleanFutureGoalInstancesUseCase(
             goalRepository = goalRepository,
@@ -105,5 +103,4 @@ object GoalsUseCasesModule {
             restore = RestoreGoalsUseCase(goalRepository),
         )
     }
-
 }

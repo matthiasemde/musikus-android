@@ -35,5 +35,4 @@ inline fun <reified T> ExceptionHandler(
             }
         }
     }
-
 }

@@ -1,3 +1,11 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ *
+ * Copyright (c) 2024 Matthias Emde
+ */
+
 package app.musikus.sessions.domain.usecase
 
 import app.musikus.core.data.SectionWithLibraryItem
@@ -156,7 +164,11 @@ class EditSessionUseCaseTest {
             )
         }
 
-        assertThat(exception.message).isEqualTo("Section(s) with id(s) [00000000-0000-0000-0000-000000000000, 00000000-0000-0000-0000-000000000006] are not in session with id 00000000-0000-0000-0000-000000000002")
+        assertThat(
+            exception.message
+        ).isEqualTo(
+            "Section(s) with id(s) [00000000-0000-0000-0000-000000000000, 00000000-0000-0000-0000-000000000006] are not in session with id 00000000-0000-0000-0000-000000000002"
+        )
     }
 
     @Test
@@ -174,65 +186,65 @@ class EditSessionUseCaseTest {
         assertThat(exception.message).isEqualTo("Section duration must be greater than 0")
     }
 
-     @Test
-     fun `Edit session with valid data, session is edited`() = runTest {
-            editSessionUseCase(
-                id = UUIDConverter.fromInt(2),
-                sessionUpdateAttributes = validSessionUpdateAttributes,
-                sectionUpdateData = validSectionUpdateData
-            )
+    @Test
+    fun `Edit session with valid data, session is edited`() = runTest {
+        editSessionUseCase(
+            id = UUIDConverter.fromInt(2),
+            sessionUpdateAttributes = validSessionUpdateAttributes,
+            sectionUpdateData = validSectionUpdateData
+        )
 
-            val sessions = fakeSessionRepository.orderedSessionsWithSectionsWithLibraryItems.first()
+        val sessions = fakeSessionRepository.orderedSessionsWithSectionsWithLibraryItems.first()
 
-            assertThat(sessions).containsExactly(
-                SessionWithSectionsWithLibraryItems(
-                    session = Session(
-                        id = UUIDConverter.fromInt(2),
-                        createdAt = FakeTimeProvider.START_TIME,
-                        modifiedAt = FakeTimeProvider.START_TIME,
-                        breakDurationSeconds = 600,
-                        rating = 5,
-                        comment = "Edited comment"
-                    ),
-                    sections = listOf(
-                        SectionWithLibraryItem(
-                            section = Section(
-                                id = UUIDConverter.fromInt(3),
-                                startTimestamp = FakeTimeProvider.START_TIME,
-                                durationSeconds = 900,
-                                libraryItemId = UUIDConverter.fromInt(1),
-                                sessionId = UUIDConverter.fromInt(2)
-                            ),
-                            libraryItem = LibraryItem(
-                                id = UUIDConverter.fromInt(1),
-                                createdAt = FakeTimeProvider.START_TIME,
-                                modifiedAt = FakeTimeProvider.START_TIME,
-                                name = "Test item 1",
-                                colorIndex = 5,
-                                libraryFolderId = null,
-                                customOrder = null
-                            )
+        assertThat(sessions).containsExactly(
+            SessionWithSectionsWithLibraryItems(
+                session = Session(
+                    id = UUIDConverter.fromInt(2),
+                    createdAt = FakeTimeProvider.START_TIME,
+                    modifiedAt = FakeTimeProvider.START_TIME,
+                    breakDurationSeconds = 600,
+                    rating = 5,
+                    comment = "Edited comment"
+                ),
+                sections = listOf(
+                    SectionWithLibraryItem(
+                        section = Section(
+                            id = UUIDConverter.fromInt(3),
+                            startTimestamp = FakeTimeProvider.START_TIME,
+                            durationSeconds = 900,
+                            libraryItemId = UUIDConverter.fromInt(1),
+                            sessionId = UUIDConverter.fromInt(2)
                         ),
-                        SectionWithLibraryItem(
-                            section = Section(
-                                id = UUIDConverter.fromInt(4),
-                                startTimestamp = FakeTimeProvider.START_TIME,
-                                durationSeconds = 900,
-                                libraryItemId = UUIDConverter.fromInt(1),
-                                sessionId = UUIDConverter.fromInt(2)
-                            ),
-                            libraryItem = LibraryItem(
-                                id = UUIDConverter.fromInt(1),
-                                createdAt = FakeTimeProvider.START_TIME,
-                                modifiedAt = FakeTimeProvider.START_TIME,
-                                name = "Test item 1",
-                                colorIndex = 5,
-                                libraryFolderId = null,
-                                customOrder = null
-                            )
+                        libraryItem = LibraryItem(
+                            id = UUIDConverter.fromInt(1),
+                            createdAt = FakeTimeProvider.START_TIME,
+                            modifiedAt = FakeTimeProvider.START_TIME,
+                            name = "Test item 1",
+                            colorIndex = 5,
+                            libraryFolderId = null,
+                            customOrder = null
                         )
                     ),
-                )
+                    SectionWithLibraryItem(
+                        section = Section(
+                            id = UUIDConverter.fromInt(4),
+                            startTimestamp = FakeTimeProvider.START_TIME,
+                            durationSeconds = 900,
+                            libraryItemId = UUIDConverter.fromInt(1),
+                            sessionId = UUIDConverter.fromInt(2)
+                        ),
+                        libraryItem = LibraryItem(
+                            id = UUIDConverter.fromInt(1),
+                            createdAt = FakeTimeProvider.START_TIME,
+                            modifiedAt = FakeTimeProvider.START_TIME,
+                            name = "Test item 1",
+                            colorIndex = 5,
+                            libraryFolderId = null,
+                            customOrder = null
+                        )
+                    )
+                ),
             )
-     }
+        )
+    }
 }

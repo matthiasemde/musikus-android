@@ -10,8 +10,8 @@ package app.musikus.goals.di
 
 import app.musikus.core.data.MusikusDatabase
 import app.musikus.core.di.IoScope
-import app.musikus.goals.domain.GoalRepository
 import app.musikus.goals.data.GoalRepositoryImpl
+import app.musikus.goals.domain.GoalRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

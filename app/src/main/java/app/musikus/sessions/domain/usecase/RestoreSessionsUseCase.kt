@@ -15,7 +15,7 @@ class RestoreSessionsUseCase(
     private val sessionRepository: SessionRepository
 ) {
 
-    suspend operator fun invoke(ids : List<UUID>) {
+    suspend operator fun invoke(ids: List<UUID>) {
         sessionRepository.restore(ids)
     }
 }

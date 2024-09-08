@@ -68,7 +68,6 @@ class AppearanceViewModel @Inject constructor(
     private val _themeDialogShowing = MutableStateFlow(false)
     private val _colorSchemeDialogShowing = MutableStateFlow(false)
 
-
     /**
      * Imported flows
      */
@@ -163,7 +162,7 @@ class AppearanceViewModel @Inject constructor(
     )
 
     fun onUiEvent(event: AppearanceUiEvent) {
-        when(event) {
+        when (event) {
             is AppearanceUiEvent.ChangeLanguage -> {
 //                viewModelScope.launch {
 //                    userPreferencesUseCases.setLanguage(event.language)

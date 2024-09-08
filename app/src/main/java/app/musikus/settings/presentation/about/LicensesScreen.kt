@@ -8,7 +8,6 @@
 
 package app.musikus.settings.presentation.about
 
-
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -29,7 +28,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import app.musikus.R
 import app.musikus.core.presentation.theme.spacing
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -66,7 +64,7 @@ fun LicensesScreen(
                 .padding(horizontal = MaterialTheme.spacing.small)
         ) {
             licenses.forEach {
-                item{
+                item {
                     Text(
                         text = it,
                         style = MaterialTheme.typography.bodyMedium

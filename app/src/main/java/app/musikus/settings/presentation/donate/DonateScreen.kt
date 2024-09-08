@@ -36,7 +36,6 @@ import androidx.core.content.ContextCompat.startActivity
 import app.musikus.R
 import app.musikus.core.presentation.theme.spacing
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DonateScreen(

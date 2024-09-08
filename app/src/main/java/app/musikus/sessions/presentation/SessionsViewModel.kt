@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2022 Matthias Emde
+ * Copyright (c) 2022-2024 Matthias Emde
  */
 
 package app.musikus.sessions.presentation
@@ -12,11 +12,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.musikus.R
 import app.musikus.core.data.SessionWithSectionsWithLibraryItems
-import app.musikus.sessions.domain.usecase.SessionsUseCases
 import app.musikus.core.presentation.utils.DurationFormat
 import app.musikus.core.presentation.utils.DurationString
 import app.musikus.core.presentation.utils.UiText
 import app.musikus.core.presentation.utils.getDurationString
+import app.musikus.sessions.domain.usecase.SessionsUseCases
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -27,7 +27,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
-
 
 /** Utility data classes */
 
@@ -53,7 +52,6 @@ class SessionsViewModel @Inject constructor(
 
     private var _sessionIdsCache = emptyList<UUID>()
 
-
     /** Imported Flows */
     private val sessionsForDaysForMonths = sessionsUseCases.getSessionsForDaysForMonths().stateIn(
         scope = viewModelScope,
@@ -68,7 +66,6 @@ class SessionsViewModel @Inject constructor(
     private val _expandedMonths = MutableStateFlow<Set<Int>>(emptySet())
 
     private val _deleteDialogShowing = MutableStateFlow(false)
-
 
     /** Combining imported and own state flows */
 
@@ -92,18 +89,20 @@ class SessionsViewModel @Inject constructor(
                 month = sessionsForDaysForMonth.month.name,
                 specificMonth = sessionsForDaysForMonth.specificMonth,
                 dayData =
-                    if(sessionsForDaysForMonth.specificMonth in expandedMonths)
-                        sessionsForDaysForMonth.sessionsForDays.map { sessionsForDay ->
-                            DayUiDatum(
-                                date = sessionsForDay.day,
-                                totalPracticeDuration = getDurationString(
-                                    sessionsForDay.totalPracticeDuration,
-                                    DurationFormat.HUMAN_PRETTY
-                                ),
-                                sessions = sessionsForDay.sessions,
-                            )
-                        }
-                    else emptyList()
+                if (sessionsForDaysForMonth.specificMonth in expandedMonths) {
+                    sessionsForDaysForMonth.sessionsForDays.map { sessionsForDay ->
+                        DayUiDatum(
+                            date = sessionsForDay.day,
+                            totalPracticeDuration = getDurationString(
+                                sessionsForDay.totalPracticeDuration,
+                                DurationFormat.HUMAN_PRETTY
+                            ),
+                            sessions = sessionsForDay.sessions,
+                        )
+                    }
+                } else {
+                    emptyList()
+                }
             )
         }
     }.stateIn(
@@ -111,7 +110,6 @@ class SessionsViewModel @Inject constructor(
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = emptyList()
     )
-
 
     /** Composing the Ui state */
     private val topBarUiState = MutableStateFlow(
@@ -155,7 +153,7 @@ class SessionsViewModel @Inject constructor(
     )
 
     private val deleteDialogUiState = _deleteDialogShowing.map { isShowing ->
-        if(!isShowing) return@map null
+        if (!isShowing) return@map null
 
         SessionsDeleteDialogUiState(
             numberOfSelections = _selectedSessions.value.size
@@ -190,7 +188,7 @@ class SessionsViewModel @Inject constructor(
     )
 
     fun onUiEvent(event: SessionsUiEvent) {
-        when(event) {
+        when (event) {
             is SessionsUiEvent.MonthHeaderPressed -> onMonthHeaderClicked(event.specificMonth)
             is SessionsUiEvent.SessionPressed -> onSessionClicked(event.sessionId, event.longClick)
             is SessionsUiEvent.EditButtonPressed -> onEditAction(event.editSession)
@@ -207,7 +205,6 @@ class SessionsViewModel @Inject constructor(
             is SessionsUiEvent.ClearActionMode -> clearActionMode()
         }
     }
-
 
     /** Private state mutators */
 
@@ -231,12 +228,12 @@ class SessionsViewModel @Inject constructor(
     }
 
     private fun clearActionMode() {
-        _selectedSessions.update{ emptySet() }
+        _selectedSessions.update { emptySet() }
     }
 
     private fun onMonthHeaderClicked(specificMonth: Int) {
         _expandedMonths.update {
-            if(it.contains(specificMonth)) {
+            if (it.contains(specificMonth)) {
                 it - specificMonth
             } else {
                 it + specificMonth
@@ -248,16 +245,16 @@ class SessionsViewModel @Inject constructor(
         sessionId: UUID,
         longClick: Boolean = false
     ) {
-        if(longClick) {
+        if (longClick) {
             _selectedSessions.update { it + sessionId }
             return
         }
 
         // Short click
-        if(!actionModeUiState.value.isActionMode) {
+        if (!actionModeUiState.value.isActionMode) {
             // go to session detail screen
         } else {
-            if(_selectedSessions.value.contains(sessionId)) {
+            if (_selectedSessions.value.contains(sessionId)) {
                 _selectedSessions.update { it - sessionId }
             } else {
                 _selectedSessions.update { it + sessionId }

@@ -73,7 +73,6 @@ class Recorder(
             )
         }
 
-
         // create the uri for the new recording from the current time and the provided display name
         val contentUri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
@@ -97,12 +96,12 @@ class Recorder(
 
     @Throws(IllegalRecorderStateException::class)
     fun pause() {
-        if(state.value != RecorderState.RECORDING) {
+        if (state.value != RecorderState.RECORDING) {
             throw IllegalRecorderStateException(
                 context.getString(R.string.recorder_illegal_state_exception_pause_while_not_recording)
             )
         }
-        mediaRecorder?.pause() ?: throw  IllegalRecorderStateException(
+        mediaRecorder?.pause() ?: throw IllegalRecorderStateException(
             context.getString(R.string.recorder_illegal_state_exception_pause_while_uninitialized)
         )
         state.update { RecorderState.PAUSED }
@@ -110,21 +109,20 @@ class Recorder(
 
     @Throws(IllegalRecorderStateException::class)
     fun resume() {
-        if(state.value != RecorderState.PAUSED) {
+        if (state.value != RecorderState.PAUSED) {
             throw IllegalRecorderStateException(
                 context.getString(R.string.recorder_illegal_state_exception_resume_while_not_paused)
             )
         }
-        mediaRecorder?.resume() ?: throw  IllegalRecorderStateException(
+        mediaRecorder?.resume() ?: throw IllegalRecorderStateException(
             context.getString(R.string.recorder_illegal_state_exception_resume_while_uninitialized)
         )
         state.update { RecorderState.RECORDING }
     }
 
-
     @Throws(IllegalRecorderStateException::class)
     fun delete() {
-        if(state.value != RecorderState.PAUSED) {
+        if (state.value != RecorderState.PAUSED) {
             throw IllegalRecorderStateException(
                 context.getString(R.string.recorder_illegal_state_exception_delete_while_not_paused)
             )
@@ -132,7 +130,7 @@ class Recorder(
         mediaRecorder?.apply {
             stop()
             release()
-        } ?: throw  IllegalRecorderStateException(
+        } ?: throw IllegalRecorderStateException(
             context.getString(R.string.recorder_illegal_state_exception_delete_while_uninitialized)
         )
         recordingUri?.let {
@@ -144,26 +142,26 @@ class Recorder(
 
     @Throws(IllegalRecorderStateException::class)
     fun save(recordingName: String) {
-        if(state.value != RecorderState.PAUSED) {
+        if (state.value != RecorderState.PAUSED) {
             throw IllegalRecorderStateException(
                 context.getString(R.string.recorder_illegal_state_exception_save_while_not_paused)
             )
         }
 
-        if(recordingName.isBlank()) {
+        if (recordingName.isBlank()) {
             throw RecorderException.SaveWithEmptyName(context)
         }
 
         mediaRecorder?.apply {
             stop()
             release()
-        } ?: throw  IllegalRecorderStateException(
+        } ?: throw IllegalRecorderStateException(
             context.getString(R.string.recorder_illegal_state_exception_save_while_uninitialized)
         )
 
         // finally update the recordings content values to mark it as no longer pending
         ContentValues().apply {
-            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 put(MediaStore.MediaColumns.IS_PENDING, false)
             }
             put(MediaStore.MediaColumns.DISPLAY_NAME, recordingName)
@@ -191,7 +189,6 @@ class Recorder(
 
     private fun getContentValues(time: ZonedDateTime): ContentValues {
         return ContentValues().apply {
-
             put(MediaStore.Audio.Media.MIME_TYPE, "audio/mp4")
             put(MediaStore.Audio.Media.ALBUM, context.getString(R.string.recorder_content_values_album))
             put(MediaStore.Audio.Media.DATE_ADDED, time.toString())

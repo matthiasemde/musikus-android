@@ -63,7 +63,6 @@ import app.musikus.core.presentation.theme.dimensions
 import app.musikus.core.presentation.theme.spacing
 import app.musikus.core.presentation.utils.UiText
 
-
 @Composable
 fun MetronomeUi(
     modifier: Modifier = Modifier,
@@ -98,8 +97,9 @@ fun MetronomeLayout(
     uiState: MetronomeUiState,
     eventHandler: (MetronomeUiEvent) -> Unit,
 ) {
-    Column (modifier = modifier
-        .padding(horizontal = MaterialTheme.spacing.large)
+    Column(
+        modifier = modifier
+            .padding(horizontal = MaterialTheme.spacing.large)
     ) {
         MetronomeHeader(
             modifier = Modifier.height(MaterialTheme.dimensions.toolsHeaderHeight),
@@ -115,7 +115,6 @@ fun MetronomeLayout(
                 .fillMaxWidth()
                 .height(MaterialTheme.dimensions.toolsBodyHeight),
         ) {
-
             Spacer(modifier = Modifier.weight(1f))
 
             MetronomeSlider(
@@ -136,19 +135,18 @@ fun MetronomeLayout(
                 onTapTempo = { eventHandler(MetronomeUiEvent.TabTempo) }
             )
         }
-        
+
         Spacer(modifier = Modifier.height(MaterialTheme.spacing.large))
     }
 }
-
 
 @PreviewLightDark
 @Composable
 private fun PreviewMetronome(
     @PreviewParameter(MusikusColorSchemeProvider::class) theme: ColorSchemeSelections,
 ) {
-    MusikusThemedPreview (theme) {
-        Surface (color = MaterialTheme.colorScheme.surfaceContainerHigh) {
+    MusikusThemedPreview(theme) {
+        Surface(color = MaterialTheme.colorScheme.surfaceContainerHigh) {
             MetronomeLayout(
                 uiState = MetronomeUiState(
                     settings = MetronomeSettings.DEFAULT.copy(bpm = 40),
@@ -178,7 +176,6 @@ private fun MetronomeHeader(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-
             val smallIncrementButtonSize = 25.dp
             val largeIncrementButtonSize = 30.dp
 
@@ -196,7 +193,6 @@ private fun MetronomeHeader(
 
             Spacer(modifier = Modifier.width(MaterialTheme.spacing.small))
 
-
             // -1 Bpm
             MetronomeIncrementBpmButton(
                 bpmIncrement = -1,
@@ -207,11 +203,12 @@ private fun MetronomeHeader(
             )
 
             // Bpm
-            Row (
+            Row(
                 Modifier
                     .width(130.dp)
                     .padding(MaterialTheme.spacing.small),
-                horizontalArrangement = Arrangement.Center){
+                horizontalArrangement = Arrangement.Center
+            ) {
                 Text(
                     modifier = Modifier
                         .alignByBaseline(),
@@ -276,7 +273,6 @@ private fun MetronomeHeader(
                     }
                 }
             }
-
         }
     }
 }
@@ -298,13 +294,11 @@ fun MetronomeSlider(
         Slider(
             value = uiState.sliderValue,
             valueRange =
-            MetronomeSettings.BPM_RANGE.first.toFloat()..
-                    MetronomeSettings.BPM_RANGE.last.toFloat(),
+            MetronomeSettings.BPM_RANGE.first.toFloat()..MetronomeSettings.BPM_RANGE.last.toFloat(),
             onValueChange = { onSliderValueChange(it) },
         )
     }
 }
-
 
 @Composable
 fun MetronomeIncrementBpmButton(
@@ -319,7 +313,7 @@ fun MetronomeIncrementBpmButton(
         contentPadding = PaddingValues(MaterialTheme.spacing.extraSmall)
     ) {
         Text(
-            text = (if(bpmIncrement > 0) "+" else "") + bpmIncrement.toString(),
+            text = (if (bpmIncrement > 0) "+" else "") + bpmIncrement.toString(),
             style = MaterialTheme.typography.labelMedium,
         )
     }
@@ -339,7 +333,6 @@ fun MetronomeExtraSettingsRow(
         verticalAlignment = Alignment.Top,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-
         MetronomeExtraSettingsColumn(label = stringResource(id = R.string.metronome_extra_settings_beats_per_bar)) {
             MetronomeIncrementer(
                 value = uiState.beatsPerBar,
@@ -366,7 +359,6 @@ fun MetronomeExtraSettingsRow(
                     contentDescription = stringResource(id = R.string.metronome_extra_settings_tap_tempo)
                 )
             }
-
         }
     }
 }

@@ -10,6 +10,9 @@ package app.musikus.goals.domain.usecase
 
 import app.musikus.core.data.GoalDescriptionWithInstancesAndLibraryItems
 import app.musikus.core.data.UUIDConverter
+import app.musikus.core.domain.FakeIdProvider
+import app.musikus.core.domain.FakeTimeProvider
+import app.musikus.goals.data.FakeGoalRepository
 import app.musikus.goals.data.daos.GoalDescription
 import app.musikus.goals.data.daos.GoalInstance
 import app.musikus.goals.data.entities.GoalDescriptionCreationAttributes
@@ -17,11 +20,8 @@ import app.musikus.goals.data.entities.GoalInstanceCreationAttributes
 import app.musikus.goals.data.entities.GoalPeriodUnit
 import app.musikus.goals.data.entities.GoalProgressType
 import app.musikus.goals.data.entities.GoalType
-import app.musikus.goals.data.FakeGoalRepository
 import app.musikus.library.data.FakeLibraryRepository
 import app.musikus.library.domain.usecase.GetAllLibraryItemsUseCase
-import app.musikus.core.domain.FakeIdProvider
-import app.musikus.core.domain.FakeTimeProvider
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest

@@ -10,6 +10,8 @@ package app.musikus.sessions.data
 
 import app.musikus.core.data.GoalInstanceWithDescriptionWithLibraryItems
 import app.musikus.core.data.SessionWithSectionsWithLibraryItems
+import app.musikus.core.domain.TimeProvider
+import app.musikus.core.domain.Timeframe
 import app.musikus.goals.data.daos.GoalDescription
 import app.musikus.goals.data.daos.GoalInstance
 import app.musikus.library.data.daos.LibraryItem
@@ -21,19 +23,16 @@ import app.musikus.sessions.data.entities.SectionUpdateAttributes
 import app.musikus.sessions.data.entities.SessionCreationAttributes
 import app.musikus.sessions.data.entities.SessionUpdateAttributes
 import app.musikus.sessions.domain.SessionRepository
-import app.musikus.core.domain.TimeProvider
-import app.musikus.core.domain.Timeframe
 import kotlinx.coroutines.flow.Flow
 import java.time.ZonedDateTime
 import java.util.UUID
 
 class SessionRepositoryImpl(
     private val timeProvider: TimeProvider,
-    private val sessionDao : SessionDao,
-    private val sectionDao : SectionDao,
+    private val sessionDao: SessionDao,
+    private val sectionDao: SectionDao,
     private val withDatabaseTransaction: suspend (suspend () -> Unit) -> Unit,
 ) : SessionRepository {
-
 
     /** Accessors */
     override val sessions = sessionDao.getAllAsFlow()
@@ -46,9 +45,9 @@ class SessionRepositoryImpl(
         return sessionDao.getWithSectionsWithLibraryItems(id)
     }
 
-    override fun sessionsInTimeframe (
+    override fun sessionsInTimeframe(
         timeframe: Timeframe
-    ) : Flow<List<SessionWithSectionsWithLibraryItems>> {
+    ): Flow<List<SessionWithSectionsWithLibraryItems>> {
         return sessionDao.getFromTimeframe(timeframe)
     }
 
@@ -56,20 +55,24 @@ class SessionRepositoryImpl(
         return sectionDao.getForSession(sessionId)
     }
 
-    private suspend fun sectionsForGoal (
+    private suspend fun sectionsForGoal(
         startTimestamp: ZonedDateTime,
         endTimestamp: ZonedDateTime,
         itemIds: List<UUID>? = null
-    ) = if (itemIds == null) sectionDao.getInTimeframe(
-        startTimestamp = startTimestamp,
-        endTimestamp = endTimestamp,
-    ) else sectionDao.getInTimeframeForItemId(
-        startTimestamp = startTimestamp,
-        endTimestamp = endTimestamp,
-        itemIds = itemIds
-    )
+    ) = if (itemIds == null) {
+        sectionDao.getInTimeframe(
+            startTimestamp = startTimestamp,
+            endTimestamp = endTimestamp,
+        )
+    } else {
+        sectionDao.getInTimeframeForItemId(
+            startTimestamp = startTimestamp,
+            endTimestamp = endTimestamp,
+            itemIds = itemIds
+        )
+    }
 
-    override suspend fun sectionsForGoal (goal: GoalInstanceWithDescriptionWithLibraryItems) = sectionsForGoal(
+    override suspend fun sectionsForGoal(goal: GoalInstanceWithDescriptionWithLibraryItems) = sectionsForGoal(
         startTimestamp = goal.instance.startTimestamp,
         endTimestamp = goal.endTimestampInLocalTimezone(timeProvider),
         itemIds = goal.description.libraryItems.map { it.id }.takeIf { it.isNotEmpty() }
@@ -85,7 +88,7 @@ class SessionRepositoryImpl(
         itemIds = libraryItems.map { it.id }.takeIf { it.isNotEmpty() }
     )
 
-    override fun getLastSectionsForItems(items: List<LibraryItem>) : Flow<List<Section>> {
+    override fun getLastSectionsForItems(items: List<LibraryItem>): Flow<List<Section>> {
         return sectionDao.getLatestForItems(items.map { it.id })
     }
 
@@ -133,7 +136,6 @@ class SessionRepositoryImpl(
     override suspend fun clean() {
         sessionDao.clean()
     }
-
 
     /** Transaction */
 

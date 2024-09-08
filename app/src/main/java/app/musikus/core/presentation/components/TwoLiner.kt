@@ -29,7 +29,6 @@ import app.musikus.core.presentation.theme.spacing
 import app.musikus.core.presentation.utils.UiIcon
 import app.musikus.core.presentation.utils.UiText
 
-
 data class TwoLinerData(
     val icon: UiIcon? = null,
     val firstLine: UiText? = null,

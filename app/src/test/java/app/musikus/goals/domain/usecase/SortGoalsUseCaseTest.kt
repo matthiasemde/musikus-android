@@ -75,11 +75,13 @@ class SortGoalsUseCaseTest {
                 modifiedAt = baseDescription.modifiedAt.plus(1.seconds.toJavaDuration()),
                 periodUnit = GoalPeriodUnit.DAY,
             ),
-            instances = listOf(baseInstance.copy(
-                id = UUIDConverter.fromInt(4),
-                descriptionId = UUIDConverter.fromInt(3),
-                targetSeconds = 1,
-            )),
+            instances = listOf(
+                baseInstance.copy(
+                    id = UUIDConverter.fromInt(4),
+                    descriptionId = UUIDConverter.fromInt(3),
+                    targetSeconds = 1,
+                )
+            ),
             libraryItems = emptyList()
         ),
         GoalDescriptionWithInstancesAndLibraryItems(
@@ -89,11 +91,13 @@ class SortGoalsUseCaseTest {
                 modifiedAt = baseDescription.modifiedAt.plus(2.seconds.toJavaDuration()),
                 periodUnit = GoalPeriodUnit.MONTH,
             ),
-            instances = listOf(baseInstance.copy(
-                id = UUIDConverter.fromInt(6),
-                descriptionId = UUIDConverter.fromInt(5),
-                targetSeconds = 5,
-            )),
+            instances = listOf(
+                baseInstance.copy(
+                    id = UUIDConverter.fromInt(6),
+                    descriptionId = UUIDConverter.fromInt(5),
+                    targetSeconds = 5,
+                )
+            ),
             libraryItems = emptyList()
         ),
         GoalDescriptionWithInstancesAndLibraryItems(
@@ -104,11 +108,13 @@ class SortGoalsUseCaseTest {
                 periodUnit = GoalPeriodUnit.DAY,
                 periodInPeriodUnits = 9,
             ),
-            instances = listOf(baseInstance.copy(
-                id = UUIDConverter.fromInt(8),
-                descriptionId = UUIDConverter.fromInt(7),
-                targetSeconds = 4,
-            )),
+            instances = listOf(
+                baseInstance.copy(
+                    id = UUIDConverter.fromInt(8),
+                    descriptionId = UUIDConverter.fromInt(7),
+                    targetSeconds = 4,
+                )
+            ),
             libraryItems = emptyList()
         ),
         GoalDescriptionWithInstancesAndLibraryItems(
@@ -119,11 +125,13 @@ class SortGoalsUseCaseTest {
                 periodUnit = GoalPeriodUnit.WEEK,
                 periodInPeriodUnits = 6,
             ),
-            instances = listOf(baseInstance.copy(
-                id = UUIDConverter.fromInt(10),
-                descriptionId = UUIDConverter.fromInt(9),
-                targetSeconds = 2,
-            )),
+            instances = listOf(
+                baseInstance.copy(
+                    id = UUIDConverter.fromInt(10),
+                    descriptionId = UUIDConverter.fromInt(9),
+                    targetSeconds = 2,
+                )
+            ),
             libraryItems = emptyList()
         ),
     )
@@ -179,11 +187,11 @@ class SortGoalsUseCaseTest {
         val sortedGoals = sortGoals(goalsFlow = flowOf(goals)).first()
 
         val expectedDescriptionIds = listOf(
-            5,  // target: 5 seconds
-            7,  // target: 4 seconds
-            1,  // target: 3 seconds
-            9,  // target: 2 seconds
-            3   // target: 1 seconds
+            5, // target: 5 seconds
+            7, // target: 4 seconds
+            1, // target: 3 seconds
+            9, // target: 2 seconds
+            3 // target: 1 seconds
         ).map { UUIDConverter.fromInt(it) }
 
         // Assert that the goals are sorted correctly
@@ -203,11 +211,11 @@ class SortGoalsUseCaseTest {
         val sortedGoals = sortGoals(goalsFlow = flowOf(goals)).first()
 
         val expectedDescriptionIds = listOf(
-            3,  // target: 1 seconds
-            9,  // target: 2 seconds
-            1,  // target: 3 seconds
-            7,  // target: 4 seconds
-            5   // target: 5 seconds
+            3, // target: 1 seconds
+            9, // target: 2 seconds
+            1, // target: 3 seconds
+            7, // target: 4 seconds
+            5 // target: 5 seconds
         ).map { UUIDConverter.fromInt(it) }
 
         // Assert that the goals are sorted correctly
@@ -227,11 +235,11 @@ class SortGoalsUseCaseTest {
         val sortedGoals = sortGoals(goalsFlow = flowOf(goals)).first()
 
         val expectedDescriptionIds = listOf(
-            5,  // period: 1 month
-            9,  // period: 6 weeks
-            1,  // period: 1 week
-            7,  // period: 9 days
-            3,  // period: 1 day
+            5, // period: 1 month
+            9, // period: 6 weeks
+            1, // period: 1 week
+            7, // period: 9 days
+            3, // period: 1 day
         ).map { UUIDConverter.fromInt(it) }
 
         // Assert that the goals are sorted correctly
@@ -251,11 +259,11 @@ class SortGoalsUseCaseTest {
         val sortedGoals = sortGoals(goalsFlow = flowOf(goals)).first()
 
         val expectedDescriptionIds = listOf(
-            3,  // period: 1 day
-            7,  // period: 9 days
-            1,  // period: 1 week
-            9,  // period: 6 weeks
-            5,  // period: 1 month
+            3, // period: 1 day
+            7, // period: 9 days
+            1, // period: 1 week
+            9, // period: 6 weeks
+            5, // period: 1 month
         ).map { UUIDConverter.fromInt(it) }
 
         // Assert that the goals are sorted correctly

@@ -3,8 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2024 Michael Prommersberger
- *
+ * Copyright (c) 2024 Michael Prommersberger, Matthias Emde
  */
 
 package app.musikus.activesession.presentation
@@ -14,21 +13,21 @@ import android.os.Build
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import app.musikus.R
-import app.musikus.core.data.Nullable
-import app.musikus.library.data.daos.LibraryItem
-import app.musikus.sessions.data.entities.SectionCreationAttributes
-import app.musikus.sessions.data.entities.SessionCreationAttributes
-import app.musikus.core.di.ApplicationScope
-import app.musikus.core.presentation.theme.libraryItemColors
 import app.musikus.activesession.domain.usecase.ActiveSessionUseCases
 import app.musikus.activesession.domain.usecase.SessionStatus
-import app.musikus.library.domain.usecase.LibraryUseCases
-import app.musikus.permissions.domain.usecase.PermissionsUseCases
-import app.musikus.sessions.domain.usecase.SessionsUseCases
+import app.musikus.core.data.Nullable
+import app.musikus.core.di.ApplicationScope
+import app.musikus.core.presentation.theme.libraryItemColors
 import app.musikus.core.presentation.utils.DurationFormat
 import app.musikus.core.presentation.utils.UiText
-import app.musikus.permissions.domain.PermissionChecker
 import app.musikus.core.presentation.utils.getDurationString
+import app.musikus.library.data.daos.LibraryItem
+import app.musikus.library.domain.usecase.LibraryUseCases
+import app.musikus.permissions.domain.PermissionChecker
+import app.musikus.permissions.domain.usecase.PermissionsUseCases
+import app.musikus.sessions.data.entities.SectionCreationAttributes
+import app.musikus.sessions.data.entities.SessionCreationAttributes
+import app.musikus.sessions.domain.usecase.SessionsUseCases
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -54,7 +53,6 @@ import kotlin.concurrent.timer
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
-
 
 @HiltViewModel
 class ActiveSessionViewModel @Inject constructor(
@@ -137,14 +135,14 @@ class ActiveSessionViewModel @Inject constructor(
 
     private val timerUiState = combine(
         sessionState,
-        _clock  // should update with clock
+        _clock // should update with clock
     ) { timerState, _ ->
         val pause = timerState == ActiveSessionState.PAUSED
 
         val practiceDuration = try {
             activeSessionUseCases.getPracticeDuration()
         } catch (e: IllegalStateException) {
-            Duration.ZERO   // Session not yet started
+            Duration.ZERO // Session not yet started
         }
         val pauseDurStr = getDurationString(
             activeSessionUseCases.getOngoingPauseDuration(),
@@ -153,8 +151,11 @@ class ActiveSessionViewModel @Inject constructor(
         ActiveSessionTimerUiState(
             timerText = getFormattedTimerText(practiceDuration),
             subHeadingText =
-                if (pause) UiText.StringResource(R.string.active_session_timer_subheading_paused, pauseDurStr)
-                else UiText.StringResource(R.string.active_session_timer_subheading),
+            if (pause) {
+                UiText.StringResource(R.string.active_session_timer_subheading_paused, pauseDurStr)
+            } else {
+                UiText.StringResource(R.string.active_session_timer_subheading)
+            },
         )
     }.stateIn(
         scope = viewModelScope,
@@ -173,14 +174,14 @@ class ActiveSessionViewModel @Inject constructor(
     private val currentItemUiState: StateFlow<ActiveSessionCurrentItemUiState?> = combine(
         sessionState,
         runningLibraryItem,
-        _clock  // should update with clock
+        _clock // should update with clock
     ) { sessionState, item, _ ->
         if (sessionState == ActiveSessionState.NOT_STARTED || item == null) return@combine null
 
         val currentItemDuration = try {
             activeSessionUseCases.getRunningItemDuration()
         } catch (e: IllegalStateException) {
-            Duration.ZERO   // Session not yet started
+            Duration.ZERO // Session not yet started
         }
         ActiveSessionCurrentItemUiState(
             name = item.name,
@@ -218,7 +219,6 @@ class ActiveSessionViewModel @Inject constructor(
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = null
     )
-
 
     private val newItemSelectorUiState = combine(
         _newItemSelectorVisible,
@@ -291,7 +291,6 @@ class ActiveSessionViewModel @Inject constructor(
     private val navigationChannel = Channel<NavigationEvent>()
     val navigationEventsChannelFlow = navigationChannel.receiveAsFlow()
 
-
     init {
         startTimer()
         /** Hide the Tools Bottom Sheet on Startup */
@@ -307,7 +306,6 @@ class ActiveSessionViewModel @Inject constructor(
 //                viewModelScope.launch {
 //                    navigationChannel.send(NavigationEvent.HideTools)
 //                }
-
             }
         }
     }
@@ -361,8 +359,8 @@ class ActiveSessionViewModel @Inject constructor(
             activeSessionUseCases.resume()
         }
         // wait until the current item has been running for at least 1 second
-        if (sessionState.value != ActiveSessionState.NOT_STARTED
-            && activeSessionUseCases.getRunningItemDuration() < 1.seconds
+        if (sessionState.value != ActiveSessionState.NOT_STARTED &&
+            activeSessionUseCases.getRunningItemDuration() < 1.seconds
         ) {
             delay(1000)
         }
@@ -427,7 +425,7 @@ class ActiveSessionViewModel @Inject constructor(
                 )
             }
         )
-        activeSessionUseCases.reset()   // reset the active session state
+        activeSessionUseCases.reset() // reset the active session state
         viewModelScope.launch {
             navigationChannel.send(NavigationEvent.NavigateUp)
         }

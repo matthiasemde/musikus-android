@@ -23,7 +23,7 @@ class SortGoalsUseCase(
     @JvmName("sortGoalDescriptionWithInstances")
     operator fun invoke(
         goalsFlow: Flow<List<GoalDescriptionWithInstancesAndLibraryItems>>
-    ) : Flow<List<GoalDescriptionWithInstancesAndLibraryItems>> {
+    ): Flow<List<GoalDescriptionWithInstancesAndLibraryItems>> {
         return combine(
             goalsFlow,
             getGoalSortInfo()
@@ -35,7 +35,7 @@ class SortGoalsUseCase(
     @JvmName("sortGoalInstanceWithDescription")
     operator fun invoke(
         goalsFlow: Flow<List<GoalInstanceWithDescriptionWithLibraryItems>>
-    ) : Flow<List<GoalInstanceWithDescriptionWithLibraryItems>> {
+    ): Flow<List<GoalInstanceWithDescriptionWithLibraryItems>> {
         return combine(
             goalsFlow,
             getGoalSortInfo()

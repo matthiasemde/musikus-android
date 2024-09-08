@@ -16,14 +16,13 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
-
 @Module
 @InstallIn(SingletonComponent::class)
 object ActiveSessionRepositoryModule {
 
     @Provides
     @Singleton
-    fun provideActiveSessionRepository() : ActiveSessionRepository {
+    fun provideActiveSessionRepository(): ActiveSessionRepository {
         return ActiveSessionRepositoryImpl()
     }
 }

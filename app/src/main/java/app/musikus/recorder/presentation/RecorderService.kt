@@ -22,11 +22,11 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import androidx.core.net.toUri
 import app.musikus.R
-import app.musikus.core.presentation.RECORDER_NOTIFICATION_CHANNEL_ID
-import app.musikus.core.di.ApplicationScope
 import app.musikus.activesession.presentation.ActiveSessionActions
-import app.musikus.core.presentation.utils.DurationFormat
+import app.musikus.core.di.ApplicationScope
 import app.musikus.core.domain.TimeProvider
+import app.musikus.core.presentation.RECORDER_NOTIFICATION_CHANNEL_ID
+import app.musikus.core.presentation.utils.DurationFormat
 import app.musikus.core.presentation.utils.getDurationString
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
@@ -47,27 +47,24 @@ import kotlin.time.Duration.Companion.seconds
 
 const val RECORDER_NOTIFICATION_ID = 97
 
-
 data class RecorderServiceState(
     val recorderState: RecorderState,
     val recordingDuration: Duration
 )
 
-
 /**
  * Exposed interface for events between Service and Activity / ViewModel
  */
 sealed class RecorderServiceEvent {
-    data object StartRecording: RecorderServiceEvent()
-    data object PauseRecording: RecorderServiceEvent()
-    data object ResumeRecording: RecorderServiceEvent()
-    data object DeleteRecording: RecorderServiceEvent()
-    data class SaveRecording(val recordingName: String): RecorderServiceEvent()
+    data object StartRecording : RecorderServiceEvent()
+    data object PauseRecording : RecorderServiceEvent()
+    data object ResumeRecording : RecorderServiceEvent()
+    data object DeleteRecording : RecorderServiceEvent()
+    data class SaveRecording(val recordingName: String) : RecorderServiceEvent()
 }
 
 sealed class RecorderServiceException(override val message: String) : Exception(message) {
     data class IllegalRecorderState(override val message: String) : RecorderServiceException(message)
-
 }
 
 @AndroidEntryPoint
@@ -105,9 +102,9 @@ class RecorderService : Service() {
 
     private val _recordingDuration = MutableStateFlow(0.seconds)
 
-    private var _recordingTimer : Timer? = null
+    private var _recordingTimer: Timer? = null
 
-    private var pendingIntentTapAction : PendingIntent? = null
+    private var pendingIntentTapAction: PendingIntent? = null
 
     private val dependenciesInjected = MutableStateFlow(false)
 
@@ -117,8 +114,11 @@ class RecorderService : Service() {
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private val recorderState = dependenciesInjected.flatMapLatest {
-        if (!it) flowOf(RecorderState.UNINITIALIZED)
-        else recorder.state
+        if (!it) {
+            flowOf(RecorderState.UNINITIALIZED)
+        } else {
+            recorder.state
+        }
     }
 
     val serviceState = combine(
@@ -132,7 +132,7 @@ class RecorderService : Service() {
     }
 
     fun onEvent(event: RecorderServiceEvent) {
-        when(event) {
+        when (event) {
             is RecorderServiceEvent.StartRecording -> startRecording()
             is RecorderServiceEvent.PauseRecording -> pauseRecording()
             is RecorderServiceEvent.ResumeRecording -> resumeRecording()
@@ -152,9 +152,11 @@ class RecorderService : Service() {
             recorder.start()
             startTimer()
         } catch (e: IllegalRecorderStateException) {
-            applicationScope.launch { _exceptionChannel.send(
-                RecorderServiceException.IllegalRecorderState(e.message)
-            ) }
+            applicationScope.launch {
+                _exceptionChannel.send(
+                    RecorderServiceException.IllegalRecorderState(e.message)
+                )
+            }
         }
     }
 
@@ -163,9 +165,11 @@ class RecorderService : Service() {
             recorder.pause()
             _recordingTimer?.cancel()
         } catch (e: IllegalRecorderStateException) {
-            applicationScope.launch { _exceptionChannel.send(
-                RecorderServiceException.IllegalRecorderState(e.message)
-            ) }
+            applicationScope.launch {
+                _exceptionChannel.send(
+                    RecorderServiceException.IllegalRecorderState(e.message)
+                )
+            }
         }
     }
 
@@ -174,9 +178,11 @@ class RecorderService : Service() {
             recorder.resume()
             startTimer()
         } catch (e: IllegalRecorderStateException) {
-            applicationScope.launch { _exceptionChannel.send(
-                RecorderServiceException.IllegalRecorderState(e.message)
-            ) }
+            applicationScope.launch {
+                _exceptionChannel.send(
+                    RecorderServiceException.IllegalRecorderState(e.message)
+                )
+            }
         }
     }
 
@@ -185,9 +191,11 @@ class RecorderService : Service() {
             recorder.delete()
             reset(keepNotification = false)
         } catch (e: IllegalRecorderStateException) {
-            applicationScope.launch { _exceptionChannel.send(
-                RecorderServiceException.IllegalRecorderState(e.message)
-            ) }
+            applicationScope.launch {
+                _exceptionChannel.send(
+                    RecorderServiceException.IllegalRecorderState(e.message)
+                )
+            }
         }
     }
 
@@ -197,9 +205,11 @@ class RecorderService : Service() {
             setFinalNotification()
             reset(keepNotification = true)
         } catch (e: IllegalRecorderStateException) {
-            applicationScope.launch { _exceptionChannel.send(
-                RecorderServiceException.IllegalRecorderState(e.message)
-            ) }
+            applicationScope.launch {
+                _exceptionChannel.send(
+                    RecorderServiceException.IllegalRecorderState(e.message)
+                )
+            }
         }
     }
 
@@ -220,13 +230,14 @@ class RecorderService : Service() {
     private fun reset(keepNotification: Boolean) {
         _recordingDuration.update { 0.seconds }
         _recordingTimer?.cancel()
-        stopForeground( if(keepNotification) {
-            STOP_FOREGROUND_DETACH
-        } else {
-            STOP_FOREGROUND_REMOVE
-        })
+        stopForeground(
+            if (keepNotification) {
+                STOP_FOREGROUND_DETACH
+            } else {
+                STOP_FOREGROUND_REMOVE
+            }
+        )
     }
-
 
     /**
      * --------------- Service Boilerplate ------------
@@ -290,17 +301,19 @@ class RecorderService : Service() {
         mNotificationManager.notify(RECORDER_NOTIFICATION_ID, notification)
     }
 
-    private fun getNotification(duration: Duration) : Notification {
+    private fun getNotification(duration: Duration): Notification {
         return getBasicNotification(
             title = getString(R.string.recorder_service_notification_title),
             text = getDurationString(duration, DurationFormat.HMS_DIGITAL)
         )
     }
 
-    private fun getBasicNotification(title: String, text: CharSequence, persistent: Boolean = true) : Notification {
-        return  NotificationCompat.Builder(this, RECORDER_NOTIFICATION_CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_microphone)    // without icon, setOngoing does not work
-            .setOngoing(persistent) // does not work on Android 14: https://developer.android.com/about/versions/14/behavior-changes-all#non-dismissable-notifications
+    private fun getBasicNotification(title: String, text: CharSequence, persistent: Boolean = true): Notification {
+        return NotificationCompat.Builder(this, RECORDER_NOTIFICATION_CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_microphone) // without icon, setOngoing does not work
+            .setOngoing(
+                persistent
+            ) // does not work on Android 14: https://developer.android.com/about/versions/14/behavior-changes-all#non-dismissable-notifications
             .setContentTitle(title)
             .setContentText(text)
             .setOnlyAlertOnce(true)

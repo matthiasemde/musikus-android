@@ -16,7 +16,6 @@ import app.musikus.core.presentation.utils.UiText
 import app.musikus.library.data.daos.LibraryFolder
 import app.musikus.library.data.daos.LibraryItem
 
-
 enum class LibraryItemSortMode : SortMode<LibraryItem> {
     DATE_ADDED {
         override val label = UiText.StringResource(R.string.library_item_sort_mode_date_added)
@@ -57,10 +56,10 @@ enum class LibraryItemSortMode : SortMode<LibraryItem> {
 fun List<LibraryItem>.sorted(
     mode: LibraryItemSortMode,
     direction: SortDirection
-) = this.sortedWith (
-    when(direction) {
+) = this.sortedWith(
+    when (direction) {
         SortDirection.ASCENDING ->
-            compareBy (mode.comparator) { it }
+            compareBy(mode.comparator) { it }
         SortDirection.DESCENDING ->
             compareByDescending(mode.comparator) { it }
     }

@@ -40,11 +40,11 @@ import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
 import androidx.navigation.navigation
 import app.musikus.activesession.presentation.ActiveSession
+import app.musikus.core.domain.TimeProvider
+import app.musikus.core.presentation.theme.MusikusTheme
 import app.musikus.sessions.presentation.EditSession
 import app.musikus.settings.presentation.addSettingsNavigationGraph
 import app.musikus.statistics.presentation.addStatisticsNavigationGraph
-import app.musikus.core.presentation.theme.MusikusTheme
-import app.musikus.core.domain.TimeProvider
 import java.util.UUID
 
 const val DEEP_LINK_KEY = "argument"
@@ -63,12 +63,10 @@ fun MusikusApp(
     val theme = uiState.activeTheme ?: return
     val colorScheme = uiState.activeColorScheme ?: return
 
-
     MusikusTheme(
         theme = theme,
         colorScheme = colorScheme
     ) {
-
         NavHost(
             modifier = Modifier.background(MaterialTheme.colorScheme.background),
             navController = navController,
@@ -86,9 +84,11 @@ fun MusikusApp(
             ) {
                 composable(
                     route = "home/{tab}",
-                    arguments = listOf(navArgument("tab") {
-                        nullable = true
-                    })
+                    arguments = listOf(
+                        navArgument("tab") {
+                            nullable = true
+                        }
+                    )
                 ) { backStackEntry ->
                     val tabRoute = backStackEntry.arguments?.getString("tab")
                     val tab = Screen.HomeTab.allTabs.firstOrNull { it.subRoute == tabRoute }
@@ -105,8 +105,8 @@ fun MusikusApp(
 
             composable(
                 route = Screen.EditSession.route,
-                arguments = listOf(navArgument("sessionId") { type = NavType.StringType})
-            ) {backStackEntry ->
+                arguments = listOf(navArgument("sessionId") { type = NavType.StringType })
+            ) { backStackEntry ->
                 val sessionId = backStackEntry.arguments?.getString("sessionId")
                     ?: return@composable navController.navigate(Screen.HomeTab.Sessions.route)
 
@@ -117,9 +117,11 @@ fun MusikusApp(
             }
             composable(
                 route = Screen.ActiveSession.route,
-                deepLinks = listOf(navDeepLink {
-                    uriPattern = "musikus://activeSession/{$DEEP_LINK_KEY}"
-                })
+                deepLinks = listOf(
+                    navDeepLink {
+                        uriPattern = "musikus://activeSession/{$DEEP_LINK_KEY}"
+                    }
+                )
             ) { backStackEntry ->
                 ActiveSession(
                     navigateUp = navController::navigateUp,
@@ -143,10 +145,9 @@ fun NavController.navigateTo(screen: Screen) {
     navigate(screen.route)
 }
 
-
 const val ANIMATION_BASE_DURATION = 400
 
-fun AnimatedContentTransitionScope<NavBackStackEntry>.getEnterTransition() : EnterTransition {
+fun AnimatedContentTransitionScope<NavBackStackEntry>.getEnterTransition(): EnterTransition {
     val initialRoute = initialState.destination.route ?: return fadeIn()
     val targetRoute = targetState.destination.route ?: return fadeIn()
 
@@ -170,7 +171,7 @@ fun AnimatedContentTransitionScope<NavBackStackEntry>.getEnterTransition() : Ent
         // when changing to settings, zoom in when coming from a sub menu
         // and slide in from the right when coming from the home screen
         targetRoute == Screen.Settings.route -> {
-            if(initialRoute in (Screen.SettingsOption.allSettings.map { it.route }) ) {
+            if (initialRoute in (Screen.SettingsOption.allSettings.map { it.route })) {
                 scaleIn(
                     animationSpec = tween(ANIMATION_BASE_DURATION / 2),
                     initialScale = 1.2f,
@@ -182,7 +183,6 @@ fun AnimatedContentTransitionScope<NavBackStackEntry>.getEnterTransition() : Ent
                 ) + fadeIn(animationSpec = tween(ANIMATION_BASE_DURATION / 2))
             }
         }
-
 
         // when changing from settings screen, if going to setting sub menu, zoom out
         // otherwise slide in from the right
@@ -202,7 +202,7 @@ fun AnimatedContentTransitionScope<NavBackStackEntry>.getEnterTransition() : Ent
 
         // when changing to session or goal statistics, slide in from the right
         targetRoute == Screen.SessionStatistics.route ||
-        targetRoute == Screen.GoalStatistics.route -> {
+            targetRoute == Screen.GoalStatistics.route -> {
             slideInHorizontally(
                 animationSpec = tween(ANIMATION_BASE_DURATION),
                 initialOffsetX = { fullWidth -> (fullWidth / 10) }
@@ -211,7 +211,7 @@ fun AnimatedContentTransitionScope<NavBackStackEntry>.getEnterTransition() : Ent
 
         // when changing from session or goal statistics, slide in from the left
         initialRoute == Screen.SessionStatistics.route ||
-        initialRoute == Screen.GoalStatistics.route -> {
+            initialRoute == Screen.GoalStatistics.route -> {
             slideInHorizontally(
                 animationSpec = tween(ANIMATION_BASE_DURATION),
                 initialOffsetX = { fullWidth -> -(fullWidth / 10) }
@@ -233,7 +233,7 @@ fun AnimatedContentTransitionScope<NavBackStackEntry>.getEnterTransition() : Ent
     }
 }
 
-fun AnimatedContentTransitionScope<NavBackStackEntry>.getExitTransition() : ExitTransition {
+fun AnimatedContentTransitionScope<NavBackStackEntry>.getExitTransition(): ExitTransition {
     val initialRoute = initialState.destination.route ?: return fadeOut()
     val targetRoute = targetState.destination.route ?: return fadeOut()
 
@@ -254,7 +254,7 @@ fun AnimatedContentTransitionScope<NavBackStackEntry>.getExitTransition() : Exit
         // when changing to settings, zoom in when coming from a sub menu
         // and slide out to the left when coming from the home screen
         targetRoute == Screen.Settings.route -> {
-            if(initialRoute in (Screen.SettingsOption.allSettings.map { it.route })) {
+            if (initialRoute in (Screen.SettingsOption.allSettings.map { it.route })) {
                 scaleOut(
                     animationSpec = tween(ANIMATION_BASE_DURATION / 2),
                     targetScale = 0.7f,
@@ -285,7 +285,7 @@ fun AnimatedContentTransitionScope<NavBackStackEntry>.getExitTransition() : Exit
 
         // when changing to session or goal statistics, slide in from the right
         targetRoute == Screen.SessionStatistics.route ||
-        targetRoute == Screen.GoalStatistics.route -> {
+            targetRoute == Screen.GoalStatistics.route -> {
             slideOutHorizontally(
                 animationSpec = tween(ANIMATION_BASE_DURATION),
                 targetOffsetX = { fullWidth -> (fullWidth / 10) }
@@ -294,7 +294,7 @@ fun AnimatedContentTransitionScope<NavBackStackEntry>.getExitTransition() : Exit
 
         // when changing from session or goal statistics, slide in from the left
         initialRoute == Screen.SessionStatistics.route ||
-        initialRoute == Screen.GoalStatistics.route -> {
+            initialRoute == Screen.GoalStatistics.route -> {
             slideOutHorizontally(
                 animationSpec = tween(ANIMATION_BASE_DURATION),
                 targetOffsetX = { fullWidth -> -(fullWidth / 10) }

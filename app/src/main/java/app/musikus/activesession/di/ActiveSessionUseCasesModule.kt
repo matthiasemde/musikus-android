@@ -37,15 +37,13 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object ActiveSessionUseCasesModule {
 
-
     @Provides
     @Singleton
     fun provideActiveSessionUseCases(
         activeSessionRepository: ActiveSessionRepository,
         timeProvider: TimeProvider,
         idProvider: IdProvider
-    ) : ActiveSessionUseCases {
-
+    ): ActiveSessionUseCases {
         val getOngoingPauseDurationUseCase = GetOngoingPauseDurationUseCase(
             activeSessionRepository,
             timeProvider
@@ -96,5 +94,4 @@ object ActiveSessionUseCasesModule {
             getSessionStatus = GetSessionStatusUseCase(activeSessionRepository)
         )
     }
-
 }

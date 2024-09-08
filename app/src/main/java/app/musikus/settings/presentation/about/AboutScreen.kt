@@ -39,7 +39,6 @@ import app.musikus.core.presentation.theme.spacing
 import app.musikus.core.presentation.utils.UiIcon
 import app.musikus.core.presentation.utils.UiText
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AboutScreen(
@@ -105,7 +104,6 @@ fun AboutScreen(
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState()),
         ) {
-
             for (group in aboutScreenItems) {
                 for (item in group) {
                     TwoLiner(data = item)
