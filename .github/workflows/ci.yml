@@ -26,7 +26,7 @@ jobs:
         cache: gradle
 
     - name: Check Gradle wrapper
-      uses: gradle/wrapper-validation-action@v2
+      uses: gradle/wrapper-validation-action@v3
 
     - name: Check lint
       run: ./gradlew lint
@@ -136,7 +136,7 @@ jobs:
           sudo udevadm trigger --name-match=kvm
     
       - name: Instrumentation tests
-        uses: reactivecircus/android-emulator-runner@v2.30.1
+        uses: reactivecircus/android-emulator-runner@v2.32.0
         with:
           api-level: ${{ matrix.api-level }}
           arch: ${{ steps.avd-info.outputs.arch }}
