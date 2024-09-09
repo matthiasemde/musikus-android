@@ -22,6 +22,8 @@
  * SOFTWARE.
  */
 
+@file:Suppress("AbsentOrWrongFileLicense")
+
 package app.musikus.recorder.presentation
 
 import android.content.ComponentName

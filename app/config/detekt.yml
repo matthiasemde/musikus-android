@@ -16,3 +16,9 @@ style:
     ignoreAnnotated: ['Preview', 'PreviewLightDark']
   MaxLineLength:
     maxLineLength: 140
+
+comments:
+  AbsentOrWrongFileLicense:
+    active: true
+    licenseTemplateFile: 'musikusLicense.template'
+    licenseTemplateIsRegex: true
