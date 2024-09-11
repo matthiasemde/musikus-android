@@ -31,7 +31,9 @@ interface SessionRepository {
     val sessions: Flow<List<Session>>
     val sections: Flow<List<Section>>
 
+    val sessionsWithSectionsWithLibraryItems: Flow<List<SessionWithSectionsWithLibraryItems>>
     val orderedSessionsWithSectionsWithLibraryItems: Flow<List<SessionWithSectionsWithLibraryItems>>
+
     suspend fun getSession(id: UUID): SessionWithSectionsWithLibraryItems
 
     fun sessionsInTimeframe(timeframe: Timeframe): Flow<List<SessionWithSectionsWithLibraryItems>>
