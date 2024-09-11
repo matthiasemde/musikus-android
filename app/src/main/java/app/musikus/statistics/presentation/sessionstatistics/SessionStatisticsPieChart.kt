@@ -28,20 +28,18 @@ import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
-import app.musikus.library.data.daos.LibraryItem
 import app.musikus.core.presentation.theme.libraryItemColors
+import app.musikus.library.data.daos.LibraryItem
 import app.musikus.library.data.sorted
 import kotlinx.coroutines.launch
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.time.Duration.Companion.seconds
 
-
 @Composable
 fun SessionStatisticsPieChart(
     uiState: SessionStatisticsPieChartUiState,
 ) {
-
     val (
         libraryItemToDuration,
         itemSortMode,
@@ -67,7 +65,7 @@ fun SessionStatisticsPieChart(
 
     val noData =
         libraryItemToDuration.isEmpty() ||
-                libraryItemToDuration.values.all { it == 0.seconds }
+            libraryItemToDuration.values.all { it == 0.seconds }
 
     val animatedOpenCloseScaler by animateFloatAsState(
         targetValue = if (noData) 0f else 1f,
@@ -79,8 +77,11 @@ fun SessionStatisticsPieChart(
         val totalDuration = libraryItemToDuration.values.sumOf { it.inWholeSeconds }.toFloat()
         libraryItemToDuration.mapValues { (_, duration) ->
             (duration.inWholeSeconds / totalDuration * 100f).let {
-                if ( it.isNaN() || it < 5f) ""
-                else it.toInt().toString() + "%"
+                if (it.isNaN() || it < 5f) {
+                    ""
+                } else {
+                    it.toInt().toString() + "%"
+                }
             }.let {
                 textMeasurer.measure(it, labelTextStyle)
             }
@@ -136,13 +137,17 @@ fun SessionStatisticsPieChart(
         .zip(animatedAccumulatedDurations.dropLast(1))
         .map { (pair, accumulatedDuration) ->
             val (item, duration) = pair
-            item to if (animatedTotalAccumulatedDuration == 0f) Pair(absoluteStartAngle, 0f) else Pair(
-                (
+            item to if (animatedTotalAccumulatedDuration == 0f) {
+                Pair(absoluteStartAngle, 0f)
+            } else {
+                Pair(
+                    (
                         (accumulatedDuration / animatedTotalAccumulatedDuration) *
-                                180f * animatedOpenCloseScaler
+                            180f * animatedOpenCloseScaler
                         ) + absoluteStartAngle,
-                (duration.value / animatedTotalAccumulatedDuration) * 180f * animatedOpenCloseScaler
-            )
+                    (duration.value / animatedTotalAccumulatedDuration) * 180f * animatedOpenCloseScaler
+                )
+            }
         }
 
     Canvas(
@@ -218,7 +223,7 @@ fun SessionStatisticsPieChart(
                 )
 
                 if (sweepAngle > 10f) {
-                    itemsToMeasuredLabels[item]?.let {  measuredLabel ->
+                    itemsToMeasuredLabels[item]?.let { measuredLabel ->
                         drawText(
                             textLayoutResult = measuredLabel,
                             topLeft = pieChartCenter + halfSweepCenterPoint - Offset(

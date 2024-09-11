@@ -18,7 +18,6 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
-
 class SelectGoalsSortModeUseCaseTest {
     private lateinit var selectGoalSortMode: SelectGoalsSortModeUseCase
     private lateinit var fakeUserPreferencesRepository: FakeUserPreferencesRepository
@@ -51,9 +50,9 @@ class SelectGoalsSortModeUseCaseTest {
         assertThat(sortInfo)
             .isEqualTo(
                 SortInfo(
-                mode = GoalsSortMode.TARGET,
-                direction = SortDirection.DEFAULT,
-            )
+                    mode = GoalsSortMode.TARGET,
+                    direction = SortDirection.DEFAULT,
+                )
             )
     }
 
@@ -77,9 +76,9 @@ class SelectGoalsSortModeUseCaseTest {
         assertThat(sortInfo)
             .isEqualTo(
                 SortInfo(
-                mode = GoalsSortMode.DATE_ADDED,
-                direction = SortDirection.ASCENDING,
-            )
+                    mode = GoalsSortMode.DATE_ADDED,
+                    direction = SortDirection.ASCENDING,
+                )
             )
     }
 }

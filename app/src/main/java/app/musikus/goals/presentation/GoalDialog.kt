@@ -38,18 +38,18 @@ import app.musikus.core.presentation.components.DialogActions
 import app.musikus.core.presentation.components.DialogHeader
 import app.musikus.core.presentation.components.DurationInput
 import app.musikus.core.presentation.components.IntSelectionSpinnerOption
-import app.musikus.core.presentation.components.ToggleButton
 import app.musikus.core.presentation.components.NumberInput
 import app.musikus.core.presentation.components.SelectionSpinner
+import app.musikus.core.presentation.components.ToggleButton
 import app.musikus.core.presentation.components.ToggleButtonOption
 import app.musikus.core.presentation.components.UUIDSelectionSpinnerOption
-import app.musikus.library.data.daos.LibraryItem
-import app.musikus.goals.data.entities.GoalPeriodUnit
-import app.musikus.goals.data.entities.GoalType
-import app.musikus.library.presentation.DialogMode
 import app.musikus.core.presentation.theme.spacing
 import app.musikus.core.presentation.utils.TestTags
 import app.musikus.core.presentation.utils.UiText
+import app.musikus.goals.data.entities.GoalPeriodUnit
+import app.musikus.goals.data.entities.GoalType
+import app.musikus.library.data.daos.LibraryItem
+import app.musikus.library.presentation.DialogMode
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -65,7 +65,6 @@ sealed class GoalDialogUiEvent {
     data object Dismiss : GoalDialogUiEvent()
 }
 
-
 @Composable
 fun GoalDialog(
     uiState: GoalsAddOrEditDialogUiState,
@@ -77,7 +76,6 @@ fun GoalDialog(
 
     var libraryItemsSelectorExpanded by remember { mutableStateOf(false) }
     var periodUnitSelectorExpanded by remember { mutableStateOf(false) }
-
 
     /**
      * Composing the Dialog
@@ -99,8 +97,11 @@ fun GoalDialog(
             DialogHeader(
                 title = stringResource(
                     id =
-                        if(isEditMode) R.string.goals_goal_dialog_title_edit
-                        else R.string.goals_goal_dialog_title
+                    if (isEditMode) {
+                        R.string.goals_goal_dialog_title_edit
+                    } else {
+                        R.string.goals_goal_dialog_title
+                    }
                 )
             )
 
@@ -111,7 +112,7 @@ fun GoalDialog(
             )
             confirmButtonEnabled = confirmButtonEnabled && dialogData.target > 0.seconds
 
-            if(!isEditMode) {
+            if (!isEditMode) {
                 Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
                 PeriodInput(
                     periodInPeriodUnits = dialogData.periodInPeriodUnits,
@@ -158,9 +159,11 @@ fun GoalDialog(
                         SelectionSpinner(
                             expanded = libraryItemsSelectorExpanded,
                             placeholder = {
-                                Text(text = stringResource(
-                                    id = R.string.goals_goal_dialog_item_selector_placeholder
-                                ))
+                                Text(
+                                    text = stringResource(
+                                        id = R.string.goals_goal_dialog_item_selector_placeholder
+                                    )
+                                )
                             },
                             options = libraryItems.map {
                                 UUIDSelectionSpinnerOption(it.id, UiText.DynamicString(it.name))
@@ -168,16 +171,22 @@ fun GoalDialog(
                             selected = dialogData.selectedLibraryItems.firstOrNull()?.let {
                                 UUIDSelectionSpinnerOption(it.id, UiText.DynamicString(it.name))
                             },
-                            semanticDescription = stringResource(id = R.string.goals_goal_dialog_item_selector_description),
+                            semanticDescription = stringResource(
+                                id = R.string.goals_goal_dialog_item_selector_description
+                            ),
                             dropdownTestTag = TestTags.GOAL_DIALOG_ITEM_SELECTOR_DROPDOWN,
                             onExpandedChange = {
                                 libraryItemsSelectorExpanded = it
                                 periodUnitSelectorExpanded = false
                             },
                             onSelectedChange = { selection ->
-                                eventHandler(GoalDialogUiEvent.LibraryItemsSelected(libraryItems.filter {
-                                    it.id == (selection as UUIDSelectionSpinnerOption).id
-                                }))
+                                eventHandler(
+                                    GoalDialogUiEvent.LibraryItemsSelected(
+                                        libraryItems.filter {
+                                            it.id == (selection as UUIDSelectionSpinnerOption).id
+                                        }
+                                    )
+                                )
                                 libraryItemsSelectorExpanded = false
                             }
                         )
@@ -188,17 +197,21 @@ fun GoalDialog(
 
                 confirmButtonEnabled = confirmButtonEnabled && (
                     dialogData.goalType == GoalType.NON_SPECIFIC ||
-                    dialogData.selectedLibraryItems.isNotEmpty()
-                )
+                        dialogData.selectedLibraryItems.isNotEmpty()
+                    )
             }
 
             DialogActions(
                 onConfirmHandler = { eventHandler(GoalDialogUiEvent.Confirm) },
                 onDismissHandler = { eventHandler(GoalDialogUiEvent.Dismiss) },
                 confirmButtonEnabled = confirmButtonEnabled,
-                confirmButtonText = stringResource( id =
-                    if (isEditMode) R.string.goals_goal_dialog_confirm_edit
-                    else R.string.goals_goal_dialog_confirm
+                confirmButtonText = stringResource(
+                    id =
+                    if (isEditMode) {
+                        R.string.goals_goal_dialog_confirm_edit
+                    } else {
+                        R.string.goals_goal_dialog_confirm
+                    }
                 )
             )
         }

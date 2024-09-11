@@ -20,31 +20,29 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.core.text.HtmlCompat
 
-
 // source: https://www.youtube.com/watch?v=mB1Lej0aDus (Phillip Lackner)
 sealed class UiText {
-    data class DynamicString(val value: String): UiText()
-    data class DynamicAnnotatedString(val value: AnnotatedString): UiText()
+    data class DynamicString(val value: String) : UiText()
+    data class DynamicAnnotatedString(val value: AnnotatedString) : UiText()
     class StringResource(
         @StringRes val resId: Int,
         vararg val args: Any
-    ): UiText()
-
+    ) : UiText()
 
     class PluralResource(
         @PluralsRes val resId: Int,
         val quantity: Int,
         vararg val formatArgs: Any
-    ): UiText()
+    ) : UiText()
 
     class HtmlResource(
         @StringRes val resId: Int,
         vararg val args: Any
-    ): UiText()
+    ) : UiText()
 
     @Composable
     fun asAnnotatedString(): AnnotatedString {
-        return when(this) {
+        return when (this) {
             is DynamicString -> AnnotatedString(value)
             is DynamicAnnotatedString -> value
             is StringResource -> AnnotatedString(stringResource(resId, *args))
@@ -55,7 +53,7 @@ sealed class UiText {
 
     @Composable
     fun asString(): String {
-        return when(this) {
+        return when (this) {
             is DynamicString -> value
             is DynamicAnnotatedString -> value.text
             is StringResource -> stringResource(resId, *args)
@@ -69,7 +67,6 @@ sealed class UiText {
 fun List<UiText>.asAnnotatedString(
     separator: String = " "
 ) = map { it.asAnnotatedString() }.joinToString(separator) { it }
-
 
 // source: https://stackoverflow.com/questions/68549248/android-jetpack-compose-how-to-show-styled-text-from-string-resources
 @Composable

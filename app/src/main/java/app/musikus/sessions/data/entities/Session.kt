@@ -6,7 +6,6 @@
  * Copyright (c) 2024 Matthias Emde
  */
 
-
 package app.musikus.sessions.data.entities
 
 import androidx.room.ColumnInfo
@@ -43,10 +42,10 @@ data class SessionUpdateAttributes(
 ) : SoftDeleteModelUpdateAttributes(), ISessionUpdateAttributes
 
 @Entity(tableName = "session")
-data class SessionModel (
-    @ColumnInfo(name="break_duration_seconds") val breakDurationSeconds: Int,
-    @ColumnInfo(name="rating") override var rating: Int,
-    @ColumnInfo(name="comment") override var comment: String,
+data class SessionModel(
+    @ColumnInfo(name = "break_duration_seconds") val breakDurationSeconds: Int,
+    @ColumnInfo(name = "rating") override var rating: Int,
+    @ColumnInfo(name = "comment") override var comment: String,
 ) : SoftDeleteModel(), ISessionCreationAttributes, ISessionUpdateAttributes {
 
     @get:Ignore

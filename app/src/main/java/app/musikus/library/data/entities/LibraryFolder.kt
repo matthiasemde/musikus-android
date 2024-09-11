@@ -10,12 +10,12 @@ package app.musikus.library.data.entities
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
+import app.musikus.core.data.Nullable
 import app.musikus.core.data.entities.ISoftDeleteModelCreationAttributes
 import app.musikus.core.data.entities.ISoftDeleteModelUpdateAttributes
 import app.musikus.core.data.entities.SoftDeleteModel
 import app.musikus.core.data.entities.SoftDeleteModelCreationAttributes
 import app.musikus.core.data.entities.SoftDeleteModelUpdateAttributes
-import app.musikus.core.data.Nullable
 
 private interface ILibraryFolderCreationAttributes : ISoftDeleteModelCreationAttributes {
     val name: String
@@ -36,7 +36,7 @@ data class LibraryFolderUpdateAttributes(
 ) : SoftDeleteModelUpdateAttributes(), ILibraryFolderUpdateAttributes
 
 @Entity(tableName = "library_folder")
-data class LibraryFolderModel (
-    @ColumnInfo(name="name") override var name: String,
-    @ColumnInfo(name="custom_order") override var customOrder: Nullable<Int>? = null,
+data class LibraryFolderModel(
+    @ColumnInfo(name = "name") override var name: String,
+    @ColumnInfo(name = "custom_order") override var customOrder: Nullable<Int>? = null,
 ) : SoftDeleteModel(), ILibraryFolderCreationAttributes, ILibraryFolderUpdateAttributes

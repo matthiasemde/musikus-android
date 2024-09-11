@@ -8,10 +8,10 @@
 
 package app.musikus.settings.domain.usecase
 
-import app.musikus.settings.domain.UserPreferencesRepository
 import app.musikus.core.domain.SortDirection
 import app.musikus.core.domain.SortInfo
 import app.musikus.library.data.LibraryItemSortMode
+import app.musikus.settings.domain.UserPreferencesRepository
 import kotlinx.coroutines.flow.first
 
 class SelectItemSortModeUseCase(
@@ -22,16 +22,18 @@ class SelectItemSortModeUseCase(
         val currentSortInfo = userPreferencesRepository.itemSortInfo.first()
 
         if (currentSortInfo.mode == sortMode) {
-            userPreferencesRepository.updateLibraryItemSortInfo(currentSortInfo.copy(
-                direction = currentSortInfo.direction.invert()
-            ))
+            userPreferencesRepository.updateLibraryItemSortInfo(
+                currentSortInfo.copy(
+                    direction = currentSortInfo.direction.invert()
+                )
+            )
             return
         }
         userPreferencesRepository.updateLibraryItemSortInfo(
             SortInfo(
-            mode = sortMode,
-            direction = SortDirection.DEFAULT
-        )
+                mode = sortMode,
+                direction = SortDirection.DEFAULT
+            )
         )
     }
 }

@@ -31,7 +31,7 @@ class Metronome(
     context: Context
 ) {
 
-    private var playerJob : Job? = null
+    private var playerJob: Job? = null
 
     private val highNote by lazy { createNote(R.raw.beat_1, context) }
     private val mediumNote by lazy { createNote(R.raw.beat_2, context) }
@@ -42,7 +42,7 @@ class Metronome(
     private var clicksPerBar = beatsPerBar * clicksPerBeat
     private var nanosecondsBetweenClicks = (
         1.minutes.inWholeNanoseconds / (MetronomeSettings.DEFAULT.bpm * clicksPerBeat)
-    )
+        )
 
     fun updateSettings(settings: MetronomeSettings) {
         beatsPerBar = settings.beatsPerBar
@@ -60,11 +60,9 @@ class Metronome(
         playerJob?.cancel()
     }
 
-
-    private fun createPlayerJob() : Job {
+    private fun createPlayerJob(): Job {
         return applicationScope.launch {
             val track = createTrack()
-
 
             val nanosecondsPerFrame = 1.seconds.inWholeNanoseconds / track.sampleRate
 
@@ -72,7 +70,6 @@ class Metronome(
             // buffer size is 1/4 of the track buffer size to avoid overfilling
             val bufferSize = track.bufferSizeInFrames / 4
             val buffer = FloatArray(bufferSize)
-
 
 //            Log.d("Metronome", "Sample rate: ${track.sampleRate}")
 //            Log.d("Metronome", "Buffer size: $bufferSize")
@@ -82,14 +79,14 @@ class Metronome(
 
             var currentClick = 0
             var framesUntilNextClick = 0
-            var clickSampleFramePointer : Int? = null
+            var clickSampleFramePointer: Int? = null
 
             /**
              * The loop playing the metronome
              */
 
             while (true) {
-                if(!isActive) {
+                if (!isActive) {
                     break
                 }
 
@@ -98,7 +95,7 @@ class Metronome(
 
                 var bufferFramePointer = 0
 
-                while(bufferFramePointer < bufferSize) {
+                while (bufferFramePointer < bufferSize) {
                     val currentClickSample = when {
                         currentClick == 0 -> highNote
                         (currentClick % clicksPerBeat) != 0 -> lowNote
@@ -148,7 +145,7 @@ class Metronome(
 //                    Log.d("Metronome", "Writing $framesToWrite frames to buffer at $bufferFramePointer")
 
                     // write the frames to the buffer
-                    for(i in 0 until framesToWrite) {
+                    for (i in 0 until framesToWrite) {
                         buffer[bufferFramePointer + i] = currentClickSample[clickSampleFramePointer + i]
                     }
 
@@ -157,11 +154,11 @@ class Metronome(
                     framesUntilNextClick -= framesToWrite
 
                     // check if the clickSample is finished or not
-                    if(framesToWrite >= remainingClickFrames || framesUntilNextClick == 0) {
+                    if (framesToWrite >= remainingClickFrames || framesUntilNextClick == 0) {
                         // if it is finished, update the click count
                         // and reset clickSampleFramePointer back to null
                         currentClick++
-                        if(currentClick >= clicksPerBar) {
+                        if (currentClick >= clicksPerBar) {
                             currentClick = 0
                         }
                         clickSampleFramePointer = null
@@ -170,7 +167,6 @@ class Metronome(
                         clickSampleFramePointer += framesToWrite
                     }
                 }
-
 
                 // write() is a blocking call
                 track.write(buffer, 0, bufferSize, AudioTrack.WRITE_BLOCKING)
@@ -185,7 +181,7 @@ class Metronome(
         }
     }
     companion object {
-        fun createTrack() : AudioTrack {
+        fun createTrack(): AudioTrack {
             val nativeSampleRate = AudioTrack.getNativeOutputSampleRate(AudioManager.STREAM_MUSIC)
             val bufferSize = 4 * AudioTrack.getMinBufferSize(
                 nativeSampleRate, AudioFormat.CHANNEL_OUT_MONO,
@@ -212,7 +208,7 @@ class Metronome(
 
         // source: https://github.com/thetwom/toc2/blob/master/app/src/main/java/de/moekadu/metronome/audio/AudioDecoder.kt
         // TODO sort copyright
-        fun createNote(@RawRes noteId: Int, context: Context) : FloatArray {
+        fun createNote(@RawRes noteId: Int, context: Context): FloatArray {
             val inputStream = context.resources.openRawResource(noteId)
             val outputArray = ArrayList<Float>()
 
@@ -221,10 +217,10 @@ class Metronome(
             val byteBuffer = ByteBuffer.wrap(buffer)
             byteBuffer.order(ByteOrder.LITTLE_ENDIAN)
 
-            var numRead : Int? = null
-            while(numRead == null || numRead > 0) {
+            var numRead: Int? = null
+            while (numRead == null || numRead > 0) {
                 numRead = inputStream.read(buffer)
-                for(i in 0 until numRead step 2) {
+                for (i in 0 until numRead step 2) {
                     outputArray.add(byteBuffer.getShort(i).toFloat() / 32768.0f)
                 }
             }

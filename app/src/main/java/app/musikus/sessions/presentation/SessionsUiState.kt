@@ -22,7 +22,7 @@ data class SessionsActionModeUiState(
     val numberOfSelections: Int,
 )
 
-data class SessionsContentUiState (
+data class SessionsContentUiState(
     val monthData: List<MonthUiDatum>,
     val selectedSessions: Set<UUID>,
 

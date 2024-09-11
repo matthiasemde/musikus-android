@@ -31,18 +31,16 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.math.sqrt
 
-
 @Composable
 fun Waveform(
     modifier: Modifier = Modifier,
     rawMediaData: ShortArray?,
-    playBackMarker : Float,
+    playBackMarker: Float,
     onDragStart: () -> Unit,
     onDragEnd: () -> Unit,
     onDrag: (Float) -> Unit,
     onClick: (Float) -> Unit
 ) {
-
     val loudnessScaling = 0.00015f
     val minProportionalBarHeight = 0.02f
     // the rounded Caps of the bars extend beyond the bar height,
@@ -56,19 +54,19 @@ fun Waveform(
     }
 
     LaunchedEffect(key1 = rawMediaData) {
-
         if (rawMediaData == null || rawMediaData.isEmpty()) {
-            barHeightAnimatables.forEachIndexed { i, animatable -> launch {
-                animatable.animateTo(
-                    targetValue = 0f,
-                    animationSpec = tween(200, delayMillis = i * 5)
-                )
-            } }
+            barHeightAnimatables.forEachIndexed { i, animatable ->
+                launch {
+                    animatable.animateTo(
+                        targetValue = 0f,
+                        animationSpec = tween(200, delayMillis = i * 5)
+                    )
+                }
+            }
             return@LaunchedEffect
         }
 
         withContext(Dispatchers.Default) {
-
             val numberOfSamplesPerBar = rawMediaData.size.floorDiv(numberOfBars - 1)
 
             // Calculate the loudness of the recording as RMS
@@ -129,7 +127,6 @@ fun Waveform(
     ) {
         val barSpacing = size.width / (numberOfBars * 3 + 2)
         val barWidth = 2 * barSpacing
-
 
         val clipPath = Path().apply {
             animatedProportionalBarHeights.forEachIndexed { index, proportionalBarHeight ->

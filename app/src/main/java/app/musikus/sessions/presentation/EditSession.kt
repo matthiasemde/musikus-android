@@ -45,9 +45,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.musikus.R
+import app.musikus.core.presentation.theme.libraryItemColors
 import app.musikus.core.presentation.utils.DurationFormat
 import app.musikus.core.presentation.utils.getDurationString
-import app.musikus.core.presentation.theme.libraryItemColors
 import java.util.UUID
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -63,7 +63,6 @@ fun EditSession(
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
-
     Scaffold(
         modifier = Modifier
             .nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -72,9 +71,12 @@ fun EditSession(
                 title = { Text(text = "Edit Session") },
                 navigationIcon = {
                     IconButton(onClick = navigateUp) {
-                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(
-                            id = R.string.components_top_bar_back_description
-                        ))
+                        Icon(
+                            Icons.AutoMirrored.Rounded.ArrowBack,
+                            contentDescription = stringResource(
+                                id = R.string.components_top_bar_back_description
+                            )
+                        )
                     }
                 }
             )
@@ -159,7 +161,7 @@ fun EditSession(
                             contentColor = MaterialTheme.colorScheme.primary
                         )
                     ) {
-                        Text(text =  "Edit")
+                        Text(text = "Edit")
                     }
                 }
             )

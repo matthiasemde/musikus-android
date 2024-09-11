@@ -30,7 +30,6 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
-
 @Module
 @InstallIn(SingletonComponent::class)
 object LibraryUseCasesModule {
@@ -42,11 +41,13 @@ object LibraryUseCasesModule {
         sessionRepository: SessionRepository,
         userPreferencesUseCases: UserPreferencesUseCases
     ): LibraryUseCases {
-
         return LibraryUseCases(
             getAllItems = GetAllLibraryItemsUseCase(libraryRepository),
             getSortedItems = GetSortedLibraryItemsUseCase(libraryRepository, userPreferencesUseCases.getItemSortInfo),
-            getSortedFolders = GetSortedLibraryFoldersUseCase(libraryRepository, userPreferencesUseCases.getFolderSortInfo),
+            getSortedFolders = GetSortedLibraryFoldersUseCase(
+                libraryRepository,
+                userPreferencesUseCases.getFolderSortInfo
+            ),
             getLastPracticedDate = GetLastPracticedDateUseCase(sessionRepository),
             addItem = AddItemUseCase(libraryRepository),
             addFolder = AddFolderUseCase(libraryRepository),

@@ -16,16 +16,15 @@
 
 package app.musikus.settings.domain.usecase
 
-import app.musikus.settings.data.FakeUserPreferencesRepository
 import app.musikus.core.domain.SortDirection
 import app.musikus.core.domain.SortInfo
 import app.musikus.library.data.LibraryFolderSortMode
+import app.musikus.settings.data.FakeUserPreferencesRepository
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-
 
 class SelectFolderSortModeUseCaseTest {
     private lateinit var selectFolderSortMode: SelectFolderSortModeUseCase
@@ -59,9 +58,9 @@ class SelectFolderSortModeUseCaseTest {
         assertThat(sortInfo)
             .isEqualTo(
                 SortInfo(
-                mode = LibraryFolderSortMode.NAME,
-                direction = SortDirection.DEFAULT,
-            )
+                    mode = LibraryFolderSortMode.NAME,
+                    direction = SortDirection.DEFAULT,
+                )
             )
     }
 
@@ -85,9 +84,9 @@ class SelectFolderSortModeUseCaseTest {
         assertThat(sortInfo)
             .isEqualTo(
                 SortInfo(
-                mode = LibraryFolderSortMode.DATE_ADDED,
-                direction = SortDirection.ASCENDING,
-            )
+                    mode = LibraryFolderSortMode.DATE_ADDED,
+                    direction = SortDirection.ASCENDING,
+                )
             )
     }
 }

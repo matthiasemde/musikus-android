@@ -11,6 +11,9 @@ package app.musikus.goals.domain.usecase
 import app.musikus.core.data.GoalDescriptionWithInstancesAndLibraryItems
 import app.musikus.core.data.Nullable
 import app.musikus.core.data.UUIDConverter
+import app.musikus.core.domain.FakeIdProvider
+import app.musikus.core.domain.FakeTimeProvider
+import app.musikus.goals.data.FakeGoalRepository
 import app.musikus.goals.data.daos.GoalDescription
 import app.musikus.goals.data.daos.GoalInstance
 import app.musikus.goals.data.entities.GoalDescriptionCreationAttributes
@@ -22,11 +25,8 @@ import app.musikus.goals.data.entities.GoalProgressType
 import app.musikus.goals.data.entities.GoalType
 import app.musikus.goals.data.entities.InvalidGoalDescriptionException
 import app.musikus.goals.data.entities.InvalidGoalInstanceException
-import app.musikus.goals.data.FakeGoalRepository
 import app.musikus.library.data.FakeLibraryRepository
 import app.musikus.library.domain.usecase.GetAllLibraryItemsUseCase
-import app.musikus.core.domain.FakeIdProvider
-import app.musikus.core.domain.FakeTimeProvider
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -91,7 +91,6 @@ class EditGoalUseCaseTest {
 
     @Test
     fun `Edit goal target, target is changed`() = runTest {
-
         editGoalUseCase(
             descriptionId = UUIDConverter.fromInt(1),
             instanceUpdateAttributes = GoalInstanceUpdateAttributes(
@@ -262,7 +261,6 @@ class EditGoalUseCaseTest {
 
         assertThat(exception.message).isEqualTo("Goal with id 00000000-0000-0000-0000-000000000002 does not exist")
     }
-
 
     @Test
     fun `Edit goal with archived property set, IllegalArgumentException`() = runTest {

@@ -3,21 +3,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2024 Michael Prommersberger
- *
+ * Copyright (c) 2024 Michael Prommersberger, Matthias Emde
  */
 
 package app.musikus.activesession.domain.usecase
 
-import app.musikus.library.data.daos.LibraryItem
 import app.musikus.activesession.domain.ActiveSessionRepository
+import app.musikus.library.data.daos.LibraryItem
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-class GetRunningItemUseCase (
+class GetRunningItemUseCase(
     private val activeSessionRepository: ActiveSessionRepository,
 ) {
-    operator fun invoke() : Flow<LibraryItem?> {
+    operator fun invoke(): Flow<LibraryItem?> {
         return activeSessionRepository.getSessionState().map {
             it?.currentSectionItem
         }

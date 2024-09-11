@@ -61,16 +61,24 @@ class UserPreferencesRepositoryImpl(
 
             appIntroDone = preferences[PreferenceKeys.APPINTRO_DONE] ?: false,
 
-            libraryFolderSortMode = LibraryFolderSortMode.valueOrDefault(preferences[PreferenceKeys.LIBRARY_FOLDER_SORT_MODE]),
-            libraryFolderSortDirection = SortDirection.valueOrDefault(preferences[PreferenceKeys.LIBRARY_FOLDER_SORT_DIRECTION]),
+            libraryFolderSortMode = LibraryFolderSortMode.valueOrDefault(
+                preferences[PreferenceKeys.LIBRARY_FOLDER_SORT_MODE]
+            ),
+            libraryFolderSortDirection = SortDirection.valueOrDefault(
+                preferences[PreferenceKeys.LIBRARY_FOLDER_SORT_DIRECTION]
+            ),
 
-            libraryItemSortMode = LibraryItemSortMode.valueOrDefault(preferences[PreferenceKeys.LIBRARY_ITEM_SORT_MODE]),
-            libraryItemSortDirection = SortDirection.valueOrDefault(preferences[PreferenceKeys.LIBRARY_ITEM_SORT_DIRECTION]),
+            libraryItemSortMode = LibraryItemSortMode.valueOrDefault(
+                preferences[PreferenceKeys.LIBRARY_ITEM_SORT_MODE]
+            ),
+            libraryItemSortDirection = SortDirection.valueOrDefault(
+                preferences[PreferenceKeys.LIBRARY_ITEM_SORT_DIRECTION]
+            ),
 
             goalsSortMode = GoalsSortMode.valueOrDefault(preferences[PreferenceKeys.GOALS_SORT_MODE]),
             goalsSortDirection = SortDirection.valueOrDefault(preferences[PreferenceKeys.GOALS_SORT_DIRECTION]),
 
-            showPausedGoals =  preferences[PreferenceKeys.SHOW_PAUSED_GOALS] ?: true,
+            showPausedGoals = preferences[PreferenceKeys.SHOW_PAUSED_GOALS] ?: true,
 
             metronomeSettings = MetronomeSettings(
                 bpm = preferences[PreferenceKeys.METRONOME_BPM] ?: MetronomeSettings.DEFAULT.bpm,
@@ -88,7 +96,7 @@ class UserPreferencesRepositoryImpl(
         preferences.colorScheme
     }
 
-    override val itemSortInfo : Flow<SortInfo<LibraryItem>> =
+    override val itemSortInfo: Flow<SortInfo<LibraryItem>> =
         userPreferences.map { preferences ->
             SortInfo(
                 mode = preferences.libraryItemSortMode,
@@ -96,7 +104,7 @@ class UserPreferencesRepositoryImpl(
             )
         }
 
-    override val folderSortInfo : Flow<SortInfo<LibraryFolder>> =
+    override val folderSortInfo: Flow<SortInfo<LibraryFolder>> =
         userPreferences.map { preferences ->
             SortInfo(
                 mode = preferences.libraryFolderSortMode,
@@ -104,7 +112,7 @@ class UserPreferencesRepositoryImpl(
             )
         }
 
-    override val goalSortInfo : Flow<GoalSortInfo> =
+    override val goalSortInfo: Flow<GoalSortInfo> =
         userPreferences.map { preferences ->
             SortInfo(
                 mode = preferences.goalsSortMode,
@@ -142,7 +150,6 @@ class UserPreferencesRepositoryImpl(
             preferences[PreferenceKeys.LIBRARY_FOLDER_SORT_DIRECTION] = sortInfo.direction.name
         }
     }
-
 
     override suspend fun updateGoalSortInfo(sortInfo: GoalSortInfo) {
         dataStore.edit { preferences ->

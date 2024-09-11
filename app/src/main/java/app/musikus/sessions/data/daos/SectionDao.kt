@@ -15,10 +15,10 @@ import androidx.room.RewriteQueriesToDropUnusedColumns
 import app.musikus.core.data.MusikusDatabase
 import app.musikus.core.data.daos.BaseDao
 import app.musikus.core.data.entities.BaseModelDisplayAttributes
+import app.musikus.core.data.toDatabaseInterpretableString
 import app.musikus.sessions.data.entities.SectionCreationAttributes
 import app.musikus.sessions.data.entities.SectionModel
 import app.musikus.sessions.data.entities.SectionUpdateAttributes
-import app.musikus.core.data.toDatabaseInterpretableString
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import java.time.ZonedDateTime
@@ -27,11 +27,11 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 data class Section(
-    @ColumnInfo(name="id") override val id: UUID,
-    @ColumnInfo(name="session_id") val sessionId: UUID,
-    @ColumnInfo(name="library_item_id") val libraryItemId: UUID,
-    @ColumnInfo(name="duration_seconds") val durationSeconds: Long,
-    @ColumnInfo(name="start_timestamp") val startTimestamp: ZonedDateTime,
+    @ColumnInfo(name = "id") override val id: UUID,
+    @ColumnInfo(name = "session_id") val sessionId: UUID,
+    @ColumnInfo(name = "library_item_id") val libraryItemId: UUID,
+    @ColumnInfo(name = "duration_seconds") val durationSeconds: Long,
+    @ColumnInfo(name = "start_timestamp") val startTimestamp: ZonedDateTime,
 ) : BaseModelDisplayAttributes() {
 
     override fun toString(): String {
@@ -50,11 +50,11 @@ data class Section(
 abstract class SectionDao(
     private val database: MusikusDatabase
 ) : BaseDao<
-        SectionModel,
-        SectionCreationAttributes,
-        SectionUpdateAttributes,
-        Section
-        >(
+    SectionModel,
+    SectionCreationAttributes,
+    SectionUpdateAttributes,
+    Section
+    >(
     tableName = "section",
     database = database,
     displayAttributes = listOf(
@@ -89,7 +89,7 @@ abstract class SectionDao(
     ): List<UUID> {
         val sessionId = creationAttributes.first().sessionId
 
-        if(!database.sessionDao.exists(sessionId)) {
+        if (!database.sessionDao.exists(sessionId)) {
             throw IllegalArgumentException("Could not insert sections for non-existent session $sessionId")
         }
 
@@ -128,7 +128,8 @@ abstract class SectionDao(
     abstract fun getForSession(sessionId: UUID): List<Section>
 
     @RewriteQueriesToDropUnusedColumns
-    @Query("SELECT * FROM section " +
+    @Query(
+        "SELECT * FROM section " +
             "WHERE datetime(SUBSTR(start_timestamp, 1, INSTR(start_timestamp, '[') - 1))>=datetime(:startTimestamp) " +
             "AND datetime(SUBSTR(start_timestamp, 1, INSTR(start_timestamp, '[') - 1))<datetime(:endTimestamp) " +
             "AND session_id IN (" +
@@ -152,7 +153,8 @@ abstract class SectionDao(
     }
 
     @RewriteQueriesToDropUnusedColumns
-    @Query("SELECT * FROM section " +
+    @Query(
+        "SELECT * FROM section " +
             "WHERE datetime(SUBSTR(start_timestamp, 1, INSTR(start_timestamp, '[') - 1))>=datetime(:startTimestamp) " +
             "AND datetime(SUBSTR(start_timestamp, 1, INSTR(start_timestamp, '[') - 1))<datetime(:endTimestamp) " +
             "AND library_item_id IN (:itemIds) " +
@@ -183,21 +185,22 @@ abstract class SectionDao(
     }
 
     @RewriteQueriesToDropUnusedColumns
-    @Query("SELECT * " +
+    @Query(
+        "SELECT * " +
             "FROM section " +
-            "WHERE section.library_item_id IN (:itemIds) " +    // filter by itemIds
-            "AND section.session_id IN (" +                     // filter non-deleted sessions
-                "SELECT id FROM session " +
-                "WHERE deleted=0 " +
+            "WHERE section.library_item_id IN (:itemIds) " + // filter by itemIds
+            "AND section.session_id IN (" + // filter non-deleted sessions
+            "SELECT id FROM session " +
+            "WHERE deleted=0 " +
             ")" +
-            "AND NOT EXISTS (" +                                // filter out all sections that have a later section for the same item
-                "SELECT 1 FROM section AS s " +
-                "WHERE s.library_item_id = section.library_item_id " +
-                "AND s.session_id IN (" +
-                    "SELECT id FROM session " +
-                    "WHERE deleted=0 " +
-                ") " +
-                "AND datetime(SUBSTR(s.start_timestamp, 1, INSTR(s.start_timestamp, '[') - 1)) > datetime(SUBSTR(section.start_timestamp, 1, INSTR(section.start_timestamp, '[') - 1)) " +
+            "AND NOT EXISTS (" + // filter out all sections that have a later section for the same item
+            "SELECT 1 FROM section AS s " +
+            "WHERE s.library_item_id = section.library_item_id " +
+            "AND s.session_id IN (" +
+            "SELECT id FROM session " +
+            "WHERE deleted=0 " +
+            ") " +
+            "AND datetime(SUBSTR(s.start_timestamp, 1, INSTR(s.start_timestamp, '[') - 1)) > datetime(SUBSTR(section.start_timestamp, 1, INSTR(section.start_timestamp, '[') - 1)) " +
             ")"
     )
     abstract fun getLatestForItems(itemIds: List<UUID>): Flow<List<Section>>

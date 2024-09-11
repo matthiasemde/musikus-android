@@ -19,7 +19,7 @@ class GetLastPracticedDateUseCase(
     private val sessionRepository: SessionRepository
 ) {
 
-    operator fun invoke(items: List<LibraryItem>) : Flow<Map<UUID, ZonedDateTime>> {
+    operator fun invoke(items: List<LibraryItem>): Flow<Map<UUID, ZonedDateTime>> {
         return sessionRepository.getLastSectionsForItems(items).map { sections ->
             sections.groupBy { it.libraryItemId }.mapValues { (_, sections) ->
                 sections.single().startTimestamp

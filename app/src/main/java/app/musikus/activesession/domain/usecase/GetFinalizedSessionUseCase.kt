@@ -3,18 +3,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2024 Michael Prommersberger
- *
+ * Copyright (c) 2024 Michael Prommersberger, Matthias Emde
  */
 
 package app.musikus.activesession.domain.usecase
 
-import app.musikus.core.domain.IdProvider
-import app.musikus.core.domain.minus
-import app.musikus.core.domain.plus
 import app.musikus.activesession.domain.ActiveSessionRepository
 import app.musikus.activesession.domain.PracticeSection
 import app.musikus.activesession.domain.SessionState
+import app.musikus.core.domain.IdProvider
+import app.musikus.core.domain.minus
+import app.musikus.core.domain.plus
 import kotlinx.coroutines.flow.first
 import kotlin.time.Duration.Companion.seconds
 
@@ -45,5 +44,4 @@ class GetFinalizedSessionUseCase(
             completedSections = updatedSections
         )
     }
-
 }

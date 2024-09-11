@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2022 Matthias Emde
+ * Copyright (c) 2022-2024 Matthias Emde
  *
  * Parts of this software are licensed under the MIT license
  *
@@ -19,14 +19,14 @@ import androidx.room.RewriteQueriesToDropUnusedColumns
 import androidx.room.Transaction
 import app.musikus.core.data.MusikusDatabase
 import app.musikus.core.data.SessionWithSectionsWithLibraryItems
+import app.musikus.core.data.daos.SoftDeleteDao
+import app.musikus.core.data.entities.SoftDeleteModelDisplayAttributes
+import app.musikus.core.data.toDatabaseInterpretableString
+import app.musikus.core.domain.Timeframe
 import app.musikus.sessions.data.entities.SectionCreationAttributes
 import app.musikus.sessions.data.entities.SessionCreationAttributes
 import app.musikus.sessions.data.entities.SessionModel
 import app.musikus.sessions.data.entities.SessionUpdateAttributes
-import app.musikus.core.data.entities.SoftDeleteModelDisplayAttributes
-import app.musikus.core.data.toDatabaseInterpretableString
-import app.musikus.core.domain.Timeframe
-import app.musikus.core.data.daos.SoftDeleteDao
 import kotlinx.coroutines.flow.Flow
 import java.time.ZonedDateTime
 import java.util.UUID
@@ -34,12 +34,12 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 data class Session(
-    @ColumnInfo(name="id") override val id: UUID,
-    @ColumnInfo(name="created_at") override val createdAt: ZonedDateTime,
-    @ColumnInfo(name="modified_at") override val modifiedAt: ZonedDateTime,
-    @ColumnInfo(name="break_duration_seconds") val breakDurationSeconds: Long,
-    @ColumnInfo(name="rating") val rating: Int,
-    @ColumnInfo(name="comment") val comment: String?,
+    @ColumnInfo(name = "id") override val id: UUID,
+    @ColumnInfo(name = "created_at") override val createdAt: ZonedDateTime,
+    @ColumnInfo(name = "modified_at") override val modifiedAt: ZonedDateTime,
+    @ColumnInfo(name = "break_duration_seconds") val breakDurationSeconds: Long,
+    @ColumnInfo(name = "rating") val rating: Int,
+    @ColumnInfo(name = "comment") val comment: String?,
 ) : SoftDeleteModelDisplayAttributes() {
 
     override fun toString(): String {
@@ -52,15 +52,16 @@ data class Session(
     val breakDuration: Duration
         get() = breakDurationSeconds.seconds
 }
+
 @Dao
 abstract class SessionDao(
-    private val database : MusikusDatabase,
+    private val database: MusikusDatabase,
 ) : SoftDeleteDao<
-        SessionModel,
-        SessionCreationAttributes,
-        SessionUpdateAttributes,
-        Session
-        >(
+    SessionModel,
+    SessionCreationAttributes,
+    SessionUpdateAttributes,
+    Session
+    >(
     tableName = "session",
     database = database,
     displayAttributes = listOf("break_duration_seconds", "rating", "comment")
@@ -103,15 +104,19 @@ abstract class SessionDao(
         sessionCreationAttributes: SessionCreationAttributes,
         sectionCreationAttributes: List<SectionCreationAttributes>
     ): Pair<UUID, List<UUID>> {
-        if(sectionCreationAttributes.isEmpty()) {
+        if (sectionCreationAttributes.isEmpty()) {
             throw IllegalArgumentException("Each session must include at least one section")
         }
 
-        val sessionId = super.insert(listOf(sessionCreationAttributes)).single() // insert of single session would call the overridden insert method
+        val sessionId = super.insert(
+            listOf(sessionCreationAttributes)
+        ).single() // insert of single session would call the overridden insert method
 
-        val sectionIds = database.sectionDao.insert(sectionCreationAttributes.onEach {
-            it.sessionId = sessionId
-        })
+        val sectionIds = database.sectionDao.insert(
+            sectionCreationAttributes.onEach {
+                it.sessionId = sessionId
+            }
+        )
 
         return Pair(sessionId, sectionIds)
     }
@@ -134,10 +139,10 @@ abstract class SessionDao(
             ?: throw IllegalArgumentException("Session with id $sessionId not found")
     }
 
-
     @Transaction
     @RewriteQueriesToDropUnusedColumns
-    @Query("""
+    @Query(
+        """
     SELECT session.*
     FROM
         session
@@ -151,15 +156,15 @@ abstract class SessionDao(
             ON ids_with_start_timestamp.session_id = session.id 
     WHERE deleted=0 
     ORDER BY ids_with_start_timestamp.start_timestamp DESC 
-    """)
+    """
+    )
 //         LIMIT 50
-    abstract fun getOrderedWithSectionsWithLibraryItems()
-            : Flow<List<SessionWithSectionsWithLibraryItems>>
-
+    abstract fun getOrderedWithSectionsWithLibraryItems(): Flow<List<SessionWithSectionsWithLibraryItems>>
 
     @Transaction
     @RewriteQueriesToDropUnusedColumns
-    @Query("""
+    @Query(
+        """
         SELECT session.*
         FROM
             session
@@ -176,7 +181,8 @@ abstract class SessionDao(
             start_timestamp >= datetime(:startTimestamp) AND
             start_timestamp < datetime(:endTimestamp) AND
             deleted=0
-    """)
+    """
+    )
     protected abstract fun directGetFromTimeframe(
         startTimestamp: String,
         endTimestamp: String

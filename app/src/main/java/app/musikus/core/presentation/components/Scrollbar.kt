@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2023 Matthias Emde
+ * Copyright (c) 2023-2024 Matthias Emde
  */
 
 package app.musikus.core.presentation.components
@@ -37,7 +37,9 @@ fun Modifier.simpleVerticalScrollbar(
         val scrollableContentHeight = state.maxValue + viewportHeight
 
         val percentageOfColumnShownInViewPort = viewportHeight / (scrollableContentHeight)
-        val scrollbarHeight = (percentageOfColumnShownInViewPort * viewportHeight).coerceAtMost(maxSize.toPx()) // in pixels
+        val scrollbarHeight = (percentageOfColumnShownInViewPort * viewportHeight).coerceAtMost(
+            maxSize.toPx()
+        ) // in pixels
 
         val scrollbarOffsetY = state.value * (percentageOfColumnShownInViewPort + 1)
 
@@ -81,11 +83,10 @@ fun Modifier.simpleVerticalScrollbar(
             listState.layoutInfo.visibleItemsInfo.firstOrNull()?.size?.toFloat() ?: 0f
         val firstVisibleItemOffsetPercentage = listState.firstVisibleItemScrollOffset.toFloat() / firstVisibleItemHeight
 
-
         val scrollbarHeight = (trackHeight * percentageShowing).coerceAtMost(maxSize.toPx()) // in pixels
         val scrollPerItem = (trackHeight - scrollbarHeight) / (totalItemCount * (1 - percentageShowing)) // in pixels
 
-        if(listState.canScrollBackward || listState.canScrollForward) {
+        if (listState.canScrollBackward || listState.canScrollForward) {
             val firstIndex = listState.firstVisibleItemIndex.toFloat()
             val scrollbarOffsetY = (firstIndex + firstVisibleItemOffsetPercentage) * scrollPerItem
 

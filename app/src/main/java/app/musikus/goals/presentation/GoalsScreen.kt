@@ -52,6 +52,7 @@ import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.musikus.R
+import app.musikus.core.domain.TimeProvider
 import app.musikus.core.presentation.HomeUiEvent
 import app.musikus.core.presentation.HomeUiEventHandler
 import app.musikus.core.presentation.HomeUiState
@@ -68,11 +69,9 @@ import app.musikus.core.presentation.components.MultiFabState
 import app.musikus.core.presentation.components.Selectable
 import app.musikus.core.presentation.components.SortMenu
 import app.musikus.core.presentation.theme.spacing
-import app.musikus.core.domain.TimeProvider
 import app.musikus.core.presentation.utils.UiIcon
 import app.musikus.core.presentation.utils.UiText
 import app.musikus.goals.data.GoalsSortMode
-
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -147,7 +146,9 @@ fun GoalsScreen(
                         sortModes = GoalsSortMode.entries,
                         currentSortMode = sortMenuUiState.mode,
                         currentSortDirection = sortMenuUiState.direction,
-                        sortItemDescription = stringResource(id = R.string.goals_screen_top_bar_sort_menu_item_description),
+                        sortItemDescription = stringResource(
+                            id = R.string.goals_screen_top_bar_sort_menu_item_description
+                        ),
                         onShowMenuChanged = { eventHandler(GoalsUiEvent.GoalSortMenuPressed) },
                         onSelectionHandler = { eventHandler(GoalsUiEvent.GoalSortModeSelected(it)) }
                     )
@@ -167,7 +168,7 @@ fun GoalsScreen(
                                 homeEventHandler(HomeUiEvent.HideMainMenu)
 
                                 when (commonSelection) {
-                                    CommonMenuSelections.SETTINGS -> { navigateTo(Screen.Settings)}
+                                    CommonMenuSelections.SETTINGS -> { navigateTo(Screen.Settings) }
                                 }
                             },
                             uniqueMenuItems = {}
@@ -187,7 +188,9 @@ fun GoalsScreen(
                         IconButton(onClick = { eventHandler(GoalsUiEvent.ArchiveButtonPressed) }) {
                             Icon(
                                 imageVector = Icons.Rounded.Archive,
-                                contentDescription = stringResource(id = R.string.components_action_bar_archive_button_description),
+                                contentDescription = stringResource(
+                                    id = R.string.components_action_bar_archive_button_description
+                                ),
                             )
                         }
                     },
@@ -220,18 +223,22 @@ fun GoalsScreen(
                     Selectable(
                         modifier = Modifier.animateItemPlacement(),
                         selected = descriptionId in contentUiState.selectedGoalIds,
-                        onShortClick = { eventHandler(
-                            GoalsUiEvent.GoalPressed(
-                                goal,
-                                longClick = false
+                        onShortClick = {
+                            eventHandler(
+                                GoalsUiEvent.GoalPressed(
+                                    goal,
+                                    longClick = false
+                                )
                             )
-                        ) },
-                        onLongClick = { eventHandler(
-                            GoalsUiEvent.GoalPressed(
-                                goal,
-                                longClick = true
+                        },
+                        onLongClick = {
+                            eventHandler(
+                                GoalsUiEvent.GoalPressed(
+                                    goal,
+                                    longClick = true
+                                )
                             )
-                        ) }
+                        }
                     ) {
                         GoalCard(
                             goal = goal,
@@ -257,7 +264,6 @@ fun GoalsScreen(
                 }
             }
 
-
             /**
              *  ---------------------- Dialogs ----------------------
              */
@@ -274,35 +280,42 @@ fun GoalsScreen(
                 )
             }
 
-
             // Delete Goal Dialog
             val deleteOrArchiveDialogUiState = dialogUiState.deleteOrArchiveDialogUiState
 
             if (deleteOrArchiveDialogUiState != null) {
                 val snackbarMessage = stringResource(
-                    id = if (deleteOrArchiveDialogUiState.isArchiveAction)
-                        R.string.goals_screen_snackbar_archived else
+                    id = if (deleteOrArchiveDialogUiState.isArchiveAction) {
+                        R.string.goals_screen_snackbar_archived
+                    } else {
                         R.string.goals_screen_snackbar_deleted
+                    }
                 )
 
                 DeleteConfirmationBottomSheet(
                     explanation = UiText.PluralResource(
                         resId =
-                            if(deleteOrArchiveDialogUiState.isArchiveAction)
-                                R.plurals.goals_screen_archive_goal_dialog_explanation
-                            else
-                                R.plurals.goals_screen_delete_goal_dialog_explanation,
+                        if (deleteOrArchiveDialogUiState.isArchiveAction) {
+                            R.plurals.goals_screen_archive_goal_dialog_explanation
+                        } else {
+                            R.plurals.goals_screen_delete_goal_dialog_explanation
+                        },
                         quantity = deleteOrArchiveDialogUiState.numberOfSelections,
                         deleteOrArchiveDialogUiState.numberOfSelections
                     ),
                     confirmationIcon = UiIcon.DynamicIcon(
-                        if(deleteOrArchiveDialogUiState.isArchiveAction) Icons.Rounded.Archive
-                        else Icons.Rounded.Delete
+                        if (deleteOrArchiveDialogUiState.isArchiveAction) {
+                            Icons.Rounded.Archive
+                        } else {
+                            Icons.Rounded.Delete
+                        }
                     ),
                     confirmationText = UiText.StringResource(
-                        resId = if(deleteOrArchiveDialogUiState.isArchiveAction)
-                            R.string.goals_screen_archive_goal_dialog_confirm else
-                            R.string.goals_screen_delete_goal_dialog_confirm,
+                        resId = if (deleteOrArchiveDialogUiState.isArchiveAction) {
+                            R.string.goals_screen_archive_goal_dialog_confirm
+                        } else {
+                            R.string.goals_screen_delete_goal_dialog_confirm
+                        },
                         deleteOrArchiveDialogUiState.numberOfSelections
                     ),
                     onDismiss = { eventHandler(GoalsUiEvent.DeleteOrArchiveDialogDismissed) },
@@ -310,9 +323,10 @@ fun GoalsScreen(
                         eventHandler(GoalsUiEvent.DeleteOrArchiveDialogConfirmed)
                         mainEventHandler(
                             MainUiEvent.ShowSnackbar(
-                            message = snackbarMessage,
-                            onUndo = { eventHandler(GoalsUiEvent.UndoButtonPressed) }
-                        ))
+                                message = snackbarMessage,
+                                onUndo = { eventHandler(GoalsUiEvent.UndoButtonPressed) }
+                            )
+                        )
                     }
                 )
             }

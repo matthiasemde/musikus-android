@@ -1,18 +1,26 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ *
+ * Copyright (c) 2024 Matthias Emde
+ */
+
 package app.musikus.goals.domain
 
 import app.musikus.core.data.GoalDescriptionWithInstancesAndLibraryItems
 import app.musikus.core.data.GoalDescriptionWithLibraryItems
 import app.musikus.core.data.GoalInstanceWithDescription
 import app.musikus.core.data.GoalInstanceWithDescriptionWithLibraryItems
-import app.musikus.goals.data.daos.GoalDescription
-import app.musikus.goals.data.daos.GoalInstance
-import app.musikus.library.data.daos.LibraryItem
 import app.musikus.core.domain.TimeProvider
 import app.musikus.core.presentation.utils.UiText
+import app.musikus.goals.data.daos.GoalDescription
+import app.musikus.goals.data.daos.GoalInstance
 import app.musikus.goals.data.entities.GoalDescriptionCreationAttributes
 import app.musikus.goals.data.entities.GoalDescriptionUpdateAttributes
 import app.musikus.goals.data.entities.GoalInstanceCreationAttributes
 import app.musikus.goals.data.entities.GoalInstanceUpdateAttributes
+import app.musikus.library.data.daos.LibraryItem
 import kotlinx.coroutines.flow.Flow
 import java.util.UUID
 import kotlin.time.Duration
@@ -67,7 +75,6 @@ interface GoalRepository {
 
     /** Transaction */
     suspend fun withTransaction(block: suspend () -> Unit)
-
 }
 
 data class GoalDescriptionWithInstancesWithProgressAndLibraryItems(
@@ -88,7 +95,7 @@ data class GoalInstanceWithProgressAndDescriptionWithLibraryItems(
     val instance: GoalInstance,
     val progress: Duration
 ) {
-    val title : UiText
+    val title: UiText
         get() = description.title
 
     val subtitle by lazy { description.subtitle(instance) }

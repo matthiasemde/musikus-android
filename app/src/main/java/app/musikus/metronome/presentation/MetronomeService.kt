@@ -20,11 +20,11 @@ import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import androidx.core.net.toUri
-import app.musikus.core.presentation.METRONOME_NOTIFICATION_CHANNEL_ID
 import app.musikus.R
+import app.musikus.activesession.presentation.ActiveSessionActions
 import app.musikus.core.di.ApplicationScope
 import app.musikus.core.di.IoScope
-import app.musikus.activesession.presentation.ActiveSessionActions
+import app.musikus.core.presentation.METRONOME_NOTIFICATION_CHANNEL_ID
 import app.musikus.settings.domain.usecase.UserPreferencesUseCases
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
@@ -35,20 +35,17 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-
 const val METRONOME_NOTIFICATION_ID = 69
-
 
 data class MetronomeServiceState(
     val isPlaying: Boolean
 )
 
-
 /**
  * Exposed interface for events between Service and Activity / ViewModel
  */
 sealed class MetronomeServiceEvent {
-    data object TogglePlaying: MetronomeServiceEvent()
+    data object TogglePlaying : MetronomeServiceEvent()
 }
 
 @AndroidEntryPoint
@@ -65,7 +62,7 @@ class MetronomeService : Service() {
     @IoScope
     lateinit var ioScope: CoroutineScope
 
-    private var pendingIntentTapAction : PendingIntent? = null
+    private var pendingIntentTapAction: PendingIntent? = null
 
     private val metronome by lazy {
         val player = Metronome(
@@ -95,11 +92,10 @@ class MetronomeService : Service() {
         userPreferencesUseCases.getMetronomeSettings()
     }
 
-    private var metronomeSettingsUpdateJob : Job? = null
+    private var metronomeSettingsUpdateJob: Job? = null
 
     /** Own state flows */
     private val _isPlaying = MutableStateFlow(false)
-
 
     /** Composing the service state */
     val serviceState = _isPlaying.map {
@@ -112,11 +108,10 @@ class MetronomeService : Service() {
      *  Interface for Activity / ViewModel
      */
     fun onEvent(event: MetronomeServiceEvent) {
-        when(event) {
+        when (event) {
             is MetronomeServiceEvent.TogglePlaying -> toggleIsPlaying()
         }
     }
-
 
     private fun toggleIsPlaying() {
         _isPlaying.update { !it }
@@ -167,12 +162,13 @@ class MetronomeService : Service() {
         title: String,
         description: String
     ): Notification {
-
         val icon = R.drawable.ic_launcher_foreground
 
         val builder = NotificationCompat.Builder(this, METRONOME_NOTIFICATION_CHANNEL_ID)
-            .setSmallIcon(icon)    // without icon, setOngoing does not work
-            .setOngoing(true)  // does not work on Android 14: https://developer.android.com/about/versions/14/behavior-changes-all#non-dismissable-notifications
+            .setSmallIcon(icon) // without icon, setOngoing does not work
+            .setOngoing(
+                true
+            ) // does not work on Android 14: https://developer.android.com/about/versions/14/behavior-changes-all#non-dismissable-notifications
             .setOnlyAlertOnce(true)
             .setContentTitle(title)
             .setContentIntent(pendingIntentTapAction)
@@ -181,7 +177,6 @@ class MetronomeService : Service() {
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
 
         return builder.build()
-
     }
 
     private fun createPendingIntent() {
@@ -193,7 +188,6 @@ class MetronomeService : Service() {
             getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         }
     }
-
 
     override fun onDestroy() {
         metronomeSettingsUpdateJob?.cancel()

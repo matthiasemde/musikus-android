@@ -80,7 +80,6 @@ sealed class Screen(
         route = "editSession/{sessionId}",
     )
 
-
     data object SessionStatistics : Screen(
         route = "sessionStatistics",
     )
@@ -161,7 +160,6 @@ sealed class Screen(
             }
         }
     }
-
 
     data class DisplayData(
         val title: UiText,

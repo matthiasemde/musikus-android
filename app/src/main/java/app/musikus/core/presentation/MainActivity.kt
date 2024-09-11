@@ -20,14 +20,14 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.lifecycleScope
-import app.musikus.core.data.MIME_TYPE_DATABASE
-import app.musikus.core.data.MusikusDatabase
+import app.musikus.activesession.domain.usecase.ActiveSessionUseCases
 import app.musikus.activesession.presentation.ActiveSessionServiceActions
 import app.musikus.activesession.presentation.SessionService
-import app.musikus.activesession.domain.usecase.ActiveSessionUseCases
+import app.musikus.core.data.MIME_TYPE_DATABASE
+import app.musikus.core.data.MusikusDatabase
+import app.musikus.core.domain.TimeProvider
 import app.musikus.permissions.domain.PermissionChecker
 import app.musikus.permissions.domain.PermissionCheckerActivity
-import app.musikus.core.domain.TimeProvider
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import java.io.File
@@ -63,7 +63,6 @@ class MainActivity : PermissionCheckerActivity() {
         }
     }
 
-
     override fun onResume() {
         super.onResume()
         // remove notification if session is not running
@@ -87,15 +86,12 @@ class MainActivity : PermissionCheckerActivity() {
             } else {
                 startService(intent)
             }
-        }
-        else {
+        } else {
             Log.d("MainActivity", "Session is not running")
         }
-
     }
 
     private fun initializeExportImportLaunchers() {
-
         exportLauncher = registerForActivityResult(
             ExportDatabaseContract()
         ) { uri ->
@@ -179,11 +175,13 @@ class MainActivity : PermissionCheckerActivity() {
     }
 
     fun importDatabase() {
-        importLauncher.launch(arrayOf(
-            MIME_TYPE_DATABASE,
-            "application/vnd.sqlite3",
-            "application/x-sqlite3",
-        ))
+        importLauncher.launch(
+            arrayOf(
+                MIME_TYPE_DATABASE,
+                "application/vnd.sqlite3",
+                "application/x-sqlite3",
+            )
+        )
     }
 
     // source: https://gist.github.com/easterapps/7127ce0749cfce2edf083e55b6eecec5
@@ -206,7 +204,7 @@ private class ExportDatabaseContract : ActivityResultContracts.CreateDocument(MI
     override fun createIntent(context: Context, input: String) =
         super.createIntent(context, input).apply {
             addCategory(Intent.CATEGORY_OPENABLE)
-            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 putExtra(DocumentsContract.EXTRA_INITIAL_URI, Environment.DIRECTORY_DOWNLOADS)
             }
         }
@@ -217,7 +215,7 @@ private class ImportDatabaseContract : ActivityResultContracts.OpenDocument() {
         super.createIntent(context, input).apply {
             type = MIME_TYPE_DATABASE
             addCategory(Intent.CATEGORY_OPENABLE)
-            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 putExtra(DocumentsContract.EXTRA_INITIAL_URI, Environment.DIRECTORY_DOWNLOADS)
             }
         }

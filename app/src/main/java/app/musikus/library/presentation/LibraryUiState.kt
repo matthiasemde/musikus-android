@@ -8,13 +8,13 @@
 
 package app.musikus.library.presentation
 
-import app.musikus.core.presentation.components.TopBarUiState
 import app.musikus.core.data.LibraryFolderWithItems
-import app.musikus.library.data.daos.LibraryFolder
-import app.musikus.library.data.daos.LibraryItem
 import app.musikus.core.domain.SortDirection
 import app.musikus.core.domain.SortMode
+import app.musikus.core.presentation.components.TopBarUiState
 import app.musikus.core.presentation.utils.UiText
+import app.musikus.library.data.daos.LibraryFolder
+import app.musikus.library.data.daos.LibraryItem
 import java.time.ZonedDateTime
 import java.util.UUID
 
@@ -73,7 +73,7 @@ data class LibraryFolderDialogUiState(
 data class LibraryLibraryItemDialogUiState(
     override val mode: DialogMode,
     override val itemData: LibraryItemEditData,
-    override val folders : List<LibraryFolder>,
+    override val folders: List<LibraryFolder>,
     override val isConfirmButtonEnabled: Boolean,
 ) : LibraryItemDialogUiState
 
@@ -92,7 +92,7 @@ data class LibraryFabUiState(
     val activeFolder: LibraryFolder?,
 )
 
-data class LibraryUiState (
+data class LibraryUiState(
     val topBarUiState: LibraryTopBarUiState,
     val actionModeUiState: LibraryActionModeUiState,
     val contentUiState: LibraryContentUiState,

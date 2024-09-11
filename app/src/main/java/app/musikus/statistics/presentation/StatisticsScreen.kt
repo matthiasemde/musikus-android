@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2023 Matthias Emde
+ * Copyright (c) 2023-2024 Matthias Emde
  */
 
 package app.musikus.statistics.presentation
@@ -124,7 +124,7 @@ fun Statistics(
                             imageVector = Icons.Default.MoreVert,
                             contentDescription = stringResource(R.string.core_kebab_menu_description)
                         )
-                        MainMenu (
+                        MainMenu(
                             show = homeUiState.showMainMenu,
                             onDismiss = { homeEventHandler(HomeUiEvent.HideMainMenu) },
                             onSelection = { commonSelection ->
@@ -200,7 +200,6 @@ fun StatisticsCurrentMonth(
     uiState: StatisticsCurrentMonthUiState,
     timeProvider: TimeProvider
 ) {
-
     val labelTextStyle = MaterialTheme.typography.labelSmall
     val statsTextStyle = MaterialTheme.typography.titleMedium.copy(
         color = MaterialTheme.colorScheme.primary,
@@ -230,9 +229,11 @@ fun StatisticsCurrentMonth(
         ),
         Pair(
             UiText.StringResource(R.string.statistics_screen_current_month_per_session),
-            AnnotatedString(stringResource(R.string.core_average_sign) + " %.1f".format(
-                uiState.averageRatingPerSession
-            ))
+            AnnotatedString(
+                stringResource(R.string.core_average_sign) + " %.1f".format(
+                    uiState.averageRatingPerSession
+                )
+            )
         )
     )
 
@@ -248,14 +249,14 @@ fun StatisticsCurrentMonth(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small),
         ) {
-            currentMonthStats.forEach {(label, stat) ->
-               Column(
-                   modifier = Modifier.weight(1f),
-                   horizontalAlignment = CenterHorizontally,
-               ) {
-                   Text(text = stat, style = statsTextStyle)
-                   Text(text = label.asString(), style = labelTextStyle)
-               }
+            currentMonthStats.forEach { (label, stat) ->
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = CenterHorizontally,
+                ) {
+                    Text(text = stat, style = statsTextStyle)
+                    Text(text = label.asString(), style = labelTextStyle)
+                }
             }
         }
     }
@@ -269,10 +270,11 @@ fun StatisticsSessionsCard(
     ElevatedCard(
         modifier = Modifier.fillMaxWidth()
     ) {
-        Column(modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = navigateToSessionStatistics)
-            .padding(MaterialTheme.spacing.medium)
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = navigateToSessionStatistics)
+                .padding(MaterialTheme.spacing.medium)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -334,12 +336,15 @@ fun StatisticsSessionsCard(
                     uiState.lastSevenDayPracticeDuration.forEachIndexed { index, (day, duration) ->
                         val animatedColumnHeight by animateFloatAsState(
                             targetValue =
-                                if (maxDurationSeconds == 0L) 0f
-                                else (duration.inWholeSeconds.toFloat() / maxDurationSeconds),
+                            if (maxDurationSeconds == 0L) {
+                                0f
+                            } else {
+                                (duration.inWholeSeconds.toFloat() / maxDurationSeconds)
+                            },
                             animationSpec = tween(
                                 durationMillis = 1500,
                                 delayMillis = 100 * index
-                        ),
+                            ),
                             label = "day-animation-$index"
                         )
                         Column(
@@ -349,10 +354,10 @@ fun StatisticsSessionsCard(
                             horizontalAlignment = CenterHorizontally,
                         ) {
                             Column(
-                               modifier= Modifier.weight(1f),
-                               verticalArrangement = Bottom
+                                modifier = Modifier.weight(1f),
+                                verticalArrangement = Bottom
                             ) {
-                                if(animatedColumnHeight > 0) {
+                                if (animatedColumnHeight > 0) {
                                     Box(
                                         modifier = Modifier
                                             .fillMaxWidth()
@@ -394,14 +399,16 @@ fun StatisticsGoalsCard(
     uiState: StatisticsGoalCardUiState,
     navigateToGoalStatistics: () -> Unit,
 ) {
-    ElevatedCard(modifier = Modifier
-        .fillMaxWidth()
-        .wrapContentHeight()
-    ) {
-        Column(modifier = Modifier
+    ElevatedCard(
+        modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = navigateToGoalStatistics)
-            .padding(MaterialTheme.spacing.medium)
+            .wrapContentHeight()
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = navigateToGoalStatistics)
+                .padding(MaterialTheme.spacing.medium)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -466,7 +473,7 @@ fun StatisticsGoalsCard(
                                 label = "goal-animation-$index"
                             )
                             val color = displayData.color ?: MaterialTheme.colorScheme.primary
-                            Box{
+                            Box {
                                 CircularProgressIndicator(
                                     progress = { animatedProgress },
                                     modifier = Modifier.size(35.dp),
@@ -507,9 +514,10 @@ fun StatisticsRatingsCard(
     uiState: StatisticsRatingsCardUiState
 ) {
     ElevatedCard(modifier = Modifier.fillMaxWidth()) {
-        Column(modifier = Modifier
-            .fillMaxWidth()
-            .padding(MaterialTheme.spacing.medium)
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(MaterialTheme.spacing.medium)
         ) {
             Text(
                 text = stringResource(R.string.statistics_screen_ratings_card_title),
@@ -570,7 +578,9 @@ fun StatisticsRatingsCard(
                     x = pieChartSize / 2,
                     y = pieChartSize / 2
                 )
-                animatedAngles.zip(uiState.numOfRatingsFromOneToFive).forEachIndexed { index, (angleState, numRatings) ->
+                animatedAngles.zip(
+                    uiState.numOfRatingsFromOneToFive
+                ).forEachIndexed { index, (angleState, numRatings) ->
                     if (numRatings == 0) return@forEachIndexed
                     val angle = angleState.value
 
@@ -592,7 +602,7 @@ fun StatisticsRatingsCard(
                         style = Fill
                     )
 
-                    val lineCornerPoint =  pieChartCenter + halfSweepEdgePoint * 1.2f
+                    val lineCornerPoint = pieChartCenter + halfSweepEdgePoint * 1.2f
                     val labelOnRightSide = (startAngle + angle / 2) < 270f + 180f && (startAngle + angle / 2) > 270f
 
                     startAngle += angle
@@ -606,7 +616,6 @@ fun StatisticsRatingsCard(
                         end = lineCornerPoint,
                         strokeWidth = 1.dp.toPx()
                     )
-
 
                     val lineEndPoint = lineCornerPoint + Offset(
                         x = 24.dp.toPx() * if (labelOnRightSide) 1 else -1,

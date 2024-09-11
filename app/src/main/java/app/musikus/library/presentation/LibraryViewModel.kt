@@ -12,6 +12,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.musikus.R
 import app.musikus.core.data.Nullable
+import app.musikus.core.domain.SortDirection
+import app.musikus.core.domain.SortInfo
+import app.musikus.core.presentation.utils.UiText
+import app.musikus.library.data.LibraryFolderSortMode
+import app.musikus.library.data.LibraryItemSortMode
 import app.musikus.library.data.daos.LibraryFolder
 import app.musikus.library.data.daos.LibraryItem
 import app.musikus.library.data.entities.LibraryFolderCreationAttributes
@@ -20,11 +25,6 @@ import app.musikus.library.data.entities.LibraryItemCreationAttributes
 import app.musikus.library.data.entities.LibraryItemUpdateAttributes
 import app.musikus.library.domain.usecase.LibraryUseCases
 import app.musikus.settings.domain.usecase.UserPreferencesUseCases
-import app.musikus.core.domain.SortDirection
-import app.musikus.core.domain.SortInfo
-import app.musikus.core.presentation.utils.UiText
-import app.musikus.library.data.LibraryFolderSortMode
-import app.musikus.library.data.LibraryItemSortMode
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -59,7 +59,6 @@ class LibraryViewModel @Inject constructor(
     private val libraryUseCases: LibraryUseCases,
     private val userPreferencesUseCases: UserPreferencesUseCases,
 ) : ViewModel() {
-
 
     /** Private variables */
     private var _foldersCache = emptyList<UUID>()
@@ -113,7 +112,6 @@ class LibraryViewModel @Inject constructor(
 
     // Delete dialog
     private val _showDeleteDialog = MutableStateFlow(false)
-
 
     /** Combining imported and own flows  */
 
@@ -196,7 +194,7 @@ class LibraryViewModel @Inject constructor(
         _selectedFolderIds,
         foldersSortMenuUiState,
     ) { foldersWithItems, selectedFolders, sortMenuUiState ->
-        if(foldersWithItems.isEmpty()) return@combine null
+        if (foldersWithItems.isEmpty()) return@combine null
 
         LibraryFoldersUiState(
             foldersWithItems = foldersWithItems,
@@ -234,7 +232,7 @@ class LibraryViewModel @Inject constructor(
         _selectedItemIds,
         itemsSortMenuUiState,
     ) { items, lastPracticedDates, selectedItems, sortMenuUiState ->
-        if(items.isEmpty()) return@combine null
+        if (items.isEmpty()) return@combine null
 
         LibraryItemsUiState(
             itemsWithLastPracticedDate = items.map { item ->
@@ -273,7 +271,7 @@ class LibraryViewModel @Inject constructor(
         _folderEditData,
         _folderToEditId,
     ) { editData, folderToEditId ->
-        if(editData == null) return@combine null
+        if (editData == null) return@combine null
         val confirmButtonEnabled = editData.name.isNotBlank()
 
         LibraryFolderDialogUiState(
@@ -293,7 +291,7 @@ class LibraryViewModel @Inject constructor(
         _itemToEditId,
         foldersWithItems,
     ) { editData, itemToEditId, foldersWithItems ->
-        if(editData == null) return@combine null
+        if (editData == null) return@combine null
         val confirmButtonEnabled = editData.name.isNotBlank()
 
         LibraryLibraryItemDialogUiState(
@@ -330,7 +328,7 @@ class LibraryViewModel @Inject constructor(
         itemDialogUiState,
         deleteDialogUiState
     ) { folderDialogUiState, itemDialogUiState, deleteDialogUiState ->
-        assert (folderDialogUiState == null || itemDialogUiState == null)
+        assert(folderDialogUiState == null || itemDialogUiState == null)
         LibraryDialogUiState(
             folderDialogUiState = folderDialogUiState,
             itemDialogUiState = itemDialogUiState,
@@ -385,7 +383,7 @@ class LibraryViewModel @Inject constructor(
     )
 
     fun onUiEvent(event: LibraryUiEvent) {
-        when(event) {
+        when (event) {
             is LibraryUiEvent.BackButtonPressed -> onTopBarBackPressed()
             is LibraryUiEvent.FolderPressed -> onFolderClicked(event.folder, event.longClick)
             is LibraryUiEvent.FolderSortMenuPressed -> onFolderSortMenuChanged(_showFolderSortMenu.value.not())
@@ -410,9 +408,11 @@ class LibraryViewModel @Inject constructor(
             is LibraryUiEvent.FolderDialogConfirmed -> onFolderDialogConfirmed()
             is LibraryUiEvent.FolderDialogDismissed -> clearFolderDialog()
             is LibraryUiEvent.ItemDialogUiEvent -> {
-                when(val dialogEvent = event.dialogEvent) {
+                when (val dialogEvent = event.dialogEvent) {
                     is LibraryItemDialogUiEvent.NameChanged -> onItemDialogNameChanged(dialogEvent.name)
-                    is LibraryItemDialogUiEvent.ColorIndexChanged -> onItemDialogColorIndexChanged(dialogEvent.colorIndex)
+                    is LibraryItemDialogUiEvent.ColorIndexChanged -> onItemDialogColorIndexChanged(
+                        dialogEvent.colorIndex
+                    )
                     is LibraryItemDialogUiEvent.FolderIdChanged -> onItemDialogFolderIdChanged(dialogEvent.folderId)
                     is LibraryItemDialogUiEvent.Confirmed -> onItemDialogConfirmed()
                     is LibraryItemDialogUiEvent.Dismissed -> clearItemDialog()
@@ -421,7 +421,6 @@ class LibraryViewModel @Inject constructor(
             is LibraryUiEvent.ClearActionMode -> clearActionMode()
         }
     }
-
 
     /**
      * Mutators
@@ -441,10 +440,10 @@ class LibraryViewModel @Inject constructor(
         }
 
         // Short Click
-        if(!uiState.value.actionModeUiState.isActionMode) {
+        if (!uiState.value.actionModeUiState.isActionMode) {
             _activeFolder.update { folder }
         } else {
-            if(_selectedFolderIds.value.contains(folder.id)) {
+            if (_selectedFolderIds.value.contains(folder.id)) {
                 _selectedFolderIds.update { it - folder.id }
             } else {
                 _selectedFolderIds.update { it + folder.id }
@@ -466,7 +465,7 @@ class LibraryViewModel @Inject constructor(
         }
 
         // Short Click
-        if(!uiState.value.actionModeUiState.isActionMode) {
+        if (!uiState.value.actionModeUiState.isActionMode) {
             _itemToEditId.update { item.id }
             _itemEditData.update {
                 LibraryItemEditData(
@@ -476,7 +475,7 @@ class LibraryViewModel @Inject constructor(
                 )
             }
         } else {
-            if(_selectedItemIds.value.contains(item.id)) {
+            if (_selectedItemIds.value.contains(item.id)) {
                 _selectedItemIds.update { it - item.id }
             } else {
                 _selectedItemIds.update { it + item.id }
@@ -598,7 +597,7 @@ class LibraryViewModel @Inject constructor(
             _itemToEditId.value?.let {
                 libraryUseCases.editItem(
                     id = it,
-                    LibraryItemUpdateAttributes (
+                    LibraryItemUpdateAttributes(
                         name = itemData.name,
                         colorIndex = itemData.colorIndex,
                         libraryFolderId = Nullable(itemData.folderId),

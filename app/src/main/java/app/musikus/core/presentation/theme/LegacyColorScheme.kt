@@ -30,7 +30,6 @@ val md_grey_500 = Color(0xFF9E9E9E)
 val md_grey_600 = Color(0xFF757575)
 val md_grey_700 = Color(0xFF616161)
 
-
 private val md_theme_light_primary = primary_light
 private val md_theme_light_onPrimary = Color.White
 private val md_theme_light_primaryContainer = primary_light
@@ -122,7 +121,6 @@ val LegacyLightColorScheme = lightColorScheme(
     outlineVariant = md_theme_light_outlineVariant,
     scrim = md_theme_light_scrim,
 )
-
 
 val LegacyDarkColorScheme = darkColorScheme(
     primary = md_theme_dark_primary,

@@ -11,9 +11,11 @@ package app.musikus.goals.domain.usecase
 import app.musikus.core.data.GoalDescriptionWithInstancesAndLibraryItems
 import app.musikus.core.data.Nullable
 import app.musikus.core.data.UUIDConverter
+import app.musikus.core.domain.FakeIdProvider
+import app.musikus.core.domain.FakeTimeProvider
+import app.musikus.goals.data.FakeGoalRepository
 import app.musikus.goals.data.daos.GoalDescription
 import app.musikus.goals.data.daos.GoalInstance
-import app.musikus.library.data.daos.LibraryItem
 import app.musikus.goals.data.entities.GoalDescriptionCreationAttributes
 import app.musikus.goals.data.entities.GoalInstanceCreationAttributes
 import app.musikus.goals.data.entities.GoalPeriodUnit
@@ -21,12 +23,10 @@ import app.musikus.goals.data.entities.GoalProgressType
 import app.musikus.goals.data.entities.GoalType
 import app.musikus.goals.data.entities.InvalidGoalDescriptionException
 import app.musikus.goals.data.entities.InvalidGoalInstanceException
-import app.musikus.library.data.entities.LibraryItemCreationAttributes
-import app.musikus.goals.data.FakeGoalRepository
 import app.musikus.library.data.FakeLibraryRepository
+import app.musikus.library.data.daos.LibraryItem
+import app.musikus.library.data.entities.LibraryItemCreationAttributes
 import app.musikus.library.domain.usecase.GetAllLibraryItemsUseCase
-import app.musikus.core.domain.FakeIdProvider
-import app.musikus.core.domain.FakeTimeProvider
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
@@ -55,7 +55,6 @@ class AddGoalUseCaseTest {
     private val validInstanceCreationAttributes = GoalInstanceCreationAttributes(
         target = 1.hours,
     )
-
 
     @BeforeEach
     fun setUp() {
@@ -264,7 +263,11 @@ class AddGoalUseCaseTest {
             )
         }
 
-        assertThat(exception.message).isEqualTo("Library items must be null or empty for non-specific goals, but was [00000000-0000-0000-0000-000000000001]")
+        assertThat(
+            exception.message
+        ).isEqualTo(
+            "Library items must be null or empty for non-specific goals, but was [00000000-0000-0000-0000-000000000001]"
+        )
     }
 
     @Test

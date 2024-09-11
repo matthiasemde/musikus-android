@@ -21,7 +21,7 @@ class GetSessionsForDaysForMonthsUseCase(
     private val sessionsRepository: SessionRepository
 ) {
 
-    operator fun invoke() : Flow<List<SessionsForDaysForMonth>> {
+    operator fun invoke(): Flow<List<SessionsForDaysForMonth>> {
         return sessionsRepository.orderedSessionsWithSectionsWithLibraryItems.map { rawSessions ->
             if (rawSessions.isEmpty()) {
                 return@map emptyList()

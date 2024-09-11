@@ -20,7 +20,7 @@ data class RecorderUiState(
     val recorderState: RecorderState,
     val recordingDuration: DurationString,
     val recordings: List<RecordingListItemUiState>,
-    val currentPlaybackRawMedia: ShortArray?,   // currently played media file as raw array
+    val currentPlaybackRawMedia: ShortArray?, // currently played media file as raw array
     val dialogUiState: RecorderDialogUiState
 )
 
@@ -60,22 +60,37 @@ sealed class RecorderUiEvent {
     data object DeleteRecordingDialogDismissed : RecorderUiEvent()
     data object SaveRecordingDialogConfirmed : RecorderUiEvent()
     data object DeleteRecordingDialogConfirmed : RecorderUiEvent()
-
 }
 
 typealias RecorderUiEventHandler = (event: RecorderUiEvent) -> Unit
 
 sealed class RecorderException(message: String) : Exception(message) {
-    class NoMicrophonePermission(context: Context) : RecorderException(context.getString(R.string.recorder_exception_no_microphone_permission))
-    class NoStoragePermission(context: Context) : RecorderException(context.getString(R.string.recorder_exception_no_storage_permission))
-    class NoNotificationPermission(context: Context) : RecorderException(context.getString(R.string.recorder_exception_no_notification_permission))
+    class NoMicrophonePermission(context: Context) : RecorderException(
+        context.getString(R.string.recorder_exception_no_microphone_permission)
+    )
+    class NoStoragePermission(context: Context) : RecorderException(
+        context.getString(R.string.recorder_exception_no_storage_permission)
+    )
+    class NoNotificationPermission(context: Context) : RecorderException(
+        context.getString(R.string.recorder_exception_no_notification_permission)
+    )
 
-    class CouldNotLoadRecording(context: Context) : RecorderException(context.getString(R.string.recorder_exception_no_could_not_load))
+    class CouldNotLoadRecording(context: Context) : RecorderException(
+        context.getString(R.string.recorder_exception_no_could_not_load)
+    )
 
-    class MediaStoreInsertFailed(context: Context) : RecorderException(context.getString(R.string.recorder_exception_media_store_failed_insert))
-    class MediaStoreUpdateFailed(context: Context) : RecorderException(context.getString(R.string.recorder_exception_media_store_failed_update))
-    class SaveWithEmptyName(context: Context) : RecorderException(context.getString(R.string.recorder_exception_save_with_empty_name))
+    class MediaStoreInsertFailed(context: Context) : RecorderException(
+        context.getString(R.string.recorder_exception_media_store_failed_insert)
+    )
+    class MediaStoreUpdateFailed(context: Context) : RecorderException(
+        context.getString(R.string.recorder_exception_media_store_failed_update)
+    )
+    class SaveWithEmptyName(context: Context) : RecorderException(
+        context.getString(R.string.recorder_exception_save_with_empty_name)
+    )
 
-    class ServiceNotFound(context: Context) : RecorderException(context.getString(R.string.recorder_exception_no_service_not_found))
+    class ServiceNotFound(context: Context) : RecorderException(
+        context.getString(R.string.recorder_exception_no_service_not_found)
+    )
     data class ServiceException(val exception: RecorderServiceException) : RecorderException(exception.message)
 }

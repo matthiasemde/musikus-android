@@ -1,3 +1,11 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ *
+ * Copyright (c) 2024 Matthias Emde
+ */
+
 package app.musikus.goals.data
 
 import app.musikus.core.data.GoalDescriptionWithInstancesAndLibraryItems
@@ -26,20 +34,23 @@ class FakeGoalRepository(
     private val idProvider: IdProvider
 ) : GoalRepository {
 
-    private val _goalDescriptionWithInstancesAndLibraryItems = mutableListOf<GoalDescriptionWithInstancesAndLibraryItems>()
+    private val _goalDescriptionWithInstancesAndLibraryItems =
+        mutableListOf<GoalDescriptionWithInstancesAndLibraryItems>()
 
     private var _goalBuffer = listOf<GoalDescriptionWithInstancesAndLibraryItems>()
 
     override val currentGoals: Flow<List<GoalInstanceWithDescriptionWithLibraryItems>>
-        get() = flowOf(_goalDescriptionWithInstancesAndLibraryItems.map {
-            GoalInstanceWithDescriptionWithLibraryItems(
-                instance = it.latestInstance,
-                description = GoalDescriptionWithLibraryItems(
-                    description = it.description,
-                    libraryItems = it.libraryItems
+        get() = flowOf(
+            _goalDescriptionWithInstancesAndLibraryItems.map {
+                GoalInstanceWithDescriptionWithLibraryItems(
+                    instance = it.latestInstance,
+                    description = GoalDescriptionWithLibraryItems(
+                        description = it.description,
+                        libraryItems = it.libraryItems
+                    )
                 )
-            )
-        })
+            }
+        )
     override val allGoals: Flow<List<GoalDescriptionWithInstancesAndLibraryItems>>
         get() = flowOf(_goalDescriptionWithInstancesAndLibraryItems)
     override val lastFiveCompletedGoals: Flow<List<GoalInstanceWithDescriptionWithLibraryItems>>
@@ -227,6 +238,6 @@ class FakeGoalRepository(
     }
 
     override suspend fun withTransaction(block: suspend () -> Unit) {
-       block()
+        block()
     }
 }

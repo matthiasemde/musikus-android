@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2023 Matthias Emde
+ * Copyright (c) 2023-2024 Matthias Emde
  *
  * Parts of this software are licensed under the MIT license
  *
@@ -21,7 +21,6 @@ import androidx.room.Update
 import androidx.room.withTransaction
 import androidx.sqlite.db.SimpleSQLiteQuery
 import androidx.sqlite.db.SupportSQLiteQuery
-import app.musikus.core.presentation.Musikus.Companion.ioThread
 import app.musikus.core.data.MusikusDatabase
 import app.musikus.core.data.UUIDConverter
 import app.musikus.core.data.entities.BaseModel
@@ -37,6 +36,7 @@ import app.musikus.core.data.entities.TimestampModelCreationAttributes
 import app.musikus.core.data.entities.TimestampModelDisplayAttributes
 import app.musikus.core.data.entities.TimestampModelUpdateAttributes
 import app.musikus.core.data.toDatabaseInterpretableString
+import app.musikus.core.presentation.Musikus.Companion.ioThread
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.flow
@@ -44,7 +44,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.runBlocking
 import java.util.UUID
-
 
 /**
  * @Dao Base dao
@@ -55,7 +54,7 @@ abstract class BaseDao<
     C : BaseModelCreationAttributes,
     U : BaseModelUpdateAttributes,
     D : BaseModelDisplayAttributes
->(
+    >(
     private val tableName: String,
     private val database: MusikusDatabase,
     displayAttributes: List<String>,
@@ -64,9 +63,8 @@ abstract class BaseDao<
 
     protected val displayAttributesString = (
         listOf("id") +
-        displayAttributes
-    ).joinToString(separator = ", ")
-
+            displayAttributes
+        ).joinToString(separator = ", ")
 
     /**
      * @Insert queries
@@ -105,7 +103,6 @@ abstract class BaseDao<
         directDelete(getModels(ids))
     }
 
-
     /**
      * @Update queries
      */
@@ -128,7 +125,6 @@ abstract class BaseDao<
 
     protected open fun applyUpdateAttributes(oldModel: M, updateAttributes: U): M = oldModel
 
-
     /**
      * @RawQueries of all properties for update function
      */
@@ -144,24 +140,26 @@ abstract class BaseDao<
             SimpleSQLiteQuery(
                 query = "SELECT * FROM $tableName WHERE " +
                     "id IN (${uniqueIds.joinToString(separator = ",") { "?" }}) " +
-                    if (dependencies == null) ";"
-                    else dependencies.joinToString(separator = "") { dependentTableName ->
-                        "AND ${dependentTableName}_id IN (SELECT id FROM $dependentTableName WHERE deleted = 0) "
-                    } + ";",
+                    if (dependencies == null) {
+                        ";"
+                    } else {
+                        dependencies.joinToString(separator = "") { dependentTableName ->
+                            "AND ${dependentTableName}_id IN (SELECT id FROM $dependentTableName WHERE deleted = 0) "
+                        } + ";"
+                    },
                 uniqueIds.map { UUIDConverter().toByte(it) }.toTypedArray()
             )
         )
 
         // make sure all models were found
-        if(models.size != uniqueIds.size) {
+        if (models.size != uniqueIds.size) {
             throw IllegalArgumentException(
-                "Could not find ${tableName}(s) with the following id(s): ${uniqueIds - models.map { it.id }.toSet()}"
+                "Could not find $tableName(s) with the following id(s): ${uniqueIds - models.map { it.id }.toSet()}"
             )
         }
 
         return models
     }
-
 
     /**
      * @RawQueries for standard getters
@@ -172,24 +170,27 @@ abstract class BaseDao<
 
     protected suspend fun get(id: UUID) = get(listOf(id)).first()
 
-    protected open suspend fun get(ids: List<UUID>): List<D>  {
+    protected open suspend fun get(ids: List<UUID>): List<D> {
         val uniqueIds = ids.toSet() // TODO possibly make ids Set instead of List in the first place
         val rows = get(
             SimpleSQLiteQuery(
                 query = "SELECT $displayAttributesString FROM $tableName WHERE " +
-                        "id IN (${uniqueIds.joinToString(separator = ",") { "?" }}) " +
-                        if (dependencies == null) ";"
-                        else dependencies.joinToString(separator = "") { dependentTableName ->
+                    "id IN (${uniqueIds.joinToString(separator = ",") { "?" }}) " +
+                    if (dependencies == null) {
+                        ";"
+                    } else {
+                        dependencies.joinToString(separator = "") { dependentTableName ->
                             "AND ${dependentTableName}_id IN (SELECT id FROM $dependentTableName WHERE deleted = 0) "
-                        } + ";",
+                        } + ";"
+                    },
                 uniqueIds.map { UUIDConverter().toByte(it) }.toTypedArray()
             )
         )
 
         // make sure all rows were found
-        if(rows.size != uniqueIds.size) {
+        if (rows.size != uniqueIds.size) {
             throw IllegalArgumentException(
-                "Could not find ${tableName}(s) with the following id(s): ${uniqueIds - rows.map { it.id }.toSet()}"
+                "Could not find $tableName(s) with the following id(s): ${uniqueIds - rows.map { it.id }.toSet()}"
             )
         }
 
@@ -199,10 +200,13 @@ abstract class BaseDao<
     protected open suspend fun getAll() = get(
         SimpleSQLiteQuery(
             "SELECT $displayAttributesString FROM $tableName " +
-            if (dependencies == null) ";"
-            else "WHERE " + dependencies.joinToString(separator = "AND ") { dependentTableName ->
-                "${dependentTableName}_id IN (SELECT id FROM $dependentTableName WHERE deleted = 0) "
-            } + ";"
+                if (dependencies == null) {
+                    ";"
+                } else {
+                    "WHERE " + dependencies.joinToString(separator = "AND ") { dependentTableName ->
+                        "${dependentTableName}_id IN (SELECT id FROM $dependentTableName WHERE deleted = 0) "
+                    } + ";"
+                }
         )
     )
 
@@ -220,15 +224,19 @@ abstract class BaseDao<
         var observer: InvalidationTracker.Observer? = null
 
         return flow {
-            observer = observer ?: (object : InvalidationTracker.Observer(tableName) {
-                override fun onInvalidated(tables: Set<String>) {
-                    ioThread { runBlocking {
-                        notify.emit("invalidated")
-                    }}
+            observer = observer ?: (
+                object : InvalidationTracker.Observer(tableName) {
+                    override fun onInvalidated(tables: Set<String>) {
+                        ioThread {
+                            runBlocking {
+                                notify.emit("invalidated")
+                            } 
+                        }
+                    }
+                }.also {
+                    database.invalidationTracker.addObserver(it)
                 }
-            }.also {
-                database.invalidationTracker.addObserver(it)
-            })
+                )
 
             // emit the initial value
             emit(query())
@@ -268,7 +276,7 @@ abstract class TimestampDao<
     C : TimestampModelCreationAttributes,
     U : TimestampModelUpdateAttributes,
     D : TimestampModelDisplayAttributes
->(
+    >(
     tableName: String,
     private val database: MusikusDatabase,
     displayAttributes: List<String>,
@@ -277,7 +285,7 @@ abstract class TimestampDao<
     tableName = tableName,
     database = database,
     displayAttributes =
-        listOf("created_at", "modified_at") +
+    listOf("created_at", "modified_at") +
         displayAttributes,
     dependencies = dependencies
 ) {
@@ -312,7 +320,7 @@ abstract class SoftDeleteDao<
     C : SoftDeleteModelCreationAttributes,
     U : SoftDeleteModelUpdateAttributes,
     D : SoftDeleteModelDisplayAttributes
->(
+    >(
     private val tableName: String,
     private val database: MusikusDatabase,
     displayAttributes: List<String>
@@ -329,10 +337,12 @@ abstract class SoftDeleteDao<
     }
 
     override suspend fun delete(ids: List<UUID>) {
-        directUpdate(getModels(ids).onEach {
-            it.deleted = true
-            it.modifiedAt = database.timeProvider.now()
-        })
+        directUpdate(
+            getModels(ids).onEach {
+                it.deleted = true
+                it.modifiedAt = database.timeProvider.now()
+            }
+        )
     }
 
     suspend fun restore(id: UUID) {
@@ -340,27 +350,29 @@ abstract class SoftDeleteDao<
     }
 
     suspend fun restore(ids: List<UUID>) {
-        directUpdate(getModels(ids).onEach {
-            it.deleted = false
-            it.modifiedAt = database.timeProvider.now()
-        })
+        directUpdate(
+            getModels(ids).onEach {
+                it.deleted = false
+                it.modifiedAt = database.timeProvider.now()
+            }
+        )
     }
 
-    override suspend fun get(ids: List<UUID>) : List<D> {
+    override suspend fun get(ids: List<UUID>): List<D> {
         val uniqueIds = ids.toSet() // TODO possibly make ids Set instead of List in the first place
         val rows = get(
             SimpleSQLiteQuery(
                 query = "SELECT ${super.displayAttributesString} FROM $tableName WHERE " +
-                        "id IN (${uniqueIds.joinToString(separator = ",") { "?" }}) " +
-                        "AND deleted=0;",
+                    "id IN (${uniqueIds.joinToString(separator = ",") { "?" }}) " +
+                    "AND deleted=0;",
                 uniqueIds.map { UUIDConverter().toByte(it) }.toTypedArray()
             )
         )
 
         // make sure all rows were found
-        if(rows.size != uniqueIds.size) {
+        if (rows.size != uniqueIds.size) {
             throw IllegalArgumentException(
-                "Could not find ${tableName}(s) with the following id(s): ${uniqueIds - rows.map { it.id }.toSet()}"
+                "Could not find $tableName(s) with the following id(s): ${uniqueIds - rows.map { it.id }.toSet()}"
             )
         }
 
@@ -374,11 +386,13 @@ abstract class SoftDeleteDao<
     @RawQuery
     abstract suspend fun clean(
         query: SimpleSQLiteQuery = SimpleSQLiteQuery(
-            query = ("DELETE FROM $tableName WHERE " +
-                "deleted=1 " +
-                "AND (datetime(SUBSTR(modified_at, 1, INSTR(modified_at, '[') - 1)) < " +
+            query = (
+                "DELETE FROM $tableName WHERE " +
+                    "deleted=1 " +
+                    "AND (datetime(SUBSTR(modified_at, 1, INSTR(modified_at, '[') - 1)) < " +
                     "datetime('${database.timeProvider.now().toDatabaseInterpretableString()}', '-1 month')" +
-                    ");")
+                    ");"
+                )
         )
-    ) : Int
+    ): Int
 }

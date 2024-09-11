@@ -28,7 +28,6 @@ sealed class SelectionSpinnerOption(val name: UiText)
 class UUIDSelectionSpinnerOption(val id: UUID?, name: UiText) : SelectionSpinnerOption(name)
 class IntSelectionSpinnerOption(val id: Int?, name: UiText) : SelectionSpinnerOption(name)
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SelectionSpinner(
@@ -45,8 +44,10 @@ fun SelectionSpinner(
     onExpandedChange: (Boolean) -> Unit,
     onSelectedChange: (SelectionSpinnerOption) -> Unit
 ) {
-    if(selected == null && (label == null && placeholder == null) ) {
-        throw IllegalArgumentException("SelectionSpinner needs either a label or a placeholder if no option is selected")
+    if (selected == null && (label == null && placeholder == null)) {
+        throw IllegalArgumentException(
+            "SelectionSpinner needs either a label or a placeholder if no option is selected"
+        )
     }
 
     ExposedDropdownMenuBox(
@@ -76,12 +77,11 @@ fun SelectionSpinner(
                 expanded = expanded,
                 onDismissRequest = { onExpandedChange(false) },
             ) {
-
                 val scrollState = rememberScrollState()
                 val singleDropdownItemHeight = 48.dp
                 val totalDropDownMenuHeight = (
-                        singleDropdownItemHeight * (options.size + if(specialOption != null) 1 else 0)
-                ).coerceAtMost(220.dp)
+                    singleDropdownItemHeight * (options.size + if (specialOption != null) 1 else 0)
+                    ).coerceAtMost(220.dp)
                 val totalDropDownMenuHeightInPx = with(LocalDensity.current) { totalDropDownMenuHeight.toPx() }
 
                 val scrollBarShowing = scrollState.maxValue > 0
@@ -95,18 +95,18 @@ fun SelectionSpinner(
                         }
                 ) {
                     specialOption?.let {
-                            DropdownMenuItem(
-                                modifier = Modifier
-                                    .conditional(scrollBarShowing) { padding(end = 12.dp) }
-                                    .height(singleDropdownItemHeight - 2.dp),
-                                text = { Text(text = it.name.asString()) },
-                                onClick = { onSelectedChange(it) }
-                            )
-                            HorizontalDivider(
-                                Modifier
-                                    .conditional(scrollBarShowing) { padding(end = 12.dp) },
-                                thickness = Dp.Hairline
-                            )
+                        DropdownMenuItem(
+                            modifier = Modifier
+                                .conditional(scrollBarShowing) { padding(end = 12.dp) }
+                                .height(singleDropdownItemHeight - 2.dp),
+                            text = { Text(text = it.name.asString()) },
+                            onClick = { onSelectedChange(it) }
+                        )
+                        HorizontalDivider(
+                            Modifier
+                                .conditional(scrollBarShowing) { padding(end = 12.dp) },
+                            thickness = Dp.Hairline
+                        )
                     }
                     options.forEach { option ->
                         DropdownMenuItem(

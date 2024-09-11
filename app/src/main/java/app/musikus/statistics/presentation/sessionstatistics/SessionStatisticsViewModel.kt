@@ -83,7 +83,7 @@ enum class SessionStatisticsChartType : EnumWithLabel, EnumWithIcon {
     };
 
     fun invert(): SessionStatisticsChartType {
-        return when(this) {
+        return when (this) {
             PIE -> BAR
             BAR -> PIE
         }
@@ -108,7 +108,6 @@ data class TabWithTimeframeWithSections(
     val tabWithTimeframe: TabWithTimeframe,
     val sections: List<Pair<ZonedDateTime, List<SectionWithLibraryItem>>>
 )
-
 
 data class SessionStatisticsUiState(
     val topBarUiState: SessionsStatisticsTopBarUiState,
@@ -193,7 +192,7 @@ class SessionStatisticsViewModel @Inject constructor(
     private val _selectedTabWithTimeframe = MutableStateFlow(
         TabWithTimeframe(
             SessionStatisticsTab.DEFAULT,
-            when(SessionStatisticsTab.DEFAULT) {
+            when (SessionStatisticsTab.DEFAULT) {
                 SessionStatisticsTab.DAYS ->
                     timeProvider.getStartOfDay().minusDays(6) to timeProvider.getEndOfDay()
                 SessionStatisticsTab.WEEKS ->
@@ -211,22 +210,22 @@ class SessionStatisticsViewModel @Inject constructor(
     @OptIn(ExperimentalCoroutinesApi::class)
     private val tabWithTimeframeWithSessions =
         _selectedTabWithTimeframe.flatMapLatest { tabWithTimeframe ->
-        sessionsUseCases.getInTimeframe(tabWithTimeframe.timeframe).map {
-            TabWithTimeframeWithSessions(
-                tabWithTimeframe = tabWithTimeframe,
-                sessions = it
-            )
-        }
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = TabWithTimeframeWithSessions(
-            tabWithTimeframe = _selectedTabWithTimeframe.value,
-            sessions = emptyList()
-        ),
-    )
+            sessionsUseCases.getInTimeframe(tabWithTimeframe.timeframe).map {
+                TabWithTimeframeWithSessions(
+                    tabWithTimeframe = tabWithTimeframe,
+                    sessions = it
+                )
+            }
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = TabWithTimeframeWithSessions(
+                tabWithTimeframe = _selectedTabWithTimeframe.value,
+                sessions = emptyList()
+            ),
+        )
 
-    private val tabWithTimeframeWithFilteredSections = combine (
+    private val tabWithTimeframeWithFilteredSections = combine(
         tabWithTimeframeWithSessions,
         _deselectedLibraryItems
     ) { (tabWithFrame, sessions), deselectedLibraryItems ->
@@ -270,7 +269,7 @@ class SessionStatisticsViewModel @Inject constructor(
             itemSortMode as LibraryItemSortMode,
             itemSortDirection
         ).map { item ->
-            Triple (
+            Triple(
                 item,
                 item !in deselectedItems,
                 getDurationString(
@@ -290,9 +289,9 @@ class SessionStatisticsViewModel @Inject constructor(
         tabWithTimeframeWithFilteredSections,
         itemsSortInfo,
     ) {
-        chartType,
-        (tabWithTimeframe ,timestampAndFilteredSections),
-        (itemSortMode, itemSortDirection) ->
+            chartType,
+            (tabWithTimeframe, timestampAndFilteredSections),
+            (itemSortMode, itemSortDirection) ->
 
         if (chartType != SessionStatisticsChartType.BAR) return@combine null
 
@@ -300,30 +299,30 @@ class SessionStatisticsViewModel @Inject constructor(
         val (_, timeframeEnd) = timeframe
 
         val timeframes = (0L..6L).reversed().map {
-            when(selectedTab) {
+            when (selectedTab) {
                 SessionStatisticsTab.DAYS ->
                     timeProvider.getStartOfDay(dateTime = timeframeEnd.minusSeconds(1)).minusDays(it) to
-                    timeProvider.getEndOfDay(dateTime = timeframeEnd.minusSeconds(1)).minusDays(it)
+                        timeProvider.getEndOfDay(dateTime = timeframeEnd.minusSeconds(1)).minusDays(it)
                 SessionStatisticsTab.WEEKS ->
                     timeProvider.getStartOfWeek(dateTime = timeframeEnd.minusSeconds(1)).minusWeeks(it) to
-                    timeProvider.getEndOfWeek(dateTime = timeframeEnd.minusSeconds(1)).minusWeeks(it)
+                        timeProvider.getEndOfWeek(dateTime = timeframeEnd.minusSeconds(1)).minusWeeks(it)
                 SessionStatisticsTab.MONTHS ->
                     timeProvider.getStartOfMonth(dateTime = timeframeEnd.minusSeconds(1)).minusMonths(it) to
-                    timeProvider.getEndOfMonth(dateTime = timeframeEnd.minusSeconds(1)).minusMonths(it)
+                        timeProvider.getEndOfMonth(dateTime = timeframeEnd.minusSeconds(1)).minusMonths(it)
             }
         }
 
         val specificDateToSections = timestampAndFilteredSections.groupBy { (timestamp, _) ->
-            when(selectedTab) {
+            when (selectedTab) {
                 SessionStatisticsTab.DAYS -> timestamp.specificDay
                 SessionStatisticsTab.WEEKS -> timestamp.specificWeek
                 SessionStatisticsTab.MONTHS -> timestamp.specificMonth
             }
-        }.mapValues { (_, list) -> list.flatMap {(_, sections) -> sections } }
+        }.mapValues { (_, list) -> list.flatMap { (_, sections) -> sections } }
 
         val barData = timeframes.map { (start, end) ->
             val sectionsInBar = specificDateToSections[
-                when(selectedTab) {
+                when (selectedTab) {
                     SessionStatisticsTab.DAYS -> start.specificDay
                     SessionStatisticsTab.WEEKS -> start.specificWeek
                     SessionStatisticsTab.MONTHS -> start.specificMonth
@@ -337,7 +336,7 @@ class SessionStatisticsViewModel @Inject constructor(
                 }
 
             BarChartDatum(
-                label = when(selectedTab) {
+                label = when (selectedTab) {
                     SessionStatisticsTab.DAYS -> start.musikusFormat(DateFormat.WEEKDAY_ABBREVIATED)
                     SessionStatisticsTab.WEEKS -> "${start.dayOfMonth}-${end.minusSeconds(1).dayOfMonth}"
                     SessionStatisticsTab.MONTHS -> start.musikusFormat(DateFormat.MONTH_ABBREVIATED)
@@ -393,12 +392,16 @@ class SessionStatisticsViewModel @Inject constructor(
     private val pieChartUiState = pieChartData.flatMapLatest { chartData ->
         if (chartData == null) {
             return@flatMapLatest flow {
-                if(_pieChartShowing) {
-                    emit(_pieChartStateBuffer?.let { it.copy(
-                        chartData = it.chartData.copy(
-                            libraryItemToDuration = emptyMap(),
-                        )
-                    )})
+                if (_pieChartShowing) {
+                    emit(
+                        _pieChartStateBuffer?.let {
+                            it.copy(
+                                chartData = it.chartData.copy(
+                                    libraryItemToDuration = emptyMap(),
+                                )
+                            )
+                        }
+                    )
                     _pieChartShowing = false
                     delay(700)
                 }
@@ -410,12 +413,12 @@ class SessionStatisticsViewModel @Inject constructor(
             if (!_pieChartShowing) {
                 emit(
                     SessionStatisticsPieChartUiState(
-                    chartData = PieChartData(
-                        libraryItemToDuration = emptyMap(),
-                        itemSortMode = LibraryItemSortMode.DEFAULT,
-                        itemSortDirection = SortDirection.DEFAULT
+                        chartData = PieChartData(
+                            libraryItemToDuration = emptyMap(),
+                            itemSortMode = LibraryItemSortMode.DEFAULT,
+                            itemSortDirection = SortDirection.DEFAULT
+                        )
                     )
-                )
                 )
                 _pieChartShowing = true
                 _pieChartStateBuffer = SessionStatisticsPieChartUiState(chartData)
@@ -434,14 +437,20 @@ class SessionStatisticsViewModel @Inject constructor(
         if (chartData == null) {
             return@flatMapLatest flow {
                 if (_barChartShowing) {
-                    emit(_barChartStateBuffer?.let { it.copy(
-                        chartData = it.chartData.copy(
-                            barData = it.chartData.barData.map { bar -> bar.copy(
-                                libraryItemsToDuration = emptyMap(),
-                                totalDuration = 0.seconds,
-                            )},
-                        )
-                    )})
+                    emit(
+                        _barChartStateBuffer?.let {
+                            it.copy(
+                                chartData = it.chartData.copy(
+                                    barData = it.chartData.barData.map { bar ->
+                                        bar.copy(
+                                            libraryItemsToDuration = emptyMap(),
+                                            totalDuration = 0.seconds,
+                                        )
+                                    },
+                                )
+                            )
+                        }
+                    )
                     _barChartShowing = false
                     delay(700)
                 }
@@ -493,11 +502,11 @@ class SessionStatisticsViewModel @Inject constructor(
         pieChartUiState,
         sortedLibraryItemsWithSelectionAndDuration
     ) {
-        (selectedTab, _),
-        headerUiState,
-        barChartUiState,
-        pieChartUiState,
-        libraryItemsWithSelectionAndDuration ->
+            (selectedTab, _),
+            headerUiState,
+            barChartUiState,
+            pieChartUiState,
+            libraryItemsWithSelectionAndDuration ->
 
         SessionStatisticsContentUiState(
             selectedTab = selectedTab,
@@ -551,7 +560,7 @@ class SessionStatisticsViewModel @Inject constructor(
 
     fun onChartTypeButtonClicked() {
         _chartType.update {
-            when(_chartType.value) {
+            when (_chartType.value) {
                 SessionStatisticsChartType.BAR -> SessionStatisticsChartType.PIE
                 SessionStatisticsChartType.PIE -> SessionStatisticsChartType.BAR
             }
@@ -565,7 +574,7 @@ class SessionStatisticsViewModel @Inject constructor(
 
             TabWithTimeframe(
                 tab = selectedTab,
-                timeframe = when(selectedTab) {
+                timeframe = when (selectedTab) {
                     SessionStatisticsTab.DAYS -> {
                         val endOfToday = timeProvider.getEndOfDay()
                         var newEnd = end
@@ -596,33 +605,33 @@ class SessionStatisticsViewModel @Inject constructor(
     }
 
     fun onSeekForwardClicked() {
-        _selectedTabWithTimeframe.update { (tab , timeframe) ->
+        _selectedTabWithTimeframe.update { (tab, timeframe) ->
             val (_, end) = timeframe
 
             TabWithTimeframe(
                 tab = tab,
-                timeframe = when(tab) {
+                timeframe = when (tab) {
                     SessionStatisticsTab.DAYS -> {
                         val endOfToday = timeProvider.getEndOfDay()
                         var newEnd = end.plusDays(7)
-                        if(newEnd > endOfToday) {
-                           newEnd = endOfToday
+                        if (newEnd > endOfToday) {
+                            newEnd = endOfToday
                         }
                         timeProvider.getStartOfDay(dateTime = newEnd.minusSeconds(1)).minusDays(6) to newEnd
                     }
                     SessionStatisticsTab.WEEKS -> {
                         val endOfThisWeek = timeProvider.getEndOfWeek()
                         var newEnd = end.plusWeeks(7)
-                        if(newEnd > endOfThisWeek) {
-                           newEnd = endOfThisWeek
+                        if (newEnd > endOfThisWeek) {
+                            newEnd = endOfThisWeek
                         }
                         timeProvider.getStartOfWeek(dateTime = newEnd.minusSeconds(1)).minusWeeks(6) to newEnd
                     }
                     SessionStatisticsTab.MONTHS -> {
                         val endOfThisMonth = timeProvider.getEndOfMonth()
                         var newEnd = end.plusMonths(7)
-                        if(newEnd > endOfThisMonth) {
-                           newEnd = endOfThisMonth
+                        if (newEnd > endOfThisMonth) {
+                            newEnd = endOfThisMonth
                         }
                         timeProvider.getStartOfMonth(dateTime = newEnd.minusSeconds(1)).minusMonths(6) to newEnd
                     }
@@ -637,24 +646,24 @@ class SessionStatisticsViewModel @Inject constructor(
 
             TabWithTimeframe(
                 tab = tab,
-                timeframe = when(tab) {
+                timeframe = when (tab) {
                     SessionStatisticsTab.DAYS -> {
                         var newStart = start.minusDays(7)
-                        if(newStart < release) {
+                        if (newStart < release) {
                             newStart = release
                         }
                         newStart to timeProvider.getEndOfDay(dateTime = newStart).plusDays(6)
                     }
                     SessionStatisticsTab.WEEKS -> {
                         var newStart = start.minusWeeks(7)
-                        if(newStart < release) {
+                        if (newStart < release) {
                             newStart = release
                         }
                         newStart to timeProvider.getEndOfWeek(dateTime = newStart).plusWeeks(6)
                     }
                     SessionStatisticsTab.MONTHS -> {
                         var newStart = start.minusMonths(7)
-                        if(newStart < release) {
+                        if (newStart < release) {
                             newStart = release
                         }
                         newStart to timeProvider.getEndOfMonth(dateTime = newStart).plusMonths(6)
@@ -666,8 +675,11 @@ class SessionStatisticsViewModel @Inject constructor(
 
     fun onLibraryItemCheckboxClicked(libraryItem: LibraryItem) {
         _deselectedLibraryItems.update {
-            if (libraryItem in it) it - libraryItem
-            else it + libraryItem
+            if (libraryItem in it) {
+                it - libraryItem
+            } else {
+                it + libraryItem
+            }
         }
     }
 }

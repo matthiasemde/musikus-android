@@ -106,7 +106,7 @@ fun SessionsScreen(
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 icon = {
-                    if(mainUiState.isSessionRunning) {
+                    if (mainUiState.isSessionRunning) {
                         Icon(
                             imageVector = Icons.Default.KeyboardArrowUp,
                             contentDescription = stringResource(id = R.string.sessions_screen_fab_resume)
@@ -119,16 +119,24 @@ fun SessionsScreen(
                     }
                 },
                 text = {
-                    Text(text = stringResource(id = if(mainUiState.isSessionRunning)
-                        R.string.sessions_screen_fab_resume else
-                        R.string.sessions_screen_fab
-                    ))
+                    Text(
+                        text = stringResource(
+                            id = if (mainUiState.isSessionRunning) {
+                                R.string.sessions_screen_fab_resume
+                            } else {
+                                R.string.sessions_screen_fab
+                            }
+                        )
+                    )
                 },
                 onClick = { navigateTo(Screen.ActiveSession) },
                 expanded = fabExpanded,
                 containerColor =
-                if (mainUiState.isSessionRunning) MaterialTheme.colorScheme.primary
-                else MaterialTheme.colorScheme.primaryContainer
+                if (mainUiState.isSessionRunning) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.primaryContainer
+                }
             )
         },
         topBar = {
@@ -137,12 +145,12 @@ fun SessionsScreen(
                 title = { Text(text = topBarUiState.title.asString()) },
                 scrollBehavior = scrollBehavior,
                 actions = {
-                    IconButton(onClick = { homeEventHandler(HomeUiEvent.ShowMainMenu) } ) {
+                    IconButton(onClick = { homeEventHandler(HomeUiEvent.ShowMainMenu) }) {
                         Icon(
                             imageVector = Icons.Default.MoreVert,
                             contentDescription = stringResource(id = R.string.core_kebab_menu_description)
                         )
-                        MainMenu (
+                        MainMenu(
                             show = homeUiState.showMainMenu,
                             onDismiss = { homeEventHandler(HomeUiEvent.HideMainMenu) },
                             onSelection = { commonSelection ->
@@ -160,7 +168,7 @@ fun SessionsScreen(
 
             // Action bar
             val actionModeUiState = uiState.actionModeUiState
-            if(actionModeUiState.isActionMode) {
+            if (actionModeUiState.isActionMode) {
                 ActionBar(
                     numSelectedItems = actionModeUiState.numberOfSelections,
                     onDismissHandler = { eventHandler(SessionsUiEvent.ClearActionMode) },
@@ -188,7 +196,7 @@ fun SessionsScreen(
             ) {
                 contentUiState.monthData.forEach { monthDatum ->
                     item {
-                        Row (
+                        Row(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .animateItemPlacement(),
@@ -239,7 +247,6 @@ fun SessionsScreen(
                 }
             }
 
-
             // Show hint if there are no sessions
             if (contentUiState.showHint) {
                 Box(
@@ -256,7 +263,6 @@ fun SessionsScreen(
                 }
             }
 
-
             /**
              *  ---------------------- Dialogs ----------------------
              */
@@ -264,7 +270,7 @@ fun SessionsScreen(
             // Delete session dialog
             val deleteDialogUiState = uiState.deleteDialogUiState
 
-            if(deleteDialogUiState != null) {
+            if (deleteDialogUiState != null) {
                 val snackbarMessage = stringResource(id = R.string.sessions_screen_snackbar_deleted)
 
                 DeleteConfirmationBottomSheet(
@@ -283,9 +289,10 @@ fun SessionsScreen(
                         eventHandler(SessionsUiEvent.DeleteDialogConfirmed)
                         mainEventHandler(
                             MainUiEvent.ShowSnackbar(
-                            message = snackbarMessage,
-                            onUndo = { eventHandler(SessionsUiEvent.UndoButtonPressed) }
-                        ))
+                                message = snackbarMessage,
+                                onUndo = { eventHandler(SessionsUiEvent.UndoButtonPressed) }
+                            )
+                        )
                     }
                 )
             }

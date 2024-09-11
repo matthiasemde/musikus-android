@@ -69,14 +69,15 @@ class PermissionChecker(
 
         // if there are no permissions requested, or all permissions are already granted, return success
         if (permissions.isEmpty() || permissions.all {
-            context.checkSelfPermission(it) == PackageManager.PERMISSION_GRANTED
-        }) {
+                context.checkSelfPermission(it) == PackageManager.PERMISSION_GRANTED
+            }
+        ) {
             return Result.success(Unit)
         }
 
         permissionCheckLock.lock()
 
-        val result =  try {
+        val result = try {
             val result: PermissionResult = withContext(applicationScope.coroutineContext) {
                 val result: PermissionResult = suspendCancellableCoroutine { coroutine ->
                     resultCallback = { permissionResult ->

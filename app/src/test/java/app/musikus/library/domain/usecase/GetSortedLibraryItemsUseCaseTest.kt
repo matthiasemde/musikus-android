@@ -31,7 +31,6 @@ import org.junit.jupiter.api.Test
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
 
-
 class GetSortedLibraryItemsUseCaseTest {
     private lateinit var fakeTimeProvider: FakeTimeProvider
     private lateinit var fakeIdProvider: FakeIdProvider
@@ -76,9 +75,11 @@ class GetSortedLibraryItemsUseCaseTest {
 
             itemCreationAttributes.forEach {
                 fakeLibraryRepository.addItem(it)
-                fakeLibraryRepository.addItem(it.copy(
-                    libraryFolderId = Nullable(UUIDConverter.fromInt(1))
-                ))
+                fakeLibraryRepository.addItem(
+                    it.copy(
+                        libraryFolderId = Nullable(UUIDConverter.fromInt(1))
+                    )
+                )
                 fakeTimeProvider.advanceTimeBy(1.seconds) // necessary to ensure that the timestamps are different
             }
 

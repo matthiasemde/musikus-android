@@ -3,8 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2024 Michael Prommersberger
- *
+ * Copyright (c) 2024 Michael Prommersberger, Matthias Emde
  */
 
 package app.musikus.core.presentation.components
@@ -35,7 +34,6 @@ import androidx.compose.ui.draw.clip
 import app.musikus.core.presentation.theme.spacing
 import kotlinx.coroutines.delay
 
-
 /**
  * A container that allows the content to be swiped away.
  *
@@ -59,8 +57,8 @@ fun SwipeToDeleteContainer(
     ) {
         SwipeToDismissBox(
             state = state,
-            enableDismissFromEndToStart = true,     // <-<-<-
-            enableDismissFromStartToEnd = false,    // ->->-> (deactivate)
+            enableDismissFromEndToStart = true, // <-<-<-
+            enableDismissFromStartToEnd = false, // ->->-> (deactivate)
             backgroundContent = {
                 SwipeToDeleteBackground(dismissState = state)
             }
@@ -70,14 +68,13 @@ fun SwipeToDeleteContainer(
     }
 
     // actually delete the element from the list (business logic)
-    LaunchedEffect(key1 = deleted){
+    LaunchedEffect(key1 = deleted) {
         if (state.targetValue == SwipeToDismissBoxValue.EndToStart) {
             delay(animationDuration.toLong())
             onDeleted()
         }
     }
 }
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

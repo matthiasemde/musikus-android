@@ -1,3 +1,11 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ *
+ * Copyright (c) 2024 Matthias Emde
+ */
+
 package app.musikus.goals.domain.usecase
 
 import app.musikus.core.data.Nullable
@@ -12,10 +20,10 @@ import app.musikus.goals.data.entities.GoalProgressType
 import app.musikus.goals.data.entities.GoalType
 import app.musikus.library.data.FakeLibraryRepository
 import app.musikus.library.data.entities.LibraryItemCreationAttributes
+import app.musikus.sessions.data.FakeSessionRepository
 import app.musikus.sessions.data.entities.SectionCreationAttributes
 import app.musikus.sessions.data.entities.SessionCreationAttributes
 import app.musikus.sessions.domain.usecase.GetSessionsInTimeframeUseCase
-import app.musikus.sessions.data.FakeSessionRepository
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -29,7 +37,6 @@ import kotlin.time.toJavaDuration
 
 class CalculateGoalProgressUseCaseTest {
 
-
     private lateinit var fakeLibraryRepository: FakeLibraryRepository
     private lateinit var fakeSessionRepository: FakeSessionRepository
     private lateinit var fakeGoalRepository: FakeGoalRepository
@@ -39,7 +46,6 @@ class CalculateGoalProgressUseCaseTest {
 
     @BeforeEach
     fun setUp() {
-
         val fakeTimeProvider = FakeTimeProvider()
         val fakeIdProvider = FakeIdProvider()
 
@@ -64,15 +70,14 @@ class CalculateGoalProgressUseCaseTest {
             timeProvider = fakeTimeProvider
         )
 
-
         // Set up test data
         runBlocking {
             fakeLibraryRepository.addItem(
                 LibraryItemCreationAttributes(
-                name = "Test Item 1",
-                colorIndex = 5,
-                libraryFolderId = Nullable(null)
-            )
+                    name = "Test Item 1",
+                    colorIndex = 5,
+                    libraryFolderId = Nullable(null)
+                )
             )
         }
     }
@@ -148,10 +153,10 @@ class CalculateGoalProgressUseCaseTest {
     fun `calculate progress for item-specific goal`() = runTest {
         fakeLibraryRepository.addItem(
             LibraryItemCreationAttributes(
-            name = "Test Item 2",
-            colorIndex = 5,
-            libraryFolderId = Nullable(null)
-        )
+                name = "Test Item 2",
+                colorIndex = 5,
+                libraryFolderId = Nullable(null)
+            )
         )
 
         fakeGoalRepository.addNewGoal(

@@ -34,10 +34,10 @@ import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
-import app.musikus.library.data.daos.LibraryItem
+import app.musikus.core.presentation.theme.libraryItemColors
 import app.musikus.core.presentation.utils.DurationFormat
 import app.musikus.core.presentation.utils.getDurationString
-import app.musikus.core.presentation.theme.libraryItemColors
+import app.musikus.library.data.daos.LibraryItem
 import app.musikus.library.data.sorted
 import kotlinx.coroutines.launch
 import kotlin.time.Duration
@@ -46,13 +46,14 @@ import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.times
 
-data class ScaleLineData (
+data class ScaleLineData(
     val label: TextLayoutResult,
     val duration: Duration,
     val lineColor: Color,
     val labelColor: Color,
     val target: Boolean = false,
 )
+
 @Composable
 fun SessionStatisticsBarChart(
     uiState: SessionStatisticsBarChartUiState
@@ -75,10 +76,9 @@ fun SessionStatisticsBarChart(
     )
     val dashedLineEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f)
 
-
     val noData = barData.all { barDatum ->
         barDatum.libraryItemsToDuration.isEmpty() ||
-                barDatum.libraryItemsToDuration.values.all { it == 0.seconds }
+            barDatum.libraryItemsToDuration.values.all { it == 0.seconds }
     }
 
     val firstComposition = remember { mutableStateOf(true) }
@@ -136,7 +136,6 @@ fun SessionStatisticsBarChart(
     }
 
     val scaleLinesWithAnimatedColor = remember(newScaleLines) {
-
         (newScaleLines + scaleLines.keys)
             .distinct()
             .onEach { scaleLine ->
@@ -151,7 +150,8 @@ fun SessionStatisticsBarChart(
                         targetValue = targetOpacity,
                         animationSpec = tween(
                             delayMillis = 250,
-                           durationMillis = 250),
+                            durationMillis = 250
+                        ),
                     )
 
                     if (animationResult.endReason == AnimationEndReason.Finished && targetOpacity == 0f) {
@@ -228,10 +228,13 @@ fun SessionStatisticsBarChart(
     val animatedBarMaxDurationForBars = barData.mapIndexed { barIndex, barDatum ->
         animateFloatAsState(
             targetValue =
-            if (animatedChartMaxDuration == 0f) 0f
-            else barDatum.totalDuration.inWholeSeconds.toFloat(),
+            if (animatedChartMaxDuration == 0f) {
+                0f
+            } else {
+                barDatum.totalDuration.inWholeSeconds.toFloat()
+            },
             animationSpec = tween(durationMillis = 1000),
-            label = "bar-chart-max-duration-animation-${barIndex}",
+            label = "bar-chart-max-duration-animation-$barIndex",
         ).value
     }
 
@@ -256,7 +259,7 @@ fun SessionStatisticsBarChart(
         scaleLinesWithAnimatedColor.forEach { scaleLineData ->
             val lineHeight =
                 (size.height - yZero) -
-                (yMax * (scaleLineData.duration.inWholeSeconds.toFloat() / animatedChartMaxDuration))
+                    (yMax * (scaleLineData.duration.inWholeSeconds.toFloat() / animatedChartMaxDuration))
             drawLine(
                 color = scaleLineData.lineColor,
                 start = Offset(
@@ -286,11 +289,11 @@ fun SessionStatisticsBarChart(
                 val (sortedItemsWithAnimatedDuration, animatedBarMaxDuration) = pair
                 val leftEdge =
                     paddingLeft.toPx() +
-                    spacingInPx / 2 +
-                    barIndex * (columnThicknessInPx + spacingInPx)
+                        spacingInPx / 2 +
+                        barIndex * (columnThicknessInPx + spacingInPx)
                 val rightEdge = leftEdge + columnThicknessInPx
 
-                val animatedAccumulatedDurations = sortedItemsWithAnimatedDuration.runningFold (
+                val animatedAccumulatedDurations = sortedItemsWithAnimatedDuration.runningFold(
                     initial = 0f,
                     operation = { start, (_, duration) ->
                         start + duration.value
@@ -300,22 +303,28 @@ fun SessionStatisticsBarChart(
                 val animatedTotalAccumulatedDuration = animatedAccumulatedDurations.last()
 
                 val animatedBarHeight =
-                    if (animatedChartMaxDuration == 0f) 0f
-                    else
+                    if (animatedChartMaxDuration == 0f) {
+                        0f
+                    } else {
                         (
                             (animatedBarMaxDuration / animatedChartMaxDuration) *
                                 (yMax) *
                                 animatedOpenCloseScaler
-                        )
+                            )
+                    }
 
                 val animatedStartAndSegmentHeights = sortedItemsWithAnimatedDuration
                     .zip(animatedAccumulatedDurations.dropLast(1))
                     .map { (pair, accumulatedDuration) ->
                         val (item, duration) = pair
-                        item to if (animatedTotalAccumulatedDuration == 0f) Pair(0f, 0f) else Pair(
-                            accumulatedDuration / animatedTotalAccumulatedDuration * animatedBarHeight + (yZero + columnYOffset),
-                            duration.value / animatedTotalAccumulatedDuration * animatedBarHeight
-                        )
+                        item to if (animatedTotalAccumulatedDuration == 0f) {
+                            Pair(0f, 0f)
+                        } else {
+                            Pair(
+                                accumulatedDuration / animatedTotalAccumulatedDuration * animatedBarHeight + (yZero + columnYOffset),
+                                duration.value / animatedTotalAccumulatedDuration * animatedBarHeight
+                            )
+                        }
                     }
 
                 animatedStartAndSegmentHeights.forEach { (item, pair) ->

@@ -1,3 +1,11 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ *
+ * Copyright (c) 2024 Matthias Emde
+ */
+
 package app.musikus.sessions.domain.usecase
 
 import app.musikus.core.data.Nullable
@@ -46,7 +54,6 @@ class GetSessionsForDaysForMonthsUseCaseTest {
             fakeIdProvider
         )
 
-
         /** SUT */
 
         getSessionsForDaysForMonths = GetSessionsForDaysForMonthsUseCase(
@@ -56,10 +63,10 @@ class GetSessionsForDaysForMonthsUseCaseTest {
         runBlocking {
             fakeLibraryRepository.addItem(
                 LibraryItemCreationAttributes(
-                name = "Test item 1",
-                colorIndex = 5,
-                libraryFolderId = Nullable(null)
-            )
+                    name = "Test item 1",
+                    colorIndex = 5,
+                    libraryFolderId = Nullable(null)
+                )
             )
         }
     }
@@ -119,7 +126,6 @@ class GetSessionsForDaysForMonthsUseCaseTest {
             )
         )
 
-
         // add another session overlapping the first one
         fakeSessionRepository.add(
             sessionCreationAttributes = sessionCreationAttributes,
@@ -153,7 +159,7 @@ class GetSessionsForDaysForMonthsUseCaseTest {
             customOrder = null
         )
 
-        val expectedSession : (Int) -> Session = { id ->
+        val expectedSession: (Int) -> Session = { id ->
             Session(
                 id = UUIDConverter.fromInt(id),
                 createdAt = FakeTimeProvider.START_TIME,
@@ -164,118 +170,120 @@ class GetSessionsForDaysForMonthsUseCaseTest {
             )
         }
 
-        assertThat(sessionsForDaysForMonths).isEqualTo(listOf(
-            SessionsForDaysForMonth(
-                specificMonth = 23_636, // (1969 * 12 + 8) months
-                sessionsForDays = listOf(
-                    SessionsForDay(
-                        specificDay = 720_890, // (1969 * 366 + 236) days
-                        totalPracticeDuration = 4.minutes,
-                        sessions = listOf(
-                            SessionWithSectionsWithLibraryItems(
-                                session = expectedSession(5),
-                                sections = listOf(
-                                    SectionWithLibraryItem(
-                                        section = Section(
-                                            id = UUIDConverter.fromInt(6),
-                                            sessionId = UUIDConverter.fromInt(5),
-                                            libraryItemId = UUIDConverter.fromInt(1),
-                                            durationSeconds = 240,
-                                            startTimestamp = FakeTimeProvider.START_TIME.plus(
-                                                35.days.toJavaDuration()
+        assertThat(sessionsForDaysForMonths).isEqualTo(
+            listOf(
+                SessionsForDaysForMonth(
+                    specificMonth = 23_636, // (1969 * 12 + 8) months
+                    sessionsForDays = listOf(
+                        SessionsForDay(
+                            specificDay = 720_890, // (1969 * 366 + 236) days
+                            totalPracticeDuration = 4.minutes,
+                            sessions = listOf(
+                                SessionWithSectionsWithLibraryItems(
+                                    session = expectedSession(5),
+                                    sections = listOf(
+                                        SectionWithLibraryItem(
+                                            section = Section(
+                                                id = UUIDConverter.fromInt(6),
+                                                sessionId = UUIDConverter.fromInt(5),
+                                                libraryItemId = UUIDConverter.fromInt(1),
+                                                durationSeconds = 240,
+                                                startTimestamp = FakeTimeProvider.START_TIME.plus(
+                                                    35.days.toJavaDuration()
+                                                ),
                                             ),
-                                        ),
-                                        libraryItem = expectedLibraryItem
+                                            libraryItem = expectedLibraryItem
+                                        )
                                     )
                                 )
                             )
                         )
                     )
-                )
-            ),
-            SessionsForDaysForMonth(
-                specificMonth = 23_635, // (1969 * 12 + 7) months
-                sessionsForDays = listOf(
-                    SessionsForDay(
-                        specificDay = 720_856, // (1969 * 366 + 202) days
-                        totalPracticeDuration = 5.minutes,
-                        sessions = listOf(
-                            SessionWithSectionsWithLibraryItems(
-                                session = expectedSession(7),
-                                sections = listOf(
-                                    SectionWithLibraryItem(
-                                        section = Section(
-                                            id = UUIDConverter.fromInt(8),
-                                            sessionId = UUIDConverter.fromInt(7),
-                                            libraryItemId = UUIDConverter.fromInt(1),
-                                            durationSeconds = 300,
-                                            startTimestamp = FakeTimeProvider.START_TIME.plus(
-                                                1.days.toJavaDuration()
+                ),
+                SessionsForDaysForMonth(
+                    specificMonth = 23_635, // (1969 * 12 + 7) months
+                    sessionsForDays = listOf(
+                        SessionsForDay(
+                            specificDay = 720_856, // (1969 * 366 + 202) days
+                            totalPracticeDuration = 5.minutes,
+                            sessions = listOf(
+                                SessionWithSectionsWithLibraryItems(
+                                    session = expectedSession(7),
+                                    sections = listOf(
+                                        SectionWithLibraryItem(
+                                            section = Section(
+                                                id = UUIDConverter.fromInt(8),
+                                                sessionId = UUIDConverter.fromInt(7),
+                                                libraryItemId = UUIDConverter.fromInt(1),
+                                                durationSeconds = 300,
+                                                startTimestamp = FakeTimeProvider.START_TIME.plus(
+                                                    1.days.toJavaDuration()
+                                                ),
                                             ),
-                                        ),
-                                        libraryItem = expectedLibraryItem
+                                            libraryItem = expectedLibraryItem
+                                        )
                                     )
                                 )
                             )
-                        )
-                    ),
-                    SessionsForDay(
-                        specificDay = 720_855, // (1969 * 366 + 201) days
-                        totalPracticeDuration = 16.minutes,
-                        sessions = listOf(
-                            SessionWithSectionsWithLibraryItems(
-                                session = expectedSession(9),
-                                sections = listOf(
-                                    SectionWithLibraryItem(
-                                        section = Section(
-                                            id = UUIDConverter.fromInt(10),
-                                            sessionId = UUIDConverter.fromInt(9),
-                                            libraryItemId = UUIDConverter.fromInt(1),
-                                            durationSeconds = 360,
-                                            startTimestamp = FakeTimeProvider.START_TIME.plus(
-                                                3.seconds.toJavaDuration()
+                        ),
+                        SessionsForDay(
+                            specificDay = 720_855, // (1969 * 366 + 201) days
+                            totalPracticeDuration = 16.minutes,
+                            sessions = listOf(
+                                SessionWithSectionsWithLibraryItems(
+                                    session = expectedSession(9),
+                                    sections = listOf(
+                                        SectionWithLibraryItem(
+                                            section = Section(
+                                                id = UUIDConverter.fromInt(10),
+                                                sessionId = UUIDConverter.fromInt(9),
+                                                libraryItemId = UUIDConverter.fromInt(1),
+                                                durationSeconds = 360,
+                                                startTimestamp = FakeTimeProvider.START_TIME.plus(
+                                                    3.seconds.toJavaDuration()
+                                                ),
                                             ),
+                                            libraryItem = expectedLibraryItem
                                         ),
-                                        libraryItem = expectedLibraryItem
-                                    ),
-                                    SectionWithLibraryItem(
-                                        section = Section(
-                                            id = UUIDConverter.fromInt(11),
-                                            sessionId = UUIDConverter.fromInt(9),
-                                            libraryItemId = UUIDConverter.fromInt(1),
-                                            durationSeconds = 420,
-                                            startTimestamp = FakeTimeProvider.START_TIME.plus(
-                                                8.seconds.toJavaDuration()
+                                        SectionWithLibraryItem(
+                                            section = Section(
+                                                id = UUIDConverter.fromInt(11),
+                                                sessionId = UUIDConverter.fromInt(9),
+                                                libraryItemId = UUIDConverter.fromInt(1),
+                                                durationSeconds = 420,
+                                                startTimestamp = FakeTimeProvider.START_TIME.plus(
+                                                    8.seconds.toJavaDuration()
+                                                ),
                                             ),
-                                        ),
-                                        libraryItem = expectedLibraryItem
+                                            libraryItem = expectedLibraryItem
+                                        )
                                     )
-                                )
-                            ),
-                            SessionWithSectionsWithLibraryItems(
-                                session = expectedSession(2),
-                                sections = listOf(
-                                    SectionWithLibraryItem(
-                                        section = Section(
-                                            id = UUIDConverter.fromInt(4),
-                                            sessionId = UUIDConverter.fromInt(2),
-                                            libraryItemId = UUIDConverter.fromInt(1),
-                                            durationSeconds = 120,
-                                            startTimestamp = FakeTimeProvider.START_TIME,
-                                        ),
-                                        libraryItem = expectedLibraryItem
-                                    ),
-                                    SectionWithLibraryItem(
-                                        section = Section(
-                                            id = UUIDConverter.fromInt(3),
-                                            sessionId = UUIDConverter.fromInt(2),
-                                            libraryItemId = UUIDConverter.fromInt(1),
-                                            durationSeconds = 60,
-                                            startTimestamp = FakeTimeProvider.START_TIME.plus(
-                                                5.seconds.toJavaDuration()
+                                ),
+                                SessionWithSectionsWithLibraryItems(
+                                    session = expectedSession(2),
+                                    sections = listOf(
+                                        SectionWithLibraryItem(
+                                            section = Section(
+                                                id = UUIDConverter.fromInt(4),
+                                                sessionId = UUIDConverter.fromInt(2),
+                                                libraryItemId = UUIDConverter.fromInt(1),
+                                                durationSeconds = 120,
+                                                startTimestamp = FakeTimeProvider.START_TIME,
                                             ),
+                                            libraryItem = expectedLibraryItem
                                         ),
-                                        libraryItem = expectedLibraryItem
+                                        SectionWithLibraryItem(
+                                            section = Section(
+                                                id = UUIDConverter.fromInt(3),
+                                                sessionId = UUIDConverter.fromInt(2),
+                                                libraryItemId = UUIDConverter.fromInt(1),
+                                                durationSeconds = 60,
+                                                startTimestamp = FakeTimeProvider.START_TIME.plus(
+                                                    5.seconds.toJavaDuration()
+                                                ),
+                                            ),
+                                            libraryItem = expectedLibraryItem
+                                        )
                                     )
                                 )
                             )
@@ -283,6 +291,6 @@ class GetSessionsForDaysForMonthsUseCaseTest {
                     )
                 )
             )
-        ))
+        )
     }
 }

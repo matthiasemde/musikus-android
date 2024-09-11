@@ -91,12 +91,12 @@ fun AppearanceScreen(
 
         Column(Modifier.padding(paddingValues)) {
             for (item in appearanceMenuItems) {
-                 TwoLiner(data = item)
+                TwoLiner(data = item)
             }
         }
     }
 
-    if(uiState.languageUiState.languageDialogShowing) {
+    if (uiState.languageUiState.languageDialogShowing) {
         Dialog(
             onDismissRequest = { eventHandler(AppearanceUiEvent.HideLanguageDialog) }
         ) {
@@ -134,14 +134,14 @@ fun AppearanceScreen(
                     Button(
                         onClick = { eventHandler(AppearanceUiEvent.HideLanguageDialog) }
                     ) {
-                        Text (text = stringResource(R.string.settings_appearance_language_dialog_confirm))
+                        Text(text = stringResource(R.string.settings_appearance_language_dialog_confirm))
                     }
                 }
             }
         }
     }
 
-    if(uiState.themeUiState.themeDialogShowing) {
+    if (uiState.themeUiState.themeDialogShowing) {
         Dialog(
             onDismissRequest = { eventHandler(AppearanceUiEvent.HideThemeDialog) }
         ) {
@@ -165,8 +165,7 @@ fun AppearanceScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable { eventHandler(AppearanceUiEvent.ChangeTheme(selection)) }
-                            .padding(horizontal = MaterialTheme.spacing.medium)
-                        ,
+                            .padding(horizontal = MaterialTheme.spacing.medium),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         RadioButton(
@@ -182,7 +181,7 @@ fun AppearanceScreen(
         }
     }
 
-    if(uiState.colorSchemeUiState.colorSchemeDialogShowing) {
+    if (uiState.colorSchemeUiState.colorSchemeDialogShowing) {
         Dialog(
             onDismissRequest = { eventHandler(AppearanceUiEvent.HideColorSchemeDialog) }
         ) {
@@ -206,8 +205,7 @@ fun AppearanceScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable { eventHandler(AppearanceUiEvent.ChangeColorScheme(selection)) }
-                            .padding(horizontal = MaterialTheme.spacing.medium)
-                        ,
+                            .padding(horizontal = MaterialTheme.spacing.medium),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         RadioButton(

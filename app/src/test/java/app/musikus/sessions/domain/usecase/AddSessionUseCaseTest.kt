@@ -50,13 +50,15 @@ class AddSessionUseCaseTest {
         comment = "Test comment"
     )
 
-    private val validSectionCreationAttributes by lazy { (1..2).map { index ->
-        SectionCreationAttributes(
-            libraryItemId = UUIDConverter.fromInt(index),
-            startTimestamp = fakeTimeProvider.now(),
-            duration = 10.minutes
-        )
-    }}
+    private val validSectionCreationAttributes by lazy {
+        (1..2).map { index ->
+            SectionCreationAttributes(
+                libraryItemId = UUIDConverter.fromInt(index),
+                startTimestamp = fakeTimeProvider.now(),
+                duration = 10.minutes
+            )
+        } 
+    }
 
     @BeforeEach
     fun setUp() {

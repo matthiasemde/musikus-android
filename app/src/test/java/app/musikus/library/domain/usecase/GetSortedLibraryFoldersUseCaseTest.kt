@@ -9,17 +9,17 @@
 package app.musikus.library.domain.usecase
 
 import app.musikus.core.data.LibraryFolderWithItems
-import app.musikus.library.data.daos.LibraryFolder
-import app.musikus.library.data.entities.LibraryFolderCreationAttributes
-import app.musikus.library.data.entities.LibraryFolderUpdateAttributes
-import app.musikus.library.data.FakeLibraryRepository
-import app.musikus.settings.data.FakeUserPreferencesRepository
+import app.musikus.core.data.UUIDConverter
 import app.musikus.core.domain.FakeIdProvider
 import app.musikus.core.domain.FakeTimeProvider
 import app.musikus.core.domain.SortDirection
 import app.musikus.core.domain.SortInfo
-import app.musikus.core.data.UUIDConverter
+import app.musikus.library.data.FakeLibraryRepository
 import app.musikus.library.data.LibraryFolderSortMode
+import app.musikus.library.data.daos.LibraryFolder
+import app.musikus.library.data.entities.LibraryFolderCreationAttributes
+import app.musikus.library.data.entities.LibraryFolderUpdateAttributes
+import app.musikus.settings.data.FakeUserPreferencesRepository
 import app.musikus.settings.domain.usecase.GetFolderSortInfoUseCase
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.flow.first
@@ -29,7 +29,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
-
 
 class GetSortedLibraryFoldersUseCaseTest {
     private lateinit var fakeTimeProvider: FakeTimeProvider

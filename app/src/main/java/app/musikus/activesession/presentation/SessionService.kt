@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2024 Michael Prommersberger
+ * Copyright (c) 2024 Michael Prommersberger, Matthias Emde
  */
 
 package app.musikus.activesession.presentation
@@ -46,7 +46,6 @@ import kotlin.time.Duration.Companion.milliseconds
 const val SESSION_NOTIFICATION_ID = 42
 const val BROADCAST_INTENT_FILTER = "activeSessionAction"
 
-
 /**
  * Actions that can be triggered via intent
  */
@@ -78,8 +77,8 @@ class SessionService : Service() {
     lateinit var timeProvider: TimeProvider
 
     @Inject
-    lateinit var useCases : ActiveSessionUseCases
-    private var _timer : Timer? = null
+    lateinit var useCases: ActiveSessionUseCases
+    private var _timer: Timer? = null
 
     /** Broadcast receiver (currently only for pause action) */
     private val myReceiver: BroadcastReceiver = object : BroadcastReceiver() {
@@ -92,19 +91,18 @@ class SessionService : Service() {
     }
 
     /** Intents */
-    private var pendingIntentTapAction : PendingIntent? = null
-    private var pendingIntentActionPause : PendingIntent? = null
-    private var pendingIntentActionFinish : PendingIntent? = null
+    private var pendingIntentTapAction: PendingIntent? = null
+    private var pendingIntentActionPause: PendingIntent? = null
+    private var pendingIntentActionFinish: PendingIntent? = null
 
     /** Notification Button Configs */
-    private var pauseActionButton : NotificationActionButtonConfig? = null
-    private var resumeActionButton : NotificationActionButtonConfig? = null
-    private var finishActionButton : NotificationActionButtonConfig? = null
+    private var pauseActionButton: NotificationActionButtonConfig? = null
+    private var resumeActionButton: NotificationActionButtonConfig? = null
+    private var finishActionButton: NotificationActionButtonConfig? = null
 
     /**
      *  ---------------------- Interface for Activity / ViewModel ----------------------
      */
-
 
     override fun onCreate() {
         super.onCreate()
@@ -117,7 +115,6 @@ class SessionService : Service() {
             ContextCompat.RECEIVER_NOT_EXPORTED
         )
     }
-
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.d(LOG_TAG, "onStartCommand")
@@ -149,7 +146,6 @@ class SessionService : Service() {
         }
         return START_NOT_STICKY
     }
-
 
     /**
      * ----------------------------------- private functions ------------------------------------
@@ -185,7 +181,6 @@ class SessionService : Service() {
         updateNotification()
     }
 
-
     /** -------------------------------------------- Service Boilerplate -------------------------*/
 
     private fun updateNotification() {
@@ -199,7 +194,7 @@ class SessionService : Service() {
     /**
      * Creates a notification object based on current session state
      */
-    private suspend fun createNotification() : Notification {
+    private suspend fun createNotification(): Notification {
         var title: String
         var description: String
 
@@ -241,7 +236,7 @@ class SessionService : Service() {
                     pauseActionButton
                 }
             } else {
-                null    // TODO: broadcast receiver is broken on Android 14
+                null // TODO: broadcast receiver is broken on Android 14
             }
 
         val actionButton2Intent = finishActionButton
@@ -249,7 +244,7 @@ class SessionService : Service() {
         return getNotification(
             title = title,
             description = description,
-            actionButton1 = actionButton1Intent,  // TODO: Fix action button (pause/resume)
+            actionButton1 = actionButton1Intent, // TODO: Fix action button (pause/resume)
             actionButton2 = actionButton2Intent
         )
     }
@@ -260,12 +255,13 @@ class SessionService : Service() {
         actionButton1: NotificationActionButtonConfig?,
         actionButton2: NotificationActionButtonConfig?
     ): Notification {
-
         val icon = R.drawable.ic_launcher_foreground
 
         val builder = NotificationCompat.Builder(this, SESSION_NOTIFICATION_CHANNEL_ID)
-            .setSmallIcon(icon)    // without icon, setOngoing does not work
-            .setOngoing(true)  // does not work on Android 14: https://developer.android.com/about/versions/14/behavior-changes-all#non-dismissable-notifications
+            .setSmallIcon(icon) // without icon, setOngoing does not work
+            .setOngoing(
+                true
+            ) // does not work on Android 14: https://developer.android.com/about/versions/14/behavior-changes-all#non-dismissable-notifications
             .setOnlyAlertOnce(true)
             .setContentTitle(title)
             .setContentText(description)
@@ -280,7 +276,6 @@ class SessionService : Service() {
             builder.addAction(actionButton2.icon, actionButton2.text, actionButton2.tapIntent)
         }
         return builder.build()
-
     }
 
     /**
@@ -300,7 +295,7 @@ class SessionService : Service() {
             SESSION_NOTIFICATION_ID,
             Intent(BROADCAST_INTENT_FILTER).apply {
                 putExtra("action", ActiveSessionActions.PAUSE.toString())
-             },
+            },
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
@@ -328,7 +323,6 @@ class SessionService : Service() {
             text = getString(R.string.active_session_service_notification_action_finish),
             tapIntent = pendingIntentActionFinish
         )
-
     }
 
     override fun onDestroy() {

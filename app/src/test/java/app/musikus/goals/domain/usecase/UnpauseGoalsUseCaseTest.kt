@@ -9,15 +9,15 @@
 package app.musikus.goals.domain.usecase
 
 import app.musikus.core.data.UUIDConverter
+import app.musikus.core.domain.FakeIdProvider
+import app.musikus.core.domain.FakeTimeProvider
+import app.musikus.goals.data.FakeGoalRepository
 import app.musikus.goals.data.entities.GoalDescriptionCreationAttributes
 import app.musikus.goals.data.entities.GoalDescriptionUpdateAttributes
 import app.musikus.goals.data.entities.GoalInstanceCreationAttributes
 import app.musikus.goals.data.entities.GoalPeriodUnit
 import app.musikus.goals.data.entities.GoalType
-import app.musikus.goals.data.FakeGoalRepository
 import app.musikus.library.data.FakeLibraryRepository
-import app.musikus.core.domain.FakeIdProvider
-import app.musikus.core.domain.FakeTimeProvider
 import com.google.common.truth.Truth
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -94,9 +94,11 @@ class UnpauseGoalsUseCaseTest {
 
     @Test
     fun `Unpause archived goal, InvalidArgumentException`() = runTest {
-        fakeGoalRepository.updateGoalDescriptions(listOf(
-            UUIDConverter.fromInt(1) to GoalDescriptionUpdateAttributes(archived = true)
-        ))
+        fakeGoalRepository.updateGoalDescriptions(
+            listOf(
+                UUIDConverter.fromInt(1) to GoalDescriptionUpdateAttributes(archived = true)
+            )
+        )
 
         val exception = org.junit.jupiter.api.assertThrows<IllegalArgumentException> {
             unpauseGoals(listOf(UUIDConverter.fromInt(1)))

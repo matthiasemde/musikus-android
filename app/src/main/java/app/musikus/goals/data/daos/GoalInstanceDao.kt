@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2022 Matthias Emde
+ * Copyright (c) 2022-2024 Matthias Emde
  *
  * Parts of this software are licensed under the MIT license
  *
@@ -21,11 +21,11 @@ import app.musikus.core.data.GoalInstanceWithDescription
 import app.musikus.core.data.GoalInstanceWithDescriptionWithLibraryItems
 import app.musikus.core.data.MusikusDatabase
 import app.musikus.core.data.daos.TimestampDao
+import app.musikus.core.data.entities.TimestampModelDisplayAttributes
+import app.musikus.core.data.toDatabaseInterpretableString
 import app.musikus.goals.data.entities.GoalInstanceCreationAttributes
 import app.musikus.goals.data.entities.GoalInstanceModel
 import app.musikus.goals.data.entities.GoalInstanceUpdateAttributes
-import app.musikus.core.data.entities.TimestampModelDisplayAttributes
-import app.musikus.core.data.toDatabaseInterpretableString
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import java.time.ZonedDateTime
@@ -34,14 +34,14 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 data class GoalInstance(
-    @ColumnInfo(name="id") override val id: UUID,
-    @ColumnInfo(name="created_at") override val createdAt: ZonedDateTime,
-    @ColumnInfo(name="modified_at") override val modifiedAt: ZonedDateTime,
-    @ColumnInfo(name="goal_description_id") val descriptionId: UUID,
-    @ColumnInfo(name="previous_goal_instance_id") val previousInstanceId: UUID?,
-    @ColumnInfo(name="start_timestamp") val startTimestamp: ZonedDateTime,
-    @ColumnInfo(name="end_timestamp") val endTimestamp: ZonedDateTime?,
-    @ColumnInfo(name="target_seconds") val targetSeconds: Long,
+    @ColumnInfo(name = "id") override val id: UUID,
+    @ColumnInfo(name = "created_at") override val createdAt: ZonedDateTime,
+    @ColumnInfo(name = "modified_at") override val modifiedAt: ZonedDateTime,
+    @ColumnInfo(name = "goal_description_id") val descriptionId: UUID,
+    @ColumnInfo(name = "previous_goal_instance_id") val previousInstanceId: UUID?,
+    @ColumnInfo(name = "start_timestamp") val startTimestamp: ZonedDateTime,
+    @ColumnInfo(name = "end_timestamp") val endTimestamp: ZonedDateTime?,
+    @ColumnInfo(name = "target_seconds") val targetSeconds: Long,
 ) : TimestampModelDisplayAttributes() {
 
     override fun toString(): String {
@@ -53,19 +53,19 @@ data class GoalInstance(
             "\ttarget:\t\t\t\t$target\n"
     }
 
-    val target : Duration
+    val target: Duration
         get() = targetSeconds.seconds
 }
 
 @Dao
 abstract class GoalInstanceDao(
-    private val database : MusikusDatabase,
+    private val database: MusikusDatabase,
 ) : TimestampDao<
-        GoalInstanceModel,
-        GoalInstanceCreationAttributes,
-        GoalInstanceUpdateAttributes,
-        GoalInstance
-        >(
+    GoalInstanceModel,
+    GoalInstanceCreationAttributes,
+    GoalInstanceUpdateAttributes,
+    GoalInstance
+    >(
     tableName = "goal_instance",
     database = database,
     displayAttributes = listOf(
@@ -106,35 +106,41 @@ abstract class GoalInstanceDao(
     suspend fun insert(
         creationAttributes: GoalInstanceCreationAttributes,
         firstInstance: Boolean
-    ) : UUID {
+    ): UUID {
         val descriptionId = creationAttributes.descriptionId
 
         // throws exception if description does not exist
         val description = database.goalDescriptionDao.getAsFlow(descriptionId).first()
 
-        if(description.archived) {
+        if (description.archived) {
             throw IllegalArgumentException("Cannot insert instance for archived goal: $descriptionId")
         }
 
-        if(!firstInstance) {
+        if (!firstInstance) {
             val previousInstanceId = creationAttributes.previousInstanceId
                 ?: throw IllegalArgumentException("Cannot insert instance without providing id of previous instance")
 
             val instancesForDescription = getForDescription(descriptionId)
 
-            if(instancesForDescription.any { it.previousInstanceId == previousInstanceId }) {
-                throw IllegalArgumentException("Cannot insert instance with previous instance id that matches previous instance id of another instance for the same description")
+            if (instancesForDescription.any { it.previousInstanceId == previousInstanceId }) {
+                throw IllegalArgumentException(
+                    "Cannot insert instance with previous instance id that matches previous instance id of another instance for the same description"
+                )
             }
 
             // throws exception if previous instance does not exist
             val previousInstance = try {
                 instancesForDescription.single { it.id == previousInstanceId }
-            } catch(e: NoSuchElementException) {
-                throw IllegalArgumentException("Goal description does not contain instance with id: $previousInstanceId")
+            } catch (e: NoSuchElementException) {
+                throw IllegalArgumentException(
+                    "Goal description does not contain instance with id: $previousInstanceId"
+                )
             }
 
             if (previousInstance.endTimestamp == null) {
-                throw IllegalArgumentException("Cannot insert instance before finalizing previous instance (endTimestamp is null)")
+                throw IllegalArgumentException(
+                    "Cannot insert instance before finalizing previous instance (endTimestamp is null)"
+                )
             }
 
             if (previousInstance.endTimestamp > creationAttributes.startTimestamp) {
@@ -160,11 +166,13 @@ abstract class GoalInstanceDao(
             instances.map { it.descriptionId }
         ).first()
 
-        if(
+        if (
             descriptions.any { it.archived } &&
             rows.any { (_, updateAttributes) -> updateAttributes.target != null }
         ) {
-            throw IllegalArgumentException("Cannot update target for instance(s) of archived goal(s): ${descriptions.filter {it.archived}.map { it.id }}")
+            throw IllegalArgumentException(
+                "Cannot update target for instance(s) of archived goal(s): ${descriptions.filter {it.archived}.map { it.id }}"
+            )
         }
 
         super.update(rows)
@@ -197,14 +205,16 @@ abstract class GoalInstanceDao(
     suspend fun deletePausedInstance(id: UUID) {
         // try to get the description of the instance
         // if null is returned, it must be because the instance does not exist
-        val description = database.goalDescriptionDao.getDescriptionForInstance(id) ?:
-            throw IllegalArgumentException("Could not find goal_instance with the following id: $id")
+        val description = database.goalDescriptionDao.getDescriptionForInstance(id)
+            ?: throw IllegalArgumentException("Could not find goal_instance with the following id: $id")
 
         if (!description.paused) {
             throw IllegalArgumentException("Can only delete instances of paused goals")
         }
 
-        super.delete(listOf(id)) // need to call listOf(id) because super.delete(id) would call overridden delete(listOf(id))
+        super.delete(
+            listOf(id)
+        ) // need to call listOf(id) because super.delete(id) would call overridden delete(listOf(id))
     }
 
     suspend fun deleteFutureInstances(ids: List<UUID>) {
@@ -226,20 +236,19 @@ abstract class GoalInstanceDao(
     @RewriteQueriesToDropUnusedColumns
     @Query(
         "SELECT * FROM goal_instance WHERE " +
-        "previous_goal_instance_id=:previousInstanceId"
+            "previous_goal_instance_id=:previousInstanceId"
     )
     abstract fun getByPreviousInstanceId(previousInstanceId: UUID?): Flow<GoalInstance>
-
 
     @Transaction
     @RewriteQueriesToDropUnusedColumns
     @Query(
         "SELECT * FROM goal_instance " +
-        "WHERE goal_description_id = (SELECT " +
+            "WHERE goal_description_id = (SELECT " +
             "id FROM goal_description " +
             "WHERE id = :descriptionId " +
             "AND deleted = 0" +
-        ")"
+            ")"
     )
     protected abstract suspend fun directGetForDescription(
         descriptionId: UUID
@@ -247,9 +256,8 @@ abstract class GoalInstanceDao(
 
     suspend fun getForDescription(
         descriptionId: UUID
-    ) : List<GoalInstance> {
-
-        if(!database.goalDescriptionDao.exists(descriptionId)) {
+    ): List<GoalInstance> {
+        if (!database.goalDescriptionDao.exists(descriptionId)) {
             throw IllegalArgumentException("Cannot get instances for non-existing description: $descriptionId")
         }
 
@@ -262,31 +270,30 @@ abstract class GoalInstanceDao(
         "SELECT * FROM goal_instance " +
             "WHERE datetime(SUBSTR(start_timestamp, 1, INSTR(start_timestamp, '[') - 1)) <= datetime(:now) " +
             "AND (" +
-                "end_timestamp IS NULL " +
-                "OR datetime(:now) < datetime(SUBSTR(end_timestamp, 1, INSTR(end_timestamp, '[') - 1))" +
+            "end_timestamp IS NULL " +
+            "OR datetime(:now) < datetime(SUBSTR(end_timestamp, 1, INSTR(end_timestamp, '[') - 1))" +
             ") " +
             "AND goal_description_id IN (" +
-                "SELECT id FROM goal_description " +
-                "WHERE archived=0 " +
-                "AND deleted=0" +
+            "SELECT id FROM goal_description " +
+            "WHERE archived=0 " +
+            "AND deleted=0" +
             ")"
     )
     protected abstract fun directGetCurrent(
         now: String = database.timeProvider.now().toDatabaseInterpretableString()
-    ) : Flow<List<GoalInstanceWithDescriptionWithLibraryItems>>
+    ): Flow<List<GoalInstanceWithDescriptionWithLibraryItems>>
 
     fun getCurrent() = directGetCurrent()
-
 
     @Transaction
     @RewriteQueriesToDropUnusedColumns
     @Query(
         "Select * FROM goal_instance " +
-        "WHERE end_timestamp IS NULL " +
-        "AND goal_description_id IN (" +
+            "WHERE end_timestamp IS NULL " +
+            "AND goal_description_id IN (" +
             "SELECT id FROM goal_description " +
             "WHERE deleted=0" +
-        ") "
+            ") "
     )
     abstract suspend fun getLatest(): List<GoalInstanceWithDescription>
 
@@ -294,13 +301,13 @@ abstract class GoalInstanceDao(
     @RewriteQueriesToDropUnusedColumns
     @Query(
         "SELECT * FROM goal_instance " +
-                "WHERE goal_description_id IN (" +
-                "SELECT id FROM goal_description " +
-                "WHERE deleted=0" +
-                ")" +
-                "AND end_timestamp IS NOT NULL " +
-                "ORDER BY datetime(SUBSTR(end_timestamp, 1, INSTR(end_timestamp, '[') - 1)) DESC " +
-                "LIMIT :n"
+            "WHERE goal_description_id IN (" +
+            "SELECT id FROM goal_description " +
+            "WHERE deleted=0" +
+            ")" +
+            "AND end_timestamp IS NOT NULL " +
+            "ORDER BY datetime(SUBSTR(end_timestamp, 1, INSTR(end_timestamp, '[') - 1)) DESC " +
+            "LIMIT :n"
     )
     abstract fun getLastNCompleted(
         n: Int,

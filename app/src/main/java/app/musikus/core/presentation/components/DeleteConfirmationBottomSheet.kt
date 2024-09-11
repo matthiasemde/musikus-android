@@ -63,7 +63,6 @@ fun DeleteConfirmationBottomSheet(
     onDismiss: () -> Unit,
     onConfirm: () -> Unit
 ) {
-
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     ModalBottomSheet(
@@ -71,8 +70,7 @@ fun DeleteConfirmationBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
     ) {
-
-        if(explanation != null) {
+        if (explanation != null) {
             Text(
                 modifier = Modifier.padding(horizontal = MaterialTheme.spacing.medium),
                 text = explanation.asString(),

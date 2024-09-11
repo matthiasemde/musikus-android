@@ -42,4 +42,3 @@ interface SortMode<T> {
 
     val isDefault: Boolean
 }
-

@@ -28,13 +28,15 @@ class ArchiveGoalsUseCase(
         }
 
         val missingGoalIds = uniqueGoalDescriptionIds - currentGoals.map { it.description.description.id }.toSet()
-        if(missingGoalIds.isNotEmpty()) {
+        if (missingGoalIds.isNotEmpty()) {
             throw IllegalArgumentException("Could not find goal(s) with descriptionId(s): $missingGoalIds")
         }
 
         val archivedGoals = currentGoals.filter { it.description.description.archived }
-        if(archivedGoals.isNotEmpty()) {
-            throw IllegalArgumentException("Cannot archive already archived goal(s): ${archivedGoals.map { it.description.description.id }}")
+        if (archivedGoals.isNotEmpty()) {
+            throw IllegalArgumentException(
+                "Cannot archive already archived goal(s): ${archivedGoals.map { it.description.description.id }}"
+            )
         }
 
         // clean future instances before archiving
@@ -46,7 +48,7 @@ class ArchiveGoalsUseCase(
 
             // if previous instance id is zero, the goal instance is the first instance of the goal
             // and should not be deleted
-            if(description.paused && currentGoal.instance.previousInstanceId != null) {
+            if (description.paused && currentGoal.instance.previousInstanceId != null) {
                 goalRepository.deletePausedInstance(currentGoal.instance.id)
             }
         }

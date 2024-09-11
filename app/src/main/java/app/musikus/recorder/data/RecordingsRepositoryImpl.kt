@@ -39,7 +39,6 @@ import java.time.ZoneId
 import java.time.ZonedDateTime
 import kotlin.time.Duration.Companion.milliseconds
 
-
 private const val DECODER_INPUT_BUFFER_SIZE = 1 shl 12 // 4096 Byte
 private const val EXTRACTOR_OUTPUT_BUFFER_SIZE = 1 shl 11 // 2048 Byte
 
@@ -49,7 +48,6 @@ class RecordingsRepositoryImpl(
     @IoScope private val ioScope: CoroutineScope
 ) : RecordingsRepository {
 
-
     private val collection = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
         MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL)
     } else {
@@ -58,24 +56,22 @@ class RecordingsRepositoryImpl(
     override val recordings: Flow<List<Recording>>
         get() = subscribeTo { getRecordings() }
 
-
     // inspired by: https://stackoverflow.com/questions/55212362/how-to-decode-an-m4a-audio-on-android
     // and: https://imnotyourson.com/enhance-poor-performance-of-decoding-audio-with-mediaextractor-and-mediacodec-to-pcm/
 
     @OptIn(ExperimentalCoroutinesApi::class)
     override suspend fun getRawRecording(contentUri: Uri): Result<ShortArray> {
         return withContext(Dispatchers.IO) {
-
             val mediaExtractor = MediaExtractor()
 
             val recordingBuffer = ArrayList<Short>()
-            var mediaFormat : MediaFormat? = null
+            var mediaFormat: MediaFormat? = null
 
             mediaExtractor.setDataSource(application, contentUri, null)
 
             repeat(mediaExtractor.trackCount) { trackIndex ->
                 mediaFormat = mediaExtractor.getTrackFormat(trackIndex)
-                if(mediaFormat?.getString(MediaFormat.KEY_MIME)?.startsWith("audio/") == true) {
+                if (mediaFormat?.getString(MediaFormat.KEY_MIME)?.startsWith("audio/") == true) {
                     mediaExtractor.selectTrack(trackIndex)
                     return@repeat
                 }
@@ -105,14 +101,14 @@ class RecordingsRepositoryImpl(
 
                     override fun onInputBufferAvailable(codec: MediaCodec, index: Int) {
                         val inputBuffer = codec.getInputBuffer(index) ?: return
-                        if(isDecoderEosSent) return
+                        if (isDecoderEosSent) return
 
                         var bufferChunkSize = 0
                         val presentationTime: Long // not sure, why this does not have to be var...
 
                         val temporaryBuffer = ByteBuffer.allocate(EXTRACTOR_OUTPUT_BUFFER_SIZE)
 
-                        while(true) {
+                        while (true) {
                             val samplesRead = mediaExtractor.readSampleData(temporaryBuffer, 0)
 
                             if (samplesRead > 0) {
@@ -123,7 +119,7 @@ class RecordingsRepositoryImpl(
                             val isExtractorDone = !mediaExtractor.advance() && samplesRead == -1
                             val isDecoderBufferNearlyFull = bufferChunkSize + EXTRACTOR_OUTPUT_BUFFER_SIZE > DECODER_INPUT_BUFFER_SIZE
 
-                            if(isExtractorDone || isDecoderBufferNearlyFull)  {
+                            if (isExtractorDone || isDecoderBufferNearlyFull) {
                                 presentationTime = mediaExtractor.sampleTime
                                 break
                             }
@@ -131,8 +127,7 @@ class RecordingsRepositoryImpl(
                             temporaryBuffer.clear()
                         }
 
-
-                        if(bufferChunkSize > 0) {
+                        if (bufferChunkSize > 0) {
                             codec.queueInputBuffer(
                                 index,
                                 0,
@@ -173,7 +168,7 @@ class RecordingsRepositoryImpl(
                         }
 
                         for (i in 0 until info.size step 2) {
-                            recordingBuffer.add (outputBuffer.getShort(i))
+                            recordingBuffer.add(outputBuffer.getShort(i))
                         }
 
                         codec.releaseOutputBuffer(index, false)
@@ -209,13 +204,15 @@ class RecordingsRepositoryImpl(
         var observer: ContentObserver? = null
 
         return flow {
-            observer = observer ?: (object : ContentObserver(null) {
-                override fun onChange(selfChange: Boolean) {
-                    ioScope.launch {
-                        notify.emit("changed")
+            observer = observer ?: (
+                object : ContentObserver(null) {
+                    override fun onChange(selfChange: Boolean) {
+                        ioScope.launch {
+                            notify.emit("changed")
+                        }
                     }
                 }
-            }).also {
+                ).also {
                 contentResolver.registerContentObserver(collection, true, it)
             }
 
@@ -232,8 +229,7 @@ class RecordingsRepositoryImpl(
         }
     }
 
-    private suspend fun getRecordings() : List<Recording> {
-
+    private suspend fun getRecordings(): List<Recording> {
         return withContext(Dispatchers.IO) {
             val recordingList = mutableListOf<Recording>()
 
@@ -254,7 +250,7 @@ class RecordingsRepositoryImpl(
                 val durationColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION)
                 val dateColumn = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATE_ADDED)
 
-                while(cursor.moveToNext()) {
+                while (cursor.moveToNext()) {
                     val id = cursor.getLong(idColumn)
                     val displayName = cursor.getString(displayNameColumn)
                     val duration = cursor.getInt(durationColumn)
@@ -278,5 +274,4 @@ class RecordingsRepositoryImpl(
             return@withContext recordingList
         }
     }
-
 }

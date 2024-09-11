@@ -37,18 +37,20 @@ fun ToggleButton(
             Button(
                 modifier = Modifier.weight(1f),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = if(selected == option)
+                    containerColor = if (selected == option) {
                         MaterialTheme.colorScheme.primary
-                    else
-                        MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = if(selected == option)
+                    } else {
+                        MaterialTheme.colorScheme.primaryContainer
+                    },
+                    contentColor = if (selected == option) {
                         MaterialTheme.colorScheme.onPrimary
-                    else
-                        MaterialTheme.colorScheme.onPrimaryContainer,
+                    } else {
+                        MaterialTheme.colorScheme.onPrimaryContainer
+                    },
                 ),
                 shape = RoundedCornerShape(
-                    topStartPercent = if(index == 0) 50 else 0,
-                    bottomStartPercent = if(index == 0) 50 else 0,
+                    topStartPercent = if (index == 0) 50 else 0,
+                    bottomStartPercent = if (index == 0) 50 else 0,
                     topEndPercent = if (index == options.size - 1) 50 else 0,
                     bottomEndPercent = if (index == options.size - 1) 50 else 0
                 ),

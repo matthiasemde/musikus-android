@@ -8,8 +8,8 @@
 
 package app.musikus.permissions.data
 
-import app.musikus.permissions.domain.PermissionRepository
 import app.musikus.permissions.domain.PermissionChecker
+import app.musikus.permissions.domain.PermissionRepository
 
 class PermissionRepositoryImpl(
     private val permissionChecker: PermissionChecker

@@ -9,18 +9,18 @@
 package app.musikus.core.data
 
 import android.util.Log
+import app.musikus.goals.data.GoalRepositoryImpl
 import app.musikus.goals.data.entities.GoalDescriptionCreationAttributes
 import app.musikus.goals.data.entities.GoalInstanceCreationAttributes
 import app.musikus.goals.data.entities.GoalPeriodUnit
 import app.musikus.goals.data.entities.GoalType
+import app.musikus.goals.domain.usecase.ArchiveGoalsUseCase
+import app.musikus.goals.domain.usecase.CleanFutureGoalInstancesUseCase
+import app.musikus.goals.domain.usecase.UpdateGoalsUseCase
 import app.musikus.library.data.entities.LibraryFolderCreationAttributes
 import app.musikus.library.data.entities.LibraryItemCreationAttributes
 import app.musikus.sessions.data.entities.SectionCreationAttributes
 import app.musikus.sessions.data.entities.SessionCreationAttributes
-import app.musikus.goals.data.GoalRepositoryImpl
-import app.musikus.goals.domain.usecase.ArchiveGoalsUseCase
-import app.musikus.goals.domain.usecase.CleanFutureGoalInstancesUseCase
-import app.musikus.goals.domain.usecase.UpdateGoalsUseCase
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import java.time.temporal.ChronoUnit
@@ -30,7 +30,6 @@ import kotlin.time.Duration.Companion.minutes
 suspend fun prepopulateDatabase(
     database: MusikusDatabase,
 ) {
-
     listOf(
         LibraryFolderCreationAttributes(name = "Schupra"),
         LibraryFolderCreationAttributes(name = "Fagott"),
@@ -38,28 +37,47 @@ suspend fun prepopulateDatabase(
     ).forEach {
         database.libraryFolderDao.insert(it)
         Log.d("MainActivity", "Folder ${it.name} created")
-        delay(10) //make sure folders have different createdAt values
+        delay(10) // make sure folders have different createdAt values
     }
 
     database.libraryFolderDao.getAllAsFlow().first().let { folders ->
         // populate the libraryItem table on first run
         listOf(
-            LibraryItemCreationAttributes(name = "Die Schöpfung", colorIndex = 0, libraryFolderId = Nullable(folders[0].id)),
-            LibraryItemCreationAttributes(name = "Beethoven Septett",colorIndex = 1,libraryFolderId = Nullable(folders[0].id)),
-            LibraryItemCreationAttributes(name = "Schostakowitsch 9.", colorIndex = 2, libraryFolderId = Nullable(folders[1].id)),
-            LibraryItemCreationAttributes(name = "Trauermarsch c-Moll", colorIndex = 3, libraryFolderId = Nullable(folders[1].id)),
+            LibraryItemCreationAttributes(
+                name = "Die Schöpfung",
+                colorIndex = 0,
+                libraryFolderId = Nullable(folders[0].id)
+            ),
+            LibraryItemCreationAttributes(
+                name = "Beethoven Septett",
+                colorIndex = 1,
+                libraryFolderId = Nullable(folders[0].id)
+            ),
+            LibraryItemCreationAttributes(
+                name = "Schostakowitsch 9.",
+                colorIndex = 2,
+                libraryFolderId = Nullable(folders[1].id)
+            ),
+            LibraryItemCreationAttributes(
+                name = "Trauermarsch c-Moll",
+                colorIndex = 3,
+                libraryFolderId = Nullable(folders[1].id)
+            ),
             LibraryItemCreationAttributes(name = "Adagio", colorIndex = 4, libraryFolderId = Nullable(folders[2].id)),
-            LibraryItemCreationAttributes(name = "Eine kleine Gigue", colorIndex = 5, libraryFolderId = Nullable(folders[2].id)),
+            LibraryItemCreationAttributes(
+                name = "Eine kleine Gigue",
+                colorIndex = 5,
+                libraryFolderId = Nullable(folders[2].id)
+            ),
             LibraryItemCreationAttributes(name = "Andantino", colorIndex = 6),
             LibraryItemCreationAttributes(name = "Klaviersonate", colorIndex = 7),
             LibraryItemCreationAttributes(name = "Trauermarsch", colorIndex = 8),
         ).forEach {
             database.libraryItemDao.insert(it)
             Log.d("MainActivity", "LibraryItem ${it.name} created")
-            delay(10) //make sure items have different createdAt values
+            delay(10) // make sure items have different createdAt values
         }
     }
-
 
     database.libraryItemDao.getAllAsFlow().first().let { items ->
         listOf(
@@ -101,23 +119,29 @@ suspend fun prepopulateDatabase(
             ),
         ).forEach { goalDescriptionCreationAttributes ->
             val offset = (
-                if (goalDescriptionCreationAttributes.repeat) 10L
-                else 1L
-            ) * goalDescriptionCreationAttributes.periodInPeriodUnits
+                if (goalDescriptionCreationAttributes.repeat) {
+                    10L
+                } else {
+                    1L
+                }
+                ) * goalDescriptionCreationAttributes.periodInPeriodUnits
 
             database.goalDescriptionDao.insert(
                 descriptionCreationAttributes = goalDescriptionCreationAttributes,
                 instanceCreationAttributes = GoalInstanceCreationAttributes(
-                    startTimestamp = when(goalDescriptionCreationAttributes.periodUnit) {
+                    startTimestamp = when (goalDescriptionCreationAttributes.periodUnit) {
                         GoalPeriodUnit.DAY -> database.timeProvider.getStartOfDay().minusDays(offset)
                         GoalPeriodUnit.WEEK -> database.timeProvider.getStartOfWeek().minusWeeks(offset)
                         GoalPeriodUnit.MONTH -> database.timeProvider.getStartOfMonth().minusMonths(offset)
                     },
-                    target =((1..6).random() * 10 + 30).minutes
+                    target = ((1..6).random() * 10 + 30).minutes
                 ),
                 libraryItemIds =
-                    if (goalDescriptionCreationAttributes.type == GoalType.NON_SPECIFIC) null
-                    else listOf(items.random().id),
+                if (goalDescriptionCreationAttributes.type == GoalType.NON_SPECIFIC) {
+                    null
+                } else {
+                    listOf(items.random().id)
+                },
             )
             delay(10)
         }
@@ -151,10 +175,10 @@ suspend fun prepopulateDatabase(
                         libraryItemId = items.random().id,
                         startTimestamp = database.timeProvider.now().minus(
                             (
-                                    (sessionNum / 2) * // two sessions per day initially
-                                            24 * 60 * 60 *
-                                            1.02.pow(sessionNum.toDouble()) // exponential growth
-                                    ).toLong() + duration.inWholeSeconds,
+                                (sessionNum / 2) * // two sessions per day initially
+                                    24 * 60 * 60 *
+                                    1.02.pow(sessionNum.toDouble()) // exponential growth
+                                ).toLong() + duration.inWholeSeconds,
                             ChronoUnit.SECONDS
                         ),
                         duration = duration,

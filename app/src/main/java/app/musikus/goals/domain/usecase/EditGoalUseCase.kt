@@ -26,7 +26,6 @@ class EditGoalUseCase(
         descriptionUpdateAttributes: GoalDescriptionUpdateAttributes? = null,
         instanceUpdateAttributes: GoalInstanceUpdateAttributes? = null,
     ) {
-
         if (!goalRepository.existsDescription(descriptionId)) {
             throw IllegalArgumentException("Goal with id $descriptionId does not exist")
         }
@@ -58,12 +57,12 @@ class EditGoalUseCase(
             throw InvalidGoalDescriptionException("End timestamp cannot be set manually")
         }
 
-        if(
+        if (
             instanceUpdateAttributes?.target != null &&
             !(
                 instanceUpdateAttributes.target.isFinite() &&
-                instanceUpdateAttributes.target.inWholeSeconds > 0
-            )
+                    instanceUpdateAttributes.target.inWholeSeconds > 0
+                )
         ) {
             throw InvalidGoalInstanceException("Target must be finite and greater than 0")
         }

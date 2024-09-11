@@ -18,7 +18,6 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
 
-
 // inspired by https://medium.com/@ouzhaneki/basic-background-playback-implementation-with-media3-mediasessionservice-4d571f15bdc2
 @UnstableApi
 class RecordingPlaybackService : MediaSessionService() {
@@ -28,8 +27,6 @@ class RecordingPlaybackService : MediaSessionService() {
      */
 
     private var _mediaSession: MediaSession? = null
-
-
 
     /**
      * --------------- Service Boilerplate ------------

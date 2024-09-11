@@ -21,7 +21,7 @@ class GetSortedLibraryFoldersUseCase(
     private val getFolderSortInfo: GetFolderSortInfoUseCase,
 ) {
 
-    operator fun invoke() : Flow<List<LibraryFolderWithItems>> {
+    operator fun invoke(): Flow<List<LibraryFolderWithItems>> {
         return combine(
             libraryRepository.folders,
             getFolderSortInfo()

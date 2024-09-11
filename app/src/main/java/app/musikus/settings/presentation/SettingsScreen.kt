@@ -38,6 +38,7 @@ import app.musikus.core.presentation.Screen
 import app.musikus.core.presentation.components.TwoLiner
 import app.musikus.core.presentation.components.TwoLinerData
 import app.musikus.core.presentation.navigateTo
+import app.musikus.core.presentation.theme.spacing
 import app.musikus.settings.presentation.about.AboutScreen
 import app.musikus.settings.presentation.about.LicensesScreen
 import app.musikus.settings.presentation.appearance.AppearanceScreen
@@ -45,7 +46,6 @@ import app.musikus.settings.presentation.backup.BackupScreen
 import app.musikus.settings.presentation.donate.DonateScreen
 import app.musikus.settings.presentation.export.ExportScreen
 import app.musikus.settings.presentation.help.HelpScreen
-import app.musikus.core.presentation.theme.spacing
 
 fun NavGraphBuilder.addSettingsNavigationGraph(navController: NavController) {
     composable(Screen.Settings.route) {
@@ -87,11 +87,13 @@ fun SettingsScreen(
     navigateTo: (Screen) -> Unit,
 ) {
     val settingsItems = listOf(
-        listOf(TwoLinerData(
-            icon = Screen.SettingsOption.Donate.displayData.icon,
-            firstLine = Screen.SettingsOption.Donate.displayData.title,
-            onClick = { navigateTo(Screen.SettingsOption.Donate )}
-        )),
+        listOf(
+            TwoLinerData(
+                icon = Screen.SettingsOption.Donate.displayData.icon,
+                firstLine = Screen.SettingsOption.Donate.displayData.title,
+                onClick = { navigateTo(Screen.SettingsOption.Donate) }
+            )
+        ),
         listOf(
             TwoLinerData(
                 icon = Screen.SettingsOption.Appearance.displayData.icon,
@@ -113,12 +115,12 @@ fun SettingsScreen(
             TwoLinerData(
                 icon = Screen.SettingsOption.Help.displayData.icon,
                 firstLine = Screen.SettingsOption.Help.displayData.title,
-                onClick = { navigateTo(Screen.SettingsOption.Help )}
+                onClick = { navigateTo(Screen.SettingsOption.Help) }
             ),
             TwoLinerData(
                 icon = Screen.SettingsOption.About.displayData.icon,
                 firstLine = Screen.SettingsOption.About.displayData.title,
-                onClick = { navigateTo(Screen.SettingsOption.About )}
+                onClick = { navigateTo(Screen.SettingsOption.About) }
             ),
         ),
     )
@@ -147,11 +149,11 @@ fun SettingsScreen(
             Column(
                 modifier = Modifier.verticalScroll(rememberScrollState())
             ) {
-                for(group in settingsItems) {
+                for (group in settingsItems) {
                     for (settingsItem in group) {
                         TwoLiner(data = settingsItem)
                     }
-                    if(group != settingsItems.last()) {
+                    if (group != settingsItems.last()) {
                         HorizontalDivider(Modifier.padding(vertical = MaterialTheme.spacing.medium))
                     }
                 }

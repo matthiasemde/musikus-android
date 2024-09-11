@@ -10,10 +10,10 @@ package app.musikus.goals.domain.usecase
 
 import app.musikus.core.data.GoalInstanceWithDescription
 import app.musikus.core.data.Nullable
+import app.musikus.core.domain.TimeProvider
 import app.musikus.goals.data.entities.GoalInstanceCreationAttributes
 import app.musikus.goals.data.entities.GoalInstanceUpdateAttributes
 import app.musikus.goals.domain.GoalRepository
-import app.musikus.core.domain.TimeProvider
 
 class UpdateGoalsUseCase(
     private val goalRepository: GoalRepository,
@@ -64,10 +64,10 @@ class UpdateGoalsUseCase(
     }
 
     suspend operator fun invoke() {
-        var lastOutdatedGoals : List<GoalInstanceWithDescription>? = null
+        var lastOutdatedGoals: List<GoalInstanceWithDescription>? = null
 
         // if there are no more outdated goals, we are done
-        while(lastOutdatedGoals == null || lastOutdatedGoals.isNotEmpty()) {
+        while (lastOutdatedGoals == null || lastOutdatedGoals.isNotEmpty()) {
             goalRepository.withTransaction {
                 val outdatedGoals = goalRepository
                     .getLatestInstances()
@@ -99,10 +99,9 @@ class UpdateGoalsUseCase(
                 notArchivedOutdatedGoals.forEach { goal ->
                     val description = goal.description
 
-                    if(description.repeat) {
+                    if (description.repeat) {
                         renewInstance(goal)
-                    }
-                    else {
+                    } else {
                         archiveGoals(listOf(description.id))
                     }
                 }

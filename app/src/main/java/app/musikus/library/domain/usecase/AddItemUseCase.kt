@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2023 Matthias Emde
+ * Copyright (c) 2023-2024 Matthias Emde
  */
 
 package app.musikus.library.domain.usecase
@@ -20,15 +20,15 @@ class AddItemUseCase(
     suspend operator fun invoke(
         creationAttributes: LibraryItemCreationAttributes
     ) {
-        if(creationAttributes.name.isBlank()) {
+        if (creationAttributes.name.isBlank()) {
             throw InvalidLibraryItemException("Item name cannot be empty")
         }
 
-        if(creationAttributes.colorIndex !in 0..9) {
+        if (creationAttributes.colorIndex !in 0..9) {
             throw InvalidLibraryItemException("Color index must be between 0 and 9")
         }
 
-        if(
+        if (
             creationAttributes.libraryFolderId.value != null &&
             !libraryRepository.existsFolder(creationAttributes.libraryFolderId.value)
         ) {

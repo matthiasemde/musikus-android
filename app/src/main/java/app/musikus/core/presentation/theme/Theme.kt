@@ -29,7 +29,6 @@ import androidx.compose.ui.unit.dp
 import app.musikus.settings.domain.ColorSchemeSelections
 import app.musikus.settings.domain.ThemeSelections
 
-
 /** Library item colors */
 
 val libraryItemColors = listOf(
@@ -51,13 +50,13 @@ fun MusikusTheme(
     colorScheme: ColorSchemeSelections,
     content: @Composable () -> Unit
 ) {
-    val useDarkTheme = when(theme) {
+    val useDarkTheme = when (theme) {
         ThemeSelections.SYSTEM -> isSystemInDarkTheme()
         ThemeSelections.DAY -> false
         ThemeSelections.NIGHT -> true
     }
 
-    val colorSchemeDarkOrLight = when(colorScheme) {
+    val colorSchemeDarkOrLight = when (colorScheme) {
         ColorSchemeSelections.MUSIKUS -> {
             if (useDarkTheme) DarkColorScheme else LightColorScheme
         }
@@ -80,7 +79,6 @@ fun MusikusTheme(
     if (!LocalInspectionMode.current) {
         val context = LocalContext.current as ComponentActivity
         LaunchedEffect(key1 = theme) {
-
             val statusBarColorDarkTheme = android.graphics.Color.TRANSPARENT
             val statusBarColorLightTheme = android.graphics.Color.TRANSPARENT
             val statusBarColorLightThemeOldDevices = DarkColorScheme.surface.toArgb()
@@ -90,22 +88,26 @@ fun MusikusTheme(
             val navBarColorLightThemeOldDevices = DarkColorScheme.surface.toArgb()
 
             context.enableEdgeToEdge(
-                statusBarStyle = if (useDarkTheme)
+                statusBarStyle = if (useDarkTheme) {
                     SystemBarStyle.dark(
                         scrim = statusBarColorDarkTheme
                     )
-                else SystemBarStyle.light(
-                    scrim = statusBarColorLightTheme,
-                    darkScrim = statusBarColorLightThemeOldDevices
-                ),
-                navigationBarStyle = if (useDarkTheme)
+                } else {
+                    SystemBarStyle.light(
+                        scrim = statusBarColorLightTheme,
+                        darkScrim = statusBarColorLightThemeOldDevices
+                    )
+                },
+                navigationBarStyle = if (useDarkTheme) {
                     SystemBarStyle.dark(
                         scrim = navBarColorDarkTheme
                     )
-                else SystemBarStyle.light(
-                    scrim = navBarColorLightTheme,
-                    darkScrim = navBarColorLightThemeOldDevices
-                ),
+                } else {
+                    SystemBarStyle.light(
+                        scrim = navBarColorLightTheme,
+                        darkScrim = navBarColorLightThemeOldDevices
+                    )
+                },
             )
         }
     }
@@ -124,18 +126,17 @@ data class Spacing(
     val extraLarge: Dp = 32.dp,
 )
 
-
 data class Dimensions(
     val cardPeekHeight: Dp = 105.dp,
     val cardNormalHeight: Dp = 300.dp,
-    val cardHandleHeight: Dp = 19.dp,   // ~3dp handle height + 2*small spacing
+    val cardHandleHeight: Dp = 19.dp, // ~3dp handle height + 2*small spacing
     val bottomButtonsPagerHeight: Dp = 50.dp,
     val cardPeekContentHeight: Dp = cardPeekHeight - cardHandleHeight,
     val cardNormalContentHeight: Dp = cardNormalHeight - cardHandleHeight,
     val toolsHeaderHeight: Dp = 95.dp,
     val toolsBodyHeight: Dp = 205.dp,
-    val toolsSheetPeekHeight: Dp = toolsHeaderHeight + 3.dp + 8.dp,    // 3.dp DragHandle + spacing
-    val fabHeight: Dp = 56.dp   // TODO: remove and try to get it via intrisic defaults
+    val toolsSheetPeekHeight: Dp = toolsHeaderHeight + 3.dp + 8.dp, // 3.dp DragHandle + spacing
+    val fabHeight: Dp = 56.dp // TODO: remove and try to get it via intrisic defaults
 )
 
 val LocalSpacing = compositionLocalOf { Spacing() }

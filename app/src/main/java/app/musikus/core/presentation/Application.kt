@@ -27,10 +27,8 @@ const val SESSION_NOTIFICATION_CHANNEL_NAME = "Session notification"
 const val RECORDER_NOTIFICATION_CHANNEL_ID = "recorder_notification_channel"
 const val RECORDER_NOTIFICATION_CHANNEL_NAME = "Recorder notification"
 
-
 @HiltAndroidApp
 class Musikus : Application() {
-
 
     override fun onCreate() {
         super.onCreate()
@@ -47,7 +45,8 @@ class Musikus : Application() {
             val sessionNotificationChannel = NotificationChannel(
                 SESSION_NOTIFICATION_CHANNEL_ID,
                 SESSION_NOTIFICATION_CHANNEL_NAME,
-                NotificationManager.IMPORTANCE_HIGH).apply {
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
                 description = "Notification to keep track of the running session"
             }
 
@@ -57,7 +56,8 @@ class Musikus : Application() {
             val metronomeNotificationChannel = NotificationChannel(
                 METRONOME_NOTIFICATION_CHANNEL_ID,
                 METRONOME_NOTIFICATION_CHANNEL_NAME,
-                NotificationManager.IMPORTANCE_DEFAULT).apply {
+                NotificationManager.IMPORTANCE_DEFAULT
+            ).apply {
                 description = "Notification to keep track of the metronome"
             }
 
@@ -67,7 +67,8 @@ class Musikus : Application() {
             val recorderNotificationChannel = NotificationChannel(
                 RECORDER_NOTIFICATION_CHANNEL_ID,
                 RECORDER_NOTIFICATION_CHANNEL_NAME,
-                NotificationManager.IMPORTANCE_HIGH).apply {
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
                 description = "Notification to keep track of the recorder"
             }
             // Register the channel with the system
@@ -79,14 +80,14 @@ class Musikus : Application() {
         val executorService: ExecutorService = Executors.newFixedThreadPool(4)
         private val IO_EXECUTOR = Executors.newSingleThreadExecutor()
 
-        fun ioThread(f : () -> Unit) {
+        fun ioThread(f: () -> Unit) {
             IO_EXECUTOR.execute(f)
         }
 
         var noSessionsYet = true
         var serviceIsRunning = false
 
-        fun getRandomQuote(context: Context) : CharSequence {
+        fun getRandomQuote(context: Context): CharSequence {
             return context.resources.getTextArray(R.array.quotes).random()
         }
 

@@ -20,14 +20,14 @@ import android.os.IBinder
 import androidx.compose.ui.text.AnnotatedString
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import app.musikus.core.domain.DateFormat
+import app.musikus.core.domain.TimeProvider
+import app.musikus.core.domain.musikusFormat
+import app.musikus.core.presentation.utils.DurationFormat
+import app.musikus.core.presentation.utils.getDurationString
+import app.musikus.permissions.domain.PermissionChecker
 import app.musikus.permissions.domain.usecase.PermissionsUseCases
 import app.musikus.recorder.domain.usecase.RecordingsUseCases
-import app.musikus.core.domain.DateFormat
-import app.musikus.core.presentation.utils.DurationFormat
-import app.musikus.permissions.domain.PermissionChecker
-import app.musikus.core.domain.TimeProvider
-import app.musikus.core.presentation.utils.getDurationString
-import app.musikus.core.domain.musikusFormat
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
@@ -45,7 +45,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.seconds
-
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
@@ -139,7 +138,6 @@ class RecorderViewModel @Inject constructor(
     private val _showSaveRecordingDialog = MutableStateFlow(false)
     private val _recordingName = MutableStateFlow("")
 
-
     /** Imported Flows */
 
     private val recordings = _readPermissionsGranted.flatMapLatest { readPermissionsGranted ->
@@ -158,12 +156,14 @@ class RecorderViewModel @Inject constructor(
         flow {
             emit(null)
 
-            emit(currentRawRecording?.let {
-                recordingsUseCases.getRawRecording(it).getOrElse {
-                    _exceptionChannel.send(RecorderException.CouldNotLoadRecording(application))
-                    null
+            emit(
+                currentRawRecording?.let {
+                    recordingsUseCases.getRawRecording(it).getOrElse {
+                        _exceptionChannel.send(RecorderException.CouldNotLoadRecording(application))
+                        null
+                    }
                 }
-            })
+            )
         }
     }.stateIn(
         scope = viewModelScope,
@@ -207,7 +207,7 @@ class RecorderViewModel @Inject constructor(
         recorderServiceState,
         recordings,
         currentRawRecording,
-        _currentRecordingUri,   // TODO check if combine cycle b.c. rawRec. depends on _curr.R.Uri
+        _currentRecordingUri, // TODO check if combine cycle b.c. rawRec. depends on _curr.R.Uri
         dialogUiState
     ) { serviceState, recordings, currentRawRecording, currentUri, dialogUiState ->
         RecorderUiState(
@@ -240,7 +240,6 @@ class RecorderViewModel @Inject constructor(
             dialogUiState = dialogUiState.value
         )
     )
-
 
     // TODO split out subfunctions
     fun onUiEvent(event: RecorderUiEvent) {
@@ -294,7 +293,6 @@ class RecorderViewModel @Inject constructor(
 
     val exceptionChannel = _exceptionChannel.receiveAsFlow()
 
-
     /**
      *  --------------- Private methods ---------------
      */
@@ -326,7 +324,6 @@ class RecorderViewModel @Inject constructor(
         }
         return true
     }
-
 
     private suspend fun startRecording() {
         if (!checkAndRequestPermissions()) {

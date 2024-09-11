@@ -3,21 +3,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2022 Matthias Emde
+ * Copyright (c) 2022-2024 Matthias Emde
  */
 
 package app.musikus.library.data
 
-import app.musikus.core.data.LibraryFolderWithItems
 import app.musikus.library.data.daos.LibraryFolderDao
-import app.musikus.library.data.daos.LibraryItem
 import app.musikus.library.data.daos.LibraryItemDao
 import app.musikus.library.data.entities.LibraryFolderCreationAttributes
 import app.musikus.library.data.entities.LibraryFolderUpdateAttributes
 import app.musikus.library.data.entities.LibraryItemCreationAttributes
 import app.musikus.library.data.entities.LibraryItemUpdateAttributes
 import app.musikus.library.domain.LibraryRepository
-import kotlinx.coroutines.flow.Flow
 import java.util.UUID
 
 class LibraryRepositoryImpl(
@@ -27,7 +24,6 @@ class LibraryRepositoryImpl(
 
     override val items = itemDao.getAllAsFlow()
     override val folders = folderDao.getAllWithItems()
-
 
     /** Mutators */
     /** Add */

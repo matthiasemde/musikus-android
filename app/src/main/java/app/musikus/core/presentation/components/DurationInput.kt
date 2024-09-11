@@ -42,7 +42,7 @@ fun DurationInput(
                 hours = it
                 onValueChanged(
                     (hours.toIntOrNull() ?: 0).hours +
-                            (minutes.toIntOrNull() ?: 0).minutes
+                        (minutes.toIntOrNull() ?: 0).minutes
                 )
             },
             showLeadingZero = true,
@@ -60,7 +60,7 @@ fun DurationInput(
                 minutes = it
                 onValueChanged(
                     (hours.toIntOrNull() ?: 0).hours +
-                            (minutes.toIntOrNull() ?: 0).minutes
+                        (minutes.toIntOrNull() ?: 0).minutes
                 )
             },
             showLeadingZero = true,

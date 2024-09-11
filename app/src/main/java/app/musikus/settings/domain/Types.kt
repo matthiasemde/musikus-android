@@ -27,7 +27,7 @@ const val USER_PREFERENCES_NAME = "user_preferences"
 
 enum class ThemeSelections : EnumWithLabel {
     SYSTEM {
-       override val label = UiText.StringResource(R.string.settings_appearance_theme_options_system)
+        override val label = UiText.StringResource(R.string.settings_appearance_theme_options_system)
     },
     DAY {
         override val label = UiText.StringResource(R.string.settings_appearance_theme_options_day)
@@ -72,8 +72,7 @@ enum class ColorSchemeSelections : EnumWithLabel, EnumWithDescription {
     }
 }
 
-
-data class UserPreferences (
+data class UserPreferences(
     val theme: ThemeSelections,
     val colorScheme: ColorSchemeSelections,
 
@@ -95,7 +94,6 @@ data class UserPreferences (
     // Metronome
     val metronomeSettings: MetronomeSettings
 )
-
 
 interface UserPreferencesRepository {
 

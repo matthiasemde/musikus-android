@@ -42,14 +42,16 @@ fun <T : SortMode<*>> SortMenu(
     onShowMenuChanged: (Boolean) -> Unit,
     onSelectionHandler: (T) -> Unit
 ) {
-    val mainContentDescription = stringResource(id = R.string.components_sort_menu_content_description, sortItemDescription)
-    val dropdownContentDescription = stringResource(id = R.string.components_sort_menu_dropdown_content_description, sortItemDescription)
+    val mainContentDescription =
+        stringResource(id = R.string.components_sort_menu_content_description, sortItemDescription)
+    val dropdownContentDescription =
+        stringResource(id = R.string.components_sort_menu_dropdown_content_description, sortItemDescription)
     TextButton(
         modifier = modifier.semantics {
             contentDescription = mainContentDescription
         },
-        onClick = { onShowMenuChanged(!show) })
-    {
+        onClick = { onShowMenuChanged(!show) }
+    ) {
         Text(
             modifier = Modifier.padding(end = 8.dp),
             color = MaterialTheme.colorScheme.onSurface,
@@ -98,8 +100,11 @@ fun <T : SortMode<*>> SortMenu(
                     text = {
                         Text(
                             text = sortMode.label.asString(),
-                            color = if (selected) MaterialTheme.colorScheme.primary
-                            else Color.Unspecified
+                            color = if (selected) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                Color.Unspecified
+                            }
                         )
                     },
                     onClick = { onSelectionHandler(sortMode) },

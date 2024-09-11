@@ -36,9 +36,12 @@ class GetSortedLibraryItemsUseCase(
     ): Flow<List<LibraryItem>> {
         return libraryRepository.items
             .map { items ->
-                if (folderId == null) items
-                else items.filter { item ->
-                    item.libraryFolderId == folderId.value
+                if (folderId == null) {
+                    items
+                } else {
+                    items.filter { item ->
+                        item.libraryFolderId == folderId.value
+                    }
                 }
             }
             .combine(

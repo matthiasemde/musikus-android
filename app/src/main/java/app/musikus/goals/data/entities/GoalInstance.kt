@@ -1,16 +1,24 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ *
+ * Copyright (c) 2024 Matthias Emde
+ */
+
 package app.musikus.goals.data.entities
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Ignore
+import app.musikus.core.data.Nullable
+import app.musikus.core.data.UUIDConverter
 import app.musikus.core.data.entities.ITimestampModelCreationAttributes
 import app.musikus.core.data.entities.ITimestampModelUpdateAttributes
 import app.musikus.core.data.entities.TimestampModel
 import app.musikus.core.data.entities.TimestampModelCreationAttributes
 import app.musikus.core.data.entities.TimestampModelUpdateAttributes
-import app.musikus.core.data.Nullable
-import app.musikus.core.data.UUIDConverter
 import app.musikus.core.domain.TimeProvider
 import java.time.ZonedDateTime
 import java.util.UUID
@@ -53,11 +61,11 @@ data class GoalInstanceUpdateAttributes(
     ]
 )
 data class GoalInstanceModel(
-    @ColumnInfo(name="goal_description_id", index = true) override var descriptionId: UUID,
-    @ColumnInfo(name="previous_goal_instance_id", index = true) override var previousInstanceId: UUID?,
-    @ColumnInfo(name="start_timestamp") override var startTimestamp: ZonedDateTime,
-    @ColumnInfo(name="end_timestamp") override var endTimestamp: Nullable<ZonedDateTime>? = null,
-    @ColumnInfo(name="target_seconds") var targetSeconds: Long,
+    @ColumnInfo(name = "goal_description_id", index = true) override var descriptionId: UUID,
+    @ColumnInfo(name = "previous_goal_instance_id", index = true) override var previousInstanceId: UUID?,
+    @ColumnInfo(name = "start_timestamp") override var startTimestamp: ZonedDateTime,
+    @ColumnInfo(name = "end_timestamp") override var endTimestamp: Nullable<ZonedDateTime>? = null,
+    @ColumnInfo(name = "target_seconds") var targetSeconds: Long,
 ) : TimestampModel(), IGoalInstanceCreationAttributes, IGoalInstanceUpdateAttributes {
 
     @get:Ignore

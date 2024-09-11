@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2022 Matthias Emde
+ * Copyright (c) 2022-2024 Matthias Emde
  *
  * Parts of this software are licensed under the MIT license
  *
@@ -72,17 +72,20 @@ fun NumberInput(
     val textStyle = TextStyle(
         fontSize = textSize,
         fontWeight = FontWeight.Bold,
-        color = if(isFocused)
+        color = if (isFocused) {
             MaterialTheme.colorScheme.primary
-        else
-            MaterialTheme.colorScheme.onSurface,
+        } else {
+            MaterialTheme.colorScheme.onSurface
+        },
         baselineShift = BaselineShift(0f),
-        textDecoration = if(underlined) TextDecoration.Underline else TextDecoration.None,
+        textDecoration = if (underlined) TextDecoration.Underline else TextDecoration.None,
     )
-    CompositionLocalProvider(LocalTextSelectionColors provides TextSelectionColors(
-        Color.Transparent,
-        Color.Transparent
-    )) {
+    CompositionLocalProvider(
+        LocalTextSelectionColors provides TextSelectionColors(
+            Color.Transparent,
+            Color.Transparent
+        )
+    ) {
         Box {
             Row {
                 BasicTextField(
@@ -102,13 +105,14 @@ fun NumberInput(
                         if (newInt in minValue..maxValue) {
                             val newString = newInt.toString()
                             onValueChange(
-                                if (showLeadingZero)
+                                if (showLeadingZero) {
                                     newString.padStart(maxLength, '0')
-                                else
+                                } else {
                                     newString
+                                }
                             )
-                            if(newString.length == maxLength) {
-                                when(imeAction) {
+                            if (newString.length == maxLength) {
+                                when (imeAction) {
                                     ImeAction.Next -> localFocusManager.moveFocus(FocusDirection.Next)
                                     ImeAction.Done -> localFocusManager.clearFocus()
                                     else -> localFocusManager.clearFocus()
@@ -127,7 +131,7 @@ fun NumberInput(
                     ),
                     decorationBox = { innerTextField ->
                         innerTextField()
-                        if(value.isEmpty() && placeHolder != null) {
+                        if (value.isEmpty() && placeHolder != null) {
                             Text(
                                 text = placeHolder,
                                 style = textStyle,
@@ -140,12 +144,13 @@ fun NumberInput(
                     label(Modifier.alignByBaseline())
                 }
             }
-            Surface(modifier = Modifier
-                .matchParentSize()
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null,
-                ) { focusRequester.requestFocus() },
+            Surface(
+                modifier = Modifier
+                    .matchParentSize()
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                    ) { focusRequester.requestFocus() },
                 color = Color.Transparent,
             ) {}
         }

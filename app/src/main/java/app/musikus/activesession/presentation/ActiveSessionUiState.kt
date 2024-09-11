@@ -17,7 +17,6 @@ import kotlinx.coroutines.flow.StateFlow
 import java.time.ZonedDateTime
 import java.util.UUID
 
-
 @Stable
 enum class ActiveSessionState {
     NOT_STARTED,
@@ -88,12 +87,12 @@ data class NewItemSelectorUiState(
     val rootItems: List<LibraryItem>,
 )
 
-//@Stable
-//data class ActiveSessionToolsUiState(
+// @Stable
+// data class ActiveSessionToolsUiState(
 //    /** state is still unused */
 //    val activeTab: ActiveSessionTab,
 //    val expanded: Boolean,
-//)
+// )
 
 enum class ActiveSessionTab {
     METRONOME, RECORDER, DEFAULT
@@ -106,10 +105,9 @@ sealed class ActiveSessionUiEvent {
     data class DeleteSection(val sectionId: UUID) : ActiveSessionUiEvent()
     data class EndDialogUiEvent(val dialogEvent: ActiveSessionEndDialogUiEvent) : ActiveSessionUiEvent()
     data object DiscardSessionDialogConfirmed : ActiveSessionUiEvent()
-    data object ToggleNewItemSelector: ActiveSessionUiEvent()
+    data object ToggleNewItemSelector : ActiveSessionUiEvent()
     data object ToggleFinishDialog : ActiveSessionUiEvent()
     data object ToggleDiscardDialog : ActiveSessionUiEvent()
-
 }
 
 sealed class ActiveSessionEndDialogUiEvent {
@@ -119,5 +117,5 @@ sealed class ActiveSessionEndDialogUiEvent {
 }
 
 sealed class ActiveSessionException(message: String) : Exception(message) {
-    data object NoNotificationPermission: ActiveSessionException("Notification permission required")
+    data object NoNotificationPermission : ActiveSessionException("Notification permission required")
 }

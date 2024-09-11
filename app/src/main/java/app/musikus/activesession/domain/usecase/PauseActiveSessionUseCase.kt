@@ -3,14 +3,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2024 Michael Prommersberger
- *
+ * Copyright (c) 2024 Michael Prommersberger, Matthias Emde
  */
 
 package app.musikus.activesession.domain.usecase
 
-import app.musikus.core.domain.TimeProvider
 import app.musikus.activesession.domain.ActiveSessionRepository
+import app.musikus.core.domain.TimeProvider
 import kotlinx.coroutines.flow.first
 import kotlin.time.Duration.Companion.seconds
 

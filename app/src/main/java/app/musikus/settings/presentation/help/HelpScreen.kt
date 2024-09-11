@@ -39,7 +39,6 @@ import app.musikus.core.presentation.theme.spacing
 fun HelpScreen(
     navigateUp: () -> Unit
 ) {
-
     val context = LocalContext.current
 
     Scaffold(

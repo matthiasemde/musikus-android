@@ -10,6 +10,9 @@ package app.musikus.sessions.domain
 
 import app.musikus.core.data.GoalInstanceWithDescriptionWithLibraryItems
 import app.musikus.core.data.SessionWithSectionsWithLibraryItems
+import app.musikus.core.domain.DateFormat
+import app.musikus.core.domain.Timeframe
+import app.musikus.core.domain.musikusFormat
 import app.musikus.goals.data.daos.GoalDescription
 import app.musikus.goals.data.daos.GoalInstance
 import app.musikus.library.data.daos.LibraryItem
@@ -19,40 +22,37 @@ import app.musikus.sessions.data.entities.SectionCreationAttributes
 import app.musikus.sessions.data.entities.SectionUpdateAttributes
 import app.musikus.sessions.data.entities.SessionCreationAttributes
 import app.musikus.sessions.data.entities.SessionUpdateAttributes
-import app.musikus.core.domain.DateFormat
-import app.musikus.core.domain.Timeframe
-import app.musikus.core.domain.musikusFormat
 import kotlinx.coroutines.flow.Flow
 import java.time.Month
 import java.util.UUID
 import kotlin.time.Duration
 
 interface SessionRepository {
-    val sessions : Flow<List<Session>>
-    val sections : Flow<List<Section>>
+    val sessions: Flow<List<Session>>
+    val sections: Flow<List<Section>>
 
-    val orderedSessionsWithSectionsWithLibraryItems : Flow<List<SessionWithSectionsWithLibraryItems>>
-    suspend fun getSession(id: UUID) : SessionWithSectionsWithLibraryItems
+    val orderedSessionsWithSectionsWithLibraryItems: Flow<List<SessionWithSectionsWithLibraryItems>>
+    suspend fun getSession(id: UUID): SessionWithSectionsWithLibraryItems
 
-    fun sessionsInTimeframe (timeframe: Timeframe) : Flow<List<SessionWithSectionsWithLibraryItems>>
+    fun sessionsInTimeframe(timeframe: Timeframe): Flow<List<SessionWithSectionsWithLibraryItems>>
 
     suspend fun sectionsForSession(sessionId: UUID): List<Section>
 
-    suspend fun sectionsForGoal (goal: GoalInstanceWithDescriptionWithLibraryItems) : Flow<List<Section>>
-    suspend fun sectionsForGoal (
+    suspend fun sectionsForGoal(goal: GoalInstanceWithDescriptionWithLibraryItems): Flow<List<Section>>
+    suspend fun sectionsForGoal(
         instance: GoalInstance,
         description: GoalDescription,
         libraryItems: List<LibraryItem>
-    ) : Flow<List<Section>>
+    ): Flow<List<Section>>
 
-    fun getLastSectionsForItems(items: List<LibraryItem>) : Flow<List<Section>>
+    fun getLastSectionsForItems(items: List<LibraryItem>): Flow<List<Section>>
 
     /** Mutators */
     /** Add */
     suspend fun add(
         sessionCreationAttributes: SessionCreationAttributes,
         sectionCreationAttributes: List<SectionCreationAttributes>
-    ) : Pair<UUID, List<UUID>>
+    ): Pair<UUID, List<UUID>>
 
     /** Update */
 
@@ -70,7 +70,7 @@ interface SessionRepository {
     suspend fun restore(sessionIds: List<UUID>)
 
     /** Exists */
-    suspend fun existsSession(id: UUID) : Boolean
+    suspend fun existsSession(id: UUID): Boolean
 
     /** Clean */
     suspend fun clean()
@@ -79,7 +79,7 @@ interface SessionRepository {
     suspend fun withTransaction(block: suspend () -> Unit)
 }
 
-data class SessionsForDaysForMonth (
+data class SessionsForDaysForMonth(
     val specificMonth: Int,
     val sessionsForDays: List<SessionsForDay>
 ) {
@@ -88,7 +88,7 @@ data class SessionsForDaysForMonth (
     }
 }
 
-data class SessionsForDay (
+data class SessionsForDay(
     val specificDay: Int,
     val totalPracticeDuration: Duration,
     val sessions: List<SessionWithSectionsWithLibraryItems>

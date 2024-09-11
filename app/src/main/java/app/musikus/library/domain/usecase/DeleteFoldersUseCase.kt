@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2023 Matthias Emde
+ * Copyright (c) 2023-2024 Matthias Emde
  */
 
 package app.musikus.library.domain.usecase
@@ -15,7 +15,7 @@ class DeleteFoldersUseCase(
     private val libraryRepository: LibraryRepository
 ) {
 
-    suspend operator fun invoke(folderIds : List<UUID>) {
+    suspend operator fun invoke(folderIds: List<UUID>) {
         libraryRepository.deleteFolders(folderIds)
     }
 }

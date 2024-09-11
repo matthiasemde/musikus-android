@@ -59,7 +59,6 @@ import app.musikus.core.presentation.utils.asAnnotatedString
 import app.musikus.statistics.presentation.sessionstatistics.TimeframeSelectionHeader
 import java.util.UUID
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GoalStatistics(
@@ -86,20 +85,22 @@ fun GoalStatistics(
             val contentUiState = uiState.contentUiState
             Column(modifier = Modifier.padding(top = contentPadding.calculateTopPadding())) {
                 Column(modifier = Modifier.height(256.dp)) {
-                    contentUiState.headerUiState?.let { TimeframeSelectionHeader(
-                        timeframe = it.timeframe,
-                        subtitle = it.successRate?.let { (succeeded, total) ->
-                            stringResource(
-                                id = R.string.statistics_goal_statistics_achieved_goals,
-                                succeeded,
-                                total
-                            )
-                        } ?: "",
-                        seekBackwardEnabled = it.seekBackwardEnabled,
-                        seekForwardEnabled = it.seekForwardEnabled,
-                        seekForwards = viewModel::seekForwards,
-                        seekBackwards = viewModel::seekBackwards,
-                    ) }
+                    contentUiState.headerUiState?.let {
+                        TimeframeSelectionHeader(
+                            timeframe = it.timeframe,
+                            subtitle = it.successRate?.let { (succeeded, total) ->
+                                stringResource(
+                                    id = R.string.statistics_goal_statistics_achieved_goals,
+                                    succeeded,
+                                    total
+                                )
+                            } ?: "",
+                            seekBackwardEnabled = it.seekBackwardEnabled,
+                            seekForwardEnabled = it.seekForwardEnabled,
+                            seekForwards = viewModel::seekForwards,
+                            seekBackwards = viewModel::seekBackwards,
+                        )
+                    }
                     Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
                     contentUiState.barChartUiState?.let {
                         GoalStatisticsBarChart(it)
@@ -107,10 +108,12 @@ fun GoalStatistics(
                 }
                 Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
                 HorizontalDivider()
-                contentUiState.goalSelectorUiState?.let { GoalStatisticsGoalSelector(
-                    it,
-                    onGoalSelected = viewModel::onGoalSelected
-                ) }
+                contentUiState.goalSelectorUiState?.let {
+                    GoalStatisticsGoalSelector(
+                        it,
+                        onGoalSelected = viewModel::onGoalSelected
+                    )
+                }
             }
         }
     )
@@ -124,17 +127,19 @@ fun GoalStatisticsGoalSelector(
     val scrollState = rememberLazyListState()
     val showScrollbar = scrollState.canScrollBackward || scrollState.canScrollForward
     LazyColumn(
-        modifier = Modifier.conditional(showScrollbar) { simpleVerticalScrollbar(
-            scrollState,
-            width = 5.dp,
-            verticalPadding = MaterialTheme.spacing.extraSmall
-        ) },
+        modifier = Modifier.conditional(showScrollbar) {
+            simpleVerticalScrollbar(
+                scrollState,
+                width = 5.dp,
+                verticalPadding = MaterialTheme.spacing.extraSmall
+            )
+        },
         state = scrollState,
     ) {
         items(
             items = uiState.goalsInfo,
             key = { goalInfo -> goalInfo.goalId }
-        ) {goalInfo ->
+        ) { goalInfo ->
             Row(
                 modifier = Modifier
                     .height(IntrinsicSize.Max)
@@ -246,8 +251,11 @@ fun GoalStatisticsGoalSelector(
                 Spacer(
                     modifier = Modifier
                         .width(
-                            if (showScrollbar) MaterialTheme.spacing.large
-                            else MaterialTheme.spacing.medium
+                            if (showScrollbar) {
+                                MaterialTheme.spacing.large
+                            } else {
+                                MaterialTheme.spacing.medium
+                            }
                         )
                         .animateContentSize()
                 )

@@ -51,9 +51,9 @@ class SelectItemSortModeUseCaseTest {
             assertThat(sortInfo)
                 .isEqualTo(
                     SortInfo(
-                    mode = LibraryItemSortMode.NAME,
-                    direction = SortDirection.DEFAULT,
-                )
+                        mode = LibraryItemSortMode.NAME,
+                        direction = SortDirection.DEFAULT,
+                    )
                 )
         }
     }
@@ -79,9 +79,9 @@ class SelectItemSortModeUseCaseTest {
             assertThat(sortInfo)
                 .isEqualTo(
                     SortInfo(
-                    mode = LibraryItemSortMode.DATE_ADDED,
-                    direction = SortDirection.ASCENDING,
-                )
+                        mode = LibraryItemSortMode.DATE_ADDED,
+                        direction = SortDirection.ASCENDING,
+                    )
                 )
         }
     }

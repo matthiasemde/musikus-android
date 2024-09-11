@@ -3,10 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2024 Michael Prommersberger
- *
+ * Copyright (c) 2024 Michael Prommersberger, Matthias Emde
  */
-
 
 package app.musikus.activesession.data
 
@@ -15,7 +13,6 @@ import app.musikus.activesession.domain.SessionState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-
 
 class ActiveSessionRepositoryImpl : ActiveSessionRepository {
 

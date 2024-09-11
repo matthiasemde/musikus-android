@@ -24,11 +24,10 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 
-
 typealias MainUiEventHandler = (MainUiEvent) -> Unit
 
 sealed class MainUiEvent {
-    data class ShowSnackbar(val message: String, val onUndo: (() -> Unit)? = null): MainUiEvent()
+    data class ShowSnackbar(val message: String, val onUndo: (() -> Unit)? = null) : MainUiEvent()
 }
 
 data class MainUiState(
@@ -44,7 +43,6 @@ class MainViewModel @Inject constructor(
     userPreferencesUseCases: UserPreferencesUseCases,
     activeSessionUseCases: ActiveSessionUseCases
 ) : AndroidViewModel(application) {
-
 
     /**
      * Private state variables
@@ -98,7 +96,6 @@ class MainViewModel @Inject constructor(
             isSessionRunning = runningItem.value != null
         )
     )
-
 
     fun onUiEvent(event: MainUiEvent) {
         when (event) {

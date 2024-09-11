@@ -11,15 +11,15 @@ package app.musikus.statistics.presentation
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import app.musikus.core.presentation.theme.libraryItemColors
-import app.musikus.goals.domain.usecase.GoalsUseCases
-import app.musikus.sessions.domain.usecase.SessionsUseCases
 import app.musikus.core.domain.DateFormat
 import app.musikus.core.domain.TimeProvider
 import app.musikus.core.domain.getDayIndexOfWeek
 import app.musikus.core.domain.musikusFormat
 import app.musikus.core.domain.specificMonth
 import app.musikus.core.domain.weekIndexToName
+import app.musikus.core.presentation.theme.libraryItemColors
+import app.musikus.goals.domain.usecase.GoalsUseCases
+import app.musikus.sessions.domain.usecase.SessionsUseCases
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
@@ -32,7 +32,6 @@ import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
-
 
 /**
  * Ui state data classes
@@ -125,16 +124,19 @@ class StatisticsViewModel @Inject constructor(
             sections.sumOf { (section, _) -> section.duration.inWholeSeconds }
         }.seconds
         val averageDurationPerSession = currentMonthSessions.size.let {
-            if(it == 0) 0.seconds else totalPracticeDuration / it
+            if (it == 0) 0.seconds else totalPracticeDuration / it
         }
         val breakDurationPerHour = currentMonthSessions.sumOf { (session, _) ->
             session.breakDuration.inWholeSeconds
         }.seconds
         val averageRatingPerSession = currentMonthSessions.size.let {
-            if(it == 0) 0f else
-            currentMonthSessions.sumOf { (session, _) ->
-                session.rating
-            }.toFloat() / it
+            if (it == 0) {
+                0f
+            } else {
+                currentMonthSessions.sumOf { (session, _) ->
+                    session.rating
+                }.toFloat() / it
+            }
         }
 
         StatisticsCurrentMonthUiState(
@@ -172,9 +174,11 @@ class StatisticsViewModel @Inject constructor(
             val dayIndex = getDayIndexOfWeek(day)
             PracticeDurationPerDay(
                 day = weekIndexToName(dayIndex)[0].toString(),
-                duration = (groupedSessions[dayIndex]?.sumOf { (_, sections) ->
-                    sections.sumOf { (section, _) -> section.duration.inWholeSeconds }
-                } ?: 0).seconds
+                duration = (
+                    groupedSessions[dayIndex]?.sumOf { (_, sections) ->
+                        sections.sumOf { (section, _) -> section.duration.inWholeSeconds }
+                    } ?: 0
+                    ).seconds
             )
         }
 
@@ -186,10 +190,12 @@ class StatisticsViewModel @Inject constructor(
             if (_noSessionsForDurationCard) {
                 emit(
                     StatisticsPracticeDurationCardUiState(
-                        lastSevenDayPracticeDuration = lastSevenDayPracticeDuration.map { PracticeDurationPerDay(
-                            day = it.day,
-                            duration = 0.seconds
-                        ) },
+                        lastSevenDayPracticeDuration = lastSevenDayPracticeDuration.map {
+                            PracticeDurationPerDay(
+                                day = it.day,
+                                duration = 0.seconds
+                            )
+                        },
                         totalPracticeDuration = totalPracticeDuration,
                     )
                 )
@@ -203,7 +209,6 @@ class StatisticsViewModel @Inject constructor(
                 )
             )
         }
-
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
@@ -221,35 +226,39 @@ class StatisticsViewModel @Inject constructor(
 
         flow {
             if (_noSessionsForGoalCard) {
-                emit(StatisticsGoalCardUiState(
-                    successRate = null,
-                    lastGoalsDisplayData = lastFiveGoals.map {
-                        GoalCardGoalDisplayData(
-                            label = "",
-                            progress = 0f,
-                            color = null
-                        )
-                    }
-                ))
+                emit(
+                    StatisticsGoalCardUiState(
+                        successRate = null,
+                        lastGoalsDisplayData = lastFiveGoals.map {
+                            GoalCardGoalDisplayData(
+                                label = "",
+                                progress = 0f,
+                                color = null
+                            )
+                        }
+                    )
+                )
                 delay(350)
                 _noSessionsForGoalCard = false
             }
-            emit(StatisticsGoalCardUiState(
-                successRate = lastFiveGoals.count {
-                    it.progress >= it.instance.target
-                } to lastFiveGoals.size,
-                lastGoalsDisplayData = lastFiveGoals.reversed().map {
-                    GoalCardGoalDisplayData(
-                        label = it.instance.startTimestamp.musikusFormat(DateFormat.DAY_AND_MONTH),
-                        progress = (
-                            it.progress.inWholeSeconds.toFloat() / it.instance.target.inWholeSeconds
-                        ).coerceAtMost(1f),
-                        color = it.description.libraryItems.firstOrNull()?.let { item ->
-                            libraryItemColors[item.colorIndex]
-                        }
-                    )
-                }
-            ))
+            emit(
+                StatisticsGoalCardUiState(
+                    successRate = lastFiveGoals.count {
+                        it.progress >= it.instance.target
+                    } to lastFiveGoals.size,
+                    lastGoalsDisplayData = lastFiveGoals.reversed().map {
+                        GoalCardGoalDisplayData(
+                            label = it.instance.startTimestamp.musikusFormat(DateFormat.DAY_AND_MONTH),
+                            progress = (
+                                it.progress.inWholeSeconds.toFloat() / it.instance.target.inWholeSeconds
+                                ).coerceAtMost(1f),
+                            color = it.description.libraryItems.firstOrNull()?.let { item ->
+                                libraryItemColors[item.colorIndex]
+                            }
+                        )
+                    }
+                )
+            )
         }
     }.stateIn(
         scope = viewModelScope,
@@ -269,7 +278,7 @@ class StatisticsViewModel @Inject constructor(
         val numOfRatingsFromOneToFive = sessions.groupBy { (session, _) ->
             session.rating
         }.let { ratingToSessions ->
-            (1 .. 5).map { rating ->
+            (1..5).map { rating ->
                 ratingToSessions[rating]?.size ?: 0
             }
         }
@@ -302,10 +311,10 @@ class StatisticsViewModel @Inject constructor(
                 ratingsCardUiState = ratingsCardUiState,
                 showHint = (
                     currentMonthUiState == null &&
-                    practiceDurationCardUiState == null &&
-                    goalCardUiState == null &&
-                    ratingsCardUiState == null
-                )
+                        practiceDurationCardUiState == null &&
+                        goalCardUiState == null &&
+                        ratingsCardUiState == null
+                    )
             ),
         )
     }.stateIn(

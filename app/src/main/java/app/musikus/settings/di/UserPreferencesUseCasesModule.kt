@@ -52,5 +52,4 @@ object UserPreferencesUseCasesModule {
             changeMetronomeSettings = ChangeMetronomeSettingsUseCase(userPreferencesRepository),
         )
     }
-
 }

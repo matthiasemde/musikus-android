@@ -3,8 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2024 Michael Prommersberger
- *
+ * Copyright (c) 2024 Michael Prommersberger, Matthias Emde
  */
 
 package app.musikus.activesession.domain.usecase
@@ -19,17 +18,17 @@ enum class SessionStatus {
     PAUSED
 }
 
-class GetSessionStatusUseCase (
+class GetSessionStatusUseCase(
     private val activeSessionRepository: ActiveSessionRepository,
 ) {
-    operator fun invoke() : Flow<SessionStatus> {
-
+    operator fun invoke(): Flow<SessionStatus> {
         return activeSessionRepository.getSessionState().map { state ->
             if (state == null) {
                 return@map SessionStatus.NOT_STARTED
             }
-            if (state.isPaused)
+            if (state.isPaused) {
                 return@map SessionStatus.PAUSED
+            }
 
             SessionStatus.RUNNING
         }

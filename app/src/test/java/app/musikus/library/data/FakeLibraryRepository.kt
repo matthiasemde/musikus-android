@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  *
- * Copyright (c) 2023 Matthias Emde
+ * Copyright (c) 2023-2024 Matthias Emde
  */
 
 package app.musikus.library.data
@@ -36,71 +36,88 @@ class FakeLibraryRepository(
         get() = flowOf(_items)
 
     override val folders
-        get() = flowOf(_folders.map {
-            it.copy(items = _items.filter { item -> item.libraryFolderId == it.folder.id })
-        })
+        get() = flowOf(
+            _folders.map {
+                it.copy(items = _items.filter { item -> item.libraryFolderId == it.folder.id })
+            }
+        )
 
     override suspend fun addFolder(creationAttributes: LibraryFolderCreationAttributes) {
         _folders.add(
             LibraryFolderWithItems(
-            folder = LibraryFolder(
-                id = idProvider.generateId(),
-                createdAt = timeProvider.now(),
-                modifiedAt = timeProvider.now(),
-                name = creationAttributes.name,
-                customOrder = null
-            ),
-            items = emptyList()
-        )
+                folder = LibraryFolder(
+                    id = idProvider.generateId(),
+                    createdAt = timeProvider.now(),
+                    modifiedAt = timeProvider.now(),
+                    name = creationAttributes.name,
+                    customOrder = null
+                ),
+                items = emptyList()
+            )
         )
     }
 
     override suspend fun addItem(creationAttributes: LibraryItemCreationAttributes) {
         _items.add(
             LibraryItem(
-            id = idProvider.generateId(),
-            createdAt = timeProvider.now(),
-            modifiedAt = timeProvider.now(),
-            name = creationAttributes.name,
-            libraryFolderId = creationAttributes.libraryFolderId.value,
-            colorIndex = creationAttributes.colorIndex,
-            customOrder = null
-        )
+                id = idProvider.generateId(),
+                createdAt = timeProvider.now(),
+                modifiedAt = timeProvider.now(),
+                name = creationAttributes.name,
+                libraryFolderId = creationAttributes.libraryFolderId.value,
+                colorIndex = creationAttributes.colorIndex,
+                customOrder = null
+            )
         )
     }
 
     override suspend fun editFolder(id: UUID, updateAttributes: LibraryFolderUpdateAttributes) {
         _folders.replaceAll { folderWithItems ->
-            if (folderWithItems.folder.id == id) folderWithItems.copy(
-                folder = folderWithItems.folder.copy(
-                    modifiedAt = timeProvider.now(),
-                    name = updateAttributes.name ?: folderWithItems.folder.name,
-                    customOrder = updateAttributes.customOrder.let {
-                        if (it != null) it.value
-                        else folderWithItems.folder.customOrder
-                    }
+            if (folderWithItems.folder.id == id) {
+                folderWithItems.copy(
+                    folder = folderWithItems.folder.copy(
+                        modifiedAt = timeProvider.now(),
+                        name = updateAttributes.name ?: folderWithItems.folder.name,
+                        customOrder = updateAttributes.customOrder.let {
+                            if (it != null) {
+                                it.value
+                            } else {
+                                folderWithItems.folder.customOrder
+                            }
+                        }
+                    )
                 )
-            )
-            else folderWithItems
+            } else {
+                folderWithItems
+            }
         }
     }
 
     override suspend fun editItem(id: UUID, updateAttributes: LibraryItemUpdateAttributes) {
         _items.replaceAll { item ->
-            if (item.id == id) item.copy(
-                modifiedAt = timeProvider.now(),
-                name = updateAttributes.name ?: item.name,
-                libraryFolderId = updateAttributes.libraryFolderId.let {
-                    if (it != null) it.value
-                    else item.libraryFolderId
-                },
-                colorIndex = updateAttributes.colorIndex ?: item.colorIndex,
-                customOrder = updateAttributes.customOrder.let {
-                    if (it != null) it.value
-                    else item.customOrder
-                }
-            )
-            else item
+            if (item.id == id) {
+                item.copy(
+                    modifiedAt = timeProvider.now(),
+                    name = updateAttributes.name ?: item.name,
+                    libraryFolderId = updateAttributes.libraryFolderId.let {
+                        if (it != null) {
+                            it.value
+                        } else {
+                            item.libraryFolderId
+                        }
+                    },
+                    colorIndex = updateAttributes.colorIndex ?: item.colorIndex,
+                    customOrder = updateAttributes.customOrder.let {
+                        if (it != null) {
+                            it.value
+                        } else {
+                            item.customOrder
+                        }
+                    }
+                )
+            } else {
+                item
+            }
         }
     }
 
