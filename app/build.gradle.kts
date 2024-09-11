@@ -185,6 +185,32 @@ tasks.register("setupMusikus") {
     }
 }
 
+tasks.register("checkLicense") {
+    group = "verification"
+    description = "Checks if all files most in the HEAD commit have the correct license header."
+
+    doLast {
+        // Execute python script to check license headers
+        exec {
+            workingDir = file("../tools")
+            commandLine("python", "check_license_headers.py")
+        }
+    }
+}
+
+tasks.register("fixLicense") {
+    group = "verification"
+    description = "Fixes the license header in all staged files."
+
+    doLast {
+        // Execute python script to update license headers
+        exec {
+            workingDir = file("../tools")
+            commandLine("python", "fix_license_headers.py")
+        }
+    }
+}
+
 dependencies {
     detektPlugins(libs.detekt.formatting)
 
