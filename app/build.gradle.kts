@@ -163,12 +163,12 @@ tasks.register("setupMusikus") {
         // Step 1: Execute the existing bash script to install the pre-commit hook
         if (System.getProperty("os.name").lowercase().contains("win")) {
             exec {
-                workingDir = file("../.github/hooks")
+                workingDir = file("../tools/hooks")
                 commandLine("cmd", "/c", "setup_hooks.bat")
             }
         } else {
             exec {
-                commandLine("bash", ".github/hooks/setup_hooks.sh")
+                commandLine("bash", "../tools/hooks/setup_hooks.sh")
             }
         }
         println("Pre-commit hook installed.")
