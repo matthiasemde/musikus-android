@@ -1,8 +1,10 @@
 @echo off
+setlocal enabledelayedexpansion
 set SCRIPT_DIR=%~dp0
 
-REM Copy the pre-commit hook to the .git/hooks directory
-copy "%SCRIPT_DIR%pre-commit" "%SCRIPT_DIR%..\..\.git\hooks\pre-commit"
-
-REM Make the pre-commit hook executable
-attrib +x "%SCRIPT_DIR%..\..\.git\hooks\pre-commit"
+REM Iterate over all .hook files in the SCRIPT_DIR
+for %%f in ("%SCRIPT_DIR%*.hook") do (
+    set "filename=%%~nf"
+    copy "%%f" "%SCRIPT_DIR%..\..\.git\hooks\!filename!"
+    attrib +x "%SCRIPT_DIR%..\..\.git\hooks\!filename!"
+)
