@@ -6,8 +6,11 @@ if ! ./gradlew checkLicense; then
   exit 1
 fi
 
+# Get the list of files changed in the most recent commit
+changed_files=$(git diff --name-only HEAD~1 HEAD)
+
 # Run detekt and android lint
-if ! ./gradlew detekt lint; then
+if ! ./gradlew detekt --input "$changed_files" lint; then
   echo "Errors found during code analysis. Please review the reports."
   exit 1
 fi
