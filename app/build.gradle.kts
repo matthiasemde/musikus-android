@@ -3,11 +3,11 @@
 import java.util.Properties
 import java.util.Scanner
 
-val properties = Properties()
-file("$rootDir/build.properties").inputStream().use { properties.load(it) }
-val importedVersionCode = properties["versionCode"] as String
-val importedVersionName = properties["versionName"] as String
-val commitHash = properties["commitHash"] as String
+val buildProperties = Properties()
+file("$rootDir/build.properties").inputStream().use { buildProperties.load(it) }
+val importedVersionCode = buildProperties["versionCode"] as String
+val importedVersionName = buildProperties["versionName"] as String
+val commitHash = buildProperties["commitHash"] as String
 
 val reportsPath = "$projectDir/build/reports"
 
