@@ -12,6 +12,10 @@ import re
 from datetime import datetime
 import textwrap
 
+file_path = os.path.abspath(__file__)
+project_path = os.path.dirname(file_path)
+while '.git' not in os.listdir(project_path):
+    project_path = os.path.dirname(project_path)
 
 # Function to get the current year
 def get_current_year():
@@ -23,12 +27,12 @@ def get_staged_files():
     result = subprocess.run(['git', 'diff', '--name-only', '--cached'], capture_output=True, text=True)
     files = result.stdout.splitlines()
 
-    return files
+    return [f'{project_path}/{f}' for f in files]
 
 
 # Function to read the copyrightName from musikus.properties
 def get_copyright_name():
-    props_file = 'musikus.properties'
+    props_file = f'{project_path}/musikus.properties'
     if not os.path.exists(props_file):
         raise FileNotFoundError(f"{props_file} not found")
 

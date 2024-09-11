@@ -6,11 +6,26 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 Copyright (c) 2024 Matthias Emde
 """
 
+import os
 import re
+import subprocess
 import sys
 from pathlib import Path
 import datetime
 
+# ANSI escape codes for colors
+RED = '\033[91m'
+GREEN = '\033[92m'
+YELLOW = '\033[93m'
+RESET = '\033[0m'
+
+# Get the project path
+file_path = os.path.abspath(__file__)
+project_path = os.path.dirname(file_path)
+while '.git' not in os.listdir(project_path):
+    project_path = os.path.dirname(project_path)
+
+# Get the current year
 current_year = str(datetime.datetime.now().year)
 
 # Define the license header patterns
@@ -38,6 +53,16 @@ kt_license_pattern = re.compile(r'/\*\n'
                                 r' \*/\n'
                                 r'\n')
 
+
+# Function to fetch the files that were just commited to git
+def get_committed_files():
+    result = subprocess.run(['git', 'diff', '--name-only', 'HEAD~1', 'HEAD'], capture_output=True, text=True)
+    files = result.stdout.splitlines()
+
+    return [f'{project_path}/{f}' for f in files]
+
+
+# Function to check the license header in a file
 def check_license_header(file_path):
     try:
         with open(file_path, 'r', encoding='utf-8') as file:
@@ -50,22 +75,27 @@ def check_license_header(file_path):
                     return False
         return True
     except Exception as e:
-        print(f"Error reading {file_path}: {e}")
+        print(f"{RED}Error reading {file_path}: {e}{RESET}")
         return False
 
+
 def main():
-    # Get the list of files to check from the command line arguments
-    files_to_check = sys.argv[1:]
+    all_files_have_correct_license_headers = True
+
+    # Get the staged files to check for license headers
+    files_to_check = get_committed_files()
 
     # Check each file
     for file_path in files_to_check:
         path = Path(file_path)
         if path.suffix in {'.xml', '.kt'} and not check_license_header(path):
-            print(f"License header missing or incorrect in {file_path}")
-            sys.exit(1)
+            print(f"{RED}License header missing or incorrect in {file_path}{RESET}")
+            all_files_have_correct_license_headers = False
 
-    print("All files have correct license headers.")
-    sys.exit(0)
+    if not all_files_have_correct_license_headers:
+        print(f"\n{YELLOW}Some files have missing or incorrect license headers. :(\nFix them manually or using the fixLicense gradle task and amend your commit.{RESET}")
+    else:
+        print(f"\n{GREEN}All files have correct license headers. :){RESET}")
 
 if __name__ == "__main__":
     main()
