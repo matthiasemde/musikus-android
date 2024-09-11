@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# Run the gradle task to check license headers
+if ! ./gradlew checkLicense; then
+  echo "Errors found in license headers. Please fix them"
+  exit 1
+fi
+
+# Run detekt and android lint
+if ! ./gradlew detekt lint; then
+  echo "Errors found during code analysis. Please review the reports."
+  exit 1
+fi
+
+echo "Code analysis successful!"
