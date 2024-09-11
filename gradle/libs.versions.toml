@@ -18,6 +18,7 @@ compose-bom = "2024.09.00"
 coroutines = "1.8.1"
 dagger-hilt = "2.52"
 datastore-preferences = "1.1.1"
+detekt-formatting = "1.23.3"
 hilt = "2.49"
 jdk-desugar = "2.1.2"
 junit = "4.13.2"
@@ -32,6 +33,7 @@ minSdk = "24"
 mockk = "1.13.12"
 room = "2.6.1"
 room-testing = "1.1.1"
+detekt = "1.23.0"
 # @keep
 targetSdk = "34"
 google-truth = "1.4.4"
@@ -78,6 +80,7 @@ androidx-test-espresso-core = { module = "androidx.test.espresso:espresso-core",
 androidx-test-ext-junit = { module = "androidx.test.ext:junit", version.ref = "androidx-test-ext-junit" }
 androidx-test-runner = { module = "androidx.test:runner", version.ref = "androidx-test-runner" }
 core-jdk-desugaring = { module = "com.android.tools:desugar_jdk_libs", version.ref = "jdk-desugar" }
+detekt-formatting = { module = "io.gitlab.arturbosch.detekt:detekt-formatting", version.ref = "detekt-formatting" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }
 hilt-android-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "dagger-hilt" }
 hilt-android-testing = { module = "com.google.dagger:hilt-android-testing", version.ref = "hilt" }
@@ -103,3 +106,4 @@ hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 license-report = { id = "com.jaredsburrows.license", version.ref = "license-report" }
+detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }

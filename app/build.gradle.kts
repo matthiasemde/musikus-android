@@ -8,6 +8,8 @@ val importedVersionCode = properties["versionCode"] as String
 val importedVersionName = properties["versionName"] as String
 val commitHash = properties["commitHash"] as String
 
+val reportsPath = "$projectDir/build/reports"
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.android.junit5)
@@ -17,6 +19,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.ksp)
     alias(libs.plugins.license.report)
+    alias(libs.plugins.detekt)
 }
 
 android {
@@ -92,10 +95,37 @@ android {
         compose = true
         buildConfig = true
     }
+
+    lint {
+        lintConfig = file("$projectDir/config/androidLint.xml")
+
+//        warningsAsErrors = true
+//        abortOnError = true
+
+        htmlOutput = file("$reportsPath/lint/android.html")
+        xmlOutput = file("$reportsPath/lint/android.xml")
+        textOutput = file("$reportsPath/lint/android.txt")
+    }
 }
 
 room {
     schemaDirectory("$projectDir/schemas")
+}
+
+detekt {
+    // Version of detekt that will be used. When unspecified the latest detekt
+    // version found will be used. Override to stay on the same version.
+    toolVersion = "1.23.6"
+
+    // Point to your custom config defining rules to run, overwriting default behavior
+    config.setFrom("$projectDir/config/detekt.yml")
+
+    // Applies the config files on top of detekt's default config file. `false` by default.
+    buildUponDefaultConfig = true
+
+    // Specify the base path for file paths in the formatted reports.
+    // If not set, all file paths reported will be absolute file path.
+    basePath = "$reportsPath/lint"
 }
 
 tasks.withType<Test> {
@@ -108,19 +138,19 @@ tasks.withType<Test> {
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
     compilerOptions {
         if (project.findProperty("composeCompilerReports") == "true") {
-            val reportPath =
-                "${project.layout.buildDirectory.asFile.get().absolutePath}/reports/composeCompiler"
             freeCompilerArgs.addAll(
                 "-P",
-                "plugin:androidx.compose.compiler.plugins.kotlin:reportsDestination=$reportPath",
+                "plugin:androidx.compose.compiler.plugins.kotlin:reportsDestination=$reportsPath/composeCompiler",
                 "-P",
-                "plugin:androidx.compose.compiler.plugins.kotlin:metricsDestination=$reportPath"
+                "plugin:androidx.compose.compiler.plugins.kotlin:metricsDestination=$reportsPath/composeCompiler"
             )
         }
     }
 }
 
 dependencies {
+    detektPlugins(libs.detekt.formatting)
+
     // BOM
     // https://developer.android.com/jetpack/androidx/releases/compose-kotlin
     // https://developer.android.com/jetpack/compose/bom/bom-mapping
