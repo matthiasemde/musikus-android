@@ -1,5 +1,7 @@
 @file:Suppress("UnstableApiUsage")
 
+import io.gitlab.arturbosch.detekt.Detekt
+import java.io.IOException
 import java.util.Properties
 import java.util.Scanner
 
@@ -51,7 +53,7 @@ android {
                 keyAlias = System.getenv("SIGNING_KEY_ALIAS")
                 keyPassword = System.getenv("SIGNING_KEY_PASSWORD")
             }
-        } catch (e: Exception) {
+        } catch (e: IOException) {
             logger.warn("No signing configuration found, using debug key (message: ${e.message})")
         }
     }
@@ -113,20 +115,53 @@ room {
     schemaDirectory("$projectDir/schemas")
 }
 
+object DetektSettings {
+    const val VERSION = "1.23.6"
+    const val CONFIG_FILE = "config/detekt.yml" // Relative to the project root
+    const val BUILD_UPON_DEFAULT_CONFIG = true
+    const val REPORT_PATH = "lint" // Relative to the reports path
+}
+
 detekt {
     // Version of detekt that will be used. When unspecified the latest detekt
     // version found will be used. Override to stay on the same version.
-    toolVersion = "1.23.6"
+    toolVersion = DetektSettings.VERSION
 
     // Point to your custom config defining rules to run, overwriting default behavior
-    config.setFrom("$projectDir/config/detekt.yml")
+    config.setFrom("$projectDir/${DetektSettings.CONFIG_FILE}")
 
     // Applies the config files on top of detekt's default config file. `false` by default.
-    buildUponDefaultConfig = true
+    buildUponDefaultConfig = DetektSettings.BUILD_UPON_DEFAULT_CONFIG
 
     // Specify the base path for file paths in the formatted reports.
     // If not set, all file paths reported will be absolute file path.
-    basePath = "$reportsPath/lint"
+    basePath = "$reportsPath/${DetektSettings.REPORT_PATH}"
+}
+
+tasks.register<Detekt>("detektOnFiles") {
+    description = "Runs detekt on the changed Kotlin files."
+    version = DetektSettings.VERSION
+    setSource(files("/"))
+    config.setFrom("$projectDir/${DetektSettings.CONFIG_FILE}")
+    buildUponDefaultConfig = true
+    basePath = "$reportsPath/${DetektSettings.REPORT_PATH}"
+
+    doFirst {
+        // Step 1: Get the list of changed Kotlin files
+        val changedKotlinFiles =
+            System.getenv("CHANGED_FILES")?.split(":")?.filter { it.endsWith(".kt") } ?: emptyList()
+
+        // Step 2: Check if there are any Kotlin files changed
+        if (changedKotlinFiles.isEmpty()) {
+            println("No Kotlin files changed in the last commit, skipping Detekt")
+            include("build.gradle.kts") // Include the build file to avoid a no-source error
+        }
+
+        // Step 3: Include the changed Kotlin files in the detekt task
+        changedKotlinFiles.forEach {
+            include(it.removePrefix("app/"))
+        }
+    }
 }
 
 tasks.withType<Test> {
@@ -163,15 +198,15 @@ tasks.register("setupMusikus") {
         // Step 1: Execute the existing bash script to install the pre-commit hook
         if (System.getProperty("os.name").lowercase().contains("win")) {
             exec {
-                workingDir = file("../tools/hooks")
+                workingDir = file("$rootDir/tools/hooks")
                 commandLine("cmd", "/c", "setup_hooks.bat")
             }
         } else {
             exec {
-                commandLine("bash", "../tools/hooks/setup_hooks.sh")
+                commandLine("bash", "$rootDir/tools/hooks/setup_hooks.sh")
             }
         }
-        println("Pre-commit hook installed.")
+        println("Pre-commit hook installed.\n")
 
         // Step 2: Query and store a name for the copyright header
         val scanner = Scanner(System.`in`)
@@ -181,7 +216,7 @@ tasks.register("setupMusikus") {
         require(!name.isNullOrBlank()) { "Name must not be empty." }
         val propertiesFile = file("$rootDir/musikus.properties")
         propertiesFile.writeText("copyrightName=$name")
-        println("Name stored for copyright header: $name")
+        println("Name stored for copyright header: $name\n")
     }
 }
 
@@ -192,7 +227,7 @@ tasks.register("checkLicense") {
     doLast {
         // Execute python script to check license headers
         exec {
-            workingDir = file("../tools")
+            workingDir = file("$rootDir/tools")
             commandLine("python", "check_license_headers.py")
         }
     }
@@ -205,7 +240,7 @@ tasks.register("fixLicense") {
     doLast {
         // Execute python script to update license headers
         exec {
-            workingDir = file("../tools")
+            workingDir = file("$rootDir/tools")
             commandLine("python", "fix_license_headers.py")
         }
     }
