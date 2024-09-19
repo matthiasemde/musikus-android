@@ -50,7 +50,7 @@ import java.util.UUID
 const val DEEP_LINK_KEY = "argument"
 
 @Composable
-fun MusikusApp(
+fun MainScreen(
     timeProvider: TimeProvider,
     mainViewModel: MainViewModel = hiltViewModel(),
     navController: NavHostController = rememberNavController(),
