@@ -57,7 +57,7 @@ class AddSessionUseCaseTest {
                 startTimestamp = fakeTimeProvider.now(),
                 duration = 10.minutes
             )
-        } 
+        }
     }
 
     @BeforeEach

@@ -49,7 +49,6 @@ fun MusikusBottomBar(
     currentTab: Screen.HomeTab?,
     onTabSelected: (Screen.HomeTab) -> Unit,
 ) {
-
     AnimatedVisibility(
         visible = currentTab != null, // only show bottom bar when in home screen
         enter = slideInVertically(

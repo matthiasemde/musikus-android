@@ -32,7 +32,7 @@ fun HomeScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val eventHandler: HomeUiEventHandler = viewModel::onUiEvent
 
-    when(currentTab) {
+    when (currentTab) {
         is Screen.HomeTab.Sessions -> {
             SessionsScreen(
                 mainUiState = mainUiState,

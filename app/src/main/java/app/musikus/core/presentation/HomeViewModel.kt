@@ -27,8 +27,8 @@ typealias HomeUiEventHandler = (HomeUiEvent) -> Unit
 
 sealed class HomeUiEvent {
     data class TabSelected(val tab: Screen.HomeTab) : HomeUiEvent()
-    data object ShowMainMenu: HomeUiEvent()
-    data object HideMainMenu: HomeUiEvent()
+    data object ShowMainMenu : HomeUiEvent()
+    data object HideMainMenu : HomeUiEvent()
 }
 
 @HiltViewModel

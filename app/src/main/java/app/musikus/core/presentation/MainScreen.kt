@@ -110,7 +110,7 @@ fun MainScreen(
             BackHandler(
                 enabled =
                 navController.previousBackStackEntry == null &&
-                        currentTab != Screen.HomeTab.defaultTab,
+                    currentTab != Screen.HomeTab.defaultTab,
                 onBack = { navController.navigateTo(Screen.HomeTab.defaultTab) }
             )
 
@@ -131,8 +131,10 @@ fun MainScreen(
                 ) {
                     composable(
                         route = "home/{tab}",
-                        arguments = listOf(navArgument("tab") {
-                            nullable = true}
+                        arguments = listOf(
+                            navArgument("tab") {
+                                nullable = true
+                            }
                         )
                     ) { backStackEntry ->
                         val tabRoute = backStackEntry.arguments?.getString("tab")
@@ -166,8 +168,10 @@ fun MainScreen(
                 // Active Session
                 composable(
                     route = Screen.ActiveSession.route,
-                    deepLinks = listOf(navDeepLink {
-                        uriPattern = "musikus://activeSession/{$DEEP_LINK_KEY}"}
+                    deepLinks = listOf(
+                        navDeepLink {
+                            uriPattern = "musikus://activeSession/{$DEEP_LINK_KEY}"
+                        }
                     )
                 ) { backStackEntry ->
                     ActiveSession(
