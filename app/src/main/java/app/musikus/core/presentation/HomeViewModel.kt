@@ -10,7 +10,6 @@ package app.musikus.core.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import app.musikus.core.presentation.components.MultiFabState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -21,7 +20,6 @@ import javax.inject.Inject
 
 data class HomeUiState(
     val currentTab: Screen.HomeTab,
-    val multiFabState: MultiFabState,
     val showMainMenu: Boolean,
 )
 
@@ -29,10 +27,8 @@ typealias HomeUiEventHandler = (HomeUiEvent) -> Unit
 
 sealed class HomeUiEvent {
     data class TabSelected(val tab: Screen.HomeTab) : HomeUiEvent()
-    data object ShowMainMenu : HomeUiEvent()
-    data object HideMainMenu : HomeUiEvent()
-    data object ExpandMultiFab : HomeUiEvent()
-    data object CollapseMultiFab : HomeUiEvent()
+    data object ShowMainMenu: HomeUiEvent()
+    data object HideMainMenu: HomeUiEvent()
 }
 
 @HiltViewModel
@@ -45,9 +41,6 @@ class HomeViewModel @Inject constructor() : ViewModel() {
     // Current Tab
     private val _currentTab = MutableStateFlow<Screen.HomeTab>(Screen.HomeTab.defaultTab)
 
-    // Content Scrim over NavBar for Multi FAB etc
-    private val _multiFabState = MutableStateFlow(MultiFabState.COLLAPSED)
-
     // Menu
     private val _showMainMenu = MutableStateFlow(false)
 
@@ -58,11 +51,9 @@ class HomeViewModel @Inject constructor() : ViewModel() {
     val uiState = combine(
         _currentTab,
         _showMainMenu,
-        _multiFabState,
-    ) { currentTab, showMainMenu, multiFabState ->
+    ) { currentTab, showMainMenu ->
         HomeUiState(
             currentTab = currentTab,
-            multiFabState = multiFabState,
             showMainMenu = showMainMenu,
         )
     }.stateIn(
@@ -70,7 +61,6 @@ class HomeViewModel @Inject constructor() : ViewModel() {
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = HomeUiState(
             currentTab = _currentTab.value,
-            multiFabState = _multiFabState.value,
             showMainMenu = _showMainMenu.value,
         )
     )
@@ -85,12 +75,6 @@ class HomeViewModel @Inject constructor() : ViewModel() {
             }
             is HomeUiEvent.HideMainMenu -> {
                 _showMainMenu.update { false }
-            }
-            is HomeUiEvent.ExpandMultiFab -> {
-                _multiFabState.update { MultiFabState.EXPANDED }
-            }
-            is HomeUiEvent.CollapseMultiFab -> {
-                _multiFabState.update { MultiFabState.COLLAPSED }
             }
         }
     }

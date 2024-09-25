@@ -13,6 +13,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import app.musikus.activesession.domain.usecase.ActiveSessionUseCases
+import app.musikus.core.presentation.components.MultiFabState
 import app.musikus.core.presentation.components.showSnackbar
 import app.musikus.settings.domain.ColorSchemeSelections
 import app.musikus.settings.domain.ThemeSelections
@@ -22,19 +23,23 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 
 typealias MainUiEventHandler = (MainUiEvent) -> Unit
 
 sealed class MainUiEvent {
     data class ShowSnackbar(val message: String, val onUndo: (() -> Unit)? = null) : MainUiEvent()
+    data object ExpandMultiFab : MainUiEvent()
+    data object CollapseMultiFab : MainUiEvent()
 }
 
 data class MainUiState(
     val activeTheme: ThemeSelections?,
     val activeColorScheme: ColorSchemeSelections?,
-    var snackbarHost: SnackbarHostState,
-    var isSessionRunning: Boolean
+    val snackbarHost: SnackbarHostState,
+    val isSessionRunning: Boolean,
+    val multiFabState: MultiFabState,
 )
 
 @HiltViewModel
@@ -48,22 +53,29 @@ class MainViewModel @Inject constructor(
      * Private state variables
      */
 
-    /** Snackbar */
+    // Snackbar
     private val _snackbarHost = MutableStateFlow(SnackbarHostState())
 
-    /** Theme */
+    // Theme
     private val _activeTheme = userPreferencesUseCases.getTheme().stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = null
     )
 
+    // Color Scheme
     private val _activeColorScheme = userPreferencesUseCases.getColorScheme().stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = null
     )
 
+    // Content Scrim over NavBar for Multi FAB etc.
+    private val _multiFabState = MutableStateFlow(MultiFabState.COLLAPSED)
+
+    /**
+     * Imported flows
+     */
     private val runningItem = activeSessionUseCases.getRunningItem().stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
@@ -78,13 +90,15 @@ class MainViewModel @Inject constructor(
         _activeTheme,
         _activeColorScheme,
         _snackbarHost,
-        runningItem
-    ) { activeTheme, activeColorScheme, snackbarHost, runningItem ->
+        runningItem,
+        _multiFabState
+    ) { activeTheme, activeColorScheme, snackbarHost, runningItem, multiFabState ->
         MainUiState(
             activeTheme = activeTheme,
             activeColorScheme = activeColorScheme,
             snackbarHost = snackbarHost,
-            isSessionRunning = runningItem != null
+            isSessionRunning = runningItem != null,
+            multiFabState = multiFabState
         )
     }.stateIn(
         scope = viewModelScope,
@@ -93,7 +107,8 @@ class MainViewModel @Inject constructor(
             activeTheme = _activeTheme.value,
             activeColorScheme = _activeColorScheme.value,
             snackbarHost = _snackbarHost.value,
-            isSessionRunning = runningItem.value != null
+            isSessionRunning = runningItem.value != null,
+            multiFabState = _multiFabState.value
         )
     )
 
@@ -107,6 +122,12 @@ class MainViewModel @Inject constructor(
                     message = event.message,
                     onUndo = event.onUndo
                 )
+            }
+            is MainUiEvent.ExpandMultiFab -> {
+                _multiFabState.update { MultiFabState.EXPANDED }
+            }
+            is MainUiEvent.CollapseMultiFab -> {
+                _multiFabState.update { MultiFabState.COLLAPSED }
             }
         }
     }

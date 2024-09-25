@@ -46,6 +46,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -76,6 +77,7 @@ import java.util.UUID
 fun SessionsScreen(
     mainUiState: MainUiState,
     homeUiState: HomeUiState,
+    bottomBarHeight: Dp,
     viewModel: SessionsViewModel = hiltViewModel(),
     navigateTo: (Screen) -> Unit,
     onSessionEdit: (sessionId: UUID) -> Unit,
@@ -100,7 +102,7 @@ fun SessionsScreen(
     val context = LocalContext.current
 
     Scaffold(
-        contentWindowInsets = WindowInsets(bottom = 0.dp),
+        contentWindowInsets = WindowInsets(bottom = bottomBarHeight),
         modifier = Modifier
             .nestedScroll(scrollBehavior.nestedScrollConnection),
         floatingActionButton = {

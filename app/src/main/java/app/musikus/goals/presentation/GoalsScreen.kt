@@ -47,6 +47,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -58,6 +59,7 @@ import app.musikus.core.presentation.HomeUiEventHandler
 import app.musikus.core.presentation.HomeUiState
 import app.musikus.core.presentation.MainUiEvent
 import app.musikus.core.presentation.MainUiEventHandler
+import app.musikus.core.presentation.MainUiState
 import app.musikus.core.presentation.Screen
 import app.musikus.core.presentation.components.ActionBar
 import app.musikus.core.presentation.components.CommonMenuSelections
@@ -76,12 +78,14 @@ import app.musikus.goals.data.GoalsSortMode
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun GoalsScreen(
+    mainUiState: MainUiState,
     mainEventHandler: MainUiEventHandler,
     homeUiState: HomeUiState,
     homeEventHandler: HomeUiEventHandler,
     navigateTo: (Screen) -> Unit,
     viewModel: GoalsViewModel = hiltViewModel(),
     timeProvider: TimeProvider,
+    bottomBarHeight: Dp,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val eventHandler: GoalsUiEventHandler = viewModel::onUiEvent
@@ -94,22 +98,22 @@ fun GoalsScreen(
     )
 
     BackHandler(
-        enabled = homeUiState.multiFabState == MultiFabState.EXPANDED,
-        onBack = { homeEventHandler(HomeUiEvent.CollapseMultiFab) }
+        enabled = mainUiState.multiFabState == MultiFabState.EXPANDED,
+        onBack = { mainEventHandler(MainUiEvent.CollapseMultiFab) }
     )
 
     Scaffold(
-        contentWindowInsets = WindowInsets(bottom = 0.dp), // makes sure FAB is not shifted up
+        contentWindowInsets = WindowInsets(bottom = bottomBarHeight), // makes sure FAB is above the bottom Bar
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         floatingActionButton = {
             MultiFAB(
-                state = homeUiState.multiFabState,
+                state = mainUiState.multiFabState,
                 onStateChange = { newState ->
                     if (newState == MultiFabState.EXPANDED) {
-                        homeEventHandler(HomeUiEvent.ExpandMultiFab)
+                        mainEventHandler(MainUiEvent.ExpandMultiFab)
                         eventHandler(GoalsUiEvent.ClearActionMode)
                     } else {
-                        homeEventHandler(HomeUiEvent.CollapseMultiFab)
+                        mainEventHandler(MainUiEvent.CollapseMultiFab)
                     }
                 },
                 contentDescription = stringResource(id = R.string.goals_screen_multi_fab_description),
@@ -117,7 +121,7 @@ fun GoalsScreen(
                     MiniFABData(
                         onClick = {
                             eventHandler(GoalsUiEvent.AddGoalButtonPressed(oneShot = true))
-                            homeEventHandler(HomeUiEvent.CollapseMultiFab)
+                            mainEventHandler(MainUiEvent.CollapseMultiFab)
                         },
                         label = stringResource(id = R.string.goals_non_repeating),
                         icon = Icons.Filled.LocalFireDepartment,
@@ -125,7 +129,7 @@ fun GoalsScreen(
                     MiniFABData(
                         onClick = {
                             eventHandler(GoalsUiEvent.AddGoalButtonPressed(oneShot = false))
-                            homeEventHandler(HomeUiEvent.CollapseMultiFab)
+                            mainEventHandler(MainUiEvent.CollapseMultiFab)
                         },
                         label = stringResource(id = R.string.goals_repeating),
                         icon = Icons.Rounded.Repeat,
@@ -334,7 +338,7 @@ fun GoalsScreen(
             // Content Scrim for multiFAB
             AnimatedVisibility(
                 modifier = Modifier.zIndex(1f),
-                visible = homeUiState.multiFabState == MultiFabState.EXPANDED,
+                visible = mainUiState.multiFabState == MultiFabState.EXPANDED,
                 enter = fadeIn(),
                 exit = fadeOut()
             ) {
@@ -345,7 +349,7 @@ fun GoalsScreen(
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null,
-                            onClick = { homeEventHandler(HomeUiEvent.CollapseMultiFab) }
+                            onClick = { mainEventHandler(MainUiEvent.CollapseMultiFab) }
                         )
                 )
             }
