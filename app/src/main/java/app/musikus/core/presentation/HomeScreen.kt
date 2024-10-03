@@ -38,9 +38,8 @@ fun HomeScreen(
             SessionsScreen(
                 mainUiState = mainUiState,
                 mainEventHandler = mainEventHandler,
-                homeUiState = uiState,
-                homeEventHandler = eventHandler,
                 navigateTo = navigateTo,
+                navigateUp = navigateUp,
                 onSessionEdit = {},
                 bottomBarHeight = bottomBarHeight,
 //                        onSessionEdit = { sessionId: UUID ->
@@ -57,7 +56,7 @@ fun HomeScreen(
             GoalsScreen(
                 mainUiState = mainUiState,
                 mainEventHandler = mainEventHandler,
-                homeEventHandler = eventHandler,
+                navigateUp = navigateUp,
                 timeProvider = timeProvider,
                 bottomBarHeight = bottomBarHeight,
             )
@@ -72,9 +71,9 @@ fun HomeScreen(
         }
         is HomeTab.Statistics -> {
             Statistics(
-                homeUiState = uiState,
-                homeEventHandler = eventHandler,
+                mainEventHandler = mainEventHandler,
                 navigateTo = navigateTo,
+                navigateUp = navigateUp,
                 timeProvider = timeProvider,
                 bottomBarHeight = bottomBarHeight,
             )

@@ -33,13 +33,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -74,9 +71,9 @@ import app.musikus.R
 import app.musikus.core.domain.DateFormat
 import app.musikus.core.domain.TimeProvider
 import app.musikus.core.domain.musikusFormat
-import app.musikus.core.presentation.HomeUiEvent
-import app.musikus.core.presentation.HomeUiEventHandler
-import app.musikus.core.presentation.HomeUiState
+import app.musikus.core.presentation.MainUiEvent
+import app.musikus.core.presentation.MainUiEventHandler
+import app.musikus.core.presentation.MusikusTopBar
 import app.musikus.core.presentation.Screen
 import app.musikus.core.presentation.theme.libraryItemColors
 import app.musikus.core.presentation.theme.spacing
@@ -101,9 +98,9 @@ fun NavGraphBuilder.addStatisticsNavigationGraph(
 @Composable
 fun Statistics(
     statisticsViewModel: StatisticsViewModel = hiltViewModel(),
-    homeUiState: HomeUiState,
-    homeEventHandler: HomeUiEventHandler,
+    mainEventHandler: MainUiEventHandler,
     navigateTo: (Screen) -> Unit,
+    navigateUp: () -> Unit,
     timeProvider: TimeProvider,
     bottomBarHeight: Dp,
 ) {
@@ -115,19 +112,12 @@ fun Statistics(
         contentWindowInsets = WindowInsets(bottom = bottomBarHeight),
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            LargeTopAppBar(
-                title = { Text(text = stringResource(R.string.statistics_title)) },
+            MusikusTopBar(
+                isTopLevel = true,
+                title = UiText.StringResource(R.string.statistics_title),
                 scrollBehavior = scrollBehavior,
-                actions = {
-                    IconButton(onClick = {
-                        homeEventHandler(HomeUiEvent.ShowMainMenu)
-                    }) {
-                        Icon(
-                            imageVector = Icons.Default.MoreVert,
-                            contentDescription = stringResource(R.string.core_kebab_menu_description)
-                        )
-                    }
-                }
+                navigateUp = navigateUp,
+                openMainMenu = { mainEventHandler(MainUiEvent.OpenMainMenu) }
             )
         }
     ) { paddingValues ->

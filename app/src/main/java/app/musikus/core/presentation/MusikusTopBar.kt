@@ -34,8 +34,8 @@ fun MusikusTopBar(
     isTopLevel: Boolean,
     title: UiText,
     scrollBehavior: TopAppBarScrollBehavior,
-    Actions: @Composable () -> Unit = {},
-    OverflowActions: (@Composable () -> Unit)? = null, // Should be a list of DropdownMenuItem()
+    actions: @Composable () -> Unit = {},
+    overflowActions: (@Composable () -> Unit)? = null, // Should be a list of DropdownMenuItem()
     navigateUp: () -> Unit,
     openMainMenu: () -> Unit,
 ) {
@@ -65,12 +65,12 @@ fun MusikusTopBar(
         },
         actions = {
             // Screen specific actions
-            Actions()
+            actions()
 
             /*
              * Optional screen specific overflow menu
              */
-            if (OverflowActions == null)
+            if (overflowActions == null)
                 return@LargeTopAppBar
 
             var showOverflowMenu by remember { mutableStateOf(false) }
@@ -84,7 +84,7 @@ fun MusikusTopBar(
                     expanded = showOverflowMenu,
                     onDismissRequest = { showOverflowMenu = false },
                 ) {
-                    OverflowActions()
+                    overflowActions()
                 }
             }
         }
