@@ -10,11 +10,9 @@ package app.musikus.library.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import app.musikus.R
 import app.musikus.core.data.Nullable
 import app.musikus.core.domain.SortDirection
 import app.musikus.core.domain.SortInfo
-import app.musikus.core.presentation.utils.UiText
 import app.musikus.library.data.LibraryFolderSortMode
 import app.musikus.library.data.LibraryItemSortMode
 import app.musikus.library.data.daos.LibraryFolder
@@ -136,22 +134,22 @@ class LibraryViewModel @Inject constructor(
     /**
      * Composing the Ui state
      */
-    private val topBarUiState = _activeFolder.map { activeFolder ->
-        val title = activeFolder?.name?.let { UiText.DynamicString(it) } ?: UiText.StringResource(R.string.library_title)
-        val showBackButton = activeFolder != null
-
-        LibraryTopBarUiState(
-            title = title,
-            showBackButton = showBackButton,
-        )
-    }.stateIn(
-        scope = viewModelScope,
-        started = WhileSubscribed(5000),
-        initialValue = LibraryTopBarUiState(
-            title = UiText.StringResource(R.string.library_title),
-            showBackButton = false,
-        )
-    )
+//    private val topBarUiState = _activeFolder.map { activeFolder ->
+//        val title = activeFolder?.name?.let { UiText.DynamicString(it) } ?: UiText.StringResource(R.string.library_title)
+//        val showBackButton = activeFolder != null
+//
+//        LibraryTopBarUiState(
+//            title = title,
+//            showBackButton = showBackButton,
+//        )
+//    }.stateIn(
+//        scope = viewModelScope,
+//        started = WhileSubscribed(5000),
+//        initialValue = LibraryTopBarUiState(
+//            title = UiText.StringResource(R.string.library_title),
+//            showBackButton = false,
+//        )
+//    )
 
     private val actionModeUiState = combine(
         _selectedFolderIds,
@@ -357,14 +355,12 @@ class LibraryViewModel @Inject constructor(
     )
 
     val uiState = combine(
-        topBarUiState,
         actionModeUiState,
         contentUiState,
         dialogUiState,
         fabUiState,
-    ) { topBarUiState, actionModeUiState, contentUiState, dialogUiState, fabUiState ->
+    ) { actionModeUiState, contentUiState, dialogUiState, fabUiState ->
         LibraryUiState(
-            topBarUiState = topBarUiState,
             actionModeUiState = actionModeUiState,
             contentUiState = contentUiState,
             dialogUiState = dialogUiState,
@@ -374,7 +370,6 @@ class LibraryViewModel @Inject constructor(
         scope = viewModelScope,
         started = WhileSubscribed(5000),
         initialValue = LibraryUiState(
-            topBarUiState = topBarUiState.value,
             actionModeUiState = actionModeUiState.value,
             contentUiState = contentUiState.value,
             dialogUiState = dialogUiState.value,

@@ -33,6 +33,7 @@
     <string name="components_sort_menu_title">Sort by</string>
 
     <!-- TopBar -->
+    <string name="components_top_bar_menu_description">Main menu</string>
     <string name="components_top_bar_back_description">Back</string>
 
     <!-- ActionBar -->

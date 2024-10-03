@@ -23,15 +23,28 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.ModalDrawerSheet
+import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.Dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -41,9 +54,11 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import app.musikus.activesession.presentation.ActiveSession
 import app.musikus.core.domain.TimeProvider
+import app.musikus.core.presentation.components.MainMenu
 import app.musikus.core.presentation.theme.MusikusTheme
 import app.musikus.settings.presentation.addSettingsNavigationGraph
 import app.musikus.statistics.presentation.addStatisticsNavigationGraph
+import kotlinx.coroutines.launch
 import kotlin.reflect.typeOf
 
 const val DEEP_LINK_KEY = "argument"
@@ -51,11 +66,11 @@ const val DEEP_LINK_KEY = "argument"
 @Composable
 fun MainScreen(
     timeProvider: TimeProvider,
-    mainViewModel: MainViewModel = hiltViewModel(),
+    viewModel: MainViewModel = hiltViewModel(),
     navController: NavHostController = rememberNavController(),
 ) {
-    val uiState by mainViewModel.uiState.collectAsStateWithLifecycle()
-    val eventHandler = mainViewModel::onUiEvent
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val eventHandler = viewModel::onUiEvent
 
     // This line ensures, that the app is only drawn when the proper theme is loaded
     // TODO: make sure this is the right way to do it
@@ -74,44 +89,73 @@ fun MainScreen(
         theme = theme,
         colorScheme = colorScheme
     ) {
-        // This is the main scaffold of the app which contains the bottom navigation,
-        // the snackbar host and the nav host
-        Scaffold(
-            snackbarHost = {
-                SnackbarHost(hostState = uiState.snackbarHost)
-            },
-            bottomBar = {
-                MusikusBottomBar(
-                    mainUiState = uiState,
-                    mainEventHandler = eventHandler,
-                    currentTab = currentTab,
-                    onTabSelected = { selectedTab ->
-                        navController.navigate(Screen.Home(selectedTab)) {
+        val scope = rememberCoroutineScope()
+        val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+
+        val lifeCycleOwner = LocalLifecycleOwner.current
+
+        LaunchedEffect(viewModel.eventChannel, lifeCycleOwner.lifecycle) {
+            lifeCycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.eventChannel.collect {
+                    when (it) {
+                        is MainEvent.OpenMainDrawer -> drawerState.open()
+                    }
+                }
+            }
+        }
+
+        ModalNavigationDrawer(
+            drawerState = drawerState,
+            drawerContent = {
+                ModalDrawerSheet(
+                    modifier = Modifier.width(IntrinsicSize.Min)
+                ) {
+                    MainMenu(
+                        navigateTo = { navController.navigate(it) },
+                        onDismiss = { scope.launch { drawerState.close() } }
+                    )
+                }
+            }
+        ) {
+            // This is the main scaffold of the app which contains the bottom navigation,
+            // the snackbar host and the nav host
+            Scaffold(
+                snackbarHost = {
+                    SnackbarHost(hostState = uiState.snackbarHost)
+                },
+                bottomBar = {
+                    MusikusBottomBar(
+                        mainUiState = uiState,
+                        mainEventHandler = eventHandler,
+                        currentTab = currentTab,
+                        onTabSelected = { selectedTab ->
+                            navController.navigate(Screen.Home(selectedTab)) {
                             navController.popBackStack()
                         }
-                    },
+                        },
+                    )
+                }
+            ) { innerPadding ->
+
+                // Calculate the height of the bottom bar so we can add it as  padding in the home tabs
+                val bottomBarHeight = innerPadding.calculateBottomPadding()
+
+                // Handle back press when on home screen
+                BackHandler(
+                    enabled =
+                    (navController.previousBackStackEntry == null) &&
+                            (currentTab != HomeTab.default),
+                    onBack = { navController.navigate(Screen.Home(HomeTab.default)) }
+                )
+
+                MusikusNavHost(
+                    navController = navController,
+                    mainUiState = uiState,
+                    mainEventHandler = eventHandler,
+                    bottomBarHeight = bottomBarHeight,
+                    timeProvider = timeProvider
                 )
             }
-        ) { innerPadding ->
-
-            // Calculate the height of the bottom bar so we can add it as  padding in the home tabs
-            val bottomBarHeight = innerPadding.calculateBottomPadding()
-
-            // Handle back press when on home screen
-            BackHandler(
-                enabled =
-                (navController.previousBackStackEntry == null) &&
-                        (currentTab != HomeTab.default),
-                onBack = { navController.navigate(Screen.Home(HomeTab.default)) }
-            )
-
-            MusikusNavHost(
-                navController = navController,
-                mainUiState = uiState,
-                mainEventHandler = eventHandler,
-                bottomBarHeight = bottomBarHeight,
-                timeProvider = timeProvider
-            )
         }
     }
 }
@@ -146,20 +190,22 @@ fun MusikusNavHost(
                 bottomBarHeight = bottomBarHeight,
                 currentTab = tab,
                 navigateTo = { navController.navigate(it) },
-                timeProvider = timeProvider
+                navigateUp = navController::navigateUp,
+                timeProvider = timeProvider,
             )
         }
 
-//        // Edit Session
-//        composable<Screen.EditSession> { backStackEntry ->
-//            val sessionId = backStackEntry.arguments?.getString("sessionId")
-//                ?: return@composable navController.navigate(Sessions)
+
+            // //Edit Session
+    //        composable<Screen.EditSession> { backStackEntry ->
+    //            val sessionId = backStackEntry.arguments?.getString("sessionId")
+    //                ?: return@composable navController.navigate(Sessions)
 //
-//            EditSession(
-//                sessionToEditId = UUID.fromString(sessionId),
-//                navigateUp = navController::navigateUp
-//            )
-//        }
+    //            EditSession(
+    //                sessionToEditId = UUID.fromString(sessionId),
+    //                navigateUp = navController::navigateUp
+    //            )
+    //        }
 
         // Active Session
         composable<Screen.ActiveSession>(
