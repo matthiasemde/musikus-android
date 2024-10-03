@@ -9,7 +9,6 @@
 package app.musikus.goals.presentation
 
 import app.musikus.core.domain.SortDirection
-import app.musikus.core.presentation.utils.UiText
 import app.musikus.goals.data.GoalsSortMode
 import app.musikus.goals.domain.GoalInstanceWithProgressAndDescriptionWithLibraryItems
 import app.musikus.library.data.daos.LibraryItem
@@ -24,11 +23,8 @@ data class GoalsSortMenuUiState(
 )
 
 data class GoalsTopBarUiState(
-    val title: UiText,
-    val showBackButton: Boolean,
     val sortMenuUiState: GoalsSortMenuUiState,
 )
-//    : TopBarUiState
 
 data class GoalsActionModeUiState(
     val isActionMode: Boolean,
