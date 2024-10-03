@@ -56,15 +56,11 @@ import app.musikus.R
 import app.musikus.core.domain.TimeProvider
 import app.musikus.core.presentation.HomeUiEvent
 import app.musikus.core.presentation.HomeUiEventHandler
-import app.musikus.core.presentation.HomeUiState
 import app.musikus.core.presentation.MainUiEvent
 import app.musikus.core.presentation.MainUiEventHandler
 import app.musikus.core.presentation.MainUiState
-import app.musikus.core.presentation.Screen
 import app.musikus.core.presentation.components.ActionBar
-import app.musikus.core.presentation.components.CommonMenuSelections
 import app.musikus.core.presentation.components.DeleteConfirmationBottomSheet
-import app.musikus.core.presentation.components.MainMenu
 import app.musikus.core.presentation.components.MiniFABData
 import app.musikus.core.presentation.components.MultiFAB
 import app.musikus.core.presentation.components.MultiFabState
@@ -80,9 +76,7 @@ import app.musikus.goals.data.GoalsSortMode
 fun GoalsScreen(
     mainUiState: MainUiState,
     mainEventHandler: MainUiEventHandler,
-    homeUiState: HomeUiState,
     homeEventHandler: HomeUiEventHandler,
-    navigateTo: (Screen) -> Unit,
     viewModel: GoalsViewModel = hiltViewModel(),
     timeProvider: TimeProvider,
     bottomBarHeight: Dp,
@@ -165,18 +159,6 @@ fun GoalsScreen(
                                 contentDescription = stringResource(id = R.string.core_kebab_menu_description)
                             )
                         }
-                        MainMenu(
-                            show = homeUiState.showMainMenu,
-                            onDismiss = { homeEventHandler(HomeUiEvent.HideMainMenu) },
-                            onSelection = { commonSelection ->
-                                homeEventHandler(HomeUiEvent.HideMainMenu)
-
-                                when (commonSelection) {
-                                    CommonMenuSelections.SETTINGS -> { navigateTo(Screen.Settings) }
-                                }
-                            },
-                            uniqueMenuItems = {}
-                        )
                     }
                 }
 

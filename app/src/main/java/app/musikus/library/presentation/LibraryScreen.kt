@@ -35,17 +35,13 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.rounded.Folder
 import androidx.compose.material.icons.rounded.MusicNote
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.Scaffold
@@ -75,17 +71,12 @@ import app.musikus.R
 import app.musikus.core.data.UUIDConverter
 import app.musikus.core.domain.DateFormat
 import app.musikus.core.domain.musikusFormat
-import app.musikus.core.presentation.HomeUiEvent
-import app.musikus.core.presentation.HomeUiEventHandler
-import app.musikus.core.presentation.HomeUiState
 import app.musikus.core.presentation.MainUiEvent
 import app.musikus.core.presentation.MainUiEventHandler
 import app.musikus.core.presentation.MainUiState
-import app.musikus.core.presentation.Screen
+import app.musikus.core.presentation.MusikusTopBar
 import app.musikus.core.presentation.components.ActionBar
-import app.musikus.core.presentation.components.CommonMenuSelections
 import app.musikus.core.presentation.components.DeleteConfirmationBottomSheet
-import app.musikus.core.presentation.components.MainMenu
 import app.musikus.core.presentation.components.MiniFABData
 import app.musikus.core.presentation.components.MultiFAB
 import app.musikus.core.presentation.components.MultiFabState
@@ -109,10 +100,8 @@ import java.time.ZonedDateTime
 fun Library(
     mainUiState: MainUiState,
     mainEventHandler: MainUiEventHandler,
-    homeUiState: HomeUiState,
-    homeEventHandler: HomeUiEventHandler,
     viewModel: LibraryViewModel = hiltViewModel(),
-    navigateTo: (Screen) -> Unit,
+    navigateUp: () -> Unit,
     bottomBarHeight: Dp,
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
@@ -120,10 +109,10 @@ fun Library(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val eventHandler = viewModel::onUiEvent
 
-    BackHandler(
-        enabled = uiState.topBarUiState.showBackButton,
-        onBack = { eventHandler(LibraryUiEvent.BackButtonPressed) }
-    )
+//    BackHandler(
+//        enabled = uiState.topBarUiState.showBackButton,
+//        onBack = { eventHandler(LibraryUiEvent.BackButtonPressed) }
+//    )
 
     BackHandler(
         enabled = uiState.actionModeUiState.isActionMode,
@@ -186,43 +175,13 @@ fun Library(
             }
         },
         topBar = {
-            val topBarUiState = uiState.topBarUiState
-            LargeTopAppBar(
+            // Main top bar
+            MusikusTopBar(
+                isTopLevel = true,
+                title = UiText.StringResource(R.string.library_title),
                 scrollBehavior = scrollBehavior,
-                title = { Text(text = topBarUiState.title.asString()) },
-                navigationIcon = {
-                    if (topBarUiState.showBackButton) {
-                        IconButton(onClick = { eventHandler(LibraryUiEvent.BackButtonPressed) }) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-                                contentDescription = stringResource(
-                                    id = R.string.components_top_bar_back_description
-                                )
-                            )
-                        }
-                    }
-                },
-                actions = {
-                    IconButton(onClick = {
-                        homeEventHandler(HomeUiEvent.ShowMainMenu)
-                    }) {
-                        Icon(
-                            imageVector = Icons.Default.MoreVert,
-                            contentDescription = stringResource(id = R.string.core_kebab_menu_description)
-                        )
-                        MainMenu(
-                            show = homeUiState.showMainMenu,
-                            onDismiss = { homeEventHandler(HomeUiEvent.HideMainMenu) },
-                            onSelection = { commonSelection ->
-                                homeEventHandler(HomeUiEvent.HideMainMenu)
-
-                                when (commonSelection) {
-                                    CommonMenuSelections.SETTINGS -> { navigateTo(Screen.Settings) }
-                                }
-                            }
-                        )
-                    }
-                }
+                navigateUp = navigateUp,
+                openMainMenu = { mainEventHandler(MainUiEvent.OpenMainMenu) }
             )
 
             // Action bar

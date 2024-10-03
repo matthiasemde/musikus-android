@@ -27,6 +27,7 @@ fun HomeScreen(
     currentTab: HomeTab,
     viewModel: HomeViewModel = hiltViewModel(),
     navigateTo: (Screen) -> Unit,
+    navigateUp: () -> Unit,
     timeProvider: TimeProvider,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -56,9 +57,7 @@ fun HomeScreen(
             GoalsScreen(
                 mainUiState = mainUiState,
                 mainEventHandler = mainEventHandler,
-                homeUiState = uiState,
                 homeEventHandler = eventHandler,
-                navigateTo = navigateTo,
                 timeProvider = timeProvider,
                 bottomBarHeight = bottomBarHeight,
             )
@@ -67,9 +66,7 @@ fun HomeScreen(
             Library(
                 mainUiState = mainUiState,
                 mainEventHandler = mainEventHandler,
-                homeUiState = uiState,
-                homeEventHandler = eventHandler,
-                navigateTo = navigateTo,
+                navigateUp = navigateUp,
                 bottomBarHeight = bottomBarHeight,
             )
         }

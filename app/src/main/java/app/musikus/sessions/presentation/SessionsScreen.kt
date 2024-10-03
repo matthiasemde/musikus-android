@@ -59,9 +59,7 @@ import app.musikus.core.presentation.MainUiEventHandler
 import app.musikus.core.presentation.MainUiState
 import app.musikus.core.presentation.Screen
 import app.musikus.core.presentation.components.ActionBar
-import app.musikus.core.presentation.components.CommonMenuSelections
 import app.musikus.core.presentation.components.DeleteConfirmationBottomSheet
-import app.musikus.core.presentation.components.MainMenu
 import app.musikus.core.presentation.components.Selectable
 import app.musikus.core.presentation.theme.spacing
 import app.musikus.core.presentation.utils.DurationString
@@ -151,18 +149,6 @@ fun SessionsScreen(
                         Icon(
                             imageVector = Icons.Default.MoreVert,
                             contentDescription = stringResource(id = R.string.core_kebab_menu_description)
-                        )
-                        MainMenu(
-                            show = homeUiState.showMainMenu,
-                            onDismiss = { homeEventHandler(HomeUiEvent.HideMainMenu) },
-                            onSelection = { commonSelection ->
-                                homeEventHandler(HomeUiEvent.HideMainMenu)
-
-                                when (commonSelection) {
-                                    CommonMenuSelections.SETTINGS -> navigateTo(Screen.Settings)
-                                }
-                            },
-                            uniqueMenuItems = { }
                         )
                     }
                 }

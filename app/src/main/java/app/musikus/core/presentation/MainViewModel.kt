@@ -19,11 +19,14 @@ import app.musikus.settings.domain.ColorSchemeSelections
 import app.musikus.settings.domain.ThemeSelections
 import app.musikus.settings.domain.usecase.UserPreferencesUseCases
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 typealias MainUiEventHandler = (MainUiEvent) -> Unit
@@ -32,6 +35,11 @@ sealed class MainUiEvent {
     data class ShowSnackbar(val message: String, val onUndo: (() -> Unit)? = null) : MainUiEvent()
     data object ExpandMultiFab : MainUiEvent()
     data object CollapseMultiFab : MainUiEvent()
+    data object OpenMainMenu : MainUiEvent()
+}
+
+sealed class MainEvent {
+    data object OpenMainDrawer : MainEvent()
 }
 
 data class MainUiState(
@@ -55,6 +63,10 @@ class MainViewModel @Inject constructor(
 
     // Snackbar
     private val _snackbarHost = MutableStateFlow(SnackbarHostState())
+
+    // Main Menu Drawer
+    private val _eventChannel = Channel<MainEvent>()
+    val eventChannel = _eventChannel.receiveAsFlow()
 
     // Theme
     private val _activeTheme = userPreferencesUseCases.getTheme().stateIn(
@@ -128,6 +140,11 @@ class MainViewModel @Inject constructor(
             }
             is MainUiEvent.CollapseMultiFab -> {
                 _multiFabState.update { MultiFabState.COLLAPSED }
+            }
+            is MainUiEvent.OpenMainMenu -> {
+                viewModelScope.launch {
+                    _eventChannel.send(MainEvent.OpenMainDrawer)
+                }
             }
         }
     }

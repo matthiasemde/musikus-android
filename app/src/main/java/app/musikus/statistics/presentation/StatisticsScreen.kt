@@ -78,8 +78,6 @@ import app.musikus.core.presentation.HomeUiEvent
 import app.musikus.core.presentation.HomeUiEventHandler
 import app.musikus.core.presentation.HomeUiState
 import app.musikus.core.presentation.Screen
-import app.musikus.core.presentation.components.CommonMenuSelections
-import app.musikus.core.presentation.components.MainMenu
 import app.musikus.core.presentation.theme.libraryItemColors
 import app.musikus.core.presentation.theme.spacing
 import app.musikus.core.presentation.utils.DurationFormat
@@ -127,18 +125,6 @@ fun Statistics(
                         Icon(
                             imageVector = Icons.Default.MoreVert,
                             contentDescription = stringResource(R.string.core_kebab_menu_description)
-                        )
-                        MainMenu(
-                            show = homeUiState.showMainMenu,
-                            onDismiss = { homeEventHandler(HomeUiEvent.HideMainMenu) },
-                            onSelection = { commonSelection ->
-                                homeEventHandler(HomeUiEvent.HideMainMenu)
-
-                                when (commonSelection) {
-                                    CommonMenuSelections.SETTINGS -> { navigateTo(Screen.Settings) }
-                                }
-                            },
-                            uniqueMenuItems = {}
                         )
                     }
                 }
