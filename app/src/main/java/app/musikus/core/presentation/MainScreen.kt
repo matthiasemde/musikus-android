@@ -37,13 +37,12 @@ import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
 import androidx.navigation.NavController.OnDestinationChangedListener
 import androidx.navigation.NavHostController
-import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
 import androidx.navigation.navigation
+import androidx.navigation.toRoute
 import app.musikus.activesession.presentation.ActiveSession
 import app.musikus.core.domain.TimeProvider
 import app.musikus.core.presentation.theme.MusikusTheme
@@ -149,16 +148,9 @@ fun MusikusNavHost(
             route = Screen.Home.route,
             startDestination = Screen.HomeTab.defaultTab.route
         ) {
-            composable(
-                route = "home/{tab}",
-                arguments = listOf(
-                    navArgument("tab") {
-                        nullable = true
-                    }
-                )
-            ) { backStackEntry ->
-                val tabRoute = backStackEntry.arguments?.getString("tab")
-                val tab = Screen.HomeTab.allTabs.first { it.subRoute == tabRoute }
+            composable<Screen.HomeTab> { backStackEntry ->
+                val args = backStackEntry.toRoute<Screen.HomeTab>()
+                val tab = Screen.HomeTab.allTabs.first { it.subRoute == args.subRoute }
 
                 HomeScreen(
                     mainUiState = mainUiState,
@@ -172,10 +164,7 @@ fun MusikusNavHost(
         }
 
         // Edit Session
-        composable(
-            route = Screen.EditSession.route,
-            arguments = listOf(navArgument("sessionId") { type = NavType.StringType })
-        ) { backStackEntry ->
+        composable<Screen.EditSession> { backStackEntry ->
             val sessionId = backStackEntry.arguments?.getString("sessionId")
                 ?: return@composable navController.navigate(Screen.HomeTab.Sessions.route)
 
@@ -186,8 +175,7 @@ fun MusikusNavHost(
         }
 
         // Active Session
-        composable(
-            route = Screen.ActiveSession.route,
+        composable<Screen.ActiveSession>(
             deepLinks = listOf(
                 navDeepLink {
                     uriPattern = "musikus://activeSession/{$DEEP_LINK_KEY}"
@@ -212,7 +200,7 @@ fun MusikusNavHost(
 }
 
 fun NavController.navigateTo(screen: Screen) {
-    navigate(screen.route) {
+    navigate(screen) {
         // We do not want to keep a back stack during navigation events between home tabs,
         // therefore, pop the back stack every time we navigate to a home tab
         if (screen is Screen.HomeTab) {

@@ -67,12 +67,12 @@ fun MusikusBottomBar(
                     val painterCount = 5
                     var activePainter by remember { mutableIntStateOf(0) }
                     val painter = rememberVectorPainter(
-                        image = tab.displayData.icon.asIcon()
+                        image = tab.getDisplayData()?.icon?.asIcon()!!
                     )
                     val animatedPainters = (0..painterCount).map {
                         rememberAnimatedVectorPainter(
                             animatedImageVector = AnimatedImageVector.animatedVectorResource(
-                                tab.displayData.animatedIcon!!
+                                tab.getDisplayData()?.animatedIcon!!
                             ),
                             atEnd = selected && activePainter == it
                         )
@@ -93,7 +93,7 @@ fun MusikusBottomBar(
                         },
                         label = {
                             Text(
-                                text = tab.displayData.title.asAnnotatedString(),
+                                text = tab.getDisplayData()?.title?.asAnnotatedString()!!,
                                 fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
                             )
                         },

@@ -91,12 +91,12 @@ import app.musikus.statistics.presentation.sessionstatistics.SessionStatistics
 fun NavGraphBuilder.addStatisticsNavigationGraph(
     navController: NavController,
 ) {
-    composable(
-        route = Screen.SessionStatistics.route,
-    ) { SessionStatistics(navigateUp = navController::navigateUp) }
-    composable(
-        route = Screen.GoalStatistics.route,
-    ) { GoalStatistics(navigateUp = navController::navigateUp) }
+    composable<Screen.SessionStatistics> {
+        SessionStatistics(navigateUp = navController::navigateUp)
+    }
+    composable<Screen.GoalStatistics> {
+        GoalStatistics(navigateUp = navController::navigateUp)
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
