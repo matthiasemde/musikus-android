@@ -117,7 +117,8 @@ fun MainScreen(
                         onDismiss = { scope.launch { drawerState.close() } }
                     )
                 }
-            }
+            },
+            gesturesEnabled = drawerState.isOpen, // only allow gestures to close the drawer once it is open
         ) {
             // This is the main scaffold of the app which contains the bottom navigation,
             // the snackbar host and the nav host
