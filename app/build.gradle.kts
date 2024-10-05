@@ -254,4 +254,5 @@ dependencies {
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.google.truth)
     androidTestImplementation(libs.android.arch.persistence.room.testing)
+    androidTestImplementation(libs.androidx.test.navigation)
 }

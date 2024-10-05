@@ -30,6 +30,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.unit.Dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavBackStackEntry
@@ -114,82 +115,99 @@ fun MainScreen(
                 onBack = { navController.navigateTo(Screen.HomeTab.defaultTab) }
             )
 
-            NavHost(
+            MusikusNavHost(
                 navController = navController,
-                startDestination = Screen.Home.route,
-                enterTransition = {
-                    getEnterTransition()
-                },
-                exitTransition = {
-                    getExitTransition()
-                }
-            ) {
-                // Home
-                navigation(
-                    route = Screen.Home.route,
-                    startDestination = Screen.HomeTab.defaultTab.route
-                ) {
-                    composable(
-                        route = "home/{tab}",
-                        arguments = listOf(
-                            navArgument("tab") {
-                                nullable = true
-                            }
-                        )
-                    ) { backStackEntry ->
-                        val tabRoute = backStackEntry.arguments?.getString("tab")
-                        val tab = Screen.HomeTab.allTabs.first { it.subRoute == tabRoute }
+                mainUiState = uiState,
+                mainEventHandler = eventHandler,
+                bottomBarHeight = bottomBarHeight,
+                timeProvider = timeProvider
+            )
+        }
+    }
+}
 
-                        HomeScreen(
-                            mainUiState = uiState,
-                            mainEventHandler = eventHandler,
-                            bottomBarHeight = bottomBarHeight,
-                            currentTab = tab,
-                            navigateTo = navController::navigateTo,
-                            timeProvider = timeProvider
-                        )
+@Composable
+fun MusikusNavHost(
+    navController: NavHostController,
+    mainUiState: MainUiState,
+    mainEventHandler: MainUiEventHandler,
+    bottomBarHeight: Dp,
+    timeProvider: TimeProvider
+) {
+    NavHost(
+        navController = navController,
+        startDestination = Screen.Home.route,
+        enterTransition = {
+            getEnterTransition()
+        },
+        exitTransition = {
+            getExitTransition()
+        }
+    ) {
+        // Home
+        navigation(
+            route = Screen.Home.route,
+            startDestination = Screen.HomeTab.defaultTab.route
+        ) {
+            composable(
+                route = "home/{tab}",
+                arguments = listOf(
+                    navArgument("tab") {
+                        nullable = true
                     }
-                }
-
-                // Edit Session
-                composable(
-                    route = Screen.EditSession.route,
-                    arguments = listOf(navArgument("sessionId") { type = NavType.StringType })
-                ) { backStackEntry ->
-                    val sessionId = backStackEntry.arguments?.getString("sessionId")
-                        ?: return@composable navController.navigate(Screen.HomeTab.Sessions.route)
-
-                    EditSession(
-                        sessionToEditId = UUID.fromString(sessionId),
-                        navigateUp = navController::navigateUp
-                    )
-                }
-
-                // Active Session
-                composable(
-                    route = Screen.ActiveSession.route,
-                    deepLinks = listOf(
-                        navDeepLink {
-                            uriPattern = "musikus://activeSession/{$DEEP_LINK_KEY}"
-                        }
-                    )
-                ) { backStackEntry ->
-                    ActiveSession(
-                        navigateUp = navController::navigateUp,
-                        deepLinkArgument = backStackEntry.arguments?.getString(DEEP_LINK_KEY),
-                        navigateTo = navController::navigateTo
-                    )
-                }
-
-                // Statistics
-                addStatisticsNavigationGraph(
-                    navController = navController,
                 )
+            ) { backStackEntry ->
+                val tabRoute = backStackEntry.arguments?.getString("tab")
+                val tab = Screen.HomeTab.allTabs.first { it.subRoute == tabRoute }
 
-                // Settings
-                addSettingsNavigationGraph(navController)
+                HomeScreen(
+                    mainUiState = mainUiState,
+                    mainEventHandler = mainEventHandler,
+                    bottomBarHeight = bottomBarHeight,
+                    currentTab = tab,
+                    navigateTo = navController::navigateTo,
+                    timeProvider = timeProvider
+                )
             }
         }
+
+        // Edit Session
+        composable(
+            route = Screen.EditSession.route,
+            arguments = listOf(navArgument("sessionId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val sessionId = backStackEntry.arguments?.getString("sessionId")
+                ?: return@composable navController.navigate(Screen.HomeTab.Sessions.route)
+
+            EditSession(
+                sessionToEditId = UUID.fromString(sessionId),
+                navigateUp = navController::navigateUp
+            )
+        }
+
+        // Active Session
+        composable(
+            route = Screen.ActiveSession.route,
+            deepLinks = listOf(
+                navDeepLink {
+                    uriPattern = "musikus://activeSession/{$DEEP_LINK_KEY}"
+                }
+            )
+        ) { backStackEntry ->
+            ActiveSession(
+                navigateUp = navController::navigateUp,
+                deepLinkArgument = backStackEntry.arguments?.getString(DEEP_LINK_KEY),
+                navigateTo = navController::navigateTo
+            )
+        }
+
+        // Statistics
+        addStatisticsNavigationGraph(
+            navController = navController,
+        )
+
+        // Settings
+        addSettingsNavigationGraph(navController)
     }
 }
 
