@@ -46,8 +46,8 @@ import app.musikus.core.presentation.components.MultiFabState
 fun MusikusBottomBar(
     mainUiState: MainUiState,
     mainEventHandler: MainUiEventHandler,
-    currentTab: Screen.HomeTab?,
-    onTabSelected: (Screen.HomeTab) -> Unit,
+    currentTab: HomeTab?,
+    onTabSelected: (HomeTab) -> Unit,
 ) {
     AnimatedVisibility(
         visible = currentTab != null, // only show bottom bar when in home screen
@@ -62,17 +62,17 @@ fun MusikusBottomBar(
     ) {
         Box {
             NavigationBar {
-                Screen.HomeTab.allTabs.forEach { tab ->
+                HomeTab.all.forEach { tab ->
                     val selected = tab == currentTab
                     val painterCount = 5
                     var activePainter by remember { mutableIntStateOf(0) }
                     val painter = rememberVectorPainter(
-                        image = tab.getDisplayData()?.icon?.asIcon()!!
+                        image = tab.getDisplayData().icon.asIcon()
                     )
                     val animatedPainters = (0..painterCount).map {
                         rememberAnimatedVectorPainter(
                             animatedImageVector = AnimatedImageVector.animatedVectorResource(
-                                tab.getDisplayData()?.animatedIcon!!
+                                tab.getDisplayData().animatedIcon!!
                             ),
                             atEnd = selected && activePainter == it
                         )
@@ -80,7 +80,7 @@ fun MusikusBottomBar(
                     NavigationBarItem(
                         icon = {
                             BadgedBox(badge = {
-                                if (tab == Screen.HomeTab.Sessions && mainUiState.isSessionRunning) {
+                                if (tab == HomeTab.Sessions && mainUiState.isSessionRunning) {
                                     Badge()
                                 }
                             }) {
@@ -93,7 +93,7 @@ fun MusikusBottomBar(
                         },
                         label = {
                             Text(
-                                text = tab.getDisplayData()?.title?.asAnnotatedString()!!,
+                                text = tab.getDisplayData().title.asAnnotatedString(),
                                 fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
                             )
                         },

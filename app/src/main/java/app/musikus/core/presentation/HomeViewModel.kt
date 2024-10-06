@@ -13,20 +13,18 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 
 data class HomeUiState(
-    val currentTab: Screen.HomeTab,
     val showMainMenu: Boolean,
 )
 
 typealias HomeUiEventHandler = (HomeUiEvent) -> Unit
 
 sealed class HomeUiEvent {
-    data class TabSelected(val tab: Screen.HomeTab) : HomeUiEvent()
     data object ShowMainMenu : HomeUiEvent()
     data object HideMainMenu : HomeUiEvent()
 }
@@ -38,9 +36,6 @@ class HomeViewModel @Inject constructor() : ViewModel() {
      * Own state flows
      */
 
-    // Current Tab
-    private val _currentTab = MutableStateFlow<Screen.HomeTab>(Screen.HomeTab.defaultTab)
-
     // Menu
     private val _showMainMenu = MutableStateFlow(false)
 
@@ -48,28 +43,20 @@ class HomeViewModel @Inject constructor() : ViewModel() {
      * Composing the ui state
      */
 
-    val uiState = combine(
-        _currentTab,
-        _showMainMenu,
-    ) { currentTab, showMainMenu ->
+    val uiState = _showMainMenu.map { showMainMenu ->
         HomeUiState(
-            currentTab = currentTab,
             showMainMenu = showMainMenu,
         )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = HomeUiState(
-            currentTab = _currentTab.value,
             showMainMenu = _showMainMenu.value,
         )
     )
 
     fun onUiEvent(event: HomeUiEvent) {
         when (event) {
-            is HomeUiEvent.TabSelected -> {
-                _currentTab.update { event.tab }
-            }
             is HomeUiEvent.ShowMainMenu -> {
                 _showMainMenu.update { true }
             }

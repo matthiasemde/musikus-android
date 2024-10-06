@@ -26,30 +26,26 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.unit.Dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
-import androidx.navigation.NavController.OnDestinationChangedListener
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navDeepLink
-import androidx.navigation.navigation
 import androidx.navigation.toRoute
 import app.musikus.activesession.presentation.ActiveSession
 import app.musikus.core.domain.TimeProvider
 import app.musikus.core.presentation.theme.MusikusTheme
-import app.musikus.sessions.presentation.EditSession
 import app.musikus.settings.presentation.addSettingsNavigationGraph
 import app.musikus.statistics.presentation.addStatisticsNavigationGraph
-import java.util.UUID
+import kotlin.reflect.typeOf
 
 const val DEEP_LINK_KEY = "argument"
 
@@ -67,19 +63,13 @@ fun MainScreen(
     val theme = uiState.activeTheme ?: return
     val colorScheme = uiState.activeColorScheme ?: return
 
-    // In order to track the current tab and route, we need to listen to the nav controller
-    var currentRoute by remember { mutableStateOf(Screen.Home.route as String?) }
-    var currentTab by remember { mutableStateOf(Screen.HomeTab.defaultTab as Screen.HomeTab?) }
-
-    navController.addOnDestinationChangedListener(
-        OnDestinationChangedListener { controller, destination, arguments ->
-            currentRoute = destination.route
-
-            val tabArgument = arguments?.getString("tab")
-            currentTab = Screen.HomeTab.allTabs.firstOrNull { it.subRoute == tabArgument }
-            println("OnDestinationChangedListener - Current tab: $currentTab ($currentRoute)")
-        }
-    )
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute by remember { derivedStateOf {
+        navBackStackEntry?.toScreen()
+    } }
+    val currentTab by remember { derivedStateOf {
+        currentRoute?.let { if (it is Screen.Home) it.tab else null }
+    } }
 
     MusikusTheme(
         theme = theme,
@@ -97,7 +87,7 @@ fun MainScreen(
                     mainEventHandler = eventHandler,
                     currentTab = currentTab,
                     onTabSelected = { selectedTab ->
-                        navController.navigateTo(selectedTab)
+                        navController.navigateTo(Screen.Home(selectedTab))
                     },
                 )
             }
@@ -109,9 +99,9 @@ fun MainScreen(
             // Handle back press when on home screen
             BackHandler(
                 enabled =
-                navController.previousBackStackEntry == null &&
-                    currentTab != Screen.HomeTab.defaultTab,
-                onBack = { navController.navigateTo(Screen.HomeTab.defaultTab) }
+                (navController.previousBackStackEntry == null) &&
+                        (currentTab != HomeTab.default),
+                onBack = { navController.navigateTo(Screen.Home(HomeTab.default)) }
             )
 
             MusikusNavHost(
@@ -135,7 +125,7 @@ fun MusikusNavHost(
 ) {
     NavHost(
         navController = navController,
-        startDestination = Screen.Home.route,
+        startDestination = Screen.Home(tab = HomeTab.default),
         enterTransition = {
             getEnterTransition()
         },
@@ -144,43 +134,39 @@ fun MusikusNavHost(
         }
     ) {
         // Home
-        navigation(
-            route = Screen.Home.route,
-            startDestination = Screen.HomeTab.defaultTab.route
-        ) {
-            composable<Screen.HomeTab> { backStackEntry ->
-                val args = backStackEntry.toRoute<Screen.HomeTab>()
-                val tab = Screen.HomeTab.allTabs.first { it.subRoute == args.subRoute }
+        composable<Screen.Home>(
+            typeMap = mapOf(typeOf<HomeTab>() to HomeTabNavType),
+        ) { backStackEntry ->
+            val tab = backStackEntry.toRoute<Screen.Home>().tab
 
-                HomeScreen(
-                    mainUiState = mainUiState,
-                    mainEventHandler = mainEventHandler,
-                    bottomBarHeight = bottomBarHeight,
-                    currentTab = tab,
-                    navigateTo = navController::navigateTo,
-                    timeProvider = timeProvider
-                )
-            }
-        }
-
-        // Edit Session
-        composable<Screen.EditSession> { backStackEntry ->
-            val sessionId = backStackEntry.arguments?.getString("sessionId")
-                ?: return@composable navController.navigate(Screen.HomeTab.Sessions.route)
-
-            EditSession(
-                sessionToEditId = UUID.fromString(sessionId),
-                navigateUp = navController::navigateUp
+            HomeScreen(
+                mainUiState = mainUiState,
+                mainEventHandler = mainEventHandler,
+                bottomBarHeight = bottomBarHeight,
+                currentTab = tab,
+                navigateTo = navController::navigateTo,
+                timeProvider = timeProvider
             )
         }
+
+//        // Edit Session
+//        composable<Screen.EditSession> { backStackEntry ->
+//            val sessionId = backStackEntry.arguments?.getString("sessionId")
+//                ?: return@composable navController.navigate(Sessions)
+//
+//            EditSession(
+//                sessionToEditId = UUID.fromString(sessionId),
+//                navigateUp = navController::navigateUp
+//            )
+//        }
 
         // Active Session
         composable<Screen.ActiveSession>(
-            deepLinks = listOf(
-                navDeepLink {
-                    uriPattern = "musikus://activeSession/{$DEEP_LINK_KEY}"
-                }
-            )
+//            deepLinks = listOf(
+//                navDeepLink {
+//                    uriPattern = "musikus://activeSession/{$DEEP_LINK_KEY}"
+//                }
+//            )
         ) { backStackEntry ->
             ActiveSession(
                 navigateUp = navController::navigateUp,
@@ -203,7 +189,7 @@ fun NavController.navigateTo(screen: Screen) {
     navigate(screen) {
         // We do not want to keep a back stack during navigation events between home tabs,
         // therefore, pop the back stack every time we navigate to a home tab
-        if (screen is Screen.HomeTab) {
+        if (screen is Screen.Home) {
             popBackStack()
         }
     }
@@ -212,12 +198,12 @@ fun NavController.navigateTo(screen: Screen) {
 const val ANIMATION_BASE_DURATION = 400
 
 fun AnimatedContentTransitionScope<NavBackStackEntry>.getEnterTransition(): EnterTransition {
-    val initialRoute = initialState.destination.route ?: return fadeIn()
-    val targetRoute = targetState.destination.route ?: return fadeIn()
+    val initialScreen = initialState.toScreen()
+    val targetScreen = targetState.toScreen()
 
     return when {
         // when changing to active session, slide in from the bottom
-        targetRoute == Screen.ActiveSession.route -> {
+        targetScreen is Screen.ActiveSession -> {
             slideInVertically(
                 animationSpec = tween(ANIMATION_BASE_DURATION, easing = EaseOut),
                 initialOffsetY = { fullHeight -> fullHeight }
@@ -225,7 +211,7 @@ fun AnimatedContentTransitionScope<NavBackStackEntry>.getEnterTransition(): Ente
         }
 
         // when changing from active session, stay invisible until active session has slid in from the bottom
-        initialRoute == Screen.ActiveSession.route -> {
+        initialScreen is Screen.ActiveSession -> {
             fadeIn(
                 initialAlpha = 1f,
                 animationSpec = tween(durationMillis = ANIMATION_BASE_DURATION)
@@ -234,8 +220,8 @@ fun AnimatedContentTransitionScope<NavBackStackEntry>.getEnterTransition(): Ente
 
         // when changing to settings, zoom in when coming from a sub menu
         // and slide in from the right when coming from the home screen
-        targetRoute == Screen.Settings.route -> {
-            if (initialRoute in (Screen.SettingsOption.allSettings.map { it.route })) {
+        targetScreen is Screen.Settings -> {
+            if (initialScreen is Screen.SettingsOption) {
                 scaleIn(
                     animationSpec = tween(ANIMATION_BASE_DURATION / 2),
                     initialScale = 1.2f,
@@ -250,8 +236,8 @@ fun AnimatedContentTransitionScope<NavBackStackEntry>.getEnterTransition(): Ente
 
         // when changing from settings screen, if going to setting sub menu, zoom out
         // otherwise slide in from the right
-        initialRoute == Screen.Settings.route -> {
-            if (targetRoute in (Screen.SettingsOption.allSettings.map { it.route })) {
+        initialScreen is Screen.Settings -> {
+            if (targetScreen is Screen.SettingsOption) {
                 scaleIn(
                     animationSpec = tween(ANIMATION_BASE_DURATION / 2),
                     initialScale = 0.7f,
@@ -265,8 +251,8 @@ fun AnimatedContentTransitionScope<NavBackStackEntry>.getEnterTransition(): Ente
         }
 
         // when changing to session or goal statistics, slide in from the right
-        targetRoute == Screen.SessionStatistics.route ||
-            targetRoute == Screen.GoalStatistics.route -> {
+        targetScreen is Screen.SessionStatistics ||
+            targetScreen is Screen.GoalStatistics -> {
             slideInHorizontally(
                 animationSpec = tween(ANIMATION_BASE_DURATION),
                 initialOffsetX = { fullWidth -> (fullWidth / 10) }
@@ -274,8 +260,8 @@ fun AnimatedContentTransitionScope<NavBackStackEntry>.getEnterTransition(): Ente
         }
 
         // when changing from session or goal statistics, slide in from the left
-        initialRoute == Screen.SessionStatistics.route ||
-            initialRoute == Screen.GoalStatistics.route -> {
+        initialScreen is Screen.SessionStatistics ||
+            initialScreen is Screen.GoalStatistics -> {
             slideInHorizontally(
                 animationSpec = tween(ANIMATION_BASE_DURATION),
                 initialOffsetX = { fullWidth -> -(fullWidth / 10) }
@@ -298,17 +284,17 @@ fun AnimatedContentTransitionScope<NavBackStackEntry>.getEnterTransition(): Ente
 }
 
 fun AnimatedContentTransitionScope<NavBackStackEntry>.getExitTransition(): ExitTransition {
-    val initialRoute = initialState.destination.route ?: return fadeOut()
-    val targetRoute = targetState.destination.route ?: return fadeOut()
+    val initialScreen = initialState.toScreen()
+    val targetScreen = targetState.toScreen()
 
     return when {
         // when changing to active session, show immediately
-        targetRoute == Screen.ActiveSession.route -> {
+        targetScreen is Screen.ActiveSession -> {
             fadeOut(tween(durationMillis = 1, delayMillis = ANIMATION_BASE_DURATION))
         }
 
         // when changing from active session, slide out to the bottom
-        initialRoute == Screen.ActiveSession.route -> {
+        initialScreen is Screen.ActiveSession -> {
             slideOutVertically(
                 animationSpec = tween(ANIMATION_BASE_DURATION, easing = EaseIn),
                 targetOffsetY = { fullHeight -> fullHeight }
@@ -317,8 +303,8 @@ fun AnimatedContentTransitionScope<NavBackStackEntry>.getExitTransition(): ExitT
 
         // when changing to settings, zoom in when coming from a sub menu
         // and slide out to the left when coming from the home screen
-        targetRoute == Screen.Settings.route -> {
-            if (initialRoute in (Screen.SettingsOption.allSettings.map { it.route })) {
+        targetScreen is Screen.Settings -> {
+            if (initialScreen is Screen.SettingsOption) {
                 scaleOut(
                     animationSpec = tween(ANIMATION_BASE_DURATION / 2),
                     targetScale = 0.7f,
@@ -333,8 +319,8 @@ fun AnimatedContentTransitionScope<NavBackStackEntry>.getExitTransition(): ExitT
 
         // when changing from settings screen, if going to setting sub menu, zoom out
         // otherwise slide out to the right
-        initialRoute == Screen.Settings.route -> {
-            if (targetRoute in (Screen.SettingsOption.allSettings.map { it.route })) {
+        initialScreen is Screen.Settings -> {
+            if (targetScreen is Screen.SettingsOption) {
                 scaleOut(
                     animationSpec = tween(ANIMATION_BASE_DURATION / 2),
                     targetScale = 1.2f,
@@ -348,8 +334,8 @@ fun AnimatedContentTransitionScope<NavBackStackEntry>.getExitTransition(): ExitT
         }
 
         // when changing to session or goal statistics, slide in from the right
-        targetRoute == Screen.SessionStatistics.route ||
-            targetRoute == Screen.GoalStatistics.route -> {
+        targetScreen is Screen.SessionStatistics ||
+            targetScreen is Screen.GoalStatistics -> {
             slideOutHorizontally(
                 animationSpec = tween(ANIMATION_BASE_DURATION),
                 targetOffsetX = { fullWidth -> (fullWidth / 10) }
@@ -357,8 +343,8 @@ fun AnimatedContentTransitionScope<NavBackStackEntry>.getExitTransition(): ExitT
         }
 
         // when changing from session or goal statistics, slide in from the left
-        initialRoute == Screen.SessionStatistics.route ||
-            initialRoute == Screen.GoalStatistics.route -> {
+        initialScreen is Screen.SessionStatistics ||
+            initialScreen is Screen.GoalStatistics -> {
             slideOutHorizontally(
                 animationSpec = tween(ANIMATION_BASE_DURATION),
                 targetOffsetX = { fullWidth -> -(fullWidth / 10) }

@@ -135,7 +135,7 @@ fun Statistics(
                                 homeEventHandler(HomeUiEvent.HideMainMenu)
 
                                 when (commonSelection) {
-                                    CommonMenuSelections.SETTINGS -> { navigateTo(Screen.Settings) }
+                                    CommonMenuSelections.SETTINGS -> { navigateTo(Screen.Settings()) }
                                 }
                             },
                             uniqueMenuItems = {}
@@ -166,12 +166,12 @@ fun Statistics(
             }
             contentUiState.practiceDurationCardUiState?.let {
                 item {
-                    StatisticsSessionsCard(it) { navigateTo(Screen.SessionStatistics) }
+                    StatisticsSessionsCard(it) { navigateTo(Screen.SessionStatistics()) }
                 }
             }
             contentUiState.goalCardUiState?.let {
                 item {
-                    StatisticsGoalsCard(it) { navigateTo(Screen.GoalStatistics) }
+                    StatisticsGoalsCard(it) { navigateTo(Screen.GoalStatistics()) }
                 }
             }
             contentUiState.ratingsCardUiState?.let {

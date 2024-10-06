@@ -8,12 +8,17 @@
 
 package app.musikus.core.presentation
 
+import android.net.Uri
+import android.os.Bundle
 import androidx.annotation.DrawableRes
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Help
 import androidx.compose.material.icons.outlined.CloudUpload
 import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.Info
+import androidx.navigation.NavBackStackEntry
+import androidx.navigation.NavType
+import androidx.navigation.toRoute
 import app.musikus.R
 import app.musikus.core.presentation.utils.UiIcon
 import app.musikus.core.presentation.utils.UiText
@@ -21,51 +26,37 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 sealed class Screen(
-    val route: String,
+    val route: String
 ) {
 
-    data object Home : Screen(
-        route = "home"
-    )
+    @Serializable
+    class ActiveSession : Screen("activeSession")
 
     @Serializable
-    sealed class HomeTab(
-        val subRoute: String,
-    ) : Screen("home/$subRoute") {
-        data object Sessions : HomeTab("sessions")
-        data object Goals : HomeTab("goals")
-        data object Statistics : HomeTab("statistics")
-        data object Library : HomeTab("library")
+    data class Home (
+        val tab: HomeTab = HomeTab.Sessions
+    ): Screen("home")
+
+    @Serializable
+    class Settings : Screen("settings")
+
+    @Serializable
+    sealed class SettingsOption(val subRoute: String) : Screen("settings/$subRoute") {
+        @Serializable
+        class About : SettingsOption("about")
+        @Serializable
+        class Help : SettingsOption("help")
+        @Serializable
+        class Backup : SettingsOption("backup")
+        @Serializable
+        class Export : SettingsOption("export")
+        @Serializable
+        class Donate : SettingsOption("donate")
+        @Serializable
+        class Appearance : SettingsOption("appearance")
 
         companion object {
-            val allTabs by lazy { listOf(Sessions, Goals, Statistics, Library) }
-            val defaultTab = Sessions
-        }
-    }
-
-    data object ActiveSession : Screen("activeSession")
-
-    data object EditSession : Screen("editSession/{sessionId}")
-
-    data object SessionStatistics : Screen("sessionStatistics")
-    data object GoalStatistics : Screen("goalStatistics")
-
-    data object Settings : Screen("settings")
-
-    data object License : Screen("settings/about/license")
-
-    sealed class SettingsOption(
-        subRoute: String,
-    ) : Screen("settings/$subRoute") {
-        data object About : SettingsOption("about")
-        data object Help : SettingsOption("help")
-        data object Backup : SettingsOption("backup")
-        data object Export : SettingsOption("export")
-        data object Donate : SettingsOption("donate")
-        data object Appearance : SettingsOption("appearance")
-
-        companion object {
-            val allSettings by lazy {
+            val all by lazy {
                 listOf(
                     About,
                     Help,
@@ -77,6 +68,82 @@ sealed class Screen(
             }
         }
     }
+
+    @Serializable
+    class EditSession : Screen("editSession")
+
+    @Serializable
+    class SessionStatistics : Screen("sessionStatistics")
+
+    @Serializable
+    class GoalStatistics : Screen("goalStatistics")
+
+    @Serializable
+    class License : Screen("license")
+}
+
+fun NavBackStackEntry.toScreen() : Screen {
+    val route = arguments?.getString("route")
+        ?: throw IllegalArgumentException("Route argument missing from $this")
+
+    return when (route) {
+        Screen.ActiveSession().route -> toRoute<Screen.ActiveSession>()
+        Screen.Home().route -> toRoute<Screen.Home>()
+        Screen.Settings().route -> toRoute<Screen.Settings>()
+        Screen.SettingsOption.About().route -> toRoute<Screen.SettingsOption.About>()
+        Screen.SettingsOption.Help().route -> toRoute<Screen.SettingsOption.Help>()
+        Screen.SettingsOption.Backup().route -> toRoute<Screen.SettingsOption.Backup>()
+        Screen.SettingsOption.Export().route -> toRoute<Screen.SettingsOption.Export>()
+        Screen.SettingsOption.Donate().route -> toRoute<Screen.SettingsOption.Donate>()
+        Screen.SettingsOption.Appearance().route -> toRoute<Screen.SettingsOption.Appearance>()
+        Screen.EditSession().route -> toRoute<Screen.EditSession>()
+        Screen.SessionStatistics().route -> toRoute<Screen.SessionStatistics>()
+        Screen.GoalStatistics().route -> toRoute<Screen.GoalStatistics>()
+        Screen.License().route -> toRoute<Screen.License>()
+        else -> throw IllegalArgumentException("Unknown route: $route")
+    }
+}
+
+@Serializable
+sealed class HomeTab {
+    data object Sessions : HomeTab()
+    data object Goals : HomeTab()
+    data object Statistics : HomeTab()
+    data object Library : HomeTab()
+
+    companion object {
+        val all by lazy { listOf(Sessions, Goals, Statistics, Library) }
+        val default = Sessions
+    }
+}
+
+val HomeTabNavType = object : NavType<HomeTab>(isNullableAllowed = false) {
+    override fun get(
+        bundle: Bundle,
+        key: String
+    ): HomeTab? {
+        return bundle.getString(key)?.let {
+             parseValue(it)
+        }
+    }
+
+    override fun put(
+        bundle: Bundle,
+        key: String,
+        value: HomeTab
+    ) {
+        bundle.putString(key, serializeAsValue(value))
+    }
+
+    override fun parseValue(value: String): HomeTab {
+        return Uri.decode(value).let {
+            HomeTab.all.first { tab -> tab.toString() == it }
+        }
+    }
+
+    override fun serializeAsValue(value: HomeTab): String {
+        return Uri.encode(value.toString())
+    }
 }
 
 data class DisplayData(
@@ -85,28 +152,36 @@ data class DisplayData(
     @DrawableRes val animatedIcon: Int? = null
 )
 
-fun Screen.getDisplayData(): DisplayData? {
+fun HomeTab.getDisplayData(): DisplayData {
     return when(this) {
-        is Screen.HomeTab.Sessions -> DisplayData(
+        is HomeTab.Sessions -> DisplayData(
             title = UiText.StringResource(R.string.components_bottom_bar_items_sessions),
             icon = UiIcon.IconResource(R.drawable.ic_sessions),
             animatedIcon = R.drawable.avd_sessions,
         )
-        is Screen.HomeTab.Goals -> DisplayData(
+
+        is HomeTab.Goals -> DisplayData(
             title = UiText.StringResource(R.string.components_bottom_bar_items_goals),
             icon = UiIcon.IconResource(R.drawable.ic_goals),
             animatedIcon = R.drawable.avd_goals
         )
-        is Screen.HomeTab.Statistics -> DisplayData(
+
+        is HomeTab.Statistics -> DisplayData(
             title = UiText.StringResource(R.string.components_bottom_bar_items_statistics),
             icon = UiIcon.IconResource(R.drawable.ic_bar_chart),
             animatedIcon = R.drawable.avd_bar_chart
         )
-        is Screen.HomeTab.Library -> DisplayData(
+
+        is HomeTab.Library -> DisplayData(
             title = UiText.StringResource(R.string.components_bottom_bar_items_library),
             icon = UiIcon.IconResource(R.drawable.ic_library),
             animatedIcon = R.drawable.avd_library
         )
+    }
+}
+
+fun Screen.SettingsOption.getDisplayData(): DisplayData {
+    return when(this) {
         is Screen.SettingsOption.About -> DisplayData(
             title = UiText.StringResource(R.string.settings_items_about),
             icon = UiIcon.DynamicIcon(Icons.Outlined.Info),
@@ -131,6 +206,5 @@ fun Screen.getDisplayData(): DisplayData? {
             title = UiText.StringResource(R.string.settings_items_appearance),
             icon = UiIcon.IconResource(R.drawable.ic_appearance),
         )
-        else -> null
     }
 }

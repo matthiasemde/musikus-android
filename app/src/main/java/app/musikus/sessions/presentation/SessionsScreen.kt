@@ -131,7 +131,7 @@ fun SessionsScreen(
                         )
                     )
                 },
-                onClick = { navigateTo(Screen.ActiveSession) },
+                onClick = { navigateTo(Screen.ActiveSession()) },
                 expanded = fabExpanded,
                 containerColor =
                 if (mainUiState.isSessionRunning) {
@@ -159,7 +159,7 @@ fun SessionsScreen(
                                 homeEventHandler(HomeUiEvent.HideMainMenu)
 
                                 when (commonSelection) {
-                                    CommonMenuSelections.SETTINGS -> navigateTo(Screen.Settings)
+                                    CommonMenuSelections.SETTINGS -> navigateTo(Screen.Settings())
                                 }
                             },
                             uniqueMenuItems = { }

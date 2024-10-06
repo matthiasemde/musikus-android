@@ -24,7 +24,7 @@ fun HomeScreen(
     mainUiState: MainUiState,
     mainEventHandler: MainUiEventHandler,
     bottomBarHeight: Dp,
-    currentTab: Screen.HomeTab,
+    currentTab: HomeTab,
     viewModel: HomeViewModel = hiltViewModel(),
     navigateTo: (Screen) -> Unit,
     timeProvider: TimeProvider,
@@ -33,7 +33,7 @@ fun HomeScreen(
     val eventHandler: HomeUiEventHandler = viewModel::onUiEvent
 
     when (currentTab) {
-        is Screen.HomeTab.Sessions -> {
+        is HomeTab.Sessions -> {
             SessionsScreen(
                 mainUiState = mainUiState,
                 mainEventHandler = mainEventHandler,
@@ -52,7 +52,7 @@ fun HomeScreen(
 //                        },
             )
         }
-        is Screen.HomeTab.Goals -> {
+        is HomeTab.Goals -> {
             GoalsScreen(
                 mainUiState = mainUiState,
                 mainEventHandler = mainEventHandler,
@@ -63,7 +63,7 @@ fun HomeScreen(
                 bottomBarHeight = bottomBarHeight,
             )
         }
-        is Screen.HomeTab.Library -> {
+        is HomeTab.Library -> {
             Library(
                 mainUiState = mainUiState,
                 mainEventHandler = mainEventHandler,
@@ -73,7 +73,7 @@ fun HomeScreen(
                 bottomBarHeight = bottomBarHeight,
             )
         }
-        is Screen.HomeTab.Statistics -> {
+        is HomeTab.Statistics -> {
             Statistics(
                 homeUiState = uiState,
                 homeEventHandler = eventHandler,
