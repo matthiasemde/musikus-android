@@ -38,7 +38,6 @@ import app.musikus.core.presentation.Screen
 import app.musikus.core.presentation.components.TwoLiner
 import app.musikus.core.presentation.components.TwoLinerData
 import app.musikus.core.presentation.getDisplayData
-import app.musikus.core.presentation.navigateTo
 import app.musikus.core.presentation.theme.spacing
 import app.musikus.settings.presentation.about.AboutScreen
 import app.musikus.settings.presentation.about.LicensesScreen
@@ -52,7 +51,7 @@ fun NavGraphBuilder.addSettingsNavigationGraph(navController: NavController) {
     composable<Screen.Settings> {
         SettingsScreen(
             navigateUp = { navController.navigateUp() },
-            navigateTo = navController::navigateTo
+            navigateTo = { navController.navigate(it) }
         )
     }
     composable<Screen.SettingsOption.Donate> {
@@ -73,7 +72,7 @@ fun NavGraphBuilder.addSettingsNavigationGraph(navController: NavController) {
     composable<Screen.SettingsOption.About> {
         AboutScreen(
             navigateUp = { navController.navigateUp() },
-            navigateTo = navController::navigateTo
+            navigateTo = { navController.navigate(it) }
         )
     }
     composable<Screen.License> {

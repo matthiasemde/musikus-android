@@ -33,7 +33,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavBackStackEntry
-import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -87,7 +86,9 @@ fun MainScreen(
                     mainEventHandler = eventHandler,
                     currentTab = currentTab,
                     onTabSelected = { selectedTab ->
-                        navController.navigateTo(Screen.Home(selectedTab))
+                        navController.navigate(Screen.Home(selectedTab)) {
+                            navController.popBackStack()
+                        }
                     },
                 )
             }
@@ -101,7 +102,7 @@ fun MainScreen(
                 enabled =
                 (navController.previousBackStackEntry == null) &&
                         (currentTab != HomeTab.default),
-                onBack = { navController.navigateTo(Screen.Home(HomeTab.default)) }
+                onBack = { navController.navigate(Screen.Home(HomeTab.default)) }
             )
 
             MusikusNavHost(
@@ -144,7 +145,7 @@ fun MusikusNavHost(
                 mainEventHandler = mainEventHandler,
                 bottomBarHeight = bottomBarHeight,
                 currentTab = tab,
-                navigateTo = navController::navigateTo,
+                navigateTo = { navController.navigate(it) },
                 timeProvider = timeProvider
             )
         }
@@ -171,7 +172,7 @@ fun MusikusNavHost(
             ActiveSession(
                 navigateUp = navController::navigateUp,
                 deepLinkArgument = backStackEntry.arguments?.getString(DEEP_LINK_KEY),
-                navigateTo = navController::navigateTo
+                navigateTo = { navController.navigate(it) }
             )
         }
 
@@ -182,16 +183,6 @@ fun MusikusNavHost(
 
         // Settings
         addSettingsNavigationGraph(navController)
-    }
-}
-
-fun NavController.navigateTo(screen: Screen) {
-    navigate(screen) {
-        // We do not want to keep a back stack during navigation events between home tabs,
-        // therefore, pop the back stack every time we navigate to a home tab
-        if (screen is Screen.Home) {
-            popBackStack()
-        }
     }
 }
 

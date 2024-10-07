@@ -85,7 +85,7 @@ class MusikusNavHostTest {
         composeRule.awaitIdle() // ensures that navController is initialized
 
         composeRule.runOnUiThread {
-            navController.navigateTo(Screen.Home(HomeTab.Goals))
+            navController.navigate(Screen.Home(HomeTab.Goals))
         }
 
         val screen = navController.currentBackStackEntry?.toScreen()
@@ -104,7 +104,7 @@ class MusikusNavHostTest {
         composeRule.awaitIdle() // ensures that navController is initialized
 
         composeRule.runOnUiThread {
-            navController.navigateTo(Screen.Home(HomeTab.Statistics))
+            navController.navigate(Screen.Home(HomeTab.Statistics))
         }
 
         val screen = navController.currentBackStackEntry?.toScreen()
@@ -123,7 +123,7 @@ class MusikusNavHostTest {
         composeRule.awaitIdle() // ensures that navController is initialized
 
         composeRule.runOnUiThread {
-            navController.navigateTo(Screen.Home(HomeTab.Library))
+            navController.navigate(Screen.Home(HomeTab.Library))
         }
 
         val screen = navController.currentBackStackEntry?.toScreen()
@@ -142,7 +142,7 @@ class MusikusNavHostTest {
         composeRule.awaitIdle() // ensures that navController is initialized
 
         composeRule.runOnUiThread {
-            navController.navigateTo(Screen.ActiveSession())
+            navController.navigate(Screen.ActiveSession())
         }
 
         val screen = navController.currentBackStackEntry?.toScreen()
@@ -157,7 +157,7 @@ class MusikusNavHostTest {
         composeRule.awaitIdle() // ensures that navController is initialized
 
         composeRule.runOnUiThread {
-            navController.navigateTo(Screen.SessionStatistics())
+            navController.navigate(Screen.SessionStatistics())
         }
 
         val screen = navController.currentBackStackEntry?.toScreen()
@@ -172,7 +172,7 @@ class MusikusNavHostTest {
         composeRule.awaitIdle() // ensures that navController is initialized
 
         composeRule.runOnUiThread {
-            navController.navigateTo(Screen.GoalStatistics())
+            navController.navigate(Screen.GoalStatistics())
         }
 
         val screen = navController.currentBackStackEntry?.toScreen()
@@ -187,7 +187,7 @@ class MusikusNavHostTest {
         composeRule.awaitIdle() // ensures that navController is initialized
 
         composeRule.runOnUiThread {
-            navController.navigateTo(Screen.Settings())
+            navController.navigate(Screen.Settings())
         }
 
         val screen = navController.currentBackStackEntry?.toScreen()
@@ -202,7 +202,7 @@ class MusikusNavHostTest {
         composeRule.awaitIdle() // ensures that navController is initialized
 
         composeRule.runOnUiThread {
-            navController.navigateTo(Screen.SettingsOption.About())
+            navController.navigate(Screen.SettingsOption.About())
         }
 
         val screen = navController.currentBackStackEntry?.toScreen()
@@ -217,7 +217,7 @@ class MusikusNavHostTest {
         composeRule.awaitIdle() // ensures that navController is initialized
 
         composeRule.runOnUiThread {
-            navController.navigateTo(Screen.SettingsOption.Help())
+            navController.navigate(Screen.SettingsOption.Help())
         }
 
         val screen = navController.currentBackStackEntry?.toScreen()
@@ -232,7 +232,7 @@ class MusikusNavHostTest {
         composeRule.awaitIdle() // ensures that navController is initialized
 
         composeRule.runOnUiThread {
-            navController.navigateTo(Screen.SettingsOption.Backup())
+            navController.navigate(Screen.SettingsOption.Backup())
         }
 
         val screen = navController.currentBackStackEntry?.toScreen()
@@ -247,7 +247,7 @@ class MusikusNavHostTest {
         composeRule.awaitIdle() // ensures that navController is initialized
 
         composeRule.runOnUiThread {
-            navController.navigateTo(Screen.SettingsOption.Export())
+            navController.navigate(Screen.SettingsOption.Export())
         }
 
         val screen = navController.currentBackStackEntry?.toScreen()
@@ -262,7 +262,7 @@ class MusikusNavHostTest {
         composeRule.awaitIdle() // ensures that navController is initialized
 
         composeRule.runOnUiThread {
-            navController.navigateTo(Screen.SettingsOption.Donate())
+            navController.navigate(Screen.SettingsOption.Donate())
         }
 
         val screen = navController.currentBackStackEntry?.toScreen()
@@ -277,7 +277,7 @@ class MusikusNavHostTest {
         composeRule.awaitIdle() // ensures that navController is initialized
 
         composeRule.runOnUiThread {
-            navController.navigateTo(Screen.SettingsOption.Appearance())
+            navController.navigate(Screen.SettingsOption.Appearance())
         }
 
         val screen = navController.currentBackStackEntry?.toScreen()
@@ -292,7 +292,7 @@ class MusikusNavHostTest {
         composeRule.awaitIdle() // ensures that navController is initialized
 
         composeRule.runOnUiThread {
-            navController.navigateTo(Screen.License())
+            navController.navigate(Screen.License())
         }
 
         val screen = navController.currentBackStackEntry?.toScreen()
