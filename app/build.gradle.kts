@@ -115,7 +115,7 @@ room {
 detekt {
     // Version of detekt that will be used. When unspecified the latest detekt
     // version found will be used. Override to stay on the same version.
-    toolVersion = "1.23.6"
+    toolVersion = "1.23.7"
 
     // Point to your custom config defining rules to run, overwriting default behavior
     config.setFrom("$projectDir/config/detekt.yml")
