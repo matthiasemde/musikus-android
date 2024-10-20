@@ -16,6 +16,7 @@ import androidx.compose.material.icons.automirrored.outlined.Help
 import androidx.compose.material.icons.outlined.CloudUpload
 import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Settings
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavType
 import androidx.navigation.toRoute
@@ -37,32 +38,44 @@ sealed class Screen(
         val tab: HomeTab = HomeTab.Sessions
     ): Screen("home")
 
+
     @Serializable
-    class Settings : Screen("settings")
+    sealed class MainMenuEntry(val route2: String) : Screen(route2) {
+        @Serializable
+        class Settings : MainMenuEntry("settings")
+        @Serializable
+        class About : MainMenuEntry("about")
+        @Serializable
+        class Help : MainMenuEntry("help")
+        @Serializable
+        class Donate : MainMenuEntry("donate")
+
+        companion object {
+            val all by lazy {
+                listOf(
+                    Settings(),
+                    About(),
+                    Help(),
+                    Donate()
+                )
+            }
+        }
+    }
 
     @Serializable
     sealed class SettingsOption(val subRoute: String) : Screen("settings/$subRoute") {
         @Serializable
-        class About : SettingsOption("about")
-        @Serializable
-        class Help : SettingsOption("help")
-        @Serializable
         class Backup : SettingsOption("backup")
         @Serializable
         class Export : SettingsOption("export")
-        @Serializable
-        class Donate : SettingsOption("donate")
         @Serializable
         class Appearance : SettingsOption("appearance")
 
         companion object {
             val all by lazy {
                 listOf(
-                    About,
-                    Help,
                     Backup,
                     Export,
-                    Donate,
                     Appearance
                 )
             }
@@ -80,6 +93,19 @@ sealed class Screen(
 
     @Serializable
     class License : Screen("license")
+
+    companion object {
+        val all by lazy {
+            listOf(
+                ActiveSession(),
+                Home(),
+                EditSession(),
+                SessionStatistics(),
+                GoalStatistics(),
+                License()
+            ) + SettingsOption.all + MainMenuEntry.all
+        }
+    }
 }
 
 fun NavBackStackEntry.toScreen() : Screen {
@@ -89,12 +115,12 @@ fun NavBackStackEntry.toScreen() : Screen {
     return when (route) {
         Screen.ActiveSession().route -> toRoute<Screen.ActiveSession>()
         Screen.Home().route -> toRoute<Screen.Home>()
-        Screen.Settings().route -> toRoute<Screen.Settings>()
-        Screen.SettingsOption.About().route -> toRoute<Screen.SettingsOption.About>()
-        Screen.SettingsOption.Help().route -> toRoute<Screen.SettingsOption.Help>()
+        Screen.MainMenuEntry.Settings().route -> toRoute<Screen.MainMenuEntry.Settings>()
+        Screen.MainMenuEntry.About().route -> toRoute<Screen.MainMenuEntry.About>()
+        Screen.MainMenuEntry.Help().route -> toRoute<Screen.MainMenuEntry.Help>()
+        Screen.MainMenuEntry.Donate().route -> toRoute<Screen.MainMenuEntry.Donate>()
         Screen.SettingsOption.Backup().route -> toRoute<Screen.SettingsOption.Backup>()
         Screen.SettingsOption.Export().route -> toRoute<Screen.SettingsOption.Export>()
-        Screen.SettingsOption.Donate().route -> toRoute<Screen.SettingsOption.Donate>()
         Screen.SettingsOption.Appearance().route -> toRoute<Screen.SettingsOption.Appearance>()
         Screen.EditSession().route -> toRoute<Screen.EditSession>()
         Screen.SessionStatistics().route -> toRoute<Screen.SessionStatistics>()
@@ -180,16 +206,29 @@ fun HomeTab.getDisplayData(): DisplayData {
     }
 }
 
-fun Screen.SettingsOption.getDisplayData(): DisplayData {
+fun Screen.MainMenuEntry.getDisplayData(): DisplayData {
     return when(this) {
-        is Screen.SettingsOption.About -> DisplayData(
-            title = UiText.StringResource(R.string.settings_items_about),
+        is Screen.MainMenuEntry.Settings -> DisplayData(
+            title = UiText.StringResource(R.string.components_main_menu_item_settings),
+            icon = UiIcon.DynamicIcon(Icons.Outlined.Settings),
+        )
+        is Screen.MainMenuEntry.About -> DisplayData(
+            title = UiText.StringResource(R.string.components_main_menu_item_about),
             icon = UiIcon.DynamicIcon(Icons.Outlined.Info),
         )
-        is Screen.SettingsOption.Help -> DisplayData(
-            title = UiText.StringResource(R.string.settings_items_help),
+        is Screen.MainMenuEntry.Help -> DisplayData(
+            title = UiText.StringResource(R.string.components_main_menu_item_help),
             icon = UiIcon.DynamicIcon(Icons.AutoMirrored.Outlined.Help),
         )
+        is Screen.MainMenuEntry.Donate -> DisplayData(
+            title = UiText.StringResource(R.string.components_main_menu_item_donate),
+            icon = UiIcon.DynamicIcon(Icons.Outlined.Favorite),
+        )
+    }
+}
+
+fun Screen.SettingsOption.getDisplayData(): DisplayData {
+    return when(this) {
         is Screen.SettingsOption.Backup -> DisplayData(
             title = UiText.StringResource(R.string.settings_items_backup),
             icon = UiIcon.DynamicIcon(Icons.Outlined.CloudUpload),
@@ -197,10 +236,6 @@ fun Screen.SettingsOption.getDisplayData(): DisplayData {
         is Screen.SettingsOption.Export -> DisplayData(
             title = UiText.StringResource(R.string.settings_items_export),
             icon = UiIcon.IconResource(R.drawable.ic_export),
-        )
-        is Screen.SettingsOption.Donate -> DisplayData(
-            title = UiText.StringResource(R.string.settings_items_donate),
-            icon = UiIcon.DynamicIcon(Icons.Outlined.Favorite),
         )
         is Screen.SettingsOption.Appearance -> DisplayData(
             title = UiText.StringResource(R.string.settings_items_appearance),
