@@ -36,7 +36,6 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.Dp
@@ -55,8 +54,9 @@ import androidx.navigation.toRoute
 import app.musikus.activesession.presentation.ActiveSession
 import app.musikus.core.domain.TimeProvider
 import app.musikus.core.presentation.components.MainMenu
+import app.musikus.core.presentation.components.addMainMenuNavigationGraph
 import app.musikus.core.presentation.theme.MusikusTheme
-import app.musikus.settings.presentation.addSettingsNavigationGraph
+import app.musikus.settings.presentation.addSettingsOptionsNavigationGraph
 import app.musikus.statistics.presentation.addStatisticsNavigationGraph
 import kotlinx.coroutines.launch
 import kotlin.reflect.typeOf
@@ -213,8 +213,11 @@ fun MusikusNavHost(
             navController = navController,
         )
 
+        // Main menu
+        addMainMenuNavigationGraph(navController)
+
         // Settings
-        addSettingsNavigationGraph(navController)
+        addSettingsOptionsNavigationGraph(navController)
     }
 }
 
@@ -243,7 +246,7 @@ fun AnimatedContentTransitionScope<NavBackStackEntry>.getEnterTransition(): Ente
 
         // when changing to settings, zoom in when coming from a sub menu
         // and slide in from the right when coming from the home screen
-        targetScreen is Screen.Settings -> {
+        targetScreen is Screen.MainMenuEntry -> {
             if (initialScreen is Screen.SettingsOption) {
                 scaleIn(
                     animationSpec = tween(ANIMATION_BASE_DURATION / 2),
@@ -259,7 +262,7 @@ fun AnimatedContentTransitionScope<NavBackStackEntry>.getEnterTransition(): Ente
 
         // when changing from settings screen, if going to setting sub menu, zoom out
         // otherwise slide in from the right
-        initialScreen is Screen.Settings -> {
+        initialScreen is Screen.MainMenuEntry -> {
             if (targetScreen is Screen.SettingsOption) {
                 scaleIn(
                     animationSpec = tween(ANIMATION_BASE_DURATION / 2),
@@ -326,7 +329,7 @@ fun AnimatedContentTransitionScope<NavBackStackEntry>.getExitTransition(): ExitT
 
         // when changing to settings, zoom in when coming from a sub menu
         // and slide out to the left when coming from the home screen
-        targetScreen is Screen.Settings -> {
+        targetScreen is Screen.MainMenuEntry -> {
             if (initialScreen is Screen.SettingsOption) {
                 scaleOut(
                     animationSpec = tween(ANIMATION_BASE_DURATION / 2),
@@ -342,7 +345,7 @@ fun AnimatedContentTransitionScope<NavBackStackEntry>.getExitTransition(): ExitT
 
         // when changing from settings screen, if going to setting sub menu, zoom out
         // otherwise slide out to the right
-        initialScreen is Screen.Settings -> {
+        initialScreen is Screen.MainMenuEntry -> {
             if (targetScreen is Screen.SettingsOption) {
                 scaleOut(
                     animationSpec = tween(ANIMATION_BASE_DURATION / 2),

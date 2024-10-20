@@ -16,6 +16,7 @@ import androidx.compose.material.icons.automirrored.outlined.Help
 import androidx.compose.material.icons.outlined.CloudUpload
 import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Settings
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavType
 import androidx.navigation.toRoute
@@ -41,17 +42,35 @@ sealed class Screen {
         val tab: HomeTab = HomeTab.Sessions
     ) : Screen()
 
+
     @Serializable
-    data object Settings : Screen()
+    sealed class MainMenuEntry : Screen() {
+        @Serializable
+        data object Settings : MainMenuEntry()
+
+        @Serializable
+        data object About : MainMenuEntry()
+
+        @Serializable
+        data object Help : MainMenuEntry()
+
+        @Serializable
+        data object Donate : MainMenuEntry()
+
+        companion object {
+            val all by lazy {
+                listOf(
+                    Settings,
+                    About,
+                    Help,
+                    Donate
+                )
+            }
+        }
+    }
 
     @Serializable
     sealed class SettingsOption : Screen() {
-        @Serializable
-        data object About : SettingsOption()
-
-        @Serializable
-        data object Help : SettingsOption()
-
         @Serializable
         data object Backup : SettingsOption()
 
@@ -59,27 +78,18 @@ sealed class Screen {
         data object Export : SettingsOption()
 
         @Serializable
-        data object Donate : SettingsOption()
-
-        @Serializable
         data object Appearance : SettingsOption()
 
         companion object {
             val all by lazy {
                 listOf(
-                    About,
-                    Help,
                     Backup,
                     Export,
-                    Donate,
                     Appearance
                 )
             }
         }
     }
-
-    @Serializable
-    data object EditSession : Screen()
 
     @Serializable
     data object SessionStatistics : Screen()
@@ -89,6 +99,18 @@ sealed class Screen {
 
     @Serializable
     data object License : Screen()
+
+    companion object {
+        val all by lazy {
+            listOf(
+                ActiveSession(),
+                Home(),
+                SessionStatistics,
+                GoalStatistics,
+                License
+            ) + SettingsOption.all + MainMenuEntry.all
+        }
+    }
 }
 
 val Screen.route: String?
@@ -107,14 +129,13 @@ fun NavBackStackEntry.toScreen(): Screen {
     return when (route) {
         Screen.ActiveSession().route -> toRoute<Screen.ActiveSession>()
         Screen.Home().route -> toRoute<Screen.Home>()
-        Screen.Settings.route -> toRoute<Screen.Settings>()
-        Screen.SettingsOption.About.route -> toRoute<Screen.SettingsOption.About>()
-        Screen.SettingsOption.Help.route -> toRoute<Screen.SettingsOption.Help>()
+        Screen.MainMenuEntry.Settings.route -> toRoute<Screen.MainMenuEntry.Settings>()
+        Screen.MainMenuEntry.About.route -> toRoute<Screen.MainMenuEntry.About>()
+        Screen.MainMenuEntry.Help.route -> toRoute<Screen.MainMenuEntry.Help>()
+        Screen.MainMenuEntry.Donate.route -> toRoute<Screen.MainMenuEntry.Donate>()
         Screen.SettingsOption.Backup.route -> toRoute<Screen.SettingsOption.Backup>()
         Screen.SettingsOption.Export.route -> toRoute<Screen.SettingsOption.Export>()
-        Screen.SettingsOption.Donate.route -> toRoute<Screen.SettingsOption.Donate>()
         Screen.SettingsOption.Appearance.route -> toRoute<Screen.SettingsOption.Appearance>()
-        Screen.EditSession.route -> toRoute<Screen.EditSession>()
         Screen.SessionStatistics.route -> toRoute<Screen.SessionStatistics>()
         Screen.GoalStatistics.route -> toRoute<Screen.GoalStatistics>()
         Screen.License.route -> toRoute<Screen.License>()
@@ -214,19 +235,36 @@ fun HomeTab.getDisplayData(): DisplayData {
 }
 
 /**
+ * Extension function to get the display data for a [Screen.MainMenuEntry].
+ * @return The display data for the main menu entry.
+ */
+fun Screen.MainMenuEntry.getDisplayData(): DisplayData {
+    return when (this) {
+        is Screen.MainMenuEntry.Settings -> DisplayData(
+            title = UiText.StringResource(R.string.components_main_menu_item_settings),
+            icon = UiIcon.DynamicIcon(Icons.Outlined.Settings),
+        )
+        is Screen.MainMenuEntry.About -> DisplayData(
+            title = UiText.StringResource(R.string.components_main_menu_item_about),
+            icon = UiIcon.DynamicIcon(Icons.Outlined.Info),
+        )
+        is Screen.MainMenuEntry.Help -> DisplayData(
+            title = UiText.StringResource(R.string.components_main_menu_item_help),
+            icon = UiIcon.DynamicIcon(Icons.AutoMirrored.Outlined.Help),
+        )
+        is Screen.MainMenuEntry.Donate -> DisplayData(
+            title = UiText.StringResource(R.string.components_main_menu_item_donate),
+            icon = UiIcon.DynamicIcon(Icons.Outlined.Favorite),
+        )
+    }
+}
+
+/**
  * Extension function to get the display data for a [Screen.SettingsOption].
  * @return The display data for the settings option.
  */
 fun Screen.SettingsOption.getDisplayData(): DisplayData {
-    return when (this) {
-        is Screen.SettingsOption.About -> DisplayData(
-            title = UiText.StringResource(R.string.settings_items_about),
-            icon = UiIcon.DynamicIcon(Icons.Outlined.Info),
-        )
-        is Screen.SettingsOption.Help -> DisplayData(
-            title = UiText.StringResource(R.string.settings_items_help),
-            icon = UiIcon.DynamicIcon(Icons.AutoMirrored.Outlined.Help),
-        )
+    return when(this) {
         is Screen.SettingsOption.Backup -> DisplayData(
             title = UiText.StringResource(R.string.settings_items_backup),
             icon = UiIcon.DynamicIcon(Icons.Outlined.CloudUpload),
@@ -234,10 +272,6 @@ fun Screen.SettingsOption.getDisplayData(): DisplayData {
         is Screen.SettingsOption.Export -> DisplayData(
             title = UiText.StringResource(R.string.settings_items_export),
             icon = UiIcon.IconResource(R.drawable.ic_export),
-        )
-        is Screen.SettingsOption.Donate -> DisplayData(
-            title = UiText.StringResource(R.string.settings_items_donate),
-            icon = UiIcon.DynamicIcon(Icons.Outlined.Favorite),
         )
         is Screen.SettingsOption.Appearance -> DisplayData(
             title = UiText.StringResource(R.string.settings_items_appearance),

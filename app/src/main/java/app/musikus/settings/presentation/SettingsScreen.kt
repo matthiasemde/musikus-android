@@ -39,24 +39,11 @@ import app.musikus.core.presentation.components.TwoLiner
 import app.musikus.core.presentation.components.TwoLinerData
 import app.musikus.core.presentation.getDisplayData
 import app.musikus.core.presentation.theme.spacing
-import app.musikus.settings.presentation.about.AboutScreen
-import app.musikus.settings.presentation.about.LicensesScreen
 import app.musikus.settings.presentation.appearance.AppearanceScreen
 import app.musikus.settings.presentation.backup.BackupScreen
-import app.musikus.settings.presentation.donate.DonateScreen
 import app.musikus.settings.presentation.export.ExportScreen
-import app.musikus.settings.presentation.help.HelpScreen
 
-fun NavGraphBuilder.addSettingsNavigationGraph(navController: NavController) {
-    composable<Screen.Settings> {
-        SettingsScreen(
-            navigateUp = { navController.navigateUp() },
-            navigateTo = { navController.navigate(it) }
-        )
-    }
-    composable<Screen.SettingsOption.Donate> {
-        DonateScreen(navigateUp = { navController.navigateUp() })
-    }
+fun NavGraphBuilder.addSettingsOptionsNavigationGraph(navController: NavController) {
     composable<Screen.SettingsOption.Appearance> {
         AppearanceScreen(navigateUp = { navController.navigateUp() })
     }
@@ -65,18 +52,6 @@ fun NavGraphBuilder.addSettingsNavigationGraph(navController: NavController) {
     }
     composable<Screen.SettingsOption.Export> {
         ExportScreen(navigateUp = { navController.navigateUp() })
-    }
-    composable<Screen.SettingsOption.Help> {
-        HelpScreen(navigateUp = { navController.navigateUp() })
-    }
-    composable<Screen.SettingsOption.About> {
-        AboutScreen(
-            navigateUp = { navController.navigateUp() },
-            navigateTo = { navController.navigate(it) }
-        )
-    }
-    composable<Screen.License> {
-        LicensesScreen(navigateUp = { navController.navigateUp() })
     }
 }
 
@@ -87,13 +62,6 @@ fun SettingsScreen(
     navigateTo: (Screen) -> Unit,
 ) {
     val settingsItems = listOf(
-        listOf(
-            TwoLinerData(
-                icon = Screen.SettingsOption.Donate.getDisplayData().icon,
-                firstLine = Screen.SettingsOption.Donate.getDisplayData().title,
-                onClick = { navigateTo(Screen.SettingsOption.Donate) }
-            )
-        ),
         listOf(
             TwoLinerData(
                 icon = Screen.SettingsOption.Appearance.getDisplayData().icon,
@@ -110,19 +78,7 @@ fun SettingsScreen(
                 firstLine = Screen.SettingsOption.Export.getDisplayData().title,
                 onClick = { navigateTo(Screen.SettingsOption.Export) }
             )
-        ),
-        listOf(
-            TwoLinerData(
-                icon = Screen.SettingsOption.Help.getDisplayData().icon,
-                firstLine = Screen.SettingsOption.Help.getDisplayData().title,
-                onClick = { navigateTo(Screen.SettingsOption.Help) }
-            ),
-            TwoLinerData(
-                icon = Screen.SettingsOption.About.getDisplayData().icon,
-                firstLine = Screen.SettingsOption.About.getDisplayData().title,
-                onClick = { navigateTo(Screen.SettingsOption.About) }
-            ),
-        ),
+        )
     )
 
     Scaffold(
