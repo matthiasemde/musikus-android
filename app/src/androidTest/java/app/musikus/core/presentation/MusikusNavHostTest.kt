@@ -187,14 +187,29 @@ class MusikusNavHostTest {
         composeRule.awaitIdle() // ensures that navController is initialized
 
         composeRule.runOnUiThread {
-            navController.navigate(Screen.Settings())
+            navController.navigate(Screen.MainMenuEntry.Settings())
         }
 
         val screen = navController.currentBackStackEntry?.toScreen()
 
-        assertThat(screen).isInstanceOf(Screen.Settings::class.java)
+        assertThat(screen).isInstanceOf(Screen.MainMenuEntry.Settings::class.java)
         assertThat(screen?.route).isEqualTo("settings")
         composeRule.onNodeWithText("Settings").assertIsDisplayed()
+    }
+
+    @Test
+    fun testNavigationToDonate() = runTest {
+        composeRule.awaitIdle() // ensures that navController is initialized
+
+        composeRule.runOnUiThread {
+            navController.navigate(Screen.MainMenuEntry.Donate())
+        }
+
+        val screen = navController.currentBackStackEntry?.toScreen()
+
+        assertThat(screen).isInstanceOf(Screen.MainMenuEntry.Donate::class.java)
+        assertThat(screen?.route).isEqualTo("settings/donate")
+        composeRule.onNodeWithText("Support us!").assertIsDisplayed()
     }
 
     @Test
@@ -202,12 +217,12 @@ class MusikusNavHostTest {
         composeRule.awaitIdle() // ensures that navController is initialized
 
         composeRule.runOnUiThread {
-            navController.navigate(Screen.SettingsOption.About())
+            navController.navigate(Screen.MainMenuEntry.About())
         }
 
         val screen = navController.currentBackStackEntry?.toScreen()
 
-        assertThat(screen).isInstanceOf(Screen.SettingsOption.About::class.java)
+        assertThat(screen).isInstanceOf(Screen.MainMenuEntry.About::class.java)
         assertThat(screen?.route).isEqualTo("settings/about")
         composeRule.onNodeWithText("About").assertIsDisplayed()
     }
@@ -217,12 +232,12 @@ class MusikusNavHostTest {
         composeRule.awaitIdle() // ensures that navController is initialized
 
         composeRule.runOnUiThread {
-            navController.navigate(Screen.SettingsOption.Help())
+            navController.navigate(Screen.MainMenuEntry.Help())
         }
 
         val screen = navController.currentBackStackEntry?.toScreen()
 
-        assertThat(screen).isInstanceOf(Screen.SettingsOption.Help::class.java)
+        assertThat(screen).isInstanceOf(Screen.MainMenuEntry.Help::class.java)
         assertThat(screen?.route).isEqualTo("settings/help")
         composeRule.onNodeWithText("Help").assertIsDisplayed()
     }
@@ -255,21 +270,6 @@ class MusikusNavHostTest {
         assertThat(screen).isInstanceOf(Screen.SettingsOption.Export::class.java)
         assertThat(screen?.route).isEqualTo("settings/export")
         composeRule.onNodeWithText("Export session data").assertIsDisplayed()
-    }
-
-    @Test
-    fun testNavigationToDonate() = runTest {
-        composeRule.awaitIdle() // ensures that navController is initialized
-
-        composeRule.runOnUiThread {
-            navController.navigate(Screen.SettingsOption.Donate())
-        }
-
-        val screen = navController.currentBackStackEntry?.toScreen()
-
-        assertThat(screen).isInstanceOf(Screen.SettingsOption.Donate::class.java)
-        assertThat(screen?.route).isEqualTo("settings/donate")
-        composeRule.onNodeWithText("Support us!").assertIsDisplayed()
     }
 
     @Test

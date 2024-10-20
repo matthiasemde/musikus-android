@@ -32,7 +32,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.test.core.app.ApplicationProvider
 import app.musikus.R
 import app.musikus.core.domain.FakeTimeProvider
-import app.musikus.core.presentation.HomeViewModel
 import app.musikus.core.presentation.MainActivity
 import app.musikus.core.presentation.MainViewModel
 import app.musikus.core.presentation.utils.TestTags
@@ -65,16 +64,10 @@ class LibraryScreenTest {
             val mainUiState by mainViewModel.uiState.collectAsStateWithLifecycle()
             val mainEventHandler = mainViewModel::onUiEvent
 
-            val homeViewModel: HomeViewModel = hiltViewModel()
-            val homeUiState by homeViewModel.uiState.collectAsStateWithLifecycle()
-            val homeEventHandler = homeViewModel::onUiEvent
-
             Library(
                 mainUiState = mainUiState,
                 mainEventHandler = mainEventHandler,
-                homeUiState = homeUiState,
-                homeEventHandler = homeEventHandler,
-                navigateTo = { },
+                navigateUp = { },
                 bottomBarHeight = 0.dp
             )
         }
