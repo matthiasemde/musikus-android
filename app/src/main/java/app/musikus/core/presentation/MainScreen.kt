@@ -8,6 +8,7 @@
 
 package app.musikus.core.presentation
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
@@ -147,7 +148,9 @@ fun MainScreen(
                     mainUiState = uiState,
                     mainEventHandler = eventHandler,
                     bottomBarHeight = bottomBarHeight,
-                    timeProvider = timeProvider
+                    timeProvider = timeProvider,
+                    isMainMenuOpen = drawerState.isOpen,
+                    closeMainMenu = { scope.launch { drawerState.close() } }
                 )
             }
         }
@@ -160,7 +163,9 @@ fun MusikusNavHost(
     mainUiState: MainUiState,
     mainEventHandler: MainUiEventHandler,
     bottomBarHeight: Dp,
-    timeProvider: TimeProvider
+    timeProvider: TimeProvider,
+    isMainMenuOpen: Boolean,
+    closeMainMenu: () -> Unit,
 ) {
     NavHost(
         navController = navController,
@@ -177,6 +182,11 @@ fun MusikusNavHost(
             typeMap = mapOf(typeOf<HomeTab>() to HomeTabNavType),
         ) { backStackEntry ->
             val tab = backStackEntry.toRoute<Screen.Home>().tab
+
+            BackHandler(
+                enabled = isMainMenuOpen,
+                onBack = closeMainMenu
+            )
 
             HomeScreen(
                 mainUiState = mainUiState,
