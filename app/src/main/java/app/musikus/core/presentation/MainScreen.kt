@@ -8,7 +8,6 @@
 
 package app.musikus.core.presentation
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
@@ -86,7 +85,9 @@ fun MainScreen(
                     currentTab = currentTab,
                     onTabSelected = { selectedTab ->
                         navController.navigate(Screen.Home(selectedTab)) {
-                            navController.popBackStack()
+                            popUpTo(Screen.Home(HomeTab.default)) {
+                                inclusive = selectedTab == HomeTab.default
+                            }
                         }
                     },
                 )
@@ -96,13 +97,7 @@ fun MainScreen(
             // Calculate the height of the bottom bar so we can add it as  padding in the home tabs
             val bottomBarHeight = innerPadding.calculateBottomPadding()
 
-            // Handle back press when on home screen
-            BackHandler(
-                enabled =
-                (navController.previousBackStackEntry == null) &&
-                        (currentTab != HomeTab.default),
-                onBack = { navController.navigate(Screen.Home(HomeTab.default)) }
-            )
+
 
             MusikusNavHost(
                 navController = navController,
