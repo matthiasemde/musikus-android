@@ -155,9 +155,11 @@ fun LibraryItemDialog(
                             .padding(top = 16.dp)
                             .padding(horizontal = 24.dp),
                         expanded = folderSelectorExpanded,
-                        label = { Text(
-                            text = stringResource(id = R.string.library_item_dialog_folder_selector_label)
-                        ) },
+                        label = {
+                            Text(
+                                text = stringResource(id = R.string.library_item_dialog_folder_selector_label)
+                            )
+                        },
                         leadingIcon = {
                             Icon(
                                 imageVector = Icons.Default.Folder,

@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -62,19 +61,22 @@ fun TwoLiner(
 
         // Content
         Column {
+            val textStyle = MaterialTheme.typography.bodyLarge
+
             data.firstLine?.let {
                 Text(
                     text = it.asString(),
-                    style = LocalTextStyle.current,
+                    style = textStyle,
                     color = LocalContentColor.current
                 )
             }
             data.secondLine?.let {
                 Text(
                     text = it.asString(),
-                    style = LocalTextStyle.current,
-                    fontSize = LocalTextStyle.current.fontSize * 0.9f,
-                    color = LocalContentColor.current.copy(alpha = 0.6f),
+                    style = textStyle.copy(
+                        fontSize = textStyle.fontSize * 0.9f,
+                        color = textStyle.color.copy(alpha = 0.6f),
+                    ),
                     lineHeight = 1.2.em
                 )
             }

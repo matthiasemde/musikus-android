@@ -230,7 +230,7 @@ abstract class BaseDao<
                         ioThread {
                             runBlocking {
                                 notify.emit("invalidated")
-                            } 
+                            }
                         }
                     }
                 }.also {

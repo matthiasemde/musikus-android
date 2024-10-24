@@ -59,7 +59,7 @@ class MainActivity : PermissionCheckerActivity() {
         initializeExportImportLaunchers()
 
         setContent {
-            MusikusApp(timeProvider)
+            MainScreen(timeProvider)
         }
     }
 
