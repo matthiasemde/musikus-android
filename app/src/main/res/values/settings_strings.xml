@@ -8,12 +8,9 @@
 <resources>
     <!-- Settings -->
     <string name="settings_title">Settings</string>
-    <string name="settings_items_about">About the app</string>
     <string name="settings_items_appearance">Appearance</string>
     <string name="settings_items_backup">Backup &amp; Restore</string>
     <string name="settings_items_export">Export session data</string>
-    <string name="settings_items_help">Help</string>
-    <string name="settings_items_donate">Support us!</string>
 
     <string name="settings_footer" translatable="false">Made with ❤️ in Munich</string>
 

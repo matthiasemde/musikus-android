@@ -10,10 +10,8 @@ package app.musikus.goals.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import app.musikus.R
 import app.musikus.core.domain.SortDirection
 import app.musikus.core.domain.SortInfo
-import app.musikus.core.presentation.utils.UiText
 import app.musikus.goals.data.GoalsSortMode
 import app.musikus.goals.data.entities.GoalDescriptionCreationAttributes
 import app.musikus.goals.data.entities.GoalInstanceCreationAttributes
@@ -126,16 +124,12 @@ class GoalsViewModel @Inject constructor(
 
     private val topBarUiState = sortMenuUiState.map { sortMenuUiState ->
         GoalsTopBarUiState(
-            title = UiText.StringResource(R.string.goals_title),
-            showBackButton = false,
             sortMenuUiState = sortMenuUiState,
         )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = GoalsTopBarUiState(
-            title = UiText.StringResource(R.string.goals_title),
-            showBackButton = false,
             sortMenuUiState = sortMenuUiState.value,
         )
     )

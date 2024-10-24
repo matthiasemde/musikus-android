@@ -10,11 +10,9 @@ package app.musikus.sessions.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import app.musikus.R
 import app.musikus.core.data.SessionWithSectionsWithLibraryItems
 import app.musikus.core.presentation.utils.DurationFormat
 import app.musikus.core.presentation.utils.DurationString
-import app.musikus.core.presentation.utils.UiText
 import app.musikus.core.presentation.utils.getDurationString
 import app.musikus.sessions.domain.usecase.SessionsUseCases
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -112,13 +110,6 @@ class SessionsViewModel @Inject constructor(
     )
 
     /** Composing the Ui state */
-    private val topBarUiState = MutableStateFlow(
-        SessionsTopBarUiState(
-            title = UiText.StringResource(R.string.sessions_title),
-            showBackButton = false,
-        )
-    )
-
     private val actionModeUiState = _selectedSessions.map { selectedSessions ->
         SessionsActionModeUiState(
             isActionMode = selectedSessions.isNotEmpty(),
@@ -165,13 +156,11 @@ class SessionsViewModel @Inject constructor(
     )
 
     val uiState = combine(
-        topBarUiState,
         actionModeUiState,
         contentUiState,
         deleteDialogUiState,
-    ) { topBarUiState, actionModeUiState, contentUiState, deleteDialogUiState ->
+    ) { actionModeUiState, contentUiState, deleteDialogUiState ->
         SessionsUiState(
-            topBarUiState = topBarUiState,
             actionModeUiState = actionModeUiState,
             contentUiState = contentUiState,
             deleteDialogUiState = deleteDialogUiState,
@@ -180,7 +169,6 @@ class SessionsViewModel @Inject constructor(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = SessionsUiState(
-            topBarUiState = topBarUiState.value,
             actionModeUiState = actionModeUiState.value,
             contentUiState = contentUiState.value,
             deleteDialogUiState = deleteDialogUiState.value,
