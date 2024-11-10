@@ -53,18 +53,10 @@ fun MusikusNavHost(
     NavHost(
         navController = navController,
         startDestination = Screen.Home(tab = HomeTab.default),
-        enterTransition = {
-            getEnterTransition()
-        },
-        exitTransition = {
-            getExitTransition()
-        },
-        popEnterTransition = {
-            getEnterTransition(pop = true)
-        },
-        popExitTransition = {
-            getExitTransition(pop = true)
-        }
+        enterTransition = { getEnterTransition() },
+        exitTransition = { getExitTransition() },
+        popEnterTransition = { getEnterTransition(pop = true) },
+        popExitTransition = { getExitTransition(pop = true) }
     ) {
         // Home
         composable<Screen.Home>(
@@ -149,22 +141,7 @@ fun AnimatedContentTransitionScope<NavBackStackEntry>.getEnterTransition(pop: Bo
             )
         }
 
-        // when changing to settings, zoom in when coming from a sub menu
-        // and slide in from the right when coming from the home screen
-        targetScreen is Screen.MainMenuEntry -> {
-            if (initialScreen is Screen.SettingsOption) {
-                scaleIn(
-                    animationSpec = tween(ANIMATION_BASE_DURATION / 2),
-                    initialScale = 1.2f,
-                ) + fadeIn(animationSpec = tween(ANIMATION_BASE_DURATION / 2))
-            } else {
-                slideInHorizontally(
-                    animationSpec = tween(ANIMATION_BASE_DURATION),
-                    initialOffsetX = { fullWidth -> (fullWidth / 10) }
-                ) + fadeIn(animationSpec = tween(ANIMATION_BASE_DURATION / 2))
-            }
-        }
-
+        // when switching between home tabs, do the vertical slide&fade
         initialScreen is Screen.Home && targetScreen is Screen.Home -> {
             slideInVertically(
                 animationSpec = tween(ANIMATION_BASE_DURATION),
@@ -177,33 +154,23 @@ fun AnimatedContentTransitionScope<NavBackStackEntry>.getEnterTransition(pop: Bo
             )
         }
 
-        // when coming from settings screen slide in from the right
-        initialScreen is Screen.MainMenuEntry && targetScreen !is Screen.SettingsOption -> {
-            slideInHorizontally(
-                animationSpec = tween(ANIMATION_BASE_DURATION),
-                initialOffsetX = { fullWidth -> -(fullWidth / 10) }
-            ) + fadeIn(animationSpec = tween(ANIMATION_BASE_DURATION / 2))
-        }
-
-        // when changing to session or goal statistics, slide in from the right
-        targetScreen is Screen.SessionStatistics ||
-                targetScreen is Screen.GoalStatistics -> {
+        // when changing to main menu screens, do the horizontal slide&fade (right to left)
+        targetScreen is Screen.MainMenuEntry && !pop -> {
             slideInHorizontally(
                 animationSpec = tween(ANIMATION_BASE_DURATION),
                 initialOffsetX = { fullWidth -> (fullWidth / 10) }
             ) + fadeIn(animationSpec = tween(ANIMATION_BASE_DURATION / 2))
         }
 
-        // when changing from session or goal statistics, slide in from the left
-        initialScreen is Screen.SessionStatistics ||
-                initialScreen is Screen.GoalStatistics -> {
+        // when returning from main menu screens, do the horizontal slide&fade (right to left)
+        initialScreen is Screen.MainMenuEntry && pop -> {
             slideInHorizontally(
                 animationSpec = tween(ANIMATION_BASE_DURATION),
                 initialOffsetX = { fullWidth -> -(fullWidth / 10) }
             ) + fadeIn(animationSpec = tween(ANIMATION_BASE_DURATION / 2))
         }
 
-        // default animation
+        // default animation: zoom&fade
         else -> {
             if (pop) {
                 scaleIn(
@@ -227,7 +194,10 @@ fun AnimatedContentTransitionScope<NavBackStackEntry>.getExitTransition(pop: Boo
     return when {
         // when changing to active session, show immediately
         targetScreen is Screen.ActiveSession -> {
-            fadeOut(tween(durationMillis = 1, delayMillis = ANIMATION_BASE_DURATION))
+            fadeOut(tween(
+                durationMillis = 1,
+                delayMillis = ANIMATION_BASE_DURATION
+            ))
         }
 
         // when changing from active session, slide out to the bottom
@@ -238,7 +208,7 @@ fun AnimatedContentTransitionScope<NavBackStackEntry>.getExitTransition(pop: Boo
             )
         }
 
-        // when changing between home tabs, slide out to the top
+        // when switching between home tabs, do the vertical slide&fade
         initialScreen is Screen.Home && targetScreen is Screen.Home -> {
             slideOutVertically(
                 animationSpec = tween(ANIMATION_BASE_DURATION),
@@ -246,49 +216,23 @@ fun AnimatedContentTransitionScope<NavBackStackEntry>.getExitTransition(pop: Boo
             ) + fadeOut(animationSpec = tween(ANIMATION_BASE_DURATION / 2))
         }
 
-        // when changing to settings slide out to the left
-        targetScreen is Screen.MainMenuEntry && initialScreen !is Screen.SettingsOption -> {
+        // when changing to main menu screens, do the horizontal slide&fade (right to left)
+        targetScreen is Screen.MainMenuEntry && !pop -> {
             slideOutHorizontally(
                 animationSpec = tween(ANIMATION_BASE_DURATION),
                 targetOffsetX = { fullWidth -> -(fullWidth / 10) }
             ) + fadeOut(animationSpec = tween(ANIMATION_BASE_DURATION / 2))
         }
 
-        // when changing from settings screen, if going to setting sub menu, zoom out
-        // otherwise slide out to the right
-        initialScreen is Screen.MainMenuEntry -> {
-            if (targetScreen is Screen.SettingsOption) {
-                scaleOut(
-                    animationSpec = tween(ANIMATION_BASE_DURATION / 2),
-                    targetScale = 1.2f,
-                ) + fadeOut(animationSpec = tween(ANIMATION_BASE_DURATION / 2))
-            } else {
-                slideOutHorizontally(
-                    animationSpec = tween(ANIMATION_BASE_DURATION),
-                    targetOffsetX = { fullWidth -> (fullWidth / 10) }
-                ) + fadeOut(animationSpec = tween(ANIMATION_BASE_DURATION / 2))
-            }
-        }
-
-        // when changing to session or goal statistics, slide in from the right
-        targetScreen is Screen.SessionStatistics ||
-                targetScreen is Screen.GoalStatistics -> {
+        // when returning from main menu screens, do the horizontal slide&fade (right to left)
+        initialScreen is Screen.MainMenuEntry && pop -> {
             slideOutHorizontally(
                 animationSpec = tween(ANIMATION_BASE_DURATION),
                 targetOffsetX = { fullWidth -> (fullWidth / 10) }
             ) + fadeOut(animationSpec = tween(ANIMATION_BASE_DURATION / 2))
         }
 
-        // when changing from session or goal statistics, slide in from the left
-        initialScreen is Screen.SessionStatistics ||
-                initialScreen is Screen.GoalStatistics -> {
-            slideOutHorizontally(
-                animationSpec = tween(ANIMATION_BASE_DURATION),
-                targetOffsetX = { fullWidth -> -(fullWidth / 10) }
-            ) + fadeOut(animationSpec = tween(ANIMATION_BASE_DURATION / 2))
-        }
-
-        // default animation: zoom and fade out
+        // default animation: zoom&fade
         else -> {
             if(pop) {
                 scaleOut(
