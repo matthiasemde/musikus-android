@@ -27,19 +27,15 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment.Companion.CenterVertically
@@ -52,9 +48,11 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.musikus.R
+import app.musikus.core.presentation.MusikusTopBar
 import app.musikus.core.presentation.components.conditional
 import app.musikus.core.presentation.components.simpleVerticalScrollbar
 import app.musikus.core.presentation.theme.spacing
+import app.musikus.core.presentation.utils.UiText
 import app.musikus.core.presentation.utils.asAnnotatedString
 import app.musikus.statistics.presentation.sessionstatistics.TimeframeSelectionHeader
 import java.util.UUID
@@ -67,18 +65,15 @@ fun GoalStatistics(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(text = stringResource(id = R.string.statistics_goal_statistics_title)) },
-                navigationIcon = {
-                    IconButton(onClick = navigateUp) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-                            contentDescription = stringResource(R.string.components_top_bar_back_description)
-                        )
-                    }
-                },
+            MusikusTopBar(
+                isTopLevel = false,
+                title = UiText.StringResource(R.string.statistics_goal_statistics_title),
+                scrollBehavior = scrollBehavior,
+                navigateUp = navigateUp
             )
         },
         content = { contentPadding ->

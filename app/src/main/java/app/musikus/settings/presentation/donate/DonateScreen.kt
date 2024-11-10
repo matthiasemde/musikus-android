@@ -15,16 +15,12 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -34,7 +30,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.em
 import androidx.core.content.ContextCompat.startActivity
 import app.musikus.R
+import app.musikus.core.presentation.MusikusTopBar
 import app.musikus.core.presentation.theme.spacing
+import app.musikus.core.presentation.utils.UiText
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,18 +41,15 @@ fun DonateScreen(
 ) {
     val context = LocalContext.current
 
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.settings_donate_title)) },
-                navigationIcon = {
-                    IconButton(onClick = navigateUp) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.components_top_bar_back_description),
-                        )
-                    }
-                }
+            MusikusTopBar(
+                isTopLevel = false,
+                title = UiText.StringResource(R.string.settings_donate_title),
+                scrollBehavior = scrollBehavior,
+                navigateUp = navigateUp
             )
         }
     ) { paddingValues ->

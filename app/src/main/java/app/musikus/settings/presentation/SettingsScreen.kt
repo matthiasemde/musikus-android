@@ -16,17 +16,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -34,11 +30,13 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import app.musikus.R
+import app.musikus.core.presentation.MusikusTopBar
 import app.musikus.core.presentation.Screen
 import app.musikus.core.presentation.components.TwoLiner
 import app.musikus.core.presentation.components.TwoLinerData
 import app.musikus.core.presentation.getDisplayData
 import app.musikus.core.presentation.theme.spacing
+import app.musikus.core.presentation.utils.UiText
 import app.musikus.settings.presentation.appearance.AppearanceScreen
 import app.musikus.settings.presentation.backup.BackupScreen
 import app.musikus.settings.presentation.export.ExportScreen
@@ -81,18 +79,15 @@ fun SettingsScreen(
         )
     )
 
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.settings_title)) },
-                navigationIcon = {
-                    IconButton(onClick = navigateUp) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.components_top_bar_back_description),
-                        )
-                    }
-                }
+            MusikusTopBar(
+                isTopLevel = false,
+                title = UiText.StringResource(R.string.settings_title),
+                scrollBehavior = scrollBehavior,
+                navigateUp = navigateUp
             )
         }
     ) { contentPadding ->
