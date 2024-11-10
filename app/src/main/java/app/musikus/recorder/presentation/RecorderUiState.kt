@@ -62,7 +62,7 @@ sealed class RecorderUiEvent {
     data object DeleteRecordingDialogConfirmed : RecorderUiEvent()
 }
 
-typealias RecorderUiEventHandler = (event: RecorderUiEvent) -> Unit
+typealias RecorderUiEventHandler = (event: RecorderUiEvent) -> Boolean
 
 sealed class RecorderException(message: String) : Exception(message) {
     class NoMicrophonePermission(context: Context) : RecorderException(

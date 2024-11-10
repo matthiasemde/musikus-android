@@ -95,7 +95,7 @@ fun MetronomeUi(
 fun MetronomeLayout(
     modifier: Modifier = Modifier,
     uiState: MetronomeUiState,
-    eventHandler: (MetronomeUiEvent) -> Unit,
+    eventHandler: MetronomeUiEventHandler,
 ) {
     Column(
         modifier = modifier
@@ -154,7 +154,7 @@ private fun PreviewMetronome(
                     isPlaying = false,
                     sliderValue = 120f,
                 ),
-                eventHandler = {}
+                eventHandler = { true }
             )
         }
     }

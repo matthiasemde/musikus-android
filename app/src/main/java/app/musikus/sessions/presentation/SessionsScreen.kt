@@ -139,7 +139,6 @@ fun SessionsScreen(
                 isTopLevel = true,
                 title = UiText.StringResource(R.string.sessions_title),
                 scrollBehavior = scrollBehavior,
-                navigateUp = navigateUp,
                 openMainMenu = { mainEventHandler(MainUiEvent.OpenMainMenu) }
             )
 

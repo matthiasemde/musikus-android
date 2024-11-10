@@ -161,7 +161,7 @@ class AppearanceViewModel @Inject constructor(
         )
     )
 
-    fun onUiEvent(event: AppearanceUiEvent) {
+    fun onUiEvent(event: AppearanceUiEvent) : Boolean {
         when (event) {
             is AppearanceUiEvent.ChangeLanguage -> {
 //                viewModelScope.launch {
@@ -202,5 +202,8 @@ class AppearanceViewModel @Inject constructor(
                 _colorSchemeDialogShowing.update { false }
             }
         }
+
+        // events are consumed by default
+        return true
     }
 }

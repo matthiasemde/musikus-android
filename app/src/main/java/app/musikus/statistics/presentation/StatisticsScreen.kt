@@ -116,7 +116,6 @@ fun Statistics(
                 isTopLevel = true,
                 title = UiText.StringResource(R.string.statistics_title),
                 scrollBehavior = scrollBehavior,
-                navigateUp = navigateUp,
                 openMainMenu = { mainEventHandler(MainUiEvent.OpenMainMenu) }
             )
         }

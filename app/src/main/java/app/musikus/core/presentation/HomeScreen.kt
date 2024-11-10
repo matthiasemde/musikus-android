@@ -65,7 +65,7 @@ fun HomeScreen(
             Library(
                 mainUiState = mainUiState,
                 mainEventHandler = mainEventHandler,
-                navigateUp = navigateUp,
+                navigateToFolderDetails = { navigateTo(it) },
                 bottomBarHeight = bottomBarHeight,
             )
         }

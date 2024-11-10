@@ -53,7 +53,7 @@ import app.musikus.library.presentation.DialogMode
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
-typealias GoalDialogEventHandler = (GoalDialogUiEvent) -> Unit
+typealias GoalDialogUiEventHandler = (GoalDialogUiEvent) -> Boolean
 
 sealed class GoalDialogUiEvent {
     data class TargetChanged(val target: Duration) : GoalDialogUiEvent()
@@ -68,7 +68,7 @@ sealed class GoalDialogUiEvent {
 @Composable
 fun GoalDialog(
     uiState: GoalsAddOrEditDialogUiState,
-    eventHandler: GoalDialogEventHandler,
+    eventHandler: GoalDialogUiEventHandler,
 ) {
     /**
      * Local GoalDialog state

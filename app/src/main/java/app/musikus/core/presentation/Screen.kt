@@ -42,6 +42,10 @@ sealed class Screen {
         val tab: HomeTab = HomeTab.Sessions
     ) : Screen()
 
+    @Serializable
+    data class LibraryFolderDetails(
+        val folderId: String
+    ) : Screen()
 
     @Serializable
     sealed class MainMenuEntry : Screen() {
@@ -129,6 +133,7 @@ fun NavBackStackEntry.toScreen(): Screen {
     return when (route) {
         Screen.ActiveSession().route -> toRoute<Screen.ActiveSession>()
         Screen.Home().route -> toRoute<Screen.Home>()
+        Screen.LibraryFolderDetails("").route -> toRoute<Screen.LibraryFolderDetails>()
         Screen.MainMenuEntry.Settings.route -> toRoute<Screen.MainMenuEntry.Settings>()
         Screen.MainMenuEntry.About.route -> toRoute<Screen.MainMenuEntry.About>()
         Screen.MainMenuEntry.Help.route -> toRoute<Screen.MainMenuEntry.Help>()

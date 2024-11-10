@@ -135,7 +135,6 @@ fun GoalsScreen(
                 isTopLevel = true,
                 title = UiText.StringResource(R.string.goals_title),
                 scrollBehavior = scrollBehavior,
-                navigateUp = navigateUp,
                 openMainMenu = { mainEventHandler(MainUiEvent.OpenMainMenu) },
                 actions = {
                     val sortMenuUiState = topBarUiState.sortMenuUiState

@@ -18,6 +18,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -36,14 +37,18 @@ fun MusikusTopBar(
     scrollBehavior: TopAppBarScrollBehavior,
     actions: @Composable () -> Unit = {},
     overflowActions: (@Composable () -> Unit)? = null, // Should be a list of DropdownMenuItem()
-    navigateUp: () -> Unit,
-    openMainMenu: () -> Unit,
+    navigateUp: (() -> Unit)? = null,
+    openMainMenu: (() -> Unit)? = null,
 ) {
-    LargeTopAppBar(
-        scrollBehavior = scrollBehavior,
-        title = { Text(text = title.asString()) },
-        navigationIcon = {
-            if (isTopLevel) {
+    if (isTopLevel) {
+        LargeTopAppBar(
+            scrollBehavior = scrollBehavior,
+            title = { Text(text = title.asString()) },
+            navigationIcon = {
+                if (openMainMenu == null) {
+                    throw IllegalArgumentException("openMainMenu must be provided for top level screens")
+                }
+
                 IconButton(onClick = { openMainMenu() }) {
                     Icon(
                         imageVector = Icons.Default.Menu,
@@ -52,7 +57,23 @@ fun MusikusTopBar(
                         )
                     )
                 }
-            } else {
+            },
+            actions = {
+                TopBarActions(
+                    actions = actions,
+                    overflowActions = overflowActions
+                )
+            }
+        )
+    } else {
+        TopAppBar(
+            scrollBehavior = scrollBehavior,
+            title = { Text(text = title.asString()) },
+            navigationIcon = {
+                if (navigateUp == null) {
+                    throw IllegalArgumentException("navigateUp must be provided for non-top level screens")
+                }
+
                 IconButton(onClick = { navigateUp() }) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
@@ -61,33 +82,44 @@ fun MusikusTopBar(
                         )
                     )
                 }
-            }
-        },
-        actions = {
-            // Screen specific actions
-            actions()
-
-            /*
-             * Optional screen specific overflow menu
-             */
-            if (overflowActions == null) {
-                return@LargeTopAppBar
-            }
-
-            var showOverflowMenu by remember { mutableStateOf(false) }
-
-            IconButton(onClick = { showOverflowMenu = true }) {
-                Icon(
-                    imageVector = Icons.Default.MoreVert,
-                    contentDescription = stringResource(id = R.string.core_kebab_menu_description)
+            },
+            actions = {
+                TopBarActions(
+                    actions = actions,
+                    overflowActions = overflowActions
                 )
-                DropdownMenu(
-                    expanded = showOverflowMenu,
-                    onDismissRequest = { showOverflowMenu = false },
-                ) {
-                    overflowActions()
-                }
             }
+        )
+    }
+}
+
+@Composable
+fun TopBarActions(
+    actions: @Composable () -> Unit,
+    overflowActions: (@Composable () -> Unit)? = null, // Should be a list of DropdownMenuItem()
+) {
+    // Screen specific actions
+    actions()
+
+    /*
+     * Optional screen specific overflow menu
+     */
+    if (overflowActions == null) {
+        return
+    }
+
+    var showOverflowMenu by remember { mutableStateOf(false) }
+
+    IconButton(onClick = { showOverflowMenu = true }) {
+        Icon(
+            imageVector = Icons.Default.MoreVert,
+            contentDescription = stringResource(id = R.string.core_kebab_menu_description)
+        )
+        DropdownMenu(
+            expanded = showOverflowMenu,
+            onDismissRequest = { showOverflowMenu = false },
+        ) {
+            overflowActions()
         }
-    )
+    }
 }

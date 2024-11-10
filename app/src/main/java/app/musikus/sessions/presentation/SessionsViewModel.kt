@@ -175,7 +175,7 @@ class SessionsViewModel @Inject constructor(
         )
     )
 
-    fun onUiEvent(event: SessionsUiEvent) {
+    fun onUiEvent(event: SessionsUiEvent) : Boolean {
         when (event) {
             is SessionsUiEvent.MonthHeaderPressed -> onMonthHeaderClicked(event.specificMonth)
             is SessionsUiEvent.SessionPressed -> onSessionClicked(event.sessionId, event.longClick)
@@ -192,6 +192,9 @@ class SessionsViewModel @Inject constructor(
             is SessionsUiEvent.UndoButtonPressed -> onRestoreAction()
             is SessionsUiEvent.ClearActionMode -> clearActionMode()
         }
+
+        // events are consumed by default
+        return true
     }
 
     /** Private state mutators */

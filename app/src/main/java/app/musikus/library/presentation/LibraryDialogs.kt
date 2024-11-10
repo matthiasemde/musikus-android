@@ -51,12 +51,20 @@ import app.musikus.core.presentation.utils.UiText
 import app.musikus.library.data.daos.LibraryFolder
 import java.util.UUID
 
+typealias LibraryFolderDialogUiEventHandler = (LibraryFolderDialogUiEvent) -> Boolean
+
+sealed class LibraryFolderDialogUiEvent {
+    data class NameChanged(val name: String) : LibraryFolderDialogUiEvent()
+    data object Confirmed : LibraryFolderDialogUiEvent()
+    data object Dismissed : LibraryFolderDialogUiEvent()
+}
+
 @Composable
 fun LibraryFolderDialog(
     uiState: LibraryFolderDialogUiState,
-    eventHandler: LibraryUiEventHandler
+    eventHandler: LibraryFolderDialogUiEventHandler
 ) {
-    Dialog(onDismissRequest = { eventHandler(LibraryUiEvent.FolderDialogDismissed) }) {
+    Dialog(onDismissRequest = { eventHandler(LibraryFolderDialogUiEvent.Dismissed) }) {
         Column(
             modifier = Modifier
                 .clip(MaterialTheme.shapes.extraLarge)
@@ -76,7 +84,7 @@ fun LibraryFolderDialog(
                         .padding(horizontal = 24.dp)
                         .testTag(TestTags.FOLDER_DIALOG_NAME_INPUT),
                     value = uiState.folderData.name,
-                    onValueChange = { eventHandler(LibraryUiEvent.FolderDialogNameChanged(it)) },
+                    onValueChange = { eventHandler(LibraryFolderDialogUiEvent.NameChanged(it)) },
                     label = { Text(text = stringResource(id = R.string.library_folder_dialog_name_label)) },
                     singleLine = true,
                 )
@@ -87,8 +95,8 @@ fun LibraryFolderDialog(
                             DialogMode.EDIT -> R.string.library_folder_dialog_confirm_edit
                         }
                     ),
-                    onDismissHandler = { eventHandler(LibraryUiEvent.FolderDialogDismissed) },
-                    onConfirmHandler = { eventHandler(LibraryUiEvent.FolderDialogConfirmed) },
+                    onDismissHandler = { eventHandler(LibraryFolderDialogUiEvent.Dismissed) },
+                    onConfirmHandler = { eventHandler(LibraryFolderDialogUiEvent.Confirmed) },
                     confirmButtonEnabled = uiState.folderData.name.isNotEmpty()
                 )
             }
@@ -103,7 +111,7 @@ interface LibraryItemDialogUiState {
     val isConfirmButtonEnabled: Boolean
 }
 
-typealias LibraryItemDialogUiEventHandler = (LibraryItemDialogUiEvent) -> Unit
+typealias LibraryItemDialogUiEventHandler = (LibraryItemDialogUiEvent) -> Boolean
 
 sealed class LibraryItemDialogUiEvent {
     data class NameChanged(val name: String) : LibraryItemDialogUiEvent()

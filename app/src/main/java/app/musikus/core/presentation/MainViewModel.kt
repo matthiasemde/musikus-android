@@ -29,7 +29,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-typealias MainUiEventHandler = (MainUiEvent) -> Unit
+typealias MainUiEventHandler = (MainUiEvent) -> Boolean
 
 sealed class MainUiEvent {
     data class ShowSnackbar(val message: String, val onUndo: (() -> Unit)? = null) : MainUiEvent()
@@ -124,7 +124,7 @@ class MainViewModel @Inject constructor(
         )
     )
 
-    fun onUiEvent(event: MainUiEvent) {
+    fun onUiEvent(event: MainUiEvent) : Boolean {
         when (event) {
             is MainUiEvent.ShowSnackbar -> {
                 showSnackbar(
@@ -147,5 +147,8 @@ class MainViewModel @Inject constructor(
                 }
             }
         }
+
+        // events are consumed by default
+        return true
     }
 }

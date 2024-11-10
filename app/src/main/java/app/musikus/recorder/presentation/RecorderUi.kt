@@ -750,7 +750,7 @@ private fun PreviewRecorderUi(
                 ),
                 currentPlaybackRawMedia = null
             ),
-            eventHandler = {},
+            eventHandler = { true },
             mediaController = null,
             playerState = null,
             currentPlaybackPosition = 0,

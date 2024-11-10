@@ -75,19 +75,8 @@ data class LibraryDeleteDialogUiState(
     val numberOfSelectedItems: Int,
 )
 
-data class LibraryDialogUiState(
+data class LibraryDialogsUiState(
     val folderDialogUiState: LibraryFolderDialogUiState?,
     val itemDialogUiState: LibraryItemDialogUiState?,
     val deleteDialogUiState: LibraryDeleteDialogUiState?,
-)
-
-data class LibraryFabUiState(
-    val activeFolder: LibraryFolder?,
-)
-
-data class LibraryUiState(
-    val actionModeUiState: LibraryActionModeUiState,
-    val contentUiState: LibraryContentUiState,
-    val dialogUiState: LibraryDialogUiState,
-    val fabUiState: LibraryFabUiState,
 )

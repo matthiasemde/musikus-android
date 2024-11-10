@@ -65,6 +65,8 @@ data class MetronomeUiState(
     val isPlaying: Boolean,
 )
 
+typealias MetronomeUiEventHandler = (MetronomeUiEvent) -> Boolean
+
 sealed class MetronomeUiEvent {
     data object ToggleIsPlaying : MetronomeUiEvent()
 
@@ -203,7 +205,7 @@ class MetronomeViewModel @Inject constructor(
 
     /** Mutators */
 
-    fun onUiEvent(event: MetronomeUiEvent) {
+    fun onUiEvent(event: MetronomeUiEvent) : Boolean {
         when (event) {
             is MetronomeUiEvent.ToggleIsPlaying -> {
                 viewModelScope.launch {
@@ -231,6 +233,9 @@ class MetronomeViewModel @Inject constructor(
 
             is MetronomeUiEvent.TabTempo -> tabTempo()
         }
+
+        // events are consumed by default
+        return true
     }
 
     private suspend fun checkPermissions(): Boolean {

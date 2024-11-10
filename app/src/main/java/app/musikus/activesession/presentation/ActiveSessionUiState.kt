@@ -98,6 +98,8 @@ enum class ActiveSessionTab {
     METRONOME, RECORDER, DEFAULT
 }
 
+typealias ActiveSessionUiEventHandler = (ActiveSessionUiEvent) -> Boolean
+
 sealed class ActiveSessionUiEvent {
     data object TogglePauseState : ActiveSessionUiEvent()
     data class SelectItem(val item: LibraryItem) : ActiveSessionUiEvent()
