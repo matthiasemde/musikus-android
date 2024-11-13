@@ -1,7 +1,6 @@
 @file:Suppress("UnstableApiUsage")
 
 import io.gitlab.arturbosch.detekt.Detekt
-import java.io.IOException
 import java.util.Properties
 import java.util.Scanner
 
@@ -46,6 +45,7 @@ android {
     }
 
     signingConfigs {
+        @Suppress("TooGenericExceptionCaught")
         try {
             create("release") {
                 storeFile = file(System.getenv("SIGNING_KEY_STORE_PATH"))
@@ -53,7 +53,7 @@ android {
                 keyAlias = System.getenv("SIGNING_KEY_ALIAS")
                 keyPassword = System.getenv("SIGNING_KEY_PASSWORD")
             }
-        } catch (e: IOException) {
+        } catch (e: Exception) {
             logger.warn("No signing configuration found, using debug key (message: ${e.message})")
         }
     }
@@ -149,7 +149,9 @@ tasks.register<Detekt>("detektOnFiles") {
     doFirst {
         // Step 1: Get the list of changed Kotlin files
         val changedKotlinFiles =
-            System.getenv("CHANGED_FILES")?.split(":")?.filter { it.endsWith(".kt") } ?: emptyList()
+            System.getenv("CHANGED_FILES")?.split(":")?.filter {
+                it.endsWith(".kt") || it.endsWith(".kts")
+            } ?: emptyList()
 
         // Step 2: Check if there are any Kotlin files changed
         if (changedKotlinFiles.isEmpty()) {

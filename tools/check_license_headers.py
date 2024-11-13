@@ -56,7 +56,7 @@ kt_license_pattern = re.compile(r'/\*\n'
 
 # Function to fetch the files that were just commited to git
 def get_committed_files():
-    result = subprocess.run(['git', 'diff', '--name-only', 'HEAD~1', 'HEAD'], capture_output=True, text=True)
+    result = subprocess.run(['git', 'diff', '--name-only', 'origin/main', 'HEAD'], capture_output=True, text=True)
     files = result.stdout.splitlines()
 
     return [f'{project_path}/{f}' for f in files]
