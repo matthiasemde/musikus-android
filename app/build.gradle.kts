@@ -1,12 +1,14 @@
 @file:Suppress("UnstableApiUsage")
 
+import io.gitlab.arturbosch.detekt.Detekt
 import java.util.Properties
+import java.util.Scanner
 
-val properties = Properties()
-file("$rootDir/build.properties").inputStream().use { properties.load(it) }
-val importedVersionCode = properties["versionCode"] as String
-val importedVersionName = properties["versionName"] as String
-val commitHash = properties["commitHash"] as String
+val buildProperties = Properties()
+file("$rootDir/build.properties").inputStream().use { buildProperties.load(it) }
+val importedVersionCode = buildProperties["versionCode"] as String
+val importedVersionName = buildProperties["versionName"] as String
+val commitHash = buildProperties["commitHash"] as String
 
 val reportsPath = "$projectDir/build/reports"
 
@@ -43,6 +45,7 @@ android {
     }
 
     signingConfigs {
+        @Suppress("TooGenericExceptionCaught")
         try {
             create("release") {
                 storeFile = file(System.getenv("SIGNING_KEY_STORE_PATH"))
@@ -112,20 +115,55 @@ room {
     schemaDirectory("$projectDir/schemas")
 }
 
+object DetektSettings {
+    const val VERSION = "1.23.6"
+    const val CONFIG_FILE = "config/detekt.yml" // Relative to the project root
+    const val BUILD_UPON_DEFAULT_CONFIG = true
+    const val REPORT_PATH = "lint" // Relative to the reports path
+}
+
 detekt {
     // Version of detekt that will be used. When unspecified the latest detekt
     // version found will be used. Override to stay on the same version.
-    toolVersion = "1.23.6"
+    toolVersion = DetektSettings.VERSION
 
     // Point to your custom config defining rules to run, overwriting default behavior
-    config.setFrom("$projectDir/config/detekt.yml")
+    config.setFrom("$projectDir/${DetektSettings.CONFIG_FILE}")
 
     // Applies the config files on top of detekt's default config file. `false` by default.
-    buildUponDefaultConfig = true
+    buildUponDefaultConfig = DetektSettings.BUILD_UPON_DEFAULT_CONFIG
 
     // Specify the base path for file paths in the formatted reports.
     // If not set, all file paths reported will be absolute file path.
-    basePath = "$reportsPath/lint"
+    basePath = "$reportsPath/${DetektSettings.REPORT_PATH}"
+}
+
+tasks.register<Detekt>("detektOnFiles") {
+    description = "Runs detekt on the changed Kotlin files."
+    version = DetektSettings.VERSION
+    setSource(files("/"))
+    config.setFrom("$projectDir/${DetektSettings.CONFIG_FILE}")
+    buildUponDefaultConfig = true
+    basePath = "$reportsPath/${DetektSettings.REPORT_PATH}"
+
+    doFirst {
+        // Step 1: Get the list of changed Kotlin files
+        val changedKotlinFiles =
+            System.getenv("CHANGED_FILES")?.split(":")?.filter {
+                it.endsWith(".kt") || it.endsWith(".kts")
+            } ?: emptyList()
+
+        // Step 2: Check if there are any Kotlin files changed
+        if (changedKotlinFiles.isEmpty()) {
+            println("No Kotlin files changed in the last commit, skipping Detekt")
+            include("build.gradle.kts") // Include the build file to avoid a no-source error
+        }
+
+        // Step 3: Include the changed Kotlin files in the detekt task
+        changedKotlinFiles.forEach {
+            include(it.removePrefix("app/"))
+        }
+    }
 }
 
 tasks.withType<Test> {
@@ -144,6 +182,68 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach 
                 "-P",
                 "plugin:androidx.compose.compiler.plugins.kotlin:metricsDestination=$reportsPath/composeCompiler"
             )
+        }
+    }
+}
+
+tasks.register("setupMusikus") {
+    group = "setup"
+    description = "Sets up the Musikus project with pre-commit hooks, copyright header, and IDE settings."
+
+    doFirst {
+        gradle.startParameter.consoleOutput = ConsoleOutput.Plain
+    }
+
+    doLast {
+        println("Setting up Musikus project...")
+
+        // Step 1: Execute the existing bash script to install the pre-commit hook
+        if (System.getProperty("os.name").lowercase().contains("win")) {
+            exec {
+                workingDir = file("$rootDir/tools/hooks")
+                commandLine("cmd", "/c", "setup_hooks.bat")
+            }
+        } else {
+            exec {
+                commandLine("bash", "$rootDir/tools/hooks/setup_hooks.sh")
+            }
+        }
+        println("Pre-commit hook installed.\n")
+
+        // Step 2: Query and store a name for the copyright header
+        val scanner = Scanner(System.`in`)
+        print("Enter your name for the copyright header: ")
+        System.out.flush() // Needed to ensure the prompt is displayed
+        val name = scanner.nextLine()
+        require(!name.isNullOrBlank()) { "Name must not be empty." }
+        val propertiesFile = file("$rootDir/musikus.properties")
+        propertiesFile.writeText("copyrightName=$name")
+        println("Name stored for copyright header: $name\n")
+    }
+}
+
+tasks.register("checkLicense") {
+    group = "verification"
+    description = "Checks if all files most in the HEAD commit have the correct license header."
+
+    doLast {
+        // Execute python script to check license headers
+        exec {
+            workingDir = file("$rootDir/tools")
+            commandLine("python", "check_license_headers.py")
+        }
+    }
+}
+
+tasks.register("fixLicense") {
+    group = "verification"
+    description = "Fixes the license header in all staged files."
+
+    doLast {
+        // Execute python script to update license headers
+        exec {
+            workingDir = file("$rootDir/tools")
+            commandLine("python", "fix_license_headers.py")
         }
     }
 }
@@ -170,7 +270,7 @@ dependencies {
     implementation(libs.androidx.compose.animation.core)
     implementation(libs.androidx.compose.animation.graphics)
 
-    //Foundation
+    // Foundation
     implementation(libs.androidx.compose.foundation)
     implementation(libs.androidx.compose.foundation.layout)
 
@@ -206,7 +306,7 @@ dependencies {
     // Immutable Lists
     implementation(libs.kotlinx.collections.immutable)
 
-    //Dagger - Hilt
+    // Dagger - Hilt
     implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)

@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# Run the gradle task to check license headers
+echo "Checking license headers..."
+if ! ./gradlew checkLicense; then
+  echo "Errors found in license headers. Please fix them"
+  exit 1
+fi
+
+# Get the list of files changed in the most recent commit
+CHANGED_FILES=$(git diff --name-only origin/main HEAD | tr '\n' ':')
+export CHANGED_FILES
+
+# Run detekt on changed files
+echo "Running code analysis..."
+if ! ./gradlew detektOnFiles; then
+  echo "Errors found during code analysis. Please review the reports or try running ./gradlew detekt --auto-correct"
+  exit 1
+fi
+
+echo "Post-commit checks passed successfully!"
