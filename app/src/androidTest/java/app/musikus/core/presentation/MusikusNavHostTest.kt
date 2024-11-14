@@ -20,6 +20,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.ComposeNavigator
 import androidx.navigation.testing.TestNavHostController
 import app.musikus.core.domain.FakeTimeProvider
+import app.musikus.core.presentation.theme.MusikusTheme
+import app.musikus.settings.domain.ColorSchemeSelections
+import app.musikus.settings.domain.ThemeSelections
 import com.google.common.truth.Truth.assertThat
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -55,13 +58,18 @@ class MusikusNavHostTest {
             navController = TestNavHostController(LocalContext.current)
             navController.navigatorProvider.addNavigator(ComposeNavigator())
 
-            MusikusNavHost(
-                navController = navController,
-                mainUiState = mainUiState,
-                mainEventHandler = eventHandler,
-                bottomBarHeight = 0.dp,
-                timeProvider = fakeTimeProvider,
-            )
+            MusikusTheme(
+                theme = ThemeSelections.DAY,
+                colorScheme = ColorSchemeSelections.MUSIKUS,
+            ) {
+                MusikusNavHost(
+                    navController = navController,
+                    mainUiState = mainUiState,
+                    mainEventHandler = eventHandler,
+                    bottomBarHeight = 0.dp,
+                    timeProvider = fakeTimeProvider,
+                )
+            }
         }
     }
 
