@@ -245,15 +245,13 @@ abstract class MusikusDatabase : RoomDatabase() {
                     val id = cursor.getLong(cursor.getColumnIndexOrThrow("id"))
                     val now = ZonedDateTime.now().toEpochSecond()
                     db.update(
-                        tableName,
-                        SQLiteDatabase.CONFLICT_IGNORE,
+                        tableName, SQLiteDatabase.CONFLICT_IGNORE,
                         ContentValues().let {
                             it.put("created_at", now + id)
                             it.put("modified_at", now + id)
                             it
                         },
-                        "id=?",
-                        arrayOf(id)
+                        "id=?", arrayOf(id)
                     )
                 }
                 Log.d("POST_MIGRATION", "Added timestamps for $tableName")
@@ -269,14 +267,12 @@ abstract class MusikusDatabase : RoomDatabase() {
                 val id = cursor.getLong(cursor.getColumnIndexOrThrow("id"))
                 val oneTime = cursor.getInt(cursor.getColumnIndexOrThrow("repeat"))
                 db.update(
-                    "goal_description",
-                    SQLiteDatabase.CONFLICT_IGNORE,
+                    "goal_description", SQLiteDatabase.CONFLICT_IGNORE,
                     ContentValues().let {
                         it.put("repeat", if (oneTime == 0) "1" else "0")
                         it
                     },
-                    "id=?",
-                    arrayOf(id)
+                    "id=?", arrayOf(id)
                 )
             }
             Log.d("POST_MIGRATION", "Migrated 'oneTime' to 'repeat' for goal descriptions")
@@ -538,25 +534,21 @@ abstract class MusikusDatabase : RoomDatabase() {
                             "(3 -> 4): Updating $tableName with id ${UUIDConverter().fromByte(id)} to deleted $deleted}"
                         )
                         db.update(
-                            tableName,
-                            SQLiteDatabase.CONFLICT_ROLLBACK,
+                            tableName, SQLiteDatabase.CONFLICT_ROLLBACK,
                             ContentValues().apply {
                                 put("deleted", deleted == "1")
                             },
-                            "id=?",
-                            arrayOf(id)
+                            "id=?", arrayOf(id)
                         )
 
                         if (tableName == "goal_description") {
                             val paused = cursor.getString(cursor.getColumnIndexOrThrow("paused"))
                             db.update(
-                                tableName,
-                                SQLiteDatabase.CONFLICT_ROLLBACK,
+                                tableName, SQLiteDatabase.CONFLICT_ROLLBACK,
                                 ContentValues().apply {
                                     put("paused", paused == "1")
                                 },
-                                "id=?",
-                                arrayOf(id)
+                                "id=?", arrayOf(id)
                             )
                         }
                     }
