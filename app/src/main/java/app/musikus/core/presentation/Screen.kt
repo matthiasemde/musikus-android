@@ -113,7 +113,7 @@ sealed class HomeTab {
 
     companion object {
         val all by lazy { listOf(Sessions, Goals, Statistics, Library) }
-        val default = Sessions
+        val default by lazy { Sessions } // has to be lazy due to some testing peculiarities
     }
 }
 
