@@ -75,16 +75,24 @@
         <activity
             android:name=".core.presentation.MainActivity"
             android:exported="true">
+
+            <!-- This intent filter is required for the app to appear in the app launcher -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <data android:scheme="musikus" />
-            </intent-filter>
 
+            <!-- This intent filter is used for deep links (e.g. ActiveSession) -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:scheme="https" />
+                <data android:host="musikus.app" />
+                <data android:host="www.musikus.app" />
+            </intent-filter>
         </activity>
     </application>
 

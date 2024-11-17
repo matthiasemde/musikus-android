@@ -25,6 +25,8 @@ import app.musikus.activesession.presentation.ActiveSessionActions
 import app.musikus.core.di.ApplicationScope
 import app.musikus.core.di.IoScope
 import app.musikus.core.presentation.METRONOME_NOTIFICATION_CHANNEL_ID
+import app.musikus.core.presentation.MainActivity
+import app.musikus.core.presentation.Screen
 import app.musikus.settings.domain.usecase.UserPreferencesUseCases
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
@@ -183,7 +185,13 @@ class MetronomeService : Service() {
         // trigger deep link to open ActiveSession https://stackoverflow.com/a/72769863
         pendingIntentTapAction = TaskStackBuilder.create(this).run {
             addNextIntentWithParentStack(
-                Intent(Intent.ACTION_VIEW, "musikus://activeSession/${ActiveSessionActions.METRONOME}".toUri())
+                Intent(this@MetronomeService, MainActivity::class.java).apply {
+                    data = (
+                        "https://musikus.app/" +
+                            "${Screen.ActiveSession().route}?" +
+                            "action=${ActiveSessionActions.METRONOME}"
+                        ).toUri()
+                }
             )
             getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         }

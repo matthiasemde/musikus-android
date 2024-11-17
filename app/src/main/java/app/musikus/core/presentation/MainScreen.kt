@@ -38,6 +38,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navDeepLink
 import androidx.navigation.toRoute
 import app.musikus.activesession.presentation.ActiveSession
 import app.musikus.core.domain.TimeProvider
@@ -45,8 +46,6 @@ import app.musikus.core.presentation.theme.MusikusTheme
 import app.musikus.settings.presentation.addSettingsNavigationGraph
 import app.musikus.statistics.presentation.addStatisticsNavigationGraph
 import kotlin.reflect.typeOf
-
-const val DEEP_LINK_KEY = "argument"
 
 @Composable
 fun MainScreen(
@@ -150,29 +149,19 @@ fun MusikusNavHost(
             )
         }
 
-//        // Edit Session
-//        composable<Screen.EditSession> { backStackEntry ->
-//            val sessionId = backStackEntry.arguments?.getString("sessionId")
-//                ?: return@composable navController.navigate(Sessions)
-//
-//            EditSession(
-//                sessionToEditId = UUID.fromString(sessionId),
-//                navigateUp = navController::navigateUp
-//            )
-//        }
-
         // Active Session
         composable<Screen.ActiveSession>(
-//            deepLinks = listOf(
-//                navDeepLink {
-//                    uriPattern = "musikus://activeSession/{$DEEP_LINK_KEY}"
-//                }
-//            )
+            deepLinks = listOf(
+                navDeepLink<Screen.ActiveSession>(
+                    basePath = "https://musikus.app"
+                )
+            )
         ) { backStackEntry ->
+            val deepLinkAction = backStackEntry.toRoute<Screen.ActiveSession>().action
+
             ActiveSession(
+                deepLinkAction = deepLinkAction,
                 navigateUp = navController::navigateUp,
-                deepLinkArgument = backStackEntry.arguments?.getString(DEEP_LINK_KEY),
-                navigateTo = { navController.navigate(it) }
             )
         }
 

@@ -151,7 +151,6 @@ import app.musikus.R
 import app.musikus.core.data.LibraryFolderWithItems
 import app.musikus.core.data.UUIDConverter
 import app.musikus.core.domain.TimeProvider
-import app.musikus.core.presentation.Screen
 import app.musikus.core.presentation.components.DeleteConfirmationBottomSheet
 import app.musikus.core.presentation.components.DialogActions
 import app.musikus.core.presentation.components.DialogHeader
@@ -194,6 +193,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.Serializable
 import java.time.ZonedDateTime
 import java.util.UUID
 import kotlin.random.Random
@@ -202,8 +202,9 @@ import kotlin.time.Duration.Companion.seconds
 /**
  * Actions that can be triggered by the Notification
  */
+@Serializable
 enum class ActiveSessionActions {
-    OPEN, PAUSE, FINISH, METRONOME, RECORDER
+    PAUSE, FINISH, METRONOME, RECORDER
 }
 
 data class ToolsTab(
@@ -226,9 +227,8 @@ data class ScreenSizeClass(
 @Composable
 fun ActiveSession(
     viewModel: ActiveSessionViewModel = hiltViewModel(),
-    deepLinkArgument: String?,
+    deepLinkAction: ActiveSessionActions? = null,
     navigateUp: () -> Unit,
-    navigateTo: (Screen) -> Unit,
 ) {
     val uiState = viewModel.uiState.collectAsStateWithLifecycle()
     val eventHandler = viewModel::onUiEvent
@@ -300,9 +300,9 @@ fun ActiveSession(
     )
 
     /** Handle deep link Arguments */
-    LaunchedEffect(deepLinkArgument) {
-        when (deepLinkArgument) {
-            ActiveSessionActions.METRONOME.name -> {
+    LaunchedEffect(deepLinkAction) {
+        when (deepLinkAction) {
+            ActiveSessionActions.METRONOME -> {
                 // switch to metronome tab
                 scope.launch {
                     bottomSheetPagerState.animateScrollToPage(
@@ -314,7 +314,7 @@ fun ActiveSession(
                     bottomSheetScaffoldState.bottomSheetState.expand()
                 }
             }
-            ActiveSessionActions.RECORDER.name -> {
+            ActiveSessionActions.RECORDER -> {
                 // switch to metronome tab
                 scope.launch {
                     bottomSheetPagerState.animateScrollToPage(
@@ -327,8 +327,12 @@ fun ActiveSession(
                 }
             }
 
-            ActiveSessionActions.FINISH.name -> {
+            ActiveSessionActions.FINISH -> {
                 eventHandler(ActiveSessionUiEvent.ToggleFinishDialog)
+            }
+
+            else -> {
+                // do nothing
             }
         }
     }

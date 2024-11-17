@@ -20,6 +20,7 @@ import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavType
 import androidx.navigation.toRoute
 import app.musikus.R
+import app.musikus.activesession.presentation.ActiveSessionActions
 import app.musikus.core.presentation.utils.UiIcon
 import app.musikus.core.presentation.utils.UiText
 import kotlinx.serialization.Serializable
@@ -30,7 +31,9 @@ sealed class Screen(
 ) {
 
     @Serializable
-    class ActiveSession : Screen("activeSession")
+    class ActiveSession(
+        val action: ActiveSessionActions? = null
+    ) : Screen("activeSession")
 
     @Serializable
     data class Home (
