@@ -22,7 +22,6 @@ import android.os.Binder
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
-import androidx.annotation.DrawableRes
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
@@ -54,15 +53,6 @@ const val BROADCAST_INTENT_FILTER = "activeSessionAction"
 enum class ActiveSessionServiceActions {
     START, STOP
 }
-
-/**
- * Data Structure for a Button inside the Notification
- */
-data class NotificationActionButtonConfig(
-    @DrawableRes val icon: Int,
-    val text: String,
-    val tapIntent: PendingIntent?
-)
 
 const val LOG_TAG = "SessionService"
 
