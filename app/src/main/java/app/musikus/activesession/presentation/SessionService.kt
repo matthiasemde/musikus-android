@@ -76,8 +76,15 @@ class SessionService : Service() {
     private val myReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             Log.d(LOG_TAG, "Received Broadcast")
-            when (intent.getStringExtra("action")) {
-                ActiveSessionActions.PAUSE.toString() -> togglePause()
+            val action = intent.getStringExtra("action")?.let {
+                ActiveSessionActions.valueOf(it)
+            } ?: throw IllegalArgumentException("No action provided in broadcast")
+
+            when (action) {
+                ActiveSessionActions.PAUSE -> togglePause()
+                else -> throw IllegalArgumentException(
+                    "Broadcast receiver can't handle action: $action"
+                )
             }
         }
     }
@@ -89,12 +96,25 @@ class SessionService : Service() {
     override fun onCreate() {
         super.onCreate()
         Log.d(LOG_TAG, "onCreate")
-        ContextCompat.registerReceiver(
-            this,
-            myReceiver,
-            IntentFilter(BROADCAST_INTENT_FILTER),
-            ContextCompat.RECEIVER_NOT_EXPORTED
-        )
+        val filter = IntentFilter(BROADCAST_INTENT_FILTER)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            registerReceiver(
+                myReceiver,
+                filter,
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    RECEIVER_NOT_EXPORTED
+                } else {
+                    ContextCompat.RECEIVER_NOT_EXPORTED
+                }
+            )
+        } else {
+            ContextCompat.registerReceiver(
+                this,
+                myReceiver,
+                filter,
+                ContextCompat.RECEIVER_NOT_EXPORTED
+            )
+        }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -153,7 +173,7 @@ class SessionService : Service() {
 
     private fun togglePause() {
         applicationScope.launch {
-            if (useCases.getPausedState()) {
+            if (useCases.isSessionPaused()) {
                 useCases.resume()
             } else {
                 useCases.pause()
@@ -186,7 +206,7 @@ class SessionService : Service() {
 
             val currentSectionName = useCases.getRunningItem().first()!!.name
 
-            if (useCases.getPausedState()) {
+            if (useCases.isSessionPaused()) {
                 title = getString(R.string.active_session_service_notification_title_paused)
                 description = getString(
                     R.string.active_session_service_notification_description_paused,
@@ -208,16 +228,25 @@ class SessionService : Service() {
         return getNotification(
             title = title,
             description = description,
-            isSessionRunning = useCases.getPausedState()
         )
     }
 
-    private fun getNotification(
+    private suspend fun getNotification(
         title: String,
         description: String,
-        isSessionRunning: Boolean,
     ): Notification {
         val icon = R.drawable.ic_launcher_foreground
+
+        val pauseButtonIntent = Intent(BROADCAST_INTENT_FILTER).apply {
+            putExtra("action", ActiveSessionActions.PAUSE.toString())
+        }
+
+        val pauseButtonPendingIntent = PendingIntent.getBroadcast(
+            this,
+            SESSION_NOTIFICATION_ID,
+            pauseButtonIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
 
         return NotificationCompat.Builder(this, SESSION_NOTIFICATION_CHANNEL_ID).run {
             setSmallIcon(icon) // without icon, setOngoing does not work
@@ -230,17 +259,17 @@ class SessionService : Service() {
             setPriority(NotificationCompat.PRIORITY_HIGH) // only relevant below Oreo, else channel priority is used
             setContentIntent(activeSessionIntent(null))
             setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-            if (isSessionRunning) {
+            if (!useCases.isSessionPaused()) {
                 addAction(
                     R.drawable.ic_pause,
                     getString(R.string.active_session_service_notification_action_pause),
-                    activeSessionIntent(ActiveSessionActions.PAUSE)
+                    pauseButtonPendingIntent
                 )
             } else {
                 addAction(
                     R.drawable.ic_play,
                     getString(R.string.active_session_service_notification_action_resume),
-                    activeSessionIntent(ActiveSessionActions.PAUSE)
+                    pauseButtonPendingIntent
                 )
             }
             addAction(

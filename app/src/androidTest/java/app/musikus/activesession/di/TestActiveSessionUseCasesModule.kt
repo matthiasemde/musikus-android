@@ -14,12 +14,12 @@ import app.musikus.activesession.domain.usecase.DeleteSectionUseCase
 import app.musikus.activesession.domain.usecase.GetCompletedSectionsUseCase
 import app.musikus.activesession.domain.usecase.GetFinalizedSessionUseCase
 import app.musikus.activesession.domain.usecase.GetOngoingPauseDurationUseCase
-import app.musikus.activesession.domain.usecase.GetPausedStateUseCase
 import app.musikus.activesession.domain.usecase.GetRunningItemDurationUseCase
 import app.musikus.activesession.domain.usecase.GetRunningItemUseCase
 import app.musikus.activesession.domain.usecase.GetSessionStatusUseCase
 import app.musikus.activesession.domain.usecase.GetStartTimeUseCase
 import app.musikus.activesession.domain.usecase.GetTotalPracticeDurationUseCase
+import app.musikus.activesession.domain.usecase.IsSessionPausedUseCase
 import app.musikus.activesession.domain.usecase.IsSessionRunningUseCase
 import app.musikus.activesession.domain.usecase.PauseActiveSessionUseCase
 import app.musikus.activesession.domain.usecase.ResetSessionUseCase
@@ -82,7 +82,7 @@ object TestActiveSessionUseCasesModule {
             getRunningItemDuration = getRunningItemDurationUseCase,
             getCompletedSections = GetCompletedSectionsUseCase(activeSessionRepository),
             getOngoingPauseDuration = GetOngoingPauseDurationUseCase(activeSessionRepository, timeProvider),
-            getPausedState = GetPausedStateUseCase(activeSessionRepository),
+            isSessionPaused = IsSessionPausedUseCase(activeSessionRepository),
             getFinalizedSession = GetFinalizedSessionUseCase(
                 activeSessionRepository = activeSessionRepository,
                 getRunningItemDurationUseCase = getRunningItemDurationUseCase,
