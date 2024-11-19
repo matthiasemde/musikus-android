@@ -25,6 +25,9 @@ import app.musikus.core.presentation.utils.UiIcon
 import app.musikus.core.presentation.utils.UiText
 import kotlinx.serialization.Serializable
 
+/**
+ * Sealed class representing different screens in the application.
+ */
 @Serializable
 sealed class Screen {
 
@@ -81,12 +84,17 @@ sealed class Screen {
 
     @Serializable
     data object License : Screen()
-
 }
 
 val Screen.route: String?
     get() = this.javaClass.canonicalName
 
+/**
+ * Converts a [NavBackStackEntry] to a [Screen].
+ * This function is necessary because there is no direct way of getting a typed [Screen] object from
+ * the [NavBackStackEntry] outside the NavHost. It does so by parsing the route of the destination
+ * and comparing it to the canonical class name of the [Screen] object.
+ */
 fun NavBackStackEntry.toScreen() : Screen {
     val route = destination.route?.split(Regex("[^a-zA-Z0-9.]"))?.first()
         ?: throw IllegalArgumentException("Route argument missing from $destination")
@@ -122,6 +130,11 @@ sealed class HomeTab {
     }
 }
 
+/**
+ * Custom [NavType] for [HomeTab].
+ * This is necessary for type-safe navigation because [HomeTab] is a sealed class
+ * and cannot be directly serialized or deserialized.
+ */
 val HomeTabNavType = object : NavType<HomeTab>(isNullableAllowed = false) {
     override fun get(
         bundle: Bundle,
@@ -151,12 +164,22 @@ val HomeTabNavType = object : NavType<HomeTab>(isNullableAllowed = false) {
     }
 }
 
+/**
+ * Data class representing display data for a tab or screen.
+ * @property title The title of the tab or screen.
+ * @property icon The icon of the tab or screen.
+ * @property animatedIcon The animated icon of the tab or screen.
+ */
 data class DisplayData(
     val title: UiText,
     val icon: UiIcon,
     @DrawableRes val animatedIcon: Int? = null
 )
 
+/**
+ * Extension function to get the display data for a [HomeTab].
+ * @return The display data for the tab.
+ */
 fun HomeTab.getDisplayData(): DisplayData {
     return when(this) {
         is HomeTab.Sessions -> DisplayData(
@@ -185,6 +208,10 @@ fun HomeTab.getDisplayData(): DisplayData {
     }
 }
 
+/**
+ * Extension function to get the display data for a [Screen.SettingsOption].
+ * @return The display data for the settings option.
+ */
 fun Screen.SettingsOption.getDisplayData(): DisplayData {
     return when(this) {
         is Screen.SettingsOption.About -> DisplayData(
