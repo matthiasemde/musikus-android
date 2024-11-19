@@ -18,10 +18,10 @@ data class ActiveSessionUseCases(
     val getRunningItem: GetRunningItemUseCase,
     val getCompletedSections: GetCompletedSectionsUseCase,
     val getOngoingPauseDuration: GetOngoingPauseDurationUseCase,
-    val getPausedState: GetPausedStateUseCase,
     val getStartTime: GetStartTimeUseCase,
     val getFinalizedSession: GetFinalizedSessionUseCase,
     val reset: ResetSessionUseCase,
+    val isSessionPaused: IsSessionPausedUseCase,
     val isSessionRunning: IsSessionRunningUseCase,
     val getSessionStatus: GetSessionStatusUseCase,
 )

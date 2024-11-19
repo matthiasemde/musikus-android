@@ -19,6 +19,7 @@ plugins {
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.hilt)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.license.report)
     alias(libs.plugins.detekt)
@@ -261,8 +262,12 @@ dependencies {
 
     implementation(libs.androidx.activity.ktx)
 
-    implementation(libs.androidx.navigation.runtime.ktx)
     implementation(libs.androidx.legacy.support.v4)
+
+    // Navigation
+    implementation(libs.androidx.navigation.runtime.ktx)
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.kotlinx.serialization.json)
 
     // Compose
     // Animation
@@ -354,4 +359,5 @@ dependencies {
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.google.truth)
     androidTestImplementation(libs.android.arch.persistence.room.testing)
+    androidTestImplementation(libs.androidx.test.navigation)
 }

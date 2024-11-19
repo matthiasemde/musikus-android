@@ -25,6 +25,7 @@ import app.musikus.R
 import app.musikus.activesession.presentation.ActiveSessionActions
 import app.musikus.core.di.ApplicationScope
 import app.musikus.core.domain.TimeProvider
+import app.musikus.core.presentation.MainActivity
 import app.musikus.core.presentation.RECORDER_NOTIFICATION_CHANNEL_ID
 import app.musikus.core.presentation.utils.DurationFormat
 import app.musikus.core.presentation.utils.getDurationString
@@ -279,7 +280,12 @@ class RecorderService : Service() {
         // trigger deep link to open ActiveSession https://stackoverflow.com/a/72769863
         pendingIntentTapAction = TaskStackBuilder.create(this).run {
             addNextIntentWithParentStack(
-                Intent(Intent.ACTION_VIEW, "musikus://activeSession/${ActiveSessionActions.RECORDER}".toUri())
+                Intent(this@RecorderService, MainActivity::class.java).apply {
+                    data = (
+                        "https://musikus.app" +
+                            "?action=${ActiveSessionActions.RECORDER}"
+                        ).toUri()
+                }
             )
             getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         }

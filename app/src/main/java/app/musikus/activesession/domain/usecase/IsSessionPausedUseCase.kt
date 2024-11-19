@@ -11,7 +11,7 @@ package app.musikus.activesession.domain.usecase
 import app.musikus.activesession.domain.ActiveSessionRepository
 import kotlinx.coroutines.flow.first
 
-class GetPausedStateUseCase(
+class IsSessionPausedUseCase(
     private val activeSessionRepository: ActiveSessionRepository
 ) {
     suspend operator fun invoke(): Boolean {

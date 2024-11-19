@@ -63,16 +63,12 @@ fun TwoLiner(
         // Content
         Column {
             data.firstLine?.let {
-                Text(
-                    text = it.asString(),
-                    style = LocalTextStyle.current,
-                    color = LocalContentColor.current
-                )
+                Text(text = it.asString())
             }
+
             data.secondLine?.let {
                 Text(
                     text = it.asString(),
-                    style = LocalTextStyle.current,
                     fontSize = LocalTextStyle.current.fontSize * 0.9f,
                     color = LocalContentColor.current.copy(alpha = 0.6f),
                     lineHeight = 1.2.em

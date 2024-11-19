@@ -22,7 +22,6 @@ import android.os.Binder
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
-import androidx.annotation.DrawableRes
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
@@ -31,6 +30,7 @@ import app.musikus.R
 import app.musikus.activesession.domain.usecase.ActiveSessionUseCases
 import app.musikus.core.di.ApplicationScope
 import app.musikus.core.domain.TimeProvider
+import app.musikus.core.presentation.MainActivity
 import app.musikus.core.presentation.SESSION_NOTIFICATION_CHANNEL_ID
 import app.musikus.core.presentation.utils.DurationFormat
 import app.musikus.core.presentation.utils.getDurationString
@@ -52,15 +52,6 @@ const val BROADCAST_INTENT_FILTER = "activeSessionAction"
 enum class ActiveSessionServiceActions {
     START, STOP
 }
-
-/**
- * Data Structure for a Button inside the Notification
- */
-data class NotificationActionButtonConfig(
-    @DrawableRes val icon: Int,
-    val text: String,
-    val tapIntent: PendingIntent?
-)
 
 const val LOG_TAG = "SessionService"
 
@@ -84,21 +75,18 @@ class SessionService : Service() {
     private val myReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             Log.d(LOG_TAG, "Received Broadcast")
-            when (intent.getStringExtra("action")) {
-                ActiveSessionActions.PAUSE.toString() -> togglePause()
+            val action = intent.getStringExtra("action")?.let {
+                ActiveSessionActions.valueOf(it)
+            } ?: throw IllegalArgumentException("No action provided in broadcast")
+
+            when (action) {
+                ActiveSessionActions.PAUSE -> togglePause()
+                else -> throw IllegalArgumentException(
+                    "Broadcast receiver can't handle action: $action"
+                )
             }
         }
     }
-
-    /** Intents */
-    private var pendingIntentTapAction: PendingIntent? = null
-    private var pendingIntentActionPause: PendingIntent? = null
-    private var pendingIntentActionFinish: PendingIntent? = null
-
-    /** Notification Button Configs */
-    private var pauseActionButton: NotificationActionButtonConfig? = null
-    private var resumeActionButton: NotificationActionButtonConfig? = null
-    private var finishActionButton: NotificationActionButtonConfig? = null
 
     /**
      *  ---------------------- Interface for Activity / ViewModel ----------------------
@@ -107,13 +95,25 @@ class SessionService : Service() {
     override fun onCreate() {
         super.onCreate()
         Log.d(LOG_TAG, "onCreate")
-        createPendingIntents()
-        ContextCompat.registerReceiver(
-            this,
-            myReceiver,
-            IntentFilter(BROADCAST_INTENT_FILTER),
-            ContextCompat.RECEIVER_NOT_EXPORTED
-        )
+        val filter = IntentFilter(BROADCAST_INTENT_FILTER)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            registerReceiver(
+                myReceiver,
+                filter,
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    RECEIVER_NOT_EXPORTED
+                } else {
+                    ContextCompat.RECEIVER_NOT_EXPORTED
+                }
+            )
+        } else {
+            ContextCompat.registerReceiver(
+                this,
+                myReceiver,
+                filter,
+                ContextCompat.RECEIVER_NOT_EXPORTED
+            )
+        }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -172,7 +172,7 @@ class SessionService : Service() {
 
     private fun togglePause() {
         applicationScope.launch {
-            if (useCases.getPausedState()) {
+            if (useCases.isSessionPaused()) {
                 useCases.resume()
             } else {
                 useCases.pause()
@@ -205,7 +205,7 @@ class SessionService : Service() {
 
             val currentSectionName = useCases.getRunningItem().first()!!.name
 
-            if (useCases.getPausedState()) {
+            if (useCases.isSessionPaused()) {
                 title = getString(R.string.active_session_service_notification_title_paused)
                 description = getString(
                     R.string.active_session_service_notification_description_paused,
@@ -224,105 +224,60 @@ class SessionService : Service() {
             description = "Could not get session info"
         }
 
-        val actionButton1Intent =
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                try {
-                    if (useCases.getPausedState()) {
-                        resumeActionButton
-                    } else {
-                        pauseActionButton
-                    }
-                } catch (e: IllegalStateException) {
-                    pauseActionButton
-                }
-            } else {
-                null // TODO: broadcast receiver is broken on Android 14
-            }
-
-        val actionButton2Intent = finishActionButton
-
         return getNotification(
             title = title,
             description = description,
-            actionButton1 = actionButton1Intent, // TODO: Fix action button (pause/resume)
-            actionButton2 = actionButton2Intent
         )
     }
 
-    private fun getNotification(
+    private suspend fun getNotification(
         title: String,
         description: String,
-        actionButton1: NotificationActionButtonConfig?,
-        actionButton2: NotificationActionButtonConfig?
     ): Notification {
         val icon = R.drawable.ic_launcher_foreground
 
-        val builder = NotificationCompat.Builder(this, SESSION_NOTIFICATION_CHANNEL_ID)
-            .setSmallIcon(icon) // without icon, setOngoing does not work
-            .setOngoing(
-                true
-            ) // does not work on Android 14: https://developer.android.com/about/versions/14/behavior-changes-all#non-dismissable-notifications
-            .setOnlyAlertOnce(true)
-            .setContentTitle(title)
-            .setContentText(description)
-            .setPriority(NotificationCompat.PRIORITY_HIGH) // only relevant below Oreo, else channel priority is used
-            .setContentIntent(pendingIntentTapAction)
-            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-
-        if (actionButton1 != null) {
-            builder.addAction(actionButton1.icon, actionButton1.text, actionButton1.tapIntent)
-        }
-        if (actionButton2 != null) {
-            builder.addAction(actionButton2.icon, actionButton2.text, actionButton2.tapIntent)
-        }
-        return builder.build()
-    }
-
-    /**
-     * Creates all pending intents for the notification. Has to be done when Context is available.
-     */
-    private fun createPendingIntents() {
-        // trigger deep link to open ActiveSession https://stackoverflow.com/a/72769863
-        pendingIntentTapAction = TaskStackBuilder.create(this).run {
-            addNextIntentWithParentStack(
-                Intent(Intent.ACTION_VIEW, "musikus://activeSession/${ActiveSessionActions.OPEN}".toUri())
-            )
-            getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+        val pauseButtonIntent = Intent(BROADCAST_INTENT_FILTER).apply {
+            putExtra("action", ActiveSessionActions.PAUSE.toString())
         }
 
-        pendingIntentActionPause = PendingIntent.getBroadcast(
+        val pauseButtonPendingIntent = PendingIntent.getBroadcast(
             this,
             SESSION_NOTIFICATION_ID,
-            Intent(BROADCAST_INTENT_FILTER).apply {
-                putExtra("action", ActiveSessionActions.PAUSE.toString())
-            },
+            pauseButtonIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        pendingIntentActionFinish = TaskStackBuilder.create(this).run {
-            addNextIntentWithParentStack(
-                Intent(Intent.ACTION_VIEW, "musikus://activeSession/${ActiveSessionActions.FINISH}".toUri())
+        return NotificationCompat.Builder(this, SESSION_NOTIFICATION_CHANNEL_ID).run {
+            setSmallIcon(icon) // without icon, setOngoing does not work
+            setOngoing(
+                true
+            ) // does not work on Android 14: https://developer.android.com/about/versions/14/behavior-changes-all#non-dismissable-notifications
+            setOnlyAlertOnce(true)
+            setContentTitle(title)
+            setContentText(description)
+            setPriority(NotificationCompat.PRIORITY_HIGH) // only relevant below Oreo, else channel priority is used
+            setContentIntent(activeSessionIntent(null))
+            setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            if (!useCases.isSessionPaused()) {
+                addAction(
+                    R.drawable.ic_pause,
+                    getString(R.string.active_session_service_notification_action_pause),
+                    pauseButtonPendingIntent
+                )
+            } else {
+                addAction(
+                    R.drawable.ic_play,
+                    getString(R.string.active_session_service_notification_action_resume),
+                    pauseButtonPendingIntent
+                )
+            }
+            addAction(
+                R.drawable.ic_stop,
+                getString(R.string.active_session_service_notification_action_finish),
+                activeSessionIntent(ActiveSessionActions.FINISH)
             )
-            getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+            build()
         }
-
-        pauseActionButton = NotificationActionButtonConfig(
-            icon = R.drawable.ic_pause,
-            text = getString(R.string.active_session_service_notification_action_pause),
-            tapIntent = pendingIntentActionPause
-        )
-
-        resumeActionButton = NotificationActionButtonConfig(
-            icon = R.drawable.ic_play,
-            text = getString(R.string.active_session_service_notification_action_resume),
-            tapIntent = pendingIntentActionPause
-        )
-
-        finishActionButton = NotificationActionButtonConfig(
-            icon = R.drawable.ic_stop,
-            text = getString(R.string.active_session_service_notification_action_finish),
-            tapIntent = pendingIntentActionFinish
-        )
     }
 
     override fun onDestroy() {
@@ -340,5 +295,21 @@ class SessionService : Service() {
     private fun stopService() {
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
+    }
+
+    private fun activeSessionIntent(activeSessionAction: ActiveSessionActions?): PendingIntent {
+        val intent = Intent(this, MainActivity::class.java).apply {
+            data = (
+                "https://musikus.app" +
+                    (activeSessionAction?.let { "?action=$activeSessionAction" } ?: "")
+                ).toUri()
+        }
+
+        return TaskStackBuilder.create(this).run {
+            addNextIntentWithParentStack(intent)
+            // Get a PendingIntent and make it immutable
+            val requestCode = 0
+            getPendingIntent(requestCode, PendingIntent.FLAG_IMMUTABLE)
+        }
     }
 }

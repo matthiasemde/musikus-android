@@ -26,22 +26,16 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
 import androidx.test.core.app.ApplicationProvider
 import app.musikus.R
 import app.musikus.core.domain.FakeTimeProvider
 import app.musikus.core.presentation.HomeViewModel
 import app.musikus.core.presentation.MainActivity
 import app.musikus.core.presentation.MainViewModel
-import app.musikus.core.presentation.Screen
-import app.musikus.core.presentation.theme.MusikusTheme
 import app.musikus.core.presentation.utils.TestTags
-import app.musikus.settings.domain.ColorSchemeSelections
-import app.musikus.settings.domain.ThemeSelections
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import org.junit.Before
@@ -67,28 +61,22 @@ class LibraryScreenTest {
     fun setUp() {
         hiltRule.inject()
         composeRule.activity.setContent {
-            val viewModel: MainViewModel = hiltViewModel()
+            val mainViewModel: MainViewModel = hiltViewModel()
+            val mainUiState by mainViewModel.uiState.collectAsStateWithLifecycle()
+            val mainEventHandler = mainViewModel::onUiEvent
 
-            val navController = rememberNavController()
-            MusikusTheme(theme = ThemeSelections.DAY, colorScheme = ColorSchemeSelections.DEFAULT) {
+            val homeViewModel: HomeViewModel = hiltViewModel()
+            val homeUiState by homeViewModel.uiState.collectAsStateWithLifecycle()
+            val homeEventHandler = homeViewModel::onUiEvent
 
-                val homeViewModel: HomeViewModel = hiltViewModel()
-                val homeUiState by homeViewModel.uiState.collectAsStateWithLifecycle()
-
-                NavHost(
-                    navController = navController,
-                    startDestination = Screen.HomeTab.Library.route
-                ) {
-                    composable(Screen.HomeTab.Library.route) {
-                        Library(
-                            homeUiState = homeUiState,
-                            mainEventHandler = viewModel::onUiEvent,
-                            homeEventHandler = homeViewModel::onUiEvent,
-                            navigateTo = { }
-                        )
-                    }
-                }
-            }
+            Library(
+                mainUiState = mainUiState,
+                mainEventHandler = mainEventHandler,
+                homeUiState = homeUiState,
+                homeEventHandler = homeEventHandler,
+                navigateTo = { },
+                bottomBarHeight = 0.dp
+            )
         }
     }
 
