@@ -49,7 +49,6 @@ class MusikusNavHostTest {
     fun setUp() {
         hiltRule.inject()
         composeRule.activity.setContent {
-
             val mainViewModel: MainViewModel = hiltViewModel()
 
             val mainUiState by mainViewModel.uiState.collectAsStateWithLifecycle()
@@ -79,11 +78,9 @@ class MusikusNavHostTest {
 
         val screen = navController.currentBackStackEntry?.toScreen()
 
-        if (screen !is Screen.Home) {
-            throw IllegalArgumentException("Expected Home screen but was $screen")
-        }
+        assertThat(screen).isInstanceOf(Screen.Home::class.java)
+        require(screen is Screen.Home)
 
-        assertThat(screen.route).isEqualTo("home")
         assertThat(screen.tab).isEqualTo(HomeTab.Sessions)
         composeRule.onNodeWithText("Sessions").assertIsDisplayed()
     }
@@ -98,11 +95,9 @@ class MusikusNavHostTest {
 
         val screen = navController.currentBackStackEntry?.toScreen()
 
-        if (screen !is Screen.Home) {
-            throw IllegalArgumentException("Expected Home screen but was $screen")
-        }
+        assertThat(screen).isInstanceOf(Screen.Home::class.java)
+        require(screen is Screen.Home)
 
-        assertThat(screen.route).isEqualTo("home")
         assertThat(screen.tab).isEqualTo(HomeTab.Goals)
         composeRule.onNodeWithText("Goals").assertIsDisplayed()
     }
@@ -117,11 +112,8 @@ class MusikusNavHostTest {
 
         val screen = navController.currentBackStackEntry?.toScreen()
 
-        if (screen !is Screen.Home) {
-            throw IllegalArgumentException("Expected Home screen but was $screen")
-        }
-
-        assertThat(screen.route).isEqualTo("home")
+        assertThat(screen).isInstanceOf(Screen.Home::class.java)
+        require(screen is Screen.Home)
         assertThat(screen.tab).isEqualTo(HomeTab.Statistics)
         composeRule.onNodeWithText("Statistics").assertIsDisplayed()
     }
@@ -136,11 +128,9 @@ class MusikusNavHostTest {
 
         val screen = navController.currentBackStackEntry?.toScreen()
 
-        if (screen !is Screen.Home) {
-            throw IllegalArgumentException("Expected Home screen but was $screen")
-        }
+        assertThat(screen).isInstanceOf(Screen.Home::class.java)
+        require(screen is Screen.Home)
 
-        assertThat(screen.route).isEqualTo("home")
         assertThat(screen.tab).isEqualTo(HomeTab.Library)
         composeRule.onNodeWithText("Library").assertIsDisplayed()
     }
@@ -150,13 +140,12 @@ class MusikusNavHostTest {
         composeRule.awaitIdle() // ensures that navController is initialized
 
         composeRule.runOnUiThread {
-            navController.navigate(Screen.ActiveSession)
+            navController.navigate(Screen.ActiveSession())
         }
 
         val screen = navController.currentBackStackEntry?.toScreen()
 
         assertThat(screen).isInstanceOf(Screen.ActiveSession::class.java)
-        assertThat(screen?.route).isEqualTo("activeSession")
         composeRule.onNodeWithText("Practice Time").assertIsDisplayed()
     }
 
@@ -171,7 +160,6 @@ class MusikusNavHostTest {
         val screen = navController.currentBackStackEntry?.toScreen()
 
         assertThat(screen).isInstanceOf(Screen.SessionStatistics::class.java)
-        assertThat(screen?.route).isEqualTo("sessionStatistics")
         composeRule.onNodeWithText("Session History").assertIsDisplayed()
     }
 
@@ -186,7 +174,6 @@ class MusikusNavHostTest {
         val screen = navController.currentBackStackEntry?.toScreen()
 
         assertThat(screen).isInstanceOf(Screen.GoalStatistics::class.java)
-        assertThat(screen?.route).isEqualTo("goalStatistics")
         composeRule.onNodeWithText("Goal History").assertIsDisplayed()
     }
 
@@ -201,7 +188,6 @@ class MusikusNavHostTest {
         val screen = navController.currentBackStackEntry?.toScreen()
 
         assertThat(screen).isInstanceOf(Screen.Settings::class.java)
-        assertThat(screen?.route).isEqualTo("settings")
         composeRule.onNodeWithText("Settings").assertIsDisplayed()
     }
 
@@ -216,7 +202,6 @@ class MusikusNavHostTest {
         val screen = navController.currentBackStackEntry?.toScreen()
 
         assertThat(screen).isInstanceOf(Screen.SettingsOption.About::class.java)
-        assertThat(screen?.route).isEqualTo("settings/about")
         composeRule.onNodeWithText("About").assertIsDisplayed()
     }
 
@@ -231,7 +216,6 @@ class MusikusNavHostTest {
         val screen = navController.currentBackStackEntry?.toScreen()
 
         assertThat(screen).isInstanceOf(Screen.SettingsOption.Help::class.java)
-        assertThat(screen?.route).isEqualTo("settings/help")
         composeRule.onNodeWithText("Help").assertIsDisplayed()
     }
 
@@ -246,7 +230,6 @@ class MusikusNavHostTest {
         val screen = navController.currentBackStackEntry?.toScreen()
 
         assertThat(screen).isInstanceOf(Screen.SettingsOption.Backup::class.java)
-        assertThat(screen?.route).isEqualTo("settings/backup")
         composeRule.onNodeWithText("Backup and restore").assertIsDisplayed()
     }
 
@@ -261,7 +244,6 @@ class MusikusNavHostTest {
         val screen = navController.currentBackStackEntry?.toScreen()
 
         assertThat(screen).isInstanceOf(Screen.SettingsOption.Export::class.java)
-        assertThat(screen?.route).isEqualTo("settings/export")
         composeRule.onNodeWithText("Export session data").assertIsDisplayed()
     }
 
@@ -276,7 +258,6 @@ class MusikusNavHostTest {
         val screen = navController.currentBackStackEntry?.toScreen()
 
         assertThat(screen).isInstanceOf(Screen.SettingsOption.Donate::class.java)
-        assertThat(screen?.route).isEqualTo("settings/donate")
         composeRule.onNodeWithText("Support us!").assertIsDisplayed()
     }
 
@@ -291,7 +272,6 @@ class MusikusNavHostTest {
         val screen = navController.currentBackStackEntry?.toScreen()
 
         assertThat(screen).isInstanceOf(Screen.SettingsOption.Appearance::class.java)
-        assertThat(screen?.route).isEqualTo("settings/appearance")
         composeRule.onNodeWithText("Appearance").assertIsDisplayed()
     }
 
@@ -306,7 +286,6 @@ class MusikusNavHostTest {
         val screen = navController.currentBackStackEntry?.toScreen()
 
         assertThat(screen).isInstanceOf(Screen.License::class.java)
-        assertThat(screen?.route).isEqualTo("license")
         composeRule.onNodeWithText("Licenses").assertIsDisplayed()
     }
 }
