@@ -61,12 +61,16 @@ fun MainScreen(
     val colorScheme = uiState.activeColorScheme ?: return
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute by remember { derivedStateOf {
-        navBackStackEntry?.toScreen()
-    } }
-    val currentTab by remember { derivedStateOf {
-        currentRoute?.let { if (it is Screen.Home) it.tab else null }
-    } }
+    val currentRoute by remember {
+        derivedStateOf {
+            navBackStackEntry?.toScreen()
+        }
+    }
+    val currentTab by remember {
+        derivedStateOf {
+            currentRoute?.let { if (it is Screen.Home) it.tab else null }
+        }
+    }
 
     MusikusTheme(
         theme = theme,
@@ -96,8 +100,6 @@ fun MainScreen(
 
             // Calculate the height of the bottom bar so we can add it as  padding in the home tabs
             val bottomBarHeight = innerPadding.calculateBottomPadding()
-
-
 
             MusikusNavHost(
                 navController = navController,

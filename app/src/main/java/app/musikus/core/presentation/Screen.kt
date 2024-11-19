@@ -37,9 +37,9 @@ sealed class Screen {
     ) : Screen()
 
     @Serializable
-    data class Home (
+    data class Home(
         val tab: HomeTab = HomeTab.Sessions
-    ): Screen()
+    ) : Screen()
 
     @Serializable
     data object Settings : Screen()
@@ -48,14 +48,19 @@ sealed class Screen {
     sealed class SettingsOption : Screen() {
         @Serializable
         data object About : SettingsOption()
+
         @Serializable
         data object Help : SettingsOption()
+
         @Serializable
         data object Backup : SettingsOption()
+
         @Serializable
         data object Export : SettingsOption()
+
         @Serializable
         data object Donate : SettingsOption()
+
         @Serializable
         data object Appearance : SettingsOption()
 
@@ -95,7 +100,7 @@ val Screen.route: String?
  * the [NavBackStackEntry] outside the NavHost. It does so by parsing the route of the destination
  * and comparing it to the canonical class name of the [Screen] object.
  */
-fun NavBackStackEntry.toScreen() : Screen {
+fun NavBackStackEntry.toScreen(): Screen {
     val route = destination.route?.split(Regex("[^a-zA-Z0-9.]"))?.first()
         ?: throw IllegalArgumentException("Route argument missing from $destination")
 
@@ -141,7 +146,7 @@ val HomeTabNavType = object : NavType<HomeTab>(isNullableAllowed = false) {
         key: String
     ): HomeTab? {
         return bundle.getString(key)?.let {
-             parseValue(it)
+            parseValue(it)
         }
     }
 
@@ -181,7 +186,7 @@ data class DisplayData(
  * @return The display data for the tab.
  */
 fun HomeTab.getDisplayData(): DisplayData {
-    return when(this) {
+    return when (this) {
         is HomeTab.Sessions -> DisplayData(
             title = UiText.StringResource(R.string.components_bottom_bar_items_sessions),
             icon = UiIcon.IconResource(R.drawable.ic_sessions),
@@ -213,7 +218,7 @@ fun HomeTab.getDisplayData(): DisplayData {
  * @return The display data for the settings option.
  */
 fun Screen.SettingsOption.getDisplayData(): DisplayData {
-    return when(this) {
+    return when (this) {
         is Screen.SettingsOption.About -> DisplayData(
             title = UiText.StringResource(R.string.settings_items_about),
             icon = UiIcon.DynamicIcon(Icons.Outlined.Info),
