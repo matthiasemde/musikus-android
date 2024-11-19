@@ -159,7 +159,7 @@ fun SessionsScreen(
                                 homeEventHandler(HomeUiEvent.HideMainMenu)
 
                                 when (commonSelection) {
-                                    CommonMenuSelections.SETTINGS -> navigateTo(Screen.Settings())
+                                    CommonMenuSelections.SETTINGS -> navigateTo(Screen.Settings)
                                 }
                             },
                             uniqueMenuItems = { }

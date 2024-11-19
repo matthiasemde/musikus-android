@@ -26,7 +26,6 @@ import app.musikus.core.di.ApplicationScope
 import app.musikus.core.di.IoScope
 import app.musikus.core.presentation.METRONOME_NOTIFICATION_CHANNEL_ID
 import app.musikus.core.presentation.MainActivity
-import app.musikus.core.presentation.Screen
 import app.musikus.settings.domain.usecase.UserPreferencesUseCases
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
@@ -187,9 +186,8 @@ class MetronomeService : Service() {
             addNextIntentWithParentStack(
                 Intent(this@MetronomeService, MainActivity::class.java).apply {
                     data = (
-                        "https://musikus.app/" +
-                            "${Screen.ActiveSession().route}?" +
-                            "action=${ActiveSessionActions.METRONOME}"
+                        "https://musikus.app" +
+                            "?action=${ActiveSessionActions.METRONOME}"
                         ).toUri()
                 }
             )

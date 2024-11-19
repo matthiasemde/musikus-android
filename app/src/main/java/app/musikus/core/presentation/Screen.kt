@@ -26,37 +26,35 @@ import app.musikus.core.presentation.utils.UiText
 import kotlinx.serialization.Serializable
 
 @Serializable
-sealed class Screen(
-    val route: String
-) {
+sealed class Screen {
 
     @Serializable
-    class ActiveSession(
+    data class ActiveSession(
         val action: ActiveSessionActions? = null
-    ) : Screen("activeSession")
+    ) : Screen()
 
     @Serializable
     data class Home (
         val tab: HomeTab = HomeTab.Sessions
-    ): Screen("home")
+    ): Screen()
 
     @Serializable
-    class Settings : Screen("settings")
+    data object Settings : Screen()
 
     @Serializable
-    sealed class SettingsOption(val subRoute: String) : Screen("settings/$subRoute") {
+    sealed class SettingsOption : Screen() {
         @Serializable
-        class About : SettingsOption("about")
+        data object About : SettingsOption()
         @Serializable
-        class Help : SettingsOption("help")
+        data object Help : SettingsOption()
         @Serializable
-        class Backup : SettingsOption("backup")
+        data object Backup : SettingsOption()
         @Serializable
-        class Export : SettingsOption("export")
+        data object Export : SettingsOption()
         @Serializable
-        class Donate : SettingsOption("donate")
+        data object Donate : SettingsOption()
         @Serializable
-        class Appearance : SettingsOption("appearance")
+        data object Appearance : SettingsOption()
 
         companion object {
             val all by lazy {
@@ -73,36 +71,40 @@ sealed class Screen(
     }
 
     @Serializable
-    class EditSession : Screen("editSession")
+    data object EditSession : Screen()
 
     @Serializable
-    class SessionStatistics : Screen("sessionStatistics")
+    data object SessionStatistics : Screen()
 
     @Serializable
-    class GoalStatistics : Screen("goalStatistics")
+    data object GoalStatistics : Screen()
 
     @Serializable
-    class License : Screen("license")
+    data object License : Screen()
+
 }
 
+val Screen.route: String?
+    get() = this.javaClass.canonicalName
+
 fun NavBackStackEntry.toScreen() : Screen {
-    val route = arguments?.getString("route")
-        ?: throw IllegalArgumentException("Route argument missing from $this")
+    val route = destination.route?.split(Regex("[^a-zA-Z0-9.]"))?.first()
+        ?: throw IllegalArgumentException("Route argument missing from $destination")
 
     return when (route) {
         Screen.ActiveSession().route -> toRoute<Screen.ActiveSession>()
         Screen.Home().route -> toRoute<Screen.Home>()
-        Screen.Settings().route -> toRoute<Screen.Settings>()
-        Screen.SettingsOption.About().route -> toRoute<Screen.SettingsOption.About>()
-        Screen.SettingsOption.Help().route -> toRoute<Screen.SettingsOption.Help>()
-        Screen.SettingsOption.Backup().route -> toRoute<Screen.SettingsOption.Backup>()
-        Screen.SettingsOption.Export().route -> toRoute<Screen.SettingsOption.Export>()
-        Screen.SettingsOption.Donate().route -> toRoute<Screen.SettingsOption.Donate>()
-        Screen.SettingsOption.Appearance().route -> toRoute<Screen.SettingsOption.Appearance>()
-        Screen.EditSession().route -> toRoute<Screen.EditSession>()
-        Screen.SessionStatistics().route -> toRoute<Screen.SessionStatistics>()
-        Screen.GoalStatistics().route -> toRoute<Screen.GoalStatistics>()
-        Screen.License().route -> toRoute<Screen.License>()
+        Screen.Settings.route -> toRoute<Screen.Settings>()
+        Screen.SettingsOption.About.route -> toRoute<Screen.SettingsOption.About>()
+        Screen.SettingsOption.Help.route -> toRoute<Screen.SettingsOption.Help>()
+        Screen.SettingsOption.Backup.route -> toRoute<Screen.SettingsOption.Backup>()
+        Screen.SettingsOption.Export.route -> toRoute<Screen.SettingsOption.Export>()
+        Screen.SettingsOption.Donate.route -> toRoute<Screen.SettingsOption.Donate>()
+        Screen.SettingsOption.Appearance.route -> toRoute<Screen.SettingsOption.Appearance>()
+        Screen.EditSession.route -> toRoute<Screen.EditSession>()
+        Screen.SessionStatistics.route -> toRoute<Screen.SessionStatistics>()
+        Screen.GoalStatistics.route -> toRoute<Screen.GoalStatistics>()
+        Screen.License.route -> toRoute<Screen.License>()
         else -> throw IllegalArgumentException("Unknown route: $route")
     }
 }

@@ -27,7 +27,6 @@ import app.musikus.core.di.ApplicationScope
 import app.musikus.core.domain.TimeProvider
 import app.musikus.core.presentation.MainActivity
 import app.musikus.core.presentation.RECORDER_NOTIFICATION_CHANNEL_ID
-import app.musikus.core.presentation.Screen
 import app.musikus.core.presentation.utils.DurationFormat
 import app.musikus.core.presentation.utils.getDurationString
 import dagger.hilt.android.AndroidEntryPoint
@@ -283,9 +282,8 @@ class RecorderService : Service() {
             addNextIntentWithParentStack(
                 Intent(this@RecorderService, MainActivity::class.java).apply {
                     data = (
-                        "https://musikus.app/" +
-                            "${Screen.ActiveSession().route}?" +
-                            "action=${ActiveSessionActions.RECORDER}"
+                        "https://musikus.app" +
+                            "?action=${ActiveSessionActions.RECORDER}"
                         ).toUri()
                 }
             )

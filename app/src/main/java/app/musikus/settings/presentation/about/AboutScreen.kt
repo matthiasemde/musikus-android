@@ -91,7 +91,7 @@ fun AboutScreen(
                 ),
                 TwoLinerData(
                     firstLine = UiText.StringResource(R.string.settings_about_licenses_first_line),
-                    onClick = { navigateTo(Screen.License()) }
+                    onClick = { navigateTo(Screen.License) }
                 ),
                 TwoLinerData(
                     secondLine = UiText.StringResource(R.string.settings_about_copyright_second_line)

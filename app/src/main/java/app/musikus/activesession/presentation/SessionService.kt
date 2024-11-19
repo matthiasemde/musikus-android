@@ -32,7 +32,6 @@ import app.musikus.core.di.ApplicationScope
 import app.musikus.core.domain.TimeProvider
 import app.musikus.core.presentation.MainActivity
 import app.musikus.core.presentation.SESSION_NOTIFICATION_CHANNEL_ID
-import app.musikus.core.presentation.Screen
 import app.musikus.core.presentation.utils.DurationFormat
 import app.musikus.core.presentation.utils.getDurationString
 import dagger.hilt.android.AndroidEntryPoint
@@ -298,18 +297,19 @@ class SessionService : Service() {
         stopSelf()
     }
 
-    private fun activeSessionIntent(action: ActiveSessionActions?): PendingIntent {
+    private fun activeSessionIntent(activeSessionAction: ActiveSessionActions?): PendingIntent {
         val intent = Intent(this, MainActivity::class.java).apply {
             data = (
                 "https://musikus.app" +
-                    "/${Screen.ActiveSession().route}" +
-                    (action?.let { "?action=$action" } ?: "")
+                    (activeSessionAction?.let { "?action=$activeSessionAction" } ?: "")
                 ).toUri()
         }
 
         return TaskStackBuilder.create(this).run {
             addNextIntentWithParentStack(intent)
-            getPendingIntent(0, PendingIntent.FLAG_IMMUTABLE)
+            // Get a PendingIntent and make it immutable
+            val requestCode = 0
+            getPendingIntent(requestCode, PendingIntent.FLAG_IMMUTABLE)
         }
     }
 }

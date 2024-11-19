@@ -150,7 +150,7 @@ class MusikusNavHostTest {
         composeRule.awaitIdle() // ensures that navController is initialized
 
         composeRule.runOnUiThread {
-            navController.navigate(Screen.ActiveSession())
+            navController.navigate(Screen.ActiveSession)
         }
 
         val screen = navController.currentBackStackEntry?.toScreen()
@@ -165,7 +165,7 @@ class MusikusNavHostTest {
         composeRule.awaitIdle() // ensures that navController is initialized
 
         composeRule.runOnUiThread {
-            navController.navigate(Screen.SessionStatistics())
+            navController.navigate(Screen.SessionStatistics)
         }
 
         val screen = navController.currentBackStackEntry?.toScreen()
@@ -180,7 +180,7 @@ class MusikusNavHostTest {
         composeRule.awaitIdle() // ensures that navController is initialized
 
         composeRule.runOnUiThread {
-            navController.navigate(Screen.GoalStatistics())
+            navController.navigate(Screen.GoalStatistics)
         }
 
         val screen = navController.currentBackStackEntry?.toScreen()
@@ -195,7 +195,7 @@ class MusikusNavHostTest {
         composeRule.awaitIdle() // ensures that navController is initialized
 
         composeRule.runOnUiThread {
-            navController.navigate(Screen.Settings())
+            navController.navigate(Screen.Settings)
         }
 
         val screen = navController.currentBackStackEntry?.toScreen()
@@ -210,7 +210,7 @@ class MusikusNavHostTest {
         composeRule.awaitIdle() // ensures that navController is initialized
 
         composeRule.runOnUiThread {
-            navController.navigate(Screen.SettingsOption.About())
+            navController.navigate(Screen.SettingsOption.About)
         }
 
         val screen = navController.currentBackStackEntry?.toScreen()
@@ -225,7 +225,7 @@ class MusikusNavHostTest {
         composeRule.awaitIdle() // ensures that navController is initialized
 
         composeRule.runOnUiThread {
-            navController.navigate(Screen.SettingsOption.Help())
+            navController.navigate(Screen.SettingsOption.Help)
         }
 
         val screen = navController.currentBackStackEntry?.toScreen()
@@ -240,7 +240,7 @@ class MusikusNavHostTest {
         composeRule.awaitIdle() // ensures that navController is initialized
 
         composeRule.runOnUiThread {
-            navController.navigate(Screen.SettingsOption.Backup())
+            navController.navigate(Screen.SettingsOption.Backup)
         }
 
         val screen = navController.currentBackStackEntry?.toScreen()
@@ -255,7 +255,7 @@ class MusikusNavHostTest {
         composeRule.awaitIdle() // ensures that navController is initialized
 
         composeRule.runOnUiThread {
-            navController.navigate(Screen.SettingsOption.Export())
+            navController.navigate(Screen.SettingsOption.Export)
         }
 
         val screen = navController.currentBackStackEntry?.toScreen()
@@ -270,7 +270,7 @@ class MusikusNavHostTest {
         composeRule.awaitIdle() // ensures that navController is initialized
 
         composeRule.runOnUiThread {
-            navController.navigate(Screen.SettingsOption.Donate())
+            navController.navigate(Screen.SettingsOption.Donate)
         }
 
         val screen = navController.currentBackStackEntry?.toScreen()
@@ -285,7 +285,7 @@ class MusikusNavHostTest {
         composeRule.awaitIdle() // ensures that navController is initialized
 
         composeRule.runOnUiThread {
-            navController.navigate(Screen.SettingsOption.Appearance())
+            navController.navigate(Screen.SettingsOption.Appearance)
         }
 
         val screen = navController.currentBackStackEntry?.toScreen()
@@ -300,7 +300,7 @@ class MusikusNavHostTest {
         composeRule.awaitIdle() // ensures that navController is initialized
 
         composeRule.runOnUiThread {
-            navController.navigate(Screen.License())
+            navController.navigate(Screen.License)
         }
 
         val screen = navController.currentBackStackEntry?.toScreen()

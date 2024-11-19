@@ -89,38 +89,38 @@ fun SettingsScreen(
     val settingsItems = listOf(
         listOf(
             TwoLinerData(
-                icon = Screen.SettingsOption.Donate().getDisplayData().icon,
-                firstLine = Screen.SettingsOption.Donate().getDisplayData().title,
-                onClick = { navigateTo(Screen.SettingsOption.Donate()) }
+                icon = Screen.SettingsOption.Donate.getDisplayData().icon,
+                firstLine = Screen.SettingsOption.Donate.getDisplayData().title,
+                onClick = { navigateTo(Screen.SettingsOption.Donate) }
             )
         ),
         listOf(
             TwoLinerData(
-                icon = Screen.SettingsOption.Appearance().getDisplayData().icon,
-                firstLine = Screen.SettingsOption.Appearance().getDisplayData().title,
-                onClick = { navigateTo(Screen.SettingsOption.Appearance()) }
+                icon = Screen.SettingsOption.Appearance.getDisplayData().icon,
+                firstLine = Screen.SettingsOption.Appearance.getDisplayData().title,
+                onClick = { navigateTo(Screen.SettingsOption.Appearance) }
             ),
             TwoLinerData(
-                icon = Screen.SettingsOption.Backup().getDisplayData().icon,
-                firstLine = Screen.SettingsOption.Backup().getDisplayData().title,
-                onClick = { navigateTo(Screen.SettingsOption.Backup()) }
+                icon = Screen.SettingsOption.Backup.getDisplayData().icon,
+                firstLine = Screen.SettingsOption.Backup.getDisplayData().title,
+                onClick = { navigateTo(Screen.SettingsOption.Backup) }
             ),
             TwoLinerData(
-                icon = Screen.SettingsOption.Export().getDisplayData().icon,
-                firstLine = Screen.SettingsOption.Export().getDisplayData().title,
-                onClick = { navigateTo(Screen.SettingsOption.Export()) }
+                icon = Screen.SettingsOption.Export.getDisplayData().icon,
+                firstLine = Screen.SettingsOption.Export.getDisplayData().title,
+                onClick = { navigateTo(Screen.SettingsOption.Export) }
             )
         ),
         listOf(
             TwoLinerData(
-                icon = Screen.SettingsOption.Help().getDisplayData().icon,
-                firstLine = Screen.SettingsOption.Help().getDisplayData().title,
-                onClick = { navigateTo(Screen.SettingsOption.Help()) }
+                icon = Screen.SettingsOption.Help.getDisplayData().icon,
+                firstLine = Screen.SettingsOption.Help.getDisplayData().title,
+                onClick = { navigateTo(Screen.SettingsOption.Help) }
             ),
             TwoLinerData(
-                icon = Screen.SettingsOption.About().getDisplayData().icon,
-                firstLine = Screen.SettingsOption.About().getDisplayData().title,
-                onClick = { navigateTo(Screen.SettingsOption.About()) }
+                icon = Screen.SettingsOption.About.getDisplayData().icon,
+                firstLine = Screen.SettingsOption.About.getDisplayData().title,
+                onClick = { navigateTo(Screen.SettingsOption.About) }
             ),
         ),
     )
