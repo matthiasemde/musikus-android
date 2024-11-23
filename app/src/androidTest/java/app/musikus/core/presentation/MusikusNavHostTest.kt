@@ -19,6 +19,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.ComposeNavigator
 import androidx.navigation.testing.TestNavHostController
+import app.musikus.core.data.UUIDConverter
 import app.musikus.core.domain.FakeTimeProvider
 import app.musikus.core.presentation.theme.MusikusTheme
 import app.musikus.settings.domain.ColorSchemeSelections
@@ -67,6 +68,8 @@ class MusikusNavHostTest {
                     mainEventHandler = eventHandler,
                     bottomBarHeight = 0.dp,
                     timeProvider = fakeTimeProvider,
+                    isMainMenuOpen = false,
+                    closeMainMenu = {},
                 )
             }
         }
@@ -133,6 +136,20 @@ class MusikusNavHostTest {
 
         assertThat(screen.tab).isEqualTo(HomeTab.Library)
         composeRule.onNodeWithText("Library").assertIsDisplayed()
+    }
+
+    @Test
+    fun testNavigationToLibraryFolderDetails() = runTest {
+        composeRule.awaitIdle() // ensures that navController is initialized
+
+        composeRule.runOnUiThread {
+            navController.navigate(Screen.LibraryFolderDetails(folderId = UUIDConverter.fromInt(1).toString()))
+        }
+
+        val screen = navController.currentBackStackEntry?.toScreen()
+
+        assertThat(screen).isInstanceOf(Screen.LibraryFolderDetails::class.java)
+        composeRule.onNodeWithText("Folder not found").assertIsDisplayed()
     }
 
     @Test

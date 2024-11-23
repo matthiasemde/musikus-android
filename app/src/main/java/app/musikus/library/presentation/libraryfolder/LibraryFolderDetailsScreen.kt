@@ -36,7 +36,6 @@ import app.musikus.core.presentation.MainUiEventHandler
 import app.musikus.core.presentation.MusikusTopBar
 import app.musikus.core.presentation.components.ActionBar
 import app.musikus.core.presentation.components.SortMenu
-import app.musikus.core.presentation.utils.UiText
 import app.musikus.library.data.LibraryItemSortMode
 import app.musikus.library.presentation.LibraryCoreUiEvent
 import app.musikus.library.presentation.LibraryDialogs
@@ -66,7 +65,7 @@ fun LibraryFolderDetailsScreen(
             // Main top bar
             MusikusTopBar(
                 isTopLevel = false,
-                title = UiText.DynamicString(uiState.folderName),
+                title = uiState.folderName,
                 scrollBehavior = scrollBehavior,
                 navigateUp = navigateUp,
                 actions = {

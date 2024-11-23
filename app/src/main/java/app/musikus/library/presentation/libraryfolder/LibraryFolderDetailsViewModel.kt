@@ -9,6 +9,8 @@
 package app.musikus.library.presentation.libraryfolder
 
 import androidx.lifecycle.viewModelScope
+import app.musikus.R
+import app.musikus.core.presentation.utils.UiText
 import app.musikus.library.domain.usecase.LibraryUseCases
 import app.musikus.library.presentation.LibraryActionModeUiState
 import app.musikus.library.presentation.LibraryCoreUiEvent
@@ -34,7 +36,7 @@ sealed class LibraryFolderDetailsUiEvent {
 }
 
 data class LibraryFolderDetailsUiState(
-    val folderName: String,
+    val folderName: UiText,
     val itemsSortMenuUiState: LibraryItemsSortMenuUiState,
     val actionModeUiState: LibraryActionModeUiState,
     val itemsUiState: LibraryItemsUiState?,
@@ -72,7 +74,9 @@ class LibraryFolderDetailsViewModel @Inject constructor(
         dialogUiState,
     ) { activeFolder, itemsSortMenuUiState, actionModeUiState, itemsUiState, dialogUiState ->
         LibraryFolderDetailsUiState(
-            folderName = activeFolder?.folder?.name ?: "",
+            folderName = activeFolder?.folder?.name?.let {
+                    UiText.DynamicString(it)
+                } ?: UiText.StringResource(R.string.library_folder_details_folder_not_found),
             itemsSortMenuUiState = itemsSortMenuUiState,
             actionModeUiState = actionModeUiState,
             itemsUiState = itemsUiState,
@@ -82,7 +86,7 @@ class LibraryFolderDetailsViewModel @Inject constructor(
         scope = viewModelScope,
         started = WhileSubscribed(5000),
         initialValue = LibraryFolderDetailsUiState(
-            folderName = "",
+            folderName = UiText.DynamicString(""),
             itemsSortMenuUiState = itemsSortMenuUiState.value,
             actionModeUiState = actionModeUiState.value,
             itemsUiState = itemsUiState.value,

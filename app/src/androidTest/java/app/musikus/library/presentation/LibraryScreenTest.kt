@@ -16,7 +16,6 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasContentDescription
-import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.longClick
@@ -43,10 +42,8 @@ import org.junit.Test
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.seconds
 
-
 @HiltAndroidTest
 class LibraryScreenTest {
-
     @Inject lateinit var fakeTimeProvider: FakeTimeProvider
 
     @get:Rule(order = 0)
@@ -54,7 +51,6 @@ class LibraryScreenTest {
 
     @get:Rule(order = 1)
     val composeRule = createAndroidComposeRule<MainActivity>()
-
 
     @Before
     fun setUp() {
@@ -67,7 +63,7 @@ class LibraryScreenTest {
             Library(
                 mainUiState = mainUiState,
                 mainEventHandler = mainEventHandler,
-                navigateUp = { },
+                navigateToFolderDetails = { },
                 bottomBarHeight = 0.dp
             )
         }
@@ -126,43 +122,6 @@ class LibraryScreenTest {
         composeRule.onNodeWithText(context.getString(R.string.library_screen_hint)).assertIsDisplayed()
     }
 
-    @Test
-    fun addItemToFolderFromInsideAndOutside() {
-
-        // Add a folder
-        composeRule.onNodeWithContentDescription("Add folder or item").performClick()
-        composeRule.onNodeWithContentDescription("Add folder").performClick()
-        composeRule.onNodeWithTag(TestTags.FOLDER_DIALOG_NAME_INPUT).performTextInput("TestFolder")
-        composeRule.onNodeWithContentDescription("Create").performClick()
-
-        // Add an item from outside the folder
-        composeRule.onNodeWithContentDescription("Add folder or item").performClick()
-        composeRule.onNodeWithContentDescription("Add item").performClick()
-        composeRule.onNodeWithTag(TestTags.ITEM_DIALOG_NAME_INPUT).performTextInput("TestItem1")
-        composeRule.onNodeWithContentDescription("Select folder").performClick()
-
-        composeRule.onNode(
-            matcher = hasAnyAncestor(hasTestTag(TestTags.ITEM_DIALOG_FOLDER_SELECTOR_DROPDOWN))
-            and
-            hasText("TestFolder")
-        ).performClick()
-        composeRule.onNodeWithContentDescription("Create").performClick()
-
-        // Open folder
-        composeRule.onNodeWithText("TestFolder").performClick()
-
-        // Check if item is displayed
-        composeRule.onNodeWithText("TestItem1").assertIsDisplayed()
-
-        // Add an item from inside the folder (folder should be pre-selected)
-        composeRule.onNodeWithContentDescription("Add item").performClick()
-        composeRule.onNodeWithTag(TestTags.ITEM_DIALOG_NAME_INPUT).performTextInput("TestItem2")
-        composeRule.onNodeWithContentDescription("Create").performClick()
-
-        // Check if item is displayed
-        composeRule.onNodeWithText("TestItem2").assertIsDisplayed()
-    }
-
     private fun clickSortMode(
         sortModeType: String,
         sortMode: String
@@ -171,14 +130,13 @@ class LibraryScreenTest {
         // Select name as sorting mode
         composeRule.onNode(
             matcher = hasAnyAncestor(hasContentDescription("List of sort modes for $sortModeType"))
-                    and
-                    hasText(sortMode)
+                and
+                hasText(sortMode)
         ).performClick()
     }
 
     @Test
     fun saveNewItems_checkDefaultSortingThenNameSortingDescAndAsc() {
-
         val namesAndColors = listOf(
             "TestItem3" to 3,
             "TestItem1" to 9,

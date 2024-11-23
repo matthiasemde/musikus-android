@@ -75,5 +75,7 @@
     <string name="library_content_items_last_practiced_never">never</string>
 
 
+    <!-- LibraryFolderDetailsScreen -->
+    <string name="library_folder_details_folder_not_found">Folder not found</string>
 
 </resources>
