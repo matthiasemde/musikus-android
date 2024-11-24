@@ -130,8 +130,6 @@ class LibraryFolderDetailsScreenTest {
         // Change sorting mode to name descending
         clickSortMode("items", "Name")
 
-        composeRule.awaitIdle()
-
         // Check if items are displayed in correct order
         itemNodes = composeRule.onAllNodes(hasText("TestItem", substring = true))
 
@@ -200,5 +198,21 @@ class LibraryFolderDetailsScreenTest {
 
         // Check if edited item name is displayed
         composeRule.onNodeWithText("TestItem3").assertIsDisplayed()
+    }
+
+    @Test
+    fun deleteItem() = runTest {
+        // Add an item
+        composeRule.onNodeWithContentDescription("Add item").performClick()
+        composeRule.onNodeWithTag(TestTags.ITEM_DIALOG_NAME_INPUT).performTextInput("TestItem1")
+        composeRule.onNodeWithContentDescription("Create").performClick()
+
+        // Delete item by clicking it
+        composeRule.onNodeWithText("TestItem1").performTouchInput { longClick() }
+        composeRule.onNodeWithContentDescription("Delete").performClick()
+        composeRule.onNodeWithContentDescription("Delete forever (1)").performClick()
+
+        // Check if item is no longer displayed
+        composeRule.onNodeWithText("TestItem1").assertDoesNotExist()
     }
 }

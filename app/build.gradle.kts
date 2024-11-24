@@ -81,6 +81,8 @@ android {
 
     // needed for mockk
     testOptions {
+        animationsDisabled = true
+
         packaging {
             jniLibs { useLegacyPackaging = true }
         }
