@@ -45,7 +45,7 @@ fun HelpScreen(
         topBar = {
             MusikusTopBar(
                 isTopLevel = false,
-                title = UiText.StringResource(R.string.settings_help_title),
+                title = UiText.StringResource(R.string.menu_help_title),
                 scrollBehavior = scrollBehavior,
                 navigateUp = navigateUp
             )
@@ -59,13 +59,13 @@ fun HelpScreen(
             ) {
                 Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
                 Text(
-                    text = stringResource(R.string.settings_help_tips_title),
+                    text = stringResource(R.string.menu_help_tips_title),
                     fontWeight = FontWeight.Bold
                 )
                 Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
-                Text(stringResource(R.string.settings_help_tips_text))
+                Text(stringResource(R.string.menu_help_tips_text))
                 Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
-                for (bulletPoint in stringArrayResource(R.array.settings_help_tips_bulletlist)) {
+                for (bulletPoint in stringArrayResource(R.array.menu_help_tips_bulletlist)) {
                     Text(text = "\u2022\t" + bulletPoint)
                     Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
                 }
@@ -75,7 +75,7 @@ fun HelpScreen(
                 modifier = Modifier.padding(horizontal = MaterialTheme.spacing.large)
             ) {
                 Text(
-                    text = stringResource(R.string.settings_help_tutorial_title),
+                    text = stringResource(R.string.menu_help_tutorial_title),
                     fontWeight = FontWeight.Bold
                 )
                 Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
@@ -88,7 +88,7 @@ fun HelpScreen(
                         Toast.makeText(context, context.getString(R.string.core_coming_soon), Toast.LENGTH_SHORT).show()
                     }
                 ) {
-                    Text(stringResource(R.string.settings_help_tutorial_replay_intro))
+                    Text(stringResource(R.string.menu_help_tutorial_replay_intro))
                 }
             }
         }

@@ -17,13 +17,13 @@ import app.musikus.menu.domain.ThemeSelections.valueOf
 
 enum class ThemeSelections : EnumWithLabel {
     SYSTEM {
-        override val label = UiText.StringResource(R.string.settings_appearance_theme_options_system)
+        override val label = UiText.StringResource(R.string.menu_settings_appearance_theme_options_system)
     },
     DAY {
-        override val label = UiText.StringResource(R.string.settings_appearance_theme_options_day)
+        override val label = UiText.StringResource(R.string.menu_settings_appearance_theme_options_day)
     },
     NIGHT {
-        override val label = UiText.StringResource(R.string.settings_appearance_theme_options_night)
+        override val label = UiText.StringResource(R.string.menu_settings_appearance_theme_options_night)
     };
 
     companion object {
@@ -39,16 +39,16 @@ enum class ThemeSelections : EnumWithLabel {
 
 enum class ColorSchemeSelections : EnumWithLabel, EnumWithDescription {
     MUSIKUS {
-        override val label = UiText.StringResource(R.string.settings_appearance_color_scheme_options_musikus_title)
-        override val description = UiText.StringResource(R.string.settings_appearance_color_scheme_options_musikus_text)
+        override val label = UiText.StringResource(R.string.menu_settings_appearance_color_scheme_options_musikus_title)
+        override val description = UiText.StringResource(R.string.menu_settings_appearance_color_scheme_options_musikus_text)
     },
     LEGACY {
-        override val label = UiText.StringResource(R.string.settings_appearance_color_scheme_options_legacy_title)
-        override val description = UiText.StringResource(R.string.settings_appearance_color_scheme_options_legacy_text)
+        override val label = UiText.StringResource(R.string.menu_settings_appearance_color_scheme_options_legacy_title)
+        override val description = UiText.StringResource(R.string.menu_settings_appearance_color_scheme_options_legacy_text)
     },
     DYNAMIC {
-        override val label = UiText.StringResource(R.string.settings_appearance_color_scheme_options_dynamic_title)
-        override val description = UiText.StringResource(R.string.settings_appearance_color_scheme_options_dynamic_text)
+        override val label = UiText.StringResource(R.string.menu_settings_appearance_color_scheme_options_dynamic_title)
+        override val description = UiText.StringResource(R.string.menu_settings_appearance_color_scheme_options_dynamic_text)
     };
 
     companion object {

@@ -44,7 +44,7 @@ fun ExportScreen(
         topBar = {
             MusikusTopBar(
                 isTopLevel = false,
-                title = UiText.StringResource(R.string.settings_export_title),
+                title = UiText.StringResource(R.string.menu_settings_export_title),
                 scrollBehavior = scrollBehavior,
                 navigateUp = navigateUp
             )
@@ -57,7 +57,7 @@ fun ExportScreen(
         ) {
             Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
             Text(
-                text = stringResource(id = R.string.settings_export_text)
+                text = stringResource(id = R.string.menu_settings_export_text)
             )
             Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
             Button(
@@ -68,10 +68,10 @@ fun ExportScreen(
             ) {
                 Icon(imageVector = Icons.Default.Download, contentDescription = null)
                 Spacer(modifier = Modifier.width(MaterialTheme.spacing.medium))
-                Text(stringResource(R.string.settings_export_button_text))
+                Text(stringResource(R.string.menu_settings_export_button_text))
             }
             Text(
-                text = htmlResource(R.string.settings_export_footnote),
+                text = htmlResource(R.string.menu_settings_export_footnote),
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.Bold
             )

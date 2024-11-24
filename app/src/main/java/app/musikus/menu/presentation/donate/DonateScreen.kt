@@ -47,7 +47,7 @@ fun DonateScreen(
         topBar = {
             MusikusTopBar(
                 isTopLevel = false,
-                title = UiText.StringResource(R.string.settings_donate_title),
+                title = UiText.StringResource(R.string.menu_donate_title),
                 scrollBehavior = scrollBehavior,
                 navigateUp = navigateUp
             )
@@ -59,11 +59,11 @@ fun DonateScreen(
                 .padding(horizontal = MaterialTheme.spacing.extraLarge)
         ) {
             Text(
-                text = stringResource(R.string.settings_donate_text),
+                text = stringResource(R.string.menu_donate_text),
                 lineHeight = 1.6.em,
             )
             Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
-            for (bulletPoint in stringArrayResource(R.array.settings_donate_bulletlist)) {
+            for (bulletPoint in stringArrayResource(R.array.menu_donate_bulletlist)) {
                 Text(text = "\u2022\t" + bulletPoint)
                 Spacer(modifier = Modifier.height(MaterialTheme.spacing.extraSmall))
             }
@@ -74,12 +74,12 @@ fun DonateScreen(
                 modifier = Modifier.fillMaxWidth(),
                 onClick = {
                     val openUrlIntent = Intent(Intent.ACTION_VIEW)
-                    openUrlIntent.data = Uri.parse(context.getString(R.string.settings_donate_url))
+                    openUrlIntent.data = Uri.parse(context.getString(R.string.menu_donate_url))
                     startActivity(context, openUrlIntent, null)
                 }
             ) {
                 Text(
-                    text = stringResource(R.string.settings_donate_button_text),
+                    text = stringResource(R.string.menu_donate_button_text),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )

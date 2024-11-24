@@ -48,7 +48,7 @@ fun BackupScreen(
         topBar = {
             MusikusTopBar(
                 isTopLevel = false,
-                title = UiText.StringResource(R.string.settings_backup_title),
+                title = UiText.StringResource(R.string.menu_backup_title),
                 scrollBehavior = scrollBehavior,
                 navigateUp = navigateUp
             )
@@ -60,7 +60,7 @@ fun BackupScreen(
                 .padding(horizontal = MaterialTheme.spacing.large),
         ) {
             Text(
-                text = stringResource(R.string.settings_backup_text),
+                text = stringResource(R.string.menu_backup_text),
             )
 
             Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
@@ -79,7 +79,7 @@ fun BackupScreen(
                     Icon(Icons.Default.CloudUpload, contentDescription = null)
                     Spacer(modifier = Modifier.width(MaterialTheme.spacing.small))
                     Text(
-                        text = stringResource(R.string.settings_backup_create_backup),
+                        text = stringResource(R.string.menu_backup_create_backup),
                         style = MaterialTheme.typography.titleMedium
                     )
                 }
@@ -99,7 +99,7 @@ fun BackupScreen(
                     Icon(Icons.Default.CloudDownload, contentDescription = null)
                     Spacer(modifier = Modifier.width(MaterialTheme.spacing.small))
                     Text(
-                        text = stringResource(R.string.settings_backup_restore_backup),
+                        text = stringResource(R.string.menu_backup_restore_backup),
                         style = MaterialTheme.typography.titleMedium
                     )
                 }
@@ -108,7 +108,7 @@ fun BackupScreen(
             Spacer(modifier = Modifier.height(MaterialTheme.spacing.extraSmall))
 
             Text(
-                text = stringResource(R.string.settings_backup_footnote),
+                text = stringResource(R.string.menu_backup_footnote),
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.Bold
             )

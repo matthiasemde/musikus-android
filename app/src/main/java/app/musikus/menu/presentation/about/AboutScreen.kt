@@ -47,7 +47,7 @@ fun AboutScreen(
         topBar = {
             MusikusTopBar(
                 isTopLevel = false,
-                title = UiText.StringResource(R.string.settings_about_title),
+                title = UiText.StringResource(R.string.menu_about_title),
                 scrollBehavior = scrollBehavior,
                 navigateUp = navigateUp
             )
@@ -58,20 +58,20 @@ fun AboutScreen(
         val aboutScreenItems = listOf(
             listOf(
                 TwoLinerData(
-                    firstLine = UiText.StringResource(R.string.settings_about_developers_first_line),
-                    secondLine = UiText.StringResource(R.string.settings_about_developers_second_line)
+                    firstLine = UiText.StringResource(R.string.menu_about_developers_first_line),
+                    secondLine = UiText.StringResource(R.string.menu_about_developers_second_line)
                 )
             ),
             listOf(
                 TwoLinerData(
-                    firstLine = UiText.StringResource(R.string.settings_about_publisher_first_line),
-                    secondLine = UiText.StringResource(R.string.settings_about_publisher_second_line),
+                    firstLine = UiText.StringResource(R.string.menu_about_publisher_first_line),
+                    secondLine = UiText.StringResource(R.string.menu_about_publisher_second_line),
                 ),
                 TwoLinerData(
-                    firstLine = UiText.StringResource(R.string.settings_about_privacy_policy_first_line),
+                    firstLine = UiText.StringResource(R.string.menu_about_privacy_policy_first_line),
                     onClick = {
                         val openUrlIntent = Intent(Intent.ACTION_VIEW)
-                        openUrlIntent.data = Uri.parse(context.getString(R.string.settings_about_privacy_policy_url))
+                        openUrlIntent.data = Uri.parse(context.getString(R.string.menu_about_privacy_policy_url))
                         ContextCompat.startActivity(context, openUrlIntent, null)
                     },
                     trailingIcon = UiIcon.DynamicIcon(Icons.AutoMirrored.Filled.OpenInNew)
@@ -79,15 +79,15 @@ fun AboutScreen(
             ),
             listOf(
                 TwoLinerData(
-                    firstLine = UiText.StringResource(R.string.settings_about_version_first_line),
+                    firstLine = UiText.StringResource(R.string.menu_about_version_first_line),
                     secondLine = UiText.DynamicString("${BuildConfig.VERSION_NAME} (${BuildConfig.COMMIT_HASH})")
                 ),
                 TwoLinerData(
-                    firstLine = UiText.StringResource(R.string.settings_about_licenses_first_line),
+                    firstLine = UiText.StringResource(R.string.menu_about_licenses_first_line),
                     onClick = { navigateTo(Screen.License) }
                 ),
                 TwoLinerData(
-                    secondLine = UiText.StringResource(R.string.settings_about_copyright_second_line)
+                    secondLine = UiText.StringResource(R.string.menu_about_copyright_second_line)
                 )
             ),
         )

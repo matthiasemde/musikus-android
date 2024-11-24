@@ -271,15 +271,15 @@ fun Screen.MainMenuEntry.getDisplayData(): DisplayData {
 fun Screen.SettingsOption.getDisplayData(): DisplayData {
     return when(this) {
         is Screen.SettingsOption.Backup -> DisplayData(
-            title = UiText.StringResource(R.string.settings_items_backup),
+            title = UiText.StringResource(R.string.menu_settings_items_backup),
             icon = UiIcon.DynamicIcon(Icons.Outlined.CloudUpload),
         )
         is Screen.SettingsOption.Export -> DisplayData(
-            title = UiText.StringResource(R.string.settings_items_export),
+            title = UiText.StringResource(R.string.menu_settings_items_export),
             icon = UiIcon.IconResource(R.drawable.ic_export),
         )
         is Screen.SettingsOption.Appearance -> DisplayData(
-            title = UiText.StringResource(R.string.settings_items_appearance),
+            title = UiText.StringResource(R.string.menu_settings_items_appearance),
             icon = UiIcon.IconResource(R.drawable.ic_appearance),
         )
     }

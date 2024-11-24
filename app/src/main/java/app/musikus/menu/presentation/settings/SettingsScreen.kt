@@ -85,7 +85,7 @@ fun SettingsScreen(
         topBar = {
             MusikusTopBar(
                 isTopLevel = false,
-                title = UiText.StringResource(R.string.settings_title),
+                title = UiText.StringResource(R.string.menu_settings_title),
                 scrollBehavior = scrollBehavior,
                 navigateUp = navigateUp
             )
@@ -114,7 +114,7 @@ fun SettingsScreen(
                 horizontalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = stringResource(R.string.settings_footer),
+                    text = stringResource(R.string.menu_settings_footer),
                     style = MaterialTheme.typography.bodyMedium,
                     color = LocalContentColor.current.copy(alpha = 0.8f)
                 )

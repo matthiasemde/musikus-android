@@ -58,7 +58,7 @@ fun AppearanceScreen(
         topBar = {
             MusikusTopBar(
                 isTopLevel = false,
-                title = UiText.StringResource(R.string.settings_appearance_title),
+                title = UiText.StringResource(R.string.menu_settings_appearance_title),
                 scrollBehavior = scrollBehavior,
                 navigateUp = navigateUp
             )
@@ -67,17 +67,17 @@ fun AppearanceScreen(
 
         val appearanceMenuItems = listOf(
             TwoLinerData(
-                firstLine = UiText.StringResource(R.string.settings_appearance_language_first_line),
+                firstLine = UiText.StringResource(R.string.menu_settings_appearance_language_first_line),
                 secondLine = UiText.DynamicString(uiState.languageUiState.currentLanguage),
                 onClick = { eventHandler(AppearanceUiEvent.ShowLanguageDialog) }
             ),
             TwoLinerData(
-                firstLine = UiText.StringResource(R.string.settings_appearance_theme_first_line),
+                firstLine = UiText.StringResource(R.string.menu_settings_appearance_theme_first_line),
                 secondLine = uiState.themeUiState.currentTheme.label,
                 onClick = { eventHandler(AppearanceUiEvent.ShowThemeDialog) }
             ),
             TwoLinerData(
-                firstLine = UiText.StringResource(R.string.settings_appearance_color_scheme_first_line),
+                firstLine = UiText.StringResource(R.string.menu_settings_appearance_color_scheme_first_line),
                 secondLine = uiState.colorSchemeUiState.currentColorScheme.label,
                 onClick = { eventHandler(AppearanceUiEvent.ShowColorSchemeDialog) }
             ),
@@ -104,14 +104,14 @@ fun AppearanceScreen(
                         .padding(horizontal = (MaterialTheme.spacing.medium + MaterialTheme.spacing.small)),
                 ) {
                     Text(
-                        text = stringResource(R.string.settings_appearance_language_dialog_title),
+                        text = stringResource(R.string.menu_settings_appearance_language_dialog_title),
                         style = MaterialTheme.typography.titleLarge
                     )
                 }
                 Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
                 Text(
                     modifier = Modifier.padding(horizontal = MaterialTheme.spacing.medium),
-                    text = htmlResource(R.string.settings_appearance_language_dialog_text),
+                    text = htmlResource(R.string.menu_settings_appearance_language_dialog_text),
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
@@ -128,7 +128,7 @@ fun AppearanceScreen(
                     Button(
                         onClick = { eventHandler(AppearanceUiEvent.HideLanguageDialog) }
                     ) {
-                        Text(text = stringResource(R.string.settings_appearance_language_dialog_confirm))
+                        Text(text = stringResource(R.string.menu_settings_appearance_language_dialog_confirm))
                     }
                 }
             }
@@ -149,7 +149,7 @@ fun AppearanceScreen(
                         .padding(horizontal = (MaterialTheme.spacing.medium + MaterialTheme.spacing.small)),
                 ) {
                     Text(
-                        text = stringResource(R.string.settings_appearance_theme_dialog_title),
+                        text = stringResource(R.string.menu_settings_appearance_theme_dialog_title),
                         style = MaterialTheme.typography.headlineSmall
                     )
                 }
@@ -189,7 +189,7 @@ fun AppearanceScreen(
                         .padding(horizontal = (MaterialTheme.spacing.medium + MaterialTheme.spacing.small)),
                 ) {
                     Text(
-                        text = stringResource(R.string.settings_appearance_color_scheme_dialog_title),
+                        text = stringResource(R.string.menu_settings_appearance_color_scheme_dialog_title),
                         style = MaterialTheme.typography.headlineSmall
                     )
                 }

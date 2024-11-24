@@ -37,7 +37,7 @@ fun LicensesScreen(
         topBar = {
             MusikusTopBar(
                 isTopLevel = false,
-                title = UiText.StringResource(R.string.settings_licenses_title),
+                title = UiText.StringResource(R.string.menu_about_licenses_title),
                 scrollBehavior = scrollBehavior,
                 navigateUp = navigateUp
             )
