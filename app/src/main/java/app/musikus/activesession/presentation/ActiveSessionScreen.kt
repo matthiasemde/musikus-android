@@ -1367,7 +1367,7 @@ private fun LibraryFoldersRow(
     ScrollableTabRow(
         modifier = modifier.fillMaxWidth(),
         selectedTabIndex = selectedTabIndex,
-        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,  // match color of ModalBottomSheet
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLow, // match color of ModalBottomSheet
         divider = { }
     ) {
         LibraryFolderElement(
