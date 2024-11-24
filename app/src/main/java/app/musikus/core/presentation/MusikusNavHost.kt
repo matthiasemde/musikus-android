@@ -194,10 +194,12 @@ fun AnimatedContentTransitionScope<NavBackStackEntry>.getExitTransition(pop: Boo
     return when {
         // when changing to active session, show immediately
         targetScreen is Screen.ActiveSession -> {
-            fadeOut(tween(
-                durationMillis = 1,
-                delayMillis = ANIMATION_BASE_DURATION
-            ))
+            fadeOut(
+                tween(
+                    durationMillis = 1,
+                    delayMillis = ANIMATION_BASE_DURATION
+                )
+            )
         }
 
         // when changing from active session, slide out to the bottom
@@ -234,7 +236,7 @@ fun AnimatedContentTransitionScope<NavBackStackEntry>.getExitTransition(pop: Boo
 
         // default animation: zoom&fade
         else -> {
-            if(pop) {
+            if (pop) {
                 scaleOut(
                     animationSpec = tween(ANIMATION_BASE_DURATION / 2),
                     targetScale = 0.7f,

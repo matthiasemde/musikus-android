@@ -72,7 +72,6 @@ fun SessionStatistics(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
 
     Scaffold(

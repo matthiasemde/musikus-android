@@ -46,7 +46,7 @@ data class LibraryItemEditData(
 )
 
 @OptIn(ExperimentalCoroutinesApi::class)
-abstract class LibraryCoreViewModel (
+abstract class LibraryCoreViewModel(
     private val libraryUseCases: LibraryUseCases,
 ) : ViewModel() {
 
@@ -249,7 +249,7 @@ abstract class LibraryCoreViewModel (
     /**
      * Ui event handler
      */
-    protected fun onUiEvent(event: LibraryCoreUiEvent) : Boolean {
+    protected fun onUiEvent(event: LibraryCoreUiEvent): Boolean {
         when (event) {
             is LibraryCoreUiEvent.ItemPressed -> onItemClicked(event.item, event.longClick)
             is LibraryCoreUiEvent.ItemSortMenuPressed -> onItemSortMenuChanged(_showItemSortMenu.value.not())

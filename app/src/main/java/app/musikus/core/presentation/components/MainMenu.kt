@@ -62,7 +62,7 @@ fun MainMenu(
         )
         Spacer(modifier = Modifier.weight(1f))
         menuEntryGroups.forEach { group ->
-            group.forEach{ entry ->
+            group.forEach { entry ->
                 val displayData = entry.getDisplayData()
                 NavigationDrawerItem(
                     modifier = Modifier
@@ -72,7 +72,7 @@ fun MainMenu(
                             displayData.icon.asIcon(),
                             contentDescription = displayData.title.asString()
                         )
-                   },
+                    },
                     label = { Text(text = displayData.title.asString()) },
                     selected = false,
                     onClick = {
@@ -86,10 +86,12 @@ fun MainMenu(
             }
 
             if (group != menuEntryGroups.last()) {
-                HorizontalDivider(modifier = Modifier.padding(
-                    horizontal = MaterialTheme.spacing.medium,
-                    vertical = MaterialTheme.spacing.small
-                ))
+                HorizontalDivider(
+                    modifier = Modifier.padding(
+                        horizontal = MaterialTheme.spacing.medium,
+                        vertical = MaterialTheme.spacing.small
+                    )
+                )
             }
         }
         Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))

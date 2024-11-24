@@ -27,7 +27,6 @@ import kotlinx.coroutines.flow.update
 import java.util.UUID
 import javax.inject.Inject
 
-
 typealias LibraryFolderDetailsUiEventHandler = (LibraryFolderDetailsUiEvent) -> Boolean
 
 sealed class LibraryFolderDetailsUiEvent {
@@ -72,8 +71,8 @@ class LibraryFolderDetailsViewModel @Inject constructor(
     ) { activeFolder, itemsSortMenuUiState, actionModeUiState, itemsUiState, dialogUiState ->
         LibraryFolderDetailsUiState(
             folderName = activeFolder?.folder?.name?.let {
-                    UiText.DynamicString(it)
-                } ?: UiText.StringResource(R.string.library_folder_details_folder_not_found),
+                UiText.DynamicString(it)
+            } ?: UiText.StringResource(R.string.library_folder_details_folder_not_found),
             itemsSortMenuUiState = itemsSortMenuUiState,
             actionModeUiState = actionModeUiState,
             itemsUiState = itemsUiState,
@@ -94,7 +93,7 @@ class LibraryFolderDetailsViewModel @Inject constructor(
     /**
      * Ui event handler
      */
-    fun onUiEvent(event: LibraryFolderDetailsUiEvent) : Boolean {
+    fun onUiEvent(event: LibraryFolderDetailsUiEvent): Boolean {
         when (event) {
             is LibraryFolderDetailsUiEvent.CoreUiEvent -> {
                 super.onUiEvent(event.coreEvent)

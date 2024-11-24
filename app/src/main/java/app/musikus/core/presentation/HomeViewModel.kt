@@ -55,7 +55,7 @@ class HomeViewModel @Inject constructor() : ViewModel() {
         )
     )
 
-    fun onUiEvent(event: HomeUiEvent) : Boolean {
+    fun onUiEvent(event: HomeUiEvent): Boolean {
         when (event) {
             is HomeUiEvent.ShowMainMenu -> {
                 _showMainMenu.update { true }

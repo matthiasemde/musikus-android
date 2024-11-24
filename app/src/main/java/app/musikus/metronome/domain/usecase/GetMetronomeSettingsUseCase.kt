@@ -10,7 +10,6 @@ package app.musikus.metronome.domain.usecase
 
 import app.musikus.core.domain.UserPreferencesRepository
 
-
 class GetMetronomeSettingsUseCase(
     private val userPreferencesRepository: UserPreferencesRepository
 ) {

@@ -124,7 +124,7 @@ class MainViewModel @Inject constructor(
         )
     )
 
-    fun onUiEvent(event: MainUiEvent) : Boolean {
+    fun onUiEvent(event: MainUiEvent): Boolean {
         when (event) {
             is MainUiEvent.ShowSnackbar -> {
                 showSnackbar(

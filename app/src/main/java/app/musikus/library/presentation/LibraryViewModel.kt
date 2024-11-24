@@ -138,7 +138,7 @@ class LibraryViewModel @Inject constructor(
     /**
      * Ui event handler
      */
-    fun onUiEvent(event: LibraryUiEvent) : Boolean {
+    fun onUiEvent(event: LibraryUiEvent): Boolean {
         when (event) {
             is LibraryUiEvent.CoreUiEvent -> super.onUiEvent(event.coreEvent)
             is LibraryUiEvent.FolderSortMenuPressed -> onFolderSortMenuChanged(_showFolderSortMenu.value.not())
@@ -157,7 +157,7 @@ class LibraryViewModel @Inject constructor(
     private fun onFolderClicked(
         folder: LibraryFolder,
         longClick: Boolean = false
-    ) : Boolean {
+    ): Boolean {
         if (longClick) {
             selectedFolderIds.update { it + folder.id }
             return true

@@ -248,7 +248,7 @@ class GoalsViewModel @Inject constructor(
      * Ui event handler
      */
 
-    fun onUiEvent(event: GoalsUiEvent) : Boolean {
+    fun onUiEvent(event: GoalsUiEvent): Boolean {
         when (event) {
             is GoalsUiEvent.BackButtonPressed -> clearActionMode()
 

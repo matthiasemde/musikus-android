@@ -77,10 +77,19 @@ fun LibraryFolderDetailsScreen(
                         currentSortMode = sortMenuUiState.mode,
                         currentSortDirection = sortMenuUiState.direction,
                         sortItemDescription = stringResource(id = R.string.library_content_items_sort_menu_description),
-                        onShowMenuChanged = { eventHandler(LibraryFolderDetailsUiEvent.CoreUiEvent(
-                            LibraryCoreUiEvent.ItemSortMenuPressed)) },
+                        onShowMenuChanged = {
+                            eventHandler(
+                                LibraryFolderDetailsUiEvent.CoreUiEvent(
+                                    LibraryCoreUiEvent.ItemSortMenuPressed
+                                )
+                            )
+                        },
                         onSelectionHandler = {
-                            eventHandler(LibraryFolderDetailsUiEvent.CoreUiEvent(LibraryCoreUiEvent.ItemSortModeSelected(it as LibraryItemSortMode)))
+                            eventHandler(
+                                LibraryFolderDetailsUiEvent.CoreUiEvent(
+                                    LibraryCoreUiEvent.ItemSortModeSelected(it as LibraryItemSortMode)
+                                )
+                            )
                         }
                     )
 
@@ -93,7 +102,9 @@ fun LibraryFolderDetailsScreen(
                     }) {
                         Icon(
                             imageVector = Icons.Rounded.Edit,
-                            contentDescription = stringResource(id = R.string.components_action_bar_edit_button_description)
+                            contentDescription = stringResource(
+                                id = R.string.components_action_bar_edit_button_description
+                            )
                         )
                     }
                 }
@@ -104,8 +115,16 @@ fun LibraryFolderDetailsScreen(
             if (actionModeUiState.isActionMode) {
                 ActionBar(
                     numSelectedItems = actionModeUiState.numberOfSelections,
-                    onDismissHandler = { eventHandler(LibraryFolderDetailsUiEvent.CoreUiEvent(LibraryCoreUiEvent.ClearActionMode)) },
-                    onEditHandler = { eventHandler(LibraryFolderDetailsUiEvent.CoreUiEvent(LibraryCoreUiEvent.EditButtonPressed)) },
+                    onDismissHandler = {
+                        eventHandler(
+                            LibraryFolderDetailsUiEvent.CoreUiEvent(LibraryCoreUiEvent.ClearActionMode)
+                        )
+                    },
+                    onEditHandler = {
+                        eventHandler(
+                            LibraryFolderDetailsUiEvent.CoreUiEvent(LibraryCoreUiEvent.EditButtonPressed)
+                        )
+                    },
                     onDeleteHandler = {
                         eventHandler(LibraryFolderDetailsUiEvent.CoreUiEvent(LibraryCoreUiEvent.DeleteButtonPressed))
                     }

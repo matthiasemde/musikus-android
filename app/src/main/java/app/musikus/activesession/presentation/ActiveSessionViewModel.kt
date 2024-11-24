@@ -310,7 +310,7 @@ class ActiveSessionViewModel @Inject constructor(
         }
     }
 
-    fun onUiEvent(event: ActiveSessionUiEvent) : Boolean {
+    fun onUiEvent(event: ActiveSessionUiEvent): Boolean {
         when (event) {
             is ActiveSessionUiEvent.SelectItem -> viewModelScope.launch { selectItem(event.item) }
             is ActiveSessionUiEvent.TogglePauseState -> viewModelScope.launch { togglePauseState() }

@@ -40,15 +40,21 @@ enum class ThemeSelections : EnumWithLabel {
 enum class ColorSchemeSelections : EnumWithLabel, EnumWithDescription {
     MUSIKUS {
         override val label = UiText.StringResource(R.string.menu_settings_appearance_color_scheme_options_musikus_title)
-        override val description = UiText.StringResource(R.string.menu_settings_appearance_color_scheme_options_musikus_text)
+        override val description = UiText.StringResource(
+            R.string.menu_settings_appearance_color_scheme_options_musikus_text
+        )
     },
     LEGACY {
         override val label = UiText.StringResource(R.string.menu_settings_appearance_color_scheme_options_legacy_title)
-        override val description = UiText.StringResource(R.string.menu_settings_appearance_color_scheme_options_legacy_text)
+        override val description = UiText.StringResource(
+            R.string.menu_settings_appearance_color_scheme_options_legacy_text
+        )
     },
     DYNAMIC {
         override val label = UiText.StringResource(R.string.menu_settings_appearance_color_scheme_options_dynamic_title)
-        override val description = UiText.StringResource(R.string.menu_settings_appearance_color_scheme_options_dynamic_text)
+        override val description = UiText.StringResource(
+            R.string.menu_settings_appearance_color_scheme_options_dynamic_text
+        )
     };
 
     companion object {

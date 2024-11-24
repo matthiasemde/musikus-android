@@ -242,7 +242,7 @@ class RecorderViewModel @Inject constructor(
     )
 
     // TODO split out subfunctions
-    fun onUiEvent(event: RecorderUiEvent) : Boolean {
+    fun onUiEvent(event: RecorderUiEvent): Boolean {
         when (event) {
             is RecorderUiEvent.StartRecording -> { viewModelScope.launch { startRecording() } }
             is RecorderUiEvent.PauseRecording -> pauseRecording()

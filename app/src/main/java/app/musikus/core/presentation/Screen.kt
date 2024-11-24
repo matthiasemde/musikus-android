@@ -269,7 +269,7 @@ fun Screen.MainMenuEntry.getDisplayData(): DisplayData {
  * @return The display data for the settings option.
  */
 fun Screen.SettingsOption.getDisplayData(): DisplayData {
-    return when(this) {
+    return when (this) {
         is Screen.SettingsOption.Backup -> DisplayData(
             title = UiText.StringResource(R.string.menu_settings_items_backup),
             icon = UiIcon.DynamicIcon(Icons.Outlined.CloudUpload),

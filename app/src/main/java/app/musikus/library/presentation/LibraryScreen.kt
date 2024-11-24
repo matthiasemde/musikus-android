@@ -280,7 +280,7 @@ fun LibraryContent(
                                 numItems = folderWithItems.items.size,
                                 selected = folder.id in foldersUiState.selectedFolderIds,
                                 onShortClick = {
-                                    if(!eventHandler(LibraryUiEvent.FolderPressed(folder, longClick = false))) {
+                                    if (!eventHandler(LibraryUiEvent.FolderPressed(folder, longClick = false))) {
                                         navigateToFolderDetails(Screen.LibraryFolderDetails(folder.id.toString()))
                                     }
                                 },

@@ -175,7 +175,7 @@ class SessionsViewModel @Inject constructor(
         )
     )
 
-    fun onUiEvent(event: SessionsUiEvent) : Boolean {
+    fun onUiEvent(event: SessionsUiEvent): Boolean {
         when (event) {
             is SessionsUiEvent.MonthHeaderPressed -> onMonthHeaderClicked(event.specificMonth)
             is SessionsUiEvent.SessionPressed -> onSessionClicked(event.sessionId, event.longClick)

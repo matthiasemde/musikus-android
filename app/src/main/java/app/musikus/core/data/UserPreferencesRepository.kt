@@ -76,7 +76,9 @@ class UserPreferencesRepositoryImpl(
             ),
 
             goalsSortMode = GoalsSortMode.Companion.valueOrDefault(preferences[PreferenceKeys.GOALS_SORT_MODE]),
-            goalsSortDirection = SortDirection.Companion.valueOrDefault(preferences[PreferenceKeys.GOALS_SORT_DIRECTION]),
+            goalsSortDirection = SortDirection.Companion.valueOrDefault(
+                preferences[PreferenceKeys.GOALS_SORT_DIRECTION]
+            ),
 
             showPausedGoals = preferences[PreferenceKeys.SHOW_PAUSED_GOALS] ?: true,
 

@@ -205,7 +205,7 @@ class MetronomeViewModel @Inject constructor(
 
     /** Mutators */
 
-    fun onUiEvent(event: MetronomeUiEvent) : Boolean {
+    fun onUiEvent(event: MetronomeUiEvent): Boolean {
         when (event) {
             is MetronomeUiEvent.ToggleIsPlaying -> {
                 viewModelScope.launch {

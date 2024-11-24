@@ -161,7 +161,7 @@ class AppearanceViewModel @Inject constructor(
         )
     )
 
-    fun onUiEvent(event: AppearanceUiEvent) : Boolean {
+    fun onUiEvent(event: AppearanceUiEvent): Boolean {
         when (event) {
             is AppearanceUiEvent.ChangeLanguage -> {
 //                viewModelScope.launch {
