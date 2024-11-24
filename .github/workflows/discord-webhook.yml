@@ -2,7 +2,7 @@ name: DISCORD-WEBHOOK
 
 on:
   pull_request:
-    types: [opened]
+    types: [opened, reopened]
   release:
     types: [published]
 
@@ -15,15 +15,23 @@ jobs:
       - name: Send Discord notification for PR
         if: github.event_name == 'pull_request'
         run: |
-          curl -H "Content-Type: application/json" \
+          response=$(curl -s -o /dev/null -w "%{http_code}" -H "Content-Type: application/json" \
           -X POST \
           -d "{\"content\": \"📣 **New Pull Request**: [${{ github.event.pull_request.title }}](${{ github.event.pull_request.html_url }})\n\n📝 **Description**: ${{ github.event.pull_request.body }}\n\n🚀 **Branch**: ${{ github.event.pull_request.head.ref }}\"}" \
-          ${{ secrets.DISCORD_WEBHOOK_URL }}
+          ${{ secrets.DISCORD_WEBHOOK_URL }})
+          if [ "$response" -ne 200 ]; then
+            echo "Failed to send Discord notification"
+            exit 1
+          fi
 
       - name: Send Discord notification for Release
         if: github.event_name == 'release'
         run: |
-          curl -H "Content-Type: application/json" \
+          response=$(curl -s -o /dev/null -w "%{http_code}" -H "Content-Type: application/json" \
           -X POST \
           -d "{\"content\": \"🎉 **New Release**: [${{ github.event.release.name }}](${{ github.event.release.html_url }})\n\n📦 **Version**: ${{ github.event.release.tag_name }}\n\n📝 **Description**: ${{ github.event.release.body }}\"}" \
-          ${{ secrets.DISCORD_WEBHOOK_URL }}
+          ${{ secrets.DISCORD_WEBHOOK_URL }})
+          if [ "$response" -ne 200 ]; then
+            echo "Failed to send Discord notification"
+            exit 1
+          fi
