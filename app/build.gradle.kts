@@ -130,6 +130,13 @@ detekt {
     // version found will be used. Override to stay on the same version.
     toolVersion = DetektSettings.VERSION
 
+    // Set the source directories for detekt to analyze (androidTest not included by default).
+    source.setFrom(
+        "src/main/java",
+        "src/test/java",
+        "src/androidTest/java",
+    )
+
     // Point to your custom config defining rules to run, overwriting default behavior
     config.setFrom("$projectDir/${DetektSettings.CONFIG_FILE}")
 
