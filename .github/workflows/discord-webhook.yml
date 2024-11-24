@@ -15,15 +15,18 @@ jobs:
       - name: Send Discord notification for PR
         if: github.event_name == 'pull_request'
         run: |
-          response_code=$(curl -s -o /dev/null -w "%{http_code}" -H "Content-Type: application/json" \
+          BODY=$'${{ github.event.pull_request.body }}'
+          response=$(curl -s -w "\n%{http_code}" -H "Content-Type: application/json" \
             -X POST \
             -d "$(jq -n --arg title "${{ github.event.pull_request.title }}" \
             --arg url "${{ github.event.pull_request.html_url }}" \
-            --arg body "${{ github.event.pull_request.body }}" \
+            --arg body "$(echo $BODY | sed 's/`/\\`/g')" \
             --arg branch "${{ github.event.pull_request.head.ref }}" \
             '{"content": "📣 **New Pull Request**: [\($title)](\($url))\n\n📝 **Description**: \($body)\n\n🚀 **Branch**: \($branch)"}')" \
             ${{ secrets.DISCORD_WEBHOOK_URL }})
-          if [ "$response_code" -ne 200 ]; then
+          echo "$response"
+          response_code=$(echo "$response" | tail -n1)
+          if [ "$response_code" -ne 204 ]; then
             echo "Failed to send Discord notification"
             exit 1
           fi
@@ -31,15 +34,18 @@ jobs:
       - name: Send Discord notification for Release
         if: github.event_name == 'release'
         run: |
-          response_code=$(curl -s -o /dev/null -w "%{http_code}" -H "Content-Type: application/json" \
+          BODY=$'${{ github.event.release.body }}'
+          response=$(curl -s -w "%{http_code}" -H "Content-Type: application/json" \
           -X POST \
-          -d "$(jq -n --arg title "${{ github.event.pull_request.title }}" \
-            --arg url "${{ github.event.pull_request.html_url }}" \
-            --arg body "${{ github.event.pull_request.body }}" \
+          -d "$(jq -n --arg title "${{ github.event.release.title }}" \
+            --arg url "${{ github.event.release.html_url }}" \
+            --arg body "$(echo $BODY | sed 's/`/\\`/g')" \
             --arg tag "${{ github.event.release.tag_name }}" \
             '{"content": "🎉 **New Release**: [\($title)](\($url))\n\n📦 **Version**: \($tag)\n\n📝 **Description**: \($body)"}')" \
           ${{ secrets.DISCORD_WEBHOOK_URL }})
-          if [ "$response_code" -ne 200 ]; then
+          echo "$response"
+          response_code=$(echo "$response" | tail -n1)
+          if [ "$response_code" -ne 204 ]; then
             echo "Failed to send Discord notification"
             exit 1
           fi
