@@ -731,8 +731,6 @@ private fun NewItemSelectorBottomSheet(
 ) {
     val scope = rememberCoroutineScope()
     ModalBottomSheet(
-        modifier = Modifier
-            .fillMaxHeight(0.6f), // avoid jumping height when changing folders
         contentWindowInsets = { WindowInsets(top = 0.dp) }, // makes sure the scrim covers the status bar
         onDismissRequest = remember { onDismissed },
         sheetState = sheetState,
@@ -740,6 +738,8 @@ private fun NewItemSelectorBottomSheet(
         dragHandle = {},
     ) {
         NewItemSelector(
+            modifier = Modifier
+                .fillMaxHeight(0.6f), // avoid jumping height when changing folders
             uiState = uiState,
             onItemSelected = onItemSelected,
             onNewItem = onNewItem,
@@ -1367,6 +1367,7 @@ private fun LibraryFoldersRow(
     ScrollableTabRow(
         modifier = modifier.fillMaxWidth(),
         selectedTabIndex = selectedTabIndex,
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLow, // match color of ModalBottomSheet
         divider = { }
     ) {
         LibraryFolderElement(
