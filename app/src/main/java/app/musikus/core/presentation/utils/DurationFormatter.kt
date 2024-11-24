@@ -176,27 +176,29 @@ fun getDurationString(
             DurationFormat.PRETTY_APPROX -> {
                 append(
                     when {
-                        // if time left is larger than a day, show the number of begun days
+                        // if time left is at least one day, show the number of begun days
                         days > 0 -> "${days + 1} days"
-                        // if days are zero, but hours is larger than 1, show the number of begun hours
+                        // if days are zero, but hours is at least one, show the number of begun hours
                         hours > 0 -> "${hours + 1} hours"
-                        // else, show the number of begun minutes
-                        else -> "${minutes + 1} minutes"
-                    }
-                )
+                        // if the duration is less than one hour but still positive, show the number of begun minutes
+                        duration.isPositive() -> "${minutes + 1} minutes"
+                    // if duration is zero or negative, throw an error
+                    else -> throw (IllegalArgumentException("Duration must be positive"))
+                })
             }
 
             DurationFormat.PRETTY_APPROX_SHORT -> {
                 append(
                     when {
-                        // if time left is larger than a day, show the number of begun days
+                        // if time left is at least one day, show the number of begun days
                         days > 0 -> "${days + 1} days"
-                        // if days are zero, but hours is larger than 1, show the number of begun hours
+                        // if days are zero, but hours is at least one, show the number of begun hours
                         hours > 0 -> "${hours + 1}h"
-                        // else, show the number of begun minutes
-                        else -> "${minutes + 1}m"
-                    }
-                )
+                        // if the duration is less than one hour but still positive, show the number of begun minutes
+                        duration.isPositive() -> "${minutes + 1}m"
+                    // if the duration is zero or negative, throw an error
+                    else -> throw (IllegalArgumentException("Duration must be positive"))
+                })
             }
         }
     }
