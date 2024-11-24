@@ -178,10 +178,10 @@ import app.musikus.core.presentation.utils.getDurationString
 import app.musikus.library.data.daos.LibraryFolder
 import app.musikus.library.data.daos.LibraryItem
 import app.musikus.library.presentation.LibraryItemComponent
+import app.musikus.menu.domain.ColorSchemeSelections
 import app.musikus.metronome.presentation.MetronomeUi
 import app.musikus.recorder.presentation.RecorderUi
 import app.musikus.sessions.presentation.RatingBar
-import app.musikus.settings.domain.ColorSchemeSelections
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.persistentListOf

@@ -29,11 +29,11 @@ import app.musikus.R
 import app.musikus.core.presentation.Screen
 import app.musikus.core.presentation.getDisplayData
 import app.musikus.core.presentation.theme.spacing
-import app.musikus.settings.presentation.SettingsScreen
-import app.musikus.settings.presentation.about.AboutScreen
-import app.musikus.settings.presentation.about.LicensesScreen
-import app.musikus.settings.presentation.donate.DonateScreen
-import app.musikus.settings.presentation.help.HelpScreen
+import app.musikus.menu.presentation.about.AboutScreen
+import app.musikus.menu.presentation.about.LicensesScreen
+import app.musikus.menu.presentation.donate.DonateScreen
+import app.musikus.menu.presentation.help.HelpScreen
+import app.musikus.menu.presentation.settings.SettingsScreen
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.milliseconds

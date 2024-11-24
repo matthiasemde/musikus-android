@@ -13,7 +13,6 @@ import app.musikus.library.data.LibraryItemSortMode
 import app.musikus.library.data.daos.LibraryItem
 import app.musikus.library.data.sorted
 import app.musikus.library.domain.LibraryRepository
-import app.musikus.settings.domain.usecase.GetItemSortInfoUseCase
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map

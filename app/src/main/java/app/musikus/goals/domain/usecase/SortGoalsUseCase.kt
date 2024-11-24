@@ -12,7 +12,6 @@ import app.musikus.core.data.GoalDescriptionWithInstancesAndLibraryItems
 import app.musikus.core.data.GoalInstanceWithDescriptionWithLibraryItems
 import app.musikus.goals.data.GoalsSortMode
 import app.musikus.goals.data.sorted
-import app.musikus.settings.domain.usecase.GetGoalSortInfoUseCase
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 

@@ -14,7 +14,6 @@ import app.musikus.core.domain.SortInfo
 import app.musikus.library.data.LibraryFolderSortMode
 import app.musikus.library.data.daos.LibraryFolder
 import app.musikus.library.domain.usecase.LibraryUseCases
-import app.musikus.settings.domain.usecase.UserPreferencesUseCases
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -34,17 +33,15 @@ data class LibraryUiState(
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class LibraryViewModel @Inject constructor(
-    libraryUseCases: LibraryUseCases,
-    private val userPreferencesUseCases: UserPreferencesUseCases,
+    private val libraryUseCases: LibraryUseCases,
 ) : LibraryCoreViewModel(
     libraryUseCases = libraryUseCases,
-    userPreferencesUseCases = userPreferencesUseCases,
 ) {
 
     /**
      *  Imported flows
      */
-    private val folderSortInfo = userPreferencesUseCases.getFolderSortInfo().stateIn(
+    private val folderSortInfo = libraryUseCases.getFolderSortInfo().stateIn(
         scope = viewModelScope,
         started = WhileSubscribed(5000),
         initialValue = SortInfo(
@@ -189,7 +186,7 @@ class LibraryViewModel @Inject constructor(
     private fun onFolderSortModeSelected(selection: LibraryFolderSortMode) {
         _showFolderSortMenu.update { false }
         viewModelScope.launch {
-            userPreferencesUseCases.selectFolderSortMode(selection)
+            libraryUseCases.selectFolderSortMode(selection)
         }
     }
 }

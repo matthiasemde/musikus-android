@@ -26,8 +26,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import app.musikus.settings.domain.ColorSchemeSelections
-import app.musikus.settings.domain.ThemeSelections
+import app.musikus.menu.domain.ColorSchemeSelections
+import app.musikus.menu.domain.ThemeSelections
 
 /** Library item colors */
 

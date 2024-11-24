@@ -37,6 +37,7 @@ import app.musikus.library.presentation.libraryfolder.LibraryFolderDetailsScreen
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -101,7 +102,7 @@ class LibraryFolderDetailsScreenTest {
     }
 
     @Test
-    fun saveNewItems_checkDefaultSortingThenNameSortingDescAndAsc() {
+    fun saveNewItems_checkDefaultSortingThenNameSortingDescAndAsc() = runTest {
         val namesAndColors = listOf(
             "TestItem3" to 3,
             "TestItem1" to 9,
@@ -128,6 +129,8 @@ class LibraryFolderDetailsScreenTest {
 
         // Change sorting mode to name descending
         clickSortMode("items", "Name")
+
+        composeRule.awaitIdle()
 
         // Check if items are displayed in correct order
         itemNodes = composeRule.onAllNodes(hasText("TestItem", substring = true))

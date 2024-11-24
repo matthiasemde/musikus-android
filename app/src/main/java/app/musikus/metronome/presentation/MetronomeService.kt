@@ -26,7 +26,7 @@ import app.musikus.core.di.ApplicationScope
 import app.musikus.core.di.IoScope
 import app.musikus.core.presentation.METRONOME_NOTIFICATION_CHANNEL_ID
 import app.musikus.core.presentation.MainActivity
-import app.musikus.settings.domain.usecase.UserPreferencesUseCases
+import app.musikus.metronome.domain.usecase.MetronomeUseCases
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -53,7 +53,7 @@ sealed class MetronomeServiceEvent {
 class MetronomeService : Service() {
 
     @Inject
-    lateinit var userPreferencesUseCases: UserPreferencesUseCases
+    lateinit var metronomeUseCases: MetronomeUseCases
 
     @Inject
     @ApplicationScope
@@ -90,7 +90,7 @@ class MetronomeService : Service() {
 
     /** Imported flows */
     private val metronomeSettings by lazy {
-        userPreferencesUseCases.getMetronomeSettings()
+        metronomeUseCases.getMetronomeSettings()
     }
 
     private var metronomeSettingsUpdateJob: Job? = null

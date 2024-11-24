@@ -18,7 +18,6 @@ import app.musikus.library.presentation.LibraryCoreViewModel
 import app.musikus.library.presentation.LibraryDialogsUiState
 import app.musikus.library.presentation.LibraryItemsSortMenuUiState
 import app.musikus.library.presentation.LibraryItemsUiState
-import app.musikus.settings.domain.usecase.UserPreferencesUseCases
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.SharingStarted.Companion.WhileSubscribed
@@ -47,10 +46,8 @@ data class LibraryFolderDetailsUiState(
 @HiltViewModel
 class LibraryFolderDetailsViewModel @Inject constructor(
     libraryUseCases: LibraryUseCases,
-    userPreferencesUseCases: UserPreferencesUseCases,
 ) : LibraryCoreViewModel(
     libraryUseCases,
-    userPreferencesUseCases,
 ) {
 
     /**

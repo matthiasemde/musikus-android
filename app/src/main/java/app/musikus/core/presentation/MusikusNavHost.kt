@@ -35,7 +35,7 @@ import app.musikus.activesession.presentation.ActiveSession
 import app.musikus.core.domain.TimeProvider
 import app.musikus.core.presentation.components.addMainMenuNavigationGraph
 import app.musikus.library.presentation.libraryfolder.LibraryFolderDetailsScreen
-import app.musikus.settings.presentation.addSettingsOptionsNavigationGraph
+import app.musikus.menu.presentation.settings.addSettingsOptionsNavigationGraph
 import app.musikus.statistics.presentation.addStatisticsNavigationGraph
 import java.util.UUID
 import kotlin.reflect.typeOf

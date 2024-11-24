@@ -88,7 +88,7 @@ import app.musikus.core.presentation.theme.dimensions
 import app.musikus.core.presentation.theme.spacing
 import app.musikus.core.presentation.utils.DurationFormat
 import app.musikus.core.presentation.utils.getDurationString
-import app.musikus.settings.domain.ColorSchemeSelections
+import app.musikus.menu.domain.ColorSchemeSelections
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.delay

@@ -20,7 +20,7 @@ import app.musikus.core.domain.IdProvider
 import app.musikus.core.domain.IdProviderImpl
 import app.musikus.core.domain.TimeProvider
 import app.musikus.core.domain.TimeProviderImpl
-import app.musikus.settings.domain.USER_PREFERENCES_NAME
+import app.musikus.core.domain.USER_PREFERENCES_NAME
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

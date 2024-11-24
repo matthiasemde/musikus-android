@@ -15,9 +15,9 @@ import androidx.lifecycle.viewModelScope
 import app.musikus.activesession.domain.usecase.ActiveSessionUseCases
 import app.musikus.core.presentation.components.MultiFabState
 import app.musikus.core.presentation.components.showSnackbar
-import app.musikus.settings.domain.ColorSchemeSelections
-import app.musikus.settings.domain.ThemeSelections
-import app.musikus.settings.domain.usecase.UserPreferencesUseCases
+import app.musikus.menu.domain.ColorSchemeSelections
+import app.musikus.menu.domain.ThemeSelections
+import app.musikus.menu.domain.usecase.SettingsUseCases
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -53,7 +53,7 @@ data class MainUiState(
 @HiltViewModel
 class MainViewModel @Inject constructor(
     private val application: Application,
-    userPreferencesUseCases: UserPreferencesUseCases,
+    settingsUseCases: SettingsUseCases,
     activeSessionUseCases: ActiveSessionUseCases
 ) : AndroidViewModel(application) {
 
@@ -69,14 +69,14 @@ class MainViewModel @Inject constructor(
     val eventChannel = _eventChannel.receiveAsFlow()
 
     // Theme
-    private val _activeTheme = userPreferencesUseCases.getTheme().stateIn(
+    private val _activeTheme = settingsUseCases.getTheme().stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = null
     )
 
     // Color Scheme
-    private val _activeColorScheme = userPreferencesUseCases.getColorScheme().stateIn(
+    private val _activeColorScheme = settingsUseCases.getColorScheme().stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = null

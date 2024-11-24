@@ -61,7 +61,7 @@ import app.musikus.core.presentation.theme.MusikusThemedPreview
 import app.musikus.core.presentation.theme.dimensions
 import app.musikus.core.presentation.theme.spacing
 import app.musikus.core.presentation.utils.UiText
-import app.musikus.settings.domain.ColorSchemeSelections
+import app.musikus.menu.domain.ColorSchemeSelections
 
 @Composable
 fun MetronomeUi(

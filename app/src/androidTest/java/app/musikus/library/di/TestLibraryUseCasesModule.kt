@@ -8,6 +8,7 @@
 
 package app.musikus.library.di
 
+import app.musikus.core.domain.UserPreferencesRepository
 import app.musikus.library.domain.LibraryRepository
 import app.musikus.library.domain.usecase.AddFolderUseCase
 import app.musikus.library.domain.usecase.AddItemUseCase
@@ -16,14 +17,17 @@ import app.musikus.library.domain.usecase.DeleteItemsUseCase
 import app.musikus.library.domain.usecase.EditFolderUseCase
 import app.musikus.library.domain.usecase.EditItemUseCase
 import app.musikus.library.domain.usecase.GetAllLibraryItemsUseCase
+import app.musikus.library.domain.usecase.GetFolderSortInfoUseCase
+import app.musikus.library.domain.usecase.GetItemSortInfoUseCase
 import app.musikus.library.domain.usecase.GetLastPracticedDateUseCase
 import app.musikus.library.domain.usecase.GetSortedLibraryFoldersUseCase
 import app.musikus.library.domain.usecase.GetSortedLibraryItemsUseCase
 import app.musikus.library.domain.usecase.LibraryUseCases
 import app.musikus.library.domain.usecase.RestoreFoldersUseCase
 import app.musikus.library.domain.usecase.RestoreItemsUseCase
+import app.musikus.library.domain.usecase.SelectFolderSortModeUseCase
+import app.musikus.library.domain.usecase.SelectItemSortModeUseCase
 import app.musikus.sessions.domain.SessionRepository
-import app.musikus.settings.domain.usecase.UserPreferencesUseCases
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.components.SingletonComponent
@@ -39,12 +43,15 @@ object TestLibraryUseCasesModule {
     fun provideLibraryUseCases(
         libraryRepository: LibraryRepository,
         sessionRepository: SessionRepository,
-        userPreferencesUseCases: UserPreferencesUseCases
+        userPreferencesRepository: UserPreferencesRepository
     ): LibraryUseCases {
+        val getItemSortInfo = GetItemSortInfoUseCase(userPreferencesRepository)
+        val getFolderSortInfo = GetFolderSortInfoUseCase(userPreferencesRepository)
+
         return LibraryUseCases(
             getAllItems = GetAllLibraryItemsUseCase(libraryRepository),
-            getSortedItems = GetSortedLibraryItemsUseCase(libraryRepository, userPreferencesUseCases.getItemSortInfo),
-            getSortedFolders = GetSortedLibraryFoldersUseCase(libraryRepository, userPreferencesUseCases.getFolderSortInfo),
+            getSortedItems = GetSortedLibraryItemsUseCase(libraryRepository, getItemSortInfo),
+            getSortedFolders = GetSortedLibraryFoldersUseCase(libraryRepository, getFolderSortInfo),
             getLastPracticedDate = GetLastPracticedDateUseCase(sessionRepository),
             addItem = AddItemUseCase(libraryRepository),
             addFolder = AddFolderUseCase(libraryRepository),
@@ -54,7 +61,10 @@ object TestLibraryUseCasesModule {
             deleteFolders = DeleteFoldersUseCase(libraryRepository),
             restoreItems = RestoreItemsUseCase(libraryRepository),
             restoreFolders = RestoreFoldersUseCase(libraryRepository),
+            getItemSortInfo = getItemSortInfo,
+            getFolderSortInfo = getFolderSortInfo,
+            selectItemSortMode = SelectItemSortModeUseCase(userPreferencesRepository),
+            selectFolderSortMode = SelectFolderSortModeUseCase(userPreferencesRepository)
         )
     }
-
 }

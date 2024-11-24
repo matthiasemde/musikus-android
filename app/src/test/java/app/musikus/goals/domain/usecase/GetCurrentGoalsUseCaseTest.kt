@@ -8,6 +8,7 @@
 
 package app.musikus.goals.domain.usecase
 
+import app.musikus.core.data.FakeUserPreferencesRepository
 import app.musikus.core.data.GoalDescriptionWithLibraryItems
 import app.musikus.core.data.Nullable
 import app.musikus.core.data.UUIDConverter
@@ -29,8 +30,6 @@ import app.musikus.sessions.data.FakeSessionRepository
 import app.musikus.sessions.data.entities.SectionCreationAttributes
 import app.musikus.sessions.data.entities.SessionCreationAttributes
 import app.musikus.sessions.domain.usecase.GetSessionsInTimeframeUseCase
-import app.musikus.settings.data.FakeUserPreferencesRepository
-import app.musikus.settings.domain.usecase.GetGoalSortInfoUseCase
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking

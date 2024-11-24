@@ -22,8 +22,8 @@ import androidx.navigation.testing.TestNavHostController
 import app.musikus.core.data.UUIDConverter
 import app.musikus.core.domain.FakeTimeProvider
 import app.musikus.core.presentation.theme.MusikusTheme
-import app.musikus.settings.domain.ColorSchemeSelections
-import app.musikus.settings.domain.ThemeSelections
+import app.musikus.menu.domain.ColorSchemeSelections
+import app.musikus.menu.domain.ThemeSelections
 import com.google.common.truth.Truth.assertThat
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest

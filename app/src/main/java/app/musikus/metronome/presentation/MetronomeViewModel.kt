@@ -19,9 +19,9 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import app.musikus.R
 import app.musikus.core.presentation.utils.UiText
+import app.musikus.metronome.domain.usecase.MetronomeUseCases
 import app.musikus.permissions.domain.PermissionChecker
 import app.musikus.permissions.domain.usecase.PermissionsUseCases
-import app.musikus.settings.domain.usecase.UserPreferencesUseCases
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
@@ -83,7 +83,7 @@ sealed class MetronomeUiEvent {
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class MetronomeViewModel @Inject constructor(
-    private val userPreferencesUseCases: UserPreferencesUseCases,
+    private val metronomeUseCases: MetronomeUseCases,
     private val permissionsUseCases: PermissionsUseCases,
     private val application: Application
 ) : AndroidViewModel(application) {
@@ -164,7 +164,7 @@ class MetronomeViewModel @Inject constructor(
     )
 
     /** Imported flows */
-    private val metronomeSettings = userPreferencesUseCases.getMetronomeSettings().stateIn(
+    private val metronomeSettings = metronomeUseCases.getMetronomeSettings().stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = MetronomeSettings.DEFAULT
@@ -258,7 +258,7 @@ class MetronomeViewModel @Inject constructor(
 
     private fun changeBpm(bpm: Int) {
         viewModelScope.launch {
-            userPreferencesUseCases.changeMetronomeSettings(
+            metronomeUseCases.changeMetronomeSettings(
                 metronomeSettings.value.copy(
                     bpm = bpm.coerceIn(MetronomeSettings.BPM_RANGE)
                 )
@@ -268,7 +268,7 @@ class MetronomeViewModel @Inject constructor(
 
     private fun incrementBeatsPerBar(increment: Int) {
         viewModelScope.launch {
-            userPreferencesUseCases.changeMetronomeSettings(
+            metronomeUseCases.changeMetronomeSettings(
                 metronomeSettings.value.copy(
                     beatsPerBar = (
                         metronomeSettings.value.beatsPerBar + increment
@@ -280,7 +280,7 @@ class MetronomeViewModel @Inject constructor(
 
     private fun incrementClicksPerBeat(increment: Int) {
         viewModelScope.launch {
-            userPreferencesUseCases.changeMetronomeSettings(
+            metronomeUseCases.changeMetronomeSettings(
                 metronomeSettings.value.copy(
                     clicksPerBeat = (
                         metronomeSettings.value.clicksPerBeat + increment

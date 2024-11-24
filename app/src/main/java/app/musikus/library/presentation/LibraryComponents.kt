@@ -61,7 +61,7 @@ import app.musikus.core.presentation.utils.UiText
 import app.musikus.library.data.LibraryItemSortMode
 import app.musikus.library.data.daos.LibraryFolder
 import app.musikus.library.data.daos.LibraryItem
-import app.musikus.settings.domain.ColorSchemeSelections
+import app.musikus.menu.domain.ColorSchemeSelections
 import java.time.ZonedDateTime
 
 @Composable

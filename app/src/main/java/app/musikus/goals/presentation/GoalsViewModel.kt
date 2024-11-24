@@ -23,7 +23,6 @@ import app.musikus.goals.domain.usecase.GoalsUseCases
 import app.musikus.library.data.daos.LibraryItem
 import app.musikus.library.domain.usecase.LibraryUseCases
 import app.musikus.library.presentation.DialogMode
-import app.musikus.settings.domain.usecase.UserPreferencesUseCases
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -48,7 +47,6 @@ data class GoalDialogData(
 
 @HiltViewModel
 class GoalsViewModel @Inject constructor(
-    private val userPreferencesUseCases: UserPreferencesUseCases,
     private val goalsUseCases: GoalsUseCases,
     libraryUseCases: LibraryUseCases,
 ) : ViewModel() {
@@ -63,7 +61,7 @@ class GoalsViewModel @Inject constructor(
 
     /** Imported flows */
 
-    private val goalsSortInfo = userPreferencesUseCases.getGoalSortInfo().stateIn(
+    private val goalsSortInfo = goalsUseCases.getGoalSortInfo().stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = SortInfo(
@@ -328,7 +326,7 @@ class GoalsViewModel @Inject constructor(
     private fun onSortModeSelected(selection: GoalsSortMode) {
         _showSortModeMenu.update { false }
         viewModelScope.launch {
-            userPreferencesUseCases.selectGoalSortMode(selection)
+            goalsUseCases.selectGoalSortMode(selection)
         }
     }
 

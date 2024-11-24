@@ -20,7 +20,6 @@ import app.musikus.library.data.entities.LibraryFolderUpdateAttributes
 import app.musikus.library.data.entities.LibraryItemCreationAttributes
 import app.musikus.library.data.entities.LibraryItemUpdateAttributes
 import app.musikus.library.domain.usecase.LibraryUseCases
-import app.musikus.settings.domain.usecase.UserPreferencesUseCases
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted.Companion.WhileSubscribed
@@ -49,7 +48,6 @@ data class LibraryItemEditData(
 @OptIn(ExperimentalCoroutinesApi::class)
 abstract class LibraryCoreViewModel (
     private val libraryUseCases: LibraryUseCases,
-    private val userPreferencesUseCases: UserPreferencesUseCases,
 ) : ViewModel() {
 
     /** Private variables */
@@ -63,7 +61,7 @@ abstract class LibraryCoreViewModel (
         initialValue = emptyList()
     )
 
-    private val itemSortInfo = userPreferencesUseCases.getItemSortInfo().stateIn(
+    private val itemSortInfo = libraryUseCases.getItemSortInfo().stateIn(
         scope = viewModelScope,
         started = WhileSubscribed(5000),
         initialValue = SortInfo(
@@ -467,7 +465,7 @@ abstract class LibraryCoreViewModel (
     private fun onItemSortModeSelected(selection: LibraryItemSortMode) {
         _showItemSortMenu.update { false }
         viewModelScope.launch {
-            userPreferencesUseCases.selectItemSortMode(selection)
+            libraryUseCases.selectItemSortMode(selection)
         }
     }
 }

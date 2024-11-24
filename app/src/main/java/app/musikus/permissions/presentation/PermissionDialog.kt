@@ -25,7 +25,7 @@ import app.musikus.core.presentation.theme.MusikusColorSchemeProvider
 import app.musikus.core.presentation.theme.MusikusPreviewElement1
 import app.musikus.core.presentation.theme.MusikusThemedPreview
 import app.musikus.core.presentation.theme.spacing
-import app.musikus.settings.domain.ColorSchemeSelections
+import app.musikus.menu.domain.ColorSchemeSelections
 
 @Composable
 fun PermissionDialog(

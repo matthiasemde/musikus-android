@@ -34,8 +34,8 @@ import app.musikus.core.presentation.utils.getDurationString
 import app.musikus.library.data.LibraryItemSortMode
 import app.musikus.library.data.daos.LibraryItem
 import app.musikus.library.data.sorted
+import app.musikus.library.domain.usecase.LibraryUseCases
 import app.musikus.sessions.domain.usecase.SessionsUseCases
-import app.musikus.settings.domain.usecase.UserPreferencesUseCases
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
@@ -163,7 +163,7 @@ data class PieChartData(
 @HiltViewModel
 class SessionStatisticsViewModel @Inject constructor(
     private val timeProvider: TimeProvider,
-    userPreferencesUseCases: UserPreferencesUseCases,
+    libraryUseCases: LibraryUseCases,
     sessionsUseCases: SessionsUseCases
 ) : ViewModel() {
 
@@ -178,7 +178,7 @@ class SessionStatisticsViewModel @Inject constructor(
     private var _pieChartStateBuffer: SessionStatisticsPieChartUiState? = null
 
     /** Imported Flows */
-    private val itemsSortInfo = userPreferencesUseCases.getItemSortInfo().stateIn(
+    private val itemsSortInfo = libraryUseCases.getItemSortInfo().stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = SortInfo(
