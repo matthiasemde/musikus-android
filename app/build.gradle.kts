@@ -119,7 +119,7 @@ room {
 }
 
 object DetektSettings {
-    const val VERSION = "1.23.6"
+    const val VERSION = "1.23.7"
     const val CONFIG_FILE = "config/detekt.yml" // Relative to the project root
     const val BUILD_UPON_DEFAULT_CONFIG = true
     const val REPORT_PATH = "lint" // Relative to the reports path
