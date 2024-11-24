@@ -8,10 +8,13 @@
 
 package app.musikus.core.presentation.components
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -21,7 +24,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat.startActivity
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
@@ -44,6 +52,7 @@ fun MainMenu(
     onDismiss: () -> Unit
 ) {
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
 
     val menuEntryGroups = listOf(
         listOf(Screen.MainMenuEntry.Donate),
@@ -61,6 +70,45 @@ fun MainMenu(
             style = MaterialTheme.typography.titleLarge
         )
         Spacer(modifier = Modifier.weight(1f))
+
+        // Link to Discord
+        NavigationDrawerItem(
+            modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding),
+            icon = {
+                Icon(
+                    modifier = Modifier.size(24.dp),
+                    imageVector = ImageVector.vectorResource(R.drawable.ic_discord),
+                    contentDescription = stringResource(R.string.menu_connect_title)
+                )
+            },
+            label = { Text(text = stringResource(R.string.menu_connect_title)) },
+            selected = false,
+            onClick = {
+                val openUrlIntent = Intent(Intent.ACTION_VIEW)
+                openUrlIntent.data = Uri.parse(context.getString(R.string.menu_connect_discord_url))
+                startActivity(context, openUrlIntent, null)
+            }
+        )
+
+        // Link to GitHub
+        NavigationDrawerItem(
+            modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding),
+            icon = {
+                Icon(
+                    modifier = Modifier.size(24.dp),
+                    imageVector = ImageVector.vectorResource(R.drawable.ic_github),
+                    contentDescription = stringResource(R.string.menu_contribute_title)
+                )
+            },
+            label = { Text(text = stringResource(R.string.menu_contribute_title)) },
+            selected = false,
+            onClick = {
+                val openUrlIntent = Intent(Intent.ACTION_VIEW)
+                openUrlIntent.data = Uri.parse(context.getString(R.string.menu_contribute_github_url))
+                startActivity(context, openUrlIntent, null)
+            }
+        )
+
         menuEntryGroups.forEach { group ->
             group.forEach { entry ->
                 val displayData = entry.getDisplayData()

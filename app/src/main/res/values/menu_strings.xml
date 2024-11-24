@@ -38,6 +38,13 @@
     <string name="menu_backup_restore_backup">Restore backup</string>
     <string name="menu_backup_footnote">*Note: Loading a backup will overwrite your current data.</string>
 
+    <!-- Connect (Discord) -->
+    <string name="menu_connect_title">Connect</string>
+    <string name="menu_connect_discord_url" translatable="false">https://discord.gg/CNbvGmbS7d</string>
+
+    <!-- Contribute -->
+    <string name="menu_contribute_title">Contribute</string>
+    <string name="menu_contribute_github_url" translatable="false">https://github.com/matthiasemde/musikus-android</string>
 
     <!-- Donate -->
     <string name="menu_donate_title">Support us!</string>
